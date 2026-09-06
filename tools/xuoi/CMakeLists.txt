@@ -15,6 +15,8 @@ set(XUOI_LIBS "${PROJECT_NAME} ${THREAD} ${LOADER}" CACHE INTERNAL "")
 set(XUOI_SRCS
   xuo_updater.cpp
   xuo_updater.h
+  keypatch.cpp
+  keypatch.h
   xuoi.cpp
 )
 

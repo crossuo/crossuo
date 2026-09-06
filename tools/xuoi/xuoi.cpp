@@ -14,6 +14,7 @@
 #include <xuocore/xuoi.h>
 #include <xuocore/common.h>
 #include <xuocore/uop.h>
+#include "keypatch.h"
 #include "xuo_updater.h"
 
 #define XUOI_AGENT_NAME "EAMythic Patch Client"
@@ -34,6 +35,147 @@
 #define DATA_PATCHER_SERVER_ADDRESS "uopatch-sa/legacyrelease/patcher/manifest/"
 #define DATA_PATCHER_FILE "patcher.prod"
 
+static po::parser s_cli;
+
+static bool xuoi_keypatch_hex_to_bin(const char *hex, std::vector<uint8_t> &out)
+{
+    const size_t len = strlen(hex);
+    if (len == 0 || (len & 1) != 0)
+        return false;
+    out.reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2)
+    {
+        char buf[3] = { hex[i], hex[i + 1], 0 };
+        char *end = nullptr;
+        const long v = strtol(buf, &end, 16);
+        if (!end || *end != 0 || v < 0 || v > 0xff)
+            return false;
+        out.push_back(uint8_t(v));
+    }
+    return true;
+}
+
+static bool xuoi_keypatch_load_data(const char *src, std::vector<uint8_t> &out, size_t max_size)
+{
+    if (FILE *fp = fopen(src, "rb"))
+    {
+        fseek(fp, 0, SEEK_END);
+        const long size = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        if (size <= 0 || size_t(size) > max_size)
+        {
+            fclose(fp);
+            return false;
+        }
+        out.resize(size_t(size));
+        const bool ok = fread(out.data(), 1, size_t(size), fp) == size_t(size);
+        fclose(fp);
+        return ok;
+    }
+    return xuoi_keypatch_hex_to_bin(src, out);
+}
+
+static void xuoi_keypatch_print_blob(const uint8_t blob[keypatch::KEY_BLOB_LEN])
+{
+    const int e_len = blob[138];
+    const int e_start = 142 + (3 - e_len);
+    LOG_INFO("key blob: len=%u type=%u version=%u", blob[0], blob[2], blob[4]);
+    LOG_INFO("modulus (%u bytes):", blob[5]);
+    for (int i = 0; i < 129; i += 32)
+    {
+        char line[97] = {};
+        for (int j = i; j < i + 32 && j < 129; ++j)
+            snprintf(&line[(j - i) * 2], 3, "%02x", blob[9 + j]);
+        LOG_INFO("  %s", line);
+    }
+    LOG_INFO("exponent: %u bytes", e_len);
+    for (int i = 0; i < e_len; ++i)
+        fprintf(stdout, "%02x", blob[e_start + i]);
+    fprintf(stdout, "\n");
+}
+
+static int xuoi_keypatch_run()
+{
+    char err[256] = {};
+    const bool show = s_cli["showkey"].was_set();
+    const bool patch = s_cli["keypatch"].was_set();
+    const char *exepath =
+        (patch ? s_cli["keypatch"] : s_cli["showkey"]).get().string.c_str();
+
+    if (show)
+    {
+        std::vector<uint8_t> image;
+        if (!xuoi_keypatch_load_data(exepath, image, 64 * 1024 * 1024))
+        {
+            LOG_ERROR("couldn't read launcher image: %s", exepath);
+            return -1;
+        }
+        size_t offset = 0;
+        uint32_t va = 0;
+        keypatch::find_key_ctor(image.data(), image.size(), &offset, &va, err, sizeof(err));
+        uint8_t blob[keypatch::KEY_BLOB_LEN] = {};
+        if (!keypatch::read_patched_key(image.data(), image.size(), blob, err, sizeof(err)))
+        {
+            LOG_ERROR("%s", err);
+            LOG_ERROR("launcher not patched yet? use --keypatch to replace the key");
+            return -1;
+        }
+        LOG_INFO("patched key found at %s", exepath);
+        xuoi_keypatch_print_blob(blob);
+        return 0;
+    }
+
+    std::vector<uint8_t> modulus;
+    std::vector<uint8_t> exponent;
+    if (!s_cli["modulus"].was_set())
+    {
+        LOG_ERROR("--keypatch requires --modulus (raw big-endian file path or hex string)");
+        return -1;
+    }
+    const char *modsrc = s_cli["modulus"].get().string.c_str();
+    const char *expsrc = s_cli["exponent"].was_set() ? s_cli["exponent"].get().string.c_str() : "010001";
+    if (!xuoi_keypatch_load_data(modsrc, modulus, keypatch::KEY_MODULUS_LEN))
+    {
+        LOG_ERROR("couldn't load modulus (raw file or hex string): %s", modsrc);
+        return -1;
+    }
+    if (!xuoi_keypatch_hex_to_bin(expsrc, exponent) || exponent.empty())
+    {
+        LOG_ERROR("invalid exponent hex string: %s", expsrc);
+        return -1;
+    }
+    if (modulus.empty() || modulus.size() > keypatch::KEY_MODULUS_LEN)
+    {
+        LOG_ERROR("invalid modulus size: %zu (max %zu)", modulus.size(), keypatch::KEY_MODULUS_LEN);
+        return -1;
+    }
+
+    uint8_t blob[keypatch::KEY_BLOB_LEN] = {};
+    if (!keypatch::build_key_blob(modulus.data(), modulus.size(), exponent.data(), exponent.size(), blob))
+    {
+        LOG_ERROR("failed to build key blob");
+        return -1;
+    }
+    if (!keypatch::patch_file(exepath, blob, err, sizeof(err)))
+    {
+        LOG_ERROR("patch failed: %s", err);
+        return -1;
+    }
+
+    std::vector<uint8_t> image_buf;
+    uint8_t verify[keypatch::KEY_BLOB_LEN] = {};
+    if (!xuoi_keypatch_load_data(exepath, image_buf, 64 * 1024 * 1024) ||
+        !keypatch::read_patched_key(image_buf.data(), image_buf.size(), verify, err, sizeof(err)) ||
+        memcmp(verify, blob, keypatch::KEY_BLOB_LEN) != 0)
+    {
+        LOG_ERROR("post-patch verification failed");
+        return -1;
+    }
+    LOG_INFO("launcher key replaced successfully: %s", exepath);
+    xuoi_keypatch_print_blob(blob);
+    return 0;
+}
+
 static void print_banner()
 {
     fprintf(stdout, "xuoi - crossuo installer 0.0.1\n");
@@ -44,7 +186,6 @@ static void print_banner()
     fprintf(stdout, "\n");
 }
 
-static po::parser s_cli;
 static bool init_cli(int argc, char *argv[])
 {
     s_cli["help"].abbreviation('h').description("print this help screen");
@@ -68,6 +209,23 @@ static bool init_cli(int argc, char *argv[])
         .abbreviation('d')
         .type(po::string)
         .description("output diff information between two releases: versionA,versionB");
+    s_cli["keypatch"]
+        .abbreviation('k')
+        .type(po::string)
+        .description(
+            "replace the public key embedded in the UO.exe launcher (path); requires --modulus");
+    s_cli["modulus"]
+        .abbreviation('n')
+        .type(po::string)
+        .description("RSA modulus for --keypatch: raw big-endian file path or hex string");
+    s_cli["exponent"]
+        .abbreviation('e')
+        .type(po::string)
+        .description("RSA exponent hex string for --keypatch (default 010001)");
+    s_cli["showkey"]
+        .abbreviation('s')
+        .type(po::string)
+        .description("show the embedded public key of a patched UO.exe launcher (path)");
     s_cli(argc, argv);
 
     return s_cli["help"].size() == 0;
@@ -100,7 +258,17 @@ static int xuoi_export_diff(
 
 int main(int argc, char **argv)
 {
-    if (!init_cli(argc, argv) || !s_cli["path"].was_set())
+    if (!init_cli(argc, argv))
+    {
+        print_banner();
+        s_cli.print_help(std::cout);
+        return 0;
+    }
+
+    if (s_cli["keypatch"].was_set() || s_cli["showkey"].was_set())
+        return xuoi_keypatch_run();
+
+    if (!s_cli["path"].was_set())
     {
         print_banner();
         s_cli.print_help(std::cout);

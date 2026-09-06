@@ -12,6 +12,7 @@
 #include "mft.h"
 #include "http.h"
 #include "common.h"
+#include "meta.h"
 
 #include <common/utils.h>
 #include <common/logging/logging.h>
@@ -458,6 +459,11 @@ static size_t mft_download_entry(mft_product &prod, mft_entry &entry, uint32_t t
     auto res = mft_download(prod, prod.file_repo, name, entry, data, cdata, &size, &bytes);
     entry.state = res == mft_ok ? state_none : state_download_failed;
 
+    // the .meta signature is computed over the uncompressed content
+    uint8_t content_sha[32] = {};
+    if (entry.state == state_none)
+        meta::sha256(data, size, content_sha);
+
     if (entry.type == mft_entry_part)
     {
         size = prod.config.download_buffer_size;
@@ -475,6 +481,16 @@ static size_t mft_download_entry(mft_product &prod, mft_entry &entry, uint32_t t
         meta.sig = {};
         meta.sig_type = 0;
         mft_download(prod, prod.file_repo, meta_name, meta, data, cdata, &size, &meta_bytes);
+        if (meta_bytes > 0)
+        {
+            if (meta::verify_meta(data, meta_bytes, content_sha))
+                LOG_TRACE("signature ok: %s", name);
+            else
+            {
+                LOG_ERROR("signature verification failed for %s", name);
+                entry.state = state_download_failed;
+            }
+        }
     }
 
     return bytes + meta_bytes;

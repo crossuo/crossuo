@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 .pre-commit-config.yaml
 **.orig
+.maki/
 **/target/**
 tools/xuodeploy/release
 tools/xuodeploy/update
