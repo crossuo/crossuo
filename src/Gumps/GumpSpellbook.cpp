@@ -121,7 +121,7 @@ static astr_t MasterGroupNameById(int id)
 CGumpSpellbook::CGumpSpellbook(uint32_t serial, int x, int y)
     : CGump(GT_SPELLBOOK, serial, x, y)
 {
-    Draw2Page = 1;
+    PageAmount = 1;
     memset(&Spells[0], 0, sizeof(Spells));
 }
 

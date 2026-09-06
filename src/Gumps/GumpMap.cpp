@@ -208,10 +208,8 @@ void CGumpMap::PrepareContent()
     }
 }
 
-void CGumpMap::GenerateFrame(bool stop)
+void CGumpMap::GenerateFrame()
 {
-    //m_Labels
-
     if (m_DataBox != nullptr)
     {
         int idx = 0;
@@ -241,7 +239,7 @@ void CGumpMap::GenerateFrame(bool stop)
         }
     }
 
-    CGump::GenerateFrame(false);
+    CGump::GenerateFrame();
 
     if (m_DataBox != nullptr)
     {

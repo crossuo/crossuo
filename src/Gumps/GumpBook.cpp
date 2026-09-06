@@ -36,7 +36,7 @@ CGumpBook::CGumpBook(
     m_ChangedPage = new bool[pageCount + 1];
     m_PageDataReceived = new bool[pageCount + 1];
     Page = 0;
-    Draw2Page = 1;
+    PageAmount = 1;
 
     Add(new CGUIPage(-1));
     Add(new CGUIGumppic(0x01FE, 0, 0)); //Body

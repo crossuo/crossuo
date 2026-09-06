@@ -17,7 +17,7 @@
 CGumpRacialAbilitiesBook::CGumpRacialAbilitiesBook(int x, int y)
     : CGump(GT_RACIAL_ABILITIES_BOOK, 0, x, y)
 {
-    Draw2Page = 1;
+    PageAmount = 1;
 }
 
 CGumpRacialAbilitiesBook::~CGumpRacialAbilitiesBook()

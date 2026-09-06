@@ -516,9 +516,9 @@ void CGumpWorldMap::LoadMap(int map)
     }
 }
 
-void CGumpWorldMap::GenerateFrame(bool stop)
+void CGumpWorldMap::GenerateFrame()
 {
-    CGump::GenerateFrame(false);
+    CGump::GenerateFrame();
 
     //Player drawing
     if (!Minimized && g_CurrentMap == GetCurrentMap())

@@ -19,7 +19,7 @@ CGumpBuff::CGumpBuff(short x, short y)
     Add(new CGUIHitBox(0, 0, 0, 0, 0));
     Add(new CGUIButton(ID_GB_NEXT_WINDOW_DIRECTION, 0x7585, 0x7589, 0x7589, 0, 0));
     Add(new CGUIAlphaBlending(true, 0.1f));
-    Add(new CGUIAlphaBlending(false, 0.1f));
+    Add(new CGUIAlphaBlending(false, 0.0f));
 }
 
 CGumpBuff::~CGumpBuff()

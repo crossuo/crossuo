@@ -10,6 +10,15 @@
 #include "../Network/Packets.h"
 #include "../Globals.h" // g_Language, CONTEXT_MENU_FONT
 
+struct CPopupMenuItemInfo
+{
+    uint32_t Cliloc = 0;
+    uint16_t Index = 0;
+    uint16_t Flags = 0;
+    uint16_t Color = 0;
+    uint16_t ReplaceColor = 0;
+};
+
 CGumpPopupMenu *g_PopupMenu = nullptr;
 
 CGumpPopupMenu::CGumpPopupMenu(uint32_t serial, short x, short y)
@@ -37,7 +46,6 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
     uint8_t count = reader.ReadUInt8();
 
     std::vector<CPopupMenuItemInfo> items;
-
     for (int i = 0; i < count; i++)
     {
         CPopupMenuItemInfo info;
@@ -87,7 +95,7 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 
     menu->Add(new CGUIAlphaBlending(true, 0.75f));
     CGUIResizepic *resizepic = (CGUIResizepic *)menu->Add(new CGUIResizepic(0, 0x0A3C, 0, 0, 0, 0));
-    menu->Add(new CGUIAlphaBlending(false, 1.0f));
+    menu->Add(new CGUIAlphaBlending(false, 0.0f));
 
     int offsetY = 10;
     bool arrowAdded = false;
@@ -95,7 +103,6 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
     for (const CPopupMenuItemInfo &info : items)
     {
         wstr_t str = g_IntlocManager.Intloc(g_Language, info.Cliloc, isNewClilocs);
-
         CGUITextEntry *item = new CGUITextEntry(
             info.Index,
             info.Color,

@@ -320,9 +320,9 @@ enum GUMP_TYPE
 enum GUMP_OBJECT_TYPE
 {
     GOT_NONE = 0,        // No type
-    GOT_PAGE,            // Page ID
+    GOT_PAGE,            // Page ID marker (can be as minimized and maximizes views)
     GOT_GROUP,           // Group ID (for radio buttons)
-    GOT_MASTERGUMP,      // ?
+    GOT_MASTERGUMP,      // unused
     GOT_RESIZEPIC,       // Background (molded from 9 pieces)
     GOT_SCOPE,           // Frame (molded from 4 pieces)
     GOT_CHECKTRANS,      // Translucent zone on the gump
@@ -337,8 +337,8 @@ enum GUMP_OBJECT_TYPE
     GOT_BUTTON,  // Button
     GOT_RESIZEBUTTON,        // Resize button
     GOT_BUTTONTILEART,       // Button with a picture
-    GOT_BLENDING,            // Color blending
-    GOT_GLOBAL_COLOR,        // Global color
+    GOT_BLENDING,            // Color blending marker
+    GOT_GLOBAL_COLOR,        // Global color marker
     GOT_BUFF,                // Buff icon / debuff
     GOT_SHOPITEM,            // Store item
     GOT_SHOPRESULT,          // Store item (result)
@@ -361,7 +361,7 @@ enum GUMP_OBJECT_TYPE
     GOT_TEXTENTRY,           // Enter text
     GOT_HTMLGUMP,            // CTML Gump
     GOT_XFMHTMLGUMP,         // XTML clump gump (color ibid)
-    GOT_XFMHTMLTOKEN,        //
+    GOT_XFMHTMLTOKEN,        // XFM HTML Token
     GOT_TOOLTIP,             //
     GOT_VIRTUE_GUMP          //
 };

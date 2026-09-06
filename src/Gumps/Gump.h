@@ -51,7 +51,7 @@ public:
     bool Blocked = false;
     bool LockMoving = false;
     int Page = 0;
-    int Draw2Page = 0;
+    int PageAmount = 0;
     bool Transparent = false;
     bool RemoveMark = false;
     bool NoProcess = false;
@@ -59,12 +59,9 @@ public:
     CRect GumpRect = CRect();
 
 protected:
-    CGUIButton m_Locker{ CGUIButton(0, 0, 0, 0, 0, 0) };
-
-    CGLFrameBuffer m_FrameBuffer{ CGLFrameBuffer() };
-
+    CGUIButton m_Locker{ 0, 0, 0, 0, 0, 0 };
+    CGLFrameBuffer m_FrameBuffer;
     virtual void CalculateGumpState();
-
     virtual void RecalculateSize();
 
 public:
@@ -75,9 +72,8 @@ public:
     virtual void PasteClipboardData(wstr_t &data);
     static void ProcessListing();
 
-    static void DrawItems(CBaseGUI *start, int currentPage, int draw2Page = 0);
-    static class CRenderObject *SelectItems(CBaseGUI *start, int currentPage, int draw2Page = 0);
-
+    static void DrawItems(CBaseGUI *start, int currentPage, int pageAmount = 0);
+    static class CRenderObject *SelectItems(CBaseGUI *start, int currentPage, int pageAmount = 0);
     static void GetItemsSize(
         CGump *gump,
         CBaseGUI *start,
@@ -86,22 +82,26 @@ public:
         CPoint2Di &offset,
         int count,
         int currentPage,
-        int draw2Page);
+        int pageAmount);
     static void TestItemsLeftMouseDown(
-        CGump *gump, CBaseGUI *start, int currentPage, int draw2Page = 0, int count = -1);
+        CGump *gump, CBaseGUI *start, int currentPage, int pageAmount = 0, int count = -1);
     static void
-    TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, int draw2Page = 0);
+    TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, int pageAmount = 0);
     static void TestItemsDragging(
-        CGump *gump, CBaseGUI *start, int currentPage, int draw2Page = 0, int count = -1);
+        CGump *gump, CBaseGUI *start, int currentPage, int pageAmount = 0, int count = -1);
     static void
-    TestItemsScrolling(CGump *gump, CBaseGUI *start, bool up, int currentPage, int draw2Page = 0);
+    TestItemsScrolling(CGump *gump, CBaseGUI *start, bool up, int currentPage, int pageAmount = 0);
 
     virtual void DelayedClick(class CRenderObject *obj) {}
     virtual void PrepareContent() {}
     virtual void UpdateContent() {}
     virtual class CTextRenderer *GetTextRenderer() { return nullptr; }
     virtual void PrepareTextures() override;
-    virtual void GenerateFrame(bool stop);
+    // GenerateFrame will do in order:
+    // 1. CalculateGumpState: position, press, drag, hit, minimized state related stuff
+    // 2. PrepareTextures: iterate all GUI children loading texture data (eg. Execute* stuff)
+    // 3. DrawItems: Draw each GUI children in respect the range [currentPage, pageAmount)
+    virtual void GenerateFrame();
     virtual bool CanBeDisplayed() { return true; }
 
     void FixCoordinates();

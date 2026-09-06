@@ -81,9 +81,7 @@ public:
     void UpdateSize();
 
     virtual bool CanBeDisplayed() override { return Called; }
-
-    virtual void GenerateFrame(bool stop) override;
-
+    virtual void GenerateFrame() override;
     virtual void PrepareContent() override;
 
     GUMP_BUTTON_EVENT_H override;

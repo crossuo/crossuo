@@ -18,7 +18,7 @@
 CGumpCombatBook::CGumpCombatBook(int x, int y)
     : CGump(GT_COMBAT_BOOK, 0, x, y)
 {
-    Draw2Page = 1;
+    PageAmount = 1;
 
     if (g_Config.ClientVersion < CV_7000)
     {
@@ -32,7 +32,6 @@ CGumpCombatBook::CGumpCombatBook(int x, int y)
             DictionaryPagesCount = 2;
         }
     }
-
     PagesCount = DictionaryPagesCount + (AbilityCount * 2);
 }
 
@@ -43,7 +42,6 @@ CGumpCombatBook::~CGumpCombatBook()
 std::vector<uint16_t> CGumpCombatBook::GetItemsList(uint8_t index)
 {
     std::vector<uint16_t> list;
-
     switch (index)
     {
         case 0:

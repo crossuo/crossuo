@@ -42,7 +42,7 @@ public:
     void SetPlotState(int val);
 
     virtual void PrepareContent() override;
-    virtual void GenerateFrame(bool stop) override;
+    virtual void GenerateFrame() override;
     virtual CRenderObject *Select() override;
 
     GUMP_BUTTON_EVENT_H override;

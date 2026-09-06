@@ -12,7 +12,7 @@ CGUIAlphaBlending::CGUIAlphaBlending(bool enabled, float alpha)
 {
 }
 
-void CGUIAlphaBlending::Draw(bool checktrans)
+void CGUIAlphaBlending::Draw(bool)
 {
     ScopedPerfMarker(__FUNCTION__);
 #ifndef NEW_RENDERER_ENABLED
