@@ -102,7 +102,7 @@ void CToolTip::Set(int clilocID, const char *str, int maxWidth, bool toCamelCase
 void CToolTip::Draw(int cursorWidth, int cursorHeight)
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    SCOPED_GL_DEBUG_MARKER_LABEL("CToolTip::Draw");
     if (!Use /*|| !g_ConfigManager.UseToolTips*/)
     {
         return;

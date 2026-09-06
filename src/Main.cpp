@@ -85,6 +85,7 @@ static bool InitCli(int argc, char *argv[])
     return g_cli["help"].size() == 0;
 }
 
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
 RenderCmdList *g_renderCmdList = nullptr;
 static void *s_renderCmdListData = nullptr;
 
@@ -101,7 +102,11 @@ void gfx_render_list_init()
 
     // use indirect-rendering to enable delayed render cmds (commands are pushed to the GPU when RenderDraw_Execute is called)
     // don't use this until text resources lifetime isn't fixed (see CFontsManager::DrawA)
+#if defined(RENDERER_LEGACY)
+    const bool immediateMode = true;
+#else
     const bool immediateMode = !g_cli["indirect-rendering"].was_set();
+#endif //#if defined(RENDERER_LEGACY)
     static RenderCmdList s_renderCmdList(
         s_renderCmdListData, s_renderCmdListSize, Render_DefaultState(), immediateMode);
     g_renderCmdList = &s_renderCmdList;
@@ -116,6 +121,7 @@ void gfx_render_list_destroy()
     }
     g_renderCmdList = nullptr;
 }
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
 
 void fatal_error_dialog(const char *message)
 {
@@ -323,7 +329,9 @@ int main(int argc, char **argv)
     const bool isHeadless = g_cli["headless"].was_set();
     if (!isHeadless)
     {
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
         gfx_render_list_init();
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
         if (!g_GameWindow.Create(CLIENT_TITLE, false, 640, 480))
         {
             const char *errMsg =
@@ -344,7 +352,9 @@ int main(int argc, char **argv)
     g_Game.LoadPlugins();
     auto ret = g_App.Run();
     SDL_Quit();
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
     gfx_render_list_destroy();
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
     return ret;
 }
 

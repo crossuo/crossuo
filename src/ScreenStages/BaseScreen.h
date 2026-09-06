@@ -7,6 +7,7 @@
 #include "../BaseQueue.h"
 #include "../Gumps/Gump.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Managers/FontsManager.h"
 
 class CBaseScreen : public CBaseQueue
 {

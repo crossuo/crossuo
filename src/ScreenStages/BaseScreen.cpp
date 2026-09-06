@@ -25,8 +25,9 @@ void CBaseScreen::Init()
 
 void CBaseScreen::Render()
 {
-#ifdef NEW_RENDERER_ENABLED
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
+    g_FontManager.ClearTextSpritePool(); // Clear previous frame's text sprites
     RenderAdd_FlushState(g_renderCmdList);
     RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{});
 #else
@@ -34,7 +35,7 @@ void CBaseScreen::Render()
     // Gump-something; investigate it and remove/move it elsewhere so
     // we can get rid of glEngine
     g_GL.BeginDraw();
-#endif
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 
     if (DrawSmoothMonitor() != 0)
     {
@@ -50,16 +51,15 @@ void CBaseScreen::Render()
     InitToolTip();
     DrawSmoothMonitorEffect();
     g_MouseManager.Draw(CursorGraphic);
-
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
-
-#ifdef NEW_RENDERER_ENABLED
+    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
     Render_SwapBuffers();
     g_ScreenshotBuilder.GPUDataReady();
 #else
     g_GL.EndDraw();
-#endif
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 }
 
 void CBaseScreen::SelectObject()

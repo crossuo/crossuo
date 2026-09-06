@@ -19,7 +19,17 @@
     #define GL_SHADER_IN "in "
     #define GL_SHADER_OUT "out "
     #endif // #else // #if defined(__APPLE__)
-#elif defined(USE_GL2) // #if defined(USE_GL3)
+#elif defined(USE_GL1)
+    #define USE_GL
+    #define USE_GLEW
+    #define SOKOL_DUMMY_BACKEND
+    #define GL_SHADER_VERSION "120"
+    #define GL_SHADER_ATTRIBUTE(x) "attribute "
+    #define GL_SHADER_IN "varying "
+    #define GL_SHADER_OUT "varying "
+    #define GFX_GL_MAJOR 1
+    #define GFX_GL_MINOR 1
+#elif defined(USE_GL2) // #elif defined(USE_GL1)
     #define USE_GL
     #define USE_GLEW
     #define SOKOL_GLES2
@@ -96,6 +106,15 @@
         if (e != GL_NO_ERROR) { \
             Error(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
             exit(-69); \
+        } \
+    } while(0)
+#define GL_CALL(statement) \
+    do { \
+        Info(Renderer, "GL_CALL: %s", TOSTRING(statement)); \
+        statement; \
+        const auto e = glGetError(); \
+        if (e != GL_NO_ERROR) { \
+            Warning(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
         } \
     } while(0)
 

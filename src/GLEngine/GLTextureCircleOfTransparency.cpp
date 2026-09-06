@@ -84,7 +84,7 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     glStencilFunc(GL_NOTEQUAL, 1, 1);
     glDisable(GL_STENCIL_TEST);
 #else
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CircleOfTransparency");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CircleOfTransparency");
 
     // Match GL1 behavior exactly - only modify stencil and color mask
     // Step 1: Enable stencil and draw circle with REPLACE operation

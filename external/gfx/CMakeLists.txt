@@ -26,7 +26,7 @@ set(EXTERNALGFX_SRC
     ui.cpp
 )
 
-if (USE_GL2)
+if (USE_GL2 OR USE_GL1)
     list(APPEND EXTERNALGFX_SRC GL/glew.c)
 endif()
 

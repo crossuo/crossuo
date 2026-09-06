@@ -39,7 +39,7 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     auto cmd = DrawQuadCmd{ Texture, x, y, Width, Height };
     if (checktrans)
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Object with Transparency");
+        SCOPED_GL_DEBUG_MARKER_LABEL("Object with Transparency");
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -58,10 +58,8 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
                              StencilOp::StencilOp_Keep,
                              1,
                              1 });
-        // Draw again - default white color (no rgba specified) at full opacity
-        auto fullOpacityCmd = DrawQuadCmd{ Texture, x, y, Width, Height };
         RenderAdd_EnableStencil(g_renderCmdList);
-        RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
+        RenderAdd_DrawQuad(g_renderCmdList, cmd);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
@@ -119,7 +117,7 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 
     if (checktrans)
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Object With Transparency 2");
+        SCOPED_GL_DEBUG_MARKER_LABEL("Object With Transparency 2");
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -138,16 +136,8 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
                              StencilOp::StencilOp_Keep,
                              1,
                              1 });
-        // Draw again - default white color (no rgba specified) at full opacity
-        auto fullOpacityCmd = DrawQuadCmd{ Texture,
-                                        x,
-                                        y,
-                                        uint32_t(width),
-                                        uint32_t(height),
-                                        width / float(Width),
-                                        height / float(Height) };
         RenderAdd_EnableStencil(g_renderCmdList);
-        RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
+        RenderAdd_DrawQuad(g_renderCmdList, cmd);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
@@ -159,6 +149,7 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 
 void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL("CGLTexture::Draw_Tooltip");
 #ifndef NEW_RENDERER_ENABLED
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -175,9 +166,10 @@ void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList,
         DrawUntexturedQuadCmd{ x, y, uint32_t(width), uint32_t(height), { 0.f, 0.f, 0.f, 0.5f } });
-    auto cmd = DrawQuadCmd{ Texture, x + 6, y + 4, Width, Height };
     RenderAdd_DisableBlend(g_renderCmdList);
-    RenderAdd_DrawQuad(g_renderCmdList, cmd);
+    RenderAdd_DrawQuad(
+        g_renderCmdList,
+        DrawQuadCmd{ Texture, x + 6, y + 4, Width, Height });
 #endif
 }
 
@@ -248,10 +240,8 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
                              StencilOp::StencilOp_Keep,
                              1,
                              1 });
-       // Draw again at full opacity (rgba defaults to white when not specified)
-       auto fullOpacityCmd = DrawQuadCmd{ Texture, x, y, Width, Height };
        RenderAdd_EnableStencil(g_renderCmdList);
-       RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
+       RenderAdd_DrawQuad(g_renderCmdList, cmd);
        RenderAdd_DisableStencil(g_renderCmdList);
     }
 #endif

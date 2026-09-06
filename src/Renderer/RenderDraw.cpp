@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
-#include <cmath> // cos, sin
+#if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
 #include <glm/glm.hpp>
@@ -23,24 +24,6 @@
         cmd += sizeof(type##Cmd);                                                                  \
         break;                                                                                     \
     }
-
-#if defined(USE_GLES) || defined(USE_GL3)
-extern uint32_t _defaultTex;
-extern int _inPos;
-extern int _inColor;
-extern int _inUV;
-extern int _uProjectionView;
-extern int _uModel;
-extern int _uTex;
-extern int _uAlphaTestEnabled;
-extern int _uAlphaRef;
-extern int _uDrawMode;
-extern int _uColors;
-extern int _pProg;
-extern int _inNormal;
-extern int g_CurrentDrawMode;
-extern float g_CurrentColors[96];
-#endif
 
 static std::deque<SetScissorCmd> s_ScissorList;
 
@@ -84,10 +67,6 @@ bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state)
 bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
-//    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, "DrawQuad");
-//#endif
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     // clang-format off
     const float uv[] = {
          0.0f, cmd.v,
@@ -109,52 +88,6 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     };
     // clang-format on
     const auto &vb = cmd.mirrored ? v_mirrored : v;
-#if defined(USE_GL2)
-    if (cmd.rgba != g_ColorInvalid)
-    {
-        RenderState_SetColor(state, cmd.rgba);
-    }
-    glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
-    glBegin(GL_TRIANGLE_STRIP);
-    for (int i = 0; i < sizeof(v); i += 2)
-    {
-        glTexCoord2f(uv[i], uv[i + 1]);
-        glVertex2i(vb[i], vb[i + 1]);
-    }
-    /*
-    if (!cmd.mirrored)
-    {
-        glTexCoord2f(0.0f, cmd.v);
-        glVertex2i(0, GLint(cmd.height));
-        glTexCoord2f(cmd.u, cmd.v);
-        glVertex2i(cmd.width, GLint(cmd.height));
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2i(0, 0);
-        glTexCoord2f(cmd.u, 0.0f);
-        glVertex2i(cmd.width, 0);
-    }
-    else
-    {
-        glTexCoord2f(0.0f, cmd.v);
-        glVertex2i(cmd.width, GLint(cmd.height));
-        glTexCoord2f(cmd.u, cmd.v);
-        glVertex2i(0, GLint(cmd.height));
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2i(cmd.width, 0);
-        glTexCoord2f(cmd.u, 0.0f);
-        glVertex2i(0, 0);
-    }
-    */
-    glEnd();
-    glTranslatef(-(GLfloat)cmd.x, -(GLfloat)cmd.y, 0.0f);
-#else
-    // GL3/GLES - quad rendering
-    glm::mat4 model(1.0f);
-    // Apply stored translation first, then command's position
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
-    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
-
-    // Build vertex data using UV coords from command and vertex positions
     const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
         (((uint32_t)(cmd.color[0] * 255) << 0) |
@@ -169,60 +102,23 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
         { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY },
     };
 
-#if !defined(USE_GLES2)
-    uint32_t vao;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif
-    uint32_t vbo;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-    // Set identity normal (0, 0, 1) for 2D quads
-    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-    GL_CHECK(glUniform1i(_uTex, 0));
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawQuad");
+    RenderState_ResetAllStates(state);
 
-    GL_CHECK(glDisableVertexAttribArray(_inPos));
-    GL_CHECK(glDisableVertexAttribArray(_inUV));
-    GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormal));
-
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-    // Restore color state to white after drawing colored quad
-    if (colored)
-    {
-        RenderState_SetColor(state, g_ColorWhite);
-    }
-#endif
-
-//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
-//    glPopDebugGroup();
-//#endif
+    // FIXME: FORCE RESET STATES TO AVOID GRAPHICAL ISSUES
+    // Need to figure out which object is "leaking" state here
+    //RenderState_SetBlendEnabled(state, false);
 
     return true;
 }
@@ -230,8 +126,6 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     // clang-format off
     const float uv[] = {
          0.0f, cmd.v,
@@ -253,53 +147,6 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     };
     // clang-format on
     const auto &vb = cmd.mirrored ? v_mirrored : v;
-#if defined(USE_GL2)
-    if (cmd.rgba != g_ColorInvalid)
-    {
-        RenderState_SetColor(state, cmd.rgba);
-    }
-    glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
-    glRotatef(cmd.angle, 0.0f, 0.0f, 1.0f);
-    glBegin(GL_TRIANGLE_STRIP);
-    for (int i = 0; i < sizeof(v); i += 2)
-    {
-        glTexCoord2f(uv[i], uv[i + 1]);
-        glVertex2i(vb[i], vb[i + 1]);
-    }
-    /*if (!cmd.mirrored)
-    {
-        glTexCoord2f(0.0f, cmd.v);
-        glVertex2i(0, cmd.height);
-        glTexCoord2f(cmd.u, cmd.v);
-        glVertex2i(cmd.width, cmd.height);
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2i(0, 0);
-        glTexCoord2f(cmd.u, 0.0f);
-        glVertex2i(cmd.width, 0);
-    }
-    else
-    {
-        glTexCoord2f(0.0f, cmd.v);
-        glVertex2i(cmd.width, cmd.height);
-        glTexCoord2f(cmd.u, cmd.v);
-        glVertex2i(0, cmd.height);
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2i(cmd.width, 0);
-        glTexCoord2f(cmd.u, 0.0f);
-        glVertex2i(0, 0);
-    }*/
-    glEnd();
-    glTranslatef(-(GLfloat)cmd.x, -(GLfloat)cmd.y, 0.0f);
-    glRotatef(cmd.angle, 0.0f, 0.0f, -1.0f);
-#else
-    // GL3/GLES - rotated quad rendering
-    glm::mat4 model(1.0f);
-    // Apply stored translation first, then command's position and rotation
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
-    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
-    model = glm::rotate(model, glm::radians(cmd.angle), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    // Build vertex data using UV coords from command and vertex positions
     const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
         (((uint32_t)(cmd.color[0] * 255) << 0) |
@@ -314,69 +161,27 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
         { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY },
     };
 
-#if !defined(USE_GLES2)
-    uint32_t vao;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif
-    uint32_t vbo;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+    model = glm::rotate(model, glm::radians(cmd.angle), glm::vec3(0.0f, 0.0f, 1.0f));
 
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-    // Set identity normal (0, 0, 1) for 2D rotated quads
-    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-    GL_CHECK(glUniform1i(_uTex, 0));
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    GL_CHECK(glDisableVertexAttribArray(_inPos));
-    GL_CHECK(glDisableVertexAttribArray(_inUV));
-    GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormal));
-
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-
-    // Restore color state to white after drawing colored quad
-    if (colored)
-    {
-        RenderState_SetColor(state, g_ColorWhite);
-    }
-#endif
-
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawRotatedQuad");
+    RenderState_ResetAllStates(state);
     return true;
 }
 
 bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderState *state)
 {
-    static const auto s_sittingCharacterOffset = 8.f;
-
     ScopedPerfMarker(__FUNCTION__);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-
+    static const auto s_sittingCharacterOffset = 8.f;
     const auto x = (GLfloat)cmd.x;
     const auto y = (GLfloat)cmd.y;
     const float width = (float)cmd.width;
@@ -386,112 +191,6 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     const float h09 = height * cmd.h9mod;
     const float widthOffset = (float)(width + s_sittingCharacterOffset);
 
-#if defined(USE_GL2)
-    glTranslatef(x, y, 0.0f);
-    glBegin(GL_TRIANGLE_STRIP);
-    if (cmd.mirror)
-    {
-        // TODO this won't end well... add a isAlmostZeroF(float val)
-        if (cmd.h3mod != 0.0f)
-        {
-            glTexCoord2f(0.0f, 0.0f);
-            glVertex2f(width, 0);
-            glTexCoord2f(1.0f, 0.0f);
-            glVertex2f(0, 0);
-            glTexCoord2f(0.0f, cmd.h3mod);
-            glVertex2f(width, h03);
-            glTexCoord2f(1.0f, cmd.h3mod);
-            glVertex2f(0, h03);
-        }
-
-        if (cmd.h6mod != 0.0f)
-        {
-            if (cmd.h3mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(width, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(0, 0);
-            }
-
-            glTexCoord2f(0.0f, cmd.h6mod);
-            glVertex2f(widthOffset, h06);
-            glTexCoord2f(1.0f, cmd.h6mod);
-            glVertex2f(s_sittingCharacterOffset, h06);
-        }
-
-        if (cmd.h9mod != 0.0f)
-        {
-            if (cmd.h6mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(widthOffset, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(s_sittingCharacterOffset, 0);
-            }
-
-            glTexCoord2f(0.0f, 1.0f);
-            glVertex2f(widthOffset, h09);
-            glTexCoord2f(1.0f, 1.0f);
-            glVertex2f(s_sittingCharacterOffset, h09);
-        }
-    }
-    else
-    {
-        if (cmd.h3mod != 0.0f)
-        {
-            glTexCoord2f(0.0f, 0.0f);
-            glVertex2f(s_sittingCharacterOffset, 0);
-            glTexCoord2f(1.0f, 0.0f);
-            glVertex2f(widthOffset, 0);
-            glTexCoord2f(0.0f, cmd.h3mod);
-            glVertex2f(s_sittingCharacterOffset, h03);
-            glTexCoord2f(1.0f, cmd.h3mod);
-            glVertex2f(widthOffset, h03);
-        }
-
-        if (cmd.h6mod != 0.0f)
-        {
-            if (cmd.h3mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(s_sittingCharacterOffset, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(width + s_sittingCharacterOffset, 0);
-            }
-
-            glTexCoord2f(0.0f, cmd.h6mod);
-            glVertex2f(0, h06);
-            glTexCoord2f(1.0f, cmd.h6mod);
-            glVertex2f(width, h06);
-        }
-
-        if (cmd.h9mod != 0.0f)
-        {
-            if (cmd.h6mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(0, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(width, 0);
-            }
-
-            glTexCoord2f(0.0f, 1.0f);
-            glVertex2f(0, h09);
-            glTexCoord2f(1.0f, 1.0f);
-            glVertex2f(width, h09);
-        }
-    }
-    glEnd();
-    glTranslatef(-x, -y, 0.0f);
-#else
-    // GL3/GLES - character sitting rendering
-    glm::mat4 model(1.0f);
-    // Apply stored translation first, then the command's position
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
-    model = glm::translate(model, glm::vec3(x, y, 0.0f));
-
-    // Build vertex list for sitting character (triangle strip)
     GenericVertex vertices[10]; // Max 10 vertices for 3 segments
     int vertexCount = 0;
     // Use actual color from state instead of hardcoded white
@@ -568,53 +267,20 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 
     if (vertexCount > 0)
     {
-#if !defined(USE_GLES2)
-        uint32_t vao;
-        GL_CHECK(glGenVertexArrays(1, &vao));
-        GL_CHECK(glBindVertexArray(vao));
-#endif
-        uint32_t vbo;
-        GL_CHECK(glGenBuffers(1, &vbo));
-        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-        GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GenericVertex), vertices, GL_STATIC_DRAW));
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+        model = glm::translate(model, glm::vec3(x, y, 0.0f));
 
-        GL_CHECK(glUseProgram(_pProg));
-        GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-        GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-        GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
-        GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-        GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-
-        GL_CHECK(glEnableVertexAttribArray(_inPos));
-        GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-
-        GL_CHECK(glEnableVertexAttribArray(_inUV));
-        GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-
-        GL_CHECK(glEnableVertexAttribArray(_inColor));
-        GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-        GL_CHECK(glEnableVertexAttribArray(_inNormal));
-        GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-        // Set identity normal (0, 0, 1) for 2D character sitting
-        GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-        GL_CHECK(glUniform1i(_uTex, 0));
+        RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+        RenderState_SetupCachedState(state, model);
+        RENDER_STATE_DUMP_BEFORE(state);
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+        GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, vertexCount * sizeof(GenericVertex), vertices));
         GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount));
-
-        GL_CHECK(glDisableVertexAttribArray(_inPos));
-        GL_CHECK(glDisableVertexAttribArray(_inUV));
-        GL_CHECK(glDisableVertexAttribArray(_inColor));
-        GL_CHECK(glDisableVertexAttribArray(_inNormal));
-
-        GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-        GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-        GL_CHECK(glUseProgram(0));
+        RENDER_STATE_DUMP_AFTER(state);
+        RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawCharacterSitting");
+        RenderState_ResetAllStates(state);
     }
-#endif
 
     return true;
 }
@@ -622,36 +288,11 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     const float translateX = cmd.x - 22.0f;
     const float translateY = cmd.y - 22.0f;
     const auto &rc = cmd.rect;
 
-#if defined(USE_GL2)
-    glTranslatef(translateX, translateY, 0.0f);
-
-    glBegin(GL_TRIANGLE_STRIP);
-    glNormal3f(cmd.normals[0][0], cmd.normals[0][1], cmd.normals[0][2]);
-    glTexCoord2i(0, 0);
-    glVertex2i(22, -rc.x); //^
-
-    glNormal3f(cmd.normals[3][0], cmd.normals[3][1], cmd.normals[3][2]);
-    glTexCoord2i(0, 1);
-    glVertex2i(0, 22 - rc.y); //<
-
-    glNormal3f(cmd.normals[1][0], cmd.normals[1][1], cmd.normals[1][2]);
-    glTexCoord2i(1, 0);
-    glVertex2i(44, 22 - rc.h); //>
-
-    glNormal3f(cmd.normals[2][0], cmd.normals[2][1], cmd.normals[2][2]);
-    glTexCoord2i(1, 1);
-    glVertex2i(22, 44 - rc.w); //v
-    glEnd();
-
-    glTranslatef(-translateX, -translateY, 0.0f);
-#else
-
+    // Build vertex data for land tile (triangle strip)
     const uint32_t col =
         (((uint32_t)(state->color[0] * 255) << 0) |
         ((uint32_t)(state->color[1] * 255) << 8) |
@@ -705,123 +346,34 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         }
     };
 
-    // Create and bind vertex array and buffer
-#if !defined(USE_GLES2)
-    uint32_t vao;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif
-    uint32_t vbo;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), vertices, GL_STATIC_DRAW));
-
-    // Use the unified shader with land tile mode
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-
     // Set up model matrix with translation
     glm::mat4 model(1.0f);
-    // Apply stored translation first, then the tile's position
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0],
+                                           state->modelTranslation[1],
+                                           state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(translateX, translateY, 0.0f));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
-    // Set draw mode and colors uniforms
-    GL_CHECK(glUniform1i(_uDrawMode, cmd.drawMode));
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-
-    // Set up vertex attributes
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)0));
-
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, uv)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, col)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-    // Draw the quad
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), vertices));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    // Cleanup
-    GL_CHECK(glDisableVertexAttribArray(_inPos));
-    GL_CHECK(glDisableVertexAttribArray(_inUV));
-    GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormal));
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-    GL_CHECK(glUseProgram(0));
-#endif
-
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawLandTile");
+    RenderState_ResetAllStates(state);
     return true;
 }
 
 bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-
-#if defined(USE_GL2)
-    // Shader uniform is only used with custom shader pipelines in GL2
-    RenderState_SetShaderUniform(
-        state, cmd.uniformId, &cmd.uniformValue, ShaderUniformType::ShaderUniformType_Int1);
-#endif
-    RenderState_SetBlend(
-        state,
-        true,
-        BlendFactor::BlendFactor_DstColor,
-        BlendFactor::BlendFactor_Zero,
-        BlendEquation::BlendEquation_Add);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-
     const auto width = (float)cmd.width;
     const auto height = cmd.height / 2.0f;
     const auto x = GLfloat(cmd.x);
     const auto translateY = GLfloat(cmd.y + height * 0.75);
     const float ratio = height / width;
-
-#if defined(USE_GL2)
-    glTranslatef(x, translateY, 0.0f);
-    glBegin(GL_TRIANGLE_STRIP);
-    if (cmd.mirror)
-    {
-        glTexCoord2f(0, 1);
-        glVertex2f(width, height);
-        glTexCoord2f(1, 1);
-        glVertex2f(0, height);
-        glTexCoord2f(0, 0);
-        glVertex2f(width * (ratio + 1.0f), 0);
-        glTexCoord2f(1, 0);
-        glVertex2f(width * ratio, 0);
-    }
-    else
-    {
-        glTexCoord2f(0, 1);
-        glVertex2f(0, height);
-        glTexCoord2f(1, 1);
-        glVertex2f(width, height);
-        glTexCoord2f(0, 0);
-        glVertex2f(width * ratio, 0);
-        glTexCoord2f(1, 0);
-        glVertex2f(width * (ratio + 1.0f), 0);
-    }
-    glEnd();
-    glTranslatef(-x, -translateY, 0.0f);
-#else
-    // GL3/GLES - shadow rendering
-    glm::mat4 model(1.0f);
-    // Apply stored translation first, then shadow's position
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
-    model = glm::translate(model, glm::vec3(x, translateY, 0.0f));
-
-    // Use actual color from state instead of hardcoded white
+    // Use actual color from state
     const uint32_t col =
         (((uint32_t)(state->color[0] * 255) << 0) |
          ((uint32_t)(state->color[1] * 255) << 8) |
@@ -843,55 +395,24 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
         data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
         data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
     }
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+    model = glm::translate(model, glm::vec3(x, translateY, 0.0f));
 
-#if !defined(USE_GLES2)
-    uint32_t vao;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif
-    uint32_t vbo;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
-
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-    // Set identity normal (0, 0, 1) for 2D shadows
-    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-    GL_CHECK(glUniform1i(_uTex, 0));
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    RenderState_SetBlend(
+        state,
+        true,
+        BlendFactor::BlendFactor_DstColor,
+        BlendFactor::BlendFactor_Zero,
+        BlendEquation::BlendEquation_Add);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
-    GL_CHECK(glDisableVertexAttribArray(_inPos));
-    GL_CHECK(glDisableVertexAttribArray(_inUV));
-    GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormal));
-
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-    GL_CHECK(glUseProgram(0));
-#endif
-
-    if (cmd.restoreBlendFunc)
+    if (cmd.keepBlend)
     {
         RenderState_SetBlend(
             state,
@@ -902,51 +423,19 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     }
     else
     {
-        RenderState_SetBlend(
-            state,
-            false,
-            BlendFactor::BlendFactor_Invalid,
-            BlendFactor::BlendFactor_Invalid,
-            BlendEquation::BlendEquation_Invalid);
+        RenderState_SetBlendEnabled(state, false);
     }
-
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawShadow");
+    RenderState_ResetAllStates(state);
     return true;
 }
 
 bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
-//    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, "DrawCircle");
-//#endif
-
     const float pi = (float)XUO_M_PI * 2.0f;
     const auto radius = cmd.radius;
-
-#if defined(USE_GL2)
-    glDisable(GL_TEXTURE_2D);
-    glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2i(0, 0);
-    if (cmd.gradientMode != 0)
-    {
-        RenderState_SetColor(state, { 0.f, 0.f, 0.f, 0.f });
-    }
-    for (int i = 0; i <= 360; i++)
-    {
-        float a = (i / 180.0f) * pi;
-        glVertex2f(cos(a) * radius, sin(a) * radius);
-    }
-    glEnd();
-    glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f);
-    glEnable(GL_TEXTURE_2D);
-#else
-    // GL3/GLES - circle rendering
-    glm::mat4 model(1.0f);
-    // Apply stored translation first, then the circle's position
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
-    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
-
     // Build circle vertices (triangle fan: center + perimeter)
     const int segments = 361; // 0 to 360 degrees
     GenericVertex vertices[segments + 1];
@@ -969,104 +458,26 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
         vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, { 0.5f, 0.5f }, edgeColor, NORMAL_IDENTITY };
     }
 
-    // Bind default white texture for untextured circle
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
-
-#if !defined(USE_GLES2)
-    uint32_t vao;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif
-    uint32_t vbo;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, (segments + 1) * sizeof(GenericVertex), vertices, GL_STATIC_DRAW));
-
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-    // Set identity normal (0, 0, 1) for 2D circles
-    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-    GL_CHECK(glUniform1i(_uTex, 0));
+    RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, (segments + 1) * sizeof(GenericVertex), vertices));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 1));
-
-    GL_CHECK(glDisableVertexAttribArray(_inPos));
-    GL_CHECK(glDisableVertexAttribArray(_inUV));
-    GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormal));
-
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-    GL_CHECK(glUseProgram(0));
-    glEnable(GL_TEXTURE_2D);
-#endif
-
-//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
-//    glPopDebugGroup();
-//#endif
-
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawCircle");
+    RenderState_ResetAllStates(state);
     return true;
 }
 
 bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-
-    const auto colored =
-        memcmp(g_ColorInvalid.rgba, cmd.color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
-    const auto blend = colored && cmd.color[3] < 1.f;
-    if (colored)
-    {
-        RenderState_SetColor(state, cmd.color);
-
-        if (blend)
-        {
-            RenderState_SetBlend(
-                state,
-                true,
-                BlendFactor::BlendFactor_SrcAlpha,
-                BlendFactor::BlendFactor_OneMinusSrcAlpha,
-                BlendEquation::BlendEquation_Add);
-        }
-    }
-
-#if defined(USE_GL2)
-    glDisable(GL_TEXTURE_2D);
-    glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex2i(0, cmd.height);
-    glVertex2i(cmd.width, cmd.height);
-    glVertex2i(0, 0);
-    glVertex2i(cmd.width, 0);
-    glEnd();
-    glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f);
-    glEnable(GL_TEXTURE_2D);
-#else
-    // GL3/GLES - untextured quad rendering
-    glm::mat4 model(1.0f);
-    // Apply stored translation first, then the quad's position
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
-    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
-
+    const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
         (((uint32_t)(cmd.color[0] * 255) << 0) |
          ((uint32_t)(cmd.color[1] * 255) << 8) |
@@ -1074,73 +485,25 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { 0.0f, float(cmd.height) }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY },
-        { { float(cmd.width), float(cmd.height) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY },
+        { { 0.0f, float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.width), float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
         { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
-        { { float(cmd.width), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.width), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
     };
 
-    // Bind default white texture for untextured quad
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
-#if !defined(USE_GLES2)
-    uint32_t vao;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif
-    uint32_t vbo;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
-
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-    // Set identity normal (0, 0, 1) for 2D untextured quads
-    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-    GL_CHECK(glUniform1i(_uTex, 0));
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _whiteTex);
+    RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-
-    GL_CHECK(glDisableVertexAttribArray(_inPos));
-    GL_CHECK(glDisableVertexAttribArray(_inUV));
-    GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormal));
-
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-    GL_CHECK(glUseProgram(0));
-#endif
-
-    if (colored)
-    {
-        if (blend)
-        {
-            RenderState_SetBlend(
-                state,
-                false,
-                BlendFactor::BlendFactor_Invalid,
-                BlendFactor::BlendFactor_Invalid,
-                BlendEquation::BlendEquation_Invalid);
-        }
-        RenderState_SetColor(state, g_ColorWhite);
-    }
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawUntexturedQuad");
+    RenderState_ResetAllStates(state);
     return true;
 }
 
@@ -1148,18 +511,13 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-#if defined(USE_GL2)
-    glDisable(GL_TEXTURE_2D);
-    glBegin(GL_LINES);
-    glVertex2i(cmd.x0, cmd.y0);
-    glVertex2i(cmd.x1, cmd.y1);
-    glEnd();
-    glEnable(GL_TEXTURE_2D);
-#else
-    // GL3/GLES - line rendering
-    glm::mat4 model(1.0f);
-    // Apply stored translation
-    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+    RenderState_SetColor(state, cmd.color);
+    RenderState_SetBlend(
+        state,
+        true,
+        BlendFactor::BlendFactor_SrcAlpha,
+        BlendFactor::BlendFactor_OneMinusSrcAlpha,
+        BlendEquation::BlendEquation_Add);
 
     const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
@@ -1172,72 +530,20 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
         { { float(cmd.x0), float(cmd.y0) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
         { { float(cmd.x1), float(cmd.y1) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY },
     };
-    RenderState_SetColor(state, cmd.color);
-    RenderState_SetBlend(
-        state,
-        true,
-        BlendFactor::BlendFactor_SrcAlpha,
-        BlendFactor::BlendFactor_OneMinusSrcAlpha,
-        BlendEquation::BlendEquation_Add);
-    // Bind default white texture for line
+
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
-
-#if !defined(USE_GLES2)
-    uint32_t vao;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif
-    uint32_t vbo;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
-
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
-    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
-
-    // Set identity normal (0, 0, 1) for 2D lines
-    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-    GL_CHECK(glUniform1i(_uTex, 0));
+    RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
-
-    GL_CHECK(glDisableVertexAttribArray(_inPos));
-    GL_CHECK(glDisableVertexAttribArray(_inUV));
-    GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormal));
-    RenderState_SetBlend(
-        state,
-        false,
-        BlendFactor::BlendFactor_Invalid,
-        BlendFactor::BlendFactor_Invalid,
-        BlendEquation::BlendEquation_Invalid);
-
-    RenderState_SetColor(state, g_ColorWhite);
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif
-    GL_CHECK(glUseProgram(0));
-#endif
-
-
-
+    RenderState_SetBlendEnabled(state, false);
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawLine");
+    RenderState_ResetAllStates(state);
     return true;
 }
 
@@ -1258,12 +564,7 @@ bool RenderDraw_BlendState(const BlendStateCmd &cmd, RenderState *state)
 
 bool RenderDraw_DisableBlendState(const DisableBlendStateCmd &, RenderState *state)
 {
-    return RenderState_SetBlend(
-        state,
-        false,
-        BlendFactor::BlendFactor_Invalid,
-        BlendFactor::BlendFactor_Invalid,
-        BlendEquation::BlendEquation_Invalid);
+    return RenderState_SetBlendEnabled(state, false);
 }
 
 bool RenderDraw_FlushState(const FlushStateCmd &cmd, RenderState *state)
@@ -1338,6 +639,11 @@ bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *state)
     return RenderState_SetColorMask(state, cmd.mask);
 }
 
+bool RenderDraw_SetDrawMode(const SetDrawModeCmd &cmd, RenderState *state)
+{
+    return RenderState_SetDrawMode(state, cmd.drawMode);
+}
+
 bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state)
 {
     return RenderState_SetColor(state, cmd.color);
@@ -1346,6 +652,11 @@ bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state)
 bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *state)
 {
     return RenderState_SetClearColor(state, cmd.color);
+}
+
+bool RenderDraw_SetColorPalette(const SetColorPaletteCmd &cmd, RenderState *state)
+{
+    return RenderState_SetColorPalette(state, cmd.palette);
 }
 
 bool RenderDraw_ClearRT(const ClearRTCmd &cmd, RenderState *)
@@ -1386,11 +697,7 @@ bool RenderDraw_DisableShaderPipeline(const DisableShaderPipelineCmd &cmd, Rende
 
 bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderState *state)
 {
-#if defined(USE_GL)
-    const auto format = GL_UNSIGNED_INT_8_8_8_8_REV;
-#else
     const auto format = GL_UNSIGNED_BYTE;
-#endif
     const auto bpp = 4;
     auto neededSize = (cmd.width * cmd.height) * bpp;
     assert(cmd.dataSize >= neededSize);
@@ -1406,6 +713,28 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
 
     glReadPixels(cmd.x, bottom, cmd.width, cmd.height, GL_RGBA, format, cmd.data);
 
+    return true;
+}
+
+bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state)
+{
+    (void)state;
+#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
+#else
+    (void)cmd;
+#endif
+    return true;
+}
+
+bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
+{
+    (void)state;
+#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
+    glPopDebugGroup();
+#else
+    (void)cmd;
+#endif
     return true;
 }
 
@@ -1440,6 +769,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(SetTexture, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetFrameBuffer, cmd, &cmdList->state)
             MATCH_CASE_DRAW(AlphaTest, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetDrawMode, cmd, &cmdList->state)
             MATCH_CASE_DRAW(BlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW(StencilState, cmd, &cmdList->state)
@@ -1451,6 +781,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(SetColorMask, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetClearColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetColorPalette, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetViewParams, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetModelViewTranslation, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetScissor, cmd, &cmdList->state)
@@ -1473,3 +804,4 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
 
     return true;
 }
+#endif // #if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))

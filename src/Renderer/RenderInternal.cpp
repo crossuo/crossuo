@@ -2,8 +2,10 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #include "../Renderer/RenderAPI.h"
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <common/logging/logging.h>
 #include <assert.h>
@@ -12,37 +14,47 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
+#include "ShaderData.h"
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
-#if defined(USE_GLES) || defined(USE_GL3)
 // clang-format off
+// SDL_PIXELFORMAT_ABGR8888
 static const uint32_t _missingTexture[] = {
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
+};
+static const uint32_t _whiteTexture[] = {
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
 };
 // clang-format on
-#include "../ShaderData.h"
 extern uint32_t _vao;
 extern uint32_t _vbo;
 extern uint32_t _vio;
 extern uint32_t _defaultTex;
+extern uint32_t _whiteTex;
 extern int _inPos;
 extern int _inColor;
 extern int _inUV;
 extern int _inNormal;
 extern int _uProjectionView;
 extern int _uModel;
-extern int _uTex;
-extern int _pProg;
 uint32_t _vao = 0;
 uint32_t _vibuffers[2] = { 0, 0 };
 uint32_t _defaultTex = 0;
+uint32_t _whiteTex = 0;
 int _inPos = 0;
 int _inColor = 0;
 int _inUV = 0;
@@ -50,25 +62,23 @@ int _inNormal = 0;
 int _uProjectionView = 0;
 int _uModel = 0;
 int _uTex = 0;
+int _pProg = 0;
+
+
 int _uAlphaTestEnabled = 0;
 int _uAlphaRef = 0;
 int _uDrawMode = 0;
 int _uColors = 0;
-int _pProg = 0;
 
-// Global state for current draw mode and color palette (GL3/GLES only)
-int g_CurrentDrawMode = 0; // SDM_NO_COLOR
-float g_CurrentColors[96] = { 0.0f };
-#endif
+bool g_rendererDebugForceStateReset = false;
 
-float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
-float4 g_ColorBlack = { 0.f, 0.f, 0.f, 1.f };
-float4 g_ColorBlue = { 0.f, 0.f, 1.f, 1.f };
-static int g_iColorInvalid = 0xffffffff;
-float4 g_ColorInvalid = { *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid };
+// Persistent vertex buffers for optimized rendering (avoid per-draw allocation)
+uint32_t g_drawVAO = 0;
+uint32_t g_drawVBO = 0;
+size_t g_vboSize = 0;
+const size_t MAX_VERTICES = 65536; // Support up to 64k vertices
+
+
 
 struct
 {
@@ -81,49 +91,18 @@ struct
     bool shutdown = false;
 } g_render;
 
-float float4::operator[](size_t i) const
-{
-    assert(i < countof(rgba));
-    return rgba[i];
-}
 
-bool float4::operator==(const float4 &other) const
-{
-    return memcmp(rgba, other.rgba, sizeof(rgba)) == 0;
-}
-
-bool float4::operator!=(const float4 &other) const
-{
-    return !(*this == other);
-}
-
-float float3::operator[](size_t i) const
-{
-    assert(i < countof(rgb));
-    return rgb[i];
-}
-
-bool float3::operator==(const float3 &other) const
-{
-    return memcmp(rgb, other.rgb, sizeof(rgb)) == 0;
-}
-
-bool float3::operator!=(const float3 &other) const
-{
-    return !(*this == other);
-}
 
 bool Render_Init(SDL_Window *window)
 {
-    win_gfx_context_attrbutes(true);
-    auto context = SDL_GL_CreateContext(window);
-    SDL_GL_MakeCurrent(window, context);
-
     // mark the renderer as down on ANY process exit path (atexit handlers run
     // in reverse order, so this executes before the global/static destructors),
     // guarding the Render_Destroy* calls against issuing GL commands without a
     // live context
     atexit([] { g_render.shutdown = true; });
+    win_gfx_context_attrbutes(true);
+    auto context = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, context);
 
 #if defined(USE_GLEW)
     int glewInitResult = glewInit();
@@ -155,6 +134,12 @@ bool Render_Init(SDL_Window *window)
     Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
     Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
+#if defined(USE_GL3) && defined(OGL_DEBUGCONTEXT_ENABLED)
+    GLint maxStackDepth;
+    glGetIntegerv(GL_MAX_DEBUG_GROUP_STACK_DEPTH, &maxStackDepth);
+    Info(Renderer, "    Markers Depth: %d", maxStackDepth);
+#endif // #if defined(USE_GL3) && defined(OGL_DEBUGCONTEXT_ENABLED)
+
 #if defined(USE_GL)
 #ifdef OGL_DEBUGCONTEXT_ENABLED
     // debug messages callback needs ogl >= 4.30
@@ -163,19 +148,19 @@ bool Render_Init(SDL_Window *window)
     if (GLEW_KHR_debug)
 #else
     if (GL_KHR_debug)
-#endif
+#endif // defined(USE_GLEW)
     {
         SetupOGLDebugMessage();
     }
-#endif
+#endif // OGL_DEBUGCONTEXT_ENABLED
 
     const auto canUseFrameBuffer =
         (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
          glFramebufferTexture2D && glGenFramebuffers);
-#else
+#else // defined(USE_GL)
     SetupOGLDebugMessage();
     const auto canUseFrameBuffer = true;
-#endif
+#endif // defined(USE_GL)
 
     if (!canUseFrameBuffer)
     {
@@ -188,25 +173,7 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glClearStencil(0));
     // glStencilMask(1);
     // glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
-#if defined(USE_GL2)
-    GL_CHECK(glEnable(GL_TEXTURE_2D));
-    GL_CHECK(glShadeModel(GL_SMOOTH)); // Enables Smooth Color Shading
-    GL_CHECK(glClearDepth(1.0));       // Depth Buffer Setup
-    GL_CHECK(glDisable(GL_DITHER));
-    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
-    GL_CHECK(glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST));
-    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL));
-    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
-    GL_CHECK(glEnable(GL_LIGHT0));
-    const GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
-    GL_CHECK(glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]));
-    const GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    GL_CHECK(glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]));
-    const GLfloat lav = 0.8f;
-    const GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
-    GL_CHECK(glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]));
-    GL_CHECK(glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE));
-#else
+
     GL_CHECK(glClearDepthf(1.0)); // Depth Buffer Setup
     // TODO: gles - init shaders
     // https://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences
@@ -271,10 +238,10 @@ bool Render_Init(SDL_Window *window)
 
     // clang-format off
     const GenericVertex data[] = {
-        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
-        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
-        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
-        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
+        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
+        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
+        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
+        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
     };
     const unsigned int idx[] = { 0, 1, 2, 3 };
 #if !defined(USE_GLES2)
@@ -302,10 +269,15 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
+    GL_CHECK(glGenTextures(1, &_whiteTex));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, _whiteTex));
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, _whiteTexture));
+
     // Set texture unit to 0 once during initialization (never needs to change)
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
     GL_CHECK(glUniform1i(_uDrawMode, 0)); // SDM_NO_COLOR - initial draw mode
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors)); // Initial color palette
+    static float currentColors[96] = { 0.0f };
+    GL_CHECK(glUniform1fv(_uColors, 96, currentColors)); // Initial color palette
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, 0)); // Alpha test disabled initially
     GL_CHECK(glUniform1f(_uAlphaRef, 0.0f)); // Initial alpha reference value
 
@@ -314,7 +286,9 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
     // clang-format on
-#endif
+
+    // Initialize persistent vertex buffers for optimized rendering
+    Render_InitVertexBuffers();
     g_render.context = context;
     g_render.window = window;
     return true;
@@ -323,6 +297,7 @@ bool Render_Init(SDL_Window *window)
 void Render_Shutdown()
 {
     g_render.shutdown = true;
+    Render_CleanupVertexBuffers();
     if (g_render.context != nullptr)
     {
         SDL_GL_DeleteContext(g_render.context);
@@ -340,18 +315,6 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     int bottom = cmd.window_height - needed_height;
 
     GL_CHECK(glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height));
-#if defined(USE_GL2)
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(
-        cmd.scene_x,
-        cmd.scene_x + cmd.scene_width,
-        cmd.scene_y + cmd.scene_height,
-        cmd.scene_y,
-        cmd.camera_nearZ,
-        cmd.camera_farZ);
-    glMatrixMode(GL_MODELVIEW);
-#else
     // TODO: gles - ortho viewparms hack
     const auto projection = glm::ortho(
         float(cmd.scene_x),
@@ -363,7 +326,6 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     // Set projection for basic shader
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
-#endif
     return true;
 }
 
@@ -377,6 +339,61 @@ bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb)
 void Render_SwapBuffers()
 {
     SDL_GL_SwapWindow(g_render.window);
+}
+
+bool Render_InitVertexBuffers()
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    // VBO size based on GenericVertex format (now includes normal)
+    g_vboSize = MAX_VERTICES * sizeof(GenericVertex);
+
+#if !defined(USE_GLES2)
+    GL_CHECK(glGenVertexArrays(1, &g_drawVAO));
+    GL_CHECK(glBindVertexArray(g_drawVAO));
+#endif
+
+    GL_CHECK(glGenBuffers(1, &g_drawVBO));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, g_vboSize, nullptr, GL_DYNAMIC_DRAW));
+
+    // Set up vertex attributes for unified GenericVertex format
+    GL_CHECK(glEnableVertexAttribArray(_inPos));
+    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
+    GL_CHECK(glEnableVertexAttribArray(_inUV));
+    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
+    GL_CHECK(glEnableVertexAttribArray(_inColor));
+    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, normal)));
+
+#if !defined(USE_GLES2)
+    GL_CHECK(glBindVertexArray(0));
+#endif
+
+    Info(Renderer, "Persistent vertex buffers initialized: %zu bytes (%zu vertices)", g_vboSize, MAX_VERTICES);
+    return true;
+}
+
+void Render_CleanupVertexBuffers()
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    if (g_drawVBO != 0)
+    {
+        GL_CHECK(glDeleteBuffers(1, &g_drawVBO));
+        g_drawVBO = 0;
+    }
+
+#if !defined(USE_GLES2)
+    if (g_drawVAO != 0)
+    {
+        GL_CHECK(glDeleteVertexArrays(1, &g_drawVAO));
+        g_drawVAO = 0;
+    }
+#endif // #if !defined(USE_GLES2)
+
+    g_vboSize = 0;
 }
 
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)
@@ -398,6 +415,10 @@ uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)
 bool Render_CreateShaderPipeline(
     const char *vertexShaderSource, const char *fragmentShaderSource, ShaderPipeline *pipeline)
 {
+    if (g_render.shutdown || g_render.context == nullptr)
+    {
+        return false; // GL context is gone, GL resource release is irrelevant
+    }
     assert(vertexShaderSource);
     assert(fragmentShaderSource);
     assert(pipeline);
@@ -507,11 +528,6 @@ bool Render_CreateShaderPipeline(
 bool Render_DestroyShaderPipeline(ShaderPipeline *pipeline)
 {
     assert(pipeline);
-    if (g_render.shutdown || g_render.context == nullptr)
-    {
-        return false; // GL context is gone, GL resource release is irrelevant
-    }
-
     if (pipeline->program != RENDER_SHADERPROGRAM_INVALID)
     {
         for (auto handle : pipeline->shaders)
@@ -575,27 +591,26 @@ texture_handle_t Render_CreateTexture2D(
         GL_UNSIGNED_SHORT_1_5_5_5_REV, // TextureFormat_Unsigned_A1_BGR5
     };
     const auto imgFormat = GL_BGRA;
-#else
+#else // #if defined(USE_GL)
     static GLenum s_pixelFormatToOGLFormat[] = {
         GL_UNSIGNED_BYTE,          // TextureFormat_Unsigned_RGBA8
         GL_UNSIGNED_SHORT_5_5_5_1, // TextureFormat_Unsigned_A1_BGR5
     };
     const auto imgFormat = GL_RGBA; //GL_BGRA_EXT;
-#endif
+#endif // #if defined(USE_GL)
 
     texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;
 
     GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
+    //GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
     GL_CHECK(glGenTextures(1, &tex));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, tex));
-#if defined(USE_GL2)
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-#else
-    // TODO: gles - not needed
-#endif
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    //GL_CHECK(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE));
+
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    //GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    //GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CHECK(glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -612,6 +627,10 @@ texture_handle_t Render_CreateTexture2D(
 
 frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
 {
+    if (g_render.shutdown || g_render.context == nullptr)
+    {
+        return RENDER_FRAMEBUFFER_INVALID; // GL context is gone
+    }
     texture_handle_t texture;
     framebuffer_handle_t handle;
 
@@ -654,7 +673,6 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb)
     {
         return false; // GL context is gone, GL resource release is irrelevant
     }
-
     auto validTex = fb.texture != RENDER_TEXTUREHANDLE_INVALID;
     auto validFb = fb.handle != RENDER_FRAMEBUFFER_INVALID;
     assert(validFb);
@@ -675,11 +693,6 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb)
 bool Render_DestroyTexture(texture_handle_t texture)
 {
     assert(texture != RENDER_TEXTUREHANDLE_INVALID);
-    if (g_render.shutdown || g_render.context == nullptr)
-    {
-        return false; // GL context is gone, GL resource release is irrelevant
-    }
-
     if (texture != RENDER_TEXTUREHANDLE_INVALID)
     {
         GL_CHECK(glDeleteTextures(1, &texture));
@@ -740,14 +753,4 @@ void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state)
     cmdList->state = state;
 }
 
-#if defined(USE_GL3) || defined(USE_GLES)
-void Render_SetDrawMode(int drawMode)
-{
-    g_CurrentDrawMode = drawMode;
-}
-
-int Render_GetDrawMode()
-{
-    return g_CurrentDrawMode;
-}
-#endif
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

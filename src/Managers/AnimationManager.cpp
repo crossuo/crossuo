@@ -460,6 +460,7 @@ void CAnimationManager::Draw(
     uint16_t convColor)
 {
     ScopedPerfMarker(__FUNCTION__);
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw");
     if (obj == nullptr)
     {
         return;
@@ -515,6 +516,7 @@ void CAnimationManager::Draw(
     auto sdmNoColor = true;
     if (isShadow)
     {
+        SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Shadow");
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
         glEnable(GL_BLEND);
@@ -530,6 +532,7 @@ void CAnimationManager::Draw(
         }
 #else
         auto tex = spr->Texture;
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_SHADOW});
         RenderAdd_DrawShadow(
             g_renderCmdList,
             DrawShadowCmd{ tex->Texture,
@@ -537,8 +540,6 @@ void CAnimationManager::Draw(
                            y,
                            tex->Width,
                            tex->Height,
-                           g_ShaderDrawMode,
-                           SDM_SHADOW,
                            mirror,
                            m_UseBlending });
 #endif
@@ -577,6 +578,7 @@ void CAnimationManager::Draw(
 
             if ((color & SPECTRAL_COLOR_FLAG) != 0)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw SpectralColor");
                 spectralColor = true;
 #ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
@@ -601,18 +603,13 @@ void CAnimationManager::Draw(
                 }
 
                 RenderAdd_SetBlend(g_renderCmdList, BlendStateCmd{ blendSrc, blendDst });
-#if defined(USE_GL2)
-                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-                cmd.value.asInt1 = uniformValue;
-                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-                Render_SetDrawMode(uniformValue);
-#endif
+                RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
                 sdmNoColor = false;
             }
             else if (color != 0u)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Colored");
 #ifndef NEW_RENDERER_ENABLED
                 if (partialHue)
                 {
@@ -623,13 +620,10 @@ void CAnimationManager::Draw(
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                 }
 #else
-#if defined(USE_GL2)
-                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-                cmd.value.asInt1 = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-                Render_SetDrawMode(partialHue ? SDM_PARTIAL_HUE : SDM_COLORED);
-#endif
+{
+    SCOPED_GL_DEBUG_MARKER_LABEL(partialHue?"CAnimationManager::Draw SDM_PARTIAL_HUE":"CAnimationManager::Draw SDM_COLORED");
+                RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{partialHue ? SDM_PARTIAL_HUE : SDM_COLORED});
+}
 #endif
                 g_ColorManager.SendColorsToShader(color);
                 sdmNoColor = false;
@@ -638,16 +632,11 @@ void CAnimationManager::Draw(
 
         if (sdmNoColor)
         {
+            SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw NoColor");
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-#if defined(USE_GL2)
-            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-            cmd.value.asInt1 = SDM_NO_COLOR;
-            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-            Render_SetDrawMode(SDM_NO_COLOR);
-#endif
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
         }
 
@@ -759,6 +748,8 @@ void CAnimationManager::Draw(
         }
         else
         {
+            SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Mirrored");
+
 #ifndef NEW_RENDERER_ENABLED
             g_GL.DrawMirrored(*spr->Texture, x, y, mirror);
 #else
@@ -779,6 +770,7 @@ void CAnimationManager::Draw(
         {
             if (m_UseBlending)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw UseBlending");
 #ifndef NEW_RENDERER_ENABLED
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #else
@@ -790,6 +782,7 @@ void CAnimationManager::Draw(
             }
             else
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw NoBlending");
 #ifndef NEW_RENDERER_ENABLED
                 glDisable(GL_BLEND);
 #else
@@ -924,6 +917,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
 
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawCharacter");
     m_Transform = false;
 
     int drawX = x + obj->OffsetX;
@@ -958,13 +952,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                            ToColorB(auraColor) / 255.f,
                            ToColorA(auraColor) / 255.f } });
 
-#if defined(USE_GL2)
-        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-        cmd.value.asInt1 = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-        Render_SetDrawMode(SDM_NO_COLOR);
-#endif
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
@@ -1457,6 +1445,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 
 void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawCorpse");
     if (g_CorpseManager.InList(obj->Serial, 0))
     {
         return;
@@ -1724,6 +1713,7 @@ bool CAnimationManager::DrawEquippedLayers(
     uint8_t animIndex,
     int lightOffset)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawEquippedLayers");
     bool result = false;
     const auto &list = obj->m_DrawLayeredObjects;
     uint16_t bodyGraphic = obj->Graphic;

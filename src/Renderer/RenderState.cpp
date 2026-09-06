@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
-#include "../Renderer/RenderAPI.h"
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
 #include <glm/glm.hpp>
@@ -14,18 +15,91 @@
 #include <string.h> // memcmp, memcpy
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
-#if defined(USE_GLES) || defined(USE_GL3)
-extern uint32_t _defaultTex;
-extern int _inPos;
-extern int _inColor;
-extern int _inUV;
-extern int _uProjectionView;
-extern int _uModel;
-extern int _uTex;
-extern int _uAlphaTestEnabled;
-extern int _uAlphaRef;
-extern int _pProg;
-#endif
+static ShaderPipeline g_pipeline = {};
+
+// Helper function to set up cached GL state before drawing
+// Returns true if any state changed, false if all state was already set
+bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatrix)
+{
+    bool stateChanged = false;
+
+    GL_CHECK(glBindVertexArray(g_drawVAO));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+
+    GL_CHECK(glUseProgram(_pProg));
+    // Bind shader program (always bind to ensure it's active)
+    if (state->currentProgram != _pProg)
+    {
+        GL_CHECK(glUseProgram(_pProg));
+        state->currentProgram = _pProg;
+        g_pipeline.program = _pProg;
+        stateChanged = true;
+    }
+
+    // Upload alpha test uniforms if needed
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+
+    // Upload model matrix if changed
+    if (!state->modelMatrixCached ||
+        memcmp(state->cachedModelMatrix, &modelMatrix[0][0], sizeof(state->cachedModelMatrix)) != 0)
+    {
+        GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(modelMatrix)));
+        memcpy(state->cachedModelMatrix, &modelMatrix[0][0], sizeof(state->cachedModelMatrix));
+        state->modelMatrixCached = true;
+        stateChanged = true;
+    }
+    return stateChanged;
+}
+
+// Helper function to reset all render states to defaults after a draw call
+void RenderState_ResetAllStates(RenderState *state)
+{
+    if (g_rendererDebugForceStateReset)
+    {
+        // Reset blend state
+        //RenderState_SetBlendEnabled(state, false);
+        //state->currentDrawMode = 1;
+/*
+        // Reset color to white
+        RenderState_SetColor(state, g_ColorWhite);
+
+        // Reset alpha test to default
+        RenderState_SetAlphaTest(state, true, AlphaTestFunc::AlphaTestFunc_Greater, 0.f);
+
+        // Reset stencil state
+        RenderState_SetStencilEnabled(state, false);
+
+        // Reset depth state
+        RenderState_SetDepthEnabled(state, flase);
+
+        // Reset scissor state
+        RenderState_SetScissor(state, false, 0, 0, 0, 0);
+
+        // Reset color mask
+        RenderState_SetColorMask(state, ColorMask::ColorMask_All);
+
+        // Reset shader pipeline
+        RenderState_DisableShaderPipeline(state);
+
+        // Reset GL program
+        //GL_CHECK(glUseProgram(0));
+
+        // Reset texture to default
+        RenderState_SetTexture(state, TextureType::TextureType_Texture2D, RENDER_TEXTUREHANDLE_INVALID);
+
+        // Reset framebuffer to default
+        RenderState_SetFrameBuffer(state, {});
+
+        // Reset uniform cache
+        state->uniformCache = RenderStateUniformCache{};
+
+        memset(state->currentColors, 0, sizeof(state->currentColors));
+        state->currentProgram = 0;
+        state->modelMatrixCached = false;
+        */
+    }
+}
 
 bool RenderState_FlushState(RenderState *state)
 {
@@ -63,16 +137,12 @@ bool RenderState_FlushState(RenderState *state)
         state->scissor.width,
         state->scissor.height);
 
-#if defined(USE_GL2)
-    glLoadIdentity();
-#else
-    // TODO: gles - model identity
     glm::mat4 identity(1.0f);
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
-#endif
 
-    // RenderState_SetShaderPipeline(state, &state->pipeline, true);
+    RenderState_SetDrawMode(state, 0, true);
+    //RenderState_SetShaderPipeline(state, &state->pipeline, true);
     // FIXME uniform cache is not applied during flush, not sure if it should be applied or if the behavior
     // should be clear
     // TODO add a compile-time assert to ensure any newly added command is applied or properly ignored here
@@ -103,31 +173,13 @@ bool RenderState_SetAlphaTest(
     {
         changed = true;
         state->alphaTest.enabled = enabled;
-#if defined(USE_GL2)
-        if (enabled)
-        {
-            glEnable(GL_ALPHA_TEST);
-        }
-        else
-        {
-            glDisable(GL_ALPHA_TEST);
-        }
-#elif defined(USE_GLES) || defined(USE_GL3)
         // For GL3/GLES, we'll set the uniform when the program is used
         // Just store the state for now
-#endif
     }
 
-#if !defined(_MSC_VER)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#endif
     auto differentFuncOrRef = [&]() -> bool {
         return state->alphaTest.func != func || state->alphaTest.alphaRef != ref;
     };
-#if !defined(_MSC_VER)
-#pragma GCC diagnostic pop
-#endif
 
     if (enabled &&
         (differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTestFunc_Invalid)))
@@ -135,12 +187,8 @@ bool RenderState_SetAlphaTest(
         changed = true;
         state->alphaTest.func = func;
         state->alphaTest.alphaRef = ref;
-#if defined(USE_GL2)
-        glAlphaFunc(s_alphaTestfuncToOGLFunc[func], ref);
-#elif defined(USE_GLES) || defined(USE_GL3)
         // For GL3/GLES, we'll set the uniform when the program is used
         // Just store the state for now
-#endif
     }
 
     return changed;
@@ -177,9 +225,37 @@ bool RenderState_SetBlend(
         "missing blend equation mapping");
 
     bool changed = false;
-    if (state->blend.enabled != enabled || forced)
+    if (forced || state->blend.enabled != enabled || state->blend.src != src || state->blend.dst != dst || state->blend.equation != equation)
     {
         changed = true;
+        state->blend.enabled = enabled;
+        if (enabled)
+        {
+            GL_CHECK(glEnable(GL_BLEND));
+            state->blend.src = src;
+            state->blend.dst = dst;
+            GL_CHECK(glBlendFunc(s_blendFactorToOGLEnum[src], s_blendFactorToOGLEnum[dst]));
+            state->blend.equation = equation;
+            GL_CHECK(glBlendEquation(s_blendEquationToOGLEnum[equation]));
+        }
+        else
+        {
+            GL_CHECK(glDisable(GL_BLEND));
+        }
+    }
+
+    return changed;
+}
+
+bool RenderState_SetBlendEnabled(RenderState *state, bool enabled, bool forced)
+{
+    if (forced || state->blend.enabled != enabled)
+    {
+        RENDER_STATE_LOG_BLEND(state->blend.enabled, enabled);
+        if (!forced)
+        {
+            RenderDebug_LogStackTrace("  BLEND STATE CHANGE");
+        }
         state->blend.enabled = enabled;
         if (enabled)
         {
@@ -189,27 +265,9 @@ bool RenderState_SetBlend(
         {
             GL_CHECK(glDisable(GL_BLEND));
         }
+        return true;
     }
-
-    if (enabled && ((state->blend.src != src || state->blend.dst != dst) ||
-                    (forced && (state->blend.src != BlendFactor::BlendFactor_Invalid &&
-                                state->blend.dst != BlendFactor::BlendFactor_Invalid))))
-    {
-        changed = true;
-        state->blend.src = src;
-        state->blend.dst = dst;
-        GL_CHECK(glBlendFunc(s_blendFactorToOGLEnum[src], s_blendFactorToOGLEnum[dst]));
-    }
-
-    if (enabled && (forced || (state->blend.equation != equation)))
-    {
-        assert(state->blend.equation != BlendEquation::BlendEquation_Invalid);
-        changed = true;
-        state->blend.equation = equation;
-        GL_CHECK(glBlendEquation(s_blendEquationToOGLEnum[equation]));
-    }
-
-    return changed;
+    return false;
 }
 
 bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool forced)
@@ -370,68 +428,24 @@ bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced)
     return false;
 }
 
+bool RenderState_SetDrawMode(RenderState *state, int drawMode, bool forced)
+{
+    if (forced || state->currentDrawMode != drawMode)
+    {
+        state->currentDrawMode = drawMode;
+        GL_CHECK(glUniform1i(_uDrawMode, drawMode));
+        return true;
+    }
+
+    return false;
+}
+
 bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
 {
     if (forced || state->color != color)
     {
         state->color = color;
         memcpy(state->color.rgba, color.rgba, sizeof(state->color.rgba));
-#if defined(USE_GL2)
-        glColor4f(state->color[0], state->color[1], state->color[2], state->color[3]);
-#else
-        const GenericVertex data[] = {
-            { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
-            { { -1.0f, 1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
-            { { 1.0f, 1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
-            { { 1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
-        };
-        const unsigned int idx[] = { 0, 1, 2, 3 };
-#if !defined(USE_GLES2)
-        uint32_t vao;
-        GL_CHECK(glGenVertexArrays(1, &vao));
-        GL_CHECK(glBindVertexArray(vao));
-#endif // #if !defined(USE_GLES2)
-        uint32_t buffers[2] = {};
-        GL_CHECK(glGenBuffers(2, buffers));
-        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, buffers[0]));
-        GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
-        GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]));
-        GL_CHECK(
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
-        GL_CHECK(glUseProgram(_pProg));
-        GL_CHECK(glEnableVertexAttribArray(_inPos));
-        GL_CHECK(glEnableVertexAttribArray(_inUV));
-        GL_CHECK(glEnableVertexAttribArray(_inColor));
-        GL_CHECK(glVertexAttribPointer(
-            _inPos,
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(GenericVertex),
-            (GLvoid *)OFFSETOF(GenericVertex, pos)));
-        GL_CHECK(glVertexAttribPointer(
-            _inUV,
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(GenericVertex),
-            (GLvoid *)OFFSETOF(GenericVertex, uv)));
-        GL_CHECK(glVertexAttribPointer(
-            _inColor,
-            4,
-            GL_UNSIGNED_BYTE,
-            GL_TRUE,
-            sizeof(GenericVertex),
-            (GLvoid *)OFFSETOF(GenericVertex, col)));
-
-        //GL_CHECK(glEnableVertexAttribArray(_inColor));
-        //GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, state->color.rgba));
-        GL_CHECK(glUseProgram(0));
-        GL_CHECK(glDeleteBuffers(2, buffers));
-#if !defined(USE_GLES2)
-        GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif // #if !defined(USE_GLES2)
-#endif
         return true;
     }
 
@@ -445,6 +459,20 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
         state->clearColor = color;
         memcpy(state->clearColor.rgba, color.rgba, sizeof(state->clearColor.rgba));
         GL_CHECK(glClearColor(color[0], color[1], color[2], color[3]));
+        return true;
+    }
+
+    return false;
+}
+
+bool RenderState_SetColorPalette(RenderState *state, const float *colors, bool forced)
+{
+    constexpr int paletteSize = 96;
+    assert(sizeof(state->currentColors) == paletteSize * sizeof(float));
+    if (memcmp(state->currentColors, colors, paletteSize * sizeof(float)) != 0)
+    {
+        memcpy(state->currentColors, colors, paletteSize * sizeof(float));
+        GL_CHECK(glUniform1fv(_uColors, paletteSize, colors));
         return true;
     }
 
@@ -618,9 +646,6 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
     {
         if (fb.handle != RENDER_FRAMEBUFFER_INVALID)
         {
-#if defined(USE_GL2)
-            glEnable(GL_TEXTURE_2D);
-#endif
             GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, fb.handle));
             GL_CHECK(glBindTexture(GL_TEXTURE_2D, fb.texture));
         }
@@ -679,18 +704,6 @@ bool RenderState_SetViewParams(
         const float scaledTop = scene_y * scene_scale - (scaledBottom - (scene_y + scene_height));
 
         glViewport(scene_x, bottom, scene_width, scene_height);
-#if defined(USE_GL2)
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(
-            scaledLeft,
-            scaledRight,
-            proj_flipped_y ? scaledTop : scaledBottom,
-            proj_flipped_y ? scaledBottom : scaledTop,
-            float(camera_nearZ),
-            float(camera_farZ));
-        glMatrixMode(GL_MODELVIEW);
-#else
         // TODO: gles - projection ortho view parms
         const auto projection = glm::ortho(
             scaledLeft,
@@ -701,7 +714,6 @@ bool RenderState_SetViewParams(
             float(camera_farZ));
         GL_CHECK(glUseProgram(_pProg));
         GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
-#endif
         return true;
     }
     return false;
@@ -709,14 +721,10 @@ bool RenderState_SetViewParams(
 
 bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool forced)
 {
-#if defined(USE_GL2)
-    glTranslatef(pos[0], pos[1], pos[2]);
-#else
     // Accumulate translation in state for GL3/GLES (like glTranslatef does)
     state->modelTranslation.rgb[0] += pos[0];
     state->modelTranslation.rgb[1] += pos[1];
     state->modelTranslation.rgb[2] += pos[2];
-#endif
     return true;
 }
 
@@ -750,3 +758,4 @@ bool RenderState_SetScissor(
     }
     return changed;
 }
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

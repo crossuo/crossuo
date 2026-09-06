@@ -25,6 +25,10 @@
 #include "Gumps/Gump.h"
 #include "Walker/PathFinder.h"
 
+#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#include "GLEngine/GLEngine.h"
+#endif // #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+
 #if USE_PING
 #include "Utility/PingThread.h"
 #endif // USE_PING
@@ -47,7 +51,7 @@ void CGameWindow::SetRenderTimerDelay(int delay)
 
 bool CGameWindow::OnCreate()
 {
-#ifndef NEW_RENDERER_ENABLED
+#if !defined(NEW_RENDERER_ENABLED)
     if (!g_GL.Install())
 #else
     if (!Render_Init(m_window))
@@ -58,7 +62,7 @@ bool CGameWindow::OnCreate()
         return false;
     }
 
-#ifdef NEW_RENDERER_ENABLED
+#if defined(NEW_RENDERER_ENABLED)
     HACKRender_SetViewParams(SetViewParamsCmd{
         0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
 #endif
@@ -68,11 +72,10 @@ bool CGameWindow::OnCreate()
         return false;
     }
 
-#ifndef NEW_RENDERER_ENABLED
+#if !defined(NEW_RENDERER_ENABLED)
     g_GL.UpdateRect();
-#else
-    g_GumpManager.RedrawAll();
 #endif
+    g_GumpManager.RedrawAll();
     return true;
 }
 
@@ -85,16 +88,15 @@ void CGameWindow::OnDestroy()
 
 void CGameWindow::OnResize()
 {
-#ifndef NEW_RENDERER_ENABLED
+#if !defined(NEW_RENDERER_ENABLED)
     g_GL.UpdateRect();
 #else
     RenderAdd_SetViewParams(
         g_renderCmdList,
         SetViewParamsCmd{
             0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
-
-    g_GumpManager.RedrawAll();
 #endif
+    g_GumpManager.RedrawAll();
 }
 
 void CGameWindow::EmulateOnLeftMouseButtonDown()

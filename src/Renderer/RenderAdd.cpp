@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || (defined(RENDERER_LEGACY) && defined(USE_GL1)))
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
@@ -150,6 +151,18 @@ bool RenderAdd_DisableAlphaTest(RenderCmdList *cmdList)
     return true;
 }
 
+bool RenderAdd_SetDrawMode(RenderCmdList *cmdList, const SetDrawModeCmd &cmd)
+{
+    auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetDrawMode(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, const BlendStateCmd &cmd)
 {
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
@@ -284,6 +297,18 @@ bool RenderAdd_SetClearColor(RenderCmdList *cmdList, const SetClearColorCmd &cmd
     }
 
     RenderDraw_SetClearColor(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd &cmd)
+{
+    auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetColorPalette(cmd, &cmdList->state);
     return true;
 }
 
@@ -452,3 +477,4 @@ bool RenderAdd_PopDebugMarker(RenderCmdList *cmdList)
     RenderDraw_PopDebugMarker(cmd, &cmdList->state);
     return true;
 }
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

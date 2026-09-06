@@ -88,6 +88,7 @@ int CScreenEffectManager::Process()
 void CScreenEffectManager::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
+    SCOPED_GL_DEBUG_MARKER_LABEL("CScreenEffectManager::Draw");
     if (Mode != SEM_NONE)
     {
 #ifndef NEW_RENDERER_ENABLED

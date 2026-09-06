@@ -21,18 +21,12 @@ CGUIGumppicHightlighted::~CGUIGumppicHightlighted()
 
 void CGUIGumppicHightlighted::SetShaderMode()
 {
-    if (g_SelectedObject.Object == this)
+    if (SelectedColor != 0) // was if (g_SelectedObject.Object == this) in case there is a bug
     {
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
-#if defined(USE_GL2)
-        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-        cmd.value.asInt1 = SDM_COLORED;
-        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-        Render_SetDrawMode(SDM_COLORED);
-#endif
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
 #endif
 
         g_ColorManager.SendColorsToShader(SelectedColor);
@@ -43,13 +37,7 @@ void CGUIGumppicHightlighted::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-#if defined(USE_GL2)
-        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-        cmd.value.asInt1 = uniformValue;
-        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-        Render_SetDrawMode(uniformValue);
-#endif
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
 
         g_ColorManager.SendColorsToShader(Color);
@@ -59,13 +47,7 @@ void CGUIGumppicHightlighted::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-#if defined(USE_GL2)
-        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-        cmd.value.asInt1 = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-        Render_SetDrawMode(SDM_NO_COLOR);
-#endif
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
     }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
@@ -83,26 +84,14 @@ static void EnableOpenGLMessage(GLuint id, bool shouldAssert, bool shouldLog)
     assert(false);
 }
 
-#if defined(USE_GL2)
-static void OGLDebugMsgCallback(
+static void APIENTRY OGLDebugMsgCallback(
     uint source,
     GLenum type,
     GLuint id,
     GLenum severity,
     GLsizei length,
     const GLchar *message,
-    const void *userParam)
-#endif // #if defined(USE_GL2)
-#if defined(USE_GL3)
-    static void APIENTRY OGLDebugMsgCallback(
-        uint source,
-        GLenum type,
-        GLuint id,
-        GLenum severity,
-        GLsizei length,
-        const GLchar *message,
-        void *userParam)
-#endif // #if defined(USE_GL2)
+    void *userParam)
 {
     (void)source;
     (void)length;
@@ -682,16 +671,14 @@ void RenderDraw_DrawLandTileDebug(DrawLandTileCmd *cmd, RenderState *)
 void RenderDraw_DrawShadowDebug(DrawShadowCmd *cmd, RenderState *)
 {
     DumpInfo(
-        "DrawShadowCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - uniformId: %d - uniformValue: %d - mirror: %s - restoreBlendFunc: %s",
+        "DrawShadowCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - mirror: %s - keepBlend: %s",
         cmd->texture,
         cmd->x,
         cmd->y,
         cmd->width,
         cmd->height,
-        cmd->uniformId,
-        cmd->uniformValue,
         cmd->mirror ? "true" : "false",
-        cmd->restoreBlendFunc ? "true" : "false");
+        cmd->keepBlend ? "true" : "false");
 }
 
 void RenderDraw_DrawCircleDebug(DrawCircleCmd *cmd, RenderState *state)
@@ -761,6 +748,11 @@ void RenderDraw_DisableAlphaTestDebug(DisableAlphaTestCmd *, RenderState *)
     DumpInfo("DisableAlphaTestCmd");
 }
 
+void RenderDraw_SetDrawModeDebug(SetDrawModeCmd *cmd, RenderState *)
+{
+    DumpInfo("SetDrawModeCmd: drawMode: %d", cmd->drawMode);
+}
+
 void RenderDraw_DepthStateDebug(DepthStateCmd *cmd, RenderState *)
 {
     DumpInfo("DepthStateCmd: func: %s", DepthFuncAsString(cmd->func));
@@ -784,6 +776,18 @@ void RenderDraw_SetClearColorDebug(SetClearColorCmd *cmd, RenderState *)
         cmd->color[1],
         cmd->color[2],
         cmd->color[3]);
+}
+
+void RenderDraw_SetColorPaletteDebug(SetColorPaletteCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "SetColorPaletteCmd: first colors: (%f, %f, %f, %f, %f, %f)",
+        cmd->palette[0],
+        cmd->palette[1],
+        cmd->palette[2],
+        cmd->palette[3],
+        cmd->palette[4],
+        cmd->palette[5]);
 }
 
 void RenderDraw_SetViewParamsDebug(SetViewParamsCmd *cmd, RenderState *)
@@ -840,6 +844,19 @@ void RenderDraw_GetFrameBufferPixelsDebug(GetFrameBufferPixelsCmd *cmd, RenderSt
         cmd->dataSize);
 }
 
+void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state)
+{
+    (void)state;
+    DumpInfo("PushDebugMarker: %s", cmd->label ? cmd->label : "(null)");
+}
+
+void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state)
+{
+    (void)state;
+    (void)cmd;
+    DumpInfo("PopDebugMarker");
+}
+
 void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
 {
     DumpInfo(
@@ -875,6 +892,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(SetFrameBuffer, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(AlphaTest, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableAlphaTest, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetDrawMode, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(BlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(StencilState, cmd, &cmdList->state)
@@ -886,6 +904,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(SetColorMask, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetClearColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetColorPalette, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetViewParams, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetModelViewTranslation, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetScissor, cmd, &cmdList->state)
@@ -923,40 +942,4 @@ void RenderDebug_ProcessFrame(RenderCmdList *cmdList)
     RenderDebug_EndFrame();
 }
 
-bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state)
-{
-    (void)state;
-#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
-    if (cmd.label)
-    {
-        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
-    }
-#else
-    (void)cmd;
-#endif
-    return true;
-}
-
-bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
-{
-    (void)state;
-#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
-    glPopDebugGroup();
-#else
-    (void)cmd;
-#endif
-    return true;
-}
-
-void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state)
-{
-    (void)state;
-    DumpInfo("PushDebugMarker: %s", cmd->label ? cmd->label : "(null)");
-}
-
-void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state)
-{
-    (void)state;
-    (void)cmd;
-    DumpInfo("PopDebugMarker");
-}
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

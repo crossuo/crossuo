@@ -176,7 +176,7 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
 void CTextRenderer::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    SCOPED_GL_DEBUG_MARKER_LABEL("CTextRenderer::Draw");
     CalculatePositions(true);
 
     for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
@@ -212,13 +212,7 @@ void CTextRenderer::Draw()
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 
 #else
-#if defined(USE_GL2)
-            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-            cmd.value.asInt1 = uniformValue;
-            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-            Render_SetDrawMode(uniformValue);
-#endif
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
 
             if (text.Transparent)
@@ -393,13 +387,7 @@ void CTextRenderer::WorldDraw()
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-#if defined(USE_GL2)
-            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-            cmd.value.asInt1 = uniformValue;
-            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-            Render_SetDrawMode(uniformValue);
-#endif
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
 
             if (text.Transparent)

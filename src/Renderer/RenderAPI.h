@@ -3,23 +3,25 @@
 
 #pragma once
 
+#include <external/gfx/gfx.h>
+
+#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#include "../GLEngine/GLEngine.h"
+#include "Debug/OGLDebugMarker.h"
+#endif // #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+
 #include "../SDL_wrapper.h"
+
+#if defined(NEW_RENDERER_ENABLED)
 
 #if defined(USE_GL3)
 #define OGL_DEBUGCONTEXT_ENABLED
 #endif // #if defined(USE_GL)
 
-#include <external/gfx/gfx.h>
-#if !defined(NEW_RENDERER_ENABLED)
-#include "../GLEngine/GLEngine.h"
-#endif
-
 #include "RenderTypes.h"
 #include "RenderCommands.h"
-extern RenderCmdList *g_renderCmdList;
-
-// Debug markers for RenderDoc support (GL3 only)
 #include "Debug/OGLDebugMarker.h"
+extern RenderCmdList *g_renderCmdList;
 
 // Frame debug dumping
 void RenderDebug_EnableDump();
@@ -57,11 +59,11 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb);
 void Render_PushScissor(int x, int y, uint32_t w, uint32_t h);
 void Render_PopScissor();
 
-#if defined(USE_GL3) || defined(USE_GLES)
+//#if defined(USE_GL3) || defined(USE_GLES)
 // GL3/GLES helpers for draw mode (replaces shader pipeline system in GL2)
-void Render_SetDrawMode(int drawMode);
-int Render_GetDrawMode();
-#endif
+//void Render_SetDrawMode(int drawMode);
+//int Render_GetDrawMode();
+//#endif
 
 bool RenderAdd_SetTexture(RenderCmdList *cmdList, const SetTextureCmd &cmd);
 bool RenderAdd_SetFrameBuffer(RenderCmdList *cmdList, const SetFrameBufferCmd &cmd);
@@ -76,6 +78,7 @@ bool RenderAdd_DrawLine(RenderCmdList *cmdList, const DrawLineCmd &cmd);
 
 bool RenderAdd_SetAlphaTest(RenderCmdList *cmdList, const AlphaTestCmd &cmd);
 bool RenderAdd_DisableAlphaTest(RenderCmdList *cmdList);
+bool RenderAdd_SetDrawMode(RenderCmdList *cmdList, const SetDrawModeCmd &cmd);
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, const BlendStateCmd &cmd);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, const StencilStateCmd &cmd);
@@ -87,6 +90,7 @@ bool RenderAdd_EnableDepth(RenderCmdList *cmdList);
 bool RenderAdd_SetColorMask(RenderCmdList *cmdList, const SetColorMaskCmd &cmd);
 bool RenderAdd_SetColor(RenderCmdList *cmdList, const SetColorCmd &cmd);
 bool RenderAdd_SetClearColor(RenderCmdList *cmdList, const SetClearColorCmd &cmd);
+bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd &cmd);
 bool RenderAdd_ClearRT(RenderCmdList *cmdList, const ClearRTCmd &cmd);
 
 bool RenderAdd_SetShaderUniform(RenderCmdList *cmdList, const ShaderUniformCmd &cmd);
@@ -102,3 +106,4 @@ bool RenderAdd_DisableScissor(RenderCmdList *cmdList);
 bool RenderAdd_GetFrameBufferPixels(RenderCmdList *cmdList, const GetFrameBufferPixelsCmd &cmd);
 
 bool RenderDraw_Execute(RenderCmdList *cmdList);
+#endif // #if defined(NEW_RENDERER_ENABLED)

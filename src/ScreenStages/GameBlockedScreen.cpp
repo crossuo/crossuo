@@ -29,15 +29,19 @@ void CGameBlockedScreen::Init()
 
 void CGameBlockedScreen::Render()
 {
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
+    g_FontManager.ClearTextSpritePool(); // Clear previous frame's text sprites
     RenderAdd_FlushState(g_renderCmdList);
-
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     g_GumpManager.Draw(true);
     InitToolTip();
     g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
-
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
+    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 }
 
 void CGameBlockedScreen::SelectObject()

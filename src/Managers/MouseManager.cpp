@@ -342,7 +342,7 @@ bool CMouseManager::LoadCursorTextures()
 void CMouseManager::Draw(uint16_t id)
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw");
     if (g_GameState >= GS_GAME)
     {
         if (g_CustomHouseGump != nullptr && (g_CustomHouseGump->SelectedGraphic != 0u))
@@ -365,6 +365,7 @@ void CMouseManager::Draw(uint16_t id)
 
             if (static_cast<unsigned int>(!list.empty()) != 0u)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArt");
                 for (const CBuildObject &item : list)
                 {
                     int x = g_MouseManager.Position.X + (item.X - item.Y) * 22;
@@ -375,6 +376,7 @@ void CMouseManager::Draw(uint16_t id)
             }
             else
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArtInContainer");
                 g_Game.DrawStaticArtInContainer(
                     g_CustomHouseGump->SelectedGraphic,
                     color,
@@ -411,6 +413,7 @@ void CMouseManager::Draw(uint16_t id)
                 auto to = g_Game.ExecuteGump(ohGraphic);
                 if (to != nullptr)
                 {
+                    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawGump");
                     g_Game.DrawGump(
                         ohGraphic,
                         ohColor,
@@ -420,6 +423,7 @@ void CMouseManager::Draw(uint16_t id)
             }
             else
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArtInContainer 2");
                 g_Game.DrawStaticArtInContainer(
                     ohGraphic,
                     ohColor,
@@ -430,6 +434,7 @@ void CMouseManager::Draw(uint16_t id)
 
                 if (doubleDraw)
                 {
+                    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArtInContainer 3");
                     g_Game.DrawStaticArtInContainer(
                         ohGraphic,
                         ohColor,
@@ -467,28 +472,25 @@ void CMouseManager::Draw(uint16_t id)
 
         if (id < 16)
         {
+            SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw");
             g_ToolTip.Draw(spr->Width, spr->Height);
             int x = Position.X + m_CursorOffset[0][id];
             int y = Position.Y + m_CursorOffset[1][id];
             if (color != 0u)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw Color");
                 g_ColorizerShader.Enable();
 #ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
-#if defined(USE_GL2)
-                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-                cmd.value.asInt1 = SDM_COLORED;
-                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
-                Render_SetDrawMode(SDM_COLORED);
-#endif
+                RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
 #endif
                 g_ColorManager.SendColorsToShader(color);
             }
             spr->Texture->Draw(x, y);
             if (color != 0u)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw Disable Color");
                 g_ColorizerShader.Disable();
             }
 
@@ -511,6 +513,7 @@ void CMouseManager::Draw(uint16_t id)
 
                 if (auraColor != 0u)
                 {
+                    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw auraColor");
 #ifndef NEW_RENDERER_ENABLED
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -533,14 +536,7 @@ void CMouseManager::Draw(uint16_t id)
                         g_renderCmdList,
                         BlendStateCmd{ BlendFactor::BlendFactor_One,
                                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
-#if defined(USE_GL2)
-                    ShaderUniformCmd uniformCmd{ g_ShaderDrawMode,
-                                                 ShaderUniformType::ShaderUniformType_Int1 };
-                    uniformCmd.value.asInt1 = SDM_NO_COLOR;
-                    RenderAdd_SetShaderUniform(g_renderCmdList, uniformCmd);
-#else
-                    Render_SetDrawMode(SDM_NO_COLOR);
-#endif
+                    RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
                     RenderAdd_SetColor(
                         g_renderCmdList,
                         SetColorCmd{ { ToColorR(auraColor) / 255.f,

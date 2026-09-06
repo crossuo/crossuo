@@ -6,9 +6,9 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Globals.h" // ToColor*, g_ShaderColorTableInUse, SPECTRAL_COLOR_FLAG
 
-#if defined(USE_GL3) || defined(USE_GLES)
-// Global state for GL3/GLES draw mode and colors
-extern float g_CurrentColors[96];
+#if defined(NEW_RENDERER_ENABLED)
+#define RENDERER_INTERNAL
+#include "../Renderer/RenderInternal.h"
 #endif
 
 CColorManager g_ColorManager;
@@ -49,27 +49,13 @@ void CColorManager::CreateHuesPalette()
 
 void CColorManager::SendColorsToShader(uint16_t color)
 {
-    if (!color)
+    if (!color || !GetHuesCount())
         return;
 
-    //assert(g_ShaderColorTableInUse);
+    float *palette = nullptr;
     if ((color & SPECTRAL_COLOR_FLAG) != 0)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[0].Palette[0]);
-#else
-#if defined(USE_GL2)
-        RenderAdd_SetShaderLargeUniform(
-            g_renderCmdList,
-            ShaderLargeUniformCmd{ &m_HuesFloat[0].Palette[0],
-                                   32 * 3,
-                                   g_ShaderColorTableInUse,
-                                   ShaderUniformType::ShaderUniformType_Float1V });
-#else
-        // GL3/GLES: Copy colors to global state
-        memcpy(g_CurrentColors, &m_HuesFloat[0].Palette[0], 32 * 3 * sizeof(float));
-#endif
-#endif
+        palette = &m_HuesFloat[0].Palette[0];
     }
     else
     {
@@ -83,22 +69,17 @@ void CColorManager::SendColorsToShader(uint16_t color)
             }
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[color - 1].Palette[0]);
-#else
-#if defined(USE_GL2)
-        RenderAdd_SetShaderLargeUniform(
-            g_renderCmdList,
-            ShaderLargeUniformCmd{ &m_HuesFloat[color - 1].Palette[0],
-                                   32 * 3,
-                                   g_ShaderColorTableInUse,
-                                   ShaderUniformType::ShaderUniformType_Float1V });
-#else
-        // GL3/GLES: Copy colors to global state
-        memcpy(g_CurrentColors, &m_HuesFloat[color - 1].Palette[0], 32 * 3 * sizeof(float));
-#endif
-#endif
+        palette = &m_HuesFloat[color - 1].Palette[0];
     }
+
+    assert(palette);
+#ifndef NEW_RENDERER_ENABLED
+    glUniform1fv(g_ShaderColorTableInUse, 32 * 3, palette);
+#else
+    SetColorPaletteCmd cmd{};
+    memcpy(cmd.palette, palette, sizeof(cmd.palette));
+    RenderAdd_SetColorPalette(g_renderCmdList, cmd);
+#endif
 }
 
 uint32_t CColorManager::Color16To32(uint16_t c) const

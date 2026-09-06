@@ -93,6 +93,10 @@ private:
     size_t m_UnicodeFontAddress[20] = {};
     uint32_t m_UnicodeFontSize[20] = {};
 
+    // Frame-local text sprite pool for indirect rendering support
+    // Sprites allocated from this pool live until ClearTextSpritePool() is called
+    std::vector<CTextSprite *> m_TextSpritePool;
+
     bool m_UseHTML = false;
     uint32_t m_HTMLColor = 0xFFFFFFFF;
     bool m_HTMLBackgroundCanBeColored = false;
@@ -282,6 +286,10 @@ public:
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
+
+    // Text sprite pool management for indirect rendering
+    void ClearTextSpritePool();
+    CTextSprite *AllocateTextSprite();
 };
 
 extern CFontsManager g_FontManager;

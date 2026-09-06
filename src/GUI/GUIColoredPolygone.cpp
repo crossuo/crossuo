@@ -38,6 +38,7 @@ void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 void CGUIColoredPolygone::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
+    SCOPED_GL_DEBUG_MARKER();
 #ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 

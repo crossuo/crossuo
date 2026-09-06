@@ -283,16 +283,19 @@ void SendConsoleText(wstr_t text, uint16_t defaultColor)
             {
                 // Local player commands
                 astr_t command = str_from(text.substr(offset));
-                if (command == "dumpframe")
+
+                if (command == "quit")
+                {
+                    g_GameWindow.Destroy();
+                }
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+                else if (command == "dumpframe")
                 {
                     RenderDebug_EnableDump();
                     g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, "Render dump enabled for next frame");
                     return;
                 }
-                else if (command == "quit")
-                {
-                    g_GameWindow.Destroy();
-                }
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
                 else
                 {
                     astr_t str = "Unknown command: %s" + command;
