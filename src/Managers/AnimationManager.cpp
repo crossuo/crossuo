@@ -1,5 +1,5 @@
-// MIT License
-// Copyright (C) August 2016 Hotride
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/utils.h>
 #include <common/str.h>
@@ -21,6 +21,7 @@
 #include "../GameObjects/GameCharacter.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "../Managers/FontsManager.h"
 
 CAnimationManager g_AnimationManager;
 
@@ -29,6 +30,12 @@ void *LoadSpritePixels(int width, int height, uint16_t *pixels)
     auto spr = new CSprite();
     spr->LoadSprite16(width, height, pixels);
     return spr;
+}
+
+void DeleteSprite(void *ptr)
+{
+    auto spr = (CSprite *)ptr;
+    delete spr;
 }
 
 struct FRAME_OUTPUT_INFO
@@ -42,9 +49,11 @@ struct FRAME_OUTPUT_INFO
 void CalculateFrameInformation(
     FRAME_OUTPUT_INFO &info, CGameObject *obj, bool mirror, uint8_t animIndex)
 {
-    const auto dir = g_AnimationManager.SelectAnim.Direction;
-    const auto grp = g_AnimationManager.SelectAnim.Group;
-    const auto dim = g_AnimationManager.GetAnimationDimensions(obj, animIndex, dir, grp);
+    const auto dir = g_AnimationManager.Anim.Direction;
+    const auto grp = g_AnimationManager.Anim.Group;
+    const AnimationState anim = { obj->GetGraphicForAnimation(), grp, dir };
+    const auto dim = g_AnimationManager.GetAnimationDimensions(
+        obj->AnimIndex, anim, obj->IsMounted(), obj->IsCorpse());
     int y = -(dim.Height + dim.CenterY + 3);
     int x = -dim.CenterX;
     if (mirror)
@@ -126,860 +135,106 @@ const int CAnimationManager::m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT
 
 CAnimationManager::CAnimationManager()
 {
-    memset(m_AddressIdx, 0, sizeof(m_AddressIdx));
-    memset(m_SizeIdx, 0, sizeof(m_SizeIdx));
-
     memset(m_CharacterLayerGraphic, 0, sizeof(m_CharacterLayerGraphic));
     memset(m_CharacterLayerAnimID, 0, sizeof(m_CharacterLayerAnimID));
 }
 
 CAnimationManager::~CAnimationManager()
 {
-    ClearUnusedTextures(g_Ticks + 100000);
+    ClearUnusedAnimations();
 }
 
-void CAnimationManager::UpdateAnimationAddressTable()
+uint8_t CAnimationManager::GetRandomIdleAnimation(uint16_t graphic) const
 {
-    for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
-    {
-        CIndexAnimation &index = g_Index.m_Anim[i];
-
-        for (int g = 0; g < MAX_ANIMATION_GROUPS_COUNT; g++)
-        {
-            CTextureAnimationGroup &group = index.m_Groups[g];
-
-            for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
-            {
-                CTextureAnimationDirection &direction = group.m_Direction[d];
-                bool replace = (direction.FileIndex >= 4);
-
-                if (direction.FileIndex == 2)
-                {
-                    replace = (g_Config.ClientFlag >= CF_LBR);
-                }
-                else if (direction.FileIndex == 3)
-                {
-                    replace = (g_Config.ClientFlag >= CF_AOS);
-                }
-                //else if (direction.FileIndex == 4)
-                //	replace = (g_LockedClientFeatures & LFF_AOS);
-                //else if (direction.FileIndex == 5)
-                //	replace = true; // (g_LockedClientFeatures & LFF_ML);
-
-                if (replace)
-                {
-                    direction.Address = direction.PatchedAddress;
-                    direction.Size = direction.PatchedSize;
-                }
-                else
-                {
-                    direction.Address = direction.BaseAddress;
-                    direction.Size = direction.BaseSize;
-                }
-            }
-        }
-    }
+    ANIMATION_GROUPS groupIndex = GetGroupIndex(graphic);
+    const uint8_t fidgetAnimTable[3][3] = { { LAG_FIDGET_1, LAG_FIDGET_2, LAG_FIDGET_1 },
+                                            { HAG_FIDGET_1, HAG_FIDGET_2, HAG_FIDGET_1 },
+                                            { PAG_FIDGET_1, PAG_FIDGET_2, PAG_FIDGET_3 } };
+    return fidgetAnimTable[groupIndex - 1][RandomInt(3)];
 }
 
-void CAnimationManager::Load(uint32_t *verdata)
+uint8_t CAnimationManager::GetStandingGroupForGraphic(uint16_t graphic) const
 {
-    size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
-
-    for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
+    switch (GetGroupIndex(graphic))
     {
-        CIndexAnimation &index = g_Index.m_Anim[i];
-
-        ANIMATION_GROUPS_TYPE groupType = AGT_UNKNOWN;
-        size_t findID = 0;
-
-        if (i >= 200)
+        case AG_LOW:
         {
-            if (i >= 400) //People
-            {
-                groupType = AGT_HUMAN;
-                findID = (((i - 400) * 175) + 35000) * sizeof(AnimIdxBlock);
-            }
-            else //Low
-            {
-                groupType = AGT_ANIMAL;
-                findID = (((i - 200) * 65) + 22000) * sizeof(AnimIdxBlock);
-            }
+            return LAG_STAND;
         }
-        else //Hight
+        case AG_HIGH:
         {
-            groupType = AGT_MONSTER;
-            findID = (i * 110) * sizeof(AnimIdxBlock);
+            return HAG_STAND;
         }
-
-        if (findID >= m_SizeIdx[0])
+        case AG_PEOPLE:
         {
+            return PAG_STAND;
+        }
+        default:
             break;
-        }
-
-        index.Graphic = (int)i;
-
-        //if (index.Type != AGT_UNKNOWN)
-        //	groupType = index.Type;
-
-        int count = 0;
-
-        switch (groupType)
-        {
-            case AGT_MONSTER:
-            case AGT_SEA_MONSTER:
-            {
-                count = HAG_ANIMATION_COUNT;
-                break;
-            }
-            case AGT_HUMAN:
-            case AGT_EQUIPMENT:
-            {
-                count = PAG_ANIMATION_COUNT;
-                break;
-            }
-            case AGT_ANIMAL:
-            default:
-            {
-                count = LAG_ANIMATION_COUNT;
-                break;
-            }
-        }
-
-        index.Type = groupType;
-
-        size_t address = m_AddressIdx[0] + findID;
-
-        for (int j = 0; j < count; j++)
-        {
-            CTextureAnimationGroup &group = index.m_Groups[j];
-            const int offset = (int)j * MAX_MOBILE_DIRECTIONS;
-            for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
-            {
-                CTextureAnimationDirection &direction = group.m_Direction[d];
-                const auto *aidx =
-                    (AnimIdxBlock *)(address + ((offset + d) * sizeof(AnimIdxBlock)));
-                if ((size_t)aidx >= maxAddress)
-                {
-                    break;
-                }
-
-                if ((aidx->Size != 0u) && aidx->Position != 0xFFFFFFFF && aidx->Size != 0xFFFFFFFF)
-                {
-                    direction.BaseAddress = aidx->Position;
-                    direction.BaseSize = aidx->Size;
-                    direction.Address = direction.BaseAddress;
-                    direction.Size = direction.BaseSize;
-                }
-            }
-        }
     }
-
-    if (verdata != nullptr)
-    {
-        int dataCount = *verdata;
-
-        for (int j = 0; j < dataCount; j++)
-        {
-            VERDATA_HEADER *vh =
-                (VERDATA_HEADER *)((size_t)verdata + 4 + (j * sizeof(VERDATA_HEADER)));
-
-            if (vh->FileID == 0x06) //Anim
-            {
-                ANIMATION_GROUPS_TYPE groupType = AGT_HUMAN;
-                uint32_t graphic = vh->BlockID;
-                uint16_t id = 0xFFFF;
-                uint32_t group = 0;
-                uint32_t dir = 0;
-                uint32_t offset = 0;
-                int count = 0;
-
-                TRACE(Data, "vh->ID = 0x%02X vh->BlockID = 0x%08X", vh->FileID, graphic);
-                if (graphic < 35000)
-                {
-                    if (graphic < 22000) //monsters
-                    {
-                        count = 22;
-                        groupType = AGT_MONSTER;
-                        id = graphic / 110;
-                        offset = graphic - (id * 110);
-                    }
-                    else //animals
-                    {
-                        count = 13;
-                        groupType = AGT_ANIMAL;
-                        id = (graphic - 22000) / 65;
-                        offset = graphic - ((id * 65) + 22000);
-                        id += 200;
-                    }
-                }
-                else //humans
-                {
-                    groupType = AGT_HUMAN;
-                    count = PAG_ANIMATION_COUNT;
-                    id = (graphic - 35000) / 175;
-                    offset = graphic - ((id * 175) + 35000);
-                    id += 400;
-                }
-
-                group = offset / MAX_MOBILE_DIRECTIONS;
-                dir = offset % MAX_MOBILE_DIRECTIONS;
-
-                if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-                {
-                    Warning(Data, "Invalid animation patch 0x%04X (0x%08X)", id, graphic);
-                    continue;
-                }
-                if (group >= (uint32_t)count)
-                {
-                    Warning(
-                        Data,
-                        "Invalid group index: %i in animation patch 0x%04X (0x%08X)",
-                        group,
-                        id,
-                        graphic);
-                    continue;
-                }
-
-                CIndexAnimation &index = g_Index.m_Anim[id];
-
-                CTextureAnimationDirection &direction = index.m_Groups[group].m_Direction[dir];
-
-                direction.IsVerdata = true;
-                direction.BaseAddress = (size_t)g_FileManager.m_VerdataMul.Start + vh->Position;
-                direction.BaseSize = vh->Size;
-                direction.Address = direction.BaseAddress;
-                direction.Size = direction.BaseSize;
-
-                index.Graphic = id;
-                index.Type = groupType;
-            }
-        }
-    }
+    assert(false && "unknown group index for graphic");
+    return 0;
 }
 
-void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
+ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
 {
-    if (g_Config.ClientVersion >= CV_500A)
-    {
-        static const astr_t typeNames[5] = {
-            "monster", "sea_monster", "animal", "human", "equipment"
-        };
-
-        Wisp::CTextFileParser mobtypesParser(g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
-
-        while (!mobtypesParser.IsEOF())
-        {
-            std::vector<astr_t> strings = mobtypesParser.ReadTokens();
-
-            if (strings.size() >= 3)
-            {
-                uint16_t index = str_to_int(strings[0]);
-
-                if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-                {
-                    continue;
-                }
-
-                auto testType = str_lower(strings[1]);
-
-                for (int i = 0; i < 5; i++)
-                {
-                    if (testType == typeNames[i])
-                    {
-                        g_Index.m_Anim[index].Type = (ANIMATION_GROUPS_TYPE)i;
-
-                        char *endP = nullptr;
-                        g_Index.m_Anim[index].Flags =
-                            0x80000000 | strtoul(("0x" + strings[2]).c_str(), &endP, 16);
-
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    Load(verdata);
-
-    //std::pair<uint16_t, char> m_GroupReplaces[2];
-
-    Wisp::CTextFileParser animParser[2] = {
-        Wisp::CTextFileParser(g_App.UOFilesPath("Anim1.def"), " \t", "#;//", "{}"),
-        Wisp::CTextFileParser(g_App.UOFilesPath("Anim2.def"), " \t", "#;//", "{}"),
-    };
-
-    for (int i = 0; i < 2; i++)
-    {
-        while (!animParser[i].IsEOF())
-        {
-            std::vector<astr_t> strings = animParser[i].ReadTokens();
-
-            if (strings.size() < 2)
-            {
-                continue;
-            }
-
-            uint16_t group = (uint16_t)str_to_int(strings[0]);
-            int replaceGroup = str_to_int(strings[1]);
-
-            m_GroupReplaces[i].push_back(
-                std::pair<uint16_t, uint8_t>(group, (uint8_t)replaceGroup));
-        }
-    }
-
-    if (g_Config.ClientVersion < CV_305D)
-    { //CV_204C
-        return;
-    }
-
-    Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
-    Wisp::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
-    Wisp::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
-
-    Wisp::CTextFileParser equipConvParser(g_App.UOFilesPath("Equipconv.def"), " \t", "#;//", "");
-
-    while (!equipConvParser.IsEOF())
-    {
-        std::vector<astr_t> strings = equipConvParser.ReadTokens();
-        if (strings.size() >= 5)
-        {
-            auto body = (uint16_t)str_to_int(strings[0]);
-            if (body >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
-            auto graphic = (uint16_t)str_to_int(strings[1]);
-            if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
-            auto newGraphic = (uint16_t)str_to_int(strings[2]);
-            if (newGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                newGraphic = graphic;
-            }
-
-            const auto gump_field = (uint32_t)str_to_int(strings[3]);
-            if (gump_field >= MAX_GUMP_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
-            auto gump = checked_cast<uint16_t>(gump_field);
-            if (gump == 0)
-            {
-                gump = graphic; // +50000;
-            }
-            else if (gump == 0xFFFF)
-            {
-                gump = newGraphic; // +50000;
-            }
-
-            auto color = (uint16_t)str_to_int(strings[4]);
-            EQUIP_CONV_BODY_MAP::iterator bodyMapIter = m_EquipConv.find(body);
-            if (bodyMapIter == m_EquipConv.end())
-            {
-                m_EquipConv.insert(EQUIP_CONV_BODY_MAP::value_type(body, EQUIP_CONV_DATA_MAP()));
-
-                bodyMapIter = m_EquipConv.find(body);
-
-                if (bodyMapIter == m_EquipConv.end())
-                {
-                    continue; //?!?!??
-                }
-            }
-
-            bodyMapIter->second.insert(
-                EQUIP_CONV_DATA_MAP::value_type(graphic, CEquipConvData(newGraphic, gump, color)));
-        }
-    }
-
-    while (!bodyconvParser.IsEOF())
-    {
-        std::vector<astr_t> strings = bodyconvParser.ReadTokens();
-
-        if (strings.size() >= 2)
-        {
-            uint16_t index = str_to_int(strings[0]);
-
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
-            int anim[4] = { str_to_int(strings[1]), -1, -1, -1 };
-
-            if (strings.size() >= 3)
-            {
-                anim[1] = str_to_int(strings[2]);
-
-                if (strings.size() >= 4)
-                {
-                    anim[2] = str_to_int(strings[3]);
-
-                    if (strings.size() >= 5)
-                    {
-                        anim[3] = str_to_int(strings[4]);
-                    }
-                }
-            }
-
-            int startAnimID = -1;
-            int animFile = 1;
-            uint16_t realAnimID = 0;
-            char mountedHeightOffset = 0;
-            ANIMATION_GROUPS_TYPE groupType = AGT_UNKNOWN;
-
-            if (anim[0] != -1 && m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
-            {
-                animFile = 2;
-                realAnimID = anim[0];
-                if (realAnimID == 68)
-                {
-                    realAnimID = 122;
-                }
-
-                if (realAnimID >= 200) //Low
-                {
-                    startAnimID = ((realAnimID - 200) * 65) + 22000;
-                    groupType = AGT_ANIMAL;
-                    mountedHeightOffset = +8;
-                }
-                else //Hight
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
-
-                if (index == 192 || index == 793)
-                {
-                    mountedHeightOffset = -9;
-                }
-            }
-            else if (anim[1] != -1 && m_AddressIdx[3] != 0 && g_FileManager.IsMulFileOpen(3))
-            {
-                animFile = 3;
-                realAnimID = anim[1];
-
-                if (realAnimID < 630)
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
-                else
-                {
-                    startAnimID = 69300 + ((realAnimID - 630) * 175);
-                    groupType = AGT_HUMAN;
-                }
-
-                if (index == 1401)
-                {
-                    mountedHeightOffset = 9;
-                }
-            }
-            else if (anim[2] != -1 && m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
-            {
-                animFile = 4;
-                realAnimID = anim[2];
-
-                if (realAnimID >= 200)
-                {
-                    if (realAnimID >= 400) //People
-                    {
-                        startAnimID = ((realAnimID - 400) * 175) + 35000;
-                        groupType = AGT_HUMAN;
-                    }
-                    else //Low
-                    {
-                        startAnimID = ((realAnimID - 200) * 65) + 22000;
-                        groupType = AGT_ANIMAL;
-                        mountedHeightOffset = +8;
-                    }
-                }
-                else //Hight
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
-            }
-            else if (anim[3] != -1 && m_AddressIdx[5] != 0 && g_FileManager.IsMulFileOpen(5))
-            {
-                animFile = 5;
-                realAnimID = anim[3];
-
-                if (realAnimID == 34)
-                {
-                    startAnimID = ((realAnimID - 200) * 65) + 22000;
-                }
-                else if (realAnimID >= 200)
-                {
-                    if (realAnimID >= 400) //People
-                    {
-                        startAnimID = ((realAnimID - 400) * 175) + 35000;
-                        groupType = AGT_HUMAN;
-                    }
-                    else //Low
-                    {
-                        startAnimID = ((realAnimID - 200) * 65) + 22000;
-                        groupType = AGT_ANIMAL;
-                        //mountedHeightOffset = +8;
-                    }
-                }
-                else //Hight
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
-
-                switch (index)
-                {
-                    case 192:
-                    case 277:
-                        mountedHeightOffset = 0;
-                        break;
-                    case 1069:
-                        mountedHeightOffset = 3;
-                        break;
-                    default:
-                        mountedHeightOffset = -9;
-                        break;
-                }
-            }
-
-            if (animFile != 1 && startAnimID != -1)
-            {
-                startAnimID = startAnimID * sizeof(AnimIdxBlock);
-                if ((uint32_t)startAnimID < m_SizeIdx[animFile])
-                {
-                    CIndexAnimation &dataIndex = g_Index.m_Anim[index];
-                    dataIndex.MountedHeightOffset = mountedHeightOffset;
-                    if (g_Config.ClientVersion < CV_500A || groupType == AGT_UNKNOWN)
-                    {
-                        if (realAnimID >= 200)
-                        {
-                            if (realAnimID >= 400)
-                            { //People
-                                dataIndex.Type = AGT_HUMAN;
-                            }
-                            else
-                            { //Low
-                                dataIndex.Type = AGT_ANIMAL;
-                                mountedHeightOffset = +8;
-                            }
-                        }
-                        else
-                        {
-                            dataIndex.Type = AGT_MONSTER;
-                        }
-                    }
-                    else if (groupType != AGT_UNKNOWN)
-                    {
-                        dataIndex.Type = groupType;
-                    }
-
-                    int count = 0;
-
-                    switch (dataIndex.Type)
-                    {
-                        case AGT_MONSTER:
-                        case AGT_SEA_MONSTER:
-                        {
-                            count = HAG_ANIMATION_COUNT;
-                            break;
-                        }
-                        case AGT_HUMAN:
-                        case AGT_EQUIPMENT:
-                        {
-                            count = PAG_ANIMATION_COUNT;
-                            break;
-                        }
-                        case AGT_ANIMAL:
-                        default:
-                        {
-                            count = LAG_ANIMATION_COUNT;
-                            break;
-                        }
-                    }
-
-                    size_t address = m_AddressIdx[animFile] + startAnimID;
-                    size_t maxAddress = m_AddressIdx[animFile] + m_SizeIdx[animFile];
-
-                    for (int j = 0; j < count; j++)
-                    {
-                        CTextureAnimationGroup &group = dataIndex.m_Groups[j];
-                        int offset = (int)j * MAX_MOBILE_DIRECTIONS;
-
-                        for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
-                        {
-                            CTextureAnimationDirection &direction = group.m_Direction[d];
-                            const auto *aidx =
-                                (AnimIdxBlock *)(address + ((offset + d) * sizeof(AnimIdxBlock)));
-                            if ((size_t)aidx >= maxAddress)
-                            {
-                                break;
-                            }
-
-                            if ((aidx->Size != 0u) && aidx->Position != 0xFFFFFFFF &&
-                                aidx->Size != 0xFFFFFFFF)
-                            {
-                                direction.PatchedAddress = aidx->Position;
-                                direction.PatchedSize = aidx->Size;
-                                direction.FileIndex = animFile;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    while (!bodyParser.IsEOF())
-    {
-        std::vector<astr_t> strings = bodyParser.ReadTokens();
-
-        if (strings.size() >= 3)
-        {
-            uint16_t index = str_to_int(strings[0]);
-
-            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1]);
-
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
-            {
-                continue;
-            }
-
-            uint16_t checkIndex = str_to_int(newBody[0]);
-
-            if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
-            CIndexAnimation &dataIndex = g_Index.m_Anim[index];
-            CIndexAnimation &checkDataIndex = g_Index.m_Anim[checkIndex];
-
-            int count = 0;
-            int ignoreGroups[2] = { -1, -1 };
-
-            switch (checkDataIndex.Type)
-            {
-                case AGT_MONSTER:
-                case AGT_SEA_MONSTER:
-                {
-                    count = HAG_ANIMATION_COUNT;
-                    ignoreGroups[0] = HAG_DIE_1;
-                    ignoreGroups[1] = HAG_DIE_2;
-
-                    break;
-                }
-                case AGT_HUMAN:
-                case AGT_EQUIPMENT:
-                {
-                    count = PAG_ANIMATION_COUNT;
-                    ignoreGroups[0] = PAG_DIE_1;
-                    ignoreGroups[1] = PAG_DIE_2;
-
-                    break;
-                }
-                case AGT_ANIMAL:
-                {
-                    count = LAG_ANIMATION_COUNT;
-                    ignoreGroups[0] = LAG_DIE_1;
-                    ignoreGroups[1] = LAG_DIE_2;
-
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            for (int j = 0; j < count; j++)
-            {
-                if (j == ignoreGroups[0] || j == ignoreGroups[1])
-                {
-                    continue;
-                }
-
-                CTextureAnimationGroup &group = dataIndex.m_Groups[j];
-                CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[j];
-
-                for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
-                {
-                    CTextureAnimationDirection &direction = group.m_Direction[d];
-                    CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
-
-                    direction.BaseAddress = newDirection.BaseAddress;
-                    direction.BaseSize = newDirection.BaseSize;
-                    direction.Address = direction.BaseAddress;
-                    direction.Size = direction.BaseSize;
-
-                    if (direction.PatchedAddress == 0u)
-                    {
-                        direction.PatchedAddress = newDirection.PatchedAddress;
-                        direction.PatchedSize = newDirection.PatchedSize;
-                        direction.FileIndex = newDirection.FileIndex;
-                    }
-
-                    if (direction.BaseAddress == 0u)
-                    {
-                        direction.BaseAddress = direction.PatchedAddress;
-                        direction.BaseSize = direction.PatchedSize;
-                        direction.Address = direction.BaseAddress;
-                        direction.Size = direction.BaseSize;
-                    }
-                }
-            }
-
-            dataIndex.Type = checkDataIndex.Type;
-            dataIndex.Flags = checkDataIndex.Flags;
-            dataIndex.Graphic = checkIndex;
-            dataIndex.Color = str_to_int(strings[2]);
-        }
-    }
-
-    while (!corpseParser.IsEOF())
-    {
-        std::vector<astr_t> strings = corpseParser.ReadTokens();
-
-        if (strings.size() >= 3)
-        {
-            uint16_t index = str_to_int(strings[0]);
-
-            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1]);
-
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
-            {
-                continue;
-            }
-
-            uint16_t checkIndex = str_to_int(newBody[0]);
-
-            if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
-            CIndexAnimation &dataIndex = g_Index.m_Anim[index];
-            CIndexAnimation &checkDataIndex = g_Index.m_Anim[checkIndex];
-
-            int ignoreGroups[2] = { -1, -1 };
-
-            switch (checkDataIndex.Type)
-            {
-                case AGT_MONSTER:
-                case AGT_SEA_MONSTER:
-                {
-                    ignoreGroups[0] = HAG_DIE_1;
-                    ignoreGroups[1] = HAG_DIE_2;
-
-                    break;
-                }
-                case AGT_HUMAN:
-                case AGT_EQUIPMENT:
-                {
-                    ignoreGroups[0] = PAG_DIE_1;
-                    ignoreGroups[1] = PAG_DIE_2;
-
-                    break;
-                }
-                case AGT_ANIMAL:
-                {
-                    ignoreGroups[0] = LAG_DIE_1;
-                    ignoreGroups[1] = LAG_DIE_2;
-
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            if (ignoreGroups[0] == -1)
-            {
-                continue;
-            }
-
-            for (int j = 0; j < 2; j++)
-            {
-                CTextureAnimationGroup &group = dataIndex.m_Groups[ignoreGroups[j]];
-                CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[ignoreGroups[j]];
-
-                for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
-                {
-                    CTextureAnimationDirection &direction = group.m_Direction[d];
-                    CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
-
-                    direction.BaseAddress = newDirection.BaseAddress;
-                    direction.BaseSize = newDirection.BaseSize;
-                    direction.Address = direction.BaseAddress;
-                    direction.Size = direction.BaseSize;
-
-                    if (direction.PatchedAddress == 0u)
-                    {
-                        direction.PatchedAddress = newDirection.PatchedAddress;
-                        direction.PatchedSize = newDirection.PatchedSize;
-                        direction.FileIndex = newDirection.FileIndex;
-                    }
-
-                    if (direction.BaseAddress == 0u)
-                    {
-                        direction.BaseAddress = direction.PatchedAddress;
-                        direction.BaseSize = direction.PatchedSize;
-                        direction.Address = direction.BaseAddress;
-                        direction.Size = direction.BaseSize;
-                    }
-                }
-            }
-
-            dataIndex.Type = checkDataIndex.Type;
-            dataIndex.Flags = checkDataIndex.Flags;
-            dataIndex.Graphic = checkIndex;
-            dataIndex.Color = str_to_int(strings[2]);
-        }
-    }
-}
-
-ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
-{
-    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        Warning(Data, "GetGroupIndex: Invalid ID: 0x%04X", id);
-        return AG_HIGHT;
-    }
-
-    switch (g_Index.m_Anim[id].Type)
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+    switch (g_Index.m_Anim[graphic].Type)
     {
         case AGT_ANIMAL:
             return AG_LOW;
         case AGT_MONSTER:
         case AGT_SEA_MONSTER:
-            return AG_HIGHT;
+            return AG_HIGH;
         case AGT_HUMAN:
         case AGT_EQUIPMENT:
             return AG_PEOPLE;
         case AGT_UNKNOWN:
             break;
     }
-
-    return AG_HIGHT;
+    return AG_HIGH;
 }
 
-uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
+uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool third)
 {
-    DEBUG(Data, "gr: 0x%04X, %i", id, g_Index.m_Anim[id].Type);
-    switch (g_Index.m_Anim[id].Type)
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+    const auto flags = g_Index.m_Anim[graphic].Flags;
+    switch (g_Index.m_Anim[graphic].Type)
     {
         case AGT_ANIMAL:
-            return (uint8_t)(second ? LAG_DIE_2 : LAG_DIE_1);
-        case AGT_MONSTER:
+        {
+            if (flags & AF_USE_2_IF_HITTED_WHILE_RUNNING || flags & AF_CAN_FLYING)
+            {
+                return 2;
+            }
+            if (flags & AF_USE_UOP_ANIMATION)
+            {
+                return running ? 3 : 2;
+            }
+            return running ? LAG_DIE_2 : LAG_DIE_1;
+        }
         case AGT_SEA_MONSTER:
-            return (uint8_t)(second ? HAG_DIE_2 : HAG_DIE_1);
+        {
+            if (!third)
+                return 8;
+
+            // [[fallthrough]]
+        }
+        case AGT_MONSTER:
+        {
+            if (flags & AF_USE_UOP_ANIMATION)
+            {
+                return running ? 3 : 2;
+            }
+            return running ? HAG_DIE_2 : HAG_DIE_1;
+        }
         case AGT_HUMAN:
         case AGT_EQUIPMENT:
-            return (uint8_t)(second ? PAG_DIE_2 : PAG_DIE_1);
+        {
+            return running ? PAG_DIE_2 : PAG_DIE_1;
+        }
         case AGT_UNKNOWN:
+        default:
             break;
     }
 
@@ -995,7 +250,6 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
         {
             mirror = (dir == 2);
             dir = 1;
-
             break;
         }
         case 1:
@@ -1003,7 +257,6 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
         {
             mirror = (dir == 1);
             dir = 2;
-
             break;
         }
         case 0:
@@ -1011,19 +264,16 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
         {
             mirror = (dir == 0);
             dir = 3;
-
             break;
         }
         case 3:
         {
             dir = 0;
-
             break;
         }
         case 7:
         {
             dir = 4;
-
             break;
         }
         default:
@@ -1039,28 +289,24 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
         {
             mirror = true;
             dir = 3;
-
             break;
         }
         case 2:
         {
             mirror = true;
             dir = 1;
-
             break;
         }
         case 4:
         {
             mirror = false;
             dir = 1;
-
             break;
         }
         case 6:
         {
             mirror = false;
             dir = 3;
-
             break;
         }
         default:
@@ -1068,23 +314,37 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
     }
 }
 
-void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
+static const int CLEAR_ANIMATION_TEXTURES_DELAY = 10000;
+static const int MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR = 5;
+static std::unordered_map<uint32_t, uint32_t> s_AnimationLifetime;
+
+AnimationDirFrames *CAnimationManager::ExecuteAnimation(AnimationState anim, uint32_t ticks)
+{
+    Anim = anim;
+    auto animation = uo_animation_get(anim);
+    if (animation == nullptr)
+    {
+        if (g_FileManager.LoadAnimation(Anim, LoadSpritePixels))
+        {
+            animation = uo_animation_get(anim);
+        }
+    }
+    s_AnimationLifetime[AnimId(anim)] = ticks;
+    return animation;
+}
+
+void CAnimationManager::ClearUnusedAnimations(uint32_t ticks)
 {
     ticks -= CLEAR_ANIMATION_TEXTURES_DELAY;
     int count = 0;
-    for (auto it = m_UsedAnimList.begin(); it != m_UsedAnimList.end();)
+    for (auto it = s_AnimationLifetime.begin(); it != s_AnimationLifetime.end();)
     {
-        CTextureAnimationDirection *obj = *it;
-        if (obj->LastAccessTime < ticks)
+        const auto lastAccessTime = it->second;
+        if (lastAccessTime < ticks || ticks == ~0)
         {
-            if (obj->m_Frames != nullptr)
-            {
-                delete[] obj->m_Frames;
-                obj->m_Frames = nullptr;
-            }
-            obj->FrameCount = 0;
-            obj->LastAccessTime = 0;
-            it = m_UsedAnimList.erase(it);
+            const auto animId = it->first;
+            uo_animation_destroy(animId, DeleteSprite);
+            it = s_AnimationLifetime.erase(it);
             if (++count >= MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR)
             {
                 break;
@@ -1092,7 +352,7 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
         }
         else
         {
-            it++;
+            ++it;
         }
     }
     if (count)
@@ -1101,28 +361,41 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
     }
 }
 
+void CAnimationManager::GarbageCollect()
+{
+    static uint32_t removeUnusedAnimationTexturesTime = 0;
+    if (removeUnusedAnimationTexturesTime < g_Ticks)
+    {
+        g_AnimationManager.ClearUnusedAnimations(g_Ticks);
+        removeUnusedAnimationTexturesTime = g_Ticks + CLEAR_ANIMATION_TEXTURES_DELAY;
+    }
+}
+
 bool CAnimationManager::TestPixels(
-    CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, uint16_t id)
+    CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, uint16_t graphic)
 {
     if (obj == nullptr)
     {
         return false;
     }
 
-    if (id == 0)
+    if (graphic == 0)
     {
-        id = obj->GetMountAnimation();
+        graphic = obj->GetGraphicForAnimation();
     }
 
-    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
         return false;
     }
 
-    assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-    auto direction =
-        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id);
-    const int fc = direction.FrameCount;
+    const auto anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
+    if (!anim)
+    {
+        //Info(Data, "Test: couldn't get animation: 0x%04x", id);
+        return false;
+    }
+    const int fc = anim->FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
@@ -1135,12 +408,12 @@ bool CAnimationManager::TestPixels(
         }
     }
 
-    if (frameIndex >= direction.FrameCount)
+    if (frameIndex >= fc)
     {
         return false;
     }
 
-    auto &frame = direction.m_Frames[frameIndex];
+    auto &frame = anim->Frames[frameIndex];
     auto spr = (CSprite *)frame.UserData;
 
     if (!spr)
@@ -1171,7 +444,14 @@ bool CAnimationManager::TestPixels(
 }
 
 void CAnimationManager::Draw(
-    CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id)
+    CGameObject *obj,
+    int x,
+    int y,
+    bool mirror,
+    uint8_t &frameIndex,
+    uint16_t graphic,
+    bool isShadow,
+    uint16_t convColor)
 {
     ScopedPerfMarker(__FUNCTION__);
     SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw");
@@ -1180,26 +460,19 @@ void CAnimationManager::Draw(
         return;
     }
 
-    const bool isShadow = (id >= 0x10000);
-    if (isShadow)
+    if (graphic == 0)
     {
-        id -= 0x10000;
+        graphic = obj->GetGraphicForAnimation();
     }
 
-    if (id == 0)
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+    const auto anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
+    if (!anim)
     {
-        id = obj->GetMountAnimation();
-    }
-
-    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
+        //Info(Data, "Draw: couldn't get animation: 0x%04x", id);
         return;
     }
-
-    assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-    auto direction =
-        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id);
-    const int fc = direction.FrameCount;
+    const int fc = anim->FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
@@ -1212,12 +485,12 @@ void CAnimationManager::Draw(
         }
     }
 
-    if (frameIndex >= direction.FrameCount)
+    if (frameIndex >= fc)
     {
         return;
     }
 
-    CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
+    auto &frame = anim->Frames[frameIndex];
     auto spr = (CSprite *)frame.UserData;
     if (!spr) //spr->Texture == 0)
     {
@@ -1285,13 +558,13 @@ void CAnimationManager::Draw(
 
                 if (color == 0u)
                 {
-                    if (direction.Address != direction.PatchedAddress)
+                    //if (direction.Address != direction.PatchedAddress) // FIXME
                     {
-                        color = g_Index.m_Anim[id].Color;
+                        color = g_Index.m_Anim[graphic].Color;
                     }
-                    if ((color == 0u) && m_EquipConvItem != nullptr)
+                    if (color == 0 && convColor != 0)
                     {
-                        color = m_EquipConvItem->Color;
+                        color = convColor;
                     }
                     partialHue = false;
                 }
@@ -1517,8 +790,7 @@ void CAnimationManager::Draw(
 void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y)
 {
     const SITTING_INFO_DATA &data = SITTING_INFO[m_Sitting - 1];
-
-    auto dir = SelectAnim.Direction;
+    auto dir = Anim.Direction;
     switch (dir)
     {
         case 7:
@@ -1539,7 +811,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction1;
             }
-
             break;
         }
         case 1:
@@ -1560,7 +831,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction2;
             }
-
             break;
         }
         case 3:
@@ -1581,7 +851,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction3;
             }
-
             break;
         }
         case 5:
@@ -1602,7 +871,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction4;
             }
-
             break;
         }
         default:
@@ -1638,14 +906,12 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
         }
     }
 
-    SelectAnim.Direction = dir;
+    Anim.Direction = dir;
 }
 
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
     SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawCharacter");
-    m_EquipConvItem = nullptr;
-
     m_Transform = false;
 
     int drawX = x + obj->OffsetX;
@@ -1654,7 +920,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     uint16_t targetColor = 0;
     bool needHPLine = false;
     uint32_t serial = obj->Serial;
-    bool drawShadow = !obj->Dead();
+    bool drawShadow = !obj->IsDead();
     m_UseBlending = false;
 
     if (g_DrawAura)
@@ -1679,6 +945,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                            ToColorG(auraColor) / 255.f,
                            ToColorB(auraColor) / 255.f,
                            ToColorA(auraColor) / 255.f } });
+
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
@@ -1748,11 +1015,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         if (g_ConfigManager.GetApplyStateColorOnCharacters())
         {
-            if (obj->Poisoned() || obj->SA_Poisoned)
+            if (obj->IsPoisoned() || obj->SA_Poisoned)
             {
                 Color = 0x0044;
             }
-            else if (obj->Frozen())
+            else if (obj->IsParalyzed())
             {
                 Color = 0x014C;
             }
@@ -1766,7 +1033,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             }
         }
 
-        if (obj->Dead())
+        if (obj->IsDead())
         {
             Color = 0x0386;
         }
@@ -1814,30 +1081,30 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         }
     }
 
-    SelectAnim.Direction = 0;
-    obj->UpdateAnimationInfo(SelectAnim.Direction);
+    Anim.Direction = 0;
+    obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
     bool mirror = false;
-    uint8_t layerDir = SelectAnim.Direction;
+    uint8_t layerDir = Anim.Direction;
 
-    GetAnimDirection(SelectAnim.Direction, mirror);
+    GetAnimDirection(Anim.Direction, mirror);
 
-    uint8_t animIndex = obj->AnimIndex;
-    uint8_t animGroup = obj->GetAnimationGroup();
-    SelectAnim.Group = animGroup;
+    const auto graphic = /*GetGraphicForAnimation*/ obj->Graphic;
+    uint8_t frameIndex = obj->AnimIndex;
+    uint8_t animGroup = obj->GetGroupForAnimation(graphic, true);
+    Anim.Group = animGroup;
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
 
     int lightOffset = 20;
 
-    if (obj->IsHuman() && goi != nullptr) //Draw mount
+    if (obj->IsHuman() && goi != nullptr && !obj->IsDrivingBoat()) //Draw mount
     {
         m_Sitting = 0;
         lightOffset += 20;
 
-        uint16_t mountID = goi->GetMountAnimation();
+        uint16_t mountID = goi->GetGraphicForAnimation();
         int mountedHeightOffset = 0;
-
         if (mountID < MAX_ANIMATIONS_DATA_INDEX_COUNT)
         {
             mountedHeightOffset = g_Index.m_Anim[mountID].MountedHeightOffset;
@@ -1845,17 +1112,16 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         if (drawShadow)
         {
-            Draw(obj, drawX, drawY + 10 + mountedHeightOffset, mirror, animIndex, 0x10000);
-            SelectAnim.Group = obj->GetAnimationGroup(mountID);
-
-            Draw(goi, drawX, drawY, mirror, animIndex, mountID + 0x10000);
+            Draw(obj, drawX, drawY + 10 + mountedHeightOffset, mirror, frameIndex, 0, true);
+            Anim.Group = obj->GetGroupForAnimation(mountID, false);
+            Draw(goi, drawX, drawY, mirror, frameIndex, mountID + 0x10000);
         }
         else
         {
-            SelectAnim.Group = obj->GetAnimationGroup(mountID);
+            Anim.Group = obj->GetGroupForAnimation(mountID, false);
         }
 
-        Draw(goi, drawX, drawY, mirror, animIndex, mountID);
+        Draw(goi, drawX, drawY, mirror, frameIndex, mountID);
         drawY += mountedHeightOffset;
     }
     else
@@ -1865,13 +1131,13 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (m_Sitting != 0)
         {
             animGroup = PAG_STAND;
-            animIndex = 0;
+            frameIndex = 0;
 
-            obj->UpdateAnimationInfo(SelectAnim.Direction);
+            obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
             FixSittingDirection(layerDir, mirror, drawX, drawY);
 
-            if (SelectAnim.Direction == 3)
+            if (Anim.Direction == 3)
             {
                 animGroup = 25;
             }
@@ -1882,21 +1148,29 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         }
         else if (drawShadow)
         {
-            Draw(obj, drawX, drawY, mirror, animIndex, 0x10000);
+            Draw(obj, drawX, drawY, mirror, frameIndex, 0, true);
         }
     }
 
-    SelectAnim.Group = animGroup;
+    Anim.Group = animGroup;
 
-    Draw(obj, drawX, drawY, mirror, animIndex); //Draw character
+    Draw(obj, drawX, drawY, mirror, frameIndex); //Draw character
+    if (g_DeveloperMode == DM_DEBUGGING)
+    {
+        char buf[100] = { 0 };
+        sprintf(buf, "A:0x%04X G:%02d D:%02d", Anim.Graphic, Anim.Group, Anim.Direction);
+        const auto py = drawY - 72;
+        const auto px = drawX - 50;
+        g_FontManager.DrawA(3, buf, 0x35, px, py, 100, TS_CENTER);
+    }
 
     if (obj->IsHuman()) //Draw layered objects
     {
-        DrawEquippedLayers(false, obj, drawX, drawY, mirror, layerDir, animIndex, lightOffset);
+        DrawEquippedLayers(false, obj, drawX, drawY, mirror, layerDir, frameIndex, lightOffset);
 
         const SITTING_INFO_DATA &sittingData = SITTING_INFO[m_Sitting - 1];
 
-        if ((m_Sitting != 0) && SelectAnim.Direction == 3 && sittingData.DrawBack &&
+        if ((m_Sitting != 0) && Anim.Direction == 3 && sittingData.DrawBack &&
             obj->FindLayer(OL_CLOAK) == nullptr)
         {
             for (CRenderWorldObject *ro = obj->m_PrevXY; ro != nullptr; ro = ro->m_PrevXY)
@@ -1948,114 +1222,109 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == obj->Serial)
     {
-        uint16_t id = obj->GetMountAnimation();
-
-        if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
+        const auto id = obj->GetGraphicForAnimation();
+        const auto group = Anim.Group;
+        const auto dir = Anim.Direction;
+        const auto animation = ExecuteAnimation({ id, group, dir }, g_Ticks);
+        if (animation != nullptr && animation->Frames != nullptr)
         {
-            assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-            CTextureAnimationDirection &direction =
-                g_Index.m_Anim[id].m_Groups[SelectAnim.Group].m_Direction[SelectAnim.Direction];
+            auto &frame = animation->Frames[0];
+            auto spr = (CSprite *)frame.UserData;
+            assert(spr);
 
-            if (direction.Address != 0 && direction.m_Frames != nullptr)
+            int frameWidth = spr->Width;
+            int frameHeight = spr->Height;
+
+            if (frameWidth >= 80)
             {
-                CTextureAnimationFrame &frame = direction.m_Frames[0];
-                auto spr = (CSprite *)frame.UserData;
-                assert(spr);
+                g_NewTargetSystem.GumpTop = 0x756D;
+                g_NewTargetSystem.GumpBottom = 0x756A;
+            }
+            else if (frameWidth >= 40)
+            {
+                g_NewTargetSystem.GumpTop = 0x756E;
+                g_NewTargetSystem.GumpBottom = 0x756B;
+            }
+            else
+            {
+                g_NewTargetSystem.GumpTop = 0x756F;
+                g_NewTargetSystem.GumpBottom = 0x756C;
+            }
 
-                int frameWidth = spr->Width;
-                int frameHeight = spr->Height;
-
-                if (frameWidth >= 80)
+            switch (obj->Notoriety)
+            {
+                case NT_INNOCENT:
                 {
-                    g_NewTargetSystem.GumpTop = 0x756D;
-                    g_NewTargetSystem.GumpBottom = 0x756A;
+                    g_NewTargetSystem.ColorGump = 0x7570;
+                    break;
                 }
-                else if (frameWidth >= 40)
+                case NT_FRIENDLY:
                 {
-                    g_NewTargetSystem.GumpTop = 0x756E;
-                    g_NewTargetSystem.GumpBottom = 0x756B;
+                    g_NewTargetSystem.ColorGump = 0x7571;
+                    break;
                 }
-                else
+                case NT_SOMEONE_GRAY:
+                case NT_CRIMINAL:
                 {
-                    g_NewTargetSystem.GumpTop = 0x756F;
-                    g_NewTargetSystem.GumpBottom = 0x756C;
+                    g_NewTargetSystem.ColorGump = 0x7572;
+                    break;
                 }
-
-                switch (obj->Notoriety)
+                case NT_ENEMY:
                 {
-                    case NT_INNOCENT:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7570;
-                        break;
-                    }
-                    case NT_FRIENDLY:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7571;
-                        break;
-                    }
-                    case NT_SOMEONE_GRAY:
-                    case NT_CRIMINAL:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7572;
-                        break;
-                    }
-                    case NT_ENEMY:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7573;
-                        break;
-                    }
-                    case NT_MURDERER:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7576;
-                        break;
-                    }
-                    case NT_INVULNERABLE:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7575;
-                        break;
-                    }
-                    default:
-                        break;
+                    g_NewTargetSystem.ColorGump = 0x7573;
+                    break;
                 }
-
-                int per = obj->MaxHits;
-
-                if (per > 0)
+                case NT_MURDERER:
                 {
-                    per = (obj->Hits * 100) / per;
+                    g_NewTargetSystem.ColorGump = 0x7576;
+                    break;
+                }
+                case NT_INVULNERABLE:
+                {
+                    g_NewTargetSystem.ColorGump = 0x7575;
+                    break;
+                }
+                default:
+                    break;
+            }
 
-                    if (per > 100)
-                    {
-                        per = 100;
-                    }
+            int per = obj->MaxHits;
 
-                    if (per < 1)
-                    {
-                        per = 0;
-                    }
-                    else
-                    {
-                        per = (34 * per) / 100;
-                    }
+            if (per > 0)
+            {
+                per = (obj->Hits * 100) / per;
+
+                if (per > 100)
+                {
+                    per = 100;
                 }
 
-                g_NewTargetSystem.Hits = per;
-                g_NewTargetSystem.X = drawX;
-                g_NewTargetSystem.TopY = drawY - frameHeight - 8;
-                g_NewTargetSystem.BottomY = drawY + 7;
-                g_NewTargetSystem.TargetedCharacter = obj;
-                if (obj->Poisoned() || obj->SA_Poisoned)
+                if (per < 1)
                 {
-                    g_NewTargetSystem.HealthColor = 63; //Character status line (green)
-                }
-                else if (obj->YellowHits())
-                {
-                    g_NewTargetSystem.HealthColor = 53; //Character status line (green)
+                    per = 0;
                 }
                 else
                 {
-                    g_NewTargetSystem.HealthColor = 90; //Character status line (blue)
+                    per = (34 * per) / 100;
                 }
+            }
+
+            g_NewTargetSystem.Hits = per;
+            g_NewTargetSystem.X = drawX;
+            g_NewTargetSystem.TopY = drawY - frameHeight - 8;
+            g_NewTargetSystem.BottomY = drawY + 7;
+            g_NewTargetSystem.TargetedCharacter = obj;
+            if (obj->IsPoisoned() || obj->SA_Poisoned)
+            {
+                g_NewTargetSystem.HealthColor = 63; //Character status line (green)
+            }
+            else if (obj->YellowHits())
+            {
+                g_NewTargetSystem.HealthColor = 53; //Character status line (green)
+            }
+            else
+            {
+                g_NewTargetSystem.HealthColor = 90; //Character status line (blue)
             }
         }
     }
@@ -2102,7 +1371,7 @@ void CAnimationManager::PrepareTargetAttackGump(
     gump.Color = targetColor;
     gump.Hits = per;
     gump.TargetedCharacter = &obj;
-    if (obj.Poisoned() || obj.SA_Poisoned)
+    if (obj.IsPoisoned() || obj.SA_Poisoned)
     {
         gump.HealthColor = 63; //Character status line (green)
     }
@@ -2120,16 +1389,16 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 {
     y -= 3;
     m_Sitting = obj->IsSitting();
-    SelectAnim.Direction = 0;
-    obj->UpdateAnimationInfo(SelectAnim.Direction);
+    Anim.Direction = 0;
+    obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
     bool mirror = false;
-    uint8_t layerDir = SelectAnim.Direction;
+    uint8_t layerDir = Anim.Direction;
 
-    GetAnimDirection(SelectAnim.Direction, mirror);
+    GetAnimDirection(Anim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    uint8_t animGroup = obj->GetAnimationGroup();
+    uint8_t animGroup = obj->GetGroupForAnimation(0, true);
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
 
@@ -2138,10 +1407,8 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 
     if (obj->IsHuman() && goi != nullptr) //Check mount
     {
-        uint16_t mountID = goi->GetMountAnimation();
-
-        SelectAnim.Group = obj->GetAnimationGroup(mountID);
-
+        uint16_t mountID = goi->GetGraphicForAnimation();
+        Anim.Group = obj->GetGroupForAnimation(mountID, false);
         if (TestPixels(goi, drawX, drawY, mirror, animIndex, mountID))
         {
             return true;
@@ -2156,18 +1423,15 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     {
         animGroup = PAG_STAND;
         animIndex = 0;
-
-        obj->UpdateAnimationInfo(SelectAnim.Direction);
-
+        obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
         FixSittingDirection(layerDir, mirror, drawX, drawY);
-
-        if (SelectAnim.Direction == 3)
+        if (Anim.Direction == 3)
         {
             animGroup = 25;
         }
     }
 
-    SelectAnim.Group = animGroup;
+    Anim.Group = animGroup;
 
     return TestPixels(obj, drawX, drawY, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, drawX, drawY, mirror, layerDir, animIndex, 0);
@@ -2182,26 +1446,15 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     }
 
     m_Sitting = 0;
-    SelectAnim.Direction = (obj->Layer & 0x7F) & 7;
+    Anim.Direction = (obj->Layer & 0x7F) & 7;
     bool mirror = false;
-
-    GetAnimDirection(SelectAnim.Direction, mirror);
-
-    if (obj->Hidden())
-    {
-        Color = 0x038E;
-    }
-    else
-    {
-        Color = 0;
-    }
-
+    GetAnimDirection(Anim.Direction, mirror);
+    Color = obj->Hidden() ? 0x038E : 0;
     uint8_t animIndex = obj->AnimIndex;
-    SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
-
+    const uint16_t graphic = g_AnimationManager.ConvertBodyIfNeeded(obj->GetGraphicForAnimation());
+    Anim.Group = GetDieGroupIndex(graphic, obj->UsedLayer != 0);
     Draw(obj, x, y, mirror, animIndex); //Draw animation
-
-    DrawEquippedLayers(false, obj, x, y, mirror, SelectAnim.Direction, animIndex, 0);
+    DrawEquippedLayers(false, obj, x, y, mirror, Anim.Direction, animIndex, 0);
 }
 
 bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
@@ -2212,134 +1465,107 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     }
 
     m_Sitting = 0;
-    SelectAnim.Direction = (obj->Layer & 0x7F) & 7;
+    Anim.Direction = (obj->Layer & 0x7F) & 7;
     bool mirror = false;
 
-    GetAnimDirection(SelectAnim.Direction, mirror);
+    GetAnimDirection(Anim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
+    Anim.Group = GetDieGroupIndex(obj->GetGraphicForAnimation(), obj->UsedLayer != 0);
 
     return TestPixels(obj, x, y, mirror, animIndex) ||
-           DrawEquippedLayers(true, obj, x, y, mirror, SelectAnim.Direction, animIndex, 0);
+           DrawEquippedLayers(true, obj, x, y, mirror, Anim.Direction, animIndex, 0);
 }
 
-bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
+uint16_t CAnimationManager::ConvertBodyIfNeeded(uint16_t graphic, bool isParent)
 {
-    bool result = false;
-    if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT)
-    {
-        auto groupDir = g_Index.m_Anim[graphic].m_Groups[group].m_Direction[0];
-        result = groupDir.Address != 0 || groupDir.IsUOP;
-    }
-    return result;
+    uint16_t newGraphic = graphic;
+    uo_find_body_replacement(newGraphic, isParent);
+    return newGraphic;
 }
 
-AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
-    uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
+/*
+AnimationGroup &CAnimationManager::GetBodyAnimationGroup(uint16_t graphic, uint8_t group, uint16_t &outHue, bool isParent)
+{
+    uint16_t newGraphic = graphic;
+    outHue = g_Index.m_Anim[graphic].Color;
+    if (!uo_find_body_replacement(newGraphic, isParent))
+    {
+        return g_Index.m_Anim[graphic].Groups[group];
+    }
+
+    return g_Index.m_Anim[newGraphic].Groups[group];
+}
+*/
+
+static std::unordered_map<AnimationId, AnimationFrameInfo> s_DimensionsCache;
+
+AnimationFrameInfo
+CAnimationManager::GetAnimationDimensions(uint8_t frameIndex, AnimationState anim, bool isCorpse)
 {
     AnimationFrameInfo result = {};
-    if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        CTextureAnimationGroup &group = g_Index.m_Anim[id].m_Groups[animGroup];
-        if (dir < MAX_MOBILE_DIRECTIONS)
-        {
-            auto &direction = group.m_Direction[dir];
-            int fc = direction.FrameCount;
-            if (fc > 0)
-            {
-                if (frameIndex >= fc)
-                {
-                    if (isCorpse)
-                    {
-                        frameIndex = fc - 1;
-                    }
-                    else
-                    {
-                        frameIndex = 0;
-                    }
-                }
+    const auto animId = AnimId(anim);
+    const auto animation = uo_animation_get(animId);
+    if (animation == nullptr)
+        return result;
 
-                if (direction.m_Frames != nullptr)
-                {
-                    CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-                    auto spr = (CSprite *)frame.UserData;
-                    //assert(spr);
-                    if (!spr)
-                    {
-                        // FIXME: before we had CSprite in the struct, we need cleanup how to construct these objects
-                        spr = new CSprite();
-                    }
-                    result.Width = spr->Width;
-                    result.Height = spr->Height;
-                    result.CenterX = frame.CenterX;
-                    result.CenterY = frame.CenterY;
-                    return result;
-                }
+    const auto it = s_DimensionsCache.find(animId);
+    if (it != s_DimensionsCache.end())
+        return it->second;
+
+    int fc = animation->FrameCount;
+    if (fc > 0)
+    {
+        if (frameIndex >= fc)
+        {
+            frameIndex = 0;
+        }
+
+        if (animation->Frames != nullptr)
+        {
+            auto &frame = animation->Frames[frameIndex];
+            auto spr = (CSprite *)frame.UserData;
+            if (spr)
+            {
+                result.Width = spr->Width;
+                result.Height = spr->Height;
+                result.CenterX = frame.CenterX;
+                result.CenterY = frame.CenterY;
+                s_DimensionsCache[animId] = result;
+                return result;
             }
         }
-        CTextureAnimationDirection &direction = group.m_Direction[0];
-        g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
     }
+
+    g_FileManager.LoadAnimationFrameInfo(result, anim, frameIndex, isCorpse);
+    s_DimensionsCache[animId] = result;
     return result;
 }
 
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
-    CGameObject *obj, uint8_t frameIndex, uint8_t defaultDirection, uint8_t defaultGroup)
+    uint8_t animIndex, AnimationState anim, bool isMounted, bool isCorpse, uint8_t frameIndex)
 {
-    uint8_t dir = defaultDirection & 0x7F;
-    uint8_t animGroup = defaultGroup;
-    uint16_t id = obj->GetMountAnimation();
+    anim.Direction &= 0x7F;
     bool mirror = false;
-
-    if (obj->NPC)
-    {
-        CGameCharacter *gc = obj->GameCharacterPtr();
-        gc->UpdateAnimationInfo(dir);
-        animGroup = gc->GetAnimationGroup();
-        GetAnimDirection(dir, mirror);
-    }
-    else if (obj->IsCorpse())
-    {
-        dir = ((CGameItem *)obj)->Layer & 7;
-        animGroup = GetDieGroupIndex(id, ((CGameItem *)obj)->UsedLayer != 0u);
-        GetAnimDirection(dir, mirror);
-    }
-    else if (((CGameItem *)obj)->Layer != OL_MOUNT)
-    { //TGameItem
-        id = ((CGameItem *)obj)->AnimID;
-    }
-
+    GetAnimDirection(anim.Direction, mirror);
     if (frameIndex == 0xFF)
     {
-        frameIndex = (uint8_t)obj->AnimIndex;
+        frameIndex = animIndex;
     }
 
-    AnimationFrameInfo dims =
-        GetAnimationDimensions(frameIndex, id, dir, animGroup, obj->IsCorpse());
-
-    if ((dims.Width == 0) && (dims.Height == 0) && (dims.CenterX == 0) && (dims.CenterY == 0))
+    auto frame = GetAnimationDimensions(frameIndex, anim, isCorpse);
+    if (frame.Width == 0 && frame.Height == 0 && frame.CenterX == 0 && frame.CenterY == 0)
     {
-        dims.Width = 20;
-
-        if (obj->NPC && obj->FindLayer(OL_MOUNT) != nullptr)
-        {
-            dims.Height = 100;
-        }
-        else
-        {
-            dims.Height = 60;
-        }
+        frame.Height = isMounted ? 100 : 60;
     }
-
-    return dims;
+    return frame;
 }
 
 DRAW_FRAME_INFORMATION
 CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLayers)
 {
     m_Sitting = 0;
-    SelectAnim.Direction = 0;
+    Anim.Direction = 0;
 
     DRAW_FRAME_INFORMATION dfInfo = {};
 
@@ -2365,15 +1591,15 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
     if (gameObject->NPC)
     {
         CGameCharacter *obj = (CGameCharacter *)gameObject;
-        obj->UpdateAnimationInfo(SelectAnim.Direction);
+        obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
         bool mirror = false;
-        uint8_t layerDir = SelectAnim.Direction;
+        uint8_t layerDir = Anim.Direction;
 
-        GetAnimDirection(SelectAnim.Direction, mirror);
+        GetAnimDirection(Anim.Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
-        uint8_t animGroup = obj->GetAnimationGroup();
+        uint8_t animGroup = obj->GetGroupForAnimation(0, true);
 
         FRAME_OUTPUT_INFO info = {};
 
@@ -2381,12 +1607,9 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
         if (goi != nullptr) //Check mount
         {
-            uint16_t mountID = goi->GetMountAnimation();
-
-            SelectAnim.Group = obj->GetAnimationGroup(mountID);
-
+            uint16_t mountID = goi->GetGraphicForAnimation();
+            Anim.Group = obj->GetGroupForAnimation(mountID, false);
             CalculateFrameInformation(info, goi, mirror, animIndex);
-
             switch (animGroup)
             {
                 case PAG_FIDGET_1:
@@ -2402,7 +1625,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
             }
         }
 
-        SelectAnim.Group = animGroup;
+        Anim.Group = animGroup;
 
         CalculateFrameInformation(info, obj, mirror, animIndex);
 
@@ -2435,13 +1658,13 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
     {
         CGameItem *obj = (CGameItem *)gameObject;
 
-        SelectAnim.Direction = (obj->Layer & 0x7F) & 7;
+        Anim.Direction = (obj->Layer & 0x7F) & 7;
         bool mirror = false;
 
-        GetAnimDirection(SelectAnim.Direction, mirror);
+        GetAnimDirection(Anim.Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
-        SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
+        Anim.Group = GetDieGroupIndex(obj->GetGraphicForAnimation(), obj->UsedLayer != 0u);
 
         FRAME_OUTPUT_INFO info = {};
 
@@ -2451,8 +1674,8 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         {
             for (int l = 0; l < USED_LAYER_COUNT; l++)
             {
-                assert(SelectAnim.Direction < MAX_LAYER_DIRECTIONS && "Out-of-bounds access");
-                CGameItem *goi = obj->FindLayer(m_UsedLayers[SelectAnim.Direction][l]);
+                assert(Anim.Direction < MAX_LAYER_DIRECTIONS && "Out-of-bounds access");
+                CGameItem *goi = obj->FindLayer(m_UsedLayers[Anim.Direction][l]);
 
                 if (goi != nullptr && (goi->AnimID != 0u))
                 {
@@ -2486,34 +1709,23 @@ bool CAnimationManager::DrawEquippedLayers(
 {
     SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawEquippedLayers");
     bool result = false;
-
-    std::vector<CGameItem *> &list = obj->m_DrawLayeredObjects;
-
+    const auto &list = obj->m_DrawLayeredObjects;
     uint16_t bodyGraphic = obj->Graphic;
-
     if (obj->IsCorpse())
     {
         bodyGraphic = obj->Count;
     }
-
-    EQUIP_CONV_BODY_MAP::iterator bodyMapIter = m_EquipConv.find(bodyGraphic);
 
     if (selection)
     {
         for (auto i = list.begin(); i != list.end() && !result; ++i)
         {
             uint16_t id = (*i)->AnimID;
-
-            if (bodyMapIter != m_EquipConv.end())
+            const auto conv = uo_get_equipconv(bodyGraphic, id);
+            if (conv != nullptr)
             {
-                EQUIP_CONV_DATA_MAP::iterator dataIter = bodyMapIter->second.find(id);
-
-                if (dataIter != bodyMapIter->second.end())
-                {
-                    id = dataIter->second.Graphic;
-                }
+                id = conv->Graphic;
             }
-
             result = TestPixels(*i, drawX, drawY, mirror, animIndex, id);
         }
     }
@@ -2522,23 +1734,15 @@ bool CAnimationManager::DrawEquippedLayers(
         for (auto i = list.begin(); i != list.end(); ++i)
         {
             CGameItem *item = *i;
-
             uint16_t id = item->AnimID;
-
-            if (bodyMapIter != m_EquipConv.end())
+            uint16_t convColor = 0;
+            const auto conv = uo_get_equipconv(bodyGraphic, id);
+            if (conv != nullptr)
             {
-                EQUIP_CONV_DATA_MAP::iterator dataIter = bodyMapIter->second.find(id);
-
-                if (dataIter != bodyMapIter->second.end())
-                {
-                    m_EquipConvItem = &dataIter->second;
-                    id = m_EquipConvItem->Graphic;
-                }
+                id = conv->Graphic;
+                convColor = conv->Color;
             }
-
-            Draw(item, drawX, drawY, mirror, animIndex, id);
-            m_EquipConvItem = nullptr;
-
+            Draw(item, drawX, drawY, mirror, animIndex, id, convColor);
             if (item->IsLightSource() && g_GameScreen.UseLight)
             {
                 g_GameScreen.AddLight(obj, item, drawX, drawY - lightOffset);
@@ -2703,39 +1907,42 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 
 uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index)
 {
-    auto getReplaceGroup = [](const std::vector<std::pair<uint16_t, uint8_t>> &list,
-                              uint16_t index,
-                              uint16_t walkIndex) -> uint16_t {
-        for (const std::pair<uint16_t, uint8_t> &item : list)
+    auto getReplaceGroup = [](const auto &list, uint16_t index) -> uint8_t {
+        for (const auto &item : list)
         {
             if (item.first == index)
             {
-                if (item.second == 0xFF)
-                {
-                    return walkIndex;
-                }
-
-                return (uint16_t)item.second;
+                return checked_cast<uint8_t>(item.second == 0xff ? 0 : item.second);
             }
         }
-
-        return index;
+        return checked_cast<uint8_t>(index);
     };
 
-    ANIMATION_GROUPS group = GetGroupIndex(obj->Graphic);
-
+    const ANIMATION_GROUPS group = GetGroupIndex(obj->Graphic);
     if (group == AG_LOW)
     {
-        return (uint8_t)(
-            getReplaceGroup(m_GroupReplaces[0], index, LAG_WALK) % LAG_ANIMATION_COUNT);
+        return getReplaceGroup(g_FileManager.m_GroupReplaces[0], index) % LAG_ANIMATION_COUNT;
     }
     if (group == AG_PEOPLE)
     {
-        return (uint8_t)(
-            getReplaceGroup(m_GroupReplaces[1], index, PAG_WALK_UNARMED) % PAG_ANIMATION_COUNT);
+        return getReplaceGroup(g_FileManager.m_GroupReplaces[1], index) % PAG_ANIMATION_COUNT;
     }
-
     return (uint8_t)(index % HAG_ANIMATION_COUNT);
+}
+
+bool CAnimationManager::IsReplacedObjectAnimation(uint8_t anim, uint16_t v13) const
+{
+    if (anim >= countof(g_FileManager.m_GroupReplaces))
+        return false;
+
+    for (const auto &item : g_FileManager.m_GroupReplaces[anim])
+    {
+        if (item.first == v13)
+        {
+            return item.second != 0xff;
+        }
+    }
+    return false;
 }
 
 uint8_t
@@ -2743,11 +1950,9 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
 {
     if (action <= 10)
     {
-        CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+        const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
         ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-        if ((ia.Flags & 0x80000000) != 0u)
+        if (ia.Flags & AF_FOUND)
         {
             type = ia.Type;
         }
@@ -2761,7 +1966,7 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 2:
                     return 6;
                 case 3:
-                    if ((ia.Flags & 1) != 0u)
+                    if (ia.Flags & AF_UNKNOWN_1)
                     {
                         return 12;
                     }
@@ -2777,14 +1982,13 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
             {
                 return 6;
             }
-
             return 5;
         }
         else if (type != AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                if (action != 0u)
+                if (action > 0)
                 {
                     if (action == 1)
                     {
@@ -2794,10 +1998,8 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                     {
                         return 28;
                     }
-
                     return 26;
                 }
-
                 return 29;
             }
 
@@ -2810,6 +2012,11 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 6:
                     return 12;
                 case 7:
+                    if (obj->IsGargoyle() && obj->IsFlying() &&
+                        uo_animation_exists(obj->Graphic, 72))
+                    {
+                        return 72;
+                    }
                     return 13;
                 case 8:
                     return 14;
@@ -2820,58 +2027,63 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 5:
                     return 10;
                 default:
-                    return 31;
+                    if (obj->IsGargoyle() && obj->IsFlying() &&
+                        uo_animation_exists(obj->Graphic, 71))
+                    {
+                        return 71;
+                    }
+                    else if (uo_animation_exists(obj->Graphic, 31))
+                    {
+                        return 31;
+                    }
             }
+        }
+
+        if (ia.Flags & AF_USE_2_IF_HITTED_WHILE_RUNNING)
+        {
+            return 2;
         }
 
         if ((mode % 2) != 0)
         {
             return 6;
         }
-
         return 5;
     }
-
     return 0;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
 
     if (type != AGT_MONSTER)
     {
-        if (type <= AGT_ANIMAL || obj->FindLayer(OL_MOUNT) != nullptr)
+        if (type <= AGT_ANIMAL || obj->IsMounted())
         {
-            return 0xFF;
+            return 0xff;
         }
-
         return 30;
     }
     if ((mode % 2) != 0)
     {
         return 15;
     }
-
     return 16;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -2888,7 +2100,6 @@ CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t act
             {
                 return 21;
             }
-
             return 22;
         }
 
@@ -2896,25 +2107,21 @@ CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t act
         {
             return 8;
         }
-
         return 12;
     }
     if ((mode % 2) != 0)
     {
         return 2;
     }
-
     return 3;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -2923,28 +2130,27 @@ CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t act
     {
         if (type > AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsGargoyle() && obj->IsFlying() && uo_animation_exists(obj->Graphic, 77))
             {
-                return 0xFF;
+                return 77;
             }
-
+            if (obj->IsMounted())
+            {
+                return 0xff;
+            }
             return 20;
         }
-
         return 7;
     }
-
     return 10;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -2955,21 +2161,20 @@ CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t act
         {
             return 18;
         }
-
         return 17;
     }
+
     if (type != AGT_ANIMAL)
     {
-        if (obj->FindLayer(OL_MOUNT) != nullptr)
+        if (obj->IsMounted())
         {
-            return 0xFF;
+            return 0xff;
         }
 
         if ((mode % 2) != 0)
         {
             return 6;
         }
-
         return 5;
     }
 
@@ -2982,18 +2187,15 @@ CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t act
         default:
             break;
     }
-
     return 9;
 }
 
 uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -3007,29 +2209,26 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
                 return 3;
             }
 
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                return 0xFF;
+                return 0xff;
             }
-
             return 34;
         }
-
         return 5;
     }
-
     return 11;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    if (obj->FindLayer(OL_MOUNT) != nullptr)
+    if (obj->IsMounted())
     {
-        return 0xFF;
+        return 0xff;
     }
 
-    if (action != 0u)
+    if (action > 0)
     {
         if (action == 1)
         {
@@ -3046,9 +2245,9 @@ CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t act
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -3062,9 +2261,9 @@ CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t act
                 return 9;
             }
 
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                return 0xFF;
+                return 0xff;
             }
             return 33;
         }
@@ -3076,16 +2275,33 @@ CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t act
 uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
 
     if (type != AGT_MONSTER)
     {
-        return 0xFF;
+        if (obj->IsGargoyle())
+        {
+            if (obj->IsFlying())
+            {
+                if (action == 0)
+                {
+                    return 60;
+                }
+            }
+            else
+            {
+                if (action == 0)
+                {
+                    return 61;
+                }
+            }
+        }
+        return 0xff;
     }
     return 20;
 }
@@ -3093,9 +2309,9 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -3104,18 +2320,26 @@ CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t ac
     {
         if (type >= AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                return 0xFF;
+                return 0xff;
             }
 
             switch (action)
             {
                 case 1:
                 case 2:
+                    if (obj->IsGargoyle() && obj->IsFlying())
+                    {
+                        return 76;
+                    }
                     return 17;
                 default:
                     break;
+            }
+            if (obj->IsGargoyle() && obj->IsFlying())
+            {
+                return 75;
             }
             return 16;
         }
@@ -3127,11 +2351,7 @@ CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t ac
 uint8_t CAnimationManager::GetObjectNewAnimation(
     CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode)
 {
-    if (obj->Graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        return 0;
-    }
-
+    assert(obj->Graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     switch (type)
     {
         case 0:
@@ -3163,21 +2383,556 @@ uint8_t CAnimationManager::GetObjectNewAnimation(
     return 0;
 }
 
-CTextureAnimationDirection &
-CAnimationManager::ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t graphic)
+static void LABEL_222(ANIMATION_FLAGS flags, uint16_t &v13)
 {
-    SelectAnim.Group = group;
-    SelectAnim.Direction = direction;
-    SelectAnim.Graphic = graphic;
-
-    CTextureAnimationGroup &grp = g_Index.m_Anim[graphic].m_Groups[group];
-    CTextureAnimationDirection &dir = grp.m_Direction[direction];
-    if (dir.FrameCount == 0)
+    if (flags & AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED)
     {
-        if (g_FileManager.LoadAnimation(SelectAnim, LoadSpritePixels))
+        switch (v13)
         {
-            m_UsedAnimList.push_back(&dir);
+            case 0:
+                v13 = 0;
+                goto LABEL_243;
+            case 1:
+                v13 = 19;
+                goto LABEL_243;
+            case 5:
+            case 6:
+                if (flags & AF_IDLE_AT_8_FRAME)
+                    v13 = 4;
+                else
+                    v13 = uint16_t(6 - (RandomInt(2) & 1));
+                goto LABEL_243;
+            case 8:
+                v13 = 2;
+                goto LABEL_243;
+            case 9:
+                v13 = 17;
+                goto LABEL_243;
+            case 10:
+                v13 = 18;
+                if (flags & AF_IDLE_AT_8_FRAME)
+                    v13--;
+                goto LABEL_243;
+            case 12:
+                v13 = 3;
+                goto LABEL_243;
+        }
+        // LABEL_241
+        v13 = 1;
+    }
+    else
+    {
+        if (flags & AF_CALCULATE_OFFSET_BY_LOW_GROUP)
+        {
+            switch (v13)
+            {
+                case 0:
+                    // LABEL_232
+                    v13 = 0;
+                    break;
+                case 2:
+                    v13 = 8;
+                    break;
+                case 3:
+                    v13 = 12;
+                    break;
+                case 4:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 12:
+                case 13:
+                case 14:
+                    v13 = 5;
+                    break;
+                case 5:
+                    v13 = 6;
+                    break;
+                case 10:
+                case 21:
+                    v13 = 7;
+                    break;
+                case 11:
+                    //LABEL_238:
+                    v13 = 3;
+                    break;
+                case 17:
+                    v13 = 9;
+                    break;
+                case 18:
+                    v13 = 10;
+                    break;
+                case 19:
+                    v13 = 1;
+                    break;
+                default:
+                    //LABEL_242:
+                    v13 = 2;
+                    break;
+            }
         }
     }
-    return dir;
+
+LABEL_243:
+    v13 = uint16_t(v13 & 0x7F);
+    if (v13 > 34)
+        v13 = 0;
+    //return uint8_t(v13);
+}
+
+static void LABEL_190(ANIMATION_FLAGS flags, uint16_t &v13)
+{
+    if (flags & AF_UNKNOWN_80 && v13 == 4)
+    {
+        v13 = 5;
+    }
+
+    if (flags & AF_UNKNOWN_200)
+    {
+        if (v13 - 7 > 9)
+        {
+            if (v13 == 19)
+            {
+                //LABEL_196
+                v13 = 0;
+            }
+            else if (v13 > 19)
+            {
+                v13 = 1;
+            }
+            LABEL_222(flags, v13);
+            return;
+        }
+    }
+    else
+    {
+        if (flags & AF_UNKNOWN_100)
+        {
+            switch (v13)
+            {
+                case 10:
+                case 15:
+                case 16:
+                    v13 = 1;
+                    LABEL_222(flags, v13);
+                    return;
+                case 11:
+                    v13 = 17;
+                    LABEL_222(flags, v13);
+                    return;
+            }
+            LABEL_222(flags, v13);
+            return;
+        }
+
+        if (flags & AF_UNKNOWN_1)
+        {
+            if (v13 == 21)
+            {
+                v13 = 10;
+            }
+            LABEL_222(flags, v13);
+            return;
+        }
+
+        if (flags & AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP)
+        {
+            //LABEL_222:
+            LABEL_222(flags, v13);
+            return;
+        }
+
+        switch (v13)
+        {
+            case 0:
+                v13 = 0;
+                break;
+            case 2:
+                v13 = 21;
+                LABEL_222(flags, v13);
+                return;
+            case 3:
+                v13 = 22;
+                LABEL_222(flags, v13);
+                return;
+            case 4:
+            case 9:
+                v13 = 9;
+                LABEL_222(flags, v13);
+                return;
+            case 5:
+                v13 = 11;
+                LABEL_222(flags, v13);
+                return;
+            case 6:
+                v13 = 13;
+                LABEL_222(flags, v13);
+                return;
+            case 7:
+                v13 = 18;
+                LABEL_222(flags, v13);
+                return;
+            case 8:
+                v13 = 19;
+                LABEL_222(flags, v13);
+                return;
+            case 10:
+            case 21:
+                v13 = 20;
+                LABEL_222(flags, v13);
+                return;
+            case 11:
+                v13 = 3;
+                LABEL_222(flags, v13);
+                return;
+            case 12:
+            case 14:
+                v13 = 16;
+                LABEL_222(flags, v13);
+                return;
+            case 13:
+                //LABEL_202:
+                v13 = 17;
+                LABEL_222(flags, v13);
+                return;
+            case 15:
+            case 16:
+                v13 = 30;
+                LABEL_222(flags, v13);
+                return;
+            case 17:
+                v13 = 5;
+                LABEL_222(flags, v13);
+                return;
+            case 18:
+                v13 = 6;
+                LABEL_222(flags, v13);
+                return;
+            case 19:
+                //LABEL_201:
+                v13 = 1;
+                LABEL_222(flags, v13);
+                return;
+        }
+    }
+    v13 = 4;
+    LABEL_222(flags, v13);
+}
+
+uint8_t CAnimationManager::CorrectAnimationGroupServer(
+    ANIMATION_GROUPS_TYPE type,
+    ANIMATION_GROUPS_TYPE originalType,
+    ANIMATION_FLAGS flags,
+    uint16_t v13) const
+{
+    if (v13 == 12)
+    {
+        if (!(type == AGT_HUMAN || type == AGT_EQUIPMENT || flags & AF_UNKNOWN_1000))
+        {
+            if (type != AGT_MONSTER)
+            {
+                if (type == AGT_HUMAN || type == AGT_EQUIPMENT)
+                {
+                    v13 = 16;
+                }
+                else
+                    v13 = 5;
+            }
+            else
+                v13 = 4;
+        }
+    }
+
+    if (type != AGT_MONSTER)
+    {
+        if (type != AGT_SEA_MONSTER)
+        {
+            if (type == AGT_ANIMAL)
+            {
+                if (IsReplacedObjectAnimation(0, v13))
+                {
+                    originalType = AGT_UNKNOWN;
+                }
+                if (v13 > 12)
+                {
+                    v13 = 0; // 2
+                }
+            }
+            else
+            {
+                if (IsReplacedObjectAnimation(1, v13))
+                {
+                    // LABEL_190:
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                }
+            }
+        }
+        else
+        {
+            if (IsReplacedObjectAnimation(3, v13))
+            {
+                originalType = AGT_UNKNOWN;
+            }
+            if (v13 > 8)
+            {
+                v13 = 2;
+            }
+        }
+    }
+    else
+    {
+        if (IsReplacedObjectAnimation(2, v13))
+        {
+            originalType = AGT_UNKNOWN;
+        }
+        if (v13 > 21)
+        {
+            v13 = 1;
+        }
+    }
+
+    if (originalType == AGT_UNKNOWN)
+    {
+        LABEL_190(flags, v13);
+        return uint8_t(v13);
+    }
+
+    if (originalType != 0)
+    {
+        if (originalType == AGT_ANIMAL && type == AGT_MONSTER)
+        {
+            switch (v13)
+            {
+                case 0:
+                    v13 = 0;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 1:
+                    v13 = 19;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 3:
+                    v13 = 11;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 5:
+                    v13 = 4;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 6:
+                    v13 = 5;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 7:
+                case 11:
+                    v13 = 10;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 8:
+                    v13 = 2;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 9:
+                    v13 = 17;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 10:
+                    v13 = 18;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 12:
+                    v13 = 3;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            // LABEL_187
+            v13 = 1;
+        }
+        LABEL_190(flags, v13);
+        return uint8_t(v13);
+    }
+
+    switch (type)
+    {
+        case AGT_HUMAN:
+        {
+            switch (v13)
+            {
+                case 0:
+                    v13 = 0;
+                    goto LABEL_189;
+                case 2:
+                    v13 = 21;
+                    goto LABEL_189;
+                case 3:
+                    v13 = 22;
+                    goto LABEL_189;
+                case 4:
+                case 9:
+                    v13 = 9;
+                    goto LABEL_189;
+                case 5:
+                    //LABEL_163:
+                    v13 = 11;
+                    goto LABEL_189;
+                case 6:
+                    v13 = 13;
+                    goto LABEL_189;
+                case 7:
+                    //LABEL_165:
+                    v13 = 18;
+                    goto LABEL_189;
+                case 8:
+                    //LABEL_172:
+                    v13 = 19;
+                    goto LABEL_189;
+                case 10:
+                case 21:
+                    v13 = 20;
+                    goto LABEL_189;
+                case 12:
+                case 14:
+                    v13 = 16;
+                    goto LABEL_189;
+                case 13:
+                    //LABEL_164:
+                    v13 = 17;
+                    goto LABEL_189;
+                case 15:
+                case 16:
+                    v13 = 30;
+                    goto LABEL_189;
+                case 17:
+                    v13 = 5;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 18:
+                    v13 = 6;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 19:
+                    v13 = 1;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            //LABEL_161:
+            v13 = 4;
+            goto LABEL_189;
+        }
+        case AGT_ANIMAL:
+        {
+            switch (v13)
+            {
+                case 0:
+                    v13 = 0;
+                    goto LABEL_189;
+                case 2:
+                    v13 = 8;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 3:
+                    v13 = 12;
+                    goto LABEL_189;
+                case 4:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 12:
+                case 13:
+                case 14:
+                    v13 = 5;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 5:
+                    v13 = 6;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 10:
+                case 21:
+                    v13 = 7;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 11:
+                    v13 = 3;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 17:
+                    //LABEL_170:
+                    v13 = 9;
+                    goto LABEL_189;
+                case 18:
+                    //LABEL_162:
+                    v13 = 10;
+                    goto LABEL_189;
+                case 19:
+                    v13 = 1;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            v13 = 2;
+            LABEL_190(flags, v13);
+            return uint8_t(v13);
+        }
+        case AGT_SEA_MONSTER:
+        {
+            switch (v13)
+            {
+                case 0:
+                    //LABEL_182:
+                    v13 = 0;
+                    goto LABEL_189;
+                case 2:
+                case 3:
+                    //LABEL_178:
+                    v13 = 8;
+                    goto LABEL_189;
+                case 4:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 12:
+                case 13:
+                case 14:
+                    //LABEL_183:
+                    v13 = 5;
+                    goto LABEL_189;
+                case 5:
+                    //LABEL_184:
+                    v13 = 6;
+                    goto LABEL_189;
+                case 10:
+                case 21:
+                    //LABEL_185:
+                    v13 = 7;
+                    goto LABEL_189;
+                case 17:
+                    //LABEL_186:
+                    v13 = 3;
+                    goto LABEL_189;
+                case 18:
+                    v13 = 4;
+                    goto LABEL_189;
+                case 19:
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            v13 = 2;
+            LABEL_190(flags, v13);
+            return uint8_t(v13);
+        }
+        default:
+        {
+        LABEL_189:
+            LABEL_190(flags, v13);
+            return uint8_t(v13);
+        }
+    }
+    // LABEL_188
+    v13 = 2;
+    LABEL_190(flags, v13);
+    return uint8_t(v13);
 }
