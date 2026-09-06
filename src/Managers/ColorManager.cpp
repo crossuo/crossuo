@@ -49,7 +49,7 @@ void CColorManager::CreateHuesPalette()
 
 void CColorManager::SendColorsToShader(uint16_t color)
 {
-    if (!color || !m_HuesCount)
+    if (!color || !GetHuesCount())
         return;
 
     float *palette = nullptr;
