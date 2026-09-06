@@ -1,3 +1,7 @@
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC system_header
+#endif
+
 /*
  *	ProgramOptions.hxx - a single-header program options parsing library for C++11
  *	Copyright (C) 2017-2018 Josua Rieder (josua.rieder1996@gmail.com)

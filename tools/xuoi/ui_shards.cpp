@@ -200,6 +200,8 @@ void ui_shards(ui_model &m, bool picker)
                                     "http://web.cdn.eamythic.com/us/uo/installers/20120309/UOClassicSetup_7_0_24_0.exe");
                         }
                         break;
+                        default:
+                            break;
                     }
                 }
                 // by knowing all our data paths and data version, we can match supported shards

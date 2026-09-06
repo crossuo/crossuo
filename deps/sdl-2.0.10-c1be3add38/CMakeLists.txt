@@ -1847,6 +1847,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 # Always build SDLmain
 if(NOT WINDOWS_STORE)
 add_library(XSDL2main STATIC ${SDLMAIN_SOURCES})
+  # xuo
+  target_compile_options(XSDL2main PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W0>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>
+  )
 target_include_directories(XSDL2main PUBLIC "$<BUILD_INTERFACE:${SDL2_SOURCE_DIR}/include>" $<INSTALL_INTERFACE:include/SDL2>)
 set(_INSTALL_LIBS "XSDL2main")
 if (NOT ANDROID)

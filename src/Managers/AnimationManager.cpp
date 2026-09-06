@@ -191,6 +191,8 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
             return AG_PEOPLE;
         case AGT_UNKNOWN:
             break;
+        default:
+            break;
     }
     return AG_HIGH;
 }
@@ -234,6 +236,8 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool
             return running ? PAG_DIE_2 : PAG_DIE_1;
         }
         case AGT_UNKNOWN:
+        default:
+            break;
         default:
             break;
     }

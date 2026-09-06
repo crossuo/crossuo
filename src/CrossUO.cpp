@@ -4674,6 +4674,13 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
         {
             color = g_OutOfRangeColor;
         }
+#ifndef NEW_RENDERER_ENABLED
+        if (!g_GrayedPixels && (color != 0u))
+        {
+            g_ColorManager.SendColorsToShader(color);
+        }
+        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
         auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
@@ -4684,9 +4691,6 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
             }
             g_ColorManager.SendColorsToShader(color);
         }
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
         ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
         cmd.value.asInt1 = uniformValue;
         RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
@@ -5205,6 +5209,8 @@ void CGame::CreateTextMessage(
 
             break;
         }
+        default:
+            break;
     }
 }
 
@@ -5332,6 +5338,8 @@ void CGame::CreateUnicodeTextMessage(
             g_WorldTextRenderer.AddText(td);
             break;
         }
+        default:
+            break;
     }
 }
 

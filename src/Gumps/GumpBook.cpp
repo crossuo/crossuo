@@ -333,7 +333,6 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
 
     if (page >= 0 && page <= PageCount)
     {
-        bool isSecondEntry = false;
         CGUITextEntry *entry = GetEntry(page);
 
         if (entry == nullptr)
@@ -347,7 +346,6 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
 
             if (entry != nullptr && page < PageCount - 1 && g_EntryPointer == &entry->m_Entry)
             {
-                isSecondEntry = true;
                 page++;
             }
             else

@@ -1,3 +1,7 @@
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC system_header
+#endif
+
 /* TinySoundFont - v0.8 - SoundFont2 synthesizer - https://github.com/schellingb/TinySoundFont
                                      no warranty implied; use at your own risk
    Do this:

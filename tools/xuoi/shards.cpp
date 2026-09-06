@@ -102,6 +102,8 @@ astr_t as_str(const tag_install &in)
             break;
         case tag_install_type::uo_latest:
             break;
+        default:
+            break;
     }
     return r;
 }

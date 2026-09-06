@@ -87,7 +87,7 @@ int xuoi_listing_load(const fs_path &path, mft_entries_map &data)
     if (!fp)
         return 0;
 
-    char tmp[512], endline;
+    char tmp[513], endline;
     fscanf(fp, "%s\n", tmp); // skip first line
     int count = 0;
     while (!feof(fp))

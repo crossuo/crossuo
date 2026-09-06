@@ -21,7 +21,10 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
     IsStretched = ((tile.TexID == 0u) && ::IsWet(tile.Flags));
 
     memset(&m_Rect, 0, sizeof(m_Rect));
-    memset(&m_Normals[0], 0, sizeof(m_Normals));
+    for (auto &normal : m_Normals)
+    {
+        normal = CVector();
+    }
 
     g_LandObjectsCount++;
 }

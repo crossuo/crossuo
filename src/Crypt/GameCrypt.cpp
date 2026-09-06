@@ -656,6 +656,8 @@ static unsigned int F32(unsigned int x, unsigned int *k32, int keyLen)
             b[1] = p8(10)[p8(11)[p8(12)[b[1]] ^ _b(k32[1], 1)] ^ _b(k32[0], 1)];
             b[2] = p8(20)[p8(21)[p8(22)[b[2]] ^ _b(k32[1], 2)] ^ _b(k32[0], 2)];
             b[3] = p8(30)[p8(31)[p8(32)[b[3]] ^ _b(k32[1], 3)] ^ _b(k32[0], 3)];
+        default:
+            break;
     }
 
     return ((M00(b[0]) ^ M01(b[1]) ^ M02(b[2]) ^ M03(b[3]))) ^

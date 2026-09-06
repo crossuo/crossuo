@@ -497,6 +497,8 @@ void CPathFinder::GetNewXY(uint8_t direction, int &x, int &y)
             y--;
             break;
         }
+        default:
+            break;
     }
 }
 

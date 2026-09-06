@@ -593,7 +593,6 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 void CGump::TestItemsLeftMouseDown(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    int group = 0;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
 
@@ -628,7 +627,6 @@ void CGump::TestItemsLeftMouseDown(
         {
             if (item->Type == GOT_GROUP)
             {
-                group = ((CGUIGroup *)item)->Index;
                 continue;
             }
             if (g_SelectedObject.Object != item && !item->IsHTMLGump())
@@ -1133,7 +1131,6 @@ void CGump::TestItemsScrolling(
 {
     const int delay = SCROLL_LISTING_DELAY / 7;
 
-    int group = 0;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
 
@@ -1154,7 +1151,6 @@ void CGump::TestItemsScrolling(
         {
             if (item->Type == GOT_GROUP)
             {
-                group = ((CGUIGroup *)item)->Index;
                 continue;
             }
             if (g_SelectedObject.Object != item && !item->IsHTMLGump())
@@ -1246,7 +1242,6 @@ void CGump::TestItemsScrolling(
 void CGump::TestItemsDragging(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    int group = 0;
     int page = 0;
     bool canDraw =
         ((page == -1) || ((page == 0) && (draw2Page == 0)) ||
@@ -1276,7 +1271,6 @@ void CGump::TestItemsDragging(
         {
             if (item->Type == GOT_GROUP)
             {
-                group = ((CGUIGroup *)item)->Index;
                 continue;
             }
             if (g_PressedObject.LeftObject != item && !item->IsHTMLGump())

@@ -538,7 +538,6 @@ void CGumpSkills::UpdateGroupText()
 
 void CGumpSkills::SetGroupTextFromEntry()
 {
-    int index = 0;
     CSkillGroupObject *groupItem = g_SkillGroupManager.m_Groups;
 
     QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
@@ -560,7 +559,6 @@ void CGumpSkills::SetGroupTextFromEntry()
             }
 
             group->m_Name->Focused = false;
-            index++;
             if (groupItem != nullptr)
             {
                 groupItem = groupItem->m_Next;

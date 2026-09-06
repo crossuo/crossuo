@@ -135,11 +135,6 @@ bool parse_pe_text(const uint8_t *image, size_t size, PeText &out, char *err, si
     return false;
 }
 
-constexpr uint32_t va_to_off(const PeText &t, uint32_t va)
-{
-    return va - t.va + t.raw_off;
-}
-
 } // namespace
 
 bool build_key_blob(

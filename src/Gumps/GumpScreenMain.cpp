@@ -279,6 +279,8 @@ void CGumpScreenMain::GUMP_BUTTON_EVENT_C
             Platform::OpenBrowser("https://github.com/crossuo/crossuo/graphs/contributors");
             break;
         }
+        default:
+            break;
     }
 }
 

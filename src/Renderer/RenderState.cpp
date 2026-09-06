@@ -90,9 +90,16 @@ bool RenderState_SetAlphaTest(
         }
     }
 
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
     auto differentFuncOrRef = [&]() -> bool {
         return state->alphaTest.func != func || state->alphaTest.alphaRef != ref;
     };
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
     if (enabled &&
         (differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTestFunc_Invalid)))

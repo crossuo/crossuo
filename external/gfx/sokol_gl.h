@@ -1,3 +1,7 @@
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC system_header
+#endif
+
 #ifndef SOKOL_GL_INCLUDED
 /*
     sokol_gl.h -- OpenGL 1.x style rendering on top of sokol_gfx.h

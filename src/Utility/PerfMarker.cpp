@@ -7,19 +7,17 @@
 
 // TODO renderer add a cmd for this or it won't work unless in immediate mode
 // 'label' lifetime is assumed to be valid until the current cmd list is executed
+#ifdef PERFMARKERS_ENABLED
 static void PushGPUMarker(const char *label)
 {
-#ifdef PERFMARKERS_ENABLED
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, label);
-#endif
 }
 
 static void PopGPUMarker()
 {
-#ifdef PERFMARKERS_ENABLED
     glPopDebugGroup();
-#endif
 }
+#endif
 
 void PushPerfMarker(const char *label)
 {

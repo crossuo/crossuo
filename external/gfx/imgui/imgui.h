@@ -1,3 +1,7 @@
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC system_header
+#endif
+
 // dear imgui, v1.74 WIP
 // (headers)
 

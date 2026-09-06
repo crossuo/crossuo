@@ -2,6 +2,7 @@
 #if _MSC_VER
 #pragma warning(push, 0)
 #else
+#pragma GCC system_header
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wunknown-warning-option"

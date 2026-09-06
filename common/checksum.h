@@ -122,6 +122,8 @@ CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s)
             case_1:
                 ebx += s[i];
                 break;
+            default:
+                break;
         }
 
         esi = (esi ^ edi) - ((edi >> 18) ^ (edi << 14));

@@ -2997,6 +2997,8 @@ PACKET_HANDLER(ExtendedCommand)
                     }
                     break;
                 }
+                default:
+                    break;
             }
             break;
         }
@@ -4064,10 +4066,9 @@ PACKET_HANDLER(DisplayClilocString)
         font = uint8_t(g_ConfigManager.ChatFont);
     }
 
-    uint8_t flags = 0;
     if (*Start == 0xCC)
     {
-        flags = ReadUInt8();
+        ReadUInt8();
     }
 
     auto name = ReadString(30);
@@ -5879,16 +5880,6 @@ PACKET_HANDLER(BuyList)
         }
 
         CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
-
-        int currentY = 0;
-
-        QFOR(shopItem, htmlGump->m_Items, CBaseGUI *)
-        {
-            if (shopItem->Type == GOT_SHOPITEM)
-            {
-                currentY += shopItem->GetSize().Height;
-            }
-        }
 
         for (int i = 0; i < count; i++)
         {

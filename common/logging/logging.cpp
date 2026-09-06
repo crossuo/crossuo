@@ -54,19 +54,6 @@ void LogInit(int argc, char *argv[], const char *filename)
 
 void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, int size)
 {
-    auto logger = g_logClient;
-    switch (sys)
-    {
-#define LOG_SYSTEM(id, name)                                                                       \
-    case eLogSystem::LogSystem##name:                                                              \
-        logger = g_log##name;                                                                      \
-        break;
-#include "loggers.h"
-#undef LOG_SYSTEM
-        default:
-            break;
-    }
-
     if (title && title[0] != '\0')
     {
         VLOG_F(sys, level, "%s", title);

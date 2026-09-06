@@ -31,10 +31,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 # Remove warning from 3rd party compilation
 if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/W0")
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-unused-function" "-Wno-float-equal" "-Wno-shadow")
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    else()
-        # GCC
-    endif()
+    target_compile_options(${PROJECT_NAME} PRIVATE "-w")
 endif()

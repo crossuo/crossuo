@@ -245,6 +245,8 @@ bool CWindow::Create(const char *title, bool showCursor, int width, int height)
                 subsystem = "Vivante";
                 break;
 #endif
+            default:
+                break;
         }
 
         Info(Client, "System: %s", subsystem);
@@ -331,6 +333,9 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     OnDeactivate(); // Sound + FPS
                 }
                 break;
+
+                default:
+                    break;
             }
         }
         break;
@@ -537,6 +542,9 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     break;
 
                 case SDL_BUTTON_X2:
+                    break;
+
+                default:
                     break;
             }
         }
