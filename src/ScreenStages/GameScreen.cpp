@@ -1324,6 +1324,7 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
 
 void CGameScreen::DrawGameWindow(bool render)
 {
+    Info(Renderer, "GL_CALL: ****** DrawGameWindow START");
     const int playerZPlus5 = g_RenderBounds.PlayerZ + 5;
     if (render)
     {
@@ -1477,6 +1478,7 @@ void CGameScreen::DrawGameWindow(bool render)
             m_ObjectHandlesList[i]->SelectObjectHandlesTexture();
         }
     }
+    Info(Renderer, "GL_CALL: ****** DrawGameWindow END");
 }
 
 void CGameScreen::DrawGameWindowLight()
@@ -1558,8 +1560,15 @@ void CGameScreen::DrawGameWindowLight()
         g_LightColorizerShader.Disable();
         g_LightBuffer.Release();
 
+        Info(Renderer, "GL_CALL: 1 GameX: %d", g_RenderBounds.GameWindowPosX);
+        Info(Renderer, "GL_CALL: 1 GameY: %d", g_RenderBounds.GameWindowPosY);
+        Info(Renderer, "GL_CALL: 1 GameW: %d", g_RenderBounds.GameWindowWidth);
+        Info(Renderer, "GL_CALL: 1 GameH: %d", g_RenderBounds.GameWindowHeight);
+        Info(Renderer, "GL_CALL: 1 WindW: %d", g_GameWindow.GetSize().Width);
+        Info(Renderer, "GL_CALL: 1 WindH: %d", g_GameWindow.GetSize().Height);
+        Info(Renderer, "GL_CALL: 1 Scale: %d", (int)g_GlobalScale);
 #ifndef NEW_RENDERER_ENABLED
-        g_GL.RestorePort();
+        //g_GL.RestorePort();
 
         g_GL.ViewPortScaled(
             g_RenderBounds.GameWindowPosX,
@@ -1864,6 +1873,13 @@ void CGameScreen::Render()
     g_NewTargetSystem.TargetedCharacter = nullptr;
 
     m_LightCount = 0;
+    Info(Renderer, "GL_CALL: 2 GameX: %d", g_RenderBounds.GameWindowPosX);
+    Info(Renderer, "GL_CALL: 2 GameY: %d", g_RenderBounds.GameWindowPosY);
+    Info(Renderer, "GL_CALL: 2 GameW: %d", g_RenderBounds.GameWindowWidth);
+    Info(Renderer, "GL_CALL: 2 GameH: %d", g_RenderBounds.GameWindowHeight);
+    Info(Renderer, "GL_CALL: 2 WindW: %d", g_GameWindow.GetSize().Width);
+    Info(Renderer, "GL_CALL: 2 WindH: %d", g_GameWindow.GetSize().Height);
+    Info(Renderer, "GL_CALL: 2 Scale: %d", (int)g_GlobalScale);
 
 #ifndef NEW_RENDERER_ENABLED
     g_GL.ViewPortScaled(

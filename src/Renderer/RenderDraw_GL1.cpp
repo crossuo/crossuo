@@ -73,8 +73,8 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
     ScopedPerfMarker(__FUNCTION__);
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
 
-    Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)cmd.x, (float)cmd.y, (float)cmd.width, (float)cmd.height);
-    GL_CALL(glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f));
+    //Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)cmd.x, (float)cmd.y, (float)cmd.width, (float)cmd.height);
+    glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
 
     const float drawCountX = cmd.u;
     const float drawCountY = cmd.v;
@@ -104,7 +104,7 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
     }
     glEnd();
 
-    GL_CALL(glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f));
+    glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f);
 
     return true;
 }
@@ -373,21 +373,21 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     const int y = cmd.y;
     const int width = (int)cmd.width;
     const int height = (int)cmd.height;
-    GL_CALL(glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]));
-    GL_CALL(glDisable(GL_TEXTURE_2D));
+    glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]));
+    glDisable(GL_TEXTURE_2D));
 
-    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
+    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
-    GL_CALL(glBegin(GL_TRIANGLE_STRIP));
-    GL_CALL(glVertex2i(0, height));
-    GL_CALL(glVertex2i(width, height));
-    GL_CALL(glVertex2i(0, 0));
-    GL_CALL(glVertex2i(width, 0));
-    GL_CALL(glEnd());
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2i(0, height);
+    glVertex2i(width, height);
+    glVertex2i(0, 0);
+    glVertex2i(width, 0);
+    glEnd();
 
-    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
-    GL_CALL(glColor4f(1.0f, 1.0f, 1.0f, 1.0f));
-    GL_CALL(glEnable(GL_TEXTURE_2D));
+    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glEnable(GL_TEXTURE_2D);
 
     return true;
 }
@@ -443,41 +443,41 @@ bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *)
     GLdouble top = (GLdouble)cmd.scene_y;
     GLdouble bottom = (GLdouble)(cmd.scene_y + cmd.scene_height);
 
-    int glBottom;
+    int viewX = cmd.scene_x;
+    int viewY = cmd.window_height - cmd.scene_y - cmd.scene_height;
+    int viewW = cmd.scene_width;
+    int viewH = cmd.scene_height;
+    int newBottom = bottom;
+    int newRight = right;
     if (cmd.proj_flipped_y)
     {
+        Info(Renderer, "GL_CALL: FLIPPED");
         // Frame buffers are already in OpenGL coordinate space (bottom-left origin)
         // No Y-flip needed, no scaling
-        glBottom = cmd.scene_y;
     }
     else
     {
-        // Window coordinates are in screen space (top-left origin)
-        // Need to flip Y to convert to OpenGL coordinate space
-        // game viewport isn't scaled, if OS window is smaller than scene_y + scene_height, bottom will
-        // be negative by this difference
-        int needed_height = cmd.scene_y + cmd.scene_height;
-        glBottom = cmd.window_height - needed_height;
+        if (cmd.scene_scale != 1.0f)
+            Info(Renderer, "GL_CALL: SCALED");
+        else
+            Info(Renderer, "GL_CALL: NORMAL");
 
         // Apply global scaling like ViewPortScaled does
-        GLdouble newRight = right * cmd.scene_scale;
-        GLdouble newBottom = bottom * cmd.scene_scale;
+        newRight = right * cmd.scene_scale;
+        newBottom = bottom * cmd.scene_scale;
 
         left = (left * cmd.scene_scale) - (newRight - right);
         top = (top * cmd.scene_scale) - (newBottom - bottom);
-        bottom = newBottom;
-        right = newRight;
     }
 
-    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)cmd.scene_x, (float)glBottom, (float)cmd.scene_width, (float)cmd.scene_height);
-    GL_CALL(glViewport(cmd.scene_x, glBottom, cmd.scene_width, cmd.scene_height));
-    GL_CALL(glMatrixMode(GL_PROJECTION));
-    GL_CALL(glLoadIdentity());
-    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", left, right, bottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
-    GL_CALL(glOrtho(left, right, bottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ));
-
-    GL_CALL(glMatrixMode(GL_MODELVIEW));
-    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: glViewport args: x = %d, y = %d, width = %d, height = %d", viewX, viewY, viewW, viewH);
+    glViewport(viewX, viewY, viewW, viewH);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    Info(Renderer, "GL_CALL: glOrtho args: left = %d, right = %d, bottom = %d, top = %d", (int)left, (int)newRight, (int)newBottom, (int)top);
+    glOrtho(left, newRight, newBottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
     return true;
 }
@@ -486,30 +486,19 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    // game viewport isn't scaled, if the OS window is smaller than scene_y + scene_height, bottom will
-    // be negative by this difference
-    int needed_height = cmd.scene_y + cmd.scene_height;
-    int bottom = cmd.window_height - needed_height;
-    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)cmd.scene_x, (float)bottom, (float)cmd.scene_width, (float)cmd.scene_height);
-    GL_CALL(glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height));
-    GL_CALL(glMatrixMode(GL_PROJECTION));
-    GL_CALL(glLoadIdentity());
-    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", float(cmd.scene_x),
-        float(cmd.scene_x + cmd.scene_width),
-        float(cmd.scene_y + cmd.scene_height),
-        float(cmd.scene_y),
-        float(cmd.camera_nearZ),
-        float(cmd.camera_farZ));
-    GL_CALL(glOrtho(
-        float(cmd.scene_x),
-        float(cmd.scene_x + cmd.scene_width),
-        float(cmd.scene_y + cmd.scene_height),
-        float(cmd.scene_y),
-        float(cmd.camera_nearZ),
-        float(cmd.camera_farZ)));
+    int viewX = cmd.scene_x;
+    int viewY = cmd.scene_y;
+    int viewW = cmd.window_width;
+    int viewH = cmd.window_height;
 
-    GL_CALL(glMatrixMode(GL_MODELVIEW));
-    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: HACKRender_SetViewParams glViewport args: x = %d, y = %d, width = %d, height = %d", viewX, viewY, viewW, viewH);
+    glViewport(viewX, viewY, viewW, viewH);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    Info(Renderer, "GL_CALL: HACKRender_SetViewParams glOrtho args: left = %d, right = %d, bottom = %d, top = %d", viewX, viewY, viewW, viewH);
+    glOrtho(viewX, viewY, viewW, viewH, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
     return true;
 }
@@ -1030,9 +1019,10 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     framebuffer_handle_t handle;
 
     GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+    //GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
     GL_CALL(glGenTextures(1, &texture));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+    Info(Renderer, "Texture: %d", texture);
     GL_CALL(glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -1051,6 +1041,7 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     GL_CALL(glGenFramebuffers(1, &handle));
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, handle));
     GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0));
+
     int glresult;
     GL_CALL(glresult = glCheckFramebufferStatus(GL_FRAMEBUFFER));
     assert(glresult == GL_FRAMEBUFFER_COMPLETE);
@@ -1063,12 +1054,12 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb)
 {
     if (fb.texture != RENDER_TEXTUREHANDLE_INVALID)
     {
-        GL_CALL(glDeleteTextures(1, &fb.texture));
+        glDeleteTextures(1, &fb.texture);
     }
 
     if (fb.handle != RENDER_FRAMEBUFFER_INVALID)
     {
-        GL_CALL(glDeleteFramebuffers(1, &fb.handle));
+        glDeleteFramebuffers(1, &fb.handle);
     }
 
     return true;

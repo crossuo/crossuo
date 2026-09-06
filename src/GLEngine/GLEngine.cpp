@@ -367,11 +367,11 @@ void CGLEngine::EndDraw()
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
-
-    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)x, (float)g_GameWindow.GetSize().Height - y - height, (float)width, (float)height);
-    GL_CALL(glViewport(x, g_GameWindow.GetSize().Height - y - height, width, height));
-    GL_CALL(glMatrixMode(GL_PROJECTION));
-    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: SCALED");
+    Info(Renderer, "GL_CALL: glViewport args: x = %d, y = %d, width = %d, height = %d", x, g_GameWindow.GetSize().Height - y - height, width, height);
+    glViewport(x, g_GameWindow.GetSize().Height - y - height, width, height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
 
     GLdouble left = (GLdouble)x;
     GLdouble right = (GLdouble)(width + x);
@@ -384,35 +384,38 @@ void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
     left = (left * g_GlobalScale) - (newRight - right);
     top = (top * g_GlobalScale) - (newBottom - bottom);
 
-    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", left, newRight, newBottom, top, -150.0, 150.0);
-    GL_CALL(glOrtho(left, newRight, newBottom, top, -150.0, 150.0));
-    GL_CALL(glMatrixMode(GL_MODELVIEW));
+    Info(Renderer, "GL_CALL: glOrtho args: left = %d, right = %d, bottom = %d, top = %d", (int)left, (int)newRight, (int)newBottom, (int)top);
+    glOrtho(left, newRight, newBottom, top, -150.0, 150.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 void CGLEngine::ViewPort(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    Info(Renderer, "GL_CALL: NORMAL");
     const auto size = g_GameWindow.GetSize();
     Info(Renderer, "GL_CALL: glViewport args: x = %d, y = %d, width = %d, height = %d", x, size.Height - y - height, width, height);
-    GL_CALL(glViewport(x, size.Height - y - height, width, height));
-    GL_CALL(glMatrixMode(GL_PROJECTION));
-    GL_CALL(glLoadIdentity());
-    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", (float)x, (float)width + x, (float)height + y, (float)y, (float)-150.0, (float)150.0);
-    GL_CALL(glOrtho(x, width + x, height + y, y, -150.0, 150.0));
-    GL_CALL(glMatrixMode(GL_MODELVIEW));
+    glViewport(x, size.Height - y - height, width, height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    Info(Renderer, "GL_CALL: glOrtho args: left = %d, right = %d, bottom = %d, top = %d", x, width + x, height + y, y);
+    glOrtho(x, width + x, height + y, y, -150.0, 150.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 void CGLEngine::RestorePort()
 {
     ScopedPerfMarker(__FUNCTION__);
     Info(Renderer, "GL_CALL: glViewport args: x = %d, y = %d, width = %d, height = %d", 0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
-    GL_CALL(glViewport(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height));
-    GL_CALL(glMatrixMode(GL_PROJECTION));
-    GL_CALL(glLoadIdentity());
-    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", (float)0.0, (float)g_GameWindow.GetSize().Width, (float)g_GameWindow.GetSize().Height, (float)0.0, (float)-150.0, (float)150.0);
-    GL_CALL(glOrtho(0.0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0.0, -150.0, 150.0));
-    GL_CALL(glMatrixMode(GL_MODELVIEW));
+    glViewport(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    Info(Renderer, "GL_CALL: glOrtho args: left = %d, right = %d, bottom = %d, top = %d", 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0);
+    glOrtho(0.0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0.0, -150.0, 150.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 void CGLEngine::PushScissor(int x, int y, int width, int height)
@@ -501,20 +504,20 @@ void CGLEngine::DrawPolygone(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    GL_CALL(glDisable(GL_TEXTURE_2D));
+    glDisable(GL_TEXTURE_2D);
 
-    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
+    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
-    GL_CALL(glBegin(GL_TRIANGLE_STRIP));
-    GL_CALL(glVertex2i(0, height));
-    GL_CALL(glVertex2i(width, height));
-    GL_CALL(glVertex2i(0, 0));
-    GL_CALL(glVertex2i(width, 0));
-    GL_CALL(glEnd());
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2i(0, height);
+    glVertex2i(width, height);
+    glVertex2i(0, 0);
+    glVertex2i(width, 0);
+    glEnd();
 
-    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
+    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 
-    GL_CALL(glEnable(GL_TEXTURE_2D));
+    glEnable(GL_TEXTURE_2D);
 }
 
 void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
@@ -593,8 +596,8 @@ void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
     int width = texture.Width;
     int height = texture.Height;
 
-    Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)x, (float)y, (float)width, (float)height);
-    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
+    //Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)x, (float)y, (float)width, (float)height);
+    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2i(0, 1);
@@ -607,7 +610,7 @@ void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
     glVertex2i(width, 0);
     glEnd();
 
-    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
+    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
 void CGLEngine::DrawRotated(const CGLTexture &texture, int x, int y, float angle)
@@ -853,8 +856,8 @@ void CGLEngine::DrawStretched(
     int width = texture.Width;
     int height = texture.Height;
 
-    Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)x, (float)y, (float)width, (float)height);
-    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
+    //Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)x, (float)y, (float)width, (float)height);
+    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
     float drawCountX = drawWidth / (float)width;
     float drawCountY = drawHeight / (float)height;
@@ -870,7 +873,7 @@ void CGLEngine::DrawStretched(
     glVertex2i(drawWidth, 0);
     glEnd();
 
-    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
+    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
 void CGLEngine::DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
