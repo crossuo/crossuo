@@ -13,8 +13,14 @@ set(XUOI_INCLUDE "${XUOI_DIR}" CACHE INTERNAL "")
 set(XUOI_LIBS "${PROJECT_NAME} ${THREAD} ${LOADER}" CACHE INTERNAL "")
 
 set(XUOI_SRCS
+  common.cpp
+  common.h
+  http.cpp
+  http.h
   xuo_updater.cpp
   xuo_updater.h
+  mft.cpp
+  mft.h
   xuoi.cpp
 )
 
@@ -104,17 +110,4 @@ add_dependencies(${CLIENT_INFO_PROJECT} ${XUOCORE_PROJECT})
 target_link_libraries(${CLIENT_INFO_PROJECT} PUBLIC ${XUOCORE_PROJECT})
 target_include_directories(${CLIENT_INFO_PROJECT} PUBLIC ${XUOCORE_PROJECT})
 
-#
-# virtual installation
-#
-set(VUOI_SRCS
-  vuoi.cpp
-)
 
-set(VUOI_PROJECT vuoi)
-
-add_executable(${VUOI_PROJECT} ${VUOI_SRCS})
-add_dependencies(${VUOI_PROJECT} ${XUOCORE_PROJECT} ${3RDPARTY_STATIC})
-
-target_link_libraries(${VUOI_PROJECT} PUBLIC ${XUOCORE_PROJECT} ${CURL_LIBRARIES})
-target_include_directories(${VUOI_PROJECT} PUBLIC ${XUOCORE_PROJECT})

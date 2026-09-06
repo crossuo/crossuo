@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
-
-#define LOGGER_MODULE Launcher
+// AGPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #include "shards.h"
 #include <vector>
@@ -9,8 +7,8 @@
 #include <unordered_map>
 #include <algorithm>
 #include <external/inih.h>
-#include <xuocore/http.h>
-#include <xuocore/common.h>
+#include "http.h"
+#include "common.h"
 
 extern bool valid_url(const astr_t &url);
 extern void open_url(const astr_t &url);
@@ -22,17 +20,13 @@ namespace shard
 
 struct url_other
 {
-    astr_t name; // dynamic ui
+    astr_t name;
     astr_t type;
     astr_t url;
 };
 
 astr_t as_str(const url_other &in)
 {
-    if (in.url.length() == 0)
-        return "";
-    if (in.type.length() == 0)
-        return in.url;
     return in.type + "+" + in.url;
 }
 
@@ -223,7 +217,7 @@ bool shard_getter(void *data, int idx, const char **out_text)
 {
     auto *items = (std::vector<shard::entry> *)data;
     assert(items);
-    assert(idx < (int)items->size());
+    assert(idx < items->size());
     if (out_text)
         *out_text = items->at(idx).shard_name.c_str();
     return true;
@@ -279,7 +273,7 @@ void write_shards(void *_fp)
         return;
 
     auto fp = (FILE *)_fp;
-    for (size_t i = 1; i < s_shards.entries.size(); ++i)
+    for (int i = 1; i < s_shards.entries.size(); ++i)
     {
         const auto &e = s_shards.entries[i];
         shard::write(fp, e, "Shard");
@@ -296,7 +290,7 @@ int shard_index_by_loginserver(const char *login_server)
 
 shard_data shard_by_id(int id)
 {
-    assert(id < (int)s_shards.entries.size());
+    assert(id < s_shards.entries.size());
     const auto &s = s_shards.entries[id];
     return { s.shard_loginserver.c_str(),
              s.shard_clienttype.c_str(),
@@ -310,10 +304,9 @@ shard_data shard_by_id(int id)
 static void print_banner()
 {
     fprintf(stdout, "shardchk - crossuo launcher shard validator 0.0.1\n");
-    fprintf(stdout, "Copyright (c) 2020 Danny Angelo Carminati Grein\n");
+    fprintf(stdout, "Copyright (c) 2019 Danny Angelo Carminati Grein\n");
     fprintf(
-        stdout,
-        "License AGPLv3+: GNU Affero GPL version 3 or later <http://gnu.org/licenses/agpl.html>.\n");
+        stdout, "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n");
     fprintf(stdout, "\n");
 }
 

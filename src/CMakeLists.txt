@@ -40,10 +40,6 @@ set(glengine_src
   GLEngine/GLTexture.cpp
 )
 
-if (NOT XUO_EMSC)
-  set(glengine_src ${glengine_src} GLEngine/glew.c)
-endif()
-
 set(renderer_src
   Renderer/RenderAdd.cpp
   Renderer/RenderDraw.cpp
