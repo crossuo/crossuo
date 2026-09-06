@@ -41,15 +41,26 @@ struct UopFileEntry
     uint32_t CompressedSize = 0;
     uint32_t DecompressedSize = 0;
     uint64_t Hash = 0;     // (primary hash(ph)|secondary hash(sh))
-    uint32_t Checksum = 0; // crc32 of UopFileMetadata
+    uint32_t Checksum = 0; // adler32 of the metadata block for type 3 / version 4 archives
+                           // (verified against tileart.uop); for type 4 / version 5 archives
+                           // it is a provenance value from the patch manifest ("rh" attribute)
+                           // and cannot be recomputed from the stored bytes
     uint16_t Flags = 0;    // Compression type (0 - none, 1 - zlib)
 };
 static_assert(sizeof(UopFileEntry) == 34, "Invalid UopFileEntry size");
 
+// Metadata stored at UopFileEntry::Offset, before the data block.
+// The client (MypArchive::GetMetadataBlock @0x429053 / mapped variant @0x5964b0)
+// treats it as a chain of blocks: { u16 Type; u16 Size; uint8_t Payload[Size]; }
+// - Size counts the payload ONLY (the 4-byte header is extra); the client walks
+//   the chain with ptr += 4 + Size
+// - in practice every shipped file carries a single block, so
+//   MetadataSize == sizeof(UopFileMetadata) + Size
+// - on big-endian archives both u16s are byte swapped (client flag at MypArchive+0x5C)
 struct UopFileMetadata
 {
-    uint16_t Type = 0;
-    uint16_t Size = 0;
+    uint16_t Type = 0; // 3 = timestamp, 4 = RSA signature
+    uint16_t Size = 0; // payload size in bytes, excluding this 4-byte header
 };
 static_assert(sizeof(UopFileMetadata) == 4, "Invalid UopFileMetadata size");
 
@@ -57,9 +68,22 @@ struct UopFileMetadata3
 {
     uint16_t Type = 0;
     uint16_t Size = 0;
-    uint64_t Timestamp = 0;
+    uint64_t Timestamp = 0; // Windows FILETIME (100ns units since 1601-01-01)
 };
 static_assert(sizeof(UopFileMetadata3) == 12, "Invalid UopFileMetadata3 size");
+
+// Type 4 payload: RSA signature over the decompressed content, produced by the
+// patch system. NOTE: the two u16 fields are stored BIG-ENDIAN (same quirk as
+// the .meta/.mft signature records), unlike the block header above.
+// EM = Sig^65537 mod N (Mythic launcher key id 21) is
+// 33x00 || 32xFF || SHA256(decompressed content) || 32xFF
+struct UopFileMetadata4
+{
+    uint16_t SigType = 0; // key id, big-endian in file (21 = Mythic launcher RSA key)
+    uint16_t SigSize = 0; // signature length, big-endian in file (128 = RSA-1024)
+    //uint8_t SigData[SigSize]; // follows immediately after
+};
+static_assert(sizeof(UopFileMetadata4) == 4, "Invalid UopFileMetadata4 size");
 
 struct UopAnimationHeader
 {
