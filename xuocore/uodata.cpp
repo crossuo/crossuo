@@ -229,9 +229,14 @@ static bool DecompressBlock(const UopFileEntry *block, uint8_t *dst, uint8_t *sr
     assert(block);
     uLongf cLen = block->CompressedSize;
     uLongf dLen = block->DecompressedSize;
-    if (cLen == 0 || block->Flags == 0)
+    if (cLen == 0)
     {
-        dst = src;
+        return false;
+    }
+    if (block->Flags == 0)
+    {
+        // stored uncompressed; the client memcpy's the raw bytes (Flags 0 -> memcpy)
+        memcpy(dst, src, cLen <= dLen ? cLen : dLen);
         return true;
     }
 
@@ -862,9 +867,12 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
         return false;
     }
 
-    if (file.Header->Version > 5)
+    // the client only accepts versions 4 and 5 (MypArchive::Open @0x4288c2:
+    // "3 < version && version < 6", else "Version [%d] did not match code version range")
+    if (file.Header->Version < 4 || file.Header->Version > 5)
     {
-        Warning(Data, "%s:unexpected version %d", filename, file.Header->Version);
+        Error(Data, "%s:unsupported version %d (client supports 4-5)", filename, file.Header->Version);
+        return false;
     }
     TRACE(Data, "%s:signature is 0x%08x", filename, file.Header->Signature);
     TRACE(Data, "%s:file_count is %d", filename, file.Header->FileCount);
@@ -941,6 +949,11 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
             fprintf(fp, "\t\t\tMetadata........:\n");
             fprintf(fp, "\t\t\t\tType....: %d\n", meta->Type);
             fprintf(fp, "\t\t\t\tSize....: %d\n", meta->Size);
+            if (sizeof(UopFileMetadata) + meta->Size != block->MetadataSize)
+            {
+                Warning(Data, "%s: unexpected metadata chain (type %d size %d, metadata size %d)",
+                        uopFilename, meta->Type, meta->Size, block->MetadataSize);
+            }
             switch (meta->Type)
             {
                 case 3:
@@ -973,7 +986,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
                 default:
                 {
                     fprintf(fp, "Unknown Meta Type: %d\n", meta->Type);
-                    assert(false && "unknown metadata type");
+                    // the client does not reject unknown types; it just walks the chain
                 }
                 break;
             };
