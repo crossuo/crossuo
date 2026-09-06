@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <common/str.h>
 
+#include <cstdint>
+
 class CCharacterList
 {
     astr_t m_Name[7];
