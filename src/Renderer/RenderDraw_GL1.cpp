@@ -61,11 +61,14 @@ bool RenderDraw_SetTexture(const SetTextureCmd &cmd, RenderState *)
     return true;
 }
 
-bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *)
+bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    // Framebuffers not supported in GL1/GL2 fixed pipeline
-    return true;
+    // Framebuffer objects are available on GL1/GL2 compatibility contexts and
+    // are required by the light buffer pass: bind for real (and keep the state
+    // tracking in sync) or the light pass clears the default framebuffer and
+    // composites an empty texture over the scene (black screen).
+    return RenderState_SetFrameBuffer(state, cmd.frameBuffer);
 }
 
 bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
