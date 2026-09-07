@@ -40,12 +40,12 @@ jobs:
     - name: package
       if: matrix.arch == 'x64' && matrix.type == 'Release' && startsWith(github.ref, 'refs/pull/') != true
       run: .github\package.cmd
-    - name: release master
+    - name: release latest
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/heads/master')
       with:
-        tag_name: master
-        files: crossuo-win64-master.zip
+        tag_name: latest
+        files: crossuo-win64-latest.zip
     - name: release tag
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
@@ -85,11 +85,11 @@ jobs:
     - name: package
       if: startsWith(github.ref, 'refs/pull/') != true
       run: ${GITHUB_WORKSPACE}/.github/package.sh ${{ github.ref }} ${{ matrix.type }} ${{ matrix.cc }}
-    - name: release master
+    - name: release latest
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/heads/master')
       with:
-        tag_name: master
+        tag_name: latest
         files: crossuo-linux-*.tgz
     - name: release tag
       uses: softprops/action-gh-release@v1
@@ -118,12 +118,12 @@ jobs:
     - name: package
       if: startsWith(github.ref, 'refs/pull/') != true
       run: ${GITHUB_WORKSPACE}/.github/package.sh ${{ github.ref }} Release clang
-    - name: release master
+    - name: release latest
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/heads/master')
       with:
-        tag_name: master
-        files: crossuo-osx-master.zip
+        tag_name: latest
+        files: crossuo-osx-latest.zip
     - name: release tag
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
