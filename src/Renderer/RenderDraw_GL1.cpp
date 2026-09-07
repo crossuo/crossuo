@@ -158,6 +158,24 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
     RenderDrawGL1_ApplyColor(cmd.color);
 
+    static const bool trace = getenv("XUO_GL1_TRACE") != nullptr;
+    if (trace)
+    {
+        GLint vp[4], sc[4], tw = 0, th = 0;
+        GLboolean scTest = glIsEnabled(GL_SCISSOR_TEST);
+        GLboolean blend = glIsEnabled(GL_BLEND);
+        glGetIntegerv(GL_VIEWPORT, vp);
+        glGetIntegerv(GL_SCISSOR_BOX, sc);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &tw);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &th);
+        Warning(Renderer,
+                "QUAD tex=%u texSize=(%dx%d) rgba=(%.2f,%.2f,%.2f,%.2f) mode=%d vp=(%d,%d,%d,%d) "
+                "scTest=%d scBox=(%d,%d,%d,%d) blend=%d",
+                cmd.texture, tw, th, cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3],
+                s_currentDrawMode, vp[0], vp[1], vp[2], vp[3], (int)scTest, sc[0], sc[1], sc[2],
+                sc[3], (int)blend);
+    }
+
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
 
     const float drawCountX = cmd.u;
@@ -1152,6 +1170,12 @@ texture_handle_t Render_CreateTexture2D(
         imgFormat,
         s_pixelFormatToOGLFormat[pixelsFormat],
         pixels);
+
+    static const bool trace = getenv("XUO_GL1_TRACE") != nullptr;
+    if (trace)
+    {
+        Warning(Renderer, "CREATE tex=%u size=(%ux%u)", tex, width, height);
+    }
 
     return tex;
 }

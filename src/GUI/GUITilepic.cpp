@@ -40,6 +40,12 @@ void CGUITilepic::Draw(bool checktrans)
     if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
+        static const bool trace = getenv("XUO_GL1_TRACE") != nullptr;
+        if (trace)
+        {
+            Warning(Renderer, "ITEM tilepic graphic=%u tex=%u at=(%d,%d) size=(%ux%u)",
+                     Graphic, spr->Texture->Texture, m_X, m_Y, spr->Width, spr->Height);
+        }
         spr->Texture->Draw(m_X, m_Y, checktrans);
         if (DoubleDraw)
         {

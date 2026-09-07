@@ -66,7 +66,21 @@ void CGUIDrawObject::Draw(bool checktrans)
     if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
+        static const bool trace = getenv("XUO_GL1_TRACE") != nullptr;
+        if (trace)
+        {
+            Warning(Renderer, "ITEM gumpic graphic=%u tex=%u at=(%d,%d) size=(%ux%u)",
+                     GetDrawGraphic(), spr->Texture->Texture, m_X, m_Y, spr->Width, spr->Height);
+        }
         spr->Texture->Draw(m_X, m_Y, checktrans);
+    }
+    else
+    {
+        static const bool trace = getenv("XUO_GL1_TRACE") != nullptr;
+        if (trace)
+        {
+            Warning(Renderer, "ITEM SKIP gumpic graphic=%u (spr=%p)", GetDrawGraphic(), (void *)spr);
+        }
     }
 }
 

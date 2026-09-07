@@ -5169,7 +5169,7 @@ PACKET_HANDLER(OpenGump)
                         gump->Add(new CGUIShader(&g_ColorizerShader, true));
                     }
                     go = new CGUIGumppic(graphic, x, y);
-                    go->Color = color + 1; // PARITY: check parity
+                    go->Color = color; // server hue 0 = uncolored; SendColorsToShader indexes hues 1-based (color - 1)
                     go->DrawOnly = true;
                 }
             }

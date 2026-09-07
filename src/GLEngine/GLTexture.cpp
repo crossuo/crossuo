@@ -37,6 +37,12 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
         return;
 
     auto cmd = DrawQuadCmd{ Texture, x, y, Width, Height };
+    static const bool trace = getenv("XUO_GL1_TRACE") != nullptr;
+    if (trace)
+    {
+        Warning(Renderer, "TEXDRAW tex=%u at=(%d,%d) size=(%ux%u) checktrans=%d", Texture, x, y,
+                 Width, Height, (int)checktrans);
+    }
     if (checktrans)
     {
         SCOPED_GL_DEBUG_MARKER_LABEL("Object with Transparency");
