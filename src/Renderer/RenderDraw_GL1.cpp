@@ -68,7 +68,20 @@ bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state)
     // are required by the light buffer pass: bind for real (and keep the state
     // tracking in sync) or the light pass clears the default framebuffer and
     // composites an empty texture over the scene (black screen).
-    return RenderState_SetFrameBuffer(state, cmd.frameBuffer);
+    // NOTE: this mirrors RenderState_SetFrameBuffer, which is not compiled for
+    // RENDERER_LEGACY builds (RenderState.cpp is GL3/GLES-only); legacy runs in
+    // immediate mode, so there is no cached state to compare against.
+    if (cmd.frameBuffer.handle != RENDER_FRAMEBUFFER_INVALID)
+    {
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, cmd.frameBuffer.handle));
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D, cmd.frameBuffer.texture));
+    }
+    else
+    {
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    }
+    state->framebuffer = cmd.frameBuffer;
+    return true;
 }
 
 bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
@@ -1110,10 +1123,13 @@ bool Render_Init(SDL_Window *window)
 
     // debug messages callback needs ogl >= 4.30
     // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
+#if defined(OGL_DEBUGCONTEXT_ENABLED) // GL3-only: the debug message callback
+    // machinery lives in RenderDebug.cpp, which is not compiled for legacy
     if (debugContext && GLEW_KHR_debug)
     {
         SetupOGLDebugMessage();
     }
+#endif
 
     Info(Renderer, "Graphics Successfully Initialized");
     Info(Renderer, "OpenGL Info:");
