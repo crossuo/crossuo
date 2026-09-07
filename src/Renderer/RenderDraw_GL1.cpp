@@ -18,6 +18,74 @@
 
 #define XUO_M_PI 3.14159265358979323846264338327950288
 static float s_palette[96] = {};
+static int s_currentDrawMode = SDM_NO_COLOR;
+
+// Fixed-function approximation of the colorizer shader: the UO hue palettes
+// are brightness ramps of a single hue, so tinting by the average palette
+// entry reproduces the palette lookup closely enough without shaders.
+static void RenderDrawGL1_ApplyColor(const RenderState *state, const float4 &cmdColor)
+{
+    float r = state->color[0];
+    float g = state->color[1];
+    float b = state->color[2];
+    float a = state->color[3];
+
+    if (cmdColor != g_ColorInvalid)
+    {
+        r *= cmdColor[0];
+        g *= cmdColor[1];
+        b *= cmdColor[2];
+        a *= cmdColor[3];
+    }
+
+    switch (s_currentDrawMode)
+    {
+        case SDM_COLORED:
+        case SDM_PARTIAL_HUE:
+        case SDM_LAND_COLORED:
+        {
+            float tr = 0.f, tg = 0.f, tb = 0.f;
+            for (int i = 0; i < 32; i++)
+            {
+                tr += s_palette[i * 3 + 0];
+                tg += s_palette[i * 3 + 1];
+                tb += s_palette[i * 3 + 2];
+            }
+            r *= tr / 32.f;
+            g *= tg / 32.f;
+            b *= tb / 32.f;
+            break;
+        }
+        case SDM_TEXT_COLORED:
+        case SDM_TEXT_COLORED_NO_BLACK:
+        {
+            r *= s_palette[90];
+            g *= s_palette[91];
+            b *= s_palette[92];
+            break;
+        }
+        case SDM_SPECTRAL:
+        {
+            r *= 1.5f;
+            g *= 1.5f;
+            b *= 1.5f;
+            break;
+        }
+        case SDM_SPECIAL_SPECTRAL:
+        {
+            r *= 0.5f;
+            g *= 0.5f;
+            b *= 0.5f;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    glColor4f(r, g, b, a);
+}
 static std::deque<SetScissorCmd> s_ScissorList;
 
 struct
@@ -84,10 +152,11 @@ bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state)
     return true;
 }
 
-bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
+bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
+    RenderDrawGL1_ApplyColor(state, cmd.color);
 
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
 
@@ -124,10 +193,11 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
     return true;
 }
 
-bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *)
+bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
+    RenderDrawGL1_ApplyColor(state, cmd.color);
 
     const float translateY = (float)(cmd.y - (int)cmd.height);
     const float width = (float)cmd.width;
@@ -154,10 +224,11 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *)
     return true;
 }
 
-bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderState *)
+bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     static const auto s_sittingCharacterOffset = 8.0f;
+    RenderDrawGL1_ApplyColor(state, g_ColorWhite);
     const auto x = (GLfloat)cmd.x;
     const auto y = (GLfloat)cmd.y;
     const float width = (float)cmd.width;
@@ -273,7 +344,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     return true;
 }
 
-bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *)
+bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     const float translateX = cmd.x - 22.0f;
@@ -281,6 +352,8 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *)
     const auto &rc = cmd.rect;
 
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
+    s_currentDrawMode = cmd.drawMode;
+    RenderDrawGL1_ApplyColor(state, g_ColorWhite);
 
     glTranslatef(translateX, translateY, 0.0f);
 
@@ -310,43 +383,63 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *)
 bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    const int width = (int)cmd.width;
-    const int height = (int)cmd.height;
+    // Same geometry as the GL3 backend (and the old CGLEngine::DrawShadow):
+    // the shadow is the sprite squashed to half height and sheared along the
+    // ground diagonal.
+    const float width = (float)cmd.width;
+    const float height = cmd.height / 2.0f;
     const int x = cmd.x;
     const int y = cmd.y;
-    const float ratio = 0.7f;
+    const float ratio = height / width;
+    const GLfloat translateY = (GLfloat)(y + height * 0.75);
 
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
 
-    GLfloat translateY = (GLfloat)(y + height * 0.75);
+    // Fixed-function stand-in for the SDM_SHADOW shader output (0.6 gray):
+    // darken the background to 60% through the sprite silhouette by
+    // modulating the destination with (1 - 0.4 * texAlpha); the global alpha
+    // test culls fully transparent texels.
+    glColor4f(1.0f, 1.0f, 1.0f, 0.4f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+
     glTranslatef((GLfloat)x, translateY, 0.0f);
 
     glBegin(GL_TRIANGLE_STRIP);
     if (cmd.mirror)
     {
         glTexCoord2f(0.0f, 1.0f);
-        glVertex2f((float)width * ratio, (float)height);
+        glVertex2f(width, height);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(0.0f, (float)height);
+        glVertex2f(0.0f, height);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f((float)width * ratio, 0.0f);
+        glVertex2f(width * (ratio + 1.0f), 0.0f);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(0.0f, 0.0f);
+        glVertex2f(width * ratio, 0.0f);
     }
     else
     {
         glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(0.0f, (float)height);
+        glVertex2f(0.0f, height);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f((float)width * ratio, (float)height);
+        glVertex2f(width, height);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(0.0f, 0.0f);
+        glVertex2f(width * ratio, 0.0f);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f((float)width * ratio, 0.0f);
+        glVertex2f(width * (ratio + 1.0f), 0.0f);
     }
     glEnd();
 
     glTranslatef((GLfloat)-x, -translateY, 0.0f);
+
+    if (cmd.keepBlend)
+    {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else
+    {
+        glDisable(GL_BLEND);
+    }
 
     return true;
 }
@@ -865,10 +958,12 @@ bool RenderDraw_EnableDepthState(const EnableDepthStateCmd &cmd, RenderState *)
     return true;
 }
 
-bool RenderDraw_SetDrawMode(const SetDrawModeCmd &cmd, RenderState *)
+bool RenderDraw_SetDrawMode(const SetDrawModeCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    // Shaders not supported in GL1/GL2 fixed pipeline - SetDrawMode is a no-op
+    // Shaders not supported in GL1/GL2 fixed pipeline; the draw mode drives
+    // the fixed-function color application in the draw handlers instead
+    s_currentDrawMode = cmd.drawMode;
     return true;
 }
 
@@ -883,9 +978,10 @@ bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *)
     return true;
 }
 
-bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *)
+bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
+    state->color = cmd.color;
     GL_CALL(glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]));
     return true;
 }
