@@ -339,6 +339,17 @@ bool CMouseManager::LoadCursorTextures()
     return result;
 }
 
+// Cursor rendering and colorization rules:
+//
+//  - Plain cursors (art id < 0x206A, or drawn on facet 0/Trammel-like maps)
+//    are drawn uncolorized: the raw static art as-is.
+//  - Cursors with art id >= 0x206A drawn on any facet other than 0 are
+//    colorized with hue 0x0033 (the brown/tan "Felucca" tint).
+//  - While the custom house tool is open, the preview art under the cursor is
+//    tinted with 0x0021 when the placement is invalid.
+//  - An object held by the cursor (g_ObjectInHand) is drawn with its own
+//    color, doubled diagonally when the item is a stackable resource pile.
+//
 void CMouseManager::Draw(uint16_t id)
 {
     ScopedPerfMarker(__FUNCTION__);
