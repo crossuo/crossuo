@@ -68,10 +68,10 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "CrossUO Team"
             VALUE "FileDescription", "The Open Source Ultima Online Client"
-            VALUE "FileVersion", "1.0.3.b"
+            VALUE "FileVersion", "1.1.0"
             VALUE "LegalCopyright", "Copyright (C) 2020"
             VALUE "ProductName", "X:UO Launcher"
-            VALUE "ProductVersion", "1.0.3.b"
+            VALUE "ProductVersion", "1.1.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -98,12 +98,12 @@ IDI_SMALL               ICON                    "xuolauncher.ico"
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#ifndef APSTUDIO_INVOKED\r\n"
     "#include ""targetver.h""\r\n"
@@ -114,7 +114,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -148,4 +148,3 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-
