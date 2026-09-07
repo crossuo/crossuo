@@ -515,13 +515,34 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
 bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
+    float r = 1.f, g = 1.f, b = 1.f, a = 1.f;
+    if (cmd.color != g_ColorInvalid)
+    {
+        r = cmd.color[0];
+        g = cmd.color[1];
+        b = cmd.color[2];
+        a = cmd.color[3];
+    }
+    glColor4f(r, g, b, a);
+
     glDisable(GL_TEXTURE_2D);
+    const bool blend = a < 1.f;
+    if (blend)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
     glBegin(GL_LINES);
     glVertex2i(cmd.x0, cmd.y0);
     glVertex2i(cmd.x1, cmd.y1);
     glEnd();
 
+    if (blend)
+    {
+        glDisable(GL_BLEND);
+    }
+    glColor4f(1.f, 1.f, 1.f, 1.f);
     glEnable(GL_TEXTURE_2D);
 
     return true;
