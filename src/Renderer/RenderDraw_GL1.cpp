@@ -84,7 +84,7 @@ static void RenderDrawGL1_ApplyColor(const RenderState *state, const float4 &cmd
         }
     }
 
-    glColor4f(r, g, b, a);
+    GL_CALL(glColor4f(r, g, b, a));
 }
 static std::deque<SetScissorCmd> s_ScissorList;
 
@@ -444,7 +444,7 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *)
     return true;
 }
 
-bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *)
+bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     const float pi = XUO_M_PI;
@@ -452,9 +452,15 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *)
     const int segments = 32;
     const float centerX = (float)cmd.x;
     const float centerY = (float)cmd.y;
-    const uint32_t centerColor = 0xFFFFFFFF;
-    const uint32_t edgeColor = 0xFFFFFFFF;
+    const uint32_t centerColor =
+        (((uint32_t)(state->color[0] * 255) << 0) |
+         ((uint32_t)(state->color[1] * 255) << 8) |
+         ((uint32_t)(state->color[2] * 255) << 16) |
+         ((uint32_t)(state->color[3] * 255) << 24));
+    // Edge color: black if gradient mode is on, otherwise use state color
+    const uint32_t edgeColor = cmd.gradientMode != 0 ? 0x00000000 : centerColor;
 
+    glDisable(GL_TEXTURE_2D);
     glTranslatef(centerX, centerY, 0.0f);
 
     glBegin(GL_TRIANGLE_FAN);
@@ -468,20 +474,20 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *)
         glVertex2f(radius * cosf(a), radius * sinf(a));
     }
     glEnd();
-
     glTranslatef(-centerX, -centerY, 0.0f);
+    glEnable(GL_TEXTURE_2D);
 
     return true;
 }
 
-bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState *)
+bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     const int x = cmd.x;
     const int y = cmd.y;
     const int width = (int)cmd.width;
     const int height = (int)cmd.height;
-    glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]);
+    RenderDrawGL1_ApplyColor(state, cmd.color);
     glDisable(GL_TEXTURE_2D);
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
@@ -500,16 +506,17 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     return true;
 }
 
-bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *)
+bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    const uint32_t col = 0xFFFFFFFF;
+    glDisable(GL_TEXTURE_2D);
 
     glBegin(GL_LINES);
-    glColor4ub(col & 0xFF, (col >> 8) & 0xFF, (col >> 16) & 0xFF, (col >> 24) & 0xFF);
     glVertex2i(cmd.x0, cmd.y0);
     glVertex2i(cmd.x1, cmd.y1);
     glEnd();
+
+    glEnable(GL_TEXTURE_2D);
 
     return true;
 }
