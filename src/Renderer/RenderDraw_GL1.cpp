@@ -463,10 +463,16 @@ bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *)
     int viewH = cmd.scene_height;
     int newBottom = bottom;
     int newRight = right;
+
+    glViewport(viewX, viewY, viewW, viewH);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
     if (cmd.proj_flipped_y)
     {
-        // Frame buffers are already in OpenGL coordinate space (bottom-left origin)
-        // No Y-flip needed, no scaling
+        // FBO pass: render in GL-native orientation (straight ortho, no Y
+        // inversion, no scaling) so the framebuffer texture is sampled upright
+        // by the composite pass. Matches RenderState_SetViewParams (GL3).
+        glOrtho(left, right, top, bottom, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
     }
     else
     {
@@ -476,12 +482,10 @@ bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *)
 
         left = (left * cmd.scene_scale) - (newRight - right);
         top = (top * cmd.scene_scale) - (newBottom - bottom);
-    }
 
-    glViewport(viewX, viewY, viewW, viewH);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(left, newRight, newBottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
+        glOrtho(
+            left, newRight, newBottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
+    }
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
