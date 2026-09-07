@@ -19,6 +19,7 @@
 #define XUO_M_PI 3.14159265358979323846264338327950288
 static float s_palette[96] = {};
 static int s_currentDrawMode = SDM_NO_COLOR;
+static bool s_viewFlippedY = false;
 
 // Fixed-function approximation of the colorizer shader: the UO hue palettes
 // are brightness ramps of a single hue, so tinting by the average palette
@@ -569,6 +570,7 @@ bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *)
     int newBottom = bottom;
     int newRight = right;
 
+    s_viewFlippedY = cmd.proj_flipped_y;
     glViewport(viewX, viewY, viewW, viewH);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -632,12 +634,23 @@ bool RenderDraw_SetScissor(const SetScissorCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
     GL_CALL(glEnable(GL_SCISSOR_TEST));
-    // The scissor box lives in window space (origin at the bottom-left) while
-    // the command stream works in game space (origin at the top-left): flip
-    // the rect vertically against the current viewport height.
+    // The scissor box lives in window space (origin at the bottom-left); its
+    // correct Y depends on the active projection orientation, which the draw
+    // mode of the current pass selects:
+    //  - straight ortho (framebuffer passes, proj_flipped_y): game Y maps 1:1
+    //  - inverted ortho (window passes): game Y must be flipped against the
+    //    viewport height
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
-    int gl_scissor_y = viewport[3] - cmd.y - (int)cmd.height;
+    int gl_scissor_y = 0;
+    if (s_viewFlippedY)
+    {
+        gl_scissor_y = viewport[1] + cmd.y;
+    }
+    else
+    {
+        gl_scissor_y = viewport[1] + viewport[3] - cmd.y - (int)cmd.height;
+    }
 
     GL_CALL(glScissor(cmd.x, gl_scissor_y, cmd.width, cmd.height));
     return true;
