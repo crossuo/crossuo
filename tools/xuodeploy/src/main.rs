@@ -8,7 +8,7 @@ use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::hash::Hasher;
 use std::io::prelude::*;
-use std::io::{BufRead, BufReader, Error, ErrorKind, Write};
+use std::io::{BufRead, BufReader, Error, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use twox_hash::XxHash64;
@@ -16,18 +16,18 @@ use walkdir::WalkDir;
 
 fn zip_file(out_path: &Path, in_path: &Path, name: &Path) -> zip::result::ZipResult<()> {
     use zip::write::FileOptions;
-    let out_file = File::create(&out_path)?;
+    let out_file = File::create(out_path)?;
     let mut input_file = File::open(in_path)?;
     let mut buffer = Vec::new();
     input_file.read_to_end(&mut buffer)?;
 
     let mut zip = zip::ZipWriter::new(out_file);
-    let options = FileOptions::default()
+    let options = FileOptions::<()>::default()
         .last_modified_time(zip::DateTime::default())
         .compression_method(zip::CompressionMethod::Deflated)
         .unix_permissions(0o755);
     zip.start_file(name.to_string_lossy(), options)?;
-    zip.write_all(&*buffer)?;
+    zip.write_all(&buffer)?;
     zip.finish()?;
     Ok(())
 }
@@ -100,17 +100,24 @@ fn cache_put(cache: &mut Cache, name: &Path, hash: &str, datahash: &str) {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default, Clone)]
 #[serde(rename = "file", default)]
 struct XuoFile {
+    #[serde(rename = "@name", default)]
     name: PathBuf,
+    #[serde(rename = "@hash", default)]
     hash: String,
+    #[serde(rename = "@data", default)]
     data: PathBuf,
+    #[serde(rename = "@datahash", default)]
     datahash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 #[serde(rename = "release", default)]
 struct XuoRelease {
+    #[serde(rename = "@name", default)]
     name: String,
+    #[serde(rename = "@version", default)]
     version: String,
+    #[serde(rename = "@latest", default)]
     latest: bool,
     #[serde(rename = "file", default)]
     files: Vec<XuoFile>,
@@ -131,8 +138,12 @@ fn platform_read_manifest(path: &Path) -> Result<XuoManifest, Error> {
     let reader = BufReader::new(file);
     let manifest: XuoManifest = match from_reader(reader) {
         Ok(data) => data,
-        Err(_) => {
-            println!("couldn't read manifest {}, creating it.", path.display());
+        Err(e) => {
+            println!(
+                "couldn't read manifest {}, creating it. ({})",
+                path.display(),
+                e
+            );
             XuoManifest {
                 ..Default::default()
             }
@@ -214,7 +225,7 @@ fn manifest_add_release(
         "could not find a product \"{}\", maybe you want force create? `--force`",
         new_release.name
     );
-    Err(Error::new(ErrorKind::Other, "product not found"))
+    Err(Error::other("product not found"))
 }
 
 fn manifest_get_datahash(manifest: &XuoManifest, name: &Path, hash: &str) -> Result<String, Error> {
@@ -225,8 +236,7 @@ fn manifest_get_datahash(manifest: &XuoManifest, name: &Path, hash: &str) -> Res
             }
         }
     }
-    Err(Error::new(
-        ErrorKind::Other,
+    Err(Error::other(
         "file in cache not found in manifest, please delete the cache to rebuild it",
     ))
 }
@@ -365,7 +375,7 @@ fn main() -> Result<(), Error> {
             println!(
                 "when updating/generating a new product update, a version string is required!"
             );
-            return Err(Error::new(ErrorKind::Other, "version string is required"));
+            return Err(Error::other("version string is required"));
         } else {
             "incremental".to_owned()
         };
@@ -396,13 +406,13 @@ fn main() -> Result<(), Error> {
             if file.file_name() == cache_file {
                 continue;
             }
-            if let Some(ref expected_product) = product_name {
-                if *expected_product != current_product {
-                    continue;
-                }
+            if let Some(ref expected_product) = product_name
+                && *expected_product != current_product
+            {
+                continue;
             }
 
-            let hash = hash_file(&file)?;
+            let hash = hash_file(file)?;
             let product_path = platform_path.join(&current_product);
             let diff = file.strip_prefix(&product_path).unwrap();
             println!("file: {} => {}", diff.display(), hash);
@@ -412,18 +422,18 @@ fn main() -> Result<(), Error> {
                 panic!("could not obtain hash for file: {}", file.display());
             };
 
-            let zip_subpath = build_artifact_name(&*diff.display().to_string(), &*hash);
+            let zip_subpath = build_artifact_name(&diff.display().to_string(), &hash);
             let zip_path = update_path.join(&zip_subpath);
-            let artifact_path = update_path.join(&placement);
+            let artifact_path = update_path.join(placement);
             fs_create_path(&artifact_path)?;
-            let datahash = if !cache_hit(&cache, &diff, &hash) {
+            let datahash = if !cache_hit(&cache, diff, &hash) {
                 println!("zip {}", zip_path.display());
-                zip_file(&zip_path, &file, &diff)?;
+                zip_file(&zip_path, file, diff)?;
                 hash_file(&zip_path)?
             } else {
-                manifest_get_datahash(&manifest, &diff, &hash)?
+                manifest_get_datahash(&manifest, diff, &hash)?
             };
-            cache_put(&mut cache, &diff, &hash, &datahash);
+            cache_put(&mut cache, diff, &hash, &datahash);
 
             println!("found {}", file.display());
             let file = XuoFile {

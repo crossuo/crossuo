@@ -3,19 +3,19 @@
 
 [package]
 name = "xuodeploy"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Danny Angelo Carminati Grein <fungos@gmail.com>"]
-edition = "2018"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-twox-hash = "1.5.0"
+twox-hash = "2.1.4"
 walkdir = "2.3.1"
-zip = "0.5.4"
+zip = "8.6"
 structopt = "0.3.8"
 serde_derive = "1.0.104"
 serde = { version = "1.0", features = ["derive"] }
-quick-xml = { version = "0.17", features = [ "serialize" ] }
-warp = "0.2.1"
-tokio = { version = "1.18", features = ["macros"] }
+quick-xml = { version = "0.42", features = [ "serialize" ] }
+warp = { version = "0.4.3", features = ["server"] }
+tokio = { version = "1.18", features = ["macros", "rt-multi-thread"] }
