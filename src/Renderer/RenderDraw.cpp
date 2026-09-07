@@ -8,6 +8,16 @@
 #include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
+
+// One-shot draw mode: the colorizer mode applies only to the draw that follows
+// its SetDrawMode command. Without the reset, a colored draw (text, hued
+// sprite) leaves the shader mode active and every later uncolored draw (gump
+// decorations, frames) is rendered through the stale palette.
+static void RenderDraw_ResetDrawMode(RenderState *state)
+{
+    state->currentDrawMode = SDM_NO_COLOR;
+    GL_CHECK(glUniform1i(_uDrawMode, SDM_NO_COLOR));
+}
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
@@ -119,6 +129,7 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     // FIXME: FORCE RESET STATES TO AVOID GRAPHICAL ISSUES
     // Need to figure out which object is "leaking" state here
     //RenderState_SetBlendEnabled(state, false);
+    RenderDraw_ResetDrawMode(state);
 
     return true;
 }
@@ -175,6 +186,7 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawRotatedQuad");
     RenderState_ResetAllStates(state);
+    RenderDraw_ResetDrawMode(state);
     return true;
 }
 
@@ -282,6 +294,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         RenderState_ResetAllStates(state);
     }
 
+    RenderDraw_ResetDrawMode(state);
     return true;
 }
 
@@ -362,6 +375,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawLandTile");
     RenderState_ResetAllStates(state);
+    RenderDraw_ResetDrawMode(state);
     return true;
 }
 
@@ -428,6 +442,7 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawShadow");
     RenderState_ResetAllStates(state);
+    RenderDraw_ResetDrawMode(state);
     return true;
 }
 

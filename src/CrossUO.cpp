@@ -4657,6 +4657,7 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
             g_ColorManager.SendColorsToShader(color);
         }
 #ifndef NEW_RENDERER_ENABLED
+        (void)uniformValue;
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
