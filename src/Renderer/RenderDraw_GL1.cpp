@@ -189,6 +189,7 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     glEnd();
 
     glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f);
+    s_currentDrawMode = SDM_NO_COLOR;
 
     return true;
 }
@@ -220,6 +221,7 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
 
     glRotatef(cmd.angle, 0.0f, 0.0f, -1.0f);
     glTranslatef((GLfloat)-cmd.x, -translateY, 0.0f);
+    s_currentDrawMode = SDM_NO_COLOR;
 
     return true;
 }
@@ -340,6 +342,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     glEnd();
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
+    s_currentDrawMode = SDM_NO_COLOR;
 
     return true;
 }
@@ -376,6 +379,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     glEnd();
 
     glTranslatef(-translateX, -translateY, 0.0f);
+    s_currentDrawMode = SDM_NO_COLOR;
 
     return true;
 }
@@ -440,6 +444,7 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *)
     {
         glDisable(GL_BLEND);
     }
+    s_currentDrawMode = SDM_NO_COLOR;
 
     return true;
 }
@@ -627,10 +632,12 @@ bool RenderDraw_SetScissor(const SetScissorCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
     GL_CALL(glEnable(GL_SCISSOR_TEST));
-    // Transform scissor coordinates from screen space to OpenGL space
-    // Screen space: Y=0 is at top, increases downward
-    // OpenGL space: Y=0 is at bottom, increases upward
-    int gl_scissor_y = cmd.height - cmd.y;
+    // The scissor box lives in window space (origin at the bottom-left) while
+    // the command stream works in game space (origin at the top-left): flip
+    // the rect vertically against the current viewport height.
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    int gl_scissor_y = viewport[3] - cmd.y - (int)cmd.height;
 
     GL_CALL(glScissor(cmd.x, gl_scissor_y, cmd.width, cmd.height));
     return true;
