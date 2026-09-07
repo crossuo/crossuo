@@ -140,7 +140,11 @@ CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s)
     return (static_cast<uint64_t>(esi) << 32) | eax;
 }
 
-#if 1 // USE_CLIENT_CRC32
+// USE_CLIENT_CRC32: when enabled, uses a runtime-computed crc table that
+// requires crc32_init() to be called first. crc32_init() is kept for table
+// (re)generation purposes: flip this check, build+run with the #if 0 generator
+// block below enabled, and paste its output into the static table.
+#if 0 // USE_CLIENT_CRC32
 
 static uint32_t crc32_table[256];
 static uint32_t crc32_reflect(uint32_t source, int c)

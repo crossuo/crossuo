@@ -356,7 +356,6 @@ int main(int argc, char **argv)
     {
         return 0;
     }
-    crc32_init();
     auto uopath = cli("client_path");
     auto unpack = s_cli["unpack"].was_set();
     auto info = s_cli["info"].was_set();
