@@ -38,8 +38,12 @@ struct ScopedGLDebugMarker
     }
 };
 
-#define SCOPED_GL_DEBUG_MARKER() ScopedGLDebugMarker _scopedGLMarker(g_renderCmdList, __FUNCTION__)
-#define SCOPED_GL_DEBUG_MARKER_LABEL(label) ScopedGLDebugMarker _scopedGLMarker(g_renderCmdList, label)
+#define SCOPED_GL_DEBUG_MARKER_CONCAT_(a, b) a##b
+#define SCOPED_GL_DEBUG_MARKER_CONCAT(a, b) SCOPED_GL_DEBUG_MARKER_CONCAT_(a, b)
+#define SCOPED_GL_DEBUG_MARKER() \
+    ScopedGLDebugMarker SCOPED_GL_DEBUG_MARKER_CONCAT(_scopedGLMarker_, __LINE__)(g_renderCmdList, __FUNCTION__)
+#define SCOPED_GL_DEBUG_MARKER_LABEL(label) \
+    ScopedGLDebugMarker SCOPED_GL_DEBUG_MARKER_CONCAT(_scopedGLMarker_, __LINE__)(g_renderCmdList, label)
 #define GL_DEBUG_MARKER_PUSH(label) RenderAdd_PushDebugMarker(g_renderCmdList, label)
 #define GL_DEBUG_MARKER_POP() RenderAdd_PopDebugMarker(g_renderCmdList)
 

@@ -97,10 +97,11 @@ static void APIENTRY OGLDebugMsgCallback(
     (void)length;
     (void)userParam;
 
-    auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id) {
+    auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id, OpenGLDebugMsgState &outAssert, OpenGLDebugMsgState &outLog) {
         auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
         auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
-        auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
+        OpenGLDebugMsgState &shouldAssert = infoSeverity.assert;
+        OpenGLDebugMsgState &shouldLog = infoSeverity.log;
         if (infoType.assert != OGL_DBGMSG_UNSET)
             shouldAssert = infoType.assert;
         if (infoType.log != OGL_DBGMSG_UNSET)
@@ -127,10 +128,13 @@ static void APIENTRY OGLDebugMsgCallback(
             }
         }
 
-        return std::tie(shouldAssert, shouldLog);
+        outAssert = shouldAssert;
+        outLog = shouldLog;
     };
 
-    auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
+    OpenGLDebugMsgState shouldAssert = OGL_DBGMSG_UNSET;
+    OpenGLDebugMsgState shouldLog = OGL_DBGMSG_UNSET;
+    getMsgInfo(severity, type, id, shouldAssert, shouldLog);
     (void)shouldAssert;
     if (shouldLog == OGL_DBGMSG_ENABLED)
     {

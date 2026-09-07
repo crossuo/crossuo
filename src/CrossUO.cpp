@@ -5172,6 +5172,8 @@ void CGame::CreateTextMessage(
 
             break;
         }
+        default:
+            break;
     }
 }
 
@@ -5299,6 +5301,8 @@ void CGame::CreateUnicodeTextMessage(
             g_WorldTextRenderer.AddText(td);
             break;
         }
+        default:
+            break;
     }
 }
 
