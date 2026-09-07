@@ -44,16 +44,13 @@ static void RenderDrawGL1_ApplyColor(const float4 &cmdColor)
         case SDM_PARTIAL_HUE:
         case SDM_LAND_COLORED:
         {
-            float tr = 0.f, tg = 0.f, tb = 0.f;
-            for (int i = 0; i < 32; i++)
-            {
-                tr += s_palette[i * 3 + 0];
-                tg += s_palette[i * 3 + 1];
-                tb += s_palette[i * 3 + 2];
-            }
-            r *= tr / 32.f;
-            g *= tg / 32.f;
-            b *= tb / 32.f;
+            // UO hue ramps are approximately linear from a dark entry to a
+            // bright one, so the top entry reproduces what the shader's
+            // per-pixel lookup yields for the (mostly bright) sprites this
+            // backend tints; the average entry would darken them.
+            r *= s_palette[93];
+            g *= s_palette[94];
+            b *= s_palette[95];
             break;
         }
         case SDM_TEXT_COLORED:
