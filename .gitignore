@@ -50,3 +50,5 @@ crossuo.log
 /build/
 /desktop
 *.DS_Store
+re*ts*/**
+*.pyc
