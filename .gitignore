@@ -53,3 +53,5 @@ crossuo.log
 *.DS_Store
 re*ts*/**
 *.pyc
+# vfs test scratch dir (tests are expected to clean it up)
+vfs_tests_tmp/

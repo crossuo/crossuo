@@ -1,0 +1,32 @@
+<MythicMFT>
+    <product serial="1787679382" launchfile="client.exe">
+        <manifestrepos>
+            <repo url="http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest/" />
+        </manifestrepos>
+        <filerepos>
+            <repo url="http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files/" />
+        </filerepos>
+        <stages>
+            <stage name="notes" priority="5" verifyunpacked="0">
+                <completion />
+                <packages>
+                    <package name="notes" rpath="notes" priority="0">
+                        <manifest n="pkg.mft" ul="1a4" ct="1" cl="123" t="6a8dd296">
+                            <sig id="21" v="AIEBrbLyMKV1cGmEWL/ZiMU3uzwC6YEIUF5lOj3iowPPRxBlohPsJclageIJj+v+lQCQmNDec+uaKqZT6Z39i2+nDDu44lJUNrqe/MMynOKfJa6tyItHzF1f/N3zPK1qzoTPmJMsaSVgEXJbYpY8e4KCPKv/uLEO58z+UTaAHcKlT7k=" />
+                        </manifest>
+                    </package>
+                </packages>
+            </stage>
+            <stage name="main" priority="10" verifyunpacked="0">
+                <completion />
+                <packages>
+                    <package name="base" rpath="base" priority="0">
+                        <manifest n="pkg.mft" ul="e9b" ct="1" cl="700" t="6a8dd30f">
+                            <sig id="21" v="AIECKd9SOnuvPw4cfedeortfUQkKrlJU8uZbajyf2lTFi6DWpWZ9HtoPg6wQw9lSXPZRLeIZfLD8v3MwBpsk8WE5v9GGYpswmjxaSGf+wvrmQJ5kYVDKWvbvAsb4CvYpyN2Q+i7iYQXsxnzZLfZoIc0mmfQGkUTNIV7qWNWbfklkefU=" />
+                        </manifest>
+                    </package>
+                </packages>
+            </stage>
+        </stages>
+    </product>
+</MythicMFT>
