@@ -61,6 +61,9 @@ void uop_populate_asset_names()
                 snprintf(build, sizeof(build), format, pack[p], file);
                 uint32_t ph = 0, sh = 0;
                 hashlittle2(build, strlen(build), &ph, &sh);
+                // real MYP files key entries on (sh<<32)|ph (verified M0/M1,
+                // tests/vfs/test_urls.cpp hash_word_order_matches_uop_hash);
+                // this legacy name table keys on UOP_HASH(ph,sh) instead
                 const uint64_t hash = UOP_HASH(ph, sh);
                 UopAssetName name;
                 name.name = build;

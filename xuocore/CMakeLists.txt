@@ -19,6 +19,14 @@ set(XUOCORE_SRCS
   mft.h
   meta.cpp
   meta.h
+  vfs.cpp
+  vfs.h
+  vfs_manifest.cpp
+  vfs_manifest.h
+  vfs_state.cpp
+  vfs_state.h
+  vfs_store.cpp
+  vfs_store.h
   xuoi.cpp
   xuoi.h
   uo_installer.cpp

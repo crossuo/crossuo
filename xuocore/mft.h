@@ -12,6 +12,26 @@
 
 #define MFT_MAX_DOWNLOAD_SIZE (1024 * 1024 * 1024)
 
+// Byte-acquisition seam: resolves one resource (product manifest, sub-manifest,
+// loose file or pack part) to its raw, as-shipped bytes (still compressed when
+// the entry is ct=1; the caller decompresses). The built-in implementation
+// reads the local cache first and falls back to HTTP, back-filling the cache;
+// alternative transports (the M1 offline blob store, the M2 fetch engine) plug
+// in through mft_config::fetch without touching the manifest recursion.
+// - url: absolute resource URL (repo + rel_path), for implementations that
+//   still go to the network
+// - rel_path: resource path relative to the repo root
+//   ("<rpath>/<pack_name|unpacked>/<name>"); local stores mirror it 1:1
+// - local_path: default local cache path of the resource
+// - buffer/size: destination; in: capacity, out: number of bytes placed
+using mft_fetch_fn = bool (*)(
+    void *context,
+    const char *url,
+    const char *rel_path,
+    const char *local_path,
+    uint8_t *buffer,
+    size_t *size);
+
 enum mft_result : uint32_t
 {
     mft_ok = 0,
@@ -35,6 +55,8 @@ struct mft_config
     bool generate_diff = false;
     fs_path output_path;
     fs_path product_path;
+    mft_fetch_fn fetch = nullptr;  // null: built-in local cache + HTTP
+    void *fetch_context = nullptr; // opaque handle passed back to fetch
 };
 
 enum mft_entry_type : uint32_t
@@ -121,6 +143,7 @@ struct mft_product
 };
 
 void mft_init(mft_product &prod, mft_config &cfg);
+void mft_entry_remote_path(mft_entry &entry, char out[512]);
 mft_result mft_load(
     mft_product &prod, const uint8_t *data, size_t data_size, const char *remote_path = nullptr);
 mft_result mft_consume_manifests(mft_product &prod);

@@ -13,6 +13,7 @@
 #include "http.h"
 #include "common.h"
 #include "meta.h"
+#include "vfs_manifest.h" // vfs_path_component_ok
 
 #include <common/utils.h>
 #include <common/logging/logging.h>
@@ -21,6 +22,87 @@
 #include <common/str.h>
 
 #include <external/zlib_amalg.h>
+
+static void mft_entry_remote_name(mft_entry &entry, char name[32]);
+
+// true when the manifest-controlled path attributes of `entry` are safe to
+// join under the repo root / local store (defense in depth: the plan build
+// already rejects them, this guards the fetch paths that bypass it)
+static bool mft_entry_paths_ok(const mft_entry &entry)
+{
+    if (!vfs_path_component_ok(entry.remote_path))
+        return false;
+    if (entry.pack_name && !vfs_path_component_ok(entry.pack_name))
+        return false;
+    if (entry.name && !vfs_path_component_ok(entry.name))
+        return false;
+    return true;
+}
+
+// Builds the resource path of an entry relative to its repo root, the exact
+// tail of the download URL: "<rpath>/<pack_name|unpacked>/<remote name>".
+// Sub-manifests keep their literal name; loose files and pack parts are
+// addressed by their hash names ("%08x%08x" of ph, sh). This is also the
+// layout local stores use to mirror the remote tree (mft_download's cache
+// path is the same tail under <product_path>/cache). As a side effect, the
+// ph/sh of a name-addressed (file) entry are filled in, matching
+// mft_entry_remote_name.
+void mft_entry_remote_path(mft_entry &entry, char out[512])
+{
+    out[0] = '\0';
+    if (!mft_entry_paths_ok(entry))
+    {
+        LOG_WARN(
+            "unsafe manifest path rejected: rpath=\"%s\" pack=\"%s\" n=\"%s\"",
+            entry.remote_path ? entry.remote_path : "",
+            entry.pack_name ? entry.pack_name : "",
+            entry.name ? entry.name : "");
+        return;
+    }
+    char name[32] = {};
+    if (entry.type == mft_entry_manifest)
+    {
+        assert(entry.name);
+        snprintf(name, sizeof(name), "%s", entry.name);
+    }
+    else
+    {
+        mft_entry_remote_name(entry, name);
+    }
+    if (entry.pack_name)
+        snprintf(out, 512, "%s/%s/%s", entry.remote_path, entry.pack_name, name);
+    else
+        snprintf(
+            out,
+            512,
+            "%s/%s%s",
+            entry.remote_path,
+            entry.type == mft_entry_manifest ? "" : "unpacked/",
+            name);
+}
+
+// The built-in acquisition used by the patcher toolchain: local cache first,
+// HTTP on miss, back-filling the cache. This is the pre-seam code path, kept
+// byte-identical when mft_config::fetch is not set.
+static bool mft_fetch_resource(
+    mft_product &prod,
+    const char *url,
+    const char *rel_path,
+    const char *local_path,
+    uint8_t *buffer,
+    size_t *size)
+{
+    if (prod.config.fetch)
+        return prod.config.fetch(
+            prod.config.fetch_context, url, rel_path, local_path, buffer, size);
+    (void)rel_path;
+    if (fs_file_read(local_path, buffer, size))
+        return true;
+    if (!http_get_binary(url, buffer, size))
+        return false;
+    fs_file_write(local_path, buffer, *size); // save to local cache
+    return true;
+}
 
 static mft_result mft_download(
     mft_product &prod,
@@ -35,7 +117,20 @@ static mft_result mft_download(
     assert(repo && remote_name && buffer && buffer_size);
     const bool in_pack = entry.type != mft_entry_manifest;
 
-    // create paths
+    // defense in depth: these attributes compose both the cache path and the
+    // store/URL tail below; a hostile manifest must not escape either
+    if (!mft_entry_paths_ok(entry))
+    {
+        LOG_ERROR(
+            "unsafe manifest path rejected: rpath=\"%s\" pack=\"%s\" n=\"%s\"",
+            entry.remote_path ? entry.remote_path : "",
+            entry.pack_name ? entry.pack_name : "",
+            entry.name ? entry.name : "");
+        return mft_invalid_format;
+    }
+
+    // create paths; not needed by custom acquisitions, which resolve bytes
+    // through mft_config::fetch directly
     fs_path path = fs_path_join(prod.config.product_path, "cache");
     path = fs_path_join(path, entry.remote_path);
     if (entry.pack_name)
@@ -44,33 +139,29 @@ static mft_result mft_download(
         path = fs_path_join(path, "unpacked");
     path = fs_path_join(path, remote_name);
     fs_path dir = fs_directory(path);
-    if (!fs_path_create(dir))
+    if (!prod.config.fetch && !fs_path_create(dir))
     {
         LOG_ERROR("failed to create directory: %s", fs_path_ascii(dir));
         return mft_could_not_open_path;
     }
     auto lpath = fs_path_ascii(path);
 
-    // build resource url
-    char upath[512] = {};
+    // build resource url: repo + the entry's relative resource path. The tail
+    // is built from the caller-provided remote name (literal for manifests,
+    // "%08x%08x" hash name otherwise), mirroring mft_entry_remote_path.
+    char rpath[512] = {};
     if (entry.pack_name)
-        snprintf(
-            upath,
-            sizeof(upath),
-            "%s%s/%s/%s",
-            repo,
-            entry.remote_path,
-            entry.pack_name,
-            remote_name);
+        snprintf(rpath, sizeof(rpath), "%s/%s/%s", entry.remote_path, entry.pack_name, remote_name);
     else
         snprintf(
-            upath,
-            sizeof(upath),
-            "%s%s/%s%s",
-            repo,
+            rpath,
+            sizeof(rpath),
+            "%s/%s%s",
             entry.remote_path,
             in_pack ? "unpacked/" : "",
             remote_name);
+    char upath[512] = {};
+    snprintf(upath, sizeof(upath), "%s%s", repo, rpath);
 
     size_t ul = entry.uncompressed_len;
     assert(ul < *buffer_size);
@@ -80,13 +171,9 @@ static mft_result mft_download(
     {
         case 0:
         {
-            if (!fs_file_read(lpath, buffer, buffer_size))
-            {
-                if (!http_get_binary(upath, buffer, buffer_size))
-                    return mft_could_not_download_file;
-
-                fs_file_write(lpath, buffer, *buffer_size); // save to local cache
-            }
+            if (!mft_fetch_resource(
+                    prod, upath, rpath, lpath, const_cast<uint8_t *>(buffer), buffer_size))
+                return mft_could_not_download_file;
             bytes = *buffer_size;
         }
         break;
@@ -94,13 +181,9 @@ static mft_result mft_download(
         {
             auto cl = entry.compressed_len;
             assert(cl < *buffer_size);
-            if (!fs_file_read(lpath, cbuffer, buffer_size))
-            {
-                if (!http_get_binary(upath, cbuffer, buffer_size))
-                    return mft_could_not_download_file;
-
-                fs_file_write(lpath, cbuffer, *buffer_size); // save to local cache
-            }
+            if (!mft_fetch_resource(
+                    prod, upath, rpath, lpath, const_cast<uint8_t *>(cbuffer), buffer_size))
+                return mft_could_not_download_file;
             cl = *buffer_size;
             bytes = cl;
             if (cl != entry.compressed_len)
@@ -519,9 +602,8 @@ size_t mft_download_batch(mft_product &prod, const std::vector<mft_entry> &allen
         allentries.begin(),
         allentries.end(),
         std::back_inserter(entries),
-        [](const mft_entry &entry) {
-            return entry.state != state_need_update && entry.state != state_download_failed;
-        });
+        [](const mft_entry &entry)
+        { return entry.state != state_need_update && entry.state != state_download_failed; });
 
     const uint32_t threads = prod.config.thread_count;
     size_t bytes = 0;
@@ -549,7 +631,8 @@ size_t mft_download_batch(mft_product &prod, const std::vector<mft_entry> &allen
 
             LOG_TRACE(
                 "scheduling job for thread %d with batch range from %d to %d", tid + 1, start, end);
-            auto job = [start, end, tid, &prod, &entries, &bytesTotal]() {
+            auto job = [start, end, tid, &prod, &entries, &bytesTotal]()
+            {
                 for (auto i = start; i < end; ++i)
                 {
                     size_t l = mft_download_entry(prod, entries[i], tid);
