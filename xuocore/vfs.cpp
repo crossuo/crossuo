@@ -13,17 +13,31 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "mft.h"
+
+#include "vfs.h"
+
+#include <inttypes.h>
+#include <stdio.h>
+#include <string.h>
+
 #include <algorithm>
 #include <atomic>
+#include <condition_variable>
 #include <map>
 #include <mutex>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "http.h"
 #include "vfs_fetch.h"
 #include "vfs_record.h"
 #include "vfs_trap.h"
+
+#include "common.h"
+#include "uodata.h"
+#include <common/logging/logging.h>
 
 #include "common.h"
 #include <common/logging/logging.h>
@@ -52,6 +66,18 @@ static vfs_journal s_journal;
 // Built when the plan is loaded; consumed by vfs_map_file.
 static std::map<astr_t, size_t> s_managed_files;
 static bool s_managed_built = false;
+
+// pack-asset registry (M4): uop hash -> (file index, asset index) for the
+// index-build stubbed lookups (vfs_asset_is_stubbed)
+static std::map<uint64_t, std::pair<size_t, size_t>> s_managed_hashes;
+
+// demand tier (M4, §6.8 zero-latency): assets whose real fetch was deferred
+// by the fault path are healed here, one at a time, off the render thread
+static std::vector<std::pair<uint32_t, uint32_t>> s_demand_queue;
+static std::map<std::pair<uint32_t, uint32_t>, bool> s_demand_queued; // dedup set
+static std::mutex s_demand_mutex;
+static std::condition_variable s_demand_cv;
+static std::thread s_demand_thread;
 
 // ---------------------------------------------------------------------------
 // managed mappings (M3, plan §6.1, §6.5)
@@ -85,8 +111,17 @@ static void vfs_managed_build()
         return;
     s_managed_built = true;
     s_managed_files.clear();
+    s_managed_hashes.clear();
     for (size_t i = 0; i < s_plan.files.size(); ++i)
+    {
         s_managed_files[vfs_lower_ascii(s_plan.files[i].name.c_str())] = i;
+        const auto &file = s_plan.files[i];
+        for (size_t ai = 0; ai < file.assets.size(); ++ai)
+        {
+            if (file.assets[ai].uop_hash != 0)
+                s_managed_hashes[file.assets[ai].uop_hash] = {i, ai};
+        }
+    }
 }
 
 // global plan asset index of a file's first asset (state bytes are in plan
@@ -103,6 +138,7 @@ static size_t vfs_state_base_index(const VfsPlan &plan, size_t file_index)
 // artifact: it must live inside the install dir and match a plan file name
 static int64_t vfs_managed_index_of(const fs_path &path)
 {
+    vfs_managed_build(); // binds the registry to the current params' plan
     if (!vfs_plan_ready() || s_managed_files.empty())
         return -1;
     astr_t candidate = vfs_lower_ascii(fs_path_ascii(path));
@@ -122,7 +158,7 @@ static int64_t vfs_managed_index_of(const fs_path &path)
 // fetch engine dedups equal in-flight tails), then run the M1 write path for
 // exactly this asset. Called with no trap lock held (plan §9 lock order).
 // The wait is bounded (m3): a fetch stalled past this turns the fault into
-// the zero-fill path instead of parking the faulting thread forever
+// the stub path instead of parking the faulting thread forever
 #define VFS_TRAP_FETCH_TIMEOUT_MS (30 * 1000)
 
 static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
@@ -140,7 +176,7 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
             return false; // no engine: nothing can appear in the store
         if (!vfs_fetch_blob_to_store(
                 asset.blob.c_str(), block->expected, false, VFS_TRAP_FETCH_TIMEOUT_MS))
-            return false; // the fault degrades to the zero-fill path
+            return false; // the fault degrades to the stub path
     }
     vfs_store_params store_params;
     store_params.blobs_dir = s_params.blobs_dir;
@@ -151,11 +187,87 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
         s_plan, store_params, s_states, &s_journal, block->file_index, block->asset_index);
 }
 
+// stub transition (M4): the trap served a placeholder payload for this asset.
+// Folds the state byte + a durable journal mark so the next boot sees the
+// placeholder truth (and the §6.8 index build can mark the game's caches)
+static void vfs_trap_asset_stubbed(void *context, const vfs_trap_block *block)
+{
+    (void)context;
+    if (!block || !vfs_plan_ready() || block->file_index >= s_plan.files.size())
+        return;
+    const auto &file = s_plan.files[block->file_index];
+    if (block->asset_index >= file.assets.size())
+        return;
+    size_t global = block->asset_index;
+    for (size_t fi = 0; fi < block->file_index; ++fi)
+        global += s_plan.files[fi].assets.size();
+    std::unique_lock<std::mutex> lock(s_state_mutex);
+    if (global >= s_states.size() || s_states[global] == vfs_fetched)
+        return; // a heal that raced the report wins
+    s_states[global] = vfs_stubbed;
+    vfs_journal_mark(s_journal, {'B', block->file_index, block->asset_index});
+}
+
+// ---------------------------------------------------------------------------
+// demand tier (M4, §6.8): zero-latency faults defer the real fetch; this
+// worker heals them one at a time (fetch -> materialize -> flip), so the
+// hot-swap refresh hooks see healed bytes on the next access. Offline runs
+// never start it: nothing can land.
+// ---------------------------------------------------------------------------
+
+static void vfs_demand_enqueue(uint32_t file_index, uint32_t asset_index)
+{
+    if (s_params.offline || !s_boot_started)
+        return;
+    {
+        std::lock_guard<std::mutex> lock(s_demand_mutex);
+        const auto key = std::make_pair(file_index, asset_index);
+        if (s_demand_queued.find(key) != s_demand_queued.end())
+            return; // already queued or being healed
+        s_demand_queued[key] = true;
+        s_demand_queue.push_back(key);
+    }
+    s_demand_cv.notify_one();
+}
+
+static void vfs_demand_run()
+{
+    LOG_INFO("demand tier: started (zero-latency healing)");
+    for (;;)
+    {
+        std::pair<uint32_t, uint32_t> item;
+        {
+            std::unique_lock<std::mutex> lock(s_demand_mutex);
+            s_demand_cv.wait(lock, [] { return !s_demand_queue.empty() || s_boot_shutdown; });
+            if (s_boot_shutdown && s_demand_queue.empty())
+                break;
+            item = s_demand_queue.front();
+            s_demand_queue.erase(s_demand_queue.begin());
+        }
+        // runs the blocking resolution for exactly this asset (bounded by the
+        // fetch timeout); a failure keeps the placeholder and drops the dedup
+        // guard so a later fault can re-enqueue
+        vfs_trap_resolve_asset(&s_plan, item.first, item.second);
+        {
+            std::lock_guard<std::mutex> lock(s_demand_mutex);
+            s_demand_queued.erase(item);
+        }
+    }
+    LOG_INFO("demand tier: stopped");
+}
+
 static void vfs_trap_backend_ensure()
 {
     vfs_trap_backend backend;
     backend.context = nullptr;
     backend.ensure = vfs_trap_ensure_asset;
+    backend.stubbed = vfs_trap_asset_stubbed;
+    backend.prefetch = [](void *context, const vfs_trap_block *block)
+    {
+        (void)context;
+        if (block)
+            vfs_demand_enqueue(block->file_index, block->asset_index);
+    };
     vfs_trap_set_backend(backend);
 }
 
@@ -214,6 +326,119 @@ bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length)
     return vfs_trap_resolve_range(base, uint64_t(offset), uint64_t(length));
 }
 
+// ---------------------------------------------------------------------------
+// stubs and hot-swap (M4, plan §6.7, §6.8)
+// ---------------------------------------------------------------------------
+
+uint64_t vfs_stub_count()
+{
+    vfs_trap_stats stats;
+    vfs_trap_stats_get(&stats);
+    return stats.stubbed;
+}
+
+bool vfs_is_ready(uint8_t *base, size_t offset)
+{
+    if (!vfs_enabled() || base == nullptr)
+        return true; // native files are always whole
+    const auto mark = vfs_trap_page_mark_at(base, uint64_t(offset));
+    return mark == vfs_trap_mark_real;
+}
+
+bool vfs_refresh_block(const uint8_t *addr)
+{
+    if (!vfs_enabled() || addr == nullptr)
+        return false;
+    return vfs_trap_asset_healed(addr);
+}
+
+bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj))
+{
+    if (io == nullptr || !vfs_enabled() || io->Stubbed == 0)
+        return false;
+    // Address is the payload pointer the index was built from: it identifies
+    // the trap asset whose real bytes may have landed in the meantime
+    if (io->Address == 0 || !vfs_refresh_block(reinterpret_cast<const uint8_t *>(io->Address)))
+        return false;
+    if (destroy != nullptr)
+        destroy(io); // game-supplied teardown (DestroySprite and friends)
+    io->UserData = nullptr;
+    // UOP gumps are the one kind whose index carries payload-derived fields:
+    // UopReadIndexFile read Width/Height from the block's first 8 bytes (the
+    // stub wrote 0x0 there so the readers short-circuit) and advanced Address
+    // past them - so the dims sit 8 bytes behind Address. Re-read them from
+    // the healed bytes before the caller reloads, mirroring that bake exactly.
+    if (io->UopBlock != nullptr &&
+        vfs_trap_stub_kind_at(reinterpret_cast<const uint8_t *>(io->Address)) == vfs_stub_gump)
+    {
+        const uint8_t *dims = reinterpret_cast<const uint8_t *>(io->Address) - 8;
+        io->Width = int32_t(dims[0]) | int32_t(dims[1]) << 8 | int32_t(dims[2]) << 16 |
+                    int32_t(dims[3]) << 24;
+        io->Height = int32_t(dims[4]) | int32_t(dims[5]) << 8 | int32_t(dims[6]) << 16 |
+                     int32_t(dims[7]) << 24;
+    }
+    io->Stubbed = 0;
+    return true; // caller must reload
+}
+
+// state byte of one plan asset (a snapshot read; the byte is only advisory
+// for the game's index markers)
+static bool vfs_asset_state_is(uint32_t file_index, uint32_t asset_index, uint8_t state)
+{
+    if (!vfs_plan_ready() || file_index >= s_plan.files.size())
+        return false;
+    size_t global = asset_index;
+    for (size_t fi = 0; fi < file_index; ++fi)
+        global += s_plan.files[fi].assets.size();
+    std::lock_guard<std::mutex> lock(s_state_mutex);
+    return global < s_states.size() && s_states[global] == state;
+}
+
+bool vfs_asset_is_stubbed(uint64_t uop_hash)
+{
+    if (!vfs_enabled() || uop_hash == 0)
+        return false;
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return false;
+    return vfs_asset_state_is(
+        uint32_t(found->second.first), uint32_t(found->second.second), vfs_stubbed);
+}
+
+bool vfs_file_is_stubbed(const uint8_t *base)
+{
+    if (!vfs_enabled() || base == nullptr)
+        return false;
+    const VfsPlan *plan = nullptr;
+    size_t file_index = 0;
+    if (!vfs_trap_file_of(base, &plan, &file_index) || plan != &s_plan)
+        return false;
+    // loose files carry a single whole-file asset (§10.3); pack entries are
+    // marked through vfs_asset_is_stubbed instead
+    return vfs_asset_state_is(uint32_t(file_index), 0, vfs_stubbed);
+}
+
+size_t vfs_file_state_base(const uint8_t *mapping_base)
+{
+    if (!vfs_enabled() || mapping_base == nullptr || !vfs_plan_ready())
+        return SIZE_MAX;
+    const VfsPlan *plan = nullptr;
+    size_t file_index = 0;
+    if (!vfs_trap_file_of(mapping_base, &plan, &file_index) || plan != &s_plan ||
+        file_index >= s_plan.files.size())
+        return SIZE_MAX;
+    return vfs_state_base_index(s_plan, file_index);
+}
+
+bool vfs_asset_stubbed_at(size_t base, size_t asset_index)
+{
+    if (base == SIZE_MAX)
+        return false;
+    std::lock_guard<std::mutex> lock(s_state_mutex);
+    return base + asset_index < s_states.size() && s_states[base + asset_index] == vfs_stubbed;
+}
+
 
 // ---------------------------------------------------------------------------
 // params
@@ -225,6 +450,7 @@ void vfs_set_params(const vfs_params &params)
     s_plan_loaded = false;
     s_managed_built = false; // the registry follows the (new) plan
     s_states.clear();        // runtime state binds to the previous params
+    vfs_trap_set_zerolat(s_params.zerolat); // bound before any mapping faults
     if (fs_path_some(s_params.state_dir))
     {
         fs_path_create(s_params.state_dir);
@@ -379,7 +605,7 @@ static bool vfs_state_open(const VfsPlan &plan, std::vector<uint8_t> &states, vf
     vfs_state_apply_journal(plan, records, states);
 
     vfs_reconcile_stats reconcile;
-    vfs_state_reconcile(plan, s_params.install_dir, states, &reconcile);
+    vfs_state_reconcile(plan, s_params.install_dir, states, &reconcile, s_params.blobs_dir);
     if (reconcile.assets_repaired)
     {
         LOG_INFO(
@@ -478,7 +704,7 @@ void vfs_stats(VfsStats *out)
         std::vector<vfs_journal_record> records;
         vfs_journal_replay(fs_path_join(s_params.state_dir, "journal.log"), records);
         vfs_state_apply_journal(plan, records, states);
-        vfs_state_reconcile(plan, s_params.install_dir, states, nullptr);
+        vfs_state_reconcile(plan, s_params.install_dir, states, nullptr, s_params.blobs_dir);
 
         size_t gi = 0;
         for (const auto &file : plan.files)
@@ -503,6 +729,11 @@ void vfs_stats(VfsStats *out)
         }
     }
     stats.online = !s_params.offline && vfs_fetch_started();
+    // faults answered with a §6.8 placeholder payload (zerolat); per-asset
+    // stub reports stay on vfs_stub_count()
+    vfs_trap_stats trap_stats;
+    vfs_trap_stats_get(&trap_stats);
+    stats.stubs_served = trap_stats.stub_served;
     if (out)
         *out = stats;
 }
@@ -790,7 +1021,7 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         vfs_journal_replay(fs_path_join(s_params.state_dir, "journal.log"), records);
         vfs_state_apply_journal(plan, records, s_states);
         vfs_reconcile_stats reconcile;
-        vfs_state_reconcile(plan, s_params.install_dir, s_states, &reconcile);
+        vfs_state_reconcile(plan, s_params.install_dir, s_states, &reconcile, s_params.blobs_dir);
         if (reconcile.assets_repaired)
         {
             LOG_INFO(
@@ -911,17 +1142,27 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     s_boot_shutdown = false;
     s_boot_started = true;
     s_background = std::thread(vfs_boot_background, plan, std::move(t1));
+    if (s_params.zerolat && !s_params.offline)
+        s_demand_thread = std::thread(vfs_demand_run);
     return true;
 }
 
 void vfs_shutdown()
 {
+    if (s_boot_started)
+    {
+        // the demand tier stops before the trap: it resolves through the same
+        // registry, and its in-flight work must not race the teardown
+        s_boot_shutdown = true;
+        s_demand_cv.notify_all();
+        if (s_demand_thread.joinable())
+            s_demand_thread.join();
+    }
     // the trap goes first: no resolution may run against a torn-down store
     // (later faults outside managed ranges chain to the default crash)
     vfs_trap_shutdown();
     if (s_boot_started)
     {
-        s_boot_shutdown = true;
         vfs_fetch_stop(); // unblocks any in-flight batch in the background tier
         if (s_background.joinable())
             s_background.join();

@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <common/fs.h>
+#include <stdint.h>
 
 #include "vfs_manifest.h"
 #include "vfs_state.h"
@@ -21,12 +22,16 @@ struct VfsStats
     size_t bytes_total = 0; // planned bytes (pack tables + blocks, loose files)
     size_t bytes_done = 0;  // bytes confirmed in place
     bool online = false;    // fetch engine connected to a repo (M2)
+    uint64_t stubs_served = 0; // faults answered with a placeholder payload (M4 zerolat)
 };
 
 struct vfs_params
 {
     bool enabled = false; // streaming install mode (M2); false: no-op module
     bool offline = false; // never hit the network; cache/stubs only
+    // zero-latency mode (M4, plan §6.8): faults serve stub payloads instantly
+    // and heal in the background instead of blocking on the fetch
+    bool zerolat = false;
     uint32_t workers = 0; // download workers; 0: default (cpu-1, cap 8)
     fs_path blobs_dir;   // local blob store root (mirrors the remote URL tree)
     fs_path install_dir; // materialized game files
@@ -94,3 +99,50 @@ void vfs_unmap_file(uint8_t *start, size_t size);
 // makes [offset, offset + length) of a mapped managed base readable (fetch +
 // materialize + flip, deduplicated); false when resolution failed hard
 bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length);
+// §6.1: true when the byte at `offset` holds real materialized data (sealed
+// or flipped pages). Unmanaged/native addresses are always ready. The cheap
+// check behind stub-refresh decisions and diagnostics
+bool vfs_is_ready(uint8_t *base, size_t offset);
+
+// ---------------------------------------------------------------------------
+// stubs and hot-swap (M4, VUOI plan §6.7, §6.8): the trap serves syntactically
+// valid placeholder payloads for missing ranges (zeros only when the kind has
+// no payload content); zero-latency mode adds instant stubs + background
+// healing. Cached game objects decoded from a stub go stale when the real
+// bytes land - the refresh helpers below detect that and let the caller drop
+// the cache so the next load decodes the real asset. All of them are no-ops
+// when streaming is disabled, and refreshes only ever fire for objects the
+// index build marked Stubbed.
+// ---------------------------------------------------------------------------
+
+// assets served from a stub payload since boot (HUD/telemetry counter)
+uint64_t vfs_stub_count();
+// true when the asset whose block contains `addr` was served a stub and its
+// real bytes have since materialized (one-shot per check: the caller decides
+// what to drop and reloads; the object's Stubbed flag must be cleared by it)
+bool vfs_refresh_block(const uint8_t *addr);
+
+struct CIndexObject;
+
+// CIndexObject flavor: checks `io->Stubbed` + vfs_refresh_block(io->Address);
+// when healed, releases the cached sprite through `destroy` (game-supplied,
+// e.g. DestroySprite), clears UserData and the flag, and returns true so the
+// caller falls through to the normal load. One-liner contract at every
+// Execute*/cache entry point.
+bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj));
+
+// index-build markers (§6.8): true when the pack asset with `uop_hash` (or
+// the managed loose file mapped at `base`) was served a stub payload. The
+// index build marks the CIndexObject so healed bytes hot-swap later. Always
+// false when streaming is disabled.
+bool vfs_asset_is_stubbed(uint64_t uop_hash);
+bool vfs_file_is_stubbed(const uint8_t *base);
+
+// per-file bulk form of the markers above (M4 perf): a mapped pack's plan
+// file resolves once per index build - `vfs_file_state_base` returns the
+// state DB base index of the plan file mapped at `mapping_base` (SIZE_MAX
+// when untracked or streaming is disabled), and `vfs_asset_stubbed_at`
+// answers the per-entry question with a single state read instead of a hash
+// lookup + a plan walk per object
+size_t vfs_file_state_base(const uint8_t *mapping_base);
+bool vfs_asset_stubbed_at(size_t base, size_t asset_index);

@@ -563,6 +563,23 @@ void DestroySprite(CIndexObject *obj)
     }
 }
 
+// M4 (VUOI §6.8): teardown for a sound decoded from a streaming placeholder -
+// the same path the garbage collector uses, plus the malloc'd wave scratch
+static void DestroySoundCache(CIndexObject *obj)
+{
+    auto *snd = (CIndexSound *)obj;
+    if (snd->UserData != SOUND_NULL)
+    {
+        g_SoundManager.UpdateSoundEffect((SoundHandle)snd->UserData, -1);
+        snd->UserData = SOUND_NULL;
+    }
+    if (snd->m_WaveFile != nullptr)
+    {
+        free(snd->m_WaveFile);
+        snd->m_WaveFile = nullptr;
+    }
+}
+
 void CGame::UnloadIndexFiles()
 {
     std::deque<CIndexObject *> *lists[] = {
@@ -4024,6 +4041,7 @@ void CGame::PlaySoundEffect(uint16_t id, float volume)
     }
 
     CIndexSound &is = g_Index.m_Sound[id];
+    vfs_refresh_index(&is, DestroySoundCache); // M4: hot-swap a placeholder wave
     if (is.Address == 0)
     {
         return;
@@ -4103,6 +4121,7 @@ CSprite *CGame::ExecuteGump(uint16_t id)
         return nullptr;
     }
     CIndexObject &io = g_Index.m_Gump[id];
+    vfs_refresh_index(&io, DestroySprite); // M4: hot-swap a placeholder gump
     if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
@@ -4128,6 +4147,7 @@ CSprite *CGame::ExecuteLandArt(uint16_t id)
         return nullptr;
     }
     CIndexObject &io = g_Index.m_Land[id];
+    vfs_refresh_index(&io, DestroySprite); // M4: hot-swap a placeholder tile
     if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
@@ -4160,6 +4180,7 @@ CSprite *CGame::ExecuteStaticArt(uint16_t id)
     }
 
     CIndexObject &io = g_Index.m_Static[id];
+    vfs_refresh_index(&io, DestroySprite); // M4: hot-swap a placeholder art
     if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
@@ -4190,6 +4211,7 @@ CSprite *CGame::ExecuteTexture(uint16_t id)
     }
 
     CIndexObject &io = g_Index.m_Texture[id];
+    vfs_refresh_index(&io, DestroySprite); // M4: hot-swap a placeholder texture
     if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
@@ -4216,6 +4238,7 @@ CSprite *CGame::ExecuteLight(uint8_t id)
     }
 
     CIndexObject &io = g_Index.m_Light[id];
+    vfs_refresh_index(&io, DestroySprite); // M4: hot-swap a placeholder light
     if (io.UserData == nullptr)
     {
         if (io.Address == 0u)

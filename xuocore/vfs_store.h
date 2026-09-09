@@ -122,9 +122,17 @@ bool vfs_store_materialize(
 // blocking tier, valid-but-unfetched (plan §7.2, §7.3).
 bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params);
 
-// on-disk truth check for one pack asset (shared with the state reconcile)
+// on-disk truth check for one pack asset (shared with the state reconcile
+// and the trap's boot presence). `blobs_dir` opts into the reconcile-grade
+// strictness (see the implementation): ct==0 stub patches only separate from
+// real blocks by content, so the stored head is checked against the blob
+// (empty root: entry-shape semantics only)
 bool vfs_store_pack_asset_present(
-    const uint8_t *start, uint64_t file_size, size_t asset_index, const VfsAsset &asset);
+    const uint8_t *start,
+    uint64_t file_size,
+    size_t asset_index,
+    const VfsAsset &asset,
+    const fs_path &blobs_dir = fs_path());
 
 // ---------------------------------------------------------------------------
 // trap support (M3, plan §6.5): page-coverage computation over the plan's

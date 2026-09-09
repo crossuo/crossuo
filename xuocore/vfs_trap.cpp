@@ -44,6 +44,7 @@
 #include "uop.h"
 
 #include "common.h"
+#include "vfs_stub.h"
 #include <common/logging/logging.h>
 
 #if defined(_MSC_VER)
@@ -85,7 +86,8 @@ enum vfs_trap_page_state : uint8_t
 {
     trap_page_none = 0,     // protected (PROT_NONE / PAGE_NOACCESS)
     trap_page_readable = 1, // real bytes, readable
-    trap_page_zeroed = 2,   // degraded: readable zeros (fetch failed; M4 stubs)
+    trap_page_zeroed = 2,   // degraded: readable zeros (no stub content)
+    trap_page_stubbed = 3,  // degraded: readable §8 placeholder payload
 };
 
 enum vfs_trap_asset_state : uint8_t
@@ -105,6 +107,10 @@ struct vfs_trap_asset
     // resolve-call epoch of the last failed attempt: bounds the retry loop
     // (a failed block is never re-claimed within the same resolution)
     uint32_t attempt = 0;
+    // served from a stub payload (M4); `reported` hands the transition to the
+    // backend exactly once (state DB mark + demand prefetch)
+    uint8_t stubbed = 0;
+    uint8_t reported = 0;
 };
 
 struct vfs_trap_mapping
@@ -116,6 +122,7 @@ struct vfs_trap_mapping
     const VfsPlan *plan = nullptr; // borrowed: the plan outlives its mappings
     size_t file_index = 0;
     bool is_pack = false;
+    vfs_stub_kind stub_kind = vfs_stub_misc; // §8 kind of the whole file
     bool sealed = false;
     // zombie: unmap/shutdown gave up waiting for a resolution and left the
     // mapping (object + pages) alive for the process lifetime; never unmapped
@@ -300,6 +307,8 @@ enum vfs_trap_counter
     trap_faults = 0,
     trap_resolved,
     trap_zeroed,
+    trap_stubbed,
+    trap_stub_served,
     trap_dedup_waits,
     trap_chained,
     trap_flips,
@@ -314,6 +323,7 @@ uint32_t s_resolving = 0; // resolutions in flight across all mappings
 vfs_trap_backend s_backend;
 bool s_handler_installed = false;
 bool s_report_counters = false;
+bool s_zerolat = false; // §6.8: faults serve stubs and enqueue demand fetches
 
 void trap_counter_inc(vfs_trap_counter which, uint64_t delta = 1)
 {
@@ -450,14 +460,65 @@ size_t trap_first_candidate(const vfs_trap_mapping &m, uint64_t offset)
     return low;
 }
 
-// zeroes the still-absent sub-ranges of every protected page overlapping
-// [start, end), preserving entry-table and present-block bytes (sparse files
-// already read as zeros; the memset is belt and braces against foreign
-// bytes). Transient mprotect failures (memory-pressure ENOMEM) are retried;
-// a persistent failure leaves the page protected but marks it zeroed and
-// stuck, so the next fault chains instead of refault-looping (m1: no infinite
-// loop, no process kill on a transient failure).
-void trap_zero_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
+// rewrites the pack's on-disk entry as a stored (Flags=0) block of the stub
+// bytes actually placed, so the asset becomes visible to UopLoadFile on the
+// next boot (mid-session tables are already parsed and need no patch). The
+// entry keeps the plan's DecompressedSize/Hash/Checksum and advertises only
+// the stored span, so the M1 presence check still reports the asset absent
+// and a real blob heals it (the state DB stays the source of truth).
+void trap_stub_patch_entry(vfs_trap_mapping &m, size_t index, uint32_t stored_len)
+{
+    if (!m.is_pack)
+        return;
+    const auto &trap_asset = m.assets[index];
+    const auto &asset = m.plan->files[m.file_index].assets[trap_asset.plan_index];
+    UopFileEntry entry;
+    entry.Offset = asset.file_offset;
+    entry.MetadataSize = asset.ml;
+    entry.CompressedSize = stored_len;
+    entry.DecompressedSize = uint32_t(asset.ul);
+    entry.Hash = asset.uop_hash;
+    entry.Checksum = asset.mc;
+    entry.Flags = 0;
+    // the record may straddle a page boundary: flip [pos, pos+size) writable
+    const uint64_t pos = sizeof(UopHeader) + sizeof(UopSection) +
+                         sizeof(UopFileEntry) * trap_asset.plan_index;
+    if (pos + sizeof(entry) > m.table_end)
+        return;
+    const size_t first = trap_page_of(pos);
+    const size_t last = trap_page_of(pos + sizeof(entry) - 1);
+    for (size_t page = first; page <= last && page < m.page_state.size(); ++page)
+    {
+        const size_t len = size_t(trap_page_span(page, m));
+        if (!os_protect_read_write(m.base + page * s_page_size, len))
+            return; // leave the entry untouched: the asset stays invisible
+    }
+    memcpy(m.base + pos, &entry, sizeof(entry));
+    for (size_t page = first; page <= last && page < m.page_state.size(); ++page)
+    {
+        const size_t len = size_t(trap_page_span(page, m));
+        os_protect_read(m.base + page * s_page_size, len);
+    }
+}
+
+// serves the still-absent sub-ranges of every protected page overlapping
+// [start, end) with the file kind's §8 stub payload (plain zeros when the
+// kind has no payload content or the payload cannot fit), preserving
+// entry-table and present-block bytes. Stubs only ever occupy the block's
+// planned stored span ([start + ml, start + ml + min(ul, stored)): the
+// decompressed readers take the memcpy path of DecompressBlock, which pads
+// the tail with zeros, and raw-pointer readers never walk past what the
+// header short-circuits. Deterministic generators write straight into the
+// mapping: no allocation, and the cost is bounded by the page - the same
+// guarantees the M3 memset path gave. Per-asset stub transitions are flagged
+// (`stubbed`) and reported by trap_report_stubs once, with no trap lock
+// held. Entry-table patches are deferred until the page is readable again:
+// patching mid-fill would restore protection under the writer's feet.
+// Transient mprotect failures (memory-pressure ENOMEM) are retried; a
+// persistent failure leaves the page protected but marks it zeroed and
+// stuck, so the next fault chains instead of refault-looping (m1: no
+// infinite loop, no process kill on a transient failure).
+void trap_stub_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
 {
     size_t page = trap_page_of(start);
     const size_t last = trap_page_of(end > 0 ? end - 1 : 0);
@@ -468,24 +529,70 @@ void trap_zero_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
         const size_t page_offset = page * s_page_size;
         const size_t len = size_t(trap_page_span(page, m));
         uint8_t *const at = m.base + page_offset;
+        struct vfs_trap_patch
+        {
+            size_t index;
+            uint32_t stored_len;
+        };
+        vfs_trap_patch patches[VFS_TRAP_BATCH];
+        size_t patch_count = 0;
         bool flipped = false;
+        size_t page_nonzero = 0;
         for (int attempt = 0; attempt < VFS_TRAP_ZERO_ATTEMPTS && !flipped; ++attempt)
         {
             if (attempt > 0)
                 std::this_thread::sleep_for(std::chrono::milliseconds(VFS_TRAP_ZERO_RETRY_MS));
             if (!os_protect_read_write(at, len))
                 continue;
+            patch_count = 0;
+            page_nonzero = 0;
             for (size_t i = trap_first_candidate(m, page_offset); i < m.assets.size(); ++i)
             {
-                const auto &asset = m.assets[i];
-                if (asset.start >= page_offset + len)
+                auto &trap_asset = m.assets[i];
+                if (trap_asset.start >= page_offset + len)
                     break;
-                if (asset.state == trap_asset_present)
+                if (trap_asset.state == trap_asset_present)
                     continue;
-                const uint64_t from = asset.start > page_offset ? asset.start : page_offset;
-                const uint64_t to = asset.end < page_offset + len ? asset.end : page_offset + len;
-                if (to > from)
-                    memset(at + (from - page_offset), 0, size_t(to - from));
+                if (trap_asset.stubbed == 0)
+                {
+                    // the payload lives behind the block's metadata and can
+                    // never exceed the block's planned stored span
+                    const auto &asset =
+                        m.plan->files[m.file_index].assets[trap_asset.plan_index];
+                    const uint64_t payload = trap_asset.start + asset.ml;
+                    const uint64_t stored =
+                        trap_asset.end > payload ? trap_asset.end - payload : 0;
+                    const uint64_t capacity =
+                        stored < uint64_t(asset.ul) ? stored : uint64_t(asset.ul);
+                    if (capacity >= vfs_stub_min_payload(m.stub_kind))
+                    {
+                        const uint64_t from =
+                            payload > page_offset ? payload : page_offset;
+                        const uint64_t to = payload + capacity < page_offset + len
+                                                ? payload + capacity
+                                                : page_offset + len;
+                        if (to > from)
+                        {
+                            page_nonzero += vfs_stub_fill_slice(
+                                m.stub_kind,
+                                asset.ul,
+                                m.is_pack,
+                                from - payload,
+                                at + size_t(from - page_offset),
+                                size_t(to - from));
+                        }
+                        if (patch_count < VFS_TRAP_BATCH)
+                        {
+                            patches[patch_count].index = i;
+                            patches[patch_count].stored_len = uint32_t(capacity);
+                            ++patch_count;
+                        }
+                        // more than VFS_TRAP_BATCH blocks sharing one page is
+                        // a degenerate layout: the surplus keeps a zeroed
+                        // entry (the asset simply stays invisible, M3 style)
+                    }
+                    trap_asset.stubbed = 1;
+                }
             }
             flipped = os_protect_read(at, len);
         }
@@ -493,13 +600,59 @@ void trap_zero_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
         {
             // pragmatic §9 corner: this logs from the fault path, but only
             // after retries against a persistent os failure
-            LOG_ERROR("vfs_trap: zero-fill stuck (mprotect failed) on %s", fs_path_ascii(m.path));
+            LOG_ERROR("vfs_trap: stub fill stuck (mprotect failed) on %s", fs_path_ascii(m.path));
             m.page_state[page] = trap_page_zeroed;
             m.page_stuck[page] = 1;
             continue;
         }
-        m.page_state[page] = trap_page_zeroed;
+        // the page is readable again: entry patches may flip table pages now
+        for (size_t p = 0; p < patch_count; ++p)
+            trap_stub_patch_entry(m, patches[p].index, patches[p].stored_len);
+        m.page_state[page] = page_nonzero != 0 ? trap_page_stubbed : trap_page_zeroed;
         trap_counter_inc(trap_flips);
+    }
+}
+
+// one covering block handed to the backend for resolution (definition below;
+// the fill helper above only flags transitions)
+void trap_block_of(const vfs_trap_mapping &m, size_t asset_index, vfs_trap_block *out);
+
+// hands every not-yet-reported stub transition overlapping [start, end) to
+// the backend - `stubbed` (state DB mark, counters) always and `prefetch`
+// after zero-latency serves (§6.8) - with no trap lock held
+void trap_report_stubs(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool prefetch)
+{
+    if (s_backend.stubbed == nullptr && (!prefetch || s_backend.prefetch == nullptr))
+        return;
+    for (;;)
+    {
+        vfs_trap_block blocks[VFS_TRAP_BATCH];
+        size_t count = 0;
+        {
+            std::lock_guard<std::mutex> lock(s_mutex);
+            for (size_t i = trap_first_candidate(m, start); i < m.assets.size(); ++i)
+            {
+                auto &trap_asset = m.assets[i];
+                if (trap_asset.start >= end)
+                    break;
+                if (trap_asset.stubbed == 0 || trap_asset.reported != 0)
+                    continue;
+                trap_asset.reported = 1;
+                trap_block_of(m, i, &blocks[count]);
+                if (++count == VFS_TRAP_BATCH)
+                    break;
+            }
+        }
+        for (size_t i = 0; i < count; ++i)
+        {
+            if (s_backend.stubbed != nullptr)
+                s_backend.stubbed(s_backend.context, &blocks[i]);
+            if (prefetch && s_backend.prefetch != nullptr)
+                s_backend.prefetch(s_backend.context, &blocks[i]);
+            trap_counter_inc(trap_stubbed);
+        }
+        if (count < VFS_TRAP_BATCH)
+            break;
     }
 }
 
@@ -618,8 +771,11 @@ bool trap_resolve_range(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool 
     {
         if (!allow_zero)
             return false;
-        std::lock_guard<std::mutex> lock(s_mutex);
-        trap_zero_fill(m, start, end);
+        {
+            std::lock_guard<std::mutex> lock(s_mutex);
+            trap_stub_fill(m, start, end);
+        }
+        trap_report_stubs(m, start, end, false); // no demand fetch: default mode
         trap_counter_inc(trap_zeroed);
     }
     return true;
@@ -702,6 +858,24 @@ bool trap_handle_fault(uint8_t *addr)
     const size_t page = trap_page_of(offset);
     const uint64_t start = uint64_t(page) * s_page_size;
     const uint64_t len = trap_page_span(page, *m);
+    if (s_zerolat)
+    {
+        // §6.8: never wait on the network in the fault path - serve the stub
+        // payload right away, flip the page and enqueue the real fetch; the
+        // heal arrives through the demand tier and the §6.8 refresh hooks.
+        // Counted as a placeholder serve, not a resolution: the bytes behind
+        // the fault are synthetic (the per-asset stubbed counter above stays
+        // the once-per-asset report)
+        {
+            std::lock_guard<std::mutex> lock(s_mutex);
+            m->resolve_epoch++;
+            trap_stub_fill(*m, start, start + len);
+        }
+        trap_report_stubs(*m, start, start + len, true);
+        trap_unpin(m);
+        trap_counter_inc(trap_stub_served);
+        return true;
+    }
     const bool ok = trap_resolve_range(*m, start, start + len, true);
     trap_unpin(m);
     if (!ok)
@@ -825,6 +999,12 @@ void vfs_trap_set_backend(const vfs_trap_backend &backend)
     s_backend = backend;
 }
 
+void vfs_trap_set_zerolat(bool zerolat)
+{
+    s_zerolat = zerolat;
+    LOG_INFO("vfs_trap: zero-latency mode %s", zerolat ? "enabled" : "disabled");
+}
+
 void vfs_trap_stats_get(vfs_trap_stats *out)
 {
     if (!out)
@@ -832,6 +1012,8 @@ void vfs_trap_stats_get(vfs_trap_stats *out)
     out->faults = trap_counter_get(trap_faults);
     out->resolved = trap_counter_get(trap_resolved);
     out->zeroed = trap_counter_get(trap_zeroed);
+    out->stubbed = trap_counter_get(trap_stubbed);
+    out->stub_served = trap_counter_get(trap_stub_served);
     out->dedup_waits = trap_counter_get(trap_dedup_waits);
     out->chained = trap_counter_get(trap_chained);
     out->flips = trap_counter_get(trap_flips);
@@ -921,11 +1103,14 @@ void vfs_trap_shutdown()
         vfs_trap_stats stats;
         vfs_trap_stats_get(&stats);
         printf(
-            "vfs_trap: faults %" PRIu64 " resolved %" PRIu64 " zeroed %" PRIu64
-            " dedup_waits %" PRIu64 " chained %" PRIu64 " flips %" PRIu64 "\n",
+            "vfs_trap: faults %" PRIu64 " resolved %" PRIu64 " zeroed %" PRIu64 " stubbed %" PRIu64
+            " stub_served %" PRIu64 " dedup_waits %" PRIu64 " chained %" PRIu64 " flips %" PRIu64
+            "\n",
             stats.faults,
             stats.resolved,
             stats.zeroed,
+            stats.stubbed,
+            stats.stub_served,
             stats.dedup_waits,
             stats.chained,
             stats.flips);
@@ -963,6 +1148,7 @@ uint8_t *vfs_trap_map(
     m.file_index = file_index;
     const auto &file = plan.files[file_index];
     m.is_pack = file.is_uop;
+    m.stub_kind = vfs_stub_kind_for(file.name.c_str());
 
     // per-asset coverage model: packs cover [offset, offset + ml + payload)
     // (the whole block the M1 writer puts down); loose files resolve as one
@@ -1196,6 +1382,81 @@ vfs_trap_page_mark vfs_trap_page_mark_at(const uint8_t *base, uint64_t offset)
     if (m->sealed)
         return vfs_trap_mark_real;
     return vfs_trap_page_mark(m->page_state[trap_page_of(offset)]);
+}
+
+bool vfs_trap_asset_healed(const uint8_t *addr)
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    const auto *m = trap_find(addr);
+    if (!m || m->sealed)
+        return false;
+    const uint64_t offset = uint64_t(addr - m->base);
+    const size_t index = trap_first_candidate(*m, offset);
+    if (index >= m->assets.size())
+        return false;
+    const auto &asset = m->assets[index];
+    if (offset < asset.start || offset >= asset.end)
+        return false;
+    // the fetch landed, the writer put the real bytes down and the pages
+    // flipped: the cached placeholder can be dropped on the next access
+    return asset.stubbed != 0 && asset.state == trap_asset_present;
+}
+
+vfs_stub_kind vfs_trap_stub_kind_at(const uint8_t *addr)
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    const auto *m = trap_find(addr);
+    if (!m)
+        return vfs_stub_misc;
+    return m->stub_kind;
+}
+
+bool vfs_trap_file_of(const uint8_t *base, const VfsPlan **out_plan, size_t *out_file_index)
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    const auto *m = trap_find_base(base);
+    if (!m || m->zombie)
+        return false;
+    if (out_plan)
+        *out_plan = m->plan;
+    if (out_file_index)
+        *out_file_index = m->file_index;
+    return true;
+}
+
+bool vfs_trap_resolve_asset(const VfsPlan *plan, uint32_t file_index, uint32_t asset_index)
+{
+    if (plan == nullptr || file_index >= plan->files.size())
+        return false;
+    vfs_trap_mapping *m = nullptr;
+    uint64_t start = 0, end = 0;
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        for (auto &mapping : s_mappings)
+        {
+            if (mapping->zombie || mapping->plan != plan || mapping->file_index != file_index)
+                continue;
+            for (size_t i = 0; i < mapping->assets.size(); ++i)
+            {
+                if (mapping->assets[i].plan_index != asset_index)
+                    continue;
+                m = mapping.get();
+                start = mapping->assets[i].start;
+                end = mapping->assets[i].end;
+                break;
+            }
+            break;
+        }
+        if (m == nullptr)
+            return false;
+        if (m->sealed)
+            return true;
+        trap_pin(m);
+    }
+    // demand-tier context: blocking here is fine (no fault handler involved)
+    const bool ok = trap_resolve_range(*m, start, end, true);
+    trap_unpin(m);
+    return ok;
 }
 
 size_t vfs_trap_page_size()

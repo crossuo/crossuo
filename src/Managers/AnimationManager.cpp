@@ -3,12 +3,14 @@
 
 #include <common/utils.h>
 #include <common/str.h>
+#include <unordered_set>
 #include "AnimationManager.h"
 #include "MouseManager.h"
 #include "ConfigManager.h"
 #include "ColorManager.h"
 #include "CorpseManager.h"
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h>
 #include "../Target.h"
 #include "../Constants.h"
 #include "../Config.h"
@@ -35,6 +37,47 @@ void DeleteSprite(void *ptr)
 {
     auto spr = (CSprite *)ptr;
     delete spr;
+}
+
+// M4 (VUOI §6.8): a group decoded from a streaming placeholder is dropped as
+// soon as its real bytes land, so the next ExecuteAnimation reloads it. The
+// drop decision is the trap's healed query (stub-served AND bytes landed),
+// not the state DB byte: the heal itself moves the asset to fetched, so a
+// live `vfs_asset_is_stubbed` check here never fires (the M4 review M1 dead
+// code). The one-shot set keeps the drop from looping - the trap keeps its
+// stubbed+present marks after the heal, so the group must be dropped only
+// once. Groups drop whole (all directions share the group's block), like the
+// index build marks whole entries; every check exits immediately for
+// non-streaming installs.
+static std::unordered_set<uint64_t> s_anim_refreshed_groups;
+
+static void AnimationRefreshStub(const AnimationState &anim)
+{
+    const auto *block = uo_animation_group_get(anim);
+    if (block == nullptr || block->Hash == 0)
+    {
+        return;
+    }
+    auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
+    const auto *base = g_FileManager.m_AnimationFrame[direction.FileIndex].Start;
+    if (base == nullptr)
+    {
+        return;
+    }
+    const auto group_id = uint64_t{GroupId(anim.Graphic, anim.Group)};
+    if (s_anim_refreshed_groups.count(group_id) != 0u)
+    {
+        return; // already dropped once: the reload below is authoritative
+    }
+    if (!vfs_refresh_block(base + block->Offset))
+    {
+        return; // not (yet) healed
+    }
+    s_anim_refreshed_groups.insert(group_id);
+    for (uint8_t dir = 0; dir < MAX_MOBILE_DIRECTIONS; ++dir)
+    {
+        uo_animation_destroy(AnimId(anim.Graphic, anim.Group, dir), DeleteSprite);
+    }
 }
 
 struct FRAME_OUTPUT_INFO
@@ -326,6 +369,7 @@ static std::unordered_map<uint32_t, uint32_t> s_AnimationLifetime;
 AnimationDirFrames *CAnimationManager::ExecuteAnimation(AnimationState anim, uint32_t ticks)
 {
     Anim = anim;
+    AnimationRefreshStub(anim); // M4: drop a healed placeholder frame set
     auto animation = uo_animation_get(anim);
     if (animation == nullptr)
     {

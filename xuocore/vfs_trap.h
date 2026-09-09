@@ -27,6 +27,7 @@
 
 #include "vfs_manifest.h"
 #include "vfs_store.h"
+#include "vfs_stub.h"
 
 // one covering block handed to the backend for resolution
 struct vfs_trap_block
@@ -42,20 +43,34 @@ struct vfs_trap_block
 // run the M1 write path for exactly this asset; true when the bytes are in
 // place afterwards. Called with no trap lock held and must not call back
 // into vfs_trap (lock order above); the default backend fails every block,
-// which degrades resolution to the zero-fill path (M4 replaces with stubs).
+// which degrades resolution to the stub path (M4). The two optional hooks
+// close the loop around stub serving (M4): `stubbed` reports every asset
+// served from a placeholder payload (state DB mark, HUD counters) and
+// `prefetch` enqueues the real fetch after a zero-latency stub (§6.8). Both
+// are called with no trap lock held, in that order, once per asset.
 struct vfs_trap_backend
 {
     void *context = nullptr;
     bool (*ensure)(void *context, const vfs_trap_block *block) = nullptr;
+    void (*stubbed)(void *context, const vfs_trap_block *block) = nullptr;
+    void (*prefetch)(void *context, const vfs_trap_block *block) = nullptr;
 };
 
 void vfs_trap_set_backend(const vfs_trap_backend &backend);
+
+// zero-latency mode (plan §6.8): faults do not fetch synchronously - the
+// covering page is stub-filled immediately, flips readable and every stubbed
+// asset is reported to the backend (stubbed + prefetch). Default (false):
+// faults block on the fetch and stubs are only served on failure.
+void vfs_trap_set_zerolat(bool zerolat);
 
 struct vfs_trap_stats
 {
     uint64_t faults = 0;     // handled faulting accesses inside managed ranges
     uint64_t resolved = 0;   // faults satisfied with real bytes
     uint64_t zeroed = 0;     // faults degraded to a zero-filled page
+    uint64_t stubbed = 0;    // assets served from a stub payload (M4)
+    uint64_t stub_served = 0; // faults answered with a stub payload (M4 zerolat)
     uint64_t dedup_waits = 0; // faults that waited on an in-flight resolution
     uint64_t chained = 0;    // faults outside managed ranges (real bugs)
     uint64_t flips = 0;      // pages flipped from protected to readable
@@ -97,25 +112,54 @@ bool vfs_trap_range_present(const uint8_t *base, uint64_t offset, uint64_t lengt
 
 // synchronous resolution of [offset, offset+length): fetches + materializes
 // every absent covering block (deduplicated with in-flight work) and flips
-// the covered pages; on failure the requested pages are zero-filled and the
-// file's assets are marked failed (M4 serves real stubs). Returns false only
-// when the range is not registered.
+// the covered pages; on failure the requested pages are served the §8 stub
+// payload for their kind (zeros when the kind has no payload content). Used
+// by the pre-resolve paths and by the demand tier (M4 hot-swap healing).
+// Returns false only when the range is not registered.
 bool vfs_trap_resolve_range(uint8_t *base, uint64_t offset, uint64_t length);
+
+// background completion path (M4 demand tier): runs the same resolution for
+// one plan asset of the file mapped from `plan` (fetch + materialize + flip
+// of its pages, promoting stubbed pages to real). Safe off the fault path;
+// false when no live mapping of that plan file holds the asset.
+bool vfs_trap_resolve_asset(
+    const VfsPlan *plan,
+    uint32_t file_index,
+    uint32_t asset_index);
 
 // marks [offset, offset+length) of a mapping present and re-checks page
 // coverage, flipping every fully-covered page to readable; used after the
 // backend materialized bytes behind the mapping
 void vfs_trap_flip(uint8_t *base, uint64_t offset, uint64_t length);
 
-// page mark for the page holding `offset` (M4 consumes the zeroed markers as
-// stub-placement points and the failed ranges for retry scheduling)
+// page mark for the page holding `offset` (`stubbed` pages carry a §8
+// placeholder payload and back the hot-swap refresh decisions; `zeroed`
+// pages are the plain-zeros degradation)
 enum vfs_trap_page_mark : uint8_t
 {
-    vfs_trap_mark_none = 0,   // protected hole (or beyond the file end)
-    vfs_trap_mark_real = 1,   // materialized bytes
-    vfs_trap_mark_zeroed = 2, // degraded zeros (fetch failed; M4 stub point)
+    vfs_trap_mark_none = 0,    // protected hole (or beyond the file end)
+    vfs_trap_mark_real = 1,    // materialized bytes
+    vfs_trap_mark_zeroed = 2,  // degraded zeros (no stub content for the kind)
+    vfs_trap_mark_stubbed = 3, // placeholder payload served (M4)
 };
 vfs_trap_page_mark vfs_trap_page_mark_at(const uint8_t *base, uint64_t offset);
+
+// true when the asset whose block contains `addr` was served from a stub
+// payload and its real bytes have since materialized (fetch + write + flip
+// completed): the refresh trigger behind the zero-latency hot-swap (§6.8).
+// Sealed mappings and untracked addresses report false.
+bool vfs_trap_asset_healed(const uint8_t *addr);
+
+// stub payload kind of the plan file whose live mapping contains `addr`
+// (vfs_stub_misc when untracked): the hot-swap refresh uses it to know which
+// index fields a healed payload must re-read (UOP gump dims, see
+// vfs_refresh_index)
+vfs_stub_kind vfs_trap_stub_kind_at(const uint8_t *addr);
+
+// plan-file identity of a registry-owned mapping base: copies the owning plan
+// pointer and file index; false when the base is not a live trap mapping
+// (diagnostics + the game's index-build stubbed lookups)
+bool vfs_trap_file_of(const uint8_t *base, const VfsPlan **out_plan, size_t *out_file_index);
 
 // system page size (the mapping/protection granularity)
 size_t vfs_trap_page_size();

@@ -252,9 +252,13 @@ static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &fi
     return fp;
 }
 
-// writes [metadata][blob] at the planned offset and patches the entry's
-// Offset in place (data first, pointer second: a crash in between leaves the
-// entry skipped and the block simply rewritten later)
+// writes [metadata][blob] at the planned offset and patches the entry in
+// place (data first, pointer second: a crash in between leaves the entry
+// skipped or stale and the block simply rewritten later). The WHOLE entry is
+// rewritten, not just Offset: M4 stubs land as Flags=0/CompressedSize=ul
+// blocks of plan assets that ship compressed, and the real block must
+// restore the plan's fields when it heals (the stub stays on disk - and
+// reads as absent - until then).
 static bool vfs_store_pack_write_block(
     FILE *fp,
     const VfsPlan::VfsFile &file,
@@ -262,6 +266,7 @@ static bool vfs_store_pack_write_block(
     const VfsAsset &asset,
     const std::vector<uint8_t> &blob)
 {
+    (void)file;
     std::vector<uint8_t> metadata;
     vfs_store_synthesize_metadata(asset, metadata);
 
@@ -273,8 +278,13 @@ static bool vfs_store_pack_write_block(
 
     UopFileEntry patch;
     patch.Offset = asset.file_offset;
-    if (!vfs_file_write_at(
-            fp, vfs_store_table_pos(asset_index), &patch.Offset, sizeof(patch.Offset)))
+    patch.MetadataSize = asset.ml;
+    patch.CompressedSize = uint32_t(asset.ct == 0 ? asset.ul : asset.cl);
+    patch.DecompressedSize = uint32_t(asset.ul);
+    patch.Hash = asset.uop_hash;
+    patch.Checksum = asset.mc;
+    patch.Flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
+    if (!vfs_file_write_at(fp, vfs_store_table_pos(asset_index), &patch, sizeof(patch)))
         return false;
     return fflush(fp) == 0;
 }
@@ -721,10 +731,22 @@ static uint8_t vfs_verify_loose_asset(
     return vfs_verify_ok;
 }
 
-// on-disk truth check shared with the state DB reconcile: the block bytes of
-// `asset` are present in `file` exactly as planned
+// on-disk truth check shared with the state DB reconcile and the trap's boot
+// presence: the block bytes of `asset` are present in `file` exactly as
+// planned. M4 review hardening: a §6.7 stub patch must never read as the real
+// thing. ct==1 patches are rejected by entry shape alone (the plan says zlib,
+// the patch says stored). ct==0 patches are byte-identical to the planned
+// entry (the patch keeps Flags=0 and cl==ul), so `blobs_dir` - the
+// reconcile-grade strictness - opts into a content check: the stored head is
+// compared against the blob head, and a missing blob counts as not-present.
+// The invariant: stub entries are never promoted to fetched by reconcile -
+// only the heal path (the materialize write + its journal 'F') promotes.
 bool vfs_store_pack_asset_present(
-    const uint8_t *start, uint64_t file_size, size_t asset_index, const VfsAsset &asset)
+    const uint8_t *start,
+    uint64_t file_size,
+    size_t asset_index,
+    const VfsAsset &asset,
+    const fs_path &blobs_dir)
 {
     if (!start || file_size < vfs_store_table_pos(asset_index) + sizeof(UopFileEntry))
         return false;
@@ -734,11 +756,31 @@ bool vfs_store_pack_asset_present(
     memcpy(&entry, start + vfs_store_table_pos(asset_index), sizeof(entry));
     const uint32_t compressed = asset.ct == 0 ? uint32_t(asset.ul) : uint32_t(asset.cl);
     const uint16_t flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
-    return entry.Offset == asset.file_offset && entry.Offset != 0 &&
-           entry.MetadataSize == asset.ml && entry.CompressedSize == compressed &&
-           entry.DecompressedSize == asset.ul && entry.Hash == asset.uop_hash &&
-           entry.Flags == flags &&
-           entry.Offset + entry.MetadataSize + entry.CompressedSize <= file_size;
+    const bool shape = entry.Offset == asset.file_offset && entry.Offset != 0 &&
+                       entry.MetadataSize == asset.ml && entry.CompressedSize == compressed &&
+                       entry.DecompressedSize == asset.ul && entry.Hash == asset.uop_hash &&
+                       entry.Flags == flags &&
+                       entry.Offset + entry.MetadataSize + entry.CompressedSize <= file_size;
+    if (!shape)
+        return false;
+    if (entry.Flags == 0 && asset.ct == 1)
+        return false; // stored block for a zlib asset: a §6.7 stub patch
+    if (asset.ct != 0 || fs_path_empty(blobs_dir))
+        return true; // the entry shape decided (or no store root given)
+    // ct==0: only content decides. The blob is the payload stored verbatim,
+    // so comparing the heads separates a real block from the zeros/header
+    // tail of a stub patch; a missing blob cannot prove realness
+    const size_t head = size_t(asset.ul < 64 ? asset.ul : 64);
+    if (head == 0)
+        return true;
+    uint8_t blob_head[64] = {};
+    FILE *fp = fopen(fs_path_ascii(fs_path_join(blobs_dir, asset.blob)), "rb");
+    if (fp == nullptr)
+        return false;
+    const size_t got = fread(blob_head, 1, head, fp);
+    fclose(fp);
+    return got == head &&
+           memcmp(start + entry.Offset + entry.MetadataSize, blob_head, head) == 0;
 }
 
 int vfs_store_verify(const VfsPlan &plan, const vfs_store_params &params, vfs_verify_result *out)

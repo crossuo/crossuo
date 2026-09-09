@@ -314,6 +314,101 @@ VFS_TEST(state_reconcile_missing_file)
     TEST_CHECK(states[5] == vfs_fetched);
 }
 
+// rewrites one pack entry exactly as the trap's §6.7 stub patch does
+// (Flags=0, CompressedSize = the stored span) and zeroes the stored head (the
+// placeholder content): for stored (ct==0) assets the entry is byte-identical
+// to the planned shape, which is the whole point
+static void stub_patch_pack_entry(
+    const test_product_data &prod,
+    const VfsPlan &plan,
+    size_t asset_index)
+{
+    const auto &file = plan.files[0];
+    const auto &asset = file.assets[asset_index];
+    const uint32_t stored = uint32_t(asset.ct == 0 ? asset.ul : asset.cl);
+    const auto path = fs_path_join(prod.install, file.name);
+    FILE *fp = fopen(fs_path_ascii(path), "r+b");
+    TEST_CHECK_MSG(fp != nullptr, "could not reopen pack");
+    UopFileEntry entry = {};
+    entry.Offset = asset.file_offset;
+    entry.MetadataSize = asset.ml;
+    entry.CompressedSize = stored;
+    entry.DecompressedSize = asset.ul;
+    entry.Hash = asset.uop_hash;
+    entry.Checksum = asset.mc;
+    entry.Flags = 0;
+    const uint64_t pos =
+        sizeof(UopHeader) + sizeof(UopSection) + sizeof(UopFileEntry) * asset_index;
+    TEST_CHECK(fseek(fp, long(pos), SEEK_SET) == 0);
+    TEST_CHECK(fwrite(&entry, 1, sizeof(entry), fp) == sizeof(entry));
+    std::vector<uint8_t> zeros(stored, 0); // the stub payload's zero tail
+    TEST_CHECK(fseek(fp, long(asset.file_offset + asset.ml), SEEK_SET) == 0);
+    TEST_CHECK(fwrite(zeros.data(), 1, zeros.size(), fp) == zeros.size());
+    fclose(fp);
+}
+
+VFS_TEST(state_reconcile_never_promotes_stub_patches)
+{
+    // M4 review: a §6.7 stub patch must never become permanent through
+    // reconcile. Stored (ct==0) patches are entry-identical to the plan, so
+    // on-disk presence alone promotes neither a stubbed nor a pending asset;
+    // only the heal path (a real block write, journalled 'F') promotes
+    test_product_data prod;
+    VfsPlan plan;
+    TEST_CHECK(build_plan(prod, "state_stub_patch", plan));
+
+    std::vector<uint8_t> states;
+    materialize(prod, plan, states);
+
+    // the trap's placeholder for part B (stored, ct==0)
+    stub_patch_pack_entry(prod, plan, 1);
+    const auto &part = plan.files[0].assets[1];
+
+    // the entry shape alone still reports visible (the trap's boot mapping
+    // relies on that), but the reconcile-grade check has the store root and
+    // rejects the placeholder on content
+    const auto path = fs_path_join(prod.install, plan.files[0].name);
+    {
+        size_t disk_size = 0;
+        auto *disk = reinterpret_cast<uint8_t *>(fs_map(path, &disk_size));
+        TEST_CHECK(disk != nullptr);
+        TEST_CHECK(vfs_store_pack_asset_present(disk, uint64_t(disk_size), 1, part));
+        TEST_CHECK(!vfs_store_pack_asset_present(disk, uint64_t(disk_size), 1, part, prod.blobs));
+        fs_unmap(disk, disk_size);
+    }
+
+    states[1] = vfs_stubbed;
+    {
+        state_log_mute mute;
+        vfs_reconcile_stats stats;
+        TEST_CHECK(vfs_state_reconcile(plan, prod.install, states, &stats, prod.blobs));
+        TEST_CHECK(stats.assets_upgraded == 0);
+        TEST_CHECK(states[1] == vfs_stubbed); // disk presence never promotes
+    }
+
+    // the crash-before-the-'B'-journal window: pending + a stub-shaped entry
+    // does not promote either (content, not shape, confirms real bytes)
+    states[1] = vfs_pending;
+    {
+        state_log_mute mute;
+        vfs_reconcile_stats stats;
+        TEST_CHECK(vfs_state_reconcile(plan, prod.install, states, &stats, prod.blobs));
+        TEST_CHECK(stats.assets_upgraded == 0);
+        TEST_CHECK(states[1] == vfs_pending);
+    }
+
+    // the heal path is the only promotion: a real block write journals 'F'
+    const std::vector<vfs_journal_record> records = { { 'F', 0, 1 } };
+    vfs_state_apply_journal(plan, records, states);
+    TEST_CHECK(states[1] == vfs_fetched);
+    {
+        state_log_mute mute;
+        vfs_reconcile_stats stats;
+        TEST_CHECK(vfs_state_reconcile(plan, prod.install, states, &stats, prod.blobs));
+        TEST_CHECK(states[1] == vfs_fetched);
+    }
+}
+
 VFS_TEST(state_reconcile_journal_recovery)
 {
     // crash simulation: materialized bytes are on disk, but the state file is

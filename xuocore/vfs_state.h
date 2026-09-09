@@ -24,7 +24,7 @@ enum vfs_asset_state : uint8_t
 {
     vfs_pending = 0, // not materialized yet (or unknown after a crash)
     vfs_fetched = 1, // bytes written to the output file and confirmed
-    vfs_stubbed = 2, // reserved: placeholder served (M4)
+    vfs_stubbed = 2, // placeholder payload served (M4); heals to fetched
     vfs_failed = 3,  // last attempt failed (corrupt blob, io error)
 };
 
@@ -59,7 +59,8 @@ bool vfs_state_load(const fs_path &path, size_t asset_count, std::vector<uint8_t
 
 struct vfs_journal_record
 {
-    char op = 0; // 'F': asset fetched (block written), 'S': file sealed
+    char op = 0; // 'F': asset fetched (block written), 'S': file sealed,
+                 // 'B': asset served from a stub payload (M4)
     uint32_t file_index = 0;
     uint32_t asset_index = 0;
 };
@@ -100,8 +101,13 @@ struct vfs_reconcile_stats
 // packs; size for loose files), downgrading anything inconsistent to pending
 // so a later materialize pass repairs it. The materialized files are the
 // source of truth; the DB is rebuilt from them, never the other way around.
+// `blobs_dir` (the store root) enables the reconcile-grade presence check for
+// packs: a §6.7 stub patch never promotes pending state for ct==0 assets,
+// and a stubbed asset is never promoted from on-disk presence at all - only
+// the heal path (materialize write + journal 'F') moves stubbed to fetched.
 bool vfs_state_reconcile(
     const VfsPlan &plan,
     const fs_path &install_dir,
     std::vector<uint8_t> &states,
-    vfs_reconcile_stats *stats);
+    vfs_reconcile_stats *stats,
+    const fs_path &blobs_dir = fs_path());

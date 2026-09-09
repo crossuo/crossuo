@@ -1487,10 +1487,13 @@ void CFileManager::MulReadIndexFile(
     IndexBlock *ptr,
     const std::function<IndexBlock *()> &getNewPtrValue)
 {
+    // perf: one stub lookup per file (the whole loose file stubs as one)
+    const bool file_stubbed = vfs_file_is_stubbed(reinterpret_cast<const uint8_t *>(address));
     for (int i = 0; i < (int)indexMaxCount; i++)
     {
         CIndexObject *obj = getIdxObj((int)i);
         obj->ReadIndexFile(address, ptr);
+        obj->Stubbed = file_stubbed ? 1 : 0;
         ptr = getNewPtrValue();
     }
 }
@@ -1511,6 +1514,10 @@ void CFileManager::UopReadIndexFile(
     char basePath[100];
     snprintf(basePath, sizeof(basePath), "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
 
+    // perf: one plan-file resolution per pack - the per-entry stub check
+    // below is a single state read instead of a hash lookup + plan walk
+    const size_t state_base = vfs_file_state_base(uopFile.Start);
+
     for (int i = startIndex; i < (int)indexMaxCount; i++)
     {
         char filename[200];
@@ -1524,6 +1531,7 @@ void CFileManager::UopReadIndexFile(
             obj->DataSize = block->DecompressedSize;
             obj->UopBlock = block;
             //obj->ID = -1;
+            obj->Stubbed = vfs_asset_stubbed_at(state_base, size_t(i)) ? 1 : 0;
 
             if (isGump)
             {

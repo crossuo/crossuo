@@ -289,6 +289,8 @@ bool vfs_journal_mark(vfs_journal &journal, const vfs_journal_record &record)
         fprintf(journal.handle, "F %u %u\n", record.file_index, record.asset_index);
     else if (record.op == 'S')
         fprintf(journal.handle, "S %u\n", record.file_index);
+    else if (record.op == 'B')
+        fprintf(journal.handle, "B %u %u\n", record.file_index, record.asset_index);
     else
         return false;
     // every completion mark is durable before it is reported as done
@@ -323,6 +325,15 @@ bool vfs_journal_replay(const fs_path &path, std::vector<vfs_journal_record> &ou
                 out.push_back(record);
             }
         }
+        else if (line[0] == 'B')
+        {
+            unsigned int file_index = 0, asset_index = 0;
+            if (sscanf(line, "B %u %u", &file_index, &asset_index) == 2)
+            {
+                record = { 'B', file_index, asset_index };
+                out.push_back(record);
+            }
+        }
         // anything else (a torn trailing write) is ignored
     }
     fclose(fp);
@@ -342,7 +353,7 @@ void vfs_state_apply_journal(
 {
     for (const auto &record : records)
     {
-        if (record.op != 'F' || record.file_index >= plan.files.size())
+        if (record.file_index >= plan.files.size())
             continue;
         const auto &file = plan.files[record.file_index];
         if (record.asset_index >= file.assets.size())
@@ -350,8 +361,14 @@ void vfs_state_apply_journal(
         size_t asset_index = record.asset_index;
         for (size_t fi = 0; fi < record.file_index; ++fi)
             asset_index += plan.files[fi].assets.size();
-        if (asset_index < states.size())
+        if (asset_index >= states.size())
+            continue;
+        // 'F': block written; 'B': placeholder served (M4). A stub mark never
+        // overrides fetched state (a heal that raced the report wins)
+        if (record.op == 'F')
             states[asset_index] = vfs_fetched;
+        else if (record.op == 'B' && states[asset_index] != vfs_fetched)
+            states[asset_index] = vfs_stubbed;
     }
 }
 
@@ -384,7 +401,8 @@ bool vfs_state_reconcile(
     const VfsPlan &plan,
     const fs_path &install_dir,
     std::vector<uint8_t> &states,
-    vfs_reconcile_stats *stats)
+    vfs_reconcile_stats *stats,
+    const fs_path &blobs_dir)
 {
     vfs_reconcile_stats run;
     size_t asset_index = 0;
@@ -430,10 +448,23 @@ bool vfs_state_reconcile(
             }
             else if (states[asset_index] == vfs_pending && on_disk)
             {
-                LOG_TRACE("reconcile: upgrade %s[%zu] to fetched", file.name.c_str(), ai);
-                states[asset_index] = vfs_fetched;
-                ++run.assets_upgraded;
+                // promotion needs the real block: a §6.7 stub patch passes the
+                // entry-table check for ct==0 shapes, so confirm content
+                // against the blob when the store root is known (m4 review)
+                const bool real = !file.is_uop ||
+                                  vfs_store_pack_asset_present(
+                                      mapped, uint64_t(mapped_size), ai, asset, blobs_dir);
+                if (real)
+                {
+                    LOG_TRACE("reconcile: upgrade %s[%zu] to fetched", file.name.c_str(), ai);
+                    states[asset_index] = vfs_fetched;
+                    ++run.assets_upgraded;
+                }
             }
+            // vfs_stubbed: stays stubbed. On-disk presence alone never promotes
+            // a placeholder (the entry patch is entry-identical to the plan for
+            // ct==0 assets - m4 review); only the heal path (the materialize
+            // write + its journal 'F') moves stubbed to fetched
         }
         if (mapped)
         {
