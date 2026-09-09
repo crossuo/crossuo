@@ -23,6 +23,7 @@
 #include "http.h"
 #include "vfs_fetch.h"
 #include "vfs_record.h"
+#include "vfs_trap.h"
 
 #include "common.h"
 #include <common/logging/logging.h>
@@ -47,6 +48,173 @@ static std::mutex s_state_mutex;
 static std::vector<uint8_t> s_states;
 static vfs_journal s_journal;
 
+// managed-mapping registry (M3): plan file name (lowercased) -> file index.
+// Built when the plan is loaded; consumed by vfs_map_file.
+static std::map<astr_t, size_t> s_managed_files;
+static bool s_managed_built = false;
+
+// ---------------------------------------------------------------------------
+// managed mappings (M3, plan §6.1, §6.5)
+// ---------------------------------------------------------------------------
+
+static astr_t vfs_lower_ascii(const char *text)
+{
+    astr_t lower(text);
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c)
+                   { return char(c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c); });
+    for (auto &c : lower)
+    {
+        if (c == '\\')
+            c = '/';
+    }
+    return lower;
+}
+
+// the plan module state: loads (or rebuilds) s_plan on first use
+static bool vfs_plan_ready()
+{
+    if (s_plan_loaded)
+        return true;
+    VfsPlan plan;
+    return vfs_plan_ensure(plan); // ensure() binds s_plan on success
+}
+
+static void vfs_managed_build()
+{
+    if (s_managed_built || !vfs_plan_ready())
+        return;
+    s_managed_built = true;
+    s_managed_files.clear();
+    for (size_t i = 0; i < s_plan.files.size(); ++i)
+        s_managed_files[vfs_lower_ascii(s_plan.files[i].name.c_str())] = i;
+}
+
+// global plan asset index of a file's first asset (state bytes are in plan
+// order: files in plan order, assets in file order)
+static size_t vfs_state_base_index(const VfsPlan &plan, size_t file_index)
+{
+    size_t index = 0;
+    for (size_t i = 0; i < file_index && i < plan.files.size(); ++i)
+        index += plan.files[i].assets.size();
+    return index;
+}
+
+// plan file index for a mapped path, -1 when the path is not a managed
+// artifact: it must live inside the install dir and match a plan file name
+static int64_t vfs_managed_index_of(const fs_path &path)
+{
+    if (!vfs_plan_ready() || s_managed_files.empty())
+        return -1;
+    astr_t candidate = vfs_lower_ascii(fs_path_ascii(path));
+    astr_t install = vfs_lower_ascii(fs_path_ascii(s_params.install_dir));
+    if (!install.empty() && install.back() != '/')
+        install += '/';
+    if (candidate.size() <= install.size() || candidate.compare(0, install.size(), install) != 0)
+        return -1;
+    const astr_t name = candidate.substr(install.size());
+    const auto found = s_managed_files.find(name);
+    if (found == s_managed_files.end())
+        return -1;
+    return int64_t(found->second);
+}
+
+// trap resolution backend: acquire the blob (store-only when offline; the
+// fetch engine dedups equal in-flight tails), then run the M1 write path for
+// exactly this asset. Called with no trap lock held (plan §9 lock order).
+// The wait is bounded (m3): a fetch stalled past this turns the fault into
+// the zero-fill path instead of parking the faulting thread forever
+#define VFS_TRAP_FETCH_TIMEOUT_MS (30 * 1000)
+
+static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
+{
+    (void)context;
+    if (!block || !vfs_plan_ready() || block->file_index >= s_plan.files.size())
+        return false;
+    const auto &file = s_plan.files[block->file_index];
+    if (block->asset_index >= file.assets.size())
+        return false;
+    const auto &asset = file.assets[block->asset_index];
+    if (!s_params.offline && !fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
+    {
+        if (!vfs_fetch_started())
+            return false; // no engine: nothing can appear in the store
+        if (!vfs_fetch_blob_to_store(
+                asset.blob.c_str(), block->expected, false, VFS_TRAP_FETCH_TIMEOUT_MS))
+            return false; // the fault degrades to the zero-fill path
+    }
+    vfs_store_params store_params;
+    store_params.blobs_dir = s_params.blobs_dir;
+    store_params.install_dir = s_params.install_dir;
+    store_params.state_dir = s_params.state_dir;
+    std::unique_lock<std::mutex> lock(s_state_mutex);
+    return vfs_store_rematerialize_asset(
+        s_plan, store_params, s_states, &s_journal, block->file_index, block->asset_index);
+}
+
+static void vfs_trap_backend_ensure()
+{
+    vfs_trap_backend backend;
+    backend.context = nullptr;
+    backend.ensure = vfs_trap_ensure_asset;
+    vfs_trap_set_backend(backend);
+}
+
+bool vfs_map_file(const fs_path &path, uint8_t *&out_start, size_t &out_size)
+{
+    out_start = nullptr;
+    out_size = 0;
+    if (vfs_enabled())
+    {
+        const int64_t index = vfs_managed_index_of(path);
+        if (index >= 0)
+        {
+            vfs_trap_backend_ensure();
+            // state snapshot for the file (loose presence comes from the
+            // state DB); taken and released before mapping so the store lock
+            // is never held across the trap's own lock (plan §9 order)
+            std::vector<uint8_t> states;
+            const size_t assets = s_plan.files[size_t(index)].assets.size();
+            {
+                std::unique_lock<std::mutex> lock(s_state_mutex);
+                const size_t base = vfs_state_base_index(s_plan, size_t(index));
+                if (base < s_states.size())
+                {
+                    const size_t count = std::min(assets, s_states.size() - base);
+                    states.assign(s_states.begin() + ptrdiff_t(base),
+                                  s_states.begin() + ptrdiff_t(base + count));
+                }
+            }
+            out_start = vfs_trap_map(
+                path,
+                s_plan,
+                size_t(index),
+                states.size() == assets ? states.data() : nullptr,
+                &out_size);
+            if (out_start)
+                return true;
+            LOG_WARN("vfs: managed mapping failed, falling back: %s", fs_path_ascii(path));
+        }
+    }
+    // unmanaged path (or streaming disabled): exactly the pre-VFS behavior
+    out_start = reinterpret_cast<uint8_t *>(fs_map(path, &out_size));
+    return out_start != nullptr;
+}
+
+void vfs_unmap_file(uint8_t *start, size_t size)
+{
+    if (vfs_enabled() && vfs_trap_unmap(start))
+        return;
+    fs_unmap(reinterpret_cast<unsigned char *>(start), size);
+}
+
+bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length)
+{
+    if (!vfs_enabled() || base == nullptr || length == 0)
+        return true; // disabled: no-op, zero behavior change
+    return vfs_trap_resolve_range(base, uint64_t(offset), uint64_t(length));
+}
+
+
 // ---------------------------------------------------------------------------
 // params
 // ---------------------------------------------------------------------------
@@ -55,6 +223,8 @@ void vfs_set_params(const vfs_params &params)
 {
     s_params = params;
     s_plan_loaded = false;
+    s_managed_built = false; // the registry follows the (new) plan
+    s_states.clear();        // runtime state binds to the previous params
     if (fs_path_some(s_params.state_dir))
     {
         fs_path_create(s_params.state_dir);
@@ -647,6 +817,9 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     }
     fs_path_create(s_params.install_dir);
 
+    // managed-mapping registry: file -> plan index, consumed by vfs_map_file
+    vfs_managed_build();
+
     // tier work lists
     std::vector<vfs_boot_item> t0, t0_fetch, t1, t1_fetch;
     size_t holes = 0, t2 = 0, t3 = 0;
@@ -729,6 +902,11 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     if (progress)
         progress(1.0f, "starting");
 
+    // trap backend (M3): bound before any managed mapping can exist; the
+    // fault handler itself installs lazily with the first vfs_trap_map, so a
+    // run that never maps a managed file never installs one
+    vfs_trap_backend_ensure();
+
     // T1: background worker loop (never blocks the game render loop)
     s_boot_shutdown = false;
     s_boot_started = true;
@@ -738,6 +916,9 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
 
 void vfs_shutdown()
 {
+    // the trap goes first: no resolution may run against a torn-down store
+    // (later faults outside managed ranges chain to the default crash)
+    vfs_trap_shutdown();
     if (s_boot_started)
     {
         s_boot_shutdown = true;

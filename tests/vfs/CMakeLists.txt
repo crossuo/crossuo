@@ -14,6 +14,7 @@ set(VFS_TESTS_SRCS
   test_plan.cpp
   test_product.h
   test_state.cpp
+  test_trap.cpp
   test_store.cpp
   test_urls.cpp
   test_uop_parse.cpp

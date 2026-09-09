@@ -472,7 +472,8 @@ static std::shared_ptr<vfs_fetch_job> vfs_fetch_enqueue(
     return job;
 }
 
-bool vfs_fetch_blob_to_store(const char *tail, uint64_t expected_size, bool manifest)
+bool vfs_fetch_blob_to_store(
+    const char *tail, uint64_t expected_size, bool manifest, uint32_t timeout_ms)
 {
     if (!tail || !*tail)
         return false;
@@ -493,7 +494,19 @@ bool vfs_fetch_blob_to_store(const char *tail, uint64_t expected_size, bool mani
     s_cv_jobs.notify_all();
 
     lock.lock();
-    s_cv_done.wait(lock, [&job] { return job->state >= vfs_fetch_done || s_stop; });
+    if (timeout_ms == 0)
+    {
+        s_cv_done.wait(lock, [&job] { return job->state >= vfs_fetch_done || s_stop; });
+    }
+    else if (!s_cv_done.wait_for(
+                 lock, std::chrono::milliseconds(timeout_ms),
+                 [&job] { return job->state >= vfs_fetch_done || s_stop; }))
+    {
+        // the job stays in flight (the store keeps whatever lands); the
+        // caller treats the timeout as a failed fetch (trap: zero-fill path)
+        LOG_ERROR("fetch: timed out after %u ms waiting for %s", timeout_ms, tail);
+        return false;
+    }
     return job->state == vfs_fetch_done;
 }
 

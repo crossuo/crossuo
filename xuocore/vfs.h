@@ -77,3 +77,20 @@ bool vfs_boot(void (*progress)(float done01, const char *label));
 void vfs_boot_wait();
 // stops the fetch engine and the background tier, saves the state DB
 void vfs_shutdown();
+
+// ---------------------------------------------------------------------------
+// managed mappings (M3, VUOI plan §6.1, §6.5): hole-paged mappings with
+// fault-driven streaming. vfs_map_file routes install files known to the
+// plan through vfs_trap (unreadable holes, first touch fetches the covering
+// block); every other path - and the whole path when streaming is disabled -
+// is a plain fs_map with identical semantics. vfs_ensure_range pre-resolves
+// a byte range synchronously without faulting (GetData/GetRaw call it; the
+// trap remains the safety net). No-op when streaming is disabled.
+// ---------------------------------------------------------------------------
+
+bool vfs_map_file(const fs_path &path, uint8_t *&out_start, size_t &out_size);
+// unmap counterpart; routes through the trap when the base is registry-owned
+void vfs_unmap_file(uint8_t *start, size_t size);
+// makes [offset, offset + length) of a mapped managed base readable (fetch +
+// materialize + flip, deduplicated); false when resolution failed hard
+bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length);

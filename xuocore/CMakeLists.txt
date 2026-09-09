@@ -32,6 +32,8 @@ set(XUOCORE_SRCS
   vfs_state.h
   vfs_store.cpp
   vfs_store.h
+  vfs_trap.cpp
+  vfs_trap.h
   xuoi.cpp
   xuoi.h
   uo_installer.cpp

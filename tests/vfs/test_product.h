@@ -310,18 +310,23 @@ static bool test_build_product(test_product_data &prod, const char *name)
     prod.install = fs_path_join(prod.root, "install");
     test_clean_outputs(prod);
 
-    test_add_part(
-        prod,
-        prod.first_part_ph ? prod.first_part_ph : 0x00000001,
-        prod.first_part_sh ? prod.first_part_sh : 0x11111111,
-        1,
-        12,
-        4096);
-    test_add_part(prod, 0x00000002, 0x22222222, 0, 0, 777);
-    test_add_part(prod, 0x00000003, 0x33333333, 1, 88, 1000);
-    test_add_part(prod, 0x00000004, 0x44444444, 1, 0, 0); // the hole
-    test_add_loose(prod, "tiledata.mul", 0, 2048);
-    test_add_loose(prod, "Music/Digital/Britainpos.mp3", 1, 3333);
+    // callers may prefill parts/loose for custom layouts (M3 trap tests use
+    // page-straddling block sizes); the default mini product otherwise
+    if (prod.parts.empty() && prod.loose.empty())
+    {
+        test_add_part(
+            prod,
+            prod.first_part_ph ? prod.first_part_ph : 0x00000001,
+            prod.first_part_sh ? prod.first_part_sh : 0x11111111,
+            1,
+            12,
+            4096);
+        test_add_part(prod, 0x00000002, 0x22222222, 0, 0, 777);
+        test_add_part(prod, 0x00000003, 0x33333333, 1, 88, 1000);
+        test_add_part(prod, 0x00000004, 0x44444444, 1, 0, 0); // the hole
+        test_add_loose(prod, "tiledata.mul", 0, 2048);
+        test_add_loose(prod, "Music/Digital/Britainpos.mp3", 1, 3333);
+    }
     for (const auto &extra : prod.extra_valid_loose)
     {
         test_add_loose(prod, extra.name.c_str(), extra.ct, extra.size);

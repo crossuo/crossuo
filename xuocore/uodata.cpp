@@ -6,6 +6,7 @@
 #include "mulstruct.h"
 #include "text_parser.h"
 #include "revision.h" // CLIENT_APPNAME
+#include "vfs.h"
 
 #include <stdarg.h>
 #include <thread>
@@ -472,6 +473,9 @@ static bool UopDecompressBlockBwt(const UopFileEntry *block, std::vector<uint8_t
 std::vector<uint8_t> CUopMappedFile::GetMeta(const UopFileEntry *block)
 {
     assert(block);
+    // streaming: resolve the metadata range before reading it (same pre-resolve
+    // as GetRaw/GetData; the trap remains the safety net for raw-pointer reads)
+    vfs_ensure_range(Start, size_t(block->Offset), size_t(block->MetadataSize));
     uint8_t *src = Start + block->Offset;
     std::vector<uint8_t> dst;
     dst.assign(src, src + block->MetadataSize);
@@ -481,6 +485,11 @@ std::vector<uint8_t> CUopMappedFile::GetMeta(const UopFileEntry *block)
 std::vector<uint8_t> CUopMappedFile::GetRaw(const UopFileEntry *block)
 {
     assert(block);
+    // streaming: resolve the block's byte range before reading it (no-op
+    // when the range is present or streaming is disabled); the trap remains
+    // the safety net for raw-pointer reads
+    vfs_ensure_range(
+        Start, size_t(block->Offset + block->MetadataSize), size_t(block->CompressedSize));
     uint8_t *src = Start + block->Offset + block->MetadataSize;
     std::vector<uint8_t> dst;
     dst.assign(src, src + block->CompressedSize);
@@ -490,6 +499,8 @@ std::vector<uint8_t> CUopMappedFile::GetRaw(const UopFileEntry *block)
 std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 {
     assert(block);
+    vfs_ensure_range(
+        Start, size_t(block->Offset + block->MetadataSize), size_t(block->CompressedSize));
     uint8_t *src = Start + block->Offset + block->MetadataSize;
     if (block->Flags == 3)
     {

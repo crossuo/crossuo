@@ -256,8 +256,13 @@ VFS_TEST(fetch_http_end_to_end)
     const auto *entry = pack.GetAsset(strings_part.uop_hash());
     TEST_CHECK_MSG(entry != nullptr, "the T0 block is not materialized");
     TEST_CHECK(pack.GetData(entry) == strings_part.payload);
-    // T2 blocks stay holes until M3 makes them reachable
-    TEST_CHECK(pack.GetAsset(prod.parts[1].uop_hash()) == nullptr);
+    // M3: T2 blocks sharing the first pages with the entry table are now
+    // reachable - the fault handler resolved them on the table walk (their
+    // blobs were fetched from the still-running fixture server), which is
+    // exactly the on-demand streaming the trap provides
+    const auto *streamed = pack.GetAsset(prod.parts[1].uop_hash());
+    TEST_CHECK_MSG(streamed != nullptr, "the T2 block was not streamed on access");
+    TEST_CHECK(pack.GetData(streamed) == prod.parts[1].payload);
 
     vfs_shutdown();
     test_server_stop(srv);

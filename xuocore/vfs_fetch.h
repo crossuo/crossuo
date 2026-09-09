@@ -65,8 +65,14 @@ void vfs_fetch_stats_get(vfs_fetch_stats *out);
 // the blob store; deduplicated with any equal in-flight request. Pack parts
 // and loose files use the file repo, manifests the manifest repo (see
 // vfs_fetch_is_manifest). Returns false after the retries are exhausted
-// (404s are definitive and fail on the first attempt).
-bool vfs_fetch_blob_to_store(const char *tail, uint64_t expected_size, bool manifest);
+// (404s are definitive and fail on the first attempt), or when `timeout_ms`
+// (0 = wait forever) elapses first - on timeout the request stays in flight
+// and the caller treats the fetch as failed (the trap zero-fills the range)
+bool vfs_fetch_blob_to_store(
+    const char *tail,
+    uint64_t expected_size,
+    bool manifest,
+    uint32_t timeout_ms = 0);
 
 // batch driver used by boot: fetches every tail (at `priority`, ascending =
 // higher precedence) reporting progress(0..1, tail) on the calling thread as

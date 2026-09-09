@@ -931,3 +931,62 @@ vfs_store_backend *vfs_store_backend_sparse_create(const vfs_store_params &param
     // the backend binds to a plan through open() before first use
     return new store_sparse(params);
 }
+
+// ---------------------------------------------------------------------------
+// trap support (M3, plan §6.5)
+// ---------------------------------------------------------------------------
+
+// page-coverage computation over the plan's deterministic layout: the block
+// indices whose [file_offset, file_offset + ml + payload) range overlaps
+// [start, end) - exactly the bytes the M1 write path puts down per asset
+void vfs_store_blocks_overlapping(
+    const VfsPlan::VfsFile &file,
+    uint64_t start,
+    uint64_t end,
+    std::vector<uint32_t> *out)
+{
+    if (!out)
+        return;
+    for (size_t ai = 0; ai < file.assets.size(); ++ai)
+    {
+        const auto &asset = file.assets[ai];
+        if (vfs_asset_is_hole(asset))
+            continue; // reserved slot, no bytes, no coverage
+        const uint64_t block_start = asset.file_offset;
+        const uint64_t block_end = block_start + vfs_asset_block_size(asset);
+        if (block_end <= start)
+            continue; // fully before the range (planned layout is ascending)
+        if (block_start >= end)
+            break; // fully after the range: nothing further can overlap
+        out->push_back(uint32_t(ai));
+    }
+}
+
+// one-asset materialization through the M1 write path (the same code as the
+// batch driver, restricted to a single item), assuming the blob is already
+// in the store - the trap fetches before calling this. Returns true only
+// when the asset bytes are confirmed in place afterwards (state == fetched),
+// so a missing blob is reported as failure, not as a clean no-op run.
+bool vfs_store_rematerialize_asset(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    std::vector<uint8_t> &states,
+    vfs_journal *journal,
+    uint32_t file_index,
+    uint32_t asset_index)
+{
+    if (file_index >= plan.files.size())
+        return false;
+    const auto &file = plan.files[file_index];
+    if (asset_index >= file.assets.size())
+        return false;
+    const size_t gi = vfs_store_global_index(plan, file_index, asset_index);
+    std::vector<vfs_store_item> items;
+    items.push_back({ file_index, asset_index });
+    vfs_materialize_stats stats;
+    if (!vfs_store_materialize(plan, params, states, journal, &stats, &items))
+        return false;
+    // a missing blob is not a failed run, but it is not a success either:
+    // the caller cares about bytes in place, so read the state back
+    return gi < states.size() && states[gi] == vfs_fetched;
+}

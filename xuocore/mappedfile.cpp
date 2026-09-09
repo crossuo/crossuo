@@ -7,6 +7,8 @@
 #include <common/str.h>
 #include <string.h> // memcpy
 
+#include "vfs.h"
+
 #if 0
 #define DATASTREAM_DEBUG DEBUG_TRACE_FUNCTION
 #else
@@ -332,8 +334,10 @@ bool CMappedFile::Load(const fs_path &path)
     if (fs_path_exists(path))
     {
         Unload();
-        Start = fs_map(path, &Size);
-        result = Start != nullptr;
+        // managed artifacts (streaming install) map with hole pages through
+        // the trap; everything else - and everything, when streaming is
+        // disabled - maps exactly as before
+        result = vfs_map_file(path, Start, Size);
         SetData(Start, Size);
     }
     else
@@ -352,7 +356,7 @@ void CMappedFile::Unload()
     }
     if (Start != nullptr)
     {
-        fs_unmap(Start, Size);
+        vfs_unmap_file(Start, Size);
     }
     m_Memory.clear();
     SetData(nullptr, 0);

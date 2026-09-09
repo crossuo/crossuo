@@ -126,6 +126,32 @@ bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params);
 bool vfs_store_pack_asset_present(
     const uint8_t *start, uint64_t file_size, size_t asset_index, const VfsAsset &asset);
 
+// ---------------------------------------------------------------------------
+// trap support (M3, plan §6.5): page-coverage computation over the plan's
+// deterministic layout. Blocks are [file_offset, file_offset + ml + payload)
+// - exactly the bytes the M1 write path puts down for the asset. Indices
+// appended to `out` are ascending (the layout packs blocks contiguously).
+// ---------------------------------------------------------------------------
+
+void vfs_store_blocks_overlapping(
+    const VfsPlan::VfsFile &file,
+    uint64_t start,
+    uint64_t end,
+    std::vector<uint32_t> *out);
+
+// materializes exactly one asset through the M1 write path (the same code
+// path as the batch driver, restricted to one item), assuming the blob is
+// already in the store (the trap fetches first). The caller owns `states`
+// (and journal); returns true only when the asset bytes are confirmed in
+// place afterwards (state == fetched).
+bool vfs_store_rematerialize_asset(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    std::vector<uint8_t> &states,
+    vfs_journal *journal,
+    uint32_t file_index,
+    uint32_t asset_index);
+
 // full verify pass over the plan; returns the number of corrupt assets (0
 // when clean) and fills `out` (optional) with the per-asset details
 int vfs_store_verify(const VfsPlan &plan, const vfs_store_params &params, vfs_verify_result *out);
