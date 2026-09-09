@@ -13,6 +13,7 @@
 #include <xuocore/http.h>
 #include <xuocore/xuoi.h>
 #include <xuocore/common.h>
+#include <xuocore/vfs.h>
 #include <xuocore/uop.h>
 #include "keypatch.h"
 #include "xuo_updater.h"
@@ -186,6 +187,87 @@ static void print_banner()
     fprintf(stdout, "\n");
 }
 
+// ---------------------------------------------------------------------------
+// --full (M5, resolved decision #4): the classic whole-install assembly as a
+// thin driver over the vfs public api - boot (plan + blocking core), fetch
+// every tier, materialize, verify. No install logic lives here.
+// ---------------------------------------------------------------------------
+
+static void xuoi_full_progress(float done01, const char *label)
+{
+    fprintf(stdout, "[ vfs %3d%% ] %s\n", int(done01 * 100.0f), label);
+    fflush(stdout);
+}
+
+static int xuoi_full_run(const fs_path &outpath)
+{
+    vfs_params params;
+    params.enabled = true;
+    params.install_dir = outpath;
+    params.blobs_dir = fs_path_join(outpath, "cache", "blobs");
+    if (s_cli["product"].was_set())
+    {
+        const auto product = s_cli["product"].get().string;
+        if (product.rfind("http://", 0) == 0 || product.rfind("https://", 0) == 0)
+            params.product_url = product;
+        else
+            params.product_file = fs_path_from(product.c_str());
+    }
+    vfs_set_params(params);
+
+    if (!vfs_boot(xuoi_full_progress))
+    {
+        vfs_shutdown();
+        LOG_ERROR("streamed install: boot failed (missing product manifest?)");
+        return -int(mft_could_not_download_file);
+    }
+    if (!vfs_fetch_all(xuoi_full_progress))
+    {
+        LOG_ERROR("streamed install: some downloads failed");
+    }
+    vfs_boot_wait(); // finish the background tier
+
+    vfs_materialize_stats stats;
+    const bool materialized = vfs_materialize(&stats);
+    LOG_INFO(
+        "materialize: %zu written, %zu present, %zu missing, %zu failed (%" PRIu64 " bytes)",
+        stats.assets_fetched,
+        stats.assets_present,
+        stats.assets_missing,
+        stats.assets_failed,
+        stats.bytes_written);
+
+    vfs_verify_result result;
+    const int corrupt = vfs_verify(&result);
+    size_t sealed = 0;
+    for (const auto &file : result.files)
+    {
+        LOG_INFO(
+            "  %-32s %zu ok, %zu missing-blob, %zu missing-block, %zu corrupt%s",
+            file.name.c_str(),
+            file.counts[vfs_verify_ok],
+            file.counts[vfs_verify_missing_blob],
+            file.counts[vfs_verify_missing_block],
+            file.counts[vfs_verify_corrupt],
+            file.sealed ? " [sealed]" : "");
+        sealed += file.sealed ? 1 : 0;
+    }
+    LOG_INFO(
+        "full install: %zu/%zu files sealed, %d corrupt assets",
+        sealed,
+        result.files.size(),
+        corrupt);
+
+    vfs_shutdown();
+    if (!materialized)
+        return -int(mft_write_error);
+    if (corrupt > 0)
+        return -int(mft_decompress_error);
+    if (sealed != result.files.size())
+        return -int(mft_could_not_download_file); // incomplete install
+    return 0;
+}
+
 static bool init_cli(int argc, char *argv[])
 {
     s_cli["help"].abbreviation('h').description("print this help screen");
@@ -226,6 +308,9 @@ static bool init_cli(int argc, char *argv[])
         .abbreviation('s')
         .type(po::string)
         .description("show the embedded public key of a patched UO.exe launcher (path)");
+    s_cli["full"].description(
+        "full streamed install over vfs (plan, fetch all tiers, materialize,"
+        " verify); --path is the install dir");
     s_cli(argc, argv);
 
     return s_cli["help"].size() == 0;
@@ -313,6 +398,13 @@ int main(int argc, char **argv)
         auto r = xuo_update_apply(ctx);
         xuo_shutdown(ctx);
         return r;
+    }
+
+    if (s_cli["full"].was_set())
+    {
+        const int code = xuoi_full_run(outpath);
+        http_shutdown();
+        return code;
     }
 
     const char *debug_product_urls[] = { "http://localhost/" DATA_PATCHER_SERVER_ADDRESS,

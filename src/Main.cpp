@@ -91,6 +91,9 @@ static bool InitCli(int argc, char *argv[])
         "streaming: never hit the network, cache only");
     g_cli["streaming-zerolat"].description(
         "streaming: serve placeholders instantly and heal in the background ");
+    g_cli["streaming-trap"].type(po::string).description(
+        "streaming: set to 'off' to disable hole traps - reads of undownloaded"
+        " data return zeros (escape hatch, plan §15)");
     g_cli["streaming-workers"].type(po::u32).description(
         "streaming: download workers (default cpu-1, max 8)");
     g_cli["streaming-record"].type(po::string).description(
@@ -451,6 +454,12 @@ int main(int argc, char **argv)
         params.enabled = true;
         params.offline = g_cli["streaming-offline"].was_set();
         params.zerolat = g_cli["streaming-zerolat"].was_set();
+        if (g_cli["streaming-trap"].was_set())
+        {
+            // --streaming-trap=off: holes stay readable (zeros) - the escape
+            // hatch when the fault handler misbehaves (plan §15)
+            params.traps = g_cli["streaming-trap"].get().string != "off";
+        }
         if (g_cli["streaming-workers"].was_set())
             params.workers = g_cli["streaming-workers"].get().u32;
         auto dir = g_cli["streaming"].get().string;

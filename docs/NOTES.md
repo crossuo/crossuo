@@ -28,15 +28,20 @@ converges via the idle tier (§7.3 T3).
 
 ## Product manifest staleness
 
-The plan is rebuilt only when the product serial changes; until M5 adds
-conditional GET / manifest diffing, a re-signed but same-serial manifest is not
-re-fetched, and the local copy can lag the repo between boots.
+CLOSED in M5 (plan §10.5): an online boot refreshes the product manifest every
+boot (it is ~1.6 KB; a local `--product` file still wins and offline runs keep
+the cached copy), so a re-signed or re-serialized manifest is seen on the next
+start. A failed refresh falls back to the cached copy with a warning.
 
 ## Embedded T1 tables: converter TODO
 
-The T1 tables are meant to be embedded from recorded runs (§7.5), but the
-CSV → C++ converter tool does not exist yet, so recordings cannot be embedded;
-this is tracked for M4/M5.
+CLOSED in M5: `vuoi --embed-record=<file.csv>` converts a recorder CSV into
+the generated `vfs_manifest_embedded.cpp` on stdout (SPDX header, first-access
+order, malformed/duplicate rows skipped with warnings). Deployment flow:
+record a run, feed the CSV to the converter, replace
+`xuocore/vfs_manifest_embedded.cpp` with the output and rebuild. Tests inject
+converted tables through `vfs_manifest_embedded_set` (see
+tests/vfs/test_update.cpp); that seam survives the deployment rewrite.
 
 # NOTES — deferred decisions and known limitations (M3)
 
@@ -288,3 +293,98 @@ Three blockers from the M4 review, closed in place:
   dim handling in `UopReadIndexFile` is exact-match `gumpartlegacymul`; exact
   pairing holds for all current packs — a future "gump*" pack must keep the
   `+=8` dim convention or both sites must be updated together.
+
+# NOTES — deferred decisions and known limitations (M5)
+
+## Non-sparse filesystems: warn, no append-layout (§12 deviation)
+
+The plan (§12) specifies an append-layout fallback for filesystems without
+sparse files (fat/exFAT): blocks appended as downloaded with per-entry
+`Offset` patches. **This is deliberately not implemented.** The trap's page
+coverage model depends on the static planned offsets (the plan *is* the
+coverage map; `vfs_trap_map` builds per-asset ranges from it at mapping time),
+and an append layout moves blocks to file-end offsets that only exist after
+download - supporting it means a second coverage model, remap-on-grow (POSIX)
+or staged assembly (Windows), for a rare case.
+
+What ships instead: after the store prepares a run,
+`vfs_store_fs_supports_sparse` probes the filesystem once (a 1 MB hole, then
+`st_blocks` on POSIX / `FILE_ATTRIBUTE_SPARSE_FILE` on Windows). On a
+non-sparse volume the store logs a loud warning with the planned install size
+("up to N MB will be preallocated") and continues; everything works, it just
+really allocates. The probe is covered by a unit test on sparse filesystems;
+the warning path itself needs an actual fat volume (manual verification only -
+no such filesystem is available to CI).
+
+## Update flow (§10.5) semantics and residual limitations
+
+- An online boot downloads the product manifest fresh; a serial change
+  rebuilds the plan over HTTP. Cached `*.mft` manifests are purged on drift
+  before the rebuild (the store mirrors the URL tree, so stale manifests would
+  otherwise shadow changed ones forever); part blobs stay (content-addressed).
+- The old and new plans are diffed per asset (timestamp/rh/sizes/metadata -
+  the same fields `xuoi_listing` diffs). Changed assets: state reset to
+  pending (journal op `R`), pack entry `Offset` zeroed via
+  `vfs_store_invalidate_asset` (the hole re-opens, the file loses its sealed
+  status), cached blob deleted. They heal through the normal paths: tiers for
+  T0/T1, the trap for T2/T3, `xuoi --full`/`vfs_fetch_all` headlessly.
+- **Serial change with identical content** (a re-signed manifest that changed
+  nothing else) logs "update: new serial, no differences" and touches
+  nothing. **Same serial with changed content** under an existing manifest
+  tail is still invisible - the limitation of the content-addressed store; it
+  would need a per-tail timestamp index in the store (deferred, not planned).
+- State indexes are plan-order positions. The diff/reset assume the new plan
+  keeps the manifest order (the deterministic plan makes this true for
+  re-signed manifests); a manifest that *reorders* entries makes old state
+  bytes misalign (pre-existing behavior on serial drift: `vfs_state_load`
+  rejects only size changes). Not addressed in M5.
+- Loose-file reconcile is now content-aware when the store root is known
+  (`vfs_store_loose_asset_content_ok`: head compare against the blob,
+  inflating the head for zlib assets). Before M5 a boot skeleton (right-sized
+  sparse file) promoted to fetched at the reconcile inside the first
+  materialize pass, which permanently shadowed its blob - a loose T2/T3 file
+  could then never converge (surfaced by the M5 full-install convergence
+  work). Without a blobs_dir the old size-only check still applies.
+
+## Verify/seal stub semantics (M4 follow-up)
+
+`vfs_verify`/`vfs_store_verify` take the state DB: an asset marked
+`vfs_stubbed` reports `vfs_verify_missing_block` (bucket) with the asset's
+`stubbed` flag set (vuoi prints `STUB` as the label), never `corrupt` - its
+on-disk entry is a §6.7 placeholder patch. Sealing is state-driven and
+unchanged: stubbed (like pending/failed) blocks the seal mark, and the file
+re-seals through the normal materialize write once the real block lands.
+
+## `--streaming-trap=off` (plan §15 escape hatch)
+
+`vfs_params::traps = false` maps managed files without any page protection:
+pointer reads of undownloaded ranges return the sparse file's zeros, no fault
+handler is installed (the process keeps its default SIGSEGV/VEH disposition),
+and the fault counters stay silent. `vfs_ensure_range` (the GetData/GetRaw
+pre-resolve) and the zerolat demand tier still fetch + materialize on demand;
+stub payloads are never served (their pages are readable, so nothing faults
+into the stub path). Trap-off wins over `--streaming-zerolat` for mapping;
+mappings made before the flag flips keep their protection. The HUD shows no
+placeholder counts in this mode (nothing is ever marked stubbed).
+
+## HUD (§11, resolved decision #3)
+
+`CGumpVfsStatus::Draw` (src/Gumps/GumpVfsStatus.cpp) is called once per frame
+from `CGame::Process` after the screen render - main thread only. It polls
+`vfs_hud_stats` (an in-memory snapshot over the boot-owned state; no disk io,
+no reconcile - the full `vfs_stats` maps every pack and would hitch the
+render) a few times a second, shows activity (rate + done/total), a
+"placeholders: N" warning while stubbed assets are in use, and an offline
+badge; it fades out ~2 s after the last activity and costs one flag check
+when streaming is disabled. It is deliberately not registered in the gump
+manager (passive, non-interactive, visible on every screen).
+
+## Still deferred
+
+- MUL idx-range streaming (§10.3): unchanged - loose files resolve whole-file
+  on first fault; the idx-range covering map + range-GET coalescing remain
+  future work (see the M3 note).
+- Retry scheduler: the next-boot retry stands (§11); no in-session retry
+  rework landed in M5.
+- The M2 "zero requests" test now asserts *one* request on a full-cache
+  online boot (the product refresh); everything else must stay request-free.

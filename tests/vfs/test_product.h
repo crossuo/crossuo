@@ -140,6 +140,8 @@ struct test_part_def
     std::vector<uint8_t> payload; // expected decoded content (ul bytes)
     std::vector<uint8_t> blob;    // bytes placed in the store
     astr_t blob_rel;              // store path relative to the blobs root
+    // manifest timestamp of the part (M5 update tests bump one part's t)
+    uint64_t timestamp = 0x6a8dd30c;
 
     uint64_t uop_hash() const { return (static_cast<uint64_t>(sh) << 32) | ph; }
 };
@@ -182,6 +184,8 @@ struct test_product_data
     // keeps the generated default. Used to make a part T0 (MainMisc core).
     uint32_t first_part_ph = 0;
     uint32_t first_part_sh = 0;
+    // test_write_product internal: extra_valid_loose was folded into loose
+    bool extras_appended = false;
 };
 
 // registers a pack part (and its blob) in the product description
@@ -303,13 +307,13 @@ static void test_clean_outputs(const test_product_data &prod)
 //   base/empty.uop.mft : a pack with zero parts (must produce no file)
 //   base/pkg.mft       : references both manifests + the 2 loose files
 //   prod.xml           : one package (base) referencing pkg.mft
-static bool test_build_product(test_product_data &prod, const char *name)
+//
+// regenerates every manifest + blob under prod.root from the current prod
+// description (test_write_product); test_build_product sets a fresh root up
+// fills an empty product description with the default mini product (plus any
+// registered extra loose files); a no-op when parts/loose are already set
+static void test_fill_product(test_product_data &prod)
 {
-    prod.root = test_dir(name);
-    prod.blobs = fs_path_join(prod.root, "blobs");
-    prod.install = fs_path_join(prod.root, "install");
-    test_clean_outputs(prod);
-
     // callers may prefill parts/loose for custom layouts (M3 trap tests use
     // page-straddling block sizes); the default mini product otherwise
     if (prod.parts.empty() && prod.loose.empty())
@@ -327,16 +331,25 @@ static bool test_build_product(test_product_data &prod, const char *name)
         test_add_loose(prod, "tiledata.mul", 0, 2048);
         test_add_loose(prod, "Music/Digital/Britainpos.mp3", 1, 3333);
     }
-    for (const auto &extra : prod.extra_valid_loose)
+    // valid extra loose files, registered before the manifests are written;
+    // appended once (a test_write_product rebuild does not duplicate them)
+    if (!prod.extras_appended)
     {
-        test_add_loose(prod, extra.name.c_str(), extra.ct, extra.size);
+        for (const auto &extra : prod.extra_valid_loose)
+        {
+            test_add_loose(prod, extra.name.c_str(), extra.ct, extra.size);
+        }
+        prod.extras_appended = true;
     }
+}
 
+static bool test_write_product(test_product_data &prod)
+{
     // pack manifest with all parts (including the hole entry)
     astr_t files;
     for (const auto &part : prod.parts)
     {
-        files += test_part_xml(part, 0x6a8dd30c);
+        files += test_part_xml(part, part.timestamp);
     }
     const astr_t pack_xml = astr_t("<MythicMFT><manifest><packs><p name=\"") + prod.pack_name +
                             "\" rpath=\"" + prod.pack_name + "\"><files>" + files + "</files></p>" +
@@ -410,6 +423,17 @@ static bool test_build_product(test_product_data &prod, const char *name)
         test_hex64(pkg_xml.size()).c_str(),
         test_hex64(pkg_blob.size()).c_str());
     return test_write_file(fs_path_join(prod.root, "prod.xml"), test_bytes(astr_t(product)));
+}
+
+// builds the synthetic mini product into a fresh temp root
+static bool test_build_product(test_product_data &prod, const char *name)
+{
+    prod.root = test_dir(name);
+    prod.blobs = fs_path_join(prod.root, "blobs");
+    prod.install = fs_path_join(prod.root, "install");
+    test_clean_outputs(prod);
+    test_fill_product(prod);
+    return test_write_product(prod);
 }
 
 // points the product's repos at a running fixture server (the generated

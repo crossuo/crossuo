@@ -44,12 +44,18 @@ void vfs_test_fail(const char *file, int line, const char *format, ...)
     s_current_message = astr_t(prefix) + message;
 }
 
-int vfs_test_run_all()
+int vfs_test_run_all(int argc, char **argv)
 {
     const auto &tests = vfs_tests();
+    // optional name filter: vfs_tests update_serial runs only matching tests
+    const char *filter = argc > 1 ? argv[1] : nullptr;
     size_t failed = 0;
+    size_t ran = 0;
     for (const auto &test : tests)
     {
+        if (filter != nullptr && strstr(test.name, filter) == nullptr)
+            continue;
+        ++ran;
         s_current_failed = false;
         s_current_message.clear();
         test.fn();
@@ -64,11 +70,11 @@ int vfs_test_run_all()
         }
         fflush(stdout);
     }
-    printf("%zu/%zu tests passed\n", tests.size() - failed, tests.size());
+    printf("%zu/%zu tests passed\n", ran - failed, ran);
     return failed == 0 ? 0 : 1;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    return vfs_test_run_all();
+    return vfs_test_run_all(argc, argv);
 }

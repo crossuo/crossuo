@@ -41,7 +41,7 @@ bool vfs_test_add(const char *name, vfs_test_fn fn);
 
 // Runs all registered tests, printing "PASS <name>" or "FAIL <name>" per test
 // plus a one-line summary. Returns 0 when every test passed, nonzero otherwise.
-int vfs_test_run_all();
+int vfs_test_run_all(int argc, char **argv);
 
 // Records a failure for the currently running test (file:line + message).
 void vfs_test_fail(const char *file, int line, const char *format, ...);

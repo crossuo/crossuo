@@ -291,6 +291,8 @@ bool vfs_journal_mark(vfs_journal &journal, const vfs_journal_record &record)
         fprintf(journal.handle, "S %u\n", record.file_index);
     else if (record.op == 'B')
         fprintf(journal.handle, "B %u %u\n", record.file_index, record.asset_index);
+    else if (record.op == 'R')
+        fprintf(journal.handle, "R %u %u\n", record.file_index, record.asset_index);
     else
         return false;
     // every completion mark is durable before it is reported as done
@@ -334,6 +336,15 @@ bool vfs_journal_replay(const fs_path &path, std::vector<vfs_journal_record> &ou
                 out.push_back(record);
             }
         }
+        else if (line[0] == 'R')
+        {
+            unsigned int file_index = 0, asset_index = 0;
+            if (sscanf(line, "R %u %u", &file_index, &asset_index) == 2)
+            {
+                record = { 'R', file_index, asset_index };
+                out.push_back(record);
+            }
+        }
         // anything else (a torn trailing write) is ignored
     }
     fclose(fp);
@@ -363,12 +374,15 @@ void vfs_state_apply_journal(
             asset_index += plan.files[fi].assets.size();
         if (asset_index >= states.size())
             continue;
-        // 'F': block written; 'B': placeholder served (M4). A stub mark never
-        // overrides fetched state (a heal that raced the report wins)
+        // 'F': block written; 'B': placeholder served (M4); 'R': reset to
+        // pending by the update/diff flow (M5). A stub mark never overrides
+        // fetched state (a heal that raced the report wins)
         if (record.op == 'F')
             states[asset_index] = vfs_fetched;
         else if (record.op == 'B' && states[asset_index] != vfs_fetched)
             states[asset_index] = vfs_stubbed;
+        else if (record.op == 'R')
+            states[asset_index] = vfs_pending;
     }
 }
 
@@ -438,6 +452,15 @@ bool vfs_state_reconcile(
                 size_t loose_size = 0;
                 on_disk = vfs_asset_block_size(asset) > 0 &&
                           vfs_state_file_size(path, &loose_size) && loose_size == asset.ul;
+                // M5: the size check alone also accepts the untouched boot
+                // skeleton (right-sized sparse file). When the store root is
+                // known, the blob content decides - the skeleton must not
+                // promote, and a blob that arrived later must not be shadowed
+                // by it forever
+                if (on_disk && !fs_path_empty(blobs_dir))
+                {
+                    on_disk = vfs_store_loose_asset_content_ok(path, asset, blobs_dir);
+                }
             }
 
             if (states[asset_index] == vfs_fetched && !on_disk)

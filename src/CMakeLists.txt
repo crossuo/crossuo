@@ -125,6 +125,7 @@ set(gumps_src
   Gumps/GumpMenubar.cpp
   Gumps/GumpMenu.cpp
   Gumps/GumpMinimap.cpp
+  Gumps/GumpVfsStatus.cpp
   Gumps/GumpNotify.cpp
   Gumps/GumpOptions.cpp
   Gumps/GumpPaperdoll.cpp

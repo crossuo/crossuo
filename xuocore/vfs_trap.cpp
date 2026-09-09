@@ -324,6 +324,8 @@ vfs_trap_backend s_backend;
 bool s_handler_installed = false;
 bool s_report_counters = false;
 bool s_zerolat = false; // §6.8: faults serve stubs and enqueue demand fetches
+// M5 escape hatch (--streaming-trap=off): new mappings never protect pages
+bool s_traps = true;
 
 void trap_counter_inc(vfs_trap_counter which, uint64_t delta = 1)
 {
@@ -1002,7 +1004,11 @@ void vfs_trap_set_backend(const vfs_trap_backend &backend)
 void vfs_trap_set_zerolat(bool zerolat)
 {
     s_zerolat = zerolat;
-    LOG_INFO("vfs_trap: zero-latency mode %s", zerolat ? "enabled" : "disabled");
+}
+
+void vfs_trap_set_traps(bool enabled)
+{
+    s_traps = enabled;
 }
 
 void vfs_trap_stats_get(vfs_trap_stats *out)
@@ -1133,7 +1139,9 @@ uint8_t *vfs_trap_map(
     uint8_t *base = os_map_rw(path, &size);
     if (!base)
         return nullptr;
-    if (!vfs_trap_install())
+    // escape hatch: no protection, so no fault handler is needed at all -
+    // the process keeps its default SIGSEGV/VEH disposition untouched
+    if (s_traps && !vfs_trap_install())
     {
         os_unmap(base, size);
         return nullptr;
@@ -1206,6 +1214,12 @@ uint8_t *vfs_trap_map(
     m.sealed = all_present;
     if (m.sealed)
         memset(m.page_state.data(), trap_page_readable, m.page_state.size());
+    if (!s_traps && !m.sealed)
+    {
+        // trap-off: holes stay readable - pointer reads return the sparse
+        // file's zeros; ensure/demand still fetch+flip (a no-op here)
+        memset(m.page_state.data(), trap_page_readable, m.page_state.size());
+    }
 
     // fault-safety ordering (m4): the mapping enters the registry BEFORE the
     // first page is protected - the moment a hole becomes PROT_NONE a fault
@@ -1215,7 +1229,7 @@ uint8_t *vfs_trap_map(
         s_mappings.push_back(std::move(owned)); // `m` stays valid (registry owns it)
     }
 
-    if (!m.sealed)
+    if (!m.sealed && s_traps)
     {
         // every page with absent bytes stays protected; pages covered by the
         // entry table (and present blocks) map readable right away

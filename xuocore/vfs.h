@@ -23,6 +23,7 @@ struct VfsStats
     size_t bytes_done = 0;  // bytes confirmed in place
     bool online = false;    // fetch engine connected to a repo (M2)
     uint64_t stubs_served = 0; // faults answered with a placeholder payload (M4 zerolat)
+    uint64_t stubs_active = 0; // assets currently in the stubbed state (M5 HUD)
 };
 
 struct vfs_params
@@ -32,6 +33,10 @@ struct vfs_params
     // zero-latency mode (M4, plan §6.8): faults serve stub payloads instantly
     // and heal in the background instead of blocking on the fetch
     bool zerolat = false;
+    // M5 escape hatch (plan §15, --streaming-trap=off): managed files map
+    // without hole protection - pointer reads of holes return the sparse
+    // file's zeros; ensure/pre-resolve paths still fetch on demand
+    bool traps = true;
     uint32_t workers = 0; // download workers; 0: default (cpu-1, cap 8)
     fs_path blobs_dir;   // local blob store root (mirrors the remote URL tree)
     fs_path install_dir; // materialized game files
@@ -70,6 +75,11 @@ int vfs_verify(vfs_verify_result *out);
 // aggregate progress over the current plan and state DB
 void vfs_stats(VfsStats *out);
 
+// in-memory progress snapshot for the HUD (M5): reads the boot-owned state
+// and lock-free counters only - no disk io, no reconcile - so the game loop
+// can poll it at a few Hz. zeros while no boot ran.
+void vfs_hud_stats(VfsStats *out);
+
 // ---------------------------------------------------------------------------
 // boot (M2, VUOI plan §7.2): plan -> blocking T0 fetch+materialize (with
 // progress) -> background T1; returns false on fatal errors (offline mode
@@ -80,6 +90,11 @@ bool vfs_boot(void (*progress)(float done01, const char *label));
 // headless tools (vuoi): wait for the background tier to finish instead of
 // leaving it running; the game never calls this (it must not block the loop)
 void vfs_boot_wait();
+// full install (M5, resolved decision #4): fetches the blob of EVERY planned
+// asset (all tiers) into the store; blocking, optional progress per tail.
+// Requires a running boot (repos + engine); false when offline or idle.
+// The caller materializes and verifies afterwards (xuoi --full).
+bool vfs_fetch_all(void (*progress)(float done01, const char *label));
 // stops the fetch engine and the background tier, saves the state DB
 void vfs_shutdown();
 

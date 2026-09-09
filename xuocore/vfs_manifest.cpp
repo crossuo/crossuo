@@ -261,8 +261,94 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
 }
 
 // ---------------------------------------------------------------------------
+// plan diff (M5, plan §10.5)
+// ---------------------------------------------------------------------------
+
+// content identity of one asset: everything the fetch/materialize pipeline
+// consumes. Same identity => same blob tail, same planned bytes, no work.
+static bool vfs_plan_asset_same(const VfsAsset &a, const VfsAsset &b)
+{
+    return a.ul == b.ul && a.cl == b.cl && a.ct == b.ct && a.ml == b.ml && a.mc == b.mc &&
+           a.rh == b.rh && a.timestamp == b.timestamp;
+}
+
+// pack assets are identified by their uop hash inside their pack; loose files
+// by their output name. The uop hash alone can collide across packs (art
+// legacy land tiles), so the pack name prefixes the key.
+static astr_t vfs_plan_asset_key(const VfsAsset &asset)
+{
+    char suffix[24];
+    snprintf(suffix, sizeof(suffix), "/%016" PRIx64, asset.uop_hash);
+    if (vfs_asset_is_loose(asset))
+        return astr_t("loose/") + asset.name;
+    return astr_t("pack/") + asset.uop_file + suffix;
+}
+
+bool vfs_plan_diff(
+    const VfsPlan &old_plan, const VfsPlan &new_plan, vfs_plan_diff_result *out)
+{
+    if (out == nullptr)
+        return false;
+    *out = vfs_plan_diff_result();
+
+    std::map<astr_t, vfs_plan_index> old_index;
+    for (size_t fi = 0; fi < old_plan.files.size(); ++fi)
+    {
+        const auto &file = old_plan.files[fi];
+        for (size_t ai = 0; ai < file.assets.size(); ++ai)
+            old_index[vfs_plan_asset_key(file.assets[ai])] = { uint32_t(fi), uint32_t(ai) };
+    }
+
+    std::map<astr_t, bool> new_ids;
+    for (size_t fi = 0; fi < new_plan.files.size(); ++fi)
+    {
+        const auto &file = new_plan.files[fi];
+        for (size_t ai = 0; ai < file.assets.size(); ++ai)
+        {
+            const auto &asset = file.assets[ai];
+            const astr_t key = vfs_plan_asset_key(asset);
+            new_ids[key] = true;
+            const auto found = old_index.find(key);
+            if (found == old_index.end())
+                out->added.push_back({ uint32_t(fi), uint32_t(ai) });
+            else if (!vfs_plan_asset_same(old_plan.files[found->second.file_index]
+                                              .assets[found->second.asset_index],
+                                          asset))
+                out->changed.push_back({ uint32_t(fi), uint32_t(ai) });
+        }
+    }
+
+    for (const auto &file : old_plan.files)
+    {
+        for (const auto &asset : file.assets)
+        {
+            if (new_ids.find(vfs_plan_asset_key(asset)) == new_ids.end())
+                ++out->removed;
+        }
+    }
+    return true;
+}
+
+// ---------------------------------------------------------------------------
 // tiers (§7.3)
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// embedded T1 manifest seam (§7.5): consumers read through the override (set
+// by tests / future resource loading) or the embedded file's compiled table
+// ---------------------------------------------------------------------------
+
+static std::vector<vfs_embedded_entry> s_embedded_override;
+
+const std::vector<vfs_embedded_entry> &vfs_manifest_embedded_table()
+{
+    static const std::vector<vfs_embedded_entry> s_empty;
+    return s_embedded_override.empty() ? vfs_manifest_embedded() : s_embedded_override;
+}
+
+void vfs_manifest_embedded_set(std::vector<vfs_embedded_entry> table)
+{
+    s_embedded_override = std::move(table);
+}
 
 // boot-critical loose files: never stubbed, fetched before Load() returns
 static const char *const VFS_TIER_T0_FILES[] = {
@@ -363,7 +449,8 @@ void vfs_manifest_assign_tiers(VfsPlan &plan)
 
     // the embedded (recorded) manifest promotes its entries to T1; unknown
     // assets keep their static tier, so stale recordings only reorder (§7.5)
-    const auto &embedded = vfs_manifest_embedded();
+    const auto &embedded = vfs_manifest_embedded_table();
+    size_t unmatched = 0;
     for (const auto &entry : embedded)
     {
         bool found = false;
@@ -383,7 +470,14 @@ void vfs_manifest_assign_tiers(VfsPlan &plan)
             if (found)
                 break;
         }
+        if (!found)
+            ++unmatched; // stale recording: pack/asset no longer in the plan
     }
-    LOG_INFO(
-        "tiers: %zu embedded T1 entries", embedded.size());
+    LOG_INFO("tiers: %zu embedded T1 entries", embedded.size());
+    if (unmatched != 0)
+    {
+        LOG_WARN(
+            "tiers: %zu embedded entries not in the plan (stale recording, advisory only)",
+            unmatched);
+    }
 }

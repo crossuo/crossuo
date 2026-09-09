@@ -113,6 +113,40 @@ bool vfs_path_component_ok(const char *s);
 bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan);
 
 // ---------------------------------------------------------------------------
+// update flow (M5, plan §10.5): compares two plans built from different
+// product serials and reports what changed per asset. Identities are the
+// uop hash (packs) and the file name (loose); a change is any difference in
+// timestamp, provenance (rh), sizes or metadata - the same fields
+// xuoi_listing diffs, so both tools agree on what re-downloads.
+// ---------------------------------------------------------------------------
+
+// a (file, asset) position inside one plan
+struct vfs_plan_index
+{
+    uint32_t file_index = 0;
+    uint32_t asset_index = 0;
+};
+
+struct vfs_plan_diff_result
+{
+    // assets present in both plans whose content identity changed: their
+    // state resets to pending, the cached blob is dropped and the pack block
+    // is invalidated (the hole re-opens) so the normal paths heal them
+    std::vector<vfs_plan_index> changed; // indexes into the NEW plan
+    // assets that only exist in the new plan (new: already pending, nothing
+    // to reset; kept for reporting)
+    std::vector<vfs_plan_index> added; // indexes into the NEW plan
+    size_t removed = 0;                // old-plan assets the new plan dropped
+};
+
+// false when the plans cannot be compared (never expected: both are built
+// plans); an empty result means the serials differ but nothing else does
+bool vfs_plan_diff(
+    const VfsPlan &old_plan,
+    const VfsPlan &new_plan,
+    vfs_plan_diff_result *out);
+
+// ---------------------------------------------------------------------------
 // tiers (VUOI plan §7.3): assigned at boot from static name patterns plus the
 // embedded T1 order (§7.5); the persisted plan stays tier-free (M1 bytes)
 // ---------------------------------------------------------------------------
@@ -129,6 +163,14 @@ struct vfs_embedded_entry
 // vfs_manifest_embedded.cpp, which is the file the build step rewrites; the
 // checked-in stub ships an empty table (T1 then only holds the static set).
 const std::vector<vfs_embedded_entry> &vfs_manifest_embedded();
+
+// test/deployment seam (M5): the table consumers actually use - the override
+// above when one was injected, the embedded file's table otherwise. Tests
+// inject converted recordings here (the deployment rewrite of
+// vfs_manifest_embedded.cpp keeps this seam intact).
+const std::vector<vfs_embedded_entry> &vfs_manifest_embedded_table();
+// replaces the override table (empty restores the embedded file's table)
+void vfs_manifest_embedded_set(std::vector<vfs_embedded_entry> table);
 
 // applies the §7.3 tier table + the embedded T1 order to a freshly built plan
 void vfs_manifest_assign_tiers(VfsPlan &plan);

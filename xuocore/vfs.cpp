@@ -13,14 +13,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "mft.h"
-
-#include "vfs.h"
-
-#include <inttypes.h>
-#include <stdio.h>
-#include <string.h>
-
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
@@ -30,6 +22,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(XUO_WINDOWS)
+#include <windows.h> // MoveFileExA (atomic product manifest replace)
+#endif
+
 #include "http.h"
 #include "vfs_fetch.h"
 #include "vfs_record.h"
@@ -37,9 +33,6 @@
 
 #include "common.h"
 #include "uodata.h"
-#include <common/logging/logging.h>
-
-#include "common.h"
 #include <common/logging/logging.h>
 
 #define VFS_PRODUCT_FILE_DEFAULT "uo-legacyrelease.prod"
@@ -444,6 +437,13 @@ bool vfs_asset_stubbed_at(size_t base, size_t asset_index)
 // params
 // ---------------------------------------------------------------------------
 
+// true when the product manifest path was not given explicitly and was
+// defaulted into the blob store (an explicit --product file always wins over
+// a re-download, M5). Decided once per vfs_set_params: the dirs-ready path
+// resolves the file name in place, which would otherwise lose the original
+// "was it explicit?" answer between boots.
+static bool vfs_product_file_defaulted = false;
+
 void vfs_set_params(const vfs_params &params)
 {
     s_params = params;
@@ -451,6 +451,8 @@ void vfs_set_params(const vfs_params &params)
     s_managed_built = false; // the registry follows the (new) plan
     s_states.clear();        // runtime state binds to the previous params
     vfs_trap_set_zerolat(s_params.zerolat); // bound before any mapping faults
+    vfs_trap_set_traps(s_params.traps); // M5 escape hatch (--streaming-trap=off)
+    vfs_product_file_defaulted = fs_path_empty(s_params.product_file);
     if (fs_path_some(s_params.state_dir))
     {
         fs_path_create(s_params.state_dir);
@@ -493,6 +495,7 @@ static bool vfs_params_dirs_ready()
     if (fs_path_empty(s_params.product_file))
     {
         s_params.product_file = fs_path_join(s_params.blobs_dir, VFS_PRODUCT_FILE_DEFAULT);
+        vfs_product_file_defaulted = true;
     }
     else if (
         !fs_path_exists(s_params.product_file) &&
@@ -689,7 +692,15 @@ int vfs_verify(vfs_verify_result *out)
     vfs_store_params store_params;
     store_params.blobs_dir = s_params.blobs_dir;
     store_params.install_dir = s_params.install_dir;
-    return vfs_store_verify(plan, store_params, out);
+    // stub-aware (M5): the state DB decides which mapped bytes are §6.7
+    // placeholders, which report missing-block instead of corrupt
+    std::vector<uint8_t> states;
+    vfs_state_load(
+        fs_path_join(s_params.state_dir, "state.bin"), vfs_state_asset_count(plan), states);
+    std::vector<vfs_journal_record> records;
+    vfs_journal_replay(fs_path_join(s_params.state_dir, "journal.log"), records);
+    vfs_state_apply_journal(plan, records, states);
+    return vfs_store_verify(plan, store_params, out, &states);
 }
 
 void vfs_stats(VfsStats *out)
@@ -736,6 +747,48 @@ void vfs_stats(VfsStats *out)
     stats.stubs_served = trap_stats.stub_served;
     if (out)
         *out = stats;
+}
+
+// HUD snapshot (M5): the same aggregate over the boot-owned in-memory state
+// - no state.bin reload, no reconcile (which maps every pack), so the game
+// loop can afford it at a few Hz
+void vfs_hud_stats(VfsStats *out)
+{
+    VfsStats stats;
+    if (out == nullptr || !vfs_enabled())
+        return;
+    {
+        std::unique_lock<std::mutex> lock(s_state_mutex);
+        size_t gi = 0;
+        for (const auto &file : s_plan.files)
+        {
+            ++stats.files_total;
+            stats.bytes_total += file.size;
+            bool complete = !file.assets.empty();
+            for (const auto &asset : file.assets)
+            {
+                const uint8_t state = gi < s_states.size() ? s_states[gi] : vfs_pending;
+                if (state == vfs_fetched)
+                {
+                    stats.bytes_done += vfs_asset_block_size(asset);
+                }
+                else
+                {
+                    complete = false;
+                    if (state == vfs_stubbed)
+                        ++stats.stubs_active;
+                }
+                ++gi;
+            }
+            if (complete)
+                ++stats.files_done;
+        }
+    }
+    stats.online = !s_params.offline && vfs_fetch_started();
+    vfs_trap_stats trap_stats;
+    vfs_trap_stats_get(&trap_stats);
+    stats.stubs_served = trap_stats.stub_served;
+    *out = stats;
 }
 
 // ---------------------------------------------------------------------------
@@ -816,7 +869,7 @@ static void vfs_boot_items_to_tails(
 // reorder - they can never break correctness.
 static void vfs_boot_order_t1(const VfsPlan &plan, std::vector<vfs_boot_item> *items)
 {
-    const auto &embedded = vfs_manifest_embedded();
+    const auto &embedded = vfs_manifest_embedded_table();
     if (embedded.empty() || !items)
         return;
     std::map<uint64_t, size_t> order;
@@ -862,12 +915,35 @@ static bool vfs_boot_materialize(
     return vfs_store_materialize(plan, store_params, s_states, &s_journal, stats, list);
 }
 
-// downloads the product manifest into the blob store when missing (online
-// boot); a local --product file always wins
+// atomic file replace: the payload lands in <path>.tmp first and is renamed
+// over the target, so a crash mid-write can never truncate an existing file
+static bool vfs_file_write_atomic(const char *path, const std::vector<uint8_t> &data)
+{
+    const astr_t tmp = astr_t(path) + ".tmp";
+    if (!fs_file_write(tmp.c_str(), data))
+        return false;
+#if defined(XUO_WINDOWS)
+    if (MoveFileExA(tmp.c_str(), path, MOVEFILE_REPLACE_EXISTING))
+        return true;
+#else
+    if (rename(tmp.c_str(), path) == 0)
+        return true;
+#endif
+    remove(tmp.c_str());
+    return false;
+}
+
+// downloads the product manifest into the blob store. M5 (plan §10.5): an
+// online boot refreshes it EVERY boot (it is ~1.6 KB) so serial drift is
+// seen on the next start; a failure falls back to the cached copy with a
+// warning (never fatal when the cache suffices). A local --product file
+// always wins, and offline runs only download when the file is missing.
 static bool vfs_boot_product_fetch()
 {
-    if (fs_path_exists(s_params.product_file))
-        return true;
+    if (!vfs_product_file_defaulted && fs_path_exists(s_params.product_file))
+        return true; // explicit local product: the user owns staleness
+    if (fs_path_exists(s_params.product_file) && s_params.offline)
+        return true; // offline: the cached manifest is the truth
     if (s_params.offline)
     {
         LOG_ERROR("vfs: offline and no product manifest: %s", fs_path_ascii(s_params.product_file));
@@ -875,25 +951,65 @@ static bool vfs_boot_product_fetch()
     }
     LOG_INFO("fetching product manifest: %s", s_params.product_url.c_str());
     std::vector<uint8_t> data;
-    if (!http_get_binary(s_params.product_url.c_str(), data))
+    if (http_get_binary(s_params.product_url.c_str(), data) &&
+        !fs_path_empty(s_params.blobs_dir))
     {
-        LOG_ERROR("vfs: could not download the product manifest");
-        return false;
-    }
-    fs_path_create(s_params.blobs_dir);
-    if (!fs_file_write(fs_path_ascii(s_params.product_file), data))
-    {
+        fs_path_create(s_params.blobs_dir);
+        if (vfs_file_write_atomic(fs_path_ascii(s_params.product_file), data))
+            return true;
         LOG_ERROR("vfs: could not store the product manifest");
-        return false;
     }
-    return true;
+    else
+    {
+        LOG_WARN("vfs: could not download the product manifest");
+    }
+    if (fs_path_exists(s_params.product_file))
+    {
+        LOG_WARN(
+            "vfs: using the cached product manifest: %s", fs_path_ascii(s_params.product_file));
+        return true;
+    }
+    LOG_ERROR("vfs: no product manifest available: %s", fs_path_ascii(s_params.product_file));
+    return false;
+}
+
+// update flow (M5): the store mirrors the remote URL tree, so manifests
+// whose content changed upstream would be shadowed by the cached copies on
+// the next plan build. A serial drift drops every cached manifest (*.mft) -
+// they are small and re-downloadable by definition; part blobs stay (they
+// are content-addressed; the plan diff decides which re-download). Online
+// only: an offline boot could not replace what it deletes.
+static void vfs_purge_cached_manifests()
+{
+    std::vector<fs_path> files;
+    fs_path_list(s_params.blobs_dir, files);
+    size_t purged = 0;
+    for (const auto &file : files)
+    {
+        const astr_t name(fs_path_ascii(file));
+        const size_t len = name.size();
+        if (len < 4 || strcasecmp(name.c_str() + len - 4, ".mft") != 0)
+            continue;
+        fs_del(file);
+        ++purged;
+    }
+    if (purged != 0)
+        LOG_INFO("update: purged %zu cached manifests for re-download", purged);
 }
 
 // plan acquisition for boot: persisted plan when the product serial matches,
 // (re)build otherwise - online through the HTTP manifest seam, offline from
-// the store. Sets the fetch engine's repos either way.
-static bool vfs_boot_plan(VfsPlan &out_plan)
+// the store. On a serial drift the new plan is diffed against the persisted
+// one (M5, §10.5) and the per-asset changes are returned so boot can reset
+// exactly what changed after its state load. Sets the fetch engine's repos
+// either way.
+static bool
+vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, bool *out_drifted)
 {
+    if (out_diff)
+        *out_diff = vfs_plan_diff_result();
+    if (out_drifted)
+        *out_drifted = false;
     if (!vfs_params_dirs_ready())
         return false;
 
@@ -901,15 +1017,25 @@ static bool vfs_boot_plan(VfsPlan &out_plan)
         return false;
 
     const auto plan_path = fs_path_join(s_params.state_dir, "plan.bin");
+    VfsPlan persisted;
     uint64_t serial = 0;
-    if (vfs_plan_load(plan_path, out_plan) &&
-        vfs_product_serial(s_params.product_file, &serial) && serial == out_plan.product_serial)
+    if (vfs_plan_load(plan_path, persisted) && vfs_product_serial(s_params.product_file, &serial))
     {
-        s_plan = out_plan;
-        s_plan_loaded = true;
-        LOG_DEBUG("plan loaded: %s", fs_path_ascii(plan_path));
-        vfs_fetch_set_repos(out_plan.manifest_repo.c_str(), out_plan.file_repo.c_str());
-        return true;
+        if (serial == persisted.product_serial)
+        {
+            s_plan = persisted;
+            s_plan_loaded = true;
+            LOG_DEBUG("plan loaded: %s", fs_path_ascii(plan_path));
+            vfs_fetch_set_repos(persisted.manifest_repo.c_str(), persisted.file_repo.c_str());
+            out_plan = persisted;
+            return true;
+        }
+        LOG_INFO(
+            "plan serial drift: product %" PRIu64 " != plan %" PRIu64,
+            serial,
+            persisted.product_serial);
+        if (out_drifted)
+            *out_drifted = true;
     }
 
     vfs_manifest_params params;
@@ -917,18 +1043,82 @@ static bool vfs_boot_plan(VfsPlan &out_plan)
     params.blobs_dir = s_params.blobs_dir;
     if (!s_params.offline && vfs_fetch_started())
     {
-        // manifest recursion over HTTP (downloads land in the store)
+        // manifest recursion over HTTP (downloads land in the store); the
+        // cached manifests are dropped first so changed content is re-read
+        vfs_purge_cached_manifests();
         params.fetch = vfs_fetch_manifest_fn;
         params.fetch_context = nullptr;
     }
-    if (!vfs_manifest_build(params, out_plan))
+    VfsPlan rebuilt;
+    if (!vfs_manifest_build(params, rebuilt))
+    {
+        if (persisted.files.empty())
+            return false;
+        // §11: a failed refresh keeps the existing cache usable - fall back
+        // to the persisted plan instead of failing the boot
+        LOG_WARN("update: plan refresh failed, keeping the persisted plan");
+        s_plan = persisted;
+        s_plan_loaded = true;
+        vfs_fetch_set_repos(persisted.manifest_repo.c_str(), persisted.file_repo.c_str());
+        out_plan = persisted;
+        if (out_drifted)
+            *out_drifted = false; // nothing was diffed or applied
+        return true;
+    }
+    if (!persisted.files.empty())
+    {
+        // §10.5: only what actually changed re-fetches; a re-signed manifest
+        // with identical content logs "no differences" and keeps the install
+        if (out_diff)
+            vfs_plan_diff(persisted, rebuilt, out_diff);
+    }
+    if (!vfs_plan_save(plan_path, rebuilt))
         return false;
-    if (!vfs_plan_save(plan_path, out_plan))
-        return false;
-    s_plan = out_plan;
+    s_plan = rebuilt;
     s_plan_loaded = true;
-    vfs_fetch_set_repos(out_plan.manifest_repo.c_str(), out_plan.file_repo.c_str());
+    vfs_fetch_set_repos(rebuilt.manifest_repo.c_str(), rebuilt.file_repo.c_str());
+    out_plan = rebuilt;
     return true;
+}
+
+// applies a plan diff to the freshly loaded state DB (M5): changed assets
+// reset to pending (journal 'R'), their pack block is invalidated (the hole
+// re-opens, the file loses its sealed status) and their cached blob is
+// dropped so the tiers re-fetch it. New-plan assets are pending already;
+// removed ones simply drop out of plan accounting (bytes stay, harmless).
+static void vfs_boot_apply_diff(const VfsPlan &plan, const vfs_plan_diff_result &diff)
+{
+    if (diff.changed.empty() && diff.added.empty() && diff.removed == 0)
+    {
+        LOG_INFO("update: new serial, no differences");
+        return;
+    }
+    LOG_INFO(
+        "update: %zu changed, %zu new, %zu removed assets",
+        diff.changed.size(),
+        diff.added.size(),
+        diff.removed);
+
+    vfs_store_params store_params;
+    store_params.blobs_dir = s_params.blobs_dir;
+    store_params.install_dir = s_params.install_dir;
+    store_params.state_dir = s_params.state_dir;
+    for (const auto &item : diff.changed)
+    {
+        if (item.file_index >= plan.files.size())
+            continue;
+        const auto &file = plan.files[item.file_index];
+        if (item.asset_index >= file.assets.size())
+            continue;
+        const auto &asset = file.assets[item.asset_index];
+        const size_t gi = vfs_state_base_index(plan, item.file_index) + item.asset_index;
+        if (gi < s_states.size())
+            s_states[gi] = vfs_pending;
+        vfs_journal_mark(s_journal, {'R', item.file_index, item.asset_index});
+        vfs_store_invalidate_asset(plan, store_params, item.file_index, item.asset_index);
+        // the blob tail is content-addressed: a changed asset re-downloads it
+        fs_del(fs_path_join(s_params.blobs_dir, asset.blob));
+    }
 }
 
 // the background tier: T1 fetch (ordered) + materialize in chunks; runs until
@@ -1004,7 +1194,9 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         progress(0.0f, "manifests");
 
     VfsPlan plan;
-    if (!vfs_boot_plan(plan))
+    vfs_plan_diff_result diff;
+    bool drifted = false;
+    if (!vfs_boot_plan(plan, &diff, &drifted))
     {
         vfs_fetch_stop();
         return false;
@@ -1020,6 +1212,24 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         std::vector<vfs_journal_record> records;
         vfs_journal_replay(fs_path_join(s_params.state_dir, "journal.log"), records);
         vfs_state_apply_journal(plan, records, s_states);
+        // the journal opens before the diff application: the update resets
+        // ('R') must be journalled durably, not lost with a closed handle
+        if (!vfs_journal_open(s_journal, fs_path_join(s_params.state_dir, "journal.log")))
+        {
+            vfs_fetch_stop();
+            return false;
+        }
+        // §10.5 update flow: reset exactly what changed (state + pack hole
+        // + cached blob) before reconcile sees the fresh plan. Gated on the
+        // diff itself: it is computed whenever a persisted plan exists
+        // (drifted or not), and a real diff must apply either way. `drifted`
+        // stays as log context only.
+        const bool diff_nonempty =
+            !diff.changed.empty() || !diff.added.empty() || diff.removed != 0;
+        if (diff_nonempty)
+            vfs_boot_apply_diff(plan, diff);
+        else if (drifted)
+            LOG_INFO("update: drifted plan, no differences");
         vfs_reconcile_stats reconcile;
         vfs_state_reconcile(plan, s_params.install_dir, s_states, &reconcile, s_params.blobs_dir);
         if (reconcile.assets_repaired)
@@ -1028,11 +1238,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
                 "reconcile: %zu of %zu assets downgraded to pending",
                 reconcile.assets_repaired,
                 reconcile.assets_checked);
-        }
-        if (!vfs_journal_open(s_journal, fs_path_join(s_params.state_dir, "journal.log")))
-        {
-            vfs_fetch_stop();
-            return false;
         }
     }
 
@@ -1181,4 +1386,40 @@ void vfs_boot_wait()
 {
     if (s_background.joinable())
         s_background.join();
+}
+
+// full install (M5, resolved decision #4): queue the blob of every planned
+// asset that is not in the store yet, all tiers (T0..T3), and wait. The
+// thin xuoi --full driver runs this after a boot, then materializes.
+// Nothing to fetch is success regardless of the network: a complete store
+// works offline (zero requests), while offline + a missing blob fails.
+bool vfs_fetch_all(void (*progress)(float done01, const char *label))
+{
+    if (!vfs_enabled() || !vfs_plan_ready())
+        return false;
+    std::vector<astr_t> tails;
+    std::vector<uint64_t> sizes;
+    size_t total = 0;
+    {
+        std::unique_lock<std::mutex> lock(s_state_mutex);
+        for (const auto &file : s_plan.files)
+        {
+            for (const auto &asset : file.assets)
+            {
+                ++total;
+                if (vfs_asset_is_hole(asset))
+                    continue;
+                if (fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
+                    continue; // cached: the materialize pass converges it
+                tails.push_back(asset.blob);
+                sizes.push_back(asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl));
+            }
+        }
+    }
+    LOG_INFO("fetch-all: %zu of %zu assets to download", tails.size(), total);
+    if (tails.empty())
+        return true;
+    if (s_params.offline || !vfs_fetch_started())
+        return false;
+    return vfs_fetch_batch(tails, sizes, 1, false, progress);
 }

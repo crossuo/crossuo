@@ -60,7 +60,8 @@ bool vfs_state_load(const fs_path &path, size_t asset_count, std::vector<uint8_t
 struct vfs_journal_record
 {
     char op = 0; // 'F': asset fetched (block written), 'S': file sealed,
-                 // 'B': asset served from a stub payload (M4)
+                 // 'B': asset served from a stub payload (M4),
+                 // 'R': asset reset to pending (M5 update/diff re-plan)
     uint32_t file_index = 0;
     uint32_t asset_index = 0;
 };
@@ -79,7 +80,10 @@ bool vfs_journal_mark(vfs_journal &journal, const vfs_journal_record &record);
 bool vfs_journal_replay(const fs_path &path, std::vector<vfs_journal_record> &out);
 
 // applies fetched journal records on top of the given states; out of range
-// records (stale or corrupted journal) are ignored
+// records (stale or corrupted journal) are ignored. 'F' marks fetched, 'B'
+// marks a stub serve (never over fetched), 'R' resets to pending (M5 update
+// flow) - the order is the log order, so a re-fetch after a reset re-marks
+// the asset fetched exactly once
 void vfs_state_apply_journal(
     const VfsPlan &plan,
     const std::vector<vfs_journal_record> &records,

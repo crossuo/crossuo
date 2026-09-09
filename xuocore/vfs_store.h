@@ -58,6 +58,10 @@ struct vfs_verify_asset
     uint64_t uop_hash = 0;
     astr_t name;                    // loose-file name ("" for pack parts)
     uint8_t status = vfs_verify_ok; // vfs_verify_status
+    // M5: the state DB says the mapped bytes are a §6.7 placeholder payload.
+    // Reported as vfs_verify_missing_block (the placeholder never counts as
+    // present *or* corrupt) with this flag set so tools can label it "stub"
+    bool stubbed = false;
 };
 
 struct vfs_verify_file
@@ -122,6 +126,17 @@ bool vfs_store_materialize(
 // blocking tier, valid-but-unfetched (plan §7.2, §7.3).
 bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params);
 
+// true when the loose file at `path` holds the asset's real payload: the
+// leading bytes must match the blob (decompressed for zlib assets) when the
+// store root is known. This is what separates a real block from the untouched
+// boot skeleton - a sparse file of the right size with no content - so a
+// freshly sized skeleton never promotes to fetched once its blob arrives
+// (M5 full-install convergence).
+bool vfs_store_loose_asset_content_ok(
+    const fs_path &path,
+    const VfsAsset &asset,
+    const fs_path &blobs_dir);
+
 // on-disk truth check for one pack asset (shared with the state reconcile
 // and the trap's boot presence). `blobs_dir` opts into the reconcile-grade
 // strictness (see the implementation): ct==0 stub patches only separate from
@@ -160,6 +175,31 @@ bool vfs_store_rematerialize_asset(
     uint32_t file_index,
     uint32_t asset_index);
 
+// update flow (M5, plan §10.5): re-opens the hole of one pack asset - the
+// on-disk entry keeps the plan's fields but Offset goes back to 0, so every
+// presence check (reconcile, verify, trap) reports the block absent and the
+// normal paths re-fetch/re-write it. Loose assets are invalidated by
+// deleting the file (the skeleton re-sizes it). The caller resets the state
+// byte and journals the reset; this only touches the materialized file.
+bool vfs_store_invalidate_asset(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    uint32_t file_index,
+    uint32_t asset_index);
+
+// true when the filesystem holding `probe_path`'s directory grows files
+// sparsely (a freshly truncated file occupies far fewer blocks than its
+// size). Fat/exFAT report full allocation - the install then really
+// preallocates every planned byte, which the store warns about once.
+bool vfs_store_fs_supports_sparse(const fs_path &probe_dir);
+
 // full verify pass over the plan; returns the number of corrupt assets (0
-// when clean) and fills `out` (optional) with the per-asset details
-int vfs_store_verify(const VfsPlan &plan, const vfs_store_params &params, vfs_verify_result *out);
+// when clean) and fills `out` (optional) with the per-asset details.
+// `states` (optional, plan-ordered state DB bytes) makes the pass stub-aware:
+// assets the DB marks vfs_stubbed report missing-block + the stubbed flag
+// instead of corrupt (their on-disk entry is a §6.7 placeholder patch)
+int vfs_store_verify(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    vfs_verify_result *out,
+    const std::vector<uint8_t> *states = nullptr);

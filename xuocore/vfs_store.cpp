@@ -10,6 +10,9 @@
 
 #if !defined(XUO_WINDOWS)
 #include <unistd.h> // ftruncate
+#include <sys/stat.h>
+#else
+#include <windows.h>
 #endif
 
 #include <vector>
@@ -182,6 +185,60 @@ static bool vfs_store_pack_recreate_needed(
                             header.Magic == MYP_MAGIC && header.Signature == fingerprint;
     fclose(probe);
     return !compatible;
+}
+
+// ---------------------------------------------------------------------------
+// sparse-filesystem probe (M5, plan §12 deviation): the planned-offset layout
+// depends on the filesystem growing files sparsely. On fat/exFAT every
+// planned byte is really preallocated; detected once after the first pack is
+// created (st_blocks probe / windows attribute) and warned about loudly.
+// The §12 append-layout fallback is deliberately NOT implemented - the trap
+// depends on static planned offsets; see docs/NOTES.md (M5).
+// ---------------------------------------------------------------------------
+
+static bool vfs_store_sparse_checked = false;
+static bool vfs_store_sparse_ok = true;
+
+bool vfs_store_fs_supports_sparse(const fs_path &probe_dir)
+{
+    if (fs_path_empty(probe_dir))
+        return true;
+    fs_path_create(probe_dir);
+    const auto probe = fs_path_join(probe_dir, ".vfs_sparse_probe");
+    FILE *fp = fopen(fs_path_ascii(probe), "wb");
+    if (!fp)
+        return true; // cannot probe: assume the best, the write path fails loudly anyway
+    const bool sized = vfs_file_truncate(fp, 1 << 20); // 1 MB hole
+    fclose(fp);
+    bool sparse = true;
+    if (sized)
+    {
+#if defined(XUO_WINDOWS)
+        const DWORD attrs = GetFileAttributesA(fs_path_ascii(probe));
+        sparse = attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_SPARSE_FILE) != 0;
+#else
+        struct stat st;
+        sparse = stat(fs_path_ascii(probe), &st) != 0 ||
+                 uint64_t(st.st_blocks) * 512 < uint64_t(st.st_size);
+#endif
+    }
+    fs_del(probe);
+    return sparse;
+}
+
+// probes once per process and warns loudly when the install would really
+// preallocate its planned bytes
+static void vfs_store_check_sparse(uint64_t planned_bytes, const fs_path &dir)
+{
+    if (vfs_store_sparse_checked)
+        return;
+    vfs_store_sparse_checked = true;
+    vfs_store_sparse_ok = vfs_store_fs_supports_sparse(dir);
+    if (!vfs_store_sparse_ok)
+        LOG_WARN(
+            "filesystem does not support sparse files; up to %" PRIu64
+            " MB will be preallocated",
+            planned_bytes / (1024 * 1024));
 }
 
 // opens the pack for block writes; creates the full header + section + entry
@@ -462,6 +519,15 @@ static void vfs_store_seal(vfs_store_context &ctx)
     }
 }
 
+// total planned bytes of a plan (pack tables + blocks + loose payloads)
+static uint64_t vfs_store_planned_bytes(const VfsPlan &plan)
+{
+    uint64_t total = 0;
+    for (const auto &file : plan.files)
+        total += file.size;
+    return total;
+}
+
 bool vfs_store_materialize(
     const VfsPlan &plan,
     const vfs_store_params &params,
@@ -477,6 +543,8 @@ bool vfs_store_materialize(
     ctx.states = &states;
     ctx.journal = journal;
     ctx.stats = &run;
+
+    vfs_store_check_sparse(vfs_store_planned_bytes(plan), params.install_dir);
 
     // the caller may hand us a fresh vector; the plan fixes the size
     states.resize(vfs_state_asset_count(plan), vfs_pending);
@@ -584,6 +652,7 @@ static bool vfs_store_loose_prepare(const vfs_store_params &params, const VfsAss
 bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params)
 {
     fs_path_create(params.install_dir);
+    vfs_store_check_sparse(vfs_store_planned_bytes(plan), params.install_dir);
     bool ok = true;
     for (const auto &file : plan.files)
     {
@@ -608,6 +677,56 @@ bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params)
             ok = vfs_store_loose_prepare(params, file.assets[0]) && ok;
         }
     }
+    return ok;
+}
+
+// ---------------------------------------------------------------------------
+// update flow (M5, plan §10.5): invalidate one asset's materialized bytes
+// ---------------------------------------------------------------------------
+
+bool vfs_store_invalidate_asset(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    uint32_t file_index,
+    uint32_t asset_index)
+{
+    if (file_index >= plan.files.size())
+        return false;
+    const auto &file = plan.files[file_index];
+    if (asset_index >= file.assets.size())
+        return false;
+    const auto &asset = file.assets[asset_index];
+    if (vfs_asset_is_hole(asset))
+        return true; // nothing materialized, nothing to invalidate
+
+    if (!file.is_uop)
+    {
+        // loose files have no partial on-disk state: the whole payload is the
+        // file, so it goes away entirely (re-skeletonized by prepare/write)
+        const auto path = fs_path_join(params.install_dir, asset.name);
+        fs_del(path);
+        return !fs_path_exists(path);
+    }
+
+    const uint32_t compressed = asset.ct == 0 ? uint32_t(asset.ul) : uint32_t(asset.cl);
+    UopFileEntry entry;
+    entry.Offset = 0; // the hole re-opens: UopLoadFile skips the entry again
+    entry.MetadataSize = asset.ml;
+    entry.CompressedSize = compressed;
+    entry.DecompressedSize = uint32_t(asset.ul);
+    entry.Hash = asset.uop_hash;
+    entry.Checksum = asset.mc;
+    entry.Flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
+    const auto path = fs_path_join(params.install_dir, file.name);
+    FILE *fp = fopen(fs_path_ascii(path), "r+b");
+    if (!fp)
+        return !fs_path_exists(path); // a missing file is already invalid
+    const bool ok =
+        vfs_file_write_at(fp, vfs_store_table_pos(asset_index), &entry, sizeof(entry)) &&
+        fflush(fp) == 0;
+    fclose(fp);
+    if (!ok)
+        LOG_ERROR("could not invalidate block %u of %s", asset_index, file.name.c_str());
     return ok;
 }
 
@@ -640,10 +759,15 @@ static uint8_t vfs_verify_pack_asset(
     uint64_t file_size,
     size_t asset_index,
     const VfsAsset &asset,
+    bool stubbed,
     std::vector<uint8_t> &scratch)
 {
     if (vfs_asset_is_hole(asset))
         return vfs_verify_ok;
+    // the state DB is the stub truth (M4): a placeholder patch reads as a
+    // missing block (never corrupt) and the file stays unsealed
+    if (stubbed)
+        return vfs_verify_missing_block;
 
     if (!start || file_size < vfs_store_table_pos(asset_index) + sizeof(UopFileEntry))
         return vfs_store_blob_exists(params, asset) ? vfs_verify_missing_block :
@@ -675,11 +799,16 @@ static uint8_t vfs_verify_pack_asset(
 }
 
 static uint8_t vfs_verify_loose_asset(
-    const vfs_store_params &params, const VfsAsset &asset, std::vector<uint8_t> &scratch)
+    const vfs_store_params &params,
+    const VfsAsset &asset,
+    bool stubbed,
+    std::vector<uint8_t> &scratch)
 {
     (void)scratch;
     if (vfs_asset_is_hole(asset))
         return vfs_verify_ok;
+    if (stubbed) // the whole-file placeholder serve (zeros) - not corrupt
+        return vfs_verify_missing_block;
 
     const auto path = fs_path_join(params.install_dir, asset.name);
     FILE *fp = fopen(fs_path_ascii(path), "rb");
@@ -783,10 +912,61 @@ bool vfs_store_pack_asset_present(
            memcmp(start + entry.Offset + entry.MetadataSize, blob_head, head) == 0;
 }
 
-int vfs_store_verify(const VfsPlan &plan, const vfs_store_params &params, vfs_verify_result *out)
+// head bytes compared between the on-disk payload and the (decompressed)
+// blob; full content verification is verify's job, this is the cheap
+// reconcile-grade check
+#define VFS_LOOSE_HEAD_BYTES 64
+
+bool vfs_store_loose_asset_content_ok(
+    const fs_path &path,
+    const VfsAsset &asset,
+    const fs_path &blobs_dir)
+{
+    if (fs_path_empty(blobs_dir) || vfs_asset_is_hole(asset))
+        return true; // no store root: presence cannot be content-checked
+    FILE *fp = fopen(fs_path_ascii(path), "rb");
+    if (!fp)
+        return false;
+    uint8_t disk_head[VFS_LOOSE_HEAD_BYTES] = {};
+    const size_t want = size_t(asset.ul < VFS_LOOSE_HEAD_BYTES ? asset.ul : VFS_LOOSE_HEAD_BYTES);
+    const size_t got = want ? uint32_t(fread(disk_head, 1, want, fp)) : 0;
+    fclose(fp);
+    if (got != want)
+        return false;
+
+    std::vector<uint8_t> blob;
+    if (vfs_store_read_blob(blobs_dir, asset, blob) != 0)
+        return false; // a missing (or wrong-sized) blob never proves presence
+    if (asset.ct == 0)
+        return memcmp(disk_head, blob.data(), want) == 0;
+
+    // zlib: inflate just the head bytes of the payload
+    std::vector<uint8_t> head(want, 0);
+    z_stream zs = {};
+    if (inflateInit(&zs) != Z_OK)
+        return false;
+    zs.next_in = const_cast<Bytef *>(blob.data());
+    zs.avail_in = uint32_t(blob.size());
+    zs.next_out = head.data();
+    zs.avail_out = uint32_t(want);
+    const int res = inflate(&zs, Z_FINISH);
+    inflateEnd(&zs);
+    if (res != Z_STREAM_END && res != Z_OK && res != Z_BUF_ERROR)
+        return false;
+    if (zs.total_out < want)
+        return false;
+    return memcmp(disk_head, head.data(), want) == 0;
+}
+
+int vfs_store_verify(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    vfs_verify_result *out,
+    const std::vector<uint8_t> *states)
 {
     vfs_verify_result result;
     int corrupt = 0;
+    size_t global_index = 0;
     for (const auto &file : plan.files)
     {
         vfs_verify_file vf;
@@ -807,13 +987,18 @@ int vfs_store_verify(const VfsPlan &plan, const vfs_store_params &params, vfs_ve
         for (size_t ai = 0; ai < file.assets.size(); ++ai)
         {
             const auto &asset = file.assets[ai];
+            const bool stubbed =
+                states != nullptr && global_index < states->size() &&
+                (*states)[global_index] == vfs_stubbed;
             std::vector<uint8_t> scratch;
             vfs_verify_asset va;
             va.uop_hash = asset.uop_hash;
             va.name = asset.name;
+            va.stubbed = stubbed;
             va.status = file.is_uop ?
-                            vfs_verify_pack_asset(params, mapped, mapped_size, ai, asset, scratch) :
-                            vfs_verify_loose_asset(params, asset, scratch);
+                            vfs_verify_pack_asset(
+                                params, mapped, mapped_size, ai, asset, stubbed, scratch) :
+                            vfs_verify_loose_asset(params, asset, stubbed, scratch);
             ++vf.counts[va.status];
             if (va.status == vfs_verify_corrupt)
             {
@@ -821,6 +1006,7 @@ int vfs_store_verify(const VfsPlan &plan, const vfs_store_params &params, vfs_ve
                 result.corrupted = true;
             }
             vf.assets.emplace_back(va);
+            ++global_index;
         }
         if (mapped)
             fs_unmap(const_cast<unsigned char *>(mapped), map_size);

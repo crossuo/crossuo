@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <map>
+#include <vector>
 #include <external/popts.h>
 #include <xuocore/http.h>
 #include <xuocore/mft.h>
@@ -20,6 +22,13 @@
 static po::parser s_cli;
 
 static const char *VUOI_VERIFY_STATUS_NAME[] = { "OK", "MISSING-BLOB", "MISSING-BLOCK", "CORRUPT" };
+
+// per-asset label: a state-DB stub reports missing-block (the bucket), but
+// the flag upgrades the printed label so placeholders are visible as such
+static const char *vuoi_verify_label(const vfs_verify_asset &asset)
+{
+    return asset.stubbed ? "STUB" : VUOI_VERIFY_STATUS_NAME[asset.status];
+}
 
 static bool init_cli(int argc, char *argv[])
 {
@@ -41,6 +50,9 @@ static bool init_cli(int argc, char *argv[])
         "streaming: record asset accesses to <file.csv>");
     s_cli["streaming-record-scenario"].type(po::string).description(
         "streaming recorder scenario name");
+    s_cli["embed-record"].type(po::string).description(
+        "deployment (§7.5): convert a recorded CSV into a"
+        " vfs_manifest_embedded.cpp table on stdout");
     s_cli["blobs"]
         .abbreviation('b')
         .type(po::string)
@@ -142,13 +154,9 @@ static int vuoi_verify()
             if (asset.status != vfs_verify_ok)
             {
                 if (!asset.name.empty())
-                    printf(
-                        "    %s: %s\n", asset.name.c_str(), VUOI_VERIFY_STATUS_NAME[asset.status]);
+                    printf("    %s: %s\n", asset.name.c_str(), vuoi_verify_label(asset));
                 else
-                    printf(
-                        "    %016" PRIx64 ": %s\n",
-                        asset.uop_hash,
-                        VUOI_VERIFY_STATUS_NAME[asset.status]);
+                    printf("    %016" PRIx64 ": %s\n", asset.uop_hash, vuoi_verify_label(asset));
             }
         }
     }
@@ -158,6 +166,145 @@ static int vuoi_verify()
         result.files.size(),
         corrupt);
     return corrupt > 0 ? -int(mft_decompress_error) : 0;
+}
+
+// ---------------------------------------------------------------------------
+// --embed-record (M5, plan §7.5 deployment step): converts a recorder CSV
+// (hash,pack,ul,tier_hint,first_access_ms,scenario) into the generated
+// vfs_manifest_embedded.cpp - the table the client compiles in as its T1
+// order. Recorded order is preserved; malformed/duplicate hashes are skipped
+// with a warning (stale or unknown entries can only cost extra T2 faults).
+// ---------------------------------------------------------------------------
+
+struct vuoi_embedded_entry
+{
+    uint64_t hash = 0;
+    astr_t pack; // pack name (hash != 0) or the loose-file name (hash == 0)
+};
+
+// one RFC4180 field from the current line position; unquotes as needed
+static astr_t vuoi_csv_field(const char **cursor)
+{
+    const char *p = *cursor;
+    astr_t field;
+    if (*p == '"')
+    {
+        ++p;
+        while (*p != '\0')
+        {
+            if (*p == '"')
+            {
+                if (p[1] == '"')
+                {
+                    field += '"';
+                    p += 2;
+                    continue;
+                }
+                ++p;
+                break;
+            }
+            field += *p++;
+        }
+    }
+    else
+    {
+        while (*p != '\0' && *p != ',' && *p != '\n' && *p != '\r')
+            field += *p++;
+    }
+    if (*p == ',')
+        ++p;
+    *cursor = p;
+    return field;
+}
+
+static int vuoi_embed_record()
+{
+    const auto path = fs_path_from(s_cli["embed-record"].get().string.c_str());
+    FILE *fp = fopen(fs_path_ascii(path), "rb");
+    if (!fp)
+    {
+        fprintf(stderr, "embed-record: could not open %s\n", fs_path_ascii(path));
+        return -int(mft_could_not_open_path);
+    }
+    std::vector<uint8_t> data;
+    char buf[4096];
+    size_t got = 0;
+    while ((got = fread(buf, 1, sizeof(buf), fp)) > 0)
+        data.insert(data.end(), buf, buf + got);
+    fclose(fp);
+    astr_t csv(data.begin(), data.end());
+
+    std::vector<vuoi_embedded_entry> entries;
+    std::map<astr_t, bool> seen;
+    size_t skipped = 0;
+    size_t line_no = 0;
+    size_t pos = 0;
+    while (pos <= csv.size())
+    {
+        const size_t eol = csv.find('\n', pos);
+        const astr_t line =
+            csv.substr(pos, eol == astr_t::npos ? astr_t::npos : eol - pos);
+        pos = eol == astr_t::npos ? csv.size() + 1 : eol + 1;
+        ++line_no;
+        if (line.empty())
+            continue; // blank line: skip, do not stop the parse
+        const char *cursor = line.c_str();
+        const astr_t hash_text = vuoi_csv_field(&cursor);
+        const astr_t pack = vuoi_csv_field(&cursor);
+        if (line_no == 1 && hash_text == "hash")
+            continue; // header
+        if (hash_text.empty() && pack.empty())
+            continue;
+        uint64_t hash = 0;
+        char *end = nullptr;
+        hash = strtoull(hash_text.c_str(), &end, 16);
+        if (end == nullptr || *end != '\0')
+        {
+            fprintf(stderr, "embed-record: line %zu: bad hash \"%s\", skipped\n",
+                    line_no, hash_text.c_str());
+            ++skipped;
+            continue;
+        }
+        // identity: packs by hash, loose files by name
+        const astr_t key = hash != 0 ? astr_t("p/") + pack + "/" + hash_text
+                                     : astr_t("l/") + pack;
+        if (seen.find(key) != seen.end())
+        {
+            fprintf(stderr, "embed-record: line %zu: duplicate %s, skipped\n",
+                    line_no, key.c_str() + 2);
+            ++skipped;
+            continue;
+        }
+        seen[key] = true;
+        entries.push_back({ hash, pack });
+    }
+
+    printf("// SPDX-License-Identifier: AGPL-3.0-or-later\n");
+    printf("// SPDX-FileCopyrightText: 2026 CrossUO Team\n");
+    printf("\n");
+    printf("// vfs_manifest_embedded: GENERATED by vuoi --embed-record (§7.5)\n");
+    printf("// from a recorded run; %zu entries in first-access order.\n", entries.size());
+    printf("// Stale lists only reorder T1 - they can never break correctness.\n");
+    printf("\n");
+    printf("#include \"vfs_manifest.h\"\n");
+    printf("\n");
+    printf("static const std::vector<vfs_embedded_entry> s_entries = {\n");
+    for (const auto &entry : entries)
+    {
+        if (entry.hash != 0)
+            printf("    { 0x%016llx, \"%s\", \"\" },\n",
+                   (unsigned long long)entry.hash, entry.pack.c_str());
+        else
+            printf("    { 0, \"\", \"%s\" },\n", entry.pack.c_str());
+    }
+    printf("};\n");
+    printf("\n");
+    printf("const std::vector<vfs_embedded_entry> &vfs_manifest_embedded()\n");
+    printf("{\n");
+    printf("    return s_entries;\n");
+    printf("}\n");
+    fprintf(stderr, "embed-record: %zu entries, %zu skipped\n", entries.size(), skipped);
+    return 0;
 }
 
 static int vuoi_streaming_fetch()
@@ -220,6 +367,8 @@ int main(int argc, char **argv)
 
     const bool vfs_mode =
         s_cli["plan"].was_set() || s_cli["materialize"].was_set() || s_cli["verify"].was_set();
+    if (s_cli["embed-record"].was_set())
+        return vuoi_embed_record();
     if (s_cli["streaming-fetch"].was_set())
         return vuoi_streaming_fetch();
     if (!vfs_mode)

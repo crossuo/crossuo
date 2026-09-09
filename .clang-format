@@ -36,7 +36,6 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: false
 Cpp11BracedListStyle: false
 DerivePointerAlignment: false
 DisableFormat: false
-BinPackParameters: false
 ExperimentalAutoDetectBinPacking: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: Inner

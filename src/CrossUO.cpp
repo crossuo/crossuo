@@ -125,6 +125,7 @@
 #include "Gumps/GumpMenu.h"
 #include "Gumps/GumpMenubar.h"
 #include "Gumps/GumpMinimap.h"
+#include "Gumps/GumpVfsStatus.h"
 #include "Gumps/GumpNotify.h"
 #include "Gumps/GumpOptions.h"
 #include "Gumps/GumpPaperdoll.h"
@@ -1150,6 +1151,7 @@ void CGame::Process(bool rendering)
             g_CurrentScreen->PrepareContent();
             CGump::ProcessListing();
             g_CurrentScreen->Render();
+            CGumpVfsStatus::Draw(); // streamed-install HUD (M5, §11)
         }
     }
 

@@ -477,3 +477,67 @@ VFS_TEST(store_backend_sparse)
 
     delete backend;
 }
+
+// ---------------------------------------------------------------------------
+// the reconcile-grade loose content check (M5)
+// ---------------------------------------------------------------------------
+
+static const VfsAsset *find_loose_asset(const VfsPlan &plan, const char *name)
+{
+    for (const auto &file : plan.files)
+    {
+        if (!file.is_uop && file.name == name && !file.assets.empty())
+            return &file.assets[0];
+    }
+    return nullptr;
+}
+
+// direct test of the cheap reconcile-grade presence check for loose files:
+// head compare (ct=0) or bounded inflate (ct=1) against the store blob;
+// a missing blob or a short file never proves presence
+VFS_TEST(store_loose_content_check)
+{
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "store_loose_ok")); // ct=0 + ct=1 loose files
+
+    vfs_manifest_params manifest_params;
+    manifest_params.product_file = fs_path_join(prod.root, "prod.xml");
+    manifest_params.blobs_dir = prod.blobs;
+    VfsPlan plan;
+    TEST_CHECK(vfs_manifest_build(manifest_params, plan));
+
+    const auto *raw = find_loose_asset(plan, "tiledata.mul");
+    const auto *packed = find_loose_asset(plan, "Music/Digital/Britainpos.mp3");
+    TEST_CHECK_MSG(raw != nullptr && packed != nullptr, "both loose assets must be planned");
+    TEST_CHECK(raw->ct == 0 && packed->ct == 1);
+
+    const auto raw_path = fs_path_join(prod.install, "tiledata.mul");
+    const auto packed_path = fs_path_join(prod.install, "Music/Digital/Britainpos.mp3");
+
+    // ct=0: a matching head passes, one flipped head byte fails
+    TEST_CHECK(test_write_file(raw_path, prod.loose[0].payload));
+    TEST_CHECK(vfs_store_loose_asset_content_ok(raw_path, *raw, prod.blobs));
+    std::vector<uint8_t> flipped = prod.loose[0].payload;
+    flipped[0] ^= 0xff;
+    TEST_CHECK(test_write_file(raw_path, flipped));
+    TEST_CHECK(!vfs_store_loose_asset_content_ok(raw_path, *raw, prod.blobs));
+
+    // ct=1: the blob inflates (just the head bytes) to the file's head
+    TEST_CHECK(test_write_file(packed_path, prod.loose[1].payload));
+    TEST_CHECK(vfs_store_loose_asset_content_ok(packed_path, *packed, prod.blobs));
+    flipped = prod.loose[1].payload;
+    flipped[7] ^= 0xff; // inside the compared head window
+    TEST_CHECK(test_write_file(packed_path, flipped));
+    TEST_CHECK(!vfs_store_loose_asset_content_ok(packed_path, *packed, prod.blobs));
+
+    // a missing blob never proves presence, even over a correct file
+    TEST_CHECK(test_write_file(raw_path, prod.loose[0].payload));
+    test_product_remove_blob(prod, prod.loose[0].blob_rel);
+    TEST_CHECK(!vfs_store_loose_asset_content_ok(raw_path, *raw, prod.blobs));
+
+    // a short file cannot supply the compared head bytes
+    const std::vector<uint8_t> short_file(
+        prod.loose[1].payload.begin(), prod.loose[1].payload.begin() + 8);
+    TEST_CHECK(test_write_file(packed_path, short_file));
+    TEST_CHECK(!vfs_store_loose_asset_content_ok(packed_path, *packed, prod.blobs));
+}

@@ -64,6 +64,17 @@ void vfs_trap_set_backend(const vfs_trap_backend &backend);
 // faults block on the fetch and stubs are only served on failure.
 void vfs_trap_set_zerolat(bool zerolat);
 
+// enables/disables hole protection for NEW mappings (see above); mappings
+// made while it was on keep their protection. On by default.
+//
+// M5 escape hatch (--streaming-trap=off, plan §15): managed files map
+// WITHOUT hole protection - pointer reads of holes return the sparse file's
+// zeros instead of faulting, and no fault handler is installed at all.
+// vfs_ensure_range still resolves ranges on demand and the demand tier still
+// heals; stub payloads are never served (pages are readable). Trap-off wins
+// over zerolat for mapping.
+void vfs_trap_set_traps(bool enabled);
+
 struct vfs_trap_stats
 {
     uint64_t faults = 0;     // handled faulting accesses inside managed ranges
