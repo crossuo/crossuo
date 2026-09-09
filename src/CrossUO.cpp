@@ -42,6 +42,7 @@
 #include <xuocore/commoninterfaces.h>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
+#include <xuocore/vfs.h>
 #include <common/utils.h>
 
 #include "Walker/Walker.h"
@@ -336,6 +337,21 @@ bool CGame::Install()
     LoadAutoLoginNames();
 
     Info(Client, "loading files");
+    if (vfs_enabled() && !vfs_boot([](float done01, const char *label) {
+            Info(Client, "streaming: %3d%% (%s)", int(done01 * 100.0f), label);
+        }))
+    {
+        const auto errMsg =
+            astr_t("The streamed data installation failed.\n"
+                   "Check the log for details (missing core files or an\n"
+                   "unreachable patch server) and try again - already\n"
+                   "downloaded data is kept for the next attempt.\nStreaming dir: ") +
+            vfs_install_path();
+        g_GameWindow.ShowMessage(errMsg, "Streaming install");
+        Error(Client, "%s", errMsg.c_str());
+        vfs_shutdown();
+        return false;
+    }
     if (!g_FileManager.Load())
     {
         auto errMsg =
@@ -610,6 +626,7 @@ void CGame::Uninstall()
 
     g_SoundManager.Free();
     g_FileManager.Unload();
+    vfs_shutdown(); // no-op when streaming is disabled
     g_LightBuffer.Free();
 
 #ifndef NEW_RENDERER_ENABLED

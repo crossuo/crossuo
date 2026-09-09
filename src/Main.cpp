@@ -18,6 +18,7 @@
 #include <external/process.h>
 #include <xuocore/client_info.h>
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h>
 #include <common/logging/logging.h>
 #include "Managers/ConfigManager.h"
 #include "Managers/ConnectionManager.h"
@@ -81,6 +82,19 @@ static bool InitCli(int argc, char *argv[])
 
     // vars
     g_cli["DisableRenderGame"].description("disable game canvas rendering");
+
+    // streamed install (VUOI plan §7.1); typed so both --streaming and
+    // --streaming=<dir> parse (empty value = the default streaming dir)
+    g_cli["streaming"].type(po::string).description(
+        "streamed install mode, optional value = install dir");
+    g_cli["streaming-offline"].description(
+        "streaming: never hit the network, cache only");
+    g_cli["streaming-workers"].type(po::u32).description(
+        "streaming: download workers (default cpu-1, max 8)");
+    g_cli["streaming-record"].type(po::string).description(
+        "streaming: record asset accesses to <file.csv>");
+    g_cli["streaming-record-scenario"].type(po::string).description(
+        "streaming recorder scenario name");
 
     g_cli["config"]
         .abbreviation('c')
@@ -425,6 +439,32 @@ int main(int argc, char **argv)
     if (!InitCli(argc, argv))
     {
         return 0;
+    }
+
+    // streamed install: flags -> vfs params (plan §7.1); the data root used
+    // by uo_data_init switches to the streaming dir (src/Config.cpp)
+    if (g_cli["streaming"].was_set())
+    {
+        vfs_params params;
+        params.enabled = true;
+        params.offline = g_cli["streaming-offline"].was_set();
+        if (g_cli["streaming-workers"].was_set())
+            params.workers = g_cli["streaming-workers"].get().u32;
+        auto dir = g_cli["streaming"].get().string;
+        if (dir.empty())
+            dir = fs_path_ascii(g_App.FilePath("streamed"));
+        params.install_dir = fs_path_from(dir.c_str());
+        // cache (blob store + state db) lives under the streaming dir
+        params.blobs_dir = fs_path_join(params.install_dir, "cache", "blobs");
+        if (g_cli["streaming-record"].was_set())
+        {
+            params.record_path =
+                fs_path_from(g_cli["streaming-record"].get().string.c_str());
+            if (g_cli["streaming-record-scenario"].was_set())
+                params.record_scenario =
+                    g_cli["streaming-record-scenario"].get().string;
+        }
+        vfs_set_params(params);
     }
 
     LogInit(argc, argv, "crossuo.log");

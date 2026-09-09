@@ -6,6 +6,7 @@
 #include "Globals.h"
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
+#include <xuocore/vfs.h>
 #include <common/logging/logging.h>
 #include <common/fs.h>
 #include <common/str.h>

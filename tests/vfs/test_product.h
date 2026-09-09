@@ -102,7 +102,8 @@ static bool test_write_file(const fs_path &path, const std::vector<uint8_t> &byt
     return true;
 }
 
-// stable temp root that never lands in the repo checkout (see test_uop_parse)
+// stable temp root that never lands in the repo checkout (see test_uop_parse);
+// unique per process so reruns never see a previous run's leftovers
 static fs_path test_temp_root()
 {
 #ifdef _MSC_VER
@@ -119,7 +120,9 @@ static fs_path test_temp_root()
 
 static fs_path test_dir(const char *name)
 {
-    const auto dir = fs_path_join(test_temp_root(), "vfs_tests_tmp", name);
+    char unique[64];
+    snprintf(unique, sizeof(unique), "%s_%u", name, (unsigned)getpid());
+    const auto dir = fs_path_join(test_temp_root(), "vfs_tests_tmp", unique);
     fs_path_create(dir);
     return dir;
 }
@@ -166,6 +169,19 @@ struct test_product_data
     // plan must skip, so they never need blobs)
     std::vector<astr_t> extra_packs; // extra "<p ...>...</p>" in the pack manifest
     std::vector<astr_t> extra_loose; // extra "<f .../>" in the package manifest
+    // valid extra loose files, registered before the manifests are written
+    // (name, ct, uncompressed size); empty in the M1 products
+    struct extra_loose_def
+    {
+        astr_t name;
+        uint32_t ct = 0;
+        size_t size = 0;
+    };
+    std::vector<extra_loose_def> extra_valid_loose;
+    // optional override of the first part's remote-name hash (ph, sh); zero
+    // keeps the generated default. Used to make a part T0 (MainMisc core).
+    uint32_t first_part_ph = 0;
+    uint32_t first_part_sh = 0;
 };
 
 // registers a pack part (and its blob) in the product description
@@ -264,6 +280,7 @@ static void test_clean_outputs(const test_product_data &prod)
         "empty.uop",
         "artLegacyMUL.uop",
         "tiledata.mul",
+        "unifont1.mul",
         "Music/Digital/Britainpos.mp3",
     };
     for (const char *name : files)
@@ -293,12 +310,22 @@ static bool test_build_product(test_product_data &prod, const char *name)
     prod.install = fs_path_join(prod.root, "install");
     test_clean_outputs(prod);
 
-    test_add_part(prod, 0x00000001, 0x11111111, 1, 12, 4096);
+    test_add_part(
+        prod,
+        prod.first_part_ph ? prod.first_part_ph : 0x00000001,
+        prod.first_part_sh ? prod.first_part_sh : 0x11111111,
+        1,
+        12,
+        4096);
     test_add_part(prod, 0x00000002, 0x22222222, 0, 0, 777);
     test_add_part(prod, 0x00000003, 0x33333333, 1, 88, 1000);
     test_add_part(prod, 0x00000004, 0x44444444, 1, 0, 0); // the hole
     test_add_loose(prod, "tiledata.mul", 0, 2048);
     test_add_loose(prod, "Music/Digital/Britainpos.mp3", 1, 3333);
+    for (const auto &extra : prod.extra_valid_loose)
+    {
+        test_add_loose(prod, extra.name.c_str(), extra.ct, extra.size);
+    }
 
     // pack manifest with all parts (including the hole entry)
     astr_t files;
@@ -378,6 +405,37 @@ static bool test_build_product(test_product_data &prod, const char *name)
         test_hex64(pkg_xml.size()).c_str(),
         test_hex64(pkg_blob.size()).c_str());
     return test_write_file(fs_path_join(prod.root, "prod.xml"), test_bytes(astr_t(product)));
+}
+
+// points the product's repos at a running fixture server (the generated
+// prod.xml ships the offline "*.test" urls, which no test resolves)
+static bool test_product_patch_repos(
+    const test_product_data &prod, const astr_t &manifest_url, const astr_t &file_url)
+{
+    const auto path = fs_path_join(prod.root, "prod.xml");
+    std::vector<uint8_t> data;
+    if (!fs_file_read(fs_path_ascii(path), data))
+        return false;
+    astr_t xml(data.begin(), data.end());
+    const auto replace = [&xml](const astr_t &from, const astr_t &to)
+    {
+        const size_t at = xml.find(from);
+        if (at == astr_t::npos)
+            return false;
+        xml.replace(at, from.size(), to);
+        return true;
+    };
+    if (!replace("http://manifest.test/uo/manifest/", manifest_url))
+        return false;
+    if (!replace("http://files.test/uo/files/", file_url))
+        return false;
+    return test_write_file(path, test_bytes(xml));
+}
+
+// deletes a blob from the server-side store (404 exercises)
+static void test_product_remove_blob(const test_product_data &prod, const astr_t &rel)
+{
+    fs_del(fs_path_join(prod.blobs, rel));
 }
 
 // ---------------------------------------------------------------------------

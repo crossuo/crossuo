@@ -16,8 +16,11 @@ macro(xuo_dependency DEP_NAME DEP_PATH DEP_PREFIX)
     endif()
     if (XUO_LINUX)
       include_directories(BEFORE SYSTEM "${CMAKE_SOURCE_DIR}/deps/cmcurl/lib/libressl/include")
-      set(REQUIRED_LIBS "${REQUIRED_LIBS}" "${CMAKE_BINARY_DIR}/deps/cmcurl/lib/libressl/ssl/libssl.a" "${CMAKE_BINARY_DIR}/deps/cmcurl/lib/libressl/crypto/libcrypto.a" "${CMAKE_BINARY_DIR}/deps/cmcurl/lib/libressl/tls/libtls.a")
+      set(REQUIRED_LIBS "${REQUIRED_LIBS}" "${CMAKE_BINARY_DIR}/deps/cmcurl/lib/libressl/ssl/libssl.a" "${CMAKE_BINARY_DIR}/deps/cmcurl/lib/libressl/crypto/libcrypto.a")
     endif()
+    # the streaming fetch engine links curl into the game's shared library
+    # (libcrossuo.so on linux): the static lib must be position independent
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   endif()
 
   if("${DEP_PREFIX}" MATCHES "SDL2")

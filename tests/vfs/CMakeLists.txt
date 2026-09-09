@@ -10,6 +10,7 @@ project(${PROJECT_NAME})
 set(VFS_TESTS_SRCS
   test_main.cpp
   test_main.h
+  test_fetch.cpp
   test_plan.cpp
   test_product.h
   test_state.cpp
@@ -25,4 +26,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${XUOCORE_PROJECT} ${EXTERNAL_
 target_compile_definitions(
   ${PROJECT_NAME} PRIVATE
   VFS_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
+  VFS_SERVER_SCRIPT="${CMAKE_CURRENT_SOURCE_DIR}/http_server.py"
 )

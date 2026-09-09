@@ -72,7 +72,9 @@ struct vfs_reader
 
 static const uint32_t VFS_PLAN_MAGIC = 0x314c5056;  // "VPL1"
 static const uint32_t VFS_STATE_MAGIC = 0x31545356; // "VST1"
-static const uint32_t VFS_SERIALIZATION_VERSION = 1;
+// 2: the plan carries the product manifest/file repo URLs (M2 fetch engine);
+// older plan.bin files simply fail to load and the plan is rebuilt
+static const uint32_t VFS_SERIALIZATION_VERSION = 2;
 
 bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
 {
@@ -80,6 +82,8 @@ bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
     w.pod(VFS_PLAN_MAGIC);
     w.pod(VFS_SERIALIZATION_VERSION);
     w.pod(plan.product_serial);
+    w.str(plan.manifest_repo);
+    w.str(plan.file_repo);
     w.pod(uint64_t(plan.files.size()));
     for (const auto &file : plan.files)
     {
@@ -119,6 +123,8 @@ bool vfs_plan_deserialize(const uint8_t *data, size_t size, VfsPlan &out_plan)
     if (magic != VFS_PLAN_MAGIC || version != VFS_SERIALIZATION_VERSION)
         return false;
     if (!r.pod(&out_plan.product_serial))
+        return false;
+    if (!r.str(&out_plan.manifest_repo) || !r.str(&out_plan.file_repo))
         return false;
     uint64_t file_count = 0;
     if (!r.pod(&file_count))

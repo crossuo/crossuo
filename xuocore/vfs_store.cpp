@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "vfs_store.h"
+#include "vfs_record.h"
 #include "uop.h"
 
 #include "common.h"
@@ -278,7 +279,6 @@ static bool vfs_store_pack_write_block(
     return fflush(fp) == 0;
 }
 
-// ---------------------------------------------------------------------------
 // loose files: materialized whole from the blob (decompressed when ct == 1)
 // ---------------------------------------------------------------------------
 
@@ -418,6 +418,13 @@ vfs_store_materialize_asset(vfs_store_context &ctx, size_t file_index, size_t as
     vfs_store_count(ctx, &vfs_materialize_stats::assets_fetched);
     if (ctx.stats)
         ctx.stats->bytes_written += vfs_asset_block_size(asset);
+    // §7.5 recorder: this is the pending -> fetched transition of a real run;
+    // loose files carry their name in the pack column (there is no pack)
+    vfs_record_asset(
+        asset.uop_hash,
+        vfs_asset_is_loose(asset) ? asset.name : asset.uop_file,
+        uint64_t(asset.ul),
+        asset.tier);
     return true;
 }
 
@@ -450,7 +457,8 @@ bool vfs_store_materialize(
     const vfs_store_params &params,
     std::vector<uint8_t> &states,
     vfs_journal *journal,
-    vfs_materialize_stats *stats)
+    vfs_materialize_stats *stats,
+    const std::vector<vfs_store_item> *items)
 {
     vfs_materialize_stats run;
     vfs_store_context ctx;
@@ -483,12 +491,30 @@ bool vfs_store_materialize(
 
     fs_path_create(params.install_dir);
 
-    for (size_t fi = 0; fi < plan.files.size(); ++fi)
+    if (items != nullptr)
     {
-        for (size_t ai = 0; ai < plan.files[fi].assets.size(); ++ai)
+        // fetch-driven subset materialization (M2 boot): the exact same write
+        // path, restricted to the assets the caller fetched for
+        for (const auto &item : *items)
         {
+            if (item.file_index >= plan.files.size())
+                continue;
+            const auto &file = plan.files[item.file_index];
+            if (item.asset_index >= file.assets.size())
+                continue;
             ++run.assets_total;
-            vfs_store_materialize_asset(ctx, fi, ai);
+            vfs_store_materialize_asset(ctx, item.file_index, item.asset_index);
+        }
+    }
+    else
+    {
+        for (size_t fi = 0; fi < plan.files.size(); ++fi)
+        {
+            for (size_t ai = 0; ai < plan.files[fi].assets.size(); ++ai)
+            {
+                ++run.assets_total;
+                vfs_store_materialize_asset(ctx, fi, ai);
+            }
         }
     }
     vfs_store_seal(ctx);
@@ -505,6 +531,74 @@ bool vfs_store_materialize(
         run.assets_failed,
         run.bytes_written);
     return run.assets_failed == 0;
+}
+
+// ---------------------------------------------------------------------------
+// boot skeleton (§7.2 step 4, §7.3 T0 "UOP tables for all packs")
+// ---------------------------------------------------------------------------
+
+// sparse body at the planned size for a loose file; content fills later
+static bool vfs_store_loose_prepare(const vfs_store_params &params, const VfsAsset &asset)
+{
+    const auto path = fs_path_join(params.install_dir, asset.name);
+    if (fs_path_exists(path))
+    {
+        // already the right size (complete or sparse): leave it alone
+        if (FILE *probe = fopen(fs_path_ascii(path), "rb"))
+        {
+            uint64_t existing = 0;
+            const bool sized = vfs_file_size(probe, &existing);
+            fclose(probe);
+            if (sized && existing == asset.ul)
+                return true;
+        }
+    }
+    fs_path_create(fs_directory(path));
+    FILE *fp = fopen(fs_path_ascii(path), "wb");
+    if (!fp)
+    {
+        LOG_ERROR("could not create loose file: %s", asset.name.c_str());
+        return false;
+    }
+    const bool ok = vfs_file_truncate(fp, asset.ul);
+    fclose(fp);
+    if (!ok)
+        LOG_ERROR("could not size loose file: %s", asset.name.c_str());
+    return ok;
+}
+
+// creates every managed file's boot skeleton without fetching a byte: pack
+// headers + section + entry tables (all blocks still holes) and loose files
+// sized to their planned size (sparse). This is what makes g_FileManager
+// find valid, correctly sized files right after the blocking tier.
+bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params)
+{
+    fs_path_create(params.install_dir);
+    bool ok = true;
+    for (const auto &file : plan.files)
+    {
+        const auto path = fs_path_join(params.install_dir, file.name);
+        if (file.is_uop)
+        {
+            bool created = false;
+            FILE *fp = vfs_store_pack_open(path, file, &created);
+            if (fp)
+            {
+                if (created)
+                    LOG_TRACE("prepared pack: %s", file.name.c_str());
+                fclose(fp);
+            }
+            else
+            {
+                ok = false;
+            }
+        }
+        else if (!file.assets.empty())
+        {
+            ok = vfs_store_loose_prepare(params, file.assets[0]) && ok;
+        }
+    }
+    return ok;
 }
 
 // ---------------------------------------------------------------------------

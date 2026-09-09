@@ -2,10 +2,14 @@
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
 // vuoi - virtual installation CLI. M1: offline plan/materialize/verify over a
-// local blob store (VUOI plan §6, milestone M1). With none of the vfs modes
-// given, the legacy listing path (uoi_load_contents) runs unchanged.
+// local blob store (VUOI plan §6, milestone M1). M2: --streaming-fetch runs
+// the boot-equivalent flow over HTTP (plan -> fetch missing -> materialize).
+// With none of the vfs modes given, the legacy listing path (uoi_load_contents)
+// runs unchanged.
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
 #include <external/popts.h>
 #include <xuocore/http.h>
@@ -26,6 +30,17 @@ static bool init_cli(int argc, char *argv[])
     s_cli["verify"].description(
         "verify materialized files against plan and blobs "
         "(exit 0: clean, nonzero: corrupt assets or internal failure)");
+    s_cli["streaming-fetch"].description(
+        "streamed install: plan, fetch what is missing over http and "
+        "materialize (needs --path; --product accepts a url or a file)");
+    s_cli["streaming-offline"].description(
+        "streaming: never hit the network, blob store only");
+    s_cli["streaming-workers"].type(po::u32).description(
+        "streaming: download workers (default cpu-1, max 8)");
+    s_cli["streaming-record"].type(po::string).description(
+        "streaming: record asset accesses to <file.csv>");
+    s_cli["streaming-record-scenario"].type(po::string).description(
+        "streaming recorder scenario name");
     s_cli["blobs"]
         .abbreviation('b')
         .type(po::string)
@@ -145,6 +160,56 @@ static int vuoi_verify()
     return corrupt > 0 ? -int(mft_decompress_error) : 0;
 }
 
+static int vuoi_streaming_fetch()
+{
+    vfs_params params;
+    if (s_cli["blobs"].was_set())
+        params.blobs_dir = fs_path_from(s_cli["blobs"].get().string.c_str());
+    if (s_cli["path"].was_set())
+        params.install_dir = fs_path_from(s_cli["path"].get().string.c_str());
+    if (s_cli["product"].was_set())
+    {
+        const auto product = s_cli["product"].get().string;
+        if (product.rfind("http://", 0) == 0 || product.rfind("https://", 0) == 0)
+            params.product_url = product; // downloaded into the blob store
+        else
+            params.product_file = fs_path_from(product.c_str());
+    }
+    params.enabled = true;
+    params.offline = s_cli["streaming-offline"].was_set();
+    if (s_cli["streaming-workers"].was_set())
+        params.workers = s_cli["streaming-workers"].get().u32;
+    if (s_cli["streaming-record"].was_set())
+    {
+        params.record_path = fs_path_from(s_cli["streaming-record"].get().string.c_str());
+        if (s_cli["streaming-record-scenario"].was_set())
+            params.record_scenario = s_cli["streaming-record-scenario"].get().string;
+    }
+    vfs_set_params(params);
+
+    http_init();
+    if (!vfs_boot(nullptr))
+    {
+        vfs_shutdown();
+        fprintf(stderr, "streaming-fetch: boot failed (see log)\n");
+        return -int(mft_could_not_download_file);
+    }
+    vfs_boot_wait(); // headless: finish the background tier too
+
+    VfsStats stats;
+    vfs_stats(&stats);
+    printf(
+        "streaming-fetch: %zu/%zu files, %" PRIu64 "/%" PRIu64 " bytes%s\n",
+        stats.files_done,
+        stats.files_total,
+        stats.bytes_done,
+        stats.bytes_total,
+        params.offline ? " (offline)" : "");
+    const int corrupt = vuoi_verify();
+    vfs_shutdown();
+    return corrupt;
+}
+
 int main(int argc, char **argv)
 {
     if (!init_cli(argc, argv))
@@ -155,6 +220,8 @@ int main(int argc, char **argv)
 
     const bool vfs_mode =
         s_cli["plan"].was_set() || s_cli["materialize"].was_set() || s_cli["verify"].was_set();
+    if (s_cli["streaming-fetch"].was_set())
+        return vuoi_streaming_fetch();
     if (!vfs_mode)
     {
         http_init();

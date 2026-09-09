@@ -21,8 +21,13 @@ set(XUOCORE_SRCS
   meta.h
   vfs.cpp
   vfs.h
+  vfs_fetch.cpp
+  vfs_fetch.h
   vfs_manifest.cpp
   vfs_manifest.h
+  vfs_manifest_embedded.cpp
+  vfs_record.cpp
+  vfs_record.h
   vfs_state.cpp
   vfs_state.h
   vfs_store.cpp

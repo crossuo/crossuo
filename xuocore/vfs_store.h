@@ -99,13 +99,28 @@ vfs_store_backend *vfs_store_backend_sparse_create(const vfs_store_params &param
 
 // batch drivers over the sparse store (used by the CLI, tests and boot):
 // states/journal are owned by the caller so runs compose (load -> reconcile
-// -> materialize -> save).
+// -> materialize -> save). `items` (optional) restricts the run to those
+// (file_index, asset_index) pairs - the fetch-driven boot path materializes
+// exactly what it downloaded, through the same write path.
+struct vfs_store_item
+{
+    uint32_t file_index = 0;
+    uint32_t asset_index = 0;
+};
+
 bool vfs_store_materialize(
     const VfsPlan &plan,
     const vfs_store_params &params,
     std::vector<uint8_t> &states,
     vfs_journal *journal,
-    vfs_materialize_stats *stats);
+    vfs_materialize_stats *stats,
+    const std::vector<vfs_store_item> *items = nullptr);
+
+// creates the boot skeleton from the plan without fetching or writing any
+// block: pack headers + tables (blocks stay holes) and loose files sized to
+// their planned size (sparse). Boot-critical files exist right after the
+// blocking tier, valid-but-unfetched (plan §7.2, §7.3).
+bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params);
 
 // on-disk truth check for one pack asset (shared with the state reconcile)
 bool vfs_store_pack_asset_present(

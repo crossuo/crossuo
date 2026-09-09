@@ -226,8 +226,8 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
     cfg.agent_name = "vuoi";
     cfg.download_buffer_size = VFS_MANIFEST_BUFFER_SIZE;
     cfg.dump_extracted = false;
-    cfg.fetch = vfs_fetch_blob;
-    cfg.fetch_context = &p.blobs_dir;
+    cfg.fetch = p.fetch ? p.fetch : vfs_fetch_blob;
+    cfg.fetch_context = p.fetch ? p.fetch_context : &p.blobs_dir;
 
     std::vector<uint8_t> data;
     if (!fs_file_read(fs_path_ascii(params.product_file), data))
@@ -246,6 +246,10 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
     if (res == mft_ok)
     {
         out_plan.product_serial = prod.timestamp;
+        // the repos are the fetch engine's URL bases (M2); empty means the
+        // product manifest carried none (nothing can be downloaded)
+        out_plan.manifest_repo = prod.manifest_repo ? prod.manifest_repo : "";
+        out_plan.file_repo = prod.file_repo ? prod.file_repo : "";
         vfs_plan_build_packs(prod, out_plan);
         vfs_plan_build_files(prod, out_plan);
         vfs_plan_layout(out_plan);
@@ -254,4 +258,132 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
     }
     mft_cleanup(prod);
     return res == mft_ok;
+}
+
+// ---------------------------------------------------------------------------
+// tiers (§7.3)
+// ---------------------------------------------------------------------------
+
+// boot-critical loose files: never stubbed, fetched before Load() returns
+static const char *const VFS_TIER_T0_FILES[] = {
+    "tiledata.mul", "animdata.mul", "hues.mul",    "radarcol.mul", "skills.idx",
+    "skills.mul",   "speech.mul",   "langcode.iff", "multimap.rle", "texidx.mul",
+    "lightidx.mul", "light.mul",    "unifont.mul",  // + art/gump/sound/multi indexes
+    "artidx.mul",   "gumpidx.mul",  "soundidx.mul", "multi.idx",    "multi.mul",
+};
+
+static bool vfs_tier_name_is(const astr_t &name, const char *const *table, size_t count)
+{
+    for (size_t i = 0; i < count; ++i)
+    {
+        if (strcasecmp(name.c_str(), table[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
+// T1 loose files: map-0 streaming first, then the rest of the map set,
+// remaining fonts, textures and patch muls. anim.idx (1.7 MB) is included:
+// LoadCommon requires it, so it must be fetched at boot (§7.2 "sized at boot").
+static bool vfs_tier_t1_file(const astr_t &lower)
+{
+    static const char *const names[] = { "staidx0.mul", "statics0.mul", "texmaps.mul", "anim.idx" };
+    if (vfs_tier_name_is(lower, names, sizeof(names) / sizeof(names[0])))
+        return true;
+    for (int i = 0; i < 6; ++i)
+    {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "staidx%d.mul", i);
+        if (lower == buf)
+            return true;
+        snprintf(buf, sizeof(buf), "statics%d.mul", i);
+        if (lower == buf)
+            return true;
+    }
+    for (int i = 1; i <= 6; ++i)
+    {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "unifont%d.mul", i);
+        if (lower == buf)
+            return true;
+    }
+    return lower.rfind("facet", 0) == 0 ||      // facet0.mul/idx ...
+           lower.rfind("mapdif", 0) == 0 ||     // mapdifl*.mul (patch muls)
+           lower.rfind("stadif", 0) == 0;       // stadifl*.mul / stadifi*.idx
+}
+
+// MainMisc.uop core assets (§7.3), keyed by their UOP name hashes
+static const uint64_t VFS_TIER_T0_MAINMISC[] = {
+    Asset::Strings,
+    Asset::CommandsTranslate,
+    Asset::TileAnimData,
+    Asset::WearableLayers,
+    Asset::AssetMap,
+};
+
+uint8_t vfs_manifest_tier_of(const VfsPlan::VfsFile &file, const VfsAsset &asset)
+{
+    if (vfs_asset_is_loose(asset))
+    {
+        const astr_t lower = str_lower(asset.name);
+        if (lower.rfind("music/", 0) == 0)
+            return vfs_tier_t3; // deferred (§7.3, decision #2)
+        if (vfs_tier_name_is(lower, VFS_TIER_T0_FILES, sizeof(VFS_TIER_T0_FILES) / sizeof(*VFS_TIER_T0_FILES)))
+            return vfs_tier_t0;
+        if (vfs_tier_t1_file(lower))
+            return vfs_tier_t1;
+        // anim.mul (190 MB legacy fallback) deliberately stays T2: the boot
+        // skeleton prepares it valid-but-unfetched, LoadCommon passes, and the
+        // idle tier converges the content (§7.3)
+        return vfs_tier_t2;
+    }
+
+    // pack assets: only the MainMisc core set is T0; the rest comes from the
+    // embedded manifest (T1) or defaults to on-demand (T2)
+    if (strcasecmp(file.name.c_str(), "MainMisc.uop") == 0)
+    {
+        for (uint64_t hash : VFS_TIER_T0_MAINMISC)
+        {
+            if (asset.uop_hash == hash)
+                return vfs_tier_t0;
+        }
+    }
+    return vfs_tier_t2;
+}
+
+void vfs_manifest_assign_tiers(VfsPlan &plan)
+{
+    for (auto &file : plan.files)
+    {
+        for (auto &asset : file.assets)
+        {
+            asset.tier = vfs_manifest_tier_of(file, asset);
+        }
+    }
+
+    // the embedded (recorded) manifest promotes its entries to T1; unknown
+    // assets keep their static tier, so stale recordings only reorder (§7.5)
+    const auto &embedded = vfs_manifest_embedded();
+    for (const auto &entry : embedded)
+    {
+        bool found = false;
+        for (auto &file : plan.files)
+        {
+            if (entry.uop_file.empty() || file.name != entry.uop_file)
+                continue;
+            for (auto &asset : file.assets)
+            {
+                if (asset.uop_hash == entry.uop_hash)
+                {
+                    asset.tier = vfs_tier_t1;
+                    found = true;
+                    break;
+                }
+            }
+            if (found)
+                break;
+        }
+    }
+    LOG_INFO(
+        "tiers: %zu embedded T1 entries", embedded.size());
 }

@@ -6,7 +6,9 @@
 #include "Misc.h"
 
 #include <common/logging/logging.h>
-#define STR_IMPLEMENTATION
+// no STR_IMPLEMENTATION here: the game links xuocore (mft.cpp), which already
+// provides the str implementations - two copies broke the shared lib link
+// when the streaming wiring started pulling xuocore into the game
 #include <common/str.h>
 
 SDL_threadID g_MainThread;
