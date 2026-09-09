@@ -50,8 +50,15 @@ bool vfs_state_save(const fs_path &path, const std::vector<uint8_t> &states);
 // flushes an already-written file to stable storage (the guarded fsync
 // pattern used by the journal, for callers that hold no FILE* handle)
 bool vfs_state_file_sync(const fs_path &path);
-// a missing, truncated or oversized state.bin yields all-pending states
-bool vfs_state_load(const fs_path &path, size_t asset_count, std::vector<uint8_t> &out_states);
+// a missing, truncated or oversized state.bin yields all-pending states;
+// `out_reset` (optional) reports that the stored DB was discarded, so the
+// caller can apply the journal hygiene (flush the fresh state, then truncate
+// the log - stale fetched marks must not resurrect over the cleared DB)
+bool vfs_state_load(
+    const fs_path &path,
+    size_t asset_count,
+    std::vector<uint8_t> &out_states,
+    bool *out_reset = nullptr);
 
 // ---------------------------------------------------------------------------
 // journal.log

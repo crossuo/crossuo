@@ -18,10 +18,10 @@
 struct VfsStats
 {
     size_t files_total = 0;
-    size_t files_done = 0;  // files with every expected asset present
-    size_t bytes_total = 0; // planned bytes (pack tables + blocks, loose files)
-    size_t bytes_done = 0;  // bytes confirmed in place
-    bool online = false;    // fetch engine connected to a repo (M2)
+    size_t files_done = 0;     // files with every expected asset present
+    size_t bytes_total = 0;    // planned bytes (pack tables + blocks, loose files)
+    size_t bytes_done = 0;     // bytes confirmed in place
+    bool online = false;       // fetch engine connected to a repo (M2)
     uint64_t stubs_served = 0; // faults answered with a placeholder payload (M4 zerolat)
     uint64_t stubs_active = 0; // assets currently in the stubbed state (M5 HUD)
 };
@@ -38,9 +38,9 @@ struct vfs_params
     // file's zeros; ensure/pre-resolve paths still fetch on demand
     bool traps = true;
     uint32_t workers = 0; // download workers; 0: default (cpu-1, cap 8)
-    fs_path blobs_dir;   // local blob store root (mirrors the remote URL tree)
-    fs_path install_dir; // materialized game files
-    fs_path state_dir;   // state DB; default: <install_dir>/cache/state
+    fs_path blobs_dir;    // local blob store root (mirrors the remote URL tree)
+    fs_path install_dir;  // materialized game files
+    fs_path state_dir;    // state DB; default: <install_dir>/cache/state
     // product manifest; default: <blobs_dir>/uo-legacyrelease.prod, resolved
     // against the blobs root when the given value is not an existing path
     fs_path product_file;
@@ -50,6 +50,13 @@ struct vfs_params
     // §7.5 deployment recorder (--streaming-record); empty: disabled
     fs_path record_path;
     astr_t record_scenario; // --streaming-record-scenario (default "default")
+    // granule store (M6, plan §17.3): the native sparse materializer (the
+    // M1-M5 default, unchanged) or the memory arena - web groundwork; on a
+    // native build the arena is a memory-mode (no install files appear)
+    vfs_store_backend_kind store_backend = vfs_store_backend_sparse;
+    // product subset (M6, plan §17.6): the plan-build filter; none is the
+    // full native view, web drops the §17.6 patterns. Persisted in plan.bin
+    vfs_subset subset = vfs_subset_none;
 };
 
 void vfs_set_params(const vfs_params &params);
@@ -79,6 +86,11 @@ void vfs_stats(VfsStats *out);
 // and lock-free counters only - no disk io, no reconcile - so the game loop
 // can poll it at a few Hz. zeros while no boot ran.
 void vfs_hud_stats(VfsStats *out);
+
+// arena residency probe (M6, tests + web diagnostics): the tracked/resident
+// granule counts of the params-selected backend; zeros when the sparse
+// backend is active or no boot holds an arena
+void vfs_arena_residency(size_t *out_granules, size_t *out_resident);
 
 // ---------------------------------------------------------------------------
 // boot (M2, VUOI plan §7.2): plan -> blocking T0 fetch+materialize (with

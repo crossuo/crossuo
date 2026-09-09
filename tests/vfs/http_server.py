@@ -15,6 +15,9 @@
 #   - GET /shutdown -> stops the server (exit 0) when stdin is still open;
 #     closing stdin also shuts the server down (process stdin-close)
 #   - --cors -> adds Access-Control-Allow-Origin: * (M6 browser backend)
+#   - --coop-coep -> adds Cross-Origin-Opener-Policy: same-origin and
+#     Cross-Origin-Embedder-Policy: require-corp (M6 browser backend, plan
+#     §17.5: the SharedArrayBuffer the fetch worker pool needs requires them)
 #
 # The server binds an ephemeral port (port 0) and prints the chosen port as
 # the first line of stdout ("port N"); --port-file also writes it for
@@ -48,15 +51,23 @@ class Handler(BaseHTTPRequestHandler):
             total = sum(HITS.values())
         return total
 
+    def _security_headers(self):
+        # cross-origin isolation (plan §17.5): a web build's worker pool needs
+        # SharedArrayBuffer, which the browser only grants to COOP/COEP pages
+        if self.server.coop_coep:
+            self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+            self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
+        if self.server.cors:
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Expose-Headers", "Content-Range")
+
     def _send(self, code, body, content_type, ranges=None, total_len=None):
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         if ranges is not None:
             start, end = ranges
             self.send_header("Content-Range", "bytes %d-%d/%d" % (start, end, total_len))
-        if self.server.cors:
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Expose-Headers", "Content-Range")
+        self._security_headers()
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         if self.command != "HEAD":
@@ -130,8 +141,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Accept-Ranges", "bytes")
         self.send_header("Content-Type", "application/octet-stream")
-        if self.server.cors:
-            self.send_header("Access-Control-Allow-Origin", "*")
+        self._security_headers()
         self.send_header("Content-Length", str(total_len))
         self.end_headers()
         if self.command != "HEAD":
@@ -142,10 +152,11 @@ class Server(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, addr, root, ranges, cors, verbose):
+    def __init__(self, addr, root, ranges, cors, coop_coep, verbose):
         self.root = root
         self.ranges = ranges
         self.cors = cors
+        self.coop_coep = coop_coep
         self.verbose = verbose
         super().__init__(addr, Handler)
 
@@ -157,6 +168,10 @@ def main():
     ap.add_argument("--port", type=int, default=0, help="0 = ephemeral")
     ap.add_argument("--no-range", action="store_true", help="disable Range support")
     ap.add_argument("--cors", action="store_true", help="send Access-Control-Allow-Origin: *")
+    ap.add_argument(
+        "--coop-coep",
+        action="store_true",
+        help="send COOP: same-origin + COEP: require-corp (cross-origin isolation)")
     ap.add_argument("--port-file", default=None, help="write the bound port here")
     ap.add_argument(
         "--no-stdin-watch",
@@ -165,7 +180,13 @@ def main():
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
 
-    server = Server((args.host, args.port), args.root, not args.no_range, args.cors, args.verbose)
+    server = Server(
+        (args.host, args.port),
+        args.root,
+        not args.no_range,
+        args.cors,
+        args.coop_coep,
+        args.verbose)
     port = server.server_address[1]
     print("port %d" % port, flush=True)
     if args.port_file:

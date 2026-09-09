@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "vfs_store.h"
+#include "vfs_store_arena.h"
 #include "vfs_record.h"
 #include "uop.h"
 
@@ -349,6 +350,42 @@ static bool vfs_store_pack_write_block(
 // loose files: materialized whole from the blob (decompressed when ct == 1)
 // ---------------------------------------------------------------------------
 
+// pure payload step (M6): stored assets pass through, zlib assets inflate -
+// the exact bytes the loose writer has always put on disk, now shared with
+// the arena backend (no duplicated format knowledge)
+int vfs_store_asset_inflate(
+    const VfsAsset &asset, const std::vector<uint8_t> &blob, std::vector<uint8_t> *out)
+{
+    const uint8_t *data = blob.data();
+    size_t size = blob.size();
+    if (asset.ct == 1)
+    {
+        out->resize(asset.ul);
+        uLongf dst_len = out->size();
+        auto *src = reinterpret_cast<Bytef const *>(blob.data());
+        if (uncompress(out->data(), &dst_len, src, uLong(blob.size())) != Z_OK)
+        {
+            LOG_ERROR("blob failed to decompress: %s", asset.blob.c_str());
+            return 2;
+        }
+        out->resize(size_t(dst_len));
+        return 0;
+    }
+    out->assign(data, data + size);
+    return 0;
+}
+
+// blob read + inflate in one step (the arena's ensure path)
+int vfs_store_asset_payload(
+    const fs_path &blobs_dir, const VfsAsset &asset, std::vector<uint8_t> *out)
+{
+    std::vector<uint8_t> blob;
+    const int res = vfs_store_read_blob(blobs_dir, asset, blob);
+    if (res != 0)
+        return res;
+    return vfs_store_asset_inflate(asset, blob, out);
+}
+
 static bool vfs_store_write_loose(
     const vfs_store_params &params, const VfsAsset &asset, const std::vector<uint8_t> &blob)
 {
@@ -356,23 +393,9 @@ static bool vfs_store_write_loose(
     fs_path_create(fs_directory(path));
 
     std::vector<uint8_t> payload;
-    const uint8_t *data = blob.data();
-    size_t size = blob.size();
-    if (asset.ct == 1)
-    {
-        payload.resize(asset.ul);
-        uLongf dst_len = payload.size();
-        auto *src = reinterpret_cast<Bytef const *>(blob.data());
-        if (uncompress(payload.data(), &dst_len, src, uLong(blob.size())) != Z_OK)
-        {
-            LOG_ERROR("loose blob failed to decompress: %s", asset.blob.c_str());
-            return false;
-        }
-        payload.resize(size_t(dst_len));
-        data = payload.data();
-        size = payload.size();
-    }
-    return fs_file_write(fs_path_ascii(path), data, size);
+    if (vfs_store_asset_inflate(asset, blob, &payload) != 0)
+        return false;
+    return fs_file_write(fs_path_ascii(path), payload.data(), payload.size());
 }
 
 // ---------------------------------------------------------------------------
@@ -1158,6 +1181,23 @@ vfs_store_backend *vfs_store_backend_sparse_create(const vfs_store_params &param
 {
     // the backend binds to a plan through open() before first use
     return new store_sparse(params);
+}
+
+vfs_store_backend *vfs_store_backend_create(
+    vfs_store_backend_kind kind, const vfs_store_params &params)
+{
+    switch (kind)
+    {
+        case vfs_store_backend_arena:
+        {
+            vfs_store_arena_params arena_params;
+            arena_params.store = params;
+            return vfs_store_backend_arena_create(arena_params);
+        }
+        case vfs_store_backend_sparse:
+        default:
+            return vfs_store_backend_sparse_create(params);
+    }
 }
 
 // ---------------------------------------------------------------------------

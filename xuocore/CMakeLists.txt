@@ -32,8 +32,12 @@ set(XUOCORE_SRCS
   vfs_state.h
   vfs_store.cpp
   vfs_store.h
+  vfs_store_arena.cpp
+  vfs_store_arena.h
   vfs_stub.cpp
   vfs_stub.h
+  vfs_transport.cpp
+  vfs_transport.h
   vfs_trap.cpp
   vfs_trap.h
   xuoi.cpp

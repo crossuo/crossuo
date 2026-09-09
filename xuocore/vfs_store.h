@@ -101,6 +101,21 @@ struct vfs_store_backend
 // local blob store (owns its own state DB and journal under params)
 vfs_store_backend *vfs_store_backend_sparse_create(const vfs_store_params &params);
 
+// backend selector (M6, plan §17): the native sparse materializer above, or
+// the granule-resident memory arena (web groundwork; natively a memory-mode,
+// see vfs_store_arena.h)
+enum vfs_store_backend_kind : uint8_t
+{
+    vfs_store_backend_sparse = 0,
+    vfs_store_backend_arena = 1,
+};
+
+// selects a backend by kind (vfs_params.store_backend); `params` feeds both
+// flavors (the arena only reads the blob store: it never writes files)
+vfs_store_backend *vfs_store_backend_create(
+    vfs_store_backend_kind kind,
+    const vfs_store_params &params);
+
 // batch drivers over the sparse store (used by the CLI, tests and boot):
 // states/journal are owned by the caller so runs compose (load -> reconcile
 // -> materialize -> save). `items` (optional) restricts the run to those
@@ -148,6 +163,29 @@ bool vfs_store_pack_asset_present(
     size_t asset_index,
     const VfsAsset &asset,
     const fs_path &blobs_dir = fs_path());
+
+// ---------------------------------------------------------------------------
+// in-memory payload path (M6, plan §17.3): the write-path knowledge both
+// backends share. The sparse writer puts [metadata][blob] on disk; the arena
+// keeps payload bytes only - the loose writer and the arena produce the same
+// payload from the same blob, so the format lives in exactly one place.
+// ---------------------------------------------------------------------------
+
+// pure payload step: stored assets pass the blob through, zlib assets
+// inflate (the same uncompress the loose writer always ran). Returns 0 with
+// `out` = the payload, 2 when the blob cannot supply it (zlib failure).
+int vfs_store_asset_inflate(
+    const VfsAsset &asset,
+    const std::vector<uint8_t> &blob,
+    std::vector<uint8_t> *out);
+
+// blob read + inflate in one step (the arena's ensure path). Returns 0 with
+// `out` = the payload, 1 when the blob is missing (out untouched) and 2 when
+// it is unusable (size mismatch or zlib failure)
+int vfs_store_asset_payload(
+    const fs_path &blobs_dir,
+    const VfsAsset &asset,
+    std::vector<uint8_t> *out);
 
 // ---------------------------------------------------------------------------
 // trap support (M3, plan §6.5): page-coverage computation over the plan's

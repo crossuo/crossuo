@@ -10,8 +10,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 
 #include <algorithm>
 #include <atomic>
@@ -22,25 +20,10 @@
 #include <thread>
 #include <vector>
 
-#include <curl/curl.h>
+#include "vfs_transport.h"
 
 #include "common.h"
 #include <common/logging/logging.h>
-
-// portable case-insensitive comparison (no CRT differences in callers)
-static int vfs_fetch_strnicmp(const char *a, const char *b, size_t n)
-{
-    for (size_t i = 0; i < n; ++i)
-    {
-        const int ca = tolower(uint8_t(a[i]));
-        const int cb = tolower(uint8_t(b[i]));
-        if (ca != cb)
-            return ca - cb;
-        if (!ca)
-            return 0;
-    }
-    return 0;
-}
 
 #include <common/utils.h>
 
@@ -51,9 +34,6 @@ static int vfs_fetch_strnicmp(const char *a, const char *b, size_t n)
 #define VFS_FETCH_BACKOFF_MAX_MS 8000
 // guess used for backpressure accounting when no size is known up front
 #define VFS_FETCH_SIZE_GUESS (64 * 1024)
-// slack over the expected size before the transfer is aborted: guards the
-// buffer against hostile or broken servers that never stop writing
-#define VFS_FETCH_BODY_SLACK (64 * 1024)
 
 // ---------------------------------------------------------------------------
 // state
@@ -80,7 +60,6 @@ struct vfs_fetch_job
 struct vfs_fetch_worker
 {
     std::thread thread;
-    CURL *curl = nullptr;
 };
 
 static std::mutex s_mutex;
@@ -111,127 +90,60 @@ static const char *vfs_fetch_repo_of(const vfs_fetch_job &job)
 }
 
 // ---------------------------------------------------------------------------
-// curl transport (shared by the workers and the manifest seam)
+// transport seam (M6): the engine owns the retry policy on top of ONE
+// transport attempt (the transfer mechanics live in vfs_transport)
 // ---------------------------------------------------------------------------
 
-struct vfs_fetch_reply
+// fetch body sink: appends the transfer body (the engine keeps the M2-M5
+// whole-body buffering semantics; a transport may deliver chunk-wise)
+static bool vfs_fetch_body_sink(void *context, const uint8_t *data, size_t size)
 {
-    std::vector<uint8_t> body;
-    long status = 0;
-    long retry_after = -1; // seconds, when the server sent a valid header
-    uint64_t cap = 0;      // abort above expected + slack (0: size unknown)
-};
-
-static size_t vfs_fetch_write(const char *data, size_t size, size_t nmemb, void *out)
-{
-    auto *reply = static_cast<vfs_fetch_reply *>(out);
-    const size_t amount = size * nmemb;
-    if (reply->cap && uint64_t(reply->body.size()) + uint64_t(amount) > reply->cap)
-    {
-        // returning a short count fails the transfer (CURLE_WRITE_ERROR): the
-        // caller marks the item failed and the buffer cannot balloon
-        LOG_ERROR("fetch: body exceeds cap (%" PRIu64 " bytes), aborting transfer", reply->cap);
-        return 0;
-    }
-    reply->body.insert(reply->body.end(), data, data + amount);
-    return amount;
-}
-
-static size_t
-vfs_fetch_header(const char *data, size_t size, size_t nmemb, vfs_fetch_reply *reply)
-{
-    const size_t amount = size * nmemb;
-    // delta-seconds form only; date forms fall back to the default backoff.
-    // the header data is NOT NUL-terminated: parse it within an explicit
-    // length bound instead of letting strtol run past the buffer
-    if (amount > 13 && vfs_fetch_strnicmp(data, "Retry-After:", 12) == 0)
-    {
-        char value[32] = {};
-        const size_t take = std::min(amount - 12, sizeof(value) - 1);
-        memcpy(value, data + 12, take);
-        const long seconds = strtol(value, nullptr, 10);
-        if (seconds > 0)
-            reply->retry_after = seconds;
-    }
-    return amount;
-}
-
-// one GET with this worker's (or the caller's) handle; fills reply on success
-static bool vfs_fetch_http_get(CURL *curl, const char *url, vfs_fetch_reply *reply)
-{
-    reply->body.clear();
-    reply->status = 0;
-    reply->retry_after = -1;
-    // reset per request: state from a previous transfer cannot leak, while
-    // the connection cache (the reason for the persistent handle) survives
-    curl_easy_reset(curl);
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "vuoi");
-    // TLS verification is deliberately off for now, mirroring the four sites
-    // in xuocore/http.cpp (the official product/file repos are plain http
-    // today). Deferred: see docs/NOTES.md (MITM risk documented there; it
-    // closes with M5 .meta sha256 verification or a CA-bundle strategy).
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-    // a stalled connection must never hang a worker (and with it
-    // vfs_fetch_stop and game exit): 10s to connect, then 30s at under 1 B/s
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
-    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
-    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 30L);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, vfs_fetch_write);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &reply->body);
-    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, vfs_fetch_header);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, reply);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-    // blobs are addressed immutably; a cached copy is as good as a fresh one
-    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
-    const CURLcode res = curl_easy_perform(curl);
-    if (res != CURLE_OK)
-    {
-        LOG_WARN("GET %s: %s", url, curl_easy_strerror(res));
-        return false;
-    }
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &reply->status);
+    auto *body = static_cast<std::vector<uint8_t> *>(context);
+    body->insert(body->end(), data, data + size);
     return true;
 }
 
 // GET + retries (plan §6.4): transient failures back off, 404 is definitive,
-// 429 honors Retry-After. Returns true with body filled on success. `curl` is
-// the caller's handle (a worker's persistent one: reset per attempt below
-// keeps the connection cache across the retries and the queue's requests).
-// `cap` aborts transfers beyond expected + slack (0: size unknown up front).
-static bool
-vfs_fetch_http(CURL *curl, const char *url, uint64_t cap, vfs_fetch_reply *reply, const char *label)
+// 429 honors Retry-After. Returns true with `body` filled on success.
+// `cap` aborts transfers beyond it (0: size unknown up front); the exact-size
+// validation stays with the caller.
+static bool vfs_fetch_http(
+    const char *url,
+    const char *tail,
+    uint64_t cap,
+    bool manifest,
+    std::vector<uint8_t> *body,
+    const char *label)
 {
-    if (!curl)
-        return false;
-    reply->cap = cap;
     bool ok = false;
+    long retry_after = -1;
     for (uint32_t attempt = 0; attempt < s_fetch_params.retries; ++attempt)
     {
         if (attempt != 0)
         {
             long ms = long(VFS_FETCH_BACKOFF_MS) << std::min(attempt - 1, 5u);
-            if (reply->retry_after > 0)
-                ms = reply->retry_after * 1000; // server asked politely
+            if (retry_after > 0)
+                ms = retry_after * 1000; // server asked politely
             ms = std::min<long>(ms, VFS_FETCH_BACKOFF_MAX_MS);
             LOG_DEBUG("retrying %s in %ldms (%u/%u)", label, ms, attempt + 1, s_fetch_params.retries);
             std::this_thread::sleep_for(std::chrono::milliseconds(ms));
         }
-        if (vfs_fetch_http_get(curl, url, reply))
+        body->clear();
+        const vfs_transport_result res = vfs_transport_active()->fetch(
+            url, tail, cap, vfs_fetch_body_sink, body, 0, manifest);
+        retry_after = res.retry_after;
+        if (res.ok)
         {
-            if (reply->status == 200)
-            {
-                ok = true;
-                break;
-            }
-            if (reply->status == 404)
-            {
-                LOG_DEBUG("not found: %s", url);
-                break; // never heals; the caller decides what a miss means
-            }
-            LOG_WARN("GET %s: http status %ld", url, reply->status);
+            ok = true;
+            break;
         }
+        if (res.status == 404)
+        {
+            LOG_DEBUG("not found: %s", url);
+            break; // never heals; the caller decides what a miss means
+        }
+        if (res.status != 0)
+            LOG_WARN("GET %s: http status %ld", url, res.status);
         {
             std::unique_lock<std::mutex> lock(s_mutex);
             s_stats.retries++;
@@ -294,7 +206,7 @@ static bool vfs_fetch_pop(std::shared_ptr<vfs_fetch_job> *out)
 static void vfs_fetch_worker_run(size_t index)
 {
     vfs_fetch_worker &worker = s_workers[index];
-    worker.curl = curl_easy_init();
+    (void)worker;
     for (;;)
     {
         std::shared_ptr<vfs_fetch_job> job;
@@ -314,38 +226,39 @@ static void vfs_fetch_worker_run(size_t index)
                 continue; // lost the race for the queued job
             s_buffered += job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
         }
-        if (!worker.curl)
-            worker.curl = curl_easy_init();
 
         const char *repo = vfs_fetch_repo_of(*job);
         astr_t url;
         bool ok = false;
-        vfs_fetch_reply reply;
+        std::vector<uint8_t> body;
         if (repo)
         {
             url = astr_t(repo) + job->tail;
             LOG_DEBUG("fetching: %s", url.c_str());
-            const uint64_t cap = job->expected ? job->expected + uint64_t(VFS_FETCH_BODY_SLACK) : 0;
-            ok = vfs_fetch_http(worker.curl, url.c_str(), cap, &reply, job->tail.c_str());
-            if (ok && job->expected && reply.body.size() != job->expected)
+            // the expected size is also the hard body cap (M6 transport seam:
+            // exact-size validation stays here, the transfer aborts beyond)
+            const uint64_t cap = job->expected;
+            ok = vfs_fetch_http(
+                url.c_str(), job->tail.c_str(), cap, job->manifest, &body, job->tail.c_str());
+            if (ok && job->expected && body.size() != job->expected)
             {
                 LOG_WARN(
                     "size mismatch: %s (got %zu, expected %" PRIu64 ")",
                     job->tail.c_str(),
-                    reply.body.size(),
+                    body.size(),
                     job->expected);
                 vfs_fetch_store_purge(job->tail.c_str());
                 ok = false;
             }
             if (ok)
-                ok = vfs_fetch_store_write(job->tail.c_str(), reply.body);
+                ok = vfs_fetch_store_write(job->tail.c_str(), body);
         }
 
         {
             std::unique_lock<std::mutex> lock(s_mutex);
             s_stats.inflight--;
             s_stats.requests++;
-            s_stats.bytes += reply.body.size();
+            s_stats.bytes += body.size();
             s_buffered -= job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
             job->state = ok ? vfs_fetch_done : vfs_fetch_failed;
             if (!ok)
@@ -361,11 +274,6 @@ static void vfs_fetch_worker_run(size_t index)
         }
         s_cv_done.notify_all();
         s_cv_jobs.notify_all();
-    }
-    if (worker.curl)
-    {
-        curl_easy_cleanup(worker.curl);
-        worker.curl = nullptr;
     }
 }
 
@@ -578,6 +486,23 @@ bool vfs_fetch_batch(
     return failed == 0;
 }
 
+void vfs_fetch_queue_blob(const char *tail, uint64_t expected_size, bool manifest, int priority)
+{
+    if (!tail || !*tail)
+        return;
+    {
+        // fast path: the store already has it (idempotent, like every fetch)
+        const auto path = fs_path_join(s_store_dir, tail);
+        if (fs_path_exists(path))
+            return;
+    }
+    std::lock_guard<std::mutex> lock(s_mutex);
+    if (!s_running)
+        return;
+    vfs_fetch_enqueue(tail, expected_size, manifest, priority);
+    s_cv_jobs.notify_all(); // the demand granule heals only if a worker wakes
+}
+
 bool vfs_fetch_manifest_fn(
     void *context,
     const char *url,
@@ -594,48 +519,43 @@ bool vfs_fetch_manifest_fn(
 
     // cache-aware (§5.2): the store mirrors the remote tree, so a present
     // manifest is used as-is and HTTP only fills the gaps
-    vfs_fetch_reply reply;
+    std::vector<uint8_t> cached;
     const auto stored = fs_path_join(s_store_dir, rel_path);
     if (fs_path_exists(stored))
     {
-        if (!fs_file_read(fs_path_ascii(stored), reply.body))
+        if (!fs_file_read(fs_path_ascii(stored), cached))
             return false;
-        if (reply.body.size() > capacity)
+        if (cached.size() > capacity)
         {
-            LOG_ERROR("manifest too large: %s (%zu > %zu)", rel_path, reply.body.size(), capacity);
+            LOG_ERROR("manifest too large: %s (%zu > %zu)", rel_path, cached.size(), capacity);
             return false;
         }
-        memcpy(buffer, reply.body.data(), reply.body.size());
-        *size = reply.body.size();
-        LOG_TRACE("manifest from store: %s (%zu bytes)", rel_path, reply.body.size());
+        memcpy(buffer, cached.data(), cached.size());
+        *size = cached.size();
+        LOG_TRACE("manifest from store: %s (%zu bytes)", rel_path, cached.size());
         return true;
     }
 
     LOG_DEBUG("manifest: %s", url);
-    // one handle for this call: every retry reuses it (reset per request keeps
-    // the connection cache); the workers keep their own persistent handles
-    CURL *curl = curl_easy_init();
-    if (!curl)
-    {
-        LOG_ERROR("manifest fetch failed: %s (no curl handle)", rel_path);
-        return false;
-    }
-    const bool fetched = vfs_fetch_http(curl, url, capacity, &reply, rel_path);
-    curl_easy_cleanup(curl);
+    // the manifest seam shares the engine's retry policy and the active
+    // transport (M6): an injected transport serves manifests too, so the
+    // plan recursion runs without curl in tests
+    std::vector<uint8_t> body;
+    const bool fetched = vfs_fetch_http(url, rel_path, capacity, true, &body, rel_path);
     if (!fetched)
     {
         LOG_ERROR("manifest fetch failed: %s", rel_path);
         return false;
     }
-    if (reply.body.size() > capacity)
+    if (body.size() > capacity)
     {
-        LOG_ERROR("manifest too large: %s (%zu > %zu)", rel_path, reply.body.size(), capacity);
+        LOG_ERROR("manifest too large: %s (%zu > %zu)", rel_path, body.size(), capacity);
         return false;
     }
     // keep the manifest in the store: later boots consume it offline
-    if (!vfs_fetch_store_write(rel_path, reply.body))
+    if (!vfs_fetch_store_write(rel_path, body))
         return false;
-    memcpy(buffer, reply.body.data(), reply.body.size());
-    *size = reply.body.size();
+    memcpy(buffer, body.data(), body.size());
+    *size = body.size();
     return true;
 }

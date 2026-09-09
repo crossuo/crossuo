@@ -118,7 +118,7 @@ VFS_TEST(fetch_http_end_to_end)
 
     TEST_CHECK(vfs_enabled());
     TEST_CHECK_MSG(vfs_boot(nullptr), "boot over http failed"); // plan + T0 + start T1
-    vfs_boot_wait(); // headless: also finish T1
+    vfs_boot_wait();                                            // headless: also finish T1
 
     // T0 loose file byte-correct; T1 fetched by the background tier; T3 untouched
     const auto tiledata = fs_path_join(params.install_dir, "tiledata.mul");
@@ -135,8 +135,7 @@ VFS_TEST(fetch_http_end_to_end)
     std::vector<uint8_t> music_bytes;
     TEST_CHECK_MSG(test_read_file(music, music_bytes), "music skeleton missing");
     TEST_CHECK_MSG(
-        music_bytes.size() == prod.loose[1].payload.size() &&
-            music_bytes != prod.loose[1].payload,
+        music_bytes.size() == prod.loose[1].payload.size() && music_bytes != prod.loose[1].payload,
         "T3 (music) must not be fetched in M2");
 
     // the pack was skeleton-prepared, parses through the production path and
@@ -218,8 +217,7 @@ VFS_TEST(fetch_second_boot_zero_requests)
     const uint64_t after_second = test_server_total_hits(srv);
     TEST_CHECK_MSG(
         after_second - after_first == 1,
-        "second boot issued %" PRIu64
-        " extra requests (only the product refresh is allowed)",
+        "second boot issued %" PRIu64 " extra requests (only the product refresh is allowed)",
         after_second - after_first);
     TEST_CHECK_MSG(
         test_server_hits(srv, "/prod.xml") == 2,
@@ -289,7 +287,7 @@ VFS_TEST(fetch_t1_missing_is_logged_and_skipped)
         zeroed = zeroed && b == 0;
     TEST_CHECK_MSG(zeroed, "unifont1.mul must stay unfetched (zero-filled)");
     vfs_verify_result result;
-    TEST_CHECK(vfs_verify(&result) == 0); // sized files verify clean
+    TEST_CHECK(vfs_verify(&result) == 0);                               // sized files verify clean
     TEST_CHECK(test_server_hits(srv, ("/blobs/" + tail).c_str()) == 1); // the 404
     test_server_stop(srv);
 }
@@ -400,10 +398,12 @@ VFS_TEST(fetch_body_cap_aborts_oversized)
     const auto repo = test_server_url(srv, "/blobs/");
     vfs_fetch_set_repos(repo.c_str(), repo.c_str());
 
-    // the served body exceeds the expected size + slack: the transfer must be
-    // cut off at the cap instead of buffering whatever the server sends
+    // the served body is exactly ONE byte over the expected size: the exact
+    // body cap (M6) must abort the transfer mid-flight - the M2-M5 slack of
+    // 64 KB would have let this body complete, failing only at the engine's
+    // post-transfer size check
     const astr_t tail = test_loose_tail("tiledata.mul");
-    std::vector<uint8_t> big(2048 + 64 * 1024 + 1, 0xAB);
+    std::vector<uint8_t> big(2048 + 1, 0xAB);
     TEST_CHECK(test_write_file(fs_path_join(prod.blobs, tail), big));
     TEST_CHECK_MSG(
         !vfs_fetch_blob_to_store(tail.c_str(), 2048, false),

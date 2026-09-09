@@ -38,6 +38,15 @@ enum vfs_tier : uint8_t
     vfs_tier_t3,     // rare / never on boot
 };
 
+// product subset (M6, plan §17.6): a per-build filter over the SAME manifests
+// so a web plan is a strict subset of the native one - one manifest tree, one
+// granule model, no forked products
+enum vfs_subset : uint8_t
+{
+    vfs_subset_none = 0, // the full product view (native default)
+    vfs_subset_web,      // the §17.6 web exclusions
+};
+
 struct VfsAsset
 {
     uint64_t uop_hash = 0;  // (sh << 32) | ph; 0 for loose files
@@ -72,6 +81,9 @@ struct VfsPlan
     // download URLs as repo + the asset's blob tail
     astr_t manifest_repo;
     astr_t file_repo;
+    // product subset the plan was filtered to (M6, plan §17.6); persisted in
+    // plan.bin (v3). Missing (older plans) means vfs_subset_none
+    uint8_t subset = vfs_subset_none;
 };
 
 // bytes the asset occupies inside its pack: [ml metadata][payload]; zero
@@ -174,3 +186,21 @@ void vfs_manifest_embedded_set(std::vector<vfs_embedded_entry> table);
 
 // applies the §7.3 tier table + the embedded T1 order to a freshly built plan
 void vfs_manifest_assign_tiers(VfsPlan &plan);
+
+// ---------------------------------------------------------------------------
+// product subsets (M6, plan §17.6): a per-build filter over the SAME manifests
+// so a web plan is a strict subset of the native one - one manifest tree,
+// one granule model, no forked products (the vfs_subset enum is at the top).
+// ---------------------------------------------------------------------------
+
+// the §17.6 exclusion rule: true when the plan file `name` is outside the web
+// product view - the legacy MUL animation set ("anim*.mul": the UOP
+// animations cover it), Music/** (deferred), facet* and verdata*
+bool vfs_subset_web_excludes(const astr_t &name);
+
+// applies the subset filter in place (no-op for vfs_subset_none): excluded
+// files drop out entirely, and the plan records what was applied. Idempotent
+// (re-applying the same subset changes nothing). Removed-by-subset entries
+// behave like plan-removed in the update flow: bytes stay in the store,
+// accounting drops them (plan diff "removed").
+void vfs_manifest_apply_subset(VfsPlan &plan, vfs_subset subset);

@@ -100,6 +100,10 @@ static bool InitCli(int argc, char *argv[])
         "streaming: record asset accesses to <file.csv>");
     g_cli["streaming-record-scenario"].type(po::string).description(
         "streaming recorder scenario name");
+    g_cli["streaming-backend"].type(po::string).description(
+        "streaming: 'arena' for the memory granule store (M6, web groundwork)");
+    g_cli["streaming-subset"].type(po::string).description(
+        "streaming: 'web' plans the web product subset (plan §17.6)");
 
     g_cli["config"]
         .abbreviation('c')
@@ -462,6 +466,14 @@ int main(int argc, char **argv)
         }
         if (g_cli["streaming-workers"].was_set())
             params.workers = g_cli["streaming-workers"].get().u32;
+        // M6 web groundwork: memory backend + product subset (plan §17.3, §17.6)
+        if (g_cli["streaming-backend"].was_set())
+            params.store_backend = g_cli["streaming-backend"].get().string == "arena"
+                                       ? vfs_store_backend_arena
+                                       : vfs_store_backend_sparse;
+        if (g_cli["streaming-subset"].was_set())
+            params.subset =
+                g_cli["streaming-subset"].get().string == "web" ? vfs_subset_web : vfs_subset_none;
         auto dir = g_cli["streaming"].get().string;
         if (dir.empty())
             dir = fs_path_ascii(g_App.FilePath("streamed"));

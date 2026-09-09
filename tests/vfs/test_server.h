@@ -53,7 +53,18 @@ struct test_server
     int port = 0;
 };
 
+// `extra` (optional) is appended verbatim to the server command line, e.g.
+// "--coop-coep" for the cross-origin-isolation tests
+static bool
+test_server_start_ex(test_server &srv, const fs_path &root, bool no_range, const char *extra);
+
 static bool test_server_start(test_server &srv, const fs_path &root, bool no_range)
+{
+    return test_server_start_ex(srv, root, no_range, nullptr);
+}
+
+static bool
+test_server_start_ex(test_server &srv, const fs_path &root, bool no_range, const char *extra)
 {
     char root_arg[FS_MAX_PATH];
     snprintf(root_arg, sizeof(root_arg), "%s", fs_path_ascii(root));
@@ -61,9 +72,19 @@ static bool test_server_start(test_server &srv, const fs_path &root, bool no_ran
 
     for (const char *python : { "python3", "python" })
     {
-        const char *argv[] = {
-            python, VFS_SERVER_SCRIPT, "--root", root_arg, no_range ? no_range_arg : nullptr, nullptr
-        };
+        // execvp stops at the first NULL element: the optional arguments are
+        // packed in order, without holes
+        const char *argv[8];
+        int argc = 0;
+        argv[argc++] = python;
+        argv[argc++] = VFS_SERVER_SCRIPT;
+        argv[argc++] = "--root";
+        argv[argc++] = root_arg;
+        if (no_range)
+            argv[argc++] = no_range_arg;
+        if (extra)
+            argv[argc++] = extra;
+        argv[argc++] = nullptr;
         memset(&srv.process, 0, sizeof(srv.process));
         if (process_create(argv, process_option_inherit_environment, &srv.process) != 0)
         {
@@ -130,4 +151,3 @@ static uint64_t test_server_total_hits(test_server &srv)
         return uint64_t(-1);
     return strtoull(data.c_str() + at + 8, nullptr, 10);
 }
-

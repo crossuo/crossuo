@@ -481,3 +481,51 @@ void vfs_manifest_assign_tiers(VfsPlan &plan)
             unmatched);
     }
 }
+
+// ---------------------------------------------------------------------------
+// product subsets (M6, plan §17.6): one manifest tree, one granule model, a
+// per-build view over it. The web plan simply excludes what the browser
+// build does not carry (see vfs_manifest.h for the pattern list).
+// ---------------------------------------------------------------------------
+
+bool vfs_subset_web_excludes(const astr_t &name)
+{
+    if (name.empty())
+        return false;
+    const astr_t lower = str_lower(name);
+    const auto starts = [&lower](const char *prefix)
+    {
+        return lower.rfind(prefix, 0) == 0;
+    };
+    // anim*.mul: the legacy MUL animation set (560 MB - the UOP animations
+    // cover it); anim.idx stays: it is KB-sized and not worth a special case
+    if (starts("anim") && lower.size() >= 4 && lower.compare(lower.size() - 4, 4, ".mul") == 0)
+        return true;
+    // Music/**: deferred on the web build
+    if (starts("music/"))
+        return true;
+    // facet*: the facet maps are not part of the web view
+    if (starts("facet"))
+        return true;
+    // verdata*: the legacy patch file (the UOP data supersedes it)
+    if (starts("verdata"))
+        return true;
+    return false;
+}
+
+void vfs_manifest_apply_subset(VfsPlan &plan, vfs_subset subset)
+{
+    if (subset == vfs_subset_none)
+        return;
+    plan.subset = uint8_t(subset);
+    size_t removed = 0;
+    for (size_t i = plan.files.size(); i > 0; --i)
+    {
+        const size_t index = i - 1;
+        if (!vfs_subset_web_excludes(plan.files[index].name))
+            continue;
+        plan.files.erase(plan.files.begin() + ptrdiff_t(index));
+        ++removed;
+    }
+    LOG_INFO("subset: web view keeps %zu of %zu files", plan.files.size(), plan.files.size() + removed);
+}

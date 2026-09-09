@@ -74,7 +74,10 @@ static const uint32_t VFS_PLAN_MAGIC = 0x314c5056;  // "VPL1"
 static const uint32_t VFS_STATE_MAGIC = 0x31545356; // "VST1"
 // 2: the plan carries the product manifest/file repo URLs (M2 fetch engine);
 // older plan.bin files simply fail to load and the plan is rebuilt
-static const uint32_t VFS_SERIALIZATION_VERSION = 2;
+// 3: the plan records its product subset (M6, plan §17.6) - additive: a v3
+// plan is a v2 plan plus one trailing byte, and v2 plans (M5) load unchanged
+// with subset none
+static const uint32_t VFS_SERIALIZATION_VERSION = 3;
 
 bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
 {
@@ -108,6 +111,9 @@ bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
             w.str(asset.blob);
         }
     }
+    // v3: the subset is the trailing field, so a v2 payload is exactly a v3
+    // one minus this byte (the backward-compat shape the reader exploits)
+    w.pod(plan.subset);
     out = std::move(w.data);
     return true;
 }
@@ -120,8 +126,8 @@ bool vfs_plan_deserialize(const uint8_t *data, size_t size, VfsPlan &out_plan)
     uint32_t version = 0;
     if (!r.pod(&magic) || !r.pod(&version))
         return false;
-    if (magic != VFS_PLAN_MAGIC || version != VFS_SERIALIZATION_VERSION)
-        return false;
+    if (magic != VFS_PLAN_MAGIC || version < 2 || version > VFS_SERIALIZATION_VERSION)
+        return false; // v1 predates the repos; anything newer is unknown
     if (!r.pod(&out_plan.product_serial))
         return false;
     if (!r.str(&out_plan.manifest_repo) || !r.str(&out_plan.file_repo))
@@ -151,6 +157,14 @@ bool vfs_plan_deserialize(const uint8_t *data, size_t size, VfsPlan &out_plan)
             file.assets.emplace_back(asset);
         }
         out_plan.files.emplace_back(std::move(file));
+    }
+    // v3: the recorded subset; v2 plans (M5) predate the field - none
+    if (version >= 3)
+    {
+        uint8_t subset = 0;
+        if (!r.pod(&subset))
+            return false;
+        out_plan.subset = subset;
     }
     return r.pos == r.size;
 }
@@ -230,8 +244,11 @@ bool vfs_state_file_sync(const fs_path &path)
     return ok;
 }
 
-bool vfs_state_load(const fs_path &path, size_t asset_count, std::vector<uint8_t> &out_states)
+bool vfs_state_load(
+    const fs_path &path, size_t asset_count, std::vector<uint8_t> &out_states, bool *out_reset)
 {
+    if (out_reset != nullptr)
+        *out_reset = false;
     out_states.assign(asset_count, vfs_pending);
     std::vector<uint8_t> data;
     if (!fs_file_read(fs_path_ascii(path), data))
@@ -244,8 +261,12 @@ bool vfs_state_load(const fs_path &path, size_t asset_count, std::vector<uint8_t
         version != VFS_SERIALIZATION_VERSION || count != asset_count || r.pos + count > r.size)
     {
         // plan drift or corruption: unusable, but the resolved answer is
-        // still "all pending" (reconcile and materialize rebuild the rest)
+        // still "all pending" (reconcile and materialize rebuild the rest).
+        // The caller owes the journal hygiene now: flush this cleared state
+        // and truncate the log before any replay resurrects fetched marks
         LOG_WARN("state file unusable (%s), starting from pending", fs_path_ascii(path));
+        if (out_reset != nullptr)
+            *out_reset = true;
         return true;
     }
     memcpy(out_states.data(), data.data() + r.pos, count);
@@ -474,9 +495,9 @@ bool vfs_state_reconcile(
                 // promotion needs the real block: a §6.7 stub patch passes the
                 // entry-table check for ct==0 shapes, so confirm content
                 // against the blob when the store root is known (m4 review)
-                const bool real = !file.is_uop ||
-                                  vfs_store_pack_asset_present(
-                                      mapped, uint64_t(mapped_size), ai, asset, blobs_dir);
+                const bool real =
+                    !file.is_uop || vfs_store_pack_asset_present(
+                                        mapped, uint64_t(mapped_size), ai, asset, blobs_dir);
                 if (real)
                 {
                     LOG_TRACE("reconcile: upgrade %s[%zu] to fetched", file.name.c_str(), ai);

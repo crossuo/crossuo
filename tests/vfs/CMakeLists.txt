@@ -10,6 +10,7 @@ project(${PROJECT_NAME})
 set(VFS_TESTS_SRCS
   test_main.cpp
   test_main.h
+  test_arena.cpp
   test_fetch.cpp
   test_plan.cpp
   test_product.h

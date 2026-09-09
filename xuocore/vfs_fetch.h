@@ -3,11 +3,15 @@
 
 // vfs_fetch: the download engine (VUOI plan §6.4).
 //
-// A pool of worker threads (default hardware_concurrency-1, cap 8), each with
-// its own curl easy handle (keep-alive), drains one priority queue of blob
-// requests. Requests are deduplicated by resource tail, retried with backoff
-// (mft_config::download_retries semantics, honoring 429 Retry-After), and
-// bounded by a global buffered-bytes cap for backpressure.
+// A pool of worker threads (default hardware_concurrency-1, cap 8) drains one
+// priority queue of blob requests. Requests are deduplicated by resource
+// tail, retried with backoff (mft_config::download_retries semantics,
+// honoring 429 Retry-After), and bounded by a global buffered-bytes cap for
+// backpressure. The transfer mechanics themselves live behind the
+// vfs_transport seam (M6, plan §17.5): the engine owns queue, dedup and
+// retry policy, the active transport owns one GET. The built-in curl
+// transport keeps the M2-M5 wire behavior byte-identical; a web build swaps
+// it without touching this file.
 //
 // Blobs land in the M1 blob store (which mirrors the remote URL tree 1:1), so
 // fetching is exactly "get missing blobs into the store, then materialize" —
@@ -83,6 +87,12 @@ bool vfs_fetch_batch(
     int priority,
     bool manifest,
     void (*progress)(float done01, const char *tail));
+
+// fire-and-forget enqueue (M6 arena demand path, plan §17.4): queues the
+// blob download at `priority` and returns immediately - the consumer heals
+// when the blob lands in the store. Deduplicated with equal in-flight
+// requests; a no-op when the pool is not running or the blob is stored.
+void vfs_fetch_queue_blob(const char *tail, uint64_t expected_size, bool manifest, int priority);
 
 // mft fetch seam over HTTP for the manifest recursion: downloads the resource
 // into the blob store and copies the bytes to the caller's buffer

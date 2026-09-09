@@ -388,3 +388,150 @@ manager (passive, non-interactive, visible on every screen).
   rework landed in M5.
 - The M2 "zero requests" test now asserts *one* request on a full-cache
   online boot (the product refresh); everything else must stay request-free.
+
+# NOTES — deferred decisions and known limitations (M6)
+
+## M6 is groundwork: what exists now, what a browser port must still build
+
+M6 lands the VFS-side seams the Web backend plugs into (plan §17.8 item 3,
+minus everything browser-side): the `vfs_transport` seam (plan §17.5), the
+granule-resident `store_arena` backend (§17.3) with LRU eviction, the
+product-subset filters (§17.6) and the fixture server's COOP/COEP headers
+(§17.5). All of it is verified on native; nothing includes Emscripten code.
+The default configuration (sparse backend, curl transport, no subset) is
+byte-identical to M5, and the whole M1-M5 battery runs unmodified on it.
+
+What a browser port must still build (beyond the §17.7 plumbing - WebSocket
+game network, MEMFS/IDBFS layers, SDL2/audio, the requestAnimationFrame main
+loop, which are all outside the VFS):
+
+- The transport implementation: a `vfs_transport` subclass over
+  `emscripten_fetch`/JS-`fetch` (wired through `vfs_transport_set`), with
+  `range()` implementing granule range reads (the curl default reports
+  range unsupported and keeps the whole-fetch fallback). Decompression of
+  part blobs can use `DecompressionStream("deflate")` in a worker (§17.5).
+- Persistence (§17.5): Cache-API/Service-Worker or OPFS granule store behind
+  ensure/evict; the state DB (plan.bin/state.bin/journal semantics) moves to
+  IndexedDB as the advisory bitmap.
+- The async boot: `vfs_boot` is synchronous on native. On Web the T0
+  "blocking" tier must become an await (or a loading screen over repeated
+  `vfs_is_ready` checks); the seam (the fetch engine + the arena) already
+  answers every miss asynchronously via `stub_on_miss` + `prefetch`.
+- Index baking (§17.3): `CIndexObject.Address` must point at arena slots
+  (via `vfs_store_arena::read`), `0` when not resident, plus the §6.8
+  refresh hooks at every consumer - mandatory on Web (§17.4).
+- `vfs_store_arena::max_bytes` must be sized to the wasm32 headroom (§17.6;
+  default 256 MB) and `#if defined(__EMSCRIPTEN__)` code goes behind the
+  transport/`cancel` seam and the persistence wrapper - not into the engine.
+
+Web-port backlog (M6 review, port separately):
+
+- the product-manifest refresh (`http_get_binary`, vfs.cpp:~1032) predates
+  the transport seam and still uses plain curl;
+- the §17.6 `.exe`/`.dll`-ish exclusions are not implemented (the pattern
+  table covers anim\*.mul/Music/facet\*/verdata\* only);
+- the exact body cap converts an oversized-body mismatch into (bounded)
+  retry churn instead of an accepted transfer - manifests must size true.
+
+## Arena eviction and consumer liveness (THE arena rule)
+
+`evict()` and the post-ensure budget enforcement drop LRU granules; a
+granule with an in-flight `ensure()` is never evicted (its commit would
+resurrect bytes the budget asked to drop, and the waiter would read freed
+memory). Everything else - sealed granules included - is evictable, by
+decision: arena bytes are always recoverable from the blob store, and arena
+mode pairs with the no-traps configuration where a later `ensure()`
+re-materializes them. The consequence is the §17.3 consumer-liveness
+requirement: no cached game object may keep a pointer into arena bytes
+across a possible eviction. The native answer is M4's refresh machinery
+(`vfs_refresh_index`/`vfs_refresh_block`: destroy the cached sprite, clear
+the flag, reload on the next frame); the Web port wires the same
+`DestroySprite` path. Arena residency deliberately holds payload bytes only
+(pack header/entry tables are not resident: the Web UOP table synthesis is
+in-memory per §17.1), so `read()` bounds are payload bounds, not file-image
+offsets.
+
+The zerolat analog (`stub_on_miss`) fills the arena with the §6.7 stub
+payload on a missing blob and reports ready (§17.4: the miss path answers
+instantly); `ensure()` on a resident stub always retries the real blob
+first - that is the heal. Boot gates core assets on `vfs_fetched` state, so
+a stubbed T0 asset still fails a boot, exactly like M4 zerolat does not
+mask a missing core install.
+
+## Subset (§17.6) mechanics
+
+`vfs_manifest_apply_subset(plan, subset)` filters the plan at every (re)build
+(`vfs_subset_web` drops `anim*.mul`, `Music/**`, `facet*`, `verdata*`; see
+`vfs_subset_web_excludes`), and `plan.bin` (serialization version 3) records
+the subset as one trailing byte - a v2 payload (M5) is exactly a v3 payload
+minus that byte, so M5 plans load unchanged with subset none (an M5 client
+reading a v3 plan.bin rejects it and rebuilds: the drift path, harmless).
+Removed-by-subset entries behave like plan-removed in the update flow: the
+store keeps their bytes, the accounting drops them. A stored plan.bin whose
+subset byte differs from the params subset is drift in BOTH directions
+(web→none and none→web): the plan rebuilds with the params view and the
+diff/reset runs like any serial change. That rebuild changes the plan's
+asset count, and state.bin is plan-ordered - the cleared DB now also
+truncates journal.log, flushing the fresh all-pending state.bin BEFORE the
+truncate (the M5 rotation safety rule), so stale fetched marks cannot
+resurrect over the reset; a subset switch therefore always re-verifies but
+never corrupts. The sparse install never prepares excluded
+files, so a boot that ran without the subset keeps stale skeleton files
+that verify as missing blobs (delete the install or run `xuoi --verify`).
+
+## Transport seam details
+
+The transfer mechanics moved from vfs_fetch into the curl implementation of
+`vfs_transport`; the engine keeps queue, dedup, retry policy and the
+buffered-bytes backpressure. Two deliberate deviations from the M2-M5 wire
+behavior, both invisible to the tests: the per-transfer body cap is now the
+exact expected size (the M2-M5 slack of 64 KB was a grace window for
+oversized bodies that the engine rejected anyway - oversized bodies now
+abort mid-transfer instead of after it), and the manifest seam's
+per-call curl handle became a per-thread one (keep-alive improves; the
+wire protocol does not). The vtable carries the absolute URL (and not
+tail + repo) because sub-manifest URLs are composed by the mft engine from
+the product manifest's own `<manifestrepos>` - on a first boot those repos
+are not known to the fetch engine, so the seam must take resolved URLs.
+Injection is process-wide and thread-safe (`vfs_transport_set`); tests own
+their fakes and restore the previous override afterwards.
+
+## Arena boot on native (memory-mode)
+
+`--streaming-backend=arena` (or `params.store_backend`) boots without
+materializing any install file: the skeleton prepare, the managed-mapping
+registry, the trap backend and the demand tier are all skipped (§17.2: no
+traps exist), T0 granules are ensured resident through the backend, and the
+background tier ensures everything reachable from the store. The state DB
+keeps its meaning (fetched = resident this session, stubbed = §6.7
+placeholder, holes pre-marked), the HUD counters read it unchanged, and
+`vfs_stats` skips the on-disk reconcile (there is nothing to reconcile
+against). Residency contract: boot re-ensures every T0 granule (blocking -
+core assets are small) at EVERY start, restarts included, so the core bytes
+are resident again after a restart; T1+ granules are converged by the first
+boot's background pass and afterwards repopulate only on access (the
+consumer `ensure()`/`stub_on_miss` path - the native memory-mode wires no
+game layer, so nothing else touches them in between). state.bin stays the
+advisory record: a warm re-ensure that fails demotes the asset to pending
+(journal `R`), so the §11 retry semantics stand. What the native memory-mode
+deliberately does NOT do:
+serve the game (no index baking, no mappings - files do not exist), verify
+(`vfs_verify` inspects files) or materialize for the CLI tools; those stay
+sparse-backed on native and belong to the browser port's runtime.
+
+## Transport + arena test surface (M6)
+
+`tests/vfs/test_arena.cpp` runs the store_sparse core battery re-mixed for
+arena semantics (ensure/is_ready/read round-trip over zlib, stored, hole
+and loose assets, prefetch + demand heal against the fixture server, LRU
+eviction order with budget edges 0/oversized plus the read-touch
+LRU-vs-FIFO discriminator and the in-flight eviction probe, stub fill +
+heal, seal, the warm-boot T0 residency contract), the
+subset unit tests (pattern table, idempotency, plan.bin round-trip, v2
+compat, drift rebuild re-applying the subset, the persisted-subset policy
+rebuilding in both directions) and the transport seam tests
+(a fake transport serves the full boot - manifests and blobs, no curl no
+sockets - plus the range-unsupported contract, the in-flight eviction
+probe and the COOP/COEP fixture
+server headers). The M2 "zero requests" assertion is untouched and still
+passes on the curl transport.
