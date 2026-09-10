@@ -340,6 +340,19 @@ static void ClientVersionFixup(bool overrideProtocolVersion)
     }
 }
 
+// apply the defaults a config file would have set up when there is none:
+// the streamed install is always the current uop distribution, so the
+// client version defaults to the latest known one and everything derived
+// from it (cryptography, client type, packet layout, view range) follows
+void ApplyClientVersionDefaults()
+{
+    char str[32] = {};
+    client_version_string(CV_LATEST, str, sizeof(str));
+    g_Config.ClientVersionString = str;
+    g_Config.ClientVersion = CV_LATEST;
+    ClientVersionFixup(false);
+}
+
 // priority order looking for a config file:
 // 1. command line -c/--config option
 // 2. crossuo.cfg on the side with executable

@@ -189,7 +189,11 @@ bool load_config()
         if (g_cli["streaming-subset"].was_set())
             params.subset =
                 g_cli["streaming-subset"].get().string == "web" ? vfs_subset_web : vfs_subset_none;
-        auto dir = g_cli["streaming"].get().string;
+        // popts: .get() on an option that was never set reads out of bounds
+        // (release builds compile the guard out) - always check was_set first
+        astr_t dir;
+        if (g_cli["streaming"].was_set())
+            dir = g_cli["streaming"].get().string;
         if (dir.empty())
             dir = fs_path_ascii(FilePath("streamed"));
         params.install_dir = fs_path_from(dir.c_str());
@@ -222,6 +226,13 @@ bool load_config()
     {
         vfs_set_params(streaming_params());
         g_UOPath = fs_path_from(vfs_install_path());
+        if (!config_exists)
+        {
+            // no config: assume the good defaults the streamed install runs
+            // with (latest client version, and everything derived from it -
+            // cryptography, client type, packet layout, view range)
+            ApplyClientVersionDefaults();
+        }
         uo_data_init(fs_path_ascii(g_UOPath), g_Config.ClientVersion, g_Config.UseVerdata);
         Info(Client, "\tStreaming Data Path: %s", fs_path_ascii(g_UOPath));
         // the streamed product is the modern uop distribution; a config

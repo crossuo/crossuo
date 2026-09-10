@@ -44,5 +44,6 @@ struct Config
 
 bool LoadGlobalConfig();
 void SaveGlobalConfig();
+void ApplyClientVersionDefaults();
 
 extern Config g_Config;
