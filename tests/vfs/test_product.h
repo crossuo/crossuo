@@ -39,7 +39,7 @@
 // byte helpers
 // ---------------------------------------------------------------------------
 
-static std::vector<uint8_t> test_pattern(size_t size)
+static inline std::vector<uint8_t> test_pattern(size_t size)
 {
     std::vector<uint8_t> data(size);
     for (size_t i = 0; i < size; i++)
@@ -49,7 +49,7 @@ static std::vector<uint8_t> test_pattern(size_t size)
     return data;
 }
 
-static std::vector<uint8_t> test_zlib(const std::vector<uint8_t> &payload)
+static inline std::vector<uint8_t> test_zlib(const std::vector<uint8_t> &payload)
 {
     uLongf dst_len = compressBound(uLong(payload.size()));
     std::vector<uint8_t> out(dst_len);
@@ -64,7 +64,7 @@ static std::vector<uint8_t> test_zlib(const std::vector<uint8_t> &payload)
 }
 
 // the metadata bytes vfs_store synthesizes (§10.2): [type=3][size=ml-4][zeros]
-static std::vector<uint8_t> test_synth_metadata(uint32_t ml)
+static inline std::vector<uint8_t> test_synth_metadata(uint32_t ml)
 {
     std::vector<uint8_t> meta(ml, 0);
     if (ml >= 4)
@@ -77,21 +77,21 @@ static std::vector<uint8_t> test_synth_metadata(uint32_t ml)
     return meta;
 }
 
-static astr_t test_hex64(uint64_t value)
+static inline astr_t test_hex64(uint64_t value)
 {
     char buf[32] = {};
     snprintf(buf, sizeof(buf), "%llx", (unsigned long long)value);
     return astr_t(buf);
 }
 
-static astr_t test_remote_name(uint32_t ph, uint32_t sh)
+static inline astr_t test_remote_name(uint32_t ph, uint32_t sh)
 {
     char buf[32] = {};
     snprintf(buf, sizeof(buf), "%08x%08x", ph, sh);
     return astr_t(buf);
 }
 
-static bool test_write_file(const fs_path &path, const std::vector<uint8_t> &bytes)
+static inline bool test_write_file(const fs_path &path, const std::vector<uint8_t> &bytes)
 {
     fs_path_create(fs_directory(path));
     if (!fs_file_write(fs_path_ascii(path), bytes))
@@ -104,7 +104,7 @@ static bool test_write_file(const fs_path &path, const std::vector<uint8_t> &byt
 
 // stable temp root that never lands in the repo checkout (see test_uop_parse);
 // unique per process so reruns never see a previous run's leftovers
-static fs_path test_temp_root()
+static inline fs_path test_temp_root()
 {
 #ifdef _MSC_VER
     const char *env = getenv("TMP");
@@ -118,7 +118,7 @@ static fs_path test_temp_root()
 #endif
 }
 
-static fs_path test_dir(const char *name)
+static inline fs_path test_dir(const char *name)
 {
     char unique[64];
     snprintf(unique, sizeof(unique), "%s_%u", name, (unsigned)getpid());
@@ -189,7 +189,7 @@ struct test_product_data
 };
 
 // registers a pack part (and its blob) in the product description
-static void test_add_part(
+static inline void test_add_part(
     test_product_data &prod,
     uint32_t ph,
     uint32_t sh,
@@ -213,7 +213,7 @@ static void test_add_part(
     prod.parts.emplace_back(part);
 }
 
-static void
+static inline void
 test_add_loose(test_product_data &prod, const char *name, uint32_t ct, size_t payload_size)
 {
     test_loose_def loose;
@@ -227,7 +227,7 @@ test_add_loose(test_product_data &prod, const char *name, uint32_t ct, size_t pa
 }
 
 // manifest entry line for a pack part, hex attributes as the patcher ships
-static astr_t test_part_xml(const test_part_def &part, uint64_t timestamp)
+static inline astr_t test_part_xml(const test_part_def &part, uint64_t timestamp)
 {
     char buf[512] = {};
     snprintf(
@@ -245,7 +245,7 @@ static astr_t test_part_xml(const test_part_def &part, uint64_t timestamp)
     return astr_t(buf);
 }
 
-static astr_t test_loose_xml(const test_loose_def &loose, uint64_t timestamp)
+static inline astr_t test_loose_xml(const test_loose_def &loose, uint64_t timestamp)
 {
     char buf[512] = {};
     snprintf(
@@ -260,12 +260,12 @@ static astr_t test_loose_xml(const test_loose_def &loose, uint64_t timestamp)
     return astr_t(buf);
 }
 
-static std::vector<uint8_t> test_bytes(const astr_t &text)
+static inline std::vector<uint8_t> test_bytes(const astr_t &text)
 {
     return std::vector<uint8_t>(text.begin(), text.end());
 }
 
-static astr_t test_join(const std::vector<astr_t> &parts)
+static inline astr_t test_join(const std::vector<astr_t> &parts)
 {
     astr_t joined;
     for (const auto &part : parts)
@@ -277,7 +277,7 @@ static astr_t test_join(const std::vector<astr_t> &parts)
 
 // removes outputs a previous test run may have left behind: the install dir
 // files and the state DB (fs_del unlinks files only, which is all we need)
-static void test_clean_outputs(const test_product_data &prod)
+static inline void test_clean_outputs(const test_product_data &prod)
 {
     const char *files[] = {
         "pack0.uop",
@@ -312,7 +312,7 @@ static void test_clean_outputs(const test_product_data &prod)
 // description (test_write_product); test_build_product sets a fresh root up
 // fills an empty product description with the default mini product (plus any
 // registered extra loose files); a no-op when parts/loose are already set
-static void test_fill_product(test_product_data &prod)
+static inline void test_fill_product(test_product_data &prod)
 {
     // callers may prefill parts/loose for custom layouts (M3 trap tests use
     // page-straddling block sizes); the default mini product otherwise
@@ -343,7 +343,7 @@ static void test_fill_product(test_product_data &prod)
     }
 }
 
-static bool test_write_product(test_product_data &prod)
+static inline bool test_write_product(test_product_data &prod)
 {
     // pack manifest with all parts (including the hole entry)
     astr_t files;
@@ -426,7 +426,7 @@ static bool test_write_product(test_product_data &prod)
 }
 
 // builds the synthetic mini product into a fresh temp root
-static bool test_build_product(test_product_data &prod, const char *name)
+static inline bool test_build_product(test_product_data &prod, const char *name)
 {
     prod.root = test_dir(name);
     prod.blobs = fs_path_join(prod.root, "blobs");
@@ -438,7 +438,7 @@ static bool test_build_product(test_product_data &prod, const char *name)
 
 // points the product's repos at a running fixture server (the generated
 // prod.xml ships the offline "*.test" urls, which no test resolves)
-static bool test_product_patch_repos(
+static inline bool test_product_patch_repos(
     const test_product_data &prod, const astr_t &manifest_url, const astr_t &file_url)
 {
     const auto path = fs_path_join(prod.root, "prod.xml");
@@ -462,7 +462,7 @@ static bool test_product_patch_repos(
 }
 
 // deletes a blob from the server-side store (404 exercises)
-static void test_product_remove_blob(const test_product_data &prod, const astr_t &rel)
+static inline void test_product_remove_blob(const test_product_data &prod, const astr_t &rel)
 {
     fs_del(fs_path_join(prod.blobs, rel));
 }
@@ -475,7 +475,7 @@ static const char *FIXTURE_ART_ENTRY =
     "<f ph=\"3cf84\" sh=\"fc599ef4\" ul=\"1dc2\" ct=\"1\" cl=\"1917\" ml=\"88\" mc=\"9fd7f3c6\"/>";
 static const size_t FIXTURE_ART_PAYLOAD = 7618; // ul = 0x1dc2
 
-static bool test_read_fixture(const char *name, std::vector<uint8_t> &out)
+static inline bool test_read_fixture(const char *name, std::vector<uint8_t> &out)
 {
     const auto path = fs_path_join(fs_path_from(VFS_FIXTURE_DIR), name);
     FILE *fp = fopen(fs_path_ascii(path), "rb");
@@ -498,7 +498,7 @@ static bool test_read_fixture(const char *name, std::vector<uint8_t> &out)
     return true;
 }
 
-static bool test_build_fixture_product(test_product_data &prod, const char *name)
+static inline bool test_build_fixture_product(test_product_data &prod, const char *name)
 {
     prod.root = test_dir(name);
     prod.blobs = fs_path_join(prod.root, "blobs");

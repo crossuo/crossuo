@@ -467,6 +467,7 @@ VFS_TEST(stub_heal_promotes_and_refreshes)
     const uint64_t at = gone.file_offset + gone.ml;
     const uint64_t capacity = uint64_t(gone.cl);
 
+
     volatile uint8_t probe = base[at]; // fault: stub served
     (void)probe;
     TEST_CHECK(vfs_trap_page_mark_at(base, at) == vfs_trap_mark_stubbed);
@@ -566,7 +567,7 @@ VFS_TEST(stub_zerolat_offline_serves_instantly_and_heals)
 
     const auto &gone = env.plan.files[env.pack_file_index].assets[1];
     const uint64_t at = gone.file_offset + gone.ml;
-    const uint64_t capacity = uint64_t(gone.cl);
+
 
     // no fetch engine, offline, zerolat: the fault must not wait - the page
     // flips readable immediately (with a sound stub: silence => zeroed mark,

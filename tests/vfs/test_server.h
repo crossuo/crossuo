@@ -55,15 +55,15 @@ struct test_server
 
 // `extra` (optional) is appended verbatim to the server command line, e.g.
 // "--coop-coep" for the cross-origin-isolation tests
-static bool
+static inline bool
 test_server_start_ex(test_server &srv, const fs_path &root, bool no_range, const char *extra);
 
-static bool test_server_start(test_server &srv, const fs_path &root, bool no_range)
+static inline bool test_server_start(test_server &srv, const fs_path &root, bool no_range)
 {
     return test_server_start_ex(srv, root, no_range, nullptr);
 }
 
-static bool
+static inline bool
 test_server_start_ex(test_server &srv, const fs_path &root, bool no_range, const char *extra)
 {
     char root_arg[FS_MAX_PATH];
@@ -108,14 +108,14 @@ test_server_start_ex(test_server &srv, const fs_path &root, bool no_range, const
     return false;
 }
 
-static std::string test_server_url(const test_server &srv, const char *path)
+static inline std::string test_server_url(const test_server &srv, const char *path)
 {
     char buf[128];
     snprintf(buf, sizeof(buf), "http://127.0.0.1:%d%s", srv.port, path);
     return std::string(buf);
 }
 
-static void test_server_stop(test_server &srv)
+static inline void test_server_stop(test_server &srv)
 {
     if (!srv.running)
         return;
@@ -129,7 +129,7 @@ static void test_server_stop(test_server &srv)
 }
 
 // GET /hit?path=... -> plain per-path request count
-static uint64_t test_server_hits(test_server &srv, const char *path)
+static inline uint64_t test_server_hits(test_server &srv, const char *path)
 {
     char url[256];
     snprintf(url, sizeof(url), "http://127.0.0.1:%d/hit?path=%s", srv.port, path);
@@ -140,7 +140,7 @@ static uint64_t test_server_hits(test_server &srv, const char *path)
 }
 
 // total requests served, from the /hits JSON summary
-static uint64_t test_server_total_hits(test_server &srv)
+static inline uint64_t test_server_total_hits(test_server &srv)
 {
     const auto url = test_server_url(srv, "/hits");
     std::string data;
