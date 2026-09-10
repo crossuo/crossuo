@@ -546,3 +546,23 @@ sockets - plus the range-unsupported contract, the in-flight eviction
 probe and the COOP/COEP fixture
 server headers). The original "zero requests" assertion is untouched and still
 passes on the curl transport.
+
+## Current legacyrelease gumpart format (flags == 3, zlib + bwt)
+
+The product's `gumpartLegacyMUL.uop` (distributed whole, uncompressed, via
+`unpacked.mft`) stores per-gump payloads as zlib streams that inflate to a
+bwt/mtf coded stream (MYP Flags == 3); only after both steps does the payload
+read as `[u32 width][u32 height][row offsets][RLE]`. Supported since the
+ClassicUO BwtDecompress port: `DecompressBlock`/`GetData` decode Flags == 3
+blocks, and the gump read path decodes compressed entries on first use,
+caching their dimensions (verified: statusbar gump 0x0804 decodes to 154x60
+from the current file; regression test `uop_gump_dims_validation` covers the
+dimension guard).
+
+Known open edges:
+- assembled packs (art, maps) are materialized with the transfer payload
+  (Flags == 1, zlib) - raw-pointer readers (art, map blocks) expect stored
+  bytes, so the materializer should switch to writing decompressed payloads
+  (Flags == 0, layout spacing by `ml + ul`) - tracked as follow-up work.
+- cliloc files and the string dictionary carry an 0x8E byte at offset 3 when
+  bwt coded; both decode up front now.
