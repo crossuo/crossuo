@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
 // vfs_manifest: consumes EA patch manifests (product -> pkg.mft -> per-pack
-// manifests) through the mft engine and produces the persisted AssetPlan
-// (VUOI plan §6.2). The plan is the single source of truth for the
+// manifests) through the mft engine and produces the persisted AssetPlan.
+// The plan is the single source of truth for the
 // materializer: it fixes, before any byte is written, the set of output
 // files, the pack entry tables and the deterministic planned offset of every
 // UOP block.
@@ -28,8 +28,8 @@ using mft_fetch_fn = bool (*) (
     uint8_t *buffer,
     size_t *size);
 
-// tier of service: when the asset is needed (plan §7.3). Plan-only in M1:
-// every asset defaults to T2 (on-demand) until vfs_boot (M2) assigns tiers.
+// tier of service: when the asset is needed. Assets default to T2
+// (on-demand) until vfs_boot assigns tiers.
 enum vfs_tier : uint8_t
 {
     vfs_tier_t0 = 0, // boot-critical, blocking
@@ -38,13 +38,13 @@ enum vfs_tier : uint8_t
     vfs_tier_t3,     // rare / never on boot
 };
 
-// product subset (M6, plan §17.6): a per-build filter over the SAME manifests
+// product subset: a per-build filter over the SAME manifests
 // so a web plan is a strict subset of the native one - one manifest tree, one
 // granule model, no forked products
 enum vfs_subset : uint8_t
 {
     vfs_subset_none = 0, // the full product view (native default)
-    vfs_subset_web,      // the §17.6 web exclusions
+    vfs_subset_web,      // drops the legacy anim/music/facet/verdata files
 };
 
 struct VfsAsset
@@ -77,11 +77,11 @@ struct VfsPlan
     };
     std::vector<VfsFile> files;
     uint64_t product_serial = 0;
-    // repo base URLs from the product manifest (M2): the fetch engine composes
+    // repo base URLs from the product manifest: the fetch engine composes
     // download URLs as repo + the asset's blob tail
     astr_t manifest_repo;
     astr_t file_repo;
-    // product subset the plan was filtered to (M6, plan §17.6); persisted in
+    // product subset the plan was filtered to; persisted in
     // plan.bin (v3). Missing (older plans) means vfs_subset_none
     uint8_t subset = vfs_subset_none;
 };
@@ -107,8 +107,8 @@ struct vfs_manifest_params
 {
     fs_path product_file; // product manifest ("prod" XML), read from disk
     fs_path blobs_dir;    // local blob store root, mirroring the remote URL tree
-    // optional acquisition override (M2: the HTTP fetch engine); when null,
-    // every manifest must already exist in the blob store (M1 offline path)
+    // optional acquisition override (the HTTP fetch engine); when null,
+    // every manifest must already exist in the blob store (offline path)
     mft_fetch_fn fetch = nullptr;
     void *fetch_context = nullptr;
 };
@@ -125,7 +125,7 @@ bool vfs_path_component_ok(const char *s);
 bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan);
 
 // ---------------------------------------------------------------------------
-// update flow (M5, plan §10.5): compares two plans built from different
+// update flow: compares two plans built from different
 // product serials and reports what changed per asset. Identities are the
 // uop hash (packs) and the file name (loose); a change is any difference in
 // timestamp, provenance (rh), sizes or metadata - the same fields
@@ -159,8 +159,8 @@ bool vfs_plan_diff(
     vfs_plan_diff_result *out);
 
 // ---------------------------------------------------------------------------
-// tiers (VUOI plan §7.3): assigned at boot from static name patterns plus the
-// embedded T1 order (§7.5); the persisted plan stays tier-free (M1 bytes)
+// tiers: assigned at boot from static name patterns plus the
+// embedded T1 order; the persisted plan stays tier-free
 // ---------------------------------------------------------------------------
 
 // one entry of the embedded (recorded) T1 manifest
@@ -171,12 +171,13 @@ struct vfs_embedded_entry
     astr_t name;           // loose-file name ("" for pack entries)
 };
 
-// The embedded T1 manifest generated from a recorded run (§7.5). Lives in
+// The embedded T1 manifest generated from a recorded run (boot accesses of a
+// scripted first-run scenario). Lives in
 // vfs_manifest_embedded.cpp, which is the file the build step rewrites; the
 // checked-in stub ships an empty table (T1 then only holds the static set).
 const std::vector<vfs_embedded_entry> &vfs_manifest_embedded();
 
-// test/deployment seam (M5): the table consumers actually use - the override
+// test/deployment seam: the table consumers actually use - the override
 // above when one was injected, the embedded file's table otherwise. Tests
 // inject converted recordings here (the deployment rewrite of
 // vfs_manifest_embedded.cpp keeps this seam intact).
@@ -184,16 +185,16 @@ const std::vector<vfs_embedded_entry> &vfs_manifest_embedded_table();
 // replaces the override table (empty restores the embedded file's table)
 void vfs_manifest_embedded_set(std::vector<vfs_embedded_entry> table);
 
-// applies the §7.3 tier table + the embedded T1 order to a freshly built plan
+// applies the tier table + the embedded T1 order to a freshly built plan
 void vfs_manifest_assign_tiers(VfsPlan &plan);
 
 // ---------------------------------------------------------------------------
-// product subsets (M6, plan §17.6): a per-build filter over the SAME manifests
+// product subsets: a per-build filter over the SAME manifests
 // so a web plan is a strict subset of the native one - one manifest tree,
 // one granule model, no forked products (the vfs_subset enum is at the top).
 // ---------------------------------------------------------------------------
 
-// the §17.6 exclusion rule: true when the plan file `name` is outside the web
+// the web exclusion rule: true when the plan file `name` is outside the web
 // product view - the legacy MUL animation set ("anim*.mul": the UOP
 // animations cover it), Music/** (deferred), facet* and verdata*
 bool vfs_subset_web_excludes(const astr_t &name);

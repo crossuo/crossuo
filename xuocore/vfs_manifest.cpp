@@ -22,7 +22,8 @@
 // manifest blobs are small; the mft engine sizes its buffers from this
 #define VFS_MANIFEST_BUFFER_SIZE (16 * 1024 * 1024)
 
-// Blob-store acquisition for the mft fetch seam (M1): the store mirrors the
+// Blob-store acquisition for the mft fetch seam (offline path): the store
+// mirrors the
 // remote URL tree 1:1, so the resource path is used as-is. No network is
 // ever touched here; cache files are not consulted (the store is the truth).
 static bool vfs_fetch_blob(
@@ -246,7 +247,7 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
     if (res == mft_ok)
     {
         out_plan.product_serial = prod.timestamp;
-        // the repos are the fetch engine's URL bases (M2); empty means the
+        // the repos are the fetch engine's URL bases; empty means the
         // product manifest carried none (nothing can be downloaded)
         out_plan.manifest_repo = prod.manifest_repo ? prod.manifest_repo : "";
         out_plan.file_repo = prod.file_repo ? prod.file_repo : "";
@@ -261,7 +262,7 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
 }
 
 // ---------------------------------------------------------------------------
-// plan diff (M5, plan §10.5)
+// plan diff
 // ---------------------------------------------------------------------------
 
 // content identity of one asset: everything the fetch/materialize pipeline
@@ -330,10 +331,10 @@ bool vfs_plan_diff(
 }
 
 // ---------------------------------------------------------------------------
-// tiers (§7.3)
+// tiers
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// embedded T1 manifest seam (§7.5): consumers read through the override (set
+// embedded T1 manifest seam: consumers read through the override (set
 // by tests / future resource loading) or the embedded file's compiled table
 // ---------------------------------------------------------------------------
 
@@ -370,7 +371,8 @@ static bool vfs_tier_name_is(const astr_t &name, const char *const *table, size_
 
 // T1 loose files: map-0 streaming first, then the rest of the map set,
 // remaining fonts, textures and patch muls. anim.idx (1.7 MB) is included:
-// LoadCommon requires it, so it must be fetched at boot (§7.2 "sized at boot").
+// LoadCommon requires it, so it must be fetched (sized, valid-but-unfetched)
+// at boot.
 static bool vfs_tier_t1_file(const astr_t &lower)
 {
     static const char *const names[] = { "staidx0.mul", "statics0.mul", "texmaps.mul", "anim.idx" };
@@ -398,7 +400,7 @@ static bool vfs_tier_t1_file(const astr_t &lower)
            lower.rfind("stadif", 0) == 0;       // stadifl*.mul / stadifi*.idx
 }
 
-// MainMisc.uop core assets (§7.3), keyed by their UOP name hashes
+// MainMisc.uop core assets (boot-critical), keyed by their UOP name hashes
 static const uint64_t VFS_TIER_T0_MAINMISC[] = {
     Asset::Strings,
     Asset::CommandsTranslate,
@@ -413,14 +415,14 @@ uint8_t vfs_manifest_tier_of(const VfsPlan::VfsFile &file, const VfsAsset &asset
     {
         const astr_t lower = str_lower(asset.name);
         if (lower.rfind("music/", 0) == 0)
-            return vfs_tier_t3; // deferred (§7.3, decision #2)
+            return vfs_tier_t3; // deferred to idle bandwidth
         if (vfs_tier_name_is(lower, VFS_TIER_T0_FILES, sizeof(VFS_TIER_T0_FILES) / sizeof(*VFS_TIER_T0_FILES)))
             return vfs_tier_t0;
         if (vfs_tier_t1_file(lower))
             return vfs_tier_t1;
         // anim.mul (190 MB legacy fallback) deliberately stays T2: the boot
         // skeleton prepares it valid-but-unfetched, LoadCommon passes, and the
-        // idle tier converges the content (§7.3)
+        // idle tier converges the content
         return vfs_tier_t2;
     }
 
@@ -448,7 +450,7 @@ void vfs_manifest_assign_tiers(VfsPlan &plan)
     }
 
     // the embedded (recorded) manifest promotes its entries to T1; unknown
-    // assets keep their static tier, so stale recordings only reorder (§7.5)
+    // assets keep their static tier, so stale recordings only reorder
     const auto &embedded = vfs_manifest_embedded_table();
     size_t unmatched = 0;
     for (const auto &entry : embedded)
@@ -483,7 +485,7 @@ void vfs_manifest_assign_tiers(VfsPlan &plan)
 }
 
 // ---------------------------------------------------------------------------
-// product subsets (M6, plan §17.6): one manifest tree, one granule model, a
+// product subsets: one manifest tree, one granule model, a
 // per-build view over it. The web plan simply excludes what the browser
 // build does not carry (see vfs_manifest.h for the pattern list).
 // ---------------------------------------------------------------------------

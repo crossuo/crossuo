@@ -39,12 +39,12 @@ void DeleteSprite(void *ptr)
     delete spr;
 }
 
-// M4 (VUOI §6.8): a group decoded from a streaming placeholder is dropped as
-// soon as its real bytes land, so the next ExecuteAnimation reloads it. The
-// drop decision is the trap's healed query (stub-served AND bytes landed),
-// not the state DB byte: the heal itself moves the asset to fetched, so a
-// live `vfs_asset_is_stubbed` check here never fires (the M4 review M1 dead
-// code). The one-shot set keeps the drop from looping - the trap keeps its
+// a group decoded from a streaming placeholder is dropped as soon as its real
+// bytes land, so the next ExecuteAnimation reloads it. The drop decision is
+// the trap's healed query (stub-served AND bytes landed), not the state DB
+// byte: the heal itself moves the asset to fetched, so a live
+// `vfs_asset_is_stubbed` check here would never fire. The one-shot set keeps
+// the drop from looping - the trap keeps its
 // stubbed+present marks after the heal, so the group must be dropped only
 // once. Groups drop whole (all directions share the group's block), like the
 // index build marks whole entries; every check exits immediately for
@@ -369,7 +369,7 @@ static std::unordered_map<uint32_t, uint32_t> s_AnimationLifetime;
 AnimationDirFrames *CAnimationManager::ExecuteAnimation(AnimationState anim, uint32_t ticks)
 {
     Anim = anim;
-    AnimationRefreshStub(anim); // M4: drop a healed placeholder frame set
+    AnimationRefreshStub(anim); // drop a healed placeholder frame set
     auto animation = uo_animation_get(anim);
     if (animation == nullptr)
     {

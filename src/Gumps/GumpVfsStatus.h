@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// GumpVfsStatus: the streamed-install download HUD (VUOI plan §11, resolved
-// decision #3). A minor, non-intrusive one-line indicator in the top-right
+// GumpVfsStatus: the streamed-install download HUD. A minor, non-intrusive
+// one-line indicator in the top-right
 // corner: download activity (rate + done/total), placeholders-in-use warning
 // and the offline badge. It fades out after a short idle time and costs
 // nothing when streaming is disabled (one flag check per frame).

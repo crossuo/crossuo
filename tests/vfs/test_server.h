@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
 // Shared local fixture server harness (tiny python http server with Range
-// support + per-path hit counters). Used by the M2 fetch tests and the M5
+// support + per-path hit counters). Used by the fetch tests and the
 // update tests; see http_server.py.
 
 #pragma once

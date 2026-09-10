@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M1 state DB tests: plan.bin/state.bin serialization, the fsync'd journal
-// and crash reconciliation (VUOI plan §6.6). The materialized files are the
+// state DB tests: plan.bin/state.bin serialization, the fsync'd journal
+// and crash reconciliation. The materialized files are the
 // source of truth: reconcile must downgrade DB state that the on-disk files
 // do not confirm, and a later materialize pass must repair it.
 
@@ -314,7 +314,7 @@ VFS_TEST(state_reconcile_missing_file)
     TEST_CHECK(states[5] == vfs_fetched);
 }
 
-// rewrites one pack entry exactly as the trap's §6.7 stub patch does
+// rewrites one pack entry exactly as the trap's stub patch does
 // (Flags=0, CompressedSize = the stored span) and zeroes the stored head (the
 // placeholder content): for stored (ct==0) assets the entry is byte-identical
 // to the planned shape, which is the whole point
@@ -349,7 +349,7 @@ static void stub_patch_pack_entry(
 
 VFS_TEST(state_reconcile_never_promotes_stub_patches)
 {
-    // M4 review: a §6.7 stub patch must never become permanent through
+    // a stub patch must never become permanent through
     // reconcile. Stored (ct==0) patches are entry-identical to the plan, so
     // on-disk presence alone promotes neither a stubbed nor a pending asset;
     // only the heal path (a real block write, journalled 'F') promotes

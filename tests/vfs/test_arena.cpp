@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M6 tests (VUOI plan §17, web groundwork - all verified on native):
+// web-groundwork tests (all verified on native):
 //   - the store_arena backend through the store_sparse core battery re-mixed
 //     for arena semantics (ensure/is_ready/read, prefetch + demand heal,
 //     LRU eviction, seal, zerolat stub+heal)
-//   - the product-subset filter (§17.6) incl. plan.bin round-trip and the
+//   - the product-subset filter incl. plan.bin round-trip and the
 //     drift rebuild re-applying it
 //   - the transport seam: a fake transport runs the FULL fetch pipeline
 //     (manifests + blobs, no curl, no network) and the fixture server's
-//     COOP/COEP headers (§17.5) are on the wire
+//     COOP/COEP headers are on the wire
 
 #define LOGGER_MODULE TestVfs
 
@@ -286,7 +286,7 @@ VFS_TEST(arena_stub_fill_and_heal)
     test_product_data prod;
     TEST_CHECK(test_build_product(prod, "arena_stub"));
     // the third part's blob is missing: the zerolat analog must fill the
-    // arena with the §6.7 stub payload, then heal when the blob arrives
+    // arena with the stub payload, then heal when the blob arrives
     const auto &missing = prod.parts[2];
     fs_del(fs_path_join(prod.blobs, missing.blob_rel));
 
@@ -301,7 +301,7 @@ VFS_TEST(arena_stub_fill_and_heal)
     const auto &part2 = plan.files[0].assets[2];
     TEST_CHECK(!arena.is_ready(part2));
 
-    // the §17.4 miss path answers instantly: non-blocking ensure fills the
+    // the zero-latency miss path answers instantly: non-blocking ensure fills the
     // arena with the kind stub (same generator as the trap) and reports
     // ready - the caller learns what happened from asset_is_stubbed
     TEST_CHECK_MSG(arena.ensure(part2, false), "stub-on-miss ensure must succeed");
@@ -310,7 +310,7 @@ VFS_TEST(arena_stub_fill_and_heal)
 
     std::vector<uint8_t> bytes(missing.payload.size());
     TEST_CHECK(arena.read(part2, 0, bytes.data(), bytes.size()));
-    // the expected payload is the pure generator's answer (§6.7 matrix)
+    // the expected payload is the pure generator's answer (stub matrix)
     std::vector<uint8_t> expected(missing.payload.size());
     vfs_stub_fill(
         vfs_stub_kind_for("pack0.uop"),
@@ -380,7 +380,7 @@ VFS_TEST(arena_prefetch_and_demand_heal)
     TEST_CHECK(test_server_hits(srv, ("/blobs/" + part0.blob).c_str()) == 1);
 
     // demand path: a non-blocking ensure reports the miss AND queues the
-    // fetch (§17.4 async model); the next blocking ensure heals
+    // fetch (async model); the next blocking ensure heals
     TEST_CHECK(!arena.ensure(part1, false));
     TEST_CHECK(!arena.is_ready(part1));
     TEST_CHECK_MSG(test_wait_for_blob(params.store.blobs_dir, part1), "demand blob never landed");
@@ -426,7 +426,7 @@ VFS_TEST(arena_boot_memory_mode)
     TEST_CHECK_MSG(vfs_boot(nullptr), "arena boot failed");
     vfs_boot_wait();
 
-    // no install files exist: granules live in the arena (§17.3)
+    // no install files exist: granules live in the arena
     TEST_CHECK(!fs_path_exists(fs_path_join(prod.install, "pack0.uop")));
     TEST_CHECK(!fs_path_exists(fs_path_join(prod.install, "tiledata.mul")));
     TEST_CHECK(!fs_path_exists(fs_path_join(prod.install, "Music", "Digital", "Britainpos.mp3")));
@@ -445,7 +445,7 @@ VFS_TEST(arena_boot_memory_mode)
     TEST_CHECK_MSG(vfs_boot(nullptr), "second arena boot failed");
     vfs_boot_wait();
 
-    // warm-boot residency contract (M6): T0 granules re-ensure (blocking:
+    // warm-boot residency contract: T0 granules re-ensure (blocking:
     // core and small), T1+ repopulate on access. The advisory state still
     // covers every file, but only the core granule is truly resident after
     // the restart - and the fixture's T0 set is exactly tiledata.mul
@@ -461,20 +461,20 @@ VFS_TEST(arena_boot_memory_mode)
 }
 
 // ---------------------------------------------------------------------------
-// product subsets (§17.6)
+// product subsets
 // ---------------------------------------------------------------------------
 
 VFS_TEST(subset_web_excludes_patterns)
 {
     test_product_data prod;
-    // register one file per §17.6 pattern plus survivors
+    // register one file per exclusion pattern plus survivors
     prod.extra_valid_loose.push_back({ "anim.mul", 0, 100 });
     prod.extra_valid_loose.push_back({ "anim2.mul", 0, 100 });
     prod.extra_valid_loose.push_back({ "facet0.mul", 0, 100 });
     prod.extra_valid_loose.push_back({ "verdata.mul", 0, 100 });
     TEST_CHECK(test_build_product(prod, "subset_plan"));
 
-    // the rule itself: exact §17.6 patterns, nothing else
+    // the rule itself: exact exclusion patterns, nothing else
     TEST_CHECK(vfs_subset_web_excludes("anim.mul"));
     TEST_CHECK(vfs_subset_web_excludes("anim2.mul"));
     TEST_CHECK(vfs_subset_web_excludes("anim(2).mul")); // the fallback naming
@@ -557,7 +557,7 @@ VFS_TEST(subset_plan_roundtrip_and_v2_compat)
     TEST_CHECK(loaded.subset == uint8_t(vfs_subset_web));
     TEST_CHECK(loaded.files.size() == plan.files.size());
 
-    // backward compatibility (M5 plans): a v2 payload is exactly a v3 one
+    // backward compatibility: a v2 payload is exactly a v3 one
     // minus the trailing subset byte - strip it, stamp version 2, and the
     // plan must load with subset none
     VfsPlan unfiltered;
@@ -638,7 +638,7 @@ VFS_TEST(subset_drift_rebuild_reapplies_subset)
     test_server_stop(srv);
 }
 
-// the persisted-subset policy (M6 review): a plan.bin whose stored subset
+// the persisted-subset policy: a plan.bin whose stored subset
 // differs from the params subset is drift in BOTH directions - the plan must
 // rebuild with the params view, and the asset-count change must reset the
 // state DB (whose stale journal then gets truncated, not replayed)
@@ -646,7 +646,7 @@ VFS_TEST(subset_policy_drift_rebuilds_plan)
 {
     test_vfs_shutdown guard;
     test_product_data prod;
-    prod.extra_valid_loose.push_back({ "anim.mul", 0, 100 }); // a §17.6 exclusion
+    prod.extra_valid_loose.push_back({ "anim.mul", 0, 100 }); // a web exclusion
     TEST_CHECK(test_build_product(prod, "subset_policy"));
 
     arena_log_mute mute;
@@ -683,7 +683,7 @@ VFS_TEST(subset_policy_drift_rebuilds_plan)
 
     // simulate a crash before the next rotation: a stale fetched mark in the
     // journal must not survive the switch - the cleared state flushes BEFORE
-    // the journal truncate (M5 rotation rule), so the replay sees nothing
+    // the journal truncate (rotation rule), so the replay sees nothing
     {
         FILE *fp = fopen(fs_path_ascii(fs_path_join(params.state_dir, "journal.log")), "a");
         TEST_CHECK(fp != nullptr);
@@ -711,7 +711,7 @@ VFS_TEST(subset_policy_drift_rebuilds_plan)
 }
 
 // ---------------------------------------------------------------------------
-// transport seam (§17.5): a fake transport runs the FULL pipeline
+// transport seam: a fake transport runs the FULL pipeline
 // ---------------------------------------------------------------------------
 
 namespace
@@ -984,7 +984,7 @@ VFS_TEST(transport_range_unsupported_by_default)
 {
     uint8_t sink_bucket[8] = {};
     // the default transport answers range gets with "unsupported": callers
-    // keep their whole-fetch fallback (the M6 seam contract)
+    // keep their whole-fetch fallback (the seam contract)
     const vfs_transport_result result = vfs_transport_default()->range(
         "http://unused.test/blob", "base/blob", 0, 8, nullptr, sink_bucket, 0, false);
     TEST_CHECK(!result.ok);
@@ -992,7 +992,7 @@ VFS_TEST(transport_range_unsupported_by_default)
 }
 
 // ---------------------------------------------------------------------------
-// fixture server hardening: COOP/COEP headers (§17.5)
+// fixture server hardening: COOP/COEP headers
 // ---------------------------------------------------------------------------
 
 namespace

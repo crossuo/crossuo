@@ -2,22 +2,22 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # SPDX-FileCopyrightText: 2026 CrossUO Team
 #
-# vuoi fixture server (VUOI plan §13.2): a tiny, deterministic HTTP server for
+# vuoi fixture server: a tiny, deterministic HTTP server for
 # the streaming-install integration tests. Serves a directory tree over HTTP
 # with:
 #   - HTTP Range GETs (206 + correct Content-Range); --no-range disables it
-#     (server reports Accept-Range: none) to exercise the M2 whole-file
+#     (server reports Accept-Range: none) to exercise the whole-file
 #     fallback: pack parts and loose files are whole GETs anyway, so behavior
-#     is identical - the mode documents the contract for M3 range streaming
+#     is identical - the mode documents the contract for range streaming
 #   - GET /hits -> JSON {"total": N, "counts": {"/path": count}} of every
 #     request received per path (cache-miss assertions: "full cache => zero
 #     new blob requests")
 #   - GET /shutdown -> stops the server (exit 0) when stdin is still open;
 #     closing stdin also shuts the server down (process stdin-close)
-#   - --cors -> adds Access-Control-Allow-Origin: * (M6 browser backend)
+#   - --cors -> adds Access-Control-Allow-Origin: * (web browser backend)
 #   - --coop-coep -> adds Cross-Origin-Opener-Policy: same-origin and
-#     Cross-Origin-Embedder-Policy: require-corp (M6 browser backend, plan
-#     §17.5: the SharedArrayBuffer the fetch worker pool needs requires them)
+#     Cross-Origin-Embedder-Policy: require-corp (web browser backend:
+#     the SharedArrayBuffer the fetch worker pool needs requires them)
 #
 # The server binds an ephemeral port (port 0) and prints the chosen port as
 # the first line of stdout ("port N"); --port-file also writes it for
@@ -52,7 +52,7 @@ class Handler(BaseHTTPRequestHandler):
         return total
 
     def _security_headers(self):
-        # cross-origin isolation (plan §17.5): a web build's worker pool needs
+        # cross-origin isolation: a web build's worker pool needs
         # SharedArrayBuffer, which the browser only grants to COOP/COEP pages
         if self.server.coop_coep:
             self.send_header("Cross-Origin-Opener-Policy", "same-origin")

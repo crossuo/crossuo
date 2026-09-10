@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_fetch: the download engine (VUOI plan §6.4).
+// vfs_fetch: the download engine.
 //
 // A pool of worker threads (default hardware_concurrency-1, cap 8) drains one
 // priority queue of blob requests. Requests are deduplicated by resource
 // tail, retried with backoff (mft_config::download_retries semantics,
 // honoring 429 Retry-After), and bounded by a global buffered-bytes cap for
 // backpressure. The transfer mechanics themselves live behind the
-// vfs_transport seam (M6, plan §17.5): the engine owns queue, dedup and
+// vfs_transport seam: the engine owns queue, dedup and
 // retry policy, the active transport owns one GET. The built-in curl
-// transport keeps the M2-M5 wire behavior byte-identical; a web build swaps
+// transport keeps the native wire behavior byte-identical; a web build swaps
 // it without touching this file.
 //
-// Blobs land in the M1 blob store (which mirrors the remote URL tree 1:1), so
+// Blobs land in the blob store (which mirrors the remote URL tree 1:1), so
 // fetching is exactly "get missing blobs into the store, then materialize" —
-// the M1 write path stays the only writer of the install files.
+// the store's write path stays the only writer of the install files.
 
 #pragma once
 
@@ -88,7 +88,7 @@ bool vfs_fetch_batch(
     bool manifest,
     void (*progress)(float done01, const char *tail));
 
-// fire-and-forget enqueue (M6 arena demand path, plan §17.4): queues the
+// fire-and-forget enqueue (arena demand path): queues the
 // blob download at `priority` and returns immediately - the consumer heals
 // when the blob lands in the store. Deduplicated with equal in-flight
 // requests; a no-op when the pool is not running or the blob is stored.

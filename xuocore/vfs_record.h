@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_record: the asset-access recorder (VUOI plan §7.5, resolved decision
-// #1). Every asset that transitions pending -> fetched is appended to a CSV:
+// vfs_record: the asset-access recorder. Every asset that transitions
+// pending -> fetched is appended to a CSV:
 //
 //   hash,pack,ul,tier_hint,first_access_ms,scenario
 //

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M1 plan tests: manifest consumption through the mft fetch seam into the
+// plan tests: manifest consumption through the mft fetch seam into the
 // persisted AssetPlan. Determinism (same inputs -> identical plan bytes),
-// planned-offset math (VUOI plan §6.2, §6.3), hole bookkeeping and the real
-// M0 fixtures as a product slice.
+// planned-offset math (deterministic pack layout + per-block offsets), hole
+// bookkeeping and the captured live fixtures as a product slice.
 
 #define LOGGER_MODULE TestVfs
 
@@ -71,7 +71,7 @@ static void check_pack_layout(const VfsPlan &plan, const test_product_data &prod
         TEST_CHECK(asset.ml == part.ml);
         TEST_CHECK(asset.mc == part.mc);
         TEST_CHECK(asset.blob == part.blob_rel);
-        TEST_CHECK(asset.tier == vfs_tier_t2); // defaulted in M1
+        TEST_CHECK(asset.tier == vfs_tier_t2); // default before tier assignment
         if (part.payload.empty())
         {
             TEST_CHECK_MSG(asset.file_offset == 0, "hole must have no planned offset");
@@ -286,7 +286,7 @@ VFS_TEST(plan_state_roundtrip)
 }
 
 // ---------------------------------------------------------------------------
-// the real M0 fixtures as a product slice
+// the captured live fixtures as a product slice
 // ---------------------------------------------------------------------------
 
 VFS_TEST(plan_fixture_product)

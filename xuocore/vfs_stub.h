@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_stub: placeholder asset providers (VUOI plan §6.7, §8).
+// vfs_stub: placeholder asset providers.
 //
 // When a byte range cannot be fetched (offline, 404, timeout), the trap serves
 // a synthetic payload instead of raw zeros: a minimal but syntactically valid
@@ -14,7 +14,7 @@
 // Stubs are written through the existing writer as Flags=0 (uncompressed)
 // blocks, so every consumer takes the memcpy path of DecompressBlock.
 // Zero-content payloads (land tiles, texture/light pixels, sound samples,
-// string tables) degrade to the M3 plain zero-fill: the sparse file already
+// string tables) degrade to plain zero-fill: the sparse file already
 // reads as zeros there.
 
 #pragma once
@@ -23,13 +23,13 @@
 
 #include <stddef.h>
 
-// asset kinds (VUOI plan §6.7); the trap derives the kind from the plan file
-// name (§8 "Producer" column), never from asset content
+// asset kinds; the trap derives the kind from the producing plan file name
+// (the pack/loose file listed in the plan), never from asset content
 enum vfs_stub_kind : uint8_t
 {
     vfs_stub_art = 0,    // art.mul / artLegacyMUL.uop: 1x1 transparent run
     vfs_stub_gump,       // gumpart*.mul/.uop: transparent (UOP: 0x0 w/h header)
-    vfs_stub_land,       // zero-color land tile (plan §8 "Land tile")
+    vfs_stub_land,       // zero-color land tile
     vfs_stub_texture,    // texmaps.mul: zeros (plain ground)
     vfs_stub_light,      // light.mul: zeros (no light overlay)
     vfs_stub_sound,      // sound*.mul/.uop: zero samples (silent wave)
@@ -45,13 +45,14 @@ enum vfs_stub_kind : uint8_t
 };
 
 // flat land tile id written by the map-block generator. Tile 2 keeps a
-// streamed-in map region walkable ("flat ground", plan §8) instead of void;
+// streamed-in map region walkable ("flat ground") instead of void;
 // the value is a constant on purpose: the tiledata tables may not be loaded
 // (or may themselves be streaming) when a map block is stubbed.
 #define VFS_STUB_MAP_FLAT_TILE_ID 2
 
-// kind for a plan file name ("artLegacyMUL.uop", "map0.mul", ...): matches the
-// §8 producer column case-insensitively; unknown files map to vfs_stub_misc
+// kind for a plan file name ("artLegacyMUL.uop", "map0.mul", ...): matches
+// the stub-kind-to-file mapping case-insensitively; unknown files map to
+// vfs_stub_misc
 vfs_stub_kind vfs_stub_kind_for(const char *file_name);
 
 // smallest payload that keeps the kind's parser reading inside its own block

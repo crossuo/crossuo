@@ -83,7 +83,7 @@ void CGumpVfsStatus::Draw()
     uint16_t color = VFS_HUD_COLOR;
     if (s_stats.stubs_active > 0)
     {
-        // §11: warn while part of the world still lives on placeholders
+        // warn while part of the world still lives on placeholders
         snprintf(
             text, sizeof(text), "placeholders: %llu", (unsigned long long)s_stats.stubs_active);
         color = VFS_HUD_COLOR_WARN;

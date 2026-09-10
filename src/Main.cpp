@@ -83,7 +83,7 @@ static bool InitCli(int argc, char *argv[])
     // vars
     g_cli["DisableRenderGame"].description("disable game canvas rendering");
 
-    // streamed install (VUOI plan §7.1); typed so both --streaming and
+    // streamed install; typed so both --streaming and
     // --streaming=<dir> parse (empty value = the default streaming dir)
     g_cli["streaming"].type(po::string).description(
         "streamed install mode, optional value = install dir");
@@ -93,7 +93,7 @@ static bool InitCli(int argc, char *argv[])
         "streaming: serve placeholders instantly and heal in the background ");
     g_cli["streaming-trap"].type(po::string).description(
         "streaming: set to 'off' to disable hole traps - reads of undownloaded"
-        " data return zeros (escape hatch, plan §15)");
+        " data return zeros (escape hatch)");
     g_cli["streaming-workers"].type(po::u32).description(
         "streaming: download workers (default cpu-1, max 8)");
     g_cli["streaming-record"].type(po::string).description(
@@ -101,9 +101,10 @@ static bool InitCli(int argc, char *argv[])
     g_cli["streaming-record-scenario"].type(po::string).description(
         "streaming recorder scenario name");
     g_cli["streaming-backend"].type(po::string).description(
-        "streaming: 'arena' for the memory granule store (M6, web groundwork)");
+        "streaming: 'arena' for the memory granule store (web groundwork)");
     g_cli["streaming-subset"].type(po::string).description(
-        "streaming: 'web' plans the web product subset (plan §17.6)");
+        "streaming: 'web' plans the web product subset (drops the large"
+        " legacy files)");
 
     g_cli["config"]
         .abbreviation('c')
@@ -450,7 +451,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    // streamed install: flags -> vfs params (plan §7.1); the data root used
+    // streamed install: flags -> vfs params; the data root used
     // by uo_data_init switches to the streaming dir (src/Config.cpp)
     if (g_cli["streaming"].was_set())
     {
@@ -461,12 +462,13 @@ int main(int argc, char **argv)
         if (g_cli["streaming-trap"].was_set())
         {
             // --streaming-trap=off: holes stay readable (zeros) - the escape
-            // hatch when the fault handler misbehaves (plan §15)
+            // hatch when the fault handler misbehaves
             params.traps = g_cli["streaming-trap"].get().string != "off";
         }
         if (g_cli["streaming-workers"].was_set())
             params.workers = g_cli["streaming-workers"].get().u32;
-        // M6 web groundwork: memory backend + product subset (plan §17.3, §17.6)
+        // web groundwork: in-memory granule backend + web product subset
+        // (excludes the large legacy files from the plan)
         if (g_cli["streaming-backend"].was_set())
             params.store_backend = g_cli["streaming-backend"].get().string == "arena"
                                        ? vfs_store_backend_arena

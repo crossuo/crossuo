@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M5 update/diff tests (VUOI plan §10.5): fresh product every online boot,
+// update/diff tests: fresh product every online boot,
 // serial drift re-plans and re-fetches only what changed; stub-aware verify
-// and sealing; the §7.5 recorder->embedded converter; the --streaming-trap=off
+// and sealing; the recorder->embedded converter; the --streaming-trap=off
 // escape hatch; the sparse-filesystem probe.
 
 #include <stdio.h>
@@ -41,7 +41,7 @@
 }
 
 // re-serves the product with a bumped serial and one changed part timestamp
-// (the §10.5 drift the update flow must detect and diff)
+// (the drift the update flow must detect and diff)
 static bool test_bump_product(test_product_data &prod, size_t changed_part)
 {
     if (changed_part >= prod.parts.size())
@@ -53,7 +53,7 @@ static bool test_bump_product(test_product_data &prod, size_t changed_part)
     return test_write_product(prod);
 }
 
-// runs a command capturing stdout (the §7.5 converter test drives vuoi)
+// runs a command capturing stdout (the converter test drives vuoi)
 static bool test_run_capture(const char *const argv[], std::string &out)
 {
     process_s process = {};
@@ -164,7 +164,7 @@ static bool test_full_install(const vfs_params &params)
 // tests
 // ---------------------------------------------------------------------------
 
-// the §10.5 flow end to end: full cache, then a serial bump that changes one
+// the update flow end to end: full cache, then a serial bump that changes one
 // part's timestamp. Only that asset may re-fetch; the file unseals (its
 // state resets, the pack hole re-opens) and seals again after the heal.
 VFS_TEST(update_serial_bump_refetches_only_changed)
@@ -374,7 +374,7 @@ VFS_TEST(update_plan_diff_reports_changes)
     TEST_CHECK_MSG(readd.added.size() == 1, "the restored loose file must count as added");
 }
 
-// verify/seal stub semantics (M4 NOTES fix): a stubbed asset reports
+// verify/seal stub semantics: a stubbed asset reports
 // MISSING-BLOCK (labeled stubbed), never CORRUPT, and the file stays
 // unsealed while a placeholder is in use; healing re-seals it
 VFS_TEST(update_verify_stubbed_and_seal_gate)
@@ -467,7 +467,7 @@ VFS_TEST(update_verify_stubbed_and_seal_gate)
     TEST_CHECK_MSG(pack != nullptr && pack->sealed, "the file must re-seal after the heal");
 }
 
-// the journal 'R' op (M5 update resets): replays as a pending reset and a
+// the journal 'R' op (update resets): replays as a pending reset and a
 // later fetch record wins
 VFS_TEST(update_journal_reset_op)
 {
@@ -490,7 +490,7 @@ VFS_TEST(update_journal_reset_op)
     vfs_journal journal;
     TEST_CHECK(vfs_journal_open(journal, journal_path));
     TEST_CHECK(vfs_journal_mark(journal, {'F', 0, 1})); // fetched
-    TEST_CHECK(vfs_journal_mark(journal, {'R', 0, 1})); // M5 reset
+    TEST_CHECK(vfs_journal_mark(journal, {'R', 0, 1})); // reset
     TEST_CHECK(vfs_journal_mark(journal, {'F', 0, 1})); // re-fetched: wins
     TEST_CHECK(vfs_journal_mark(journal, {'R', 0, 1})); // reset: wins
     vfs_journal_close(journal);
@@ -579,7 +579,8 @@ VFS_TEST(update_trap_off_maps_holes_readable)
     test_server_stop(srv);
 }
 
-// the sparse probe (§12 deviation): on a sparse-capable filesystem (every
+// the sparse probe (deviation from the planned-offset layout): on a
+// sparse-capable filesystem (every
 // CI filesystem) the probe reports support; the non-sparse warning itself is
 // exercised by the manual xuoi --full transcript (no fat volume in CI)
 VFS_TEST(update_sparse_probe_reports_support)
@@ -591,7 +592,7 @@ VFS_TEST(update_sparse_probe_reports_support)
 #endif
 }
 
-// the §7.5 deployment step: a recorded CSV converts into the generated
+// the deployment step: a recorded CSV converts into the generated
 // vfs_manifest_embedded.cpp (via the vuoi binary), and the table it declares
 // drives the T1 tier through the embedded-table seam
 VFS_TEST(update_embed_record_converts_csv)

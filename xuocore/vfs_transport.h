@@ -2,14 +2,14 @@
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
 // vfs_transport: the pluggable HTTP transfer seam behind the fetch engine
-// (VUOI plan §17.5, M6 web groundwork). The engine (vfs_fetch) owns the
+// (web groundwork). The engine (vfs_fetch) owns the
 // queue, dedup, retry policy and worker pool; a transport owns exactly one
 // transfer: turn a URL into body bytes.
 //
 // The built-in implementation is the curl path that used to live inside
 // vfs_fetch, moved here verbatim - with no transport injected the engine
-// behaves byte-identically to M5. A web build (§17) swaps in an
-// emscripten_fetch/fetch-based transport through the same vtable; the M6
+// behaves byte-identically to the unseamed code. A web build swaps in an
+// emscripten_fetch/fetch-based transport through the same vtable; the
 // seam is proven by tests that inject a fake (no curl, no network).
 //
 // Why the absolute URL (and not tail + repo): sub-manifest URLs are composed
@@ -48,10 +48,10 @@ struct vfs_transport
     // caller's buffer capacity for manifests; the transfer aborts beyond it.
     //
     // `timeout_ms` bounds the whole transfer; 0 keeps the transport defaults
-    // (curl: 10s connect + 30s low-speed guards, unchanged from M2-M5).
+    // (curl: 10s connect + 30s low-speed guards).
     //
     // `manifest` marks manifest-repo traffic - the default transport ignores
-    // it; a web transport may key its cache on it (plan §17.5).
+    // it; a web transport may key its cache on it.
     virtual vfs_transport_result fetch(
         const char *url,
         const char *tail,
@@ -61,8 +61,8 @@ struct vfs_transport
         uint32_t timeout_ms,
         bool manifest) = 0;
 
-    // byte-range GET of [offset, offset + length) of the resource (M3 §10.3
-    // MUL streaming, web granule requests §17.3). Unsupported by default:
+    // byte-range GET of [offset, offset + length) of the resource (MUL
+    // range streaming natively, web granule requests). Unsupported by default:
     // `ok` stays false with status 0 and callers keep their whole-fetch
     // fallback. `#if defined(__EMSCRIPTEN__)` hook: the web transport
     // implements granule range reads here.

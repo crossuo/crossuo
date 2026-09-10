@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_fetch: the download engine (VUOI plan §6.4). See vfs_fetch.h.
+// vfs_fetch: the download engine. See vfs_fetch.h.
 
 #define LOGGER_MODULE Vfs
 
@@ -90,11 +90,11 @@ static const char *vfs_fetch_repo_of(const vfs_fetch_job &job)
 }
 
 // ---------------------------------------------------------------------------
-// transport seam (M6): the engine owns the retry policy on top of ONE
+// transport seam: the engine owns the retry policy on top of ONE
 // transport attempt (the transfer mechanics live in vfs_transport)
 // ---------------------------------------------------------------------------
 
-// fetch body sink: appends the transfer body (the engine keeps the M2-M5
+// fetch body sink: appends the transfer body (the engine keeps the
 // whole-body buffering semantics; a transport may deliver chunk-wise)
 static bool vfs_fetch_body_sink(void *context, const uint8_t *data, size_t size)
 {
@@ -103,7 +103,7 @@ static bool vfs_fetch_body_sink(void *context, const uint8_t *data, size_t size)
     return true;
 }
 
-// GET + retries (plan §6.4): transient failures back off, 404 is definitive,
+// GET + retries: transient failures back off, 404 is definitive,
 // 429 honors Retry-After. Returns true with `body` filled on success.
 // `cap` aborts transfers beyond it (0: size unknown up front); the exact-size
 // validation stays with the caller.
@@ -235,7 +235,7 @@ static void vfs_fetch_worker_run(size_t index)
         {
             url = astr_t(repo) + job->tail;
             LOG_DEBUG("fetching: %s", url.c_str());
-            // the expected size is also the hard body cap (M6 transport seam:
+            // the expected size is also the hard body cap (transport seam:
             // exact-size validation stays here, the transfer aborts beyond)
             const uint64_t cap = job->expected;
             ok = vfs_fetch_http(
@@ -517,7 +517,7 @@ bool vfs_fetch_manifest_fn(
         return false;
     const size_t capacity = *size;
 
-    // cache-aware (§5.2): the store mirrors the remote tree, so a present
+    // cache-aware: the store mirrors the remote tree, so a present
     // manifest is used as-is and HTTP only fills the gaps
     std::vector<uint8_t> cached;
     const auto stored = fs_path_join(s_store_dir, rel_path);
@@ -538,7 +538,7 @@ bool vfs_fetch_manifest_fn(
 
     LOG_DEBUG("manifest: %s", url);
     // the manifest seam shares the engine's retry policy and the active
-    // transport (M6): an injected transport serves manifests too, so the
+    // transport: an injected transport serves manifests too, so the
     // plan recursion runs without curl in tests
     std::vector<uint8_t> body;
     const bool fetched = vfs_fetch_http(url, rel_path, capacity, true, &body, rel_path);

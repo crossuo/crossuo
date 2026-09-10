@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
 // vfs_transport: the default curl implementation. The transfer mechanics are
-// the code that used to live in vfs_fetch (M2), moved here in M6 so a web
-// build (VUOI plan §17.5) can replace the transport without touching the
+// the code that used to live in vfs_fetch, moved behind this seam so a web
+// build can replace the transport without touching the
 // engine: same wire behavior, same guards, same log lines.
 
 #define LOGGER_MODULE Vfs
@@ -130,7 +130,7 @@ bool transport_get(const char *url, transport_reply *reply)
     // TLS verification is deliberately off for now, mirroring the four sites
     // in xuocore/http.cpp (the official product/file repos are plain http
     // today). Deferred: see docs/NOTES.md (MITM risk documented there; it
-    // closes with M5 .meta sha256 verification or a CA-bundle strategy).
+    // closes with .meta sha256 verification or a CA-bundle strategy).
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     // a stalled connection must never hang a worker (and with it
     // vfs_fetch_stop and game exit): 10s to connect, then 30s at under 1 B/s

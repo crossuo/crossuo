@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_stub: placeholder asset providers (VUOI plan §6.7, §8). See the header
+// vfs_stub: placeholder asset providers. See the header
 // for the payload model; the per-kind layouts mirror the game's real parse
 // code paths:
 //   art run reader   src/Managers/UOFileReader.cpp GetArtPixels (run branch)

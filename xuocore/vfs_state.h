@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_state: the persisted VFS state DB (VUOI plan §6.6), kept under
+// vfs_state: the persisted VFS state DB, kept under
 // <state_dir>:
 //   plan.bin      - the serialized AssetPlan (deterministic bytes)
 //   state.bin     - one state byte per plan asset, in plan order
@@ -24,7 +24,7 @@ enum vfs_asset_state : uint8_t
 {
     vfs_pending = 0, // not materialized yet (or unknown after a crash)
     vfs_fetched = 1, // bytes written to the output file and confirmed
-    vfs_stubbed = 2, // placeholder payload served (M4); heals to fetched
+    vfs_stubbed = 2, // placeholder payload served; heals to fetched
     vfs_failed = 3,  // last attempt failed (corrupt blob, io error)
 };
 
@@ -67,8 +67,8 @@ bool vfs_state_load(
 struct vfs_journal_record
 {
     char op = 0; // 'F': asset fetched (block written), 'S': file sealed,
-                 // 'B': asset served from a stub payload (M4),
-                 // 'R': asset reset to pending (M5 update/diff re-plan)
+                 // 'B': asset served from a stub payload,
+                 // 'R': asset reset to pending (update/diff re-plan)
     uint32_t file_index = 0;
     uint32_t asset_index = 0;
 };
@@ -88,7 +88,7 @@ bool vfs_journal_replay(const fs_path &path, std::vector<vfs_journal_record> &ou
 
 // applies fetched journal records on top of the given states; out of range
 // records (stale or corrupted journal) are ignored. 'F' marks fetched, 'B'
-// marks a stub serve (never over fetched), 'R' resets to pending (M5 update
+// marks a stub serve (never over fetched), 'R' resets to pending (update
 // flow) - the order is the log order, so a re-fetch after a reset re-marks
 // the asset fetched exactly once
 void vfs_state_apply_journal(
@@ -113,7 +113,7 @@ struct vfs_reconcile_stats
 // so a later materialize pass repairs it. The materialized files are the
 // source of truth; the DB is rebuilt from them, never the other way around.
 // `blobs_dir` (the store root) enables the reconcile-grade presence check for
-// packs: a §6.7 stub patch never promotes pending state for ct==0 assets,
+// packs: a stub patch never promotes pending state for ct==0 assets,
 // and a stubbed asset is never promoted from on-disk presence at all - only
 // the heal path (materialize write + journal 'F') moves stubbed to fetched.
 bool vfs_state_reconcile(

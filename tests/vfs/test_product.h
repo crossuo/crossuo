@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// Shared generator for the M1 offline-pipeline tests. Builds two products
+// Shared generator for the streaming-install pipeline tests. Builds two products
 // into a temp root:
 //
 //   test_build_product         - a fully synthetic mini product: one pack
 //                                (zlib/stored/hole parts), one empty pack,
 //                                and two loose files (one in a nested dir)
-//   test_build_fixture_product - the real M0 fixtures (prod.xml + pkg.mft +
+//   test_build_fixture_product - the captured live fixtures (prod.xml + pkg.mft +
 //                                the captured artLegacyMUL part blob) with
 //                                the remaining manifests synthesized empty
 //
@@ -63,7 +63,7 @@ static inline std::vector<uint8_t> test_zlib(const std::vector<uint8_t> &payload
     return out;
 }
 
-// the metadata bytes vfs_store synthesizes (§10.2): [type=3][size=ml-4][zeros]
+// the metadata bytes vfs_store synthesizes: [type=3][size=ml-4][zeros]
 static inline std::vector<uint8_t> test_synth_metadata(uint32_t ml)
 {
     std::vector<uint8_t> meta(ml, 0);
@@ -140,7 +140,7 @@ struct test_part_def
     std::vector<uint8_t> payload; // expected decoded content (ul bytes)
     std::vector<uint8_t> blob;    // bytes placed in the store
     astr_t blob_rel;              // store path relative to the blobs root
-    // manifest timestamp of the part (M5 update tests bump one part's t)
+    // manifest timestamp of the part (update tests bump one part's t)
     uint64_t timestamp = 0x6a8dd30c;
 
     uint64_t uop_hash() const { return (static_cast<uint64_t>(sh) << 32) | ph; }
@@ -172,7 +172,7 @@ struct test_product_data
     std::vector<astr_t> extra_packs; // extra "<p ...>...</p>" in the pack manifest
     std::vector<astr_t> extra_loose; // extra "<f .../>" in the package manifest
     // valid extra loose files, registered before the manifests are written
-    // (name, ct, uncompressed size); empty in the M1 products
+    // (name, ct, uncompressed size); empty in the default products
     struct extra_loose_def
     {
         astr_t name;
@@ -314,7 +314,7 @@ static inline void test_clean_outputs(const test_product_data &prod)
 // registered extra loose files); a no-op when parts/loose are already set
 static inline void test_fill_product(test_product_data &prod)
 {
-    // callers may prefill parts/loose for custom layouts (M3 trap tests use
+    // callers may prefill parts/loose for custom layouts (trap tests use
     // page-straddling block sizes); the default mini product otherwise
     if (prod.parts.empty() && prod.loose.empty())
     {
@@ -468,7 +468,7 @@ static inline void test_product_remove_blob(const test_product_data &prod, const
 }
 
 // ---------------------------------------------------------------------------
-// the real M0 fixtures as a product (all other manifests synthesized empty)
+// the captured live fixtures as a product (all other manifests synthesized empty)
 // ---------------------------------------------------------------------------
 
 static const char *FIXTURE_ART_ENTRY =

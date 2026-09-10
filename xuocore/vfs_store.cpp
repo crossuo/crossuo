@@ -117,7 +117,7 @@ vfs_store_read_blob(const fs_path &blobs_dir, const VfsAsset &asset, std::vector
 }
 
 // ---------------------------------------------------------------------------
-// pack assembly (§10.1, §10.2)
+// pack assembly (UOP table layout that matches UopLoadFile expectations)
 // ---------------------------------------------------------------------------
 
 static uint64_t vfs_store_table_pos(size_t asset_index)
@@ -125,8 +125,9 @@ static uint64_t vfs_store_table_pos(size_t asset_index)
     return sizeof(UopHeader) + sizeof(UopSection) + sizeof(UopFileEntry) * asset_index;
 }
 
-// synthesized metadata (§10.2): ml bytes, the first 4 being the type-3 chain
-// header { type = 3, size = ml - 4 } (LE), the remainder zeros; ml == 0 means
+// synthesized metadata: ml bytes, the first 4 being the type-3 chain
+// header { type = 3, size = ml - 4 } (LE), the remainder zeros (no consumer
+// validates the content - the game only walks the chain); ml == 0 means
 // the block starts directly with the payload
 static void vfs_store_synthesize_metadata(const VfsAsset &asset, std::vector<uint8_t> &out)
 {
@@ -189,12 +190,13 @@ static bool vfs_store_pack_recreate_needed(
 }
 
 // ---------------------------------------------------------------------------
-// sparse-filesystem probe (M5, plan §12 deviation): the planned-offset layout
+// sparse-filesystem probe: the planned-offset layout
 // depends on the filesystem growing files sparsely. On fat/exFAT every
 // planned byte is really preallocated; detected once after the first pack is
 // created (st_blocks probe / windows attribute) and warned about loudly.
-// The §12 append-layout fallback is deliberately NOT implemented - the trap
-// depends on static planned offsets; see docs/NOTES.md (M5).
+// The plan's append-layout fallback (Offset=0 table entries, blocks appended
+// as downloaded and patched in place) is deliberately NOT implemented - the
+// trap depends on static planned offsets; see docs/NOTES.md.
 // ---------------------------------------------------------------------------
 
 static bool vfs_store_sparse_checked = false;
@@ -313,7 +315,7 @@ static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &fi
 // writes [metadata][blob] at the planned offset and patches the entry in
 // place (data first, pointer second: a crash in between leaves the entry
 // skipped or stale and the block simply rewritten later). The WHOLE entry is
-// rewritten, not just Offset: M4 stubs land as Flags=0/CompressedSize=ul
+// rewritten, not just Offset: stubs land as Flags=0/CompressedSize=ul
 // blocks of plan assets that ship compressed, and the real block must
 // restore the plan's fields when it heals (the stub stays on disk - and
 // reads as absent - until then).
@@ -350,7 +352,7 @@ static bool vfs_store_pack_write_block(
 // loose files: materialized whole from the blob (decompressed when ct == 1)
 // ---------------------------------------------------------------------------
 
-// pure payload step (M6): stored assets pass through, zlib assets inflate -
+// pure payload step: stored assets pass through, zlib assets inflate -
 // the exact bytes the loose writer has always put on disk, now shared with
 // the arena backend (no duplicated format knowledge)
 int vfs_store_asset_inflate(
@@ -466,7 +468,7 @@ vfs_store_materialize_asset(vfs_store_context &ctx, size_t file_index, size_t as
     if (res == 1)
     {
         vfs_store_count(ctx, &vfs_materialize_stats::assets_missing);
-        return false; // stays pending: M2's fetch list
+        return false; // stays pending: fetch-engine work list
     }
     if (res != 0)
     {
@@ -508,7 +510,7 @@ vfs_store_materialize_asset(vfs_store_context &ctx, size_t file_index, size_t as
     vfs_store_count(ctx, &vfs_materialize_stats::assets_fetched);
     if (ctx.stats)
         ctx.stats->bytes_written += vfs_asset_block_size(asset);
-    // §7.5 recorder: this is the pending -> fetched transition of a real run;
+    // asset recorder: this is the pending -> fetched transition of a real run;
     // loose files carry their name in the pack column (there is no pack)
     vfs_record_asset(
         asset.uop_hash,
@@ -594,7 +596,7 @@ bool vfs_store_materialize(
 
     if (items != nullptr)
     {
-        // fetch-driven subset materialization (M2 boot): the exact same write
+        // fetch-driven subset materialization (boot): the exact same write
         // path, restricted to the assets the caller fetched for
         for (const auto &item : *items)
         {
@@ -635,7 +637,8 @@ bool vfs_store_materialize(
 }
 
 // ---------------------------------------------------------------------------
-// boot skeleton (§7.2 step 4, §7.3 T0 "UOP tables for all packs")
+// boot skeleton: pack headers + full entry tables (blocks stay holes) plus
+// right-sized sparse loose files - everything Load() needs, no payload yet
 // ---------------------------------------------------------------------------
 
 // sparse body at the planned size for a loose file; content fills later
@@ -704,7 +707,7 @@ bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params)
 }
 
 // ---------------------------------------------------------------------------
-// update flow (M5, plan §10.5): invalidate one asset's materialized bytes
+// update flow: invalidate one asset's materialized bytes
 // ---------------------------------------------------------------------------
 
 bool vfs_store_invalidate_asset(
@@ -787,7 +790,7 @@ static uint8_t vfs_verify_pack_asset(
 {
     if (vfs_asset_is_hole(asset))
         return vfs_verify_ok;
-    // the state DB is the stub truth (M4): a placeholder patch reads as a
+    // the state DB is the stub truth: a placeholder patch reads as a
     // missing block (never corrupt) and the file stays unsealed
     if (stubbed)
         return vfs_verify_missing_block;
@@ -885,7 +888,7 @@ static uint8_t vfs_verify_loose_asset(
 
 // on-disk truth check shared with the state DB reconcile and the trap's boot
 // presence: the block bytes of `asset` are present in `file` exactly as
-// planned. M4 review hardening: a §6.7 stub patch must never read as the real
+// planned. Hardening: a stub patch must never read as the real
 // thing. ct==1 patches are rejected by entry shape alone (the plan says zlib,
 // the patch says stored). ct==0 patches are byte-identical to the planned
 // entry (the patch keeps Flags=0 and cl==ul), so `blobs_dir` - the
@@ -916,7 +919,7 @@ bool vfs_store_pack_asset_present(
     if (!shape)
         return false;
     if (entry.Flags == 0 && asset.ct == 1)
-        return false; // stored block for a zlib asset: a §6.7 stub patch
+        return false; // stored block for a zlib asset: a stub patch
     if (asset.ct != 0 || fs_path_empty(blobs_dir))
         return true; // the entry shape decided (or no store root given)
     // ct==0: only content decides. The blob is the payload stored verbatim,
@@ -1044,7 +1047,7 @@ int vfs_store_verify(
 }
 
 // ---------------------------------------------------------------------------
-// the M1 native backend: store_sparse
+// the native backend: store_sparse
 // ---------------------------------------------------------------------------
 
 namespace
@@ -1095,7 +1098,7 @@ public:
 
     bool ensure(const VfsAsset &asset, bool block) override
     {
-        (void)block; // M1 always materializes synchronously
+        (void)block; // always materializes synchronously
         size_t fi = 0, ai = 0;
         if (!locate(asset, fi, ai))
             return false;
@@ -1106,12 +1109,12 @@ public:
     void prefetch(const VfsAsset &asset, int prio) override
     {
         (void)asset;
-        (void)prio; // M2: fetch engine queues the blob download
+        (void)prio; // the fetch engine queues the blob download
     }
 
     void evict(size_t bytes_target) override
     {
-        (void)bytes_target; // web arena only (§17.3); disk files are never evicted
+        (void)bytes_target; // web arena only; disk files are never evicted
     }
 
     bool is_ready(const VfsAsset &asset) const override
@@ -1201,12 +1204,12 @@ vfs_store_backend *vfs_store_backend_create(
 }
 
 // ---------------------------------------------------------------------------
-// trap support (M3, plan §6.5)
+// trap support
 // ---------------------------------------------------------------------------
 
 // page-coverage computation over the plan's deterministic layout: the block
 // indices whose [file_offset, file_offset + ml + payload) range overlaps
-// [start, end) - exactly the bytes the M1 write path puts down per asset
+// [start, end) - exactly the bytes the write path puts down per asset
 void vfs_store_blocks_overlapping(
     const VfsPlan::VfsFile &file,
     uint64_t start,
@@ -1230,8 +1233,8 @@ void vfs_store_blocks_overlapping(
     }
 }
 
-// one-asset materialization through the M1 write path (the same code as the
-// batch driver, restricted to a single item), assuming the blob is already
+// one-asset materialization through the shared write path (the same code as
+// the batch driver, restricted to a single item), assuming the blob is already
 // in the store - the trap fetches before calling this. Returns true only
 // when the asset bytes are confirmed in place afterwards (state == fetched),
 // so a missing blob is reported as failure, not as a clean no-op run.

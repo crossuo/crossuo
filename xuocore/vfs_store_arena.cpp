@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_store_arena: the granule-resident memory backend (VUOI plan §17.3).
+// vfs_store_arena: the granule-resident memory backend (web groundwork).
 // See the header for the residency, eviction and consumer-liveness rules.
 
 #define LOGGER_MODULE Vfs
@@ -120,7 +120,7 @@ bool vfs_store_arena::ensure(const VfsAsset &asset, bool block)
         if (granule.resident && !granule.stub)
             return true;
         // a resident STUB granule falls through: ensure() is the heal path
-        // (§17.4), so a real blob re-materializes over the stub bytes
+        // (zero-latency), so a real blob re-materializes over the stub bytes
         if (granule.inflight)
         {
             // another thread is loading exactly this granule
@@ -134,9 +134,9 @@ bool vfs_store_arena::ensure(const VfsAsset &asset, bool block)
     }
 
     // outside the lock: the load itself (file io + inflate). A blocking
-    // ensure runs the blob fetch first when the engine can (the M2/M3
+    // ensure runs the blob fetch first when the engine can (the trap's
     // "fetch, then materialize" order, pulled inside the backend); a
-    // non-blocking one queues the demand fetch (heal source, §17.4) and
+    // non-blocking one queues the demand fetch (the heal source) and
     // reports the miss immediately.
     const uint64_t expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
     const bool in_store = fs_path_exists(fs_path_join(m_params.store.blobs_dir, asset.blob));
@@ -186,7 +186,8 @@ bool vfs_store_arena::ensure(const VfsAsset &asset, bool block)
 
 void vfs_store_arena::prefetch(const VfsAsset &asset, int prio)
 {
-    // §17.3: one request per granule, no coalescing; the engine dedups by
+    // one request per granule, no coalescing (HTTP/2 multiplexes many small
+    // GETs fine); the engine dedups by
     // tail. The granule heals when the blob lands (ensure re-reads it).
     if (vfs_asset_is_hole(asset))
         return;

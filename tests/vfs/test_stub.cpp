@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M4 stub tests: payload generators parsed at the format level (mirroring the
+// stub tests: payload generators parsed at the format level (mirroring the
 // game's real read loops - the readers live in src/ and drag GL/SDL deps, so
 // the loops are mirrored here with pointers at the source), plus trap
 // integration: fault -> stub bytes, healing -> real bytes + hot-swap refresh.
@@ -511,7 +511,7 @@ VFS_TEST(stub_heal_promotes_and_refreshes)
 
 VFS_TEST(stub_healed_query_semantics)
 {
-    // M1 review: the trap's healed query is the animation hot-swap trigger,
+    // design note: the trap's healed query is the animation hot-swap trigger,
     // so it must answer on the trap's own marks (stub-served + bytes landed),
     // never on the state DB byte - the heal itself flips that byte to
     // fetched, which made the old stubbed-AND-present check dead code
@@ -607,7 +607,7 @@ VFS_TEST(stub_misc_and_loose_serve_zero_pages)
     const uint64_t at = gone.file_offset + gone.ml;
     volatile uint8_t probe = base[at];
     (void)probe;
-    // misc has no payload content: plain zeros (M3 degradation), zeroed mark
+    // misc has no payload content: plain zeros (degradation), zeroed mark
     for (uint64_t i = 0; i < uint64_t(gone.cl); ++i)
     {
         if (base[at + i] != 0)

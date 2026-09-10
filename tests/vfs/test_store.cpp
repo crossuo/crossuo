@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M1 store tests: the materializer against the synthetic mini product and
-// the real M0 fixture part. Every materialized pack must parse through the
+// store tests: the materializer against the synthetic mini product and
+// the captured live fixture part. Every materialized pack must parse through the
 // production path (CFileManager::UopLoadFile) and every present asset must
 // decode through CUopMappedFile::GetData; holes stay resolvable-free
 // (Offset == 0, skipped) while the rest of the pack keeps working.
@@ -122,7 +122,7 @@ VFS_TEST(store_materialize_full_roundtrip)
     TEST_CHECK(pack.GetAsset(hole.uop_hash()) == nullptr);
     TEST_CHECK(!pack.HasAsset(hole.uop_hash()));
 
-    // synthesized metadata (§10.2): type 3 chain header + zeros
+    // synthesized metadata: type 3 chain header + zeros
     const auto *first = pack.GetAsset(prod.parts[0].uop_hash());
     const auto meta = pack.GetMeta(first);
     TEST_CHECK(meta.size() == 12);
@@ -177,7 +177,7 @@ VFS_TEST(store_materialize_partial_resume)
     TEST_CHECK(stats.assets_fetched == 4); // A, B + both loose files
     TEST_CHECK(stats.assets_missing == 1);
     TEST_CHECK(vfs_journal_close(journal));
-    TEST_CHECK(states[2] == vfs_pending); // stays pending: M2's fetch list
+    TEST_CHECK(states[2] == vfs_pending); // stays pending: fetch-engine work
 
     // the partially materialized pack loads and exposes its present assets
     {
@@ -198,7 +198,7 @@ VFS_TEST(store_materialize_partial_resume)
     TEST_CHECK(result.files[0].counts[vfs_verify_ok] == 3); // A, B + the hole
     TEST_CHECK(result.files[0].counts[vfs_verify_missing_blob] == 1);
 
-    // the blob arrives (M2 would fetch it): re-run completes the pack
+    // the blob arrives (the fetch engine would fetch it): re-run completes the pack
     TEST_CHECK(test_write_file(fs_path_join(prod.blobs, missing.blob_rel), missing.blob));
     TEST_CHECK(vfs_journal_open(journal, fs_path_join(prod.root, "journal.log")));
     TEST_CHECK(vfs_store_materialize(plan, store_params, states, &journal, &stats));
@@ -285,7 +285,7 @@ VFS_TEST(store_verify_detects_corruption)
 }
 
 // ---------------------------------------------------------------------------
-// the real M0 fixture part through the whole pipeline
+// the captured live fixture part through the whole pipeline
 // ---------------------------------------------------------------------------
 
 VFS_TEST(store_fixture_art_legacy)
@@ -460,8 +460,8 @@ VFS_TEST(store_backend_sparse)
     const auto &loose = plan.files[1].assets[0];
 
     TEST_CHECK(!backend->is_ready(part));
-    backend->prefetch(part, 0); // no-op in M1
-    backend->evict(0);          // no-op in M1
+    backend->prefetch(part, 0); // no-op (store-only materialization)
+    backend->evict(0);          // no-op (disk files are never evicted)
     TEST_CHECK_MSG(backend->ensure(part, true), "ensure failed for blob-backed asset");
     TEST_CHECK(backend->is_ready(part));
     TEST_CHECK(backend->ensure(hole, true)); // holes are trivially ready
@@ -479,7 +479,7 @@ VFS_TEST(store_backend_sparse)
 }
 
 // ---------------------------------------------------------------------------
-// the reconcile-grade loose content check (M5)
+// the reconcile-grade loose content check
 // ---------------------------------------------------------------------------
 
 static const VfsAsset *find_loose_asset(const VfsPlan &plan, const char *name)

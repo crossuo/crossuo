@@ -65,7 +65,7 @@ static astr_t remote_name(const char *name)
 }
 
 // ---------------------------------------------------------------------------
-// URL construction, the contract vfs_manifest (M1) must implement
+// URL construction, the contract vfs_manifest must implement
 // ---------------------------------------------------------------------------
 
 // product file sits in the manifest repo root, referenced by literal name

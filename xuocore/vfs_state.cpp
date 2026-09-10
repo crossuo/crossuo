@@ -72,10 +72,10 @@ struct vfs_reader
 
 static const uint32_t VFS_PLAN_MAGIC = 0x314c5056;  // "VPL1"
 static const uint32_t VFS_STATE_MAGIC = 0x31545356; // "VST1"
-// 2: the plan carries the product manifest/file repo URLs (M2 fetch engine);
+// 2: the plan carries the product manifest/file repo URLs (fetch engine);
 // older plan.bin files simply fail to load and the plan is rebuilt
-// 3: the plan records its product subset (M6, plan §17.6) - additive: a v3
-// plan is a v2 plan plus one trailing byte, and v2 plans (M5) load unchanged
+// 3: the plan records its product subset - additive: a v3
+// plan is a v2 plan plus one trailing byte, and v2 plans load unchanged
 // with subset none
 static const uint32_t VFS_SERIALIZATION_VERSION = 3;
 
@@ -158,7 +158,7 @@ bool vfs_plan_deserialize(const uint8_t *data, size_t size, VfsPlan &out_plan)
         }
         out_plan.files.emplace_back(std::move(file));
     }
-    // v3: the recorded subset; v2 plans (M5) predate the field - none
+    // v3: the recorded subset; v2 plans predate the field - none
     if (version >= 3)
     {
         uint8_t subset = 0;
@@ -395,8 +395,8 @@ void vfs_state_apply_journal(
             asset_index += plan.files[fi].assets.size();
         if (asset_index >= states.size())
             continue;
-        // 'F': block written; 'B': placeholder served (M4); 'R': reset to
-        // pending by the update/diff flow (M5). A stub mark never overrides
+        // 'F': block written; 'B': placeholder served; 'R': reset to
+        // pending by the update/diff flow. A stub mark never overrides
         // fetched state (a heal that raced the report wins)
         if (record.op == 'F')
             states[asset_index] = vfs_fetched;
@@ -473,7 +473,7 @@ bool vfs_state_reconcile(
                 size_t loose_size = 0;
                 on_disk = vfs_asset_block_size(asset) > 0 &&
                           vfs_state_file_size(path, &loose_size) && loose_size == asset.ul;
-                // M5: the size check alone also accepts the untouched boot
+                // the size check alone also accepts the untouched boot
                 // skeleton (right-sized sparse file). When the store root is
                 // known, the blob content decides - the skeleton must not
                 // promote, and a blob that arrived later must not be shadowed
@@ -492,9 +492,9 @@ bool vfs_state_reconcile(
             }
             else if (states[asset_index] == vfs_pending && on_disk)
             {
-                // promotion needs the real block: a §6.7 stub patch passes the
+                // promotion needs the real block: a stub patch passes the
                 // entry-table check for ct==0 shapes, so confirm content
-                // against the blob when the store root is known (m4 review)
+                // against the blob when the store root is known
                 const bool real =
                     !file.is_uop || vfs_store_pack_asset_present(
                                         mapped, uint64_t(mapped_size), ai, asset, blobs_dir);

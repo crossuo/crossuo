@@ -37,7 +37,7 @@
 #include <common/logging/logging.h>
 
 #define VFS_PRODUCT_FILE_DEFAULT "uo-legacyrelease.prod"
-// the official product manifest (VUOI plan §3.1), used when no explicit URL
+// the official EA product manifest, used when no explicit URL
 #define VFS_PRODUCT_URL_DEFAULT                                                                    \
     "http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo/manifest/uo-legacyrelease.prod"
 // background tier fetch+materialize chunking
@@ -55,21 +55,21 @@ static std::thread s_background;
 static std::mutex s_state_mutex;
 static std::vector<uint8_t> s_states;
 static vfs_journal s_journal;
-// granule store (M6, plan §17.3): the params-selected backend. The native
-// default (sparse) never instantiates it - the disk pipeline is the M1-M5
+// granule store: the params-selected backend. The native
+// default (sparse) never instantiates it - the disk pipeline is the standard
 // one; arena mode keeps its granules here for the boot's ensure paths
 static vfs_store_arena *s_arena = nullptr;
 
-// managed-mapping registry (M3): plan file name (lowercased) -> file index.
+// managed-mapping registry: plan file name (lowercased) -> file index.
 // Built when the plan is loaded; consumed by vfs_map_file.
 static std::map<astr_t, size_t> s_managed_files;
 static bool s_managed_built = false;
 
-// pack-asset registry (M4): uop hash -> (file index, asset index) for the
+// pack-asset registry: uop hash -> (file index, asset index) for the
 // index-build stubbed lookups (vfs_asset_is_stubbed)
 static std::map<uint64_t, std::pair<size_t, size_t>> s_managed_hashes;
 
-// demand tier (M4, §6.8 zero-latency): assets whose real fetch was deferred
+// demand tier (zero-latency mode): assets whose real fetch was deferred
 // by the fault path are healed here, one at a time, off the render thread
 static std::vector<std::pair<uint32_t, uint32_t>> s_demand_queue;
 static std::map<std::pair<uint32_t, uint32_t>, bool> s_demand_queued; // dedup set
@@ -78,7 +78,7 @@ static std::condition_variable s_demand_cv;
 static std::thread s_demand_thread;
 
 // ---------------------------------------------------------------------------
-// managed mappings (M3, plan §6.1, §6.5)
+// managed mappings
 // ---------------------------------------------------------------------------
 
 static astr_t vfs_lower_ascii(const char *text)
@@ -156,9 +156,10 @@ static int64_t vfs_managed_index_of(const fs_path &path)
 }
 
 // trap resolution backend: acquire the blob (store-only when offline; the
-// fetch engine dedups equal in-flight tails), then run the M1 write path for
-// exactly this asset. Called with no trap lock held (plan §9 lock order).
-// The wait is bounded (m3): a fetch stalled past this turns the fault into
+// fetch engine dedups equal in-flight tails), then run the shared write path
+// for exactly this asset. Called with no trap lock held (see the vfs_trap.h
+// lock order).
+// The wait is bounded: a fetch stalled past this turns the fault into
 // the stub path instead of parking the faulting thread forever
 #define VFS_TRAP_FETCH_TIMEOUT_MS (30 * 1000)
 
@@ -188,9 +189,9 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
         s_plan, store_params, s_states, &s_journal, block->file_index, block->asset_index);
 }
 
-// stub transition (M4): the trap served a placeholder payload for this asset.
+// stub transition: the trap served a placeholder payload for this asset.
 // Folds the state byte + a durable journal mark so the next boot sees the
-// placeholder truth (and the §6.8 index build can mark the game's caches)
+// placeholder truth (and the index build can mark the game's caches)
 static void vfs_trap_asset_stubbed(void *context, const vfs_trap_block *block)
 {
     (void)context;
@@ -210,7 +211,7 @@ static void vfs_trap_asset_stubbed(void *context, const vfs_trap_block *block)
 }
 
 // ---------------------------------------------------------------------------
-// demand tier (M4, §6.8): zero-latency faults defer the real fetch; this
+// demand tier: zero-latency faults defer the real fetch; this
 // worker heals them one at a time (fetch -> materialize -> flip), so the
 // hot-swap refresh hooks see healed bytes on the next access. Offline runs
 // never start it: nothing can land.
@@ -284,7 +285,7 @@ bool vfs_map_file(const fs_path &path, uint8_t *&out_start, size_t &out_size)
             vfs_trap_backend_ensure();
             // state snapshot for the file (loose presence comes from the
             // state DB); taken and released before mapping so the store lock
-            // is never held across the trap's own lock (plan §9 order)
+            // is never held across the trap's own lock (trap->store order)
             std::vector<uint8_t> states;
             const size_t assets = s_plan.files[size_t(index)].assets.size();
             {
@@ -329,7 +330,7 @@ bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length)
 }
 
 // ---------------------------------------------------------------------------
-// stubs and hot-swap (M4, plan §6.7, §6.8)
+// stubs and hot-swap
 // ---------------------------------------------------------------------------
 
 uint64_t vfs_stub_count()
@@ -416,8 +417,8 @@ bool vfs_file_is_stubbed(const uint8_t *base)
     size_t file_index = 0;
     if (!vfs_trap_file_of(base, &plan, &file_index) || plan != &s_plan)
         return false;
-    // loose files carry a single whole-file asset (§10.3); pack entries are
-    // marked through vfs_asset_is_stubbed instead
+    // loose files carry a single whole-file asset (range-resolved); pack
+    // entries are marked through vfs_asset_is_stubbed instead
     return vfs_asset_state_is(uint32_t(file_index), 0, vfs_stubbed);
 }
 
@@ -447,7 +448,7 @@ bool vfs_asset_stubbed_at(size_t base, size_t asset_index)
 
 // true when the product manifest path was not given explicitly and was
 // defaulted into the blob store (an explicit --product file always wins over
-// a re-download, M5). Decided once per vfs_set_params: the dirs-ready path
+// a re-download). Decided once per vfs_set_params: the dirs-ready path
 // resolves the file name in place, which would otherwise lose the original
 // "was it explicit?" answer between boots.
 static bool vfs_product_file_defaulted = false;
@@ -459,7 +460,7 @@ void vfs_set_params(const vfs_params &params)
     s_managed_built = false;                // the registry follows the (new) plan
     s_states.clear();                       // runtime state binds to the previous params
     vfs_trap_set_zerolat(s_params.zerolat); // bound before any mapping faults
-    vfs_trap_set_traps(s_params.traps);     // M5 escape hatch (--streaming-trap=off)
+    vfs_trap_set_traps(s_params.traps);     // escape hatch (--streaming-trap=off)
     vfs_product_file_defaulted = fs_path_empty(s_params.product_file);
     if (fs_path_some(s_params.state_dir))
     {
@@ -566,7 +567,7 @@ bool vfs_plan_rebuild(VfsPlan &out_plan)
     params.blobs_dir = s_params.blobs_dir;
     if (!vfs_manifest_build(params, out_plan))
         return false;
-    // M6: every rebuild (boot or CLI) honors the params' subset view
+    // every rebuild (boot or CLI) honors the params' subset view
     vfs_manifest_apply_subset(out_plan, s_params.subset);
     if (!vfs_plan_save(fs_path_join(s_params.state_dir, "plan.bin"), out_plan))
         return false;
@@ -591,7 +592,7 @@ bool vfs_plan_ensure(VfsPlan &out_plan)
     {
         if (serial == out_plan.product_serial)
         {
-            // M6: the cached plan honors the params' subset view too
+            // the cached plan honors the params' subset view too
             vfs_manifest_apply_subset(out_plan, s_params.subset);
             s_plan = out_plan;
             s_plan_loaded = true;
@@ -671,7 +672,7 @@ static void vfs_runtime_close()
     vfs_record_close();
 }
 
-// arena residency probe (M6, tests + web diagnostics): the tracked/resident
+// arena residency probe (tests + web diagnostics): the tracked/resident
 // granule counts of the params-selected backend; zeros when the sparse
 // backend is active or no boot holds an arena
 void vfs_arena_residency(size_t *out_granules, size_t *out_resident)
@@ -725,7 +726,7 @@ int vfs_verify(vfs_verify_result *out)
     vfs_store_params store_params;
     store_params.blobs_dir = s_params.blobs_dir;
     store_params.install_dir = s_params.install_dir;
-    // stub-aware (M5): the state DB decides which mapped bytes are §6.7
+    // stub-aware: the state DB decides which mapped bytes are
     // placeholders, which report missing-block instead of corrupt
     std::vector<uint8_t> states;
     vfs_state_load(
@@ -748,7 +749,7 @@ void vfs_stats(VfsStats *out)
         std::vector<vfs_journal_record> records;
         vfs_journal_replay(fs_path_join(s_params.state_dir, "journal.log"), records);
         vfs_state_apply_journal(plan, records, states);
-        // arena mode (M6): no files exist to reconcile against - the state is
+        // arena mode: no files exist to reconcile against - the state is
         // the boot-owned residency record, not an install-dir mirror
         if (s_params.store_backend != vfs_store_backend_arena)
             vfs_state_reconcile(plan, s_params.install_dir, states, nullptr, s_params.blobs_dir);
@@ -776,7 +777,7 @@ void vfs_stats(VfsStats *out)
         }
     }
     stats.online = !s_params.offline && vfs_fetch_started();
-    // faults answered with a §6.8 placeholder payload (zerolat); per-asset
+    // faults answered with a placeholder payload (zerolat); per-asset
     // stub reports stay on vfs_stub_count()
     vfs_trap_stats trap_stats;
     vfs_trap_stats_get(&trap_stats);
@@ -785,7 +786,7 @@ void vfs_stats(VfsStats *out)
         *out = stats;
 }
 
-// HUD snapshot (M5): the same aggregate over the boot-owned in-memory state
+// HUD snapshot: the same aggregate over the boot-owned in-memory state
 // - no state.bin reload, no reconcile (which maps every pack), so the game
 // loop can afford it at a few Hz
 void vfs_hud_stats(VfsStats *out)
@@ -828,7 +829,7 @@ void vfs_hud_stats(VfsStats *out)
 }
 
 // ---------------------------------------------------------------------------
-// boot (M2, plan §7.2)
+// boot
 // ---------------------------------------------------------------------------
 
 // one asset the boot pipeline may need: its fetch identity (URL tail + wire
@@ -903,7 +904,7 @@ static void vfs_boot_items_to_tails(
     }
 }
 
-// §7.5: the embedded (recorded) manifest orders the T1 tier; assets it does
+// the embedded (recorded) manifest orders the T1 tier; assets it does
 // not mention keep plan order after the recorded ones. Stale entries only
 // reorder - they can never break correctness.
 static void vfs_boot_order_t1(const VfsPlan &plan, std::vector<vfs_boot_item> *items)
@@ -929,7 +930,7 @@ static void vfs_boot_order_t1(const VfsPlan &plan, std::vector<vfs_boot_item> *i
         });
 }
 
-// materializes the given items through the M1 write path (subset run); a
+// materializes the given items through the shared write path (subset run); a
 // null `items` materializes everything reachable from the store
 static bool vfs_boot_materialize(
     const VfsPlan &plan, const std::vector<vfs_boot_item> *items, vfs_materialize_stats *stats)
@@ -952,14 +953,15 @@ static bool vfs_boot_materialize(
     return vfs_store_materialize(plan, store_params, s_states, &s_journal, stats, list);
 }
 
-// arena counterpart (M6, plan §17.3): makes the granules resident instead of
+// arena counterpart: makes the granules resident instead of
 // writing files, mirroring the result into the boot state DB (and journal)
 // so stats/journal keep their meaning. A stub-filled granule (params
-// stub_on_miss) marks the M4 'B' record; a failure leaves the asset pending
-// for the next boot (§11 semantics). `force` re-ensures assets the state DB
+// stub_on_miss) marks the 'B' record; a failure leaves the asset pending
+// for the next boot (retry there). `force` re-ensures assets the state DB
 // already reports fetched - the warm-boot T0 contract: the recreated arena
 // is empty no matter what state.bin says, and a forced ensure that fails
-// demotes the stale advisory byte (journal 'R') so §11's retry stands.
+// demotes the stale advisory byte (journal 'R') so the next-boot retry
+// stands.
 //
 // Lock scope (review): s_state_mutex covers only the per-item snapshots and
 // commits - the blocking ensure() calls run with NO lock held (they may wait
@@ -1028,7 +1030,7 @@ static bool vfs_boot_arena_ensure(
             if (vfs_asset_is_hole(plan_asset))
             {
                 // reserved entry: no blob exists - the granule slot is all we
-                // owe (the M1 semantics: fetched, never journalled)
+                // owe (fetched, never journalled)
                 if (before == vfs_pending)
                     s_states[item.global_index] = vfs_fetched;
                 continue;
@@ -1080,7 +1082,7 @@ static bool vfs_file_write_atomic(const char *path, const std::vector<uint8_t> &
     return false;
 }
 
-// downloads the product manifest into the blob store. M5 (plan §10.5): an
+// downloads the product manifest into the blob store. An
 // online boot refreshes it EVERY boot (it is ~1.6 KB) so serial drift is
 // seen on the next start; a failure falls back to the cached copy with a
 // warning (never fatal when the cache suffices). A local --product file
@@ -1119,7 +1121,7 @@ static bool vfs_boot_product_fetch()
     return false;
 }
 
-// update flow (M5): the store mirrors the remote URL tree, so manifests
+// update flow: the store mirrors the remote URL tree, so manifests
 // whose content changed upstream would be shadowed by the cached copies on
 // the next plan build. A serial drift drops every cached manifest (*.mft) -
 // they are small and re-downloadable by definition; part blobs stay (they
@@ -1146,7 +1148,7 @@ static void vfs_purge_cached_manifests()
 // plan acquisition for boot: persisted plan when the product serial AND the
 // subset match, (re)build otherwise - online through the HTTP manifest seam,
 // offline from the store. On a drift the new plan is diffed against the
-// persisted one (M5, §10.5) and the per-asset changes are returned so boot
+// persisted one and the per-asset changes are returned so boot
 // can reset exactly what changed after its state load. Sets the fetch
 // engine's repos either way.
 static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, bool *out_drifted)
@@ -1167,14 +1169,14 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
     if (vfs_plan_load(plan_path, persisted) && vfs_product_serial(s_params.product_file, &serial))
     {
         const uint8_t persisted_subset = persisted.subset;
-        // M6: the persisted plan is reused only when BOTH the product serial
+        // the persisted plan is reused only when BOTH the product serial
         // and the subset match the params. A stored view that differs from
         // the params subset is drift in BOTH directions (web->none and
         // none->web): the params view must win, so the plan rebuilds and the
         // resulting diff/reset runs like any serial change
         if (serial == persisted.product_serial && persisted_subset == uint8_t(s_params.subset))
         {
-            // M6: honor the params' subset view over the persisted plan
+            // honor the params' subset view over the persisted plan
             vfs_manifest_apply_subset(persisted, s_params.subset);
             s_plan = persisted;
             s_plan_loaded = true;
@@ -1217,10 +1219,10 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
     {
         if (persisted.files.empty())
             return false;
-        // §11: a failed refresh keeps the existing cache usable - fall back
+        // a failed refresh keeps the existing cache usable - fall back
         // to the persisted plan instead of failing the boot
         LOG_WARN("update: plan refresh failed, keeping the persisted plan");
-        // M6: the fallback view honors the params' subset too (idempotent)
+        // the fallback view honors the params' subset too (idempotent)
         vfs_manifest_apply_subset(persisted, s_params.subset);
         s_plan = persisted;
         s_plan_loaded = true;
@@ -1232,12 +1234,12 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
     }
     if (!persisted.files.empty())
     {
-        // §10.5: only what actually changed re-fetches; a re-signed manifest
+        // only what actually changed re-fetches; a re-signed manifest
         // with identical content logs "no differences" and keeps the install
         if (out_diff)
             vfs_plan_diff(persisted, rebuilt, out_diff);
     }
-    // M6: the subset re-applies on every rebuild (drift rebuilds included)
+    // the subset re-applies on every rebuild (drift rebuilds included)
     vfs_manifest_apply_subset(rebuilt, s_params.subset);
     if (!vfs_plan_save(plan_path, rebuilt))
         return false;
@@ -1248,7 +1250,7 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
     return true;
 }
 
-// applies a plan diff to the freshly loaded state DB (M5): changed assets
+// applies a plan diff to the freshly loaded state DB: changed assets
 // reset to pending (journal 'R'), their pack block is invalidated (the hole
 // re-opens, the file loses its sealed status) and their cached blob is
 // dropped so the tiers re-fetch it. New-plan assets are pending already;
@@ -1299,7 +1301,7 @@ static void vfs_boot_apply_diff(const VfsPlan &plan, const vfs_plan_diff_result 
 
 // the background tier: T1 fetch (ordered) + materialize in chunks; runs until
 // the tier completes or shutdown is requested. Failed blobs are logged and
-// stay missing (retried on the next boot, §11).
+// stay missing (retried on the next boot).
 static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
 {
     LOG_INFO("background tier: %zu assets", items.size());
@@ -1327,7 +1329,7 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
     if (!s_boot_shutdown)
     {
         LOG_INFO("background tier complete");
-        // §5.2 cache rule: everything already in the store materializes
+        // cache rule: everything already in the store materializes
         // without the network (T2+ included), so the install never keeps
         // sized-but-unfetched files when the blob is available locally
         vfs_materialize_stats stats;
@@ -1385,18 +1387,19 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     }
     vfs_manifest_assign_tiers(plan);
 
-    // granule store (M6): the params-selected backend, created BEFORE the
+    // granule store: the params-selected backend, created BEFORE the
     // diff application below so a diff's invalidation reaches the live
     // backend in both modes (the arena branch was unreachable when this ran
-    // after the state block). The native sparse default keeps the M1-M5 disk
-    // pipeline unchanged (the trap resolves through
+    // after the state block). The native sparse default keeps the standard
+    // disk pipeline unchanged (the trap resolves through
     // vfs_store_rematerialize_asset, not through this object); arena mode
-    // materializes granules into memory instead of files (plan §17.3)
+    // materializes granules into memory instead of files (heap arenas hold
+    // decompressed payload bytes, no install files appear)
     if (s_params.store_backend == vfs_store_backend_arena)
     {
         vfs_store_arena_params arena_params;
         arena_params.store.blobs_dir = s_params.blobs_dir;
-        arena_params.stub_on_miss = s_params.zerolat; // §17.4: mandatory on Web
+        arena_params.stub_on_miss = s_params.zerolat; // zero-latency heals in the background
         std::unique_lock<std::mutex> lock(s_state_mutex);
         s_arena = vfs_store_backend_arena_create(arena_params);
         if (s_arena == nullptr || !s_arena->open(plan))
@@ -1409,7 +1412,7 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         }
     }
 
-    // state db: load + journal + reconcile (M1), then the boot skeleton
+    // state db: load + journal + reconcile, then the boot skeleton
     const size_t asset_count = vfs_state_asset_count(plan);
     {
         std::unique_lock<std::mutex> lock(s_state_mutex);
@@ -1421,7 +1424,7 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         {
             // journal hygiene: the DB was cleared (asset-count mismatch or
             // corruption) and the stale log must not resurrect fetched marks
-            // over the fresh all-pending states. Same safety rule as the M5
+            // over the fresh all-pending states. Same safety rule as the
             // rotation - flush the cleared state BEFORE the truncate, which
             // is exactly what the fold does
             vfs_state_close(plan, s_states, s_journal);
@@ -1436,7 +1439,7 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
             vfs_fetch_stop();
             return false;
         }
-        // §10.5 update flow: reset exactly what changed (state + pack hole
+        // update flow: reset exactly what changed (state + pack hole
         // + cached blob) before reconcile sees the fresh plan. Gated on the
         // diff itself: it is computed whenever a persisted plan exists
         // (drifted or not), and a real diff must apply either way. `drifted`
@@ -1448,7 +1451,8 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         else if (drifted)
             LOG_INFO("update: drifted plan, no differences");
         // the on-disk files are the source of truth for the sparse pipeline;
-        // arena mode keeps no files (§17.3) - residency is the boot's own
+        // arena mode keeps no files (its state is granule residency) -
+        // residency is the boot's own
         // record, so there is nothing to reconcile against
         if (s_arena == nullptr)
         {
@@ -1539,7 +1543,7 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         vfs_boot_materialize(plan, &t0, &stats);
 
     // every core asset must be in place: a missing T0 file is a boot failure
-    // naming the file (§11)
+    // naming the file
     bool failed = false;
     {
         std::unique_lock<std::mutex> lock(s_state_mutex);
@@ -1570,10 +1574,10 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     if (progress)
         progress(1.0f, "starting");
 
-    // trap backend (M3): bound before any managed mapping can exist; the
+    // trap backend: bound before any managed mapping can exist; the
     // fault handler itself installs lazily with the first vfs_trap_map, so a
     // run that never maps a managed file never installs one. Arena mode has
-    // no managed mappings (§17.2: no traps exist) and skips it.
+    // no managed mappings (no traps on the arena backend) and skips it.
     if (s_arena == nullptr)
         vfs_trap_backend_ensure();
 
@@ -1622,7 +1626,7 @@ void vfs_boot_wait()
         s_background.join();
 }
 
-// full install (M5, resolved decision #4): queue the blob of every planned
+// full install: queue the blob of every planned
 // asset that is not in the store yet, all tiers (T0..T3), and wait. The
 // thin xuoi --full driver runs this after a boot, then materializes.
 // Nothing to fetch is success regardless of the network: a complete store

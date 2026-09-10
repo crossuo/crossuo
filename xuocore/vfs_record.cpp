@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_record: CSV appender for the §7.5 deployment recorder. See vfs_record.h.
+// vfs_record: CSV appender for the deployment asset-access recorder. See
+// vfs_record.h.
 
 #define LOGGER_MODULE Vfs
 

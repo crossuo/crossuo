@@ -3,20 +3,20 @@
 
 // vfs_trap implementation. See vfs_trap.h for the design contract.
 //
-// Threading and lock order (VUOI plan §9): trap_lock (s_mutex) ->
+// Threading and lock order: trap_lock (s_mutex) ->
 // store_lock (the boot state mutex in vfs.cpp) -> fetch_lock (vfs_fetch).
 // Resolution runs in three phases so the faulting thread never holds
 // trap_lock across the backend call:
 //   1. lookup/claim under trap_lock (mark covering blocks in-flight),
 //   2. fetch + materialize with no trap lock held (backend),
 //   3. commit + page flip under trap_lock, then wake dedup waiters.
-// The backend (vfs.cpp) takes store_lock for the M1 write path and only
+// The backend (vfs.cpp) takes store_lock for the store write path and only
 // touches fetch_lock inside the fetch, so a T1 thread holding store_lock can
 // never form a cycle with a faulting thread (T1 never dereferences managed
 // pages: it writes through FILE* handles only).
 //
-// Known async-signal-safety corners, deliberate per plan §9 ("pragmatic
-// design"): the POSIX SIGSEGV handler takes s_mutex (a normal mutex, not a
+// Known async-signal-safety corners, deliberate trade-offs (a "pragmatic
+// design": the handler is only async-signal-safe-ish by intent): the POSIX SIGSEGV handler takes s_mutex (a normal mutex, not a
 // spinlock), waits on s_cv for in-flight dedup, and performs a blocking
 // network fetch (curl) inside the handler. Everything else in the hot path
 // is syscall or lock-free: mmap/mprotect/pwrite plus preallocated atomic
@@ -68,7 +68,7 @@
 // the flipped page before the pages may disappear
 #define VFS_TRAP_UNMAP_SETTLE_MS 50
 // transient mprotect failures get this many attempts before a page is
-// declared stuck (m1: no refault loop, no kill on transient ENOMEM)
+// declared stuck (no refault loop, no kill on transient ENOMEM)
 #define VFS_TRAP_ZERO_ATTEMPTS 3
 #define VFS_TRAP_ZERO_RETRY_MS 10
 // fixed claim batch: keeps the fault path allocation-free; a page covered by
@@ -87,7 +87,7 @@ enum vfs_trap_page_state : uint8_t
     trap_page_none = 0,     // protected (PROT_NONE / PAGE_NOACCESS)
     trap_page_readable = 1, // real bytes, readable
     trap_page_zeroed = 2,   // degraded: readable zeros (no stub content)
-    trap_page_stubbed = 3,  // degraded: readable §8 placeholder payload
+    trap_page_stubbed = 3,  // degraded: readable placeholder payload
 };
 
 enum vfs_trap_asset_state : uint8_t
@@ -107,7 +107,7 @@ struct vfs_trap_asset
     // resolve-call epoch of the last failed attempt: bounds the retry loop
     // (a failed block is never re-claimed within the same resolution)
     uint32_t attempt = 0;
-    // served from a stub payload (M4); `reported` hands the transition to the
+    // served from a stub payload; `reported` hands the transition to the
     // backend exactly once (state DB mark + demand prefetch)
     uint8_t stubbed = 0;
     uint8_t reported = 0;
@@ -122,7 +122,7 @@ struct vfs_trap_mapping
     const VfsPlan *plan = nullptr; // borrowed: the plan outlives its mappings
     size_t file_index = 0;
     bool is_pack = false;
-    vfs_stub_kind stub_kind = vfs_stub_misc; // §8 kind of the whole file
+    vfs_stub_kind stub_kind = vfs_stub_misc; // stub payload kind of the whole file
     bool sealed = false;
     // zombie: unmap/shutdown gave up waiting for a resolution and left the
     // mapping (object + pages) alive for the process lifetime; never unmapped
@@ -323,8 +323,8 @@ uint32_t s_resolving = 0; // resolutions in flight across all mappings
 vfs_trap_backend s_backend;
 bool s_handler_installed = false;
 bool s_report_counters = false;
-bool s_zerolat = false; // §6.8: faults serve stubs and enqueue demand fetches
-// M5 escape hatch (--streaming-trap=off): new mappings never protect pages
+bool s_zerolat = false; // zero-latency: faults serve stubs and enqueue demand fetches
+// escape hatch (--streaming-trap=off): new mappings never protect pages
 bool s_traps = true;
 
 void trap_counter_inc(vfs_trap_counter which, uint64_t delta = 1)
@@ -397,7 +397,7 @@ void trap_unpin(vfs_trap_mapping *m)
 
 // flips every fully-covered page overlapping [start, end) to readable; a
 // page degraded to zeros is promoted to real when its last absent block
-// lands - the MAP_SHARED mapping already shows the bytes the M1 writer put
+// lands - the MAP_SHARED mapping already shows the bytes the store writer put
 // down (callers hold trap_lock)
 void trap_flip_pages(vfs_trap_mapping &m, uint64_t start, uint64_t end)
 {
@@ -466,7 +466,7 @@ size_t trap_first_candidate(const vfs_trap_mapping &m, uint64_t offset)
 // bytes actually placed, so the asset becomes visible to UopLoadFile on the
 // next boot (mid-session tables are already parsed and need no patch). The
 // entry keeps the plan's DecompressedSize/Hash/Checksum and advertises only
-// the stored span, so the M1 presence check still reports the asset absent
+// the stored span, so the presence check still reports the asset absent
 // and a real blob heals it (the state DB stays the source of truth).
 void trap_stub_patch_entry(vfs_trap_mapping &m, size_t index, uint32_t stored_len)
 {
@@ -504,7 +504,7 @@ void trap_stub_patch_entry(vfs_trap_mapping &m, size_t index, uint32_t stored_le
 }
 
 // serves the still-absent sub-ranges of every protected page overlapping
-// [start, end) with the file kind's §8 stub payload (plain zeros when the
+// [start, end) with the file kind's stub payload (plain zeros when the
 // kind has no payload content or the payload cannot fit), preserving
 // entry-table and present-block bytes. Stubs only ever occupy the block's
 // planned stored span ([start + ml, start + ml + min(ul, stored)): the
@@ -512,13 +512,13 @@ void trap_stub_patch_entry(vfs_trap_mapping &m, size_t index, uint32_t stored_le
 // the tail with zeros, and raw-pointer readers never walk past what the
 // header short-circuits. Deterministic generators write straight into the
 // mapping: no allocation, and the cost is bounded by the page - the same
-// guarantees the M3 memset path gave. Per-asset stub transitions are flagged
+// guarantees the plain zero-fill path gave. Per-asset stub transitions are flagged
 // (`stubbed`) and reported by trap_report_stubs once, with no trap lock
 // held. Entry-table patches are deferred until the page is readable again:
 // patching mid-fill would restore protection under the writer's feet.
 // Transient mprotect failures (memory-pressure ENOMEM) are retried; a
 // persistent failure leaves the page protected but marks it zeroed and
-// stuck, so the next fault chains instead of refault-looping (m1: no
+// stuck, so the next fault chains instead of refault-looping (no
 // infinite loop, no process kill on a transient failure).
 void trap_stub_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
 {
@@ -591,7 +591,7 @@ void trap_stub_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
                         }
                         // more than VFS_TRAP_BATCH blocks sharing one page is
                         // a degenerate layout: the surplus keeps a zeroed
-                        // entry (the asset simply stays invisible, M3 style)
+                        // entry (the asset simply stays invisible)
                     }
                     trap_asset.stubbed = 1;
                 }
@@ -600,7 +600,7 @@ void trap_stub_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
         }
         if (!flipped)
         {
-            // pragmatic §9 corner: this logs from the fault path, but only
+            // pragmatic corner: this logs from the fault path, but only
             // after retries against a persistent os failure
             LOG_ERROR("vfs_trap: stub fill stuck (mprotect failed) on %s", fs_path_ascii(m.path));
             m.page_state[page] = trap_page_zeroed;
@@ -621,7 +621,7 @@ void trap_block_of(const vfs_trap_mapping &m, size_t asset_index, vfs_trap_block
 
 // hands every not-yet-reported stub transition overlapping [start, end) to
 // the backend - `stubbed` (state DB mark, counters) always and `prefetch`
-// after zero-latency serves (§6.8) - with no trap lock held
+// after zero-latency serves - with no trap lock held
 void trap_report_stubs(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool prefetch)
 {
     if (s_backend.stubbed == nullptr && (!prefetch || s_backend.prefetch == nullptr))
@@ -746,7 +746,7 @@ bool trap_resolve_range(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool 
             s_cv.wait_for(lock, std::chrono::milliseconds(VFS_TRAP_WAIT_DEADLINE_MS));
             continue;
         }
-        // phase 2: backend call with no trap lock held (fetch + M1 writer)
+        // phase 2: backend call with no trap lock held (fetch + store writer)
         for (size_t i = 0; i < count; ++i)
         {
             const bool done =
@@ -783,8 +783,9 @@ bool trap_resolve_range(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool 
     return true;
 }
 
-// initial presence: the entry table is the on-disk truth for packs (M1
-// patches the block's Offset in place when the block lands); for loose files
+// initial presence: the entry table is the on-disk truth for packs (the
+// store writer patches the block's Offset in place when the block lands); for
+// loose files
 // the state DB byte is the only truth (the sparse skeleton file matches the
 // planned size but holds no content). Runs while every page is still
 // readable, so the table reads cannot fault.
@@ -837,7 +838,7 @@ bool trap_handle_fault(uint8_t *addr)
         }
         else if (trap_page_stuck_at(*m, offset))
         {
-            return false; // degraded page: chain (m1 anti-loop rule)
+            return false; // degraded page: chain (anti-loop)
         }
         else
         {
@@ -862,9 +863,10 @@ bool trap_handle_fault(uint8_t *addr)
     const uint64_t len = trap_page_span(page, *m);
     if (s_zerolat)
     {
-        // §6.8: never wait on the network in the fault path - serve the stub
+        // zero-latency rule: never wait on the network in the fault path -
+        // serve the stub
         // payload right away, flip the page and enqueue the real fetch; the
-        // heal arrives through the demand tier and the §6.8 refresh hooks.
+        // heal arrives through the demand tier and the refresh hooks.
         // Counted as a placeholder serve, not a resolution: the bytes behind
         // the fault are synthetic (the per-asset stubbed counter above stays
         // the once-per-asset report)
@@ -973,7 +975,7 @@ void trap_sigaction(int sig, siginfo_t *info, void *context)
 // public API
 // ---------------------------------------------------------------------------
 
-// raw fault-context discriminator (M2): true when the context describes a
+// raw fault-context discriminator: true when the context describes a
 // WRITE access - POSIX: the ucontext_t* a SA_SIGINFO handler received (the
 // REG_ERR write bit, x86-64); Windows: the EXCEPTION_RECORD* of an access
 // violation (ExceptionInformation[0] == 1). Unknown/null contexts report a
@@ -1042,7 +1044,7 @@ bool vfs_trap_install()
     action.sa_sigaction = trap_sigaction;
     action.sa_flags = SA_SIGINFO;
     sigemptyset(&action.sa_mask);
-    // deliver on the altstack when the process has one (plan §6.5)
+    // deliver on the altstack when the process has one
     stack_t stack;
     if (sigaltstack(nullptr, &stack) == 0 && (stack.ss_flags & SS_DISABLE) == 0)
         action.sa_flags |= SA_ONSTACK;
@@ -1159,8 +1161,9 @@ uint8_t *vfs_trap_map(
     m.stub_kind = vfs_stub_kind_for(file.name.c_str());
 
     // per-asset coverage model: packs cover [offset, offset + ml + payload)
-    // (the whole block the M1 writer puts down); loose files resolve as one
-    // whole-file range on first fault (§10.3; idx-range streaming deferred)
+    // (the whole block the store writer puts down); loose files resolve as one
+    // whole-file range on first fault (HTTP Range fetch of the entire file;
+    // idx-range streaming deferred)
     if (m.is_pack)
     {
         uint64_t table_end =
@@ -1221,7 +1224,7 @@ uint8_t *vfs_trap_map(
         memset(m.page_state.data(), trap_page_readable, m.page_state.size());
     }
 
-    // fault-safety ordering (m4): the mapping enters the registry BEFORE the
+    // fault-safety ordering: the mapping enters the registry BEFORE the
     // first page is protected - the moment a hole becomes PROT_NONE a fault
     // can land, and it must find a resolvable mapping instead of chaining
     {
@@ -1304,7 +1307,7 @@ bool vfs_trap_unmap(uint8_t *base)
             return true; // already defunct: stays mapped for the process lifetime
         // wait for in-flight resolutions so the pages cannot outlive the
         // mapping; bounded: on expiry the mapping turns zombie instead of
-        // being unmapped/erased under a live resolver (m1)
+        // being unmapped/erased under a live resolver
         const uint64_t deadline = trap_now_ms() + VFS_TRAP_WAIT_DEADLINE_MS;
         bool raced = m.resolving > 0;
         while (m.resolving > 0 && trap_now_ms() <= deadline)

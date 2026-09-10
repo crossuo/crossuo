@@ -1,10 +1,10 @@
 <!-- SPDX-FileCopyrightText: 2026 CrossUO Team -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
-# VUOI golden fixtures (M0)
+# VUOI golden fixtures
 
 Captured live from the official EA/Broadsword Ultima Online patch servers on
-2026-09-08 during authoring of the VUOI streaming-install plan (M0). These are
+2026-09-08 during authoring of the VUOI streaming-install implementation. These are
 factual protocol/metadata artifacts used as byte-stream integrity fixtures for
 the offline test suite; they contain no game art, map, audio or other
 copyrighted content.

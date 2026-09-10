@@ -16,7 +16,7 @@
 // loose file or pack part) to its raw, as-shipped bytes (still compressed when
 // the entry is ct=1; the caller decompresses). The built-in implementation
 // reads the local cache first and falls back to HTTP, back-filling the cache;
-// alternative transports (the M1 offline blob store, the M2 fetch engine) plug
+// alternative transports (the offline blob store, the network fetch engine) plug
 // in through mft_config::fetch without touching the manifest recursion.
 // - url: absolute resource URL (repo + rel_path), for implementations that
 //   still go to the network

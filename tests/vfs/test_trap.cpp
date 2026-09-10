@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M3 trap tests: hole-paged managed mappings with fault-driven resolution
-// (VUOI plan §6.5). No display, no network: the store is pre-seeded and the
+// trap tests: hole-paged managed mappings with fault-driven resolution.
+// No display, no network: the store is pre-seeded and the
 // resolution backend runs offline (the game backend skips the fetch and
 // materializes from the store), so every fault path is exercised
 // deterministically:
@@ -15,11 +15,11 @@
 //   (f) out-of-registry containment logic (no crash is attempted)
 //   (g) concurrent faults on the same block resolve once (dedup)
 //   (h) GetData pre-resolve serves bytes without triggering a fault
-// plus the loose-file whole-fetch fallback (§10.3), and the M3 review
+// plus the loose-file whole-fetch fallback, and the review
 // regressions:
-//   (i) unmap racing an in-flight resolution (m1: no UAF, resolver completes)
-//   (j) write faults chain instead of resolving (M2: discriminator + fork)
-//   (k) a zeroed page heals to real via ensure once its blob lands (m7)
+//   (i) unmap racing an in-flight resolution (no UAF, resolver completes)
+//   (j) write faults chain instead of resolving (fault discriminator + fork)
+//   (k) a zeroed page heals to real via ensure once its blob lands
 
 #define LOGGER_MODULE TestVfs
 
@@ -138,7 +138,7 @@ static bool trap_setup_straddle(trap_env &env, const char *name)
     return true;
 }
 
-// materializes a subset of pack assets through the M1 write path
+// materializes a subset of pack assets through the shared write path
 static bool trap_materialize(trap_env &env, const std::vector<uint32_t> &assets)
 {
     std::vector<uint8_t> states;
@@ -616,7 +616,7 @@ VFS_TEST(trap_ensure_range_pre_resolve)
 }
 
 // ---------------------------------------------------------------------------
-// loose files stream whole-file on first fault (§10.3 MUL fallback)
+// loose files stream whole-file on first fault (HTTP Range fallback)
 // ---------------------------------------------------------------------------
 
 VFS_TEST(trap_loose_file_whole_fetch)
@@ -642,7 +642,7 @@ VFS_TEST(trap_loose_file_whole_fetch)
 }
 
 // ---------------------------------------------------------------------------
-// (i) unmap racing an in-flight resolution: the resolver must complete (m1)
+// (i) unmap racing an in-flight resolution: the resolver must complete
 // ---------------------------------------------------------------------------
 
 struct trap_unmap_backend
@@ -706,7 +706,7 @@ VFS_TEST(trap_unmap_during_resolution)
 
 // ---------------------------------------------------------------------------
 // (j) write faults are never resolved: the discriminator declines writes and
-// a real write to a flipped page chains to the default action (M2)
+// a real write to a flipped page chains to the default action
 // ---------------------------------------------------------------------------
 
 VFS_TEST(trap_write_fault_discriminator)
@@ -780,7 +780,7 @@ VFS_TEST(trap_write_fault_chains)
 #endif // !defined(_MSC_VER)
 
 // ---------------------------------------------------------------------------
-// (k) a zeroed page heals to real once its last absent block lands (m7)
+// (k) a zeroed page heals to real once its last absent block lands
 // ---------------------------------------------------------------------------
 
 VFS_TEST(trap_zeroed_page_heals)

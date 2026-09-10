@@ -5,7 +5,7 @@
 // path: CFileManager::UopLoadFile (xuocore/uodata.cpp:850) over a synthetic
 // archive built in memory, plus the real captured artLegacyMUL.uop part.
 //
-// The synthetic layout is the one vfs_store (M1) must assemble per asset:
+// The synthetic layout is the one vfs_store must assemble per asset:
 //   [MYP header][section(s)][UopFileEntry table]
 //   per entry: [metadata block][payload blob]
 // The client never validates metadata content or Checksum while walking the

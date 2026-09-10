@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs: public VUOI core API, M1 subset of plan §6.1 (plan/state/materialize/
-// verify over a local blob store; boot, fetch, trap and stub APIs arrive in
-// M2+). The install dir produced here is the future uo_data_init() target.
+// vfs: public VUOI core API (plan/state/materialize/verify over a local blob
+// store; boot, fetch, trap and stub APIs). The install dir produced here is
+// the future uo_data_init() target.
 
 #pragma once
 
@@ -21,19 +21,19 @@ struct VfsStats
     size_t files_done = 0;     // files with every expected asset present
     size_t bytes_total = 0;    // planned bytes (pack tables + blocks, loose files)
     size_t bytes_done = 0;     // bytes confirmed in place
-    bool online = false;       // fetch engine connected to a repo (M2)
-    uint64_t stubs_served = 0; // faults answered with a placeholder payload (M4 zerolat)
-    uint64_t stubs_active = 0; // assets currently in the stubbed state (M5 HUD)
+    bool online = false;       // fetch engine connected to a repo
+    uint64_t stubs_served = 0; // faults answered with a placeholder payload
+    uint64_t stubs_active = 0; // assets currently in the stubbed state (HUD)
 };
 
 struct vfs_params
 {
-    bool enabled = false; // streaming install mode (M2); false: no-op module
+    bool enabled = false; // streaming install mode; false: no-op module
     bool offline = false; // never hit the network; cache/stubs only
-    // zero-latency mode (M4, plan §6.8): faults serve stub payloads instantly
+    // zero-latency mode: faults serve stub payloads instantly
     // and heal in the background instead of blocking on the fetch
     bool zerolat = false;
-    // M5 escape hatch (plan §15, --streaming-trap=off): managed files map
+    // escape hatch (--streaming-trap=off): managed files map
     // without hole protection - pointer reads of holes return the sparse
     // file's zeros; ensure/pre-resolve paths still fetch on demand
     bool traps = true;
@@ -44,18 +44,22 @@ struct vfs_params
     // product manifest; default: <blobs_dir>/uo-legacyrelease.prod, resolved
     // against the blobs root when the given value is not an existing path
     fs_path product_file;
-    // where the product manifest is downloaded from when missing (M2);
-    // empty: the official URL (VUOI plan §3.1)
+    // where the product manifest is downloaded from when missing;
+    // empty: the official EA legacyrelease patch server URL
     astr_t product_url;
-    // §7.5 deployment recorder (--streaming-record); empty: disabled
+    // deployment-time asset-access recorder (--streaming-record): appends
+    // every resolved asset to a CSV that seeds the embedded T1 order;
+    // empty: disabled
     fs_path record_path;
     astr_t record_scenario; // --streaming-record-scenario (default "default")
-    // granule store (M6, plan §17.3): the native sparse materializer (the
-    // M1-M5 default, unchanged) or the memory arena - web groundwork; on a
+    // granule store backend: the native sparse materializer (default) or
+    // the memory arena - web groundwork, where granules live in heap arenas
+    // holding decompressed payload bytes instead of materialized files; on a
     // native build the arena is a memory-mode (no install files appear)
     vfs_store_backend_kind store_backend = vfs_store_backend_sparse;
-    // product subset (M6, plan §17.6): the plan-build filter; none is the
-    // full native view, web drops the §17.6 patterns. Persisted in plan.bin
+    // product subset filter for the plan build: none is the full native
+    // view, the web subset drops the large legacy patterns (anim*.mul,
+    // Music/**, facet*, verdata). Persisted in plan.bin
     vfs_subset subset = vfs_subset_none;
 };
 
@@ -71,7 +75,7 @@ bool vfs_plan_rebuild(VfsPlan &out_plan);
 
 // materialize everything reachable from the blob store (idempotent, offline);
 // returns false only on io failures or unusable blobs, missing blobs are not
-// fatal (they are M2's fetch list)
+// fatal (the fetch engine downloads them later)
 bool vfs_materialize(vfs_materialize_stats *stats);
 
 // verify materialized files against plan and blobs; per-file statuses in
@@ -82,19 +86,20 @@ int vfs_verify(vfs_verify_result *out);
 // aggregate progress over the current plan and state DB
 void vfs_stats(VfsStats *out);
 
-// in-memory progress snapshot for the HUD (M5): reads the boot-owned state
+// in-memory progress snapshot for the HUD: reads the boot-owned state
 // and lock-free counters only - no disk io, no reconcile - so the game loop
 // can poll it at a few Hz. zeros while no boot ran.
 void vfs_hud_stats(VfsStats *out);
 
-// arena residency probe (M6, tests + web diagnostics): the tracked/resident
+// arena residency probe (tests + web diagnostics): the tracked/resident
 // granule counts of the params-selected backend; zeros when the sparse
 // backend is active or no boot holds an arena
 void vfs_arena_residency(size_t *out_granules, size_t *out_resident);
 
 // ---------------------------------------------------------------------------
-// boot (M2, VUOI plan §7.2): plan -> blocking T0 fetch+materialize (with
-// progress) -> background T1; returns false on fatal errors (offline mode
+// boot: load/refresh the plan, then a blocking core-tier (T0)
+// fetch+materialize (with progress), then the background tier (T1); returns
+// false on fatal errors (offline mode
 // with an insufficient store, unreachable repos, failed core assets)
 // ---------------------------------------------------------------------------
 
@@ -102,7 +107,7 @@ bool vfs_boot(void (*progress)(float done01, const char *label));
 // headless tools (vuoi): wait for the background tier to finish instead of
 // leaving it running; the game never calls this (it must not block the loop)
 void vfs_boot_wait();
-// full install (M5, resolved decision #4): fetches the blob of EVERY planned
+// full install: fetches the blob of EVERY planned
 // asset (all tiers) into the store; blocking, optional progress per tail.
 // Requires a running boot (repos + engine); false when offline or idle.
 // The caller materializes and verifies afterwards (xuoi --full).
@@ -111,7 +116,7 @@ bool vfs_fetch_all(void (*progress)(float done01, const char *label));
 void vfs_shutdown();
 
 // ---------------------------------------------------------------------------
-// managed mappings (M3, VUOI plan §6.1, §6.5): hole-paged mappings with
+// managed mappings: hole-paged mappings with
 // fault-driven streaming. vfs_map_file routes install files known to the
 // plan through vfs_trap (unreadable holes, first touch fetches the covering
 // block); every other path - and the whole path when streaming is disabled -
@@ -126,13 +131,13 @@ void vfs_unmap_file(uint8_t *start, size_t size);
 // makes [offset, offset + length) of a mapped managed base readable (fetch +
 // materialize + flip, deduplicated); false when resolution failed hard
 bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length);
-// §6.1: true when the byte at `offset` holds real materialized data (sealed
+// true when the byte at `offset` holds real materialized data (sealed
 // or flipped pages). Unmanaged/native addresses are always ready. The cheap
 // check behind stub-refresh decisions and diagnostics
 bool vfs_is_ready(uint8_t *base, size_t offset);
 
 // ---------------------------------------------------------------------------
-// stubs and hot-swap (M4, VUOI plan §6.7, §6.8): the trap serves syntactically
+// stubs and hot-swap: the trap serves syntactically
 // valid placeholder payloads for missing ranges (zeros only when the kind has
 // no payload content); zero-latency mode adds instant stubs + background
 // healing. Cached game objects decoded from a stub go stale when the real
@@ -158,14 +163,14 @@ struct CIndexObject;
 // Execute*/cache entry point.
 bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj));
 
-// index-build markers (§6.8): true when the pack asset with `uop_hash` (or
+// index-build markers: true when the pack asset with `uop_hash` (or
 // the managed loose file mapped at `base`) was served a stub payload. The
 // index build marks the CIndexObject so healed bytes hot-swap later. Always
 // false when streaming is disabled.
 bool vfs_asset_is_stubbed(uint64_t uop_hash);
 bool vfs_file_is_stubbed(const uint8_t *base);
 
-// per-file bulk form of the markers above (M4 perf): a mapped pack's plan
+// per-file bulk form of the markers above (perf): a mapped pack's plan
 // file resolves once per index build - `vfs_file_state_base` returns the
 // state DB base index of the plan file mapped at `mapping_base` (SIZE_MAX
 // when untracked or streaming is disabled), and `vfs_asset_stubbed_at`

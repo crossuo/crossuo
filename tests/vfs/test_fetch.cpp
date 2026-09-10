@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// M2 fetch tests: the streaming boot pipeline against the local fixture
+// fetch tests: the streaming boot pipeline against the local fixture
 // server (tests/vfs/http_server.py, ephemeral port, no external network):
 //   - plan + fetch + materialize over HTTP, verified through the production
 //     UopLoadFile/GetData path and byte-compare of the loose files
@@ -10,7 +10,7 @@
 //     blob is logged and skipped (retried on the next boot)
 //   - offline mode never issues a request and fails cleanly on an empty store
 //   - in-flight dedup: two waiters on the same tail produce one GET
-//   - the §7.5 recorder writes a valid CSV (explicit and default scenario)
+//   - the asset recorder writes a valid CSV (explicit and default scenario)
 //   - a body far larger than the expected size aborts at the transfer cap
 
 #define LOGGER_MODULE TestVfs
@@ -131,12 +131,12 @@ VFS_TEST(fetch_http_end_to_end)
     TEST_CHECK_MSG(test_read_file(unifont, bytes), "unifont1.mul not materialized");
     TEST_CHECK_MSG(bytes == prod.loose[2].payload, "unifont1.mul bytes differ");
     // T3 (music) is deferred: the file exists only as its boot skeleton
-    // (sized sparse), never fetched in M2
+    // (sized sparse), never fetched at boot
     std::vector<uint8_t> music_bytes;
     TEST_CHECK_MSG(test_read_file(music, music_bytes), "music skeleton missing");
     TEST_CHECK_MSG(
         music_bytes.size() == prod.loose[1].payload.size() && music_bytes != prod.loose[1].payload,
-        "T3 (music) must not be fetched in M2");
+        "T3 (music) must not be fetched at boot");
 
     // the pack was skeleton-prepared, parses through the production path and
     // its T0 (Strings) block decodes to the exact payload
@@ -146,7 +146,7 @@ VFS_TEST(fetch_http_end_to_end)
     const auto *entry = pack.GetAsset(strings_part.uop_hash());
     TEST_CHECK_MSG(entry != nullptr, "the T0 block is not materialized");
     TEST_CHECK(pack.GetData(entry) == strings_part.payload);
-    // M3: T2 blocks sharing the first pages with the entry table are now
+    // trap: T2 blocks sharing the first pages with the entry table are now
     // reachable - the fault handler resolved them on the table walk (their
     // blobs were fetched from the still-running fixture server), which is
     // exactly the on-demand streaming the trap provides
@@ -158,9 +158,9 @@ VFS_TEST(fetch_http_end_to_end)
     test_server_stop(srv);
 }
 
-// M2 downloads are whole-blob GETs (pack parts and loose files alike), so a
+// downloads are whole-blob GETs (pack parts and loose files alike), so a
 // server without Range support behaves identically; documented contract for
-// the M3 range-streaming fallback (§10.3)
+// the range-streaming fallback (whole-file GET + per-range stub fill)
 VFS_TEST(fetch_http_no_range_whole_gets)
 {
     test_product_data prod;
@@ -208,7 +208,7 @@ VFS_TEST(fetch_second_boot_zero_requests)
     TEST_CHECK(after_first > 0);
 
     // second boot: the store is complete and the serial matches, so the
-    // pipeline itself is request-free. The M5 product refresh (§10.5) is the
+    // pipeline itself is request-free. The product refresh is the
     // one allowed exception: an online boot re-fetches the ~1.6 KB product
     // manifest to detect serial drift (and nothing else may be requested)
     TEST_CHECK(vfs_boot(nullptr));
@@ -399,9 +399,9 @@ VFS_TEST(fetch_body_cap_aborts_oversized)
     vfs_fetch_set_repos(repo.c_str(), repo.c_str());
 
     // the served body is exactly ONE byte over the expected size: the exact
-    // body cap (M6) must abort the transfer mid-flight - the M2-M5 slack of
-    // 64 KB would have let this body complete, failing only at the engine's
-    // post-transfer size check
+    // body cap must abort the transfer mid-flight - the legacy 64 KB slack of
+    // the unseamed engine would have let this body complete, failing only at
+    // the engine's post-transfer size check
     const astr_t tail = test_loose_tail("tiledata.mul");
     std::vector<uint8_t> big(2048 + 1, 0xAB);
     TEST_CHECK(test_write_file(fs_path_join(prod.blobs, tail), big));

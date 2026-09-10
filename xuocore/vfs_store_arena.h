@@ -1,39 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// vfs_store_arena: the granule-resident memory backend (VUOI plan §17.3, M6
-// web groundwork). One granule == one plan asset (a UOP pack part or a loose
-// file); idx-range clusters do not exist in the plan model yet (see the M6
-// NOTES section). No files are materialized and no traps exist: a granule is
+// vfs_store_arena: the granule-resident memory backend (web groundwork). One
+// granule == one plan asset (a UOP pack part or a loose file); idx-range
+// clusters do not exist in the plan model yet (see docs/NOTES.md). No files
+// are materialized and no traps exist: a granule is
 // either resident (heap buffer with the asset's payload bytes) or it is not,
 // and reads go through explicit ranges into a caller-supplied buffer.
 //
-// This is the store a web build runs on (§17: no mmap, no demand paging,
-// linear-memory budget). It is also useful natively as a memory-mode - tools
+// This is the store a web build runs on (wasm has no mmap and no demand
+// paging, and the linear-memory budget forbids multi-GB materialized files).
+// It is also useful natively as a memory-mode - tools
 // and tests can stream a product through RAM with no install dir at all.
 //
 // Payload semantics: arenas hold the asset's PAYLOAD bytes (decompressed for
 // zlib assets - the same bytes vfs_store_asset_inflate produces for the
 // loose writer; raw for stored ones). Pack header/entry tables are NOT
-// resident: on Web the UOP table synthesis produces in-memory tables (§17.1)
+// resident: on Web the UOP table synthesis produces in-memory tables
 // and the metadata bytes would be dead weight in a 2 GB budget.
 //
-// Consumer liveness (THE arena rule, §17.3): eviction can drop a resident
+// Consumer liveness (THE arena rule): eviction can drop a resident
 // granule at any ensure/evict that hits the budget. The game layer must pin
-// or refresh consumers of arena bytes - natively that is M4's refresh
+// or refresh consumers of arena bytes - natively that is the refresh
 // machinery (vfs_refresh_index / vfs_refresh_block: destroy the cached
 // sprite, clear the flag, reload on the next frame). The hook is named here
 // on purpose: the web port wires the same DestroySprite path.
 //
 // Eviction policy: LRU on last access (ensure/read touch the clock). Sealed
-// granules stay EVICTABLE like all others - the decision (M6): bytes are
+// granules stay EVICTABLE like all others - bytes are
 // always recoverable from the store/blob, and arena mode pairs with the
 // no-traps configuration where a later ensure() simply re-materializes them.
 // A granule with an in-flight ensure is never evicted (its commit would
 // resurrect bytes the budget asked to drop).
 //
-// `#if defined(__EMSCRIPTEN__)` hooks (documented, not added - M6 is native-
-// verifiable only): persistence (§17.5 Cache-API/OPFS granule store) wraps
+// `#if defined(__EMSCRIPTEN__)` hooks (documented, not added - verifiable
+// natively only without them): persistence (browser Cache-API/OPFS granule
+// store) wraps
 // ensure()/evict(); index baking (CIndexObject.Address = arena slot) sits on
 // top of read(); neither changes this interface.
 
@@ -46,7 +48,7 @@
 #include <vector>
 #include "vfs_store.h"
 
-// arena residency budget default (plan §17.3: sized for wasm32 headroom)
+// arena residency budget default (sized for wasm32 linear-memory headroom)
 #define VFS_ARENA_MAX_BYTES_DEFAULT (256ull << 20)
 
 struct vfs_store_arena_params
@@ -57,8 +59,8 @@ struct vfs_store_arena_params
     // larger than the budget stays resident (there is nothing smaller to
     // keep instead - the budget is a target, not a hard cap)
     uint64_t max_bytes = VFS_ARENA_MAX_BYTES_DEFAULT;
-    // zero-latency analog (M4 semantics, plan §17.4): a missing blob fills
-    // the arena with the asset's §6.7 stub payload (same vfs_stub generators
+    // zero-latency analog: a missing blob fills
+    // the arena with the asset's stub payload (same vfs_stub generators
     // as the trap) instead of failing; a later ensure() with the blob present
     // overwrites the arena bytes (heal). Stubbed granules are evictable too -
     // the generators are pure functions, the payload is always rebuildable.
@@ -96,12 +98,12 @@ public:
     // is not resident or [offset, offset + length) leaves the payload.
     bool read(const VfsAsset &asset, size_t offset, uint8_t *dst, size_t length);
 
-    // drops one granule (M5 update flow: a changed asset re-ensures on
+    // drops one granule (update flow: a changed asset re-ensures on
     // demand; the caller resets the state byte and drops the cached blob)
     void invalidate(const VfsAsset &asset);
 
-    // true when the resident granule holds a §6.7 stub payload (boot marks
-    // the M4 'B' journal record from this; always false when not resident)
+    // true when the resident granule holds a stub payload (boot marks
+    // the 'B' journal record from this; always false when not resident)
     bool asset_is_stubbed(const VfsAsset &asset) const;
 
     // seal bookkeeping view (tests, web diagnostics): the plan file reached
@@ -117,7 +119,7 @@ private:
         uint32_t file_index = 0;
         uint32_t asset_index = 0;
         bool hole = false;     // blockless entry: trivially ready, no bytes
-        bool stub = false;     // resident bytes are a §6.7 stub payload
+        bool stub = false;     // resident bytes are a stub payload
         bool inflight = false; // an ensure() is loading it (never evicted)
         bool resident = false;
         uint64_t last_access = 0; // LRU clock stamp
@@ -142,5 +144,5 @@ private:
     std::condition_variable m_cv; // in-flight ensure handoff
 };
 
-// the M6 memory backend (factory-selected through vfs_store_backend_create)
+// the memory backend (factory-selected through vfs_store_backend_create)
 vfs_store_arena *vfs_store_backend_arena_create(const vfs_store_arena_params &params);

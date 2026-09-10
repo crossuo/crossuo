@@ -188,7 +188,7 @@ static void print_banner()
 }
 
 // ---------------------------------------------------------------------------
-// --full (M5, resolved decision #4): the classic whole-install assembly as a
+// --full: the classic whole-install assembly as a
 // thin driver over the vfs public api - boot (plan + blocking core), fetch
 // every tier, materialize, verify. No install logic lives here.
 // ---------------------------------------------------------------------------
