@@ -36,6 +36,10 @@ struct Config
 
     bool ClientVersionModified = false;
     bool ClientKeysSet = false;
+
+    // true when the config file explicitly set the data path (CustomPath);
+    // not saved back
+    bool CustomPathSet = false;
 };
 
 bool LoadGlobalConfig();

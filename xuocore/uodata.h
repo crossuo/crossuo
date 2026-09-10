@@ -116,7 +116,7 @@ struct CIndexObject
     int32_t Height = 0;
     uint32_t LastAccessTime = 0;
     uint16_t Color = 0;
-    // streaming (M4, VUOI plan §6.8): the index was built over a placeholder
+    // streaming: the index was built over a placeholder
     // payload; the hot-swap refresh (vfs_refresh_index) drops the cached
     // sprite once the real bytes materialize. Sits in the struct's tail
     // padding (56-byte body, 6 pad bytes) - no size drift on either word size
