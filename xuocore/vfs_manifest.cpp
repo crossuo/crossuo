@@ -19,6 +19,7 @@
 
 #include <external/zlib_amalg.h>
 
+#define UOI_AGENT_NAME "EAMythic Patch Client"
 // manifest blobs are small; the mft engine sizes its buffers from this
 #define VFS_MANIFEST_BUFFER_SIZE (16 * 1024 * 1024)
 
@@ -224,7 +225,7 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
 
     vfs_manifest_params p = params; // the fetch context outlives this call
     mft_config cfg;
-    cfg.agent_name = "vuoi";
+    cfg.agent_name = UOI_AGENT_NAME;
     cfg.download_buffer_size = VFS_MANIFEST_BUFFER_SIZE;
     cfg.dump_extracted = false;
     cfg.fetch = p.fetch ? p.fetch : vfs_fetch_blob;

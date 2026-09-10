@@ -333,7 +333,7 @@ int main(int argc, char **argv)
 
     win_context win;
     memset(&win, 0, sizeof(win_context));
-    win.title = XUOL_AGENT_NAME;
+    win.title = XUOL_TITLE;
     win.width = 550;
     win.height = 284;
     win.vsync = 0;
@@ -442,7 +442,7 @@ int main(int argc, char **argv)
         ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
         ImGui::SetNextWindowSize(size, ImGuiCond_Always);
         ImGui::Begin(
-            XUOL_AGENT_NAME,
+            XUOL_TITLE,
             nullptr,
             ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |

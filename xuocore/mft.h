@@ -44,7 +44,7 @@ enum mft_result : uint32_t
 
 struct mft_config
 {
-    const char *agent_name = "";
+    const char *agent_name = "EAMythic Patch Client";
     uint32_t thread_count = 1;
     uint32_t download_buffer_size = MFT_MAX_DOWNLOAD_SIZE;
     uint32_t download_retries = 5;

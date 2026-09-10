@@ -8,7 +8,8 @@ struct xuo_release;
 
 #include "revision.h"
 
-#define XUOL_AGENT_NAME LAUNCHER_TITLE
+#define XUOL_TITLE LAUNCHER_TITLE
+#define XUOL_AGENT_NAME "EAMythic Patch Client"
 #if defined(XUO_RELEASE)
 #define XUOL_UPDATER_HOST "https://raw.githubusercontent.com/crossuo/update/release/"
 // "http://update.crossuo.com/"
