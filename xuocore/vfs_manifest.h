@@ -82,15 +82,19 @@ struct VfsPlan
     astr_t manifest_repo;
     astr_t file_repo;
     // product subset the plan was filtered to; persisted in
-    // plan.bin (v3). Missing (older plans) means vfs_subset_none
+    // plan.bin (v4). Missing (older plans) means vfs_subset_none
     uint8_t subset = vfs_subset_none;
 };
 
-// bytes the asset occupies inside its pack: [ml metadata][payload]; zero
-// marks a hole (reserved entry, nothing to fetch or write)
+// bytes the asset occupies inside its pack: [ml metadata][stored payload].
+// Payloads materialize decompressed (entry Flags == 0, CompressedSize == ul)
+// so the raw-pointer readers (art, map blocks) see stored bytes exactly like
+// EA's own local archives; the compressed blob (cl) only ever exists in the
+// blob store and inflates right before the block write. Zero marks a hole
+// (reserved entry, nothing to fetch or write)
 inline uint64_t vfs_asset_block_size(const VfsAsset &asset)
 {
-    return uint64_t(asset.ml) + (asset.ct == 0 ? asset.ul : asset.cl);
+    return uint64_t(asset.ml) + asset.ul;
 }
 
 inline bool vfs_asset_is_hole(const VfsAsset &asset)

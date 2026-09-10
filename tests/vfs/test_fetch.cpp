@@ -146,13 +146,25 @@ VFS_TEST(fetch_http_end_to_end)
     const auto *entry = pack.GetAsset(strings_part.uop_hash());
     TEST_CHECK_MSG(entry != nullptr, "the T0 block is not materialized");
     TEST_CHECK(pack.GetData(entry) == strings_part.payload);
-    // trap: T2 blocks sharing the first pages with the entry table are now
-    // reachable - the fault handler resolved them on the table walk (their
-    // blobs were fetched from the still-running fixture server), which is
-    // exactly the on-demand streaming the trap provides
-    const auto *streamed = pack.GetAsset(prod.parts[1].uop_hash());
+    // trap: the T2 block does not share a page with the entry table under
+    // the stored layout (blocks space by the decompressed payload), so the
+    // table walk does not reach it; touching its planned bytes faults, the
+    // handler streams the blob from the still-running fixture server and
+    // patches the entry - exactly the on-demand streaming the trap provides
+    const auto &streamed_part = prod.parts[1];
+    const uint64_t table_end =
+        sizeof(UopHeader) + sizeof(UopSection) + sizeof(UopFileEntry) * prod.parts.size();
+    const uint64_t streamed_at = table_end + prod.parts[0].ml + prod.parts[0].payload.size() +
+                                 streamed_part.ml;
+    volatile uint8_t probe = pack.Start[streamed_at];
+    (void)probe;
+
+    CUopMappedFile reloaded;
+    TEST_CHECK_MSG(test_load_pack(params, "MainMisc.uop", reloaded), "pack reload failed");
+    const auto *streamed = reloaded.GetAsset(streamed_part.uop_hash());
     TEST_CHECK_MSG(streamed != nullptr, "the T2 block was not streamed on access");
-    TEST_CHECK(pack.GetData(streamed) == prod.parts[1].payload);
+    TEST_CHECK(reloaded.GetData(streamed) == streamed_part.payload);
+    reloaded.Unload();
 
     vfs_shutdown();
     test_server_stop(srv);

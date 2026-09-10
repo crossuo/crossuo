@@ -109,9 +109,9 @@ VFS_TEST(store_materialize_full_roundtrip)
         const auto *entry = pack.GetAsset(part.uop_hash());
         TEST_CHECK_MSG(entry != nullptr, "asset %zu missing", i);
         TEST_CHECK(entry->DecompressedSize == part.payload.size());
-        TEST_CHECK(
-            entry->CompressedSize == (part.ct == 0 ? part.payload.size() : part.blob.size()));
-        TEST_CHECK(entry->Flags == part.ct);
+        // stored layout: entries carry the decompressed payload size, Flags 0
+        TEST_CHECK(entry->CompressedSize == part.payload.size());
+        TEST_CHECK(entry->Flags == 0);
         TEST_CHECK(entry->Checksum == part.mc);
         TEST_CHECK_MSG(pack.GetData(entry) == part.payload, "payload mismatch at asset %zu", i);
     }
@@ -319,7 +319,7 @@ VFS_TEST(store_fixture_art_legacy)
     TEST_CHECK_MSG(entry != nullptr, "fixture asset hash not resolvable");
     const auto data = pack.GetData(entry);
     TEST_CHECK(data.size() == FIXTURE_ART_PAYLOAD);
-    TEST_CHECK(entry->Flags == 1);
+    TEST_CHECK(entry->Flags == 0);
     TEST_CHECK(entry->Checksum == 0x9fd7f3c6);
 
     // the pack loads with a hole for everything not yet materialized

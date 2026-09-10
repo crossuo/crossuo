@@ -422,7 +422,8 @@ VFS_TEST(stub_pack_fault_serves_stub_bytes)
         "kept block must be real bytes");
 
     // gone part: the fault serves the gump stub within the stored span
-    const uint64_t capacity = gone.ct == 0 ? uint64_t(gone.ul) : uint64_t(gone.cl);
+    // (the whole decompressed payload under the stored layout)
+    const uint64_t capacity = uint64_t(gone.ul);
     TEST_CHECK(capacity >= vfs_stub_min_payload(vfs_stub_gump));
     const size_t span = size_t(capacity);
     std::vector<uint8_t> expected(span);
@@ -465,7 +466,7 @@ VFS_TEST(stub_heal_promotes_and_refreshes)
 
     const auto &gone = env.plan.files[env.pack_file_index].assets[1];
     const uint64_t at = gone.file_offset + gone.ml;
-    const uint64_t capacity = uint64_t(gone.cl);
+    const uint64_t capacity = uint64_t(gone.ul);
 
 
     volatile uint8_t probe = base[at]; // fault: stub served
@@ -481,9 +482,9 @@ VFS_TEST(stub_heal_promotes_and_refreshes)
     TEST_CHECK(vfs_ensure_range(base, size_t(at), size_t(capacity)));
     TEST_CHECK_MSG(vfs_trap_page_mark_at(base, at) == vfs_trap_mark_real, "heal must promote");
 
-    // ct=1 blocks store the compressed blob: the mapping shows the stored
-    // bytes (decompression happens in the readers)
-    const auto &stored = env.prod.parts[1].blob;
+    // packs materialize stored payloads: the mapping shows the decompressed
+    // bytes exactly as the game's raw-pointer readers see them
+    const auto &stored = env.prod.parts[1].payload;
     TEST_CHECK_MSG(
         memcmp(base + at, stored.data(), stored.size()) == 0, "healed bytes must be real");
 

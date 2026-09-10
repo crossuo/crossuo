@@ -131,15 +131,19 @@ Stubs are deterministic pure functions of (kind, ul, is_uop, offset): a small
 header followed by zeros (the map block repeats one 196-byte `MAP_BLOCK`
 pattern instead). Two constraints shape every generator:
 
-- **Stubs live inside the block's planned stored span** (`ml + cl`), never
-  `ul`: the sparse layout reserves exactly the on-wire size. Readers take the
-  `memcpy` path of `DecompressBlock` (entry advertises `Flags=0`,
-  `CompressedSize=min(ul, cl)`, plan `DecompressedSize`), which pads the tail
-  with zeros - exactly the stub's semantics. The entry keeps the plan's
-  `Hash`/`DecompressedSize`. Fixed in review: `vfs_store_pack_asset_present`
-  never mistakes such a patch for the real thing (see "Fixed in review",
-  the reconcile item),
-  and stub entries are never promoted to fetched by reconcile.
+- **Stubs live inside the block's planned stored span** (`ml + ul`): the
+  sparse layout reserves exactly the materialized size - packs space blocks
+  by the decompressed payload and write stored entries (`Flags=0`,
+  `CompressedSize=ul`), so raw-pointer readers (art, map blocks) see stored
+  bytes like EA's own local archives; the compressed blob only ever exists
+  in the blob store and inflates right before the block write. The stub
+  entry carries the same planned shape, which pads the tail with zeros via
+  the `memcpy` path of `DecompressBlock` - exactly the stub's semantics. The
+  entry keeps the plan's `Hash`/`DecompressedSize`. Because stub and real
+  entries now share one shape, `vfs_store_pack_asset_present` separates them
+  by content: the stored head must match the blob's decompressed head
+  whenever a store root is available (see "Fixed in review", the reconcile
+  item), and stub entries are never promoted to fetched by reconcile.
 - **Headers are all-or-nothing.** A truncated header would let the game's
   parsers walk bytes beyond the stub inside the mapped file (run-length
   overflows in `GetArtPixels`/`GetGumpPixels`). Below `vfs_stub_min_payload`
@@ -234,19 +238,19 @@ Three blockers found in review, closed in place:
   the trap's healed query (`vfs_refresh_block`) plus a one-shot marker per
   animation group (`s_anim_refreshed_groups`), dropping the group whole (all
   directions share the group's block) exactly once.
-- **Stub promotion - reconcile permanently promoted ct=0 stubs to fetched.**
-  `trap_stub_patch_entry` writes `Flags=0`/`CompressedSize=min(cl, ul)`, so a
-  stored (ct==0) asset's patched entry is byte-identical to the plan and
-  `vfs_store_pack_asset_present` reported it present - reconcile upgraded
-  stubbed (and pending, after a heal crash) to fetched on that alone, making
-  the placeholder bytes permanent. Fix: reconcile never promotes `stubbed`
-  from on-disk presence at all (only the heal path - the materialize write
-  plus its journal `F` - promotes), and pending promotion requires the
-  reconcile-grade presence check (`blobs_dir` given): ct==1 stub patches are
-  rejected by entry shape (plan says zlib, patch says stored), ct==0 patches
-  by content (stored head vs blob head; missing blob = not present). The
-  pure shape check stays the trap's boot-time visibility rule - a stub
-  patched by a previous session must stay visible to `UopLoadFile`.
+- **Stub promotion - reconcile permanently promoted stubs to fetched.**
+  `trap_stub_patch_entry` writes the plan's stored shape (`Flags=0`/
+  `CompressedSize=ul`), so a stub's patched entry is byte-identical to a
+  materialized entry and a shape-only `vfs_store_pack_asset_present` reported
+  it present - reconcile upgraded stubbed (and pending, after a heal crash)
+  to fetched on that alone, making the placeholder bytes permanent. Fix:
+  reconcile never promotes `stubbed` from on-disk presence at all (only the
+  heal path - the materialize write plus its journal `F` - promotes), and
+  pending promotion requires the reconcile-grade presence check
+  (`blobs_dir` given): the stored payload head must match the blob's
+  decompressed head (missing blob = not present). The pure shape check stays
+  the trap's boot-time visibility rule - a stub patched by a previous session
+  must stay visible to `UopLoadFile`.
 
 ## Known limitations
 
@@ -560,9 +564,13 @@ from the current file; regression test `uop_gump_dims_validation` covers the
 dimension guard).
 
 Known open edges:
-- assembled packs (art, maps) are materialized with the transfer payload
-  (Flags == 1, zlib) - raw-pointer readers (art, map blocks) expect stored
-  bytes, so the materializer should switch to writing decompressed payloads
-  (Flags == 0, layout spacing by `ml + ul`) - tracked as follow-up work.
+- [resolved] assembled packs (art, maps) materialize stored payloads
+  (Flags == 0, layout spacing by `ml + ul`): the materializer inflates each
+  zlib blob right before the block write, so raw-pointer readers (art, map
+  blocks) see stored bytes like EA's own local archives. Plan/state
+  serialization bumped to v4 - persisted plans rebuild and states reset on
+  the next boot. An entry-table page that also carries an absent block's
+  payload is re-guarded after a stub entry patch (the patch used to leave it
+  readable, silently disabling demand fetch for that block).
 - cliloc files and the string dictionary carry an 0x8E byte at offset 3 when
   bwt coded; both decode up front now.

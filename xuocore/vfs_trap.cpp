@@ -468,7 +468,7 @@ size_t trap_first_candidate(const vfs_trap_mapping &m, uint64_t offset)
 // entry keeps the plan's DecompressedSize/Hash/Checksum and advertises only
 // the stored span, so the presence check still reports the asset absent
 // and a real blob heals it (the state DB stays the source of truth).
-void trap_stub_patch_entry(vfs_trap_mapping &m, size_t index, uint32_t stored_len)
+void trap_stub_patch_entry(vfs_trap_mapping &m, size_t index, uint32_t stored_len, size_t fill_page)
 {
     if (!m.is_pack)
         return;
@@ -499,7 +499,14 @@ void trap_stub_patch_entry(vfs_trap_mapping &m, size_t index, uint32_t stored_le
     for (size_t page = first; page <= last && page < m.page_state.size(); ++page)
     {
         const size_t len = size_t(trap_page_span(page, m));
-        os_protect_read(m.base + page * s_page_size, len);
+        // a table page can also carry an absent block's payload: restore its
+        // guard, or the patch would leave those bytes readable and the block
+        // would silently read sparse zeros instead of healing on demand
+        // (the page being filled is handled by the caller's own flip)
+        if (page != fill_page && m.page_state[page] == trap_page_none)
+            os_protect_none(m.base + page * s_page_size, len);
+        else
+            os_protect_read(m.base + page * s_page_size, len);
     }
 }
 
@@ -609,7 +616,7 @@ void trap_stub_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
         }
         // the page is readable again: entry patches may flip table pages now
         for (size_t p = 0; p < patch_count; ++p)
-            trap_stub_patch_entry(m, patches[p].index, patches[p].stored_len);
+            trap_stub_patch_entry(m, patches[p].index, patches[p].stored_len, page);
         m.page_state[page] = page_nonzero != 0 ? trap_page_stubbed : trap_page_zeroed;
         trap_counter_inc(trap_flips);
     }

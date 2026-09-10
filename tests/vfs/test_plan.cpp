@@ -84,7 +84,8 @@ static void check_pack_layout(const VfsPlan &plan, const test_product_data &prod
                 i,
                 asset.file_offset,
                 offset);
-            offset += part.ml + (part.ct == 0 ? part.payload.size() : part.blob.size());
+            // packs space blocks by the stored (decompressed) payload
+            offset += part.ml + part.payload.size();
         }
     }
     TEST_CHECK(file->size == offset);
@@ -316,7 +317,7 @@ VFS_TEST(plan_fixture_product)
     TEST_CHECK(asset.mc == 0x9fd7f3c6);
     TEST_CHECK(asset.blob == "base/artLegacyMUL.uop/0003cf84fc599ef4");
     TEST_CHECK(asset.file_offset == sizeof(UopHeader) + sizeof(UopSection) + sizeof(UopFileEntry));
-    TEST_CHECK(art->size == asset.file_offset + asset.ml + asset.cl);
+    TEST_CHECK(art->size == asset.file_offset + asset.ml + asset.ul);
 
     // the synthesized empty manifests contribute no files
     for (const auto &file : plan.files)

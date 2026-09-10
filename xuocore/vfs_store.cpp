@@ -142,7 +142,7 @@ static void vfs_store_synthesize_metadata(const VfsAsset &asset, std::vector<uin
 }
 
 // 32-bit fingerprint of a pack's planned table: every entry hashed in table
-// order (uop hash + planned offset + ml + cl + ul). Written into
+// order (uop hash + planned offset + ml + stored ul). Written into
 // UopHeader::Signature when the pack is created; on open, a mismatch means
 // the on-disk table was built for a different plan and must be recreated.
 static uint32_t vfs_store_plan_fingerprint(const VfsPlan::VfsFile &file)
@@ -159,13 +159,12 @@ static uint32_t vfs_store_plan_fingerprint(const VfsPlan::VfsFile &file)
         const uint64_t hash = asset.uop_hash;
         const uint64_t offset = asset.file_offset;
         const uint32_t ml = asset.ml;
-        const uint32_t compressed = asset.ct == 0 ? uint32_t(asset.ul) : uint32_t(asset.cl);
-        const uint32_t ul = uint32_t(asset.ul);
+        const uint32_t stored = uint32_t(asset.ul);
         push(&hash, sizeof(hash));
         push(&offset, sizeof(offset));
         push(&ml, sizeof(ml));
-        push(&compressed, sizeof(compressed));
-        push(&ul, sizeof(ul));
+        push(&stored, sizeof(stored));
+        push(&stored, sizeof(stored));
     }
     return crc32_checksum(bytes.data(), bytes.size());
 }
@@ -292,15 +291,17 @@ static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &fi
     for (const auto &asset : file.assets)
     {
         // Offset stays 0 until the block is written: UopLoadFile skips the
-        // entry, and the patch below flips it to readable in place
+        // entry, and the patch below flips it to readable in place. Blocks
+        // materialize stored (Flags == 0, CompressedSize == ul): raw-pointer
+        // readers expect decompressed bytes, like EA's own local archives
         UopFileEntry entry;
         entry.Offset = 0;
         entry.MetadataSize = asset.ml;
-        entry.CompressedSize = uint32_t(asset.ct == 0 ? asset.ul : asset.cl);
+        entry.CompressedSize = uint32_t(asset.ul);
         entry.DecompressedSize = uint32_t(asset.ul);
         entry.Hash = asset.uop_hash;
         entry.Checksum = asset.mc;
-        entry.Flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
+        entry.Flags = 0;
         push(&entry, sizeof(entry));
     }
     if (!vfs_file_write_at(fp, 0, table.data(), table.size()) || !vfs_file_truncate(fp, file.size))
@@ -312,11 +313,13 @@ static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &fi
     return fp;
 }
 
-// writes [metadata][blob] at the planned offset and patches the entry in
-// place (data first, pointer second: a crash in between leaves the entry
-// skipped or stale and the block simply rewritten later). The WHOLE entry is
-// rewritten, not just Offset: stubs land as Flags=0/CompressedSize=ul
-// blocks of plan assets that ship compressed, and the real block must
+// writes [metadata][stored payload] at the planned offset and patches the
+// entry in place (data first, pointer second: a crash in between leaves the
+// entry skipped or stale and the block simply rewritten later). The payload
+// is the blob's decompressed content: packs materialize stored blocks so the
+// game's raw-pointer readers (art, map blocks) see the bytes EA's own local
+// archives carry. The WHOLE entry is rewritten, not just Offset: stubs land
+// as Flags == 0 blocks of the same planned shape, and the real block must
 // restore the plan's fields when it heals (the stub stays on disk - and
 // reads as absent - until then).
 static bool vfs_store_pack_write_block(
@@ -330,20 +333,40 @@ static bool vfs_store_pack_write_block(
     std::vector<uint8_t> metadata;
     vfs_store_synthesize_metadata(asset, metadata);
 
+    std::vector<uint8_t> payload;
+    if (asset.ct == 1)
+    {
+        if (vfs_store_asset_inflate(asset, blob, &payload) != 0)
+            return false;
+        if (payload.size() != asset.ul)
+        {
+            LOG_ERROR(
+                "blob inflated to %zu bytes, planned %zu: %s",
+                payload.size(),
+                asset.ul,
+                asset.blob.c_str());
+            return false;
+        }
+    }
+    else
+    {
+        payload = blob;
+    }
+
     if (!vfs_file_write_at(fp, asset.file_offset, metadata.data(), metadata.size()))
         return false;
-    if (!blob.empty() &&
-        !vfs_file_write_at(fp, asset.file_offset + asset.ml, blob.data(), blob.size()))
+    if (!payload.empty() &&
+        !vfs_file_write_at(fp, asset.file_offset + asset.ml, payload.data(), payload.size()))
         return false;
 
     UopFileEntry patch;
     patch.Offset = asset.file_offset;
     patch.MetadataSize = asset.ml;
-    patch.CompressedSize = uint32_t(asset.ct == 0 ? asset.ul : asset.cl);
+    patch.CompressedSize = uint32_t(asset.ul);
     patch.DecompressedSize = uint32_t(asset.ul);
     patch.Hash = asset.uop_hash;
     patch.Checksum = asset.mc;
-    patch.Flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
+    patch.Flags = 0;
     if (!vfs_file_write_at(fp, vfs_store_table_pos(asset_index), &patch, sizeof(patch)))
         return false;
     return fflush(fp) == 0;
@@ -734,15 +757,17 @@ bool vfs_store_invalidate_asset(
         return !fs_path_exists(path);
     }
 
-    const uint32_t compressed = asset.ct == 0 ? uint32_t(asset.ul) : uint32_t(asset.cl);
+    // stored layout: every materialized entry advertises the plan's ul bytes
+    // with Flags == 0; the hole re-opens (Offset = 0) and UopLoadFile skips
+    // the entry again until the block is rewritten
     UopFileEntry entry;
-    entry.Offset = 0; // the hole re-opens: UopLoadFile skips the entry again
+    entry.Offset = 0;
     entry.MetadataSize = asset.ml;
-    entry.CompressedSize = compressed;
+    entry.CompressedSize = uint32_t(asset.ul);
     entry.DecompressedSize = uint32_t(asset.ul);
     entry.Hash = asset.uop_hash;
     entry.Checksum = asset.mc;
-    entry.Flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
+    entry.Flags = 0;
     const auto path = fs_path_join(params.install_dir, file.name);
     FILE *fp = fopen(fs_path_ascii(path), "r+b");
     if (!fp)
@@ -760,17 +785,41 @@ bool vfs_store_invalidate_asset(
 // verification
 // ---------------------------------------------------------------------------
 
-static bool vfs_verify_zlib(
-    const uint8_t *stored, size_t stored_size, const VfsAsset &asset, std::vector<uint8_t> &scratch)
+// head bytes compared between the on-disk stored payload and the blob's
+// decompressed head; separates a real block from a stub patch's zeros
+#define VFS_PACK_HEAD_BYTES 64
+
+// inflates just the head bytes of the asset's zlib blob; false when the blob
+// cannot supply the planned head (missing, truncated, zlib failure)
+static bool vfs_store_blob_payload_head(
+    const fs_path &blobs_dir, const VfsAsset &asset, size_t want, uint8_t *out_head)
 {
-    if (asset.ct != 1)
-        return true;
-    scratch.resize(asset.ul);
-    uLongf dst_len = scratch.size();
-    auto *src = reinterpret_cast<Bytef const *>(stored);
-    if (uncompress(scratch.data(), &dst_len, src, uLong(stored_size)) != Z_OK)
+    std::vector<uint8_t> blob;
+    if (vfs_store_read_blob(blobs_dir, asset, blob) != 0)
         return false;
-    return dst_len == asset.ul;
+    if (asset.ct == 0)
+    {
+        if (blob.size() < want)
+            return false;
+        memcpy(out_head, blob.data(), want);
+        return true;
+    }
+    std::vector<uint8_t> head(want, 0);
+    z_stream zs = {};
+    if (inflateInit(&zs) != Z_OK)
+        return false;
+    zs.next_in = const_cast<Bytef *>(blob.data());
+    zs.avail_in = uint32_t(blob.size());
+    zs.next_out = head.data();
+    zs.avail_out = uint32_t(want);
+    const int res = inflate(&zs, Z_FINISH);
+    inflateEnd(&zs);
+    if (res != Z_STREAM_END && res != Z_OK && res != Z_BUF_ERROR)
+        return false;
+    if (zs.total_out < want)
+        return false;
+    memcpy(out_head, head.data(), want);
+    return true;
 }
 
 static bool vfs_store_blob_exists(const vfs_store_params &params, const VfsAsset &asset)
@@ -785,8 +834,7 @@ static uint8_t vfs_verify_pack_asset(
     uint64_t file_size,
     size_t asset_index,
     const VfsAsset &asset,
-    bool stubbed,
-    std::vector<uint8_t> &scratch)
+    bool stubbed)
 {
     if (vfs_asset_is_hole(asset))
         return vfs_verify_ok;
@@ -805,10 +853,10 @@ static uint8_t vfs_verify_pack_asset(
         return vfs_store_blob_exists(params, asset) ? vfs_verify_missing_block :
                                                       vfs_verify_missing_blob;
 
-    const uint32_t compressed = asset.ct == 0 ? uint32_t(asset.ul) : uint32_t(asset.cl);
-    const uint16_t flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
+    // stored layout: the entry must carry the plan's shape with Flags == 0
+    const uint16_t flags = 0;
     if (entry.Offset != asset.file_offset || entry.MetadataSize != asset.ml ||
-        entry.CompressedSize != compressed || entry.DecompressedSize != asset.ul ||
+        entry.CompressedSize != asset.ul || entry.DecompressedSize != asset.ul ||
         entry.Hash != asset.uop_hash || entry.Checksum != asset.mc || entry.Flags != flags)
         return vfs_verify_corrupt;
     if (entry.Offset + entry.MetadataSize + entry.CompressedSize > file_size)
@@ -816,12 +864,22 @@ static uint8_t vfs_verify_pack_asset(
     if (!entry.CompressedSize)
         return vfs_verify_corrupt;
 
-    // stored (ct == 0) blobs carry the payload verbatim; zlib blobs must
-    // decompress to exactly ul bytes
+    // shape decided; the blob (when available) confirms the content: the
+    // stored payload must start with the blob's decompressed head - a stub
+    // patch's placeholder bytes never do
+    const size_t head = size_t(asset.ul < VFS_PACK_HEAD_BYTES ? asset.ul : VFS_PACK_HEAD_BYTES);
+    if (head == 0)
+        return vfs_verify_ok;
+    uint8_t blob_head[VFS_PACK_HEAD_BYTES] = {};
+    if (!vfs_store_blob_payload_head(params.blobs_dir, asset, head, blob_head))
+    {
+        // without a usable blob the shape is the only verdict (same contract
+        // as the loose verifier's size-only fallback)
+        LOG_WARN("verify: unusable blob for %s, shape check only", asset.blob.c_str());
+        return vfs_verify_ok;
+    }
     const uint8_t *stored = start + entry.Offset + entry.MetadataSize;
-    if (!vfs_verify_zlib(stored, entry.CompressedSize, asset, scratch))
-        return vfs_verify_corrupt;
-    return vfs_verify_ok;
+    return memcmp(stored, blob_head, head) == 0 ? vfs_verify_ok : vfs_verify_corrupt;
 }
 
 static uint8_t vfs_verify_loose_asset(
@@ -888,13 +946,13 @@ static uint8_t vfs_verify_loose_asset(
 
 // on-disk truth check shared with the state DB reconcile and the trap's boot
 // presence: the block bytes of `asset` are present in `file` exactly as
-// planned. Hardening: a stub patch must never read as the real
-// thing. ct==1 patches are rejected by entry shape alone (the plan says zlib,
-// the patch says stored). ct==0 patches are byte-identical to the planned
-// entry (the patch keeps Flags=0 and cl==ul), so `blobs_dir` - the
-// reconcile-grade strictness - opts into a content check: the stored head is
-// compared against the blob head, and a missing blob counts as not-present.
-// The invariant: stub entries are never promoted to fetched by reconcile -
+// planned. Hardening: a stub patch must never read as the real thing. Every
+// materialized entry carries the same stored shape (Flags == 0,
+// CompressedSize == ul), so the entry shape alone cannot separate a stub
+// from a real block - with `blobs_dir`, the reconcile-grade strictness opts
+// into a content check: the stored head is compared against the blob's
+// decompressed head, and a missing blob counts as not-present. The
+// invariant: stub entries are never promoted to fetched by reconcile -
 // only the heal path (the materialize write + its journal 'F') promotes.
 bool vfs_store_pack_asset_present(
     const uint8_t *start,
@@ -909,39 +967,30 @@ bool vfs_store_pack_asset_present(
         return true; // holes are satisfied by the reserved table slot
     UopFileEntry entry;
     memcpy(&entry, start + vfs_store_table_pos(asset_index), sizeof(entry));
-    const uint32_t compressed = asset.ct == 0 ? uint32_t(asset.ul) : uint32_t(asset.cl);
-    const uint16_t flags = asset.ct == 0 ? uint16_t(0) : uint16_t(1);
     const bool shape = entry.Offset == asset.file_offset && entry.Offset != 0 &&
-                       entry.MetadataSize == asset.ml && entry.CompressedSize == compressed &&
+                       entry.MetadataSize == asset.ml && entry.CompressedSize == asset.ul &&
                        entry.DecompressedSize == asset.ul && entry.Hash == asset.uop_hash &&
-                       entry.Flags == flags &&
+                       entry.Flags == uint16_t(0) && entry.Checksum == asset.mc &&
                        entry.Offset + entry.MetadataSize + entry.CompressedSize <= file_size;
     if (!shape)
         return false;
-    if (entry.Flags == 0 && asset.ct == 1)
-        return false; // stored block for a zlib asset: a stub patch
-    if (asset.ct != 0 || fs_path_empty(blobs_dir))
-        return true; // the entry shape decided (or no store root given)
-    // ct==0: only content decides. The blob is the payload stored verbatim,
-    // so comparing the heads separates a real block from the zeros/header
-    // tail of a stub patch; a missing blob cannot prove realness
-    const size_t head = size_t(asset.ul < 64 ? asset.ul : 64);
+    if (fs_path_empty(blobs_dir))
+        return true; // no store root: the entry shape decided
+    // content decides. The blob's decompressed head versus the stored head
+    // separates a real block from the zeros/header tail of a stub patch; a
+    // missing blob cannot prove realness
+    const size_t head = size_t(asset.ul < VFS_PACK_HEAD_BYTES ? asset.ul : VFS_PACK_HEAD_BYTES);
     if (head == 0)
         return true;
-    uint8_t blob_head[64] = {};
-    FILE *fp = fopen(fs_path_ascii(fs_path_join(blobs_dir, asset.blob)), "rb");
-    if (fp == nullptr)
+    uint8_t blob_head[VFS_PACK_HEAD_BYTES] = {};
+    if (!vfs_store_blob_payload_head(blobs_dir, asset, head, blob_head))
         return false;
-    const size_t got = fread(blob_head, 1, head, fp);
-    fclose(fp);
-    return got == head &&
-           memcmp(start + entry.Offset + entry.MetadataSize, blob_head, head) == 0;
+    return memcmp(start + entry.Offset + entry.MetadataSize, blob_head, head) == 0;
 }
 
 // head bytes compared between the on-disk payload and the (decompressed)
 // blob; full content verification is verify's job, this is the cheap
-// reconcile-grade check
-#define VFS_LOOSE_HEAD_BYTES 64
+// reconcile-grade check (shared constant with the pack path)
 
 bool vfs_store_loose_asset_content_ok(
     const fs_path &path,
@@ -953,35 +1002,19 @@ bool vfs_store_loose_asset_content_ok(
     FILE *fp = fopen(fs_path_ascii(path), "rb");
     if (!fp)
         return false;
-    uint8_t disk_head[VFS_LOOSE_HEAD_BYTES] = {};
-    const size_t want = size_t(asset.ul < VFS_LOOSE_HEAD_BYTES ? asset.ul : VFS_LOOSE_HEAD_BYTES);
+    uint8_t disk_head[VFS_PACK_HEAD_BYTES] = {};
+    const size_t want = size_t(asset.ul < VFS_PACK_HEAD_BYTES ? asset.ul : VFS_PACK_HEAD_BYTES);
     const size_t got = want ? uint32_t(fread(disk_head, 1, want, fp)) : 0;
     fclose(fp);
     if (got != want)
         return false;
 
-    std::vector<uint8_t> blob;
-    if (vfs_store_read_blob(blobs_dir, asset, blob) != 0)
-        return false; // a missing (or wrong-sized) blob never proves presence
-    if (asset.ct == 0)
-        return memcmp(disk_head, blob.data(), want) == 0;
-
-    // zlib: inflate just the head bytes of the payload
-    std::vector<uint8_t> head(want, 0);
-    z_stream zs = {};
-    if (inflateInit(&zs) != Z_OK)
+    uint8_t blob_head[VFS_PACK_HEAD_BYTES] = {};
+    // a missing (or wrong-sized, or undecompressable) blob never proves
+    // presence
+    if (!vfs_store_blob_payload_head(blobs_dir, asset, want, blob_head))
         return false;
-    zs.next_in = const_cast<Bytef *>(blob.data());
-    zs.avail_in = uint32_t(blob.size());
-    zs.next_out = head.data();
-    zs.avail_out = uint32_t(want);
-    const int res = inflate(&zs, Z_FINISH);
-    inflateEnd(&zs);
-    if (res != Z_STREAM_END && res != Z_OK && res != Z_BUF_ERROR)
-        return false;
-    if (zs.total_out < want)
-        return false;
-    return memcmp(disk_head, head.data(), want) == 0;
+    return memcmp(disk_head, blob_head, want) == 0;
 }
 
 int vfs_store_verify(
@@ -1023,7 +1056,7 @@ int vfs_store_verify(
             va.stubbed = stubbed;
             va.status = file.is_uop ?
                             vfs_verify_pack_asset(
-                                params, mapped, mapped_size, ai, asset, stubbed, scratch) :
+                                params, mapped, mapped_size, ai, asset, stubbed) :
                             vfs_verify_loose_asset(params, asset, stubbed, scratch);
             ++vf.counts[va.status];
             if (va.status == vfs_verify_corrupt)

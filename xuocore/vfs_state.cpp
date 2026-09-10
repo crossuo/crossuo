@@ -77,7 +77,11 @@ static const uint32_t VFS_STATE_MAGIC = 0x31545356; // "VST1"
 // 3: the plan records its product subset - additive: a v3
 // plan is a v2 plan plus one trailing byte, and v2 plans load unchanged
 // with subset none
-static const uint32_t VFS_SERIALIZATION_VERSION = 3;
+// 4: packs materialize stored payloads (block spacing by ml + ul, entry
+// Flags == 0 / CompressedSize == ul instead of the on-wire ml + cl) - the
+// layout change invalidates every persisted plan and state file, both are
+// rebuilt/reset on the next boot
+static const uint32_t VFS_SERIALIZATION_VERSION = 4;
 
 bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
 {

@@ -167,9 +167,10 @@ bool vfs_store_pack_asset_present(
 
 // ---------------------------------------------------------------------------
 // in-memory payload path (web groundwork): the write-path knowledge both
-// backends share. The sparse writer puts [metadata][blob] on disk; the arena
-// keeps payload bytes only - the loose writer and the arena produce the same
-// payload from the same blob, so the format lives in exactly one place.
+// backends share. The sparse writer puts [metadata][stored payload] on disk
+// (zlib blobs inflate right before the write); the arena keeps payload bytes
+// only - the loose writer and the arena produce the same payload from the
+// same blob, so the format lives in exactly one place.
 // ---------------------------------------------------------------------------
 
 // pure payload step: stored assets pass the blob through, zlib assets
