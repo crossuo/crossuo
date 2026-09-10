@@ -3,7 +3,7 @@
 
 #include "ScreenshotBuilder.h"
 #include "GameWindow.h"
-#include "Application.h"
+#include <xuocore/uodata.h>
 #include <time.h>
 #include "CrossUO.h"
 #include "Managers/ConfigManager.h"
@@ -67,7 +67,7 @@ void CScreenshotBuilder::SaveScreen()
 
 void CScreenshotBuilder::WritePixelsToDisk()
 {
-    auto path = g_App.ExeFilePath("screenshots");
+    auto path = ExeFilePath("screenshots");
     fs_path_create(path);
 
     auto t = time(nullptr);

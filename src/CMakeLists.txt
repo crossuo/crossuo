@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 set(wisp_src
-  Wisp/WispApplication.cpp
   Wisp/WispConnection.cpp
   Wisp/WispMouse.cpp
   Wisp/WispPacketReader.cpp
@@ -252,7 +251,6 @@ set(crossuo_src
   Macro.cpp
   Multi.cpp
   MultiMap.cpp
-  Application.cpp
   CrossUO.cpp
   GameWindow.cpp
   Party.cpp

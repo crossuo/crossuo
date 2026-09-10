@@ -9,7 +9,6 @@
 #include "ColorManager.h"
 #include "CorpseManager.h"
 #include <xuocore/uodata.h>
-#include "../Application.h"
 #include "../Target.h"
 #include "../Constants.h"
 #include "../Config.h"

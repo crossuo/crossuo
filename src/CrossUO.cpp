@@ -29,7 +29,6 @@
 #include "Container.h"
 #include "CharacterList.h"
 #include "DateTimeStamp.h"
-#include "Application.h"
 #include "RenderWorldObject.h"
 
 #if USE_PING
@@ -328,7 +327,7 @@ bool CGame::Install()
     {
         g_Language = str_lower(g_Config.LocaleOverride);
     }
-    fs_path_create(g_App.ExeFilePath("screenshots"));
+    fs_path_create(ExeFilePath("screenshots"));
 
     Info(Config, "client config loaded");
     InitSpells();
@@ -341,7 +340,7 @@ bool CGame::Install()
         auto errMsg =
             astr_t(
                 "Error loading a memmapped file. Please check the log for more info.\nUsing UO search path: ") +
-            fs_path_str(g_App.m_UOPath);
+            fs_path_str(g_UOPath);
         g_GameWindow.ShowMessage(errMsg, "FileManager::Load");
         Error(Client, "%s", errMsg.c_str());
         return false;
@@ -715,7 +714,7 @@ void CGame::CheckStaticTileFilterFiles()
 {
     memset(&m_StaticTilesFilterFlags[0], 0, sizeof(m_StaticTilesFilterFlags));
 
-    auto path = g_App.FilePath("data");
+    auto path = FilePath("data");
     fs_path_create(path);
 
     auto filePath = fs_path_join(path, "cave.txt");
@@ -869,7 +868,7 @@ void CGame::CheckStaticTileFilterFiles()
 
 void CGame::LoadAutoLoginNames()
 {
-    TextFileParser file(g_App.UOFilesPath("autologinnames.cfg"), "", "#;", "");
+    TextFileParser file(UOFilePath("autologinnames.cfg"), "", "#;", "");
 
     auto names = g_PacketManager.AutoLoginNames + "|";
 
@@ -1136,12 +1135,12 @@ void CGame::LoadStartupConfig(int serial)
         sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(g_App.FilePath("%s/%s", buf, "options.cfg")))
+    if (!g_ConfigManager.Load(FilePath("%s/%s", buf, "options.cfg")))
     {
         // DEPRECATE: 1.0.6
-        if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
+        if (!g_ConfigManager.Load(ExeFilePath("%s/%s", buf, "options.cfg")))
         {
-            g_ConfigManager.Load(g_App.UOFilesPath("%s/%s", buf, "options.cfg"));
+            g_ConfigManager.Load(UOFilePath("%s/%s", buf, "options.cfg"));
         }
     }
 
@@ -1224,7 +1223,7 @@ void CGame::LoadPlugins()
 
     // Load X:UO Assist first, it is a special plugin due Qt mainthread issue
 #if defined(XUO_WINDOWS)
-    LoadPlugin(g_App.ExeFilePath("xuoassist.dll"), "Install", 0xFFFFFFFF);
+    LoadPlugin(ExeFilePath("xuoassist.dll"), "Install", 0xFFFFFFFF);
 #else
     InstallPlugin(g_oaReverse.Install, 0xFFFFFFFF);
 #endif
@@ -1257,7 +1256,7 @@ void CGame::LoadPlugins()
 
     for (int i = 0; i < (int)libName.size(); i++)
     {
-        LoadPlugin(g_App.ExeFilePath(libName[i].c_str()), functions[i], flags[i]);
+        LoadPlugin(ExeFilePath(libName[i].c_str()), functions[i], flags[i]);
     }
 
     if (g_PluginManager.m_Items != nullptr)
@@ -1322,10 +1321,10 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
         sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(g_App.FilePath("%s/%s", buf, "options.cfg")))
+    if (!g_ConfigManager.Load(FilePath("%s/%s", buf, "options.cfg")))
     {
         // DEPRECATE: 1.0.6
-        if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
+        if (!g_ConfigManager.Load(ExeFilePath("%s/%s", buf, "options.cfg")))
         {
             g_ConfigManager.Init();
             if (g_GameState >= GS_GAME)
@@ -1335,22 +1334,22 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
         }
     }
 
-    if (!g_SkillGroupManager.Load(g_App.FilePath("skills.xuo")))
+    if (!g_SkillGroupManager.Load(FilePath("skills.xuo")))
     {
         // DEPRECATE: 1.0.6
-        if (!g_SkillGroupManager.Load(g_App.ExeFilePath("skills.xuo")))
+        if (!g_SkillGroupManager.Load(ExeFilePath("skills.xuo")))
         {
-            g_SkillGroupManager.Load(g_App.ExeFilePath("skills.cuo"));
+            g_SkillGroupManager.Load(ExeFilePath("skills.cuo"));
         }
     }
 
-    auto macros_xuo1 = g_App.FilePath("%s/%s", buf, "macros.xuo");
+    auto macros_xuo1 = FilePath("%s/%s", buf, "macros.xuo");
     // DEPRECATE: 1.0.6
-    auto macros_xuo2 = g_App.ExeFilePath("%s/%s", buf, "macros.xuo");
-    auto macros_cuo = g_App.ExeFilePath("%s/%s", buf, "macros.cuo");
+    auto macros_xuo2 = ExeFilePath("%s/%s", buf, "macros.xuo");
+    auto macros_cuo = ExeFilePath("%s/%s", buf, "macros.cuo");
     auto macros_xuo = fs_path_exists(macros_xuo1) ? macros_xuo1 : macros_xuo2;
     auto macros_data = fs_path_exists(macros_xuo) ? macros_xuo : macros_cuo;
-    if (!g_MacroManager.Load(macros_data, g_App.UOFilesPath("macros.txt")))
+    if (!g_MacroManager.Load(macros_data, UOFilePath("macros.txt")))
     {
         char buf2[FS_MAX_PATH] = { 0 };
         if (server != nullptr)
@@ -1368,18 +1367,18 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
         }
     }
 
-    const auto gumps_xuo1 = g_App.FilePath("%s/%s", buf, "gumps.xuo");
+    const auto gumps_xuo1 = FilePath("%s/%s", buf, "gumps.xuo");
     // DEPRECATE: 1.0.6
-    const auto gumps_xuo2 = g_App.ExeFilePath("%s/%s", buf, "gumps.xuo");
-    const auto gumps_cuo = g_App.ExeFilePath("%s/%s", buf, "gumps.cuo");
+    const auto gumps_xuo2 = ExeFilePath("%s/%s", buf, "gumps.xuo");
+    const auto gumps_cuo = ExeFilePath("%s/%s", buf, "gumps.cuo");
     const auto gumps_xuo = fs_path_exists(gumps_xuo1) ? gumps_xuo1 : gumps_xuo2;
     const auto gumps_data = fs_path_exists(gumps_xuo) ? gumps_xuo : gumps_cuo;
     g_GumpManager.Load(gumps_data);
 
-    const auto customhouses_xuo1 = g_App.FilePath("%s/%s", buf, "customhouses.xuo");
+    const auto customhouses_xuo1 = FilePath("%s/%s", buf, "customhouses.xuo");
     // DEPRECATE: 1.0.6
-    const auto customhouses_xuo2 = g_App.ExeFilePath("%s/%s", buf, "customhouses.xuo");
-    const auto customhouses_cuo = g_App.ExeFilePath("%s/%s", buf, "customhouses.cuo");
+    const auto customhouses_xuo2 = ExeFilePath("%s/%s", buf, "customhouses.xuo");
+    const auto customhouses_cuo = ExeFilePath("%s/%s", buf, "customhouses.cuo");
     const auto customhouses_xuo =
         fs_path_exists(customhouses_xuo1) ? customhouses_xuo1 : customhouses_xuo2;
     const auto customhouses_data =
@@ -1419,7 +1418,7 @@ void CGame::SaveLocalConfig(int serial)
     {
         return;
     }
-    auto path = g_App.FilePath("desktop");
+    auto path = FilePath("desktop");
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
@@ -3231,7 +3230,7 @@ void CGame::LoadLogin(astr_t &login, int &port)
         return;
     }
 
-    TextFileParser file(g_App.UOFilesPath("login.cfg"), "=,", "#;", "");
+    TextFileParser file(UOFilePath("login.cfg"), "=,", "#;", "");
     while (!file.IsEOF())
     {
         auto strings = file.ReadTokens();
@@ -3935,12 +3934,12 @@ void CGame::LoadShaders()
 
 void CGame::LoadClientStartupConfig()
 {
-    if (!g_ConfigManager.Load(g_App.FilePath("options.cfg")))
+    if (!g_ConfigManager.Load(FilePath("options.cfg")))
     {
         // DEPRECATE: 1.0.6
-        if (!g_ConfigManager.Load(g_App.ExeFilePath("options.cfg")))
+        if (!g_ConfigManager.Load(ExeFilePath("options.cfg")))
         {
-            g_ConfigManager.Load(g_App.UOFilesPath("options.cfg"));
+            g_ConfigManager.Load(UOFilePath("options.cfg"));
         }
     }
 

@@ -8,7 +8,6 @@
 
 #include "Point.h"
 #include "Misc.h"
-#include "Wisp/WispApplication.h"
 #include "Wisp/WispBinaryFileWriter.h"
 #include "Wisp/WispConnection.h"
 #include "Wisp/WispMouse.h"

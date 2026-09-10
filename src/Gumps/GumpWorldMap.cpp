@@ -5,7 +5,6 @@
 #include <common/checksum.h>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
-#include "../Application.h"
 #include "../PressedObject.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/MapManager.h"
@@ -339,7 +338,7 @@ void CGumpWorldMap::LoadMap(int map)
             }
         }
 
-        auto path = g_App.FilePath("data/worldmap%08X.xuo", crc32);
+        auto path = FilePath("data/worldmap%08X.xuo", crc32);
         bool fromFile = false;
 
         std::vector<uint16_t> buf;
@@ -478,7 +477,7 @@ void CGumpWorldMap::LoadMap(int map)
                 }
             }
 
-            fs_path_create(g_App.FilePath("data"));
+            fs_path_create(FilePath("data"));
             FILE *mapFile = fs_open(path, FS_WRITE); // "wb"
             if (mapFile != nullptr)
             {

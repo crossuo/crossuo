@@ -11,7 +11,7 @@
 #include "../Target.h"
 #include "../SelectedObject.h"
 #include "../Multi.h"
-#include "../Application.h"
+#include <xuocore/uodata.h>
 #include "../Managers/MapManager.h"
 #include "../Managers/ClilocManager.h"
 #include "../GameObjects/GameItem.h"
@@ -132,18 +132,18 @@ CGumpCustomHouse::CGumpCustomHouse(int serial, int x, int y)
     g_CustomHouseGump = this;
 
     ParseCustomHouseObjectFileWithCategory<CCustomHouseObjectWall, CCustomHouseObjectWallCategory>(
-        m_Walls, g_App.UOFilesPath("walls.txt"));
-    ParseCustomHouseObjectFile<CCustomHouseObjectFloor>(m_Floors, g_App.UOFilesPath("floors.txt"));
-    ParseCustomHouseObjectFile<CCustomHouseObjectDoor>(m_Doors, g_App.UOFilesPath("doors.txt"));
+        m_Walls, UOFilePath("walls.txt"));
+    ParseCustomHouseObjectFile<CCustomHouseObjectFloor>(m_Floors, UOFilePath("floors.txt"));
+    ParseCustomHouseObjectFile<CCustomHouseObjectDoor>(m_Doors, UOFilePath("doors.txt"));
     ParseCustomHouseObjectFileWithCategory<CCustomHouseObjectMisc, CCustomHouseObjectMiscCategory>(
-        m_Miscs, g_App.UOFilesPath("misc.txt"));
-    ParseCustomHouseObjectFile<CCustomHouseObjectStair>(m_Stairs, g_App.UOFilesPath("stairs.txt"));
+        m_Miscs, UOFilePath("misc.txt"));
+    ParseCustomHouseObjectFile<CCustomHouseObjectStair>(m_Stairs, UOFilePath("stairs.txt"));
     ParseCustomHouseObjectFile<CCustomHouseObjectTeleport>(
-        m_Teleports, g_App.UOFilesPath("teleprts.txt"));
+        m_Teleports, UOFilePath("teleprts.txt"));
     ParseCustomHouseObjectFileWithCategory<CCustomHouseObjectRoof, CCustomHouseObjectRoofCategory>(
-        m_Roofs, g_App.UOFilesPath("roof.txt"));
+        m_Roofs, UOFilePath("roof.txt"));
     ParseCustomHouseObjectFile<CCustomHouseObjectPlaceInfo>(
-        m_ObjectsInfo, g_App.UOFilesPath("suppinfo.txt"));
+        m_ObjectsInfo, UOFilePath("suppinfo.txt"));
 
     CGameItem *foundationItem = g_World->GetWorldItem(serial);
 

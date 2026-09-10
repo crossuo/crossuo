@@ -3,7 +3,7 @@
 
 #include "CityManager.h"
 #include "ClilocManager.h"
-#include "../Application.h"
+#include <xuocore/uodata.h>
 #include <xuocore/mappedfile.h>
 #include <common/str.h>
 #include <common/utils.h> // countof
@@ -28,7 +28,7 @@ CCityManager::CCityManager()
 void CCityManager::Init()
 {
     CMappedFile file;
-    if (file.Load(g_App.UOFilesPath("citytext.enu")))
+    if (file.Load(UOFilePath("citytext.enu")))
     {
         uint8_t *end = file.Ptr + file.Size;
         while (file.Ptr < end)

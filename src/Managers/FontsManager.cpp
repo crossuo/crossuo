@@ -9,7 +9,6 @@
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
 #include "../CrossUO.h"
-#include "../Application.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Wisp.h" // REMOVE
 
@@ -48,7 +47,7 @@ CTextSprite *CFontsManager::AllocateTextSprite()
 bool CFontsManager::LoadFonts()
 {
     CMappedFile fontFile;
-    if (!fontFile.Load(g_App.UOFilesPath("fonts.mul")))
+    if (!fontFile.Load(UOFilePath("fonts.mul")))
     {
         return false;
     }

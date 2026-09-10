@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <common/str.h>
 #include "ClilocManager.h"
-#include "../Application.h"
+#include <xuocore/uodata.h>
 #include "../Globals.h" // g_Language
 
 CClilocManager g_ClilocManager;
@@ -24,7 +24,7 @@ CCliloc::CCliloc(const astr_t &lang)
     if (Language.length() != 0)
     {
         auto file = astr_t("Cliloc.") + lang;
-        auto path = g_App.UOFilesPath(file);
+        auto path = UOFilePath(file.c_str());
         Loaded = m_File.Load(path);
     }
 }

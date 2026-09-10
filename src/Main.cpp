@@ -1,19 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
+#include <algorithm>
+#include <time.h>
+#include <common/str.h>
 #include "Config.h"
 #include "revision.h"
+#include "Constants.h" // CPU_USAGE_DELAY
+#include "Globals.h" // g_Ticks
+#include "Misc.h" // g_MainThread
 #include "CrossUO.h"
 #include "GameWindow.h"
-#include "Application.h"
 #include "Platform.h"
 #include "SDL_wrapper.h"
-#include <time.h>
+#include "Wisp/WispThread.h"
 #include <external/popts.h>
 #include <external/process.h>
 #include <xuocore/client_info.h>
+#include <xuocore/uodata.h>
 #include <common/logging/logging.h>
 #include "Managers/ConfigManager.h"
+#include "Managers/ConnectionManager.h"
+#include "Managers/PacketManager.h"
 
 #if !defined(XUO_WINDOWS)
 #include <dlfcn.h>
@@ -172,8 +180,8 @@ bool load_config()
 
     if (config_exists)
     {
-        const auto uopath = fs_path_ascii(g_App.m_UOPath);
-        bool valid_client = uopath && uopath[0] && fs_path_exists(g_App.m_UOPath);
+        const auto uopath = fs_path_ascii(g_UOPath);
+        bool valid_client = uopath && uopath[0] && fs_path_exists(g_UOPath);
         if (!valid_client)
         {
             Warning(Client, "Couldn't find data files in the path: %s", uopath);
@@ -274,6 +282,38 @@ bool load_config()
     return true;
 }
 
+static int Run()
+{
+    bool quit = false;
+    while (!quit)
+    {
+        // 1] Handle all SDL events. Mouse, keyboard, windows etc..
+        SDL_Event event;
+        while (SDL_PollEvent(&event) != 0)
+        {
+            quit = Wisp::g_WispWindow->OnWindowProc(event);
+            if (quit)
+            {
+                break;
+            }
+        }
+
+        // 2] Run main loop, packets, rendering etc..
+        g_Ticks = SDL_GetTicks();
+        g_ConnectionManager.Recv();
+        g_PacketManager.ProcessPluginPackets();
+        g_PacketManager.SendMegaClilocRequests();
+        g_Game.Process(true);
+
+        // 3] Calculate proper delay based on settings and frame time.
+        int32_t iDynamicFPS = SDL_GetTicks() - g_Ticks;
+        int32_t iDelay = g_GameWindow.GetRenderDelay();
+
+        SDL_Delay(std::max(iDelay - iDynamicFPS, CPU_USAGE_DELAY));
+    }
+    return EXIT_SUCCESS;
+}
+
 #if !defined(XUO_WINDOWS)
 XUO_EXPORT int plugin_main(int argc, char **argv)
 #else
@@ -315,7 +355,12 @@ int main(int argc, char **argv)
     }
     Info(Client, "SDL initialized");
 
-    g_App.Init();
+    str_init();
+    Info(Client, "initializing application");
+    g_MainThread = Wisp::CThread::GetCurrentThreadId();
+    g_ExePath = fs_path_current();
+    g_UOPath = fs_path_current();
+
     if (!load_config())
     {
         return EXIT_FAILURE;
@@ -350,8 +395,9 @@ int main(int argc, char **argv)
 
     g_Game.ProcessCommandLine();
     g_Game.LoadPlugins();
-    auto ret = g_App.Run();
+    auto ret = Run();
     SDL_Quit();
+    str_terminate();
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
     gfx_render_list_destroy();
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))

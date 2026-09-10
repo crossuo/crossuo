@@ -7,7 +7,6 @@
 #include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../CrossUO.h"
-#include "../Application.h"
 #include "../Target.h"
 #include "../ToolTip.h"
 #include "../TargetGump.h"

@@ -4,7 +4,6 @@
 #include "Config.h"
 
 #include "Globals.h"
-#include "Application.h"
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
 #include <common/logging/logging.h>
@@ -348,10 +347,10 @@ static fs_path GetConfigFile()
 {
     if (!g_cli["config"].was_set())
     {
-        const auto local_exe = g_App.ExeFilePath(CROSSUO_CONFIG);
+        const auto local_exe = ExeFilePath(CROSSUO_CONFIG);
         if (fs_path_exists(local_exe))
             return local_exe;
-        return g_App.FilePath(CROSSUO_CONFIG);
+        return FilePath(CROSSUO_CONFIG);
     }
 
     return fs_path_from(g_cli["config"].get().string);
@@ -410,8 +409,8 @@ bool LoadGlobalConfig()
                 break;
                 case MSCC_CUSTOM_PATH:
                 {
-                    g_App.m_UOPath = fs_path_from(strings[1]);
-                    fs_case_insensitive_init(g_App.m_UOPath);
+                    g_UOPath = fs_path_from(strings[1]);
+                    fs_case_insensitive_init(g_UOPath);
                 }
                 break;
                 case MSCC_ACTID:
@@ -524,9 +523,9 @@ bool LoadGlobalConfig()
         GetClientTypeName((CLIENT_FLAG)g_Config.ClientFlag),
         g_Config.ClientFlag);
     Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
-    const auto uopath = fs_path_ascii(g_App.m_UOPath);
+    const auto uopath = fs_path_ascii(g_UOPath);
     Info(Client, "\tUltima Online Path: %s", uopath);
-    if (uopath && uopath[0] && fs_path_exists(g_App.m_UOPath))
+    if (uopath && uopath[0] && fs_path_exists(g_UOPath))
     {
         uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);
     }
@@ -584,9 +583,9 @@ void SaveGlobalConfig()
             g_Config.Seed);
     }
 
-    if (!fs_path_equal(g_App.m_UOPath, g_App.m_ExePath))
+    if (!fs_path_equal(g_UOPath, g_ExePath))
     {
-        fprintf(cfg, "CustomPath=%s\n", fs_path_ascii(g_App.m_UOPath));
+        fprintf(cfg, "CustomPath=%s\n", fs_path_ascii(g_UOPath));
     }
 
     if (!g_Config.ServerAddress.empty())

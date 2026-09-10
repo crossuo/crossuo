@@ -10,7 +10,7 @@
 #include <common/str.h>
 #include "../Config.h"
 #include "../CrossUO.h"
-#include "../Application.h"
+#include <xuocore/uodata.h>
 #include "../Profession.h"
 #include "../GameWindow.h"
 
@@ -312,7 +312,7 @@ bool CProfessionManager::Load()
     head->TopLevel = true;
     Add(head);
 
-    TextFileParser file(g_App.UOFilesPath("Prof.txt"), " \t,", "#;", "\"\"");
+    TextFileParser file(UOFilePath("Prof.txt"), " \t,", "#;", "\"\"");
 
     if (!file.IsEOF())
     {
@@ -388,7 +388,7 @@ void CProfessionManager::LoadProfessionDescription()
 {
     CMappedFile file;
 
-    if (file.Load(g_App.UOFilesPath("Professn.enu")))
+    if (file.Load(UOFilePath("Professn.enu")))
     {
         char *ptr = (char *)file.Start;
         char *end = (char *)((uintptr_t)file.Start + file.Size);

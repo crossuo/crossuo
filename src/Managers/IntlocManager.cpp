@@ -4,7 +4,7 @@
 #include <common/str.h>
 #include "IntlocManager.h"
 #include "ClilocManager.h"
-#include "../Application.h"
+#include <xuocore/uodata.h>
 
 CIntlocManager g_IntlocManager;
 
@@ -15,7 +15,7 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
     FileIndex = fileIndex;
     if (Language.length() != 0u)
     {
-        if (m_File.Load(g_App.UOFilesPath("intloc%02i.%s", fileIndex, lang.c_str())))
+        if (m_File.Load(UOFilePath("intloc%02i.%s", fileIndex, lang.c_str())))
         {
             while (!m_File.IsEOF())
             {
