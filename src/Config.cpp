@@ -412,6 +412,7 @@ bool LoadGlobalConfig()
                 {
                     g_UOPath = fs_path_from(strings[1]);
                     fs_case_insensitive_init(g_UOPath);
+                    g_Config.CustomPathSet = true;
                 }
                 break;
                 case MSCC_ACTID:

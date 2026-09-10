@@ -166,7 +166,77 @@ bool load_config()
 #define LAUNCHER_EXE "xuolauncher"
 #endif
 
+    // builds the streaming params from the command line flags
+    auto streaming_params = []() {
+        vfs_params params;
+        params.enabled = true;
+        params.offline = g_cli["streaming-offline"].was_set();
+        params.zerolat = g_cli["streaming-zerolat"].was_set();
+        if (g_cli["streaming-trap"].was_set())
+        {
+            // --streaming-trap=off: holes stay readable (zeros) - the escape
+            // hatch when the fault handler misbehaves
+            params.traps = g_cli["streaming-trap"].get().string != "off";
+        }
+        if (g_cli["streaming-workers"].was_set())
+            params.workers = g_cli["streaming-workers"].get().u32;
+        // web groundwork: in-memory granule backend + web product subset
+        // (excludes the large legacy files from the plan)
+        if (g_cli["streaming-backend"].was_set())
+            params.store_backend = g_cli["streaming-backend"].get().string == "arena"
+                                       ? vfs_store_backend_arena
+                                       : vfs_store_backend_sparse;
+        if (g_cli["streaming-subset"].was_set())
+            params.subset =
+                g_cli["streaming-subset"].get().string == "web" ? vfs_subset_web : vfs_subset_none;
+        auto dir = g_cli["streaming"].get().string;
+        if (dir.empty())
+            dir = fs_path_ascii(FilePath("streamed"));
+        params.install_dir = fs_path_from(dir.c_str());
+        // cache (blob store + state db) lives under the streaming dir
+        params.blobs_dir = fs_path_join(params.install_dir, "cache", "blobs");
+        if (g_cli["streaming-record"].was_set())
+        {
+            params.record_path =
+                fs_path_from(g_cli["streaming-record"].get().string.c_str());
+            if (g_cli["streaming-record-scenario"].was_set())
+                params.record_scenario =
+                    g_cli["streaming-record-scenario"].get().string;
+        }
+        return params;
+    };
+
     const bool config_exists = LoadGlobalConfig();
+
+    // streaming-mode selection, in order of precedence:
+    //  1] --streaming on the command line: stream into the given (or
+    //     default) directory, even when a data path is configured
+    //  2] a config file that sets the data path (CustomPath): use that
+    //     installation, no streaming (the original behavior)
+    //  3] otherwise (no config file, or a config without a data path):
+    //     stream automatically - the streamed install replaces the
+    //     launcher-driven setup
+    const bool streaming =
+        g_cli["streaming"].was_set() || !(config_exists && g_Config.CustomPathSet);
+    if (streaming)
+    {
+        vfs_set_params(streaming_params());
+        g_UOPath = fs_path_from(vfs_install_path());
+        uo_data_init(fs_path_ascii(g_UOPath), g_Config.ClientVersion, g_Config.UseVerdata);
+        Info(Client, "\tStreaming Data Path: %s", fs_path_ascii(g_UOPath));
+        // the streamed product is the modern uop distribution; a config
+        // pinned to a pre-uop client version cannot consume it
+        if (g_Config.ClientVersion < VERSION(7, 0, 0, 0))
+        {
+            g_Config.ClientVersion = CV_LATEST;
+            char str[32] = {};
+            client_version_string(g_Config.ClientVersion, str, sizeof(str));
+            g_Config.ClientVersionString = str;
+            Warning(Client, "streaming requires a 7.x client version, using %s instead", str);
+        }
+        return true;
+    }
+
     const auto bin_fs = fs_path_join(fs_path_current(), LAUNCHER_EXE);
     const auto bin = fs_path_ascii(bin_fs);
     const bool launcher_exists = fs_path_exists(bin_fs);
@@ -449,48 +519,6 @@ int main(int argc, char **argv)
     if (!InitCli(argc, argv))
     {
         return 0;
-    }
-
-    // streamed install: flags -> vfs params; the data root used
-    // by uo_data_init switches to the streaming dir (src/Config.cpp)
-    if (g_cli["streaming"].was_set())
-    {
-        vfs_params params;
-        params.enabled = true;
-        params.offline = g_cli["streaming-offline"].was_set();
-        params.zerolat = g_cli["streaming-zerolat"].was_set();
-        if (g_cli["streaming-trap"].was_set())
-        {
-            // --streaming-trap=off: holes stay readable (zeros) - the escape
-            // hatch when the fault handler misbehaves
-            params.traps = g_cli["streaming-trap"].get().string != "off";
-        }
-        if (g_cli["streaming-workers"].was_set())
-            params.workers = g_cli["streaming-workers"].get().u32;
-        // web groundwork: in-memory granule backend + web product subset
-        // (excludes the large legacy files from the plan)
-        if (g_cli["streaming-backend"].was_set())
-            params.store_backend = g_cli["streaming-backend"].get().string == "arena"
-                                       ? vfs_store_backend_arena
-                                       : vfs_store_backend_sparse;
-        if (g_cli["streaming-subset"].was_set())
-            params.subset =
-                g_cli["streaming-subset"].get().string == "web" ? vfs_subset_web : vfs_subset_none;
-        auto dir = g_cli["streaming"].get().string;
-        if (dir.empty())
-            dir = fs_path_ascii(g_App.FilePath("streamed"));
-        params.install_dir = fs_path_from(dir.c_str());
-        // cache (blob store + state db) lives under the streaming dir
-        params.blobs_dir = fs_path_join(params.install_dir, "cache", "blobs");
-        if (g_cli["streaming-record"].was_set())
-        {
-            params.record_path =
-                fs_path_from(g_cli["streaming-record"].get().string.c_str());
-            if (g_cli["streaming-record-scenario"].was_set())
-                params.record_scenario =
-                    g_cli["streaming-record-scenario"].get().string;
-        }
-        vfs_set_params(params);
     }
 
     LogInit(argc, argv, "crossuo.log");
