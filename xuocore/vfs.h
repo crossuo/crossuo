@@ -170,6 +170,19 @@ bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj));
 bool vfs_asset_is_stubbed(uint64_t uop_hash);
 bool vfs_file_is_stubbed(const uint8_t *base);
 
+// planned payload bytes of one entry inside a managed pack mapping, resolved
+// by the entry's uop name hash: the on-disk table entry of a block that was
+// never materialized carries Offset == 0, but the plan fixes its byte range
+// up front. Baking the returned address into the game's index exposes the
+// entry, so raw-pointer reads fault into the trap and stream on demand.
+// False when streaming is disabled, untracked, unknown to the plan, or a
+// hole (reserved slot with no bytes - the index keeps Address == 0).
+bool vfs_asset_by_hash(
+    const uint8_t *mapping_base,
+    uint64_t uop_hash,
+    uint64_t *out_offset,
+    uint32_t *out_size);
+
 // per-file bulk form of the markers above (perf): a mapped pack's plan
 // file resolves once per index build - `vfs_file_state_base` returns the
 // state DB base index of the plan file mapped at `mapping_base` (SIZE_MAX

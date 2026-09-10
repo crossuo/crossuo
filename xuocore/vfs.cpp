@@ -409,6 +409,38 @@ bool vfs_asset_is_stubbed(uint64_t uop_hash)
         uint32_t(found->second.first), uint32_t(found->second.second), vfs_stubbed);
 }
 
+// planned payload bytes of one entry inside a managed pack mapping, resolved
+// by the entry's uop name hash. The on-disk table entry of a not-yet-
+// materialized block carries Offset == 0 (and UopLoadFile skips it), but the
+// plan fixes every block's byte range up front: resolving through the plan
+// lets the game's index expose entries whose bytes are not there yet, so
+// raw-pointer reads fault into the trap and stream on demand. Returns false
+// when streaming is disabled, the base is not a managed pack mapping, the
+// hash is unknown to the plan, or the entry is a hole (reserved slot with
+// no bytes).
+bool vfs_asset_by_hash(
+    const uint8_t *mapping_base, uint64_t uop_hash, uint64_t *out_offset, uint32_t *out_size)
+{
+    if (!vfs_enabled() || mapping_base == nullptr || uop_hash == 0)
+        return false;
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return false;
+    const auto file_index = found->second.first;
+    const auto asset_index = found->second.second;
+    if (file_index >= s_plan.files.size() || asset_index >= s_plan.files[file_index].assets.size())
+        return false;
+    const auto &asset = s_plan.files[file_index].assets[asset_index];
+    if (vfs_asset_is_hole(asset))
+        return false; // reserved slot: genuinely no asset, keep Address == 0
+    if (out_offset != nullptr)
+        *out_offset = asset.file_offset + asset.ml;
+    if (out_size != nullptr)
+        *out_size = uint32_t(asset.ul);
+    return true;
+}
+
 bool vfs_file_is_stubbed(const uint8_t *base)
 {
     if (!vfs_enabled() || base == nullptr)

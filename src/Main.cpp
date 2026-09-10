@@ -212,25 +212,43 @@ bool load_config()
 
     const bool config_exists = LoadGlobalConfig();
 
+    // a config whose data path carries a streamed (vfs-managed) install -
+    // its cache/state marks it - keeps streaming into that directory: the
+    // install may be partial (holes stream on demand), so plain mapping
+    // would leave it broken
+    const bool custom_path_is_streamed =
+        config_exists && g_Config.CustomPathSet &&
+        fs_path_exists(fs_path_join(g_UOPath, "cache", "state", "plan.bin"));
+
     // streaming-mode selection, in order of precedence:
     //  1] --streaming on the command line: stream into the given (or
     //     default) directory, even when a data path is configured
-    //  2] a config file that sets the data path (CustomPath): use that
-    //     installation, no streaming (the original behavior)
-    //  3] otherwise (no config file, or a config without a data path):
+    //  2] a config file whose data path is a streamed installation: stream
+    //     into the configured directory
+    //  3] a config file with any other data path: use that installation,
+    //     no streaming (the original behavior)
+    //  4] otherwise (no config file, or a config without a data path):
     //     stream automatically - the streamed install replaces the
     //     launcher-driven setup
-    const bool streaming =
-        g_cli["streaming"].was_set() || !(config_exists && g_Config.CustomPathSet);
+    const bool streaming = g_cli["streaming"].was_set() || custom_path_is_streamed ||
+                           !(config_exists && g_Config.CustomPathSet);
     if (streaming)
     {
-        vfs_set_params(streaming_params());
-        g_UOPath = fs_path_from(vfs_install_path());
-        if (!config_exists)
+        auto params = streaming_params();
+        if (!g_cli["streaming"].was_set() && custom_path_is_streamed)
         {
-            // no config: assume the good defaults the streamed install runs
-            // with (latest client version, and everything derived from it -
-            // cryptography, client type, packet layout, view range)
+            // keep the streamed install where the config points
+            params.install_dir = g_UOPath;
+            params.blobs_dir = fs_path_join(params.install_dir, "cache", "blobs");
+        }
+        vfs_set_params(params);
+        g_UOPath = fs_path_from(vfs_install_path());
+        if (!config_exists || !g_Config.ClientVersionModified)
+        {
+            // no (explicit) client version: assume the good defaults the
+            // streamed install runs with (latest client version, and
+            // everything derived from it - cryptography, client type,
+            // packet layout, view range)
             ApplyClientVersionDefaults();
         }
         uo_data_init(fs_path_ascii(g_UOPath), g_Config.ClientVersion, g_Config.UseVerdata);

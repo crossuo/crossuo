@@ -19,6 +19,7 @@
 
 #include <external/zlib_amalg.h>
 #include <external/cbase64.h>
+#include <external/lookup3.h>
 
 #include <common/utils.h>
 #include <common/fs.h>
@@ -1524,14 +1525,46 @@ void CFileManager::UopReadIndexFile(
         snprintf(filename, sizeof(filename), basePath, (int)i);
 
         auto block = uopFile.GetAsset(filename);
-        if (block != nullptr)
+        if (block == nullptr && state_base != SIZE_MAX)
+        {
+            // streamed installs: the block may not be materialized yet (its
+            // on-disk table entry is a skeleton, Offset == 0, skipped by
+            // UopLoadFile). The plan still fixes the block's bytes: bake the
+            // planned address so reads fault into the trap and stream on
+            // demand (holes keep Address == 0, the nodraw-banned semantics)
+            uint32_t ph = 0, sh = 0;
+            hashlittle2(filename, strlen(filename), &ph, &sh);
+            uint64_t offset = 0;
+            uint32_t size = 0;
+            if (!vfs_asset_by_hash(uopFile.Start, UOP_HASH(sh, ph), &offset, &size))
+                continue;
+            CIndexObject *obj = getIdxObj((int)i);
+            obj->Address = uintptr_t(uopFile.Start) + offset;
+            obj->DataSize = size;
+            obj->UopBlock = nullptr;
+            obj->Stubbed = vfs_asset_is_stubbed(UOP_HASH(sh, ph)) ? 1 : 0;
+            continue;
+        }
+        if (block == nullptr)
+        {
+            continue;
+        }
+
         {
             CIndexObject *obj = getIdxObj((int)i);
             obj->Address = uintptr_t(uopFile.Start + block->Offset + block->MetadataSize);
             obj->DataSize = block->DecompressedSize;
             obj->UopBlock = block;
             //obj->ID = -1;
-            obj->Stubbed = vfs_asset_stubbed_at(state_base, size_t(i)) ? 1 : 0;
+            obj->Stubbed = 0;
+            if (state_base != SIZE_MAX)
+            {
+                // the state DB is in plan order while the index walks by
+                // name: ask by hash instead of assuming the orders agree
+                uint32_t ph = 0, sh = 0;
+                hashlittle2(filename, strlen(filename), &ph, &sh);
+                obj->Stubbed = vfs_asset_is_stubbed(UOP_HASH(sh, ph)) ? 1 : 0;
+            }
 
             if (isGump)
             {
@@ -2717,6 +2750,7 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
 
     int fileNumber = -1;
     size_t uopOffset = 0;
+    uint64_t uopOffset64 = 0;
     for (int blockIdx = 0; blockIdx < maxBlockCount; blockIdx++)
     {
         CIndexMap &index = list[blockIdx];
@@ -2745,7 +2779,19 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                 }
                 else
                 {
-                    Warning(Data, "couldn't find asset %s", mapFilePath);
+                    uint32_t ph = 0, sh = 0;
+                    hashlittle2(mapFilePath, strlen(mapFilePath), &ph, &sh);
+                    if (vfs_asset_by_hash(uopFile.Start, UOP_HASH(sh, ph), &uopOffset64, nullptr))
+                    {
+                        // streamed installs: the chunk is not materialized
+                        // yet - its planned bytes come from the plan and
+                        // read through the trap (streamed on demand)
+                        uopOffset = size_t(uopOffset64);
+                    }
+                    else
+                    {
+                        Warning(Data, "couldn't find asset %s", mapFilePath);
+                    }
                 }
             }
         }
