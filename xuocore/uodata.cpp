@@ -251,6 +251,178 @@ size_t CUopMappedFile::FileCount() const
     return m_MapByHash.size();
 }
 
+// ---------------------------------------------------------------------------
+// Burrows-Wheeler based decoder for MYP entries compressed with Flags == 3:
+// the zlib stream inflates to a BWT/MTF coded stream that decodes again into
+// the payload. This is the layout the current official distribution uses for
+// gumpartLegacyMUL.uop.
+// ---------------------------------------------------------------------------
+bool bwt_decompress(const std::vector<uint8_t> &coded, std::vector<uint8_t> &out)
+{
+    if (coded.size() < 6)
+    {
+        return false;
+    }
+
+    // a 16-bit move-to-front table; the reference builds the ascending
+    // 16-bit sequence and sorts it, which is exactly the identity
+    std::vector<uint16_t> table(256 * 256);
+    for (size_t i = 0; i < table.size(); i++)
+    {
+        table[i] = uint16_t(i);
+    }
+
+    std::vector<uint8_t> list(coded.size() - 4, 0);
+    uint8_t first = coded[4];
+    size_t i = 0;
+    for (size_t pos = 5; pos < coded.size() && i < list.size(); pos++, i++)
+    {
+        const uint8_t currentValue = first;
+        const uint16_t value = table[currentValue];
+        if (currentValue > 0)
+        {
+            for (int cv = currentValue; cv > 0; cv--)
+            {
+                table[size_t(cv)] = table[size_t(cv) - 1];
+            }
+        }
+        table[0] = value;
+        list[i] = uint8_t(value);
+        first = coded[pos];
+    }
+
+    // the coded stream carries a 1KB frequency header followed by the two
+    // coded streams, laid out exactly as ClassicUO reads it
+    if (list.size() < 2048)
+    {
+        return false;
+    }
+
+    int partialInput[256 * 3] = {};
+    memcpy(partialInput, list.data(), 1024);
+
+    int sum = 0;
+    for (int i = 0; i < 256; i++)
+    {
+        sum += partialInput[i];
+    }
+    if (sum <= 0)
+    {
+        return false;
+    }
+
+    out.assign(size_t(sum), 0);
+
+    int nonZeroCount = 0;
+    for (int i = 0; i < 256; i++)
+    {
+        if (partialInput[i] != 0)
+        {
+            nonZeroCount++;
+        }
+    }
+
+    uint8_t frequency[256] = {};
+    {
+        int tmp[256];
+        memcpy(tmp, partialInput, sizeof(tmp));
+        for (int i = 0; i < 256; i++)
+        {
+            uint32_t value = 0;
+            uint8_t index = 0;
+            for (int j = 0; j < 256; j++)
+            {
+                if (tmp[j] > value)
+                {
+                    index = uint8_t(j);
+                    value = uint32_t(tmp[j]);
+                }
+            }
+            if (value == 0)
+            {
+                break;
+            }
+            frequency[i] = index;
+            tmp[index] = 0;
+        }
+    }
+
+    uint8_t symbolTable[256];
+    for (int i = 0; i < 256; i++)
+    {
+        symbolTable[i] = uint8_t(i);
+    }
+
+    int m = 0;
+    for (int i = 0; i < nonZeroCount; ++i)
+    {
+        const uint8_t freq = frequency[i];
+        symbolTable[list[size_t(m) + 1024]] = freq;
+        partialInput[freq + 256] = m + 1;
+        m += partialInput[freq];
+        partialInput[freq + 512] = m;
+    }
+
+    auto shiftLeft = [&symbolTable](int max)
+    {
+        for (int i = 0; i < max; ++i)
+        {
+            symbolTable[i] = symbolTable[i + 1];
+        }
+    };
+
+    uint8_t val = symbolTable[0];
+    int count = 0;
+    while (count < sum)
+    {
+        const int firstVal = partialInput[val + 256];
+        out[size_t(count)] = val;
+        if (firstVal >= partialInput[val + 512])
+        {
+            if (nonZeroCount-- > 0)
+            {
+                shiftLeft(nonZeroCount);
+                val = symbolTable[0];
+            }
+        }
+        else
+        {
+            const uint8_t idx = list[size_t(firstVal) + 1024];
+            partialInput[val + 256]++;
+            if (idx != 0)
+            {
+                shiftLeft(idx);
+                symbolTable[idx] = val;
+                val = symbolTable[0];
+            }
+        }
+        count++;
+    }
+    return true;
+}
+
+// decodes a Flags == 3 entry: plain zlib into the coded stream, then the BWT
+// pass. The output length is discovered from the coded stream itself and can
+// differ from DecompressedSize (which sizes the zlib stage).
+static bool DecompressBlockBwt(const UopFileEntry *block, std::vector<uint8_t> &dst, uint8_t *src)
+{
+    std::vector<uint8_t> coded(size_t(block->DecompressedSize), 0);
+    uLongf dLen = block->DecompressedSize;
+    const auto *p = reinterpret_cast<unsigned char const *>(src);
+    if (uncompress(coded.data(), &dLen, p, block->CompressedSize) != Z_OK)
+    {
+        Error(Data, "decompression failed %d (bwt zlib stage)", Z_DATA_ERROR);
+        return false;
+    }
+    coded.resize(dLen);
+    if (!bwt_decompress(coded, dst))
+    {
+        Error(Data, "decompression failed (bwt stage)");
+        return false;
+    }
+    return true;
+}
+
 static bool DecompressBlock(const UopFileEntry *block, uint8_t *dst, uint8_t *src)
 {
     assert(block);
@@ -286,6 +458,17 @@ static bool UopDecompressBlock(const UopFileEntry *block, uint8_t *dst, int file
     return DecompressBlock(block, dst, src);
 }
 
+// vector form for Flags == 3 entries: the BWT output length is discovered
+// while decoding and can differ from DecompressedSize
+static bool UopDecompressBlockBwt(const UopFileEntry *block, std::vector<uint8_t> &dst, int fileId)
+{
+    assert(block);
+    assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
+    uint8_t *src =
+        g_FileManager.m_AnimationFrame[fileId].Start + block->Offset + block->MetadataSize;
+    return DecompressBlockBwt(block, dst, src);
+}
+
 std::vector<uint8_t> CUopMappedFile::GetMeta(const UopFileEntry *block)
 {
     assert(block);
@@ -308,6 +491,16 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 {
     assert(block);
     uint8_t *src = Start + block->Offset + block->MetadataSize;
+    if (block->Flags == 3)
+    {
+        std::vector<uint8_t> dst;
+        if (DecompressBlockBwt(block, dst, src))
+        {
+            return dst;
+        }
+        dst.clear();
+        return dst;
+    }
     std::vector<uint8_t> dst(block->DecompressedSize, 0);
     if (DecompressBlock(block, dst.data(), src))
     {
@@ -846,6 +1039,21 @@ void CFileManager::LoadStringDictionary()
         if (block != nullptr)
         {
             g_stringData = g_FileManager.m_StringDictionary.GetData(block);
+            if (g_stringData.size() > 4 && g_stringData[3] == 0x8E)
+            {
+                // the payload carries the bwt-coded layout (the 0x8E byte at
+                // offset 3 is the tell, same as the cliloc files)
+                std::vector<uint8_t> out;
+                if (bwt_decompress(g_stringData, out))
+                {
+                    g_stringData = std::move(out);
+                }
+                else
+                {
+                    Error(Data, "string dictionary: bwt decompression failed");
+                    g_stringData.clear();
+                }
+            }
             CDataReader reader;
             reader.SetData(&g_stringData[0], g_stringData.size());
             auto header = (UopDictionary *)reader.Start;
@@ -1375,13 +1583,25 @@ void CFileManager::UopReadAnimationFrameInfo(
     }
 
     std::vector<uint8_t> scratchBuffer;
-    scratchBuffer.reserve(block->DecompressedSize);
-    if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
+    size_t scratchSize = block->DecompressedSize;
+    if (block->Flags == 3)
     {
-        return;
+        if (!UopDecompressBlockBwt(block, scratchBuffer, direction.FileIndex))
+        {
+            return;
+        }
+        scratchSize = scratchBuffer.size();
+    }
+    else
+    {
+        scratchBuffer.reserve(block->DecompressedSize);
+        if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
+        {
+            return;
+        }
     }
     // FIXME: CFileManager SHOULD not be a DataReader! In fact, no class need to be. Clean up!
-    SetData(scratchBuffer.data(), block->DecompressedSize);
+    SetData(scratchBuffer.data(), scratchSize);
     const auto _header = UopReadAnimationHeader();
     (void)_header;
     auto frame = UopReadAnimationFrame(); // read only first frame to get image dimensions
@@ -1403,12 +1623,24 @@ CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16
     std::vector<uint8_t> scratchBuffer;
     assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
-    scratchBuffer.reserve(block->DecompressedSize);
-    if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
+    size_t scratchSize = block->DecompressedSize;
+    if (block->Flags == 3)
     {
-        return false;
+        if (!UopDecompressBlockBwt(block, scratchBuffer, direction.FileIndex))
+        {
+            return false;
+        }
+        scratchSize = scratchBuffer.size();
     }
-    SetData(scratchBuffer.data(), block->DecompressedSize);
+    else
+    {
+        scratchBuffer.reserve(block->DecompressedSize);
+        if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
+        {
+            return false;
+        }
+    }
+    SetData(scratchBuffer.data(), scratchSize);
 
     const auto framesData = UopReadAnimationFramesData();
     const int frameCount = checked_cast<uint8_t>(framesData.size() / 5);

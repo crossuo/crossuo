@@ -351,9 +351,14 @@ bool CMappedFile::Load(const fs_path &path)
 
 void CMappedFile::Unload()
 {
+    if (Start != nullptr && !m_Memory.empty())
+    {
+        Start = nullptr; // heap memory adopted via Attach: nothing to unmap
+    }
     if (Start != nullptr)
     {
         fs_unmap(Start, Size);
     }
+    m_Memory.clear();
     SetData(nullptr, 0);
 }

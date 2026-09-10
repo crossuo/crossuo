@@ -286,4 +286,16 @@ struct CMappedFile : public CDataReader
 
     bool Load(const fs_path &path);
     void Unload();
+
+    // replaces the mapping with heap memory owned by this file (Unload-safe);
+    // used when a mapped payload has to be decoded before it can be parsed
+    void Attach(std::vector<uint8_t> &&data)
+    {
+        Unload();
+        m_Memory = std::move(data);
+        SetData(m_Memory.data(), m_Memory.size());
+    }
+
+private:
+    std::vector<uint8_t> m_Memory;
 };
