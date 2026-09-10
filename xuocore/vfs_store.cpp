@@ -164,7 +164,6 @@ static uint32_t vfs_store_plan_fingerprint(const VfsPlan::VfsFile &file)
         push(&offset, sizeof(offset));
         push(&ml, sizeof(ml));
         push(&stored, sizeof(stored));
-        push(&stored, sizeof(stored));
     }
     return crc32_checksum(bytes.data(), bytes.size());
 }
@@ -252,6 +251,28 @@ static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &fi
 
     const uint32_t fingerprint = vfs_store_plan_fingerprint(file);
     const bool recreate = vfs_store_pack_recreate_needed(path, file, fingerprint);
+    if (recreate)
+    {
+        // a recreate throws away every materialized block of the pack: say
+        // why, so a fingerprint/plan mismatch is never a silent wipe
+        uint64_t existing_size = 0;
+        uint32_t existing_sig = 0;
+        if (FILE *probe = fopen(fs_path_ascii(path), "rb"))
+        {
+            UopHeader h;
+            if (fread(&h, sizeof(h), 1, probe) == 1)
+                existing_sig = h.Signature;
+            vfs_file_size(probe, &existing_size);
+            fclose(probe);
+        }
+        LOG_INFO(
+            "recreating pack %s (size %llu, sig %08x) for plan (size %llu, sig %08x)",
+            fs_path_ascii(path),
+            (unsigned long long)existing_size,
+            existing_sig,
+            (unsigned long long)file.size,
+            fingerprint);
+    }
 
     FILE *fp = fopen(fs_path_ascii(path), recreate ? "wb+" : "r+b");
     if (!fp)
@@ -874,8 +895,9 @@ static uint8_t vfs_verify_pack_asset(
     if (!vfs_store_blob_payload_head(params.blobs_dir, asset, head, blob_head))
     {
         // without a usable blob the shape is the only verdict (same contract
-        // as the loose verifier's size-only fallback)
-        LOG_WARN("verify: unusable blob for %s, shape check only", asset.blob.c_str());
+        // as the loose verifier's size-only fallback); missing blobs are the
+        // norm mid-stream, so this stays quiet
+        LOG_TRACE("verify: unusable blob for %s, shape check only", asset.blob.c_str());
         return vfs_verify_ok;
     }
     const uint8_t *stored = start + entry.Offset + entry.MetadataSize;
