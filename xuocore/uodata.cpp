@@ -267,15 +267,15 @@ bool bwt_decompress(const std::vector<uint8_t> &coded, std::vector<uint8_t> &out
     // a 16-bit move-to-front table; the reference builds the ascending
     // 16-bit sequence and sorts it, which is exactly the identity
     std::vector<uint16_t> table(256 * 256);
-    for (size_t i = 0; i < table.size(); i++)
+    for (size_t ti = 0; ti < table.size(); ti++)
     {
-        table[i] = uint16_t(i);
+        table[ti] = uint16_t(ti);
     }
 
     std::vector<uint8_t> list(coded.size() - 4, 0);
     uint8_t first = coded[4];
-    size_t i = 0;
-    for (size_t pos = 5; pos < coded.size() && i < list.size(); pos++, i++)
+    size_t li = 0;
+    for (size_t pos = 5; pos < coded.size() && li < list.size(); pos++, li++)
     {
         const uint8_t currentValue = first;
         const uint16_t value = table[currentValue];
@@ -287,7 +287,7 @@ bool bwt_decompress(const std::vector<uint8_t> &coded, std::vector<uint8_t> &out
             }
         }
         table[0] = value;
-        list[i] = uint8_t(value);
+        list[li] = uint8_t(value);
         first = coded[pos];
     }
 
@@ -314,9 +314,9 @@ bool bwt_decompress(const std::vector<uint8_t> &coded, std::vector<uint8_t> &out
     out.assign(size_t(sum), 0);
 
     int nonZeroCount = 0;
-    for (int i = 0; i < 256; i++)
+    for (int fi = 0; fi < 256; fi++)
     {
-        if (partialInput[i] != 0)
+        if (partialInput[fi] != 0)
         {
             nonZeroCount++;
         }
@@ -326,24 +326,24 @@ bool bwt_decompress(const std::vector<uint8_t> &coded, std::vector<uint8_t> &out
     {
         int tmp[256];
         memcpy(tmp, partialInput, sizeof(tmp));
-        for (int i = 0; i < 256; i++)
+        for (int fi = 0; fi < 256; fi++)
         {
-            uint32_t value = 0;
-            uint8_t index = 0;
-            for (int j = 0; j < 256; j++)
+            uint32_t bestValue = 0;
+            uint8_t bestIndex = 0;
+            for (int fj = 0; fj < 256; fj++)
             {
-                if (tmp[j] > value)
+                if (tmp[fj] > bestValue)
                 {
-                    index = uint8_t(j);
-                    value = uint32_t(tmp[j]);
+                    bestIndex = uint8_t(fj);
+                    bestValue = uint32_t(tmp[fj]);
                 }
             }
-            if (value == 0)
+            if (bestValue == 0)
             {
                 break;
             }
-            frequency[i] = index;
-            tmp[index] = 0;
+            frequency[fi] = bestIndex;
+            tmp[bestIndex] = 0;
         }
     }
 
@@ -1516,14 +1516,38 @@ void CFileManager::UopReadIndexFile(
 
             if (isGump)
             {
-                obj->Address += 8;
-                obj->DataSize -= 8;
+                // stored entries carry [width][height] in the first payload
+                // words; compressed entries (flags 1/3) only reveal them after
+                // decoding, which the gump read path does on first use
+                if (block->Flags == 0)
+                {
+                    uopFile.ResetPtr();
+                    uopFile.Move(checked_cast<intptr_t>(block->Offset + block->MetadataSize));
 
-                uopFile.ResetPtr();
-                uopFile.Move(checked_cast<intptr_t>(block->Offset + block->MetadataSize));
+                    const uint32_t width = uopFile.ReadUInt32LE();
+                    const uint32_t height = uopFile.ReadUInt32LE();
 
-                obj->Width = uopFile.ReadUInt32LE();
-                obj->Height = uopFile.ReadUInt32LE();
+                    constexpr uint32_t maxGumpDimension = 2048;
+                    if (width > 0 && width <= maxGumpDimension && height > 0 && height <= maxGumpDimension)
+                    {
+                        obj->Address += 8;
+                        obj->DataSize -= 8;
+                        obj->Width = int32_t(width);
+                        obj->Height = int32_t(height);
+                    }
+                    else
+                    {
+                        Warning(
+                            Data,
+                            "gump %i: unsupported payload layout (w=%u h=%u), entry ignored",
+                            i,
+                            width,
+                            height);
+                        obj->Address = 0;
+                        obj->DataSize = 0;
+                        obj->UopBlock = nullptr;
+                    }
+                }
             }
         }
     }

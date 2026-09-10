@@ -14,8 +14,53 @@ UOFileReader g_UOFileReader;
 
 std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 {
-    size_t dataStart = io.Address;
-    uint32_t *lookupList = (uint32_t *)dataStart;
+    std::vector<uint8_t> decoded;
+    const uint32_t *lookupList = nullptr;
+    int halfLen = 0;
+
+    const auto *uopBlock = io.UopBlock;
+    if (uopBlock != nullptr && uopBlock->Flags != 0)
+    {
+        // compressed gump entries do not carry [width][height] in the mapped
+        // payload: decode the block and parse the picture from the buffer,
+        // caching the dimensions on this entry for the callers that only ask
+        // for the size
+        decoded = g_FileManager.m_GumpartLegacyMUL.GetData(uopBlock);
+        if (decoded.size() < 8)
+        {
+            Warning(Data, "UOFileReader::GetGumpPixels could not decode the gump block");
+            return {};
+        }
+
+        uint32_t width = 0;
+        uint32_t height = 0;
+        memcpy(&width, &decoded[0], sizeof(width));
+        memcpy(&height, &decoded[4], sizeof(height));
+        constexpr uint32_t maxGumpDimension = 2048;
+        if (width == 0 || height == 0 || width > maxGumpDimension || height > maxGumpDimension)
+        {
+            Warning(
+                Data,
+                "UOFileReader::GetGumpPixels unsupported gump layout (w=%u h=%u)",
+                width,
+                height);
+            return {};
+        }
+
+        io.Width = int32_t(width);
+        io.Height = int32_t(height);
+        lookupList = reinterpret_cast<const uint32_t *>(decoded.data() + 8);
+        halfLen = int((decoded.size() - 8) >> 2);
+    }
+    else
+    {
+        lookupList = reinterpret_cast<const uint32_t *>(io.Address);
+        halfLen = int(io.DataSize >> 2);
+    }
+
+    const uint8_t *dataStart =
+        uopBlock != nullptr && uopBlock->Flags != 0 ? decoded.data() + 8
+                                                    : reinterpret_cast<const uint8_t *>(io.Address);
 
     int blocksize = io.Width * io.Height;
 
@@ -48,10 +93,10 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
         }
         else
         {
-            gSize = (io.DataSize / 4) - lookupList[y];
+            gSize = halfLen - lookupList[y];
         }
 
-        GUMP_BLOCK *gmul = (GUMP_BLOCK *)(dataStart + lookupList[y] * 4);
+        const GUMP_BLOCK *gmul = (const GUMP_BLOCK *)(dataStart + lookupList[y] * 4);
         int pos = (int)y * io.Width;
 
         for (int i = 0; i < gSize; i++)
