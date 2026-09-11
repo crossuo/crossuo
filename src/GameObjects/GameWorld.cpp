@@ -792,7 +792,7 @@ void CGameWorld::UpdateGameObject(
     UPDATE_GAME_OBJECT_TYPE updateType,
     uint16_t a13)
 {
-    Info(
+    /*Info(
         Client,
         "UpdateGameObject 0x%08X:0x%04X 0x%04X (%i) %d:%d:%d %i",
         serial,
@@ -803,7 +803,7 @@ void CGameWorld::UpdateGameObject(
         y,
         z,
         direction);
-
+    */
     CGameCharacter *character = nullptr;
     CGameItem *item = nullptr;
     CGameObject *obj = FindWorldObject(serial);
@@ -829,7 +829,7 @@ void CGameWorld::UpdateGameObject(
     if (obj == nullptr)
     {
         created = true;
-        Info(Client, "created ");
+        //Info(Client, "created ");
         if (((serial & 0x40000000) == 0) && updateType != 3)
         {
             character = GetWorldCharacter(serial);
@@ -862,7 +862,7 @@ void CGameWorld::UpdateGameObject(
     }
     else
     {
-        Info(Client, "updated ");
+        //Info(Client, "updated ");
         if (obj->Container != 0xFFFFFFFF)
         {
             RemoveFromContainer(obj);
@@ -936,7 +936,7 @@ void CGameWorld::UpdateGameObject(
         item->Count = count;
         item->SetFlags(flags);
         item->OnGraphicChange(direction);
-        Info(
+        /*Info(
             Client,
             "serial:0x%08X graphic:0x%04X color:0x%04X count:%i xyz:%d,%d,%d light:%i flags:0x%02X",
             obj->Serial,
@@ -948,6 +948,7 @@ void CGameWorld::UpdateGameObject(
             obj->GetZ(),
             direction,
             obj->GetFlags());
+            */
     }
     else
     {
@@ -1008,7 +1009,7 @@ void CGameWorld::UpdateGameObject(
         character->Color = g_ColorManager.FixColor(color, (color & 0x8000));
         character->SetFlags(flags);
 
-        Info(
+        /*Info(
             Client,
             "NPC serial:0x%08x graphic:0x%04x color:0x%04x xyz:%d,%d,%d flags:0x%02x direction:%d notoriety:%d",
             obj->Serial,
@@ -1019,7 +1020,7 @@ void CGameWorld::UpdateGameObject(
             obj->GetZ(),
             obj->GetFlags(),
             character->Direction,
-            character->Notoriety);
+            character->Notoriety);*/
     }
 
     if (created && g_ConfigManager.ShowIncomingNames && !obj->Clicked &&
