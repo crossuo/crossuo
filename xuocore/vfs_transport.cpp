@@ -24,6 +24,8 @@
 #include "common.h"
 #include <common/logging/logging.h>
 
+#define VUOI_AGENT_NAME "EAMythic Patch Client"
+
 namespace
 {
 std::atomic<vfs_transport *> s_override{ nullptr }; // injected transport, if any
@@ -130,11 +132,10 @@ bool transport_get(const char *url, transport_reply *reply)
     // the connection cache (the reason for the persistent handle) survives
     curl_easy_reset(curl);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "vuoi");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, VUOI_AGENT_NAME);
     // TLS verification is deliberately off for now, mirroring the four sites
     // in xuocore/http.cpp (the official product/file repos are plain http
-    // today). Deferred: see docs/NOTES.md (MITM risk documented there; it
-    // closes with .meta sha256 verification or a CA-bundle strategy).
+    // today).
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     // a stalled connection must never hang a worker (and with it
     // vfs_fetch_stop and game exit): 10s to connect, then 30s at under 1 B/s
@@ -178,7 +179,7 @@ bool transport_get_range(const char *url, uint64_t offset, uint64_t length, tran
     }
     curl_easy_reset(curl);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "vuoi");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, VUOI_AGENT_NAME);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
