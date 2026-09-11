@@ -211,21 +211,22 @@ static bool vfs_fetch_and_materialize_asset(
     {
         const double ensure_secs =
             std::chrono::duration<double>(std::chrono::steady_clock::now() - ensure_start).count();
-        if (expected < 1024 * 1024)
+        if (ok && expected < 1024 * 1024)
         {
+            // successful small resolves stay quiet (DEBUG); failures are
+            // always visible - a silently missing asset is a bug report
             DEBUG(
                 Vfs,
-                "trap resolve: %s (%u: %llu bytes, fault@%llu) in %.3fs%s",
+                "trap resolve: %s (%u: %llu bytes, fault@%llu) in %.3fs",
                 vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
                 asset_index,
                 (unsigned long long)expected,
                 (unsigned long long)fault_offset,
-                ensure_secs,
-                ok ? "" : " FAILED");
+                ensure_secs);
             return;
         }
         // large on-demand resolves land on the critical path of whatever read
-        // faulted: keep them visible at INFO (small ones stay quiet)
+        // faulted: keep them visible at INFO
         LOG_INFO(
             "trap resolve: %s (%u: %llu bytes, fault@%llu) in %.3fs%s",
             vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
@@ -246,8 +247,16 @@ static bool vfs_fetch_and_materialize_asset(
         const uint64_t len = vfs_asset_range_len(asset);
         astr_t url = astr_t(s_plan.file_repo) + asset.blob;
         std::vector<uint8_t> bytes(static_cast<size_t>(len), 0);
+        // the sink is what lands the transfer body: without it the transport
+        // reports success with zero bytes and the block would stub out
         vfs_transport_result res = vfs_transport_active()->range(
-            url.c_str(), asset.blob.c_str(), asset.blob_offset, len, nullptr, nullptr, 0, false);
+            url.c_str(), asset.blob.c_str(), asset.blob_offset, len,
+            [](void *context, const uint8_t *data, size_t size)
+            {
+                static_cast<std::vector<uint8_t> *>(context)->assign(data, data + size);
+                return true;
+            },
+            &bytes, 0, false);
         const bool ok = res.ok && res.bytes == len;
         log_resolve(ok);
         if (!ok)

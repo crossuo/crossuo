@@ -1100,92 +1100,160 @@ bool vfs_store_pack_asset_present(
 // reconcile-grade check (shared constant with the pack path)
 
 bool vfs_store_loose_asset_content_ok(
-    const fs_path &path,
-    const VfsAsset &asset,
-    const fs_path &blobs_dir)
+    const fs_path &path, const VfsAsset &asset, const fs_path &blobs_dir)
 {
     if (fs_path_empty(blobs_dir) || vfs_asset_is_hole(asset))
         return true; // no store root: presence cannot be content-checked
+    if (asset.ul == 0)
+        return true;
+
+    // sample windows: head, and for larger files quarter/middle/three-quarter
+    // - compared against the source payload. The multi-window compare exists
+    // because several real assets (every unifont*.mul) legitimately start
+    // with a long zero region: a head-only compare cannot separate their
+    // never-materialized zero skeleton from the real downloaded payload.
+    struct vfs_content_sample
+    {
+        uint64_t offset = 0;
+        uint32_t length = 0;
+        bool captured = false;
+        uint8_t disk[0x1000] = {};
+        uint8_t want[0x1000] = {};
+    };
+    const uint64_t size = asset.ul;
+    vfs_content_sample samples[4];
+    size_t sample_count = 0;
+    const auto add_sample = [&](uint64_t offset)
+    {
+        if (offset == UINT64_MAX || offset >= size || sample_count == 4)
+            return;
+        vfs_content_sample &sample = samples[sample_count++];
+        sample.offset = offset;
+        sample.length = uint32_t(offset + 0x1000 <= size ? 0x1000 : size - offset);
+    };
+    add_sample(0);
+    if (size > 0x4000)
+        add_sample(size / 4);
+    if (size > 0x8000)
+        add_sample(size / 2);
+    if (size > 0xC000)
+        add_sample(size - 0x1000);
+    if (sample_count == 0)
+        return true;
+
+    // read the file's windows
     FILE *fp = fopen(fs_path_ascii(path), "rb");
     if (!fp)
         return false;
-    uint8_t disk_head[VFS_PACK_HEAD_BYTES] = {};
-    const size_t want = size_t(asset.ul < VFS_PACK_HEAD_BYTES ? asset.ul : VFS_PACK_HEAD_BYTES);
-    const size_t got = want ? uint32_t(fread(disk_head, 1, want, fp)) : 0;
-    fclose(fp);
-    if (got != want)
-        return false;
-
-    uint8_t blob_head[VFS_PACK_HEAD_BYTES] = {};
-    // a missing (or wrong-sized, or undecompressable) blob never proves
-    // presence
-    if (!vfs_store_blob_payload_head(blobs_dir, asset, want, blob_head))
-        return false;
-    return memcmp(disk_head, blob_head, want) == 0;
-}
-
-int vfs_store_verify(
-    const VfsPlan &plan,
-    const vfs_store_params &params,
-    vfs_verify_result *out,
-    const std::vector<uint8_t> *states)
-{
-    vfs_verify_result result;
-    int corrupt = 0;
-    size_t global_index = 0;
-    for (const auto &file : plan.files)
+    for (size_t si = 0; si < sample_count; ++si)
     {
-        vfs_verify_file vf;
-        vf.name = file.name;
-        vf.is_uop = file.is_uop;
-
-        const uint8_t *mapped = nullptr;
-        uint64_t mapped_size = 0;
-        size_t map_size = 0;
-        if (file.is_uop)
+        auto &sample = samples[si];
+        if (fseeko(fp, off_t(sample.offset), SEEK_SET) != 0 ||
+            fread(sample.disk, 1, sample.length, fp) != sample.length)
         {
-            const auto path = fs_path_join(params.install_dir, file.name);
-            if (fs_path_exists(path))
-                mapped = fs_map(path, &map_size);
-            mapped_size = uint64_t(map_size);
+            fclose(fp);
+            return false; // short read: the file is not the real payload
         }
-
-        for (size_t ai = 0; ai < file.assets.size(); ++ai)
-        {
-            const auto &asset = file.assets[ai];
-            const bool stubbed =
-                states != nullptr && global_index < states->size() &&
-                (*states)[global_index] == vfs_stubbed;
-            std::vector<uint8_t> scratch;
-            vfs_verify_asset va;
-            va.uop_hash = asset.uop_hash;
-            va.name = asset.name;
-            va.stubbed = stubbed;
-            va.status = file.is_uop ?
-                            vfs_verify_pack_asset(
-                                params, mapped, mapped_size, ai, asset, stubbed) :
-                            vfs_verify_loose_asset(params, asset, stubbed, scratch);
-            ++vf.counts[va.status];
-            if (va.status == vfs_verify_corrupt)
-            {
-                ++corrupt;
-                result.corrupted = true;
-            }
-            vf.assets.emplace_back(va);
-            ++global_index;
-        }
-        if (mapped)
-            fs_unmap(const_cast<unsigned char *>(mapped), map_size);
-
-        vf.sealed = vf.counts[vfs_verify_missing_blob] == 0 &&
-                    vf.counts[vfs_verify_missing_block] == 0 && vf.counts[vfs_verify_corrupt] == 0;
-        result.files.emplace_back(std::move(vf));
     }
-    if (out)
-        *out = std::move(result);
-    return corrupt;
-}
+    fclose(fp);
 
+    const auto wire_path = fs_path_join(blobs_dir, asset.blob);
+    FILE *wire = fopen(fs_path_ascii(wire_path), "rb");
+    if (!wire)
+        return false; // a missing blob never proves presence
+
+    bool ok = true;
+    if (asset.ct == 0)
+    {
+        // stored: the wire IS the payload - windows compare directly
+        for (size_t si = 0; si < sample_count; ++si)
+        {
+            auto &sample = samples[si];
+            if (fseeko(wire, off_t(sample.offset), SEEK_SET) != 0 ||
+                fread(sample.want, 1, sample.length, wire) != sample.length)
+            {
+                ok = false;
+                break;
+            }
+            if (memcmp(sample.disk, sample.want, sample.length) != 0)
+            {
+                ok = false;
+                break;
+            }
+        }
+    }
+    else
+    {
+        // zlib: one progressive pass, capturing the sample windows as the
+        // stream produces them (bounded by the wire size; no full decode)
+        std::vector<uint8_t> wire_data;
+        {
+            uint8_t buf[0x10000];
+            size_t got = 0;
+            while ((got = fread(buf, 1, sizeof(buf), wire)) > 0)
+                wire_data.insert(wire_data.end(), buf, buf + got);
+        }
+        z_stream zs = {};
+        if (inflateInit(&zs) != Z_OK)
+        {
+            ok = false;
+        }
+        else
+        {
+            uint64_t produced = 0;
+            size_t windows_left = sample_count;
+            zs.next_in = reinterpret_cast<Bytef *>(wire_data.data());
+            zs.avail_in = uint32_t(wire_data.size());
+            uint8_t out[0x10000];
+            int res = Z_OK;
+            while (windows_left != 0 && res != Z_STREAM_END)
+            {
+                zs.next_out = out;
+                zs.avail_out = sizeof(out);
+                const uint64_t before = zs.total_out;
+                res = inflate(&zs, Z_NO_FLUSH);
+                const uint64_t produced_now = zs.total_out - before;
+                if (produced_now != 0)
+                {
+                    const uint64_t chunk_start = produced;
+                    for (size_t si = 0; si < sample_count; ++si)
+                    {
+                        auto &sample = samples[si];
+                        const uint64_t s = sample.offset;
+                        const uint64_t e = s + sample.length;
+                        if (s >= chunk_start && e <= chunk_start + produced_now &&
+                            !sample.captured)
+                        {
+                            memcpy(sample.want, out + size_t(s - chunk_start), sample.length);
+                            sample.captured = true;
+                            --windows_left;
+                        }
+                    }
+                    produced = chunk_start + produced_now;
+                }
+                if (zs.avail_in == 0 && windows_left != 0)
+                    break; // input exhausted before all windows were captured
+            }
+            inflateEnd(&zs);
+            for (size_t si = 0; si < sample_count; ++si)
+            {
+                auto &sample = samples[si];
+                if (!sample.captured)
+                {
+                    ok = false; // the source cannot supply the sample: unproven
+                    break;
+                }
+                if (memcmp(sample.disk, sample.want, sample.length) != 0)
+                {
+                    ok = false;
+                    break;
+                }
+            }
+        }
+    }
+    fclose(wire);
+    return ok;
+}
 // ---------------------------------------------------------------------------
 // the native backend: store_sparse
 // ---------------------------------------------------------------------------
@@ -1457,3 +1525,65 @@ bool vfs_store_materialize_asset_data(
     return vfs_store_rematerialize_asset_impl(
         plan, params, states, journal, file_index, asset_index, &block_bytes);
 }
+int vfs_store_verify(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    vfs_verify_result *out,
+    const std::vector<uint8_t> *states)
+{
+    vfs_verify_result result;
+    int corrupt = 0;
+    size_t global_index = 0;
+    for (const auto &file : plan.files)
+    {
+        vfs_verify_file vf;
+        vf.name = file.name;
+        vf.is_uop = file.is_uop;
+
+        const uint8_t *mapped = nullptr;
+        uint64_t mapped_size = 0;
+        size_t map_size = 0;
+        if (file.is_uop)
+        {
+            const auto path = fs_path_join(params.install_dir, file.name);
+            if (fs_path_exists(path))
+                mapped = fs_map(path, &map_size);
+            mapped_size = uint64_t(map_size);
+        }
+
+        for (size_t ai = 0; ai < file.assets.size(); ++ai)
+        {
+            const auto &asset = file.assets[ai];
+            const bool stubbed =
+                states != nullptr && global_index < states->size() &&
+                (*states)[global_index] == vfs_stubbed;
+            std::vector<uint8_t> scratch;
+            vfs_verify_asset va;
+            va.uop_hash = asset.uop_hash;
+            va.name = asset.name;
+            va.stubbed = stubbed;
+            va.status = file.is_uop ?
+                            vfs_verify_pack_asset(
+                                params, mapped, mapped_size, ai, asset, stubbed) :
+                            vfs_verify_loose_asset(params, asset, stubbed, scratch);
+            ++vf.counts[va.status];
+            if (va.status == vfs_verify_corrupt)
+            {
+                ++corrupt;
+                result.corrupted = true;
+            }
+            vf.assets.emplace_back(va);
+            ++global_index;
+        }
+        if (mapped)
+            fs_unmap(const_cast<unsigned char *>(mapped), map_size);
+
+        vf.sealed = vf.counts[vfs_verify_missing_blob] == 0 &&
+                    vf.counts[vfs_verify_missing_block] == 0 && vf.counts[vfs_verify_corrupt] == 0;
+        result.files.emplace_back(std::move(vf));
+    }
+    if (out)
+        *out = std::move(result);
+    return corrupt;
+}
+
