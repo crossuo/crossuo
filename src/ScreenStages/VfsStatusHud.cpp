@@ -79,16 +79,17 @@ void CVfsStatusHud::Draw()
         return;
 
     const bool offline = vfs_get_params().offline;
-    char text[192] = {};
-    uint16_t color = VFS_HUD_COLOR;
-    if (s_stats.stubs_active > 0)
+    const bool streaming = s_stats.bytes_total > 0 && s_stats.bytes_done < s_stats.bytes_total;
+    const bool placeholders = s_stats.stubs_active > 0;
+    if (!streaming && !placeholders && !offline)
     {
-        // warn while part of the world still lives on placeholders
-        snprintf(
-            text, sizeof(text), "placeholders: %llu", (unsigned long long)s_stats.stubs_active);
-        color = VFS_HUD_COLOR_WARN;
+        return; // complete and idle: nothing to say
     }
-    else if (s_stats.bytes_total > 0 && s_stats.bytes_done < s_stats.bytes_total)
+
+    // compose all active states: streaming progress, placeholders in use and
+    // the offline badge ride along together
+    char text[192] = {};
+    if (streaming)
     {
         const int percent = int((s_stats.bytes_done * 100) / s_stats.bytes_total);
         if (s_bytes_per_sec > 0)
@@ -104,17 +105,30 @@ void CVfsStatusHud::Draw()
             snprintf(text, sizeof(text), "streaming %d%%", percent);
         }
     }
-    else if (!offline)
+    if (placeholders)
     {
-        return; // complete and idle: nothing to say
+        // warn while part of the world still lives on placeholders
+        const size_t used = strlen(text);
+        snprintf(
+            text + used, sizeof(text) - used, "%splaceholders: %llu", used != 0 ? " | " : "",
+            (unsigned long long)s_stats.stubs_active);
     }
     if (offline)
     {
-        // the offline badge rides along with whatever else is shown
         const size_t used = strlen(text);
         snprintf(text + used, sizeof(text) - used, "%soffline", used != 0 ? " | " : "");
-        if (used == 0)
-            color = VFS_HUD_COLOR_OFFLINE;
+    }
+
+    // the most urgent state colors the whole line: placeholders in use, then
+    // the offline badge, then the restful streaming color
+    uint16_t color = VFS_HUD_COLOR;
+    if (placeholders)
+    {
+        color = VFS_HUD_COLOR_WARN;
+    }
+    else if (offline)
+    {
+        color = VFS_HUD_COLOR_OFFLINE;
     }
 
     const int width = g_FontManager.GetWidthA(VFS_HUD_FONT, text);
