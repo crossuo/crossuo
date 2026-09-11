@@ -539,6 +539,7 @@ bool CGame::Install()
     Splash_Shutdown();
 
     Info(Client, "initialization completed");
+    vfs_notify_first_frame(); // boot-critical work done: allow post-frame convergence
     return true;
 }
 

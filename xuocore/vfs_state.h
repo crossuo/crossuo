@@ -77,6 +77,9 @@ struct vfs_journal
 {
     FILE *handle = nullptr;
     fs_path path;
+    // fsync per mark (boot-critical tiers) vs flush-per-mark (runtime marks:
+    // process kills still keep flushed data; folds are the durability points)
+    bool durable = true;
 };
 
 bool vfs_journal_open(vfs_journal &journal, const fs_path &path);

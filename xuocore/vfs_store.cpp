@@ -6,6 +6,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <atomic>
+#include <chrono>
 #include <map>
 
 #if !defined(XUO_WINDOWS)
@@ -455,6 +457,7 @@ struct vfs_store_context
     std::vector<uint8_t> *states = nullptr; // one byte per plan asset
     vfs_journal *journal = nullptr;         // optional completion marks
     vfs_materialize_stats *stats = nullptr; // optional counters
+    std::vector<uint8_t> file_dirty;        // per file: written to this run
 };
 
 static void
@@ -473,7 +476,14 @@ static void vfs_store_mark(vfs_store_context &ctx, char op, uint32_t fi, uint32_
     record.file_index = fi;
     record.asset_index = ai;
     if (!vfs_journal_mark(*ctx.journal, record))
-        LOG_WARN("journal mark failed: %c %u %u", op, fi, ai);
+    {
+        // rate limit: a closed/failed journal once meant ~12k identical lines
+        // per boot (the seal marks every complete file on every run)
+        static std::atomic<uint32_t> s_suppressed{ 0 };
+        const uint32_t n = s_suppressed.fetch_add(1) + 1;
+        if (n <= 3 || (n % 100) == 0)
+            LOG_WARN("journal mark failed: %c %u %u (x%u)", op, fi, ai, n);
+    }
 }
 
 static size_t vfs_store_global_index(const VfsPlan &plan, size_t file_index, size_t asset_index)
@@ -550,6 +560,8 @@ vfs_store_materialize_asset(vfs_store_context &ctx, size_t file_index, size_t as
     }
 
     (*ctx.states)[gi] = vfs_fetched;
+    if (file_index < ctx.file_dirty.size())
+        ctx.file_dirty[file_index] = 1;
     vfs_store_mark(ctx, 'F', uint32_t(file_index), uint32_t(asset_index));
     vfs_store_count(ctx, &vfs_materialize_stats::assets_fetched);
     if (ctx.stats)
@@ -564,27 +576,29 @@ vfs_store_materialize_asset(vfs_store_context &ctx, size_t file_index, size_t as
     return true;
 }
 
-// seals files that reached 100% of their expected (non-hole) assets
+// seals files that reached 100% of their expected (non-hole) assets this
+// run. Only files written to by this run are considered: a sealed file never
+// changes bytes again, and re-sealing every complete file on every (single
+// asset) run used to cost O(plan) scans + a journal mark + a full-pack fsync
+// per call. Crash durability of the pack bytes themselves rides on the disk
+// truth (reconcile) + the state folds, not on a flush here.
 static void vfs_store_seal(vfs_store_context &ctx)
 {
-    size_t asset_index = 0;
     for (size_t fi = 0; fi < ctx.plan->files.size(); ++fi)
     {
+        if (fi >= ctx.file_dirty.size() || ctx.file_dirty[fi] == 0)
+            continue;
         const auto &file = ctx.plan->files[fi];
+        const size_t base = vfs_store_global_index(*ctx.plan, fi, 0);
         bool complete = !file.assets.empty();
-        for (size_t ai = 0; ai < file.assets.size(); ++ai, ++asset_index)
+        for (size_t ai = 0; ai < file.assets.size(); ++ai)
         {
-            if (!vfs_asset_is_hole(file.assets[ai]) && (*ctx.states)[asset_index] != vfs_fetched)
+            if (!vfs_asset_is_hole(file.assets[ai]) &&
+                (*ctx.states)[base + ai] != vfs_fetched)
                 complete = false;
         }
         if (complete)
-        {
             vfs_store_mark(ctx, 'S', uint32_t(fi), 0);
-            // durability: the file just reached its final bytes this run, so
-            // flush them to stable storage before reporting it sealed
-            if (!vfs_state_file_sync(fs_path_join(ctx.params.install_dir, file.name)))
-                LOG_WARN("could not flush sealed file: %s", file.name.c_str());
-        }
     }
 }
 
@@ -612,6 +626,8 @@ bool vfs_store_materialize(
     ctx.states = &states;
     ctx.journal = journal;
     ctx.stats = &run;
+    ctx.file_dirty.assign(plan.files.size(), 0);
+    const auto run_start = std::chrono::steady_clock::now();
 
     vfs_store_check_sparse(vfs_store_planned_bytes(plan), params.install_dir);
 
@@ -668,15 +684,19 @@ bool vfs_store_materialize(
 
     if (stats)
         *stats = run;
-    LOG_INFO(
-        "materialize: %zu assets (%zu written, %zu present, %zu missing, %zu failed, %" PRIu64
-        " bytes)",
-        run.assets_total,
-        run.assets_fetched,
-        run.assets_present,
-        run.assets_missing,
-        run.assets_failed,
-        run.bytes_written);
+    const double run_secs =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - run_start).count();
+    if (!params.quiet)
+        LOG_INFO(
+            "materialize: %zu assets (%zu written, %zu present, %zu missing, %zu failed, %" PRIu64
+            " bytes) in %.3fs",
+            run.assets_total,
+            run.assets_fetched,
+            run.assets_present,
+            run.assets_missing,
+            run.assets_failed,
+            run.bytes_written,
+            run_secs);
     return run.assets_failed == 0;
 }
 
@@ -1202,6 +1222,7 @@ private:
         ctx.states = &m_states;
         ctx.journal = &m_journal;
         ctx.stats = nullptr;
+        ctx.file_dirty.assign(m_plan->files.size(), 0);
         return ctx;
     }
 

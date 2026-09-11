@@ -32,6 +32,8 @@ struct vfs_store_params
     fs_path blobs_dir;
     fs_path install_dir;
     fs_path state_dir; // journal/state home; defaults to <install_dir>/cache/state
+    // quiet the per-run summary log (post-frame convergence batches)
+    bool quiet = false;
 };
 
 struct vfs_materialize_stats

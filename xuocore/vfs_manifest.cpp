@@ -370,25 +370,22 @@ static bool vfs_tier_name_is(const astr_t &name, const char *const *table, size_
     return false;
 }
 
-// T1 loose files: map-0 streaming first, then the rest of the map set,
-// remaining fonts, textures and patch muls. anim.idx (1.7 MB) is included:
-// LoadCommon requires it, so it must be fetched (sized, valid-but-unfetched)
-// at boot.
+// T1 loose files: only what Load() touches before the first frame - the
+// map-0 set (index, statics, facet, difs), textures, anim.idx and the first
+// fonts. The rest of the map set (maps 1-5, their difs) streams after the
+// first frame (the convergence worker materializes it from the store, traps
+// fetch it on travel) - booting the full statics set used to drag ~160 MB
+// through the boot path. anim.idx (1.7 MB) is included: LoadCommon requires
+// it, so it must be fetched (sized, valid-but-unfetched) at boot.
 static bool vfs_tier_t1_file(const astr_t &lower)
 {
-    static const char *const names[] = { "staidx0.mul", "statics0.mul", "texmaps.mul", "anim.idx" };
+    static const char *const names[] = {
+        "staidx0.mul",  "statics0.mul", "texmaps.mul", "anim.idx",   "facet00.mul",
+        "facet0.mul",   "mapdifl0.mul", "mapdif0.mul", "stadifl0.mul", "stadifi0.mul",
+        "stadif0.mul",
+    };
     if (vfs_tier_name_is(lower, names, sizeof(names) / sizeof(names[0])))
         return true;
-    for (int i = 0; i < 6; ++i)
-    {
-        char buf[32];
-        snprintf(buf, sizeof(buf), "staidx%d.mul", i);
-        if (lower == buf)
-            return true;
-        snprintf(buf, sizeof(buf), "statics%d.mul", i);
-        if (lower == buf)
-            return true;
-    }
     for (int i = 1; i <= 6; ++i)
     {
         char buf[32];
@@ -396,9 +393,7 @@ static bool vfs_tier_t1_file(const astr_t &lower)
         if (lower == buf)
             return true;
     }
-    return lower.rfind("facet", 0) == 0 ||      // facet0.mul/idx ...
-           lower.rfind("mapdif", 0) == 0 ||     // mapdifl*.mul (patch muls)
-           lower.rfind("stadif", 0) == 0;       // stadifl*.mul / stadifi*.idx
+    return false;
 }
 
 // MainMisc.uop core assets (boot-critical), keyed by their UOP name hashes

@@ -281,10 +281,12 @@ bool vfs_state_load(
 // journal.log
 // ---------------------------------------------------------------------------
 
-static bool vfs_journal_sync(FILE *fp)
+static bool vfs_journal_sync(FILE *fp, bool durable)
 {
     if (fflush(fp) != 0)
         return false;
+    if (!durable)
+        return true; // flush is enough for process-crash safety; folds fsync
 #if defined(XUO_WINDOWS)
     return _commit(_fileno(fp)) == 0;
 #else
@@ -320,8 +322,9 @@ bool vfs_journal_mark(vfs_journal &journal, const vfs_journal_record &record)
         fprintf(journal.handle, "R %u %u\n", record.file_index, record.asset_index);
     else
         return false;
-    // every completion mark is durable before it is reported as done
-    return vfs_journal_sync(journal.handle);
+    // every completion mark is durable before it is reported as done (when
+    // the journal runs durable; runtime marks flush only - see vfs_journal)
+    return vfs_journal_sync(journal.handle, journal.durable);
 }
 
 bool vfs_journal_replay(const fs_path &path, std::vector<vfs_journal_record> &out)

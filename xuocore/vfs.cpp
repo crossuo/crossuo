@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <map>
 #include <mutex>
@@ -42,6 +43,17 @@
     "http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo/manifest/uo-legacyrelease.prod"
 // background tier fetch+materialize chunking
 #define VFS_BOOT_T1_CHUNK 32
+// cap of expected bytes admitted per T1 chunk: bounds how long the state
+// lock is held per materialize (the game's mmaps and traps queue behind it)
+#define VFS_BOOT_T1_CHUNK_BYTES (16 * 1024 * 1024)
+// post-frame convergence: byte budget per batch, pause between batches and
+// the state fold interval (durability points during long convergences)
+#define VFS_CONV_BATCH_BYTES (8 * 1024 * 1024)
+#define VFS_CONV_BATCH_PAUSE_MS 15
+#define VFS_CONV_FOLD_BYTES (64 * 1024 * 1024)
+#define VFS_CONV_FOLD_SECS 30.0
+// poll interval while the convergence waits for the first frame
+#define VFS_CONV_WAIT_POLL_MS 50
 
 static vfs_params s_params;
 static VfsPlan s_plan;
@@ -51,6 +63,10 @@ static bool s_plan_loaded = false;
 // fetch workers only touch vfs_fetch/store/state internals under s_state_mutex)
 static std::atomic<bool> s_boot_started{ false };
 static std::atomic<bool> s_boot_shutdown{ false };
+// set once the game rendered its first frame: the background worker may then
+// spend disk/bandwidth on post-frame convergence (it never does before: boot
+// work must not compete with the first frame)
+static std::atomic<bool> s_frame_seen{ false };
 static std::thread s_background;
 static std::mutex s_state_mutex;
 static std::vector<uint8_t> s_states;
@@ -172,14 +188,44 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
     if (block->asset_index >= file.assets.size())
         return false;
     const auto &asset = file.assets[block->asset_index];
+    const uint64_t expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+    const auto ensure_start = std::chrono::steady_clock::now();
+    bool fetched = true;
     if (!s_params.offline && !fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
     {
         if (!vfs_fetch_started())
             return false; // no engine: nothing can appear in the store
-        if (!vfs_fetch_blob_to_store(
-                asset.blob.c_str(), block->expected, false, VFS_TRAP_FETCH_TIMEOUT_MS))
-            return false; // the fault degrades to the stub path
+        fetched = vfs_fetch_blob_to_store(
+            asset.blob.c_str(), block->expected, false, VFS_TRAP_FETCH_TIMEOUT_MS);
     }
+    const double ensure_secs =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - ensure_start).count();
+    if (expected >= 1024 * 1024)
+    {
+        // large on-demand resolves land on the critical path of whatever read
+        // faulted: keep them visible at INFO (small ones stay quiet). The
+        // first fault into a big pack names the game-side trigger.
+        LOG_INFO(
+            "trap resolve: %s (%u: %llu bytes) in %.3fs%s",
+            vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
+            block->asset_index,
+            (unsigned long long)expected,
+            ensure_secs,
+            fetched ? "" : " FAILED");
+    }
+    else
+    {
+        DEBUG(
+            Vfs,
+            "trap resolve: %s (%u: %llu bytes) in %.3fs%s",
+            vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
+            block->asset_index,
+            (unsigned long long)expected,
+            ensure_secs,
+            fetched ? "" : " FAILED");
+    }
+    if (!fetched)
+        return false; // the fault degrades to the stub path
     vfs_store_params store_params;
     store_params.blobs_dir = s_params.blobs_dir;
     store_params.install_dir = s_params.install_dir;
@@ -965,7 +1011,10 @@ static void vfs_boot_order_t1(const VfsPlan &plan, std::vector<vfs_boot_item> *i
 // materializes the given items through the shared write path (subset run); a
 // null `items` materializes everything reachable from the store
 static bool vfs_boot_materialize(
-    const VfsPlan &plan, const std::vector<vfs_boot_item> *items, vfs_materialize_stats *stats)
+    const VfsPlan &plan,
+    const std::vector<vfs_boot_item> *items,
+    vfs_materialize_stats *stats,
+    bool quiet = false)
 {
     std::vector<vfs_store_item> store_items;
     if (items != nullptr)
@@ -979,6 +1028,7 @@ static bool vfs_boot_materialize(
     store_params.blobs_dir = s_params.blobs_dir;
     store_params.install_dir = s_params.install_dir;
     store_params.state_dir = s_params.state_dir;
+    store_params.quiet = quiet;
 
     std::unique_lock<std::mutex> lock(s_state_mutex);
     const std::vector<vfs_store_item> *list = items != nullptr ? &store_items : nullptr;
@@ -1331,15 +1381,127 @@ static void vfs_boot_apply_diff(const VfsPlan &plan, const vfs_plan_diff_result 
     }
 }
 
-// the background tier: T1 fetch (ordered) + materialize in chunks; runs until
-// the tier completes or shutdown is requested. Failed blobs are logged and
-// stay missing (retried on the next boot).
+// fold point: flush progress into state.bin, rotate the journal, reopen it
+// for runtime marks. The fold is the session's durability barrier; runtime
+// marks flush only (process kills keep flushed data, and the next boot's
+// reconcile promotes on-disk truth). The old T1 fold left the journal CLOSED
+// for the rest of the session: every later mark failed (12k+ WARN lines per
+// boot) and killed sessions lost all post-fold progress from state.bin.
+static void vfs_state_fold(const VfsPlan &plan)
+{
+    std::unique_lock<std::mutex> lock(s_state_mutex);
+    vfs_state_close(plan, s_states, s_journal);
+    if (vfs_journal_open(s_journal, fs_path_join(s_params.state_dir, "journal.log")))
+        s_journal.durable = false; // runtime marks: flush, no fsync
+}
+
+// byte-budgeted chunk of `items` starting at `pos` (count-capped by
+// VFS_BOOT_T1_CHUNK): bounds how long one materialize call holds the state
+// lock, so the game's mmaps and traps never queue behind a 100+ MB write
+static size_t vfs_boot_chunk_span(const std::vector<vfs_boot_item> &items, size_t pos)
+{
+    const size_t count = std::min(size_t(VFS_BOOT_T1_CHUNK), items.size() - pos);
+    uint64_t bytes = 0;
+    size_t take = 0;
+    while (take < count)
+    {
+        bytes += items[pos + take].expected;
+        ++take;
+        if (bytes >= VFS_BOOT_T1_CHUNK_BYTES)
+            break;
+    }
+    return take;
+}
+
+// post-frame convergence: the "cache rule" (everything already in the store
+// materializes without the network) run in byte-budgeted batches with pauses
+// between them. It used to be a single full-plan materialize right after T1,
+// which put ~0.9 GB of writes (and the state lock) in front of the first
+// frame whenever a previous session had left blobs in the store.
+static void vfs_converge_from_store(const VfsPlan &plan)
+{
+    LOG_INFO("convergence: materializing store content (post-frame)");
+    std::vector<vfs_boot_item> batch;
+    batch.reserve(128);
+    uint64_t batch_bytes = 0;
+    uint64_t folded_bytes = 0;
+    vfs_materialize_stats total;
+    auto last_fold = std::chrono::steady_clock::now();
+
+    const auto flush_batch = [&](bool final_batch)
+    {
+        if (batch.empty())
+            return;
+        if (!s_boot_shutdown)
+        {
+            vfs_materialize_stats stats;
+            vfs_boot_materialize(plan, &batch, &stats, true);
+            total.assets_total += stats.assets_total;
+            total.assets_fetched += stats.assets_fetched;
+            total.assets_present += stats.assets_present;
+            total.assets_missing += stats.assets_missing;
+            total.assets_failed += stats.assets_failed;
+            total.bytes_written += stats.bytes_written;
+        }
+        batch.clear();
+        batch_bytes = 0;
+        if (!final_batch && !s_boot_shutdown)
+            std::this_thread::sleep_for(std::chrono::milliseconds(VFS_CONV_BATCH_PAUSE_MS));
+    };
+
+    size_t gi = 0;
+    for (size_t fi = 0; fi < plan.files.size() && !s_boot_shutdown; ++fi)
+    {
+        const auto &file = plan.files[fi];
+        for (size_t ai = 0; ai < file.assets.size(); ++ai, ++gi)
+        {
+            const auto &asset = file.assets[ai];
+            if (vfs_asset_is_hole(asset))
+                continue;
+            vfs_boot_item item;
+            item.file_index = fi;
+            item.asset_index = ai;
+            item.global_index = gi;
+            item.tail = asset.blob;
+            item.expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+            item.name = vfs_asset_is_loose(asset) ? asset.name : file.name;
+            batch.push_back(item);
+            batch_bytes += item.expected;
+            if (batch_bytes < VFS_CONV_BATCH_BYTES)
+                continue;
+            flush_batch(false);
+            folded_bytes += VFS_CONV_BATCH_BYTES;
+            const auto now = std::chrono::steady_clock::now();
+            if (folded_bytes >= VFS_CONV_FOLD_BYTES ||
+                std::chrono::duration<double>(now - last_fold).count() >= VFS_CONV_FOLD_SECS)
+            {
+                vfs_state_fold(plan);
+                folded_bytes = 0;
+                last_fold = std::chrono::steady_clock::now();
+            }
+        }
+    }
+    flush_batch(true);
+    LOG_INFO(
+        "convergence: %zu assets (%zu written, %zu present, %zu missing, %zu failed, %llu bytes)",
+        total.assets_total,
+        total.assets_fetched,
+        total.assets_present,
+        total.assets_missing,
+        total.assets_failed,
+        (unsigned long long)total.bytes_written);
+}
+
+// the background tier: T1 fetch (ordered, byte-budgeted chunks) + materialize;
+// then, once the game rendered its first frame, post-frame convergence of the
+// store. Runs until convergence completes or shutdown is requested. Failed
+// blobs are logged and stay missing (retried on the next boot).
 static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
 {
     LOG_INFO("background tier: %zu assets", items.size());
     for (size_t pos = 0; pos < items.size() && !s_boot_shutdown;)
     {
-        const size_t count = std::min(size_t(VFS_BOOT_T1_CHUNK), items.size() - pos);
+        const size_t count = vfs_boot_chunk_span(items, pos);
         const auto first = items.begin() + ptrdiff_t(pos);
         const auto last = first + ptrdiff_t(count);
         const std::vector<vfs_boot_item> chunk(first, last);
@@ -1358,21 +1520,23 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
             vfs_boot_materialize(plan, &chunk, nullptr);
         pos += count;
     }
+    LOG_INFO("background tier complete");
+    vfs_state_fold(plan); // persist T1 (and reopen the journal)
+
+    // convergence waits for the first frame: boot work must not compete with
+    // it (headless callers get it via vfs_boot_wait, which flags the frame
+    // immediately)
+    while (!s_frame_seen && !s_boot_shutdown)
+        std::this_thread::sleep_for(std::chrono::milliseconds(VFS_CONV_WAIT_POLL_MS));
     if (!s_boot_shutdown)
     {
-        LOG_INFO("background tier complete");
-        // cache rule: everything already in the store materializes
-        // without the network (T2+ included), so the install never keeps
-        // sized-but-unfetched files when the blob is available locally
-        vfs_materialize_stats stats;
         if (s_arena != nullptr)
-            vfs_boot_arena_ensure(plan, nullptr, s_arena);
+            vfs_boot_arena_ensure(plan, nullptr, s_arena); // store -> residency
         else
-            vfs_boot_materialize(plan, nullptr, &stats);
+            vfs_converge_from_store(plan);
     }
-    // fold point: flush the tier's progress into state.bin
-    std::unique_lock<std::mutex> lock(s_state_mutex);
-    vfs_state_close(plan, s_states, s_journal);
+    // final fold: everything the tier (and traps) did lands in state.bin
+    vfs_state_fold(plan);
 }
 
 bool vfs_boot(void (*progress)(float done01, const char *label))
@@ -1587,12 +1751,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
                 failed = true;
             }
         }
-        if (!failed)
-        {
-            // fold point for the blocking tier
-            vfs_state_close(plan, s_states, s_journal);
-            vfs_journal_open(s_journal, fs_path_join(s_params.state_dir, "journal.log"));
-        }
     }
     if (failed)
     {
@@ -1603,6 +1761,9 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
             progress(1.0f, "failed");
         return false;
     }
+    // fold point for the blocking tier (reopens the journal in runtime mode:
+    // marks from here on flush, folds are the durability barriers)
+    vfs_state_fold(plan);
     if (progress)
         progress(1.0f, "starting");
 
@@ -1654,8 +1815,18 @@ void vfs_shutdown()
 
 void vfs_boot_wait()
 {
+    // headless contract: waiting means "finish everything boot would do",
+    // including the post-frame convergence the game defers
+    s_frame_seen = true;
     if (s_background.joinable())
         s_background.join();
+}
+
+// the game calls this once the first frame is out: post-frame convergence
+// (store -> install) may start spending disk behind the render loop
+void vfs_notify_first_frame()
+{
+    s_frame_seen = true;
 }
 
 // full install: queue the blob of every planned

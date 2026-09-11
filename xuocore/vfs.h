@@ -104,8 +104,13 @@ void vfs_arena_residency(size_t *out_granules, size_t *out_resident);
 // ---------------------------------------------------------------------------
 
 bool vfs_boot(void (*progress)(float done01, const char *label));
+// the game calls this once the first frame rendered: boot-critical work is
+// over and the background worker may start post-frame convergence (store ->
+// install materialization). Until then the worker only serves the boot tiers
+void vfs_notify_first_frame();
 // headless tools (vuoi): wait for the background tier to finish instead of
-// leaving it running; the game never calls this (it must not block the loop)
+// leaving it running; the game never calls this (it must not block the loop).
+// Implies vfs_notify_first_frame: the wait covers convergence too
 void vfs_boot_wait();
 // full install: fetches the blob of EVERY planned
 // asset (all tiers) into the store; blocking, optional progress per tail.
