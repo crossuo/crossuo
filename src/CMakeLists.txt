@@ -125,7 +125,6 @@ set(gumps_src
   Gumps/GumpMenubar.cpp
   Gumps/GumpMenu.cpp
   Gumps/GumpMinimap.cpp
-  Gumps/GumpVfsStatus.cpp
   Gumps/GumpNotify.cpp
   Gumps/GumpOptions.cpp
   Gumps/GumpPaperdoll.cpp
@@ -209,6 +208,7 @@ set(screenstages_src
   ScreenStages/SelectProfessionScreen.cpp
   ScreenStages/SelectTownScreen.cpp
   ScreenStages/ServerScreen.cpp
+  ScreenStages/VfsStatusHud.cpp
 )
 
 set(textengine_src

@@ -10,6 +10,7 @@
 #include <cstdlib> // getenv
 #include <common/str.h>
 #include "GameScreen.h"
+#include "VfsStatusHud.h"
 #include "GameBlockedScreen.h"
 #include "ScreenshotBuilder.h"
 #include <xuocore/uodata.h>
@@ -2197,6 +2198,7 @@ void CGameScreen::Render()
         }
     }
 
+    CVfsStatusHud::Draw(); // streamed-install HUD, top-right (gone when idle)
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);

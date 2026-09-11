@@ -4,6 +4,7 @@
 #include "BaseScreen.h"
 #include "../SelectedObject.h"
 #include "../Managers/MouseManager.h"
+#include "VfsStatusHud.h"
 #include "../Managers/ScreenEffectManager.h"
 #include "ScreenshotBuilder.h"
 #include "../Renderer/RenderAPI.h"
@@ -53,6 +54,7 @@ void CBaseScreen::Render()
 #endif
     InitToolTip();
     DrawSmoothMonitorEffect();
+    CVfsStatusHud::Draw(); // streamed-install HUD, top-right (gone when idle)
     g_MouseManager.Draw(CursorGraphic);
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     RenderDebug_ProcessFrame(g_renderCmdList);

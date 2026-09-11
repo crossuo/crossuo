@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
-// GumpVfsStatus implementation. See the header for the drawing contract.
+// CVfsStatusHud implementation. See the header for the drawing contract.
 // State kept across frames: one stats copy (refreshed a few times a second,
 // never per frame), the last activity tick and the previous byte count for
 // the rate estimate. Nothing is drawn from a non-main thread: the fetch and
 // demand workers only touch vfs internals, which vfs_hud_stats copies under
 // the vfs state lock.
 
-#include "GumpVfsStatus.h"
+#include "VfsStatusHud.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +45,7 @@ void vfs_hud_size(uint64_t bytes, char *out, size_t cap)
 }
 } // namespace
 
-void CGumpVfsStatus::Draw()
+void CVfsStatusHud::Draw()
 {
     if (!vfs_enabled())
         return; // zero cost when streaming is off
