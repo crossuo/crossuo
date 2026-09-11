@@ -380,14 +380,18 @@ placeholder counts in this mode (nothing is ever marked stubbed).
 ## HUD
 
 `CVfsStatusHud::Draw` (src/ScreenStages/VfsStatusHud.cpp) is called once per frame
-from `CGame::Process` after the screen render - main thread only. It polls
+at the end of each screen's `Render` - `CBaseScreen::Render` (main menu,
+server/char list, creation, prof/town pickers) and `CGameScreen::Render`
+(in-game) - right before the frame is presented; main thread only. (Drawing
+after the screen render would paint into the void: every screen presents its
+own frame at the end of `Render`.) It polls
 `vfs_hud_stats` (an in-memory snapshot over the boot-owned state; no disk io,
 no reconcile - the full `vfs_stats` maps every pack and would hitch the
 render) a few times a second, shows activity (rate + done/total), a
 "placeholders: N" warning while stubbed assets are in use, and an offline
 badge; it fades out ~2 s after the last activity and costs one flag check
-when streaming is disabled. It is deliberately not registered in the gump
-manager (passive, non-interactive, visible on every screen).
+when streaming is disabled. It is deliberately not a gump and not registered
+in the gump manager (passive, non-interactive, visible on every screen).
 
 ## Still deferred
 
