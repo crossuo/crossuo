@@ -180,15 +180,23 @@ static int64_t vfs_managed_index_of(const fs_path &path)
 // the stub path instead of parking the faulting thread forever
 #define VFS_TRAP_FETCH_TIMEOUT_MS (30 * 1000)
 
-static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
+// fetches one asset's bytes and materializes it through the shared write
+// path: range assets stream their own block ([ml metadata][payload], HTTP
+// Range or a ranged read of a cached blob), everything else fetches the
+// whole blob into the store first. The trap's fault resolution and the T1
+// worker's prefetch both land here. fault_offset is diagnostic only.
+static bool vfs_fetch_and_materialize_asset(
+    uint32_t file_index,
+    uint32_t asset_index,
+    uint64_t fault_offset,
+    bool record = true)
 {
-    (void)context;
-    if (!block || !vfs_plan_ready() || block->file_index >= s_plan.files.size())
+    if (!vfs_plan_ready() || file_index >= s_plan.files.size())
         return false;
-    const auto &file = s_plan.files[block->file_index];
-    if (block->asset_index >= file.assets.size())
+    const auto &file = s_plan.files[file_index];
+    if (asset_index >= file.assets.size())
         return false;
-    const auto &asset = file.assets[block->asset_index];
+    const auto &asset = file.assets[asset_index];
     const uint64_t expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
     const bool ranged = asset.blob_offset != 0;
     const auto ensure_start = std::chrono::steady_clock::now();
@@ -197,6 +205,7 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
     store_params.blobs_dir = s_params.blobs_dir;
     store_params.install_dir = s_params.install_dir;
     store_params.state_dir = s_params.state_dir;
+    store_params.record = record; // T1 prefetch is cache-warming, not usage
 
     const auto log_resolve = [&](bool ok)
     {
@@ -208,9 +217,9 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
                 Vfs,
                 "trap resolve: %s (%u: %llu bytes, fault@%llu) in %.3fs%s",
                 vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
-                block->asset_index,
+                asset_index,
                 (unsigned long long)expected,
-                (unsigned long long)block->offset,
+                (unsigned long long)fault_offset,
                 ensure_secs,
                 ok ? "" : " FAILED");
             return;
@@ -220,9 +229,9 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
         LOG_INFO(
             "trap resolve: %s (%u: %llu bytes, fault@%llu) in %.3fs%s",
             vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
-            block->asset_index,
+            asset_index,
             (unsigned long long)expected,
-            (unsigned long long)block->offset,
+            (unsigned long long)fault_offset,
             ensure_secs,
             ok ? "" : " FAILED");
     };
@@ -249,8 +258,8 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
             store_params,
             s_states,
             &s_journal,
-            block->file_index,
-            block->asset_index,
+            file_index,
+            asset_index,
             bytes);
     }
 
@@ -259,15 +268,24 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
     {
         if (!vfs_fetch_started())
             return false; // no engine: nothing can appear in the store
-        fetched = vfs_fetch_blob_to_store(
-            asset.blob.c_str(), block->expected, false, VFS_TRAP_FETCH_TIMEOUT_MS);
+        const uint64_t wire = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+        fetched = vfs_fetch_blob_to_store(asset.blob.c_str(), wire, false, VFS_TRAP_FETCH_TIMEOUT_MS);
     }
     log_resolve(fetched);
     if (!fetched)
         return false; // the fault degrades to the stub path
     std::unique_lock<std::mutex> lock(s_state_mutex);
     return vfs_store_rematerialize_asset(
-        s_plan, store_params, s_states, &s_journal, block->file_index, block->asset_index);
+        s_plan, store_params, s_states, &s_journal, file_index, asset_index);
+}
+
+static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
+{
+    (void)context;
+    if (!block || block->file_index >= s_plan.files.size())
+        return false;
+    return vfs_fetch_and_materialize_asset(
+        block->file_index, block->asset_index, block->offset);
 }
 
 // stub transition: the trap served a placeholder payload for this asset.
@@ -1087,7 +1105,8 @@ static bool vfs_boot_materialize(
     const VfsPlan &plan,
     const std::vector<vfs_boot_item> *items,
     vfs_materialize_stats *stats,
-    bool quiet = false)
+    bool quiet = false,
+    bool record = false)
 {
     std::vector<vfs_store_item> store_items;
     if (items != nullptr)
@@ -1102,6 +1121,7 @@ static bool vfs_boot_materialize(
     store_params.install_dir = s_params.install_dir;
     store_params.state_dir = s_params.state_dir;
     store_params.quiet = quiet;
+    store_params.record = record;
 
     std::unique_lock<std::mutex> lock(s_state_mutex);
     const std::vector<vfs_store_item> *list = items != nullptr ? &store_items : nullptr;
@@ -1584,11 +1604,27 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
         const auto first = items.begin() + ptrdiff_t(pos);
         const auto last = first + ptrdiff_t(count);
         const std::vector<vfs_boot_item> chunk(first, last);
-        if (!s_params.offline)
+        std::vector<vfs_boot_item> batch_items; // whole-blob fetch + materialize
+        batch_items.reserve(chunk.size());
+        for (const auto &item : chunk)
+        {
+            const auto &asset = plan.files[item.file_index].assets[item.asset_index];
+            if (s_arena == nullptr && asset.blob_offset != 0 && !s_params.offline)
+            {
+                // range assets stream their own block; routing them through
+                // the whole-blob batch would pull the entire source file
+                // (up to 264MB) for a 10KB block
+                vfs_fetch_and_materialize_asset(
+                    uint32_t(item.file_index), uint32_t(item.asset_index), 0, false);
+                continue;
+            }
+            batch_items.push_back(item);
+        }
+        if (!s_params.offline && !batch_items.empty())
         {
             std::vector<astr_t> tails;
             std::vector<uint64_t> sizes;
-            vfs_boot_items_to_tails(chunk, &tails, &sizes);
+            vfs_boot_items_to_tails(batch_items, &tails, &sizes);
             vfs_fetch_batch(tails, sizes, 1, false, nullptr);
         }
         if (s_boot_shutdown)
@@ -1596,7 +1632,7 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
         if (s_arena != nullptr)
             vfs_boot_arena_ensure(plan, &chunk, s_arena);
         else
-            vfs_boot_materialize(plan, &chunk, nullptr);
+            vfs_boot_materialize(plan, &batch_items, nullptr);
         pos += count;
     }
     LOG_INFO("background tier complete");

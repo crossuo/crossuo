@@ -444,8 +444,28 @@ VFS_TEST(fetch_recorder_writes_csv)
     params.record_path = csv;
     params.record_scenario = "fixture-run"; // explicit scenario
     vfs_set_params(params);
-    TEST_CHECK(vfs_boot(nullptr)); // tiledata.mul goes pending -> fetched here
+    TEST_CHECK(vfs_boot(nullptr)); // boot fetches are cache-warming: not recorded
     vfs_boot_wait();
+    // game demand: resolving an asset through the store records it
+    VfsPlan plan;
+    TEST_CHECK(vfs_plan_ensure(plan));
+    size_t tiledata_index = SIZE_MAX;
+    for (size_t i = 0; i < plan.files.size(); ++i)
+    {
+        if (!plan.files[i].is_uop && plan.files[i].name == "tiledata.mul")
+        {
+            tiledata_index = i;
+            break;
+        }
+    }
+    TEST_CHECK_MSG(tiledata_index != SIZE_MAX, "tiledata.mul not in the plan");
+    std::vector<uint8_t> states;
+    vfs_store_params store_params;
+    store_params.blobs_dir = params.blobs_dir;
+    store_params.install_dir = params.install_dir;
+    TEST_CHECK_MSG(
+        vfs_store_rematerialize_asset(plan, store_params, states, nullptr, uint32_t(tiledata_index), 0),
+        "demand resolution failed");
     vfs_shutdown();
 
     std::vector<uint8_t> bytes;
@@ -468,6 +488,11 @@ VFS_TEST(fetch_recorder_writes_csv)
     vfs_set_params(again);
     TEST_CHECK(vfs_boot(nullptr));
     vfs_boot_wait();
+    TEST_CHECK(vfs_plan_ensure(plan));
+    std::vector<uint8_t> states2;
+    TEST_CHECK_MSG(
+        vfs_store_rematerialize_asset(plan, store_params, states2, nullptr, uint32_t(tiledata_index), 0),
+        "second demand resolution failed");
     vfs_shutdown();
     TEST_CHECK(test_read_file(csv2, bytes));
     const astr_t text2(bytes.begin(), bytes.end());

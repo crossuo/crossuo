@@ -620,13 +620,18 @@ vfs_store_materialize_asset(vfs_store_context &ctx, size_t file_index, size_t as
     vfs_store_count(ctx, &vfs_materialize_stats::assets_fetched);
     if (ctx.stats)
         ctx.stats->bytes_written += vfs_asset_block_size(asset);
-    // asset recorder: this is the pending -> fetched transition of a real run;
-    // loose files carry their name in the pack column (there is no pack)
-    vfs_record_asset(
-        asset.uop_hash,
-        vfs_asset_is_loose(asset) ? asset.name : asset.uop_file,
-        uint64_t(asset.ul),
-        asset.tier);
+    // asset recorder: the pending -> fetched transition of a run the game
+    // waited on (trap resolution, blocking tier); loose files carry their
+    // name in the pack column (there is no pack). Prefetch and convergence
+    // runs are cache-warming, not usage, and must not seed the T1 manifest
+    if (ctx.params.record)
+    {
+        vfs_record_asset(
+            asset.uop_hash,
+            vfs_asset_is_loose(asset) ? asset.name : asset.uop_file,
+            uint64_t(asset.ul),
+            asset.tier);
+    }
     return true;
 }
 

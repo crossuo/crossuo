@@ -469,7 +469,9 @@ void vfs_manifest_assign_tiers(VfsPlan &plan)
             {
                 if (asset.uop_hash == entry.uop_hash)
                 {
-                    asset.tier = vfs_tier_t1;
+                    // a recording may mention boot-critical assets: T0 wins
+                    if (asset.tier != vfs_tier_t0)
+                        asset.tier = vfs_tier_t1;
                     found = true;
                     break;
                 }

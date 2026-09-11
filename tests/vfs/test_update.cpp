@@ -15,6 +15,8 @@
 
 #include "test_main.h"
 #include "test_product.h"
+// vfs_fetch (after tinyxml2 above, before any header that pulls logging.h)
+#include <xuocore/vfs_fetch.h>
 #include "test_server.h"
 
 #include <external/process.h>
@@ -606,7 +608,8 @@ VFS_TEST(update_embed_record_converts_csv)
     TEST_CHECK(test_product_patch_repos(
         prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
 
-    // a real recorded run: T0 materializations produce csv rows
+    // a real recorded run: game-demand materializations produce csv rows
+    // (boot fetches are cache-warming and stay out of the recording)
     fetch_log_mute mute;
     vfs_params params = test_fetch_params(prod, srv);
     const auto csv = fs_path_join(prod.root, "record.csv");
@@ -614,6 +617,38 @@ VFS_TEST(update_embed_record_converts_csv)
     vfs_set_params(params);
     TEST_CHECK(vfs_boot(nullptr));
     vfs_boot_wait();
+    VfsPlan recorded_plan;
+    TEST_CHECK_MSG(vfs_plan_ensure(recorded_plan), "plan ensure failed");
+    vfs_store_params store_params;
+    store_params.blobs_dir = params.blobs_dir;
+    store_params.install_dir = params.install_dir;
+    std::vector<uint8_t> states;
+    size_t pack_index = SIZE_MAX, loose_index = SIZE_MAX;
+
+    for (size_t i = 0; i < recorded_plan.files.size(); ++i)
+    {
+        if (recorded_plan.files[i].name == prod.pack_name)
+            pack_index = i;
+        if (recorded_plan.files[i].name == "tiledata.mul")
+            loose_index = i;
+    }
+    TEST_CHECK_MSG(pack_index != SIZE_MAX && loose_index != SIZE_MAX, "plan files missing");
+    // demand-resolving an uncached asset needs its blob in the store first
+    // (the trap does this transparently; the test fetches explicitly)
+    const auto &pack_asset = recorded_plan.files[pack_index].assets[0];
+    TEST_CHECK_MSG(
+        vfs_fetch_blob_to_store(
+            pack_asset.blob.c_str(),
+            uint64_t(pack_asset.ct == 0 ? pack_asset.ul : pack_asset.cl),
+            false,
+            30000),
+        "pack blob fetch failed");
+    const bool pack_ok = vfs_store_rematerialize_asset(
+        recorded_plan, store_params, states, nullptr, uint32_t(pack_index), 0);
+    const bool loose_ok = vfs_store_rematerialize_asset(
+        recorded_plan, store_params, states, nullptr, uint32_t(loose_index), 0);
+    TEST_CHECK_MSG(pack_ok, "pack demand resolution failed");
+    TEST_CHECK_MSG(loose_ok, "loose demand resolution failed");
     vfs_shutdown();
 
     // append duplicates + malformed rows: the converter must skip them

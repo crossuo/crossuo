@@ -34,6 +34,9 @@ struct vfs_store_params
     fs_path state_dir; // journal/state home; defaults to <install_dir>/cache/state
     // quiet the per-run summary log (post-frame convergence batches)
     bool quiet = false;
+    // feed the access recorder (trap-path materializations only: prefetch
+    // and convergence runs are cache-warming, not usage)
+    bool record = true;
 };
 
 struct vfs_materialize_stats
