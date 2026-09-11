@@ -11,6 +11,7 @@
 #include <common/fs.h>
 #include <stdint.h>
 
+#include "uop.h"
 #include "vfs_manifest.h"
 #include "vfs_state.h"
 #include "vfs_store.h"
@@ -187,6 +188,15 @@ bool vfs_asset_by_hash(
     uint64_t uop_hash,
     uint64_t *out_offset,
     uint32_t *out_size);
+
+// full entry reconstruction for hashes the mapped table does not carry yet
+// (their block never materialized, so UopLoadFile skipped the slot): fills
+// `out_entry` exactly as the materialized pack's table would describe it
+// (planned offset, sizes, checksum, materialized encoding) so the caller can
+// index and decode the block from its planned address. `out_owner` (optional)
+// receives the owning plan file's name ("AnimationFrame2.uop"). False when
+// streaming is disabled or the hash is unknown to the plan.
+bool vfs_asset_entry_by_hash(uint64_t uop_hash, const char **out_owner, UopFileEntry *out_entry);
 
 // per-file bulk form of the markers above (perf): a mapped pack's plan
 // file resolves once per index build - `vfs_file_state_base` returns the

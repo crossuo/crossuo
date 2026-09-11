@@ -62,6 +62,11 @@ struct VfsAsset
     // planned byte offset of the block in the materialized pack; 0 for holes
     // (blockless entries), which stay unwritten and skipped by UopLoadFile
     uint64_t file_offset = 0;
+    // range assets: wire offset of the block ([ml metadata][payload]) within
+    // the source blob - the block streams in by HTTP Range instead of
+    // downloading the whole blob. 0 = the blob is the whole payload (and 0 is
+    // unambiguous: a real block never starts inside a valid archive's header)
+    uint64_t blob_offset = 0;
     uint8_t tier = vfs_tier_t2;
     astr_t blob; // blob store path relative to the blobs root (URL path mirror)
 };
@@ -97,6 +102,15 @@ inline uint64_t vfs_asset_block_size(const VfsAsset &asset)
     return uint64_t(asset.ml) + asset.ul;
 }
 
+// bytes to transfer for one asset: range assets stream their block
+// ([ml metadata][payload]) from the source blob; whole-blob assets transfer
+// the payload as shipped
+inline uint64_t vfs_asset_range_len(const VfsAsset &asset)
+{
+    const uint64_t payload = asset.ct == 0 ? asset.ul : asset.cl;
+    return asset.blob_offset != 0 ? uint64_t(asset.ml) + payload : payload;
+}
+
 inline bool vfs_asset_is_hole(const VfsAsset &asset)
 {
     return vfs_asset_block_size(asset) == 0;
@@ -127,6 +141,15 @@ bool vfs_path_component_ok(const char *s);
 // blob store) and computes the deterministic plan layout. Same inputs always
 // produce identical plan bytes.
 bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan);
+
+// plan refinement: whole-file range assets that are UOP archives become
+// per-block range packs - every archive entry becomes its own asset backed by
+// a byte range of the original file, so a fault streams one block (HTTP
+// Range) instead of the whole file. The table is walked once here (local blob
+// store when the file is cached, ranged GETs against file_repo otherwise);
+// files that cannot be walked stay loose. `min_size` skips small files.
+bool vfs_manifest_refine_ranges(
+    VfsPlan &plan, const fs_path &blobs_dir, const astr_t &file_repo, uint64_t min_size);
 
 // ---------------------------------------------------------------------------
 // update flow: compares two plans built from different

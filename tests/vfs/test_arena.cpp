@@ -557,20 +557,18 @@ VFS_TEST(subset_plan_roundtrip_and_v2_compat)
     TEST_CHECK(loaded.subset == uint8_t(vfs_subset_web));
     TEST_CHECK(loaded.files.size() == plan.files.size());
 
-    // backward compatibility: a v2 payload is exactly a v3 one
-    // minus the trailing subset byte - strip it, stamp version 2, and the
-    // plan must load with subset none
+    // dev serialization: any other version is rejected so the boot rebuilds
+    // the plan (v5 added the per-asset blob_offset; nothing older is shipped)
     VfsPlan unfiltered;
     TEST_CHECK(test_build_plan(prod, unfiltered));
     TEST_CHECK(vfs_plan_serialize(unfiltered, bytes));
-    TEST_CHECK(bytes.back() == vfs_subset_none); // the v3 addition
-    std::vector<uint8_t> v2(bytes.begin(), bytes.end() - 1);
-    const uint32_t version = 2;
-    memcpy(v2.data() + sizeof(uint32_t), &version, sizeof(version));
-    TEST_CHECK(vfs_plan_deserialize(v2.data(), v2.size(), decoded));
-    TEST_CHECK(decoded.subset == vfs_subset_none); // missing => none
-    TEST_CHECK(decoded.files.size() == unfiltered.files.size());
-    TEST_CHECK(decoded.manifest_repo == unfiltered.manifest_repo);
+    TEST_CHECK(bytes.back() == vfs_subset_none); // the recorded subset
+    std::vector<uint8_t> legacy(bytes.begin(), bytes.end());
+    // pinned to the current plan serialization version on purpose: bumping it
+    // should consciously update this test (old plans rebuild via the reject)
+    const uint32_t stale_version = 5 - 1;
+    memcpy(legacy.data() + sizeof(uint32_t), &stale_version, sizeof(stale_version));
+    TEST_CHECK(!vfs_plan_deserialize(legacy.data(), legacy.size(), decoded));
 }
 
 VFS_TEST(subset_drift_rebuild_reapplies_subset)

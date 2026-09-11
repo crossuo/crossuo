@@ -84,6 +84,10 @@ size_t transport_header(const char *data, size_t size, size_t nmemb, transport_r
     return amount;
 }
 
+// one ranged GET with this thread's handle; fills reply on success. The
+// response must be 206 Partial Content: a 200 means the server ignored the
+// Range and is streaming the whole resource - the body cap aborts that
+// transfer before it can balloon, and the caller falls back.
 // per-thread handle: reset per request (state cannot leak) while the
 // connection cache - the reason for a persistent handle - survives across
 // a worker's queued requests and retries. The manifest seam runs on the
@@ -155,6 +159,52 @@ bool transport_get(const char *url, transport_reply *reply)
     return true;
 }
 
+bool transport_get_range(const char *url, uint64_t offset, uint64_t length, transport_reply *reply)
+{
+    reply->body.clear();
+    reply->status = 0;
+    reply->retry_after = -1;
+
+    CURL *curl = transport_thread_handle().curl;
+    if (!curl)
+    {
+        curl = curl_easy_init();
+        transport_thread_handle().curl = curl;
+    }
+    if (!curl)
+    {
+        LOG_ERROR("GET %s [%" PRIu64 "+%" PRIu64 "]: no curl handle", url, offset, length);
+        return false;
+    }
+    curl_easy_reset(curl);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "vuoi");
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 30L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, transport_write);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &reply->body);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, transport_header);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, reply);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+    curl_easy_setopt(curl, CURLOPT_RANGE, ""); // reset, then set below
+    const std::string range =
+        std::to_string(offset) + "-" + std::to_string(offset + (length ? length - 1 : 0));
+    curl_easy_setopt(curl, CURLOPT_RANGE, range.c_str());
+    reply->cap = length; // a 200 (range ignored) aborts past this
+    const CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK)
+    {
+        LOG_WARN("GET %s [%s]: %s", url, range.c_str(), curl_easy_strerror(res));
+        return false;
+    }
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &reply->status);
+    return true;
+}
+
 class transport_curl final : public vfs_transport
 {
 public:
@@ -206,15 +256,38 @@ vfs_transport_result vfs_transport::range(
     uint32_t timeout_ms,
     bool manifest)
 {
-    (void)url;
-    (void)tail;
-    (void)offset;
-    (void)length;
-    (void)sink;
-    (void)sink_context;
-    (void)timeout_ms;
+    (void)tail;       // the URL is the transfer target (see the header)
+    (void)timeout_ms; // the fixed curl guards apply
     (void)manifest;
-    return vfs_transport_result(); // unsupported by default (whole-fetch fallback)
+    vfs_transport_result result;
+    if (!url || !*url || length == 0)
+        return result;
+    transport_reply reply;
+    reply.cap = length;
+    if (!transport_get_range(url, offset, length, &reply))
+        return result;
+    result.status = reply.status;
+    result.retry_after = reply.retry_after;
+    // 206 Partial Content is the only accepted answer: 200 means the range
+    // was ignored (the cap aborted the transfer before it finished)
+    result.ok = reply.status == 206 && reply.body.size() == size_t(length);
+    if (!result.ok)
+    {
+        LOG_WARN(
+            "range GET %s: status %ld, %zu bytes (wanted %" PRIu64 ")",
+            url,
+            reply.status,
+            reply.body.size(),
+            length);
+    }
+    if (result.ok && sink)
+    {
+        if (sink(sink_context, reply.body.data(), reply.body.size()))
+            result.bytes = reply.body.size();
+        else
+            result.ok = false;
+    }
+    return result;
 }
 
 vfs_transport *vfs_transport_set(vfs_transport *transport)

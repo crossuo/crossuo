@@ -217,6 +217,18 @@ bool vfs_store_rematerialize_asset(
     uint32_t file_index,
     uint32_t asset_index);
 
+// one-asset materialization from bytes the caller already holds (the trap's
+// range fetch delivers the block straight from the source file): same write
+// path, no store read. Range assets expect [ml metadata][payload].
+bool vfs_store_materialize_asset_data(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    std::vector<uint8_t> &states,
+    vfs_journal *journal,
+    uint32_t file_index,
+    uint32_t asset_index,
+    const std::vector<uint8_t> &block_bytes);
+
 // update flow: re-opens the hole of one pack asset - the
 // on-disk entry keeps the plan's fields but Offset goes back to 0, so every
 // presence check (reconcile, verify, trap) reports the block absent and the

@@ -36,6 +36,7 @@ struct vfs_trap_block
     uint32_t asset_index = 0;
     const char *tail = nullptr; // blob store / URL tail ("" for local-only runs)
     uint64_t expected = 0;      // exact on-wire size (0: unknown)
+    uint64_t offset = 0;        // first faulting byte this resolution serves
     bool is_loose = false;      // loose files resolve whole-file (HTTP Range)
 };
 

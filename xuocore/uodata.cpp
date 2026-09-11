@@ -12,6 +12,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <map>
 #include <vector>
 #include <algorithm>
 #include <inttypes.h>
@@ -917,6 +918,12 @@ void CFileManager::UopReadAnimations()
     char filename[200];
     const char *pattern = "build/animationlegacyframe/%06d/%02d.bin";
     g_Index.m_AnimationGroupFile.reserve(16 * 1024);
+    // streamed installs: blocks that never materialized are missing from the
+    // mapped tables (their slots carry Offset == 0 and UopLoadFile skips
+    // them), but the plan knows every block. Reconstruct the entry and
+    // register it, so the decode reads fault into the trap and the block
+    // streams on demand (mirrors the gump index's planned-address bake).
+    static std::map<uint64_t, UopFileEntry> s_streamedEntries;
     for (int animId = 0; animId < MAX_ANIMATIONS_DATA_INDEX_COUNT; animId++)
     {
         DBG_ANIM_ID(animId, "Loading animation asset:");
@@ -947,6 +954,30 @@ void CFileManager::UopReadAnimations()
                     dir.Address = 0;
                     dir.FileIndex = fileIndex;
                 }
+                continue;
+            }
+            const char *owner = nullptr;
+            UopFileEntry baked;
+            if (!vfs_asset_entry_by_hash(asset, &owner, &baked) || owner == nullptr)
+            {
+                continue;
+            }
+            int index = 0;
+            if (sscanf(owner, "AnimationFrame%d.uop", &index) != 1 || index < 1 ||
+                index > countof(m_AnimationFrame))
+            {
+                continue;
+            }
+            const auto inserted = s_streamedEntries.emplace(asset, baked).first;
+            g_Index.m_AnimationGroupFile.emplace(GroupId(animId, grpId), &inserted->second);
+            idx.IsUOP = true;
+            for (int dirId = 0; dirId < 5; dirId++)
+            {
+                auto &dir = group.Direction[dirId];
+                dir.IsUOP = true;
+                dir.BaseAddress = 0;
+                dir.Address = 0;
+                dir.FileIndex = index - 1;
             }
         }
     }

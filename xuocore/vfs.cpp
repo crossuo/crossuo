@@ -32,6 +32,7 @@
 #include "vfs_record.h"
 #include "vfs_store_arena.h"
 #include "vfs_trap.h"
+#include "vfs_transport.h"
 
 #include "common.h"
 #include "uodata.h"
@@ -189,7 +190,70 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
         return false;
     const auto &asset = file.assets[block->asset_index];
     const uint64_t expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+    const bool ranged = asset.blob_offset != 0;
     const auto ensure_start = std::chrono::steady_clock::now();
+
+    vfs_store_params store_params;
+    store_params.blobs_dir = s_params.blobs_dir;
+    store_params.install_dir = s_params.install_dir;
+    store_params.state_dir = s_params.state_dir;
+
+    const auto log_resolve = [&](bool ok)
+    {
+        const double ensure_secs =
+            std::chrono::duration<double>(std::chrono::steady_clock::now() - ensure_start).count();
+        if (expected < 1024 * 1024)
+        {
+            DEBUG(
+                Vfs,
+                "trap resolve: %s (%u: %llu bytes, fault@%llu) in %.3fs%s",
+                vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
+                block->asset_index,
+                (unsigned long long)expected,
+                (unsigned long long)block->offset,
+                ensure_secs,
+                ok ? "" : " FAILED");
+            return;
+        }
+        // large on-demand resolves land on the critical path of whatever read
+        // faulted: keep them visible at INFO (small ones stay quiet)
+        LOG_INFO(
+            "trap resolve: %s (%u: %llu bytes, fault@%llu) in %.3fs%s",
+            vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
+            block->asset_index,
+            (unsigned long long)expected,
+            (unsigned long long)block->offset,
+            ensure_secs,
+            ok ? "" : " FAILED");
+    };
+
+    // range assets stream their block ([ml metadata][payload]) straight from
+    // the source file when the whole blob is not cached locally: no 264MB
+    // downloads for a 10KB block
+    if (ranged && !fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
+    {
+        if (s_params.offline)
+            return false; // nothing to stream from; degrade to the stub path
+        const uint64_t len = vfs_asset_range_len(asset);
+        astr_t url = astr_t(s_plan.file_repo) + asset.blob;
+        std::vector<uint8_t> bytes(static_cast<size_t>(len), 0);
+        vfs_transport_result res = vfs_transport_active()->range(
+            url.c_str(), asset.blob.c_str(), asset.blob_offset, len, nullptr, nullptr, 0, false);
+        const bool ok = res.ok && res.bytes == len;
+        log_resolve(ok);
+        if (!ok)
+            return false;
+        std::unique_lock<std::mutex> lock(s_state_mutex);
+        return vfs_store_materialize_asset_data(
+            s_plan,
+            store_params,
+            s_states,
+            &s_journal,
+            block->file_index,
+            block->asset_index,
+            bytes);
+    }
+
     bool fetched = true;
     if (!s_params.offline && !fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
     {
@@ -198,38 +262,9 @@ static bool vfs_trap_ensure_asset(void *context, const vfs_trap_block *block)
         fetched = vfs_fetch_blob_to_store(
             asset.blob.c_str(), block->expected, false, VFS_TRAP_FETCH_TIMEOUT_MS);
     }
-    const double ensure_secs =
-        std::chrono::duration<double>(std::chrono::steady_clock::now() - ensure_start).count();
-    if (expected >= 1024 * 1024)
-    {
-        // large on-demand resolves land on the critical path of whatever read
-        // faulted: keep them visible at INFO (small ones stay quiet). The
-        // first fault into a big pack names the game-side trigger.
-        LOG_INFO(
-            "trap resolve: %s (%u: %llu bytes) in %.3fs%s",
-            vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
-            block->asset_index,
-            (unsigned long long)expected,
-            ensure_secs,
-            fetched ? "" : " FAILED");
-    }
-    else
-    {
-        DEBUG(
-            Vfs,
-            "trap resolve: %s (%u: %llu bytes) in %.3fs%s",
-            vfs_asset_is_loose(asset) ? asset.name.c_str() : file.name.c_str(),
-            block->asset_index,
-            (unsigned long long)expected,
-            ensure_secs,
-            fetched ? "" : " FAILED");
-    }
+    log_resolve(fetched);
     if (!fetched)
         return false; // the fault degrades to the stub path
-    vfs_store_params store_params;
-    store_params.blobs_dir = s_params.blobs_dir;
-    store_params.install_dir = s_params.install_dir;
-    store_params.state_dir = s_params.state_dir;
     std::unique_lock<std::mutex> lock(s_state_mutex);
     return vfs_store_rematerialize_asset(
         s_plan, store_params, s_states, &s_journal, block->file_index, block->asset_index);
@@ -487,6 +522,38 @@ bool vfs_asset_by_hash(
     return true;
 }
 
+bool vfs_asset_entry_by_hash(uint64_t uop_hash, const char **out_owner, UopFileEntry *out_entry)
+{
+    if (out_entry == nullptr || !vfs_enabled() || uop_hash == 0)
+        return false;
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return false;
+    const auto file_index = found->second.first;
+    const auto asset_index = found->second.second;
+    if (file_index >= s_plan.files.size() || asset_index >= s_plan.files[file_index].assets.size())
+        return false;
+    const auto &file = s_plan.files[file_index];
+    const auto &asset = file.assets[asset_index];
+    if (vfs_asset_is_hole(asset))
+        return false;
+    // the entry exactly as the materialized pack's table describes the block
+    // (the write path patches the same values in when the block lands)
+    UopFileEntry entry;
+    entry.Offset = asset.file_offset;
+    entry.MetadataSize = asset.ml;
+    entry.CompressedSize = uint32_t(asset.ul);
+    entry.DecompressedSize = uint32_t(asset.ul);
+    entry.Hash = asset.uop_hash;
+    entry.Checksum = asset.mc;
+    entry.Flags = uint16_t(asset.ct == 1 ? 0 : asset.ct);
+    *out_entry = entry;
+    if (out_owner != nullptr)
+        *out_owner = file.name.c_str();
+    return true;
+}
+
 bool vfs_file_is_stubbed(const uint8_t *base)
 {
     if (!vfs_enabled() || base == nullptr)
@@ -647,6 +714,12 @@ bool vfs_plan_rebuild(VfsPlan &out_plan)
         return false;
     // every rebuild (boot or CLI) honors the params' subset view
     vfs_manifest_apply_subset(out_plan, s_params.subset);
+    // whole-file range assets that are UOP archives become per-block range
+    // packs (HTTP Range streaming); offline rebuilds keep whole files
+    if (!s_params.offline)
+    {
+        vfs_manifest_refine_ranges(out_plan, s_params.blobs_dir, out_plan.file_repo, 512 * 1024);
+    }
     if (!vfs_plan_save(fs_path_join(s_params.state_dir, "plan.bin"), out_plan))
         return false;
     s_plan = out_plan;
@@ -1323,6 +1396,12 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
     }
     // the subset re-applies on every rebuild (drift rebuilds included)
     vfs_manifest_apply_subset(rebuilt, s_params.subset);
+    // whole-file range assets that are UOP archives become per-block range
+    // packs (HTTP Range streaming); offline rebuilds keep whole files
+    if (!s_params.offline)
+    {
+        vfs_manifest_refine_ranges(rebuilt, s_params.blobs_dir, rebuilt.file_repo, 512 * 1024);
+    }
     if (!vfs_plan_save(plan_path, rebuilt))
         return false;
     s_plan = rebuilt;

@@ -624,7 +624,7 @@ void trap_stub_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
 
 // one covering block handed to the backend for resolution (definition below;
 // the fill helper above only flags transitions)
-void trap_block_of(const vfs_trap_mapping &m, size_t asset_index, vfs_trap_block *out);
+void trap_block_of(const vfs_trap_mapping &m, size_t asset_index, uint64_t fault_offset, vfs_trap_block *out);
 
 // hands every not-yet-reported stub transition overlapping [start, end) to
 // the backend - `stubbed` (state DB mark, counters) always and `prefetch`
@@ -647,7 +647,7 @@ void trap_report_stubs(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool p
                 if (trap_asset.stubbed == 0 || trap_asset.reported != 0)
                     continue;
                 trap_asset.reported = 1;
-                trap_block_of(m, i, &blocks[count]);
+                trap_block_of(m, i, start, &blocks[count]);
                 if (++count == VFS_TRAP_BATCH)
                     break;
             }
@@ -669,13 +669,15 @@ void trap_report_stubs(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool p
 // resolution (three phases, see file head)
 // ---------------------------------------------------------------------------
 
-void trap_block_of(const vfs_trap_mapping &m, size_t asset_index, vfs_trap_block *out)
+void trap_block_of(
+    const vfs_trap_mapping &m, size_t asset_index, uint64_t fault_offset, vfs_trap_block *out)
 {
     const auto &asset = m.plan->files[m.file_index].assets[m.assets[asset_index].plan_index];
     out->file_index = uint32_t(m.file_index);
     out->asset_index = m.assets[asset_index].plan_index;
     out->tail = asset.blob.c_str();
     out->expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+    out->offset = fault_offset;
     out->is_loose = !m.is_pack;
 }
 
@@ -708,7 +710,7 @@ size_t trap_claim(
             continue;
         }
         asset.state = trap_asset_inflight;
-        trap_block_of(m, i, &blocks[count]);
+        trap_block_of(m, i, start, &blocks[count]);
         claimed[count] = uint32_t(i);
         if (++count == cap)
             break;

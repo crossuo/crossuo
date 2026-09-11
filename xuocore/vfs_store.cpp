@@ -81,12 +81,15 @@ static bool vfs_file_size(FILE *fp, uint64_t *out_size)
     return ok;
 }
 
-// reads exactly `expected` bytes from the blob store; 0 = ok, 1 = missing,
-// 2 = size mismatch (the blob store is content-addressed, sizes must match)
+// reads the asset's source bytes from the blob store; 0 = ok, 1 = missing,
+// 2 = size mismatch / unusable. Range assets read their block window
+// ([ml metadata][payload] at blob_offset) instead of the whole blob
 static int
 vfs_store_read_blob(const fs_path &blobs_dir, const VfsAsset &asset, std::vector<uint8_t> &out)
 {
-    const uint64_t expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+    const bool ranged = asset.blob_offset != 0;
+    const uint64_t expected =
+        ranged ? vfs_asset_range_len(asset) : (asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl));
     const auto path = fs_path_join(blobs_dir, asset.blob);
     FILE *fp = fopen(fs_path_ascii(path), "rb");
     if (!fp)
@@ -100,7 +103,27 @@ vfs_store_read_blob(const fs_path &blobs_dir, const VfsAsset &asset, std::vector
         fclose(fp);
         return 2;
     }
-    if (size != expected)
+    if (ranged)
+    {
+        // the source file is bigger than the block; only the window matters
+        if (size < asset.blob_offset + expected)
+        {
+            LOG_ERROR(
+                "blob too small for range: %s (got %" PRIu64 ", need %" PRIu64 "+%" PRIu64 ")",
+                asset.blob.c_str(),
+                size,
+                asset.blob_offset,
+                expected);
+            fclose(fp);
+            return 2;
+        }
+        if (fseeko(fp, off_t(asset.blob_offset), SEEK_SET) != 0)
+        {
+            fclose(fp);
+            return 2;
+        }
+    }
+    else if (size != expected)
     {
         LOG_ERROR(
             "blob size mismatch: %s (got %" PRIu64 ", expected %" PRIu64 ")",
@@ -353,13 +376,33 @@ static bool vfs_store_pack_write_block(
     const std::vector<uint8_t> &blob)
 {
     (void)file;
+    // range assets carry [ml metadata][payload] from the source file: the
+    // metadata is transplanted byte-perfect (the entry Checksum travels with
+    // it); whole-blob assets synthesize the metadata like always
     std::vector<uint8_t> metadata;
-    vfs_store_synthesize_metadata(asset, metadata);
+    const uint8_t *payload_src = blob.data();
+    size_t payload_len = blob.size();
+    if (asset.blob_offset != 0)
+    {
+        if (blob.size() < asset.ml)
+        {
+            LOG_ERROR("range block shorter than metadata: %s", asset.blob.c_str());
+            return false;
+        }
+        metadata.assign(blob.data(), blob.data() + asset.ml);
+        payload_src = blob.data() + asset.ml;
+        payload_len = blob.size() - asset.ml;
+    }
+    else
+    {
+        vfs_store_synthesize_metadata(asset, metadata);
+    }
 
     std::vector<uint8_t> payload;
     if (asset.ct == 1)
     {
-        if (vfs_store_asset_inflate(asset, blob, &payload) != 0)
+        std::vector<uint8_t> compressed(payload_src, payload_src + payload_len);
+        if (vfs_store_asset_inflate(asset, compressed, &payload) != 0)
             return false;
         if (payload.size() != asset.ul)
         {
@@ -373,7 +416,7 @@ static bool vfs_store_pack_write_block(
     }
     else
     {
-        payload = blob;
+        payload.assign(payload_src, payload_src + payload_len);
     }
 
     if (!vfs_file_write_at(fp, asset.file_offset, metadata.data(), metadata.size()))
@@ -389,7 +432,10 @@ static bool vfs_store_pack_write_block(
     patch.DecompressedSize = uint32_t(asset.ul);
     patch.Hash = asset.uop_hash;
     patch.Checksum = asset.mc;
-    patch.Flags = 0;
+    // the materialized block stores its payload raw - except BWT-encoded
+    // blocks (Flags == 3), whose payload must keep the encoding the decoder
+    // dispatches on
+    patch.Flags = uint16_t(asset.ct == 1 ? 0 : asset.ct);
     if (!vfs_file_write_at(fp, vfs_store_table_pos(asset_index), &patch, sizeof(patch)))
         return false;
     return fflush(fp) == 0;
@@ -458,6 +504,7 @@ struct vfs_store_context
     vfs_journal *journal = nullptr;         // optional completion marks
     vfs_materialize_stats *stats = nullptr; // optional counters
     std::vector<uint8_t> file_dirty;        // per file: written to this run
+    const std::vector<uint8_t> *provided_blob = nullptr; // caller-held source bytes
 };
 
 static void
@@ -518,17 +565,24 @@ vfs_store_materialize_asset(vfs_store_context &ctx, size_t file_index, size_t as
     }
 
     std::vector<uint8_t> blob;
-    const int res = vfs_store_read_blob(ctx.params.blobs_dir, asset, blob);
-    if (res == 1)
+    if (ctx.provided_blob != nullptr)
     {
-        vfs_store_count(ctx, &vfs_materialize_stats::assets_missing);
-        return false; // stays pending: fetch-engine work list
+        blob = *ctx.provided_blob; // the trap's range fetch delivered it
     }
-    if (res != 0)
+    else
     {
-        (*ctx.states)[gi] = vfs_failed;
-        vfs_store_count(ctx, &vfs_materialize_stats::assets_failed);
-        return false;
+        const int res = vfs_store_read_blob(ctx.params.blobs_dir, asset, blob);
+        if (res == 1)
+        {
+            vfs_store_count(ctx, &vfs_materialize_stats::assets_missing);
+            return false; // stays pending: fetch-engine work list
+        }
+        if (res != 0)
+        {
+            (*ctx.states)[gi] = vfs_failed;
+            vfs_store_count(ctx, &vfs_materialize_stats::assets_failed);
+            return false;
+        }
     }
 
     bool ok = false;
@@ -838,19 +892,25 @@ static bool vfs_store_blob_payload_head(
     std::vector<uint8_t> blob;
     if (vfs_store_read_blob(blobs_dir, asset, blob) != 0)
         return false;
+    // range assets carry [ml metadata][payload]: the payload starts past ml
+    const size_t skip = asset.blob_offset != 0 ? size_t(asset.ml) : 0;
+    if (blob.size() < skip)
+        return false;
+    const uint8_t *data = blob.data() + skip;
+    const size_t size = blob.size() - skip;
     if (asset.ct == 0)
     {
-        if (blob.size() < want)
+        if (size < want)
             return false;
-        memcpy(out_head, blob.data(), want);
+        memcpy(out_head, data, want);
         return true;
     }
     std::vector<uint8_t> head(want, 0);
     z_stream zs = {};
     if (inflateInit(&zs) != Z_OK)
         return false;
-    zs.next_in = const_cast<Bytef *>(blob.data());
-    zs.avail_in = uint32_t(blob.size());
+    zs.next_in = const_cast<Bytef *>(data);
+    zs.avail_in = uint32_t(size);
     zs.next_out = head.data();
     zs.avail_out = uint32_t(want);
     const int res = inflate(&zs, Z_FINISH);
@@ -1310,17 +1370,19 @@ void vfs_store_blocks_overlapping(
 }
 
 // one-asset materialization through the shared write path (the same code as
-// the batch driver, restricted to a single item), assuming the blob is already
-// in the store - the trap fetches before calling this. Returns true only
-// when the asset bytes are confirmed in place afterwards (state == fetched),
-// so a missing blob is reported as failure, not as a clean no-op run.
-bool vfs_store_rematerialize_asset(
+// the batch driver, restricted to a single item). When `provided` is set it
+// IS the source bytes (the trap's range fetch); otherwise the blob store is
+// read. Returns true only when the asset bytes are confirmed in place
+// afterwards (state == fetched), so a missing blob is reported as failure,
+// not as a clean no-op run.
+static bool vfs_store_rematerialize_asset_impl(
     const VfsPlan &plan,
     const vfs_store_params &params,
     std::vector<uint8_t> &states,
     vfs_journal *journal,
     uint32_t file_index,
-    uint32_t asset_index)
+    uint32_t asset_index,
+    const std::vector<uint8_t> *provided)
 {
     if (file_index >= plan.files.size())
         return false;
@@ -1331,9 +1393,62 @@ bool vfs_store_rematerialize_asset(
     std::vector<vfs_store_item> items;
     items.push_back({ file_index, asset_index });
     vfs_materialize_stats stats;
-    if (!vfs_store_materialize(plan, params, states, journal, &stats, &items))
-        return false;
-    // a missing blob is not a failed run, but it is not a success either:
-    // the caller cares about bytes in place, so read the state back
-    return gi < states.size() && states[gi] == vfs_fetched;
+
+    if (provided == nullptr)
+    {
+        vfs_store_context probe;
+        probe.plan = &plan;
+        probe.params = params;
+        probe.states = &states;
+        probe.journal = journal;
+        std::vector<uint8_t> blob;
+        if (vfs_store_read_blob(params.blobs_dir, file.assets[asset_index], blob) != 0)
+            return false; // missing or unusable: the caller may retry
+        if (!vfs_store_materialize(plan, params, states, journal, &stats, &items))
+            return false;
+        return gi < states.size() && states[gi] == vfs_fetched;
+    }
+
+    // materialize from the provided bytes through the shared single-item path:
+    // stage the blob where the writer expects it. The store context reads
+    // blobs per asset, so a provided run goes through a one-asset context
+    // with the blob handed over (the read is skipped for a provided run)
+    vfs_store_context ctx;
+    ctx.plan = &plan;
+    ctx.params = params;
+    ctx.states = &states;
+    ctx.journal = journal;
+    ctx.stats = &stats;
+    ctx.file_dirty.assign(plan.files.size(), 0);
+    ctx.provided_blob = provided;
+    if (gi < states.size())
+        states[gi] = vfs_pending; // force the write path (idempotent anyway)
+    const bool ok = vfs_store_materialize_asset(ctx, file_index, asset_index);
+    vfs_store_seal(ctx);
+    return ok && gi < states.size() && states[gi] == vfs_fetched;
+}
+
+bool vfs_store_rematerialize_asset(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    std::vector<uint8_t> &states,
+    vfs_journal *journal,
+    uint32_t file_index,
+    uint32_t asset_index)
+{
+    return vfs_store_rematerialize_asset_impl(
+        plan, params, states, journal, file_index, asset_index, nullptr);
+}
+
+bool vfs_store_materialize_asset_data(
+    const VfsPlan &plan,
+    const vfs_store_params &params,
+    std::vector<uint8_t> &states,
+    vfs_journal *journal,
+    uint32_t file_index,
+    uint32_t asset_index,
+    const std::vector<uint8_t> &block_bytes)
+{
+    return vfs_store_rematerialize_asset_impl(
+        plan, params, states, journal, file_index, asset_index, &block_bytes);
 }

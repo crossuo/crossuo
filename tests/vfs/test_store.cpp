@@ -541,3 +541,98 @@ VFS_TEST(store_loose_content_check)
     TEST_CHECK(test_write_file(packed_path, short_file));
     TEST_CHECK(!vfs_store_loose_asset_content_ok(packed_path, *packed, prod.blobs));
 }
+
+// ---------------------------------------------------------------------------
+// range assets: block windows ([ml metadata][payload]) of a larger source
+// blob - what plan refinement produces for whole-file UOP parts
+// ---------------------------------------------------------------------------
+
+VFS_TEST(store_range_asset_materialize)
+{
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "store_range")); // roots + store dirs
+
+    // a source blob holding two blocks at nonzero offsets, junk-separated:
+    // [16 junk][12 meta][payload1][5 pad][12 meta][payload2]
+    const std::vector<uint8_t> meta1(12, 0xAA), meta2(12, 0xBB);
+    const std::vector<uint8_t> payload1 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    const std::vector<uint8_t> payload2 = { 9, 10, 11, 12 };
+    const uint64_t off1 = 16;
+    const uint64_t off2 = off1 + meta1.size() + payload1.size() + 5;
+    std::vector<uint8_t> source(size_t(off2 + meta2.size() + payload2.size()), 0x00);
+    memcpy(source.data() + off1, meta1.data(), meta1.size());
+    memcpy(source.data() + off1 + meta1.size(), payload1.data(), payload1.size());
+    memcpy(source.data() + off2, meta2.data(), meta2.size());
+    memcpy(source.data() + off2 + meta2.size(), payload2.data(), payload2.size());
+    const auto src_path = fs_path_join(prod.blobs, "base", "unpacked", "rangesrc");
+    TEST_CHECK(fs_path_create(fs_directory(src_path)));
+    TEST_CHECK(fs_file_write(fs_path_ascii(src_path), source));
+
+    // hand-built plan: one pack, both assets ranged into the source blob
+    VfsPlan plan;
+    VfsPlan::VfsFile file;
+    file.name = "range.uop";
+    file.is_uop = true;
+    VfsAsset a1;
+    a1.uop_hash = 0xAAAA000000000001;
+    a1.ul = payload1.size();
+    a1.cl = a1.ul;
+    a1.ct = 0;
+    a1.ml = uint32_t(meta1.size());
+    a1.mc = 0x11111111;
+    a1.blob = "base/unpacked/rangesrc";
+    a1.blob_offset = off1;
+    file.assets.push_back(a1);
+    VfsAsset a2 = a1;
+    a2.uop_hash = 0xAAAA000000000002;
+    a2.ul = payload2.size();
+    a2.cl = a2.ul;
+    a2.mc = 0x22222222;
+    a2.blob_offset = off2;
+    file.assets.push_back(a2);
+    const uint64_t table = sizeof(UopHeader) + sizeof(UopSection) + sizeof(UopFileEntry) * 2;
+    file.assets[0].file_offset = table;
+    file.assets[1].file_offset = table + file.assets[0].ml + file.assets[0].ul;
+    file.size = file.assets[1].file_offset + file.assets[1].ml + file.assets[1].ul;
+    plan.files.push_back(file);
+
+    vfs_store_params store_params;
+    store_params.blobs_dir = prod.blobs;
+    store_params.install_dir = prod.install;
+    TEST_CHECK(vfs_store_prepare(plan, store_params));
+
+    // asset 0 materializes from the store (the ranged blob read)
+    std::vector<uint8_t> states;
+    vfs_journal journal;
+    TEST_CHECK(vfs_journal_open(journal, fs_path_join(prod.root, "journal.log")));
+    TEST_CHECK_MSG(
+        vfs_store_rematerialize_asset(plan, store_params, states, &journal, 0, 0),
+        "ranged rematerialize failed");
+    TEST_CHECK(states.size() == 2 && states[0] == vfs_fetched && states[1] == vfs_pending);
+
+    // asset 1 materializes from caller-held bytes (the trap's range fetch)
+    std::vector<uint8_t> block2(meta2.size() + payload2.size(), 0);
+    memcpy(block2.data(), meta2.data(), meta2.size());
+    memcpy(block2.data() + meta2.size(), payload2.data(), payload2.size());
+    TEST_CHECK_MSG(
+        vfs_store_materialize_asset_data(plan, store_params, states, &journal, 0, 1, block2),
+        "data materialize failed");
+    TEST_CHECK(states[1] == vfs_fetched);
+    TEST_CHECK(vfs_journal_close(journal));
+
+    // the materialized pack parses and decodes through the production path
+    CUopMappedFile pack;
+    TEST_CHECK_MSG(load_pack(prod, "range.uop", pack), "UopLoadFile failed");
+    const auto *e1 = pack.GetAsset(a1.uop_hash);
+    const auto *e2 = pack.GetAsset(a2.uop_hash);
+    TEST_CHECK_MSG(e1 != nullptr && e2 != nullptr, "range blocks missing from the table");
+    TEST_CHECK(e1->Offset == file.assets[0].file_offset && e1->Flags == 0);
+    TEST_CHECK(pack.GetData(e1) == payload1);
+    TEST_CHECK(pack.GetData(e2) == payload2);
+    // the metadata transplant: range blocks keep their source metadata bytes
+    const auto meta = pack.GetMeta(e1);
+    TEST_CHECK(meta.size() == meta1.size() && memcmp(meta.data(), meta1.data(), meta1.size()) == 0);
+    const auto meta_b = pack.GetMeta(e2);
+    TEST_CHECK(
+        meta_b.size() == meta2.size() && memcmp(meta_b.data(), meta2.data(), meta2.size()) == 0);
+}

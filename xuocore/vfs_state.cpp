@@ -81,7 +81,7 @@ static const uint32_t VFS_STATE_MAGIC = 0x31545356; // "VST1"
 // Flags == 0 / CompressedSize == ul instead of the on-wire ml + cl) - the
 // layout change invalidates every persisted plan and state file, both are
 // rebuilt/reset on the next boot
-static const uint32_t VFS_SERIALIZATION_VERSION = 4;
+static const uint32_t VFS_SERIALIZATION_VERSION = 5;
 
 bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
 {
@@ -111,6 +111,7 @@ bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
             w.pod(asset.rh);
             w.pod(asset.timestamp);
             w.pod(asset.file_offset);
+            w.pod(asset.blob_offset);
             w.pod(asset.tier);
             w.str(asset.blob);
         }
@@ -130,8 +131,9 @@ bool vfs_plan_deserialize(const uint8_t *data, size_t size, VfsPlan &out_plan)
     uint32_t version = 0;
     if (!r.pod(&magic) || !r.pod(&version))
         return false;
-    if (magic != VFS_PLAN_MAGIC || version < 2 || version > VFS_SERIALIZATION_VERSION)
-        return false; // v1 predates the repos; anything newer is unknown
+    // dev serialization: any other version rebuilds the plan
+    if (magic != VFS_PLAN_MAGIC || version != VFS_SERIALIZATION_VERSION)
+        return false;
     if (!r.pod(&out_plan.product_serial))
         return false;
     if (!r.str(&out_plan.manifest_repo) || !r.str(&out_plan.file_repo))
@@ -154,16 +156,17 @@ bool vfs_plan_deserialize(const uint8_t *data, size_t size, VfsPlan &out_plan)
             if (!r.str(&asset.uop_file) || !r.str(&asset.name) || !r.pod(&asset.uop_hash) ||
                 !r.pod(&ul) || !r.pod(&cl) || !r.pod(&asset.ct) || !r.pod(&asset.ml) ||
                 !r.pod(&asset.mc) || !r.pod(&asset.rh) || !r.pod(&asset.timestamp) ||
-                !r.pod(&asset.file_offset) || !r.pod(&asset.tier) || !r.str(&asset.blob))
+                !r.pod(&asset.file_offset) || !r.pod(&asset.blob_offset))
                 return false;
             asset.ul = size_t(ul);
             asset.cl = size_t(cl);
+            if (!r.pod(&asset.tier) || !r.str(&asset.blob))
+                return false;
             file.assets.emplace_back(asset);
         }
         out_plan.files.emplace_back(std::move(file));
     }
-    // v3: the recorded subset; v2 plans predate the field - none
-    if (version >= 3)
+    // the recorded subset
     {
         uint8_t subset = 0;
         if (!r.pod(&subset))
