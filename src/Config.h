@@ -11,14 +11,14 @@ struct Config
 {
     astr_t Login;
     astr_t Password;
-    astr_t ClientVersionString = "7.0.33.1";
-    astr_t ProtocolClientVersionString = "7.0.33.1";
+    astr_t ClientVersionString = "7.0.117.0";
+    astr_t ProtocolClientVersionString = "7.0.117.0";
     astr_t CustomPath;
-    astr_t ServerAddress;
+    astr_t ServerAddress = "login.uogdemise.com";
     astr_t LocaleOverride;
     uint16_t ServerPort = 2593;
     uint16_t ClientFlag = 0;
-    bool SavePassword = false;
+    bool SavePassword = true;
     bool AutoLogin = false;
     bool TheAbyss = false;
     bool Asmut = false;

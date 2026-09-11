@@ -135,7 +135,9 @@ enum CLIENT_VERSION
     CV_70720 = VERSION(7, 0, 72, 0), // Publish 102 Enable Large Bank & Vault Gumps
     CV_70796 = VERSION(7, 0, 79, 6), // Display houses content option
     CV_708111 = VERSION(7, 0, 81, 11),
-    CV_LATEST = CV_70796,
+    CV_701040 = VERSION(7, 0, 104, 0), // 7.0.104.0 packets 0xD5 (v1), 0xFD
+    CV_701170 = VERSION(7, 0, 117, 0), // 7.0.117.0 packets 0xD5 (v3)
+    CV_LATEST = CV_701170,
 };
 
 enum CONNECTION_SCREEN_TYPE
