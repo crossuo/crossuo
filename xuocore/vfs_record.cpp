@@ -28,11 +28,25 @@ void vfs_record_configure(const fs_path &path, const char *scenario)
     std::unique_lock<std::mutex> lock(s_mutex);
     if (fs_path_empty(path))
         return;
-    s_path = path;
     s_scenario = scenario && *scenario ? scenario : "default";
     s_started = std::chrono::steady_clock::now();
-    // a recording run always produces its (possibly header-only) CSV
-    fs_path_create(fs_directory(s_path));
+
+    s_path = path;
+    if (fs_path_exists(s_path) && fs_path_is_dir(s_path))
+    {
+        // a directory was configured: record inside it, one CSV per scenario
+        s_path = fs_path_join(s_path, astr_t("recording-") + s_scenario + ".csv");
+    }
+
+    // a recording run always produces its (possibly header-only) CSV. Only
+    // the parent chain is created: fs_directory() of a bare filename answers
+    // the name itself, and creating it would mkdir a directory over the
+    // record file (fopen would then fail with EISDIR)
+    const fs_path parent = fs_directory(s_path);
+    if (strcmp(fs_path_ascii(parent), fs_path_ascii(s_path)) != 0)
+    {
+        fs_path_create(parent);
+    }
     s_file = fopen(fs_path_ascii(s_path), "wb");
     if (!s_file)
     {

@@ -379,7 +379,7 @@ placeholder counts in this mode (nothing is ever marked stubbed).
 
 ## HUD
 
-`CGumpVfsStatus::Draw` (src/Gumps/GumpVfsStatus.cpp) is called once per frame
+`CVfsStatusHud::Draw` (src/ScreenStages/VfsStatusHud.cpp) is called once per frame
 from `CGame::Process` after the screen render - main thread only. It polls
 `vfs_hud_stats` (an in-memory snapshot over the boot-owned state; no disk io,
 no reconcile - the full `vfs_stats` maps every pack and would hitch the

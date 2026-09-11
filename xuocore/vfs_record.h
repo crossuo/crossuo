@@ -20,7 +20,9 @@
 
 #include "vfs_manifest.h"
 
-// enables the recorder; creates/truncates nothing until the first record
+// enables the recorder; opens (creates or truncates) the CSV right away and
+// writes the header. When `path` is an existing directory, the CSV is
+// recorded inside it as recording-<scenario>.csv
 void vfs_record_configure(const fs_path &path, const char *scenario);
 bool vfs_record_enabled();
 // appends one record (thread-safe); milliseconds are counted since configure
