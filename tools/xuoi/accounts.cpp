@@ -216,13 +216,14 @@ static void account_apply_live(int account_index)
     }
     else if (result == xuol::apply_result::needs_restart)
     {
-        LOG_INFO("profile saved, a client restart is required");
-        bool restart = false;
+        LOG_INFO("profile saved, the client must reload to apply it");
+        bool reload = false;
         if (DialogYesNo(
-                "Profile",
-                "A restart is required to apply this profile. Restart now?",
-                restart) &&
-            restart)
+                "Server",
+                "This server uses a different data path.\n"
+                "Reload the client to apply the new data?",
+                reload) &&
+            reload)
         {
             xuol::client_request_restart();
         }

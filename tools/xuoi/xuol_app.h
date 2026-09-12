@@ -65,5 +65,8 @@ apply_result client_apply_profile(const client_profile &profile);
 // relaunches the client process (used for applying updates and profiles that
 // cannot be applied live); the current process exits afterwards
 void client_request_restart();
+// forwards the original command line so a relaunched client keeps options
+// like --config; call once from the entry point
+void client_set_restart_args(int argc, char **argv);
 } // namespace xuol
 #endif // XUO_LAUNCHER_EMBEDDED

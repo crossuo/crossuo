@@ -15,6 +15,7 @@
 #include "Config.h"
 #include "CrossUO.h"
 #include "GameWindow.h"
+#include "ScreenStages/MainScreen.h"
 #include "icon_launcher.h"
 #include "xuol_app.h"
 #include <revision.h>
@@ -24,6 +25,14 @@
 static win_context s_launcher_win;
 static bool s_launcher_initialized = false;
 static bool s_launcher_visible = false;
+static int s_argc = 0;
+static char **s_argv = nullptr;
+
+// the launcher is a login-screen tool only
+static bool at_login_screen()
+{
+    return g_CurrentScreen == &g_MainScreen;
+}
 
 bool LauncherWindow_Init()
 {
@@ -131,10 +140,14 @@ static bool event_belongs_to_launcher(const SDL_Event &ev)
 bool LauncherWindow_ProcessEvent(const SDL_Event &ev)
 {
     // global toggle hotkey: Alt+L; works even when the launcher was never
-    // created (valid configuration at boot), creating it on demand
+    // created (valid configuration at boot), creating it on demand. The
+    // launcher is only available at the login screen: anywhere else the key
+    // is handed over to the client untouched.
     if (ev.type == SDL_KEYDOWN && !ev.key.repeat && ev.key.keysym.sym == SDLK_l &&
         (ev.key.keysym.mod & KMOD_ALT) != 0)
     {
+        if (!at_login_screen())
+            return false;
         if (!s_launcher_initialized)
         {
             if (!LauncherWindow_Init())
@@ -174,6 +187,13 @@ void LauncherWindow_Render()
     if (xuol_app_wants_close())
     {
         xuol_app_clear_close_intent();
+        LauncherWindow_Show(false);
+    }
+
+    // keep the launcher a login-screen tool: as soon as the client moves on
+    // (connect flow, character screen, in game) put it away
+    if (s_launcher_visible && g_CurrentScreen != nullptr && !at_login_screen())
+    {
         LauncherWindow_Show(false);
     }
 
@@ -252,14 +272,30 @@ apply_result client_apply_profile(const client_profile &profile)
     return apply_result::needs_restart;
 }
 
+void client_set_restart_args(int argc, char **argv)
+{
+    s_argc = argc;
+    s_argv = argv;
+}
+
 void client_request_restart()
 {
-    const auto bin = fs_path_process();
-    const char *args[] = { fs_path_ascii(bin), 0 };
+    std::vector<char *> args;
+    for (int i = 0; i < s_argc && s_argv && s_argv[i]; i++)
+    {
+        args.push_back(s_argv[i]);
+    }
+    if (args.empty() || !s_argv)
+    {
+        const auto bin = fs_path_process();
+        args.push_back(const_cast<char *>(fs_path_ascii(bin)));
+    }
+    args.push_back(nullptr);
+
     LOG_INFO("restarting %s", args[0]);
     process_s process;
     const auto options = process_option_inherit_environment | process_option_child_detached;
-    if (process_create(args, options, &process) == 0)
+    if (process_create(args.data(), options, &process) == 0)
     {
         g_GameWindow.Destroy();
     }

@@ -602,6 +602,9 @@ int main(int argc, char **argv)
     {
         return 0;
     }
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    xuol::client_set_restart_args(argc, argv);
+#endif
 
     LogInit(argc, argv, "crossuo.log");
 
