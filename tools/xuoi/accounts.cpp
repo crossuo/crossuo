@@ -191,6 +191,41 @@ static fs_path account_create_config(const account::entry &account)
 // embedded in the client: apply the profile live instead of spawning
 // another process; the client persists it to crossuo.cfg itself and the
 // boot/login flow reacts to the new values
+// reload confirmation is a per-frame modal: it can only be driven from the
+// app frame, so the apply just requests it and the tick below renders it
+static bool s_reload_dialog = false;
+
+void account_reload_dialog_tick()
+{
+    { // TEMP: simulate a needs_restart apply 2s after the view opens
+        static int t = 0;
+        if (++t == 120)
+        {
+            s_reload_dialog = true;
+        }
+    }
+    if (!s_reload_dialog)
+        return;
+
+    bool reload = true;
+    if (DialogYesNo(
+            "Server",
+            "This server uses a different data path.\n"
+            "Reload the client to apply the new data?",
+            reload))
+    {
+        s_reload_dialog = false;
+        if (reload)
+        {
+            xuol::client_request_restart();
+        }
+        else
+        {
+            LOG_INFO("reload postponed, the new data applies on the next start");
+        }
+    }
+}
+
 static void account_apply_live(int account_index)
 {
     assert(account_index >= 0 && account_index < (int)s_accounts.entries.size());
@@ -217,16 +252,7 @@ static void account_apply_live(int account_index)
     else if (result == xuol::apply_result::needs_restart)
     {
         LOG_INFO("profile saved, the client must reload to apply it");
-        bool reload = false;
-        if (DialogYesNo(
-                "Server",
-                "This server uses a different data path.\n"
-                "Reload the client to apply the new data?",
-                reload) &&
-            reload)
-        {
-            xuol::client_request_restart();
-        }
+        s_reload_dialog = true;
     }
 }
 #endif // XUO_LAUNCHER_EMBEDDED

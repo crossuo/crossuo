@@ -567,12 +567,16 @@ void xuol_app_frame()
         else if (model.view == ui_view::shard_picker)
             ui_shards(model, true);
 
+#if defined(XUO_LAUNCHER_EMBEDDED)
+        account_reload_dialog_tick();
+#endif
+
         if (s_launcher_restart)
         {
 #if defined(XUO_LAUNCHER_EMBEDDED)
             // embedded in the client: restarting means relaunching crossuo so
             // the updated binaries take over (the client exits by itself)
-            bool restart = false;
+            bool restart = true;
             if (DialogYesNo(
                     "Update", "A restart is required, do you want to restart now?", restart))
             {

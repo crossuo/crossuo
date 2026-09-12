@@ -136,14 +136,22 @@ bool ListBox(
 bool DialogYesNo(const char *title, const char *msg, bool &open)
 {
     bool response = false;
+    // popups default to the mouse position, which can push the modal outside
+    // the window (e.g. buttons at the bottom edge); center it instead
+    const ImVec2 center(
+        ImGui::GetIO().DisplaySize.x * 0.5f,
+        ImGui::GetIO().DisplaySize.y * 0.5f);
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     ImGui::OpenPopup(title);
     if (ImGui::BeginPopupModal(title))
     {
         ImGui::Text("%s", msg);
         ImGui::SetNextItemWidth(-1.0f);
+        // 'open' doubles as the answer and must be true on entry to keep the
+        // popup coming back until it is dismissed
         if (ImGui::Button("Yes", ImVec2(80, 0)))
         {
-            open = false;
+            open = true;
             ImGui::CloseCurrentPopup();
             response = true;
         }
