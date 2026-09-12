@@ -219,7 +219,7 @@ void account_reload_dialog_tick()
     }
 }
 
-static void account_apply_live(int account_index)
+static xuol::apply_result account_apply_live(int account_index)
 {
     assert(account_index >= 0 && account_index < (int)s_accounts.entries.size());
     const auto &entry = s_accounts.entries[account_index];
@@ -244,9 +244,12 @@ static void account_apply_live(int account_index)
     }
     else if (result == xuol::apply_result::needs_restart)
     {
+        // keep the launcher open: the reload confirmation renders from the
+        // app frame (account_reload_dialog_tick)
         LOG_INFO("profile saved, the client must reload to apply it");
         s_reload_dialog = true;
     }
+    return result;
 }
 #endif // XUO_LAUNCHER_EMBEDDED
 
@@ -259,8 +262,13 @@ static void account_launch(int account_index)
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
     xuol_set_last_used(account_index);
-    account_apply_live(account_index);
-    xuol_launch_quit();
+    const auto result = account_apply_live(account_index);
+    // on needs_restart the launcher stays open for the reload confirmation;
+    // closing it here would kill the dialog before the user can answer
+    if (result == xuol::apply_result::applied)
+    {
+        xuol_launch_quit();
+    }
     return;
 #else
     const auto &entry = s_accounts.entries[account_index];
