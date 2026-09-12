@@ -44,26 +44,18 @@ struct vfs_trap_block
 // the shared write path for exactly this asset; true when the bytes are in
 // place afterwards. Called with no trap lock held and must not call back
 // into vfs_trap (lock order above); the default backend fails every block,
-// which degrades resolution to the stub path. The two optional hooks
-// close the loop around stub serving: `stubbed` reports every asset
-// served from a placeholder payload (state DB mark, HUD counters) and
-// `prefetch` enqueues the real fetch after a zero-latency stub. Both
-// are called with no trap lock held, in that order, once per asset.
+// which degrades resolution to the stub path. The optional hook closes the
+// loop around stub serving: `stubbed` reports every asset served from a
+// placeholder payload (state DB mark, HUD counters). It is called with no
+// trap lock held, once per asset.
 struct vfs_trap_backend
 {
     void *context = nullptr;
     bool (*ensure)(void *context, const vfs_trap_block *block) = nullptr;
     void (*stubbed)(void *context, const vfs_trap_block *block) = nullptr;
-    void (*prefetch)(void *context, const vfs_trap_block *block) = nullptr;
 };
 
 void vfs_trap_set_backend(const vfs_trap_backend &backend);
-
-// zero-latency mode: faults do not fetch synchronously - the
-// covering page is stub-filled immediately, flips readable and every stubbed
-// asset is reported to the backend (stubbed + prefetch). Default (false):
-// faults block on the fetch and stubs are only served on failure.
-void vfs_trap_set_zerolat(bool zerolat);
 
 // enables/disables hole protection for NEW mappings (see above); mappings
 // made while it was on keep their protection. On by default.
@@ -71,9 +63,8 @@ void vfs_trap_set_zerolat(bool zerolat);
 // escape hatch (--streaming-trap=off): managed files map
 // WITHOUT hole protection - pointer reads of holes return the sparse file's
 // zeros instead of faulting, and no fault handler is installed at all.
-// vfs_ensure_range still resolves ranges on demand and the demand tier still
-// heals; stub payloads are never served (pages are readable). Trap-off wins
-// over zerolat for mapping.
+// vfs_ensure_range still resolves ranges on demand; stub payloads are never
+// served (pages are readable).
 void vfs_trap_set_traps(bool enabled);
 
 struct vfs_trap_stats
@@ -82,7 +73,7 @@ struct vfs_trap_stats
     uint64_t resolved = 0;   // faults satisfied with real bytes
     uint64_t zeroed = 0;     // faults degraded to a zero-filled page
     uint64_t stubbed = 0;    // assets served from a stub payload
-    uint64_t stub_served = 0; // faults answered with a stub payload (zerolat)
+    uint64_t stub_served = 0; // faults answered with a stub payload
     uint64_t dedup_waits = 0; // faults that waited on an in-flight resolution
     uint64_t chained = 0;    // faults outside managed ranges (real bugs)
     uint64_t flips = 0;      // pages flipped from protected to readable
@@ -126,18 +117,9 @@ bool vfs_trap_range_present(const uint8_t *base, uint64_t offset, uint64_t lengt
 // every absent covering block (deduplicated with in-flight work) and flips
 // the covered pages; on failure the requested pages are served the stub
 // payload for their kind (zeros when the kind has no payload content). Used
-// by the pre-resolve paths and by the demand tier (hot-swap healing).
+// by the pre-resolve paths.
 // Returns false only when the range is not registered.
 bool vfs_trap_resolve_range(uint8_t *base, uint64_t offset, uint64_t length);
-
-// background completion path (demand tier): runs the same resolution for
-// one plan asset of the file mapped from `plan` (fetch + materialize + flip
-// of its pages, promoting stubbed pages to real). Safe off the fault path;
-// false when no live mapping of that plan file holds the asset.
-bool vfs_trap_resolve_asset(
-    const VfsPlan *plan,
-    uint32_t file_index,
-    uint32_t asset_index);
 
 // marks [offset, offset+length) of a mapping present and re-checks page
 // coverage, flipping every fully-covered page to readable; used after the

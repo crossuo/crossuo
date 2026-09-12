@@ -165,7 +165,7 @@ live in the payload's first 8 bytes, which `UopReadIndexFile` reads and then
 skips). The stub writes `0x0` there; `vfs_refresh_index` re-reads the real
 dims from `Address - 8` once the asset healed (see "Fixed in review" C1).
 
-## Stubbed-flag mechanics and the zero-latency refresh contract
+## Stubbed-flag mechanics and the refresh contract
 
 - `CIndexObject::Stubbed` sits in the struct's tail padding (56-byte body on
   64-bit, 6 pad bytes before it); no size drift on either word size.
@@ -195,22 +195,6 @@ dims from `Address - 8` once the asset healed (see "Fixed in review" C1).
 - Object lists (`m_UsedGumpList` etc.) may hold the refreshed object twice
   (destroy clears `UserData` but does not erase; the reload pushes again).
   Harmless: every list consumer null-checks `UserData` before acting.
-
-## Zero-latency mode specifics
-
-- Faults never fetch: `trap_stub_fill` serves the page immediately, reports
-  each stubbed asset to the backend (`stubbed` → state DB + journal `B`,
-  `prefetch` → the demand tier), and the faulting instruction re-executes.
-- The demand tier is one worker thread started by `vfs_boot` only when
-  zerolat is on and the run is not offline; it heals queued assets through
-  `vfs_trap_resolve_asset` (the same blocking resolution, off the fault
-  path). Dedup guard per (file, asset); a failed heal drops the guard so a
-  later fault can re-enqueue. Offline + zerolat never starts it - stubs are
-  served with no network attempts and no retry storm (stubbed pages are
-  readable, so they do not refault).
-- Mid-session entry patches (packs) make a stub visible to `UopLoadFile` on
-  the **next boot**; mid-session tables are already parsed. Loose-file stubs
-  are visible immediately (raw-pointer reads).
 
 ## Fixed in review
 
@@ -371,9 +355,9 @@ re-seals through the normal materialize write once the real block lands.
 pointer reads of undownloaded ranges return the sparse file's zeros, no fault
 handler is installed (the process keeps its default SIGSEGV/VEH disposition),
 and the fault counters stay silent. `vfs_ensure_range` (the GetData/GetRaw
-pre-resolve) and the zerolat demand tier still fetch + materialize on demand;
+pre-resolve) still fetch + materialize on demand;
 stub payloads are never served (their pages are readable, so nothing faults
-into the stub path). Trap-off wins over `--streaming-zerolat` for mapping;
+into the stub path).
 mappings made before the flag flips keep their protection. The HUD shows no
 placeholder counts in this mode (nothing is ever marked stubbed).
 
@@ -433,7 +417,7 @@ loop, which are all outside the VFS):
 - The async boot: `vfs_boot` is synchronous on native. On Web the T0
   "blocking" tier must become an await (or a loading screen over repeated
   `vfs_is_ready` checks); the seam (the fetch engine + the arena) already
-  answers every miss asynchronously via `stub_on_miss` + `prefetch`.
+  answers every miss asynchronously (fetch engine + arena ensure).
 - Index baking: `CIndexObject.Address` must point at arena slots
   (via `vfs_store_arena::read`), `0` when not resident, plus the
   refresh hooks at every consumer - mandatory on Web, where no blocking
@@ -468,13 +452,6 @@ the flag, reload on the next frame); the Web port wires the same
 (pack header/entry tables are not resident: the Web UOP table synthesis is
 in-memory), so `read()` bounds are payload bounds, not file-image
 offsets.
-
-The zerolat analog (`stub_on_miss`) fills the arena with the stub
-payload on a missing blob and reports ready (the miss path answers
-instantly); `ensure()` on a resident stub always retries the real blob
-first - that is the heal. Boot gates core assets on `vfs_fetched` state, so
-a stubbed T0 asset still fails a boot, exactly as zero-latency mode does not
-mask a missing core install.
 
 ## Subset mechanics
 
@@ -518,8 +495,8 @@ their fakes and restore the previous override afterwards.
 
 `--streaming-backend=arena` (or `params.store_backend`) boots without
 materializing any install file: the skeleton prepare, the managed-mapping
-registry, the trap backend and the demand tier are all skipped (no traps
-exist on the arena backend), T0 granules are ensured resident through the
+registry and the trap backend are all skipped (no traps exist on the arena
+backend), T0 granules are ensured resident through the
 backend, and the
 background tier ensures everything reachable from the store. The state DB
 keeps its meaning (fetched = resident this session, stubbed =
@@ -529,7 +506,7 @@ against). Residency contract: boot re-ensures every T0 granule (blocking -
 core assets are small) at EVERY start, restarts included, so the core bytes
 are resident again after a restart; T1+ granules are converged by the first
 boot's background pass and afterwards repopulate only on access (the
-consumer `ensure()`/`stub_on_miss` path - the native memory-mode wires no
+consumer `ensure()` path - the native memory-mode wires no
 game layer, so nothing else touches them in between). state.bin stays the
 advisory record: a warm re-ensure that fails demotes the asset to pending
 (journal `R`), so the next-boot retry semantics stand. What the native memory-mode

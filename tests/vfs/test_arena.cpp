@@ -206,7 +206,6 @@ VFS_TEST(arena_ensure_read_roundtrip)
     const vfs_arena_stats stats = arena.stats();
     TEST_CHECK(stats.granules == 5);
     TEST_CHECK(stats.resident == 5);
-    TEST_CHECK(stats.stubbed == 0);
     TEST_CHECK(stats.evictions == 0);
     uint64_t payload_total = 0;
     for (const auto &part : prod.parts)
@@ -279,57 +278,6 @@ VFS_TEST(arena_eviction_lru_order)
     TEST_CHECK(arena.ensure(part1, true));
     TEST_CHECK(arena.read(part1, 0, slice, sizeof(slice)));
     TEST_CHECK(memcmp(slice, prod.parts[1].payload.data(), sizeof(slice)) == 0);
-}
-
-VFS_TEST(arena_stub_fill_and_heal)
-{
-    test_product_data prod;
-    TEST_CHECK(test_build_product(prod, "arena_stub"));
-    // the third part's blob is missing: the zerolat analog must fill the
-    // arena with the stub payload, then heal when the blob arrives
-    const auto &missing = prod.parts[2];
-    fs_del(fs_path_join(prod.blobs, missing.blob_rel));
-
-    VfsPlan plan;
-    TEST_CHECK(test_build_plan(prod, plan));
-
-    vfs_store_arena_params params = test_arena_params(prod);
-    params.stub_on_miss = true;
-    vfs_store_arena arena(params);
-    TEST_CHECK(arena.open(plan));
-
-    const auto &part2 = plan.files[0].assets[2];
-    TEST_CHECK(!arena.is_ready(part2));
-
-    // the zero-latency miss path answers instantly: non-blocking ensure fills the
-    // arena with the kind stub (same generator as the trap) and reports
-    // ready - the caller learns what happened from asset_is_stubbed
-    TEST_CHECK_MSG(arena.ensure(part2, false), "stub-on-miss ensure must succeed");
-    TEST_CHECK(arena.is_ready(part2));
-    TEST_CHECK(arena.asset_is_stubbed(part2));
-
-    std::vector<uint8_t> bytes(missing.payload.size());
-    TEST_CHECK(arena.read(part2, 0, bytes.data(), bytes.size()));
-    // the expected payload is the pure generator's answer (stub matrix)
-    std::vector<uint8_t> expected(missing.payload.size());
-    vfs_stub_fill(
-        vfs_stub_kind_for("pack0.uop"),
-        missing.payload.size(),
-        true,
-        expected.data(),
-        expected.size());
-    TEST_CHECK(bytes == expected);
-
-    // heal: the blob lands, ensure overwrites the arena bytes
-    TEST_CHECK(test_write_file(fs_path_join(prod.blobs, missing.blob_rel), missing.blob));
-    TEST_CHECK(arena.ensure(part2, true));
-    TEST_CHECK(!arena.asset_is_stubbed(part2));
-    TEST_CHECK(arena.read(part2, 0, bytes.data(), bytes.size()));
-    TEST_CHECK(bytes == missing.payload);
-
-    // the stats agree: one stubbed granule healed to a real payload
-    TEST_CHECK(arena.stats().stubbed == 0);
-    TEST_CHECK(arena.stats().resident == 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -858,11 +806,12 @@ VFS_TEST(arena_inflight_ensure_survives_eviction)
     test_product_data prod;
     TEST_CHECK(test_build_product(prod, "arena_inflight"));
 
-    // the arena reads from an EMPTY store: the heal below must fetch, and the
-    // gated transport parks that fetch mid-flight
+    // empty store: the ensure must fetch through the gated transport, which
+    // parks the transfer mid-flight - an in-flight granule must survive any
+    // eviction sweep while it loads (the commit would otherwise resurrect
+    // bytes the budget asked to drop)
     vfs_store_arena_params params = test_arena_params(prod);
     params.store.blobs_dir = fs_path_join(prod.root, "inflight-blobs");
-    params.stub_on_miss = true;
     vfs_store_arena arena(params);
     VfsPlan plan;
     TEST_CHECK(test_build_plan(prod, plan));
@@ -873,12 +822,6 @@ VFS_TEST(arena_inflight_ensure_survives_eviction)
     vfs_transport *previous = vfs_transport_set(&gated);
 
     const auto &part2 = plan.files[0].assets[2];
-    // stub fill first - with the engine NOT running, so the fill cannot
-    // queue its own demand fetch (that would park in the gate below instead
-    // of the heal fetch): the granule is resident (placeholder) when the
-    // heal starts, which is exactly the resurrect-on-commit race
-    TEST_CHECK(arena.ensure(part2, false));
-    TEST_CHECK(arena.asset_is_stubbed(part2));
 
     http_init(); // engine-level use: this test owns its curl globals
     vfs_fetch_params fetch_params;
@@ -887,8 +830,6 @@ VFS_TEST(arena_inflight_ensure_survives_eviction)
     vfs_fetch_set_store(params.store.blobs_dir);
     vfs_fetch_set_repos("http://unused.test/", "http://unused.test/");
 
-    // probe state is collected before any TEST_CHECK can return mid-flight
-    // (a failing check must never abandon a joinable thread)
     std::atomic<bool> healed{ false };
     std::thread healer([&] { healed = arena.ensure(part2, true); });
     for (int i = 0; i < 2000 && !gated.entered; ++i)
@@ -905,10 +846,8 @@ VFS_TEST(arena_inflight_ensure_survives_eviction)
     healer.join();
 
     TEST_CHECK_MSG(entered, "the heal fetch never reached the transport");
-    TEST_CHECK_MSG(resident_during == 1, "the in-flight granule was dropped by the budget");
     TEST_CHECK_MSG(evictions_during == 0, "an in-flight granule was evicted");
     TEST_CHECK_MSG(healed, "the heal ensure failed");
-    TEST_CHECK(!arena.asset_is_stubbed(part2)); // the heal overwrote the stub
     std::vector<uint8_t> bytes(prod.parts[2].payload.size());
     TEST_CHECK(arena.read(part2, 0, bytes.data(), bytes.size()));
     TEST_CHECK(bytes == prod.parts[2].payload);
@@ -916,7 +855,6 @@ VFS_TEST(arena_inflight_ensure_survives_eviction)
     vfs_fetch_stop();
     TEST_CHECK(vfs_transport_set(previous) == &gated);
 }
-
 VFS_TEST(transport_injection_full_pipeline)
 {
     test_vfs_shutdown guard;

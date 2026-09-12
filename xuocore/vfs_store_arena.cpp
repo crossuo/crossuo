@@ -100,7 +100,6 @@ void vfs_store_arena::evict_locked(uint64_t bytes_target)
         m_bytes_resident -= victim->bytes.size();
         std::vector<uint8_t>().swap(victim->bytes);
         victim->resident = false;
-        victim->stub = false;
         victim->last_access = 0;
         ++m_evictions;
     }
@@ -117,7 +116,7 @@ bool vfs_store_arena::ensure(const VfsAsset &asset, bool block)
         if (granule.hole)
             return true; // reserved slot: trivially ready (sparse parity)
         touch_locked(granule);
-        if (granule.resident && !granule.stub)
+        if (granule.resident)
             return true;
         // a resident STUB granule falls through: ensure() is the heal path
         // (zero-latency), so a real blob re-materializes over the stub bytes
@@ -151,31 +150,16 @@ bool vfs_store_arena::ensure(const VfsAsset &asset, bool block)
     }
 
     std::vector<uint8_t> payload;
-    int res = vfs_store_asset_payload(m_params.store.blobs_dir, asset, &payload);
-    bool stubbed = false;
-    if (res == 1 && m_params.stub_on_miss)
-    {
-        // the zerolat analog: same generators as the trap, sized to the plan
-        payload.resize(asset.ul);
-        vfs_stub_fill(
-            vfs_stub_kind_for(asset.uop_file.empty() ? asset.name.c_str() : asset.uop_file.c_str()),
-            asset.ul,
-            !vfs_asset_is_loose(asset),
-            payload.data(),
-            payload.size());
-        stubbed = true;
-        res = 0;
-    }
+    const int res = vfs_store_asset_payload(m_params.store.blobs_dir, asset, &payload);
 
     std::unique_lock<std::mutex> lock(m_mutex);
     vfs_arena_granule &granule = m_granules[index];
     granule.inflight = false;
-    bool ok = res == 0;
+    const bool ok = res == 0;
     if (ok)
     {
         granule.bytes = std::move(payload);
         granule.resident = true;
-        granule.stub = stubbed;
         m_bytes_resident += granule.bytes.size();
         touch_locked(granule);
         evict_locked(m_params.max_bytes); // the budget holds after every commit
@@ -257,19 +241,9 @@ void vfs_store_arena::invalidate(const VfsAsset &asset)
         m_bytes_resident -= granule.bytes.size();
         std::vector<uint8_t>().swap(granule.bytes);
         granule.resident = false;
-        granule.stub = false;
         granule.last_access = 0;
     }
     m_sealed[granule.file_index] = false;
-}
-
-bool vfs_store_arena::asset_is_stubbed(const VfsAsset &asset) const
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    size_t index = 0;
-    if (!locate(asset, &index))
-        return false;
-    return m_granules[index].stub;
 }
 
 bool vfs_store_arena::file_sealed(size_t file_index) const
@@ -290,8 +264,6 @@ vfs_arena_stats vfs_store_arena::stats() const
         if (granule.resident)
         {
             ++out.resident;
-            if (granule.stub)
-                ++out.stubbed;
         }
     }
     out.bytes_resident = m_bytes_resident;

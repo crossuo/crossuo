@@ -59,12 +59,6 @@ struct vfs_store_arena_params
     // larger than the budget stays resident (there is nothing smaller to
     // keep instead - the budget is a target, not a hard cap)
     uint64_t max_bytes = VFS_ARENA_MAX_BYTES_DEFAULT;
-    // zero-latency analog: a missing blob fills
-    // the arena with the asset's stub payload (same vfs_stub generators
-    // as the trap) instead of failing; a later ensure() with the blob present
-    // overwrites the arena bytes (heal). Stubbed granules are evictable too -
-    // the generators are pure functions, the payload is always rebuildable.
-    bool stub_on_miss = false;
     // blocking-ensure fetch bound (mirrors the trap's VFS_TRAP_FETCH_TIMEOUT_MS)
     uint32_t fetch_timeout_ms = 30 * 1000;
 };
@@ -73,7 +67,6 @@ struct vfs_arena_stats
 {
     size_t granules = 0; // tracked non-hole plan assets
     size_t resident = 0; // granules currently resident
-    size_t stubbed = 0;  // resident granules holding a stub payload
     uint64_t bytes_resident = 0;
     uint64_t evictions = 0; // granules dropped by eviction so far
 };
@@ -102,10 +95,6 @@ public:
     // demand; the caller resets the state byte and drops the cached blob)
     void invalidate(const VfsAsset &asset);
 
-    // true when the resident granule holds a stub payload (boot marks
-    // the 'B' journal record from this; always false when not resident)
-    bool asset_is_stubbed(const VfsAsset &asset) const;
-
     // seal bookkeeping view (tests, web diagnostics): the plan file reached
     // 100% granule residency at the last seal_check(). Eviction does not
     // clear the mark (see the header: sealed granules stay evictable).
@@ -119,7 +108,6 @@ private:
         uint32_t file_index = 0;
         uint32_t asset_index = 0;
         bool hole = false;     // blockless entry: trivially ready, no bytes
-        bool stub = false;     // resident bytes are a stub payload
         bool inflight = false; // an ensure() is loading it (never evicted)
         bool resident = false;
         uint64_t last_access = 0; // LRU clock stamp

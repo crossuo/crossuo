@@ -23,7 +23,7 @@ struct VfsStats
     size_t bytes_total = 0;    // planned bytes (pack tables + blocks, loose files)
     size_t bytes_done = 0;     // bytes confirmed in place
     bool online = false;       // fetch engine connected to a repo
-    uint64_t stubs_served = 0; // faults answered with a placeholder payload
+    uint64_t stubs_served = 0; // faults answered with a stub payload
     uint64_t stubs_active = 0; // assets currently in the stubbed state (HUD)
 };
 
@@ -31,9 +31,6 @@ struct vfs_params
 {
     bool enabled = false; // streaming install mode; false: no-op module
     bool offline = false; // never hit the network; cache/stubs only
-    // zero-latency mode: faults serve stub payloads instantly
-    // and heal in the background instead of blocking on the fetch
-    bool zerolat = false;
     // escape hatch (--streaming-trap=off): managed files map
     // without hole protection - pointer reads of holes return the sparse
     // file's zeros; ensure/pre-resolve paths still fetch on demand

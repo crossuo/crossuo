@@ -86,13 +86,6 @@ static bool s_managed_built = false;
 // index-build stubbed lookups (vfs_asset_is_stubbed)
 static std::map<uint64_t, std::pair<size_t, size_t>> s_managed_hashes;
 
-// demand tier (zero-latency mode): assets whose real fetch was deferred
-// by the fault path are healed here, one at a time, off the render thread
-static std::vector<std::pair<uint32_t, uint32_t>> s_demand_queue;
-static std::map<std::pair<uint32_t, uint32_t>, bool> s_demand_queued; // dedup set
-static std::mutex s_demand_mutex;
-static std::condition_variable s_demand_cv;
-static std::thread s_demand_thread;
 
 // ---------------------------------------------------------------------------
 // managed mappings
@@ -318,66 +311,12 @@ static void vfs_trap_asset_stubbed(void *context, const vfs_trap_block *block)
     vfs_journal_mark(s_journal, { 'B', block->file_index, block->asset_index });
 }
 
-// ---------------------------------------------------------------------------
-// demand tier: zero-latency faults defer the real fetch; this
-// worker heals them one at a time (fetch -> materialize -> flip), so the
-// hot-swap refresh hooks see healed bytes on the next access. Offline runs
-// never start it: nothing can land.
-// ---------------------------------------------------------------------------
-
-static void vfs_demand_enqueue(uint32_t file_index, uint32_t asset_index)
-{
-    if (s_params.offline || !s_boot_started)
-        return;
-    {
-        std::lock_guard<std::mutex> lock(s_demand_mutex);
-        const auto key = std::make_pair(file_index, asset_index);
-        if (s_demand_queued.find(key) != s_demand_queued.end())
-            return; // already queued or being healed
-        s_demand_queued[key] = true;
-        s_demand_queue.push_back(key);
-    }
-    s_demand_cv.notify_one();
-}
-
-static void vfs_demand_run()
-{
-    LOG_INFO("demand tier: started (zero-latency healing)");
-    for (;;)
-    {
-        std::pair<uint32_t, uint32_t> item;
-        {
-            std::unique_lock<std::mutex> lock(s_demand_mutex);
-            s_demand_cv.wait(lock, [] { return !s_demand_queue.empty() || s_boot_shutdown; });
-            if (s_boot_shutdown && s_demand_queue.empty())
-                break;
-            item = s_demand_queue.front();
-            s_demand_queue.erase(s_demand_queue.begin());
-        }
-        // runs the blocking resolution for exactly this asset (bounded by the
-        // fetch timeout); a failure keeps the placeholder and drops the dedup
-        // guard so a later fault can re-enqueue
-        vfs_trap_resolve_asset(&s_plan, item.first, item.second);
-        {
-            std::lock_guard<std::mutex> lock(s_demand_mutex);
-            s_demand_queued.erase(item);
-        }
-    }
-    LOG_INFO("demand tier: stopped");
-}
-
 static void vfs_trap_backend_ensure()
 {
     vfs_trap_backend backend;
     backend.context = nullptr;
     backend.ensure = vfs_trap_ensure_asset;
     backend.stubbed = vfs_trap_asset_stubbed;
-    backend.prefetch = [](void *context, const vfs_trap_block *block)
-    {
-        (void)context;
-        if (block)
-            vfs_demand_enqueue(block->file_index, block->asset_index);
-    };
     vfs_trap_set_backend(backend);
 }
 
@@ -631,7 +570,6 @@ void vfs_set_params(const vfs_params &params)
     s_plan_loaded = false;
     s_managed_built = false;                // the registry follows the (new) plan
     s_states.clear();                       // runtime state binds to the previous params
-    vfs_trap_set_zerolat(s_params.zerolat); // bound before any mapping faults
     vfs_trap_set_traps(s_params.traps);     // escape hatch (--streaming-trap=off)
     vfs_product_file_defaulted = fs_path_empty(s_params.product_file);
     if (fs_path_some(s_params.state_dir))
@@ -1238,12 +1176,10 @@ static bool vfs_boot_arena_ensure(
             }
             continue;
         }
-        const bool stubbed = arena->asset_is_stubbed(*asset);
         std::unique_lock<std::mutex> lock(s_state_mutex);
-        s_states[item.global_index] = stubbed ? uint8_t(vfs_stubbed) : uint8_t(vfs_fetched);
+        s_states[item.global_index] = vfs_fetched;
         vfs_journal_mark(
-            s_journal,
-            { stubbed ? 'B' : 'F', uint32_t(item.file_index), uint32_t(item.asset_index) });
+            s_journal, { 'F', uint32_t(item.file_index), uint32_t(item.asset_index) });
     }
     return ok;
 }
@@ -1719,7 +1655,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     {
         vfs_store_arena_params arena_params;
         arena_params.store.blobs_dir = s_params.blobs_dir;
-        arena_params.stub_on_miss = s_params.zerolat; // zero-latency heals in the background
         std::unique_lock<std::mutex> lock(s_state_mutex);
         s_arena = vfs_store_backend_arena_create(arena_params);
         if (s_arena == nullptr || !s_arena->open(plan))
@@ -1902,22 +1837,11 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     s_boot_shutdown = false;
     s_boot_started = true;
     s_background = std::thread(vfs_boot_background, plan, std::move(t1));
-    if (s_params.zerolat && !s_params.offline && s_arena == nullptr)
-        s_demand_thread = std::thread(vfs_demand_run); // arena heals via stub_on_miss
     return true;
 }
 
 void vfs_shutdown()
 {
-    if (s_boot_started)
-    {
-        // the demand tier stops before the trap: it resolves through the same
-        // registry, and its in-flight work must not race the teardown
-        s_boot_shutdown = true;
-        s_demand_cv.notify_all();
-        if (s_demand_thread.joinable())
-            s_demand_thread.join();
-    }
     // the trap goes first: no resolution may run against a torn-down store
     // (later faults outside managed ranges chain to the default crash)
     vfs_trap_shutdown();

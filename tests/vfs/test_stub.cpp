@@ -551,48 +551,6 @@ VFS_TEST(stub_healed_query_semantics)
     vfs_unmap_file(base2, size2);
 }
 
-VFS_TEST(stub_zerolat_offline_serves_instantly_and_heals)
-{
-    stub_log_mute mute;
-    stub_env env;
-    TEST_CHECK(stub_setup(env, "stub_zerolat", "soundLegacyMUL.uop"));
-    // enable zero-latency for this test only (vfs_set_params binds the flag)
-    vfs_params params = vfs_get_params();
-    params.zerolat = true;
-    vfs_set_params(params);
-
-    const auto path = fs_path_join(env.prod.install, env.prod.pack_name);
-    uint8_t *base = nullptr;
-    size_t size = 0;
-    TEST_CHECK(vfs_map_file(path, base, size));
-
-    const auto &gone = env.plan.files[env.pack_file_index].assets[1];
-    const uint64_t at = gone.file_offset + gone.ml;
-
-
-    // no fetch engine, offline, zerolat: the fault must not wait - the page
-    // flips readable immediately (with a sound stub: silence => zeroed mark,
-    // no stub payload bytes for this kind)
-    const auto before = vfs_stub_count();
-    volatile uint8_t probe = base[at];
-    (void)probe;
-    TEST_CHECK(vfs_trap_page_mark_at(base, at) == vfs_trap_mark_zeroed);
-    TEST_CHECK(vfs_stub_count() >= before);
-    TEST_CHECK(!vfs_refresh_block(base + at)); // nothing healed yet
-
-    // the blobs land in the store; healing still works offline. The whole
-    // file is resolved so every absent block of the shared first page lands
-    // (pages promote only when fully covered) and part0 materializes too
-    const auto blob = fs_path_join(env.prod.blobs, env.prod.parts[1].blob_rel);
-    TEST_CHECK(test_write_file(blob, env.prod.parts[1].blob));
-    const bool ensured = vfs_ensure_range(base, 0, size);
-    TEST_CHECK(ensured);
-    TEST_CHECK(vfs_trap_page_mark_at(base, at) == vfs_trap_mark_real);
-    TEST_CHECK(vfs_refresh_block(base + at));
-
-    vfs_unmap_file(base, size);
-}
-
 VFS_TEST(stub_misc_and_loose_serve_zero_pages)
 {
     stub_log_mute mute;

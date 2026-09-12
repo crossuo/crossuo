@@ -108,7 +108,7 @@ struct vfs_trap_asset
     // (a failed block is never re-claimed within the same resolution)
     uint32_t attempt = 0;
     // served from a stub payload; `reported` hands the transition to the
-    // backend exactly once (state DB mark + demand prefetch)
+    // backend exactly once (state DB mark)
     uint8_t stubbed = 0;
     uint8_t reported = 0;
 };
@@ -323,7 +323,6 @@ uint32_t s_resolving = 0; // resolutions in flight across all mappings
 vfs_trap_backend s_backend;
 bool s_handler_installed = false;
 bool s_report_counters = false;
-bool s_zerolat = false; // zero-latency: faults serve stubs and enqueue demand fetches
 // escape hatch (--streaming-trap=off): new mappings never protect pages
 bool s_traps = true;
 
@@ -627,11 +626,12 @@ void trap_stub_fill(vfs_trap_mapping &m, uint64_t start, uint64_t end)
 void trap_block_of(const vfs_trap_mapping &m, size_t asset_index, uint64_t fault_offset, vfs_trap_block *out);
 
 // hands every not-yet-reported stub transition overlapping [start, end) to
-// the backend - `stubbed` (state DB mark, counters) always and `prefetch`
-// after zero-latency serves - with no trap lock held
-void trap_report_stubs(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool prefetch)
+// hands every not-yet-reported stub transition overlapping [start, end) to
+// the backend's `stubbed` hook (state DB mark, counters), with no trap lock
+// held
+void trap_report_stubs(vfs_trap_mapping &m, uint64_t start, uint64_t end)
 {
-    if (s_backend.stubbed == nullptr && (!prefetch || s_backend.prefetch == nullptr))
+    if (s_backend.stubbed == nullptr)
         return;
     for (;;)
     {
@@ -656,8 +656,6 @@ void trap_report_stubs(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool p
         {
             if (s_backend.stubbed != nullptr)
                 s_backend.stubbed(s_backend.context, &blocks[i]);
-            if (prefetch && s_backend.prefetch != nullptr)
-                s_backend.prefetch(s_backend.context, &blocks[i]);
             trap_counter_inc(trap_stubbed);
         }
         if (count < VFS_TRAP_BATCH)
@@ -786,7 +784,7 @@ bool trap_resolve_range(vfs_trap_mapping &m, uint64_t start, uint64_t end, bool 
             std::lock_guard<std::mutex> lock(s_mutex);
             trap_stub_fill(m, start, end);
         }
-        trap_report_stubs(m, start, end, false); // no demand fetch: default mode
+        trap_report_stubs(m, start, end);
         trap_counter_inc(trap_zeroed);
     }
     return true;
@@ -870,25 +868,6 @@ bool trap_handle_fault(uint8_t *addr)
     const size_t page = trap_page_of(offset);
     const uint64_t start = uint64_t(page) * s_page_size;
     const uint64_t len = trap_page_span(page, *m);
-    if (s_zerolat)
-    {
-        // zero-latency rule: never wait on the network in the fault path -
-        // serve the stub
-        // payload right away, flip the page and enqueue the real fetch; the
-        // heal arrives through the demand tier and the refresh hooks.
-        // Counted as a placeholder serve, not a resolution: the bytes behind
-        // the fault are synthetic (the per-asset stubbed counter above stays
-        // the once-per-asset report)
-        {
-            std::lock_guard<std::mutex> lock(s_mutex);
-            m->resolve_epoch++;
-            trap_stub_fill(*m, start, start + len);
-        }
-        trap_report_stubs(*m, start, start + len, true);
-        trap_unpin(m);
-        trap_counter_inc(trap_stub_served);
-        return true;
-    }
     const bool ok = trap_resolve_range(*m, start, start + len, true);
     trap_unpin(m);
     if (!ok)
@@ -1010,11 +989,6 @@ void vfs_trap_set_backend(const vfs_trap_backend &backend)
 {
     std::lock_guard<std::mutex> lock(s_mutex);
     s_backend = backend;
-}
-
-void vfs_trap_set_zerolat(bool zerolat)
-{
-    s_zerolat = zerolat;
 }
 
 void vfs_trap_set_traps(bool enabled)
@@ -1448,41 +1422,6 @@ bool vfs_trap_file_of(const uint8_t *base, const VfsPlan **out_plan, size_t *out
     if (out_file_index)
         *out_file_index = m->file_index;
     return true;
-}
-
-bool vfs_trap_resolve_asset(const VfsPlan *plan, uint32_t file_index, uint32_t asset_index)
-{
-    if (plan == nullptr || file_index >= plan->files.size())
-        return false;
-    vfs_trap_mapping *m = nullptr;
-    uint64_t start = 0, end = 0;
-    {
-        std::lock_guard<std::mutex> lock(s_mutex);
-        for (auto &mapping : s_mappings)
-        {
-            if (mapping->zombie || mapping->plan != plan || mapping->file_index != file_index)
-                continue;
-            for (size_t i = 0; i < mapping->assets.size(); ++i)
-            {
-                if (mapping->assets[i].plan_index != asset_index)
-                    continue;
-                m = mapping.get();
-                start = mapping->assets[i].start;
-                end = mapping->assets[i].end;
-                break;
-            }
-            break;
-        }
-        if (m == nullptr)
-            return false;
-        if (m->sealed)
-            return true;
-        trap_pin(m);
-    }
-    // demand-tier context: blocking here is fine (no fault handler involved)
-    const bool ok = trap_resolve_range(*m, start, end, true);
-    trap_unpin(m);
-    return ok;
 }
 
 size_t vfs_trap_page_size()
