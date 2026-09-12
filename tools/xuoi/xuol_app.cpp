@@ -490,13 +490,23 @@ void xuol_app_frame()
     //LOG_INFO("%d, %d", win.width, win.height);
     ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
     ImGui::SetNextWindowSize(size, ImGuiCond_Always);
-    ImGui::Begin(
-        XUOL_AGENT_NAME,
-        nullptr,
-        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
-            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+    // the embedded launcher is a minimal login-screen tool: it has no menu bar,
+    // so its window flags are built without ImGuiWindowFlags_MenuBar
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoSavedSettings |
+                                          ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
+                                          ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                          ImGuiWindowFlags_NoScrollbar;
+#else
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar |
+                                          ImGuiWindowFlags_NoSavedSettings |
+                                          ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
+                                          ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                          ImGuiWindowFlags_NoScrollbar;
+#endif
+    ImGui::Begin(XUOL_AGENT_NAME, nullptr, window_flags);
     {
+#if !defined(XUO_LAUNCHER_EMBEDDED)
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("Options"))
@@ -529,6 +539,7 @@ void xuol_app_frame()
             }
             ImGui::EndMenuBar();
         }
+#endif // !XUO_LAUNCHER_EMBEDDED
 
         if (s_update_request)
         {
@@ -554,18 +565,31 @@ void xuol_app_frame()
             s_update_check = false;
         }
 
-        // GetWindowContentRegionWidth() is gone in imgui 1.90+; this is the
-        // exact expression it used to expand to (see the obsolete-API comments
-        // in imgui.h). "FIXME" retained from the original code.
-        const ImVec2 region_max = ImGui::GetWindowContentRegionMax();
-        const ImVec2 region_min = ImGui::GetWindowContentRegionMin();
-        model.area = ImVec2(region_max.x - region_min.x, size.y - 35); // FIXME
-
         // the shard picker is a pushed sub-view of Accounts, not a peer tab;
         // it renders on its own with its Pick/Cancel footer. Keep s_shown_view
         // in sync here as well so returning from it to a different view would
         // still be picked up by the tab bar below.
         static ui_view s_shown_view = ui_view::count;
+
+        // The views lay themselves out absolutely from model.area, so its height
+        // must already exclude everything above the body: the menu bar and the
+        // tab strip. GetWindowContentRegionMax() already accounts for the menu
+        // bar (ImGuiWindow::DecoOuterSizeY1 includes MenuBarHeight), so only the
+        // tab strip is subtracted. That is the height BeginTabBar() gives its bar
+        // rect, fontSize + 2 * framePadding (see BeginTabBar in
+        // imgui_widgets.cpp), plus the ItemSpacing.y that separates the bar from
+        // the body (the bar is submitted with ItemSize(..., FramePadding.y)).
+        // The picker has no tab bar, so nothing to subtract.
+        const ImVec2 region_max = ImGui::GetWindowContentRegionMax();
+        const ImVec2 region_min = ImGui::GetWindowContentRegionMin();
+        float body_height = region_max.y - region_min.y;
+        if (model.view != ui_view::shard_picker)
+        {
+            const ImGuiStyle &style = ImGui::GetStyle();
+            body_height -= ImGui::GetFontSize() + style.FramePadding.y * 2.0f + style.ItemSpacing.y;
+        }
+        model.area = ImVec2(region_max.x - region_min.x, body_height);
+
         if (model.view == ui_view::shard_picker)
         {
             s_shown_view = model.view;
