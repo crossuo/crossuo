@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+// Ported from X:UO Assist (commonitems/shopitem.h): QString -> std::string.
+
+#ifndef XUOASSIST_SHOPITEM_H
+#define XUOASSIST_SHOPITEM_H
+
+#include "core/global.h"
+
+namespace xuoassist {
+
+class CShopItem
+{
+    SETGET(string, Graphic, "")
+    SETGET(string, Color, "")
+    SETGET(string, Name, "")
+    SETGET(int, Count, 0)
+    SETGET(uint, Price, 0)
+    SETGET(string, Comment, "")
+
+public:
+    CShopItem() {}
+    CShopItem(
+        const string &graphic,
+        const string &color,
+        const string &name,
+        const int &count,
+        const uint &price,
+        const string &comment);
+};
+
+} // namespace xuoassist
+
+#endif // XUOASSIST_SHOPITEM_H

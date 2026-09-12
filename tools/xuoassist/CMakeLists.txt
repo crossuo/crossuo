@@ -11,6 +11,33 @@ set(XUOASSIST_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "")
 set(XUOASSIST_SRCS
   "AssistantWindow.cpp"
   "AssistantUI.cpp"
+  # Phase 1a: Qt-free foundation ported from xuoassist (plan §7 Phase 1 item 1)
+  "core/global.cpp"
+  "core/textconv.cpp"
+  "core/textparser.cpp"
+  "model/basequeue.cpp"
+  "model/gameobjects/gameobject.cpp"
+  "model/gameobjects/gameitem.cpp"
+  "model/gameobjects/gamecharacter.cpp"
+  "model/gameobjects/gameplayer.cpp"
+  "model/gameobjects/gameworld.cpp"
+  "model/commonitems/finditem.cpp"
+  "model/commonitems/ignoreitem.cpp"
+  "model/commonitems/buffitem.cpp"
+  "model/commonitems/displayitem.cpp"
+  "model/commonitems/gump.cpp"
+  "model/commonitems/gumphook.cpp"
+  "model/commonitems/gumpitem.cpp"
+  "model/commonitems/journalmessage.cpp"
+  "model/commonitems/menu.cpp"
+  "model/commonitems/menuitem.cpp"
+  "model/commonitems/prompt.cpp"
+  "model/commonitems/shopitem.cpp"
+  "model/commonitems/skill.cpp"
+  "model/commonitems/tradewindow.cpp"
+  "model/commonitems/vendorshopitem.cpp"
+  "model/datareader.cpp"
+  "model/datawriter.cpp"
 )
 
 add_library(xuoassist STATIC ${XUOASSIST_SRCS})
