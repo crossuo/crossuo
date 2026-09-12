@@ -30,6 +30,7 @@
 
 #include "xuol_app.h"
 #include "xuo_updater.h"
+#include "white_label.h"
 
 namespace xuol {
 
@@ -117,7 +118,7 @@ void XUODefaultStyle()
 
 void view_changelog()
 {
-    open_url("http://crossuo.com/changelog.html");
+    open_url(XUO_DEFAULT_SHARD_CHANGELOG);
 }
 
 void ui_updates(ui_model &m)
@@ -242,9 +243,13 @@ void load_config()
     if (fp)
         fs_close(fp);
     if (s_config.entries.size())
+    {
         launcher::dump(&s_config.entries[0]);
+    }
     else
+    {
         s_config.entries.push_back(launcher::default_entry());
+    }
 }
 
 void write_config(void *_fp)

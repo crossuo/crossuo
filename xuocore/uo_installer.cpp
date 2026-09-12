@@ -9,9 +9,10 @@
 #include "xuoi.h"
 #include <inttypes.h>
 #include <thread>
+#include "../white_label.h"
 
-#define DATA_PRODUCT_SERVER "http://patch.uo.eamythic.com/"
-#define DATA_PRODUCT_PATH "uopatch-sa/legacyrelease/uo/manifest/"
+#define DATA_PRODUCT_SERVER XUO_DEFAULT_DATA_PRODUCT_SERVER
+#define DATA_PRODUCT_PATH XUO_DEFAULT_DATA_PRODUCT_PATH
 #define DATA_PRODUCT_URL DATA_PRODUCT_SERVER DATA_PRODUCT_PATH
 #define DATA_PRODUCT_FILE "uo-legacyrelease.prod"
 #define UOI_AGENT_NAME "EAMythic Patch Client"

@@ -21,6 +21,7 @@
 #include "shards.h"
 #include "ui_shards.h"
 #include "xuol_app.h"
+#include "../../white_label.h"
 
 namespace xuol {
 
@@ -105,6 +106,17 @@ void load_accounts()
     account::cfg(fp, s_accounts);
     if (fp)
         fs_close(fp);
+
+    if (s_accounts.entries.empty())
+    {
+        auto default_shard = account::default_entry();
+        default_shard.account_clientversion = XUO_DEFAULT_CLIENT_VERSION_STR;
+        default_shard.account_clienttype = XUO_DEFAULT_CLIENT_TYPE;
+        default_shard.account_loginserver = XUO_DEFAULT_SERVER_ADDRESS "," MACRO_TOSTRING(XUO_DEFAULT_SERVER_PORT);
+        default_shard.account_profile = XUO_DEFAULT_SHARD_NAME;
+        s_accounts.entries.emplace_back(default_shard);
+    }
+
     auto it = s_accounts.entries.emplace(s_accounts.entries.begin());
     (*it).account_profile = "<new>";
     int i = 0;

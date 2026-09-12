@@ -288,27 +288,27 @@ void CGumpScreenMain::GUMP_BUTTON_EVENT_C
 #endif
         case ID_MS_UOACCOUNT:
         {
-            Platform::OpenBrowser("https://accounts.eamythic.com/");
+            Platform::OpenBrowser(XUO_DEFAULT_SHARD_ACCOUNT);
             break;
         }
         case ID_MS_UOCOM:
         {
-            Platform::OpenBrowser("https://uo.com");
+            Platform::OpenBrowser(XUO_DEFAULT_SHARD_WEB);
             break;
         }
         case ID_MS_HELP:
         {
-            Platform::OpenBrowser("https://crossuo.com/");
+            Platform::OpenBrowser(XUO_DEFAULT_SHARD_HELP);
             break;
         }
         case ID_MS_MOVIE:
         {
-            Platform::OpenBrowser("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+            Platform::OpenBrowser(XUO_DEFAULT_SHARD_VIDEO);
             break;
         }
         case ID_MS_CREDITS:
         {
-            Platform::OpenBrowser("https://github.com/crossuo/crossuo/graphs/contributors");
+            Platform::OpenBrowser(XUO_DEFAULT_SHARD_CREDITS);
             break;
         }
         default:

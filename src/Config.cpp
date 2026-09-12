@@ -658,7 +658,7 @@ bool ApplyClientProfile(
 
     // loginserver uses the config file format and may carry a port: "host,port"
     g_Config.ServerAddress = loginserver;
-    g_Config.ServerPort = 2593;
+    g_Config.ServerPort = XUO_DEFAULT_SERVER_PORT;
     const auto comma = loginserver.find(',');
     if (comma != astr_t::npos)
     {

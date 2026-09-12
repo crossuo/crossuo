@@ -197,6 +197,7 @@ void ui_shards(ui_model &m, bool picker)
                         case shard::tag_install_type::uo_patch_server:
                         case shard::tag_install_type::uo_latest:
                         {
+                            // TODO: fix using xuoi/vuoi installer
                             if (ImGui::MenuItem("Download Now", nullptr, false))
                                 open_url(
                                     "http://web.cdn.eamythic.com/us/uo/installers/20120309/UOClassicSetup_7_0_24_0.exe");

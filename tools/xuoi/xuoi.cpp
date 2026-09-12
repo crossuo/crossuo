@@ -17,6 +17,7 @@
 #include <xuocore/uop.h>
 #include "keypatch.h"
 #include "xuo_updater.h"
+#include "../../white_label.h"
 
 #define XUOI_AGENT_NAME "EAMythic Patch Client"
 #define XUOI_MAX_DOWNLOAD_SIZE (1024 * 1024 * 1024)
@@ -30,8 +31,8 @@
 #define XUOI_THREAD_COUNT (1)
 #endif
 
-#define DATA_OFFICIAL_SERVER "http://patch.uo.eamythic.com/"
-#define DATA_PRODUCT_SERVER_ADDRESS "uopatch-sa/legacyrelease/uo/manifest/"
+#define DATA_OFFICIAL_SERVER XUO_DEFAULT_DATA_PRODUCT_SERVER
+#define DATA_PRODUCT_SERVER_ADDRESS XUO_DEFAULT_DATA_PRODUCT_PATH
 #define DATA_PRODUCT_FILE "uo-legacyrelease.prod"
 #define DATA_PATCHER_SERVER_ADDRESS "uopatch-sa/legacyrelease/patcher/manifest/"
 #define DATA_PATCHER_FILE "patcher.prod"

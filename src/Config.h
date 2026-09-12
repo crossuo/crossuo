@@ -6,17 +6,18 @@
 #include <stdint.h>
 #include <common/fs.h>
 #include <xuocore/enumlist.h>
+#include "../white_label.h"
 
 struct Config
 {
     astr_t Login;
     astr_t Password;
-    astr_t ClientVersionString = "7.0.117.0";
-    astr_t ProtocolClientVersionString = "7.0.117.0";
+    astr_t ClientVersionString = XUO_DEFAULT_CLIENT_VERSION_STR;
+    astr_t ProtocolClientVersionString = XUO_DEFAULT_PROTOCOL_VERSION_STR;
     astr_t CustomPath;
-    astr_t ServerAddress = "login.uogdemise.com";
+    astr_t ServerAddress = XUO_DEFAULT_SERVER_ADDRESS;
     astr_t LocaleOverride;
-    uint16_t ServerPort = 2593;
+    uint16_t ServerPort = XUO_DEFAULT_SERVER_PORT;
     uint16_t ClientFlag = 0;
     bool SavePassword = true;
     bool AutoLogin = false;
@@ -30,8 +31,8 @@ struct Config
     uint32_t Key1 = 0;
     uint32_t Key2 = 0;
     uint32_t Key3 = 0;
-    uint32_t ClientVersion = CV_LATEST;
-    uint32_t ProtocolClientVersion = CV_LATEST;
+    uint32_t ClientVersion = XUO_DEFAULT_CLIENT;
+    uint32_t ProtocolClientVersion = XUO_DEFAULT_CLIENT;
     uint32_t EncryptionType = 0;
 
     bool ClientVersionModified = false;

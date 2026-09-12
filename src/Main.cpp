@@ -58,8 +58,8 @@ static bool InitCli(int argc, char *argv[])
     g_cli["port"]
         .abbreviation('p')
         .type(po::u32)
-        .description("LoginServer port, defaults to 2593")
-        .fallback(2593);
+        .description("LoginServer port, defaults to " MACRO_TOSTRING(XUO_DEFAULT_SERVER_PORT))
+        .fallback(XUO_DEFAULT_SERVER_PORT);
     g_cli["login"].abbreviation('l').type(po::string).description("Account username/login");
     g_cli["password"]
         .abbreviation('w')
