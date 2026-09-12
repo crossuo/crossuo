@@ -96,6 +96,133 @@ void http_shutdown()
     curl_global_cleanup();
 }
 
+// ---------------------------------------------------------------------------
+// extended GET (status / retry-after / body cap / range) - the transfer seam
+// the streaming layer (vfs_transport) runs on. One thread-local easy handle,
+// reset per request: the connection cache survives across a thread's
+// requests (keep-alive for thousands of small range GETs) while every other
+// option state resets.
+// ---------------------------------------------------------------------------
+
+struct http_header_state
+{
+    long retry_after = -1;
+};
+
+struct http_body_state
+{
+    std::vector<uint8_t> *body;
+    size_t cap; // 0: unbounded
+};
+
+static size_t http_write_body(const char *data, size_t size, size_t nmemb, void *out)
+{
+    auto *st = static_cast<http_body_state *>(out);
+    const size_t amount = size * nmemb;
+    // hard body cap: transfers exceeding it abort (CURLE_WRITE_ERROR), which
+    // is how a range-ignoring server (200 + full body) is cut off before it
+    // can balloon
+    if (st->cap != 0 && st->body->size() + amount > st->cap)
+    {
+        LOG_WARN("GET: body exceeds cap (%zu bytes), aborting transfer", st->cap);
+        return 0;
+    }
+    st->body->insert(st->body->end(), data, data + amount);
+    return amount;
+}
+
+static size_t http_header(const char *data, size_t size, size_t nmemb, void *out)
+{
+    auto *st = static_cast<http_header_state *>(out);
+    const size_t amount = size * nmemb;
+    // delta-seconds form only; date forms fall back to the caller's backoff
+    if (amount > 13 && strncasecmp(data, "Retry-After:", 12) == 0)
+    {
+        char value[32] = {};
+        const size_t take = amount - 12 < sizeof(value) - 1 ? amount - 12 : sizeof(value) - 1;
+        memcpy(value, data + 12, take);
+        const long seconds = strtol(value, nullptr, 10);
+        if (seconds > 0)
+            st->retry_after = seconds;
+    }
+    return amount;
+}
+
+static http_response http_perform(
+    const char *url, const char *agent, const char *range, size_t body_cap)
+{
+    http_response out;
+
+    // thread-local easy handle: reset per request so option state cannot
+    // leak, while the connection cache (the reason for a persistent handle)
+    // survives across this thread's requests
+    static thread_local CURL *tls_handle = nullptr;
+    if (!tls_handle)
+        tls_handle = curl_easy_init();
+    CURL *curl = tls_handle;
+    if (!curl)
+    {
+        LOG_ERROR("GET %s: no curl handle", url);
+        return out;
+    }
+
+    curl_easy_reset(curl);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, agent && *agent ? agent : "CrossUO");
+    // TLS verification is deliberately off for now: the official product and
+    // file repos are plain http today (see docs/NOTES.md - closes with .meta
+    // sha256 verification or a CA-bundle strategy)
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+    // a stalled connection must never hang a worker: 10s to connect, then
+    // 30s at under 1 B/s
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 30L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, http_write_body);
+    http_body_state body_state{ &out.body, body_cap };
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body_state);
+    http_header_state header_state;
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, http_header);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_state);
+    // blobs are addressed immutably; a cached copy is as good as a fresh one
+    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+    if (range)
+        curl_easy_setopt(curl, CURLOPT_RANGE, range);
+
+    const CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK)
+    {
+        LOG_WARN("GET %s: %s", url, curl_easy_strerror(res));
+        out.body.clear();
+        out.status = 0;
+        return out;
+    }
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &out.status);
+    out.retry_after = header_state.retry_after;
+    return out;
+}
+
+bool http_get(const char *url, const char *agent, size_t body_cap, http_response *out)
+{
+    if (!url || !*url || out == nullptr)
+        return false;
+    *out = http_perform(url, agent, nullptr, body_cap);
+    return out->status != 0;
+}
+
+bool http_get_range(
+    const char *url, const char *agent, uint64_t offset, uint64_t length, http_response *out)
+{
+    if (!url || !*url || out == nullptr || length == 0)
+        return false;
+    const std::string range =
+        std::to_string(offset) + "-" + std::to_string(offset + length - 1);
+    *out = http_perform(url, agent, range.c_str(), length);
+    return out->status == 206 && out->body.size() == length;
+}
+
 bool http_get_binary(const char *url, const uint8_t *buf, size_t *size)
 {
     assert(s_curl_handle && "http_init wasn't called");
