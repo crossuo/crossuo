@@ -133,6 +133,14 @@ bool ListBox(
                     callback(i);
                 }
             }
+            // a right click opens the item's context menu; make it operate on
+            // the row under the cursor instead of the previously selected one,
+            // otherwise actions like "Launch" would use the stale selection
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right) && !item_selected)
+            {
+                *current_item = i;
+                value_changed = true;
+            }
             if (item_selected)
                 ImGui::SetItemDefaultFocus();
             ImGui::PopID();

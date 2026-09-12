@@ -206,43 +206,11 @@ static fs_path account_create_config(const account::entry &account)
 // embedded in the client: apply the profile live instead of spawning
 // another process; the client persists it to crossuo.cfg itself and the
 // boot/login flow reacts to the new values
-// reload confirmation is a per-frame modal: it can only be driven from the
-// app frame, so the apply just requests it and the tick below renders it
-static bool s_reload_dialog = false;
-// DialogYesNo() reports its answer through the bool passed by reference and
-// only returns true when the dialog was dismissed by "Yes". The answer
-// therefore has to live in a static: a per-frame local initialized to true
-// would swallow the "No" (the popup closes, the tick sees false from the
-// return value, never clears s_reload_dialog, and the dialog reopens on the
-// next frame, trapping the user until they pick "Yes").
-static bool s_reload_answer = false;
-
-void account_reload_dialog_tick()
-{
-    if (!s_reload_dialog)
-        return;
-
-    s_reload_answer = true; // keeps the modal up until the user answers
-    DialogYesNo(
-        "Server",
-        "This server uses a different data path.\n"
-        "Reload the client to apply the new data?",
-        s_reload_answer);
-
-    if (s_reload_answer)
-    {
-        s_reload_dialog = false;
-        xuol_request_reload();
-        return;
-    }
-
-    // "No": only the reload is cancelled. The profile itself was already
-    // persisted by client_apply_profile(), so there is nothing to undo; it
-    // simply takes effect on the next start.
-    s_reload_dialog = false;
-    LOG_INFO("reload declined, the new data applies on the next start");
-}
-
+//
+// when the profile cannot be applied live (different data path, in game,
+// connected) the client is simply relaunched: the profile was already
+// persisted by client_apply_profile(), so the restarted process picks it up.
+// There is no confirmation dialog; the restart is the answer.
 static xuol::apply_result account_apply_live(int account_index)
 {
     assert(account_index >= 0 && account_index < (int)s_accounts.entries.size());
@@ -268,10 +236,8 @@ static xuol::apply_result account_apply_live(int account_index)
     }
     else if (result == xuol::apply_result::needs_restart)
     {
-        // keep the launcher open: the reload confirmation renders from the
-        // app frame (account_reload_dialog_tick)
-        LOG_INFO("profile saved, the client must reload to apply it");
-        s_reload_dialog = true;
+        LOG_INFO("profile saved, the client reloads to apply it");
+        xuol_request_reload();
     }
     return result;
 }
@@ -287,8 +253,10 @@ static void account_launch(int account_index)
 #if defined(XUO_LAUNCHER_EMBEDDED)
     xuol_set_last_used(account_index);
     const auto result = account_apply_live(account_index);
-    // on needs_restart the launcher stays open for the reload confirmation;
-    // closing it here would kill the dialog before the user can answer
+    // needs_restart already latched the reload, which the app frame performs;
+    // do NOT request a close in that case: hiding the launcher would stop the
+    // frame from running and the pending reload would never be acted upon.
+    // The relaunched client takes this process down anyway.
     if (result == xuol::apply_result::applied)
     {
         xuol_launch_quit();

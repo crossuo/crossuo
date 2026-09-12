@@ -592,8 +592,8 @@ void xuol_app_frame()
             ui_shards(model, true);
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
-        account_reload_dialog_tick();
-
+        // a profile that could not be applied live asked for a reload; the
+        // restart always happens, there is no confirmation step
         if (s_reload_request)
         {
             s_reload_request = false;

@@ -13,6 +13,5 @@ extern const char *client_types_cfg[];
 void load_accounts();
 void write_accounts(void *fp);
 void ui_accounts(ui_model &m);
-void account_reload_dialog_tick();
 
 } // namespace xuol

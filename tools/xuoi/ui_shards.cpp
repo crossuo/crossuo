@@ -155,7 +155,11 @@ void ui_shards(ui_model &m, bool picker)
             //    ImGui::SetTooltip("Shard %04d hovered", i);
             ImGui::EndChild();
 
-            if (ImGui::IsItemClicked())
+            // select on either button: the context menu below acts on
+            // s_selected, so a right click must move the selection to the row
+            // under the cursor rather than leaving it on a previous one
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Left) ||
+                ImGui::IsItemClicked(ImGuiMouseButton_Right))
                 s_selected = i;
 
             if (has_context && ImGui::BeginPopupContextItem("item context menu"))
