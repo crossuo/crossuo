@@ -375,7 +375,6 @@ void ui_accounts(ui_model &m)
     float left_w = fmin(floor(m.area.x * (1.0f / 3.0f)), profile_max_w);
     ImGui::BeginChild("left", { left_w, m.area.y }, false, window_flags);
     {
-        ImGui::Text(ICON_FK_USER " Accounts");
         ImGui::SetNextItemWidth(left_w);
         ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
         if (ListBox(

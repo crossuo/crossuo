@@ -499,22 +499,6 @@ void xuol_app_frame()
     {
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu("View"))
-            {
-                bool selected = model.view == ui_view::accounts;
-                if (ImGui::MenuItem(ICON_FK_USER " Accounts", nullptr, &selected))
-                    model.view = ui_view::accounts;
-                selected = model.view == ui_view::updates;
-                if (ImGui::MenuItem(ICON_FK_CLOUD_DOWNLOAD " Updates", nullptr, &selected))
-                    model.view = ui_view::updates;
-                selected = model.view == ui_view::backups;
-                if (ImGui::MenuItem(ICON_FK_FILE_ARCHIVE_O " Backups", nullptr, &selected))
-                    model.view = ui_view::backups;
-                selected = model.view == ui_view::shards;
-                if (ImGui::MenuItem(ICON_FK_GLOBE_W " Shards", nullptr, &selected))
-                    model.view = ui_view::shards;
-                ImGui::EndMenu();
-            }
             if (ImGui::BeginMenu("Options"))
             {
                 auto &cfg = config();
@@ -541,10 +525,6 @@ void xuol_app_frame()
                 {
                 }
 #endif
-                ImGui::Separator();
-                if (ImGui::MenuItem(ICON_FK_QUESTION_CIRCLE " About", nullptr))
-                {
-                }
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -580,16 +560,60 @@ void xuol_app_frame()
         const ImVec2 region_max = ImGui::GetWindowContentRegionMax();
         const ImVec2 region_min = ImGui::GetWindowContentRegionMin();
         model.area = ImVec2(region_max.x - region_min.x, size.y - 35); // FIXME
-        if (model.view == ui_view::accounts)
-            ui_accounts(model);
-        if (model.view == ui_view::updates)
-            ui_updates(model);
-        else if (model.view == ui_view::backups)
-            ui_backups(model);
-        else if (model.view == ui_view::shards)
-            ui_shards(model);
-        else if (model.view == ui_view::shard_picker)
+
+        // the shard picker is a pushed sub-view of Accounts, not a peer tab;
+        // it renders on its own with its Pick/Cancel footer. Keep s_shown_view
+        // in sync here as well so returning from it to a different view would
+        // still be picked up by the tab bar below.
+        static ui_view s_shown_view = ui_view::count;
+        if (model.view == ui_view::shard_picker)
+        {
+            s_shown_view = model.view;
             ui_shards(model, true);
+        }
+        else if (ImGui::BeginTabBar("##views"))
+        {
+            // model.view is owned outside this function (boot picks the initial
+            // view, ui_stack push/pop restores it when leaving the shard
+            // picker), so the tab bar has to follow it. _SetSelected is a
+            // trigger, not a state: passing it every frame would re-queue the
+            // focus after an earlier tab was already submitted, swallowing a
+            // click on a tab that precedes the current one. Track the view we
+            // rendered last and only force the selection when it actually
+            // changed underneath us.
+            const bool view_changed = s_shown_view != model.view;
+            s_shown_view = model.view;
+
+            // Every tab must be submitted on every frame: imgui culls from the
+            // tab bar any tab that was not submitted in the current frame
+            // (ImGuiTabBar::Tabs is rebuilt from the BeginTabItem calls). So
+            // these cannot be chained with else-if: only the selected tab
+            // returns true, and short-circuiting would make the remaining tabs
+            // disappear entirely. Submit all of them, and draw each view's
+            // content inside its own Begin/End pair, which is also what lets
+            // EndTabBar() measure the contents height correctly.
+            const auto tab = [view_changed](ui_view v, const char *label, void (*body)(ui_model &)) {
+                const ImGuiTabItemFlags flags = (view_changed && model.view == v)
+                                                    ? ImGuiTabItemFlags_SetSelected
+                                                    : ImGuiTabItemFlags_None;
+                if (ImGui::BeginTabItem(label, nullptr, flags))
+                {
+                    model.view = v;
+                    body(model);
+                    ImGui::EndTabItem();
+                }
+            };
+
+            // ui_shards() takes an optional picker argument, so it cannot decay
+            // to the plain ui_model& signature; wrap it.
+            const auto shards_body = [](ui_model &m) { ui_shards(m); };
+
+            tab(ui_view::accounts, ICON_FK_USER " Accounts", ui_accounts);
+            tab(ui_view::updates, ICON_FK_CLOUD_DOWNLOAD " Updates", ui_updates);
+            tab(ui_view::backups, ICON_FK_FILE_ARCHIVE_O " Backups", ui_backups);
+            tab(ui_view::shards, ICON_FK_GLOBE_W " Shards", shards_body);
+            ImGui::EndTabBar();
+        }
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
         // a profile that could not be applied live asked for a reload; the
