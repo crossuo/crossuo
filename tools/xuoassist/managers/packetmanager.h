@@ -160,9 +160,12 @@ extern CPacketManager g_PacketManager;
 
 // Tap entry points for the client's packet paths (src/Managers/PacketManager
 // .cpp OnPacket, src/CrossUO.cpp CGame::Send, src/Network/PluginPackets.cpp
-// SendToPlugin). Each is a single connected-check before dispatch; they never
-// consume packets (the external plugin could, the built-in assistant does not).
-void AssistantPackets_Recv(uint8_t *buf, size_t size);
+// SendToPlugin). Each is a single connected-check before dispatch. Recv may
+// consume packets exactly like the external plugin did (returns true when the
+// packet was swallowed - the WaitTarget auto-target eats the 0x6C target-cursor
+// reply so the client keeps no open cursor); Send never consumes.
+// Returns true when the packet was consumed by the assistant.
+bool AssistantPackets_Recv(uint8_t *buf, size_t size);
 void AssistantPackets_Send(uint8_t *buf, size_t size);
 
 } // namespace xuoassist

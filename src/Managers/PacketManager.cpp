@@ -711,9 +711,14 @@ void CPacketManager::OnPacket()
     {
 #if defined(XUO_ASSISTANT)
         // in-client assistant observes every server packet before the client
-        // handlers, exactly where the plugin ABI's OnRecv sits; it never
-        // consumes packets, so the client always parses below
-        xuoassist::AssistantPackets_Recv(Start, (size_t)Size);
+        // handlers, exactly where the plugin ABI's OnRecv sits; the assistant
+        // may consume packets exactly like the external plugin did (WaitTarget
+        // auto-target swallows the 0x6C reply so the client keeps no open
+        // cursor), and a consumed packet skips the client parsing below
+        if (xuoassist::AssistantPackets_Recv(Start, (size_t)Size))
+        {
+            return;
+        }
 #endif
         if (g_PluginManager.PacketRecv(Start, (int)Size))
         {

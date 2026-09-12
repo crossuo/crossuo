@@ -9,10 +9,16 @@
 //  - world-model mutations (g_World/g_Player/g_Skills/assistant globals) are
 //    kept verbatim - this is the packet-parity surface;
 //  - widget pokes became g_AssistantEvents notifications;
-//  - modules ported in later rounds (target/assist core, command/textcommand,
-//    macros recording, filters, profile config, gump/menu/trade/prompt/party/
-//    context-menu/corpse/spell/skill managers, UOAM map, shop agents) are
-//    PORT-TODO(module) markers with the original call quoted;
+//  - Phase 1c resolved the PORT-TODO(module) markers whose owners landed
+//    (assist core, target, text commands, config module, gump/menu/trade/
+//    prompt/party/context-menu/corpse/spell/skill/clientmacro/guild/
+//    display-state managers, the speech/sound/text-replace filters, the
+//    main-option gates and the font-color replaces). The remaining markers
+//    are annotated with the round that consumes them:
+//    PORT-TODO(phase-2) text window/inspector/map UI pokes,
+//    PORT-TODO(phase-3) macro recording + hotkey waits,
+//    PORT-TODO(phase-4) shop agent / script / journal commands,
+//    PORT-TODO(phase-5) UOAM/map-window notifies;
 //  - g_ClilocManager (client) supersedes the assistant's cliloc manager and is
 //    called directly (plan §7 "What NOT to do");
 //  - the per-packet LOG/LOG_DUMP lines are dropped (the client has its own
@@ -25,8 +31,23 @@
 
 #include "packetmanager.h"
 #include "../core/assistantevents.h"
+#include "../core/assist.h"
 #include "../core/packets.h"
 #include "../core/clientversion.h"
+#include "../core/target.h"
+#include "../core/textcommandmanager.h"
+#include "../config/assistantconfig.h"
+#include "../managers/clientmacromanager.h"
+#include "../managers/contextmenumanager.h"
+#include "../managers/corpsemanager.h"
+#include "../managers/guildmanager.h"
+#include "../managers/gumpmanager.h"
+#include "../managers/menumanager.h"
+#include "../managers/partymanager.h"
+#include "../managers/promptmanager.h"
+#include "../managers/skillmanager.h"
+#include "../managers/spellmanager.h"
+#include "../managers/trademanager.h"
 #include "../model/gameobjects/gameplayer.h"
 #include "../model/gameobjects/gameworld.h"
 #include "../model/commonitems/skill.h"
@@ -485,7 +506,14 @@ static void AssistantPackets_CheckDisconnect()
     }
 }
 
-void AssistantPackets_Recv(uint8_t *buf, size_t size)
+// Returns the consumption result: true when the assistant consumed the packet
+// and the client must skip its own processing. The internal handler chain keeps
+// the plugin ABI convention (true = pass through, false = consumed), so the
+// result is inverted here. The only current producer of "consumed" is the
+// WaitTarget hook path (TargetR/0x6C via CTarget::SetRecvData -> CheckHook,
+// and its MultiPlacement/0x99 sibling): the auto-target swallows the reply so
+// the client keeps no open cursor, exactly like the external plugin did.
+bool AssistantPackets_Recv(uint8_t *buf, size_t size)
 {
     AssistantPackets_Init();
 
@@ -495,10 +523,10 @@ void AssistantPackets_Recv(uint8_t *buf, size_t size)
         && *buf != 0xFC) // plugin submessages (skill/spell/macro lists are
                          // injected at plugin load, before any world exists)
     {
-        return;
+        return false;
     }
 
-    g_PacketManager.PacketRecv(buf, size);
+    return !g_PacketManager.PacketRecv(buf, size);
 }
 
 void AssistantPackets_Send(uint8_t *buf, size_t size)
@@ -544,7 +572,7 @@ PACKET_HANDLER(LightLevel)
 
     g_LightLevel = level;
 
-    // PORT-TODO(config): return !g_TabMain->LightFilter(); (filters/config round)
+    return !g_AssistantConfig.LightFilter(); // was: return !g_TabMain->LightFilter();
     return true;
 }
 
@@ -564,7 +592,7 @@ PACKET_HANDLER(PersonalLightLevel)
         g_PersonalLightLevel = level;
     }
 
-    // PORT-TODO(config): return !g_TabMain->LightFilter();
+    return !g_AssistantConfig.LightFilter(); // was: return !g_TabMain->LightFilter();
     return true;
 }
 
@@ -605,8 +633,8 @@ PACKET_HANDLER(EnterWorld)
     g_MenuReceived = false;
     g_GumpReceived = false;
     g_PromptReceived = false;
-    // PORT-TODO(target): g_Target.ClearHooks(); (assist/target round)
-    // PORT-TODO(macros): g_TabMacros->Reset(); (macro recording round)
+    g_Target.ClearHooks(); // was: g_Target.ClearHooks(); (assist/target round)
+    // PORT-TODO(phase-3/macros): g_TabMacros->Reset(); (macro recording round)
 
     RELEASE_POINTER(g_World);
 
@@ -627,13 +655,19 @@ PACKET_HANDLER(EnterWorld)
 
     g_Connected = true;
 
-    // PORT-TODO(config): g_AssistantForm->LoadProfileBySerial(serial);
-    // PORT-TODO(config): if (g_Player->Dead() && g_TabMain->NoGrayScreen())
-    //                       pack16(m_Start + 9, 0x03DB); g_OriginalGraphic = 0x03DB;
-    // PORT-TODO(config): if (runAutostart) g_AssistantForm->RunAutostart();
+    // was: g_AssistantForm->LoadProfileBySerial(serial);
+    g_AssistantConfig.LoadProfileBySerial(serial);
+    if (g_Player->Dead() && g_AssistantConfig.NoGrayScreen())
+    {
+        pack16(m_Start + 9, 0x03DB);
+        g_OriginalGraphic = 0x03DB;
+    }
+    // was: if (runAutostart) g_AssistantForm->RunAutostart(); (the Autostart
+    // script run needs the script engine)
+    // PORT-TODO(phase-4): g_TabScripts->RunScript("Autostart", ...) (scripts round)
     (void)runAutostart;
-    // PORT-TODO(map): g_UOMapManager.UOAMEnterWorld();
-    // PORT-TODO(config/map UI): if (g_MapSettings.GetShowOnLogin()) g_TabMain->OpenMap();
+    // PORT-TODO(phase-5): g_UOMapManager.UOAMEnterWorld(); (map window round)
+    // PORT-TODO(phase-5): if (g_MapSettings.GetShowOnLogin()) g_TabMain->OpenMap();
 
     // was: if (g_Map != nullptr && g_Map->isVisible()) g_Map->SetWantRedraw(true);
     g_AssistantEvents->OnMapRedraw();
@@ -663,7 +697,7 @@ PACKET_HANDLER(UpdateHitpoints)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // PORT-TODO(map): g_UOMapManager.UpdateHits();
+        // PORT-TODO(phase-5): g_UOMapManager.UpdateHits(); (map window round)
     }
 
     // was: if (g_Map != nullptr && g_Map->isVisible()) g_Map->CheckForUpdate(serial);
@@ -694,7 +728,7 @@ PACKET_HANDLER(UpdateMana)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // PORT-TODO(map): g_UOMapManager.UpdateMana();
+        // PORT-TODO(phase-5): g_UOMapManager.UpdateMana(); (map window round)
     }
 
     g_AssistantEvents->OnMapUpdate(obj->GetSerial());
@@ -724,7 +758,7 @@ PACKET_HANDLER(UpdateStamina)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // PORT-TODO(map): g_UOMapManager.UpdateStam();
+        // PORT-TODO(phase-5): g_UOMapManager.UpdateStam(); (map window round)
     }
 
     g_AssistantEvents->OnMapUpdate(obj->GetSerial());
@@ -761,9 +795,9 @@ PACKET_HANDLER(MobileAttributes)
 
         g_AssistantEvents->OnTitleRedraw();
 
-        // PORT-TODO(map): g_UOMapManager.UpdateHits();
-        // PORT-TODO(map): g_UOMapManager.UpdateMana();
-        // PORT-TODO(map): g_UOMapManager.UpdateStam();
+        // PORT-TODO(phase-5): g_UOMapManager.UpdateHits(); (map window round)
+        // PORT-TODO(phase-5): g_UOMapManager.UpdateMana(); (map window round)
+        // PORT-TODO(phase-5): g_UOMapManager.UpdateStam(); (map window round)
     }
 
     g_AssistantEvents->OnMapUpdate(obj->GetSerial());
@@ -877,8 +911,11 @@ PACKET_HANDLER(UpdatePlayer)
 
     if (g_Player->Dead())
     {
-        // PORT-TODO(config): if (g_TabMain->NoGrayScreen())
-        //                        pack16(m_Start + 5, 0x03DB); m_Start[7] = 0;
+        if (g_AssistantConfig.NoGrayScreen())
+        {
+            pack16(m_Start + 5, 0x03DB);
+            m_Start[7] = 0;
+        }
 
         if (oldDead != g_Player->Dead())
         {
@@ -940,7 +977,7 @@ PACKET_HANDLER(CharacterStatus)
             g_Player->SetArmor(ReadInt16BE());
             g_Player->SetWeight(ReadUInt16BE());
 
-            // PORT-TODO(map): g_UOMapManager.UpdateHits/Mana/Stam();
+            // PORT-TODO(phase-5): g_UOMapManager.UpdateHits/Mana/Stam(); (map window round)
 
             if (flag >= 5)
             {
@@ -1172,8 +1209,11 @@ PACKET_HANDLER(UpdateObject)
 
             if (g_Player->Dead())
             {
-                // PORT-TODO(config): if (g_TabMain->NoGrayScreen())
-                //     g_OriginalGraphic = 0x03DB; pack16(m_Start + 7, 0x03DB);
+                if (g_AssistantConfig.NoGrayScreen())
+                {
+                    g_OriginalGraphic = 0x03DB;
+                }
+                pack16(m_Start + 7, 0x03DB);
 
                 if (oldDead != g_Player->Dead())
                 {
@@ -1203,7 +1243,7 @@ PACKET_HANDLER(UpdateObject)
 
         if (((CGameCharacter *)obj)->GetMaxHits() == 0)
         {
-            // PORT-TODO(assist): g_Assistant.GetStatus(obj->GetSerial()); (assist core round)
+            g_Assistant.GetStatus(obj->GetSerial());
         }
     }
 
@@ -1431,9 +1471,10 @@ PACKET_HANDLER(DeleteObject)
             }
         }
 
-        // PORT-TODO(party): if (g_PartyManager.Contains(obj->GetSerial()))
-        //                       g_PartyManager.SaveMemberInfo((CGameCharacter *)obj);
-        // (agents/party round; same marker as model/gameworld.cpp)
+        if (g_PartyManager.Contains(obj->GetSerial()))
+        {
+            g_PartyManager.SaveMemberInfo((CGameCharacter *)obj);
+        }
 
         g_World->RemoveObject(obj);
 
@@ -1480,7 +1521,7 @@ PACKET_HANDLER(UpdateCharacter)
     {
         if (obj->GetMaxHits() == 0)
         {
-            // PORT-TODO(assist): g_Assistant.GetStatus(serial); (assist core round)
+            g_Assistant.GetStatus(serial);
         }
 
         g_World->UpdateGameObject(
@@ -1494,7 +1535,7 @@ PACKET_HANDLER(UpdateCharacter)
 
 PACKET_HANDLER(WarmodeS)
 {
-    // PORT-TODO(macros): if (g_World != nullptr && g_TabMacros->GetRecording())
+    // PORT-TODO(phase-3/macros): if (g_World != nullptr && g_TabMacros->GetRecording())
     //     g_TabMacros->AddAction(new CMacroWithIntValue(MT_WAR_MODE, ReadUInt8()), false);
     // (macro recording round)
 
@@ -1581,33 +1622,31 @@ PACKET_HANDLER(UpdateSkillsR)
 
 PACKET_HANDLER(TargetS)
 {
-    // PORT-TODO(target): the assist/target round (Phase 1c) restores:
-    //   if (g_TargetHandler != nullptr) { (g_Assistant.*(g_TargetHandler))(m_Start);
-    //       g_TargetHandler = nullptr; g_Target.Reset(); g_Target.RestoreTarget();
-    //       return false; }
-    //   return g_Target.SetSendData(*this);
-    // Until then the packet is never intercepted (original behavior when no
-    // target hook is armed).
+    // The assist/target round (Phase 1c) restores the original interception:
+    if (g_TargetHandler != nullptr)
+    {
+        (g_Assistant.*(g_TargetHandler))(m_Start);
+        g_TargetHandler = nullptr;
+        g_Target.Reset();
+        g_Target.RestoreTarget();
+        return false;
+    }
 
-    return true;
+    return g_Target.SetSendData(*this);
 }
 
 PACKET_HANDLER(TargetR)
 {
     g_TargetReceived = true;
 
-    // PORT-TODO(target): return g_Target.SetRecvData(*this); (assist/target round)
-
-    return true;
+    return g_Target.SetRecvData(*this); // (assist/target round)
 }
 
 PACKET_HANDLER(MultiPlacement)
 {
     g_TargetReceived = true;
 
-    // PORT-TODO(target): return g_Target.SetMultiData(*this); (assist/target round)
-
-    return true;
+    return g_Target.SetMultiData(*this); // (assist/target round)
 }
 
 PACKET_HANDLER(ClientTalkS)
@@ -1618,13 +1657,30 @@ PACKET_HANDLER(ClientTalkS)
 
     string str = ReadString(0);
 
-    // PORT-TODO(commands): int prefixLen = g_TabHotkeys->IsCommandPrefix(str);
-    //                      g_TextCommandManager.DoCommand(...) (Phase 1c)
-    // PORT-TODO(map): str starting with '-' -> g_UOMapManager.UOAnotifyCmd
-    // PORT-TODO(macros): macro recording of MT_SAY
-    // PORT-TODO(config): g_TabMain->GetFontColor/SetFontColor + pack16(m_Start + 4, ...)
+    int prefixLen = g_AssistantConfig.IsCommandPrefix(str);
+    if (prefixLen != 0)
+    {
+        str.erase(0, prefixLen);
+        g_TextCommandManager.DoCommand(str);
+        return false;
+    }
+    // PORT-TODO(phase-5): str starting with '-' -> g_UOMapManager.UOAnotifyCmd
+    // PORT-TODO(phase-3): macro recording of MT_SAY
 
-    (void)fontColor;
+    ushort replaceFontColorValue = 0;
+    bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
+
+    if (!replaceFontColor && replaceFontColorValue != fontColor)
+    {
+        replaceFontColorValue = fontColor;
+        g_AssistantConfig.SetFontColor(false, fontColor);
+    }
+
+    if (replaceFontColor)
+    {
+        pack16(m_Start + 4, replaceFontColorValue);
+    }
+
     (void)str;
 
     return true;
@@ -1664,12 +1720,31 @@ PACKET_HANDLER(UnicodeClientTalk)
         str = str_from(ReadWString());
     }
 
-    // PORT-TODO(commands): command prefix handling (see ClientTalkS)
-    // PORT-TODO(map): '-' UOA command notify
-    // PORT-TODO(macros): macro recording of MT_SAY
-    // PORT-TODO(config): font color replace + pack16(m_Start + 4, ...)
+    int prefixLen = g_AssistantConfig.IsCommandPrefix(str);
+    if (prefixLen != 0)
+    {
+        str.erase(0, prefixLen);
+        g_TextCommandManager.DoCommand(str);
+        return false;
+    }
+    // PORT-TODO(phase-5): '-' UOA command notify
+    // PORT-TODO(phase-3): macro recording of MT_SAY
 
-    (void)fontColor;
+    ushort replaceFontColorValue = 0;
+    bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
+
+    if (!replaceFontColor && replaceFontColorValue != fontColor)
+    {
+        replaceFontColorValue = fontColor;
+        g_AssistantConfig.SetFontColor(false, fontColor);
+    }
+
+    if (replaceFontColor)
+    {
+        pack16(m_Start + 4, replaceFontColorValue);
+    }
+
+    (void)str;
 
     return true;
 }
@@ -1730,15 +1805,28 @@ PACKET_HANDLER(Talk)
             }
             else if (obj->GetName() == name && str != name)
             {
-                // PORT-TODO(config): characters font color replace + pack16(m_Start + 10, ...)
+                ushort replaceFontColorValue = 0;
+                bool replaceFontColor =
+                    g_AssistantConfig.GetCharactersFontColor(replaceFontColorValue);
+
+                if (replaceFontColor)
+                {
+                    pack16(m_Start + 10, replaceFontColorValue);
+                }
             }
         }
     }
 
     g_AssistantEvents->OnJournalMessage(message);
 
-    // PORT-TODO(filters): g_TabFiltersReplaces->CheckReplaceText(...) -> return false;
-    // PORT-TODO(filters): g_TabFiltersSpeech->CheckSpeechInFilter(...) -> return false;
+    if (g_AssistantConfig.CheckReplaceText(str, serial, graphic, type, textColor, font, 0, false))
+    {
+        return false;
+    }
+    if (g_AssistantConfig.CheckSpeechInFilter(str, textColor))
+    {
+        return false;
+    }
 
     (void)graphic;
 
@@ -1780,7 +1868,7 @@ PACKET_HANDLER(UnicodeTalk)
 
     if (type == ST_GUILD_CHAT && (name.length() != 0))
     {
-        // PORT-TODO(guild): g_GuildManager.SetMemberName(serial, name); (agents round)
+        g_GuildManager.SetMemberName(serial, name); // (agents round)
     }
 
     if (type == ST_BROADCAST || serial == 0xFFFFFFFF || (serial == 0u) ||
@@ -1804,14 +1892,29 @@ PACKET_HANDLER(UnicodeTalk)
             }
             else if (obj->GetName() == name && str != name)
             {
-                // PORT-TODO(config): characters font color replace + pack16(m_Start + 10, ...)
+                ushort replaceFontColorValue = 0;
+                bool replaceFontColor =
+                    g_AssistantConfig.GetCharactersFontColor(replaceFontColorValue);
+
+                if (replaceFontColor)
+                {
+                    pack16(m_Start + 10, replaceFontColorValue);
+                }
             }
         }
     }
 
     g_AssistantEvents->OnJournalMessage(message);
 
-    // PORT-TODO(filters): replace/speech filters -> return false;
+    if (g_AssistantConfig.CheckReplaceText(
+            str, serial, graphic, type, textColor, font, language, true))
+    {
+        return false;
+    }
+    if (g_AssistantConfig.CheckSpeechInFilter(str, textColor))
+    {
+        return false;
+    }
 
     (void)graphic;
     (void)language;
@@ -1825,8 +1928,7 @@ PACKET_HANDLER(SetWeather)
     g_Weather.Count = ReadUInt8();
     g_Weather.Temperature = ReadUInt8();
 
-    // PORT-TODO(config): return !g_TabMain->WeatherFilter();
-    return true;
+    return !g_AssistantConfig.WeatherFilter(); // was: return !g_TabMain->WeatherFilter();
 }
 
 PACKET_HANDLER(Season)
@@ -1834,8 +1936,7 @@ PACKET_HANDLER(Season)
     g_Season.Index = ReadUInt8();
     g_Season.Music = ReadUInt8();
 
-    // PORT-TODO(config): return !g_TabMain->SeasonFilter();
-    return true;
+    return !g_AssistantConfig.SeasonFilter(); // was: return !g_TabMain->SeasonFilter();
 }
 
 PACKET_HANDLER(DisplayDeath)
@@ -1847,9 +1948,11 @@ PACKET_HANDLER(DisplayDeath)
 
     g_LastCorpseObject = ReadUInt32BE(4);
 
-    // PORT-TODO(config/corpse): if (g_TabMain->CorpsesAutoopen())
-    //     g_CorpseManager.Add(CCorpseInfo(g_LastCorpseObject, g_Ticks + g_TabMain->CorpseKeepDelay()));
-    // (corpse auto-open round; the KeepDelay default lands with the config round)
+    if (g_AssistantConfig.CorpsesAutoopen())
+    {
+        g_CorpseManager.Add(
+            CCorpseInfo(g_LastCorpseObject, (int)(g_Ticks + g_AssistantConfig.CorpseKeepDelay())));
+    }
 
     return true;
 }
@@ -1858,16 +1961,12 @@ PACKET_HANDLER(OpenMenu)
 {
     g_MenuReceived = true;
 
-    // PORT-TODO(menu): return g_MenuManager.OnPacketReceived(*this); (menu round)
-
-    return true;
+    return g_MenuManager.OnPacketReceived(*this); // (menu round)
 }
 
 PACKET_HANDLER(MenuChoice)
 {
-    // PORT-TODO(menu): return g_MenuManager.OnPacketSend(*this); (menu round)
-
-    return true;
+    return g_MenuManager.OnPacketSend(*this); // (menu round)
 }
 
 PACKET_HANDLER(DeathScreenS)
@@ -1879,13 +1978,19 @@ PACKET_HANDLER(DeathScreenR)
 {
     if (g_World != nullptr /*&& !ReadUInt8()*/)
     {
-        // PORT-TODO(config/map): if (g_TabMain->Tracker()) g_Assistant.Track(true, -1, -1);
+        if (g_AssistantConfig.Tracker())
+        {
+            g_Assistant.Track(true, -1, -1);
+        }
 
         g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
         g_LastPlayerDeadTimer = g_Ticks + 300000; // FIXME: ticks to ms
 
-        // PORT-TODO(config): if (g_TabMain->NoDeathScreen())
-        //                        g_Assistant.ClientPrint("You are DEAD!"); return false;
+        if (g_AssistantConfig.NoDeathScreen())
+        {
+            g_Assistant.ClientPrint("You are DEAD!");
+            return false;
+        }
     }
 
     return true;
@@ -1898,7 +2003,7 @@ PACKET_HANDLER(OpenContainer)
 
     if (graphic == 0x0030)
     {
-        // PORT-TODO(shop): return g_TabAgentsShop->OnPacketReceivedOpenContaier(serial);
+        // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedOpenContaier(serial);
         // (shop agent round, Phase 4)
         return true;
     }
@@ -2117,11 +2222,11 @@ PACKET_HANDLER(ExtendedCommandS)
 
     if (cmd == 0x0009) // Wrestling stun ability
     {
-        // PORT-TODO(macros): recording of MT_WRESTLING_STUN
+        // PORT-TODO(phase-3/macros): recording of MT_WRESTLING_STUN
     }
     else if (cmd == 0x000A) // Wrestling disarm ability
     {
-        // PORT-TODO(macros): recording of MT_WRESTLING_DISARM
+        // PORT-TODO(phase-3/macros): recording of MT_WRESTLING_DISARM
     }
     else if (cmd == 0x001C) // Cast spell
     {
@@ -2135,13 +2240,13 @@ PACKET_HANDLER(ExtendedCommandS)
             g_AssistantEvents->OnTitleRedraw();
         }
 
-        // PORT-TODO(macros): recording of MT_CAST_NEW (with MCT_LAST conversion)
+        // PORT-TODO(phase-3/macros): recording of MT_CAST_NEW (with MCT_LAST conversion)
     }
     else if (cmd == 0x0013) // Context menu request
     {
         uint serial = ReadUInt32BE();
 
-        // PORT-TODO(macros): recording of MT_REQUEST_CONTEXT_MENU
+        // PORT-TODO(phase-3/macros): recording of MT_REQUEST_CONTEXT_MENU
         (void)serial;
     }
     else if (cmd == 0x0015) // Context menu selection
@@ -2149,13 +2254,13 @@ PACKET_HANDLER(ExtendedCommandS)
         uint serial = ReadUInt32BE();
         ushort menuID = ReadUInt16BE();
 
-        // PORT-TODO(macros): recording of MT_WAIT_FOR_CONTEXT_MENU
+        // PORT-TODO(phase-3/macros): recording of MT_WAIT_FOR_CONTEXT_MENU
         (void)serial;
         (void)menuID;
     }
     else if (cmd == 0x0032) // Toggle gargoyle flying
     {
-        // PORT-TODO(macros): recording of MT_TOGGLE_GARGOYLE_FLYING
+        // PORT-TODO(phase-3/macros): recording of MT_TOGGLE_GARGOYLE_FLYING
     }
 
     return true;
@@ -2169,9 +2274,7 @@ PACKET_HANDLER(ExtendedCommandR)
     {
         case 6: // party
         {
-            // PORT-TODO(party): return g_PartyManager.OnPacketReceived(*this);
-            // (agents/party round, Phase 4: invites, accept/decline lists, auto-accept)
-            break;
+            return g_PartyManager.OnPacketReceived(*this); // (agents/party round)
         }
         case 8: //
         {
@@ -2185,8 +2288,8 @@ PACKET_HANDLER(ExtendedCommandR)
 
             if (oldMap != g_CurrentMap)
             {
-                // PORT-TODO(map): g_UOMapManager.UOAMnotifyLand();
-                // PORT-TODO(filemanager): g_FileManager.OnMapChange(); (the client
+                // PORT-TODO(phase-5): g_UOMapManager.UOAMnotifyLand(); (map window round)
+                // PORT-TODO(phase-5): g_FileManager.OnMapChange(); (map round; the client
                 // loads its own map diffs; the assistant's copy is not maintained)
             }
 
@@ -2296,13 +2399,11 @@ PACKET_HANDLER(ExtendedCommandR)
         {
             g_ContextMenuReceived = true;
 
-            // PORT-TODO(contextmenu): return g_ContextMenuManager.OnPacketReceived(*this);
-
-            break;
+            return g_ContextMenuManager.OnPacketReceived(*this);
         }
         case 0x18: // Enable map (diff) patches
         {
-            // PORT-TODO(filemanager): g_FileManager.ApplyPatches(*this); (see case 8)
+            // PORT-TODO(phase-5): g_FileManager.ApplyPatches(*this); (map round, see case 8)
 
             break;
         }
@@ -2320,9 +2421,7 @@ PACKET_HANDLER(SecureTradingS)
         return true;
     }
 
-    // PORT-TODO(trade): return g_TradeManager.OnPacketSend(*this); (trade round)
-
-    return true;
+    return g_TradeManager.OnPacketSend(*this); // (trade round)
 }
 
 PACKET_HANDLER(SecureTradingR)
@@ -2334,9 +2433,7 @@ PACKET_HANDLER(SecureTradingR)
 
     g_TradeReceived = true;
 
-    // PORT-TODO(trade): return g_TradeManager.OnPacketReceived(*this); (trade round)
-
-    return true;
+    return g_TradeManager.OnPacketReceived(*this); // (trade round)
 }
 
 PACKET_HANDLER(DyeDataS)
@@ -2346,11 +2443,11 @@ PACKET_HANDLER(DyeDataS)
 
     if (serial == 0xFFFFFFFF)
     {
-        // PORT-TODO(config): g_TabMain->SetFontColor(true, ReadUInt16BE());
+        g_AssistantConfig.SetFontColor(true, ReadUInt16BE());
     }
     else if (serial == 0xFFFFFFFE)
     {
-        // PORT-TODO(config): g_TabMain->SetCharactersFontColor(true, ReadUInt16BE());
+        g_AssistantConfig.SetCharactersFontColor(true, ReadUInt16BE());
     }
 
     return true;
@@ -2370,9 +2467,7 @@ PACKET_HANDLER(OpenGump)
 
     g_GumpReceived = true;
 
-    // PORT-TODO(gump): return g_GumpManager.OnPacketReceived(*this); (gump round)
-
-    return true;
+    return g_GumpManager.OnPacketReceived(*this); // (gump round)
 }
 
 PACKET_HANDLER(ChoiceGump)
@@ -2382,9 +2477,7 @@ PACKET_HANDLER(ChoiceGump)
         return true;
     }
 
-    // PORT-TODO(gump): return g_GumpManager.OnPacketSend(*this); (gump round)
-
-    return true;
+    return g_GumpManager.OnPacketSend(*this); // (gump round)
 }
 
 PACKET_HANDLER(PlaySoundEffect)
@@ -2400,14 +2493,18 @@ PACKET_HANDLER(PlaySoundEffect)
     ushort x = ReadUInt16BE();
     ushort y = ReadUInt16BE();
 
-    // PORT-TODO(config): sound echo journal message when g_TabMain->SoundEcho()
-    // PORT-TODO(filters): return !g_TabFiltersSound->CheckSoundInFilter(index);
-    (void)index;
-    (void)volume;
-    (void)x;
-    (void)y;
+    if (g_AssistantConfig.SoundEcho())
+    {
+        char text[128] = { 0 };
+        snprintf(text, sizeof(text), "soundecho: id=0x%04X volume=%i x=%i y=%i", index, volume, x, y);
 
-    return true;
+        CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+        message.SetFlags(JMT_SYSTEM);
+
+        g_AssistantEvents->OnJournalMessage(message);
+    }
+
+    return !g_AssistantConfig.CheckSoundInFilter(index);
 }
 
 PACKET_HANDLER(GraphicEffect)
@@ -2417,9 +2514,88 @@ PACKET_HANDLER(GraphicEffect)
         return true;
     }
 
-    // PORT-TODO(config): the whole effect echo journal message block, gated by
-    // g_TabMain->EffectEcho() (config round): parse type 0..3 fields, journal
-    // "effectecho: ..." system message.
+    if (g_AssistantConfig.EffectEcho())
+    {
+        uchar type = ReadUInt8();
+
+        char text[512] = { 0 };
+
+        if (type > 3)
+        {
+            if (type == 4 && *m_Start == 0x70)
+            {
+                Move(8);
+                ushort val = ReadInt16BE();
+
+                snprintf(text, sizeof(text), "effectecho: type=%i mode=%i", type, val);
+            }
+            else
+            {
+                snprintf(text, sizeof(text), "effectecho: type=%i", type);
+            }
+
+            CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+            message.SetFlags(JMT_SYSTEM);
+
+            g_AssistantEvents->OnJournalMessage(message);
+
+            return true;
+        }
+
+        uint sourceSerial = ReadUInt32BE();
+        uint destSerial = ReadUInt32BE();
+        ushort graphic = ReadUInt16BE();
+        short sourceX = ReadInt16BE();
+        short sourceY = ReadInt16BE();
+        char sourceZ = ReadInt8();
+        short destX = ReadInt16BE();
+        short destY = ReadInt16BE();
+        char destZ = ReadInt8();
+        uchar speed = ReadUInt8();
+        short duration = short(ReadUInt8()) * 50;
+        // what is in 24-25 bytes?
+        Move(2);
+        uchar fixedDirection = ReadUInt8();
+        uchar explode = ReadUInt8();
+
+        uint color = 0;
+        uint renderMode = 0;
+
+        if (*m_Start != 0x70)
+        {
+            // 0xC0
+            color = ReadUInt32BE();
+            renderMode = ReadUInt32BE() % 7;
+        }
+
+        snprintf(
+            text,
+            sizeof(text),
+            "effectecho: type=%i src_serial=0x%08X src_x=%i src_y=%i src_z=%i "
+            "dest_serial=0x%08X dest_x=%i dest_y=%i dest_z=%i graphic=0x%04X "
+            "speed=%i duration=%i fixed=%i explode=%i color=%i render_mode=%i",
+            type,
+            sourceSerial,
+            sourceX,
+            sourceY,
+            sourceZ,
+            destSerial,
+            destX,
+            destY,
+            destZ,
+            graphic,
+            speed,
+            duration,
+            fixedDirection,
+            explode,
+            color,
+            renderMode);
+
+        CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+        message.SetFlags(JMT_SYSTEM);
+
+        g_AssistantEvents->OnJournalMessage(message);
+    }
 
     return true;
 }
@@ -2431,8 +2607,37 @@ PACKET_HANDLER(CharacterAnimation)
         return true;
     }
 
-    // PORT-TODO(config): animation echo journal message block, gated by
-    // g_TabMain->AnimationEcho() (config round).
+    if (g_AssistantConfig.AnimationEcho())
+    {
+        uint serial = ReadUInt32BE();
+        ushort action = ReadUInt16BE();
+        ushort frameCount = ReadUInt16BE();
+        frameCount = 0;
+        ushort repeatMode = ReadUInt16BE();
+        bool frameDirection = (ReadUInt8() == 0); // true - forward, false -
+                                                  // backward
+        bool repeat = (ReadUInt8() != 0);
+        uchar delay = ReadUInt8();
+
+        char text[256] = { 0 };
+        snprintf(
+            text,
+            sizeof(text),
+            "animationecho: serial=0x%08X action=%i count=%i "
+            "repeat_mode=%i forward=%i repeat=%i delay=%i",
+            serial,
+            action,
+            frameCount,
+            repeatMode,
+            static_cast<int>(frameDirection),
+            static_cast<int>(repeat),
+            delay);
+
+        CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+        message.SetFlags(JMT_SYSTEM);
+
+        g_AssistantEvents->OnJournalMessage(message);
+    }
 
     return true;
 }
@@ -2519,14 +2724,28 @@ PACKET_HANDLER(DisplayClilocString)
             }
             else if (obj->GetName() == name && str != name)
             {
-                // PORT-TODO(config): characters font color replace + pack16(m_Start + 10, ...)
+                ushort replaceFontColorValue = 0;
+                bool replaceFontColor =
+                    g_AssistantConfig.GetCharactersFontColor(replaceFontColorValue);
+
+                if (replaceFontColor)
+                {
+                    pack16(m_Start + 10, replaceFontColorValue);
+                }
             }
         }
     }
 
     g_AssistantEvents->OnJournalMessage(message);
 
-    // PORT-TODO(filters): replace/speech filters -> return false;
+    if (g_AssistantConfig.CheckReplaceText(str, serial, graphic, type, color, font, 0, true))
+    {
+        return false;
+    }
+    if (g_AssistantConfig.CheckSpeechInFilter(str, color))
+    {
+        return false;
+    }
 
     (void)flags;
     (void)graphic;
@@ -2649,13 +2868,60 @@ PACKET_HANDLER(WalkRequest)
 {
     int direction = ReadUInt8();
 
-    // PORT-TODO(config/assist): the auto-open-door step
-    // (g_TabMain->AutoOpenDoors() gate, g_AssistantForm->AutoOpenDoor(x, y, z))
-    // lands with the assist-core/config round; the getNewXY walk math moves
-    // with it.
-    // PORT-TODO(macros): walk recording (MT_WALK with the run-bit conversion).
+    auto getNewXY = [](const int &direction, int &x, int &y) {
+        switch (direction & 7)
+        {
+            case 0:
+                y--;
+                break;
+            case 1:
+                x++;
+                y--;
+                break;
+            case 2:
+                x++;
+                break;
+            case 3:
+                x++;
+                y++;
+                break;
+            case 4:
+                y++;
+                break;
+            case 5:
+                x--;
+                y++;
+                break;
+            case 6:
+                x--;
+                break;
+            case 7:
+                x--;
+                y--;
+                break;
+            default:
+                break;
+        }
+    };
 
-    (void)direction;
+    // The auto-open-door step (config round + assist core):
+    if (g_Player != nullptr && g_AssistantConfig.AutoOpenDoors() && !g_Player->Dead() &&
+        !g_Player->IsGM() && ((direction % 2) == 0))
+    {
+        int x = g_Player->GetX();
+        int y = g_Player->GetY();
+
+        getNewXY(direction, x, y);
+
+        if ((direction & 7) == (g_Player->GetDirection() & 7))
+        {
+            getNewXY(direction, x, y);
+        }
+
+        g_Assistant.AutoOpenDoor(x, y, g_Player->GetZ());
+    }
+
+    // PORT-TODO(phase-3): walk recording (MT_WALK with the run-bit conversion).
 
     return true;
 }
@@ -2667,52 +2933,42 @@ PACKET_HANDLER(ConfirmWalk)
         return true;
     }
 
-    // PORT-TODO(config): if (g_TabDisplay->ApplyNotorietyColorOnName())
-    // {
-    //     Move(1);
-    //     uchar noto = ReadUInt8() & 0x0F;
-    //     if (noto != g_Player->GetNotoriety())
-    //     {
-    //         g_Player->SetNotoriety(noto);
-    //         g_AssistantEvents->OnTitleRedraw();
-    //     }
-    // }
-    // (config round restores the notoriety-on-name tracking; default off, the
-    // packet is left untouched until then)
+    if (g_AssistantConfig.ApplyNotorietyColorOnName())
+    {
+        Move(1);
+        uchar noto = ReadUInt8() & 0x0F;
+        if (noto != g_Player->GetNotoriety())
+        {
+            g_Player->SetNotoriety(noto);
+            g_AssistantEvents->OnTitleRedraw();
+        }
+    }
 
     return true;
 }
 
 PACKET_HANDLER(ASCIIPromptS)
 {
-    // PORT-TODO(prompt): return g_PromptManager.OnPacketSend(*this); (prompt round)
-
-    return true;
+    return g_PromptManager.OnPacketSend(*this); // (prompt round)
 }
 
 PACKET_HANDLER(ASCIIPromptR)
 {
     g_PromptReceived = true;
 
-    // PORT-TODO(prompt): return g_PromptManager.OnPacketReceived(*this);
-
-    return true;
+    return g_PromptManager.OnPacketReceived(*this);
 }
 
 PACKET_HANDLER(UnicodePromptS)
 {
-    // PORT-TODO(prompt): return g_PromptManager.OnPacketSend(*this);
-
-    return true;
+    return g_PromptManager.OnPacketSend(*this);
 }
 
 PACKET_HANDLER(UnicodePromptR)
 {
     g_PromptReceived = true;
 
-    // PORT-TODO(prompt): return g_PromptManager.OnPacketReceived(*this);
-
-    return true;
+    return g_PromptManager.OnPacketReceived(*this);
 }
 
 PACKET_HANDLER(CharacterProfileS)
@@ -2775,21 +3031,21 @@ PACKET_HANDLER(BuyList)
 {
     g_ShopReceived = true;
 
-    // PORT-TODO(shop): return g_TabAgentsShop->OnPacketReceivedBuyList(*this); (Phase 4)
+    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedBuyList(*this); (Phase 4)
 
     return true;
 }
 
 PACKET_HANDLER(BuyReplyS)
 {
-    // PORT-TODO(shop): return g_TabAgentsShop->OnPacketSendBuyReply();
+    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketSendBuyReply();
 
     return true;
 }
 
 PACKET_HANDLER(BuyReplyR)
 {
-    // PORT-TODO(shop): return g_TabAgentsShop->OnPacketReceivedBuyReply(*this);
+    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedBuyReply(*this);
 
     return true;
 }
@@ -2798,14 +3054,14 @@ PACKET_HANDLER(SellList)
 {
     g_ShopReceived = true;
 
-    // PORT-TODO(shop): return g_TabAgentsShop->OnPacketReceivedSellList(*this);
+    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedSellList(*this);
 
     return true;
 }
 
 PACKET_HANDLER(SellReply)
 {
-    // PORT-TODO(shop): return g_TabAgentsShop->OnPacketSendSellReply();
+    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketSendSellReply();
 
     return true;
 }
@@ -2861,7 +3117,7 @@ PACKET_HANDLER(PerformAction)
     {
         int index = atoi(str.c_str());
 
-        // PORT-TODO(macros): recording of MT_USE_SKILL (with MCT_LAST conversion)
+        // PORT-TODO(phase-3/macros): recording of MT_USE_SKILL (with MCT_LAST conversion)
 
         g_LastSkillIndex = index;
     }
@@ -2869,7 +3125,7 @@ PACKET_HANDLER(PerformAction)
     {
         int index = atoi(str.c_str());
 
-        // PORT-TODO(macros): recording of MT_CAST (with MCT_LAST conversion)
+        // PORT-TODO(phase-3/macros): recording of MT_CAST (with MCT_LAST conversion)
 
         g_LastSpellIndex = index;
     }
@@ -2877,7 +3133,7 @@ PACKET_HANDLER(PerformAction)
     {
         int index = atoi(str.c_str());
 
-        // PORT-TODO(macros): recording of MT_CAST_FROM_BOOK (with MCT_LAST conversion)
+        // PORT-TODO(phase-3/macros): recording of MT_CAST_FROM_BOOK (with MCT_LAST conversion)
 
         g_LastSpellIndex = index;
     }
@@ -2894,7 +3150,7 @@ PACKET_HANDLER(DoubleClick)
 {
     uint serial = ReadUInt32BE();
 
-    // PORT-TODO(macros): MT_USE recording (with MCT_SELF conversion).
+    // PORT-TODO(phase-3/macros): MT_USE recording (with MCT_SELF conversion).
 
     g_LastUseObject = serial;
 
@@ -2903,7 +3159,7 @@ PACKET_HANDLER(DoubleClick)
 
 PACKET_HANDLER(AttackRequest)
 {
-    // PORT-TODO(macros): MT_ATTACK recording (MCT_LASTATTACK/MCT_LASTTARGET/
+    // PORT-TODO(phase-3/macros): MT_ATTACK recording (MCT_LASTATTACK/MCT_LASTTARGET/
     // MCT_ENEMY conversions; CAssistant::TextToSerial is in core/textconv).
 
     return true;
@@ -2911,7 +3167,7 @@ PACKET_HANDLER(AttackRequest)
 
 PACKET_HANDLER(HelpRequest)
 {
-    // PORT-TODO(macros): MT_HELP_MENU_REQUEST recording.
+    // PORT-TODO(phase-3/macros): MT_HELP_MENU_REQUEST recording.
 
     return true;
 }
@@ -2923,16 +3179,16 @@ PACKET_HANDLER(AOSCommandsS)
 
     if (cmd == 0x0019) // Combat ability
     {
-        // PORT-TODO(macros): MT_COMBAT_ABILITY recording (MCT_PRIMARY/SECONDARY);
+        // PORT-TODO(phase-3/macros): MT_COMBAT_ABILITY recording (MCT_PRIMARY/SECONDARY);
         // the original only did Move(4) + ReadUInt8() inside the recording gate.
     }
     else if (cmd == 0x0028) // Guild
     {
-        // PORT-TODO(macros): MT_GUILD_MENU_REQUEST recording.
+        // PORT-TODO(phase-3/macros): MT_GUILD_MENU_REQUEST recording.
     }
     else if (cmd == 0x0032) // Quests
     {
-        // PORT-TODO(macros): MT_QUEST_MENU_REQUEST recording.
+        // PORT-TODO(phase-3/macros): MT_QUEST_MENU_REQUEST recording.
     }
 
     (void)serial;
@@ -2989,7 +3245,7 @@ PACKET_HANDLER(MapPacket)
 
         g_AssistantEvents->OnJournalMessage(message);
 
-        // PORT-TODO(config/map): if (g_TabMain->Tracker()) g_Assistant.Track(true, x, y);
+        // PORT-TODO(phase-5): if (g_AssistantConfig.Tracker()) g_Assistant.Track(true, x, y); (map draw objects)
     }
     return true;
 }
@@ -3035,9 +3291,8 @@ PACKET_HANDLER(ClientMessagesR)
 
                     g_Skills[i].SetButton(button != 0u);
                     g_Skills[i].SetName(name);
+                    g_SkillManager.Insert(name, (button != 0u), i);
                 }
-
-                // PORT-TODO(skillmanager): g_SkillManager.Insert(name, button, i);
 
                 g_AssistantEvents->OnSkillsList(hotkeyActions);
                 break;
@@ -3059,8 +3314,8 @@ PACKET_HANDLER(ClientMessagesR)
                     {
                         string spellName = ReadString();
                         hotkeyActions.back().push_back(spellName);
-                        // PORT-TODO(spells): g_SpellManager.Insert(spellName, j + offset + 1)
-                        // (spellbook circle offset: i * 100, +100 for i > 2)
+                        int offset = (i * 100) + (i > 2 ? 100 : 0);
+                        g_SpellManager.Insert(spellName, j + offset + 1);
                     }
                 }
 
@@ -3088,15 +3343,18 @@ PACKET_HANDLER(ClientMessagesR)
                     macros.push_back(macro);
                 }
 
-                // PORT-TODO(macros): g_ClientMacro cache (macro round consumes
-                // the event payload).
+                g_ClientMacro.clear(); // g_ClientMacro cache (macro round
+                for (const auto &macro : macros) // consumes the event payload)
+                {
+                    ClientMacroInsert(macro.first, macro.second);
+                }
 
                 g_AssistantEvents->OnMacroList(macros);
                 break;
             }
             case OIPMT_OPEN_MAP:
             {
-                // PORT-TODO(map UI): g_TabMain->OpenMap(); (map window round)
+                // PORT-TODO(phase-5): g_TabMain->OpenMap(); (map window round)
                 break;
             }
             default:
@@ -3112,8 +3370,8 @@ PACKET_HANDLER(ClientMessagesR)
                 g_EnabledFeature = (uint64_t)ReadInt64BE();
                 g_EnabledCommands = (uint64_t)ReadInt64BE();
 
-                // PORT-TODO(commands): g_TextCommandManager.UpdateCommands();
-                // PORT-TODO(config UI): g_TabMain->UpdateFeatures();
+                g_TextCommandManager.UpdateCommands();
+                g_AssistantConfig.UpdateFeatures(); // was: g_TabMain->UpdateFeatures();
 
                 break;
             }

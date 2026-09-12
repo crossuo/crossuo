@@ -14,6 +14,7 @@
 // makes the client's PacketManager.h (Wisp/Platform) coexist with it here.
 #include <SDL_wrapper.h>
 #include "packets.h"
+#include "target.h" // g_Target.SetRecvAssistData (target cursor the assistant requested)
 #include <string.h>
 #include <stdlib.h>
 #include <common/str.h> // wstr_from
@@ -209,9 +210,15 @@ CPacketToClientTargetRequest::CPacketToClientTargetRequest()
     WriteUInt32BE(0x0000601A);
     WriteUInt32BE(0x00010000);
 
-    // PORT-TODO(target): the Qt build handed the fresh packet to
-    // g_Target.SetRecvAssistData(CDataReader(...)) here (assist/target.cpp,
-    // Phase 1c). The packet bytes above are unchanged.
+    // The Qt build handed the fresh packet to
+    // g_Target.SetRecvAssistData(CDataReader(...)) here (assist/packets.cpp,
+    // Phase 1c): the packet bytes above are the target cursor the assistant
+    // itself requested, so the assistant target state is set eagerly (the
+    // cursor fields are read back from the packet, offset 1 skipped).
+    vector<uint8_t> packet = Data();
+    CDataReader reader(&packet[0], packet.size());
+    reader.Move(1);
+    g_Target.SetRecvAssistData(reader);
 }
 
 CPacketStatusRequest::CPacketStatusRequest(uint32_t serial)

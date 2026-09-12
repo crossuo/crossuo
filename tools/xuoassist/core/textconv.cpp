@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "global.h"
+#include "../config/assistantconfig.h"
 
 namespace xuoassist {
 
@@ -83,9 +84,7 @@ uint TextToSerial(string text)
     }
     else
     {
-        // PORT-TODO(lists): g_TabListsObjects->SeekObject(text) once the
-        // objects-list module is ported.
-        result = 0;
+        result = g_AssistantConfig.SeekObject(text);
     }
 
     if (result == 0u)
@@ -103,9 +102,7 @@ ushort TextToGraphic(string text)
         c = (char)tolower(c);
     }
 
-    // PORT-TODO(lists): g_TabListsTypes->SeekType(text) once the types-list
-    // module is ported.
-    ushort result = 0;
+    ushort result = g_AssistantConfig.SeekType(text);
 
     if (result == 0u)
     {

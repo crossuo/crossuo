@@ -39,6 +39,37 @@ using std::string;
 using std::wstring;
 using std::vector;
 
+// Forward-ported from the Qt app's assist/assist.h with the assistant core
+// round (Phase 1c); core/textconv.h previously carried the partial copy and
+// now re-uses these.
+enum FIND_TYPE_FLAGS
+{
+    FTF_NORMAL = 0x0000,
+    FTF_NEAREST = 0x0001,
+    FTF_FAST = 0x0002,
+    FTF_MOBILE = 0x0004,
+    FTF_ITEM = 0x0008,
+    FTF_HUMAN = 0x0010,
+    FTF_LIVE = 0x0020,
+    FTF_DEAD = 0x0040,
+    FTF_INJURED = 0x0080,
+    FTF_NEXT = 0x0100,
+    FTF_IGNORE_FRIENDS = 0x0200,
+    FTF_IGNORE_ENEMIES = 0x0400
+};
+
+enum NOTORIETY_TYPE_FLAGS
+{
+    NTF_ALL = 0x00,
+    NTF_INNOCENT = 0x01,
+    NTF_FRIENDLY = 0x02,
+    NTF_SOMEONE_GRAY = 0x04,
+    NTF_CRIMINAL = 0x08,
+    NTF_ENEMY = 0x10,
+    NTF_MURDERER = 0x20,
+    NTF_INVULNERABLE = 0x40
+};
+
 extern PACKET_PROC *g_SendClient;
 extern PACKET_PROC *g_SendServer;
 extern FUNCDEF_GET_STATIC_FLAGS *g_GetStaticFlags;
