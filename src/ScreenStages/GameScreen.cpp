@@ -57,6 +57,9 @@
 #include "../TextEngine/TextData.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#if defined(XUO_ASSISTANT)
+#include "AssistantWindow.h"
+#endif
 
 extern bool g_var_DisableRenderGame;
 
@@ -2202,10 +2205,18 @@ void CGameScreen::Render()
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
+#if defined(XUO_ASSISTANT)
+    // the assistant draws inside the game context, before the frame is shown
+    AssistantWindow_DrawOverlay();
+#endif
     g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
     Render_SwapBuffers();
     g_ScreenshotBuilder.GPUDataReady();
 #else
+#if defined(XUO_ASSISTANT)
+    // the assistant draws inside the game context, before the frame is shown
+    AssistantWindow_DrawOverlay();
+#endif
     g_GL.EndDraw();
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 }

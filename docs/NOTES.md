@@ -738,3 +738,40 @@ Known open edges:
   (patchcfg + patchlist fetch, T0 blocking install, fetch_all converge);
   update check; serial-drift re-fetching exactly the changed file. Also
   validated against the live uniteuo fc server end to end.
+
+---
+
+# Implementation Notes
+
+## XUO Assist — Phase 0 foundations (in-client ImGui assistant, `tools/xuoassist/`)
+
+Review verdict: PASS_WITH_NOTES (confidence HIGH; runtime pop-out/cursor behavior is
+MEDIUM pending a manual interactive pass). Notes and accepted deltas:
+
+- **Runtime-verified vs. reasoning-only**: build, symbol/link integrity, renderer gating
+  (GL3/GLES2 on, GL1/GL2 off), lifecycle hook placement and draw-pass placement were
+  verified by compilation and inspection. Actual pop-out behavior (drag-out, dock-back
+  auto-merge, window-X hide, popped-out window freezing while the game window is
+  minimized or the assistant hidden, OS cursor vs. game software cursor overlap) requires
+  an interactive session — flagged for a manual pass before Phase 1.
+- **`sync_text_input` (AssistantWindow.cpp)**: the client never calls SDL_StartTextInput
+  (only the vendored ImGui SDL2 backend, Android-only), so the assistant toggles SDL text
+  input on while `io.WantTextInput` and restores the prior state on hide/shutdown. Known
+  one-frame lag on the first keystroke into an ImGui InputText.
+- **Hidden-but-initialized assistant**: no ImGui NewFrame runs while hidden, so residual
+  platform windows (pop-out) freeze until Alt+U re-shows the assistant. Accepted for
+  Phase 0.
+- **Assistant draws after `RenderDraw_Execute`**: assistant UI paints over the game's
+  software cursor when overlapping; ImGui's SDL backend shows the OS cursor over
+  assistant windows. Cosmetic; revisit during Phase 2 UI polish.
+- **"Items: N" status field**: `CGameWorld` has no items-count accessor in this port, so
+  Phase 0 reports `g_World->m_Map.size()` (all tracked objects). Revisit when the
+  packet-manager port (Phase 1) lands.
+- **Init contract**: init may run from `AssistantWindow_DrawOverlay()` or
+  `AssistantWindow_Toggle()` (Alt+U); both run on the main thread with the game GL
+  context current at the in-game stage. On init failure the hotkey falls through to the
+  game and an error is logged once.
+- **Gotcha for future phases**: a PRIVATE compile definition on the `crossuo` target does
+  not reach the `xuoassist` static lib's own sources — the lib carries its own
+  `target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)` (a missing define went
+  unnoticed at first because Linux allows undefined symbols in shared libs).

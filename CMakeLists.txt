@@ -27,6 +27,7 @@ option(ENABLE_FORMAT "Enables clang-format (default: On)" ON)
 option(RENDER_GLES2 "Force OpenGL ES2 (default Off)" OFF)
 option(RENDER_GL3 "Force OpenGL 3.x (default Off)" OFF)
 option(RENDER_GL1 "Force OpenGL 1.1 (automatic)" OFF)
+option(XUO_ASSISTANT "Build in-client assistant (default: On)" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
@@ -103,6 +104,18 @@ elseif (GLESv2_FOUND)
   set(USE_GLES2 1)
   set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR})
   message(STATUS "Building with new renderer (GLES2)")
+endif()
+
+#
+# In-client assistant (X:UO Assist)
+#
+# the assistant renders through the vendored ImGui GL3/GLES2 stack, so it is
+# only available on those renderers (same policy as XUO_LAUNCHER_EMBEDDED
+# above); GL1/GL2 legacy builds must not get it
+set(XUO_ASSISTANT_ENABLED Off)
+if (XUO_ASSISTANT AND (USE_GL3 OR USE_GLES2))
+  set(XUO_ASSISTANT_ENABLED On)
+  message(STATUS "X:UO Assist: embedded in crossuo")
 endif()
 
 set(XUO_LOCAL_HEADERS 1)

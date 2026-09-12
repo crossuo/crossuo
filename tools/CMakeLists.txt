@@ -7,5 +7,10 @@ add_subdirectory(xuoi)
 # xuo data inspector
 add_subdirectory(xuodump)
 
+# in-client assistant (X:UO Assist, ImGui; GL3/GLES2 only)
+if (XUO_ASSISTANT_ENABLED)
+  add_subdirectory(xuoassist)
+endif()
+
 # external gfx test
 add_subdirectory(gfxtest)

@@ -13,6 +13,9 @@
 #include "CrossUO.h"
 #include "GameWindow.h"
 #include "LauncherWindow.h"
+#if defined(XUO_ASSISTANT)
+#include "AssistantWindow.h"
+#endif
 #if defined(XUO_LAUNCHER_EMBEDDED)
 #include "xuol_app.h"
 #endif
@@ -532,6 +535,13 @@ static int Run()
             if (LauncherWindow_ProcessEvent(event))
                 continue;
 #endif
+#if defined(XUO_ASSISTANT)
+            // events for assistant pop-out windows (and the Alt+U hotkey) are
+            // consumed before the game window procedure sees them; while the
+            // assistant is up it also keeps the events ImGui captured
+            if (AssistantWindow_ProcessEvent(event))
+                continue;
+#endif
             quit = Wisp::g_WispWindow->OnWindowProc(event);
             if (quit)
             {
@@ -572,6 +582,9 @@ static int Run()
     }
 #if defined(XUO_LAUNCHER_EMBEDDED)
     LauncherWindow_Shutdown();
+#endif
+#if defined(XUO_ASSISTANT)
+    AssistantWindow_Shutdown();
 #endif
     return EXIT_SUCCESS;
 }

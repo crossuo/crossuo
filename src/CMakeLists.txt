@@ -342,6 +342,15 @@ if(XUO_LAUNCHER_EMBEDDED)
   target_compile_definitions(crossuo PRIVATE XUO_LAUNCHER_EMBEDDED=1)
 endif()
 
+# the in-client assistant (X:UO Assist) is compiled into the client only; the
+# target-scoped define keeps the dependency tree clean (mirrors the launcher)
+if(XUO_ASSISTANT_ENABLED)
+  target_compile_definitions(crossuo PRIVATE XUO_ASSISTANT=1)
+  add_dependencies(crossuo ${XUOASSIST_PROJECT})
+  target_link_libraries(crossuo PUBLIC ${XUOASSIST_PROJECT})
+  target_include_directories(crossuo PUBLIC ${XUOASSIST_INCLUDE})
+endif()
+
 if(CLANG_FORMAT AND NOT $ENV{XUO_CI})
   add_dependencies(crossuo clang-format-7)
 endif()

@@ -5,6 +5,9 @@
 
 #include <common/str.h>
 #include "SDL_wrapper.h"
+#if defined(XUO_ASSISTANT)
+#include "AssistantWindow.h"
+#endif
 
 #include "revision.h"
 #include "Config.h"
@@ -970,6 +973,11 @@ void CGame::ProcessDelayedClicks()
 
 void CGame::Process(bool rendering)
 {
+#if defined(XUO_ASSISTANT)
+    // auto-close watcher: the assistant is an in-game-only tool (ADR D10) and
+    // this runs before the render pass, which the overlay draw checks too
+    AssistantWindow_FrameTick();
+#endif
     if (g_CurrentScreen == nullptr)
     {
         return;

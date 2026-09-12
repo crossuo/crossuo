@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+#ifndef _ASSISTANT_WINDOW_H_
+#define _ASSISTANT_WINDOW_H_
+
+// In-client X:UO Assist host: an ImGui overlay living in the game's own GL
+// context, in-game only (see the master plan ADR D9/D10/D11). Built only for
+// GL3/GLES2 renderers; see CMake XUO_ASSISTANT / XUO_ASSISTANT_ENABLED.
+
+#if defined(XUO_ASSISTANT)
+
+union SDL_Event;
+
+// Init-or-show/hide entry point (the Alt+U handler); returns true when the
+// hotkey was consumed. Only works while the client is in the game stage.
+bool AssistantWindow_Toggle();
+// Consumes events targeted at assistant pop-out platform windows and the
+// Alt+U toggle hotkey; while initialized, every event is forwarded to ImGui
+// first and events it wants to capture are kept away from the game.
+// Returns true when the event must not reach the game.
+bool AssistantWindow_ProcessEvent(const SDL_Event &ev);
+// Per-frame gating check (called from CGame::Process): shuts the assistant
+// down as soon as the client leaves the in-game stage.
+void AssistantWindow_FrameTick();
+// Renders the assistant overlay at the end of the in-game render pass; the
+// first call lazily initializes the assistant. Initialization may run from
+// here or from the Alt+U toggle: both run on the main thread with the game GL
+// context current at the in-game stage.
+void AssistantWindow_DrawOverlay();
+// Destroys the ImGui context and every popped-out platform window; must not
+// SDL_Quit as the client keeps running. Idempotent.
+void AssistantWindow_Shutdown();
+// Reports whether the assistant window is currently shown (Phase 0 consumers:
+// none; kept for later phases).
+bool AssistantWindow_IsVisible();
+
+#endif // XUO_ASSISTANT
+#endif // _ASSISTANT_WINDOW_H_
