@@ -485,10 +485,10 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     ScopedPerfMarker(__FUNCTION__);
     const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
-        (((uint32_t)(cmd.color[0] * 255) << 0) |
-         ((uint32_t)(cmd.color[1] * 255) << 8) |
-         ((uint32_t)(cmd.color[2] * 255) << 16) |
-         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
+        (uint32_t(cmd.color[0] * 255.f) |
+         (uint32_t(cmd.color[1] * 255.f) << 8) |
+         (uint32_t(cmd.color[2] * 255.f) << 16) |
+         (uint32_t(cmd.color[3] * 255.f) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
         { { 0.0f, float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },

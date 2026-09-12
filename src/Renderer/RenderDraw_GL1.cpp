@@ -26,9 +26,6 @@ static bool s_viewFlippedY = false;
 // entry reproduces the palette lookup closely enough without shaders.
 static void RenderDrawGL1_ApplyColor(const float4 &cmdColor)
 {
-    // Match the GL3 backend: the tint comes from the command's own color only
-    // (g_ColorInvalid means white). state->color is never inherited here -
-    // a stale SetColor would bleed into every later draw (black decorations).
     float r = 1.f, g = 1.f, b = 1.f, a = 1.f;
     if (cmdColor != g_ColorInvalid)
     {
@@ -1218,6 +1215,7 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
 
     int glresult;
     GL_CALL(glresult = glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    (void)glresult;
     assert(glresult == GL_FRAMEBUFFER_COMPLETE);
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, currentFrameBuffer));
 

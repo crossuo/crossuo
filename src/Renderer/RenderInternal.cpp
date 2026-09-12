@@ -8,6 +8,7 @@
 #include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <common/logging/logging.h>
+#include <xuocore/enumlist.h> // SDM_NO_COLOR
 #include <assert.h>
 #include <string.h> // memcmp, memcpy
 #include <stdlib.h> // malloc
@@ -275,9 +276,9 @@ bool Render_Init(SDL_Window *window)
 
     // Set texture unit to 0 once during initialization (never needs to change)
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
-    GL_CHECK(glUniform1i(_uDrawMode, 0)); // SDM_NO_COLOR - initial draw mode
-    static float currentColors[96] = { 0.0f };
-    GL_CHECK(glUniform1fv(_uColors, 96, currentColors)); // Initial color palette
+    GL_CHECK(glUniform1i(_uDrawMode, SDM_NO_COLOR)); // default draw mode
+    static const float initialColors[96] = { 0.0f };
+    GL_CHECK(glUniform1fv(_uColors, 96, initialColors)); // Initial color palette
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, 0)); // Alpha test disabled initially
     GL_CHECK(glUniform1f(_uAlphaRef, 0.0f)); // Initial alpha reference value
 

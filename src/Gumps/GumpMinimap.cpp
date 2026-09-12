@@ -305,7 +305,7 @@ void CGumpMinimap::UpdateContent()
                     g_ConfigManager.GetColorByNotoriety(go->GameCharacterPtr()->Notoriety);
                 if (color != 0u)
                 {
-                    uint32_t pcl = g_ColorManager.GetPolygoneColor(16, color);
+                    uint32_t pcl = g_ColorManager.GetPolygoneColor(30, color);
                     int x = go->GetX() - playerX;
                     int y = go->GetY() - playerY;
                     int gx = x - y;

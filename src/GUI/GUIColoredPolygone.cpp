@@ -63,6 +63,8 @@ void CGUIColoredPolygone::Draw(bool checktrans)
         g_GL.DrawPolygone(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2);
     }
 #else
+    RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
+
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList,
         DrawUntexturedQuadCmd{
