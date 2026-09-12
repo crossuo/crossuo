@@ -49,8 +49,8 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (NOT RENDER_GLES2 AND NOT RENDER_GL1 AND NOT RENDER_GL3)
-  message(STATUS "No render selected, defaulting to OpenGL 1")
-  set(RENDER_GL1 On)
+  message(STATUS "No render selected, defaulting to OpenGL 3")
+  set(RENDER_GL3 On)
 endif()
 
 #
