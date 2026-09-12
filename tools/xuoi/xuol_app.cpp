@@ -59,6 +59,10 @@ static bool s_has_update = false;
 static bool s_updated = false;
 static fs_path s_launcher_binary;
 static uint64_t s_launcher_timestamp = 0;
+#if defined(XUO_LAUNCHER_EMBEDDED)
+static bool s_restart_answer = false;
+static bool s_reload_request = false;
+#endif
 
 void XUODefaultStyle()
 {
@@ -291,6 +295,16 @@ void xuol_launch_quit()
     if (config().global_auto_close)
         request_close();
 }
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+// a profile that cannot be applied live asked for a client reload; the request
+// is latched here and acted upon by the app frame, which owns the client
+// bridge and runs even after the view that requested it has been dismissed
+void xuol_request_reload()
+{
+    s_reload_request = true;
+}
+#endif
 
 bool xuol_launch_assist()
 {
@@ -579,26 +593,29 @@ void xuol_app_frame()
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
         account_reload_dialog_tick();
+
+        if (s_reload_request)
+        {
+            s_reload_request = false;
+            xuol::client_request_restart();
+        }
 #endif
 
         if (s_launcher_restart)
         {
 #if defined(XUO_LAUNCHER_EMBEDDED)
             // embedded in the client: restarting means relaunching crossuo so
-            // the updated binaries take over (the client exits by itself)
-            bool restart = true;
-            if (DialogYesNo(
-                    "Update", "A restart is required, do you want to restart now?", restart))
+            // the updated binaries take over (the client exits by itself).
+            // the answer lives in a static: DialogYesNo() only returns true on
+            // "Yes", so a per-frame local would never observe a "No" and the
+            // dialog would reopen forever.
+            s_restart_answer = true; // keeps the modal up until answered
+            DialogYesNo(
+                "Update", "A restart is required, do you want to restart now?", s_restart_answer);
+            if (!s_restart_answer)
             {
                 s_launcher_restart = false;
-                if (restart)
-                {
-                    xuol::client_request_restart();
-                }
-                else
-                {
-                    LOG_WARN("client restart postponed, the update applies on the next start");
-                }
+                LOG_WARN("client restart postponed, the update applies on the next start");
             }
 #else
             s_launcher_quit = DialogYesNo(

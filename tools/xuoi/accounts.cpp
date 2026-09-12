@@ -47,6 +47,9 @@ extern void save_config();
 extern const fs_path &xuol_data_path();
 extern bool xuol_launch_assist();
 extern void xuol_launch_quit();
+#if defined(XUO_LAUNCHER_EMBEDDED)
+extern void xuol_request_reload();
+#endif
 extern void xuol_set_last_used(int account_index);
 extern int xuol_last_used();
 
@@ -206,29 +209,38 @@ static fs_path account_create_config(const account::entry &account)
 // reload confirmation is a per-frame modal: it can only be driven from the
 // app frame, so the apply just requests it and the tick below renders it
 static bool s_reload_dialog = false;
+// DialogYesNo() reports its answer through the bool passed by reference and
+// only returns true when the dialog was dismissed by "Yes". The answer
+// therefore has to live in a static: a per-frame local initialized to true
+// would swallow the "No" (the popup closes, the tick sees false from the
+// return value, never clears s_reload_dialog, and the dialog reopens on the
+// next frame, trapping the user until they pick "Yes").
+static bool s_reload_answer = false;
 
 void account_reload_dialog_tick()
 {
     if (!s_reload_dialog)
         return;
 
-    bool reload = true;
-    if (DialogYesNo(
-            "Server",
-            "This server uses a different data path.\n"
-            "Reload the client to apply the new data?",
-            reload))
+    s_reload_answer = true; // keeps the modal up until the user answers
+    DialogYesNo(
+        "Server",
+        "This server uses a different data path.\n"
+        "Reload the client to apply the new data?",
+        s_reload_answer);
+
+    if (s_reload_answer)
     {
         s_reload_dialog = false;
-        if (reload)
-        {
-            xuol::client_request_restart();
-        }
-        else
-        {
-            LOG_INFO("reload postponed, the new data applies on the next start");
-        }
+        xuol_request_reload();
+        return;
     }
+
+    // "No": only the reload is cancelled. The profile itself was already
+    // persisted by client_apply_profile(), so there is nothing to undo; it
+    // simply takes effect on the next start.
+    s_reload_dialog = false;
+    LOG_INFO("reload declined, the new data applies on the next start");
 }
 
 static xuol::apply_result account_apply_live(int account_index)

@@ -26,6 +26,11 @@ void xuol_app_process_event(const SDL_Event *event);
 void xuol_app_frame();
 bool xuol_app_wants_close();
 void xuol_app_clear_close_intent();
+#if defined(XUO_LAUNCHER_EMBEDDED)
+// ask for a client reload (used by views whose action needs a restart); the
+// app frame performs the actual restart through the client bridge
+void xuol_request_reload();
+#endif
 void xuol_app_shutdown();
 void xuol_ui_clear_color(float out[4]);
 // set by the client bridge whenever a profile was applied (save or launch);
