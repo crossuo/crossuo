@@ -340,7 +340,16 @@ void ui_accounts(ui_model &m)
     const auto line_size = ImGui::GetTextLineHeightWithSpacing();
     static auto label_size = ImGui::CalcTextSize("Profile Name: ", nullptr, true);
     static auto label_size2 = ImGui::CalcTextSize(" Use Character: ", nullptr, true);
-    const auto items = int(m.area.y / (line_size + 2) - 2);
+    // The left column stacks the account list and the Launch button, so the
+    // list has to leave room for the button, the spacing after the list and the
+    // list's own frame padding. The old "area / (line+2) - 2" heuristic predates
+    // the tabs and left the button floating well above the bottom edge.
+    const float button_h = ImGui::GetFrameHeight();
+    const float list_padding = ImGui::GetStyle().FramePadding.y * 2.0f;
+    const float list_spacing = ImGui::GetStyle().ItemSpacing.y;
+    int items = int((m.area.y - button_h - list_spacing - list_padding) / line_size);
+    if (items < 1)
+        items = 1;
 
     const int NEW_ACCOUNT = 0;
     const int last_item = xuol_last_used();
