@@ -113,6 +113,15 @@ bool LauncherWindow_IsVisible()
     return s_launcher_initialized && s_launcher_visible;
 }
 
+void LauncherWindow_Open()
+{
+    if (!s_launcher_initialized && !LauncherWindow_Init())
+    {
+        return;
+    }
+    LauncherWindow_Show(true);
+}
+
 static bool event_belongs_to_launcher(const SDL_Event &ev)
 {
     switch (ev.type)

@@ -17,6 +17,8 @@ bool LauncherWindow_Init();
 void LauncherWindow_Shutdown();
 // Show or hide the launcher window.
 void LauncherWindow_Show(bool show);
+// Opens the launcher, creating it on demand (login screen button).
+void LauncherWindow_Open();
 bool LauncherWindow_IsVisible();
 // Consumes events targeted at the launcher window; returns true when handled.
 // Also implements the global hotkey (Alt+L) to toggle the window.

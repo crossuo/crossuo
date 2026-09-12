@@ -9,6 +9,7 @@
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/MainScreen.h"
 #include "../GUI/GUIColoredPolygone.h"
+#include "../LauncherWindow.h"
 
 enum
 {
@@ -25,6 +26,7 @@ enum
     ID_MS_HELP,
     ID_MS_MOVIE,
     ID_MS_CREDITS,
+    ID_MS_LAUNCHER,
 
     ID_MS_COUNT,
 };
@@ -140,6 +142,9 @@ void CGumpScreenMain::UpdateContent()
 
         m_Arrow =
             (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x15A4, 0x15A5, 0x15A6, 610, 445));
+#if defined(XUO_LAUNCHER_EMBEDDED)
+        Add(new CGUIButton(ID_MS_LAUNCHER, 0x08D1, 0x08D1, 0x08D1, 590, 430));
+#endif
         g_MainScreen.m_SavePassword = (CGUICheckbox *)Add(
             new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 328, 417));
         g_MainScreen.m_SavePassword->SetTextParameters(
@@ -175,6 +180,10 @@ void CGumpScreenMain::UpdateContent()
 
         //TEEN RATING
         Add(new CGUIGumppic(0x2335, 30, 380));
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+        Add(new CGUIButton(ID_MS_LAUNCHER, 0x08D1, 0x08D1, 0x08D1, 590, 430));
+#endif
 
         Add(new CGUIResizepic(ID_MS_ACCOUNT, 0x0BB8, 220, 280, 210, 30));
         Add(new CGUIResizepic(ID_MS_PASSWORD, 0x0BB8, 220, 335, 210, 30));
@@ -221,6 +230,11 @@ void CGumpScreenMain::InitToolTip()
             g_ToolTip.Set(L"Quit Ultima Online", 80);
             break;
         }
+        case ID_MS_LAUNCHER:
+        {
+            g_ToolTip.Set(L"Open X:UO Launcher", 120);
+            break;
+        }
         case ID_MS_ARROW_NEXT:
         {
             g_ToolTip.Set(L"Next screen");
@@ -265,6 +279,13 @@ void CGumpScreenMain::GUMP_BUTTON_EVENT_C
             g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_CONNECT);
             break;
         }
+#if defined(XUO_LAUNCHER_EMBEDDED)
+        case ID_MS_LAUNCHER:
+        {
+            LauncherWindow_Open();
+            break;
+        }
+#endif
         case ID_MS_UOACCOUNT:
         {
             Platform::OpenBrowser("https://accounts.eamythic.com/");
