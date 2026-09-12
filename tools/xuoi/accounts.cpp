@@ -187,17 +187,15 @@ static fs_path account_create_config(const account::entry &account)
     return fname;
 }
 
-static void account_launch(int account_index)
+#if defined(XUO_LAUNCHER_EMBEDDED)
+// embedded in the client: apply the profile live instead of spawning
+// another process; the client persists it to crossuo.cfg itself and the
+// boot/login flow reacts to the new values
+static void account_apply_live(int account_index)
 {
-    if (account_index == 0)
-        return;
-
-    assert(account_index < (int)s_accounts.entries.size());
+    assert(account_index >= 0 && account_index < (int)s_accounts.entries.size());
     const auto &entry = s_accounts.entries[account_index];
 
-#if defined(XUO_LAUNCHER_EMBEDDED)
-    // embedded in the client: apply the profile live instead of spawning
-    // another process; the client persists it to crossuo.cfg itself
     xuol::client_profile profile;
     profile.profile = entry.account_profile;
     profile.login = entry.account_login;
@@ -211,25 +209,41 @@ static void account_launch(int account_index)
     profile.clienttype = entry.account_clienttype;
     profile.crypt = entry.account_crypt;
 
-    xuol_set_last_used(account_index);
     const auto result = xuol::client_apply_profile(profile);
     if (result == xuol::apply_result::applied)
     {
         LOG_INFO("profile applied: %s", profile.profile.c_str());
-        xuol_launch_quit();
     }
     else if (result == xuol::apply_result::needs_restart)
     {
         LOG_INFO("profile saved, a client restart is required");
         bool restart = false;
-        if (DialogYesNo("Profile", "A restart is required to apply this profile. Restart now?", restart) &&
+        if (DialogYesNo(
+                "Profile",
+                "A restart is required to apply this profile. Restart now?",
+                restart) &&
             restart)
         {
             xuol::client_request_restart();
         }
     }
+}
+#endif // XUO_LAUNCHER_EMBEDDED
+
+static void account_launch(int account_index)
+{
+    if (account_index == 0)
+        return;
+
+    assert(account_index < (int)s_accounts.entries.size());
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    xuol_set_last_used(account_index);
+    account_apply_live(account_index);
+    xuol_launch_quit();
     return;
 #else
+    const auto &entry = s_accounts.entries[account_index];
     auto cfg = account_create_config(entry);
     if (!fs_path_some(cfg))
     {
@@ -590,6 +604,15 @@ void ui_accounts(ui_model &m)
             }
 
             save_config(); // force xuolauncher to save all configurations
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+            // saving may have fixed the data path (or anything else); apply
+            // the profile live so the waiting client picks it up
+            if (acct_id != NEW_ACCOUNT && acct_id < (int)s_accounts.entries.size())
+            {
+                account_apply_live(acct_id);
+            }
+#endif
         }
     }
     ImGui::EndChild();

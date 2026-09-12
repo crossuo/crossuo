@@ -427,6 +427,20 @@ void xuol_app_shutdown()
     http_shutdown();
 }
 
+static bool s_profile_applied = false;
+
+void xuol_app_notify_profile_applied()
+{
+    s_profile_applied = true;
+}
+
+bool xuol_app_consume_profile_applied()
+{
+    const bool applied = s_profile_applied;
+    s_profile_applied = false;
+    return applied;
+}
+
 void xuol_ui_clear_color(float out[4])
 {
     out[0] = s_ui.clear_color.x;
@@ -443,9 +457,16 @@ void xuol_app_frame()
 
     ui_newframe(ui);
 
-    int x, y;
-    SDL_GetWindowPosition(win.window, &x, &y);
-    ImVec2 pos = { float(x), float(y) };
+    // with viewports enabled (standalone host) the pinned window is placed
+    // in screen coordinates; without them (embedded host) the imgui viewport
+    // starts at the client area origin
+    ImVec2 pos = { 0.0f, 0.0f };
+    if (ui.viewports_enabled)
+    {
+        int x, y;
+        SDL_GetWindowPosition(win.window, &x, &y);
+        pos = { float(x), float(y) };
+    }
     ImVec2 size = { float(win.width), float(win.height) };
     //LOG_INFO("%d, %d", win.width, win.height);
     ImGui::SetNextWindowPos(pos, ImGuiCond_Always);

@@ -192,6 +192,14 @@ void LauncherWindow_Render()
 
     xuol_app_frame();
 
+    // the imgui SDL backend toggles the process-global OS cursor visibility
+    // every frame; hide it back whenever the mouse is not over the launcher
+    // so the game keeps drawing its own cursor only
+    if (SDL_GetMouseFocus() != s_launcher_win.window)
+    {
+        SDL_ShowCursor(SDL_DISABLE);
+    }
+
     SDL_GL_SwapWindow(s_launcher_win.window);
     if (bak_window && bak_context)
         SDL_GL_MakeCurrent(bak_window, bak_context);
@@ -222,6 +230,7 @@ namespace xuol {
 
 apply_result client_apply_profile(const client_profile &profile)
 {
+    xuol_app_notify_profile_applied();
     const bool live = ApplyClientProfile(
         profile.login,
         profile.password,

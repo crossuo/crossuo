@@ -12,6 +12,9 @@
 #include "CrossUO.h"
 #include "GameWindow.h"
 #include "LauncherWindow.h"
+#if defined(XUO_LAUNCHER_EMBEDDED)
+#include "xuol_app.h"
+#endif
 #include "Platform.h"
 #include "SDL_wrapper.h"
 #include "Wisp/WispThread.h"
@@ -624,17 +627,19 @@ int main(int argc, char **argv)
     if (!load_config())
     {
 #if defined(XUO_LAUNCHER_EMBEDDED)
-        // no valid configuration: drive the embedded launcher until the user
-        // either sets up a working profile or gives up
+        // no valid configuration: the validation already ran once, open the
+        // launcher and wait; the configuration is only validated again when
+        // the user applies a profile (save or launch) from the launcher
         if (isHeadless || !LauncherWindow_Init())
             return EXIT_FAILURE;
         bool valid_config = false;
-        while (!load_config())
+        while (!valid_config)
         {
             if (!LauncherWindow_Pump())
-                break;
+                break; // user closed the launcher
+            if (xuol_app_consume_profile_applied())
+                valid_config = load_config();
         }
-        valid_config = load_config();
         if (!valid_config)
         {
             LauncherWindow_Shutdown();

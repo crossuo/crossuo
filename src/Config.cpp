@@ -703,6 +703,11 @@ bool ApplyClientProfile(
         {
             g_PacketManager.AutoLoginNames.clear();
         }
+        // the login screen already loaded art from the old data path
+        if (path_changed)
+        {
+            return false;
+        }
     }
-    return !path_changed;
+    return true;
 }

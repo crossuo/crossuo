@@ -28,6 +28,10 @@ bool xuol_app_wants_close();
 void xuol_app_clear_close_intent();
 void xuol_app_shutdown();
 void xuol_ui_clear_color(float out[4]);
+// set by the client bridge whenever a profile was applied (save or launch);
+// the boot flow consumes it to know when to re-validate the configuration
+void xuol_app_notify_profile_applied();
+bool xuol_app_consume_profile_applied();
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
 // Implemented by the client (src/LauncherWindow.cpp) to apply launcher

@@ -160,6 +160,7 @@ ui_context ui_init(win_context &win, bool enable_viewports)
 
     ui_context ctx;
     ctx.win = &win;
+    ctx.viewports_enabled = enable_viewports;
     const auto fontSize = 13.0f;
     static const ImWchar icons_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
     ImFontConfig config;

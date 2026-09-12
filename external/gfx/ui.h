@@ -12,6 +12,7 @@ struct ui_context
 {
     win_context *win = nullptr;
     void *userdata = nullptr;
+    bool viewports_enabled = true;
     bool show_stats_window = false;
     bool show_demo_window = false;
     bool show_another_window = false;

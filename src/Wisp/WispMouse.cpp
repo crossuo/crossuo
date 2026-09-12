@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "WispMouse.h"
+#include "WispWindow.h"
 #include <SDL_mouse.h>
 namespace Wisp
 {
@@ -21,6 +22,14 @@ CMouse::~CMouse()
 
 void CMouse::Update()
 {
+    // only follow the mouse while it hovers our own window; other windows in
+    // the process (like the embedded launcher) have their own mouse handling,
+    // and their coordinates would otherwise move the game cursor around
+    if (g_WispWindow != nullptr && SDL_GetMouseFocus() != g_WispWindow->m_window)
+    {
+        Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
+        return;
+    }
     SDL_GetMouseState(&Position.X, &Position.Y);
     Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
     RealPosition = Position;
