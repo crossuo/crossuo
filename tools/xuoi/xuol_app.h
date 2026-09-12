@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+#pragma once
+
+#include <external/gfx/gfx.h>
+
+//
+// X:UO Launcher application lifecycle.
+//
+// The launcher UI is hosted by two different hosts:
+// - the standalone xuolauncher executable (tools/xuoi/xuolauncher_main.cpp)
+// - embedded in the crossuo client (src/LauncherWindow.cpp), except on
+//   legacy OpenGL 1 builds, where only the standalone host is available.
+//
+// The host owns the OS window and the GL context, and drives the app:
+//   xuol_app_init(win)          -> create ImGui context, load config/accounts/shards
+//   xuol_app_process_event(e)   -> feed each SDL event
+//   xuol_app_frame()            -> new frame, draw views, render into the current context
+//   xuol_app_wants_close()      -> app close intent (auto-close after launch, restart, quit)
+//   xuol_app_shutdown()         -> flush config, stop updater, destroy ImGui context
+//
+
+bool xuol_app_init(win_context &win, const char *ini_name = nullptr, bool enable_viewports = true);
+void xuol_app_process_event(const SDL_Event *event);
+void xuol_app_frame();
+bool xuol_app_wants_close();
+void xuol_app_clear_close_intent();
+void xuol_app_shutdown();
+void xuol_ui_clear_color(float out[4]);
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+// Implemented by the client (src/LauncherWindow.cpp) to apply launcher
+// profiles to the running client instead of spawning a new process.
+#include <xuocore/common.h>
+
+namespace xuol {
+struct client_profile
+{
+    astr_t profile;
+    astr_t login;
+    astr_t password;
+    bool remember_pw = false;
+    bool autologin = false;
+    astr_t character; // fast login character
+    astr_t loginserver;
+    astr_t data_path;
+    astr_t clientversion;
+    astr_t clienttype;
+    bool crypt = false;
+};
+
+enum class apply_result
+{
+    applied,       // profile is live in the client
+    needs_restart, // profile persisted, but the client must be restarted
+    failed,        // could not apply (error logged)
+};
+
+apply_result client_apply_profile(const client_profile &profile);
+// relaunches the client process (used for applying updates and profiles that
+// cannot be applied live); the current process exits afterwards
+void client_request_restart();
+} // namespace xuol
+#endif // XUO_LAUNCHER_EMBEDDED

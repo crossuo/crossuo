@@ -240,6 +240,7 @@ set(crossuo_src
   Point.cpp
   Vector.cpp
   Misc.cpp
+  LauncherWindow.cpp
   BaseQueue.cpp
   CharacterList.cpp
   CityList.cpp
@@ -296,6 +297,26 @@ else()
   source_group(TREE "${XUO_DIR}" FILES ${XUO_FILES})
 endif()
 
+if(XUO_LAUNCHER_EMBEDDED)
+  # X:UO Launcher app embedded into the client (GL3 builds only)
+  set(XUOL_EMBEDDED_SRCS
+    ${XUOI_DIR}/xuol_app.cpp
+    ${XUOI_DIR}/xuol_app.h
+    ${XUOI_DIR}/accounts.cpp
+    ${XUOI_DIR}/accounts.h
+    ${XUOI_DIR}/ui_model.cpp
+    ${XUOI_DIR}/ui_model.h
+    ${XUOI_DIR}/ui_shards.cpp
+    ${XUOI_DIR}/ui_shards.h
+    ${XUOI_DIR}/widgets.cpp
+    ${XUOI_DIR}/widgets.h
+    ${XUOI_DIR}/xuo_updater.cpp
+    ${XUOI_DIR}/xuo_updater.h
+  )
+  source_group("xuoi" FILES ${XUOL_EMBEDDED_SRCS})
+  set(XUO_FILES ${XUO_FILES} ${XUOL_EMBEDDED_SRCS})
+endif()
+
 if(XUO_WINDOWS)
   set(XUO_FILES ${XUO_FILES} ${CMAKE_SOURCE_DIR}/resources/client.rc)
 endif()
@@ -313,7 +334,13 @@ endif()
 
 add_dependencies(crossuo ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${3RDPARTY_STATIC})
 target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${GLM_LIBRARIES} ${THREAD} ${CURL_LIBRARIES})
-target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${EXTERNALGFX_INCLUDE} ${GLM_INCLUDE_DIR})
+target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${EXTERNALGFX_INCLUDE} ${GLM_INCLUDE_DIR} ${XUOI_INCLUDE})
+
+# the launcher app is compiled into the client only; keeping the define on the
+# target scope avoids flagged rebuilds of the whole dependency tree
+if(XUO_LAUNCHER_EMBEDDED)
+  target_compile_definitions(crossuo PRIVATE XUO_LAUNCHER_EMBEDDED=1)
+endif()
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_CI})
   add_dependencies(crossuo clang-format-7)

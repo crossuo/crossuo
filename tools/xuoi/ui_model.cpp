@@ -4,6 +4,8 @@
 #include "ui_model.h"
 #include <stack>
 
+namespace xuol {
+
 static std::stack<ui_view> s_view_stack;
 
 void ui_push(ui_model &m, ui_view v)
@@ -17,3 +19,5 @@ void ui_pop(ui_model &m)
     m.view = s_view_stack.top();
     s_view_stack.pop();
 }
+
+} // namespace xuol

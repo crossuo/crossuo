@@ -86,6 +86,14 @@ if (OPENGL_FOUND)
     compile_definitions(USE_GL3=1)
     compile_definitions(NEW_RENDERER_ENABLED=1)
     set(USE_GL3 1)
+    if (NOT XUO_EMSC)
+      # GL3 builds embed the X:UO Launcher inside the client; legacy GL1 and
+      # the original GL2 renderer keep using the standalone xuolauncher binary.
+      # (the -D define itself is attached to the crossuo target only, so the
+      # dependency tree is not polluted and rebuilt)
+      set(XUO_LAUNCHER_EMBEDDED 1)
+      message(STATUS "X:UO Launcher: embedded in crossuo")
+    endif()
     message(STATUS "Building with new modern renderer (GL3)")
   endif()
   set(GL_LIBRARIES ${OPENGL_LIBRARIES})
@@ -103,6 +111,12 @@ set(WAYLAND_SHARED OFF CACHE BOOL "Force disable Wayland")
 xuo_dependency(glm glm GLM)
 if (NOT XUO_EMSC)
   xuo_dependency(cmcurl cmcurl CURL)
+  if (XUO_LAUNCHER_EMBEDDED)
+    # the embedded launcher drags the http/updater stack into the crossuo
+    # shared library for the first time, which requires position independent
+    # code in the vendored static curl (libressl already builds with PIC)
+    set_property(TARGET cmcurl PROPERTY POSITION_INDEPENDENT_CODE ON)
+  endif()
   xuo_dependency(XSDL2 sdl-2.0.10-c1be3add38 SDL2)
   set(3RDPARTY_STATIC SDL2-static cmcurl)
 else()

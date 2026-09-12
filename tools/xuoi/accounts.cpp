@@ -20,6 +20,9 @@
 #include "ui_model.h"
 #include "shards.h"
 #include "ui_shards.h"
+#include "xuol_app.h"
+
+namespace xuol {
 
 #define CFG_NAME account
 #define CFG_SECTION_FILTER_NAME "account"
@@ -191,6 +194,42 @@ static void account_launch(int account_index)
 
     assert(account_index < (int)s_accounts.entries.size());
     const auto &entry = s_accounts.entries[account_index];
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    // embedded in the client: apply the profile live instead of spawning
+    // another process; the client persists it to crossuo.cfg itself
+    xuol::client_profile profile;
+    profile.profile = entry.account_profile;
+    profile.login = entry.account_login;
+    profile.password = entry.account_password;
+    profile.remember_pw = !entry.account_password.empty();
+    profile.autologin = entry.account_auto_login;
+    profile.character = entry.account_fast_login;
+    profile.loginserver = entry.account_loginserver;
+    profile.data_path = entry.account_data_path;
+    profile.clientversion = entry.account_clientversion;
+    profile.clienttype = entry.account_clienttype;
+    profile.crypt = entry.account_crypt;
+
+    xuol_set_last_used(account_index);
+    const auto result = xuol::client_apply_profile(profile);
+    if (result == xuol::apply_result::applied)
+    {
+        LOG_INFO("profile applied: %s", profile.profile.c_str());
+        xuol_launch_quit();
+    }
+    else if (result == xuol::apply_result::needs_restart)
+    {
+        LOG_INFO("profile saved, a client restart is required");
+        bool restart = false;
+        if (DialogYesNo("Profile", "A restart is required to apply this profile. Restart now?", restart) &&
+            restart)
+        {
+            xuol::client_request_restart();
+        }
+    }
+    return;
+#else
     auto cfg = account_create_config(entry);
     if (!fs_path_some(cfg))
     {
@@ -248,6 +287,7 @@ static void account_launch(int account_index)
 
     xuol_set_last_used(account_index);
     xuol_launch_quit();
+#endif // XUO_LAUNCHER_EMBEDDED
 }
 
 static bool account_getter(void *data, int idx, const char **out_text)
@@ -554,3 +594,5 @@ void ui_accounts(ui_model &m)
     }
     ImGui::EndChild();
 }
+
+} // namespace xuol

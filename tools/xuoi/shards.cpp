@@ -12,8 +12,8 @@
 #include <xuocore/http.h>
 #include <xuocore/common.h>
 
-extern bool valid_url(const astr_t &url);
-extern void open_url(const astr_t &url);
+namespace xuol {
+
 extern const fs_path &xuol_data_path();
 
 namespace shard
@@ -305,9 +305,12 @@ shard_data shard_by_id(int id)
              s.shard_clientversion.c_str() };
 }
 
+} // namespace xuol
+
 #if defined(VALIDATOR)
 
 #include <external/popts.h>
+using namespace xuol;
 
 static void print_banner()
 {

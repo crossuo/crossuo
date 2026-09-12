@@ -277,6 +277,43 @@ void CWindow::ShowMessage(const wstr_t &text, const wstr_t &title)
 
 bool CWindow::OnWindowProc(SDL_Event &ev)
 {
+    // only handle events belonging to this window; other windows in the
+    // process (like the embedded launcher) have their own event handling.
+    // Events without a window id (like SDL_QUIT) remain process-global.
+    const auto id = SDL_GetWindowID(m_window);
+    switch (ev.type)
+    {
+        case SDL_WINDOWEVENT:
+            if (ev.window.windowID != id)
+                return false;
+            break;
+        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+            if (ev.key.windowID != id)
+                return false;
+            break;
+        case SDL_TEXTEDITING:
+        case SDL_TEXTINPUT:
+            if (ev.text.windowID != id)
+                return false;
+            break;
+        case SDL_MOUSEMOTION:
+            if (ev.motion.windowID != id)
+                return false;
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+            if (ev.button.windowID != id)
+                return false;
+            break;
+        case SDL_MOUSEWHEEL:
+            if (ev.wheel.windowID != id)
+                return false;
+            break;
+        default:
+            break;
+    }
+
     switch (ev.type)
     {
         case SDL_WINDOWEVENT:

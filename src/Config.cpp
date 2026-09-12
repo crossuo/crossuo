@@ -15,6 +15,9 @@
 #include <xuocore/client_info.h>
 #include "Crypt/CryptEntry.h"
 #include "Managers/PacketManager.h"
+#include "Managers/ConnectionManager.h"
+#include "ScreenStages/BaseScreen.h"
+#include "ScreenStages/MainScreen.h"
 
 #include <external/popts.h>
 extern po::parser g_cli;
@@ -619,4 +622,87 @@ void SaveGlobalConfig()
     }
     fflush(cfg);
     fs_close(cfg);
+}
+
+bool ApplyClientProfile(
+    const astr_t &login,
+    const astr_t &password,
+    bool save_password,
+    bool autologin,
+    const astr_t &character,
+    const astr_t &loginserver,
+    const astr_t &custom_path,
+    const astr_t &client_version,
+    const astr_t &client_type,
+    bool crypt)
+{
+    const bool connected = g_ConnectionManager.Connected();
+    const bool booted = g_CurrentScreen != nullptr;
+    const bool can_apply_live = !booted || (g_CurrentScreen == &g_MainScreen && !connected);
+
+    const auto new_path = fs_path_from(custom_path);
+    const bool path_changed = !custom_path.empty() && !fs_path_equal(g_UOPath, new_path);
+
+    // 1] mirror the profile into the global configuration state
+    if (!custom_path.empty())
+    {
+        g_UOPath = new_path;
+        fs_case_insensitive_init(g_UOPath);
+        g_Config.CustomPath = custom_path;
+    }
+    g_Config.Login = login;
+    g_Config.Password = password;
+    g_Config.SavePassword = save_password;
+    g_Config.AutoLogin = autologin;
+    g_Config.UseCrypt = crypt;
+
+    // loginserver uses the config file format and may carry a port: "host,port"
+    g_Config.ServerAddress = loginserver;
+    g_Config.ServerPort = 2593;
+    const auto comma = loginserver.find(',');
+    if (comma != astr_t::npos)
+    {
+        g_Config.ServerAddress = loginserver.substr(0, comma);
+        g_Config.ServerPort = (uint16_t)str_to_int(loginserver.substr(comma + 1));
+    }
+
+    if (!client_version.empty())
+    {
+        g_Config.ClientVersionString = client_version;
+        g_Config.ClientVersionModified = true;
+        s_Mark.ClientVersion = true;
+    }
+    const auto flag = GetClientTypeFromString(client_type);
+    if (flag != CF_UNDEFINED)
+    {
+        g_Config.ClientFlag = (uint16_t)flag;
+        s_Mark.ClientFlag = true;
+    }
+
+    ClientVersionFixup(s_Mark.ProtocolVersion);
+
+    // 2] persist it, keeping the active configuration file in sync
+    SaveGlobalConfig();
+
+    // 3] apply live, when the client state allows it
+    if (!can_apply_live)
+    {
+        return false;
+    }
+
+    if (booted)
+    {
+        g_MainScreen.SetAccounting(login, password);
+        g_MainScreen.m_SavePassword->Checked = save_password;
+        g_MainScreen.m_AutoLogin->Checked = autologin;
+        if (!character.empty())
+        {
+            g_PacketManager.AutoLoginNames = astr_t("|") + character;
+        }
+        else
+        {
+            g_PacketManager.AutoLoginNames.clear();
+        }
+    }
+    return !path_changed;
 }

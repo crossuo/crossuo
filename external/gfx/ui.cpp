@@ -20,7 +20,7 @@
 #error "SOKOL 3D API not defined / unknown"
 #endif
 
-ui_context ui_init(win_context &win)
+ui_context ui_init(win_context &win, bool enable_viewports)
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -31,7 +31,8 @@ ui_context ui_init(win_context &win)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+    if (enable_viewports)
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
     //io.ConfigViewportsNoAutoMerge = true;
     //io.ConfigViewportsNoTaskBarIcon = true;
 
@@ -220,7 +221,7 @@ void ui_draw(ui_context &ui)
 #endif
 }
 
-void ui_update(ui_context &ctx)
+void ui_newframe(ui_context &ctx)
 {
 #if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_NewFrame();
@@ -236,6 +237,15 @@ void ui_update(ui_context &ctx)
 
     ImGui_ImplSDL2_NewFrame(ctx.win->window);
     ImGui::NewFrame();
+
+    ImGuiIO &io = ImGui::GetIO();
+    ctx.win->width = (int)io.DisplaySize.x;
+    ctx.win->height = (int)io.DisplaySize.y;
+}
+
+void ui_update(ui_context &ctx)
+{
+    ui_newframe(ctx);
 
     if (ctx.show_demo_window)
         ImGui::ShowDemoWindow();
@@ -283,10 +293,6 @@ void ui_update(ui_context &ctx)
             ctx.show_another_window = false;
         ImGui::End();
     }
-
-    ImGuiIO &io = ImGui::GetIO();
-    ctx.win->width = (int)io.DisplaySize.x;
-    ctx.win->height = (int)io.DisplaySize.y;
 }
 
 void ui_shutdown(ui_context &)

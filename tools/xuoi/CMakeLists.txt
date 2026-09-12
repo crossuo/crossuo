@@ -34,7 +34,9 @@ set(XUOL_SRCS
   widgets.h
   xuo_updater.cpp
   xuo_updater.h
-  xuolauncher.cpp
+  xuol_app.cpp
+  xuol_app.h
+  xuolauncher_main.cpp
   accounts.cpp
   accounts.h
   ui_model.cpp

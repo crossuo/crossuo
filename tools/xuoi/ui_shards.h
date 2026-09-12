@@ -3,6 +3,8 @@
 
 #pragma once
 
+namespace xuol {
+
 struct ui_model;
 
 int shard_picked();
@@ -13,3 +15,5 @@ bool ui_shards_combo(
     int *current_item,
     int popup_max_height_in_items = -1);
 void ui_shards(ui_model &m, bool picker = false);
+
+} // namespace xuol

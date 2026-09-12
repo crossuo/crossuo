@@ -8,6 +8,8 @@
 #include "shards.cpp"
 #include <xuocore/common.h>
 
+namespace xuol {
+
 // view
 void HoverToolTip(const char *desc);
 bool ComboBox(
@@ -230,3 +232,5 @@ void ui_shards(ui_model &m, bool picker)
             ui_pop(m);
     }
 }
+
+} // namespace xuol

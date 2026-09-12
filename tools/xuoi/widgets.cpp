@@ -3,6 +3,8 @@
 
 #include "widgets.h"
 
+namespace xuol {
+
 void HoverToolTip(const char *desc)
 {
     if (ImGui::IsItemHovered())
@@ -155,3 +157,5 @@ bool DialogYesNo(const char *title, const char *msg, bool &open)
     }
     return response;
 }
+
+} // namespace xuol

@@ -6,6 +6,8 @@
 
 #include <external/gfx/ui.h>
 
+namespace xuol {
+
 typedef void (*ListBoxItemCallback)(int index);
 
 void HoverToolTip(const char *desc);
@@ -36,3 +38,5 @@ bool ListBox(
     int height_in_items,
     ListBoxItemCallback callback = nullptr);
 bool DialogYesNo(const char *title, const char *msg, bool &open);
+
+} // namespace xuol

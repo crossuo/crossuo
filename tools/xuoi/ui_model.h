@@ -5,6 +5,8 @@
 
 #include <external/gfx/ui.h>
 
+namespace xuol {
+
 enum class ui_view : uint32_t
 {
     accounts,
@@ -24,3 +26,5 @@ struct ui_model
 
 void ui_push(ui_model &m, ui_view v);
 void ui_pop(ui_model &m);
+
+} // namespace xuol

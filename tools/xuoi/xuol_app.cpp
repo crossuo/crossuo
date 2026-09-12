@@ -28,7 +28,13 @@
 #include "ui_model.h"
 #include "ui_shards.h"
 
+#include "xuol_app.h"
 #include "xuo_updater.h"
+
+namespace xuol {
+
+static ui_context s_ui;
+static win_context *s_win = nullptr;
 
 struct releases
 {
@@ -46,6 +52,7 @@ static bool s_update_request = false;
 static bool s_update_started = false;
 static bool s_launcher_restart = false;
 static bool s_launcher_quit = false;
+static bool s_launcher_close_intent = false;
 static int s_update_backup_index = -1;
 static bool s_has_update = false;
 static bool s_updated = false;
@@ -271,10 +278,16 @@ int xuol_last_used()
     return config().global_last_used;
 }
 
+void request_close()
+{
+    s_launcher_quit = true;
+    s_launcher_close_intent = true;
+}
+
 void xuol_launch_quit()
 {
     if (config().global_auto_close)
-        s_launcher_quit = true;
+        request_close();
 }
 
 bool xuol_launch_assist()
@@ -284,67 +297,90 @@ bool xuol_launch_assist()
 
 static ui_model model;
 
-static bool run_self_update_instance(int argc, char **argv)
-{
-    const char *bin = argv[0];
-    const auto len = strlen(bin);
-    if (bin[len - 1] != '_')
-    {
-        astr_t filename{ bin };
-        filename += '_';
-        auto file = fs_path_from(filename);
-        fs_del(file);
-        fs_copy(fs_path_from(bin), file);
+static void updater_init();
+static void update_run();
+static void update_backup();
+static std::thread s_update_worker;
 
-        bin = filename.c_str();
-        const char *args[] = { bin, 0 };
-        LOG_INFO("running %s", bin);
-        process_s process;
-        const auto options = process_option_inherit_environment | process_option_child_detached;
-        if (process_create(args, options, &process) != 0)
+static void updater_init()
+{
+    s_updated = false;
+    s_update_backup_index = -1;
+    xuo_shutdown(s_ctx);
+    const auto p = fs_path_current();
+    const auto install_path = fs_path_ascii(p);
+    s_ctx = xuo_init(install_path, false);
+    if (s_ctx)
+    {
+        if (s_apply_update || config().global_check_updates || config().global_auto_update)
         {
-            LOG_ERROR("could not relaunch %s for self-updates", bin);
+            s_has_update = xuo_update_check(s_ctx);
+            xuo_release_cb func = [](const char *name, const char *version, bool latest) {
+                if (latest)
+                    return;
+                if (!strcasecmp(name, "all"))
+                    return;
+                s_releases_updated.push_back({ name, version, astr_t(name) + " " + version });
+            };
+            xuo_releases_iterate(s_ctx, func);
+            s_releases.swap(s_releases_updated);
+            s_releases_updated.clear();
         }
-        return false;
+        if (s_has_update && config().global_auto_update)
+            s_update_request = true;
+        const auto timestamp = fs_timestamp_write(s_launcher_binary);
+        s_launcher_restart = s_launcher_timestamp && s_launcher_timestamp != timestamp;
     }
-    return true;
+    else
+    {
+        LOG_ERROR("could not initialize updater, ignoring updates");
+    }
+    model.view = s_has_update ? ui_view::updates : ui_view::accounts;
 }
 
-int main(int argc, char **argv)
+static void update_run()
 {
-    const char *bin = argv[0];
-    s_launcher_binary = fs_path_from(bin);
-    s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
+    s_updated = xuo_update_apply(s_ctx);
+    const auto timestamp = fs_timestamp_write(s_launcher_binary);
+    s_launcher_restart = s_updated || (s_launcher_timestamp && s_launcher_timestamp != timestamp);
+    s_update_started = false;
+    s_has_update = false;
+    model.view = ui_view::accounts;
+}
 
-#if !defined(XUO_DEBUG)
-    const bool self_relaunch = true;
-#else
-    const bool self_relaunch = argc > 1 && strcmp(argv[1], "--self") == 0;
-#endif
-    if (self_relaunch && !run_self_update_instance(argc, argv))
-    {
-        LOG_INFO("terminating %s", argv[0]);
-        return 0;
-    }
+static void update_backup()
+{
+    assert(
+        s_update_backup_index >= 0 && s_update_backup_index < (int)s_releases.size() &&
+        "invalid backup index");
+    auto &e = s_releases[s_update_backup_index];
+    LOG_INFO("downloading package %s %s", e.name, e.version);
+    s_update_backup_index = -1;
+    s_updated = xuo_release_get(s_ctx, e.name, e.version);
+    const auto timestamp = fs_timestamp_write(s_launcher_binary);
+    s_launcher_restart = s_updated || s_launcher_timestamp != timestamp;
+    s_update_started = false;
+    s_has_update = false;
+    model.view = ui_view::accounts;
+}
 
-    LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
+} // namespace xuol
+
+using namespace xuol;
+
+bool xuol_app_init(win_context &win, const char *ini_name, bool enable_viewports)
+{
+    LOG_INFO("launcher app initializing");
     http_init();
-    static const auto ini = fs_path_join(xuol_data_path(), "xuolauncher.ini");
-
-    win_context win;
-    memset(&win, 0, sizeof(win_context));
-    win.title = XUOL_TITLE;
-    win.width = 550;
-    win.height = 284;
-    win.vsync = 0;
+    s_win = &win;
+    static const auto ini =
+        fs_path_join(xuol_data_path(), ini_name ? ini_name : "xuolauncher.ini");
     win.inifile = fs_path_ascii(ini);
-    win.icon = &g_icon_xuolauncher;
-    win_init(&win);
 
-    auto ui = ui_init(win);
-    ui.userdata = &model;
+    s_ui = ui_init(win, enable_viewports);
+    s_ui.userdata = &model;
 #if defined(XUO_DEBUG)
-    ui.show_stats_window = true;
+    s_ui.show_stats_window = true;
 #endif
     XUODefaultStyle();
 
@@ -357,204 +393,184 @@ int main(int argc, char **argv)
     config().global_check_updates = false;
 #endif // defined(XUO_DEPLOY)
 
-    auto updater_init = []() {
-        s_updated = false;
-        s_update_backup_index = -1;
-        xuo_shutdown(s_ctx);
-        const auto p = fs_path_current();
-        const auto install_path = fs_path_ascii(p);
-        s_ctx = xuo_init(install_path, false);
-        if (s_ctx)
-        {
-            if (s_apply_update || config().global_check_updates || config().global_auto_update)
-            {
-                s_has_update = xuo_update_check(s_ctx);
-                xuo_release_cb func = [](const char *name, const char *version, bool latest) {
-                    if (latest)
-                        return;
-                    if (!strcasecmp(name, "all"))
-                        return;
-                    s_releases_updated.push_back({ name, version, astr_t(name) + " " + version });
-                };
-                xuo_releases_iterate(s_ctx, func);
-                s_releases.swap(s_releases_updated);
-                s_releases_updated.clear();
-            }
-            if (s_has_update && config().global_auto_update)
-                s_update_request = true;
-            const auto timestamp = fs_timestamp_write(s_launcher_binary);
-            s_launcher_restart = s_launcher_timestamp && s_launcher_timestamp != timestamp;
-        }
-        else
-        {
-            LOG_ERROR("could not initialize updater, ignoring updates");
-        }
-        model.view = s_has_update ? ui_view::updates : ui_view::accounts;
-    };
-    auto update_run = []() {
-        s_updated = xuo_update_apply(s_ctx);
-        const auto timestamp = fs_timestamp_write(s_launcher_binary);
-        s_launcher_restart =
-            s_updated || (s_launcher_timestamp && s_launcher_timestamp != timestamp);
-        s_update_started = false;
-        s_has_update = false;
-        model.view = ui_view::accounts;
-    };
-    auto update_backup = []() {
-        assert(
-            s_update_backup_index >= 0 && s_update_backup_index < (int)s_releases.size() &&
-            "invalid backup index");
-        auto &e = s_releases[s_update_backup_index];
-        LOG_INFO("downloading package %s %s", e.name, e.version);
-        s_update_backup_index = -1;
-        s_updated = xuo_release_get(s_ctx, e.name, e.version);
-        const auto timestamp = fs_timestamp_write(s_launcher_binary);
-        s_launcher_restart = s_updated || s_launcher_timestamp != timestamp;
-        s_update_started = false;
-        s_has_update = false;
-        model.view = ui_view::accounts;
-    };
-    auto update_worker = std::thread(updater_init);
+    auto init_worker = []() { updater_init(); };
+    s_update_worker = std::thread(init_worker);
+    return true;
+}
 
-    // Main loop
-    while (!s_launcher_quit)
-    {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ui_process_event(ui, &event);
-            if (event.type == SDL_QUIT)
-                s_launcher_quit = true;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-                event.window.windowID == SDL_GetWindowID(win.window))
-                s_launcher_quit = true;
-        }
+void xuol_app_process_event(const SDL_Event *event)
+{
+    ui_process_event(s_ui, event);
+}
 
-        glClearColor(ui.clear_color.x, ui.clear_color.y, ui.clear_color.z, ui.clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
+bool xuol_app_wants_close()
+{
+    return s_launcher_close_intent;
+}
 
-        int x, y;
-        SDL_GetWindowPosition(win.window, &x, &y);
-        ImVec2 pos = { float(x), float(y) };
-        ImVec2 size = { float(win.width), float(win.height) };
-        //LOG_INFO("%d, %d", win.width, win.height);
-        ui_update(ui);
-        ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
-        ImGui::SetNextWindowSize(size, ImGuiCond_Always);
-        ImGui::Begin(
-            XUOL_TITLE,
-            nullptr,
-            ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
-                ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
-                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
-        {
-            if (ImGui::BeginMenuBar())
-            {
-                if (ImGui::BeginMenu("View"))
-                {
-                    bool selected = model.view == ui_view::accounts;
-                    if (ImGui::MenuItem(ICON_FK_USER " Accounts", nullptr, &selected))
-                        model.view = ui_view::accounts;
-                    selected = model.view == ui_view::updates;
-                    if (ImGui::MenuItem(ICON_FK_CLOUD_DOWNLOAD " Updates", nullptr, &selected))
-                        model.view = ui_view::updates;
-                    selected = model.view == ui_view::backups;
-                    if (ImGui::MenuItem(ICON_FK_FILE_ARCHIVE_O " Backups", nullptr, &selected))
-                        model.view = ui_view::backups;
-                    selected = model.view == ui_view::shards;
-                    if (ImGui::MenuItem(ICON_FK_GLOBE_W " Shards", nullptr, &selected))
-                        model.view = ui_view::shards;
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu("Options"))
-                {
-                    auto &cfg = config();
-                    if (ImGui::MenuItem("Check updates", nullptr, &cfg.global_check_updates))
-                    {
-                    }
-                    if (ImGui::MenuItem("Auto update", nullptr, &cfg.global_auto_update))
-                    {
-                    }
-                    if (ImGui::MenuItem("Enable assitant", nullptr, &cfg.global_enable_assist))
-                    {
-                    }
-                    if (ImGui::MenuItem("Close after launch", nullptr, &cfg.global_auto_close))
-                    {
-                    }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu("About"))
-                {
-                    if (ImGui::MenuItem(ICON_FK_FILE_TEXT_O " Changelog", nullptr))
-                        view_changelog();
-#if defined(XUO_DEBUG)
-                    if (ImGui::MenuItem("Demo", nullptr, &ui.show_demo_window))
-                    {
-                    }
-#endif
-                    ImGui::Separator();
-                    if (ImGui::MenuItem(ICON_FK_QUESTION_CIRCLE " About", nullptr))
-                    {
-                    }
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMenuBar();
-            }
+void xuol_app_clear_close_intent()
+{
+    s_launcher_close_intent = false;
+}
 
-            if (s_update_request)
-            {
-                s_update_request = false;
-                s_update_started = true;
-                if (update_worker.joinable())
-                    update_worker.join();
-                if (s_update_backup_index != -1)
-                {
-                    update_worker = std::thread(update_backup);
-                }
-                else
-                {
-                    update_worker = std::thread(update_run);
-                }
-            }
-            else if (s_update_check)
-            {
-                s_apply_update = true;
-                if (update_worker.joinable())
-                    update_worker.join();
-                update_worker = std::thread(updater_init);
-                s_update_check = false;
-            }
-
-            model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35); // FIXME
-            if (model.view == ui_view::accounts)
-                ui_accounts(model);
-            if (model.view == ui_view::updates)
-                ui_updates(model);
-            else if (model.view == ui_view::backups)
-                ui_backups(model);
-            else if (model.view == ui_view::shards)
-                ui_shards(model);
-            else if (model.view == ui_view::shard_picker)
-                ui_shards(model, true);
-
-            if (s_launcher_restart)
-                s_launcher_quit = DialogYesNo(
-                    "Update", "A restart is required, do you want to close?", s_launcher_restart);
-        }
-        ImGui::End();
-        ui_draw(ui);
-        win_flip(&win);
-    }
-
-    if (update_worker.joinable())
-        update_worker.join();
+void xuol_app_shutdown()
+{
+    LOG_INFO("launcher app shutting down");
+    if (s_update_worker.joinable())
+        s_update_worker.join();
 
     if (s_ctx)
         xuo_shutdown(s_ctx);
     save_config();
-    ui_shutdown(ui);
-    win_shutdown(&win);
+    ui_shutdown(s_ui);
 
     http_shutdown();
-    return 0;
+}
+
+void xuol_ui_clear_color(float out[4])
+{
+    out[0] = s_ui.clear_color.x;
+    out[1] = s_ui.clear_color.y;
+    out[2] = s_ui.clear_color.z;
+    out[3] = s_ui.clear_color.w;
+}
+
+
+void xuol_app_frame()
+{
+    win_context &win = *s_win;
+    auto &ui = s_ui;
+
+    ui_newframe(ui);
+
+    int x, y;
+    SDL_GetWindowPosition(win.window, &x, &y);
+    ImVec2 pos = { float(x), float(y) };
+    ImVec2 size = { float(win.width), float(win.height) };
+    //LOG_INFO("%d, %d", win.width, win.height);
+    ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(size, ImGuiCond_Always);
+    ImGui::Begin(
+        XUOL_AGENT_NAME,
+        nullptr,
+        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+    {
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("View"))
+            {
+                bool selected = model.view == ui_view::accounts;
+                if (ImGui::MenuItem(ICON_FK_USER " Accounts", nullptr, &selected))
+                    model.view = ui_view::accounts;
+                selected = model.view == ui_view::updates;
+                if (ImGui::MenuItem(ICON_FK_CLOUD_DOWNLOAD " Updates", nullptr, &selected))
+                    model.view = ui_view::updates;
+                selected = model.view == ui_view::backups;
+                if (ImGui::MenuItem(ICON_FK_FILE_ARCHIVE_O " Backups", nullptr, &selected))
+                    model.view = ui_view::backups;
+                selected = model.view == ui_view::shards;
+                if (ImGui::MenuItem(ICON_FK_GLOBE_W " Shards", nullptr, &selected))
+                    model.view = ui_view::shards;
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Options"))
+            {
+                auto &cfg = config();
+                if (ImGui::MenuItem("Check updates", nullptr, &cfg.global_check_updates))
+                {
+                }
+                if (ImGui::MenuItem("Auto update", nullptr, &cfg.global_auto_update))
+                {
+                }
+                if (ImGui::MenuItem("Enable assitant", nullptr, &cfg.global_enable_assist))
+                {
+                }
+                if (ImGui::MenuItem("Close after launch", nullptr, &cfg.global_auto_close))
+                {
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("About"))
+            {
+                if (ImGui::MenuItem(ICON_FK_FILE_TEXT_O " Changelog", nullptr))
+                    view_changelog();
+#if defined(XUO_DEBUG)
+                if (ImGui::MenuItem("Demo", nullptr, &ui.show_demo_window))
+                {
+                }
+#endif
+                ImGui::Separator();
+                if (ImGui::MenuItem(ICON_FK_QUESTION_CIRCLE " About", nullptr))
+                {
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+
+        if (s_update_request)
+        {
+            s_update_request = false;
+            s_update_started = true;
+            if (s_update_worker.joinable())
+                s_update_worker.join();
+            if (s_update_backup_index != -1)
+            {
+                s_update_worker = std::thread(update_backup);
+            }
+            else
+            {
+                s_update_worker = std::thread(update_run);
+            }
+        }
+        else if (s_update_check)
+        {
+            s_apply_update = true;
+            if (s_update_worker.joinable())
+                s_update_worker.join();
+            s_update_worker = std::thread(updater_init);
+            s_update_check = false;
+        }
+
+        model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35); // FIXME
+        if (model.view == ui_view::accounts)
+            ui_accounts(model);
+        if (model.view == ui_view::updates)
+            ui_updates(model);
+        else if (model.view == ui_view::backups)
+            ui_backups(model);
+        else if (model.view == ui_view::shards)
+            ui_shards(model);
+        else if (model.view == ui_view::shard_picker)
+            ui_shards(model, true);
+
+        if (s_launcher_restart)
+        {
+#if defined(XUO_LAUNCHER_EMBEDDED)
+            // embedded in the client: restarting means relaunching crossuo so
+            // the updated binaries take over (the client exits by itself)
+            bool restart = false;
+            if (DialogYesNo(
+                    "Update", "A restart is required, do you want to restart now?", restart))
+            {
+                s_launcher_restart = false;
+                if (restart)
+                {
+                    xuol::client_request_restart();
+                }
+                else
+                {
+                    LOG_WARN("client restart postponed, the update applies on the next start");
+                }
+            }
+#else
+            s_launcher_quit = DialogYesNo(
+                "Update", "A restart is required, do you want to close?", s_launcher_restart);
+#endif
+        }
+    }
+    ImGui::End();
+    ui_draw(ui);
 }

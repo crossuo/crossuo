@@ -46,4 +46,20 @@ bool LoadGlobalConfig();
 void SaveGlobalConfig();
 void ApplyClientVersionDefaults();
 
+// Applies a launcher profile to the running client (embedded launcher):
+// persists the new state with SaveGlobalConfig() and mirrors it into the
+// live client state. Returns true when fully applied; false when the client
+// must be restarted for the changes to take effect.
+bool ApplyClientProfile(
+    const astr_t &login,
+    const astr_t &password,
+    bool save_password,
+    bool autologin,
+    const astr_t &character,
+    const astr_t &loginserver,
+    const astr_t &custom_path,
+    const astr_t &client_version,
+    const astr_t &client_type,
+    bool crypt);
+
 extern Config g_Config;

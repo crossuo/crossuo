@@ -18,8 +18,9 @@ struct ui_context
     ImVec4 clear_color = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
 };
 
-ui_context ui_init(win_context &win);
+ui_context ui_init(win_context &win, bool enable_viewports = true);
 void ui_process_event(ui_context &, const SDL_Event *event);
+void ui_newframe(ui_context &ctx);
 void ui_draw(ui_context &ctx);
 void ui_update(ui_context &ctx);
 void ui_shutdown(ui_context &ctx);

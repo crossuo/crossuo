@@ -11,6 +11,7 @@
 #include "Misc.h" // g_MainThread
 #include "CrossUO.h"
 #include "GameWindow.h"
+#include "LauncherWindow.h"
 #include "Platform.h"
 #include "SDL_wrapper.h"
 #include "Wisp/WispThread.h"
@@ -171,10 +172,12 @@ void fatal_error_dialog(const char *message)
 
 bool load_config()
 {
+#if !defined(XUO_LAUNCHER_EMBEDDED)
 #if defined(XUO_WINDOWS)
 #define LAUNCHER_EXE "xuolauncher.exe"
 #else
 #define LAUNCHER_EXE "xuolauncher"
+#endif
 #endif
 
     // builds the streaming params from the command line flags
@@ -226,12 +229,10 @@ bool load_config()
                 params.record_scenario =
                     g_cli["streaming-record-scenario"].get().string;
         }
-        return params;
-    };
+    return params;
+};
 
-    const bool config_exists = LoadGlobalConfig();
-
-    // a config whose data path carries a streamed (vfs-managed) install -
+// a config whose data path carries a streamed (vfs-managed) install -
     // its cache/state marks it - keeps streaming into that directory: the
     // install may be partial (holes stream on demand), so plain mapping
     // would leave it broken
@@ -285,6 +286,7 @@ bool load_config()
         return true;
     }
 
+#if !defined(XUO_LAUNCHER_EMBEDDED)
     const auto bin_fs = fs_path_join(fs_path_current(), LAUNCHER_EXE);
     const auto bin = fs_path_ascii(bin_fs);
     const bool launcher_exists = fs_path_exists(bin_fs);
@@ -317,6 +319,14 @@ bool load_config()
         launcher();
         return false;
     }
+#else
+    if (!config_exists)
+    {
+        Info(Client, "no configuration found, opening the embedded launcher");
+        LauncherWindow_Init();
+        return false;
+    }
+#endif
 
     if (config_exists)
     {
@@ -325,6 +335,7 @@ bool load_config()
         if (!valid_client)
         {
             Warning(Client, "Couldn't find data files in the path: %s", uopath);
+#if !defined(XUO_LAUNCHER_EMBEDDED)
             if (launcher_exists)
             {
                 launcher();
@@ -336,6 +347,9 @@ bool load_config()
                 "original's client installation directory.",
                 "could not find data path: %s.",
                 uopath);
+#else
+            LauncherWindow_Init();
+#endif
             return false;
         }
 
@@ -395,6 +409,7 @@ bool load_config()
         {
             if (check_valid_data)
             {
+#if !defined(XUO_LAUNCHER_EMBEDDED)
                 if (launcher_exists)
                 {
                     launcher();
@@ -406,6 +421,9 @@ bool load_config()
                     "correct version of your client installation directory.",
                     "could not find data files for client version %s.",
                     g_Config.ClientVersionString.c_str());
+#else
+                LauncherWindow_Init();
+#endif
                 return false;
             }
             else
@@ -504,6 +522,12 @@ static int Run()
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0)
         {
+#if defined(XUO_LAUNCHER_EMBEDDED)
+            // events for the launcher window (and the launcher hotkey) never
+            // reach the game window procedure
+            if (LauncherWindow_ProcessEvent(event))
+                continue;
+#endif
             quit = Wisp::g_WispWindow->OnWindowProc(event);
             if (quit)
             {
@@ -517,6 +541,10 @@ static int Run()
         g_PacketManager.ProcessPluginPackets();
         g_PacketManager.SendMegaClilocRequests();
         g_Game.Process(true);
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+        LauncherWindow_Render();
+#endif
 
         // 3] Calculate proper delay based on settings and frame time.
         // the test harness (XUO_TEST_LOGIN) runs uncapped: the window is not
@@ -538,6 +566,9 @@ static int Run()
             }
         }
     }
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    LauncherWindow_Shutdown();
+#endif
     return EXIT_SUCCESS;
 }
 
@@ -588,9 +619,30 @@ int main(int argc, char **argv)
     g_ExePath = fs_path_current();
     g_UOPath = fs_path_current();
 
+    const bool isHeadless = g_cli["headless"].was_set();
+
     if (!load_config())
     {
+#if defined(XUO_LAUNCHER_EMBEDDED)
+        // no valid configuration: drive the embedded launcher until the user
+        // either sets up a working profile or gives up
+        if (isHeadless || !LauncherWindow_Init())
+            return EXIT_FAILURE;
+        bool valid_config = false;
+        while (!load_config())
+        {
+            if (!LauncherWindow_Pump())
+                break;
+        }
+        valid_config = load_config();
+        if (!valid_config)
+        {
+            LauncherWindow_Shutdown();
+            return EXIT_FAILURE;
+        }
+#else
         return EXIT_FAILURE;
+#endif
     }
 
     if (g_cli["dump-uop"].was_set())
@@ -598,7 +650,6 @@ int main(int argc, char **argv)
         g_dumpUopFile = g_cli["dump-uop"].get().string;
     }
 
-    const bool isHeadless = g_cli["headless"].was_set();
     if (!isHeadless)
     {
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
