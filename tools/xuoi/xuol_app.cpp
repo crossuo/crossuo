@@ -156,14 +156,12 @@ void ui_updates(ui_model &m)
     }
 }
 
-static bool backup_getter(void *data, int idx, const char **out_text)
+static const char *backup_getter(void *data, int idx)
 {
     auto *items = (std::vector<releases> *)data;
     assert(items);
     assert(idx < (int)items->size());
-    if (out_text)
-        *out_text = items->at(idx).display.c_str();
-    return true;
+    return items->at(idx).display.c_str();
 }
 
 void ui_backups(ui_model &m)
@@ -182,8 +180,7 @@ void ui_backups(ui_model &m)
     //    ImGui::ListBox("##pkg", &cur_item, accounts, IM_ARRAYSIZE(accounts), items);
     ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
     ImGui::ListBox("##bkp", &cur_item, backup_getter, &s_releases, int(s_releases.size()), items);
-    ImGui::PopStyleColor();
-    ImGui::PopItemWidth();
+    ImGui::PopStyleColor();    ImGui::PopItemWidth();
     ImGui::EndChild();
     const bool in_progress = s_update_started || s_update_request;
     if (in_progress)
@@ -563,7 +560,12 @@ void xuol_app_frame()
             s_update_check = false;
         }
 
-        model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35); // FIXME
+        // GetWindowContentRegionWidth() is gone in imgui 1.90+; this is the
+        // exact expression it used to expand to (see the obsolete-API comments
+        // in imgui.h). "FIXME" retained from the original code.
+        const ImVec2 region_max = ImGui::GetWindowContentRegionMax();
+        const ImVec2 region_min = ImGui::GetWindowContentRegionMin();
+        model.area = ImVec2(region_max.x - region_min.x, size.y - 35); // FIXME
         if (model.view == ui_view::accounts)
             ui_accounts(model);
         if (model.view == ui_view::updates)

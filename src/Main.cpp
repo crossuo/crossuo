@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <time.h>
 #include <common/str.h>
+#include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
 #include "Config.h"
 #include "revision.h"
 #include "Constants.h" // CPU_USAGE_DELAY

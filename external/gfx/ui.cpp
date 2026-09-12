@@ -5,13 +5,15 @@
 
 #include "gfx.h"
 #include "imgui/imgui.h"
-#include "imgui/imgui_impl_sdl.h"
+#include "imgui/imgui_impl_sdl2.h"
 #include "imgui/IconsForkAwesomeData.h"
 
-#if defined(USE_GL3) || defined(USE_GLES)
+// imgui 1.92 removed the old imgui_impl_opengl2 backend and the
+// IMGUI_IMPL_OPENGL_LOADER_* selection macros: the GL3 backend now ships its
+// own loader (imgui_impl_opengl3_loader.h). GL1/GL2 builds therefore also use
+// the GL3 backend, which works fine as it only needs a compatibility profile.
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL2) || defined(USE_GL1)
 #include "imgui/imgui_impl_opengl3.h"
-#elif defined(USE_GL2) || defined(USE_GL1)
-#include "imgui/imgui_impl_opengl2.h"
 #elif defined(USE_DX11)
 #include "imgui/imgui_impl_dx11.h"
 #elif defined(USE_METAL)
@@ -59,7 +61,10 @@ ui_context ui_init(win_context &win, bool enable_viewports)
 #elif defined(USE_GLES)
     ImGui_ImplOpenGL3_Init("#version 100");
 #elif defined(USE_GL2) || defined(USE_GL1)
-    ImGui_ImplOpenGL2_Init();
+    // imgui 1.92 dropped imgui_impl_opengl2; the GL3 backend runs fine on a
+    // compatibility profile (GL1 builds report the GL2.1/GL1.1 context here,
+    // the backend falls back to the "#version 130"-style shader path).
+    ImGui_ImplOpenGL3_Init("#version " GL_SHADER_VERSION);
 #elif defined(USE_DX11)
     // create device d3d
     SDL_SysWMinfo info;
@@ -186,10 +191,8 @@ void ui_draw(ui_context &ui)
 {
     (void)ui;
     ImGui::Render();
-#if defined(USE_GL3) || defined(USE_GLES)
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL2) || defined(USE_GL1)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-#elif defined(USE_GL2) || defined(USE_GL1)
-    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 #elif defined(USE_DX11)
     g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
     g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, (float *)&ui.clear_color);
@@ -224,10 +227,8 @@ void ui_draw(ui_context &ui)
 
 void ui_newframe(ui_context &ctx)
 {
-#if defined(USE_GL3) || defined(USE_GLES)
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL2) || defined(USE_GL1)
     ImGui_ImplOpenGL3_NewFrame();
-#elif defined(USE_GL2) || defined(USE_GL1)
-    ImGui_ImplOpenGL2_NewFrame();
 #elif defined(USE_DX11)
     ImGui_ImplDX11_NewFrame();
 #elif defined(USE_METAL)
@@ -236,7 +237,7 @@ void ui_newframe(ui_context &ctx)
 #error "Unknown backend for imgui"
 #endif
 
-    ImGui_ImplSDL2_NewFrame(ctx.win->window);
+    ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
     ImGuiIO &io = ImGui::GetIO();
@@ -298,10 +299,8 @@ void ui_update(ui_context &ctx)
 
 void ui_shutdown(ui_context &)
 {
-#if defined(USE_GL3) || defined(USE_GLES)
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL2) || defined(USE_GL1)
     ImGui_ImplOpenGL3_Shutdown();
-#elif defined(USE_GL2) || defined(USE_GL1)
-    ImGui_ImplOpenGL2_Shutdown();
 #elif defined(USE_DX11)
     ImGui_ImplDX11_Shutdown();
     if (g_mainRenderTargetView)

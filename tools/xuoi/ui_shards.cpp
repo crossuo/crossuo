@@ -17,7 +17,7 @@ bool ComboBox(
     const char *label,
     float w,
     int *current_item,
-    bool (*items_getter)(void *data, int idx, const char **out_text),
+    const char *(*items_getter)(void *data, int idx),
     void *data,
     int items_count,
     int height_in_items = -1);

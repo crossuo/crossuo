@@ -221,14 +221,12 @@ bool convert(lang_type &out, const char *raw)
 static shard::data s_shards;
 static std::unordered_map<astr_t, int> s_shard_by_loginserver;
 
-bool shard_getter(void *data, int idx, const char **out_text)
+const char *shard_getter(void *data, int idx)
 {
     auto *items = (std::vector<shard::entry> *)data;
     assert(items);
     assert(idx < (int)items->size());
-    if (out_text)
-        *out_text = items->at(idx).shard_name.c_str();
-    return true;
+    return items->at(idx).shard_name.c_str();
 }
 
 static void load_shard_file(const fs_path &fname, shard::data &data)

@@ -16,9 +16,8 @@ set(EXTERNALGFX_SRC
     imgui/imgui.cpp
     imgui/imgui_demo.cpp
     imgui/imgui_draw.cpp
-    imgui/imgui_impl_sdl.cpp
-    imgui/imgui_impl_dx11.cpp
-    imgui/imgui_impl_opengl2.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_impl_sdl2.cpp
     imgui/imgui_impl_opengl3.cpp
     imgui/imgui_stdlib.cpp
     imgui/imgui_widgets.cpp
@@ -30,14 +29,18 @@ if (USE_GL2 OR USE_GL1)
     list(APPEND EXTERNALGFX_SRC GL/glew.c)
 endif()
 
-if (USE_GLES2)
-    list(REMOVE_ITEM EXTERNALGFX_SRC imgui/imgui_impl_opengl2.cpp)
+# The DirectX11 backend is Windows-only (it includes <d3d11.h> unconditionally).
+if(WIN32)
+    list(APPEND EXTERNALGFX_SRC imgui/imgui_impl_dx11.cpp)
 endif()
 
 add_library(${PROJECT_NAME} STATIC ${EXTERNALGFX_SRC} ${EXTERNALGFX_HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 
 if (USE_GLES2)
+    # The GL3 backend now ships its own loader (imgui_impl_opengl3_loader.h) and
+    # selects GLES2 through IMGUI_IMPL_OPENGL_ES2 instead of the old
+    # IMGUI_IMPL_OPENGL_LOADER_* macros.
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_OPENGL_ES2)
 endif()
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)

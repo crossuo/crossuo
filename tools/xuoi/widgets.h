@@ -32,7 +32,7 @@ bool ComboBox(
 bool ListBox(
     const char *label,
     int *current_item,
-    bool (*items_getter)(void *, int, const char **),
+    const char *(*items_getter)(void *, int),
     void *data,
     int items_count,
     int height_in_items,

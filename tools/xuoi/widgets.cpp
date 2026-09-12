@@ -5,6 +5,16 @@
 
 namespace xuol {
 
+// imgui removed ListBoxHeader()/ListBoxFooter() in 1.90 in favour of
+// BeginListBox()/EndListBox(); this reproduces the old size heuristic so
+// the existing call sites keep their previous look.
+static float GetListBoxHeight(int items_count, int height_in_items)
+{
+    const int lines = height_in_items < 0 ? (items_count < 7 ? items_count : 7) : height_in_items;
+    return ImGui::GetTextLineHeightWithSpacing() * (lines + 0.25f) +
+           ImGui::GetStyle().FramePadding.y * 2.0f;
+}
+
 void HoverToolTip(const char *desc)
 {
     if (ImGui::IsItemHovered())
@@ -66,7 +76,7 @@ bool ComboBox(
     const char *label,
     float w,
     int *current_item,
-    bool (*items_getter)(void *data, int idx, const char **out_text),
+    const char *(*items_getter)(void *data, int idx),
     void *data,
     int items_count,
     int height_in_items = -1)
@@ -86,13 +96,13 @@ bool ComboBox(
 bool ListBox(
     const char *label,
     int *current_item,
-    bool (*items_getter)(void *, int, const char **),
+    const char *(*items_getter)(void *, int),
     void *data,
     int items_count,
     int height_in_items,
     ListBoxItemCallback callback)
 {
-    if (!ImGui::ListBoxHeader(label, items_count, height_in_items))
+    if (!ImGui::BeginListBox(label, ImVec2(0.0f, GetListBoxHeight(items_count, height_in_items))))
         return false;
 
     ImGuiSelectableFlags flags = 0;
@@ -103,16 +113,14 @@ bool ListBox(
 
     // Assume all items have even height (= 1 line of text). If you need items of different or variable sizes you can create a custom version of ListBox() in your code without using the clipper.
     bool value_changed = false;
-    ImGuiListClipper clipper(
-        items_count,
-        ImGui::
-            GetTextLineHeightWithSpacing()); // We know exactly our line height here so we pass it as a minor optimization, but generally you don't need to.
+    ImGuiListClipper clipper;
+    clipper.Begin(items_count, ImGui::GetTextLineHeightWithSpacing()); // We know exactly our line height here so we pass it as a minor optimization, but generally you don't need to.
     while (clipper.Step())
         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
         {
             const bool item_selected = (i == *current_item);
-            const char *item_text;
-            if (!items_getter(data, i, &item_text))
+            const char *item_text = items_getter(data, i);
+            if (!item_text)
                 item_text = "*Unknown item*";
 
             ImGui::PushID(i);
@@ -129,7 +137,7 @@ bool ListBox(
                 ImGui::SetItemDefaultFocus();
             ImGui::PopID();
         }
-    ImGui::ListBoxFooter();
+    ImGui::EndListBox();
     return value_changed;
 }
 

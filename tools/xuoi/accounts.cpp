@@ -344,14 +344,12 @@ static void account_launch(int account_index)
 #endif // XUO_LAUNCHER_EMBEDDED
 }
 
-static bool account_getter(void *data, int idx, const char **out_text)
+static const char *account_getter(void *data, int idx)
 {
     auto *items = (std::vector<account::entry> *)data;
     assert(items);
     assert(idx < (int)items->size());
-    if (out_text)
-        *out_text = items->at(idx).account_profile.c_str();
-    return true;
+    return items->at(idx).account_profile.c_str();
 }
 
 static client_info info;
