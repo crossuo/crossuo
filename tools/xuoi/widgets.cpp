@@ -6,12 +6,17 @@
 namespace xuol {
 
 // imgui removed ListBoxHeader()/ListBoxFooter() in 1.90 in favour of
-// BeginListBox()/EndListBox(); this reproduces the old size heuristic so
-// the existing call sites keep their previous look.
+// BeginListBox()/EndListBox(). This reproduces the old size heuristic, but the
+// extra quarter line (meant to hint at more items) is only added when the list
+// is actually clipped; adding it unconditionally made every list 25% of a line
+// taller than requested, which pushed the controls below it out of place.
 static float GetListBoxHeight(int items_count, int height_in_items)
 {
-    const int lines = height_in_items < 0 ? (items_count < 7 ? items_count : 7) : height_in_items;
-    return ImGui::GetTextLineHeightWithSpacing() * (lines + 0.25f) +
+    if (height_in_items < 0)
+        height_in_items = items_count < 7 ? items_count : 7;
+    const float lines =
+        (height_in_items < items_count) ? (height_in_items + 0.25f) : float(height_in_items);
+    return ImGui::GetTextLineHeightWithSpacing() * lines +
            ImGui::GetStyle().FramePadding.y * 2.0f;
 }
 
