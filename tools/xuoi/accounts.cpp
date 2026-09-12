@@ -197,13 +197,6 @@ static bool s_reload_dialog = false;
 
 void account_reload_dialog_tick()
 {
-    { // TEMP: simulate a needs_restart apply 2s after the view opens
-        static int t = 0;
-        if (++t == 120)
-        {
-            s_reload_dialog = true;
-        }
-    }
     if (!s_reload_dialog)
         return;
 

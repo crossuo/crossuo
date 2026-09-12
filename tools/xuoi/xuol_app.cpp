@@ -373,6 +373,9 @@ bool xuol_app_init(win_context &win, const char *ini_name, bool enable_viewports
     LOG_INFO("launcher app initializing");
     http_init();
     s_win = &win;
+    // used by the updater to detect that the launcher binary changed on disk
+    s_launcher_binary = fs_path_process();
+    s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
     static const auto ini =
         fs_path_join(xuol_data_path(), ini_name ? ini_name : "xuolauncher.ini");
     win.inifile = fs_path_ascii(ini);
