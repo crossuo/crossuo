@@ -36,6 +36,7 @@ using uint = uint32_t;
 using ::g_Ticks;
 
 using std::string;
+using std::wstring;
 using std::vector;
 
 extern PACKET_PROC *g_SendClient;
@@ -444,6 +445,10 @@ struct WEATHER_DATA
     uchar Count;
     uchar Temperature;
 };
+
+// Season/weather filter state written by the packet handlers (0x65/0xBC).
+extern SEASON_DATA g_Season;
+extern WEATHER_DATA g_Weather;
 
 //! Replacement for the Qt app's QPoint globals (plan §4.2); x()/y() keep the
 //! original call sites verbatim.

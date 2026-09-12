@@ -20,6 +20,9 @@
 #include "MapManager.h"
 #include "ConnectionManager.h"
 #include "PluginManager.h"
+#if defined(XUO_ASSISTANT)
+#include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
+#endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
 #include <common/utils.h>
@@ -704,16 +707,25 @@ void CPacketManager::OnPacket()
     {
         Info(Network, "message direction invalid: 0x%02X", *Start);
     }
-    else if (g_PluginManager.PacketRecv(Start, (int)Size))
+    else
     {
-        if (info.Handler != 0)
+#if defined(XUO_ASSISTANT)
+        // in-client assistant observes every server packet before the client
+        // handlers, exactly where the plugin ABI's OnRecv sits; it never
+        // consumes packets, so the client always parses below
+        xuoassist::AssistantPackets_Recv(Start, (size_t)Size);
+#endif
+        if (g_PluginManager.PacketRecv(Start, (int)Size))
         {
-            Ptr = Start + 1;
-            if (info.Size == 0)
+            if (info.Handler != 0)
             {
-                Ptr += 2;
+                Ptr = Start + 1;
+                if (info.Size == 0)
+                {
+                    Ptr += 2;
+                }
+                (this->*(info.Handler))();
             }
-            (this->*(info.Handler))();
         }
     }
 }

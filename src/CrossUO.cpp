@@ -7,6 +7,9 @@
 #include "SDL_wrapper.h"
 #if defined(XUO_ASSISTANT)
 #include "AssistantWindow.h"
+#if defined(XUO_ASSISTANT)
+#include <managers/packetmanager.h> // xuoassist::AssistantPackets_Send (in-client assistant)
+#endif
 #endif
 
 #include "revision.h"
@@ -1685,6 +1688,11 @@ int CGame::Send(uint8_t *buf, int size)
     }
     else
     {
+#if defined(XUO_ASSISTANT)
+        // in-client assistant observes outgoing packets at the same spot as
+        // the plugin ABI's OnSend (pre-encryption, before the wire)
+        xuoassist::AssistantPackets_Send(buf, (size_t)size);
+#endif
         if (g_PluginManager.PacketSend(buf, size))
         {
             result = g_ConnectionManager.Send(buf, size);

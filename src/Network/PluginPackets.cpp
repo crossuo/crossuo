@@ -5,6 +5,9 @@
 #include "../Macro.h"
 #include "../Managers/SkillsManager.h"
 #include "../Managers/PluginManager.h"
+#if defined(XUO_ASSISTANT)
+#include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
+#endif
 #include "../Gumps/GumpSpellbook.h"
 #include <common/utils.h> // countof
 
@@ -24,6 +27,12 @@ void CPluginPacket::SendToPlugin()
     if (m_Data.size() >= 5)
     {
         pack16(&m_Data[1], (uint16_t)m_Data.size());
+#if defined(XUO_ASSISTANT)
+        // the in-client assistant rides the same plugin channel: the 0xFC
+        // OIPMT_* submessages (skill/spell/macro lists, open map) reach its
+        // ClientMessagesR handler exactly as they reached the external plugin
+        xuoassist::AssistantPackets_Recv(&m_Data[0], (size_t)m_Data.size());
+#endif
         g_PluginManager.PacketRecv(&m_Data[0], (int)m_Data.size());
     }
 }

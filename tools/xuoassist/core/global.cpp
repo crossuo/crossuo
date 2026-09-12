@@ -7,6 +7,7 @@
 
 #include "global.h"
 #include <cstring>
+#include <common/str.h> // str_from (wide -> utf8)
 
 namespace xuoassist {
 
@@ -34,13 +35,8 @@ string GetString(VALUE_KEY_STRING key, const string &value)
     {
         if (data->m_Unicode)
         {
-            // FIXME(utf8): original used QString::fromWCharArray; proper
-            // wide->utf8 conversion lands with the cliloc/config round.
-            const char *ptr = reinterpret_cast<const char *>(data->m_DataW);
-            for (size_t i = 0; ptr[i] != 0 || ptr[i + 1] != 0; i += 2)
-            {
-                result += ptr[i];
-            }
+            // original: QString::fromWCharArray(data->m_DataW) - wide -> utf8
+            result = str_from(std::wstring(data->m_DataW));
         }
         else
         {

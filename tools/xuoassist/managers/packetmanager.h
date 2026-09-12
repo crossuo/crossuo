@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+// Ported from X:UO Assist (managers/packetmanager.h): the full 256-entry
+// dispatch table and the handler set, decoupled from the Qt widgets (plan §4.1
+// "REUSE AS-IS (decouple UI)", §7 Phase 1 item 2). Handler names and table
+// layout are identical; every UI poke became an AssistantEvents notification
+// or a PORT-TODO marker.
+//
+// The class keeps the original CPacketManager name inside namespace xuoassist
+// (the client's global-namespace CPacketManager is a different class); the
+// PACKET_DIRECTION/CPacketInfo/HANDLER_PACKET pieces collide with the client
+// header's macro, so the handler declaration macro is XA_HANDLER_PACKET here.
+
+#ifndef XUOASSIST_PACKETMANAGER_H
+#define XUOASSIST_PACKETMANAGER_H
+
+#include "../core/global.h"
+#include "../model/datareader.h"
+
+namespace xuoassist {
+
+class CPacketManager;
+typedef bool (CPacketManager::*PACKET_FUNCTION)();
+
+//!Направление пакета
+enum PACKET_DIRECTION
+{
+    DIR_SEND = 0, //!От клиента серверу
+    DIR_RECV,     //!От сервера клиенту
+    DIR_BOTH      //!В обе стороны
+};
+
+//!Класс для хранения информации о пакетах
+class CPacketInfo
+{
+public:
+    //!Название пакета
+    const char *Name;
+
+    //!Размер пакета
+    int Size;
+
+    //!Направление пакета
+    PACKET_DIRECTION Direction;
+
+    //!Обработчик отправленного пакета
+    PACKET_FUNCTION SendHandler;
+
+    //!Обработчик принятого пакета
+    PACKET_FUNCTION RecvHandler;
+};
+
+#define XA_HANDLER_PACKET(name) bool Handle##name()
+
+class CPacketManager : public CDataReader
+{
+    SETGET(CLIENT_VERSION, ClientVersion, CV_OLD)
+
+private:
+    static CPacketInfo m_Packets[0x100];
+
+protected:
+    //!Обработчики пакетов
+    XA_HANDLER_PACKET(SecondLogin);
+    XA_HANDLER_PACKET(LightLevel);
+    XA_HANDLER_PACKET(PersonalLightLevel);
+    XA_HANDLER_PACKET(LoginComplete);
+    XA_HANDLER_PACKET(EnterWorld);
+    XA_HANDLER_PACKET(UpdateHitpoints);
+    XA_HANDLER_PACKET(UpdateMana);
+    XA_HANDLER_PACKET(UpdateStamina);
+    XA_HANDLER_PACKET(MobileAttributes);
+    XA_HANDLER_PACKET(NewHealthbarUpdate);
+    XA_HANDLER_PACKET(UpdatePlayer);
+    XA_HANDLER_PACKET(CharacterStatus);
+    XA_HANDLER_PACKET(UpdateItem);
+    XA_HANDLER_PACKET(UpdateItemSA);
+    XA_HANDLER_PACKET(UpdateObject);
+    XA_HANDLER_PACKET(EquipItem);
+    XA_HANDLER_PACKET(UpdateContainedItem);
+    XA_HANDLER_PACKET(UpdateContainedItems);
+    XA_HANDLER_PACKET(DeleteObject);
+    XA_HANDLER_PACKET(UpdateCharacter);
+    XA_HANDLER_PACKET(WarmodeS);
+    XA_HANDLER_PACKET(WarmodeR);
+    XA_HANDLER_PACKET(UpdateSkillsS);
+    XA_HANDLER_PACKET(UpdateSkillsR);
+    XA_HANDLER_PACKET(TargetS);
+    XA_HANDLER_PACKET(TargetR);
+    XA_HANDLER_PACKET(ClientTalkS);
+    XA_HANDLER_PACKET(ClientTalkR);
+    XA_HANDLER_PACKET(UnicodeClientTalk);
+    XA_HANDLER_PACKET(Talk);
+    XA_HANDLER_PACKET(UnicodeTalk);
+    XA_HANDLER_PACKET(SetWeather);
+    XA_HANDLER_PACKET(Season);
+    XA_HANDLER_PACKET(DisplayDeath);
+    XA_HANDLER_PACKET(MultiPlacement);
+    XA_HANDLER_PACKET(OpenMenu);
+    XA_HANDLER_PACKET(MenuChoice);
+    XA_HANDLER_PACKET(DeathScreenS);
+    XA_HANDLER_PACKET(DeathScreenR);
+    XA_HANDLER_PACKET(ClientMessagesS);
+    XA_HANDLER_PACKET(ClientMessagesR);
+    XA_HANDLER_PACKET(OpenContainer);
+    XA_HANDLER_PACKET(BuffDebuff);
+    XA_HANDLER_PACKET(AttackCharacter);
+    XA_HANDLER_PACKET(ExtendedCommandS);
+    XA_HANDLER_PACKET(ExtendedCommandR);
+    XA_HANDLER_PACKET(SecureTradingS);
+    XA_HANDLER_PACKET(SecureTradingR);
+    XA_HANDLER_PACKET(DyeDataS);
+    XA_HANDLER_PACKET(DyeDataR);
+    XA_HANDLER_PACKET(OpenGump);
+    XA_HANDLER_PACKET(ChoiceGump);
+    XA_HANDLER_PACKET(PlaySoundEffect);
+    XA_HANDLER_PACKET(GraphicEffect);
+    XA_HANDLER_PACKET(CharacterAnimation);
+    XA_HANDLER_PACKET(DisplayMap);
+    XA_HANDLER_PACKET(DisplayClilocString);
+    XA_HANDLER_PACKET(MegaClilocS);
+    XA_HANDLER_PACKET(MegaClilocR);
+    XA_HANDLER_PACKET(Resend);
+    XA_HANDLER_PACKET(WalkRequest);
+    XA_HANDLER_PACKET(ConfirmWalk);
+    XA_HANDLER_PACKET(ASCIIPromptS);
+    XA_HANDLER_PACKET(ASCIIPromptR);
+    XA_HANDLER_PACKET(UnicodePromptS);
+    XA_HANDLER_PACKET(UnicodePromptR);
+    XA_HANDLER_PACKET(CharacterProfileS);
+    XA_HANDLER_PACKET(CharacterProfileR);
+    XA_HANDLER_PACKET(OpenPaperdoll);
+    XA_HANDLER_PACKET(BuyList);
+    XA_HANDLER_PACKET(BuyReplyS);
+    XA_HANDLER_PACKET(BuyReplyR);
+    XA_HANDLER_PACKET(SellList);
+    XA_HANDLER_PACKET(SellReply);
+    XA_HANDLER_PACKET(KrriosClientSpecialS);
+    XA_HANDLER_PACKET(KrriosClientSpecialR);
+    XA_HANDLER_PACKET(PerformAction);
+    XA_HANDLER_PACKET(DoubleClick);
+    XA_HANDLER_PACKET(AttackRequest);
+    XA_HANDLER_PACKET(HelpRequest);
+    XA_HANDLER_PACKET(AOSCommandsS);
+    XA_HANDLER_PACKET(AOSCommandsR);
+    XA_HANDLER_PACKET(MapPacket);
+
+public:
+    CPacketManager();
+    virtual ~CPacketManager();
+
+    CPacketInfo GetInfo(const uint8_t &buf) const { return m_Packets[buf]; }
+
+    bool PacketRecv(uint8_t *buf, size_t size);
+    bool PacketSend(uint8_t *buf, size_t size);
+};
+
+extern CPacketManager g_PacketManager;
+
+// Tap entry points for the client's packet paths (src/Managers/PacketManager
+// .cpp OnPacket, src/CrossUO.cpp CGame::Send, src/Network/PluginPackets.cpp
+// SendToPlugin). Each is a single connected-check before dispatch; they never
+// consume packets (the external plugin could, the built-in assistant does not).
+void AssistantPackets_Recv(uint8_t *buf, size_t size);
+void AssistantPackets_Send(uint8_t *buf, size_t size);
+
+} // namespace xuoassist
+
+#endif // XUOASSIST_PACKETMANAGER_H

@@ -15,6 +15,10 @@ set(XUOASSIST_SRCS
   "core/global.cpp"
   "core/textconv.cpp"
   "core/textparser.cpp"
+  "core/assistantevents.cpp"
+  "core/packets.cpp"
+  # Phase 1b: packet pipeline (plan §7 Phase 1 items 2/4)
+  "managers/packetmanager.cpp"
   "model/basequeue.cpp"
   "model/gameobjects/gameobject.cpp"
   "model/gameobjects/gameitem.cpp"
