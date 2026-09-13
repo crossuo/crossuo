@@ -31,6 +31,8 @@
 #include "../managers/displaymanager.h"
 #include "../macros/macroexecutor.h"
 #include "../script/commandqueue.h"
+#include "../script/scriptfile.h" // the file-engine sandbox root
+#include "../script/scriptgump.h" // the script text window draw
 #include "../script/scripthandle.h"
 #include "scripteditor.h"
 #include "tabscripts.h"
@@ -279,6 +281,9 @@ void AssistantUI_Init()
     // install the UI events consumer (journal pane feed); handlers unchanged
     s_PreviousEvents = g_AssistantEvents;
     g_AssistantEvents = AssistantUIEvents_Get();
+    // pin the file-engine sandbox to the client dir (the config root: the
+    // client cwd == binary dir) once, on the main thread
+    ScriptFile_SetSandboxRoot(fs_path_str(g_AssistantConfig.GetRootPath()));
     s_Initialized = true;
     // compile the display title data from the just-loaded profile (was
     // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData,
@@ -358,9 +363,44 @@ int AssistantUI_ReconnectSecondsLeft()
     return s_ReconnectSeconds;
 }
 
+// The script text window (the g_TextDialog port, scriptgump.h): a small
+// ImGui window fed by the main-thread scriptgump.cpp state (the ops arrive
+// marshaled through SC_TEXT_WINDOW). Position/size come from the engine's
+// SetPos/SetSize ops; the window only closes through TextWindow.Close (the
+// script owns it, like the Qt dialog's script-driven lifecycle).
+void ScriptTextWindow_Draw()
+{
+    if (!ScriptTextWindow_Opened())
+    {
+        return;
+    }
+    int x = 40;
+    int y = 40;
+    int width = 400;
+    int height = 300;
+    ScriptTextWindow_Rect(&x, &y, &width, &height);
+    ImGui::SetNextWindowPos(ImVec2((float)x, (float)y), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2((float)width, (float)height), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Script text window", nullptr))
+    {
+        ImGui::End();
+        return;
+    }
+    const vector<string> &lines = ScriptTextWindow_Lines();
+    for (const string &line : lines)
+    {
+        ImGui::TextUnformatted(line.c_str(), line.c_str() + line.size());
+    }
+    // keep the newest line visible (the dialog scrolled to the bottom)
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+    {
+        ImGui::SetScrollHereY(1.0f);
+    }
+    ImGui::End();
+}
+
 void CancelPendingFromTargets()
 {
-    g_TargetHandler = nullptr;
     TabHotkeys_CancelPendingFromTargets();
     TabLists_CancelPendingFromTargets();
     TabDress_CancelPendingFromTargets();
@@ -520,6 +560,11 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     // the assistant window is drawn; the popup itself early-outs when the
     // agent is idle or the "Show shopping progress bar" option is off)
     TabShop_DrawProgress();
+    // the script text window (the g_TextDialog port): small ImGui window
+    // driven by scriptgump.cpp state. Documented caveat: it lives inside this
+    // draw pass, so it hides with the assistant shell (the lines stay; the
+    // packet handlers keep running - only the pixels are gated)
+    ScriptTextWindow_Draw();
 }
 
 } // namespace xuoassist

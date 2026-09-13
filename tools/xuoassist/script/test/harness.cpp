@@ -11,13 +11,25 @@
 //   4. Pointer marshaling: the result pointer slot survives a round trip
 //      through the queue even for a heap block above the 4GB boundary (the
 //      old uint slot truncated it).
-// The full API batch runs in-client (Player/Client/Orion need g_World).
+//   5. The REAL API registration (apiscript.cpp Script_RegisterAPI) over a
+//      live QuickJS context: the engine classes (Gump/File/GumpHook/
+//      ClientMacro) must carry their own prototypes - the fix-round bug had
+//      every class alias the GameObject class, so .Select/.Open/.AddEntry
+//      were missing and the finalizers freed the wrong opaque types. The
+//      client-facing symbols are stubbed in harnessstubs.cpp (disconnected
+//      client); the queue drain here runs the REAL drain executor.
 
 #include "../commandqueue.h"
 #include "../journal.h"
+#include "../scriptfile.h"
+#include "../scriptgump.h"
+#include "../scriptstate.h"
 
 #include "../../core/global.h"
 #include "../../core/assistantevents.h" // JMT_* (the journal type flags)
+#include "../../model/gameobjects/gameworld.h" // g_World (section 6 executor gate)
+#include "../apiscript.h"
+#include "../../model/commonitems/gump.h"
 
 extern "C" {
 #include "../quickjs/quickjs.h"
@@ -26,6 +38,8 @@ extern "C" {
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib> // mkdtemp
+#include <unistd.h> // rmdir
 #include <thread>
 #include <vector>
 
@@ -75,31 +89,17 @@ static void harness_format_line(JSContext *ctx, string &line, string &message)
 
 namespace xuoassist {
 
-// the harness provides its own drain side (the client uses apiscript.cpp's)
-static std::atomic<int> s_ExecCount{ 0 };
-void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
-{
-    s_ExecCount++;
-    if (command->Tag == SC_WAIT_PARSE)
-    {
-        command->ResultInt = (int)command->TextA.size(); // fake delay = len
-    }
-    else if (command->Tag == SC_JOURNAL_FIND)
-    {
-        // the journal readers hand back an entry through PointerA (never
-        // SerialA: 64-bit heap pointers truncate there)
-        command->ResultInt = (int)command->TextA.size();
-        command->PointerA = (void *)command->TextA.c_str();
-    }
-    else
-    {
-        command->ResultInt = 42;
-    }
-}
+// the fake gump the executor deep-copies for GetGump (see harnessstubs.cpp)
+extern CGump *g_HarnessGump;
 
 } // namespace xuoassist
 
 using namespace xuoassist;
+
+template <typename T, size_t N> constexpr size_t count_of(const T (&)[N])
+{
+    return N;
+}
 
 static int failures = 0;
 #define CHECK(cond)                                                  \
@@ -184,7 +184,7 @@ int main()
         JS_FreeRuntime(rt);
     }
 
-    // --- 2. command queue -----------------------------------------------
+    // --- 2. command queue (the REAL apiscript.cpp drain executor) ------------
     {
         // the "main thread": a background drainer like AssistantUI_Tick
         std::atomic<int> draining{ 1 };
@@ -196,7 +196,9 @@ int main()
             }
         }, &draining);
         ScriptQueue_SetCapacity(8);
-        // ordered exec: a main-thread drain loop like AssistantUI_Tick
+        // ordered exec: the real SC_WAIT_PARSE body reads the config delay
+        // helper (stub: text length); SC_NOW falls through the real
+        // executor's switch (handled tags only) and copies back the defaults
         auto *first = new XA_SCRIPT_COMMAND();
         first->Tag = SC_WAIT_PARSE;
         first->TextA = "100";
@@ -207,10 +209,10 @@ int main()
         ScriptQueue_Drain();
         ScriptQueue_Drain();
         CHECK(!first->ResultDropped && first->ResultInt == 3);
-        CHECK(!second->ResultDropped && second->ResultInt == 42);
+        CHECK(!second->ResultDropped && second->ResultInt == 0);
         delete first;
         delete second;
-        printf("queue: ordered exec + result round trip ok (exec=%d)\n", s_ExecCount.load());
+        printf("queue: ordered exec + result round trip ok\n");
         draining = 0;
         drainer.join();
 
@@ -281,13 +283,15 @@ int main()
         }
 
         // --- result copyback (journal readers ride PointerA) -----------------
-        // The executor writes BOTH a Result field and PointerA (like the
-        // InJournal/WaitJournal drain side in apiscript.cpp); complete_node
-        // must copy both back or every journal read sees nullptr.
+        // The real executor hands the found journal entry across the queue in
+        // the pointer slot; complete_node must copy it back or every journal
+        // read sees nullptr.
         {
+            ScriptJournal_Add(CJournalMessage(0x1, 0x02B2, "poisoned"));
             auto *command = new XA_SCRIPT_COMMAND();
             command->Tag = SC_JOURNAL_FIND;
             command->TextA = "poisoned";
+            command->TextD = "02B2"; // the color filter (0xFFFF = any)
             std::thread oneShot([]() {
                 std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 ScriptQueue_Drain();
@@ -295,12 +299,12 @@ int main()
             ScriptQueue_Exec(command);
             oneShot.join();
             CHECK(!command->ResultDropped);
-            CHECK(command->ResultInt == 8); // strlen("poisoned")
-            const char *entry = (const char *)command->PointerA;
-            CHECK(entry != nullptr && strcmp(entry, "poisoned") == 0);
-            printf("copyback: ResultInt + PointerA ok (%s)\n",
-                entry ? entry : "(null)");
+            auto *entry = (CJournalMessage *)command->PointerA;
+            CHECK(entry != nullptr && entry->GetText() == "poisoned");
+            delete entry; // the script thread owns the handed-over copy
             delete command;
+            ScriptJournal_Clear();
+            printf("copyback: journal entry through PointerA ok\n");
         }
 
         // timeout: the caller record must read dropped, not real zeros
@@ -312,6 +316,39 @@ int main()
             CHECK(slow->ResultInt == 0);
             delete slow;
             printf("timeout: caller record marked dropped\n");
+        }
+
+        // --- the WaitFor* handshake (SC_EVENT_WAIT clear+poll semantics) ---
+        // the REAL drain executor against the real g_GumpReceived flag: the
+        // first execution clears a pre-set flag (the Qt g_GumpReceived =
+        // false) and reads false, later ones only read
+        {
+            auto *wait = new XA_SCRIPT_COMMAND();
+            wait->Tag = SC_EVENT_WAIT;
+            wait->SubTag = 2; // WF_GUMP (the apiscript flag order)
+            for (int round = 0; round < 3; round++)
+            {
+                g_GumpReceived = true; // a gump "arrived" before the wait
+                wait->ResultBool = false;
+                std::thread drainOnce([]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                    ScriptQueue_Drain();
+                });
+                wait->BoolA = round > 0; // the caller-side armed marker
+                ScriptQueue_Exec(wait);
+                drainOnce.join();
+                if (round == 0)
+                {
+                    CHECK(!wait->ResultDropped && !wait->ResultBool);
+                    CHECK(!g_GumpReceived); // the drain cleared it
+                }
+                else if (round == 1)
+                {
+                    CHECK(wait->ResultBool); // the re-armed flag is visible
+                }
+            }
+            delete wait;
+            printf("wait: event-wait clear+poll handshake ok\n");
         }
 
         // shutdown: pending entries wake dropped, later pushes fail fast
@@ -331,6 +368,7 @@ int main()
         CHECK(late->ResultDropped);
         delete late;
         printf("queue: shutdown drain + fail-fast ok\n");
+        ScriptQueue_Reset(); // section 6 re-arms the queue (test hook)
     }
 
     // --- 3. journal mirror ------------------------------------------------
@@ -360,6 +398,208 @@ int main()
         printf("journal: pattern/flags/find-id/remove ok\n");
 
         ScriptJournal_Clear();
+    }
+
+    // --- 4. script state mirrors (globals / timers / buffs) ----------------
+    {
+        ScriptGlobal_Set("lootbag", "0x40001234");
+        ScriptGlobal_Set("lootbag", "0x40005678"); // overwrite (Qt map semantics)
+        CHECK(ScriptGlobal_Get("lootbag") == "0x40005678");
+        CHECK(ScriptGlobal_Get("missing") == ""); // unset -> empty (Qt parity)
+        ScriptGlobal_Set("", "ignored");          // empty name dropped
+        ScriptGlobal_Clear();
+        CHECK(ScriptGlobal_Get("lootbag") == "");
+
+        g_Ticks = 1000;
+        ScriptTimer_Set("t", 100); // stored: now - value
+        g_Ticks = 1500;
+        CHECK(ScriptTimer_Exists("t"));
+        CHECK(ScriptTimer_Get("t") == 600); // value + elapsed
+        CHECK(ScriptTimer_Get("nope") == -1);
+        ScriptTimer_Remove("t");
+        CHECK(!ScriptTimer_Exists("t"));
+        ScriptTimer_Set("u", 0);
+        ScriptTimer_Clear();
+        CHECK(!ScriptTimer_Exists("u"));
+
+        ScriptBuffs_Add(0x7542, 60000, "Mortal Strike");
+        CHECK(ScriptBuffs_Exists("mortal strike"));    // case-insensitive
+        CHECK(ScriptBuffs_Exists("  MORTAL STRIKE ")); // trimmed
+        CHECK(ScriptBuffs_Exists("0x7542"));           // icon-text lookup
+        CHECK(!ScriptBuffs_Exists("night sight"));
+        ScriptBuffs_Remove(0x7542); // the event carries the icon only
+        CHECK(!ScriptBuffs_Exists("mortal strike"));
+        printf("state: globals/timers/buffs mirrors ok\n");
+    }
+
+    // --- 5. file engine sandbox -------------------------------------------
+    {
+        char rootTemplate[] = "/tmp/xuo-harness-XXXXXX";
+        char *mk = mkdtemp(rootTemplate);
+        CHECK(mk != nullptr);
+        const string root(mk);
+        ScriptFile_SetSandboxRoot(root);
+
+        // relative paths resolve under the root
+        CHECK(ScriptFile_Sanitize("logs/out.txt", "t") == root + "/logs/out.txt");
+        // "inside" absolute paths stay
+        CHECK(ScriptFile_Sanitize(root + "/ok.txt", "t") == root + "/ok.txt");
+        // normalization keeps you in: "./a/../b" -> "b"
+        CHECK(ScriptFile_Sanitize("./x/../y.txt", "t") == root + "/y.txt");
+        // escapes are blocked and logged
+        CHECK(ScriptFile_Sanitize("../escape.txt", "t") == "");
+        CHECK(ScriptFile_Sanitize("a/../../escape.txt", "t") == "");
+        CHECK(ScriptFile_Sanitize("/etc/passwd", "t") == "");
+        CHECK(ScriptFile_Sanitize(root + "/../sibling.txt", "t") == "");
+
+        // write / read round trip through the object API
+        XA_SCRIPT_FILE file;
+        CHECK(ScriptFile_Open(&file, "line.txt", false));
+        ScriptFile_WriteLine(&file, "first");
+        ScriptFile_WriteLine(&file, "second");
+        ScriptFile_Write(&file, "tail");
+        ScriptFile_Close(&file);
+
+        CHECK(ScriptFile_Open(&file, "line.txt", true)); // checkExists hit
+        CHECK(ScriptFile_ReadLine(&file) == "first");
+        CHECK(ScriptFile_Read(&file) == "second"); // >> reads one token
+        ScriptFile_Close(&file);
+
+        // append re-opens without truncation
+        CHECK(ScriptFile_Append(&file, "line.txt", false));
+        ScriptFile_WriteLine(&file, "third");
+        ScriptFile_Close(&file);
+        CHECK(ScriptFile_Open(&file, "line.txt", true));
+        CHECK(ScriptFile_ReadLine(&file) == "first");
+        ScriptFile_Close(&file);
+
+        // sandboxed remove + the missing-file parity (QFile::exists gate)
+        CHECK(ScriptFile_RemovePath("line.txt"));
+        CHECK(!ScriptFile_RemovePath("line.txt"));
+        CHECK(!ScriptFile_Opened(&file));
+
+        // the text window engine (scriptgump.cpp): ops, cap, save
+        ScriptTextWindow_Command(TW_SET_POS, "", 30, 40, "");
+        ScriptTextWindow_Command(TW_SET_SIZE, "", 320, 240, "");
+        ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
+        CHECK(ScriptTextWindow_Opened());
+        ScriptTextWindow_Command(TW_PRINT, "hello", 0, 0, "");
+        ScriptTextWindow_Command(TW_PRINT, "world", 0, 0, "");
+        const vector<string> &lines = ScriptTextWindow_Lines();
+        CHECK(lines.size() == 2 && lines[0] == "hello" && lines[1] == "world");
+        ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
+        CHECK(ScriptTextWindow_Lines().empty());
+        for (int i = 0; i < 600; i++) // runaway print guard (512 cap)
+        {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "line %d", i);
+            ScriptTextWindow_Command(TW_PRINT, buf, 0, 0, "");
+        }
+        CHECK(ScriptTextWindow_Lines().size() == 512);
+        CHECK(ScriptTextWindow_Lines().front() == "line 88"); // oldest dropped
+        ScriptTextWindow_SaveToFile(root + "/window.txt");
+        ScriptTextWindow_Command(TW_CLOSE, "", 0, 0, "");
+        CHECK(!ScriptTextWindow_Opened());
+        CHECK(!ScriptFile_Open(&file, "../outside/window.txt", false)); // sandboxed save target
+        ScriptFile_Close(&file);
+
+        // cleanup
+        ScriptFile_SetSandboxRoot(root);
+        ScriptFile_RemovePath(root + "/window.txt");
+        rmdir(root.c_str());
+        printf("file: sandbox escape blocked + text window ok\n");
+    }
+
+
+    // --- 6. the engine classes: REAL registration wiring (the fix round) ---
+    {
+        std::atomic<int> draining{ 1 };
+        std::thread drainer([](std::atomic<int> *running) {
+            while (running->load())
+            {
+                ScriptQueue_Drain();
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            }
+        }, &draining);
+
+        JSRuntime *rt = JS_NewRuntime();
+        JSContext *ctx = JS_NewContext(rt);
+        Script_RegisterAPI(ctx, "harness");
+
+        // the SC_GUMP_INFO executor deep-copies the manager record; the stub
+        // manager hands it this one (harnessstubs.cpp). The executor is the
+        // real one, so the world pointer + the command gates must read
+        // "connected" for the GetGump path to run.
+        CGameWorld world(0);
+        g_World = &world;
+        g_EnabledCommands = ~0ULL;
+        CGump source(0x40000123, 5, 10, 20);
+        g_HarnessGump = &source;
+
+        // the fix-round bug shape: every engine class aliased the GameObject
+        // class, so the copies came back with the WRONG prototype and the
+        // gameobject finalizer freed them as the wrong type. Each `typeof`
+        // probe below must report the owning class's method.
+        const char *script = "function probe() {"
+            "var g = Orion.GetGump(0);"
+            "var f = Orion.NewFile();"
+            "var h = Orion.CreateGumpHook('1');"
+            "var m = Orion.CreateClientMacro();"
+            "return [typeof g, g === null ? 'null' : typeof g.Select,"
+            " g === null ? 'null' : typeof g.Close,"
+            " typeof f, f === null ? 'null' : typeof f.Open,"
+            " f === null ? 'null' : typeof f.WriteLine,"
+            " typeof h, h === null ? 'null' : typeof h.AddEntry,"
+            " h === null ? 'null' : typeof h.AddCheck,"
+            " typeof m, m === null ? 'null' : typeof m.AddAction];"
+            "}\n";
+        JSValue program = JS_Eval(
+            ctx, script, strlen(script), "<script>", JS_EVAL_TYPE_GLOBAL);
+        CHECK(!JS_IsException(program));
+        JS_FreeValue(ctx, program);
+
+        JSValue global = JS_GetGlobalObject(ctx);
+        JSValue probe = JS_GetPropertyStr(ctx, global, "probe");
+        CHECK(JS_IsFunction(ctx, probe));
+        JSValue result = JS_Call(ctx, probe, JS_UNDEFINED, 0, nullptr);
+        CHECK(JS_IsArray(result));
+        static const char *const EXPECTED[] = { "object",   // g: the Gump class
+            "function", // g.Select
+            "function", // g.Close
+            "object",   // f: the File class
+            "function", // f.Open
+            "function", // f.WriteLine
+            "object",   // h: the GumpHook class
+            "function", // h.AddEntry
+            "function", // h.AddCheck
+            "object",   // m: the ClientMacro class
+            "function"  // m.AddAction
+        };
+        for (size_t i = 0; i < count_of(EXPECTED); i++)
+        {
+            JSValue item = JS_GetPropertyUint32(ctx, result, (uint32_t)i);
+            const char *text = JS_ToCString(ctx, item);
+            const bool ok = text != nullptr && strcmp(text, EXPECTED[i]) == 0;
+            printf("api: probe[%zu] = %s (want %s)%s\n", i, text ? text : "?", EXPECTED[i],
+                ok ? "" : "  <-- FAIL");
+            CHECK(ok);
+            JS_FreeCString(ctx, text);
+            JS_FreeValue(ctx, item);
+        }
+
+        JS_FreeValue(ctx, result);
+        JS_FreeValue(ctx, probe);
+        JS_FreeValue(ctx, global);
+        draining = 0;
+        drainer.join();
+        // the runtime teardown runs the class finalizers (the gump deep copy
+        // is freed through CGump's destructor now, not the GameObject one)
+        JS_FreeContext(ctx);
+        JS_FreeRuntime(rt);
+        g_HarnessGump = nullptr;
+        g_World = nullptr;
+        g_EnabledCommands = 0;
+        printf("api: engine-class prototypes + finalizers ok\n");
     }
 
     if (failures == 0)

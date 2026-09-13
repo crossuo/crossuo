@@ -12,6 +12,7 @@
 //    half and mark the UI half PORT-TODO(phase-2).
 
 #include "assist.h"
+#include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "packets.h"
 #include "textconv.h"
 #include "target.h"
@@ -268,9 +269,9 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
         return;
     }
 
-    // PORT-TODO(phase-2): the text window body below (g_TextDialog->AddText
-    // + show/activateWindow) - UI round restores the dialog; the same text
-    // goes through the OnJournalMessage seam until then.
+    // the g_TextDialog->AddText + show/activateWindow body is restored by the
+    // 4b-2 text window below; the same text goes through the OnJournalMessage
+    // seam (the Qt app did both)
     int layer = 0;
     if (!obj->GetNPC())
     {
@@ -297,17 +298,27 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
     message.SetFlags(JMT_SYSTEM);
     g_AssistantEvents->OnJournalMessage(message);
+
+    // the g_TextDialog->ClearText/AddText(text) + show port (scriptgump.cpp,
+    // the 4b-2 text window) - the same dump the Qt dialog showed
+    ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
+    ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
+    ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
 void CAssistant::DumpTileInfo(const ushort &graphic, const short &x, const short &y, const char &z)
 {
-    // PORT-TODO(phase-2): g_TextDialog body (see DumpObjectInfo).
     char text[64] = { 0 };
     snprintf(text, sizeof(text), "0x%04X %i %i %i\n", graphic, x, y, z);
 
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
     message.SetFlags(JMT_SYSTEM);
     g_AssistantEvents->OnJournalMessage(message);
+
+    // the g_TextDialog body port (see DumpObjectInfo)
+    ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
+    ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
+    ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
 void CAssistant::GetStatus(const uint &serial)

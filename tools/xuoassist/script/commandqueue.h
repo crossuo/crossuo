@@ -110,6 +110,31 @@ enum XA_SCRIPT_COMMAND_TAG
     SC_WAIT_PARSE,        // Wait(text) -> delay ms (config lookup, main thread)
     SC_EDITOR_LOAD,       // LoadScript(path): read the file on the MAIN thread
 
+    // batch 2 (Phase 4b-2): the engine-class families
+    SC_MENU_INFO,         // MenuCount / GetMenu (copy via PointerA)
+    SC_MENU_SELECT,       // SelectMenu / CloseMenu
+    SC_GUMP_HOOK_ARM,     // WaitGump(hook) / CancelWaitGump
+    SC_GUMP_INFO,         // GumpCount / GetGump (copy via PointerA)
+    SC_GUMP_SELECT,       // Gump.Select/Close (re-resolved by serial+id)
+    SC_PROMPT_HOOK,       // WaitPrompt / CancelWaitPrompt
+    SC_PROMPT_INFO,       // PromptExists/PromptSerial/PromptID
+    SC_PROMPT_SEND,       // SendPrompt
+    SC_TRADE_INFO,        // TradeCount/Container/Opponent/Name/CheckState
+    SC_TRADE_CMD,         // TradeCheck / TradeClose
+    SC_SHOP,              // Buy/Sell request (shop agent)
+    SC_SHOP_STATE,        // IsShopping (the Buy/Sell wait loop)
+    SC_EVENT_WAIT,        // WaitFor* (SubTag = flag; BoolA = armed marker)
+    SC_TIMER,             // Timer family (SubTag = op)
+    SC_CLIENT_MACRO,      // ClientMacro Play (action lists)
+    SC_CONTEXT_MENU,      // Request/Wait/CancelContextMenu
+    SC_TEXT_WINDOW,       // TextWindow ops (SubTag = op)
+    SC_SELECTED_TILE,     // SelectedTile getters (SubTag = field)
+
+    // fix round (Phase 4b-2 wire-now): the remaining scriptengine families
+    SC_FRIEND_INFO,       // Find Friend/Enemy + Get*List/Status (SubTag = op)
+    SC_FRIEND_CMD,        // Add/Remove/Clear Friend/Enemy (SubTag = op)
+    SC_HOTKEYS,           // SaveHotkeys/LoadHotkeys/OnOffHotkeys (SubTag = op)
+
     SC_TAG_COUNT
 };
 
@@ -169,6 +194,10 @@ void ScriptQueue_Drain();
 // Shutdown path: drops all pending entries (waking their waiters) and makes
 // ScriptQueue_Exec fail fast for late pushers. Never blocks.
 void ScriptQueue_Shutdown();
+
+// Test hook: re-arms the queue after Shutdown (the client never calls this -
+// a fresh process starts fresh; the harness restarts the flow in-process).
+void ScriptQueue_Reset();
 
 // Queue capacity (drop-oldest beyond this). The default covers interactive
 // scripts many times over; the drop policy is the flood protection.

@@ -8,6 +8,7 @@
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../core/packets.h"
+#include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "../model/gameobjects/gameworld.h"
 #include "../core/textparser.h"
 #include <stdlib.h>
@@ -568,9 +569,9 @@ void CGumpManager::InfoGump(const string &gumpIndex)
         return;
     }
 
-    // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow.
-    // PORT-TODO(phase-2): text window round restores the dialog dump; the
-    // same information goes through the journal-message seam until then.
+    // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow -
+    // restored by the 4b-2 text window (scriptgump.cpp); the same
+    // information goes through the journal-message seam as well.
     string text = "";
 
     char buf[128] = { 0 };
@@ -645,6 +646,11 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
     message.SetFlags(JMT_SYSTEM);
     g_AssistantEvents->OnJournalMessage(message);
+
+    // the g_TextDialog->ClearText/AddText + show port (scriptgump.cpp)
+    ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
+    ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
+    ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
 } // namespace xuoassist

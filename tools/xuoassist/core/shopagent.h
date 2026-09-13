@@ -78,10 +78,10 @@ public:
     void SetVendorName(const string &name) { m_VendorName = name; }
     const string &GetVendorName() const { return m_VendorName; }
 
-private:
-    // was TabAgentsShop::SendShopRequest
+    // was TabAgentsShop::SendShopRequest (the script shop API uses it too)
     void SendShopRequest(int state, const string &listName, const string &text);
 
+private:
     bool ProcessShopList();
 
 public:

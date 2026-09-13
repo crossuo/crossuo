@@ -38,6 +38,9 @@ set(XUOASSIST_SRCS
   "script/journal.cpp"
   "script/engine.cpp"
   "script/apiscript.cpp"
+  "script/scriptfile.cpp"
+  "script/scriptgump.cpp"
+  "script/scriptstate.cpp"
   "script/scripthandle.cpp"
   "ui/scriptmenu.cpp"
   "ui/editor.cpp"
@@ -134,9 +137,23 @@ option(XUO_ASSISTANT_SCRIPT_TESTS "Build the xuoassist script harness" OFF)
 if(XUO_ASSISTANT_SCRIPT_TESTS)
   add_executable(xuoassist-script-test
     script/test/harness.cpp
+    script/test/harnessstubs.cpp
+    # the REAL registration + drain executor (the class-wiring assertions run
+    # against it; the client-facing symbols are stubbed in harnessstubs.cpp)
+    script/apiscript.cpp
     script/commandqueue.cpp
     script/journal.cpp
+    script/scriptfile.cpp
+    script/scriptgump.cpp
+    script/scriptstate.cpp
+    core/packets.cpp
+    model/commonitems/gump.cpp
+    model/commonitems/gumpitem.cpp
+    model/commonitems/menu.cpp
+    model/commonitems/menuitem.cpp
+    model/commonitems/prompt.cpp
     model/commonitems/journalmessage.cpp
+    model/datawriter.cpp
     script/quickjs/dtoa.c
     script/quickjs/libregexp.c
     script/quickjs/libunicode.c

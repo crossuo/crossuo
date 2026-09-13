@@ -8,6 +8,7 @@
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../core/packets.h"
+#include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "../model/gameobjects/gameworld.h"
 #include <stdlib.h>
 #include <common/logging/logging.h>
@@ -331,9 +332,9 @@ void CMenuManager::InfoMenu(const string &menuIndex)
         return;
     }
 
-    // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow.
-    // PORT-TODO(phase-2): text window round restores the dialog dump; the
-    // parse below matches the original text pieces.
+    // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow -
+    // restored by the 4b-2 text window (scriptgump.cpp); the parse below
+    // matches the original text pieces.
     string text = menu->GetGrayMenu() ? "Gray menu information:\nName: " : "Menu information:\nName: ";
     text += menu->GetName();
 
@@ -359,6 +360,11 @@ void CMenuManager::InfoMenu(const string &menuIndex)
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
     message.SetFlags(JMT_SYSTEM);
     g_AssistantEvents->OnJournalMessage(message);
+
+    // the g_TextDialog->ClearText/AddText + show port (scriptgump.cpp)
+    ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
+    ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
+    ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
 } // namespace xuoassist

@@ -242,6 +242,12 @@ uint ScriptQueue_Capacity()
     return s_Capacity;
 }
 
+void ScriptQueue_Reset()
+{
+    std::lock_guard<std::mutex> lock(s_QueueMutex);
+    s_Shutdown = false;
+}
+
 void ScriptQueue_SetCapacity(uint entries)
 {
     std::lock_guard<std::mutex> lock(s_QueueMutex);

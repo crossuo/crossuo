@@ -17,6 +17,7 @@
 #include "../core/actions.h"
 #include "../macros/macroexecutor.h"
 #include "../script/journal.h" // the script journal mirror feed
+#include "../script/scriptstate.h" // the script buff mirror feed
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (mirror)
 
 namespace xuoassist {
@@ -26,6 +27,18 @@ static CAssistantUIEvents s_UIEvents;
 CAssistantUIEvents *AssistantUIEvents_Get()
 {
     return &s_UIEvents;
+}
+
+void CAssistantUIEvents::OnBuffAdd(ushort graphic, uint timer, const string &name)
+{
+    // the script-visible buff mirror (was g_BuffManager.Add feeding
+    // OnCommandBuffExists); main-thread event context
+    ScriptBuffs_Add(graphic, timer, name);
+}
+
+void CAssistantUIEvents::OnBuffRemove(ushort graphic)
+{
+    ScriptBuffs_Remove(graphic);
 }
 
 void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)

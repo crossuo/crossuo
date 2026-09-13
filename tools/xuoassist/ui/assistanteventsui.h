@@ -47,6 +47,9 @@ public:
     // The hotkey action-list feeds (packetmanager.cpp:3248/3254).
     virtual void OnSpellList(const vector<vector<string>> &books) override;
     virtual void OnSkillsList(const vector<string> &hotkeyActions) override;
+    // The script buff mirror (BuffExists reads it through the queue).
+    virtual void OnBuffAdd(ushort graphic, uint timer, const string &name) override;
+    virtual void OnBuffRemove(ushort graphic) override;
     // The macro recording taps (target.cpp:190/:210).
     virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color) override;
     virtual void OnRecordTargetTile(ushort graphic, int x, int y, int z) override;
@@ -60,10 +63,9 @@ public:
     virtual void OnTitleRedraw() override;
     virtual void OnTitleRedraw(uint serial) override;
 
-    // PORT-TODO(phase-4/5): buffs (OnBuffAdd/Remove), corpses (OnCorpseAdd),
-    // party/guild member info, macro lists, object properties (OnMegaCliloc),
-    // inspector, title/map redraws and tracker updates stay default-inert
-    // until their UI rounds land.
+    // The script BuffExists mirror feed (script/scriptstate.cpp; was
+    // g_BuffManager.Add/Remove). The corpse/party/guild/megacliloc/inspector
+    // events stay default-inert until their UI rounds land (phase 5).
 
     // Ring of the last N lines (oldest first); capped, event-time copies.
     const vector<Line> &Lines() const { return m_Lines; }

@@ -9,6 +9,7 @@
 #include "packets.h"
 #include "target.h"
 #include "assistantevents.h"
+#include "../script/scriptgump.h" // the text window (the g_TextDialog port)
 #include "../config/assistantconfig.h"
 #include "../model/gameobjects/gameworld.h"
 #include "../model/gameobjects/gameplayer.h"
@@ -575,7 +576,8 @@ HCOMMAND(textopen)
         return;
     }
 
-    // PORT-TODO(phase-2): g_TextDialog->show() (text window round).
+    // the g_TextDialog->show() port (scriptgump.cpp, the 4b-2 text window)
+    ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
 HCOMMAND(textclose)
@@ -588,7 +590,8 @@ HCOMMAND(textclose)
         return;
     }
 
-    // PORT-TODO(phase-2): g_TextDialog->hide().
+    // the g_TextDialog->hide() port
+    ScriptTextWindow_Command(TW_CLOSE, "", 0, 0, "");
 }
 
 HCOMMAND(textclear)
@@ -601,7 +604,8 @@ HCOMMAND(textclear)
         return;
     }
 
-    // PORT-TODO(phase-2): g_TextDialog->ClearText().
+    // the g_TextDialog->ClearText() port
+    ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
 }
 
 HCOMMAND(textprint)
@@ -626,8 +630,8 @@ HCOMMAND(textprint)
         text += str;
     }
 
-    // PORT-TODO(phase-2): g_TextDialog->AddText(text).
-    (void)text;
+    // the g_TextDialog->AddText(text) port (scriptgump.cpp)
+    ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
 }
 
 HCOMMAND(terminate)
