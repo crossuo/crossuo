@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (commonitems/menuitem.h): QString -> std::string,
 // QList -> std::vector.
 
-#ifndef XUOASSIST_MENUITEM_H
-#define XUOASSIST_MENUITEM_H
+#pragma once
 
 #include "core/global.h"
 
@@ -28,4 +27,3 @@ typedef vector<CMenuItem> MENU_LIST;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_MENUITEM_H

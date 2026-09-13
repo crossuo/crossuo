@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/tradewindow.h): QString -> std::string.
 
-#ifndef XUOASSIST_TRADEWINDOW_H
-#define XUOASSIST_TRADEWINDOW_H
+#pragma once
 
 #include "core/global.h"
 
@@ -27,4 +26,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_TRADEWINDOW_H

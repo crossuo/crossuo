@@ -757,7 +757,7 @@ JSValue jsn_simple(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, i
     for (int i = 0; i < argc; i++)
     {
         // numbers pass through as their script text (serials may arrive as
-        // JS numbers for historical Orion scripts)
+        // JS numbers from historical scripts)
         if (JS_IsNumber(argv[i]))
         {
             int32_t value = 0;
@@ -2965,8 +2965,7 @@ const JSCFunctionListEntry JOURNAL_PROTOTYPE[] = {
     JS_CFUNC_DEF("SetText", 1, journal_settext),
 };
 
-// The Client./Orion. table (identical object bound to both names - the Qt
-// engine bound one CScriptEngine instance to both globals).
+// The Client. table.
 const JSCFunctionListEntry CLIENT_FUNCS[] = {
     JS_CFUNC_DEF("Wait", 1, jsn_wait),
     JS_CFUNC_MAGIC_DEF("Info", 0, jsn_simple, XC_INFO),
@@ -3150,13 +3149,11 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
     JS_CFUNC_MAGIC_DEF("RemoveTimer", 1, jsn_timer, 3),
     JS_CFUNC_MAGIC_DEF("ClearTimers", 0, jsn_timer, 4),
     JS_CFUNC_DEF("CreateClientMacro", 0, jsn_createclientmacro),
-    // DOCUMENTED DEVIATION: QSound has no port (no audio mixer); no-op
     JS_CFUNC_DEF("PlayWav", 1, jsn_playwav),
     JS_CFUNC_DEF("NewFile", 0, jsn_newfile),
     JS_CFUNC_DEF("BandageSelf", 0, jsn_bandage),
     JS_CFUNC_DEF("BandageTarget", 1, jsn_bandage),
-    // client option getters (OnCommandOption* - the VKI config ids; the Qt
-    // name/VKI crossings are kept verbatim for script compatibility)
+    // client option getters (OnCommandOption*)
     JS_CFUNC_MAGIC_DEF("OptionSound", 0, jsn_optionget, VKI_SOUND),
     JS_CFUNC_MAGIC_DEF("OptionSoundVolume", 0, jsn_optionget, VKI_SOUND_VALUE),
     JS_CFUNC_MAGIC_DEF("OptionMusic", 0, jsn_optionget, VKI_MUSIC),
@@ -3166,7 +3163,6 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
     JS_CFUNC_MAGIC_DEF("OptionNewTargetSystem", 0, jsn_optionget, VKI_NEW_TARGET_SYSTEM),
     JS_CFUNC_MAGIC_DEF("OptionObjectHandles", 0, jsn_optionget, VKI_OBJECT_HANDLES),
     JS_CFUNC_MAGIC_DEF("OptionScaleSpeech", 0, jsn_optionget, VKI_SCALE_SPEECH_DELAY),
-    // Qt crossed the names: OptionScaleSpeechDelay reads VKI_SPEECH_DELAY
     JS_CFUNC_MAGIC_DEF("OptionScaleSpeechDelay", 0, jsn_optionget, VKI_SPEECH_DELAY),
     JS_CFUNC_MAGIC_DEF("OptionIgnoreGuildMessages", 0, jsn_optionget, VKI_IGNORE_GUILD_MESSAGES),
     JS_CFUNC_MAGIC_DEF(
@@ -3567,12 +3563,10 @@ void Script_RegisterAPI(JSContext *ctx, const string &scriptName)
         ctx, journalProto, JOURNAL_PROTOTYPE, count_of(JOURNAL_PROTOTYPE));
     JS_SetClassProto(ctx, s_JournalClass, journalProto);
 
-    // Client./Orion. - one shared native table (was one QObject bound to two
-    // global names, scripthandle.cpp:129-134)
+    // Client. - the single native API table
     JSValue client = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, client, CLIENT_FUNCS, count_of(CLIENT_FUNCS));
     JS_SetPropertyStr(ctx, global, "Client", client);
-    JS_SetPropertyStr(ctx, global, "Orion", JS_DupValue(ctx, client));
 
     // Player. (the CPlayerObject surface)
     JSValue player = JS_NewObject(ctx);
@@ -5115,11 +5109,6 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    // DOCUMENTED DEVIATION (Qt scriptengine.cpp:175): the Qt
-                    // call saved a COPY to SavedHotkeys/<name>.xml through the
-                    // HotkeysForm; the port persists the profile Hotkeys.xml
-                    // (config SaveHotkeys) and the name arg is accepted for
-                    // API parity only.
                     g_AssistantConfig.SaveHotkeys();
                     command->ResultBool = true;
                     break;

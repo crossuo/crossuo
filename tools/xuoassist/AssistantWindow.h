@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef _ASSISTANT_WINDOW_H_
-#define _ASSISTANT_WINDOW_H_
+#pragma once
 
 // In-client X:UO Assist host: an ImGui overlay living in the game's own GL
 // context, in-game only (see the master plan ADR D9/D10/D11). Built only for
@@ -36,4 +35,3 @@ void AssistantWindow_Shutdown();
 bool AssistantWindow_IsVisible();
 
 #endif // XUO_ASSISTANT
-#endif // _ASSISTANT_WINDOW_H_

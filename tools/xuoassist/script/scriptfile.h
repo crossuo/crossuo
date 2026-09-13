@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_SCRIPT_SCRIPTFILE_H
-#define XUOASSIST_SCRIPT_SCRIPTFILE_H
+#pragma once
 
 // The script file engine (was script/fileengine.*, CScriptFileObject over
 // QFile/QTextStream): stdio-based, script-thread owned.
@@ -56,4 +55,3 @@ bool ScriptFile_RemovePath(const string &path);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SCRIPT_SCRIPTFILE_H

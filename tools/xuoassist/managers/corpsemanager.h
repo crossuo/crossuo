@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/corpsemanager.h), Qt-diet
 // (QVector -> std::vector).
 
-#ifndef XUOASSIST_CORPSEMANAGER_H
-#define XUOASSIST_CORPSEMANAGER_H
+#pragma once
 
 #include "core/global.h"
 
@@ -52,4 +51,3 @@ extern CCorpseManager g_CorpseManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_CORPSEMANAGER_H

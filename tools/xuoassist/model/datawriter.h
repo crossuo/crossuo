@@ -5,8 +5,7 @@
 // is dropped (plan §4.1). Deliberately NOT unified with xuocore's CDataWriter
 // this round (plan §4.1). vector<uint8_t> stays std::vector<uint8_t>.
 
-#ifndef XUOASSIST_DATAWRITTER_H
-#define XUOASSIST_DATAWRITTER_H
+#pragma once
 
 #include "core/global.h"
 
@@ -139,4 +138,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_DATAWRITTER_H

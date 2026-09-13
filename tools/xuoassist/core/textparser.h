@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/textparser.h): in-memory token parser for
 // cfg-style text. QString -> std::string, QStringList -> std::vector<std::string>.
 
-#ifndef XUOASSIST_TEXTPARSER_H
-#define XUOASSIST_TEXTPARSER_H
+#pragma once
 
 #include "global.h"
 #include "../model/datareader.h"
@@ -18,66 +17,66 @@ class CTextParser
     SETGET(bool, SaveQuotes, false)
 
 private:
-    // Загруженный текст
+    // Loaded text
     string m_Text;
 
-    // Указатель на текущий обрабатываемый символ
+    // Pointer to the character being processed
     uchar *m_Ptr;
 
-    // Указатель на начало предыдущей обрабатываемой строки
+    // Pointer to the start of the previously processed line
     uchar *m_StartPtr;
 
-    // Адрес конца строки
+    // Address of the end of line
     uchar *m_EOL;
 
-    // Адрес конца файла
+    // Address of the end of file
     uchar *m_End;
 
     CDataReader m_File;
 
-    // Разделители
+    // Delimiters
     char m_Delimiters[50];
 
-    // Количество разделителей
+    // Delimiter count
     int m_DelimitersSize;
 
-    // Комментарии
+    // Comment markers
     char m_Comentaries[50];
 
-    // Количество коментариев
+    // Comment marker count
     int m_ComentariesSize;
 
-    // Набор кавычек, формат кавычек в наборе: openQuote, closeQuote (могут быть одинаковыми)
+    // Quote set, pair format: openQuote, closeQuote (they may be identical)
     char m_Quotes[50];
 
-    // Количество элементов в наборе кавычек
+    // Number of entries in the quote set
     int m_QuotesSize;
 
-    // Обрезать строки на выходе
+    // Trim strings on output
     bool m_Trim{ true };
 
-    // Получить конец строки
+    // Get the end of line
     void GetEOL();
 
-    // Проверка на разделитель
+    // Check for a delimiter
     bool IsDelimiter();
 
-    // Пропустить все до данных
+    // Skip everything up to the data
     void SkipToData();
 
-    // Проверка на комментарий
+    // Check for a comment
     bool IsComment();
 
-    // Проверка на кавычку
+    // Check for a quote
     bool IsQuote();
 
-    // Проверка на закрывающую кавычку
+    // Check for a closing quote
     bool IsSecondQuote();
 
-    // Получить следующий токен
+    // Get the next token
     string ObtainData();
 
-    // Получить следующий фрагмент строки или токен (если кавычки не обнаружены)
+    // Get the next quoted string fragment, or a token if no quotes are found
     string ObtainQuotedData();
 
     void SaveRawLine();
@@ -91,23 +90,22 @@ public:
         const bool &saveQuotes = false);
     ~CTextParser();
 
-    // Сбросить указатель на старт
+    // Reset the pointer to the start
     void Restart();
 
-    // Проверка на конец файла
+    // Check for end of file
     bool IsEOF();
 
     void SavePosition();
 
     void LoadPosition();
 
-    // Прочитать токены из файла
+    // Read the tokens from the file
     vector<string> ReadTokens(bool trim = true);
 
-    // Прочитать токены из строки
+    // Read the tokens from a string
     vector<string> GetTokens(const char *str, bool trim = true);
 };
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_TEXTPARSER_H

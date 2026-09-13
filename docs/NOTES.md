@@ -834,6 +834,13 @@ MEDIUM pending a manual interactive pass). Notes and accepted deltas:
   list is untouched). With `XUO_ASSISTANT=OFF` the pre-existing load path
   compiles back in byte-for-byte; the OFF libcrossuo.so contains no
   xuoassist symbols or strings (verified with `nm`/`strings`).
+- **Single-executable layout** (`src/CMakeLists.txt`): with `XUO_ASSISTANT`
+  on (GL3/GLES2 renderers, non-Windows) the client builds as ONE
+  `crossuo` executable with a real `main()` (`XUO_STANDALONE` in
+  `src/Main.cpp`) instead of the `client` dlopen loader + `libcrossuo.so`
+  plugin pair; the reverse plugin-install channel (`g_oaReverse`,
+  `set_install`, `plugin_main`) is compiled out. `XUO_ASSISTANT=OFF`
+  keeps the exe+so layout unchanged.
 - **Harness**: `xuoassist-script-test` gained `script/test/fsimpl.cpp` (the
   stb-style `common/fs.h` implementation, normally compiled by
   `xuocore/common.cpp`) plus `config/xml.cpp`, because the text-window save
@@ -841,5 +848,8 @@ MEDIUM pending a manual interactive pass). Notes and accepted deltas:
 - **Remaining deviations** (grep `DEVIATION`, all commented in place): the
   external UOAM/UOA notify pipes (phase 5, 9 sites), the CLOGGER-only world
   dump, save/load-hotkeys targeting the profile file, tile-hook category
-  lists, and the three script-API items already documented in
-  `script/apiscript.h` (PlayWav/QSound, speech modes, LoadProfile).
+  lists, and the three script-API items commented in place in
+  `script/apiscript.cpp` (PlayWav/QSound, speech modes, LoadProfile). Kept
+  from the trimmed `apiscript.h` provenance header: the Qt option names
+  cross the VKI ids - e.g. `OptionScaleSpeechDelay` maps to
+  `VKI_SPEECH_DELAY` (visible in the apiscript.cpp registration table).

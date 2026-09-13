@@ -23,8 +23,7 @@
 // m_ShopListReplayed) used to live in ShopListEditorForm because that window
 // showed it; it is agent state here and the editor window reads it.
 
-#ifndef XUOASSIST_SHOPAGENT_H
-#define XUOASSIST_SHOPAGENT_H
+#pragma once
 
 #include "core/global.h"
 #include "../model/commonitems/vendorshopitem.h"
@@ -136,4 +135,3 @@ extern CShopAgent g_ShopAgent;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SHOPAGENT_H

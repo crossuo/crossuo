@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (commonitems/gumpitem.h): QString -> std::string,
 // QStringList -> std::vector<std::string>, QList -> std::vector.
 
-#ifndef XUOASSIST_GUMPITEM_H
-#define XUOASSIST_GUMPITEM_H
+#pragma once
 
 #include "core/global.h"
 
@@ -58,4 +57,3 @@ typedef vector<CGumpItem> GUMP_LIST;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GUMPITEM_H

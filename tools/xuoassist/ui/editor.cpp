@@ -66,7 +66,7 @@ bool is_keyword(const char *text, size_t length)
 {
     static const char *const KEYWORDS[] = { "Client", "if", "else", "for", "var", "TextWindow",
         "while", "Player", "function", "return", "break", "switch", "case", "continue",
-        "SelectedTile", "Orion", "true", "false", "null", "undefined" };
+        "SelectedTile", "true", "false", "null", "undefined" };
     for (const char *keyword : KEYWORDS)
     {
         if (strlen(keyword) == length && strncmp(keyword, text, length) == 0)

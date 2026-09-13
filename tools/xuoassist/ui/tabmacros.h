@@ -6,8 +6,7 @@
 // the disabled To-script placeholder. Was assist/tabmacros.{ui,cpp}; the
 // playback engine is macros/macroexecutor.cpp (the frame tick).
 
-#ifndef XUOASSIST_UI_TABMACROS_H
-#define XUOASSIST_UI_TABMACROS_H
+#pragma once
 
 namespace xuoassist {
 
@@ -15,4 +14,3 @@ void TabMacros_Draw();
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_TABMACROS_H

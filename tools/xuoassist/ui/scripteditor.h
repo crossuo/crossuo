@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_UI_SCRIPTEDITOR_H
-#define XUOASSIST_UI_SCRIPTEDITOR_H
+#pragma once
 
 // The script editor window (was ScriptEditorDialog, assist/
 // scripteditordialog.ui/.cpp 800x600): toolbar New/Open/Save/SaveAs/Find/
@@ -18,11 +17,12 @@
 
 namespace xuoassist {
 
-// Draws the editor window; `open` is the visibility flag (the X button flips
-// it). Saves through the tab when the path is set (Save falls back to
-// Autoload.oajs like TabScripts::SaveScript).
+// Draws the editor window; `open` is the visibility flag: the X button
+// flips it and the window skips drawing while it is false (reopening
+// through the flag - the tab button / script start - resets it). Saves
+// through the tab when the path is set (Save falls back to Autoload.oajs
+// like TabScripts::SaveScript).
 void ScriptEditorWindow_Draw(bool *open);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_SCRIPTEDITOR_H

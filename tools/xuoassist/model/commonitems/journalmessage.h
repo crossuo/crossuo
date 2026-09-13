@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (commonitems/journalmessage.h): Timer is a g_Ticks
 // stamp (the Qt app used g_Timer.elapsed()).
 
-#ifndef XUOASSIST_JOURNALMESSAGE_H
-#define XUOASSIST_JOURNALMESSAGE_H
+#pragma once
 
 #include "core/global.h"
 
@@ -29,4 +28,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_JOURNALMESSAGE_H

@@ -6,6 +6,15 @@
 
 #define LOGGER_MODULE Assistant
 
+// Platform.h must come before widgets.h: with SDL already included,
+// xuocore/plugininterface.h (pulled in by widgets.h -> core/global.h) picks
+// the SDL event structs instead of its own KeyEvent/TextEvent, which would
+// collide with Platform.h's SDL typedefs (same order as ui/tababout.cpp)
+#if defined(XUO_ASSISTANT)
+#include <SDL_wrapper.h>
+#include <Platform.h> // ::Platform::OpenBrowser (OpenURL)
+#endif
+
 #include "widgets.h"
 
 #if defined(XUO_ASSISTANT)
@@ -39,6 +48,18 @@
 #endif
 
 namespace xuoassist {
+
+// the assistant scripting docs page (widgets.h): About "Docs" + Scripts tab
+// "Script examples"
+const char *const DOCS_URL = "https://crossuo.com/book/scripting/scripting.html";
+
+void OpenURL(const char *url)
+{
+    // was QDesktopServices::openUrl (tababout.cpp:26-42); SDL is 2.0.10
+    // (no SDL_OpenURL) so the client's own launcher (Platform::OpenBrowser,
+    // src/Platform.cpp:78/:136 ShellExecute/xdg-open/open) is reused
+    ::Platform::OpenBrowser(url);
+}
 
 // ---------------------------------------------------------------------------
 // icon atlas

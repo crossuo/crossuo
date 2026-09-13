@@ -10,8 +10,7 @@
 // round-trip the external plugin used, minus the SDL event hop).
 // QVector -> std::vector, ../managers/gumpmanager.h -> the ported CGump.
 
-#ifndef XUOASSIST_PACKETS_H
-#define XUOASSIST_PACKETS_H
+#pragma once
 
 #include "global.h"
 #include "../model/datawriter.h"
@@ -154,4 +153,3 @@ DEFINE_PACKET(OpenDoorRequest);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_PACKETS_H

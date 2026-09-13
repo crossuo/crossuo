@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/menu.h): QString -> std::string.
 
-#ifndef XUOASSIST_MENU_H
-#define XUOASSIST_MENU_H
+#pragma once
 
 #include "core/global.h"
 #include "menuitem.h"
@@ -30,4 +29,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_MENU_H

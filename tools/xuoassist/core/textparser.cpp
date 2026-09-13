@@ -20,7 +20,7 @@ CTextParser::CTextParser(
     , m_EOL(nullptr)
     , m_File((uchar *)m_Text.c_str(), m_Text.length())
 {
-    // Инициализация разделителей
+    // Initialize the delimiters
     memset(&m_Delimiters[0], 0, sizeof(m_Delimiters));
     m_DelimitersSize = strlen(delimiters);
 
@@ -29,7 +29,7 @@ CTextParser::CTextParser(
         memcpy(&m_Delimiters[0], &delimiters[0], m_DelimitersSize);
     }
 
-    // Инициализация комментариев
+    // Initialize the comments
     memset(&m_Comentaries[0], 0, sizeof(m_Comentaries));
     m_ComentariesSize = strlen(comentaries);
 
@@ -38,7 +38,7 @@ CTextParser::CTextParser(
         memcpy(&m_Comentaries[0], &comentaries[0], m_ComentariesSize);
     }
 
-    // Инициализация кавычек
+    // Initialize the quotes
     memset(&m_Quotes[0], 0, sizeof(m_Quotes));
     m_QuotesSize = strlen(quotes);
 
@@ -47,7 +47,7 @@ CTextParser::CTextParser(
         memcpy(&m_Quotes[0], &quotes[0], m_QuotesSize);
     }
 
-    // Вычисляем конец файла
+    // Compute the end of file
     m_End = m_File.GetEnd();
 }
 
@@ -55,28 +55,28 @@ CTextParser::~CTextParser()
 {
 }
 
-// Сбросить указатель на старт
+// Reset the pointer to the start
 void CTextParser::Restart()
 {
     m_File.ResetPtr();
 }
 
-// Проверка на конец файла
+// Check for end of file
 bool CTextParser::IsEOF()
 {
     return (m_File.GetPtr() >= m_End);
 }
 
-// Получить конец строки
+// Get the end of line
 void CTextParser::GetEOL()
 {
-    // Конец строки равен текущему адресу
+    // The EOL starts at the current address
     m_EOL = m_File.GetPtr();
 
-    // Если файл прочитан не до конца
+    // If the file has not been read to the end
     if (!IsEOF())
     {
-        // Ищем конец строки
+        // Look for the end of line
         while (m_EOL < m_End && (*m_EOL != 0u))
         {
             if (*m_EOL == '\n')
@@ -89,12 +89,12 @@ void CTextParser::GetEOL()
     }
 }
 
-// Проверка на разделитель
+// Check for a delimiter
 bool CTextParser::IsDelimiter()
 {
     bool result = false;
 
-    // Проход по всем разделителям
+    // Walk over all delimiters
     for (int i = 0; i < m_DelimitersSize && !result; i++)
     {
         result = (*m_Ptr == m_Delimiters[i]);
@@ -103,22 +103,22 @@ bool CTextParser::IsDelimiter()
     return result;
 }
 
-// Пропустить все до данных
+// Skip everything up to the data
 void CTextParser::SkipToData()
 {
-    // Если символ - разделитель, то проход по всем разделителям и смещение указателя
+    // While the character is a delimiter, walk the delimiter set and advance the pointer
     while (m_Ptr < m_EOL && (*m_Ptr != 0u) && IsDelimiter())
     {
         m_Ptr++;
     }
 }
 
-// Проверка на комментарий
+// Check for a comment
 bool CTextParser::IsComment()
 {
     bool result = (*m_Ptr == '\n');
 
-    // Проход по всем комментариям
+    // Walk over all comment markers
     for (int i = 0; i < m_ComentariesSize && !result; i++)
     {
         result = (*m_Ptr == m_Comentaries[i]);
@@ -134,15 +134,15 @@ bool CTextParser::IsComment()
     return result;
 }
 
-// Проверка на кавычку
+// Check for a quote
 bool CTextParser::IsQuote()
 {
     bool result = (*m_Ptr == '\n');
 
-    // Пройдемся по кавычкам, формат кавычек в наборе: openQuote, closeQuote (могут быть одинаковыми)
+    // Walk over the quote set, pair format: openQuote, closeQuote (they may be identical)
     for (int i = 0; i < m_QuotesSize; i += 2)
     {
-        // Если кавычка нашлась
+        // If a quote matched
         if (*m_Ptr == m_Quotes[i] || *m_Ptr == m_Quotes[i + 1])
         {
             result = true;
@@ -153,15 +153,15 @@ bool CTextParser::IsQuote()
     return result;
 }
 
-// Проверка на закрывающую кавычку
+// Check for a closing quote
 bool CTextParser::IsSecondQuote()
 {
     bool result = (*m_Ptr == '\n');
 
-    // Пройдемся по кавычкам, формат кавычек в наборе: openQuote, closeQuote (могут быть одинаковыми)
+    // Walk over the quote set, pair format: openQuote, closeQuote (they may be identical)
     for (int i = 0; i < m_QuotesSize; i += 2)
     {
-        // Если кавычка нашлась
+        // If a quote matched
         if (*m_Ptr == m_Quotes[i + 1])
         {
             result = true;
@@ -172,19 +172,19 @@ bool CTextParser::IsSecondQuote()
     return result;
 }
 
-// Получить следующий токен
+// Get the next token
 string CTextParser::ObtainData()
 {
     string result = "";
 
-    // Пока разделитель валиден - записываем данные и смещаем указатель
+    // While the character is valid (not a stopper) - append the data and advance the pointer
     while (m_Ptr < m_End && (*m_Ptr != 0u) && *m_Ptr != '\n')
     {
-        // Проверка на разделитель
+        // Check for a delimiter
         if (IsDelimiter() || IsQuote())
         {
             break;
-            // Проверка на комментарий
+            // Check for a comment
         }
         if (IsComment())
         {
@@ -192,7 +192,7 @@ string CTextParser::ObtainData()
             break;
         }
 
-        // Проверяем на перенос строки, при необходимости обрезаем пробелы
+        // Handle line breaks and trim spaces if requested
         if (*m_Ptr != '\r' && (!m_Trim || (*m_Ptr != ' ' && *m_Ptr != '\t')))
         {
             result += *m_Ptr;
@@ -204,51 +204,51 @@ string CTextParser::ObtainData()
     return result;
 }
 
-// Получить следующий фрагмент строки или токен (если кавычки не обнаружены)
+// Get the next quoted string fragment, or a token if no quotes are found
 string CTextParser::ObtainQuotedData()
 {
     bool exit = false;
     string result;
 
-    // Пройдемся по кавычкам, формат кавычек в наборе: openQuote, closeQuote (могут быть одинаковыми)
+    // Walk over the quote set, pair format: openQuote, closeQuote (they may be identical)
     for (int i = 0; i < m_QuotesSize; i += 2)
     {
-        // Если кавычка нашлась
+        // If a quote matched
         if (*m_Ptr == m_Quotes[i])
         {
-            // Запомним закрывающую кавычку
+            // Remember the closing quote
             char endQuote = m_Quotes[i + 1];
             exit = true;
 
-            // Смещаем указатель, т.к. кавычку писать не нужно
+            // Advance the pointer, the opening quote is not part of the result
             m_Ptr++;
             uchar *ptr = m_Ptr;
 
-            // Пропустим все до конца строки или до закрывающей кавычки
+            // Skip everything up to the end of line or the closing quote
             while (ptr < m_EOL && (*ptr != 0u) && *ptr != '\n' && *ptr != endQuote)
             {
                 ptr++;
             }
 
-            // Размер фрагмента
+            // Fragment size
             int size = ptr - m_Ptr;
 
             if (size > 0)
             {
-                // Выделяем память под фрагмент
+                // Allocate space for the fragment
                 result.resize(size + 1);
 
-                // Копируем фрагмент
+                // Copy the fragment
                 memcpy(&result[0], &m_Ptr[0], size);
                 result[size] = 0;
 
-                // Пройдемся по фрагменту с конца и затрем лишнее
+                // Walk the fragment from the end and strip the trailing junk
                 for (int j = size - 1; j >= 0 && result[j] == '\r'; j--)
                 {
                     result[j] = 0;
                 }
 
-                // Указатель на конец фрагмена
+                // Pointer to the end of the fragment
                 m_Ptr = ptr;
 
                 if (m_Ptr < m_EOL && *m_Ptr == endQuote)
@@ -267,7 +267,7 @@ string CTextParser::ObtainQuotedData()
         }
     }
 
-    // Если это не кавычки - вычленим слово
+    // If this is not quoted - extract a word
     if (!exit)
     {
         return ObtainData();
@@ -276,7 +276,7 @@ string CTextParser::ObtainQuotedData()
     return result;
 }
 
-// Прочитать токены из файла
+// Read the tokens from the file
 void CTextParser::SaveRawLine()
 {
     int size = m_EOL - m_Ptr;
@@ -308,37 +308,37 @@ void CTextParser::LoadPosition()
     m_File.SetPtr(m_StartPtr);
 }
 
-// Прочитать токены из файла
+// Read the tokens from the file
 vector<string> CTextParser::ReadTokens(bool trim)
 {
     m_Trim = trim;
     vector<string> result;
 
-    // Если не достигли конца файла
+    // If the end of the file has not been reached
     if (!IsEOF())
     {
-        // Инициализация указателей
+        // Initialize the pointers
         m_Ptr = m_File.GetPtr();
         GetEOL();
 
         SaveRawLine();
 
-        // Проход до конца строки
+        // Walk until the end of line
         while (m_Ptr < m_EOL)
         {
-            // Пропустить разделители
+            // Skip the delimiters
             SkipToData();
 
-            // Если это комментарий - выходим
+            // A comment - stop here
             if (IsComment())
             {
                 break;
             }
 
-            // Получаем токен
+            // Get the token
             string buf = ObtainQuotedData();
 
-            // Если токен не пуст - запишем его в стек
+            // If the token is not empty - push it onto the stack
             if (buf.length() != 0)
             {
                 result.push_back(buf);
@@ -355,13 +355,13 @@ vector<string> CTextParser::ReadTokens(bool trim)
     return result;
 }
 
-// Прочитать токены из строки
+// Read the tokens from a string
 vector<string> CTextParser::GetTokens(const char *str, bool trim)
 {
     m_Trim = trim;
     vector<string> result;
 
-    // Сохраним предыдущее значения конца данных
+    // Save the previous end-of-data value
     uchar *oldEnd = m_End;
 
     m_Ptr = (uchar *)str;
@@ -370,22 +370,22 @@ vector<string> CTextParser::GetTokens(const char *str, bool trim)
 
     SaveRawLine();
 
-    // Пройдемся по строке
+    // Walk the string
     while (m_Ptr < m_EOL)
     {
-        // Пропустить разделители
+        // Skip the delimiters
         SkipToData();
 
-        // Если это комментарий - выходим
+        // A comment - stop here
         if (IsComment())
         {
             break;
         }
 
-        // Получаем токен
+        // Get the token
         string buf = ObtainQuotedData();
 
-        // Если токен не пуст - запишем его в стек
+        // If the token is not empty - push it onto the stack
         if (buf.length() != 0)
         {
             result.push_back(buf);
@@ -396,7 +396,7 @@ vector<string> CTextParser::GetTokens(const char *str, bool trim)
         }
     }
 
-    // Восстановим предыдущее значения конца данных
+    // Restore the previous end-of-data value
     m_End = oldEnd;
 
     return result;

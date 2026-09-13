@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_SCRIPT_COMMANDQUEUE_H
-#define XUOASSIST_SCRIPT_COMMANDQUEUE_H
+#pragma once
 
 // The main-thread marshaling queue for the script runtime (was the Qt
 // managers/commandmanager signal hub: CScriptEngine's 434
@@ -210,4 +209,3 @@ bool ScriptQueue_PrintThrottled(uint &suppressedCount);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SCRIPT_COMMANDQUEUE_H

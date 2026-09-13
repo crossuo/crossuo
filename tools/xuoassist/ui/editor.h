@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_UI_EDITOR_H
-#define XUOASSIST_UI_EDITOR_H
+#pragma once
 
 // The script text editor widget (was CScriptPlainTextEdit + the Qt
 // CSyntaxHighlighter + CExtendedPlainTextEdit gutter, plan §3.2): line
@@ -44,4 +43,3 @@ int TextEditor_CurrentLine();
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_EDITOR_H

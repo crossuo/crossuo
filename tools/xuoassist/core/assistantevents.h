@@ -16,8 +16,7 @@
 // round installs a subclass instance into g_AssistantEvents; handlers never
 // change. No Qt, no std::function registry, C++14.
 
-#ifndef XUOASSIST_ASSISTANTEVENTS_H
-#define XUOASSIST_ASSISTANTEVENTS_H
+#pragma once
 
 #include "global.h"
 #include "../model/commonitems/journalmessage.h"
@@ -202,4 +201,3 @@ extern CAssistantEvents *g_AssistantEvents;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_ASSISTANTEVENTS_H

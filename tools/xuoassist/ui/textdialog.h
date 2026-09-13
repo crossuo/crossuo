@@ -15,8 +15,7 @@
 // auto-opens (the client owns the prompt bar for the default flow, and the Qt
 // dialog was always explicitly opened by the API/user too).
 
-#ifndef XUOASSIST_UI_TEXTDIALOG_H
-#define XUOASSIST_UI_TEXTDIALOG_H
+#pragma once
 
 #if defined(XUO_ASSISTANT)
 
@@ -35,4 +34,3 @@ void TextDialog_Shutdown();
 } // namespace xuoassist
 
 #endif // XUO_ASSISTANT
-#endif // XUOASSIST_UI_TEXTDIALOG_H

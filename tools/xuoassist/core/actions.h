@@ -24,8 +24,7 @@
 // :1660/:1723 - the same DoCommand call is reused here); anything else is
 // inert with a UI tooltip.
 
-#ifndef XUOASSIST_CORE_ACTIONS_H
-#define XUOASSIST_CORE_ACTIONS_H
+#pragma once
 
 #include "global.h"
 
@@ -66,4 +65,3 @@ void Actions_SetNewTargetSystemSerial(uint serial);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_CORE_ACTIONS_H

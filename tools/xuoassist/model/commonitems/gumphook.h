@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (commonitems/gumphook.h): QList -> std::vector,
 // QString -> std::string.
 
-#ifndef XUOASSIST_GUMPHOOK_H
-#define XUOASSIST_GUMPHOOK_H
+#pragma once
 
 #include "core/global.h"
 
@@ -54,4 +53,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GUMPHOOK_H

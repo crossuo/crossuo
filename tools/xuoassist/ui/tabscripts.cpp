@@ -19,6 +19,7 @@
 #include "../core/assist.h"
 #include "scripteditor.h"
 #include "scriptmenu.h"
+#include "widgets.h" // DOCS_URL + OpenURL
 #include "../script/scripthandle.h"
 
 #include <algorithm>
@@ -49,11 +50,16 @@ void sync_path_from_config()
 
 void load_script_path(const char *path)
 {
-    snprintf(s_ScriptPath, sizeof(s_ScriptPath), "%s", path);
-    g_AssistantConfig.SetScriptFilePath(path);
+    // callers may pass s_ScriptPath itself (the ImGui edit buffer), and
+    // snprintf forbids overlap between destination and source (-Wrestrict):
+    // take a local copy of the input first
+    char pathCopy[512];
+    snprintf(pathCopy, sizeof(pathCopy), "%s", path);
+    snprintf(s_ScriptPath, sizeof(s_ScriptPath), "%s", pathCopy);
+    g_AssistantConfig.SetScriptFilePath(pathCopy);
     // the path persists with the profile (the Qt tab saved on close)
     AssistantUI_MarkOptionsDirty();
-    ScriptManager_LoadScriptFile(path);
+    ScriptManager_LoadScriptFile(pathCopy);
 }
 
 } // namespace
@@ -196,12 +202,12 @@ void TabScripts_Draw()
     ImGui::SetItemTooltip("Opens the script editor window with the loaded file");
 
     // clb_ScriptExamples: the Qt command link opened the ScriptLibrary URL;
-    // until the examples ship (phase 4b-2), show the target as a tooltip.
+    // now the docs page (hosts the examples), same launcher as the About tab
     if (ImGui::SmallButton("Script examples"))
     {
-        g_Assistant.ClientPrint("Script examples: https://github.com/crossuo/ScriptLibrary");
+        OpenURL(DOCS_URL);
     }
-    ImGui::SetItemTooltip("Opens the ScriptLibrary examples collection (blue command link)");
+    ImGui::SetItemTooltip("Opens the docs page (hosts the examples collection)");
 
     // keep the handles list clean (finished scripts leave the list)
     ScriptManager_Get()->Tick();

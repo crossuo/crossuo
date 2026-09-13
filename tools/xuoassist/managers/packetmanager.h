@@ -12,8 +12,7 @@
 // PACKET_DIRECTION/CPacketInfo/HANDLER_PACKET pieces collide with the client
 // header's macro, so the handler declaration macro is XA_HANDLER_PACKET here.
 
-#ifndef XUOASSIST_PACKETMANAGER_H
-#define XUOASSIST_PACKETMANAGER_H
+#pragma once
 
 #include "../core/global.h"
 #include "../model/datareader.h"
@@ -23,31 +22,31 @@ namespace xuoassist {
 class CPacketManager;
 typedef bool (CPacketManager::*PACKET_FUNCTION)();
 
-//!Направление пакета
+//! Packet direction
 enum PACKET_DIRECTION
 {
-    DIR_SEND = 0, //!От клиента серверу
-    DIR_RECV,     //!От сервера клиенту
-    DIR_BOTH      //!В обе стороны
+    DIR_SEND = 0, //!From client to server
+    DIR_RECV,     //!From server to client
+    DIR_BOTH      //!Both directions
 };
 
-//!Класс для хранения информации о пакетах
+//! Class that stores packet information
 class CPacketInfo
 {
 public:
-    //!Название пакета
+    //! Packet name
     const char *Name;
 
-    //!Размер пакета
+    //! Packet size
     int Size;
 
-    //!Направление пакета
+    //! Packet direction
     PACKET_DIRECTION Direction;
 
-    //!Обработчик отправленного пакета
+    //! Handler for the sent packet
     PACKET_FUNCTION SendHandler;
 
-    //!Обработчик принятого пакета
+    //! Handler for the received packet
     PACKET_FUNCTION RecvHandler;
 };
 
@@ -61,7 +60,7 @@ private:
     static CPacketInfo m_Packets[0x100];
 
 protected:
-    //!Обработчики пакетов
+    //! Packet handlers
     XA_HANDLER_PACKET(SecondLogin);
     XA_HANDLER_PACKET(LightLevel);
     XA_HANDLER_PACKET(PersonalLightLevel);
@@ -170,4 +169,3 @@ void AssistantPackets_Send(uint8_t *buf, size_t size);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_PACKETMANAGER_H

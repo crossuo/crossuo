@@ -9,8 +9,7 @@
 // The data-list lookups that used to poke g_TabLists* widget globals consult
 // the AssistantConfig module instead (same module that loads/saves them).
 
-#ifndef XUOASSIST_ASSIST_H
-#define XUOASSIST_ASSIST_H
+#pragma once
 
 #include "global.h"
 #include "../model/commonitems/skill.h"
@@ -179,4 +178,3 @@ extern CAssistant g_Assistant;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_ASSIST_H

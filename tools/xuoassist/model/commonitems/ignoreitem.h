@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/ignoreitem.h): QString -> std::string.
 
-#ifndef XUOASSIST_IGNOREITEM_H
-#define XUOASSIST_IGNOREITEM_H
+#pragma once
 
 #include "core/global.h"
 #include "finditem.h"
@@ -25,4 +24,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_IGNOREITEM_H

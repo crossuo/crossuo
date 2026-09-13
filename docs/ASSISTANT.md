@@ -64,14 +64,15 @@ Files are not locked by design.
 
 ## Scripting
 
-Scripts are JavaScript (QuickJS) with the Orion/XUO Assist API surface
-(`Player.*`, `Client.*`, `Orion.*` and the engine classes Gump, Menu,
+Scripts are JavaScript (QuickJS) with the XUO Assist API surface
+(`Player.*`, `Client.*` and the engine classes Gump, Menu,
 GumpHook, ClientMacro, File). The Scripts tab opens/reloads/runs/pauses/stops
-scripts; the API registration table and the coverage notes live in
-`tools/xuoassist/script/apiscript.h` (the coverage table and the per-function
-deviation notes are in `tools/xuoassist/script/apiscript.cpp`). Existing Qt
+scripts; the API classification ([Q]/[G]/[D] coverage notes) and the
+registration table live in `tools/xuoassist/script/apiscript.cpp`
+(`apiscript.h` only declares the two entry points). Existing Qt
 assistant scripts run unmodified except for the documented deviations
-(no audio playback, no speech-mode variants, `LoadProfile` restrictions).
+("Remaining deviations" in `docs/NOTES.md`: no audio playback, no
+speech-mode variants, `LoadProfile` restrictions).
 
 ## Differences from the external Qt assistant
 

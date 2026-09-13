@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/guildmanager.h), Qt-diet
 // (QString -> std::string).
 
-#ifndef XUOASSIST_GUILDMANAGER_H
-#define XUOASSIST_GUILDMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include <unordered_map>
@@ -49,4 +48,3 @@ extern GuildManager g_GuildManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GUILDMANAGER_H

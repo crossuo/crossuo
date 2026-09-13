@@ -13,8 +13,7 @@
 // field has keyboard focus (io.WantTextInput) the game never sees keys -
 // AssistantWindow.cpp gates that ahead of the engine.
 
-#ifndef XUOASSIST_UI_TABHOTKEYS_H
-#define XUOASSIST_UI_TABHOTKEYS_H
+#pragma once
 
 namespace xuoassist {
 
@@ -30,4 +29,3 @@ void TabHotkeys_CancelPendingFromTargets();
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_TABHOTKEYS_H

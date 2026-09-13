@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/objectpropertiesmanager.h), Qt-diet
 // (QMap -> std::map, QString -> std::string).
 
-#ifndef XUOASSIST_OBJECTPROPERTIESMANAGER_H
-#define XUOASSIST_OBJECTPROPERTIESMANAGER_H
+#pragma once
 
 #include <map>
 
@@ -47,4 +46,3 @@ extern CObjectPropertiesManager g_ObjectPropertiesManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_OBJECTPROPERTIESMANAGER_H

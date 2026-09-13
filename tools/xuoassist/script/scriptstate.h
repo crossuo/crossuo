@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_SCRIPT_SCRIPTSTATE_H
-#define XUOASSIST_SCRIPT_SCRIPTSTATE_H
+#pragma once
 
 // Main-thread script-state stores of the 4b-2 round (was the tail of
 // managers/commandmanager.* in the Qt app):
@@ -53,4 +52,3 @@ bool ScriptBuffs_Exists(const string &name);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SCRIPT_SCRIPTSTATE_H

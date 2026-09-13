@@ -25,8 +25,7 @@
 //   - the parser is not a general-purpose hardened XML parser: it is built for
 //     the assistant's own profile files.
 
-#ifndef XUOASSIST_CONFIG_XML_H
-#define XUOASSIST_CONFIG_XML_H
+#pragma once
 
 #include <stdint.h>
 #include <string>
@@ -96,4 +95,3 @@ bool XMLSelfTest();
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_CONFIG_XML_H

@@ -5,8 +5,7 @@
 // byte-exact (bounds behavior preserved). Deliberately NOT unified with
 // xuocore's CDataReader this round (plan §4.1). string/wstring -> std::.
 
-#ifndef XUOASSIST_DATAREADER_H
-#define XUOASSIST_DATAREADER_H
+#pragma once
 
 #include "core/global.h"
 
@@ -149,4 +148,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_DATAREADER_H

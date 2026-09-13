@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/clientmacromanager.h), Qt-diet
 // (QStringList -> vector<string>, QList -> vector).
 
-#ifndef XUOASSIST_CLIENTMACROMANAGER_H
-#define XUOASSIST_CLIENTMACROMANAGER_H
+#pragma once
 
 #include "core/global.h"
 
@@ -36,4 +35,3 @@ void ClientMacroInsert(const string &name, const vector<string> &actions);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_CLIENTMACROMANAGER_H

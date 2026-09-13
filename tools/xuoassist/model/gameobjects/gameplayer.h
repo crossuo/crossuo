@@ -3,14 +3,13 @@
 
 // Ported from X:UO Assist (gameobjects/gameplayer.h).
 
-#ifndef XUOASSIST_GAMEPLAYER_H
-#define XUOASSIST_GAMEPLAYER_H
+#pragma once
 
 #include "gamecharacter.h"
 
 namespace xuoassist {
 
-//! Класс игрока
+//! Player class
 class CPlayer : public CGameCharacter
 {
     SETGET(short, Str, 0)
@@ -48,9 +47,8 @@ public:
     void UpdateAbilities();
 };
 
-//! Ссылка на игрока
+//! Pointer to the player
 extern CPlayer *g_Player;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GAMEPLAYER_H

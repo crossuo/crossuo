@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_SCRIPT_SCRIPTGUMP_H
-#define XUOASSIST_SCRIPT_SCRIPTGUMP_H
+#pragma once
 
 // The script UI engine of the 4b-2 round: the script TEXT WINDOW (was
 // script/textwindowengine.* + the g_TextDialog window it drove through
@@ -58,4 +57,3 @@ void ScriptTextWindow_Rect(int *x, int *y, int *width, int *height);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SCRIPT_SCRIPTGUMP_H

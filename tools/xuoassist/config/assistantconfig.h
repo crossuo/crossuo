@@ -24,8 +24,7 @@
 // with the original item-class field names; the UI round binds its list
 // widgets directly to these containers.
 
-#ifndef XUOASSIST_ASSISTANTCONFIG_H
-#define XUOASSIST_ASSISTANTCONFIG_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -518,4 +517,3 @@ extern CAssistantConfig g_AssistantConfig;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_ASSISTANTCONFIG_H

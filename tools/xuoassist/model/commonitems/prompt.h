@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/prompt.h): QString -> std::string.
 
-#ifndef XUOASSIST_PROMPT_H
-#define XUOASSIST_PROMPT_H
+#pragma once
 
 #include "core/global.h"
 
@@ -23,4 +22,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_PROMPT_H

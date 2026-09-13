@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/spellmanager.h), Qt-diet
 // (QMap -> std::map, QList<QStringList> -> vector<vector<string>>).
 
-#ifndef XUOASSIST_SPELLMANAGER_H
-#define XUOASSIST_SPELLMANAGER_H
+#pragma once
 
 #include <map>
 
@@ -39,4 +38,3 @@ extern CSpellManager g_SpellManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SPELLMANAGER_H

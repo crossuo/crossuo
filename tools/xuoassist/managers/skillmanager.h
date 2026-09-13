@@ -6,8 +6,7 @@
 // g_Skills[] (model/commonitems/skill.h, ported in Phase 1a); the client's
 // g_SkillsManager is not used for this lookup table.
 
-#ifndef XUOASSIST_SKILLMANAGER_H
-#define XUOASSIST_SKILLMANAGER_H
+#pragma once
 
 #include <map>
 
@@ -42,4 +41,3 @@ extern CSkillManager g_SkillManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SKILLMANAGER_H

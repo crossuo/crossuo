@@ -545,10 +545,10 @@ int main()
         // gameobject finalizer freed them as the wrong type. Each `typeof`
         // probe below must report the owning class's method.
         const char *script = "function probe() {"
-            "var g = Orion.GetGump(0);"
-            "var f = Orion.NewFile();"
-            "var h = Orion.CreateGumpHook('1');"
-            "var m = Orion.CreateClientMacro();"
+            "var g = Client.GetGump(0);"
+            "var f = Client.NewFile();"
+            "var h = Client.CreateGumpHook('1');"
+            "var m = Client.CreateClientMacro();"
             "return [typeof g, g === null ? 'null' : typeof g.Select,"
             " g === null ? 'null' : typeof g.Close,"
             " typeof f, f === null ? 'null' : typeof f.Open,"

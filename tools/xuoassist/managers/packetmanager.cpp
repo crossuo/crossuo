@@ -1,34 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/packetmanager.cpp): the 256-entry dispatch
-// table and every handler, decoupled from the Qt widgets (plan §4.1 "REUSE
-// AS-IS (decouple UI)", §7 Phase 1 item 2).
-//
-// Port rules applied here (assistant-plan.md):
-//  - world-model mutations (g_World/g_Player/g_Skills/assistant globals) are
-//    kept verbatim - this is the packet-parity surface;
-//  - widget pokes became g_AssistantEvents notifications;
-//  - Phase 1c resolved the module markers whose owners landed
-//    (assist core, target, text commands, config module, gump/menu/trade/
-//    prompt/party/context-menu/corpse/spell/skill/clientmacro/guild/
-//    display-state managers, the speech/sound/text-replace filters, the
-//    main-option gates and the font-color replaces);
-//  - Phase 6 resolved the remaining behavioral markers: macro recording
-//    (the outgoing-packet taps append the exact Qt CMacro actions to
-//    g_MacroExecutor) and the Autostart script run (through the events
-//    seam); anything without an in-process equivalent is documented as an
-//    explicit DEVIATION comment instead;
-//  - g_ClilocManager (client) supersedes the assistant's cliloc manager and is
-//    called directly (plan §7 "What NOT to do");
-//  - the per-packet LOG/LOG_DUMP lines are dropped (the client has its own
-//    DEBUG/DEBUG_DUMP packet logging at the same sites).
-//
-// Client version: the Qt app got the host's validated version once at plugin
-// install (mainscript.cpp:397); in-process the client's own g_Config
-// .ClientVersion (validated from the exe at startup) is authoritative and is
-// read live at each dispatch.
-
 #include "packetmanager.h"
 #include "../core/assistantevents.h"
 #include "../core/assist.h"
@@ -68,7 +40,7 @@ CPacketManager g_PacketManager;
 
 const int PACKET_VARIABLE_SIZE = 0;
 
-//Карта пакетов УО для анализа
+// Map of UO packets for parsing
 #define UMSG(size)                                                                                 \
     {                                                                                              \
         "?", size, DIR_BOTH, nullptr, nullptr                                                      \
@@ -2924,8 +2896,10 @@ PACKET_HANDLER(WalkRequest)
 {
     int direction = ReadUInt8();
 
-    auto getNewXY = [](const int &direction, int &x, int &y) {
-        switch (direction & 7)
+    // dir is a plain value copy: a reference parameter named like the outer
+    // direction local shadows it (gcc -Wshadow) for no benefit
+    auto getNewXY = [](const int dir, int &x, int &y) {
+        switch (dir & 7)
         {
             case 0:
                 y--;

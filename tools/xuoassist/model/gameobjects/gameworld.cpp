@@ -46,8 +46,8 @@ CGameWorld::~CGameWorld()
 }
 
 /*!
-Создать игрока
-@param [__in] serial Серийник игрока
+Create the player
+@param [__in] serial Player serial
 @return
 */
 void CGameWorld::CreatePlayer(const uint &serial)
@@ -72,7 +72,7 @@ void CGameWorld::CreatePlayer(const uint &serial)
 }
 
 /*!
-Удалить игрока
+Remove the player
 @return
 */
 void CGameWorld::RemovePlayer()
@@ -89,8 +89,8 @@ void CGameWorld::RemovePlayer()
 }
 
 /*!
-Установить текущего чара с указанным серийником как основного
-@param [__in] serial Серийник нового игрока
+Make the character with the given serial the current player
+@param [__in] serial Serial of the new player
 @return
 */
 void CGameWorld::SetPlayer(const uint &serial)
@@ -141,9 +141,9 @@ void CGameWorld::IgnoreReset()
 }
 
 /*!
-Создать (или взять, если уже существует) игровой предмет
-@param [__in] serial Серийник предмета
-@return Ссылка на предмет
+Create (or fetch, if it already exists) a game item
+@param [__in] serial Item serial
+@return Pointer to the item
 */
 CGameItem *CGameWorld::GetWorldItem(const uint &serial)
 {
@@ -173,9 +173,9 @@ CGameItem *CGameWorld::GetWorldItem(const uint &serial)
 }
 
 /*!
-Создать (или взять, если уже существует) игрового персонажа
-@param [__in] serial Серийник персонажа
-@return Ссылка на персонажа
+Create (or fetch, if it already exists) a game character
+@param [__in] serial Character serial
+@return Pointer to the character
 */
 CGameCharacter *CGameWorld::GetWorldCharacter(const uint &serial)
 {
@@ -205,9 +205,9 @@ CGameCharacter *CGameWorld::GetWorldCharacter(const uint &serial)
 }
 
 /*!
-Найти игровой объект в памяти
-@param [__in] serial Серийник объекта
-@return Ссылка на объект или nullptr
+Find a game object in memory
+@param [__in] serial Object serial
+@return Pointer to the object or nullptr
 */
 CGameObject *CGameWorld::FindWorldObject(const uint &serial)
 {
@@ -223,9 +223,9 @@ CGameObject *CGameWorld::FindWorldObject(const uint &serial)
 }
 
 /*!
-Найти игровой предмет в памяти
-@param [__in] serial Серийник предмета
-@return Ссылка на предмет или nullptr
+Find a game item in memory
+@param [__in] serial Item serial
+@return Pointer to the item or nullptr
 */
 CGameItem *CGameWorld::FindWorldItem(const uint &serial)
 {
@@ -241,9 +241,9 @@ CGameItem *CGameWorld::FindWorldItem(const uint &serial)
 }
 
 /*!
-Найти игрового персонажа в памяти
-@param [__in] serial Серийник персонажа
-@return Ссылка а персонажа или nullptr
+Find a game character in memory
+@param [__in] serial Character serial
+@return Pointer to the character or nullptr
 */
 CGameCharacter *CGameWorld::FindWorldCharacter(const uint &serial)
 {
@@ -259,8 +259,8 @@ CGameCharacter *CGameWorld::FindWorldCharacter(const uint &serial)
 }
 
 /*!
-Удалить объект из памяти
-@param [__in] obj Ссылка на объект
+Remove an object from memory
+@param [__in] obj Pointer to the object
 @return
 */
 void CGameWorld::RemoveObject(CGameObject *obj)
@@ -274,8 +274,8 @@ void CGameWorld::RemoveObject(CGameObject *obj)
 }
 
 /*!
-Вынуть объект из контейнера
-@param [__in] obj Ссылка на объект
+Take an object out of its container
+@param [__in] obj Pointer to the object
 @return
 */
 void CGameWorld::RemoveFromContainer(CGameObject *obj)
@@ -331,8 +331,8 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
 }
 
 /*!
-Очистить указанный контейнер
-@param [__in] obj Ссылка на объект (контейнер)
+Empty the given container
+@param [__in] obj Pointer to the object (container)
 @return
 */
 void CGameWorld::ClearContainer(CGameObject *obj)
@@ -344,9 +344,9 @@ void CGameWorld::ClearContainer(CGameObject *obj)
 }
 
 /*!
-Положить в контейнер
-@param [__in] obj Ссылка на объект
-@param [__in] container Ссылка на контейнер
+Put an object into a container
+@param [__in] obj Pointer to the object
+@param [__in] container Pointer to the container
 @return
 */
 void CGameWorld::PutContainer(CGameObject *obj, CGameObject *container)
@@ -356,8 +356,8 @@ void CGameWorld::PutContainer(CGameObject *obj, CGameObject *container)
 }
 
 /*!
-Поднять объект вверх в очереди
-@param [__in] obj Ссылка на объект
+Move an object to the front of the queue
+@param [__in] obj Pointer to the object
 @return
 */
 void CGameWorld::MoveToTop(CGameObject *obj)
@@ -581,19 +581,11 @@ void CGameWorld::UpdateGameObject(
         if (updateType == UGOT_MULTI)
         {
             item->SetMultiBody(true);
-
             item->SetGraphic(graphic & 0x3FFF);
-
-            // DEVIATION (phase 5): was g_UOMapManager.UOAMnotifyHouse(x, y,
-            // graphic) - a Windows-only WM_USER notify to the EXTERNAL UO Auto
-            // Map app (the Qt build compiled it out on non-Windows too); there
-            // is no HWND message host in the in-client port. Houses appear on
-            // the map window through the live world overlays instead.
         }
         else
         {
             item->SetMultiBody(false);
-
             item->SetGraphic(graphic);
             item->SetTiledataFlags(g_GetStaticFlags(graphic));
         }
@@ -788,9 +780,9 @@ ushort CGameWorld::FixColor(const ushort &color, const ushort &defaultColor)
 }
 
 /*!
-Дамп предметов, хранящихся в памяти
-@param [__in] nCount Количество отступов
-@param [__in_opt] serial Серийник родителя
+Dump the items kept in memory
+@param [__in] nCount Indentation count
+@param [__in_opt] serial Parent serial
 @return
 */
 void CGameWorld::Dump(uchar tCount, uint serial)

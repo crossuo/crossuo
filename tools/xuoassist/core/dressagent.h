@@ -19,8 +19,7 @@
 // world); missing items mid-run skip silently - the server rejects an equip
 // for an object it no longer considers ours, exactly as with the script.
 
-#ifndef XUOASSIST_DRESSAGENT_H
-#define XUOASSIST_DRESSAGENT_H
+#pragma once
 
 #include "core/global.h"
 
@@ -73,4 +72,3 @@ extern CDressAgent g_DressAgent;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_DRESSAGENT_H

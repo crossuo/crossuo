@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/promptmanager.h), Qt-diet
 // (QVector -> std::vector).
 
-#ifndef XUOASSIST_PROMPTMANAGER_H
-#define XUOASSIST_PROMPTMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include "model/commonitems/prompt.h"
@@ -43,4 +42,3 @@ extern CPromptManager g_PromptManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_PROMPTMANAGER_H

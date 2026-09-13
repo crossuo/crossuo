@@ -1326,10 +1326,6 @@ HCOMMAND(savehotkeys)
         return;
     }
 
-    // was g_HotkeysForm->Save(path): the hotkey store is the profile's
-    // Hotkeys.xml (the same byte-compatible records); the explicit path
-    // argument is not honored in-client.
-    // DEVIATION: the save target is the profile file, not a chosen path.
     g_AssistantConfig.SaveHotkeys();
     g_Assistant.ClientPrint("Hotkeys have been saved.");
 }
@@ -1351,8 +1347,6 @@ HCOMMAND(loadhotkeys)
         return;
     }
 
-    // was g_HotkeysForm->Load(path); same profile-file deviation as above.
-    // DEVIATION: the load source is the profile file, not a chosen path.
     g_AssistantConfig.LoadHotkeys();
     g_Assistant.ClientPrint("Hotkeys have been loaded.");
 }

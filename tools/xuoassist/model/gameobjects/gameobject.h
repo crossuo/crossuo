@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (gameobjects/gameobject.h): QString -> std::string,
 // QList -> std::vector, QStringList -> std::vector<std::string>.
 
-#ifndef XUOASSIST_GAMEOBJECT_H
-#define XUOASSIST_GAMEOBJECT_H
+#pragma once
 
 #include "../basequeue.h"
 #include "core/global.h"
@@ -13,34 +12,34 @@
 
 namespace xuoassist {
 
-//! Класс игрового объекта
+//! Game object class
 class CGameObject : public CBaseQueueItem
 {
-    //! Серийник объекта
+    //! Object serial
     SETGET(uint, Serial, 0)
-    //! Индекс картинки объекта
+    //! Object graphic index
     SETGET(ushort, Graphic, 0)
-    //! Цвет объекта
+    //! Object color
     SETGET(ushort, Color, 0)
-    //! Координата X в мире
+    //! World X coordinate
     SETGET(short, X, 0)
-    //! Координата Y в мире
+    //! World Y coordinate
     SETGET(short, Y, 0)
-    //! Координата Z в мире
+    //! World Z coordinate
     SETGET(char, Z, 0)
-    //! Серийник контейнера, содержащего объект (0xFFFFFFFF - объект лежит в мире)
+    //! Serial of the container holding the object (0xFFFFFFFF - object is in the world)
     SETGET(uint, Container, 0xFFFFFFFF)
-    //! Карта объекта
+    //! Object map index
     SETGET(uchar, MapIndex, 0)
-    //! Количество
+    //! Count
     SETGET(uint, Count, 0)
-    //! Флаги от сервера
+    //! Flags from the server
     SETGETE(uchar, Flags, 0, OnChangeFlags)
-    //! Имя
+    //! Name
     SETGET(string, Name, "")
-    //! НПС или предмет
+    //! NPC or item
     SETGET(bool, NPC, false)
-    //! Игнорировать предмет при поиске
+    //! Ignore the item during searches
     SETGET(bool, Ignored, false)
     SETGET(bool, SA_Poisoned, false)
 
@@ -92,4 +91,3 @@ int GetDistance(const int &x1, const int &y1, const int &x2, const int &y2);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GAMEOBJECT_H

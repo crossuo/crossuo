@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/gump.h): QStringList -> std::vector<std::string>.
 
-#ifndef XUOASSIST_GUMP_H
-#define XUOASSIST_GUMP_H
+#pragma once
 
 #include "core/global.h"
 #include "gumpitem.h"
@@ -34,4 +33,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GUMP_H

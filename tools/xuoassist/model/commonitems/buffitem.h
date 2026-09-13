@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/buffitem.h): QString -> std::string.
 
-#ifndef XUOASSIST_BUFFITEM_H
-#define XUOASSIST_BUFFITEM_H
+#pragma once
 
 #include "core/global.h"
 
@@ -24,4 +23,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_BUFFITEM_H

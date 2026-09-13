@@ -3,14 +3,13 @@
 
 // Ported from X:UO Assist (gameobjects/gamecharacter.h): QString -> std::string.
 
-#ifndef XUOASSIST_GAMECHARACTER_H
-#define XUOASSIST_GAMECHARACTER_H
+#pragma once
 
 #include "gameobject.h"
 
 namespace xuoassist {
 
-//! Игровой персонаж
+//! Game character
 class CGameCharacter : public CGameObject
 {
     SETGET(short, Hits, 0)
@@ -54,4 +53,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GAMECHARACTER_H

@@ -6,8 +6,7 @@
 // rendering are Phase 2/4 - this round keeps the bytes/parsing/state and the
 // title-data compiler).
 
-#ifndef XUOASSIST_DISPLAYMANAGER_H
-#define XUOASSIST_DISPLAYMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include "model/commonitems/displayitem.h"
@@ -121,4 +120,3 @@ extern CDisplayManager g_DisplayManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_DISPLAYMANAGER_H

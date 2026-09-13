@@ -25,8 +25,7 @@
 // artifact of the client re-sending UOMSG_INPUT_KEYDOWN - here the game only
 // sends non-repeat events to the engine, see AssistantWindow.cpp).
 
-#ifndef XUOASSIST_CORE_HOTKEYS_H
-#define XUOASSIST_CORE_HOTKEYS_H
+#pragma once
 
 #include "global.h"
 
@@ -270,4 +269,3 @@ bool Hotkeys_ProcessGameEvent(const SDL_Event &ev);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_CORE_HOTKEYS_H

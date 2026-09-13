@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/textcommandmanager.h + script/command.h),
-// Qt-diet. The command table, names, flags and usage strings are identical.
-// The Qt handlers delegated to the CCommandManager signal hub (the QObject
-// marshaling layer the plan REPLACES, §4.1); the direct-call bodies of those
-// OnCommand* slots are inlined into the handlers below so no signal hub is
-// ported. Bodies that belong to a later round (hotkeys Phase 3, scripts
-// Phase 4, journal Phase 4, text window Phase 2) keep their behavior
-// landed with those rounds (hotkeys/macros, scripts, journal, text
-// window); the remaining deviations are commented inline as DEVIATION.
-
-#ifndef XUOASSIST_TEXTCOMMANDMANAGER_H
-#define XUOASSIST_TEXTCOMMANDMANAGER_H
+#pragma once
 
 #include "global.h"
 #include "textparser.h"
@@ -138,4 +127,3 @@ extern CTextCommandManager g_TextCommandManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_TEXTCOMMANDMANAGER_H

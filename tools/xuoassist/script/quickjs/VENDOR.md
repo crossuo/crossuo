@@ -11,7 +11,7 @@
 #   builtin-iterator-zip.h builtin-iterator-zip-keyed.h
 #
 # Not vendored (unused by the embedded runtime): quickjs-libc.{c,h} (the
-# std/os module - the assistant provides its own Player./Client./Orion.
+# std/os module - the assistant provides its own Player./Client.
 # surface instead), the qjs/qjsc REPL tools, tests and build files.
 #
 # Built directly into the xuoassist static lib (see tools/xuoassist/

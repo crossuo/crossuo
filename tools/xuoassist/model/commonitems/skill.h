@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/skill.h): QString -> std::string.
 
-#ifndef XUOASSIST_SKILL_H
-#define XUOASSIST_SKILL_H
+#pragma once
 
 #include "core/global.h"
 
@@ -32,4 +31,3 @@ extern int g_SkillsCount;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SKILL_H

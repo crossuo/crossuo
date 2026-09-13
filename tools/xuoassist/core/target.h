@@ -28,8 +28,7 @@
 // MultiGraphic) are required by the code above; the file-manager tile
 // resolution used by CheckHook lands with the filemanager dedup round.
 
-#ifndef XUOASSIST_TARGET_H
-#define XUOASSIST_TARGET_H
+#pragma once
 
 #include "global.h"
 #include "../model/datareader.h"
@@ -99,4 +98,3 @@ extern CTarget g_Target;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_TARGET_H

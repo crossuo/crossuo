@@ -291,8 +291,10 @@ void MapWindow_Draw(bool *open)
     }
 
     // wheel zoom (Qt Map::mapWheelEvent, map.cpp:1570-1599: index 1..8 with
-    // the x2.0 <-> x4.0 jump, up = out, down = in)
-    if (canvasHovered && ImGui::GetIO().MouseWheel != 0.0f)
+    // the x2.0 <-> x4.0 jump, up = out, down = in); the two direction
+    // comparisons below already cover the whole non-zero wheel range, so no
+    // (!= 0.0f) equality test is needed here
+    if (canvasHovered)
     {
         const int zoom = g_MapSettings.GetZoom();
         if (ImGui::GetIO().MouseWheel > 0.0f && zoom > 1)

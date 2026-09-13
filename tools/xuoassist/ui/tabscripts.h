@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_UI_TABSCRIPTS_H
-#define XUOASSIST_UI_TABSCRIPTS_H
+#pragma once
 
 // The Scripts tab (was TabScripts, assist/tabscripts.ui/.cpp, plan §2.7):
 // the script file path row + browse/reload, the running-scripts list (one
@@ -16,4 +15,3 @@ void TabScripts_Draw();
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_TABSCRIPTS_H

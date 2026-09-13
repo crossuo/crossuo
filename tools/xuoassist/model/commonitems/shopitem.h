@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/shopitem.h): QString -> std::string.
 
-#ifndef XUOASSIST_SHOPITEM_H
-#define XUOASSIST_SHOPITEM_H
+#pragma once
 
 #include "core/global.h"
 
@@ -32,4 +31,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SHOPITEM_H

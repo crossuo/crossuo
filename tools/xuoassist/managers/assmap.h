@@ -21,8 +21,7 @@
 // client draws multis from live world data; Qt used multimap.rle only as a
 // fallback for external UOAM hosting).
 
-#ifndef XUOASSIST_ASSMAP_H
-#define XUOASSIST_ASSMAP_H
+#pragma once
 
 #include "../core/global.h"
 #include <external/gfx/imgui/imgui.h>
@@ -248,4 +247,3 @@ void AssMap_AfterImGuiShutdown();
 } // namespace xuoassist
 
 #endif // XUO_ASSISTANT
-#endif // XUOASSIST_ASSMAP_H

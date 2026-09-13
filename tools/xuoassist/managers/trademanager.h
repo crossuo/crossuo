@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/trademanager.h), Qt-diet
 // (QList -> std::vector).
 
-#ifndef XUOASSIST_TRADEMANAGER_H
-#define XUOASSIST_TRADEMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include "model/commonitems/tradewindow.h"
@@ -39,4 +38,3 @@ extern CTradeManager g_TradeManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_TRADEMANAGER_H

@@ -31,8 +31,7 @@
 // consumed through the canvas item (io.WantCaptureMouse covers it before the
 // game sees anything), so panning cannot walk the player.
 
-#ifndef XUOASSIST_UI_MAPWINDOW_H
-#define XUOASSIST_UI_MAPWINDOW_H
+#pragma once
 
 #include "../core/global.h" // uint/typedefs
 
@@ -76,4 +75,3 @@ void MapSettings_Shutdown();
 } // namespace xuoassist
 
 #endif // XUO_ASSISTANT
-#endif // XUOASSIST_UI_MAPWINDOW_H

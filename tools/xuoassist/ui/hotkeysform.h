@@ -11,8 +11,7 @@
 // Persistence: every mutation saves Hotkeys.xml immediately (the Qt app
 // flagged m_WantToSave and saved from a 300 ms timer).
 
-#ifndef XUOASSIST_UI_HOTKEYSFORM_H
-#define XUOASSIST_UI_HOTKEYSFORM_H
+#pragma once
 
 namespace xuoassist {
 
@@ -23,4 +22,3 @@ void HotkeysForm_Draw(bool *open);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_HOTKEYSFORM_H

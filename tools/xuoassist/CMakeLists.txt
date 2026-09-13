@@ -10,21 +10,18 @@ set(XUOASSIST_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "")
 
 set(XUOASSIST_SRCS
   "AssistantWindow.cpp"
-  # Phase 2: the assistant shell, widget kit and the simple tabs (§6/§7)
   "ui/assistantui.cpp"
   "ui/assistanteventsui.cpp"
   "ui/widgets.cpp"
   "ui/tabmain.cpp"
   "ui/tablists.cpp"
   "ui/tabfilters.cpp"
-  # Phase 3: hotkeys & macros (§7 items 1-4)
   "core/hotkeys.cpp"
   "core/actions.cpp"
   "macros/macroexecutor.cpp"
   "ui/hotkeysform.cpp"
   "ui/tabhotkeys.cpp"
   "ui/tabmacros.cpp"
-  # Phase 4a: the agent tabs, skills and display (§2.3/§2.8/§2.9, §7 items 1-3)
   "core/dressagent.cpp"
   "core/shopagent.cpp"
   "ui/tabdress.cpp"
@@ -32,8 +29,6 @@ set(XUOASSIST_SRCS
   "ui/tabshop.cpp"
   "ui/tabskills.cpp"
   "ui/tabdisplay.cpp"
-  # Phase 4b: the script runtime (QuickJS-ng vendored under script/quickjs,
-  # see script/quickjs/VENDOR.md), the Scripts tab and the script editor
   "script/commandqueue.cpp"
   "script/journal.cpp"
   "script/engine.cpp"
@@ -46,23 +41,18 @@ set(XUOASSIST_SRCS
   "ui/editor.cpp"
   "ui/scripteditor.cpp"
   "ui/tabscripts.cpp"
-  # Phase 5: the map window (radar/overlays/context menu + settings form),
-  # the object inspector, the About tab and the text dialog (§7 items 1-4)
   "managers/assmap.cpp"
   "ui/mapwindow.cpp"
   "ui/mapsettings.cpp"
   "ui/inspector.cpp"
   "ui/tababout.cpp"
   "ui/textdialog.cpp"
-  # Phase 1a: Qt-free foundation ported from xuoassist (plan §7 Phase 1 item 1)
   "core/global.cpp"
   "core/textconv.cpp"
   "core/textparser.cpp"
   "core/assistantevents.cpp"
   "core/packets.cpp"
-  # Phase 1b: packet pipeline (plan §7 Phase 1 items 2/4)
   "managers/packetmanager.cpp"
-  # Phase 1c: assistant core (plan §7 Phase 1 items 5/6)
   "core/assist.cpp"
   "core/target.cpp"
   "core/textcommandmanager.cpp"
@@ -127,7 +117,9 @@ set_source_files_properties(
 # the define lives on this target for its own sources (mirrors the launcher's
 # target-scoped define on crossuo) and on crossuo for the hook call sites
 target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)
-# linked into the shared libcrossuo.so, so it needs position independent code
+# linked into the client binary (the shared libcrossuo.so of the
+# XUO_ASSISTANT=OFF layout, or the single-executable assistant build),
+# so it needs position independent code either way
 set_property(TARGET xuoassist PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 add_dependencies(xuoassist ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT})

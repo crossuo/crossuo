@@ -57,4 +57,26 @@ CDisplayItem::CDisplayItem(const CDisplayItem &obj)
 {
 }
 
+CDisplayItem &CDisplayItem::operator=(const CDisplayItem &obj)
+{
+    if (this != &obj)
+    {
+        m_Type = obj.m_Type;
+        m_Text = obj.m_Text;
+        m_Graphic = obj.m_Graphic;
+        m_Hue = obj.m_Hue;
+        m_MinColor = obj.m_MinColor;
+        m_MidColor = obj.m_MidColor;
+        m_Color = obj.m_Color;
+        m_Background = obj.m_Background;
+        m_BackgroundMinColor = obj.m_BackgroundMinColor;
+        m_BackgroundMidColor = obj.m_BackgroundMidColor;
+        m_BackgroundColor = obj.m_BackgroundColor;
+        m_MinValue = obj.m_MinValue;
+        m_MidValue = obj.m_MidValue;
+        m_Percents = obj.m_Percents;
+    }
+    return *this;
+}
+
 } // namespace xuoassist

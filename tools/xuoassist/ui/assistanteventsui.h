@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_UI_ASSISTANTEVENTSUI_H
-#define XUOASSIST_UI_ASSISTANTEVENTSUI_H
+#pragma once
 
 // The Phase 2 UI events consumer (plan §7 Phase 2, item 6): a
 // CAssistantEvents subclass installed into g_AssistantEvents that feeds the
@@ -106,4 +105,3 @@ void JournalPane_Draw(float height);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_ASSISTANTEVENTSUI_H

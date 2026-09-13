@@ -32,7 +32,7 @@ CGameItem *CGameItem::FindItem(const ushort &graphic, const ushort &color)
 {
     CGameItem *item = nullptr;
 
-    if (color == 0xFFFF) // Поиск по минимальному цвету
+    if (color == 0xFFFF) // Search by the minimal color
     {
         uint16_t minColor = 0xFFFF;
 
@@ -59,7 +59,7 @@ CGameItem *CGameItem::FindItem(const ushort &graphic, const ushort &color)
             }
         }
     }
-    else // стандартный поиск
+    else // regular search
     {
         QFOR(obj, m_Items, CGameItem *)
         {

@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (gameobjects/gameworld.h): WORLD_MAP unchanged
 // (std::map), the serial-graph semantics are kept exactly.
 
-#ifndef XUOASSIST_GAMEWORLD_H
-#define XUOASSIST_GAMEWORLD_H
+#pragma once
 
 #include "gameobject.h"
 #include "gameitem.h"
@@ -16,19 +15,19 @@ namespace xuoassist {
 
 typedef std::map<uint, CGameObject *> WORLD_MAP;
 
-//! Класс игрового мира
+//! Game world class
 class CGameWorld
 {
 private:
     /*!
-	Создать игрока
-	@param [__in] serial Серийник игрока
+	Create the player
+	@param [__in] serial Player serial
 	@return
 	*/
     void CreatePlayer(const uint &serial);
 
     /*!
-	Удалить игрока
+	Remove the player
 	@return
 	*/
     void RemovePlayer();
@@ -37,10 +36,10 @@ public:
     CGameWorld(const uint &serial);
     ~CGameWorld();
 
-    //! Предметы в памяти
+    //! Items in memory
     WORLD_MAP m_Map;
 
-    //! Предметы в мире
+    //! Items in the world
     CGameObject *m_Items;
 
     void IgnoreReset();
@@ -48,72 +47,72 @@ public:
     void RemoveRangedObjects();
 
     /*!
-	Установить текущего чара с указанным серийником как основного
-	@param [__in] serial Серийник нового игрока
+	Make the character with the given serial the current player
+	@param [__in] serial Serial of the new player
 	@return
 	*/
     void SetPlayer(const uint &serial);
 
     /*!
-	Создать (или взять, если уже существует) игровой предмет
-	@param [__in] serial Серийник предмета
-	@return Ссылка на предмет
+	Create (or fetch, if it already exists) a game item
+	@param [__in] serial Item serial
+	@return Pointer to the item
 	*/
     CGameItem *GetWorldItem(const uint &serial);
 
     /*!
-	Создать (или взять, если уже существует) игрового персонажа
-	@param [__in] serial Серийник персонажа
-	@return Ссылка на персонажа
+	Create (or fetch, if it already exists) a game character
+	@param [__in] serial Character serial
+	@return Pointer to the character
 	*/
     CGameCharacter *GetWorldCharacter(const uint &serial);
 
     /*!
-	Найти игровой объект в памяти
-	@param [__in] serial Серийник объекта
-	@return Ссылка на объект или nullptr
+	Find a game object in memory
+	@param [__in] serial Object serial
+	@return Pointer to the object or nullptr
 	*/
     CGameObject *FindWorldObject(const uint &serial);
 
     /*!
-	Найти игровой предмет в памяти
-	@param [__in] serial Серийник предмета
-	@return Ссылка на предмет или nullptr
+	Find a game item in memory
+	@param [__in] serial Item serial
+	@return Pointer to the item or nullptr
 	*/
     CGameItem *FindWorldItem(const uint &serial);
 
     /*!
-	Найти игрового персонажа в памяти
-	@param [__in] serial Серийник персонажа
-	@return Ссылка а персонажа или nullptr
+	Find a game character in memory
+	@param [__in] serial Character serial
+	@return Pointer to the character or nullptr
 	*/
     CGameCharacter *FindWorldCharacter(const uint &serial);
 
     /*!
-	Удалить объект из памяти
-	@param [__in] obj Ссылка на объект
+	Remove an object from memory
+	@param [__in] obj Pointer to the object
 	@return
 	*/
     void RemoveObject(CGameObject *obj);
 
     /*!
-	Вынуть объект из контейнера
-	@param [__in] obj Ссылка на объект
+	Take an object out of its container
+	@param [__in] obj Pointer to the object
 	@return
 	*/
     void RemoveFromContainer(CGameObject *obj);
 
     /*!
-	Очистить указанный контейнер
-	@param [__in] obj Ссылка на объект (контейнер)
+	Empty the given container
+	@param [__in] obj Pointer to the object (container)
 	@return
 	*/
     void ClearContainer(CGameObject *obj);
 
     /*!
-	Положить в контейнер
-	@param [__in] obj Ссылка на объект
-	@param [__in] containerSerial Серийник контейнера
+	Put an object into a container
+	@param [__in] obj Pointer to the object
+	@param [__in] containerSerial Container serial
 	@return
 	*/
     void PutContainer(CGameObject *obj, const uint &containerSerial)
@@ -124,18 +123,18 @@ public:
     }
 
     /*!
-	Положить в контейнер
-	@param [__in] obj Ссылка на объект
-	@param [__in] container Ссылка на контейнер
+	Put an object into a container
+	@param [__in] obj Pointer to the object
+	@param [__in] container Pointer to the container
 	@return
 	*/
     void PutContainer(CGameObject *obj, CGameObject *container);
 
     /*!
-	Одеть предмет
-	@param [__in] obj Ссылка на предмет
-	@param [__in] containerSerial Серийник контейнера
-	@param [__in] layer Слой, в который одеть предмет
+	Equip an item
+	@param [__in] obj Pointer to the item
+	@param [__in] containerSerial Container serial
+	@param [__in] layer Layer to equip the item in
 	@return
 	*/
     void PutEquipment(CGameItem *obj, const uint &containerSerial, const int &layer)
@@ -146,10 +145,10 @@ public:
     }
 
     /*!
-	Одеть предмет
-	@param [__in] obj Ссылка на объект
-	@param [__in] container Ссылка на контейнер
-	@param [__in] layer Слой, в который одеть предмет
+	Equip an item
+	@param [__in] obj Pointer to the object
+	@param [__in] container Pointer to the container
+	@param [__in] layer Layer to equip the item in
 	@return
 	*/
     void PutEquipment(CGameItem *obj, CGameObject *container, const int &layer)
@@ -159,8 +158,8 @@ public:
     }
 
     /*!
-	Поднять объект вверх в очереди
-	@param [__in] obj Ссылка на объект
+	Move an object to the front of the queue
+	@param [__in] obj Pointer to the object
 	@return
 	*/
     void MoveToTop(CGameObject *obj);
@@ -205,17 +204,16 @@ public:
     ushort FixColor(const ushort &color, const ushort &defaultColor);
 
     /*!
-	Дамп предметов, хранящихся в памяти
-	@param [__in] nCount Количество отступов
-	@param [__in_opt] serial Серийник родителя
+	Dump the items kept in memory
+	@param [__in] nCount Indentation count
+	@param [__in_opt] serial Parent serial
 	@return
 	*/
     void Dump(uchar nCount = 0, uint serial = 0xFFFFFFFF);
 };
 
-//! Указатель на мир
+//! Pointer to the world
 extern CGameWorld *g_World;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GAMEWORLD_H

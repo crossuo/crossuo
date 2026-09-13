@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_UI_SCRIPTMENU_H
-#define XUOASSIST_UI_SCRIPTMENU_H
+#pragma once
 
 // The script editor command-insert menu (was the ~25-submenu context menu of
 // CScriptPlainTextEdit::onCustomContextMenuRequested, gui/
@@ -29,4 +28,3 @@ bool ScriptMenu_Draw(const char *popupId, string &inserted);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_SCRIPTMENU_H

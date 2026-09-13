@@ -21,7 +21,7 @@
 #include "stb_image.h"
 
 #include "../core/global.h"
-#include "widgets.h"
+#include "widgets.h" // DOCS_URL
 
 #if defined(XUO_ASSISTANT)
 
@@ -95,7 +95,7 @@ bool LinkButton(const char *label)
         }
         else if (strcmp(label, "Docs") == 0)
         {
-            OpenLink("https://crossuo.com/book/scripting/scripting.html");
+            OpenLink(DOCS_URL);
         }
     }
     return pressed;
@@ -137,7 +137,6 @@ void TabAbout_Draw()
 
     // the static QTextBrowser block (tababout.ui, links disabled)
     ImGui::TextWrapped("Developed by CrossUO Team");
-    ImGui::TextWrapped("Based on Orion Assistant from Hotride");
 }
 
 } // namespace xuoassist

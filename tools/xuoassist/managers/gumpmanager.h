@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/gumpmanager.h), Qt-diet
 // (QList -> std::vector, QString -> std::string).
 
-#ifndef XUOASSIST_GUMPMANAGER_H
-#define XUOASSIST_GUMPMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include "model/commonitems/gump.h"
@@ -56,4 +55,3 @@ extern CGumpManager g_GumpManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GUMPMANAGER_H

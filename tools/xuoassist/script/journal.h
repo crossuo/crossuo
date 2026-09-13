@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_SCRIPT_JOURNAL_H
-#define XUOASSIST_SCRIPT_JOURNAL_H
+#pragma once
 
 // The script-visible journal mirror (was managers/journalmanager.* in the Qt
 // app feeding CScriptEngine::InJournal/WaitJournal/ClearJournal). The Qt
@@ -54,4 +53,3 @@ bool ScriptJournal_RemoveAt(int index);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SCRIPT_JOURNAL_H

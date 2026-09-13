@@ -8,8 +8,7 @@
 // is dropped; the host bridge function pointers stay and get wired to client
 // internals by the packet-manager round.
 
-#ifndef XUOASSIST_GLOBAL_H
-#define XUOASSIST_GLOBAL_H
+#pragma once
 
 #include <stdint.h>
 #include <assert.h>
@@ -832,4 +831,3 @@ template <typename T, typename U> static inline T checked_cast(U *value)
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GLOBAL_H

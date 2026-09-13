@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (commonitems/displayitem.h): QString -> std::string.
 
-#ifndef XUOASSIST_DISPLAYITEM_H
-#define XUOASSIST_DISPLAYITEM_H
+#pragma once
 
 #include "core/global.h"
 
@@ -92,9 +91,11 @@ public:
         int midValue,
         bool percents);
     CDisplayItem(const CDisplayItem &obj);
+    // rule of three: the copy ctor is user-declared, so the implicit copy
+    // assignment is deprecated (gcc -Wdeprecated-copy at every m_Item = ...)
+    CDisplayItem &operator=(const CDisplayItem &obj);
     ~CDisplayItem() {}
 };
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_DISPLAYITEM_H

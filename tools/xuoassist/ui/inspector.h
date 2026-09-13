@@ -27,8 +27,7 @@
 // caches that art in its own render tree and there is no cheap in-process
 // pixel handoff (plan §5.6 leaves art-to-ImGui a separate round).
 
-#ifndef XUOASSIST_UI_INSPECTOR_H
-#define XUOASSIST_UI_INSPECTOR_H
+#pragma once
 
 #include "../core/global.h" // uint/typedefs
 
@@ -54,4 +53,3 @@ void Inspector_Shutdown();
 } // namespace xuoassist
 
 #endif // XUO_ASSISTANT
-#endif // XUOASSIST_UI_INSPECTOR_H

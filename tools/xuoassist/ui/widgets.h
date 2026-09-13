@@ -19,8 +19,7 @@
 // through a frame-static buffer, the inline rename buffer is a fixed 128
 // bytes shared by all lists (one row edits at a time).
 
-#ifndef XUOASSIST_UI_WIDGETS_H
-#define XUOASSIST_UI_WIDGETS_H
+#pragma once
 
 #include <external/gfx/imgui/imgui.h>
 #include <stdint.h>
@@ -32,6 +31,18 @@
 #include "../model/commonitems/ignoreitem.h"
 
 namespace xuoassist {
+
+// --- shared links -------------------------------------------------------------
+// the assistant scripting docs page: the About tab "Docs" button and the
+// Scripts tab "Script examples" link both open this URL through
+// ::Platform::OpenBrowser (the Qt command link opened the ScriptLibrary
+// collection - the docs page hosts the examples now)
+extern const char *const DOCS_URL;
+
+// opens a URL in the system browser (::Platform::OpenBrowser) - the shared
+// launcher so tab TUs do not have to include src/Platform.h (its SDL event
+// typedefs collide with xuocore/plugininterface.h when included late)
+void OpenURL(const char *url);
 
 // --- icon atlas (tools/xuoassist/assets/*.png, 32x32 cells) -----------------
 enum XA_ICON
@@ -265,4 +276,3 @@ void StatusBar_Draw(uint32_t sessionStartTicks);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_UI_WIDGETS_H

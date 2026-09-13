@@ -23,8 +23,7 @@
 // item delays exactly like the Qt code) are included; script bodies are not
 // part of the executor.
 
-#ifndef XUOASSIST_MACROS_MACROEXECUTOR_H
-#define XUOASSIST_MACROS_MACROEXECUTOR_H
+#pragma once
 
 #include "macro.h"
 
@@ -111,4 +110,3 @@ extern CMacroExecutor g_MacroExecutor;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_MACROS_MACROEXECUTOR_H

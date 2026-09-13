@@ -3,19 +3,18 @@
 
 // Ported from X:UO Assist (gameobjects/gameitem.h); quint64 -> uint64_t.
 
-#ifndef XUOASSIST_GAMEITEM_H
-#define XUOASSIST_GAMEITEM_H
+#pragma once
 
 #include "gameobject.h"
 
 namespace xuoassist {
 
-//! Класс игрового предмета (или трупа)
+//! Game item class (or corpse)
 class CGameItem : public CGameObject
 {
-    //! Слой, в котором расположен объект
+    //! Layer the object is placed in
     SETGET(uchar, Layer, 0)
-    //! Это прокси-объект мульти
+    //! This is a multi proxy object
     SETGET(bool, MultiBody, false)
 
     SETGET(uint, Price, 0)
@@ -33,4 +32,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_GAMEITEM_H

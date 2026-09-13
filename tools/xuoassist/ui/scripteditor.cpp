@@ -196,6 +196,16 @@ void save_path(const string &path)
 
 void ScriptEditorWindow_Draw(bool *open)
 {
+    // the X button only FLIPS the flag (ImGui p_open reports the click, it
+    // does not hide anything): the window stays closed until the Scripts tab
+    // "Open editor" button sets the flag again. The buffer is
+    // shared with the script runtime, so content survives close/reopen
+    // (the Qt dialog had no closeEvent override either: plain hide).
+    if (open == nullptr || !*open)
+    {
+        return;
+    }
+
     if (!s_PendingOpenPath.empty())
     {
         open_path(s_PendingOpenPath);

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_SCRIPT_ENGINE_H
-#define XUOASSIST_SCRIPT_ENGINE_H
+#pragma once
 
 // The QuickJS-ng runtime wrapper (was the QScriptEngine usage inside
 // CScriptHandle::RunEngine, scripthandle.cpp:120-180): one JSRuntime + one
@@ -50,7 +49,7 @@ public:
 
     bool IsValid() const { return m_Context != nullptr; }
 
-    // Registers the runtime API (Player/Client/Orion/TextWindow/SelectedTile
+    // Registers the runtime API (Player/Client/TextWindow/SelectedTile
     // objects, the sentinel globals, ScriptName). Called by the ctor; kept
     // separate for clarity of the failure path.
     bool Setup(const string &scriptName);
@@ -91,4 +90,3 @@ private:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_SCRIPT_ENGINE_H

@@ -5,8 +5,7 @@
 // QFOR/BQFOR are guarded because the client's src/BaseQueue.h defines the same
 // (identical) macros; identical redefinitions are legal either way.
 
-#ifndef XUOASSIST_BASEQUEUE_H
-#define XUOASSIST_BASEQUEUE_H
+#pragma once
 
 namespace xuoassist {
 
@@ -54,4 +53,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_BASEQUEUE_H

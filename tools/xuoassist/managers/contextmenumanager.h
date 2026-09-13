@@ -3,8 +3,7 @@
 
 // Ported from X:UO Assist (managers/contextmenumanager.h), Qt-diet.
 
-#ifndef XUOASSIST_CONTEXTMENUMANAGER_H
-#define XUOASSIST_CONTEXTMENUMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include "model/datareader.h"
@@ -34,4 +33,3 @@ extern CContextMenuManager g_ContextMenuManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_CONTEXTMENUMANAGER_H

@@ -7,8 +7,7 @@
 // version (Config::ClientVersion, validated from the exe at startup and sent
 // in the 0xBD handshake) is the authoritative source.
 
-#ifndef XUOASSIST_CLIENTVERSION_H
-#define XUOASSIST_CLIENTVERSION_H
+#pragma once
 
 #include <xuocore/enumlist.h>
 #include "Config.h" // ::g_Config
@@ -22,4 +21,3 @@ inline CLIENT_VERSION GetClientVersion()
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_CLIENTVERSION_H

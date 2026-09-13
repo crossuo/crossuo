@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/menumanager.h), Qt-diet
 // (QList -> std::vector, QString -> std::string).
 
-#ifndef XUOASSIST_MENUMANAGER_H
-#define XUOASSIST_MENUMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include "model/commonitems/menu.h"
@@ -72,4 +71,3 @@ extern CMenuManager g_MenuManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_MENUMANAGER_H

@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (commonitems/finditem.h): QString -> std::string,
 // QStringList -> std::vector<std::string>, QVector<ushort> -> std::vector<ushort>.
 
-#ifndef XUOASSIST_FINDITEM_H
-#define XUOASSIST_FINDITEM_H
+#pragma once
 
 #include "core/global.h"
 
@@ -48,4 +47,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_FINDITEM_H

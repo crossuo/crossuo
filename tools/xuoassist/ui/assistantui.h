@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#ifndef XUOASSIST_ASSISTANTUI_H
-#define XUOASSIST_ASSISTANTUI_H
+#pragma once
 
 // Internal helper shared by AssistantWindow.cpp (lifecycle) and the ui/ tab
 // implementations; not part of the client-facing API.
@@ -143,4 +142,3 @@ void TabDisplay_CancelPendingFromTargets();
 } // namespace xuoassist
 
 #endif // XUO_ASSISTANT
-#endif // XUOASSIST_ASSISTANTUI_H

@@ -7,8 +7,7 @@
 // methods and the config-module list lookups (SeekObject/SeekType) both
 // resolve to these.
 
-#ifndef XUOASSIST_TEXTCONV_H
-#define XUOASSIST_TEXTCONV_H
+#pragma once
 
 #include <stdint.h>
 #include <string>
@@ -26,4 +25,3 @@ std::string GraphicToText(const ushort &value);
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_TEXTCONV_H

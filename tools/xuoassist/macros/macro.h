@@ -7,8 +7,7 @@
 // names and value formatting). The executor stays with the Phase 3 UI
 // (master plan: port the MODEL this round).
 
-#ifndef XUOASSIST_MACROS_MACRO_H
-#define XUOASSIST_MACROS_MACRO_H
+#pragma once
 
 #include "core/global.h"
 #include "config/xml.h"
@@ -343,4 +342,3 @@ public:
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_MACROS_MACRO_H

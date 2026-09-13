@@ -4,8 +4,7 @@
 // Ported from X:UO Assist (managers/partymanager.h), Qt-diet
 // (QString -> std::string).
 
-#ifndef XUOASSIST_PARTYMANAGER_H
-#define XUOASSIST_PARTYMANAGER_H
+#pragma once
 
 #include "core/global.h"
 #include "model/datareader.h"
@@ -23,31 +22,31 @@ struct PARTY_MEMBER_INFO
 
 class CPartyManager
 {
-    //Серийник лидера пати
+    // Serial of the party leader
     SETGET(uint, Leader, 0)
-    //Серийник пригласившего в пати
+    // Serial of whoever invited us to the party
     SETGET(uint, Inviter, 0)
-    //Может ли группа лутать труп игрока
+    // Whether the party can loot a player corpse
     SETGET(bool, CanLoot, false)
 
 public:
     CPartyManager();
 
-    //Члены группы
+    // Party members
     uint Member[10];
     PARTY_MEMBER_INFO m_MemberInfo[10];
 
-    //Обработка пакетов пати
+    // Party packet handling
     bool OnPacketReceived(CDataReader &reader);
 
-    //Содержит ли пати игрока с данным серийником
+    // Whether the player's party contains the given serial
     bool Contains(const uint &serial);
 
     void SaveMemberInfo(class CGameCharacter *obj);
 
     void SetMemberInfo(const PARTY_MEMBER_INFO &info);
 
-    //Очистить пати
+    // Clear the party
     void Clear();
 };
 
@@ -55,4 +54,3 @@ extern CPartyManager g_PartyManager;
 
 } // namespace xuoassist
 
-#endif // XUOASSIST_PARTYMANAGER_H
