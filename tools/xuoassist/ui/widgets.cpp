@@ -72,7 +72,7 @@ static ImTextureData *s_Atlas = nullptr;
 static ImVec2 s_UV0[XA_ICON_COUNT];
 static ImVec2 s_UV1[XA_ICON_COUNT];
 
-static fs_path icon_asset_path(const char *file)
+fs_path IconAssetPath(const char *file)
 {
     // dev builds run from the binary dir (assets copied there by CMake);
     // installs keep them next to the exe
@@ -117,7 +117,7 @@ bool Icons_Init()
         const int cy = (icon / cols) * cell;
 
         int w = 0, h = 0, comp = 0;
-        const fs_path path = icon_asset_path(s_IconFiles[icon].File);
+        const fs_path path = IconAssetPath(s_IconFiles[icon].File);
         stbi_uc *data = stbi_load(fs_path_ascii(path), &w, &h, &comp, 4);
         if (data == nullptr)
         {
@@ -257,6 +257,20 @@ bool IconButton(XA_ICON icon, const char *tip, bool enabled, float size, const c
         ImGui::SetTooltip("%s", tip);
     }
     return pressed;
+}
+
+// Draws an atlas icon at an explicit draw-list rectangle (no button chrome).
+// Used by canvas-style widgets (the map corpse marker); initializes the atlas
+// like IconButton does.
+void IconImage(XA_ICON icon, const ImVec2 &topLeft, const ImVec2 &size)
+{
+    if ((s_Atlas == nullptr && !Icons_Init()) || ImGui::GetCurrentContext() == nullptr)
+    {
+        return;
+    }
+    ImGui::GetWindowDrawList()->AddImage(
+        atlas_texture(), topLeft, ImVec2(topLeft.x + size.x, topLeft.y + size.y), s_UV0[icon],
+        s_UV1[icon]);
 }
 
 // --- color helpers ----------------------------------------------------------

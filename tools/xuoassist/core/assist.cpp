@@ -264,7 +264,6 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
 
     if (g_AssistantConfig.ObjectInspector())
     {
-        // PORT-TODO(phase-2): g_ObjectInspectorForm->Update(obj);
         g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
         return;
     }
@@ -938,8 +937,7 @@ void CAssistant::Track(const bool &state, short x, short y)
         CPacketQuestArrowOld(state, x, y).SendClient();
     }
 
-    // Was g_UOMapManager.UOAMnotifyTrack(state, x, y);
-    // PORT-TODO(phase-5): map-window/UOAM tracker notify.
+    g_AssistantEvents->OnTrack(state, x, y);
 }
 
 void CAssistant::HandleTargetType(uchar *buf)

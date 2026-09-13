@@ -36,6 +36,10 @@
 #include "../script/scripthandle.h"
 #include "scripteditor.h"
 #include "tabscripts.h"
+#include "mapwindow.h"
+#include "inspector.h"
+#include "textdialog.h"
+#include "../managers/assmap.h"
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (journal gating)
 
 #include <revision.h> // PRODUCT_VERSION_STR (generated into the build dir)
@@ -78,16 +82,16 @@ const char *const LIST_TABS[] = { "Types", "Objects", "Find", "Ignore", "Friends
 const char *const FILTER_TABS[] = { "Speech", "Replaces", "Sound" };
 // which phase delivers the remaining tabs (§7)
 const char *const PLACEHOLDER_PHASE[] = {
-    "",       // Main
-    "",       // Display (phase 4a)
-    "",       // Lists
-    "",       // Hotkeys (phase 3)
-    "",       // Macros (phase 3)
-    "",       // Scripts (phase 4b round 1)
-    "",       // Agents (nested: Dress/Party/Shop, phase 4a)
-    "",       // Skills (phase 4a)
-    "",       // Filters
-    "5",      // About
+    "",  // Main
+    "",  // Display (phase 4a)
+    "",  // Lists
+    "",  // Hotkeys (phase 3)
+    "",  // Macros (phase 3)
+    "",  // Scripts (phase 4b round 1)
+    "",  // Agents (nested: Dress/Party/Shop, phase 4a)
+    "",  // Skills (phase 4a)
+    "",  // Filters
+    "",  // About (phase 5)
 };
 
 bool s_Initialized = false;
@@ -289,6 +293,9 @@ void AssistantUI_Init()
     // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData,
     // assistform.cpp:463) and paint the initial caption
     AssistantUI_RecompileDisplayTitle();
+    // the map settings (was the Qt app init order: CMapSettings::Load ran
+    // once at startup, mapsettingsform.cpp:72)
+    g_MapSettings.Load();
     Info(Assistant, "assistant UI installed");
 }
 
@@ -335,6 +342,13 @@ void AssistantUI_Shutdown()
     // Targets): otherwise the stale g_TargetHandler would swallow the first
     // legit 0x6C after a re-init
     CancelPendingFromTargets();
+    // the phase 5 windows: persist the map settings + geometry (delta: the
+    // Qt app only wrote Map.xml on the settings form Apply) and clear the
+    // inspector/text-dialog state
+    MapWindow_Shutdown();
+    Inspector_Shutdown();
+    TextDialog_Shutdown();
+    g_MapSettings.Save();
     // stop the agents (was the Qt app tearing down the tab widgets + dialogs)
     g_DressAgent.Abort();
     g_ShopAgent.Reset();
@@ -352,10 +366,21 @@ void AssistantUI_Shutdown()
         s_PreviousEvents = nullptr;
         s_Initialized = false;
     }
-    // NOTE: the icon atlas is NOT released here: its texture must stay
-    // registered until the ImGui backend shut it down (GL release), and the
-    // CPU pixels are freed after DestroyContext - both handled by
-    // AssistantWindow_Shutdown right after ui_shutdown.
+    // NOTE: the UI-owned textures (icon atlas, map radar, About logo) are NOT
+    // released here: they must stay registered until the ImGui backend shuts
+    // them down (GL release), and the CPU pixels are freed after
+    // DestroyContext - both handled by AssistantWindow_Shutdown right after
+    // ui_shutdown via AssistantUI_AfterImGuiShutdown.
+}
+
+void AssistantUI_AfterImGuiShutdown()
+{
+    // called right after ui_shutdown (the ImGui context is gone): free the
+    // CPU-side pixels of the UI-owned textures; their GL names were reclaimed
+    // by the backend teardown inside ui_shutdown (RefCount still 1)
+    Icons_Shutdown();
+    AssMap_AfterImGuiShutdown();
+    TabAbout_AfterImGuiShutdown();
 }
 
 int AssistantUI_ReconnectSecondsLeft()
@@ -528,6 +553,9 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
                 case MT_SKILLS:
                     TabSkills_Draw();
                     break;
+                case MT_ABOUT:
+                    TabAbout_Draw();
+                    break;
                 default:
                     draw_placeholder(MAIN_TABS[i], PLACEHOLDER_PHASE[i]);
                     break;
@@ -565,6 +593,13 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     // draw pass, so it hides with the assistant shell (the lines stay; the
     // packet handlers keep running - only the pixels are gated)
     ScriptTextWindow_Draw();
+    // the phase 5 windows: the Map (radar + overlays + context menu), its
+    // settings form, the Object Inspector sections and the Text Dialog -
+    // each gated by its own open flag, viewport-safe like the shell
+    MapWindow_Draw(&g_AssistantMapOpen);
+    MapSettings_Draw();
+    InspectorWindow_Draw();
+    TextDialog_Draw();
 }
 
 } // namespace xuoassist

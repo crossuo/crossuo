@@ -53,9 +53,25 @@ void AssistantUI_ClearOptionsDirty();
 // (assistform.cpp:463); called at init and after a profile switch.
 void AssistantUI_RecompileDisplayTitle();
 
+// The post-shutdown half of the texture lifecycle (runs from
+// AssistantWindow.cpp right AFTER ui_shutdown/DestroyContext): frees the CPU
+// pixels of the UI-owned textures (icon atlas, map radar, About logo) whose
+// GL names the backend teardown reclaimed while the context was alive.
+void AssistantUI_AfterImGuiShutdown();
+
 // The script editor window visibility (the Scripts tab "Open editor" button
 // flips it; the shell draws the window while the assistant is visible).
 extern bool g_AssistantScriptEditorOpen;
+
+// --- phase 5 windows ----------------------------------------------------------
+// The Map window + its settings form (ui/mapwindow.cpp), the Object Inspector
+// (ui/inspector.cpp) and the Text Dialog (ui/textdialog.cpp): dockable/poppable
+// ImGui windows drawn by the shell while the assistant is visible, gated by
+// their own open flags (MapWindow_Open / Inspector_Open / TextDialog_Open).
+void TabAbout_Draw();
+// The About logo CPU-pixels release (the Phase 2 atlas ordering rule): runs
+// from AssistantUI_AfterImGuiShutdown right after the context is gone.
+void TabAbout_AfterImGuiShutdown();
 
 // --- tab pages (ui/tabmain.cpp, ui/tablists.cpp, ui/tabfilters.cpp) ---------
 void TabMain_Draw();

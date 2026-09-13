@@ -16,9 +16,13 @@
 #include "widgets.h"
 #include "../core/actions.h"
 #include "../macros/macroexecutor.h"
+#include "../managers/partymanager.h"
+#include "../managers/guildmanager.h"
 #include "../script/journal.h" // the script journal mirror feed
 #include "../script/scriptstate.h" // the script buff mirror feed
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (mirror)
+#include "mapwindow.h"
+#include "inspector.h"
 
 namespace xuoassist {
 
@@ -130,6 +134,67 @@ void CAssistantUIEvents::OnTitleRedraw(uint serial)
     // CanRedraw(graphic, color) before redrawing (packetmanager.cpp:1457)
     (void)serial;
     TabDisplay_RequestTitleRedraw();
+}
+
+// --- phase 5 ------------------------------------------------------------------
+
+void CAssistantUIEvents::OnMapUpdate(uint serial)
+{
+    // was g_Map->CheckForUpdate(serial): the overlays are recomputed from the
+    // mirror per frame; the window records the dirtiness
+    (void)serial;
+    MapWindow_OnMapUpdate();
+}
+
+void CAssistantUIEvents::OnMapRedraw()
+{
+    // was g_Map->SetWantRedraw(true)
+    MapWindow_OnMapRedraw();
+}
+
+void CAssistantUIEvents::OnMapOpenRequest()
+{
+    // was g_TabMain->OpenMap (OIPMT_OPEN_MAP / ShowOnLogin / the hotkey
+    // launcher)
+    MapWindow_Open();
+}
+
+void CAssistantUIEvents::OnTrack(bool state, int x, int y)
+{
+    // was g_UOMapManager.UOAMnotifyTrack -> the external UOAM app; the
+    // assistant map draws the point itself now (documented deviation)
+    MapWindow_OnTrack(state, x, y);
+}
+
+void CAssistantUIEvents::OnInspectorUpdate(uint serial)
+{
+    // was g_ObjectInspectorForm->CheckUpdate/Update (DumpObjectInfo, the
+    // mirror pokes and the status-item updates)
+    Inspector_OnInspectorUpdate(serial);
+}
+
+void CAssistantUIEvents::OnPartyMemberInfo(const XA_PARTY_MEMBER_INFO &info)
+{
+    // the Krrios packet positions the map window draws for mirror-less
+    // members (Qt stored them straight into g_PartyManager.m_MemberInfo)
+    PARTY_MEMBER_INFO stored;
+    stored.Serial = info.Serial;
+    stored.X = info.X;
+    stored.Y = info.Y;
+    stored.Map = info.Map;
+    stored.Name = info.Name;
+    g_PartyManager.SetMemberInfo(stored);
+}
+
+void CAssistantUIEvents::OnGuildMemberInfo(const XA_GUILD_MEMBER_INFO &info)
+{
+    GUILD_MEMBER_INFO stored;
+    stored.Serial = info.Serial;
+    stored.X = info.X;
+    stored.Y = info.Y;
+    stored.Map = info.Map;
+    stored.Name = info.Name;
+    g_GuildManager.SetMemberInfo(stored);
 }
 
 void JournalPane_Draw(float height)

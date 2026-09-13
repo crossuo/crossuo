@@ -46,6 +46,14 @@ set(XUOASSIST_SRCS
   "ui/editor.cpp"
   "ui/scripteditor.cpp"
   "ui/tabscripts.cpp"
+  # Phase 5: the map window (radar/overlays/context menu + settings form),
+  # the object inspector, the About tab and the text dialog (§7 items 1-4)
+  "managers/assmap.cpp"
+  "ui/mapwindow.cpp"
+  "ui/mapsettings.cpp"
+  "ui/inspector.cpp"
+  "ui/tababout.cpp"
+  "ui/textdialog.cpp"
   # Phase 1a: Qt-free foundation ported from xuoassist (plan §7 Phase 1 item 1)
   "core/global.cpp"
   "core/textconv.cpp"

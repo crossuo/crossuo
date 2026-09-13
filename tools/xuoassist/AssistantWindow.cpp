@@ -314,10 +314,10 @@ void AssistantWindow_Shutdown()
     // destroys the ImGui context and every platform window it created; must
     // not SDL_Quit: the client keeps running
     ui_shutdown(s_ctx);
-    // only now, with the context gone and the GL name released, may the
-    // CPU-side atlas pixels be freed (Icons_Shutdown is idempotent and only
-    // deletes the ImTextureData object)
-    xuoassist::Icons_Shutdown();
+    // only now, with the context gone and the GL names released, may the
+    // CPU-side pixels be freed (icon atlas + map radar + About logo;
+    // idempotent, deletes the ImTextureData objects)
+    xuoassist::AssistantUI_AfterImGuiShutdown();
     s_initialized = false;
     s_visible = false;
     s_ctx = ui_context();

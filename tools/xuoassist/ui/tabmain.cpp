@@ -14,6 +14,7 @@
 #include <external/gfx/imgui/imgui.h>
 
 #include "widgets.h"
+#include "mapwindow.h"
 #include "../config/assistantconfig.h"
 #include "../model/gameobjects/gameplayer.h" // g_Player
 #include "../core/assist.h"
@@ -350,10 +351,11 @@ void draw_main_page()
 
     ImGui::Separator();
 
-    // Open map (map_icon.png) - the map window lands in phase 5
-    ImGui::BeginDisabled();
-    IconButton(XA_ICON_MAP, "Open map (available in phase 5)", false);
-    ImGui::EndDisabled();
+    // Open map (map_icon.png) - the phase 5 map window
+    if (IconButton(XA_ICON_MAP, "Open map"))
+    {
+        MapWindow_Open();
+    }
 }
 
 void draw_options_page()

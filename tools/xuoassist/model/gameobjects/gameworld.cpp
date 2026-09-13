@@ -10,6 +10,7 @@
 #include "gameworld.h"
 #include "gameplayer.h"
 #include "core/global.h"
+#include "core/assistantevents.h"
 #include <common/logging/logging.h>
 
 namespace xuoassist {
@@ -505,8 +506,9 @@ void CGameWorld::UpdateGameObject(
             character->SetZ(z);
             character->SetFlags(flags);
 
-            // PORT-TODO(map): radar CheckForUpdate once the map window round
-            // ports g_Map.
+            // was g_Map->CheckForUpdate(serial) (radar): the map window round
+            // consumes it through the events seam
+            g_AssistantEvents->OnMapUpdate(serial);
         }
         else
         {
@@ -570,8 +572,11 @@ void CGameWorld::UpdateGameObject(
 
             item->SetGraphic(graphic & 0x3FFF);
 
-            // PORT-TODO(map): g_UOMapManager.UOAMnotifyHouse(x, y,
-            // obj->GetGraphic()) once uomapmanager is ported.
+            // DEVIATION (phase 5): was g_UOMapManager.UOAMnotifyHouse(x, y,
+            // graphic) - a Windows-only WM_USER notify to the EXTERNAL UO Auto
+            // Map app (the Qt build compiled it out on non-Windows too); there
+            // is no HWND message host in the in-client port. Houses appear on
+            // the map window through the live world overlays instead.
         }
         else
         {
@@ -618,13 +623,15 @@ void CGameWorld::UpdateGameObject(
             character->SetColor(FixColor(color, (color & 0x8000)));
             character->SetFlags(flags);
 
-            // PORT-TODO(map): radar CheckForUpdate once the map window round
-            // ports g_Map.
+            // was g_Map->CheckForUpdate(serial) (radar): the map window round
+            // consumes it through the events seam
+            g_AssistantEvents->OnMapUpdate(serial);
         }
     }
 
-    // PORT-TODO(inspector): g_ObjectInspectorForm->CheckUpdate(obj) once the
-    // object inspector round ports it.
+    // was g_ObjectInspectorForm->CheckUpdate(obj): the inspector round
+    // consumes it through the events seam
+    g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
 
     MoveToTop(obj);
 }
@@ -658,8 +665,10 @@ void CGameWorld::UpdatePlayer(
 
         g_Player->SetFlags(flags);
 
-        // PORT-TODO(inspector): g_ObjectInspectorForm->CheckUpdate(g_Player)
-        // and the radar SetWantRedraw poke once those modules are ported.
+        // was g_ObjectInspectorForm->CheckUpdate(g_Player) + the radar
+        // SetWantRedraw poke: consumed through the events seam
+        g_AssistantEvents->OnInspectorUpdate(g_Player->GetSerial());
+        g_AssistantEvents->OnMapRedraw();
 
         MoveToTop(g_Player);
     }
@@ -731,8 +740,9 @@ void CGameWorld::UpdateContainedItem(
     obj->SetY(y);
     PutContainer(obj, container);
 
-    // PORT-TODO(inspector): g_ObjectInspectorForm->CheckUpdate(obj) once the
-    // object inspector round ports it.
+    // was g_ObjectInspectorForm->CheckUpdate(obj): the inspector round
+    // consumes it through the events seam
+    g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
 
     MoveToTop(obj);
 

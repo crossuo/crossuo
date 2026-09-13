@@ -174,6 +174,9 @@ public:
     // --- map window (was g_Map->CheckForUpdate / SetWantRedraw) -------------
     virtual void OnMapUpdate(uint serial) { (void)serial; }
     virtual void OnMapRedraw() {}
+    // Was g_TabMain->OpenMap: the OIPMT_OPEN_MAP app packet, the MapSettings
+    // "Show on log in" flag and the hotkey launchers.
+    virtual void OnMapOpenRequest() {}
 
     // --- tracker (was CAssistant::Track; map-window round consumes) ---------
     virtual void OnTrack(bool state, int x, int y)

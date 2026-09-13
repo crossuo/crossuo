@@ -18,8 +18,7 @@
 //    PORT-TODO(phase-2) text window/inspector/map UI pokes,
 //    PORT-TODO(phase-3) macro recording + hotkey waits,
 //    PORT-TODO(phase-4b) script / journal commands (the shop agent landed
-//    in 4a via core/shopagent.h),
-//    PORT-TODO(phase-5) UOAM/map-window notifies;
+//    in 4a via core/shopagent.h);
 //  - g_ClilocManager (client) supersedes the assistant's cliloc manager and is
 //    called directly (plan §7 "What NOT to do");
 //  - the per-packet LOG/LOG_DUMP lines are dropped (the client has its own
@@ -39,6 +38,7 @@
 #include "../core/target.h"
 #include "../core/textcommandmanager.h"
 #include "../config/assistantconfig.h"
+#include "../managers/assmap.h" // g_MapSettings (ShowOnLogin)
 #include "../managers/clientmacromanager.h"
 #include "../managers/contextmenumanager.h"
 #include "../managers/corpsemanager.h"
@@ -668,8 +668,13 @@ PACKET_HANDLER(EnterWorld)
     // script run needs the script engine)
     // PORT-TODO(phase-4): g_TabScripts->RunScript("Autostart", ...) (scripts round)
     (void)runAutostart;
-    // PORT-TODO(phase-5): g_UOMapManager.UOAMEnterWorld(); (map window round)
-    // PORT-TODO(phase-5): if (g_MapSettings.GetShowOnLogin()) g_TabMain->OpenMap();
+    // DEVIATION (phase 5): g_UOMapManager.UOAMEnterWorld() was a Windows
+    // WM_USER notify to the external UO Auto Map app - no HWND host in-client.
+    if (g_MapSettings.GetShowOnLogin())
+    {
+        // was: if (g_MapSettings.GetShowOnLogin()) g_TabMain->OpenMap();
+        g_AssistantEvents->OnMapOpenRequest();
+    }
 
     // was: if (g_Map != nullptr && g_Map->isVisible()) g_Map->SetWantRedraw(true);
     g_AssistantEvents->OnMapRedraw();
@@ -699,7 +704,8 @@ PACKET_HANDLER(UpdateHitpoints)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // PORT-TODO(phase-5): g_UOMapManager.UpdateHits(); (map window round)
+        // DEVIATION (phase 5): was g_UOMapManager.UpdateHits() - an
+        // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
     // was: if (g_Map != nullptr && g_Map->isVisible()) g_Map->CheckForUpdate(serial);
@@ -730,7 +736,8 @@ PACKET_HANDLER(UpdateMana)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // PORT-TODO(phase-5): g_UOMapManager.UpdateMana(); (map window round)
+        // DEVIATION (phase 5): was g_UOMapManager.UpdateMana() - an
+        // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
     g_AssistantEvents->OnMapUpdate(obj->GetSerial());
@@ -760,7 +767,8 @@ PACKET_HANDLER(UpdateStamina)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // PORT-TODO(phase-5): g_UOMapManager.UpdateStam(); (map window round)
+        // DEVIATION (phase 5): was g_UOMapManager.UpdateStam() - an
+        // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
     g_AssistantEvents->OnMapUpdate(obj->GetSerial());
@@ -796,10 +804,8 @@ PACKET_HANDLER(MobileAttributes)
         obj->SetStam(ReadInt16BE());
 
         g_AssistantEvents->OnTitleRedraw();
-
-        // PORT-TODO(phase-5): g_UOMapManager.UpdateHits(); (map window round)
-        // PORT-TODO(phase-5): g_UOMapManager.UpdateMana(); (map window round)
-        // PORT-TODO(phase-5): g_UOMapManager.UpdateStam(); (map window round)
+        // DEVIATION (phase 5): was g_UOMapManager.UpdateHits/Mana/Stam() -
+        // external-UOAM WM_USER notifies; the client status gump carries them.
     }
 
     g_AssistantEvents->OnMapUpdate(obj->GetSerial());
@@ -979,7 +985,9 @@ PACKET_HANDLER(CharacterStatus)
             g_Player->SetArmor(ReadInt16BE());
             g_Player->SetWeight(ReadUInt16BE());
 
-            // PORT-TODO(phase-5): g_UOMapManager.UpdateHits/Mana/Stam(); (map window round)
+            // DEVIATION (phase 5): was g_UOMapManager.UpdateHits/Mana/Stam()
+            // - external-UOAM WM_USER notifies only; the client status gump
+            // already carries these values in-process.
 
             if (flag >= 5)
             {
@@ -1666,7 +1674,9 @@ PACKET_HANDLER(ClientTalkS)
         g_TextCommandManager.DoCommand(str);
         return false;
     }
-    // PORT-TODO(phase-5): str starting with '-' -> g_UOMapManager.UOAnotifyCmd
+    // DEVIATION (phase 5): a leading '-' went to g_UOMapManager.UOAnotifyCmd
+    // - the external UOA/UOAM command pipe (Windows WM_USER + atoms); there
+    // is no in-process equivalent, the command stays a normal speech line.
     // PORT-TODO(phase-3): macro recording of MT_SAY
 
     ushort replaceFontColorValue = 0;
@@ -1729,7 +1739,8 @@ PACKET_HANDLER(UnicodeClientTalk)
         g_TextCommandManager.DoCommand(str);
         return false;
     }
-    // PORT-TODO(phase-5): '-' UOA command notify
+    // DEVIATION (phase 5): the '-' UOA command notify (external UOAM command
+    // pipe) - see the ASCII branch above.
     // PORT-TODO(phase-3): macro recording of MT_SAY
 
     ushort replaceFontColorValue = 0;
@@ -2289,9 +2300,11 @@ PACKET_HANDLER(ExtendedCommandR)
 
             if (oldMap != g_CurrentMap)
             {
-                // PORT-TODO(phase-5): g_UOMapManager.UOAMnotifyLand(); (map window round)
-                // PORT-TODO(phase-5): g_FileManager.OnMapChange(); (map round; the client
-                // loads its own map diffs; the assistant's copy is not maintained)
+                // DEVIATION (phase 5): g_UOMapManager.UOAMnotifyLand() was a
+                // WM_USER notify to the external UOAM app (no host here); the
+                // map window follows g_CurrentMap for the "Current" facet.
+                // g_FileManager.OnMapChange() is superseded: the client loads
+                // and patches its own maps (g_MapManager tracks the facets).
             }
 
             break;
@@ -2404,7 +2417,10 @@ PACKET_HANDLER(ExtendedCommandR)
         }
         case 0x18: // Enable map (diff) patches
         {
-            // PORT-TODO(phase-5): g_FileManager.ApplyPatches(*this); (map round, see case 8)
+            // RESOLVED (phase 5): was g_FileManager.ApplyPatches(*this) on the
+            // Qt side after its file transfer; the client applies the patches
+            // itself in its own 0x18 handler (g_MapManager.ApplyPatches,
+            // src/Managers/PacketManager.cpp:2952) - no assistant action.
 
             break;
         }
@@ -3245,7 +3261,12 @@ PACKET_HANDLER(MapPacket)
 
         g_AssistantEvents->OnJournalMessage(message);
 
-        // PORT-TODO(phase-5): if (g_AssistantConfig.Tracker()) g_Assistant.Track(true, x, y); (map draw objects)
+        // was: if (g_AssistantConfig.Tracker()) g_Assistant.Track(true, x, y)
+        // (the assistant map draws the point now - see CAssistant::Track)
+        if (g_AssistantConfig.Tracker())
+        {
+            g_AssistantEvents->OnTrack(true, x, y);
+        }
     }
     return true;
 }
@@ -3354,7 +3375,8 @@ PACKET_HANDLER(ClientMessagesR)
             }
             case OIPMT_OPEN_MAP:
             {
-                // PORT-TODO(phase-5): g_TabMain->OpenMap(); (map window round)
+                // was g_TabMain->OpenMap(); the map window round consumes it
+                g_AssistantEvents->OnMapOpenRequest();
                 break;
             }
             default:

@@ -32,6 +32,13 @@ public:
 
     vector<GUILD_MEMBER_INFO> GetMembers();
 
+    // the live store for the map window overlay pass (GetMembers() copies;
+    // the draw path must not allocate per frame)
+    const std::unordered_map<uint, GUILD_MEMBER_INFO> &GetMembersMap() const
+    {
+        return m_GuildMembers;
+    }
+
     bool Contains(const uint &serial);
 
 private:

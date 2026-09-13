@@ -25,6 +25,8 @@
 #include <external/gfx/imgui/imgui.h>
 #include <stdint.h>
 
+#include <common/fs.h> // fs_path (IconAssetPath)
+
 #include "../core/global.h"
 #include "../model/commonitems/finditem.h"
 #include "../model/commonitems/ignoreitem.h"
@@ -61,6 +63,9 @@ bool Icons_Init();
 // must still be 1, so the atlas must NOT be unregistered before that). The
 // assistant window calls this right after ui_shutdown returns.
 void Icons_Shutdown();
+// The assets/xuoassist lookup shared by the icon atlas and the other
+// png-loading UI modules (the About logo).
+fs_path IconAssetPath(const char *file);
 
 // --- IconButton (was QImagedPushButton, imagedpushbutton.cpp:10-24) ---------
 // Flat icon button: hover rgb(192,192,192), pressed rgb(160,160,160) with the
@@ -75,6 +80,9 @@ bool IconButton(
 // --- color helpers ----------------------------------------------------------
 // 15-bit UO color -> RGBA preview (approximation: 5-bit channels x8).
 ImU32 UOColorToRGBA(ushort color);
+// Renders an atlas icon at an explicit draw-list rectangle (map corpse
+// marker); atlas lazy-init like IconButton.
+void IconImage(XA_ICON icon, const ImVec2 &topLeft, const ImVec2 &size);
 // Preview-only swatch for the 0x02B2-style hue fields (the Qt app had no RGB
 // picker for those: its '...' button sends a dye packet instead).
 void HueSwatch(ushort uoColor, float size = 18.0f);

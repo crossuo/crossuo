@@ -63,9 +63,24 @@ public:
     virtual void OnTitleRedraw() override;
     virtual void OnTitleRedraw(uint serial) override;
 
+    // --- Phase 5 consumers --------------------------------------------------
+    // The map window (was g_Map->CheckForUpdate/SetWantRedraw and the
+    // OpenMap pokes: OIPMT_OPEN_MAP, ShowOnLogin, the hotkey launcher).
+    virtual void OnMapUpdate(uint serial) override;
+    virtual void OnMapRedraw() override;
+    virtual void OnMapOpenRequest() override;
+    // The tracker point (was the external-UOAM notify; the map draws it).
+    virtual void OnTrack(bool state, int x, int y) override;
+    // The object inspector sections (was g_ObjectInspectorForm->CheckUpdate
+    // / Update from the mirror pokes and DumpObjectInfo).
+    virtual void OnInspectorUpdate(uint serial) override;
+    // The Krrios party/guild position packets (the map window markers).
+    virtual void OnPartyMemberInfo(const XA_PARTY_MEMBER_INFO &info) override;
+    virtual void OnGuildMemberInfo(const XA_GUILD_MEMBER_INFO &info) override;
+
     // The script BuffExists mirror feed (script/scriptstate.cpp; was
-    // g_BuffManager.Add/Remove). The corpse/party/guild/megacliloc/inspector
-    // events stay default-inert until their UI rounds land (phase 5).
+    // g_BuffManager.Add/Remove). OnMegaCliloc stays default-inert (the
+    // object-properties cache needs no UI round).
 
     // Ring of the last N lines (oldest first); capped, event-time copies.
     const vector<Line> &Lines() const { return m_Lines; }
