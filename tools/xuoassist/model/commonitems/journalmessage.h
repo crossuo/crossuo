@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (commonitems/journalmessage.h): Timer is a g_Ticks
-// stamp (the Qt app used g_Timer.elapsed()).
+// stamp (the original app used an elapsed-time stamp).
 
 #pragma once
 

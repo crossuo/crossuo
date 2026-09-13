@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/spellmanager.h), Qt-diet
-// (QMap -> std::map, QList<QStringList> -> vector<vector<string>>).
+// Ported from X:UO Assist (managers/spellmanager.h), trimmed
+// (maps are std::map, string lists are vector<vector<string>>).
 
 #pragma once
 

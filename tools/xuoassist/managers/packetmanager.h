@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/packetmanager.h): the full 256-entry
-// dispatch table and the handler set, decoupled from the Qt widgets (plan §4.1
+// dispatch table and the handler set, decoupled from the UI widgets (plan §4.1
 // "REUSE AS-IS (decouple UI)", §7 Phase 1 item 2). Handler names and table
 // layout are identical; every UI poke became an AssistantEvents notification
 // or, in later rounds, a direct manager/executor call; no marker remains.

@@ -8,10 +8,10 @@
 // Map::ChangeSettings semantics = g_MapSettings.Copy + Save
 // (mapsettingsform.cpp on_pb_ApplyChanges_clicked / on_pb_Close_clicked).
 //
-// Deltas (documented): the 10-entry font-style combo keeps the Qt g_MapFontStyle
+// Deltas (documented): the 10-entry font-style combo keeps the original g_MapFontStyle
 // names/indices (the persisted value stays meaningful) but renders with the
 // single assistant UI font; the "Map example" pane is not reproduced (it was
-// a static screenshot of the Qt renderer).
+// a static screenshot of the original renderer).
 
 #define LOGGER_MODULE Assistant
 
@@ -32,7 +32,7 @@ namespace {
 bool s_Open = false;
 CMapSettings s_Settings; // the working copy (was MapSettingsForm::m_Settings)
 
-constexpr int MAP_FONT_STYLES_COUNT = 10; // Qt mapsettingsform.h:30
+constexpr int MAP_FONT_STYLES_COUNT = 10; // the original mapsettingsform.h count
 const char *const FONT_STYLES[MAP_FONT_STYLES_COUNT] = { "Small 1", "Small 2", "Small 3",
                                                          "Small 4", "Small 5", "Big 1",
                                                          "Big 2",   "Big 3",   "Big 4",
@@ -72,9 +72,9 @@ bool ColorField(const char *id, uint *rgba)
     return false;
 }
 
-// one character-display group. The Qt gb_* boxes were checkable groupboxes:
+// one character-display group. The original gb_* boxes were checkable groupboxes:
 // the checkbox gates the fields (children render disabled while unchecked,
-// like the Qt groupbox disabled its children).
+// like the original groupbox disabled its children).
 void CharacterGroup(
     const char *label,
     bool *enabled,
@@ -140,7 +140,7 @@ void MapSettings_Open()
 
 void MapSettings_Shutdown()
 {
-    // was the form teardown with a pending edit: the Qt app discarded it
+    // was the form teardown with a pending edit: the original app discarded it
     s_Open = false;
 }
 
@@ -226,7 +226,7 @@ void MapSettings_Draw()
         ImGui::Indent();
         ImGui::Checkbox("Show on log in", s_Settings.ShowOnLoginPtr());
         ImGui::Checkbox("Show coordinates", s_Settings.DisplayCoordinatesPtr());
-        // the Qt dialog shipped this checkbox disabled (mapsettingsform.ui:
+        // the original dialog shipped this checkbox disabled (mapsettingsform.ui:
         // cb_SmoothImage disabled; the flag stays a stored format field)
         ImGui::BeginDisabled();
         ImGui::Checkbox("Smooth image", s_Settings.SmoothImagePtr());

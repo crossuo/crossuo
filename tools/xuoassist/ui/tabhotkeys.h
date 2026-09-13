@@ -7,7 +7,7 @@
 // (Animal/Vendor, House, Ship - assist/animalandvendorcontrolform.cpp,
 // housecontrolform.cpp, shipcontrolform.cpp).
 //
-// "Pass keys to client" semantics (the Qt consult order): a matched hotkey is
+// "Pass keys to client" semantics (the original consult order): a matched hotkey is
 // consumed by the assistant unless the checkbox is set - then the key ALSO
 // reaches the game (core/hotkeys.cpp MatchAndUse). While any assistant text
 // field has keyboard focus (io.WantTextInput) the game never sees keys -

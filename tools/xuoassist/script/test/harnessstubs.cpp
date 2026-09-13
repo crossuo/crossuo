@@ -71,7 +71,7 @@ CGump *g_HarnessGump = nullptr;
 
 uint CAssistant::TextToSerial(string text)
 {
-    // Qt parity for the tests: plain hex text
+    // Parity with the original for the tests: plain hex text
     return (uint)strtoul(text.c_str(), nullptr, 16);
 }
 string CAssistant::SerialToText(const uint &value)

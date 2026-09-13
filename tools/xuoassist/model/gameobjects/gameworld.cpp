@@ -116,7 +116,7 @@ void CGameWorld::RemoveRangedObjects()
             if (GetDistance(g_RemoveRangeXY.x(), g_RemoveRangeXY.y(), go->GetX(), go->GetY()) >
                 objectsRange)
             {
-                // was g_PartyManager.SaveMemberInfo (Qt gameworld.cpp:113):
+                // was g_PartyManager.SaveMemberInfo:
                 // refresh the map-window position of a party member that is
                 // about to leave the view range
                 if (g_PartyManager.Contains(go->GetSerial()))
@@ -533,7 +533,7 @@ void CGameWorld::UpdateGameObject(
             {
                 g_LastCorpseObject = serial;
 
-                // was the corpse auto-open bookkeeping (Qt gameworld.cpp:532):
+                // was the corpse auto-open bookkeeping:
                 // g_TabMain->CorpsesAutoopen() + g_CorpseManager.Add(...)
                 if (g_AssistantConfig.CorpsesAutoopen())
                 {
@@ -750,7 +750,7 @@ void CGameWorld::UpdateContainedItem(
 
     MoveToTop(obj);
 
-    // was g_TabDisplay->CheckRedrawTitle(obj) (Qt gameworld.cpp:790): the
+    // was g_TabDisplay->CheckRedrawTitle(obj): the
     // caption may embed counters over player-carried items
     if (obj->GetTopObject() == g_Player && g_DisplayManager.CanRedraw(obj->GetGraphic(), obj->GetColor()))
     {
@@ -787,7 +787,7 @@ Dump the items kept in memory
 */
 void CGameWorld::Dump(uchar tCount, uint serial)
 {
-    // DEVIATION: the Qt app compiled this dump out unless CLOGGER was enabled;
+    // DEVIATION: the original app compiled this dump out unless CLOGGER was enabled;
     // the client logger has no equivalent assistant world-dump channel, so
     // the function stays a no-op (the object inspector covers the same need
     // interactively).

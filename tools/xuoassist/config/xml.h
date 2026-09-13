@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Tiny self-contained XML DOM (plan §7 Phase 1 item 6 / §4.3): replaces the Qt
-// app's QXmlStreamReader/QXmlStreamWriter for the assistant's flat config
+// Tiny self-contained XML DOM (plan §7 Phase 1 item 6 / §4.3): replaces the
+// original app's XML reader/writer for the assistant's flat config
 // records (Options.xml, Types.xml, FindList.xml, ... keep the byte-compatible
 // element/attribute layout of the original writers).
 //
@@ -53,7 +53,7 @@ public:
     // --- attributes --------------------------------------------------------
     bool HasAttribute(const std::string &name) const;
     // Returns "" (or the given default) when the attribute is absent, exactly
-    // like the Qt code's attributes.hasAttribute(...) guards.
+        // like the original code's hasAttribute(...) guards.
     std::string Attribute(const std::string &name, const std::string &defaultValue = "") const;
     int AttributeInt(const std::string &name, int defaultValue = 0) const;
     void SetAttribute(const std::string &name, const std::string &value);

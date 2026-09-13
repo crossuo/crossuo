@@ -3,7 +3,7 @@
 
 // Temporary home for the CAssistant static text-conversion helpers that the
 // model layer (CFindItem/CGameObject) needs (they live in assist/assist.* in
-// the Qt app). Bodies are the originals with a Qt-diet; the CAssistant static
+// the original app). Bodies are the originals, trimmed; the CAssistant static
 // methods and the config-module list lookups (SeekObject/SeekType) both
 // resolve to these.
 
@@ -21,7 +21,7 @@ std::string SerialToText(const uint &value);
 std::string GraphicToText(const ushort &value);
 
 // The FIND_TYPE_FLAGS constants now live in core/global.h (moved here from
-// this file by the assist-core round, which owns them in the Qt app).
+// this file by the assist-core round, which owns them in the original app).
 
 } // namespace xuoassist
 

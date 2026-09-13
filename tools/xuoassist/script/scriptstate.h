@@ -4,8 +4,8 @@
 #pragma once
 
 // Main-thread script-state stores of the 4b-2 round (was the tail of
-// managers/commandmanager.* in the Qt app):
-//   - globals: the SetGlobal/GetGlobal/ClearGlobals map. The Qt map lived in
+// managers/commandmanager.* in the original app):
+//   - globals: the SetGlobal/GetGlobal/ClearGlobals map. The original map lived in
 //     the CCommandManager singleton, so it was ASSISTANT-GLOBAL (shared by
 //     every running script, session lifetime, survives script exit) - the
 //     port matches that scope; the main-tab globals list UI it fed was never
@@ -28,7 +28,7 @@ namespace xuoassist {
 // --- globals ---------------------------------------------------------------
 
 void ScriptGlobal_Set(const string &name, const string &value);
-// Returns "" when the name is not set (Qt OnCommandGetGlobal left the result
+// Returns "" when the name is not set (OnCommandGetGlobal left the result
 // string untouched, the old empty-string default).
 string ScriptGlobal_Get(const string &name);
 void ScriptGlobal_Clear();
@@ -36,7 +36,7 @@ void ScriptGlobal_Clear();
 // --- timers ----------------------------------------------------------------
 
 void ScriptTimer_Set(const string &name, int value);
-// -1 when the timer does not exist (Qt OnCommandTimer).
+// -1 when the timer does not exist (OnCommandTimer).
 int ScriptTimer_Get(const string &name);
 bool ScriptTimer_Exists(const string &name);
 void ScriptTimer_Remove(const string &name);
@@ -46,7 +46,7 @@ void ScriptTimer_Clear();
 
 void ScriptBuffs_Add(ushort graphic, uint timer, const string &name);
 void ScriptBuffs_Remove(ushort graphic);
-// Case-insensitive name match (the Qt body trimmed + lowered the script
+// Case-insensitive name match (the original body trimmed + lowered the script
 // argument; the mirror stores lowered names at event time).
 bool ScriptBuffs_Exists(const string &name);
 

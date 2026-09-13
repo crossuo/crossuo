@@ -2,10 +2,10 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The macro executor (Phase 3, master plan §2.6/§7 item 3): the playback half
-// of the Qt app's assist/tabmacros.cpp (the tick-driven ProcessMacro state
+// of the original app's assist/tabmacros.cpp (the tick-driven ProcessMacro state
 // machine) extracted from the widget. Semantics kept verbatim:
-//   - a 10 ms QTimer drove TabMacros::ProcessMacro (tabmacros.cpp:60,
-//     1105-1121); here Tick() runs from AssistantUI_Tick every game frame.
+//   - a 10 ms frame tick drove TabMacros::ProcessMacro; here Tick() runs from
+//     AssistantUI_Tick every game frame.
 //     The while (m_Playing && m_NextMacroTick < g_Ticks) loop and the
 //     m_PlayPosition / m_NextMacroTick semantics are unchanged: a waiting
 //     action sets m_NextMacroTick = now + delay and returns, so the macro
@@ -15,12 +15,12 @@
 //     1123-1135), loop delay 0 (checkbox off) stops.
 //   - the recording buffer (on_pb_Record_clicked:337) is fed by the packet
 //     observation taps (packetmanager.cpp WarmodeS/DoubleClick/AttackRequest/
-//     PerformAction/... - the exact conversions of the Qt sites) and the
+//     PerformAction/... - the exact conversions of the original sites) and the
 //     target system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
 //     while the game sends its target cursors; RecordStop replaces the
 //     selected macro's action list (an empty capture is discarded).
 // Agent-dependent bodies (dress/arm lists use the config dressbag and move
-// item delays exactly like the Qt code) are included; script bodies are not
+// item delays exactly like the original code) are included; script bodies are not
 // part of the executor.
 
 #pragma once
@@ -46,7 +46,7 @@ public:
     // TabMacros::Stop.
     void Stop();
 
-    // Loop options (the Qt Play read cb_Looped/dsb_LoopTime directly; the UI
+    // Loop options (the original Play read cb_Looped/dsb_LoopTime directly; the UI
     // pushes them here before Play).
     void SetLoopOptions(bool looped, float loopSeconds);
 
@@ -78,7 +78,7 @@ public:
     // on a waiting action that one of `types` satisfies, rewind to it and
     // re-run immediately (the awaited event just arrived). true = the wait
     // was consumed and the CALLER consumed the packet (the macro replay
-    // answered the server itself, exactly like the Qt app).
+    // answered the server itself, exactly like the original app).
     bool PlayWaiting(std::initializer_list<MACRO_TYPE> types);
 
     // TabMacros::Reset: the client-side world teardown

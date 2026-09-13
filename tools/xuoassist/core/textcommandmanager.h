@@ -12,7 +12,7 @@ namespace xuoassist {
 
 typedef vector<string> COMMAND_ARGS;
 
-// From the Qt app's managers/commandmanager.h (the flag vocabulary of the
+// From the original app's managers/commandmanager.h (the flag vocabulary of the
 // skill-value command API; survives the replaced signal hub).
 enum SKILLS_FLAGS
 {

@@ -36,8 +36,8 @@ CTarget g_Target;
 
 namespace {
 
-// The tile flags/name filter of the Qt CFileManager::GetTile path
-// (filemanager.cpp:804). TNF_BY_GRAPHIC is 0: a bare numeric graphic means
+// The tile flags/name filter of the original CFileManager::GetTile path.
+// TNF_BY_GRAPHIC is 0: a bare numeric graphic means
 // "match exactly this graphic".
 enum
 {
@@ -49,7 +49,7 @@ enum
     TNF_ANY = 0x10
 };
 
-// One resolved tile (the Qt CTileInfo record).
+// One resolved tile (the original CTileInfo record).
 struct TARGET_TILE_INFO
 {
     ushort Graphic;
@@ -259,8 +259,8 @@ bool CTarget::CheckHook()
                     z = g_Player->GetZ();
                 }
 
-                // The GetTile port (Qt filemanager.cpp:804) + the tiledata
-                // surface-height fixup of the Qt CheckHook: the client's own
+                // The GetTile port + the tiledata
+                // surface-height fixup of the original CheckHook: the client's own
                 // tiledata (g_Data.m_Static, version-normalized) provides the
                 // surface flags/heights.
                 int tileZ = z;
@@ -414,7 +414,7 @@ bool CTarget::SetRecvData(CDataReader &reader)
     bool result = (CheckHook() && !m_FromAssist);
 
     // a playing macro waiting on a target cursor consumes the reply and
-    // answers it itself (the Qt PlayWaiting tap, assist/target.cpp:281)
+    // answers it itself (the original PlayWaiting tap)
     if (result && g_MacroExecutor.IsPlaying() &&
         g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_TARGET_OBJECT, MT_WAIT_FOR_TARGET_TILE }))
     {

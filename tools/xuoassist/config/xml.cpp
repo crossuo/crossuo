@@ -261,8 +261,8 @@ XMLElement &XMLElement::AddChild(const string &name)
 namespace {
 
 // Whitespace-only character data is autoformat residue (the newlines/indent
-// QXmlStreamWriter writes between elements), not content: skipping it keeps
-// parse->write round-trips of Qt-written files byte identical instead of
+// the XML writer emits between elements), not content: skipping it keeps
+// parse->write round-trips of files written by the original app byte identical instead of
 // re-emitting it as element text (which produced blank lines). Text with any
 // non-whitespace byte is kept as-is (never trimmed).
 bool xml_text_has_content(const string &text)

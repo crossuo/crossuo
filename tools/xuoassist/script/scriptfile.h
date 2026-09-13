@@ -6,7 +6,7 @@
 // The script file engine (was script/fileengine.*, CScriptFileObject):
 // stdio-based, script-thread owned.
 //
-// SANDBOX (the plan's security rule; the Qt engine accepted any path):
+// SANDBOX (the plan's security rule; the original engine accepted any path):
 // every path a script passes is normalized and resolved under the sandbox
 // root - the client directory (the config root, CAssistantConfig::GetRootPath:
 // the client cwd). Relative paths join the root; absolute paths are accepted
@@ -17,7 +17,7 @@
 // lexical normalization only.
 //
 // Threading: file objects live entirely on the calling script worker thread
-// (Qt parity: CScriptFileObject used QFile directly, no command round trip).
+// (parity with the original: CScriptFileObject opened files directly, no command round trip).
 // The sandbox root is a process constant set once on the main thread at UI
 // install; the harness sets its own.
 
@@ -40,7 +40,7 @@ void ScriptFile_SetSandboxRoot(const string &root);
 string ScriptFile_Sanitize(const string &path, const char *api);
 
 // CScriptFileObject surface. `checkExists` fails the call when the file is
-// missing (the Qt overload flag). ReadLine returns "" at end of file; Read
+// missing (the overload flag). ReadLine returns "" at end of file; Read
 // returns the next whitespace-delimited token.
 bool ScriptFile_Open(XA_SCRIPT_FILE *file, const string &path, bool checkExists);
 bool ScriptFile_Append(XA_SCRIPT_FILE *file, const string &path, bool checkExists);

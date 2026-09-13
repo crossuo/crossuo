@@ -115,7 +115,7 @@ void TabAbout_Draw()
     if (Logo_Init())
     {
         // the 141x141 logo button of tababout.ui (non-interactive here; the
-        // Qt button had no handler either)
+        // original button had no handler either)
         const float logoSize = 128.0f;
         const ImVec2 pos = ImGui::GetCursorScreenPos();
         ImGui::GetWindowDrawList()->AddImage(

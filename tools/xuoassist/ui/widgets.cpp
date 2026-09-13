@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Assistant ImGui widget kit implementation (master plan §6). See widgets.h
-// for the per-widget Qt mapping and behaviors.
+// for the per-widget mapping and behaviors.
 
 #define LOGGER_MODULE Assistant
 
@@ -349,10 +349,10 @@ bool ColorSwatch(const char *id, ImU32 *rgba, float size, bool *commit)
     return changed;
 }
 
-// --- hex edit fields (the Qt le_* "0x..." line edits) ------------------------
+// --- hex edit fields (the original le_* "0x..." line edits) ------------------------
 
 // ImGuiInputTextFlags_CharsHexadecimal rejects the 'x' of the stored "0x..."
-// prefix (typing would drop it and the saved text would diverge from the Qt
+// prefix (typing would drop it and the saved text would diverge from the original
 // format), so the stored value keeps its prefix and the edit buffer carries
 // the bare digits only: they are seeded while the field is idle and the value
 // is re-prefixed on commit. While the field is active ImGui gives its own
@@ -699,7 +699,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
                 {
                     if (ImGui::IsKeyPressed(ImGuiKey_Escape))
                     {
-                        // Escape reverts (Qt closed the editor without applying)
+                        // Escape reverts (the original closed the editor without applying)
                         ListRenameEnd();
                         rename = nullptr;
                     }
@@ -748,7 +748,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
                     ImGui::TextUnformatted(name);
                     ImGui::EndDragDropSource();
                 }
-                // drop target on every row: dropping replaces Qt's MoveAction
+                // drop target on every row: dropping replaces the original move action
                 // reorder (insert at the hovered row)
                 if (ImGui::BeginDragDropTarget())
                 {
@@ -794,7 +794,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
 // --- HotkeyKeyboard (hotkeysform.ui) ------------------------------------------
 //
 // The on-screen keyboard, table-driven from the .ui geometry (rows, wide keys
-// and the numpad block). Delta: the Qt grid had three tall keys (Enter, +,
+// and the numpad block). Delta: the original grid had three tall keys (Enter, +,
 // numpad Enter span two rows) - here every cap is one row high, which only
 // affects cosmetics, not the assign semantics. "Prt" stays a dead button like
 // in the original (pb_Prt was not in m_ButtonsMap). The wheel/X caps from the

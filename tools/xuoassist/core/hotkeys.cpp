@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The hotkey engine (see hotkeys.h). Name/modifier tables ported from the Qt
-// app's gui/hotkeybox.cpp (g_Keymap, GetHotkeyText, eventFilter) and the
+// The hotkey engine (see hotkeys.h). Name/modifier tables ported from the
+// original app's gui/hotkeybox.cpp (g_Keymap, GetHotkeyText, eventFilter) and the
 // matching semantics from assist/hotkeysform.cpp (HotkeyExistsAndUse).
 
 #define LOGGER_MODULE Assistant
@@ -238,7 +238,7 @@ void HotkeyFormatText(uint key, uchar modifiers, char *out, size_t size)
 namespace {
 
 // Platform::IsKeypad (the SDL path): the keypad identity of
-// a key event - reproduces the Windows native-modifier bit 24 of the Qt app.
+// a key event - reproduces the Windows native-modifier bit 24 of the original app.
 bool is_keypad_keycode(uint key)
 {
     switch (key)
@@ -381,7 +381,7 @@ bool CHotkeys::ProcessKeyDown(const SDL_Event &ev)
 
 bool CHotkeys::ProcessKeyUp(const SDL_Event &)
 {
-    // UOMSG_INPUT_KEYUP was a no-op in the Qt app (mainscript.cpp:180)
+    // UOMSG_INPUT_KEYUP was a no-op in the original app
     return false;
 }
 
@@ -449,14 +449,14 @@ bool CHotkeys::ProcessWheel(const SDL_Event &ev)
 
 bool CHotkeys::MatchAndUse(uint key, uchar modifiers)
 {
-    // HotkeyExistsAndUse (hotkeysform.cpp:1436): the Qt loop bailed out when
+    // HotkeyExistsAndUse: the original loop bailed out when
     // not logged in (g_World == nullptr)
     if (g_World == nullptr)
     {
         return false;
     }
     // A binding "exists" when the
-    // key is assigned (Key != 0, the Qt enabled checkbox); the engine switch
+    // key is assigned (Key != 0, the enabled checkbox); the engine switch
     // gates everything but HT_TOGGLE_HOTKEYS.
     const vector<CHotkeyEntry> &hotkeys = g_AssistantConfig.m_Hotkeys;
     bool matched = false;
@@ -503,7 +503,7 @@ bool CHotkeys::MatchAndUse(uint key, uchar modifiers)
                     break;
             }
         }
-        break; // the Qt loop always stopped at the first (key, mod) match
+        break; // the original loop always stopped at the first (key, mod) match
     }
 
     if (!matched)
@@ -546,7 +546,7 @@ void CHotkeys::CommitKeyToRow(int row, uint key, uchar modifiers)
     }
 
     // CheckExists: the edited row must already exist
-    // (a fresh "Blank hotkey" row assigns to itself; Qt required a current
+    // (a fresh "Blank hotkey" row assigns to itself; the original required a current
     // row and returned early otherwise)
     const int dup = FindDuplicate(key, modifiers, row);
     if (dup != -1)
@@ -701,7 +701,7 @@ int CHotkeys::KeyboardCapState(int keyId, int selectedRow) const
     }
     if (found > 1)
     {
-        // Qt painted the selected row's cap last (UpdateKeyboard's second
+        // The original painted the selected row's cap last (UpdateKeyboard's second
         // currentButton pass, hotkeysform.cpp:866): the blue selection wins
         // over the multi-binding red.
         return selected ? 3 : 2; // one more hotkey is set here (red)

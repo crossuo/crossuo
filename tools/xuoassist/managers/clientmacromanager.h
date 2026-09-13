@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/clientmacromanager.h), Qt-diet
-// (QStringList -> vector<string>, QList -> vector).
+// Ported from X:UO Assist (managers/clientmacromanager.h), trimmed
+// (string lists are vector<string>, lists are vectors).
 
 #pragma once
 

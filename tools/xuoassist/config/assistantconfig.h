@@ -2,17 +2,17 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // AssistantConfig: the persistence module (master plan §4.3, §7 Phase 1 item
-// 6). The Qt app kept every reader/writer inside its widget classes
+// 6). The original app kept every reader/writer inside its widget classes
 // (assist/tab*.cpp LoadConfig/SaveConfig, assistform.cpp profile handling,
 // hotkeysform.cpp Hotkeys.xml, tabagentsdress.cpp Dress.coa); they are
 // extracted here verbatim so Phase 2 can build UI straight on top.
 //
-// File formats are byte-compatible with the Qt writers (same elements,
+// File formats are byte-compatible with the original writers (same elements,
 // attribute names, value formatting - including the original `size = count+1`
 // quirks of FindList.xml/IgnoreList.xml/Hotkeys.xml, kept for round-trip
 // fidelity).
 //
-// Layout (matches the Qt app, relative to the binary dir):
+// Layout (matches the original app, relative to the binary dir):
 //   Config/<profile>/ : Options.xml Objects.xml Hotkeys.xml Party.xml
 //                       Friends.xml Enemies.xml Macros.xml Dress.coa
 //   GlobalConfig/     : Types.xml Objects? no - Types.xml, FindList.xml,
@@ -40,7 +40,7 @@ namespace xuoassist {
 
 class CMacro;
 
-// From the Qt app's assist/tabmain.h - the 23-option checklist order (§2.2).
+// From the original app's assist/tabmain.h - the 23-option checklist order (§2.2).
 enum CHECKLISTBOX_IDENTIFICATOR
 {
     CLBI_CORPSES_AUTOOPEN = 0,
@@ -85,7 +85,7 @@ enum REPLACE_TEXT_MODE
     RTM_OTHERS
 };
 
-// From the Qt app's assist/hotkeysform.h (HOTKEY_TYPES; kept here so the
+// From the original app's assist/hotkeysform.h (HOTKEY_TYPES; kept here so the
 // hotkey data model survives ahead of the Phase 3 hotkey engine).
 enum HOTKEY_TYPES
 {
@@ -111,14 +111,14 @@ enum HOTKEY_TYPES
     HT_USE_SKILL_LAST_ATTACK,
     HT_USE_SKILL_ENEMY,
     HT_USE_SKILL_FRIEND,
-    // the Qt enum tail (hotkeysform.h:22-25) - the Phase-1c model stopped at
+    // the enum tail - the Phase-1c model stopped at
     // the skill entries; the stored uint values and the Hotkeys.xml schema
-    // are unchanged (values 0..21 above already match the Qt writer)
+    // are unchanged (values 0..21 above already match the original writer)
     HT_USE_SKILL_NEW_TARGET_SYSTEM,
     HT_TARGETING,
     HT_BANDAGE_HEALING,
     HT_NEW_TARGETING_SYSTEM_SET,
-    HT_LAST // == the Qt HT_COUNT_OF_ITEMS (26)
+    HT_LAST // == the original HT_COUNT_OF_ITEMS (26)
 };
 
 // gui/worldobjectlistitem.h (friends / enemies / party accept / decline lists)
@@ -126,7 +126,7 @@ struct CWorldObjectEntry
 {
     uint Serial{ 0 };
     string Name{ "" };
-    bool Enabled{ false }; // was the item's Qt::CheckState
+    bool Enabled{ false }; // was the item's checked state
 };
 
 // gui/typelistitem.h
@@ -255,7 +255,7 @@ public:
     // --- paths (plan §4.3: <binary dir>/Config/<profile>/) -----------------
     // The client resolves writable data relative to the working directory at
     // startup (src/Main.cpp:414 g_ExePath = fs_path_current()), which equals
-    // "next to the exe" for a normal install - the same place the Qt app
+    // "next to the exe" for a normal install - the same place the original app
     // (g_DllPath) used.
     static fs_path GetRootPath();
     static fs_path GetGlobalConfigPath();
@@ -282,7 +282,7 @@ public:
     void LoadGlobals(); // Types/Find/Ignore/Speech/Replaces/Sound/Shop/Display/Profiles
     void SaveGlobals();
     void SaveTypes();         // was TabListsTypes::SaveTypes
-    void LoadTypes();         // (with the Qt app's default rec list on empty)
+    void LoadTypes();         // (with the original app's default rec list on empty)
     void SaveFindList();      // was TabListsFind::SaveFindList (size=count+1)
     void LoadFindList();
     void SaveIgnoreList();    // was TabListsIgnore::SaveIgnoreList (size=count+1)
@@ -294,9 +294,9 @@ public:
     void SaveSoundFilter();   // was TabFiltersSound::SaveSoundFilter
     void LoadSoundFilter();
     void SaveShopList();      // was TabAgentsShop::SaveShopList
-    void LoadShopList();      // (with the Qt app's defaults on empty)
+    void LoadShopList();      // (with the original app's defaults on empty)
     void SaveDisplayItems();  // was TabDisplay::SaveDisplayItems
-    void LoadDisplayItems();  // (with the Qt app's default set on empty)
+    void LoadDisplayItems();  // (with the original app's default set on empty)
     void SaveDisplayGroups(); // was TabDisplay::SaveDisplayGroups
     void LoadDisplayGroups(); // (with allreag/default on empty)
 
@@ -410,7 +410,7 @@ public:
     bool PartyInviteCanBeAutoDeclined(uint serial);
 
     // --- filters (were TabFiltersSpeech/Replaces/Sound; consulted by the
-    //     packet handlers exactly like the Qt code did) -----------------------
+    //     packet handlers exactly like the original code did) -----------------------
     bool CheckSpeechInFilter(const string &text, const ushort &color);
     bool CheckReplaceText(
         const string &text,
@@ -441,7 +441,7 @@ public:
     // --- macros ---------------------------------------------------------------
     vector<CMacroEntry> &Macros() { return m_Macros; }
 
-    // --- data (was the widget state of the Qt tabs) ---------------------------
+    // --- data (was the widget state of the original tabs) ---------------------------
     bool m_Options[CLBI_COUNT];
     int m_MessagesLevel{ 0 };
     int m_SearchItemsDistance{ 3 };

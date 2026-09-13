@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/gumphook.h): QList -> std::vector,
-// QString -> std::string.
+// Ported from X:UO Assist (commonitems/gumphook.h): lists are std::vector,
+// strings are std::string.
 
 #pragma once
 

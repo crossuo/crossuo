@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/contextmenumanager.h), Qt-diet.
+// Ported from X:UO Assist (managers/contextmenumanager.h), trimmed.
 
 #pragma once
 

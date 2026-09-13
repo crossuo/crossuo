@@ -174,7 +174,7 @@ bool CMenuManager::OnPacketSend(CDataReader &reader)
             menu->SetReplayed(true);
             menu->SetReplyID(index);
 
-            // tabmacros recording (Qt menumanager): CMacroWithMenu(
+            // tabmacros recording (menumanager handler): CMacroWithMenu(
             // MT_WAIT_FOR_MENU, menu name, item name, item graphic, item
             // color) for the chosen item
             if (g_World != nullptr && g_MacroExecutor.IsRecording())

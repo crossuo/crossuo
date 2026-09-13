@@ -129,7 +129,7 @@ void CDisplayManager::ClearIcons()
 
 CDisplayIcon *CDisplayManager::GetIcon(const CDisplayItem &item)
 {
-    // The Qt icon cache (displaymanager.cpp:115): keyed by (graphic << 16) |
+    // The original icon cache: keyed by (graphic << 16) |
     // hue, fed by LoadDisplayIcon from the assistant filemanager's raw
     // static-art access. In-process the pixels come from the client's own
     // art reader (g_UOFileReader.GetArtPixels) and the client hue manager.
@@ -152,9 +152,9 @@ CDisplayIcon *CDisplayManager::GetIcon(const CDisplayItem &item)
 
 CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
 {
-    // The Qt LoadDisplayIcon (displaymanager.cpp:140) verbatim, with the raw
+    // The original LoadDisplayIcon verbatim, with the raw
     // art decode delegated to the client's g_UOFileReader.GetArtPixels (the
-    // Qt code walked the file bytes itself through the plugin file access).
+    // original code walked the file bytes itself through the plugin file access).
     // Pixels are IM_COL32-layout RGBA (the client hue manager emits
     // 0x00BBGGRR; nonzero pixels get full alpha for the ImGui upload).
     if (graphic == 0x0EED || graphic == 0x0EEE)
@@ -194,7 +194,7 @@ CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
             const uint16_t raw = art[(y * dataWidth) + x];
             if (raw == 0u)
             {
-                continue; // transparent (the Qt run decode skipped 0 pixels)
+                continue; // transparent (the original run decode skipped 0 pixels)
             }
 
             uint col = 0;
@@ -213,7 +213,7 @@ CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
         }
     }
 
-    // the stacked (+5 down-right) copy of stackable items (Qt verbatim)
+    // the stacked (+5 down-right) copy of stackable items (original verbatim)
     if (stackOffset != 0)
     {
         for (int j = dataHeight - 1; j >= 0; j--)
@@ -491,7 +491,7 @@ void CDisplayManager::Redraw(
     uint backgroundColor)
 {
     // Was the win32 GDI title-bar painter (displaymanager.cpp:500-...). The
-    // caption text is composed here (the Qt RDM_TEXTUAL branch, verbatim);
+    // caption text is composed here (the original RDM_TEXTUAL branch, verbatim);
     // the colored/graphical painter has no OS-caption equivalent - the two
     // colored modes produce the same plain string. The caller (the assistant
     // UI tick) applies the text to the client window on change.

@@ -47,7 +47,7 @@ struct DISPLAY_KEY_ITEM
     DISPLAY_KEY_IDENTIFIER Identifier;
 };
 
-// Raw icon payload (was a win32 HBITMAP / Pixmap wrapper in the Qt app).
+// Raw icon payload (was a win32 HBITMAP / Pixmap wrapper in the original app).
 // Rendering is Phase 2/4; the pixels are kept in the struct so the drawing
 // round can take the bytes as-is.
 struct CDisplayIcon
@@ -83,7 +83,7 @@ public:
     CDisplayManager();
     ~CDisplayManager();
 
-    // The static-art icon cache (was the win32 HBITMAP cache of the Qt
+    // The static-art icon cache (was the win32 HBITMAP cache of the original
     // displaymanager): keyed by (graphic << 16) | hue, decoded through the
     // client's art reader. nullptr when the item has no graphic. The
     // Display items editor previews these as ImGui user textures.
@@ -96,7 +96,7 @@ public:
     CDisplayItem GetDisplayItemByName(const string &name);
 
     // Title-bar rendering (was the win32 GDI body): composes the caption text
-    // into m_TitleText. The Qt textual path (Redraw RDM_TEXTUAL) is followed
+    // into m_TitleText. The original textual path (Redraw RDM_TEXTUAL) is followed
     // exactly; the two colored modes fall back to the same plain string (an
     // OS caption carries no colors/icons). Apply it with CWindow::SetTitle -
     // ui/assistantui.cpp does that on change (throttled).
@@ -108,7 +108,7 @@ public:
         bool displayAppIcon,
         uint backgroundColor);
 
-    // The last composed caption (Redraw output; Qt's local QString title)
+    // The last composed caption (Redraw output; the original's local title string)
     const string &GetTitleText() const { return m_TitleText; }
 
     void RecompilleData(const string &text, uint textColor);

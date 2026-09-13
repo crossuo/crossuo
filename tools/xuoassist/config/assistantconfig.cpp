@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // AssistantConfig implementation. Every Load*/Save* pair below is an
-// extraction of the identically named logic from the Qt tab classes listed in
+// extraction of the identically named logic from the tab classes listed in
 // the header comments; the XML element/attribute names and the value
-// formatting match the QXmlStreamWriter output byte for byte.
+// formatting match the original XML writer output byte for byte.
 
 #include "assistantconfig.h"
 #include <algorithm>
@@ -223,7 +223,7 @@ bool CAssistantConfig::LoadProfile()
     LoadEnemies();
     LoadMacros();
 
-    // The Qt form applied the fast-rotation / stamina-check host values right
+    // The original form applied the fast-rotation / stamina-check host values right
     // after the load; keep them in the same place.
     if (!FastRotation() || !EnabledFeatureFastRotation())
     {
@@ -1142,7 +1142,7 @@ void CAssistantConfig::LoadTypes()
 
     if (m_Types.empty())
     {
-        // The Qt app's default rec-list (TabListsTypes::LoadTypes).
+        // The original app's default rec-list (TabListsTypes::LoadTypes).
         static const char *defaults[][2] = {
             { "bm", "0x0F7B" }, { "bp", "0x0F7A" }, { "ga", "0x0F84" }, { "gs", "0x0F85" },
             { "mr", "0x0F86" }, { "ns", "0x0F88" }, { "sa", "0x0F8C" }, { "ss", "0x0F8D" },
@@ -1169,7 +1169,7 @@ void CAssistantConfig::SaveFindList()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    // NOTE: the Qt writer saved count+1 (an original off-by-one); kept for
+    // NOTE: the original writer saved count+1 (an off-by-one); kept for
     // byte-compatible output.
     doc.Root.SetAttribute("size", std::to_string((int)m_FindLists.size() + 1));
 
@@ -1636,7 +1636,7 @@ void CAssistantConfig::LoadDisplayItems()
 
     if (m_DisplayItems.empty())
     {
-        // The Qt app's defaults (TabDisplay::LoadDisplayItems): one entry per
+        // The original app's defaults (TabDisplay::LoadDisplayItems): one entry per
         // info command plus the reagent counters.
         for (const CDisplayInfo &info : g_DisplayManager.GetCommands())
         {
@@ -1724,7 +1724,7 @@ void CAssistantConfig::LoadDisplayGroups()
 
     if (m_DisplayGroups.empty())
     {
-        // The Qt app's defaults (TabDisplay::LoadDisplayGroups).
+        // The original app's defaults (TabDisplay::LoadDisplayGroups).
         CDisplayGroupEntry allreag;
         allreag.Name = "allreag";
         allreag.TitleData = "{bm} {bp} {ga} {gs} {mr} {ns} {sa} {ss}";
@@ -1842,7 +1842,7 @@ bool CAssistantConfig::LoadHotkeys()
                 // Legacy toggle row (hotkeysform.cpp:375-398): a plain
                 // key/modifiers binding of HT_TOGGLE_HOTKEYS, action 0, no
                 // macro/script (the Data column renders the derived action
-                // name, "Hotkeys: toggle", like the Qt UpdateHotkeyData).
+                // name, "Hotkeys: toggle", like the original UpdateHotkeyData).
                 if (!element.HasAttribute("key") || !element.HasAttribute("modifiers"))
                 {
                     continue;
@@ -2141,14 +2141,14 @@ bool CAssistantConfig::LoadMacros()
 // --- Dress.coa (was TabAgentsDress::LoadDress/SaveDress) --------------------------------------
 //
 // Custom little-endian binary format, ported on top of the namespace-local
-// CDataWriter (the Qt app used its QFile-based CFileObject). Layout:
+// CDataWriter (the original app used its file-based CFileObject). Layout:
 //   uint32 version (=0), int32 setsCount, uint8 undressBefore,
 //   per set: string name, uint8 layerCount, per layer { uint8 layer, uint32 serial },
 //   uint8 doubleClickForEquipment.
 // CFileObject::WriteString wrote: int8 length (= utf8 length + 1), the utf8
 // bytes, one 0x00 byte. The original reader's ReadString read a full int32
 // length (asymmetric with the writer - an original bug); the reader below
-// reproduces that exact tolerance so both Qt-era files and our files behave
+// reproduces that exact tolerance so both legacy files and our files behave
 // identically (names that fail the bounds check come back empty and the set
 // is skipped, like the original `continue`).
 

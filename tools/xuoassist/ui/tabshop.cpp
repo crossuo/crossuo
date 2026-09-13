@@ -505,7 +505,7 @@ void TabShop_Draw()
         s_SelectedList = -1;
     }
 
-    // selection -> "List name:" (on_lw_ShopLists_clicked). Delta: the Qt
+    // selection -> "List name:" (on_lw_ShopLists_clicked). Delta: the original
     // app also opened the editor on a list double click; the Edit shop list
     // items button is the route here (the list widget is a child window and
     // double clicks cannot be attributed to rows through it)

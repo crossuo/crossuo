@@ -3,7 +3,7 @@
 
 // TabMain (was assist/tabmain.ui/.cpp): the 23-option checklist bound to
 // g_AssistantConfig.m_Options (the same fields the packet handlers consult)
-// and the nested Main/Options pages. Toggles apply immediately like the Qt
+// and the nested Main/Options pages. Toggles apply immediately like the original
 // app's on_lw_Options_clicked -> OptionChanged and persist right away
 // (SaveMainOptions); the other page widgets save with the profile on close.
 
@@ -112,7 +112,7 @@ void option_changed(int index, bool state)
         }
         case CLBI_STAY_ON_TOP:
         {
-            // was AssistForm::UpdateStayOnTop: a Qt host-window flag; the
+            // was AssistForm::UpdateStayOnTop: a host-window flag; the
             // assistant renders in-game and has no window to keep on top
             break;
         }
@@ -185,7 +185,7 @@ void option_changed(int index, bool state)
 }
 
 // A color row: use-checkbox + hex line edit + hue preview swatch + "..."
-// (the Qt "..." sent a dye packet; the 0x95 response updates the config).
+// (the original "..." sent a dye packet; the 0x95 response updates the config).
 void font_color_row(const char *label, bool *use, string *color, uint32_t dyeSerial)
 {
     // the fixed widget ids (##use/##hex/...) are scoped per row: this is drawn
@@ -240,7 +240,7 @@ void draw_main_page()
 
     ImGui::Separator();
 
-    // Font color / Characters font color rows (the checkbox is the Qt
+    // Font color / Characters font color rows (the checkbox is the original
     // cb_FontColor "use color" state; the hex edit is the le_FontColor field)
     font_color_row(
         "Font color:",
@@ -408,7 +408,7 @@ void TabMain_Draw()
         if (ImGui::Checkbox(s_Options[i].Label, &state))
         {
             g_AssistantConfig.SetOption(index, state);
-            option_changed(index, state); // immediate client effect (Qt parity)
+            option_changed(index, state); // immediate client effect (parity with the original)
             g_AssistantConfig.SaveMainOptions();
         }
     }

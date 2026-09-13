@@ -4,8 +4,8 @@
 // The six Lists sub-tabs (was assist/tablists*.ui/.cpp, §2.4): Types,
 // Objects, Find, Ignore, Friends, Enemies. All bind straight to the
 // g_AssistantConfig containers; every structural change persists immediately
-// (the Qt tabs saved on each create/save/remove/drop and on itemDropped),
-// and the save icon re-saves like the Qt save buttons did.
+// (the original tabs saved on each create/save/remove/drop and on itemDropped),
+// and the save icon re-saves like the original save buttons did.
 
 #include "assistantui.h"
 
@@ -41,7 +41,7 @@ const ImVec4 HINT_COLOR = ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
 const ImVec4 DRESS_BAG_SET = ImVec4(0.0f, 170.0f / 255.0f, 0.0f, 1.0f);     // rgb(0,170,0)
 const ImVec4 DRESS_BAG_UNSET = ImVec4(170.0f / 255.0f, 0.0f, 0.0f, 1.0f);   // rgb(170,0,0)
 
-// case-insensitive name collision check (the Qt tabs compared toLowered texts)
+// case-insensitive name collision check (the original tabs compared toLowered texts)
 bool name_in_use(const vector<CTypeEntry> &items, const char *name, int skip)
 {
     for (int i = (int)items.size() - 1; i >= 0; i--)
@@ -56,7 +56,7 @@ bool name_in_use(const vector<CTypeEntry> &items, const char *name, int skip)
 
 // --- Types (tabliststypes.cpp) ------------------------------------------------
 
-// The Phase 3 from-target flow (was on_pb_*FromTarget_clicked in the Qt list
+// The Phase 3 from-target flow (was on_pb_*FromTarget_clicked in the original list
 // tabs): the button arms g_TargetHandler + RequestTarget; the next outgoing
 // 0x6C (assistant-requested cursor) is dispatched by PACKET_HANDLER(TargetS)
 // and forwarded here through AssistantUIEvents::OnFromTarget. Each tab polls
@@ -195,7 +195,7 @@ void draw_types_tab()
 
     if (changed)
     {
-        g_AssistantConfig.SaveTypes(); // Qt saved on every mutation and drop
+        g_AssistantConfig.SaveTypes(); // the original saved on every mutation and drop
     }
 
     ImGui::TextUnformatted("Type:");

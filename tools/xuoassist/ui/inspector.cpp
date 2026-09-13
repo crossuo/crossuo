@@ -26,7 +26,7 @@ namespace xuoassist {
 
 namespace {
 
-// the tree row keys (Qt OIK_*; identity is all the port needs)
+// the tree row keys (the original OIK_*; identity is all the port needs)
 enum OIK
 {
     OIK_GROUP = 0,
@@ -248,7 +248,7 @@ void RebuildSection(XA_INSPECTOR_SECTION &section)
     section.OutOfRange = true;
     if (g_World != nullptr)
     {
-        // Qt: CheckUpdate found the tab by serial, then read the object - a
+        // The original: CheckUpdate found the tab by serial, then read the object - a
         // serial no longer in the mirror just kept the previous snapshot
         CGameObject *obj = g_World->FindWorldObject(section.Serial);
         if (obj != nullptr)
@@ -333,7 +333,7 @@ void InspectorWindow_Draw()
         }
     }
 
-    // one collapsible section per inspected serial (Qt: one tab per serial)
+    // one collapsible section per inspected serial (original: one tab per serial)
     for (XA_INSPECTOR_SECTION &section : s_Sections)
     {
         char header[64] = { 0 };
@@ -360,7 +360,7 @@ void InspectorWindow_Draw()
         {
             if (row.Group)
             {
-                // group rows fold like the Qt tree nodes
+                // group rows fold like the original tree nodes
                 char groupId[128];
                 snprintf(groupId, sizeof(groupId), "%s##%u_%d_%d", row.Key, section.Serial,
                          row.Depth, (int)section.Rows.size());

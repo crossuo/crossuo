@@ -177,7 +177,7 @@ void CScriptHandle::Start()
     });
 }
 
-// The Qt ctor started the thread immediately; here the manager constructs and
+// The original ctor started the thread immediately; here the manager constructs and
 // spawns in one step (Run above) so the cap is checked before the spawn.
 void CScriptHandle::RunEngine()
 {
@@ -243,7 +243,7 @@ CScriptHandle *CScriptManager::Run(
 
 void CScriptManager::Tick()
 {
-    // remove finished rows (the Qt signal_RemoveRunningScriptItem flow)
+    // remove finished rows (the original signal_RemoveRunningScriptItem flow)
     m_Handles.erase(std::remove_if(m_Handles.begin(), m_Handles.end(),
                         [](CScriptHandle *handle) {
                             const XA_SCRIPT_STATE state = handle->State();

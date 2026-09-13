@@ -338,7 +338,7 @@ bool CGumpManager::OnPacketSend(CDataReader &reader)
             gump->SetReplayed(true);
             gump->SetReplyID(button);
 
-            // tabmacros recording (Qt gumpmanager): CMacroWithGump(
+            // tabmacros recording (gumpmanager handler): CMacroWithGump(
             // MT_WAIT_FOR_GUMP, serial, id, button)
             if (g_World != nullptr && g_MacroExecutor.IsRecording())
             {

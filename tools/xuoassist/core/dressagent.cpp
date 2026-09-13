@@ -9,7 +9,7 @@
 //
 // Port delta (documented): Tick() paces ONE step per frame - with
 // MoveItemsDelay == 0 the whole sequence still spreads over one step per
-// frame (m_NextTick lands on the current tick), while the Qt engine ran the
+// frame (m_NextTick lands on the current tick), while the original engine ran the
 // entire script in a single pass when the delay was 0.
 
 #define LOGGER_MODULE Assistant
@@ -157,7 +157,7 @@ void CDressAgent::Undress()
 
     m_Delay = g_AssistantConfig.MoveItemsDelay();
 
-    Start(steps); // a naked player produces no steps: a no-op (Qt parity)
+    Start(steps); // a naked player produces no steps: a no-op (parity with the original)
 }
 
 void CDressAgent::Disarm()

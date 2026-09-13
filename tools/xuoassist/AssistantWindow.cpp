@@ -226,7 +226,7 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
 
     // The capture field of the hotkeys form ("listening"): it must see the
     // next raw key/wheel/mouse event even when the game would. Gated on
-    // !WantTextInput so a busy text field always wins (the Qt filter ran
+    // !WantTextInput so a busy text field always wins (the original filter ran
     // before everything, but there was no competing text input then).
     if (xuoassist::Hotkeys_IsCapturing() && !io.WantTextInput &&
         xuoassist::Hotkeys_ProcessCapture(ev))
@@ -235,7 +235,7 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
     }
 
     // Hidden: keep ImGui fed but let the game play normally - EXCEPT the
-    // hotkey engine, which keeps working like the Qt plugin's filter did
+    // hotkey engine, which keeps working like the original plugin's filter did
     // (the assistant could be minimized to tray and its hotkeys kept firing;
     // Pass-keys and the On/Off switch govern it, see core/hotkeys.cpp).
     if (!s_visible)

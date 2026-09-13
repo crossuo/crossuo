@@ -4,7 +4,7 @@
 // The assistant JS API (Phase 4b, batches 1+2). Natives run on the SCRIPT
 // thread and marshal through ScriptQueue_Exec; the drain-side bodies of every
 // tag live in the ScriptCommand_Execute switch at the bottom and run on the
-// MAIN thread (they port the Qt OnCommand* slot bodies of
+// MAIN thread (they port the original OnCommand* handler bodies of
 // managers/commandmanager.cpp and the direct reads of scriptengine.cpp + the
 // engine classes gumpengine/textwindowengine/menuengine/fileengine/
 // clientmacroengine/clientselectedtile.cpp).
@@ -17,7 +17,7 @@
 //                           flags - and the engine-class objects' OWN copies
 //                           (GetGump/GetMenu deep-copy the manager records
 //                           into the command result; the JS wrapper owns the
-//                           copy, like the Qt CScriptGumpObject ctor copy).
+//                           copy, like the original CScriptGumpObject ctor copy).
 // The journal mirror (journal.cpp) is main-thread fed/read; script threads
 // receive copies made inside the drain.
 //
@@ -283,8 +283,8 @@ vector<string> arg_list(JSContext *ctx, JSValueConst *argv, int argc, int index)
     return list;
 }
 
-// The pause gate: the Qt engine called PauseWaiting() after nearly every
-// marshaled call (CScriptEngineBase::PauseWaiting, scriptenginebase.cpp:18-27).
+// The pause gate: the engine calls PauseWaiting() after nearly every
+// marshaled call.
 // QuickJS' interrupt handler covers pauses INSIDE js loops; this covers the
 // between-calls ones.
 void pause_gate(JSContext *ctx)
@@ -354,7 +354,7 @@ void journal_finalizer(JSRuntime *rt, JSValue val)
 }
 
 // --- the 4b-2 engine classes --------------------------------------------------
-// Gump/Menu hold DEEP COPIES made inside the drain (the Qt CScriptGumpObject /
+// Gump/Menu hold DEEP COPIES made inside the drain (the original CScriptGumpObject /
 // CScriptMenuObject ctors copied the manager records the same way); GumpHook /
 // ClientMacro / File are pure script-side records. All script-thread owned.
 
@@ -883,8 +883,8 @@ JSValue jsn_charprint(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     return JS_UNDEFINED;
 }
 
-// [Q] Say + the prefix variants (the Qt engine composed the prefixes onto
-// Say - scriptengine.cpp:3522-3581, exact strings: yell "! ", whisper "; ",
+// [Q] Say + the prefix variants (the engine composes the prefixes onto
+// Say, exact strings: yell "! ", whisper "; ",
 // emote ": ", broadcast "? ", party "/ ", guild "\\ ", alliance "| ").
 JSValue jsn_say(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
@@ -961,8 +961,8 @@ JSValue jsn_morph(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 }
 
 // [Q] UseType/UseFromGround/UseTypeList/UseFromGroundList - [G] the found
-// serial comes back (Qt passed a bool* result); the find+doubleclick body is
-// the OnCommandUseType family (commandmanager.cpp:1037-1128).
+// serial comes back (the original passed a bool* result); the find+doubleclick
+// body is the OnCommandUseType family.
 JSValue jsn_usetype(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
     auto *command = sc_make(SC_USE_TYPE);
@@ -1009,7 +1009,7 @@ JSValue jsn_find(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
 
 namespace { // appended natives (same unnamed namespace via nesting)
 // [Q] Count(graphic[, color[, container[, distance[, recurse]]]]) ->
-// g_Assistant.CountType on the main thread (the Qt defaults:
+// g_Assistant.CountType on the main thread (the defaults:
 // color 0xFFFF, container "self", distance "finddistance", recurse true).
 JSValue jsn_count(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -1077,7 +1077,7 @@ JSValue jsn_now(JSContext *ctx, JSValueConst, int, JSValueConst *)
 // [G] HaveTarget() - OnCommandHaveTarget: 0 = none, cursorType + 1.
 JSValue jsn_havetarget(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
-    // the Qt HaveTarget was a bool; GetTargetType (jsn_targettype) is the
+    // the original HaveTarget was a bool; GetTargetType (jsn_targettype) is the
     // raw CommandHaveTarget value behind the same drain read
     return JS_NewBool(ctx, result_int(sc_exec(SC_HAVE_TARGET)) != 0);
 }
@@ -1116,9 +1116,9 @@ JSValue jsn_cancelwaittarget(JSContext *ctx, JSValueConst, int, JSValueConst *)
 
 namespace {
 
-// [Q] WaitMenu(prompt, choice) - the Qt body armed g_MenuManager's wait hook
-// (commandmanager.cpp:1702 -> SetHook); the manager auto-sends the choice
-// when the named menu arrives (menumanager OnPacketReceived). Fire-and-forget
+// [Q] WaitMenu(prompt, choice) - the original body armed the menu manager's
+// wait hook (SetHook); the manager auto-sends the choice
+// when the named menu arrives. Fire-and-forget
 // + the pause gate (the WaitForMenu flag loop is the polling half).
 JSValue jsn_waitmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -1177,7 +1177,7 @@ JSValue jsn_getmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     pause_gate(ctx);
     if (menu == nullptr)
     {
-        // Qt handed the wrapper a null menu: the object read as empty
+        // the original handed the wrapper a null menu: the object read as empty
         // (Serial "0x00000000", empty name) instead of null
         menu = new CMenu();
     }
@@ -1270,7 +1270,7 @@ JSValue jsn_waitjournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
             return entry;
         }
 
-        // 10 ms poll, then the pause gate (the Qt loop's msleep + PauseWaiting)
+        // 10 ms poll, then the pause gate (the original loop's msleep + PauseWaiting)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         pause_gate(ctx);
     }
@@ -1362,7 +1362,7 @@ JSValue journal_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
 }
 
 // [D] Text()/local SetText(newText) - CScriptJournalObject::SetText kept the
-// text on the local copy only (the Qt object mutated its own m_Message).
+// text on the local copy only (the original object mutated its own m_Message).
 JSValue journal_settext(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
 {
     auto *data = (XA_JS_JOURNALENTRY *)JS_GetOpaque2(ctx, thisVal, s_JournalClass);
@@ -1497,7 +1497,7 @@ JSValue jsn_scriptrunning(JSContext *ctx, JSValueConst, int argc, JSValueConst *
     return JS_NewBool(ctx, value);
 }
 
-// [D] pure helpers of the Qt engine (scriptengine.cpp Time/Date/Random).
+// [D] pure helpers of the engine (Time/Date/Random).
 JSValue jsn_time(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     char buf[16] = { 0 };
@@ -1589,10 +1589,10 @@ JSValue jsn_buffexists(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
 // PlayWav below is the only remaining documented deviation).
 
 // --- the WaitFor* flag family -----------------------------------------------
-// Qt cleared the g_*Received global on the script thread and msleep-polled
+// The original cleared the g_*Received global on the script thread and msleep-polled
 // it; the port clears+polls it inside the drain (SC_EVENT_WAIT clears on the
 // first call - BoolA false - and only reads afterwards), so the main-thread
-// flags are never touched cross-thread. 1000ms default (the Qt overload).
+// flags are never touched cross-thread. 1000ms default (the other overload).
 
 enum XA_WAIT_FLAG
 {
@@ -1611,7 +1611,7 @@ JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     const uint maxDelay = (uint)(argc >= 1 ? arg_int(ctx, argv, argc, 0, 1000) : 1000);
     const uint deadline = g_Ticks + maxDelay;
 
-    // the Qt immediate pre-check (scriptengine.cpp:3678): WaitForTarget
+    // the immediate pre-check: WaitForTarget
     // returned true at once when a target cursor was already up. Queued:
     // g_Target is main-thread state (SC_HAVE_TARGET reads IsTargeting()).
     if (magic == WF_TARGET)
@@ -1629,7 +1629,7 @@ JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     auto *command = sc_make(SC_EVENT_WAIT);
     command->SubTag = magic;
     bool armed = false; // the caller-side marker: the first call clears the
-    while (true)        // flag, later calls only read it (the Qt reset+poll)
+    while (true)        // flag, later calls only read it (the reset+poll)
     {
         if (engine != nullptr && engine->GetTerminated())
         {
@@ -1650,7 +1650,7 @@ JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
             pause_gate(ctx);
             return JS_TRUE;
         }
-        // the Qt timeout shape (scriptengine.cpp:3686-3693): the loop ran
+        // the original timeout shape: the loop ran
         // `while (!received && timer > elapsed())` - exit false once the
         // maxDelay budget is spent (the missing deadline made a lost event
         // hang the script forever)
@@ -1694,7 +1694,7 @@ void serialize_gumphook(XA_SCRIPT_COMMAND *command, const XA_JS_GUMPHOOK *hook)
 
 JSValue jsn_creategumphook(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    // Qt trimmed + lowered the text form; "cancel" meant hook index 0
+    // the original trimmed + lowered the text form; "cancel" meant hook index 0
     string name = arg_text(ctx, argv, argc, 0, "");
     int index = 0;
     if (JS_IsNumber(argv[0]))
@@ -1965,7 +1965,7 @@ JSValue gump_text(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *
 
 // Gump.Select(hook) / Gump.Close - OnCommandSelectGump through
 // g_GumpManager.SendGumpChoice. The queue contract forbids passing the live
-// manager pointer across threads (the Qt body passed m_Parent raw), so the
+// manager pointer across threads (the original body passed m_Parent raw), so the
 // copy's serial+id re-resolve the live gump inside the drain - same reply
 // packet, no dangling window.
 JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
@@ -1995,7 +1995,7 @@ JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
 
 JSValue gump_close(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *)
 {
-    // the Qt Close built an empty hook with index 0 (the "cancel" reply)
+    // the original Close built an empty hook with index 0 (the "cancel" reply)
     return gump_select(ctx, thisVal, 0, nullptr);
 }
 
@@ -2031,7 +2031,7 @@ JSValue menu_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *a
             const int index = arg_int(ctx, argv, argc, 0, 0);
             if (index < 0 || index >= (int)menu->m_Items.size())
             {
-                // the Qt accessors returned 0 / "" out of range
+                // the original accessors returned 0 / "" out of range
                 return magic == 5 ? JS_NewInt32(ctx, 0) : JS_NewString(ctx, "");
             }
             const CMenuItem &item = menu->m_Items[index];
@@ -2073,7 +2073,7 @@ JSValue menu_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
         if (index < 0 || index >= (int)menu->m_Items.size())
         {
             pause_gate(ctx);
-            return JS_FALSE; // the Qt int form no-op'd out of range
+            return JS_FALSE; // the int form no-op'd out of range
         }
         itemName = menu->m_Items[index].GetName();
     }
@@ -2165,7 +2165,7 @@ JSValue jsn_tradeinfo(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->TextA = arg_text(ctx, argv, argc, 0, ""); // trade index
     if (magic == 1 || magic == 4)                      // container/checkstate
     {
-        // the "right" container text meant opponent 1 (the Qt bodies)
+        // the "right" container text meant opponent 1 (the original bodies)
         const string container = arg_text(ctx, argv, argc, 1, "0");
         string lowered = container;
         for (char &c : lowered)
@@ -2211,8 +2211,8 @@ JSValue jsn_shop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     ScriptQueue_Exec(command);
     delete command;
 
-    // the Qt loop polled IsShopping every 10 ms; the terminate check is the
-    // Phase-3 addition (the Qt loop had none and outlived Terminate)
+    // the original loop polled IsShopping every 10 ms; the terminate check is the
+    // Phase-3 addition (it had none and outlived Terminate)
     while (engine == nullptr || !engine->GetTerminated())
     {
         auto *state = sc_make(SC_SHOP_STATE);
@@ -2270,7 +2270,7 @@ JSValue jsn_timer(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, in
     return JS_UNDEFINED;
 }
 
-// [Q] SetGlobal(name, value) / ClearGlobals - the Qt CCommandManager map
+// [Q] SetGlobal(name, value) / ClearGlobals - the command-manager map
 // (assistant-global: shared by every script, session lifetime)
 JSValue jsn_globalset(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -2333,7 +2333,7 @@ JSValue macro_play(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
         return JS_UNDEFINED;
     }
     const bool wait = argc >= 1 ? arg_bool(ctx, argv, argc, 0, false) : false;
-    // Qt default delay 100500 (clientmacroengine.cpp Play()); nothing ever
+    // the original default delay was 100500; nothing ever
     // flipped g_ClientMacroPlayed there, so wait=true meant "sleep the delay"
     const uint delay = (uint)(argc >= 2 ? arg_int(ctx, argv, argc, 1, 100500) : 100500);
 
@@ -2462,7 +2462,7 @@ JSValue jsn_newfile(JSContext *ctx, JSValueConst, int, JSValueConst *)
 }
 
 // --- PlayWav - DOCUMENTED DEVIATION ------------------------------------------
-// Qt played a local .wav through QSound (scriptengine.cpp:3207). The port has
+// The original played a local .wav through its audio backend. The port has
 // no audio mixer; the call reports and does nothing.
 
 JSValue jsn_playwav(JSContext *ctx, JSValueConst, int, JSValueConst *)
@@ -2523,7 +2523,7 @@ JSValue jsn_selectedtile(JSContext *ctx, JSValueConst, int, JSValueConst *, int 
 }
 
 // --- the text window (scriptgump.cpp; the g_TextDialog ops) -------------------
-// Each op marshals SC_TEXT_WINDOW, then the pause gate (the Qt bodies emitted
+// Each op marshals SC_TEXT_WINDOW, then the pause gate (the original bodies emitted
 // the command and called PauseWaiting - fire-and-forget + pause).
 
 JSValue textwindow_op(JSContext *ctx, int op, JSValueConst *argv, int argc, int ints)
@@ -2570,8 +2570,8 @@ JSValue textwindow_noarg(JSContext *ctx, JSValueConst, int, JSValueConst *, int 
     return textwindow_op(ctx, magic, nullptr, 0, 0);
 }
 
-// [Q] GetGlobal(name) - the Qt OnCommandGetGlobal returned the stored value
-// or left the empty QString default.
+// [Q] GetGlobal(name) - the original OnCommandGetGlobal returned the stored value
+// or left the empty string default.
 JSValue jsn_globalget(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_GLOBAL_SET);
@@ -2636,8 +2636,8 @@ JSValue jsn_findfriendenemy(JSContext *ctx, JSValueConst, int argc, JSValueConst
     return JS_NewStringLen(ctx, text.c_str(), text.size());
 }
 
-// [G/Q] GetFriendList/GetFriendsStatus/GetEnemyList/GetEnemiesStatus (the Qt
-// set at scriptengine.cpp:957-962; the lists are the checked entries).
+// [G/Q] GetFriendList/GetFriendsStatus/GetEnemyList/GetEnemiesStatus (the
+// checked entries; the lists are the checked entries).
 JSValue jsn_friendinfo(JSContext *ctx, JSValueConst, int, JSValueConst *, int magic)
 {
     auto *command = sc_make(SC_FRIEND_INFO);
@@ -2679,7 +2679,7 @@ JSValue jsn_friendcmd(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
 }
 
 // [G/Q] SaveHotkeys(name)/LoadHotkeys(name) -> bool; OnOffHotkeys() reads and
-// OnOffHotkeys(state) sets the engine flag (the Qt OnOffHotkeys overloads).
+// OnOffHotkeys(state) sets the engine flag (the two overloads).
 JSValue jsn_hotkeys(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
     auto *command = sc_make(SC_HOTKEYS);
@@ -2701,8 +2701,8 @@ JSValue jsn_hotkeys(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
 }
 
 // [Q] UseAbility(name): the primary/secondary (+-keep) literals or a
-// g_AbilityName table entry -> CPacketUseCombatAbility (Qt OnCommandUseAbility,
-// commandmanager.cpp, over the same packet family).
+// g_AbilityName table entry -> CPacketUseCombatAbility (OnCommandUseAbility,
+// over the same packet family).
 JSValue jsn_useability(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
@@ -2714,8 +2714,8 @@ JSValue jsn_useability(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     return JS_UNDEFINED;
 }
 
-// [Q] UseWrestlingDisarm/Stun (Qt sent the crossed pair: Disarm -> the stun
-// packet, Stun -> the disarm packet - kept verbatim, commandmanager.cpp).
+// [Q] UseWrestlingDisarm/Stun (the crossed pair is kept verbatim: Disarm -> the stun
+// packet, Stun -> the disarm packet).
 JSValue jsn_wrestling(JSContext *ctx, JSValueConst, int, JSValueConst *, int magic)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
@@ -2727,7 +2727,7 @@ JSValue jsn_wrestling(JSContext *ctx, JSValueConst, int, JSValueConst *, int mag
 }
 
 // [Q] InvokeVirtue(name): Honor/Sacrifice/Valor -> CPacketInvokeVirtueRequest
-// (Qt OnCommandInvokeVirture, commandmanager.cpp).
+// (OnCommandInvokeVirture).
 JSValue jsn_invokevirtue(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
@@ -2740,7 +2740,7 @@ JSValue jsn_invokevirtue(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
 }
 
 // [G/Q] ClientViewRange() reads the VKI_VIEW_RANGE value (g_GetInt, no
-// options-access gate in Qt - commandmanager.cpp:4036), ClientViewRange(range)
+// options-access gate - commandmanager.cpp:4036), ClientViewRange(range)
 // sends CPacketClientViewRange (:4044).
 JSValue jsn_viewrange(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
@@ -2755,8 +2755,8 @@ JSValue jsn_viewrange(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
 }
 
 // [Q] SetPVPCaller([serial]): with a serial the VKI_SET_PVPCALLER value is
-// set; without one the targeting flow arms HandleSetPVPCaller (Qt
-// OnCommandSetPVPCaller, commandmanager.cpp).
+// set; without one the targeting flow arms HandleSetPVPCaller
+// (OnCommandSetPVPCaller).
 JSValue jsn_setpvpcaller(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
@@ -2768,7 +2768,7 @@ JSValue jsn_setpvpcaller(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     return JS_UNDEFINED;
 }
 
-// [G/Q] the text-window font colors (Qt SetFontColor/GetFontColor/
+// [G/Q] the text-window font colors (SetFontColor/GetFontColor/
 // GetFontColorValue + the Characters triple; commandmanager.cpp gates them
 // with EnabledCommandFontColor). 0/1/2 = set/get/value, 3/4/5 = characters.
 JSValue jsn_fontcolor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
@@ -2793,8 +2793,8 @@ JSValue jsn_fontcolor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     return JS_NewStringLen(ctx, text.c_str(), text.size());
 }
 
-// [Q] the paperdoll/statusbar window packets + LogOut + Screenshot (Qt
-// OnCommandOpenPaperdoll..OnCommandCloseStatusbar, OnCommandLogOut).
+// [Q] the paperdoll/statusbar window packets + LogOut + Screenshot (the
+// OnCommandOpenPaperdoll..OnCommandCloseStatusbar, OnCommandLogOut handlers).
 // 340 open / 341 close / 342 move (paperdoll), 343 show / 344 close
 // (statusbar), 345 logout, 346 screenshot.
 JSValue jsn_windowop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
@@ -2811,7 +2811,7 @@ JSValue jsn_windowop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv,
     return JS_UNDEFINED;
 }
 
-// [G] GetTargetType: the Qt CommandHaveTarget read (cursor type + 1 while a
+// [G] GetTargetType: the CommandHaveTarget read (cursor type + 1 while a
 // target cursor is up, else 0). HaveTarget keeps
 // its bool shape; this is the raw value.
 JSValue jsn_targettype(JSContext *ctx, JSValueConst, int, JSValueConst *)
@@ -2819,8 +2819,7 @@ JSValue jsn_targettype(JSContext *ctx, JSValueConst, int, JSValueConst *)
     return JS_NewInt32(ctx, result_int(sc_exec(SC_HAVE_TARGET)));
 }
 
-// [G] Contains(text, pattern[, ignoreCase]): the Qt helper (pure JS-side,
-// scriptengine.cpp:3402): the pattern is a '|' separated alternative list.
+// [G] Contains(text, pattern[, ignoreCase]): pure JS-side helper: the pattern is a '|' separated alternative list.
 JSValue jsn_contains(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     string text = arg_text(ctx, argv, argc, 0, "");
@@ -2859,8 +2858,7 @@ JSValue jsn_contains(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     return JS_FALSE;
 }
 
-// [G] Split(text[, separator]): the Qt helper (scriptengine.cpp:3448) - the
-// default separator is a space, empty parts skipped.
+// [G] Split(text[, separator]): the default separator is a space, empty parts skipped.
 JSValue jsn_split(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     string text = arg_text(ctx, argv, argc, 0, "");
@@ -2872,7 +2870,7 @@ JSValue jsn_split(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     {
         size_t hit = text.find(separator, start);
         string part = text.substr(start, hit == string::npos ? string::npos : hit - start);
-        if (!part.empty()) // QString::SkipEmptyParts (both Qt overloads)
+        if (!part.empty()) // empty parts are skipped (both overload forms)
         {
             JS_SetPropertyUint32(
                 ctx, array, (uint32_t)index++, JS_NewStringLen(ctx, part.c_str(), part.size()));
@@ -3012,7 +3010,7 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
     JS_CFUNC_MAGIC_DEF("SayYell", 1, jsn_say, SAY_YELL),       // "! "
     JS_CFUNC_MAGIC_DEF("SayWhisper", 1, jsn_say, SAY_WHISPER), // "; "
     JS_CFUNC_MAGIC_DEF("SayEmote", 1, jsn_say, SAY_EMOTE),     // ": "
-    // Deviation from Qt (scriptengine.cpp:3550): SayBroadcast prefixed "? "
+    // Deviation: SayBroadcast prefixed "? "
     // through Say; kept plain so the packet goes out as normal speech (the
     // executor sends ST_NORMAL) - revisit with speech modes in 4b-2.
     JS_CFUNC_MAGIC_DEF("SayBroadcast", 1, jsn_say, SAY_BROADCAST),
@@ -3128,7 +3126,7 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
     // shop
     JS_CFUNC_MAGIC_DEF("Buy", 1, jsn_shop, 0),
     JS_CFUNC_MAGIC_DEF("Sell", 1, jsn_shop, 1),
-    // the WaitFor* family (the Qt 1000ms default when the delay is omitted)
+    // the WaitFor* family (the 1000ms default when the delay is omitted)
     JS_CFUNC_MAGIC_DEF("WaitForTarget", 0, jsn_waitfor, WF_TARGET),
     JS_CFUNC_MAGIC_DEF("WaitForMenu", 0, jsn_waitfor, WF_MENU),
     JS_CFUNC_MAGIC_DEF("WaitForGump", 0, jsn_waitfor, WF_GUMP),
@@ -3280,7 +3278,7 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
     JS_CFUNC_MAGIC_DEF("CloseStatusbar", 0, jsn_windowop, 4),
     JS_CFUNC_MAGIC_DEF("LogOut", 0, jsn_windowop, 5),
     JS_CFUNC_MAGIC_DEF("Screenshot", 0, jsn_windowop, 6),
-    // string helpers (pure script-side, the Qt CScriptEngine helpers)
+    // string helpers (pure script-side, the CScriptEngine helpers)
     JS_CFUNC_DEF("Contains", 2, jsn_contains),
     JS_CFUNC_DEF("Split", 1, jsn_split),
     JS_CFUNC_DEF("GetTargetType", 0, jsn_targettype),
@@ -3452,7 +3450,7 @@ const JSCFunctionListEntry CLIENTMACRO_PROTOTYPE[] = {
 
 void Script_FormatException(JSContext *ctx, string &line, string &message)
 {
-    // the QScriptValue lineNumber/toString pair: quickjs-ng carries the line
+    // the lineNumber/toString pair: quickjs-ng carries the line
     // inside the stack frames ("<script>:N:C"), so the line is parsed from
     // there (the error property only exists for script-thrown Errors).
     JSValue exception = JS_GetException(ctx);
@@ -3571,7 +3569,7 @@ void Script_RegisterAPI(JSContext *ctx, const string &scriptName)
     JS_SetPropertyFunctionList(ctx, player, PLAYER_FUNCS, count_of(PLAYER_FUNCS));
     JS_SetPropertyStr(ctx, global, "Player", player);
 
-    // TextWindow./SelectedTile. - the live engine objects of the Qt globals
+    // TextWindow./SelectedTile. - the live engine objects of the original globals
     // (scripthandle.cpp:116-125); the text window state is the process
     // singleton (scriptgump.cpp), the selected tile reads are marshaled
     JSValue textWindow = JS_NewObject(ctx);
@@ -3585,7 +3583,7 @@ void Script_RegisterAPI(JSContext *ctx, const string &scriptName)
     JS_SetPropertyStr(ctx, global, "SelectedTile", selectedTile);
 
     // The sentinel globals (scripthandle.cpp:154-165): they were STRINGS in
-    // the Qt engine and the serial resolution pattern-matched them; they
+    // the original engine and the serial resolution pattern-matched them; they
     // stay strings so existing scripts keep working.
     static const char *const SENTINELS[] = { "self",    "ground",       "lastcorpse",
         "lasttarget", "lasttile",     "backpack", "lastcontainer", "lastattack",
@@ -3603,7 +3601,7 @@ void Script_RegisterAPI(JSContext *ctx, const string &scriptName)
 
 // ---------------------------------------------------------------------------
 // The drain-side executor (commandqueue.h): runs on the MAIN thread inside
-// ScriptQueue_Drain - the port of the Qt OnCommand* slot bodies + the direct
+// ScriptQueue_Drain - the port of the original OnCommand* handler bodies + the direct
 // engine reads. World access is unrestricted here (g_World/g_Player), config
 // and the journal mirror are main-thread state.
 // ---------------------------------------------------------------------------
@@ -3633,7 +3631,7 @@ CGameObject *world_object(uint serial)
 }
 
 // The SC_OBJECT_GET/SC_PLAYER_GET selector switch: one body per
-// CScriptGameObject/CPlayerObject getter (the Qt handlers read the same
+// CScriptGameObject/CPlayerObject getter (the original handlers read the same
 // fields through the injected interface; here it is the local world model).
 bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue, string &textValue)
 {
@@ -3724,7 +3722,7 @@ bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue
             break;
         case OF_BOOL_ISMULTI:
             boolValue = false; // the model has no multi flag; 4b-2 with the
-                               // multi round (the Qt engine read the same 0)
+                               // multi round (the original engine read the same 0)
             break;
         case OF_INT_EQUIPLAYER:
             intValue = ((CGameItem *)object)->GetEquipLayer();
@@ -4051,7 +4049,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         false, list);
                     break;
                 case UK_USE_TYPE_LIST:
-                    // the Qt gate (commandmanager.cpp:1105): find arrays are a
+                    // the find-arrays gate: find arrays are a
                     // separate enabled-command bit
                     if (!EnabledCommandFindArrays())
                     {
@@ -4062,7 +4060,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         "", command->BoolA, list);
                     break;
                 case UK_USE_FROM_GROUND_LIST:
-                    // the Qt gate (commandmanager.cpp:1120)
+                    // the find-arrays gate
                     if (!EnabledCommandFindArrays())
                     {
                         break;
@@ -4197,9 +4195,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     command->PointerA = new CJournalMessage(messages[index]);
                     if (command->BoolA)
                     {
-                        // Port extension: Qt's JournalLine(index) had no
-                        // consume and never removed
-                        // (commandmanager.cpp:4183). The extra argument is
+                        // Port extension: the original JournalLine(index) had no
+                        // consume and never removed. The extra argument is
                         // honored as remove-after-read.
                         ScriptJournal_RemoveAt(index);
                     }
@@ -4259,7 +4256,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     break;
                 }
                 default: // the type/ground hook families arm the same tile/object
-                         // hooks after a find (the Qt bodies passed the found
+                         // hooks after a find (the original bodies passed the found
                          // list through g_Target.SetObjectsHook / SetTileHook)
                 {
                     g_Target.SetObjectsHook(command->ListA);
@@ -4270,7 +4267,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_CANCEL_WAIT_TARGET:
         {
-            if (g_World != nullptr) // the Qt body gated on the world
+            if (g_World != nullptr) // the original body gated on the world
             {
                 g_Target.ClearHooks();
             }
@@ -4398,7 +4395,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         : string();
                     break;
                 }
-                case 300: // option set (the VKI id in IntB; the Qt
+                case 300: // option set (the VKI id in IntB; the
                 {         // OnCommandOptionX(const bool&) g_World + options gate)
                     if (g_World != nullptr && EnabledCommandOptionsAccess() && g_SetInt != nullptr)
                     {
@@ -4406,7 +4403,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     }
                     break;
                 }
-                case 301: // ClientViewRange() (no options gate, Qt :4036)
+                case 301: // ClientViewRange() (no options gate)
                 {
                     if (g_World == nullptr)
                     {
@@ -4416,14 +4413,14 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         g_GetInt != nullptr ? g_GetInt(VKI_VIEW_RANGE, 0) : 0;
                     break;
                 }
-                case 302: // ClientViewRange(range) (Qt :4044, SendServer)
+                case 302: // ClientViewRange(range) (SendServer)
                     if (g_World == nullptr)
                     {
                         break;
                     }
                     ::CPacketClientViewRange((uint8_t)command->IntB).Send();
                     break;
-                case 303: // SetPVPCaller([serial]) (Qt OnCommandSetPVPCaller)
+                case 303: // SetPVPCaller([serial]) (OnCommandSetPVPCaller)
                 {
                     if (g_World == nullptr)
                     {
@@ -4490,13 +4487,13 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     }
                     break;
                 }
-                case 311: // UseWrestlingDisarm (Qt sent the stun packet)
+                case 311: // UseWrestlingDisarm (sends the stun packet)
                     CPacketWrestlingStun().SendServer();
                     break;
-                case 312: // UseWrestlingStun (Qt sent the disarm packet)
+                case 312: // UseWrestlingStun (sends the disarm packet)
                     CPacketWrestlingDisarm().SendServer();
                     break;
-                case 313: // InvokeVirtue(name) (Qt OnCommandInvokeVirture)
+                case 313: // InvokeVirtue(name) (OnCommandInvokeVirture)
                 {
                     for (int i = 0; i < MAX_INVOKE_VIRTURE_COUNT; i++)
                     {
@@ -4557,7 +4554,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     command->ResultText = CAssistant::GraphicToText(color);
                     break;
                 }
-                case 340: // OpenPaperdoll(serial) (Qt :4566, SendServer)
+                case 340: // OpenPaperdoll(serial) (SendServer)
                     if (g_World == nullptr || command->TextA.empty())
                     {
                         break;
@@ -4565,14 +4562,14 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     CPacketDoubleClickRequest(CAssistant::TextToSerial(command->TextA) | 0x80000000)
                         .SendServer();
                     break;
-                case 341: // ClosePaperdoll(serial) (Qt :4579)
+                case 341: // ClosePaperdoll(serial)
                     if (g_World == nullptr || command->TextA.empty())
                     {
                         break;
                     }
                     CPacketClosePaperdoll(CAssistant::TextToSerial(command->TextA)).SendClient();
                     break;
-                case 342: // MovePaperdoll(serial, x, y) (Qt :4592)
+                case 342: // MovePaperdoll(serial, x, y)
                     if (g_World == nullptr || command->TextA.empty())
                     {
                         break;
@@ -4581,7 +4578,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         CAssistant::TextToSerial(command->TextA), command->IntB, command->IntC)
                         .SendClient();
                     break;
-                case 343: // ShowStatusbar(serial, x, y[, minimized]) (Qt :4400)
+                case 343: // ShowStatusbar(serial, x, y[, minimized])
                     if (g_World == nullptr || !EnabledCommandStatusbars())
                     {
                         break;
@@ -4590,21 +4587,21 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         command->IntC, command->BoolA)
                         .SendClient();
                     break;
-                case 344: // CloseStatusbar(serial) (Qt :4410)
+                case 344: // CloseStatusbar(serial)
                     if (g_World == nullptr || !EnabledCommandStatusbars())
                     {
                         break;
                     }
                     CPacketCloseStatusbar(CAssistant::TextToSerial(command->TextA)).SendClient();
                     break;
-                case 345: // LogOut() (Qt OnCommandLogOut)
+                case 345: // LogOut() (OnCommandLogOut)
                     if (EnabledCommandLogOut())
                     {
                         CPacketLogOut().SendClient();
                     }
                     break;
-                case 346: // Screenshot() (Qt Platform::GameScreenshot -> the
-                          // client's CScreenshotBuilder)
+                case 346: // Screenshot() (the client's CScreenshotBuilder,
+                          // like the original Platform::GameScreenshot)
                     g_ScreenshotBuilder.SaveScreen();
                     break;
                 default:
@@ -4798,7 +4795,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             CGump *gump = nullptr;
             if (command->SubTag == 1)
             {
-                // -1 was the GetLastGump path (Qt GetGump(-1) -> GetLastGump)
+                // -1 was the GetLastGump path (GetGump(-1) -> GetLastGump)
                 gump = command->IntA == -1 ? g_GumpManager.GetLastGump()
                                            : g_GumpManager.GetGump((uint)command->IntA);
             }
@@ -4965,7 +4962,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             break;
         }
         case SC_EVENT_WAIT: // the WaitFor* flags;
-        {                   // first call clears (the Qt g_XReceived = false),
+        {                   // first call clears (g_XReceived = false),
             bool *flag = nullptr; // later calls only read
             switch (command->SubTag)
             {
@@ -4999,10 +4996,10 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             command->ResultBool = *flag;
             break;
         }
-        case SC_FRIEND_INFO: // the Qt CommandFindFriend/Enemy + Get*List/
+        case SC_FRIEND_INFO: // the CommandFindFriend/Enemy + Get*List/
         {                    // Get*Status set
             // list reads/status target the friend gate, the enemy forms the
-            // enemy gate (the same split the Qt slots had)
+            // enemy gate (the same split the original slots had)
             const bool enemyForm =
                 command->SubTag == 2 || command->SubTag == 3 || command->SubTag == 5;
             if (g_World == nullptr ||
@@ -5012,7 +5009,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             switch (command->SubTag)
             {
-                case 0: // GetFriendList: the checked entries (Qt tab list)
+                case 0: // GetFriendList: the checked entries (tab list)
                 case 2: // GetEnemyList
                 {
                     const vector<CWorldObjectEntry> &list =
@@ -5056,7 +5053,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             break;
         }
-        case SC_FRIEND_CMD: // Add/Remove/Clear Friend/Enemy (the Qt slots
+        case SC_FRIEND_CMD: // Add/Remove/Clear Friend/Enemy (the original slots
         {                   // only gated g_World here)
             if (g_World == nullptr)
             {

@@ -3,7 +3,7 @@
 
 // The HotkeysForm window implementation (see hotkeysform.h). Ported from
 // assist/hotkeysform.cpp with the ImGui widget kit; behaviors referenced by
-// their Qt line numbers.
+// their original line numbers.
 
 #define LOGGER_MODULE Assistant
 
@@ -35,7 +35,7 @@ char s_HotkeyText[96] = { 0 };  // the capture field label
 char s_ExternalCode[2048] = { 0 }; // the "External code" editor (plain text)
 char s_DataText[512] = { 0 };   // Data column scratch (one row per frame)
 
-constexpr float FORM_WIDTH = 851.0f;  // Qt default size (hotkeysform.ui)
+constexpr float FORM_WIDTH = 851.0f;  // the original default form size
 constexpr float FORM_HEIGHT = 639.0f;
 
 void refresh_hotkey_text()
@@ -43,7 +43,7 @@ void refresh_hotkey_text()
     if (s_SelectedRow >= 0 && s_SelectedRow < (int)g_AssistantConfig.m_Hotkeys.size())
     {
         const CHotkeyEntry &entry = g_AssistantConfig.m_Hotkeys[s_SelectedRow];
-        // GetHotkeyText(0, ..) renders the Qt "No Key" placeholder
+        // GetHotkeyText(0, ..) renders the "No Key" placeholder
         HotkeyFormatText(entry.Key, entry.Modifiers, s_HotkeyText, sizeof(s_HotkeyText));
     }
     else
@@ -203,11 +203,11 @@ void HotkeysForm_Draw(bool *open)
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             bool enabled = entry.Key != 0;
-            ImGui::BeginDisabled(true); // the checkbox mirrors "key assigned" (Qt check state)
+            ImGui::BeginDisabled(true); // the checkbox mirrors "key assigned" (original check state)
             ImGui::Checkbox("##on", &enabled);
             ImGui::EndDisabled();
             ImGui::TableNextColumn();
-            // GetHotkeyText(0, ..) renders the Qt "No Key" placeholder
+            // GetHotkeyText(0, ..) renders the "No Key" placeholder
             HotkeyFormatText(entry.Key, entry.Modifiers, s_DataText, sizeof(s_DataText));
             const bool selected = s_SelectedRow == i;
             if (ImGui::Selectable(s_DataText, selected, ImGuiSelectableFlags_SpanAllColumns))
@@ -300,7 +300,7 @@ void HotkeysForm_Draw(bool *open)
         {
             // false = a duplicate popup opened (the pending assignment rides
             // the engine's popup state); either way the capture buffer resets
-            // and keeps listening, like the Qt box
+            // and keeps listening, like the original capture box
             g_Hotkeys.AssignCaptureToRow(s_SelectedRow);
             g_Hotkeys.BeginCapture();
             refresh_hotkey_text();

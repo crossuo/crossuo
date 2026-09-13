@@ -6,11 +6,11 @@
 // The QuickJS-ng runtime wrapper (replaces the old script engine usage
 // inside CScriptHandle::RunEngine): one JSRuntime + one
 // JSContext per running script, the assistant API surface registered as
-// plain C natives (apiscript.cpp), the sentinel globals from the Qt engine
+// plain C natives (apiscript.cpp), the sentinel globals from the original engine
 // (self/ground/lasttarget/... ) registered on the global object, and the
 // evaluate/function-call flow with error reporting through the journal.
 //
-// The Qt globals were *strings* ("self", "lasttarget", ... - see
+// The original globals were *strings* ("self", "lasttarget", ... - see
 // scripthandle.cpp:154-165): the command layer pattern-matched those
 // sentinels to the live serials. The same strings are registered here, so
 // existing scripts keep working; helpers that receive them resolve them the
@@ -55,7 +55,7 @@ public:
     bool Setup(const string &scriptName);
 
     // The CScriptHandle::RunEngine flow: evaluate the whole file (defines the
-    // functions), then call `functionName` with the string args (Qt behavior:
+    // functions), then call `functionName` with the string args (original behavior:
     // an evaluate error aborts before the call; both paths report through
     // g_Assistant.ScriptError exactly like signal_ScriptError did).
     // Returns false when the script produced an error (already reported).

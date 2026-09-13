@@ -3,9 +3,9 @@
 
 #pragma once
 
-// The script text editor widget (was CScriptPlainTextEdit + the Qt
+// The script text editor widget (was CScriptPlainTextEdit + the
 // CSyntaxHighlighter + CExtendedPlainTextEdit gutter, plan §3.2): line
-// buffer, tokenizer highlighting with the Qt palette (.Method dark-magenta,
+// buffer, tokenizer highlighting with the original palette (.Method dark-magenta,
 // keywords dark-blue, globals dark-yellow, numbers/0x-hex blue, strings
 // dark-green, // comments gray), line-number gutter, current-line highlight,
 // a snapshot undo stack and the Find/Replace/GoToLine popups.

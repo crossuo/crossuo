@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (macros/macro.h), Qt-diet: the CMacro object
-// hierarchy is unchanged; the QXmlStreamWriter Save / QXmlStreamAttributes
+// Ported from X:UO Assist (macros/macro.h), trimmed: the CMacro object
+// hierarchy is unchanged; the XML-writer Save / XML-attribute
 // Load signatures became the config/xml DOM equivalents (identical attribute
 // names and value formatting). The executor stays with the Phase 3 UI
 // (master plan: port the MODEL this round).
@@ -104,7 +104,7 @@ class CMacro
     SETGET(int, WaitingTime, 1000)
 
 public:
-    // Class-kind tag replacing the Qt code's dynamic_cast (the client builds
+    // Class-kind tag replacing the original code's dynamic_cast (the client builds
     // with -fno-rtti); each subclass reports its kind and the GetText()/copy
     // paths static_cast after checking it, exactly where the original
     // dynamic_cast checks would have failed.

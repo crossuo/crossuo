@@ -9,13 +9,13 @@
 // section); the compiled title output goes to the OS window caption through
 // the manager's Redraw + AssistantUI_Tick (was the win32 GDI title bar).
 //
-// Port deltas (documented): the color swatches pick opaque RGB (Qt's
-// QColorDialog); the value/color tables render as plain text next to the
-// pickers instead of the Qt label grids; there is no drag-reorder list here
-// (the Qt lw_DisplayItems was a plain list - no itemDropped connect beyond
+// Port deltas (documented): the color swatches pick opaque RGB through a
+// picker popup; the value/color tables render as plain text next to the
+// pickers instead of label grids; there is no drag-reorder list here
+// (the original lw_DisplayItems was a plain list - no itemDropped connect beyond
 // the Options.xml save, which the mutations do directly); the Insert command
 // / Set title from group actions APPEND the tag at the end of s_TitleData,
-// while Qt inserted at the text cursor - inserting at the InputText cursor
+// while the original inserted at the text cursor - inserting at the InputText cursor
 // is possible through the ImGui input-state accessors (documented only,
 // deliberately not implemented).
 
@@ -39,7 +39,7 @@ namespace xuoassist {
 
 namespace {
 
-// --- icon previews (the Qt items editor showed the decoded static art in
+// --- icon previews (the original items editor showed the decoded static art in
 // --- the list rows; the ImGui list core is text-only, so the preview lives
 // --- next to the selected item's properties) -------------------------------
 
@@ -122,7 +122,7 @@ static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint key)
     return tex;
 }
 
-// --- page state (the Qt widget fields) ---------------------------------------
+// --- page state (the original widget fields) ---------------------------------
 char s_TitleData[2048] = { 0 };   // te_DisplayTitleData
 string s_CompiledFrom;            // the data the manager last compiled (text|color)
 bool s_TitleDirty = false;        // a redraw was requested (events / edits)
@@ -145,7 +145,7 @@ char s_GroupData[2048] = { 0 };   // te_DisplayGroupTitleData
 bool s_FtPending = false;         // the items editor from-target
 uint s_FtGeneration = 0;
 
-// QRgb (0xFFRRGGBB, what the Qt writers stored) <-> ImGui IM_COL32 RGBA
+// 0xFFRRGGBB (what the original writers stored) <-> ImGui IM_COL32 RGBA
 ImU32 argb_to_rgba(uint argb)
 {
     return IM_COL32((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, 0xFF);
@@ -344,7 +344,7 @@ void draw_configuration_page()
     }
     if (ImGui::BeginPopup("##insert_command"))
     {
-        // the Qt menu: "Custom items" submenu + the built-in commands
+        // the original menu: "Custom items" submenu + the built-in commands
         if (ImGui::BeginMenu("Custom items"))
         {
             const vector<CDisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
@@ -462,7 +462,7 @@ void draw_configuration_page()
             "##title_data", s_TitleData, sizeof(s_TitleData), ImVec2(-1.0f, 120.0f)))
     {
         // was on_te_DisplayTitleData_textChanged: recompile + redraw; the
-        // text persists with the profile (Qt saved Options.xml on close)
+        // text persists with the profile (the original saved Options.xml on close)
         g_AssistantConfig.m_DisplayTitleData = s_TitleData;
         AssistantUI_MarkOptionsDirty();
         recompile_title();
@@ -538,7 +538,7 @@ void draw_items_editor_page()
     ImGui::TextUnformatted("Properties");
     ImGui::Separator();
 
-    // the static-art preview of the selected item (the Qt list rows carried
+    // the static-art preview of the selected item (the original list rows carried
     // the decoded icon; the ImGui list core is text-only, so the preview
     // sits with the properties of the selected entry)
     if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
@@ -611,7 +611,7 @@ void draw_items_editor_page()
     if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
     {
         // the "With background" / "Calculate colors in percents" checks and
-        // the two 3-swatch groups read/write the entry directly (the Qt page
+        // the two 3-swatch groups read/write the entry directly (the original page
         // saved only through the Save icon; the checks were bound to the item)
         CDisplayItem &di = items[s_SelectedItem].m_Item;
         bool background = di.GetBackground();
@@ -628,8 +628,8 @@ void draw_items_editor_page()
             changed = true;
         }
 
-        // Colors: "Text:" normal/mid/min + "Bg:" normal/mid/min (the Qt label
-        // grid of 6 QColoredPushButtons)
+        // Colors: "Text:" normal/mid/min + "Bg:" normal/mid/min (the label
+        // grid of 6 color swatch buttons)
         ImGui::TextUnformatted("Colors - Text:");
         ImGui::SameLine();
         uint c = di.GetColor();

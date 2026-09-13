@@ -49,7 +49,7 @@ void CAssistantUIEvents::OnBuffRemove(ushort graphic)
 void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)
 {
     // the script-visible mirror (script/journal.cpp) shares the same ring
-    // semantics the Qt g_JournalManager had
+    // semantics the original g_JournalManager had
     ScriptJournal_Add(message);
     // was g_JournalManager.Add: copy the payload, cap the ring
     Line line;
@@ -194,7 +194,7 @@ void CAssistantUIEvents::OnInspectorUpdate(uint serial)
 void CAssistantUIEvents::OnPartyMemberInfo(const XA_PARTY_MEMBER_INFO &info)
 {
     // the Krrios packet positions the map window draws for mirror-less
-    // members (Qt stored them straight into g_PartyManager.m_MemberInfo)
+    // members (the original stored them straight into g_PartyManager.m_MemberInfo)
     PARTY_MEMBER_INFO stored;
     stored.Serial = info.Serial;
     stored.X = info.X;

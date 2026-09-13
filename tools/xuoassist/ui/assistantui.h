@@ -41,7 +41,7 @@ void AssistantUI_QueueAutostart();
 // own quit event (CWindow::Destroy -> SDL_QUIT); no-op without a window.
 void AssistantUI_RequestClientClose();
 
-// The UI-layer from-target disarm (was implicit in the Qt widget teardown):
+// The UI-layer from-target disarm (was implicit in the original widget teardown):
 // clears the armed g_TargetHandler plus every tab arm state so a cursor
 // request armed before shutdown cannot consume a 0x6C after re-init. Hide
 // keeps the state on purpose; only shutdown disarms.
@@ -52,7 +52,7 @@ void CancelPendingFromTargets();
 int AssistantUI_ReconnectSecondsLeft();
 
 // Main/Options page edit tracking: those widgets persist with the profile on
-// close (Qt semantics); checklist toggles save immediately instead.
+// close (original semantics); checklist toggles save immediately instead.
 void AssistantUI_MarkOptionsDirty();
 void AssistantUI_ClearOptionsDirty();
 

@@ -40,7 +40,7 @@ public:
         uchar Flags{ 0 };
     };
 
-    // Was g_JournalManager.Add feeding the Qt journal window.
+    // Was g_JournalManager.Add feeding the journal window.
     virtual void OnJournalMessage(const CJournalMessage &message) override;
 
     // --- Phase 3 consumers -------------------------------------------------

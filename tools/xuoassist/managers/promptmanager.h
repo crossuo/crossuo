@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/promptmanager.h), Qt-diet
-// (QVector -> std::vector).
+// Ported from X:UO Assist (managers/promptmanager.h), trimmed
+// (lists are std::vector).
 
 #pragma once
 

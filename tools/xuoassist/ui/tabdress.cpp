@@ -5,7 +5,7 @@
 // list plus the working items list, the apply/dress/undress buttons and the
 // two option checkboxes. The set data lives in g_AssistantConfig.m_DressSets
 // (Dress.coa, saved on every mutation); the sequences run through
-// core/dressagent (the Qt app generated a throwaway script instead).
+// core/dressagent (the original app generated a throwaway script instead).
 
 #include "assistantui.h"
 
@@ -27,7 +27,7 @@ namespace xuoassist {
 
 namespace {
 
-// the Qt tab kept a WORKING COPY of the selected set's items in the
+// the original tab kept a WORKING COPY of the selected set's items in the
 // lw_DressItems widget (from-target / apply / clear mutated the copy; Create
 // and Save committed the copy into a set) - s_WorkRows mirrors that
 int s_SelectedSet = -1;
@@ -129,7 +129,7 @@ bool name_in_use(const char *name, int skipIndex)
 
 // the per-set layer scan buttons (was on_pb_DressSetCurrent/ApplyHands/
 // ApplyArmor_clicked): read the player's equipped items from the mirror
-// checkSafe matches the Qt guards: SetCurrent and ApplyArmor required
+// checkSafe matches the original guards: SetCurrent and ApplyArmor required
 // g_LayerSafe[layer], ApplyHands did not (tabagentsdress.cpp:187-236)
 void apply_from_equipment(int minLayer, int maxLayer, bool checkSafe)
 {
@@ -180,7 +180,7 @@ void apply_from_equipment(int minLayer, int maxLayer, bool checkSafe)
     if (changed)
     {
         work_into_set(g_AssistantConfig.m_DressSets[s_SelectedSet]);
-        g_AssistantConfig.SaveDress(); // Dress.coa (the Qt button saved too)
+        g_AssistantConfig.SaveDress(); // Dress.coa (the original button saved too)
     }
 }
 
@@ -192,7 +192,7 @@ void TabDress_Draw()
     XA_FROM_TARGET_RESULT ftResult;
 
     // the "Undress before dressing" / "Use double click for equip items"
-    // checkboxes (Qt bound them straight to the config accessors)
+    // checkboxes (the original bound them straight to the config accessors)
     bool undressFirst = g_AssistantConfig.UndressBeforeDressing();
     if (ImGui::Checkbox("Undress before dressing", &undressFirst))
     {
@@ -330,7 +330,7 @@ void TabDress_Draw()
         ImGui::TextDisabled("%s", s_Hint);
     }
 
-    // the sequence buttons (the Qt column of pb_Dress* buttons)
+    // the sequence buttons (the original column of pb_Dress* buttons)
     if (ImGui::Button("Apply current equipment to set"))
     {
         apply_from_equipment(1, OL_MOUNT - 1, true);
@@ -347,7 +347,7 @@ void TabDress_Draw()
     ImGui::BeginDisabled(g_DressAgent.Active());
     if (ImGui::Button("Dress selected set"))
     {
-        // was on_pb_DressUse_clicked -> DressSet(currentItem); the Qt app
+        // was on_pb_DressUse_clicked -> DressSet(currentItem); the original app
         // dressed the LIVE set data (not the working copy)
         if (s_SelectedSet >= 0 && s_SelectedSet < (int)sets.size())
         {

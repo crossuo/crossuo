@@ -71,7 +71,7 @@ const char *Actions_TypeName(uint type)
 
 uint Actions_TypeCount()
 {
-    return (uint)HT_LAST; // the Qt HT_COUNT_OF_ITEMS (26 entries)
+    return (uint)HT_LAST; // the original HT_COUNT_OF_ITEMS (26 entries)
 }
 
 namespace {
@@ -462,7 +462,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
             {
                 serial = CAssistant::TextToSerial("lastobject");
             }
-            // Qt parity (hotkeysform.cpp:1611): only action 1 resolves a hand;
+            // Parity with the original: only action 1 resolves a hand;
             // the "Use: right hand" slot is a no-op in the original (the
             // label advertises it, the executor never handled it) - kept.
             else if (action == 1)
@@ -592,7 +592,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
                         hook_objects("friend");
                         break;
                     default:
-                        // Qt parity (hotkeysform.cpp:1770): plain use-skill
+                        // Parity with the original: plain use-skill
                         // still calls SetObjectsHook with an empty list,
                         // clearing any stale wait-target hook so it cannot
                         // auto-target a later cursor.

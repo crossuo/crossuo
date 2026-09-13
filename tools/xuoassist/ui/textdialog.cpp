@@ -20,7 +20,7 @@ namespace {
 
 bool s_Open = false;
 
-// the pte_Text working buffer (the Qt dialog was one plain-text-edit; the
+// the pte_Text working buffer (the original dialog was one plain-text-edit; the
 // port keeps a fixed buffer - the draw path never allocates)
 constexpr int TEXT_BUFFER_SIZE = 64 * 1024;
 char s_Text[TEXT_BUFFER_SIZE] = { 0 };
@@ -60,7 +60,7 @@ void TextDialog_Draw()
         ImVec2(-1.0f, -ImGui::GetFrameHeightWithSpacing() * 2.0f),
         ImGuiInputTextFlags_AllowTabInput);
 
-    // the prompt state line (the Qt dialog had no such line; this surfaces
+    // the prompt state line (the original dialog had no such line; this surfaces
     // where Send/Cancel land - the response flow, not the display flow)
     if (g_PromptManager.GetExists())
     {

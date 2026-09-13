@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Assistant hotkey engine (Phase 3, master plan §2.5/§3.2/§5.3/§6/§7 item 1).
-// Replaces the Qt app's QHotkeyEventFilter + HotkeysForm::HotkeyExistsAndUse
+// Replaces the original app's key-event filter + HotkeysForm::HotkeyExistsAndUse
 // with an SDL-event funnel living in the client's input path:
 //
 //   AssistantWindow_ProcessEvent (Alt+U, pop-out windows, ImGui gating)
@@ -11,16 +11,16 @@
 //
 // Key storage is the Phase-1c CHotkeyEntry table in g_AssistantConfig
 // (Hotkeys.xml, version 1, SDL key codes + the HM_* modifier bitmask) - byte
-// compatible with the Qt writer/reader. The display-name tables, the keypad
+// compatible with the original writer/reader. The display-name tables, the keypad
 // bit semantics and the duplicate policy are ported from gui/hotkeybox.cpp.
 //
-// Qt semantics kept verbatim (hotkeysform.cpp:1436 HotkeyExistsAndUse):
+// Original semantics kept verbatim (HotkeyExistsAndUse):
 //   - HT_TOGGLE_HOTKEYS fires even when the engine is off (it IS the switch);
 //   - every other binding fires only when OnOffHotkeys() is set;
 //   - a matched binding is consumed unless PassHotkeys() (then the key ALSO
 //     reaches the game), with the Alt+F4 exception (never consumed);
 //   - wheel/X-button/middle-click bindings behave like any other binding.
-// Qt deltas (in-client port): key auto-repeat never fires a binding (the Qt
+// Deltas (in-client port): key auto-repeat never fires a binding (the original
 // capture filter skipped repeats; the keydown path always re-fired, an
 // artifact of the client re-sending UOMSG_INPUT_KEYDOWN - here the game only
 // sends non-repeat events to the engine, see AssistantWindow.cpp).
@@ -33,7 +33,7 @@ union SDL_Event;
 
 namespace xuoassist {
 
-// --- common/keys.h (the Qt app's modifier vocabulary, storage compatible) --
+// --- common/keys.h (the original app's modifier vocabulary, storage compatible) --
 enum HOTKEY_MODIFIERS
 {
     HM_NONE = 0,
@@ -46,7 +46,7 @@ enum HOTKEY_MODIFIERS
     HM_MOUSE_X = 0x40
 };
 
-// The pseudo-keycodes the Qt app assigned to mouse events (they are stored in
+// The pseudo-keycodes the original app assigned to mouse events (they are stored in
 // Hotkeys.xml "key" for wheel/X bindings).
 enum
 {
@@ -207,7 +207,7 @@ public:
     void CancelCapture() { m_Capturing = false; }
     uint CaptureKey() const { return m_CaptureKey; }
     uchar CaptureModifiers() const { return m_CaptureModifiers; }
-    // Commits the captured (key, modifiers) into config row `row` with the Qt
+    // Commits the captured (key, modifiers) into config row `row` with the original
     // duplicate policy (CheckExists): false when a duplicate popup is open
     // (the UI then drives ResolveDuplicate below).
     bool AssignCaptureToRow(int row);

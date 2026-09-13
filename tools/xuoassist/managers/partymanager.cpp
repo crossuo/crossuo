@@ -3,7 +3,7 @@
 
 // Ported from X:UO Assist (managers/partymanager.cpp). The auto accept /
 // decline invitation lists live in the AssistantConfig module (Party.xml) —
-// the Qt code asked TabAgentsParty.
+// the original code asked TabAgentsParty.
 
 #include "partymanager.h"
 #include "../core/assistantevents.h"

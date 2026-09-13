@@ -124,7 +124,7 @@ int main()
         JSContext *ctx = JS_NewContext(rt);
         CHECK(ctx != nullptr);
 
-        // the Qt script shape: functions on the global object + a Wait-like
+        // the original script shape: functions on the global object + a Wait-like
         // call with string args (the sentinel globals are strings)
         const char *script = "function hello(name) { return 'hi ' + name; }\n"
                              "var boom = function () { nope(); };\n";
@@ -147,7 +147,7 @@ int main()
         JS_FreeValue(ctx, func);
 
         // the error path reports the line through the stack frames (the
-        // quickjs-ng replacement of QScriptValue::lineNumber; verified via
+        // quickjs-ng replacement of the original lineNumber accessor; verified via
         // Script_FormatException's parser)
         JSValue errorFn = JS_GetPropertyStr(ctx, global, "boom");
         JSValue errorResult = JS_Call(ctx, errorFn, JS_UNDEFINED, 0, nullptr);
@@ -324,7 +324,7 @@ int main()
 
         // --- the WaitFor* handshake (SC_EVENT_WAIT clear+poll semantics) ---
         // the REAL drain executor against the real g_GumpReceived flag: the
-        // first execution clears a pre-set flag (the Qt g_GumpReceived =
+        // first execution clears a pre-set flag (the original g_GumpReceived =
         // false) and reads false, later ones only read
         {
             auto *wait = new XA_SCRIPT_COMMAND();
@@ -407,9 +407,9 @@ int main()
     // --- 4. script state mirrors (globals / timers / buffs) ----------------
     {
         ScriptGlobal_Set("lootbag", "0x40001234");
-        ScriptGlobal_Set("lootbag", "0x40005678"); // overwrite (Qt map semantics)
+        ScriptGlobal_Set("lootbag", "0x40005678"); // overwrite (original map semantics)
         CHECK(ScriptGlobal_Get("lootbag") == "0x40005678");
-        CHECK(ScriptGlobal_Get("missing") == ""); // unset -> empty (Qt parity)
+        CHECK(ScriptGlobal_Get("missing") == ""); // unset -> empty (parity with the original)
         ScriptGlobal_Set("", "ignored");          // empty name dropped
         ScriptGlobal_Clear();
         CHECK(ScriptGlobal_Get("lootbag") == "");

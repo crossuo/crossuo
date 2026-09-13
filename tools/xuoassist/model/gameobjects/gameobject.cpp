@@ -3,7 +3,7 @@
 
 // Ported from X:UO Assist (gameobjects/gameobject.cpp). The version gate is a
 // shim (core/textconv.h partner, see GetClientVersion()) until the packet
-// manager round ports g_PacketManager; qMax -> std::max, QList -> std::vector.
+// manager round ports g_PacketManager; max -> std::max, lists -> std::vector.
 
 #include "gameobject.h"
 #include "gameworld.h"

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The assistant map module, logic half (see assmap.h for the dedup map):
-// settings record + GlobalConfig/Map.xml persistence (Qt format, exact
+// settings record + GlobalConfig/Map.xml persistence (the original format, exact
 // attribute set), the zoom->scale rule, the character classification and the
 // client-API radar sampler with its single-texture cache.
 
@@ -87,7 +87,7 @@ CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint &serial)
     return OMCT_OTHER;
 }
 
-// --- settings (Qt CMapSettings, mapsettingsform.cpp:27-434) ------------------
+// --- settings (the original CMapSettings) ------------------------------------
 
 void CMapSettings::Copy(const CMapSettings &settings)
 {
@@ -139,7 +139,7 @@ void CMapSettings::Copy(const CMapSettings &settings)
     m_OtherShowName = settings.GetOtherShowName();
 }
 
-// attribute helpers over the shared xml module (the Qt code inlined
+// attribute helpers over the shared xml module (the original code inlined
 // hasAttribute guards per attribute; Attribute/AttributeInt already default)
 static void load_bool(const XMLElement &e, const char *name, bool *value)
 {
@@ -157,7 +157,7 @@ static void load_int(const XMLElement &e, const char *name, int *value)
     }
 }
 
-// QColor::rgba() text form (the Qt code round-tripped the ARGB uint through
+// Packed RGBA text form (the original code round-tripped the ARGB uint through
 // CAssistant::SerialToText/TextToSerial - same helpers here)
 static void load_color(const XMLElement &e, const char *name, uint *value)
 {
@@ -190,7 +190,7 @@ void CMapSettings::Load()
     XMLDocument doc;
     if (!doc.Load(path))
     {
-        return; // absent file = defaults (the Qt code silently kept defaults too)
+        return; // absent file = defaults (the original code silently kept defaults too)
     }
 
     const XMLElement &e = doc.Root;
@@ -246,8 +246,8 @@ void CMapSettings::Load()
     load_int(e, "other_font_style", &m_OtherFontStyle);
     load_color(e, "other_color", &m_OtherColor);
     load_bool(e, "other_show_hits", &m_OtherShowHits);
-    // Qt format quirk (mapsettingsform.cpp:340/431): this attribute is spelled
-    // "other_sho_name" in BOTH Qt directions - kept for byte compatibility.
+    // Format quirk: this attribute is spelled
+    // "other_sho_name" in BOTH write/read directions - kept for byte compatibility.
     load_bool(e, "other_sho_name", &m_OtherShowName);
 }
 
@@ -308,7 +308,7 @@ void CMapSettings::Save()
     set_int(e, "other_font_style", m_OtherFontStyle);
     set_color(e, "other_color", m_OtherColor);
     set_bool(e, "other_show_hits", m_OtherShowHits);
-    set_bool(e, "other_sho_name", m_OtherShowName); // Qt quirk, see Load
+    set_bool(e, "other_sho_name", m_OtherShowName); // format quirk, see Load
 
     doc.Save(fs_path_join(CAssistantConfig::GetGlobalConfigPath(), "Map.xml"));
 }
@@ -319,7 +319,7 @@ void CMapSettings::Save()
 // (src/Managers/MapManager.cpp:272-318) parameterized by map - the client's
 // own entry point is pinned to GetActualMap(), which cannot serve the map
 // window's explicit facet selection. withStatics=false keeps the block
-// land-only (the Qt ShowStatics toggle, map.cpp:240).
+// land-only (the original ShowStatics toggle).
 static void GetRadarMapBlockForMap(
     int map, int blockX, int blockY, bool withStatics, RADAR_MAP_BLOCK &mb)
 {
@@ -407,7 +407,7 @@ static uint32_t Color16ToRGBA32(uint16_t color)
 namespace {
 
 // One RGBA texture the size of the map window content. Rebuilds are gated by
-// a content hash + a 150 ms floor (the Qt redraw timer ran at 100 ms; the
+// a content hash + a 150 ms floor (the original redraw timer ran at 100 ms; the
 // throttle keeps a drag-pan at zoom 0.25 from resampling every frame).
 constexpr uint32_t REBUILD_INTERVAL = 150;
 
@@ -446,7 +446,7 @@ uint64_t fnv1a(uint64_t hash, const void *data, size_t size)
 }
 
 // The radar color of world tile (x, y) with the altitude modifiers from the
-// Qt sampler (map.cpp:404-416) applied; returns a packed RGBA32 pixel.
+// original sampler applied; returns a packed RGBA32 pixel.
 uint32_t SampleTile(int map, int x, int y)
 {
     const int blockX = x >> 3;
@@ -476,8 +476,8 @@ uint32_t SampleTile(int map, int x, int y)
     if (g_MapSettings.GetApplyAltitude() && cell.IsLand != 0 && cell.Graphic < 0x4000)
     {
         // map.cpp:411-416 blended with a per-channel saturating add here,
-        // while Qt masked the sum with & 0x1F, letting bright land colors
-        // wrap over (visual delta: this clamps to white where Qt wrapped to
+        // while the original masked the sum with & 0x1F, letting bright land colors
+        // wrap over (visual delta: this clamps to white where the original wrapped to
         // dark). The ramp itself is quantized to ((Z+127)/8)*32/256, so it
         // only spans 0..3 of the 5-bit channel (unlike the AltitudeOnly ramp
         // above, which maps the full Z range with Z=-128 -> 0 exactly); both
@@ -539,7 +539,7 @@ void RebuildPixels(const XA_MAP_VIEW &view)
 
             if (wx < 0 || wy < 0 || wx >= mapWidth || wy >= mapHeight)
             {
-                row[sx] = 0xFF000000u; // outside the facet (Qt drew black)
+                row[sx] = 0xFF000000u; // outside the facet (the original drew black)
                 continue;
             }
 

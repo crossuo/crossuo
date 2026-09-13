@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/corpsemanager.cpp). The timer-based
-// pieces moved from QTime elapsed() to g_Ticks stamps (plan §4.2).
+// pieces moved from elapsed timers to g_Ticks stamps (plan §4.2).
 
 #include "corpsemanager.h"
 #include "../core/assist.h"

@@ -94,7 +94,7 @@ bool CPromptManager::OnPacketSend(CDataReader &reader)
     {
         m_Exists = false;
 
-        // tabmacros recording (Qt promptmanager): parse the response text
+        // tabmacros recording (promptmanager handler): parse the response text
         // the client is about to answer with and record it as the
         // MT_WAIT_FOR_PROMPT action value
         if (g_World != nullptr && g_MacroExecutor.IsRecording())

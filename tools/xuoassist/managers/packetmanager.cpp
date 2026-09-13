@@ -461,7 +461,7 @@ static void AssistantPackets_Init()
 }
 
 // The assistant's "logged in" gate: handlers only run while the assistant
-// considers itself connected (the Qt app relied on the host's OnDisconnect
+// considers itself connected (the original app relied on the host's OnDisconnect
 // callback; in-process the game stage is the disconnect signal, mirroring the
 // assistant lifecycle of Phase 0 / ADR D10). Handshake packets are let through
 // so the state machine can engage (EnterWorld/LoginComplete set g_Connected).
@@ -1525,7 +1525,7 @@ PACKET_HANDLER(UpdateCharacter)
 
 PACKET_HANDLER(WarmodeS)
 {
-    // tabmacros recording (Qt WarmodeS): observe-only - the macro action is
+    // tabmacros recording (the WarmodeS handler): observe-only - the macro action is
     // noted from the outgoing packet, which still flows to the server.
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
     {
@@ -2243,9 +2243,9 @@ PACKET_HANDLER(ExtendedCommandS)
             g_AssistantEvents->OnTitleRedraw();
         }
 
-        // tabmacros recording (Qt ExtendedCommandS 0x001C): the MCT_LAST
+        // tabmacros recording (ExtendedCommandS 0x001C): the MCT_LAST
         // conversion fires when the new spell index equals the previous
-        // index's "was set" flag - kept verbatim from the Qt site.
+        // index's "was set" flag - kept verbatim from the original site.
         if (g_World != nullptr && g_MacroExecutor.IsRecording())
         {
             CMacro *macro = new CMacroWithIntValue(MT_CAST_NEW, g_LastSpellIndex);
@@ -2274,7 +2274,7 @@ PACKET_HANDLER(ExtendedCommandS)
 
         if (g_World != nullptr && g_MacroExecutor.IsRecording())
         {
-            // the menu id rides the graphic field, like the Qt CMacroWithObject
+            // the menu id rides the graphic field, like the original CMacroWithObject
             g_MacroExecutor.Record(new CMacroWithObject(MT_WAIT_FOR_CONTEXT_MENU, serial, menuID, 0));
         }
     }
@@ -2429,7 +2429,7 @@ PACKET_HANDLER(ExtendedCommandR)
         case 0x18: // Enable map (diff) patches
         {
             // RESOLVED (phase 5): was g_FileManager.ApplyPatches(*this) on the
-            // Qt side after its file transfer; the client applies the patches
+            // original side after its file transfer; the client applies the patches
             // itself in its own 0x18 handler (g_MapManager.ApplyPatches,
             // src/Managers/PacketManager.cpp:2952) - no assistant action.
 
@@ -2951,7 +2951,7 @@ PACKET_HANDLER(WalkRequest)
         g_Assistant.AutoOpenDoor(x, y, g_Player->GetZ());
     }
 
-    // tabmacros recording (Qt WalkRequest): a turn (the run bit set on a
+    // tabmacros recording (WalkRequest): a turn (the run bit set on a
     // direction that differs from the current facing) records as a negative
     // value - the MT_WALK turn encoding.
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
@@ -3222,7 +3222,7 @@ PACKET_HANDLER(DoubleClick)
 {
     uint serial = ReadUInt32BE();
 
-    // tabmacros recording (Qt DoubleClick): the graphic/color come from the
+    // tabmacros recording (DoubleClick): the graphic/color come from the
     // world object when known; MCT_SELF on the player (the MCT_LAST branch
     // on g_LastUseObject is commented out in the original - kept that way).
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
@@ -3255,7 +3255,7 @@ PACKET_HANDLER(DoubleClick)
 
 PACKET_HANDLER(AttackRequest)
 {
-    // tabmacros recording (Qt AttackRequest): MCT_LASTATTACK / MCT_LASTTARGET
+    // tabmacros recording (AttackRequest): MCT_LASTATTACK / MCT_LASTTARGET
     // / MCT_ENEMY conversions, in the original's order.
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
     {

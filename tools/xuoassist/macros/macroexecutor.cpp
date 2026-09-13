@@ -3,7 +3,7 @@
 
 // The macro executor implementation (see macroexecutor.h). Every action body
 // is the TabMacros::ProcessMacro case ported 1:1 (tabmacros.cpp:1105-1828);
-// the Qt code's widget reads became config reads (g_TabMain distances ->
+// the original code's widget reads became config reads (g_TabMain distances ->
 // g_AssistantConfig, g_TabAgentsDress flags -> g_AssistantConfig).
 
 #define LOGGER_MODULE Assistant
@@ -155,8 +155,8 @@ void CMacroExecutor::Stop()
 
 void CMacroExecutor::Tick()
 {
-    // was the QTimer(10ms) driving ProcessMacro; a headless frame tick keeps
-    // playback alive while the assistant window is hidden (Qt parity)
+    // was the 10 ms timer driving ProcessMacro; a headless frame tick keeps
+    // playback alive while the assistant window is hidden (parity with the original)
     if (m_Playing)
     {
         ProcessMacro();

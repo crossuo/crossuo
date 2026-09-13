@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/textparser.h): in-memory token parser for
-// cfg-style text. QString -> std::string, QStringList -> std::vector<std::string>.
+// cfg-style text. Strings are std::string, string lists are std::vector<std::string>.
 
 #pragma once
 

@@ -5,7 +5,7 @@
 // assist/map.h CMapDrawObject, ported per the Phase 5 round; the radar
 // rendering itself lives in ui/mapwindow.cpp).
 //
-// Dedup decisions (plan §4.4): the Qt app loaded map/static/multimap files
+// Dedup decisions (plan §4.4): the original app loaded map/static/multimap files
 // through its own FileManager + mmap and kept a whole-facet 16-bit pixel
 // buffer (map.cpp:220-440). The client already has the files mapped, patched
 // and indexed (g_MapManager + g_MapSize/g_MapBlockSize), so this module reads
@@ -14,11 +14,11 @@
 //     (port of src/Managers/MapManager.cpp:272-318, parameterized by facet:
 //     the client's own GetRadarMapBlock is pinned to GetActualMap());
 //   - the radar color pipeline of src/Gumps/GumpMinimap.cpp:186-193
-//     (season graphic -> radarcol -> hue), which supersedes the Qt
+//     (season graphic -> radarcol -> hue), which supersedes the old
 //     FileManager::GetRadarcolData;
 //   - g_MapSize / g_MapBlockSize for the per-facet dimensions.
 // No .mul/.uop is read twice and the multimap (.rle) path is not ported (the
-// client draws multis from live world data; Qt used multimap.rle only as a
+// client draws multis from live world data; the original app used multimap.rle only as a
 // fallback for external UOAM hosting).
 
 #pragma once
@@ -30,7 +30,7 @@
 
 namespace xuoassist {
 
-// Qt map.h:18-28 (names kept for parity)
+// Map character types (names kept for parity)
 enum CLIENT_MAP_CHARACTER_TYPE
 {
     OMCT_PLAYER = 0,
@@ -43,7 +43,7 @@ enum CLIENT_MAP_CHARACTER_TYPE
     OMCT_INVALID
 };
 
-// Qt map.h:30-44: the context-menu action ids (the ImGui menu reuses them)
+// The context-menu action ids (the ImGui menu reuses them)
 enum CLIENT_MAP_ACTION
 {
     OMA_FACET = 1,
@@ -60,7 +60,7 @@ enum CLIENT_MAP_ACTION
     OMA_ROTATE_MAP
 };
 
-// One map overlay marker (Qt CMapDrawObject, map.h:53-75; QString -> string,
+// One map overlay marker (the original CMapDrawObject; strings are std::string,
 // the CGameCharacter* stays a mirror pointer valid for the frame only).
 struct XA_MAP_DRAW_OBJECT
 {
@@ -71,11 +71,11 @@ struct XA_MAP_DRAW_OBJECT
     class CGameCharacter *Ptr{ nullptr };
 };
 
-// The map settings record (Qt CMapSettings, mapsettingsform.h:33-125): every
+// The map settings record (the original CMapSettings): every
 // field, default and the exact GlobalConfig/Map.xml attribute set are kept
-// (CMapSettings::Load/Save, mapsettingsform.cpp:72-434), including the Qt
+// (CMapSettings::Load/Save), including the original
 // writer's "other_sho_name" attribute spelling for the Other group's
-// show-name flag (a format quirk both Qt directions shared - kept so the
+// show-name flag (a format quirk both write/read directions shared - kept so the
 // file stays byte-compatible).
 class CMapSettings
 {
@@ -85,11 +85,11 @@ class CMapSettings
     SETGET(int, WindowHeight, 0)
     SETGET(uint, Facet, 0xFFFFFFFF) // 0xFFFFFFFF = current client facet
     SETGET(bool, FollowPlayer, true)
-    SETGET(int, Zoom, 2) // Qt: index 1..16, scale = index * 0.25
+    SETGET(int, Zoom, 2) // the original: index 1..16, scale = index * 0.25
     SETGET(bool, ShowStatics, true)
     SETGET(bool, ApplyAltitude, true)
     SETGET(bool, AltitudeOnly, false)
-    SETGET(bool, SmoothImage, true) // menu-disabled in Qt; kept for format parity
+    SETGET(bool, SmoothImage, true) // menu-disabled in the original; kept for format parity
     SETGET(int, Opacity, 0)         // 0=opaque, then 25%/50% steps (map.cpp:73)
     SETGET(bool, DisplayCoordinates, true)
     SETGET(bool, ShowOnLogin, false)
@@ -199,12 +199,12 @@ extern CMapSettings g_MapSettings;
 
 extern const char *g_FacetName[6];
 
-// The draw scale from the stored zoom index (Qt Map::UpdateScale,
-// map.cpp:1602-1614): scale = zoom * 0.25, clamped to [0.25 .. 4.0] (the Qt
+// The draw scale from the stored zoom index (the original UpdateScale):
+// scale = zoom * 0.25, clamped to [0.25 .. 4.0] (the original
 // clamp mapped >2.0 onto 4.0 - preserved).
 float MapSettings_Scale();
 
-// Qt Map::GetCharacterType (map.cpp:189-218) with the friends/enemies lists
+// The original GetCharacterType with the friends/enemies lists
 // read from the config module (was g_TabListsFriends/Enemies).
 CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint &serial);
 
@@ -223,7 +223,7 @@ struct XA_MAP_VIEW
 //
 // AssMap_RadarTexture returns the shared ImTextureRef for the given view,
 // rebuilding the CPU pixels when the (view, settings) content hash changed
-// and the throttle (>= 150 ms, the Qt 100 ms redraw timer rhythm) allows.
+// and the throttle (>= 150 ms, the original 100 ms redraw timer rhythm) allows.
 // Draw it with ImGui::Image / draw list AddImage; it is invalid until the
 // client map data is loaded (return value may be a null ref).
 //

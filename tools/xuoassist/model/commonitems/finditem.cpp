@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/finditem.cpp): QString trimming/parsing
+// Ported from X:UO Assist (commonitems/finditem.cpp): string trimming/parsing
 // (trimmed/at/remove) became std::string equivalents; CAssistant::TextToSerial/
 // TextToGraphic come from core/textconv.h (temporary home).
 

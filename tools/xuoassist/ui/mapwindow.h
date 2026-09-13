@@ -6,7 +6,7 @@
 // the radar texture from managers/assmap.cpp with the draw-object overlays,
 // the context menu and the zoom/rotate/follow/pan input.
 //
-// Coordinate transforms (derived once from the Qt code, both directions):
+// Coordinate transforms (derived once from the original code, both directions):
 //
 //   scale  s = zoom * 0.25 in [0.25 .. 4.0]      (Map::UpdateScale)
 //   half   = (width/2, height/2)                 window content center
@@ -22,8 +22,7 @@
 //                wx = cx + (dx+dy)/2, wy = cy + (dy-dx)/2
 //   the drag pan subtracts the same inverse displacement from the center,
 //   c' = c - (s(dx+dy)/2, s(dy-dx)/2), so the world point under the cursor
-//   follows it exactly (the Qt 0.707107 pair in mapMouseMoveEvent:1519-1532
-//   approximated this step)
+//   follows it exactly (the original 0.707107 pair approximated this step)
 //
 // The window is viewport-safe: every position comes from ImGui screen-space
 // queries (GetCursorScreenPos), never from the main window geometry, so it
@@ -50,7 +49,7 @@ void MapWindow_Open();
 // assistant is visible, gated by this).
 extern bool g_AssistantMapOpen;
 
-// Qt Map::OnActionSelect (map.cpp:1616-1711): the context-menu transition.
+// The original Map::OnActionSelect: the context-menu transition.
 void MapWindow_OnAction(uint type, uint extra);
 
 // Shutdown (context alive): persists the window geometry into g_MapSettings

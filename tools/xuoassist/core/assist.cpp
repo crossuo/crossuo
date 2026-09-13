@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (assist/assist.cpp), Qt-diet per assistant-plan.md
+// Ported from X:UO Assist (assist/assist.cpp), trimmed per assistant-plan.md
 // §4.1. Method behavior is identical; the deltas are:
-//  - the QObject signal/slot marshaling is gone (single-threaded, §8.1);
+//  - the signal/slot marshaling is gone (single-threaded, §8.1);
 //  - the data-list lookups (types/objects/find/ignore/friends/enemies) go to
-//    the AssistantConfig module, which owns the data the Qt lists displayed;
+//    the AssistantConfig module, which owns the data the original lists displayed;
 //  - numeric-option lookups (distance/delay/messages level) go to
 //    AssistantConfig too (was g_TabMain / g_AssistantForm);
 //  - the from-target handlers that filled UI widgets keep the world/state
@@ -270,7 +270,7 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
 
     // the g_TextDialog->AddText + show/activateWindow body is restored by the
     // 4b-2 text window below; the same text goes through the OnJournalMessage
-    // seam (the Qt app did both)
+    // seam (the original app did both)
     int layer = 0;
     if (!obj->GetNPC())
     {
@@ -299,7 +299,7 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
     g_AssistantEvents->OnJournalMessage(message);
 
     // the g_TextDialog->ClearText/AddText(text) + show port (scriptgump.cpp,
-    // the 4b-2 text window) - the same dump the Qt dialog showed
+    // the 4b-2 text window) - the same dump the original dialog showed
     ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
     ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
     ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
@@ -880,7 +880,7 @@ void CAssistant::UseType(
 
 void CAssistant::MoveItem(CGameItem *item)
 {
-    // The Qt app sent the pickup/drop pair directly (no client-side
+    // The original app sent the pickup/drop pair directly (no client-side
     // use-action queue); the client's ObjectOnCursor flow is untouched.
     if (item == nullptr)
     {
@@ -1045,7 +1045,7 @@ void CAssistant::HandleTargetFindList(uchar *buf)
             XA_FROM_TARGET_FIND_LIST, obj->GetSerial(), obj->GetGraphic(), obj->GetColor(),
             obj->GetName());
     }
-    // Qt also clicked the object to fetch its name when unknown
+    // The original also clicked the object to fetch its name when unknown
     // (CObjectNameReceiver); the comment field just stays empty then.
 }
 
@@ -1388,7 +1388,7 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
     // Was AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (assistform.cpp:
     // 780-822): find a door item at the target tile within +-10 z, then open
     // it (double click or the OpenDoor packet, per the config option). The
-    // Qt timer was single-shot with an immediate-fire path; the immediate
+    // original timer was single-shot with an immediate-fire path; the immediate
     // path is the behavior here.
     uint doorToOpen = 0;
 

@@ -3,8 +3,8 @@
 
 #pragma once
 
-// The script-visible journal mirror (was managers/journalmanager.* in the Qt
-// app feeding CScriptEngine::InJournal/WaitJournal/ClearJournal). The Qt
+// The script-visible journal mirror (was managers/journalmanager.* in the
+// original app feeding CScriptEngine::InJournal/WaitJournal/ClearJournal). The
 // manager was not part of the Phase 1c port (only the journal event existed),
 // so the ring lives in the script module: main-thread fed from the journal
 // event consumer (assistanteventsui.cpp), main-thread read inside the command
@@ -12,7 +12,7 @@
 //
 // Message records are the ported CJournalMessage (Timer = g_Ticks stamp,
 // Flags = JMT_* source bits, FindTextID = matched-pattern index) - identical
-// fields to the Qt app's entries, so script semantics match.
+// fields to the original app's entries, so script semantics match.
 
 #include "../core/global.h"
 #include "../model/commonitems/journalmessage.h"
@@ -48,7 +48,7 @@ CJournalMessage *ScriptJournal_Find(
 const vector<CJournalMessage> &ScriptJournal_Messages();
 int ScriptJournal_Count();
 // JournalLine(index, consume=true)'s remove-after-read half (port extension;
-// the Qt JournalLine never removed). Main thread (drain) only.
+// the original JournalLine never removed). Main thread (drain) only.
 bool ScriptJournal_RemoveAt(int index);
 
 } // namespace xuoassist

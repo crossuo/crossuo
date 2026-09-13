@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (basequeue.h) - intrusive doubly-linked list, Qt-free.
+// Ported from X:UO Assist (basequeue.h) - intrusive doubly-linked list, framework-free.
 // QFOR/BQFOR are guarded because the client's src/BaseQueue.h defines the same
 // (identical) macros; identical redefinitions are legal either way.
 

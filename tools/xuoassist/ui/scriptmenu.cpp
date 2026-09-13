@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See scriptmenu.h. The static rows cover every entry of the Qt menu; the
-// dynamic leaves the Qt app built at runtime (the Spells submenu from
+// See scriptmenu.h. The static rows cover every entry of the original menu; the
+// dynamic leaves the original app built at runtime (the Spells submenu from
 // g_SpellManager.m_SpellbookSpellNames and the per-macro Client-macro rows)
 // are rendered from the live managers in the same path scheme. The client
 // options Get/Set leaves map onto the API functions of the same names.
@@ -17,7 +17,7 @@
 
 #include "../managers/spellmanager.h"
 
-// Generated from the Qt command context menu (scriptplaintextedit.cpp:509-1522);
+// Generated from the original command context menu;
 // regenerate with the extractor when the upstream menu changes.
 static const xuoassist::XA_MENU_ITEM g_MenuItems[] = {
     { "Objects", "Info", "Client.Info(['serial']);" },
@@ -659,7 +659,7 @@ bool draw_node(const MENU_NODE &node, string &inserted)
     return false;
 }
 
-// The dynamic Spells menu (the Qt loop at scriptplaintextedit.cpp:858-880).
+// The dynamic Spells menu (the original loop).
 bool draw_spells(string &inserted)
 {
     bool picked = false;

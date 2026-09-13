@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (assist/target.h), Qt-diet.
+// Ported from X:UO Assist (assist/target.h), trimmed.
 //
 // Split decision (master plan §4.1 "assist/target.* PORT WITH CHANGES" and
 // §4.4 target.cpp row): the client already has its own CTarget (src/Target.h,
@@ -10,8 +10,8 @@
 // paths. That class is untouched and stays authoritative for the client.
 //
 // This class (namespace xuoassist, same original name CTarget as the rest of
-// the assistant port) keeps only the ASSISTANT-OWNED parts of the Qt
-// assist/target.cpp, which ran out-of-process and had to duplicate the
+// the assistant port) keeps only the ASSISTANT-OWNED parts of the
+// original assist/target.cpp, which ran out-of-process and had to duplicate the
 // client's cursor bookkeeping to work:
 //   - the WaitTarget hook queue (CTargetHook, CheckHook, SetObjectsHook /
 //     SetTileHook / ClearHooks) - pure assistant feature;
@@ -23,7 +23,7 @@
 //     RestoreTarget) and LastTile tracking for the `infotile lasttile`
 //     command;
 //   - the assistant target sends (SendTargetObject/SendTargetTile/...), which
-//     go out as real packets exactly like the Qt app's did.
+//     go out as real packets exactly like the original app's did.
 // The duplicated cursor fields (Type/CursorID/CursorType/Targeting/
 // MultiGraphic) are required by the code above; the file-manager tile
 // resolution used by CheckHook lands with the filemanager dedup round.

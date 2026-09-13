@@ -55,7 +55,7 @@ bool g_AssistantScriptEditorOpen = false;
 
 namespace {
 
-// Qt default: 650x400, non-resizable (assistform.cpp:124); ImGui keeps
+// the original default: 650x400, non-resizable; ImGui keeps
 // resizable windows, the size applies on first use only
 constexpr int SHELL_DEFAULT_WIDTH = 650;
 constexpr int SHELL_DEFAULT_HEIGHT = 400;
@@ -96,14 +96,14 @@ const char *const PLACEHOLDER_PHASE[] = {
 
 bool s_Initialized = false;
 CAssistantEvents *s_PreviousEvents = nullptr; // sink to restore on shutdown
-bool s_OptionsDirty = false; // Main/Options pages save on close (Qt semantics)
+bool s_OptionsDirty = false; // Main/Options pages save on close (original semantics)
 uint32_t s_SessionStartTicks = 0;
 
 // auto-reconnect countdown (was TabMain::m_ReconnectTimer)
 int s_ReconnectSeconds = 0;
 uint32_t s_ReconnectLastTick = 0;
 
-// the display caption (was the Qt title bar): the last string we applied to
+// the display caption (was the window title bar): the last string we applied to
 // the OS window, so SetTitle only runs on change
 string s_LastWindowTitle;
 uint32_t s_LastStepTick = 0;
@@ -142,7 +142,7 @@ void apply_display_title()
 
     // apply to the OS window on change (was the GDI painter writing the
     // caption; the client's own writes - player name change etc. - are
-    // overwritten here exactly like the Qt title bar was repainted)
+    // overwritten here exactly like the old title bar was repainted)
     const string &title = g_DisplayManager.GetTitleText();
     if (title != s_LastWindowTitle)
     {
@@ -298,8 +298,8 @@ void AssistantUI_Init()
     // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData)
     // and paint the initial caption
     AssistantUI_RecompileDisplayTitle();
-    // the map settings (was the Qt app init order: CMapSettings::Load ran
-    // once at startup, mapsettingsform.cpp:72)
+    // the map settings (was the app init order: CMapSettings::Load ran
+    // once at startup)
     g_MapSettings.Load();
     Info(Assistant, "assistant UI installed");
 }
@@ -322,7 +322,7 @@ void AssistantUI_RequestClientClose()
 
 void AssistantUI_QueueAutostart()
 {
-    // the checkbox check stayed in the EnterWorld path (Qt checked
+    // the checkbox check stayed in the EnterWorld path (the original checked
     // g_TabMain->Autostart() inside RunAutostart before arming the timer);
     // here the sink has already gated on the config value.
     s_AutostartAt = g_Ticks + 1000;
@@ -331,7 +331,7 @@ void AssistantUI_QueueAutostart()
 void AssistantUI_Tick()
 {
     // runs from AssistantWindow_FrameTick (every game frame, visible or not)
-    // the deferred Autostart script run (was the Qt single-shot timer)
+    // the deferred Autostart script run (was a single-shot timer)
     if (s_AutostartAt != 0u && g_Ticks >= s_AutostartAt)
     {
         s_AutostartAt = 0;
@@ -347,7 +347,7 @@ void AssistantUI_Tick()
     // macro playback (was the TabMacros 10 ms timer -> ProcessMacro): a
     // headless frame tick keeps running while the assistant window is hidden
     g_MacroExecutor.Tick();
-    // the dress sequence state machine (was the Qt g_EquipScriptName script)
+    // the dress sequence state machine (was the g_EquipScriptName script)
     g_DressAgent.Tick();
     // the shop engine progress countdown (was the ShopProgressForm timer)
     g_ShopAgent.Tick();
@@ -357,10 +357,10 @@ void AssistantUI_Tick()
 
 void AssistantUI_Shutdown()
 {
-    // disarm a pending Autostart run (the Qt timer died with the form)
+    // disarm a pending Autostart run (the original timer died with the form)
     s_AutostartAt = 0;
     // the scripts stop first (bounded join; never hang the client), then the
-    // queue is shut down so late pushes fail fast (the Qt app tore the tab
+    // queue is shut down so late pushes fail fast (the old app tore the tab
     // widgets down with the window and the queued signals died with it)
     ScriptManager_Get()->StopAll(2000);
     ScriptQueue_Shutdown();
@@ -374,19 +374,19 @@ void AssistantUI_Shutdown()
     // legit 0x6C after a re-init
     CancelPendingFromTargets();
     // the phase 5 windows: persist the map settings + geometry (delta: the
-    // Qt app only wrote Map.xml on the settings form Apply) and clear the
+    // original app only wrote Map.xml on the settings form Apply) and clear the
     // inspector/text-dialog state
     MapWindow_Shutdown();
     Inspector_Shutdown();
     TextDialog_Shutdown();
     g_MapSettings.Save();
-    // stop the agents (was the Qt app tearing down the tab widgets + dialogs)
+    // stop the agents (was the app tearing down the tab widgets + dialogs)
     g_DressAgent.Abort();
     g_ShopAgent.Reset();
     TabShop_CloseEditor();
     if (s_Initialized)
     {
-        // flush pending Main/Options page edits (the Qt app saved on close)
+        // flush pending Main/Options page edits (the original app saved on close)
         if (s_OptionsDirty)
         {
             g_AssistantConfig.SaveProfile();
@@ -424,7 +424,7 @@ int AssistantUI_ReconnectSecondsLeft()
 // ImGui window fed by the main-thread scriptgump.cpp state (the ops arrive
 // marshaled through SC_TEXT_WINDOW). Position/size come from the engine's
 // SetPos/SetSize ops; the window only closes through TextWindow.Close (the
-// script owns it, like the Qt dialog's script-driven lifecycle).
+// script owns it, like the original dialog's script-driven lifecycle).
 void ScriptTextWindow_Draw()
 {
     if (!ScriptTextWindow_Opened())
@@ -485,7 +485,7 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     ImGui::SetNextWindowSize(
         ImVec2((float)SHELL_DEFAULT_WIDTH, (float)SHELL_DEFAULT_HEIGHT), ImGuiCond_FirstUseEver);
 
-    // assistant windows opacity (Qt setWindowOpacity; plan §6): clamped to the
+    // assistant windows opacity (the original setWindowOpacity; plan §6): clamped to the
     // slider range (a hand-edited ini may hold anything) and pushed only
     // around the assistant shell window, so it never leaks into anything else
     // drawn in the game frame
@@ -524,7 +524,7 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
         }
     }
 
-    // the Qt title carried "X:UO Assist v<version> <playerName>"
+    // the original title carried "X:UO Assist v<version> <playerName>"
     ImGui::SameLine();
     ImGui::TextDisabled("v" PRODUCT_VERSION_STR "%s", g_CharacterName.c_str());
     ImGui::SameLine();

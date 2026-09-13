@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (assist/assist.h), Qt-diet per assistant-plan.md
-// §4.1: the QObject base, the cross-thread signal pair (signal_SendClient/
+// Ported from X:UO Assist (assist/assist.h), trimmed per assistant-plan.md
+// §4.1: the base object, the cross-thread signal pair (signal_SendClient/
 // signal_SendServer -> direct g_SendClient/g_SendServer calls) and the
-// QString parsing helpers are dropped; FIND_TYPE_FLAGS /
+// parsing helpers are dropped; FIND_TYPE_FLAGS /
 // NOTORIETY_TYPE_FLAGS moved to core/global.h (shared with the model layer).
 // The data-list lookups that used to poke g_TabLists* widget globals consult
 // the AssistantConfig module instead (same module that loads/saves them).
@@ -142,11 +142,11 @@ public:
     void MoveEquip(const uint &serial, const int &layer, const uint &container);
     void Track(const bool &state, short x, short y);
 
-    // Moved from the Qt TabListsObjects::SetDressBag (the dress bag is config
+    // Moved from the original TabListsObjects::SetDressBag (the dress bag is config
     // data; the container check + assistant messages were its logic).
     void SetDressBag(const uint &serial);
 
-    // Moved from the Qt AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (the
+    // Moved from the original AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (the
     // single-shot 20 ms timer collapsed - the scan and the open are one step
     // now, exactly like the timer's immediate-fire path).
     void AutoOpenDoor(const int &x, const int &y, const int &z);

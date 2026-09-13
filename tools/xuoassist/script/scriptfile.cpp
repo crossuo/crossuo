@@ -179,7 +179,7 @@ FILE *open_sandboxed(
     {
         return nullptr;
     }
-    // Qt modes: Append|Text -> create-or-append; ReadWrite|Text -> open an
+    // The original modes: Append|Text -> create-or-append; ReadWrite|Text -> open an
     // existing file WITHOUT truncating, create when missing. stdio has no
     // single create-or-r+ mode, so probe first.
     FILE *probe = fopen(outClean.c_str(), "r");
@@ -305,7 +305,7 @@ void ScriptFile_WriteLine(XA_SCRIPT_FILE *file, const string &text)
         return;
     }
     fputs(text.c_str(), (FILE *)file->Handle);
-    fputs("\r\n", (FILE *)file->Handle); // Qt wrote \r\n
+    fputs("\r\n", (FILE *)file->Handle); // the original wrote \r\n
 }
 
 void ScriptFile_Write(XA_SCRIPT_FILE *file, const string &text)

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // See journal.h. The Find loop is the CJournalManager::FindLine port
-// (Qt managers/journalmanager.cpp:18-97) with the m_List deque swapped for a
+// (managers/journalmanager.cpp) with the m_List deque swapped for a
 // capped vector ring; Ignore/ignorefriends flag parsing stays in the caller.
 
 #include "journal.h"
@@ -17,7 +17,7 @@ namespace xuoassist {
 
 namespace {
 
-// The Qt app capped the journal at 200 lines (journalmanager.cpp ctor).
+// The original app capped the journal at 200 lines (journalmanager.cpp ctor).
 constexpr size_t JOURNAL_CAP = 200;
 
 vector<CJournalMessage> s_Messages;
@@ -178,7 +178,7 @@ int ScriptJournal_Count()
     return (int)s_Messages.size();
 }
 
-// Remove-after-read for JournalLine(index, consume). The Qt JournalLine had
+// Remove-after-read for JournalLine(index, consume). The original JournalLine had
 // no consume argument and never removed - this is
 // the port extension's removal half. Main thread (drain) only.
 bool ScriptJournal_RemoveAt(int index)

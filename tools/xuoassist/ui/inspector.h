@@ -4,7 +4,7 @@
 // The Object Inspector window (was assist/objectinspectorform.ui +
 // assist/tabobjectinspector.cpp, 426x549 "Object Inspector").
 //
-// Layout delta (documented): Qt hosted one QTabWidget with a tab per
+// Layout delta (documented): the original hosted one tab widget with a tab per
 // inspected serial; here each inspected serial owns one collapsible section
 // (the ImGui-native equivalent) - same per-serial snapshots, same tree.
 //
@@ -18,7 +18,7 @@
 // A leaf click copies its value (on_tw_Info_itemClicked, :751-769 ->
 // SetClipboardText).
 //
-// Stale serials: Qt froze the last snapshot when the object left the mirror
+// Stale serials: the original froze the last snapshot when the object left the mirror
 // (CheckUpdate bailed on FindWorldCharacter == nullptr); the section header
 // here additionally carries an "(out of range)" marker.
 //

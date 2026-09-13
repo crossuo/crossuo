@@ -2,10 +2,10 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The assistant Map window (see mapwindow.h for the transform derivation and
-// the input contract). Overlay model: Qt CMapDrawObject (map.h:53-75); the
-// populated types are exactly the ones the Qt draw loops built (grep: party
+// the input contract). Overlay model: the original CMapDrawObject; the
+// populated types are exactly the ones the original draw loops built (grep: party
 // out-of-mirror members, mirror NPCs classified by AssMap_GetCharacterType,
-// the guild list, the last-corpse marker) plus the tracker point the Qt app
+// the guild list, the last-corpse marker) plus the tracker point the original app
 // forwarded to external UOAM (deviation, now drawn here).
 
 #define LOGGER_MODULE Assistant
@@ -40,12 +40,12 @@ namespace {
 constexpr float MAP_WINDOW_DEFAULT_WIDTH = 415.0f;  // map.ui
 constexpr float MAP_WINDOW_DEFAULT_HEIGHT = 415.0f;
 
-// Qt m_CurrentWorldCoordinates initial value (map.cpp:112)
+// the original m_CurrentWorldCoordinates initial value
 int s_CenterX = 507;
 int s_CenterY = 840;
 bool s_CenterValid = false; // becomes true on the first pan/follow update
 
-// the drag-pan state (Qt m_MousePressed/m_MousePressPoint/m_PressedWorld..)
+// the drag-pan state (the original m_MousePressed/m_MousePressPoint/m_PressedWorld..)
 bool s_Panning = false;
 ImVec2 s_PanStartMouse = ImVec2(0.0f, 0.0f);
 int s_PanStartCenterX = 0;
@@ -80,10 +80,10 @@ void MapWindow_Open()
     g_AssistantMapOpen = true;
 }
 
-// The Qt window geometry attributes (Map.xml window_x/y/width/height) stay in
+// The window geometry attributes (Map.xml window_x/y/width/height) stay in
 // the format and are honored for the first placement below; ongoing geometry
-// lives in the ImGui window ini like every other assistant window (the Qt
-// ~Map wrote them back on close - documented delta).
+// lives in the ImGui window ini like every other assistant window (the
+// original ~Map wrote them back on close - documented delta).
 void MapWindow_Shutdown()
 {
     g_AssistantMapOpen = false;
@@ -95,7 +95,7 @@ void MapWindow_Shutdown()
     MapSettings_Shutdown();
 }
 
-// --- overlay collection (Qt DrawMode0, map.cpp:834-920) ----------------------
+// --- overlay collection (the original DrawMode0) -----------------------------
 
 namespace {
 
@@ -161,7 +161,7 @@ void MapWindow_Draw(bool *open)
         return;
     }
 
-    // per-window opacity (Qt setWindowOpacity, map.cpp:73): alpha =
+    // per-window opacity (the original setWindowOpacity): alpha =
     // (100 - opacity*25)/100 with the opacity steps 0/25/50 - pushed around
     // this window only, never the global style
     const float alpha = 1.0f - (g_MapSettings.GetOpacity() * 0.25f);
@@ -225,7 +225,7 @@ void MapWindow_Draw(bool *open)
 
     // --- canvas input -----------------------------------------------------
     // the invisible button is the canvas: left drag pans (unless following),
-    // wheel zooms, right click opens the menu (Qt forwarded all of these
+    // wheel zooms, right click opens the menu (the original forwarded all of these
     // through CMapImageWidget; WantCaptureMouse keeps the game out of it)
     ImGui::InvisibleButton("##map_canvas", canvasSize, ImGuiButtonFlags_MouseButtonLeft);
     const bool canvasHovered = ImGui::IsItemHovered();
@@ -290,7 +290,7 @@ void MapWindow_Draw(bool *open)
         s_Panning = false;
     }
 
-    // wheel zoom (Qt Map::mapWheelEvent, map.cpp:1570-1599: index 1..8 with
+    // wheel zoom (the original mapWheelEvent: index 1..8 with
     // the x2.0 <-> x4.0 jump, up = out, down = in); the two direction
     // comparisons below already cover the whole non-zero wheel range, so no
     // (!= 0.0f) equality test is needed here
@@ -359,7 +359,7 @@ void MapWindow_Draw(bool *open)
             }
         }
 
-        // the mirror NPCs (map.cpp:859-894). MapIndex guard added: the Qt
+        // the mirror NPCs. MapIndex guard added: the original
         // bounds check could not reject a foreign-facet character.
         QFOR(obj, g_World->m_Items, CGameObject *)
         {
@@ -383,9 +383,9 @@ void MapWindow_Draw(bool *open)
             const string &objName = obj->GetName();
             if (type == OMCT_GUILD_MEMBER)
             {
-                // Qt refreshed the cached guild name and let the guild list
-                // draw the marker (map.cpp:874-878); SetMemberName takes a
-                // mutable string & (Qt-era API), so the copy happens here
+                // the original refreshed the cached guild name and let the guild list
+                // draw the marker; SetMemberName takes a
+                // mutable string &, so the copy happens here
                 string name = objName;
                 g_GuildManager.SetMemberName(serial, name);
                 continue;
@@ -413,7 +413,7 @@ void MapWindow_Draw(bool *open)
             s_Overlays.push_back(item);
         }
 
-        // the guild list markers (map.cpp:896-909; Qt pushed them with the
+        // the guild list markers (the original pushed them with the
         // party type - kept, that is the style they rendered with; iterated
         // over the manager's own store - GetMembers() returns by value and
         // the draw path must not allocate per frame)
@@ -476,7 +476,7 @@ void MapWindow_Draw(bool *open)
             {
                 // the corpse.png icon + white label; the
                 // atlas cell is 32px downsampled from the 128px asset
-                const float iconSize = 15.0f; // Qt scaled the icon to 15x15
+                const float iconSize = 15.0f; // the original scaled the icon to 15x15
                 IconImage(
                     XA_ICON_CORPSE,
                     ImVec2(x - iconSize / 2, y - iconSize / 2),
@@ -519,7 +519,7 @@ void MapWindow_Draw(bool *open)
 
             if (dead)
             {
-                // the Qt dead X (map.cpp:1002-1008)
+                // the original dead X
                 dl->AddLine(ImVec2(x - offX, y - offY), ImVec2(x + offX, y + offY), color, 1.0f);
                 dl->AddLine(ImVec2(x - offX, y + offY), ImVec2(x + offX, y - offY), color, 1.0f);
                 continue;
@@ -529,7 +529,7 @@ void MapWindow_Draw(bool *open)
 
             if (item.Ptr != nullptr && style.DrawHits)
             {
-                // the status bars (Qt DrawLine, map.cpp:477-504): a 20x2 dark
+                // the status bars (the original DrawLine): a 20x2 dark
                 // strip at the dot bottom, the colored fill scaled by the %
                 const ImU32 bg = IM_COL32(0, 0, 0, 127);
                 dl->AddRectFilled(ImVec2(x - 10.0f, y), ImVec2(x + 10.0f, y + 2.0f), bg);
@@ -572,8 +572,8 @@ void MapWindow_Draw(bool *open)
         dl->AddText(ImVec2(canvasTopLeft.x + 2.0f, canvasTopLeft.y + 2.0f), IM_COL32_WHITE, text);
     }
 
-    // --- context menu (Qt on_miw_Image_customContextMenuRequested,
-    //     map.cpp:1717-1797) -------------------------------------------------
+    // --- context menu (the original on_miw_Image_customContextMenuRequested,
+    //     mirrored here) ------------------------------------------------------
     if (ImGui::BeginPopupContextItem("##map_context"))
     {
         if (ImGui::BeginMenu("Facet"))
@@ -585,8 +585,8 @@ void MapWindow_Draw(bool *open)
             for (int i = 0; i < MAX_MAPS_COUNT; i++)
             {
                 // every facet is always offered: g_MapSize is a compile-time
-                // client table (the Qt availability check stayed commented
-                // out, map.cpp:1722), so selecting an uninstalled one just
+                // client table (the original availability check stayed commented
+                // out), so selecting an uninstalled one just
                 // renders black
                 if (g_MapSize[i].Width == 0)
                 {
@@ -687,8 +687,8 @@ void MapWindow_Draw(bool *open)
     ImGui::PopStyleVar();
 }
 
-// Qt Map::OnActionSelect (map.cpp:1616-1711): the context-menu -> settings
-// transitions. Kept as a free function so the menu reads like the Qt one.
+// The original Map::OnActionSelect: the context-menu -> settings
+// transitions. Kept as a free function so the menu reads like the original.
 void MapWindow_OnAction(uint type, uint extra)
 {
     bool wantRedraw = true;

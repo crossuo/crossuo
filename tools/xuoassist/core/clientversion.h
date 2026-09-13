@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Resolved at the packet-manager round: the Qt app read the host's validated
+// Resolved at the packet-manager round: the original app read the host's validated
 // client version once at plugin install (mainscript.cpp:397,
 // g_ClientInterface->ClientVersion). In-process, the client's own negotiated
 // version (Config::ClientVersion, validated from the exe at startup and sent

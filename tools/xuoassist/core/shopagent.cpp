@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The shop buy/sell engine - the port of assist/tabagentsshop.cpp (hook bodies
-// and ProcessShopList are line-faithful; the Qt widget globals became agent
+// and ProcessShopList are line-faithful; the original widget globals became agent
 // state) and assist/shopprogressform.cpp (the countdown becomes frame ticks).
 
 #define LOGGER_MODULE Assistant
@@ -32,7 +32,7 @@ CShopAgent g_ShopAgent;
 
 namespace {
 
-// the per-file to_lower_copy the Qt port keeps in assist/displaymanager
+// the per-file to_lower_copy the original port keeps in assist/displaymanager
 string to_lower_copy(string text)
 {
     for (char &ch : text)

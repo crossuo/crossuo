@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See scriptgump.h. The Qt flow was textwindowengine.cpp (emit + PauseWaiting
-// per op) into commandmanager.cpp OnCommandTextWindow* (709-761, 4426-4439)
+// See scriptgump.h. The original flow was textwindowengine.cpp (emit + PauseWaiting
+// per op) into commandmanager.cpp OnCommandTextWindow*
 // over the g_TextDialog window (script text list + position/size + save).
 
 #include "scriptgump.h"

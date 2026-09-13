@@ -3,7 +3,7 @@
 
 // See scripteditor.h. File dialogs: the plan §8.2 rule (no native dialog
 // dependency) - a small in-ImGui file picker over std::filesystem rooted at
-// the current directory replaces QFileDialog::getOpenFileName/getSaveFileName.
+// the current directory replaces the native open/save file dialogs.
 
 #include "scripteditor.h"
 #include "editor.h"
@@ -200,7 +200,7 @@ void ScriptEditorWindow_Draw(bool *open)
     // does not hide anything): the window stays closed until the Scripts tab
     // "Open editor" button sets the flag again. The buffer is
     // shared with the script runtime, so content survives close/reopen
-    // (the Qt dialog had no closeEvent override either: plain hide).
+    // (the original dialog had no closeEvent override either: plain hide).
     if (open == nullptr || !*open)
     {
         return;
@@ -271,7 +271,7 @@ void ScriptEditorWindow_Draw(bool *open)
         TextEditor_CommentSelection();
     }
     ImGui::SameLine();
-    // the command insert menu (the Qt giant context menu, now data-driven)
+    // the command insert menu (the original giant context menu, now data-driven)
     if (ImGui::Button("Commands"))
     {
         ImGui::OpenPopup("ScriptCommandMenu");

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/objectpropertiesmanager.h), Qt-diet
-// (QMap -> std::map, QString -> std::string).
+// Ported from X:UO Assist (managers/objectpropertiesmanager.h), trimmed
+// (maps are std::map, strings are std::string).
 
 #pragma once
 

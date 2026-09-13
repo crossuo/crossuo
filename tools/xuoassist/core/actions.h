@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The hotkey action registry (Phase 3, master plan §7 item 2). Replaces the
-// Qt app's signal-hub dispatch: the table the cb_Action combos offered is
+// original app's signal-hub dispatch: the table the cb_Action combos offered is
 // enumerated here as data (name, per-type action list) and every entry's
-// handler calls the Phase-1 core directly - no QObject marshaling.
+// handler calls the Phase-1 core directly - no marshaling layer.
 //
 // Sources:
 //   - s_HotkeyTypeName + PlayHotkeyAction:
@@ -45,7 +45,7 @@ int Actions_ActionCount(uint type);
 void Actions_ActionName(uint type, int action, char *out, size_t size);
 
 // The Data column text (UpdateHotkeyData, hotkeysform.cpp:899). Writes into a
-// caller buffer; empty result means the Qt "Blank hotkey" placeholder.
+// caller buffer; empty result means the original "Blank hotkey" placeholder.
 void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size);
 
 // The executor side (PlayHotkeyAction): runs the binding's action.

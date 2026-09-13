@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See scriptstate.h. The Qt sources are managers/commandmanager.cpp
-// (OnCommandSetGlobal/GetGlobal/ClearGlobals 3973-4000, the Timer family
-// 4462-4519 over m_Timers/m_Time) and OnCommandBuffExists (3602, over
+// See scriptstate.h. The original sources are managers/commandmanager.cpp
+// (OnCommandSetGlobal/GetGlobal/ClearGlobals, the Timer family
+// over m_Timers/m_Time) and OnCommandBuffExists (over
 // g_BuffManager).
 
 #include "scriptstate.h"
@@ -28,7 +28,7 @@ string to_lower_copy(string text)
     return text;
 }
 
-// The Qt BuffExists body trimmed + lowered the script argument (the port
+// The original BuffExists body trimmed + lowered the script argument (the port
 // lowers at store time, so only the lookup needs it here).
 string buff_key(string name)
 {
@@ -70,7 +70,7 @@ void ScriptGlobal_Clear()
 
 void ScriptTimer_Set(const string &name, int value)
 {
-    s_Timers[name] = g_Ticks - (uint)value; // Qt: m_Time.elapsed() - value
+    s_Timers[name] = g_Ticks - (uint)value; // was m_Time.elapsed() - value
 }
 
 int ScriptTimer_Get(const string &name)

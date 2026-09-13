@@ -3,8 +3,8 @@
 
 #pragma once
 
-// The main-thread marshaling queue for the script runtime (was the Qt
-// managers/commandmanager signal hub: CScriptEngine's 434
+// The main-thread marshaling queue for the script runtime (was the
+// managers/commandmanager signal hub: the engine's 434
 // `emit g_CommandManager.CommandX(...)` calls crossed threads through queued
 // signal connections; the result pointer arguments were the blocking part).
 //
@@ -12,7 +12,7 @@
 //  - ONLY script worker threads push; ONLY the main thread drains
 //    (ScriptQueue_Drain, called from AssistantUI_Tick BEFORE the agent ticks
 //    and before the frame draw - the same position the queued signal slots
-//    ran at in Qt, inside the event loop).
+//    ran at originally, inside the event loop).
 //  - Every command carries a promise side (mutex+cv+flag): the pushing script
 //    thread blocks on it with a timeout; the drain marks the result and
 //    notifies. Getters and mutating calls are all queued by default.
@@ -174,7 +174,7 @@ static_assert(sizeof(void *) <= sizeof(uintptr_t),
     "pointer results must fit an address-sized slot");
 
 // The drain-side executor for every tag - implemented in apiscript.cpp,
-// runs on the main thread (was the Qt OnCommand* slot bodies).
+// runs on the main thread (were the original OnCommand* slot bodies).
 void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command);
 
 // Pushes a command and blocks the calling (script) thread until the main

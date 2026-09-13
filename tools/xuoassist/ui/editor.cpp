@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The editor implementation. Qt palette mapping (scriptplaintextedit.cpp:
-// 17-488, the CSyntaxHighlighter rules):
+// The editor implementation. Palette mapping (the original CSyntaxHighlighter rules):
 //   darkMagenta 0xAA00AA  - the `.Method` names
 //   darkBlue   0x000080B  - keywords (Client/Player/if/for/...)
 //   darkYellow 0x808000   - the sentinel globals (self/lasttarget/...)
@@ -99,7 +98,7 @@ struct TOKEN_RUN
     int color;
 };
 
-// The per-line tokenizer (the Qt QRegExp rules, applied left to right).
+// The per-line tokenizer (the original regex rules, applied left to right).
 void tokenize_line(const string &line, vector<TOKEN_RUN> &runs)
 {
     runs.clear();
@@ -116,7 +115,7 @@ void tokenize_line(const string &line, vector<TOKEN_RUN> &runs)
             break;
         }
 
-        // strings (minimal match: no spanning quotes - the Qt patterns were
+        // strings (minimal match: no spanning quotes - the original patterns were
         // non-greedy ".*")
         if (c == '"' || c == '\'')
         {
@@ -275,7 +274,7 @@ struct EDITOR_STATE
         return text;
     }
 
-    // --- undo (simple snapshots; the Qt undo stack was QPlainTextEdit's) ---
+    // --- undo (simple snapshots; the original undo stack was the text edit's) ---
     struct UNDO_STATE
     {
         vector<string> lines;
@@ -429,7 +428,7 @@ bool TextEditor_Draw(
     const ImVec2 region = ImGui::GetContentRegionAvail();
     const ImVec2 size(height > 0 ? ImVec2(0, height) : region);
 
-    // the editor is a bordered child region; scrolling is ours (the Qt
+    // the editor is a bordered child region; scrolling is ours (the original
     // NoWrap + vertical scrollbar behavior)
     ImGui::BeginChild(id, size, ImGuiChildFlags_FrameStyle, ImGuiWindowFlags_NoScrollbar);
     const float contentHeight = (float)lines.size() * lineHeight;
@@ -744,7 +743,7 @@ namespace {
 
 int find_in_state(EDITOR_STATE *state, const string &needle, bool down, bool caseSensitive)
 {
-    // case-sensitive search like the Qt dialog default; down = forward
+    // case-sensitive search like the original dialog default; down = forward
     const vector<string> &lines = state->LineBuffer;
     int startLine = state->CursorLine;
     int startCol = state->CursorCol + (down ? 1 : 0);

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // AssistantEvents: the notification seam introduced at Phase 1 (master plan
-// §7 Phase 1 item 2 / §8.1 "Packet-manager UI coupling"). The Qt app's packet
+// §7 Phase 1 item 2 / §8.1 "Packet-manager UI coupling"). The original app's packet
 // handlers poked widget globals directly (g_TabMain, g_TabSkills, g_Map,
 // g_ObjectInspectorForm, g_HotkeysForm, ...); in the client build those call
 // sites become g_AssistantEvents->OnXxx(...) notifications. Anything that is
@@ -14,7 +14,7 @@
 // instance's methods are inert (except OnClientPrint, whose original behavior
 // is pure client-side packet injection and is reproduced verbatim). A later UI
 // round installs a subclass instance into g_AssistantEvents; handlers never
-// change. No Qt, no std::function registry, C++14.
+// change. No UI-framework coupling, no std::function registry, C++14.
 
 #pragma once
 
@@ -38,7 +38,7 @@ enum
     XA_FROM_TARGET_DISPLAY_ITEM    // TabDisplay items editor (graphic + hue)
 };
 
-// Forward-ported from the Qt app's managers/journalmanager.h (the manager
+// Forward-ported from the original app's managers/journalmanager.h (the manager
 // itself lands with the journal round; the flags travel with the messages).
 enum XA_JOURNAL_MESSAGE_FLAGS
 {
@@ -47,9 +47,9 @@ enum XA_JOURNAL_MESSAGE_FLAGS
     JMT_SYSTEM = 0x02
 };
 
-// Forward-ported from the Qt app's managers/partymanager.h and
+// Forward-ported from the original app's managers/partymanager.h and
 // managers/guildmanager.h (the managers land with the agents round; the packet
-// handler parses these today and hands them over as-is). QString Name ->
+// handler parses these today and hands them over as-is). Name is
 // std::string per §4.2.
 struct XA_PARTY_MEMBER_INFO
 {

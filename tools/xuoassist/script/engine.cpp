@@ -32,9 +32,9 @@ namespace {
 
 // JS interrupt handler: runs on the script thread inside every JS loop. Two
 // jobs: flip to "terminate" when the manager asked, and periodically pause
-// the script (the Qt PauseWaiting while-loop ran between API calls; a tight
+// the script (the original PauseWaiting while-loop ran between API calls; a tight
 // JS loop never reached one, QuickJS' handler gives us a hard preemption
-// point the QScriptEngine never had).
+// point the original engine never had).
 int ScriptInterruptHandler(JSRuntime *rt, void *opaque)
 {
     auto *engine = (CScriptEngine *)opaque;
@@ -138,8 +138,8 @@ bool CScriptEngine::CallFunction(const string &functionName, const vector<string
     if (JS_IsUndefined(func) || !JS_IsFunction(m_Context, func))
     {
         JS_FreeValue(m_Context, func);
-        // Qt behavior: calling a missing function produced a TypeError from
-        // QScriptValue::call; here the manager reports the same condition.
+        // Original behavior: calling a missing function produced a TypeError from
+        // the engine call; here the manager reports the same condition.
         g_Assistant.ScriptError(
             "Running script error!", "Line: 0\nfunction '" + functionName + "' not found");
         return false;
@@ -174,7 +174,7 @@ bool CScriptEngine::CallFunction(const string &functionName, const vector<string
 void CScriptEngine::RequestTerminate()
 {
     m_TerminateFlag = 1;
-    SetTerminated(true); // the Qt flag the Wait/Pause loops watched
+    SetTerminated(true); // the flag the Wait/Pause loops watched
 }
 
 } // namespace xuoassist

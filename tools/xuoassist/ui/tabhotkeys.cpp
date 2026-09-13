@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // TabHotkeys implementation (see tabhotkeys.h). Was assist/tabhotkeys.cpp +
-// the three control forms; every button keeps its Qt speech payload.
+// the three control forms; every button keeps its original speech payload.
 
 #define LOGGER_MODULE Assistant
 
@@ -312,7 +312,7 @@ void TabHotkeys_Draw()
 
     ImGui::Separator();
 
-    // Load/Save (tabhotkeys.cpp:53/77): the Qt app opened a file dialog under
+    // Load/Save (tabhotkeys.cpp:53/77): the original app opened a file dialog under
     // SavedHotkeys; the in-client port round-trips the profile Hotkeys.xml
     // (the format is identical - see core/hotkeys.cpp)
     if (ImGui::Button("Load hotkeys"))

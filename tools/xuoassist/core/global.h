@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (global.h), Qt-diet per assistant-plan.md §4.2:
-// QString -> std::string, QList/QVector -> std::vector, QTime/QElapsedTimer ->
-// client g_Ticks (ms), QPoint -> local CPoint2Di. Assistant-owned globals only:
+// Ported from X:UO Assist (global.h), trimmed per assistant-plan.md §4.2:
+// strings are std::string, lists are std::vector, timers are
+// client g_Ticks (ms), points are the local CPoint2Di. Assistant-owned globals only:
 // the external-DLL host plumbing (g_DllPath/g_ClientPath/g_SaveAero/g_WineOS)
 // is dropped; the host bridge function pointers stay and get wired to client
 // internals by the packet-manager round.
@@ -16,14 +16,14 @@
 #include <vector>
 
 #include <common/utils.h> // countof
-// Shared UO protocol types, owned by the client (same lineage as the Qt app's
+// Shared UO protocol types, owned by the client (same lineage as the original app's
 // common/ headers): enums (CLIENT_VERSION, RACE_TYPE, OL_*, AT_*, VKI_*,
 // PROMPT_TYPE, UPDATE_GAME_OBJECT_TYPE), FUNCDEF_* bridge typedefs,
 // PACKET_PROC/UOI_SELECTED_TILE/WindowHandle.
 #include <xuocore/enumlist.h>
 #include <xuocore/commoninterfaces.h>
 #include <xuocore/plugininterface.h>
-#include "Globals.h" // client g_Ticks (ms) - supersedes the Qt app's QTime/g_Timer
+#include "Globals.h" // client g_Ticks (ms) - supersedes the original app's tick timer
 
 namespace xuoassist {
 
@@ -31,14 +31,14 @@ using uchar = uint8_t;
 using ushort = uint16_t;
 using uint = uint32_t;
 
-// Client tick source (plan §4.2: QTime/QElapsedTimer -> g_Ticks).
+// Client tick source (plan §4.2: the old timer objects -> g_Ticks).
 using ::g_Ticks;
 
 using std::string;
 using std::wstring;
 using std::vector;
 
-// Forward-ported from the Qt app's assist/assist.h with the assistant core
+// Forward-ported from the original app's assist/assist.h with the assistant core
 // round (Phase 1c); core/textconv.h previously carried the partial copy and
 // now re-uses these.
 enum FIND_TYPE_FLAGS
@@ -84,7 +84,7 @@ extern uchar g_LightLevel;
 extern uchar g_PersonalLightLevel;
 
 // Host bridge accessors; null-safe until the packet-manager round attaches the
-// in-client implementations (the Qt app relied on the host DLL always being
+// in-client implementations (the original app relied on the host DLL always being
 // attached). Returning the default keeps pre-wiring behavior inert.
 int GetInt(VALUE_KEY_INT key, int value = -1);
 string GetString(VALUE_KEY_STRING key, const string &value = "");
@@ -480,7 +480,7 @@ struct WEATHER_DATA
 extern SEASON_DATA g_Season;
 extern WEATHER_DATA g_Weather;
 
-//! Replacement for the Qt app's QPoint globals (plan §4.2); x()/y() keep the
+//! Replacement for the original app's point globals (plan §4.2); x()/y() keep the
 //! original call sites verbatim.
 struct CPoint2Di
 {
@@ -512,7 +512,7 @@ extern ushort g_MorphGraphic;
 extern ushort g_OriginalGraphic;
 extern uint g_LastCorpseObject;
 extern uint g_LastContainerObject;
-//! Tick stamps (g_Ticks) replacing the Qt app's QTime objects.
+//! Tick stamps (g_Ticks) replacing the original app's timer objects.
 extern uint g_LastUseObjectTimer;
 extern uint g_StartTimer;
 extern bool g_Connected;

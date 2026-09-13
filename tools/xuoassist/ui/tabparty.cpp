@@ -23,7 +23,7 @@ namespace xuoassist {
 
 namespace {
 
-// shared serial/name fields (the Qt le_PartySerial/le_PartyName pair served
+// shared serial/name fields (the original le_PartySerial/le_PartyName pair served
 // both lists)
 char s_Name[64] = { 0 };
 char s_Serial[16] = { 0 };
@@ -41,7 +41,7 @@ void PartySetNameOf(CWorldObjectEntry &entry, const char *name)
     entry.Name = name;
 }
 
-// the Qt tabs compared CAssistant::TextToSerial(serial) != 0
+// the original tabs compared CAssistant::TextToSerial(serial) != 0
 uint serial_from_field()
 {
     return CAssistant::TextToSerial(s_Serial);
@@ -117,7 +117,7 @@ void list_remove(vector<CWorldObjectEntry> &items, int &selected, bool &changed)
     }
 }
 
-// one accept/decline pane (the two Qt list groups)
+// one accept/decline pane (the two original list groups)
 void party_pane(
     const char *id,
     const char *title,
@@ -167,7 +167,7 @@ void party_pane(
     }
     if (changed)
     {
-        g_AssistantConfig.SaveParty(); // Party.xml (the Qt tab saved per mutation)
+        g_AssistantConfig.SaveParty(); // Party.xml (the original tab saved per mutation)
     }
 }
 

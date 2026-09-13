@@ -3,11 +3,11 @@
 
 // Ported from X:UO Assist (assist/packets.cpp). Builder bodies are byte
 // identical to the originals (protocol-critical; plan "must-follow" rule).
-// Only the transport changed: the Qt app's `emit g_Assistant.signal_*`
+// Only the transport changed: the original app's `emit g_Assistant.signal_*`
 // cross-thread marshaling becomes direct client calls (plan §4.1):
 //   SendClient -> client receive injection (was UOMSG_RECV)
 //   SendServer -> g_ConnectionManager.Send  (was UOMSG_SEND)
-// QString::split/toInt/toStdWString replaced by local std equivalents.
+// String split/toInt/wide-conversion helpers replaced by local std equivalents.
 
 // SDL types must come first: xuocore/plugininterface.h maps its event structs
 // onto SDL's when SDL headers are visible (USING_SDL_STRUCTS), which is what
@@ -210,7 +210,7 @@ CPacketToClientTargetRequest::CPacketToClientTargetRequest()
     WriteUInt32BE(0x0000601A);
     WriteUInt32BE(0x00010000);
 
-    // The Qt build handed the fresh packet to
+    // The original build handed the fresh packet to
     // g_Target.SetRecvAssistData(CDataReader(...)) here (assist/packets.cpp,
     // Phase 1c): the packet bytes above are the target cursor the assistant
     // itself requested, so the assistant target state is set eagerly (the

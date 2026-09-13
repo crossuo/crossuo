@@ -5,13 +5,13 @@
 // skills table (Name/Base/Real/Delta/Cap), the clipboard copies and the delta
 // reset. The data lives in g_Skills[]/g_SkillsCount (fed by the packet
 // pipeline: the 0xFC skill list names the rows, 0xDF/0x3A carry the values
-// and lock states) - the table reads it live every frame, like the Qt table
+// and lock states) - the table reads it live every frame, like the original table
 // was updated from UpdateSkill/UpdateStatsAndSkillsInfo.
 //
-// Delta note: the Qt delta column showed Value - OldValue, suppressed while
+// Delta note: the original delta column showed Value - OldValue, suppressed while
 // (int)(delta * 10) == 0; "Reset skills delta" set OldValue = Value for every
 // skill (only the deltas are zeroed, no packet is sent). Lock-state icons
-// (skill_*.bmp) render as text glyphs with tooltips here; the Qt table's
+// (skill_*.bmp) render as text glyphs with tooltips here; the original table's
 // icons were display-only (tabskills.cpp has no cell click handler), so there
 // is no click-to-cycle behavior to port.
 
@@ -34,8 +34,8 @@ namespace xuoassist {
 
 namespace {
 
-// the lock-state glyphs for skill_up/down/lock/wtf.bmp (display-only, Qt
-// parity: no click behavior) + the tooltip text
+// the lock-state glyphs for skill_up/down/lock/wtf.bmp (display-only,
+// parity with the original: no click behavior) + the tooltip text
 struct XA_SKILL_LOCK_STYLE
 {
     const char *Glyph;
@@ -54,7 +54,7 @@ const char *skill_lock_style(uchar status)
     return s_LockStyles[status > 2 ? 3 : status].Glyph;
 }
 
-// the Qt code compared the packet-derived floats directly (the same ushort
+// the original code compared the packet-derived floats directly (the same ushort
 // /10.0f conversion on both sides makes exact equality meaningful); memcmp
 // keeps the exact-value semantics without tripping -Wfloat-equal
 bool skill_value_equal(float a, float b)
@@ -94,7 +94,7 @@ void TabSkills_Draw()
     }
     else
     {
-        // not logged in (g_Skills empty): the Qt labels showed zeros
+        // not logged in (g_Skills empty): the original labels showed zeros
         ImGui::Text("Str: 0   Int: 0   Dex: 0   Statsum: 0   Skillsum: %.1f", skillSum);
     }
     ImGui::TextDisabled("Stats info:");

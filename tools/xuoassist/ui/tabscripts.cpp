@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See tabscripts.h. Config persistence keeps the Qt element (tabscripts.cpp
+// See tabscripts.h. Config persistence keeps the original element (tabscripts.cpp
 // LoadConfig/SaveConfig: <scripts sortscripts=".." scriptfile="..">), which
 // the Phase 1c config port already reads/writes into
 // g_AssistantConfig.SortScripts()/ScriptFilePath().
@@ -43,7 +43,7 @@ void sync_path_from_config()
     s_PathLoaded = true;
     if (s_ScriptPath[0] != 0)
     {
-        // the Qt Init() auto-loaded the saved script file
+        // the original Init() auto-loaded the saved script file
         ScriptManager_LoadScriptFile(s_ScriptPath);
     }
 }
@@ -57,7 +57,7 @@ void load_script_path(const char *path)
     snprintf(pathCopy, sizeof(pathCopy), "%s", path);
     snprintf(s_ScriptPath, sizeof(s_ScriptPath), "%s", pathCopy);
     g_AssistantConfig.SetScriptFilePath(pathCopy);
-    // the path persists with the profile (the Qt tab saved on close)
+    // the path persists with the profile (the original tab saved on close)
     AssistantUI_MarkOptionsDirty();
     ScriptManager_LoadScriptFile(pathCopy);
 }
@@ -90,9 +90,9 @@ void TabScripts_Draw()
     ImGui::SetItemTooltip("Reload current script file");
 
     // --- running actions row --------------------------------------------------
-    // The function combo honors the SortScripts option (the Qt
-    // UpdateScriptsList tail sorted ONLY cb_ScriptNameForStart,
-    // tabscripts.cpp:403-407 - the running list stayed in start order).
+    // The function combo honors the SortScripts option (the original
+    // UpdateScriptsList tail sorted ONLY cb_ScriptNameForStart -
+    // the running list stayed in start order).
     const vector<string> functions = ScriptEditor_FunctionList();
     vector<std::pair<string, int>> combo; // display name -> functions[] index
     combo.reserve(functions.size());
@@ -201,7 +201,7 @@ void TabScripts_Draw()
     }
     ImGui::SetItemTooltip("Opens the script editor window with the loaded file");
 
-    // clb_ScriptExamples: the Qt command link opened the ScriptLibrary URL;
+    // clb_ScriptExamples: the original command link opened the ScriptLibrary URL;
     // now the docs page (hosts the examples), same launcher as the About tab
     if (ImGui::SmallButton("Script examples"))
     {

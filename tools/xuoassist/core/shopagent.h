@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The shop buy/sell agent (Phase 4a). Ports the engine that lived in the Qt
-// tab classes (assist/tabagentsshop.cpp: ProcessShopList + the packet hooks,
+// The shop buy/sell agent (Phase 4a). Ports the engine that lived in the
+// original tab classes (assist/tabagentsshop.cpp: ProcessShopList + the packet hooks,
 // assist/shopprogressform.cpp: the delay-then-send countdown) into a
-// frame-tick state machine, per the master plan §7 Phase 4 item 3: the Qt app
-// ran it from QTimer ticks and a modal QDialog; here AssistantUI_Tick drives
+// frame-tick state machine, per the master plan §7 Phase 4 item 3: the original app
+// ran it from frame ticks and a modal progress dialog; here AssistantUI_Tick drives
 // CShopAgent::Tick and the progress popup is an ImGui window fed from the
 // same state.
 //
 // Behavior parity notes:
 //  - the flow is speech-driven ("<vendor name> buy" / "sell"); the reply
 //    packets (OpenContainer gump 0x0030, BuyList 0x74, SellList 0x9E) are
-//    tapped from managers/packetmanager.cpp exactly where the Qt handlers
+//    tapped from managers/packetmanager.cpp exactly where the original handlers
 //    called g_TabAgentsShop;
-//  - the per-list "Auto" buy/sell checkboxes were UI-only in the Qt app
+//  - the per-list "Auto" buy/sell checkboxes were UI-only in the original app
 //    (never serialized into ShopList.xml) - they stay runtime state here;
 //  - the progress countdown sends the queued Buy/Sell request when it
 //    expires; Cancel drops the queued request (was ShopProgressForm).
@@ -60,7 +60,7 @@ class CShopAgent
     bool m_AutoSell{ false };
 
     // the "Vendor name:" field (le_VendorName; UI-set, not serialized - the
-    // Qt app kept it in the line edit only, ShopList.xml has no attribute)
+    // original app kept it in the line edit only, ShopList.xml has no attribute)
     string m_VendorName{ "" };
 
     // the queued request (was ShopProgressForm): countdown then send
@@ -73,7 +73,7 @@ class CShopAgent
     vector<std::pair<uint, int>> m_ProgressList;
 
 public:
-    // the le_VendorName field (not serialized, Qt parity)
+    // the le_VendorName field (not serialized, parity with the original)
     void SetVendorName(const string &name) { m_VendorName = name; }
     const string &GetVendorName() const { return m_VendorName; }
 
@@ -110,7 +110,7 @@ public:
     // Cancel shopping! (drops the queued request)
     void CancelProgress();
 
-    // --- packet taps (packetmanager.cpp; bool = pass-through, Qt parity) -----
+    // --- packet taps (packetmanager.cpp; bool = pass-through, parity with the original) -----
     bool OnOpenContainer(uint serial);
     bool OnBuyList(CDataReader &reader);
     bool OnBuyReply(CDataReader &reader);

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/finditem.h): QString -> std::string,
-// QStringList -> std::vector<std::string>, QVector<ushort> -> std::vector<ushort>.
+// Ported from X:UO Assist (commonitems/finditem.h): strings are std::string,
+// string lists are std::vector<std::string>, ushort lists are std::vector<ushort>.
 
 #pragma once
 

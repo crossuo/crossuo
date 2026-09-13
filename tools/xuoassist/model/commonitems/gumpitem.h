@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/gumpitem.h): QString -> std::string,
-// QStringList -> std::vector<std::string>, QList -> std::vector.
+// Ported from X:UO Assist (commonitems/gumpitem.h): strings are std::string,
+// string lists are std::vector<std::string>, lists are std::vector.
 
 #pragma once
 

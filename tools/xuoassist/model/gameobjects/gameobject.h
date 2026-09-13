@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (gameobjects/gameobject.h): QString -> std::string,
-// QList -> std::vector, QStringList -> std::vector<std::string>.
+// Ported from X:UO Assist (gameobjects/gameobject.h): strings are std::string,
+// lists are std::vector, string lists are std::vector<std::string>.
 
 #pragma once
 

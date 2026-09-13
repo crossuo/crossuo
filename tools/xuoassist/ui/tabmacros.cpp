@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabMacros implementation (see tabmacros.h). The Qt button handlers map 1:1;
+// TabMacros implementation (see tabmacros.h). The original button handlers map 1:1;
 // the actions-list text cache exists so the draw path builds no strings (the
-// Qt rows were CMacroActionListItem objects).
+// original rows were CMacroActionListItem objects).
 
 #define LOGGER_MODULE Assistant
 
@@ -107,7 +107,7 @@ void TabMacros_Draw()
     if (listChanged)
     {
         // renames/reorders/deletes through the list core: renamed macros
-        // re-point their hotkeys by name at the next save (Qt UpdateMacroList)
+        // re-point their hotkeys by name at the next save (UpdateMacroList)
         save_macros();
     }
 
@@ -224,7 +224,7 @@ void TabMacros_Draw()
     }
     ImGui::EndDisabled();
 
-    // push the loop options (the Qt Play read the checkboxes directly)
+    // push the loop options (the original Play read the checkboxes directly)
     g_MacroExecutor.SetLoopOptions(looped && EnabledFeatureLoopedMacro(), loopSeconds);
 }
 
