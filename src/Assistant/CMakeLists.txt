@@ -2,8 +2,8 @@
 # SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 # X:UO Assist: in-client ImGui assistant, linked into the crossuo target
-# (see the master plan ADR D9; wired by src/CMakeLists.txt, guarded by
-# the root CMakeLists XUO_ASSISTANT / XUO_ASSISTANT_ENABLED)
+# (wired by src/CMakeLists.txt, guarded by the root CMakeLists
+# XUO_ASSISTANT / XUO_ASSISTANT_ENABLED)
 
 set(XUOASSIST_PROJECT "xuoassist" CACHE INTERNAL "")
 set(XUOASSIST_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "")

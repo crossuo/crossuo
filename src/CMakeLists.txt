@@ -286,6 +286,12 @@ set(crossuo_src
 set(XUO_DIR ${PROJECT_SOURCE_DIR}/src/)
 include_directories(${XUO_DIR})
 
+# in-client assistant (X:UO Assist, ImGui; GL3/GLES2 only; wired into the
+# crossuo target further below)
+if (XUO_ASSISTANT_ENABLED)
+  add_subdirectory(Assistant)
+endif()
+
 set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${glengine_src} ${renderer_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
 file(GLOB XUO_HDRS ${XUO_DIR}/**/*.h)
 

@@ -67,7 +67,7 @@ Scripts are JavaScript (QuickJS) with the XUO Assist API surface
 (`Player.*`, `Client.*` and the engine classes Gump, Menu,
 GumpHook, ClientMacro, File). The Scripts tab opens/reloads/runs/pauses/stops
 scripts; the API classification ([Q]/[G]/[D] coverage notes) and the
-registration table live in `tools/xuoassist/script/apiscript.cpp`
+registration table live in `src/Assistant/script/apiscript.cpp`
 (`apiscript.h` only declares the two entry points). Earlier assistant
 scripts run unmodified except for the documented deviations
 ("Remaining deviations" in `docs/NOTES.md`: no audio playback, no

@@ -743,7 +743,7 @@ Known open edges:
 
 # XUO Assist — assistant internals & decisions
 
-Topic notes for the in-client assistant (`tools/xuoassist/`): durable
+Topic notes for the in-client assistant (`src/Assistant/`): durable
 gotchas, accepted deltas and the reasoning behind them.
 
 ## Build gates & layout

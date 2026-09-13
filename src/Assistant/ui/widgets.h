@@ -44,7 +44,7 @@ extern const char *const DOCS_URL;
 // typedefs collide with xuocore/plugininterface.h when included late)
 void OpenURL(const char *url);
 
-// --- icon atlas (tools/xuoassist/assets/*.png, 32x32 cells) -----------------
+// --- icon atlas (src/Assistant/assets/*.png, 32x32 cells) -----------------
 enum XA_ICON
 {
     XA_ICON_ADD = 0,
