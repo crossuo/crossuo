@@ -39,6 +39,9 @@ public:
     int OffsetZ = 0;
     uint32_t LastStepTime = 0;
     astr_t Title;
+    astr_t Profile;
+    bool ProfileReceived = false;
+    bool BlockProfile = false;
     uint8_t HitsPercent = 0;
 
 protected:
@@ -99,6 +102,8 @@ public:
             (Graphic == 0x04E5) ||               /*blackthorn*/
             0);
     }
+
+    inline bool IsGM() const { return Graphic == 0x03DB; } // GM body
 
     inline bool IsGargoyle() const
     {

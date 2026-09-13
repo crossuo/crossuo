@@ -45,6 +45,8 @@ public:
     void SetName(const astr_t &newName);
     bool NPC = false;
     bool Clicked = false;
+    // Set to skip the object in user-directed find/search operations
+    bool Ignored = false;
     char AnimIndex = 0;
     astr_t JournalPrefix;
     uint32_t LastAnimationChangeTime = 0;

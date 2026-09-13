@@ -12,9 +12,9 @@
 #include "core/global.h"
 #include "core/assistantevents.h"
 #include "../../config/assistantconfig.h" // CorpsesAutoopen / CorpseKeepDelay
-#include "../../managers/corpsemanager.h"
 #include "../../managers/displaymanager.h" // CanRedraw (the title-redraw gate)
-#include "../../managers/partymanager.h"
+#include "Managers/ColorManager.h" // ::g_ColorManager
+#include "Managers/CorpseManager.h" // ::g_CorpseManager (corpse auto-open)
 #include <common/logging/logging.h>
 
 namespace xuoassist {
@@ -98,37 +98,6 @@ void CGameWorld::SetPlayer(const uint &serial)
     if (serial != g_Player->GetSerial())
     {
         CreatePlayer(serial);
-    }
-}
-
-void CGameWorld::RemoveRangedObjects()
-{
-    int objectsRange = GetInt(VKI_VIEW_RANGE);
-
-    CGameObject *go = m_Items;
-
-    while (go != nullptr)
-    {
-        CGameObject *next = (CGameObject *)go->m_Next;
-
-        if (go->GetContainer() == 0xFFFFFFFF && !go->IsPlayer())
-        {
-            if (GetDistance(g_RemoveRangeXY.x(), g_RemoveRangeXY.y(), go->GetX(), go->GetY()) >
-                objectsRange)
-            {
-                // was g_PartyManager.SaveMemberInfo:
-                // refresh the map-window position of a party member that is
-                // about to leave the view range
-                if (g_PartyManager.Contains(go->GetSerial()))
-                {
-                    g_PartyManager.SaveMemberInfo((CGameCharacter *)go);
-                }
-
-                RemoveObject(go);
-            }
-        }
-
-        go = next;
     }
 }
 
@@ -509,7 +478,7 @@ void CGameWorld::UpdateGameObject(
             character->SetGraphic(graphic + graphicIncrement);
             // character->OnGraphicChange(1000);
             character->SetDirection(direction);
-            character->SetColor(FixColor(color, (color & 0x8000)));
+            character->SetColor(g_ColorManager.FixColor(color, (color & 0x8000)));
             character->SetX(x);
             character->SetY(y);
             character->SetZ(z);
@@ -533,12 +502,10 @@ void CGameWorld::UpdateGameObject(
             {
                 g_LastCorpseObject = serial;
 
-                // was the corpse auto-open bookkeeping:
-                // g_TabMain->CorpsesAutoopen() + g_CorpseManager.Add(...)
                 if (g_AssistantConfig.CorpsesAutoopen())
                 {
-                    g_CorpseManager.Add(
-                        CCorpseInfo(serial, (int)(g_Ticks + g_AssistantConfig.CorpseKeepDelay())));
+                    g_CorpseManager.AddAutoOpen(
+                        serial, (int)(g_Ticks + g_AssistantConfig.CorpseKeepDelay()));
                 }
             }
 
@@ -599,7 +566,7 @@ void CGameWorld::UpdateGameObject(
             item->SetLayer(direction);
         }
 
-        item->SetColor(FixColor(color, (color & 0x8000)));
+        item->SetColor(g_ColorManager.FixColor(color, (color & 0x8000)));
 
         if (count < 1)
         {
@@ -624,7 +591,7 @@ void CGameWorld::UpdateGameObject(
             character->SetY(y);
             character->SetZ(z);
             character->SetDirection(direction);
-            character->SetColor(FixColor(color, (color & 0x8000)));
+            character->SetColor(g_ColorManager.FixColor(color, (color & 0x8000)));
             character->SetFlags(flags);
 
             // was g_Map->CheckForUpdate(serial) (radar): the map window round
@@ -665,7 +632,7 @@ void CGameWorld::UpdatePlayer(
         // g_Player->OnGraphicChange();
 
         g_Player->SetDirection(direction);
-        g_Player->SetColor(FixColor(color, 0));
+        g_Player->SetColor(g_ColorManager.FixColor(color, 0));
 
         g_Player->SetFlags(flags);
 
@@ -729,7 +696,7 @@ void CGameWorld::UpdateContainedItem(
     {
         ((CGameItem *)obj)->SetTiledataFlags(g_GetStaticFlags(graphic + graphicIncrement));
     }
-    obj->SetColor(FixColor(color, (color & 0x8000)));
+    obj->SetColor(g_ColorManager.FixColor(color, (color & 0x8000)));
 
     if (count < 1)
     {
@@ -756,27 +723,6 @@ void CGameWorld::UpdateContainedItem(
     {
         g_AssistantEvents->OnTitleRedraw();
     }
-}
-
-ushort CGameWorld::FixColor(const ushort &color, const ushort &defaultColor)
-{
-    ushort fixedColor = color & 0x3FFF;
-
-    if (fixedColor != 0u)
-    {
-        if (fixedColor >= 0x0BB8)
-        {
-            fixedColor = 1;
-        }
-
-        fixedColor |= (color & 0xC000);
-    }
-    else
-    {
-        fixedColor = defaultColor;
-    }
-
-    return fixedColor;
 }
 
 /*!

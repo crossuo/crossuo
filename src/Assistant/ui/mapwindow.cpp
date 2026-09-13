@@ -24,11 +24,11 @@
 #include "../core/assistantevents.h"
 #include "../config/assistantconfig.h"
 #include "../managers/assmap.h"
-#include "../managers/partymanager.h"
 #include "../managers/guildmanager.h"
 #include "../model/gameobjects/gamecharacter.h"
 #include "../model/gameobjects/gameplayer.h"
 #include "../model/gameobjects/gameworld.h"
+#include "Party.h" // ::g_Party (shared party data)
 #include "widgets.h"
 
 #include <math.h>
@@ -338,18 +338,18 @@ void MapWindow_Draw(bool *open)
     {
         // party members the mirror does not know: from the packet-fed member
         // info
-        if (g_MapSettings.GetPartyEnabled() && g_PartyManager.GetLeader() != 0u)
+        if (g_MapSettings.GetPartyEnabled() && g_Party.Leader != 0u)
         {
             for (int i = 0; i < 10; i++)
             {
-                const uint serial = g_PartyManager.Member[i];
+                const uint serial = g_Party.Member[i].Serial;
                 if (serial == 0u || g_World->FindWorldCharacter(serial) != nullptr)
                 {
                     continue;
                 }
 
-                const PARTY_MEMBER_INFO &info = g_PartyManager.m_MemberInfo[i];
-                if (info.Map == (uint)map && info.X != 0 && info.Y != 0 && info.X >= minX &&
+                const CPartyObject &info = g_Party.Member[i];
+                if (info.MapIndex == (uint8_t)map && info.X != 0 && info.Y != 0 && info.X >= minX &&
                     info.X < maxX && info.Y >= minY && info.Y < maxY)
                 {
                     XA_MAP_DRAW_OBJECT item = { OMCT_PARTY_MEMBER, info.X, info.Y, info.Name,
@@ -394,13 +394,13 @@ void MapWindow_Draw(bool *open)
             // copy only when the party-name substitution actually happens
             string substituted;
             const string *name = &objName;
-            if (objName.empty() && g_PartyManager.GetLeader() != 0u)
+            if (objName.empty() && g_Party.Leader != 0u)
             {
                 for (int i = 0; i < 10; i++)
                 {
-                    if (g_PartyManager.Member[i] == serial)
+                    if (g_Party.Member[i].Serial == serial)
                     {
-                        substituted = g_PartyManager.m_MemberInfo[i].Name;
+                        substituted = g_Party.Member[i].Name;
                         name = &substituted;
                         break;
                     }

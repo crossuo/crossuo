@@ -44,8 +44,6 @@ public:
 
     void IgnoreReset();
 
-    void RemoveRangedObjects();
-
     /*!
 	Make the character with the given serial the current player
 	@param [__in] serial Serial of the new player
@@ -200,8 +198,6 @@ public:
         const ushort &serverID,
         const uchar &direction,
         const char &z);
-
-    ushort FixColor(const ushort &color, const ushort &defaultColor);
 
     /*!
 	Dump the items kept in memory

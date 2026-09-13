@@ -51,12 +51,52 @@ bool CParty::Contains(int serial)
     return result;
 }
 
+void CParty::SaveMemberInfo(CGameCharacter *obj)
+{
+    if (obj == nullptr)
+    {
+        return;
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        if (Member[i].Serial == obj->Serial)
+        {
+            Member[i].X = obj->GetX();
+            Member[i].Y = obj->GetY();
+            Member[i].Name = obj->GetName();
+            break;
+        }
+    }
+}
+
+bool CParty::SetMemberInfo(uint32_t serial, int x, int y, uint8_t mapIndex, const astr_t &name)
+{
+    for (int i = 0; i < 10; i++)
+    {
+        if (Member[i].Serial == serial)
+        {
+            Member[i].X = x;
+            Member[i].Y = y;
+            Member[i].MapIndex = mapIndex;
+            Member[i].Name = name;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void CParty::Clear()
 {
     for (int i = 0; i < 10; i++)
     {
         Member[i].Serial = 0;
         Member[i].Character = nullptr;
+        Member[i].X = 0;
+        Member[i].Y = 0;
+        Member[i].MapIndex = 0;
+        Member[i].Name.clear();
     }
 }
 

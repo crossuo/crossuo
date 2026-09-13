@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include "SkillsManager.h"
+#include "../Globals.h"
 #include <common/logging/logging.h>
+#include <common/str.h>
 #include <xuocore/uodata.h>
 #include <xuocore/mulstruct.h>
 
@@ -62,6 +64,27 @@ CSkill *CSkillsManager::Get(uint32_t index)
         return &m_Skills[index];
     }
     return nullptr;
+}
+
+int CSkillsManager::Find(const astr_t &name)
+{
+    if (name == "last" || name == "lastskill")
+    {
+        return g_LastSkillIndex;
+    }
+
+    const astr_t query = str_lower(name);
+
+    // Only skills with a use button are addressable by name
+    for (uint32_t i = 0; i < Count; i++)
+    {
+        if (m_Skills[i].Button && str_lower(m_Skills[i].Name).find(query) != astr_t::npos)
+        {
+            return (int)i;
+        }
+    }
+
+    return -1;
 }
 
 bool CSkillsManager::CompareName(const astr_t &str1, const astr_t &str2)

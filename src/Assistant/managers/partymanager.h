@@ -11,15 +11,6 @@
 
 namespace xuoassist {
 
-struct PARTY_MEMBER_INFO
-{
-    uint Serial{ 0 };
-    int X{ 0 };
-    int Y{ 0 };
-    uint Map{ 0 };
-    string Name{ "" };
-};
-
 class CPartyManager
 {
     // Serial of the party leader
@@ -34,17 +25,12 @@ public:
 
     // Party members
     uint Member[10];
-    PARTY_MEMBER_INFO m_MemberInfo[10];
 
     // Party packet handling
     bool OnPacketReceived(CDataReader &reader);
 
     // Whether the player's party contains the given serial
     bool Contains(const uint &serial);
-
-    void SaveMemberInfo(class CGameCharacter *obj);
-
-    void SetMemberInfo(const PARTY_MEMBER_INFO &info);
 
     // Clear the party
     void Clear();

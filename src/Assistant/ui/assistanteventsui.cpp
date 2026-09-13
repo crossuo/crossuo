@@ -17,11 +17,11 @@
 #include "../config/assistantconfig.h" // g_AssistantConfig (Autostart gate)
 #include "../core/actions.h"
 #include "../macros/macroexecutor.h"
-#include "../managers/partymanager.h"
 #include "../managers/guildmanager.h"
 #include "../script/journal.h" // the script journal mirror feed
 #include "../script/scriptstate.h" // the script buff mirror feed
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (mirror)
+#include "Party.h" // ::g_Party (shared party data)
 #include "mapwindow.h"
 #include "inspector.h"
 
@@ -193,15 +193,9 @@ void CAssistantUIEvents::OnInspectorUpdate(uint serial)
 
 void CAssistantUIEvents::OnPartyMemberInfo(const XA_PARTY_MEMBER_INFO &info)
 {
-    // the Krrios packet positions the map window draws for mirror-less
-    // members (the original stored them straight into g_PartyManager.m_MemberInfo)
-    PARTY_MEMBER_INFO stored;
-    stored.Serial = info.Serial;
-    stored.X = info.X;
-    stored.Y = info.Y;
-    stored.Map = info.Map;
-    stored.Name = info.Name;
-    g_PartyManager.SetMemberInfo(stored);
+    // Krrios packet positions for party members outside the client's view
+    // range; stored in the shared party data for the map window
+    g_Party.SetMemberInfo(info.Serial, info.X, info.Y, (uint8_t)info.Map, info.Name);
 }
 
 void CAssistantUIEvents::OnGuildMemberInfo(const XA_GUILD_MEMBER_INFO &info)

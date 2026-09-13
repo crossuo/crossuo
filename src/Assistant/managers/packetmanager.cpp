@@ -13,7 +13,6 @@
 #include "../managers/assmap.h" // g_MapSettings (ShowOnLogin)
 #include "../managers/clientmacromanager.h"
 #include "../managers/contextmenumanager.h"
-#include "../managers/corpsemanager.h"
 #include "../managers/guildmanager.h"
 #include "../managers/gumpmanager.h"
 #include "../managers/menumanager.h"
@@ -29,6 +28,9 @@
 #include "../model/commonitems/journalmessage.h"
 #include <common/str.h> // str_from/wstr_from (wstr <-> utf8)
 #include "Managers/ClilocManager.h" // ::g_ClilocManager (client)
+#include "Managers/ColorManager.h" // ::g_ColorManager
+#include "Managers/CorpseManager.h" // ::g_CorpseManager (corpse auto-open)
+#include "Party.h" // ::g_Party (shared party data)
 
 #define LOGGER_MODULE Assistant
 #include <common/logging/logging.h>
@@ -1187,7 +1189,7 @@ PACKET_HANDLER(UpdateObject)
             bool oldDead = g_Player->Dead();
 
             g_Player->SetGraphic(graphic);
-            g_Player->SetColor(g_World->FixColor(color, 0));
+            g_Player->SetColor(g_ColorManager.FixColor(color, 0));
             g_Player->SetFlags(flags);
 
             g_OriginalGraphic = graphic;
@@ -1266,7 +1268,7 @@ PACKET_HANDLER(UpdateObject)
 
         item->SetGraphic(itemGraphic);
         item->SetTiledataFlags(g_GetStaticFlags(itemGraphic));
-        item->SetColor(g_World->FixColor(itemColor, 0));
+        item->SetColor(g_ColorManager.FixColor(itemColor, 0));
 
         if (layer == OL_BACKPACK && obj->IsPlayer())
         {
@@ -1306,7 +1308,7 @@ PACKET_HANDLER(EquipItem)
     Move(1);
     int layer = ReadUInt8();
     uint cserial = ReadUInt32BE();
-    obj->SetColor(g_World->FixColor(ReadUInt16BE(), 0));
+    obj->SetColor(g_ColorManager.FixColor(ReadUInt16BE(), 0));
 
     g_World->PutEquipment(obj, cserial, layer);
 
@@ -1461,9 +1463,15 @@ PACKET_HANDLER(DeleteObject)
             }
         }
 
-        if (g_PartyManager.Contains(obj->GetSerial()))
+        if (g_Party.Contains((int)obj->GetSerial()))
         {
-            g_PartyManager.SaveMemberInfo((CGameCharacter *)obj);
+            g_Party.SetMemberInfo(
+                obj->GetSerial(),
+                obj->GetX(),
+                obj->GetY(),
+                obj->GetMapIndex(),
+                obj->GetName());
+            g_AssistantEvents->OnMapUpdate(obj->GetSerial());
         }
 
         g_World->RemoveObject(obj);
@@ -1948,8 +1956,8 @@ PACKET_HANDLER(DisplayDeath)
 
     if (g_AssistantConfig.CorpsesAutoopen())
     {
-        g_CorpseManager.Add(
-            CCorpseInfo(g_LastCorpseObject, (int)(g_Ticks + g_AssistantConfig.CorpseKeepDelay())));
+        g_CorpseManager.AddAutoOpen(
+            g_LastCorpseObject, (int)(g_Ticks + g_AssistantConfig.CorpseKeepDelay()));
     }
 
     return true;

@@ -9,7 +9,6 @@
 #include "../core/assistantevents.h"
 #include "../core/packets.h"
 #include "../config/assistantconfig.h"
-#include "../model/gameobjects/gamecharacter.h"
 
 #include <string.h>
 
@@ -40,43 +39,7 @@ bool CPartyManager::Contains(const uint &serial)
     }
 
     return result;
-}
-
-void CPartyManager::SaveMemberInfo(CGameCharacter *obj)
-{
-    for (int i = 0; i < 10; i++)
-    {
-        if (Member[i] == obj->GetSerial())
-        {
-            m_MemberInfo[i].X = obj->GetX();
-            m_MemberInfo[i].Y = obj->GetY();
-            m_MemberInfo[i].Name = obj->GetName();
-
-            // Was g_Map->CheckForUpdate(serial) when the map window is open.
-            g_AssistantEvents->OnMapUpdate(obj->GetSerial());
-
-            break;
-        }
-    }
-}
-
-void CPartyManager::SetMemberInfo(const PARTY_MEMBER_INFO &info)
-{
-    for (int i = 0; i < 10; i++)
-    {
-        if (Member[i] == info.Serial)
-        {
-            m_MemberInfo[i].Serial = info.Serial;
-            m_MemberInfo[i].X = info.X;
-            m_MemberInfo[i].Y = info.Y;
-            m_MemberInfo[i].Map = info.Map;
-
-            // Was g_Map->CheckForUpdate(serial); same seam as above.
-            g_AssistantEvents->OnMapUpdate(info.Serial);
-
-            break;
-        }
-    }
+    return result;
 }
 
 void CPartyManager::Clear()

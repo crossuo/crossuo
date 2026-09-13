@@ -5708,6 +5708,8 @@ void CGame::RemoveRangedObjects()
                     {
                         if (g_Party.Contains(go->Serial))
                         {
+                            // refresh the stored map position before the member leaves the view range
+                            g_Party.SaveMemberInfo((CGameCharacter *)go);
                             go->RemoveRender();
                             g_GumpManager.UpdateContent(go->Serial, 0, GT_STATUSBAR);
                         }

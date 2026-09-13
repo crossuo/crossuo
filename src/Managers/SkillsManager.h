@@ -13,6 +13,8 @@ struct CSkill
     astr_t Name;
     float BaseValue = 0.0f;
     float Value = 0.0f;
+    // Value at login or at the last delta reset; deltas are measured against it
+    float OldValue = 0.0f;
     float Cap = 0.0f;
     uint8_t LockStatus = 0; // skill lock: 0 = up, 1 = down, 2 = locked
 
@@ -42,6 +44,9 @@ public:
     void Add(const CSkill &skill);
     void Clear();
     CSkill *Get(uint32_t index);
+    // Case-insensitive partial name match; "last"/"lastskill" resolves to the
+    // last used skill. Returns the skill index or -1.
+    int Find(const astr_t &name);
     void Sort();
     int GetSortedIndex(uint32_t index);
     void UpdateSkillsSum();

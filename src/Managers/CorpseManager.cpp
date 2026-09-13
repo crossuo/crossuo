@@ -2,7 +2,10 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include "CorpseManager.h"
+#include "../CrossUO.h"
+#include "../Globals.h"
 #include "../GameObjects/GameItem.h"
+#include "../GameObjects/GamePlayer.h"
 #include "../GameObjects/GameWorld.h"
 
 CCorpseManager g_CorpseManager;
@@ -69,4 +72,66 @@ CGameObject *CCorpseManager::GetCorpseObject(int serial)
     }
 
     return nullptr;
+}
+
+void CCorpseManager::AddAutoOpen(int serial, int timer)
+{
+    for (CCorpseToOpen &item : m_AutoOpenList)
+    {
+        if (item.Serial == (uint32_t)serial)
+        {
+            item.Timer = (uint32_t)timer;
+            return;
+        }
+    }
+
+    m_AutoOpenList.push_back(CCorpseToOpen(serial, timer));
+}
+
+bool CCorpseManager::CheckCorpses(int useDistance, int useDelay, uint32_t lastUseTime)
+{
+    if (g_World == nullptr || g_Player == nullptr)
+    {
+        return false;
+    }
+
+    if ((int)(g_Ticks - lastUseTime) < useDelay)
+    {
+        return false;
+    }
+
+    for (auto i = m_AutoOpenList.begin(); i != m_AutoOpenList.end();)
+    {
+        CGameItem *item = g_World->FindWorldItem(i->Serial);
+
+        if (item == nullptr)
+        {
+            ++i;
+            continue;
+        }
+
+        if (item->Container != 0xFFFFFFFF)
+        {
+            i = m_AutoOpenList.erase(i);
+            continue;
+        }
+
+        if (GetDistance(g_Player, item) <= useDistance)
+        {
+            g_Game.DoubleClick(item->Serial);
+            m_AutoOpenList.erase(i);
+            return true;
+        }
+
+        if (i->Timer < g_Ticks)
+        {
+            i = m_AutoOpenList.erase(i);
+        }
+        else
+        {
+            ++i;
+        }
+    }
+
+    return false;
 }
