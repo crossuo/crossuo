@@ -964,10 +964,10 @@ void CAssistant::HandleTargetDisplayItem(uchar *buf)
         }
     }
 
-    // PORT-TODO(phase-2): was g_TabDisplay->SetDisplayItemFromTarget(
-    // unpack16(buf + 17), color).
-    (void)unpack16(buf + 17);
-    (void)color;
+    // was g_TabDisplay->SetDisplayItemFromTarget(unpack16(buf + 17), color);
+    // the items-editor graphic/hue fields are Phase 4 tab state
+    g_AssistantEvents->OnFromTarget(
+        XA_FROM_TARGET_DISPLAY_ITEM, 0, unpack16(buf + 17), color, "");
 }
 
 void CAssistant::HandleTargetInfo(uchar *buf)
@@ -1006,10 +1006,12 @@ void CAssistant::HandleTargetDressItem(uchar *buf)
 
         if ((layer != 0) && layer < OL_MOUNT && layer != OL_BACKPACK)
         {
-            // PORT-TODO(phase-4): g_TabAgentsDress->AddDressItemInList(item);
-            // (the dress-set data lives in the config module, the list
-            // widget add + save flow is the agents round)
-            (void)item;
+            // was g_TabAgentsDress->AddDressItemInList(item); the working-set
+            // edit is the Phase 4 tab (the tab re-resolves the item/layer
+            // through the serial)
+            g_AssistantEvents->OnFromTarget(
+                XA_FROM_TARGET_DRESS_ITEM, item->GetSerial(), item->GetGraphic(),
+                item->GetColor(), "");
         }
     }
 }
@@ -1052,11 +1054,22 @@ void CAssistant::HandleTargetIgnoreList(uchar *buf)
 
 void CAssistant::HandleTargetPartyObject(uchar *buf)
 {
-    // Was g_TabAgentsParty->SetPartyObjectFromTarget(unpack32(buf + 7));
-    // the party accept/decline lists are config data, the field update is
-    // Phase 4 UI.
-    Info(Assistant, "party object from target: 0x%08X\n", unpack32(buf + 7));
-    // PORT-TODO(phase-4): list-widget add flow.
+    // was g_TabAgentsParty->SetPartyObjectFromTarget(unpack32(buf + 7)); the
+    // serial/name fields are Phase 4 tab state
+    const uint serial = unpack32(buf + 7);
+    string name;
+
+    if (g_World != nullptr)
+    {
+        CGameObject *obj = g_World->FindWorldObject(serial);
+
+        if (obj != nullptr)
+        {
+            name = obj->GetName();
+        }
+    }
+
+    g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_PARTY, serial, 0, 0, name);
 }
 
 void CAssistant::HandleTargetFriendObject(uchar *buf)

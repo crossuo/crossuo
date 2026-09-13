@@ -64,6 +64,7 @@ private:
     vector<CDisplayInfo> m_InfoCommands;
     vector<CDisplayItem> m_Commands;
     std::map<uint, CDisplayIcon *> m_Icons;
+    string m_TitleText;
 
     static const CDisplayItem m_DefaultItems[26];
     static const DISPLAY_KEY_ITEM m_KeysList[DKI_COUNT];
@@ -89,8 +90,11 @@ public:
 
     CDisplayItem GetDisplayItemByName(const string &name);
 
-    // Title-bar rendering (was the win32 GDI body, Phase 2/4): kept as a
-    // marker so the call sites and the argument set stay stable.
+    // Title-bar rendering (was the win32 GDI body): composes the caption text
+    // into m_TitleText. The Qt textual path (Redraw RDM_TEXTUAL) is followed
+    // exactly; the two colored modes fall back to the same plain string (an
+    // OS caption carries no colors/icons). Apply it with CWindow::SetTitle -
+    // ui/assistantui.cpp does that on change (throttled).
     void Redraw(
         REDRAW_DISPLAY_MODE mode,
         bool useNotoriety,
@@ -98,6 +102,9 @@ public:
         bool highlightReagents,
         bool displayAppIcon,
         uint backgroundColor);
+
+    // The last composed caption (Redraw output; Qt's local QString title)
+    const string &GetTitleText() const { return m_TitleText; }
 
     void RecompilleData(const string &text, uint textColor);
 

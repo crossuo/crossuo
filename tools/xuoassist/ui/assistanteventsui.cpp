@@ -12,6 +12,7 @@
 
 #include <external/gfx/imgui/imgui.h>
 
+#include "assistantui.h" // TabDisplay_RequestTitleRedraw
 #include "widgets.h"
 #include "../core/actions.h"
 #include "../macros/macroexecutor.h"
@@ -81,6 +82,37 @@ XA_FROM_TARGET_RESULT &CAssistantUIEvents::FromTargetResult()
 {
     static XA_FROM_TARGET_RESULT s_Result;
     return s_Result;
+}
+
+bool UI_PollFromTarget(
+    bool &pending, uint &generation, int kind, XA_FROM_TARGET_RESULT &out)
+{
+    if (!pending)
+    {
+        return false;
+    }
+    XA_FROM_TARGET_RESULT &slot = CAssistantUIEvents::FromTargetResult();
+    if (slot.Generation == generation || slot.Kind != kind)
+    {
+        return false;
+    }
+    generation = slot.Generation;
+    out = slot;
+    return true;
+}
+
+void CAssistantUIEvents::OnTitleRedraw()
+{
+    // was g_TabDisplay->RedrawTitle: recompose + apply the caption on change
+    TabDisplay_RequestTitleRedraw();
+}
+
+void CAssistantUIEvents::OnTitleRedraw(uint serial)
+{
+    // was g_TabDisplay->CheckRedrawTitle(obj): the manager gated on
+    // CanRedraw(graphic, color) before redrawing (packetmanager.cpp:1457)
+    (void)serial;
+    TabDisplay_RequestTitleRedraw();
 }
 
 void JournalPane_Draw(float height)

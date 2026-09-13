@@ -17,7 +17,8 @@
 //    are annotated with the round that consumes them:
 //    PORT-TODO(phase-2) text window/inspector/map UI pokes,
 //    PORT-TODO(phase-3) macro recording + hotkey waits,
-//    PORT-TODO(phase-4) shop agent / script / journal commands,
+//    PORT-TODO(phase-4b) script / journal commands (the shop agent landed
+//    in 4a via core/shopagent.h),
 //    PORT-TODO(phase-5) UOAM/map-window notifies;
 //  - g_ClilocManager (client) supersedes the assistant's cliloc manager and is
 //    called directly (plan §7 "What NOT to do");
@@ -33,6 +34,7 @@
 #include "../core/assistantevents.h"
 #include "../core/assist.h"
 #include "../core/packets.h"
+#include "../core/shopagent.h"
 #include "../core/clientversion.h"
 #include "../core/target.h"
 #include "../core/textcommandmanager.h"
@@ -2003,9 +2005,8 @@ PACKET_HANDLER(OpenContainer)
 
     if (graphic == 0x0030)
     {
-        // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedOpenContaier(serial);
-        // (shop agent round, Phase 4)
-        return true;
+        // was: return g_TabAgentsShop->OnPacketReceivedOpenContaier(serial);
+        return g_ShopAgent.OnOpenContainer(serial);
     }
 
     g_LastContainerObject = serial;
@@ -3031,37 +3032,36 @@ PACKET_HANDLER(BuyList)
 {
     g_ShopReceived = true;
 
-    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedBuyList(*this); (Phase 4)
-
-    return true;
+    // was: return g_TabAgentsShop->OnPacketReceivedBuyList(*this); (Phase 4)
+    return g_ShopAgent.OnBuyList(*this);
 }
 
 PACKET_HANDLER(BuyReplyS)
 {
-    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketSendBuyReply();
+    // was: return g_TabAgentsShop->OnPacketSendBuyReply();
+    g_ShopAgent.OnBuyReplySent();
 
     return true;
 }
 
 PACKET_HANDLER(BuyReplyR)
 {
-    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedBuyReply(*this);
-
-    return true;
+    // was: return g_TabAgentsShop->OnPacketReceivedBuyReply(*this);
+    return g_ShopAgent.OnBuyReply(*this);
 }
 
 PACKET_HANDLER(SellList)
 {
     g_ShopReceived = true;
 
-    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketReceivedSellList(*this);
-
-    return true;
+    // was: return g_TabAgentsShop->OnPacketReceivedSellList(*this); (Phase 4)
+    return g_ShopAgent.OnSellList(*this);
 }
 
 PACKET_HANDLER(SellReply)
 {
-    // PORT-TODO(phase-4/shop): return g_TabAgentsShop->OnPacketSendSellReply();
+    // was: return g_TabAgentsShop->OnPacketSendSellReply();
+    g_ShopAgent.OnSellReplySent();
 
     return true;
 }

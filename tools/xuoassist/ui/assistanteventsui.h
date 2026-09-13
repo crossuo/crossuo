@@ -25,6 +25,11 @@ struct XA_FROM_TARGET_RESULT
     uint Generation{ 0 }; // bumped per reply (poll for change)
 };
 
+// The shared from-target poll (the tablists.cpp helper made available to the
+// agents/display tabs): true exactly once per reply of the given kind.
+bool UI_PollFromTarget(
+    bool &pending, uint &generation, int kind, XA_FROM_TARGET_RESULT &out);
+
 class CAssistantUIEvents : public CAssistantEvents
 {
 public:
@@ -48,6 +53,12 @@ public:
     // The from-target replies (HandleTarget* forwards).
     virtual void OnFromTarget(
         int kind, uint serial, ushort graphic, ushort color, const string &name) override;
+
+    // --- Phase 4a consumers -------------------------------------------------
+    // The display caption redraw requests (packetmanager.cpp OnTitleRedraw
+    // call sites; was g_TabDisplay->RedrawTitle/CheckRedrawTitle).
+    virtual void OnTitleRedraw() override;
+    virtual void OnTitleRedraw(uint serial) override;
 
     // PORT-TODO(phase-4/5): buffs (OnBuffAdd/Remove), corpses (OnCorpseAdd),
     // party/guild member info, macro lists, object properties (OnMegaCliloc),

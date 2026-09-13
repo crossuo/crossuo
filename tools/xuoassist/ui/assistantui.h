@@ -48,6 +48,11 @@ int AssistantUI_ReconnectSecondsLeft();
 void AssistantUI_MarkOptionsDirty();
 void AssistantUI_ClearOptionsDirty();
 
+// Recompiles the display title data (g_DisplayManager) from the config - was
+// AssistForm::LoadCurrentProfile's g_TabDisplay->RecompilleData() tail
+// (assistform.cpp:463); called at init and after a profile switch.
+void AssistantUI_RecompileDisplayTitle();
+
 // --- tab pages (ui/tabmain.cpp, ui/tablists.cpp, ui/tabfilters.cpp) ---------
 void TabMain_Draw();
 // sub-tab indexes inside the Lists nested tab bar (§2.1)
@@ -74,6 +79,34 @@ enum TAB_FILTERS
     TAB_FILTERS_SOUND
 };
 void TabFilters_Draw(int subTab);
+
+// --- phase 4a tab pages ------------------------------------------------------
+// Agents -> the Dress/Party/Shop nested bar (§2.1/§2.8); the shop tab owns
+// the Shop List Editor window (drawn from TabShop_Draw); the progress popup
+// is agent-owned and drawn from AssistantUI_Draw (TabShop_DrawProgress).
+void TabDress_Draw();
+void TabParty_Draw();
+void TabShop_Draw();
+void TabSkills_Draw();
+void TabDisplay_Draw();
+
+// Closes the shop list editor (shutdown: drop the working copy silently).
+void TabShop_CloseEditor();
+// Draws the shopping progress popup whenever the shop agent is active,
+// regardless of the visible tab (no-op otherwise).
+void TabShop_DrawProgress();
+// Marks the display caption for recompose+apply (the OnTitleRedraw events
+// and the Display tab edits land here).
+void TabDisplay_RequestTitleRedraw();
+// Returns and clears the title-redraw flag (AssistantUI_Tick).
+bool TabDisplay_ConsumeTitleDirty();
+
+// Per-tab from-target disarms for the phase 4a tabs (CancelPendingFromTargets,
+// shutdown: a request armed before shutdown must not swallow a 0x6C after
+// re-init).
+void TabDress_CancelPendingFromTargets();
+void TabParty_CancelPendingFromTargets();
+void TabDisplay_CancelPendingFromTargets();
 
 } // namespace xuoassist
 

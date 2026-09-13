@@ -24,6 +24,14 @@ set(XUOASSIST_SRCS
   "ui/hotkeysform.cpp"
   "ui/tabhotkeys.cpp"
   "ui/tabmacros.cpp"
+  # Phase 4a: the agent tabs, skills and display (§2.3/§2.8/§2.9, §7 items 1-3)
+  "core/dressagent.cpp"
+  "core/shopagent.cpp"
+  "ui/tabdress.cpp"
+  "ui/tabparty.cpp"
+  "ui/tabshop.cpp"
+  "ui/tabskills.cpp"
+  "ui/tabdisplay.cpp"
   # Phase 1a: Qt-free foundation ported from xuoassist (plan §7 Phase 1 item 1)
   "core/global.cpp"
   "core/textconv.cpp"

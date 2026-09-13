@@ -313,6 +313,8 @@ void draw_main_page()
                 {
                     g_AssistantConfig.SaveProfileMap();
                 }
+                // was LoadCurrentProfile's tail: recompile the display title
+                AssistantUI_RecompileDisplayTitle();
             }
         }
         ImGui::EndCombo();

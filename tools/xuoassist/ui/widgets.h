@@ -79,7 +79,10 @@ ImU32 UOColorToRGBA(ushort color);
 // picker for those: its '...' button sends a dye packet instead).
 void HueSwatch(ushort uoColor, float size = 18.0f);
 // QColoredPushButton + QColorDialog for true RGB fields (Display tab, phase 4).
-bool ColorSwatch(const char *id, ImU32 *rgba, float size = 18.0f);
+// commit (optional): set inside the picker popup scope when the edit session
+// ends (ImGui::IsItemDeactivatedAfterEdit - EndPopup restores LastItemData, so
+// the query is only valid here); lets callers throttle saves to the release.
+bool ColorSwatch(const char *id, ImU32 *rgba, float size = 18.0f, bool *commit = nullptr);
 
 // --- ComboGroup (QComboBox rows + CComboDelegate, comboboxdelegate.cpp) -----
 // Items starting with '#' are painted as lightGray group separator rows.

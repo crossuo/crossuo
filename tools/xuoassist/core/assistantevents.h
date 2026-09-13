@@ -34,7 +34,9 @@ enum
     XA_FROM_TARGET_FRIEND,         // TabListsFriends (serial)
     XA_FROM_TARGET_ENEMY,          // TabListsEnemies (serial)
     XA_FROM_TARGET_ANIMAL_NAME,    // AnimalAndVendorControlForm "Name" field
-    XA_FROM_TARGET_PARTY           // TabAgentsParty (phase 4)
+    XA_FROM_TARGET_PARTY,          // TabAgentsParty (phase 4)
+    XA_FROM_TARGET_DRESS_ITEM,     // TabAgentsDress "Add item to set from target"
+    XA_FROM_TARGET_DISPLAY_ITEM    // TabDisplay items editor (graphic + hue)
 };
 
 // Forward-ported from the Qt app's managers/journalmanager.h (the manager

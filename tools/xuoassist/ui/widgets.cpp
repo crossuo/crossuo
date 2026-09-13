@@ -283,11 +283,15 @@ void HueSwatch(ushort uoColor, float size)
     }
 }
 
-bool ColorSwatch(const char *id, ImU32 *rgba, float size)
+bool ColorSwatch(const char *id, ImU32 *rgba, float size, bool *commit)
 {
     ImVec4 col = ImGui::ColorConvertU32ToFloat4(*rgba);
     char label[48];
     snprintf(label, sizeof(label), "##swatch_%s", id);
+    if (commit != nullptr)
+    {
+        *commit = false;
+    }
     ImGui::PushStyleColor(ImGuiCol_Button, col);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, col);
@@ -296,6 +300,12 @@ bool ColorSwatch(const char *id, ImU32 *rgba, float size)
     if (ImGui::BeginPopupContextItem(label))
     {
         changed = ImGui::ColorPicker3(label, &col.x) || changed;
+        if (commit != nullptr)
+        {
+            // the picker is group-wrapped: EndGroup forwards the deactivated
+            // item, so this fires on the frame the drag/type-in commit ends
+            *commit = ImGui::IsItemDeactivatedAfterEdit();
+        }
         ImGui::EndPopup();
     }
     if (changed)

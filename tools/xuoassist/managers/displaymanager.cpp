@@ -12,6 +12,7 @@
 #include "../config/assistantconfig.h"
 #include "../core/textparser.h"
 #include "../model/gameobjects/gameplayer.h"
+#include "../model/gameobjects/gameworld.h" // g_World (Redraw caption gating)
 #include <common/logging/logging.h>
 #include <map>
 #include <stdlib.h>
@@ -330,15 +331,90 @@ void CDisplayManager::Redraw(
     bool displayAppIcon,
     uint backgroundColor)
 {
-    // Was the win32 GDI title-bar painter (HBITMAPs, GetValues + blits).
-    // PORT-TODO(phase-2/4): title rendering (ImGui overlay / client caption)
-    // restores the body; the data half (GetValues/CompilleData) is live.
-    (void)mode;
-    (void)useNotoriety;
+    // Was the win32 GDI title-bar painter (displaymanager.cpp:500-...). The
+    // caption text is composed here (the Qt RDM_TEXTUAL branch, verbatim);
+    // the colored/graphical painter has no OS-caption equivalent - the two
+    // colored modes produce the same plain string. The caller (the assistant
+    // UI tick) applies the text to the client window on change.
     (void)hightFont;
     (void)highlightReagents;
     (void)displayAppIcon;
     (void)backgroundColor;
+
+    string title;
+
+    if (mode == RDM_DISABLED || g_World == nullptr || g_Player == nullptr)
+    {
+        title = "Ultima Online";
+
+        if (g_World == nullptr)
+        {
+            if (g_ServerName.length() != 0)
+            {
+                title += " - " + g_ServerName;
+            }
+        }
+        else
+        {
+            title += " - " + g_CharacterName + " (" + g_ServerName + ")";
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < m_Commands.size(); i++)
+        {
+            CDisplayItem &obj = m_Commands[i];
+
+            string value = "";
+            string maxValue = "";
+            uint textColor = 0;
+            uint compiledBgColor = 0;
+
+            GetValues(obj, value, maxValue, textColor, compiledBgColor, useNotoriety);
+
+            title += obj.GetText();
+
+            switch (obj.GetType())
+            {
+                case DIT_MAX_HITS:
+                case DIT_MAX_MANA:
+                case DIT_MAX_STAM:
+                case DIT_MAX_WEIGHT:
+                {
+                    title += maxValue;
+                    break;
+                }
+                case DIT_HITS_MAX_HITS:
+                case DIT_MANA_MAX_MANA:
+                case DIT_STAM_MAX_STAM:
+                case DIT_WEIGHT_MAX_WEIGHT:
+                {
+                    if (value != maxValue)
+                    {
+                        title += value + "/" + maxValue;
+                    }
+                    else
+                    {
+                        title += value;
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    title += value;
+                    break;
+                }
+            }
+        }
+
+        if (title.length() == 0)
+        {
+            title = "Ultima Online - " + g_CharacterName + " (" + g_ServerName + ")";
+        }
+    }
+
+    m_TitleText = title;
 }
 
 CDisplayItem CDisplayManager::GetDisplayItemByName(const string &name)

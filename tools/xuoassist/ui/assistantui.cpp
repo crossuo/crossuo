@@ -16,14 +16,19 @@
 
 #include <common/logging/logging.h>
 
+#include <Wisp/WispWindow.h> // Wisp::g_WispWindow (the display caption)
+
 #include "assistanteventsui.h"
 #include "widgets.h"
 #include "tabhotkeys.h"
 #include "tabmacros.h"
 #include "../config/assistantconfig.h"
 #include "../core/assist.h"
+#include "../core/dressagent.h"
+#include "../core/shopagent.h"
 #include "../core/packets.h"
 #include "../core/global.h"
+#include "../managers/displaymanager.h"
 #include "../macros/macroexecutor.h"
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (journal gating)
 
@@ -63,13 +68,13 @@ const char *const FILTER_TABS[] = { "Speech", "Replaces", "Sound" };
 // which phase delivers the remaining tabs (§7)
 const char *const PLACEHOLDER_PHASE[] = {
     "",       // Main
-    "4",      // Display
+    "",       // Display (phase 4a)
     "",       // Lists
     "",       // Hotkeys (phase 3)
     "",       // Macros (phase 3)
-    "4",      // Scripts
-    "",       // Agents (nested: 4)
-    "4",      // Skills
+    "4",      // Scripts (phase 4b)
+    "",       // Agents (nested: Dress/Party/Shop, phase 4a)
+    "",       // Skills (phase 4a)
     "",       // Filters
     "5",      // About
 };
@@ -82,6 +87,71 @@ uint32_t s_SessionStartTicks = 0;
 // auto-reconnect countdown (was TabMain::m_ReconnectTimer, tabmain.cpp:722)
 int s_ReconnectSeconds = 0;
 uint32_t s_ReconnectLastTick = 0;
+
+// the display caption (was the Qt title bar): the last string we applied to
+// the OS window, so SetTitle only runs on change
+string s_LastWindowTitle;
+uint32_t s_LastStepTick = 0;
+
+// was TabDisplay::RedrawTitle: the config radio -> the display manager mode
+void apply_display_title()
+{
+    REDRAW_DISPLAY_MODE mode = RDM_DISABLED;
+    switch (g_AssistantConfig.DisplayType())
+    {
+        case 1:
+            mode = RDM_TEXTUAL;
+            break;
+        case 2:
+            mode = RDM_COLORED_TEXTUAL;
+            break;
+        case 3:
+            mode = RDM_COLORED_GRAPHICAL;
+            break;
+        default:
+            break;
+    }
+
+    g_DisplayManager.Redraw(
+        mode,
+        g_AssistantConfig.ApplyNotorietyColorOnName(),
+        g_AssistantConfig.HightFont(),
+        g_AssistantConfig.HighlightReagents(),
+        true,
+        g_AssistantConfig.DisplayBackgroundColor());
+
+    // apply to the OS window on change (was the GDI painter writing the
+    // caption; the client's own writes - player name change etc. - are
+    // overwritten here exactly like the Qt title bar was repainted)
+    const string &title = g_DisplayManager.GetTitleText();
+    if (title != s_LastWindowTitle)
+    {
+        s_LastWindowTitle = title;
+        if (Wisp::g_WispWindow != nullptr)
+        {
+            Wisp::g_WispWindow->SetTitle(title);
+        }
+    }
+}
+
+// the AssistantUI_Tick half of the caption: consume the dirty requests, then
+// compose+apply. The {x}/{y}/{z} tags set g_UpdateDisplayOnStep at compile
+// time - those refresh at 4 Hz; everything else is change-driven (event or
+// edit).
+void tick_display_title()
+{
+    const bool forced = TabDisplay_ConsumeTitleDirty();
+    if (!forced && !g_UpdateDisplayOnStep)
+    {
+        return;
+    }
+    if (!forced && (g_Ticks - s_LastStepTick) < 250u)
+    {
+        return;
+    }
+    s_LastStepTick = g_Ticks;
+    apply_display_title();
+}
 
 void mark_options_dirty()
 {
@@ -137,22 +207,22 @@ void draw_filters_tabs()
 
 void draw_agents_tabs()
 {
-    // Agents land in phase 4; the nested bar (Dress/Party/Shop) is already final
+    // the nested bar (Dress/Party/Shop) per §2.1, pages from phase 4a
     if (ImGui::BeginTabBar("##agents_tabs", ImGuiTabBarFlags_None))
     {
         if (ImGui::BeginTabItem("Dress"))
         {
-            draw_placeholder("Dress agent", "4");
+            TabDress_Draw();
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Party"))
         {
-            draw_placeholder("Party agent", "4");
+            TabParty_Draw();
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Shop"))
         {
-            draw_placeholder("Shop agent", "4");
+            TabShop_Draw();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
@@ -201,7 +271,18 @@ void AssistantUI_Init()
     s_PreviousEvents = g_AssistantEvents;
     g_AssistantEvents = AssistantUIEvents_Get();
     s_Initialized = true;
+    // compile the display title data from the just-loaded profile (was
+    // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData,
+    // assistform.cpp:463) and paint the initial caption
+    AssistantUI_RecompileDisplayTitle();
     Info(Assistant, "assistant UI installed");
+}
+
+void AssistantUI_RecompileDisplayTitle()
+{
+    g_DisplayManager.RecompilleData(
+        g_AssistantConfig.DisplayTitleData(), g_AssistantConfig.DisplayTextColor());
+    TabDisplay_RequestTitleRedraw();
 }
 
 void AssistantUI_Tick()
@@ -211,6 +292,12 @@ void AssistantUI_Tick()
     // macro playback (was the TabMacros 10 ms QTimer -> ProcessMacro): a
     // headless frame tick keeps running while the assistant window is hidden
     g_MacroExecutor.Tick();
+    // the dress sequence state machine (was the Qt g_EquipScriptName script)
+    g_DressAgent.Tick();
+    // the shop engine progress countdown (was the ShopProgressForm QTimer)
+    g_ShopAgent.Tick();
+    // the display caption (was the win32 GDI title-bar painter)
+    tick_display_title();
 }
 
 void AssistantUI_Shutdown()
@@ -219,6 +306,10 @@ void AssistantUI_Shutdown()
     // Targets): otherwise the stale g_TargetHandler would swallow the first
     // legit 0x6C after a re-init
     CancelPendingFromTargets();
+    // stop the agents (was the Qt app tearing down the tab widgets + dialogs)
+    g_DressAgent.Abort();
+    g_ShopAgent.Reset();
+    TabShop_CloseEditor();
     if (s_Initialized)
     {
         // flush pending Main/Options page edits (the Qt app saved on close)
@@ -248,6 +339,9 @@ void CancelPendingFromTargets()
     g_TargetHandler = nullptr;
     TabHotkeys_CancelPendingFromTargets();
     TabLists_CancelPendingFromTargets();
+    TabDress_CancelPendingFromTargets();
+    TabParty_CancelPendingFromTargets();
+    TabDisplay_CancelPendingFromTargets();
 }
 
 void AssistantUI_MarkOptionsDirty()
@@ -346,6 +440,9 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
                 case MT_MAIN:
                     TabMain_Draw();
                     break;
+                case MT_DISPLAY:
+                    TabDisplay_Draw();
+                    break;
                 case MT_LISTS:
                     draw_lists_tabs();
                     break;
@@ -360,6 +457,9 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
                     break;
                 case MT_AGENTS:
                     draw_agents_tabs();
+                    break;
+                case MT_SKILLS:
+                    TabSkills_Draw();
                     break;
                 default:
                     draw_placeholder(MAIN_TABS[i], PLACEHOLDER_PHASE[i]);
@@ -385,6 +485,11 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     // forms): separate ImGui windows gated by this draw call, i.e. by the
     // AssistantWindow visibility like everything else
     TabHotkeys_DrawControlForms();
+    // the shopping progress popup: agent-owned window drawn next to the other
+    // always-on UI so it survives leaving the Shop sub-tab (still only while
+    // the assistant window is drawn; the popup itself early-outs when the
+    // agent is idle or the "Show shopping progress bar" option is off)
+    TabShop_DrawProgress();
 }
 
 } // namespace xuoassist
