@@ -5,7 +5,7 @@
 // dispatch table and the handler set, decoupled from the Qt widgets (plan §4.1
 // "REUSE AS-IS (decouple UI)", §7 Phase 1 item 2). Handler names and table
 // layout are identical; every UI poke became an AssistantEvents notification
-// or a PORT-TODO marker.
+// or, in later rounds, a direct manager/executor call; no marker remains.
 //
 // The class keeps the original CPacketManager name inside namespace xuoassist
 // (the client's global-namespace CPacketManager is a different class); the

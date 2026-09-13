@@ -33,6 +33,15 @@ void AssistantUI_Init();
 void AssistantUI_Tick();
 void AssistantUI_Shutdown();
 
+// The deferred Autostart run (was QTimer::singleShot(1000) in
+// AssistForm::RunAutostart): arms the 1s delay, then AssistantUI_Tick runs
+// the "Autostart" function from the editor buffer exactly once.
+void AssistantUI_QueueAutostart();
+
+// The closeuo request (was SendMessage(hwnd, WM_CLOSE)): pushes the client's
+// own quit event (CWindow::Destroy -> SDL_QUIT); no-op without a window.
+void AssistantUI_RequestClientClose();
+
 // The UI-layer from-target disarm (was implicit in the Qt widget teardown):
 // clears the armed g_TargetHandler plus every tab arm state so a cursor
 // request armed before shutdown cannot consume a 0x6C after re-init. Hide
@@ -118,6 +127,9 @@ void TabShop_DrawProgress();
 // Marks the display caption for recompose+apply (the OnTitleRedraw events
 // and the Display tab edits land here).
 void TabDisplay_RequestTitleRedraw();
+// Frees the cached item-preview icon textures (shutdown: AFTER ui_shutdown
+// destroyed the context - the CPU delete ordering shared with the atlas).
+void TabDisplay_AfterImGuiShutdown();
 // Returns and clears the title-redraw flag (AssistantUI_Tick).
 bool TabDisplay_ConsumeTitleDirty();
 

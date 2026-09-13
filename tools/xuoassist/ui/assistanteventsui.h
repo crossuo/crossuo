@@ -7,7 +7,8 @@
 // The Phase 2 UI events consumer (plan §7 Phase 2, item 6): a
 // CAssistantEvents subclass installed into g_AssistantEvents that feeds the
 // journal pane. Everything else keeps the default-inert behavior; the
-// consumed notifications for later rounds are listed as PORT-TODO markers.
+// consumed notifications for later rounds arrived with their rounds; the
+// consumer now covers the full notification set through Phase 6.
 
 #include "../core/assistantevents.h"
 
@@ -53,6 +54,10 @@ public:
     // The macro recording taps (target.cpp:190/:210).
     virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color) override;
     virtual void OnRecordTargetTile(ushort graphic, int x, int y, int z) override;
+    // The Autostart script run (was AssistForm::RunAutostart from EnterWorld).
+    virtual void OnAutostartRequest() override;
+    // The closeuo request (was the WM_CLOSE to the host window).
+    virtual void OnClientCloseRequest() override;
     // The from-target replies (HandleTarget* forwards).
     virtual void OnFromTarget(
         int kind, uint serial, ushort graphic, ushort color, const string &name) override;

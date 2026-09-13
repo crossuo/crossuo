@@ -775,3 +775,71 @@ MEDIUM pending a manual interactive pass). Notes and accepted deltas:
   not reach the `xuoassist` static lib's own sources — the lib carries its own
   `target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)` (a missing define went
   unnoticed at first because Linux allows undefined symbols in shared libs).
+
+## XUO Assist — Phase 6 hardening & cutover
+
+- **Macro action recording wired** (`managers/packetmanager.cpp`,
+  `macros/macroexecutor.{h,cpp}`): the Phase-3 recording markers are closed
+  (19 `IsRecording()` gates / 19 `Record()` creation sites in
+  `packetmanager.cpp`).
+  Every outgoing-packet tap builds the same `CMacro` subclass the Qt site built
+  and hands it to `g_MacroExecutor.Record()` (appends to the recording buffer;
+  `RecordStop` commits). Conversions are verbatim from Qt: `MT_USE` → `MCT_SELF`
+  on the player serial; `MT_ATTACK` → `MCT_LASTATTACK`/`MCT_LASTTARGET`/
+  `MCT_ENEMY` (in that order); `MT_USE_SKILL`/`MT_CAST`/`MT_CAST_FROM_BOOK`/
+  `MT_CAST_NEW` → `MCT_LAST` when the new index compares equal to the previous
+  index's "was-set" flag (the `static_cast<int>(lastSpell) == index` form of
+  `MT_CAST_NEW` is kept literally); `MT_COMBAT_ABILITY` → `MCT_PRIMARY` when the
+  ability byte equals `g_Ability[0]`, else `MCT_SECONDARY` (the packet byte is
+  read only while recording, as in the original); `MT_WALK` records the
+  negative turn encoding when the direction changes facing. Taps are
+  observe-only: a single `IsRecording()` bool check when idle, packet flow
+  untouched.
+- **PlayWaiting ported** (`CMacroExecutor::PlayWaiting`): the gump, menu,
+  context-menu, prompt and target managers now satisfy a playing macro's wait
+  on packet arrival and consume the packet (macro replay answers the server),
+  matching `TabMacros::PlayWaiting` (tabmacros.cpp:1023) semantics.
+- **`MT_WALK` playback** now drives the client's own walker
+  (`g_PathFinder.Walk`) with the Qt walk delays (mount/honor run bits,
+  `FastRotation` turn delay); was the plugin-ABI PathFinder.
+- **Autostart**: EnterWorld → `OnAutostartRequest()` → the UI sink checks the
+  option and arms a 1 s timer (`AssistantUI_QueueAutostart`) that runs the
+  `Autostart` function from the editor buffer (was
+  `AssistForm::RunAutostart` + `QTimer::singleShot`).
+- **Tile-hook resolution** (`core/target.cpp`): `GetTileAt` reads the client's
+  map/statics blocks (`::g_MapManager`) and applies the tiledata
+  surface-height fixup (`g_Data.m_Static`, version-normalized; `CV_7090` gate
+  kept). Categories: numeric graphic, `land`, `any` behave as the Qt
+  `GetTile`; `tree`/`water`/`mine` need the old plugin's Config tile lists and
+  resolve like the original's empty-list path (documented in-code). The
+  `gameplayer.cpp` ability AnimID lookup now reads `g_Data.m_Static` too.
+- **Display icons** (`managers/displaymanager.cpp`): `GetIcon`/
+  `LoadDisplayIcon` decode static art through the client's
+  `g_UOFileReader.GetArtPixels` + `g_ColorManager` hues (gold 0x0EEF fix,
+  stackable double-image, bounding-box crop, exactly the Qt algorithm) into
+  `CDisplayIcon` RGBA buffers; the Display items editor previews them as
+  ImGui user textures (`ui/tabdisplay.cpp`).
+- **Crash-safe saves** (`config/xml.{h,cpp}`): `AtomicFileWrite` =
+  temp file in the target directory → write → `fflush` → `fsync`/`_commit` →
+  preserve the original mode (`stat`/`chmod` on POSIX) → atomic
+  `rename`/`MoveFileEx`. `XMLDocument::Save` (all 18 `doc.Save()` sites incl.
+  `Map.xml`) and `SaveDress` (Dress.coa) funnel through it; the script text
+  window save and the script editor's Save use it as well. Any failure keeps
+  the original file and logs via the Assistant logger; stale `*.tmp` files
+  are ignored on load and truncated on the next save. Multi-instance shares
+  the Qt app's "no locking" semantics (documented in `docs/ASSISTANT.md`).
+- **Cutover** (`src/CrossUO.cpp` `CGame::LoadPlugins`): when
+  `XUO_ASSISTANT` is on, the external `xuoassist.dll` plugin is no longer
+  auto-loaded (the built-in assistant supersedes it; the rest of the plugin
+  list is untouched). With `XUO_ASSISTANT=OFF` the pre-existing load path
+  compiles back in byte-for-byte; the OFF libcrossuo.so contains no
+  xuoassist symbols or strings (verified with `nm`/`strings`).
+- **Harness**: `xuoassist-script-test` gained `script/test/fsimpl.cpp` (the
+  stb-style `common/fs.h` implementation, normally compiled by
+  `xuocore/common.cpp`) plus `config/xml.cpp`, because the text-window save
+  now uses `AtomicFileWrite`. All harness tests pass.
+- **Remaining deviations** (grep `DEVIATION`, all commented in place): the
+  external UOAM/UOA notify pipes (phase 5, 9 sites), the CLOGGER-only world
+  dump, save/load-hotkeys targeting the profile file, tile-hook category
+  lists, and the three script-API items already documented in
+  `script/apiscript.h` (PlayWav/QSound, speech modes, LoadProfile).

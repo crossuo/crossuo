@@ -6,6 +6,7 @@
 #include "contextmenumanager.h"
 #include "../core/assist.h"
 #include "../core/packets.h"
+#include "../macros/macroexecutor.h"
 #include <common/logging/logging.h>
 
 namespace xuoassist {
@@ -33,9 +34,14 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
     bool isNewClilocs = (mode >= 2);
     m_Serial = reader.ReadUInt32BE();
 
-    // PORT-TODO(phase-3): was `g_TabMacros->GetPlaying() &&
-    // g_TabMacros->PlayWaiting({ MT_WAIT_FOR_CONTEXT_MENU })` -> return false
-    // (macro round owns the wait queue).
+    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
+    // MT_WAIT_FOR_CONTEXT_MENU })` -> return false: a playing macro waiting
+    // on this context menu consumes the packet (tabmacros.cpp:1023
+    // semantics; the original had no g_World gate here - kept that way).
+    if (g_MacroExecutor.IsPlaying() && g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_CONTEXT_MENU }))
+    {
+        return false;
+    }
 
     if (m_HookEnabled)
     {

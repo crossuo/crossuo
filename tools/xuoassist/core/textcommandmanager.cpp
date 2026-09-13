@@ -10,6 +10,8 @@
 #include "target.h"
 #include "assistantevents.h"
 #include "../script/scriptgump.h" // the text window (the g_TextDialog port)
+#include "../script/journal.h"    // the script journal ring (the g_JournalManager port)
+#include "../script/scripthandle.h" // ScriptManager_Terminate (the running-script registry)
 #include "../config/assistantconfig.h"
 #include "../model/gameobjects/gameworld.h"
 #include "../model/gameobjects/gameplayer.h"
@@ -643,8 +645,13 @@ HCOMMAND(terminate)
         g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
     }
 
-    // PORT-TODO(phase-4): g_TabScripts->TerminateScript(args[0], functionsSave)
-    // (scripts round owns the running-script registry).
+    // was g_TabScripts->TerminateScript(args[0], functionsSave)
+    // (textcommandmanager.cpp:425): the second argument is the "|"-separated
+    // keep-list for the "all" form; ScriptManager_Terminate owns both.
+    if (!args.empty())
+    {
+        ScriptManager_Terminate(args[0], args.size() > 1 ? args[1] : string());
+    }
 }
 
 HCOMMAND(setlight)
@@ -817,8 +824,10 @@ HCOMMAND(closeuo)
         return;
     }
 
-    // PORT-TODO(phase-2): close the client window (was SendMessage WM_CLOSE /
-    // an in-client equivalent - UI/lifecycle round).
+    // was SendMessage(hwnd, WM_CLOSE) - the assistant plugin asked the host
+    // window to close; in-process the request goes through the events seam
+    // and the UI sink pushes the client's own quit event (CWindow::Destroy).
+    g_AssistantEvents->OnClientCloseRequest();
 }
 
 HCOMMAND(warmode)
@@ -1317,8 +1326,12 @@ HCOMMAND(savehotkeys)
         return;
     }
 
-    // PORT-TODO(phase-3): was g_HotkeysForm->Save(path) + the assistant
-    // message; the hotkey engine round owns the SavedHotkeys files.
+    // was g_HotkeysForm->Save(path): the hotkey store is the profile's
+    // Hotkeys.xml (the same byte-compatible records); the explicit path
+    // argument is not honored in-client.
+    // DEVIATION: the save target is the profile file, not a chosen path.
+    g_AssistantConfig.SaveHotkeys();
+    g_Assistant.ClientPrint("Hotkeys have been saved.");
 }
 
 HCOMMAND(loadhotkeys)
@@ -1338,7 +1351,10 @@ HCOMMAND(loadhotkeys)
         return;
     }
 
-    // PORT-TODO(phase-3): was g_HotkeysForm->Load(path) + message.
+    // was g_HotkeysForm->Load(path); same profile-file deviation as above.
+    // DEVIATION: the load source is the profile file, not a chosen path.
+    g_AssistantConfig.LoadHotkeys();
+    g_Assistant.ClientPrint("Hotkeys have been loaded.");
 }
 
 HCOMMAND(track)
@@ -1401,9 +1417,57 @@ HCOMMAND(showjournal)
         return;
     }
 
-    // PORT-TODO(phase-4): was g_JournalManager.ShowLines(lines) (the
-    // assistant journal cache lands with the script/journal round).
-    (void)lines;
+    // was g_JournalManager.ShowLines(lines) (journalmanager.cpp:175): dump
+    // the ring into the text window (the g_TextDialog port) and show it
+    const vector<CJournalMessage> &list = ScriptJournal_Messages();
+    const int size = (int)list.size();
+
+    int i = 0;
+    int end = size;
+    if (lines > 0)
+    {
+        i = size - lines;
+        if (i < 0)
+        {
+            i = 0;
+        }
+        end = i + lines > size ? size : i + lines;
+    }
+
+    ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
+
+    char text[64] = { 0 };
+    snprintf(text, sizeof(text), "Journal lines[%i]:", end - i);
+    ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
+
+    for (; i < end; i++)
+    {
+        const CJournalMessage &item = list[i];
+
+        string line = "";
+        if ((item.GetFlags() & JMT_SYSTEM) != 0)
+        {
+            line = "sys ";
+        }
+        else if ((item.GetFlags() & JMT_MY) != 0)
+        {
+            line = "my ";
+        }
+
+        char buf[512] = { 0 };
+        snprintf(
+            buf,
+            sizeof(buf),
+            "[s=0x%08X c=0x%04X]: %s",
+            item.GetSerial(),
+            item.GetColor(),
+            item.GetText().c_str());
+        line += buf;
+
+        ScriptTextWindow_Command(TW_PRINT, line, 0, 0, "");
+    }
+
+    ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
 HCOMMAND(clearjournal)
@@ -1442,12 +1506,18 @@ HCOMMAND(clearjournal)
         return;
     }
 
-    // PORT-TODO(phase-4): was g_JournalManager.Clear(pattern,
-    // TextToSerial(serial), color, GetJournalFlags(to_lower(type))).
-    (void)pattern;
-    (void)serial;
-    (void)color;
-    (void)type;
+    // was g_JournalManager.Clear(pattern, serial, color, type)
+    // (journalmanager.cpp:96): one consume-pass over the filters, plus the
+    // full wipe when the pattern is empty and nothing matched.
+    CJournalMessage *hit =
+        ScriptJournal_Find(pattern, CAssistant::TextToSerial(serial), color,
+                           GetJournalFlags(to_lower_copy(type)), 0, 0, true);
+    delete hit;
+
+    if (hit == nullptr && pattern.length() == 0)
+    {
+        ScriptJournal_Clear();
+    }
 }
 
 HCOMMAND(journalignorecase)
@@ -1461,8 +1531,8 @@ HCOMMAND(journalignorecase)
 
     bool ignoreCase = args.empty() ? false : CAssistant::RawStringToBool(args[0]);
 
-    // PORT-TODO(phase-4): was g_JournalManager.SetIgnoreCase(on).
-    (void)ignoreCase;
+    // was g_JournalManager.SetIgnoreCase(on)
+    ScriptJournal_SetIgnoreCase(ignoreCase);
 }
 
 HCOMMAND(ignorereset)

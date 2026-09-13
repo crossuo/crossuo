@@ -25,6 +25,7 @@
 #include "../scriptgump.h"
 #include "../scriptstate.h"
 
+#include "../../config/xml.h" // AtomicFileWrite (the crash-safe save path)
 #include "../../core/global.h"
 #include "../../core/assistantevents.h" // JMT_* (the journal type flags)
 #include "../../model/gameobjects/gameworld.h" // g_World (section 6 executor gate)
@@ -38,6 +39,9 @@ extern "C" {
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
+#include <stdlib.h> // mkdtemp
+#include <sys/stat.h> // chmod
+#include <unistd.h> // rmdir
 #include <cstdlib> // mkdtemp
 #include <unistd.h> // rmdir
 #include <thread>
@@ -600,6 +604,48 @@ int main()
         g_World = nullptr;
         g_EnabledCommands = 0;
         printf("api: engine-class prototypes + finalizers ok\n");
+    }
+
+    // --- N. AtomicFileWrite (the crash-safe save path) -------------------
+    {
+        // a temp dir keeps the test side-effect free
+        char dirTemplate[] = "/tmp/xuoassist_atomic_XXXXXX";
+        const char *mkd = mkdtemp(dirTemplate);
+        CHECK(mkd != nullptr);
+        if (mkd != nullptr)
+        {
+            const string dir(mkd);
+
+            // 1) create
+            const fs_path path = fs_path_join(dir, "probe.xml");
+            CHECK(AtomicFileWrite(path, "<a/>", 4));
+            CHECK(fs_path_type(path) == FS_FILE);
+
+            // 2) replace (the old content is fully overwritten, no .tmp left)
+            CHECK(AtomicFileWrite(path, "<bbbb/>", 7));
+            {
+                size_t size = 0;
+                unsigned char *data = fs_map(path, &size);
+                CHECK(data != nullptr && size == 7 && memcmp(data, "<bbbb/>", 7) == 0);
+                fs_unmap(data, size);
+            }
+            CHECK(!fs_path_exists(fs_path_join(dir, "probe.xml.tmp")));
+
+            // 3) failure keeps the original untouched (the directory is not
+            // writable for the temp file)
+            const fs_path roDir = fs_path_join(dir, "ro");
+            fs_path_create(roDir);
+            chmod(fs_path_ascii(roDir), 0555);
+            CHECK(!AtomicFileWrite(fs_path_join(roDir, "x.xml"), "<a/>", 4));
+            chmod(fs_path_ascii(roDir), 0755);
+            CHECK(!fs_path_exists(fs_path_join(roDir, "x.xml")));
+
+            fs_del(fs_path_join(roDir, "x.xml"));
+            rmdir(fs_path_ascii(roDir));
+            fs_del(path);
+            rmdir(mkd);
+            printf("config: atomic save ok\n");
+        }
     }
 
     if (failures == 0)

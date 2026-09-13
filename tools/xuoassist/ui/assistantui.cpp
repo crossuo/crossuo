@@ -108,6 +108,11 @@ uint32_t s_ReconnectLastTick = 0;
 string s_LastWindowTitle;
 uint32_t s_LastStepTick = 0;
 
+// the Autostart script run (was AssistForm::RunAutostart's
+// QTimer::singleShot(1000, onAutostartTimer), assistform.cpp:582-588):
+// pending tick stamp, 0 = none. Fired from AssistantUI_Tick.
+uint32_t s_AutostartAt = 0;
+
 // was TabDisplay::RedrawTitle: the config radio -> the display manager mode
 void apply_display_title()
 {
@@ -306,9 +311,33 @@ void AssistantUI_RecompileDisplayTitle()
     TabDisplay_RequestTitleRedraw();
 }
 
+void AssistantUI_RequestClientClose()
+{
+    // CWindow::Destroy pushes the SDL_QUIT that runs the normal shutdown path
+    if (Wisp::g_WispWindow != nullptr)
+    {
+        Wisp::g_WispWindow->Destroy();
+    }
+}
+
+void AssistantUI_QueueAutostart()
+{
+    // the checkbox check stayed in the EnterWorld path (Qt checked
+    // g_TabMain->Autostart() inside RunAutostart before arming the timer);
+    // here the sink has already gated on the config value.
+    s_AutostartAt = g_Ticks + 1000;
+}
+
 void AssistantUI_Tick()
 {
     // runs from AssistantWindow_FrameTick (every game frame, visible or not)
+    // the deferred Autostart script run (was the Qt single-shot timer)
+    if (s_AutostartAt != 0u && g_Ticks >= s_AutostartAt)
+    {
+        s_AutostartAt = 0;
+        // was onAutostartTimer -> g_TabScripts->RunScript("Autostart", text)
+        ScriptManager_Get()->Run("Autostart", ScriptEditor_Text());
+    }
     // the script runtime first: the marshaled commands must run on the main
     // thread before anything else consumes game state this frame (plan:
     // queue -> agents -> draw)
@@ -328,6 +357,8 @@ void AssistantUI_Tick()
 
 void AssistantUI_Shutdown()
 {
+    // disarm a pending Autostart run (the Qt timer died with the form)
+    s_AutostartAt = 0;
     // the scripts stop first (bounded join; never hang the client), then the
     // queue is shut down so late pushes fail fast (the Qt app tore the tab
     // widgets down with the window and the queued signals died with it)
@@ -381,6 +412,7 @@ void AssistantUI_AfterImGuiShutdown()
     Icons_Shutdown();
     AssMap_AfterImGuiShutdown();
     TabAbout_AfterImGuiShutdown();
+    TabDisplay_AfterImGuiShutdown();
 }
 
 int AssistantUI_ReconnectSecondsLeft()

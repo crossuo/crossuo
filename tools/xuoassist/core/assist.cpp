@@ -9,7 +9,7 @@
 //  - numeric-option lookups (distance/delay/messages level) go to
 //    AssistantConfig too (was g_TabMain / g_AssistantForm);
 //  - the from-target handlers that filled UI widgets keep the world/state
-//    half and mark the UI half PORT-TODO(phase-2).
+//    half and route the UI half through the events seam (Phase 2).
 
 #include "assist.h"
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)

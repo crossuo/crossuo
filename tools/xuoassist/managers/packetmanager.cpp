@@ -9,16 +9,16 @@
 //  - world-model mutations (g_World/g_Player/g_Skills/assistant globals) are
 //    kept verbatim - this is the packet-parity surface;
 //  - widget pokes became g_AssistantEvents notifications;
-//  - Phase 1c resolved the PORT-TODO(module) markers whose owners landed
+//  - Phase 1c resolved the module markers whose owners landed
 //    (assist core, target, text commands, config module, gump/menu/trade/
 //    prompt/party/context-menu/corpse/spell/skill/clientmacro/guild/
 //    display-state managers, the speech/sound/text-replace filters, the
-//    main-option gates and the font-color replaces). The remaining markers
-//    are annotated with the round that consumes them:
-//    PORT-TODO(phase-2) text window/inspector/map UI pokes,
-//    PORT-TODO(phase-3) macro recording + hotkey waits,
-//    PORT-TODO(phase-4b) script / journal commands (the shop agent landed
-//    in 4a via core/shopagent.h);
+//    main-option gates and the font-color replaces);
+//  - Phase 6 resolved the remaining behavioral markers: macro recording
+//    (the outgoing-packet taps append the exact Qt CMacro actions to
+//    g_MacroExecutor) and the Autostart script run (through the events
+//    seam); anything without an in-process equivalent is documented as an
+//    explicit DEVIATION comment instead;
 //  - g_ClilocManager (client) supersedes the assistant's cliloc manager and is
 //    called directly (plan §7 "What NOT to do");
 //  - the per-packet LOG/LOG_DUMP lines are dropped (the client has its own
@@ -50,6 +50,7 @@
 #include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
 #include "../managers/trademanager.h"
+#include "../macros/macroexecutor.h" // g_MacroExecutor (macro recording/playing taps)
 #include "../model/gameobjects/gameplayer.h"
 #include "../model/gameobjects/gameworld.h"
 #include "../model/commonitems/skill.h"
@@ -636,7 +637,10 @@ PACKET_HANDLER(EnterWorld)
     g_GumpReceived = false;
     g_PromptReceived = false;
     g_Target.ClearHooks(); // was: g_Target.ClearHooks(); (assist/target round)
-    // PORT-TODO(phase-3/macros): g_TabMacros->Reset(); (macro recording round)
+    // was g_TabMacros->Reset() (tabmacros.cpp:366): discard any open recording
+    // and stop playback - the old world's macro state never leaks across
+    // login sessions.
+    g_MacroExecutor.Reset();
 
     RELEASE_POINTER(g_World);
 
@@ -664,10 +668,14 @@ PACKET_HANDLER(EnterWorld)
         pack16(m_Start + 9, 0x03DB);
         g_OriginalGraphic = 0x03DB;
     }
-    // was: if (runAutostart) g_AssistantForm->RunAutostart(); (the Autostart
-    // script run needs the script engine)
-    // PORT-TODO(phase-4): g_TabScripts->RunScript("Autostart", ...) (scripts round)
-    (void)runAutostart;
+    // was: if (runAutostart) g_AssistantForm->RunAutostart(); ->
+    // g_AssistantForm->RunAutostart checked g_TabMain->Autostart() and ran
+    // g_TabScripts->RunScript("Autostart", editor text) after 1s
+    // (assistform.cpp:582-588); the UI events sink replays both halves.
+    if (runAutostart)
+    {
+        g_AssistantEvents->OnAutostartRequest();
+    }
     // DEVIATION (phase 5): g_UOMapManager.UOAMEnterWorld() was a Windows
     // WM_USER notify to the external UO Auto Map app - no HWND host in-client.
     if (g_MapSettings.GetShowOnLogin())
@@ -928,7 +936,7 @@ PACKET_HANDLER(UpdatePlayer)
         if (oldDead != g_Player->Dead())
         {
             g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
-            g_LastPlayerDeadTimer = g_Ticks + 300000; // FIXME: was ticks, now ms - check
+            g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
         }
     }
 
@@ -1228,7 +1236,7 @@ PACKET_HANDLER(UpdateObject)
                 if (oldDead != g_Player->Dead())
                 {
                     g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
-                    g_LastPlayerDeadTimer = g_Ticks + 300000; // FIXME: check ticks to ms
+                    g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
                 }
             }
         }
@@ -1545,9 +1553,12 @@ PACKET_HANDLER(UpdateCharacter)
 
 PACKET_HANDLER(WarmodeS)
 {
-    // PORT-TODO(phase-3/macros): if (g_World != nullptr && g_TabMacros->GetRecording())
-    //     g_TabMacros->AddAction(new CMacroWithIntValue(MT_WAR_MODE, ReadUInt8()), false);
-    // (macro recording round)
+    // tabmacros recording (Qt WarmodeS): observe-only - the macro action is
+    // noted from the outgoing packet, which still flows to the server.
+    if (g_World != nullptr && g_MacroExecutor.IsRecording())
+    {
+        g_MacroExecutor.Record(new CMacroWithIntValue(MT_WAR_MODE, ReadUInt8()));
+    }
 
     return true;
 }
@@ -1677,7 +1688,10 @@ PACKET_HANDLER(ClientTalkS)
     // DEVIATION (phase 5): a leading '-' went to g_UOMapManager.UOAnotifyCmd
     // - the external UOA/UOAM command pipe (Windows WM_USER + atoms); there
     // is no in-process equivalent, the command stays a normal speech line.
-    // PORT-TODO(phase-3): macro recording of MT_SAY
+    if (g_World != nullptr && g_MacroExecutor.IsRecording())
+    {
+        g_MacroExecutor.Record(new CMacroWithStringValue(MT_SAY, str));
+    }
 
     ushort replaceFontColorValue = 0;
     bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
@@ -1692,8 +1706,6 @@ PACKET_HANDLER(ClientTalkS)
     {
         pack16(m_Start + 4, replaceFontColorValue);
     }
-
-    (void)str;
 
     return true;
 }
@@ -1741,7 +1753,10 @@ PACKET_HANDLER(UnicodeClientTalk)
     }
     // DEVIATION (phase 5): the '-' UOA command notify (external UOAM command
     // pipe) - see the ASCII branch above.
-    // PORT-TODO(phase-3): macro recording of MT_SAY
+    if (g_World != nullptr && g_MacroExecutor.IsRecording())
+    {
+        g_MacroExecutor.Record(new CMacroWithStringValue(MT_SAY, str));
+    }
 
     ushort replaceFontColorValue = 0;
     bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
@@ -1756,8 +1771,6 @@ PACKET_HANDLER(UnicodeClientTalk)
     {
         pack16(m_Start + 4, replaceFontColorValue);
     }
-
-    (void)str;
 
     return true;
 }
@@ -1997,7 +2010,7 @@ PACKET_HANDLER(DeathScreenR)
         }
 
         g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
-        g_LastPlayerDeadTimer = g_Ticks + 300000; // FIXME: ticks to ms
+        g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
 
         if (g_AssistantConfig.NoDeathScreen())
         {
@@ -2234,11 +2247,17 @@ PACKET_HANDLER(ExtendedCommandS)
 
     if (cmd == 0x0009) // Wrestling stun ability
     {
-        // PORT-TODO(phase-3/macros): recording of MT_WRESTLING_STUN
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            g_MacroExecutor.Record(new CMacro(MT_WRESTLING_STUN));
+        }
     }
     else if (cmd == 0x000A) // Wrestling disarm ability
     {
-        // PORT-TODO(phase-3/macros): recording of MT_WRESTLING_DISARM
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            g_MacroExecutor.Record(new CMacro(MT_WRESTLING_DISARM));
+        }
     }
     else if (cmd == 0x001C) // Cast spell
     {
@@ -2252,27 +2271,47 @@ PACKET_HANDLER(ExtendedCommandS)
             g_AssistantEvents->OnTitleRedraw();
         }
 
-        // PORT-TODO(phase-3/macros): recording of MT_CAST_NEW (with MCT_LAST conversion)
+        // tabmacros recording (Qt ExtendedCommandS 0x001C): the MCT_LAST
+        // conversion fires when the new spell index equals the previous
+        // index's "was set" flag - kept verbatim from the Qt site.
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            CMacro *macro = new CMacroWithIntValue(MT_CAST_NEW, g_LastSpellIndex);
+
+            if (static_cast<int>(lastSpell) == g_LastSpellIndex)
+            {
+                macro->SetConvertType(MCT_LAST);
+            }
+
+            g_MacroExecutor.Record(macro);
+        }
     }
     else if (cmd == 0x0013) // Context menu request
     {
         uint serial = ReadUInt32BE();
 
-        // PORT-TODO(phase-3/macros): recording of MT_REQUEST_CONTEXT_MENU
-        (void)serial;
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            g_MacroExecutor.Record(new CMacroWithObject(MT_REQUEST_CONTEXT_MENU, serial, 0, 0));
+        }
     }
     else if (cmd == 0x0015) // Context menu selection
     {
         uint serial = ReadUInt32BE();
         ushort menuID = ReadUInt16BE();
 
-        // PORT-TODO(phase-3/macros): recording of MT_WAIT_FOR_CONTEXT_MENU
-        (void)serial;
-        (void)menuID;
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            // the menu id rides the graphic field, like the Qt CMacroWithObject
+            g_MacroExecutor.Record(new CMacroWithObject(MT_WAIT_FOR_CONTEXT_MENU, serial, menuID, 0));
+        }
     }
     else if (cmd == 0x0032) // Toggle gargoyle flying
     {
-        // PORT-TODO(phase-3/macros): recording of MT_TOGGLE_GARGOYLE_FLYING
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            g_MacroExecutor.Record(new CMacro(MT_TOGGLE_GARGOYLE_FLYING));
+        }
     }
 
     return true;
@@ -2938,7 +2977,18 @@ PACKET_HANDLER(WalkRequest)
         g_Assistant.AutoOpenDoor(x, y, g_Player->GetZ());
     }
 
-    // PORT-TODO(phase-3): walk recording (MT_WALK with the run-bit conversion).
+    // tabmacros recording (Qt WalkRequest): a turn (the run bit set on a
+    // direction that differs from the current facing) records as a negative
+    // value - the MT_WALK turn encoding.
+    if (g_World != nullptr && g_MacroExecutor.IsRecording())
+    {
+        if ((direction & 7) != (g_Player->GetDirection() & 7))
+        {
+            direction = -(direction | 0x80);
+        }
+
+        g_MacroExecutor.Record(new CMacroWithIntValue(MT_WALK, direction));
+    }
 
     return true;
 }
@@ -3133,7 +3183,19 @@ PACKET_HANDLER(PerformAction)
     {
         int index = atoi(str.c_str());
 
-        // PORT-TODO(phase-3/macros): recording of MT_USE_SKILL (with MCT_LAST conversion)
+        // the conversion compares against the PREVIOUS index (the assignment
+        // below) - tabmacros recording, kept verbatim
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            CMacro *macro = new CMacroWithIntValue(MT_USE_SKILL, index);
+
+            if (index == g_LastSkillIndex)
+            {
+                macro->SetConvertType(MCT_LAST);
+            }
+
+            g_MacroExecutor.Record(macro);
+        }
 
         g_LastSkillIndex = index;
     }
@@ -3141,7 +3203,17 @@ PACKET_HANDLER(PerformAction)
     {
         int index = atoi(str.c_str());
 
-        // PORT-TODO(phase-3/macros): recording of MT_CAST (with MCT_LAST conversion)
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            CMacro *macro = new CMacroWithIntValue(MT_CAST, index);
+
+            if (index == g_LastSpellIndex)
+            {
+                macro->SetConvertType(MCT_LAST);
+            }
+
+            g_MacroExecutor.Record(macro);
+        }
 
         g_LastSpellIndex = index;
     }
@@ -3149,7 +3221,17 @@ PACKET_HANDLER(PerformAction)
     {
         int index = atoi(str.c_str());
 
-        // PORT-TODO(phase-3/macros): recording of MT_CAST_FROM_BOOK (with MCT_LAST conversion)
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            CMacro *macro = new CMacroWithIntValue(MT_CAST_FROM_BOOK, index);
+
+            if (index == g_LastSpellIndex)
+            {
+                macro->SetConvertType(MCT_LAST);
+            }
+
+            g_MacroExecutor.Record(macro);
+        }
 
         g_LastSpellIndex = index;
     }
@@ -3166,7 +3248,31 @@ PACKET_HANDLER(DoubleClick)
 {
     uint serial = ReadUInt32BE();
 
-    // PORT-TODO(phase-3/macros): MT_USE recording (with MCT_SELF conversion).
+    // tabmacros recording (Qt DoubleClick): the graphic/color come from the
+    // world object when known; MCT_SELF on the player (the MCT_LAST branch
+    // on g_LastUseObject is commented out in the original - kept that way).
+    if (g_World != nullptr && g_MacroExecutor.IsRecording())
+    {
+        CGameObject *obj = g_World->FindWorldObject(serial);
+
+        CMacro *macro = nullptr;
+
+        if (obj != nullptr)
+        {
+            macro = new CMacroWithObject(MT_USE, serial, obj->GetGraphic(), obj->GetColor());
+        }
+        else
+        {
+            macro = new CMacroWithObject(MT_USE, serial, 0, 0);
+        }
+
+        if (serial == g_PlayerSerial)
+        {
+            macro->SetConvertType(MCT_SELF);
+        }
+
+        g_MacroExecutor.Record(macro);
+    }
 
     g_LastUseObject = serial;
 
@@ -3175,15 +3281,50 @@ PACKET_HANDLER(DoubleClick)
 
 PACKET_HANDLER(AttackRequest)
 {
-    // PORT-TODO(phase-3/macros): MT_ATTACK recording (MCT_LASTATTACK/MCT_LASTTARGET/
-    // MCT_ENEMY conversions; CAssistant::TextToSerial is in core/textconv).
+    // tabmacros recording (Qt AttackRequest): MCT_LASTATTACK / MCT_LASTTARGET
+    // / MCT_ENEMY conversions, in the original's order.
+    if (g_World != nullptr && g_MacroExecutor.IsRecording())
+    {
+        uint serial = ReadUInt32BE();
+
+        CGameCharacter *obj = g_World->FindWorldCharacter(serial);
+
+        CMacro *macro = nullptr;
+
+        if (obj != nullptr)
+        {
+            macro = new CMacroWithObject(MT_ATTACK, serial, obj->GetGraphic(), obj->GetColor());
+        }
+        else
+        {
+            macro = new CMacroWithObject(MT_ATTACK, serial, 0, 0);
+        }
+
+        if (serial == g_LastAttackObject)
+        {
+            macro->SetConvertType(MCT_LASTATTACK);
+        }
+        else if (serial == g_LastTargetObject)
+        {
+            macro->SetConvertType(MCT_LASTTARGET);
+        }
+        else if (serial == CAssistant::TextToSerial("enemy"))
+        {
+            macro->SetConvertType(MCT_ENEMY);
+        }
+
+        g_MacroExecutor.Record(macro);
+    }
 
     return true;
 }
 
 PACKET_HANDLER(HelpRequest)
 {
-    // PORT-TODO(phase-3/macros): MT_HELP_MENU_REQUEST recording.
+    if (g_World != nullptr && g_MacroExecutor.IsRecording())
+    {
+        g_MacroExecutor.Record(new CMacro(MT_HELP_MENU_REQUEST));
+    }
 
     return true;
 }
@@ -3195,16 +3336,41 @@ PACKET_HANDLER(AOSCommandsS)
 
     if (cmd == 0x0019) // Combat ability
     {
-        // PORT-TODO(phase-3/macros): MT_COMBAT_ABILITY recording (MCT_PRIMARY/SECONDARY);
-        // the original only did Move(4) + ReadUInt8() inside the recording gate.
+        // the ability byte is read only while recording (the original read
+        // nothing outside the gate - the send packet is a copy here, so the
+        // position is the assistant's own cursor)
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            Move(4);
+            uchar ability = ReadUInt8();
+
+            CMacro *macro = new CMacro(MT_COMBAT_ABILITY);
+
+            if (g_Ability[0] == ability)
+            {
+                macro->SetConvertType(MCT_PRIMARY);
+            }
+            else
+            {
+                macro->SetConvertType(MCT_SECONDARY);
+            }
+
+            g_MacroExecutor.Record(macro);
+        }
     }
     else if (cmd == 0x0028) // Guild
     {
-        // PORT-TODO(phase-3/macros): MT_GUILD_MENU_REQUEST recording.
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            g_MacroExecutor.Record(new CMacro(MT_GUILD_MENU_REQUEST));
+        }
     }
     else if (cmd == 0x0032) // Quests
     {
-        // PORT-TODO(phase-3/macros): MT_QUEST_MENU_REQUEST recording.
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            g_MacroExecutor.Record(new CMacro(MT_QUEST_MENU_REQUEST));
+        }
     }
 
     (void)serial;

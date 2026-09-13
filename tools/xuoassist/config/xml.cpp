@@ -6,6 +6,12 @@
 #include <cstdio>
 #include <stdlib.h>
 #include <string.h>
+#if !defined(_WIN32)
+#include <sys/stat.h> // stat/chmod (atomic-save file mode preservation)
+#include <unistd.h>   // fsync
+#else
+#include <windows.h> // MoveFileExA / SetFileAttributesA
+#endif
 
 #include <common/logging/logging.h>
 #include <common/str.h>
@@ -609,17 +615,75 @@ string XMLDocument::Write(bool autoFormat) const
     return out;
 }
 
-bool XMLDocument::Save(const fs_path &path, bool autoFormat) const
+bool AtomicFileWrite(const fs_path &path, const void *data, size_t size)
 {
-    FILE *file = fs_open(path, FS_WRITE);
+    // <dir>/<name>.tmp - same directory so the rename stays on one filesystem
+    const string tmpName = string(fs_path_ascii(path)) + ".tmp";
+    const fs_path tmpPath = fs_path_from(tmpName);
+
+    FILE *file = fs_open(tmpPath, FS_WRITE);
     if (file == nullptr)
     {
+        Warning(Assistant, "atomic save: cannot open %s\n", tmpName.c_str());
         return false;
     }
-    const string out = Write(autoFormat);
-    const bool ok = fwrite(out.data(), 1, out.size(), file) == out.size();
+
+    if (fwrite(data, 1, size, file) != size || fflush(file) != 0)
+    {
+        Warning(Assistant, "atomic save: write failed for %s\n", fs_path_ascii(path));
+        fclose(file);
+        fs_del(tmpPath);
+        return false;
+    }
+
+    // flush to disk before the rename: after a crash the target is either the
+    // previous content or the complete new content (the plan's §8.1 row)
+    const int fd = fileno(file);
+    if (fd >= 0)
+    {
+#if defined(_WIN32)
+        _commit(fd);
+#else
+        fsync(fd);
+#endif
+    }
     fclose(file);
-    return ok;
+
+#if defined(_WIN32)
+    // keep a read-only attribute from blocking the replace
+    SetFileAttributesA(fs_path_ascii(path), FILE_ATTRIBUTE_NORMAL);
+    if (!MoveFileExA(tmpName.c_str(), fs_path_ascii(path), MOVEFILE_REPLACE_EXISTING))
+    {
+        Warning(Assistant, "atomic save: replace failed for %s\n", fs_path_ascii(path));
+        fs_del(tmpPath);
+        return false;
+    }
+#else
+    // preserve the original file mode across the replace
+    struct stat st;
+    if (stat(fs_path_ascii(path), &st) == 0)
+    {
+        chmod(tmpName.c_str(), st.st_mode & 07777);
+    }
+
+    if (rename(tmpName.c_str(), fs_path_ascii(path)) != 0)
+    {
+        Warning(Assistant, "atomic save: rename failed for %s\n", fs_path_ascii(path));
+        fs_del(tmpPath);
+        return false;
+    }
+#endif
+
+    return true;
+}
+
+bool XMLDocument::Save(const fs_path &path, bool autoFormat) const
+{
+    // every assistant config write funnels through here (17 XML files incl.
+    // Options.xml, Hotkeys.xml, Macros.xml, Map.xml) - the temp+rename path
+    // keeps a crash mid-save from truncating a profile
+    const string out = Write(autoFormat);
+    return AtomicFileWrite(path, out.data(), out.size());
 }
 
 // --- self test -------------------------------------------------------------

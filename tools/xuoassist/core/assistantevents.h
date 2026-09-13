@@ -150,6 +150,15 @@ public:
         (void)z;
     }
 
+    // Was g_AssistantForm->RunAutostart (assistform.cpp:582) from the
+    // EnterWorld handler: the sink checks the Autostart option and starts
+    // the "Autostart" script from the editor buffer after 1 second.
+    virtual void OnAutostartRequest() {}
+
+    // The closeuo command (was SendMessage(hwnd, WM_CLOSE)): the sink asks
+    // the client window to close (CWindow::Destroy -> the SDL_QUIT path).
+    virtual void OnClientCloseRequest() {}
+
     // --- from-target requests (the tablists "from target" buttons; the
     //     HandleTarget* stubs in core/assist.cpp forward the 0x6C reply) ----
     // XA_FROM_TARGET_* identifies which tab asked; name is the object name

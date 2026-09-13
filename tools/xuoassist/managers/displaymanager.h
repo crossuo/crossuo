@@ -69,7 +69,7 @@ private:
     static const CDisplayItem m_DefaultItems[26];
     static const DISPLAY_KEY_ITEM m_KeysList[DKI_COUNT];
 
-    CDisplayIcon *GetIcon(const CDisplayItem &item);
+    CDisplayIcon *LoadDisplayIcon(ushort graphic, uint16_t color);
     void ApplyAttributeToDisplayItem(CDisplayItem &obj, const string &name, const string &value);
     void CompilleData(const string &text, uint textColor);
     void GetValues(
@@ -83,6 +83,12 @@ private:
 public:
     CDisplayManager();
     ~CDisplayManager();
+
+    // The static-art icon cache (was the win32 HBITMAP cache of the Qt
+    // displaymanager): keyed by (graphic << 16) | hue, decoded through the
+    // client's art reader. nullptr when the item has no graphic. The
+    // Display items editor previews these as ImGui user textures.
+    CDisplayIcon *GetIcon(const CDisplayItem &item);
 
     void ClearIcons();
 

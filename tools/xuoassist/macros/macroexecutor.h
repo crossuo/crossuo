@@ -13,10 +13,12 @@
 //   - m_PlayList holds copies of the macro's actions (Play:931), looped
 //     macros restart with m_NextMacroTick = now + loopDelay (ProcessMacro
 //     1123-1135), loop delay 0 (checkbox off) stops.
-//   - the recording buffer (on_pb_Record_clicked:337) is fed by the target
-//     system taps (assist/target.cpp:190/:210 -> CAssistantEvents) while
-//     the game sends its target cursors; RecordStop replaces the selected
-//     macro's action list (an empty capture is discarded).
+//   - the recording buffer (on_pb_Record_clicked:337) is fed by the packet
+//     observation taps (packetmanager.cpp WarmodeS/DoubleClick/AttackRequest/
+//     PerformAction/... - the exact conversions of the Qt sites) and the
+//     target system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
+//     while the game sends its target cursors; RecordStop replaces the
+//     selected macro's action list (an empty capture is discarded).
 // Agent-dependent bodies (dress/arm lists use the config dressbag and move
 // item delays exactly like the Qt code) are included; script bodies are not
 // part of the executor.
@@ -25,6 +27,8 @@
 #define XUOASSIST_MACROS_MACROEXECUTOR_H
 
 #include "macro.h"
+
+#include <initializer_list>
 
 namespace xuoassist {
 
@@ -64,6 +68,24 @@ public:
     // assist/target.cpp:190/:210).
     void RecordTargetObject(uint serial, ushort graphic, ushort color);
     void RecordTargetTile(ushort graphic, int x, int y, int z);
+
+    // TabMacros::AddAction(macro, false) recording half (tabmacros.cpp:217):
+    // appends an observed action to the open recording; ownership passes to
+    // the executor (a stray call while not recording is freed). The packet
+    // taps gate on IsRecording() BEFORE building the macro, so the
+    // not-recording cost is a single bool check per packet.
+    void Record(CMacro *macro);
+
+    // TabMacros::PlayWaiting (tabmacros.cpp:1023): when a playing macro sits
+    // on a waiting action that one of `types` satisfies, rewind to it and
+    // re-run immediately (the awaited event just arrived). true = the wait
+    // was consumed and the CALLER consumed the packet (the macro replay
+    // answered the server itself, exactly like the Qt app).
+    bool PlayWaiting(std::initializer_list<MACRO_TYPE> types);
+
+    // TabMacros::Reset (tabmacros.cpp:366): the client-side world teardown
+    // (EnterWorld re-entry / disconnect) stops any playback and recording.
+    void Reset();
 
 private:
     void ProcessMacro(); // was TabMacros::ProcessMacro (tabmacros.cpp:1105)

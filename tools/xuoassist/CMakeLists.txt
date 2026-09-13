@@ -154,6 +154,11 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     script/scriptfile.cpp
     script/scriptgump.cpp
     script/scriptstate.cpp
+    # the crash-safe save helper (ScriptTextWindow_SaveToFile calls it)
+    config/xml.cpp
+    # the stb-style common/fs.h implementation for this standalone link (the
+    # main build gets it from xuocore/common.cpp, which is not linked here)
+    script/test/fsimpl.cpp
     core/packets.cpp
     model/commonitems/gump.cpp
     model/commonitems/gumpitem.cpp

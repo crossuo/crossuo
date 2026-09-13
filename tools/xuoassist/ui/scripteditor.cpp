@@ -159,14 +159,9 @@ bool read_file(const string &path, string &out)
 
 bool write_file(const string &path, const string &text)
 {
-    FILE *file = fopen(path.c_str(), "wb");
-    if (file == nullptr)
-    {
-        return false;
-    }
-    const bool ok = fwrite(text.data(), 1, text.size(), file) == text.size();
-    fclose(file);
-    return ok;
+    // the script editor's Save button: the crash-safe temp+rename path so a
+    // crash mid-save cannot truncate a user script (plan §8.1)
+    return AtomicFileWrite(fs_path_from(path), text.data(), text.size());
 }
 
 void open_path(const string &path)

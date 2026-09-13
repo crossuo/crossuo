@@ -17,6 +17,11 @@
 #include <map>
 #include <stdlib.h>
 
+#include <xuocore/uodata.h>        // g_Index / MAX_STATIC_DATA_INDEX_COUNT
+#include "CrossUO.h"               // ::g_Game (tiledata flags)
+#include "Managers/ColorManager.h" // ::g_ColorManager (hue)
+#include "Managers/UOFileReader.h" // ::g_UOFileReader (static art decode)
+
 namespace xuoassist {
 
 static string to_lower_copy(string text)
@@ -124,13 +129,167 @@ void CDisplayManager::ClearIcons()
 
 CDisplayIcon *CDisplayManager::GetIcon(const CDisplayItem &item)
 {
-    // Was the win32 CreateBitmap icon cache fed from the assistant
-    // filemanager's static art (LoadDisplayIcon).
-    // PORT-TODO(phase-2/4): decode static art into the CDisplayIcon payload
-    // once the filemanager dedup + rendering rounds land; the raw-bytes
-    // struct is in place.
-    (void)item;
-    return nullptr;
+    // The Qt icon cache (displaymanager.cpp:115): keyed by (graphic << 16) |
+    // hue, fed by LoadDisplayIcon from the assistant filemanager's raw
+    // static-art access. In-process the pixels come from the client's own
+    // art reader (g_UOFileReader.GetArtPixels) and the client hue manager.
+    if (item.GetGraphic() == 0u)
+    {
+        return nullptr;
+    }
+
+    const uint serial = (uint)((item.GetGraphic() << 16) | item.GetHue());
+    auto i = m_Icons.find(serial);
+    if (i == m_Icons.end() || i->second == nullptr)
+    {
+        CDisplayIcon *icon = LoadDisplayIcon(item.GetGraphic(), item.GetHue());
+        m_Icons[serial] = icon;
+        return icon;
+    }
+
+    return i->second;
+}
+
+CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
+{
+    // The Qt LoadDisplayIcon (displaymanager.cpp:140) verbatim, with the raw
+    // art decode delegated to the client's g_UOFileReader.GetArtPixels (the
+    // Qt code walked the file bytes itself through the plugin file access).
+    // Pixels are IM_COL32-layout RGBA (the client hue manager emits
+    // 0x00BBGGRR; nonzero pixels get full alpha for the ImGui upload).
+    if (graphic == 0x0EED || graphic == 0x0EEE)
+    {
+        graphic = 0x0EEF; // Fix gold display
+    }
+
+    if ((size_t)graphic >= MAX_STATIC_DATA_INDEX_COUNT)
+    {
+        return new CDisplayIcon();
+    }
+
+    short dataWidth = 0;
+    short dataHeight = 0;
+    vector<uint16_t> art =
+        g_UOFileReader.GetArtPixels(graphic, g_Index.m_Static[graphic], true, dataWidth, dataHeight);
+    if (art.empty() || dataWidth <= 0 || dataHeight <= 0)
+    {
+        return new CDisplayIcon();
+    }
+
+    const uint64_t tileFlags = g_Game.GetStaticFlags(graphic);
+    const bool partialHue = (tileFlags & 0x00040000) != 0;
+    const int stackOffset =
+        (((tileFlags & 0x00000800) != 0u) && graphic != 0x0EEF && g_AssistantConfig.DoubleImage())
+            ? 5
+            : 0;
+
+    const int imageWidth = dataWidth + stackOffset;
+    const int imageHeight = dataHeight + stackOffset;
+    vector<uint> pix((size_t)imageWidth * imageHeight, 0);
+
+    for (int y = 0; y < dataHeight; y++)
+    {
+        for (int x = 0; x < dataWidth; x++)
+        {
+            const uint16_t raw = art[(y * dataWidth) + x];
+            if (raw == 0u)
+            {
+                continue; // transparent (the Qt run decode skipped 0 pixels)
+            }
+
+            uint col = 0;
+            uint16_t c = raw;
+            if (color != 0u)
+            {
+                col = (partialHue ? ::g_ColorManager.GetPartialHueColor(c, color)
+                                  : ::g_ColorManager.GetColor(c, color));
+            }
+            else
+            {
+                col = ::g_ColorManager.Color16To32(c);
+            }
+
+            pix[(y * imageWidth) + x] = col;
+        }
+    }
+
+    // the stacked (+5 down-right) copy of stackable items (Qt verbatim)
+    if (stackOffset != 0)
+    {
+        for (int j = dataHeight - 1; j >= 0; j--)
+        {
+            const int srcPosY = j * imageWidth;
+            const int dstPosY = (j + stackOffset) * imageWidth;
+            for (int i = dataWidth - 1; i >= 0; i--)
+            {
+                const uint pixel = pix[srcPosY + i];
+                if (pixel != 0u)
+                {
+                    pix[dstPosY + i + stackOffset] = pixel;
+                }
+            }
+        }
+    }
+
+    // bounding box over the non-transparent pixels
+    int minX = 999;
+    int minY = 999;
+    int maxX = 0;
+    int maxY = 0;
+    for (int y = 0; y < imageHeight; y++)
+    {
+        for (int x = 0; x < imageWidth; x++)
+        {
+            if (pix[(y * imageWidth) + x] != 0u)
+            {
+                if (x < minX)
+                    minX = x;
+                if (x > maxX)
+                    maxX = x;
+                if (y < minY)
+                    minY = y;
+                if (y > maxY)
+                    maxY = y;
+            }
+        }
+    }
+
+    if (maxX < minX || maxY < minY)
+    {
+        return new CDisplayIcon(); // fully transparent decode
+    }
+
+    int realWidth = (maxX - minX) + stackOffset;
+    if (maxX < imageWidth)
+    {
+        realWidth++;
+    }
+
+    int realHeight = (maxY - minY) + stackOffset;
+    if (maxY < imageHeight)
+    {
+        realHeight++;
+    }
+
+    CDisplayIcon *icon = new CDisplayIcon();
+    icon->Width = realWidth;
+    icon->Height = realHeight;
+    icon->Pixels.assign((size_t)realWidth * realHeight, 0);
+
+    for (int y = 0; y < realHeight; y++)
+    {
+        const size_t srcY = (size_t)(y + minY) * imageWidth;
+        const size_t dstY = (size_t)y * realWidth;
+
+        for (int x = 0; x < realWidth; x++)
+        {
+            const uint col = pix[srcY + x + minX];
+            // 0x00BBGGRR -> opaque RGBA32 (0 stays fully transparent)
+            icon->Pixels[dstY + x] = col != 0u ? (col | 0xFF000000u) : 0u;
+        }
+    }
+
+    return icon;
 }
 
 void CDisplayManager::GetValues(

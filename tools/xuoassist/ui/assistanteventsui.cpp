@@ -12,8 +12,9 @@
 
 #include <external/gfx/imgui/imgui.h>
 
-#include "assistantui.h" // TabDisplay_RequestTitleRedraw
+#include "assistantui.h" // TabDisplay_RequestTitleRedraw / AssistantUI_RequestClientClose
 #include "widgets.h"
+#include "../config/assistantconfig.h" // g_AssistantConfig (Autostart gate)
 #include "../core/actions.h"
 #include "../macros/macroexecutor.h"
 #include "../managers/partymanager.h"
@@ -84,6 +85,23 @@ void CAssistantUIEvents::OnRecordTargetTile(ushort graphic, int x, int y, int z)
 {
     // was g_TabMacros->AddAction(new CMacroWithTargetTile(...)) (target.cpp:190)
     g_MacroExecutor.RecordTargetTile(graphic, x, y, z);
+}
+
+void CAssistantUIEvents::OnAutostartRequest()
+{
+    // was g_AssistantForm->RunAutostart (assistform.cpp:582): the checkbox
+    // gated the 1s timer; the timer ran the editor buffer as "Autostart"
+    if (g_AssistantConfig.Autostart())
+    {
+        AssistantUI_QueueAutostart();
+    }
+}
+
+void CAssistantUIEvents::OnClientCloseRequest()
+{
+    // the Wisp window lives in assistantui.cpp (header conflicts with the
+    // xuocore event structs keep it out of this TU)
+    AssistantUI_RequestClientClose();
 }
 
 void CAssistantUIEvents::OnFromTarget(

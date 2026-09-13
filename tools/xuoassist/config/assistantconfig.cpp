@@ -2199,14 +2199,9 @@ bool CAssistantConfig::SaveDress()
     writer.WriteUInt8(m_DressDoubleClickForEquipment ? 1 : 0);
 
     const vector<uint8_t> bytes = writer.Data();
-    FILE *file = fs_open(fs_path_join(GetProfilePath(), "Dress.coa"), FS_WRITE);
-    if (file == nullptr)
-    {
-        return false;
-    }
-    const bool ok = fwrite(&bytes[0], 1, bytes.size(), file) == bytes.size();
-    fclose(file);
-    return ok;
+    // Dress.coa goes through the same crash-safe temp+rename path as the XML
+    // writers (plan §8.1)
+    return AtomicFileWrite(fs_path_join(GetProfilePath(), "Dress.coa"), &bytes[0], bytes.size());
 }
 
 bool CAssistantConfig::LoadDress()

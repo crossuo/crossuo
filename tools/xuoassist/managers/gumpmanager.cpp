@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/gumpmanager.cpp). The macro wait/record
-// branches and the text-window InfoGump dump keep PORT-TODO markers.
+// Ported from X:UO Assist (managers/gumpmanager.cpp). The macro wait tap
+// (the PlayWaiting port) and the recording branch run through
+// g_MacroExecutor; the text-window InfoGump dump uses the script text
+// window (the g_TextDialog port).
 
 #include "gumpmanager.h"
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../core/packets.h"
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
+#include "../macros/macroexecutor.h"
 #include "../model/gameobjects/gameworld.h"
 #include "../core/textparser.h"
 #include <stdlib.h>
@@ -297,8 +300,15 @@ bool CGumpManager::OnPacketReceived(CDataReader &reader)
         m_LastGump->m_Text.push_back(line);
     }
 
-    // PORT-TODO(phase-3): was `g_TabMacros->GetPlaying() &&
-    // g_TabMacros->PlayWaiting({ MT_WAIT_FOR_GUMP })` -> return false.
+    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
+    // MT_WAIT_FOR_GUMP })` -> return false (tabmacros.cpp:1023): a playing
+    // macro waiting on this gump has its wait satisfied and consumes the
+    // packet (the macro replay answers the server itself).
+    if (g_World != nullptr && g_MacroExecutor.IsPlaying() &&
+        g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_GUMP }))
+    {
+        return false;
+    }
 
     if (!m_Hooks.empty())
     {
@@ -328,8 +338,12 @@ bool CGumpManager::OnPacketSend(CDataReader &reader)
             gump->SetReplayed(true);
             gump->SetReplyID(button);
 
-            // PORT-TODO(phase-3): recording branch pushed
-            // CMacroWithGump(MT_WAIT_FOR_GUMP, serial, id, button).
+            // tabmacros recording (Qt gumpmanager): CMacroWithGump(
+            // MT_WAIT_FOR_GUMP, serial, id, button)
+            if (g_World != nullptr && g_MacroExecutor.IsRecording())
+            {
+                g_MacroExecutor.Record(new CMacroWithGump(MT_WAIT_FOR_GUMP, serial, id, button));
+            }
 
             if (gump != m_LastGump)
             {

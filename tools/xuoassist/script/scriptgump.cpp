@@ -7,6 +7,7 @@
 
 #include "scriptgump.h"
 #include "scriptfile.h"
+#include "../config/xml.h" // AtomicFileWrite (the crash-safe save path)
 
 #define LOGGER_MODULE Assistant
 
@@ -82,18 +83,21 @@ void ScriptTextWindow_SaveToFile(const string &path)
     {
         return;
     }
-    FILE *file = fopen(clean.c_str(), "w");
-    if (file == nullptr)
-    {
-        Warning(Assistant, "script text window: save failed (%s)\n", clean.c_str());
-        return;
-    }
+
+    // one buffer, one atomic temp+rename write (crash-safe like the config
+    // saves; plan §8.1)
+    string out;
+    out.reserve(s_Lines.size() * 32);
     for (const string &line : s_Lines)
     {
-        fputs(line.c_str(), file);
-        fputc('\n', file);
+        out += line;
+        out += '\n';
     }
-    fclose(file);
+
+    if (!AtomicFileWrite(fs_path_from(clean), out.data(), out.size()))
+    {
+        Warning(Assistant, "script text window: save failed (%s)\n", clean.c_str());
+    }
 }
 
 const vector<string> &ScriptTextWindow_Lines()

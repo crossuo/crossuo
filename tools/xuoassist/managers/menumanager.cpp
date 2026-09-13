@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/menumanager.cpp). The macro wait/record
-// branches and the text-window InfoMenu dump keep PORT-TODO markers.
+// Ported from X:UO Assist (managers/menumanager.cpp). The macro wait tap
+// (the PlayWaiting port) and the recording branch run through
+// g_MacroExecutor; the text-window InfoMenu dump uses the script text
+// window (the g_TextDialog port).
 
 #include "menumanager.h"
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../core/packets.h"
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
+#include "../macros/macroexecutor.h"
 #include "../model/gameobjects/gameworld.h"
 #include <stdlib.h>
 #include <common/logging/logging.h>
@@ -132,8 +135,14 @@ bool CMenuManager::OnPacketReceived(CDataReader &reader)
         m_LastMenu->m_Items.push_back(CMenuItem(i + 1, graphic, color, name));
     }
 
-    // PORT-TODO(phase-3): was `g_TabMacros->GetPlaying() &&
-    // g_TabMacros->PlayWaiting({ MT_WAIT_FOR_MENU })` -> return false.
+    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
+    // MT_WAIT_FOR_MENU })` -> return false: a playing macro waiting on this
+    // menu consumes the packet (tabmacros.cpp:1023 semantics).
+    if (g_World != nullptr && g_MacroExecutor.IsPlaying() &&
+        g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_MENU }))
+    {
+        return false;
+    }
 
     if (!m_Hooks.empty())
     {
@@ -165,9 +174,26 @@ bool CMenuManager::OnPacketSend(CDataReader &reader)
             menu->SetReplayed(true);
             menu->SetReplyID(index);
 
-            // PORT-TODO(phase-3): when a macro was recording, the original
-            // pushed CMacroWithMenu(MT_WAIT_FOR_MENU, ...) for the chosen
-            // item.
+            // tabmacros recording (Qt menumanager): CMacroWithMenu(
+            // MT_WAIT_FOR_MENU, menu name, item name, item graphic, item
+            // color) for the chosen item
+            if (g_World != nullptr && g_MacroExecutor.IsRecording())
+            {
+                for (const CMenuItem &item : menu->m_Items)
+                {
+                    if (item.GetID() == index)
+                    {
+                        g_MacroExecutor.Record(
+                            new CMacroWithMenu(
+                                MT_WAIT_FOR_MENU,
+                                menu->GetName(),
+                                item.GetName(),
+                                item.GetGraphic(),
+                                item.GetColor()));
+                        break;
+                    }
+                }
+            }
 
             if (menu != m_LastMenu)
             {

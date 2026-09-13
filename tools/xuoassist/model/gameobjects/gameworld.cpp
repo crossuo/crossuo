@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (gameobjects/gameworld.cpp). UI-poking call sites
-// (g_Map, g_TabMain, g_TabDisplay, g_ObjectInspectorForm, g_CorpseManager,
-// g_UOMapManager) are marked PORT-TODO and land with their modules in later
-// rounds; all model state mutations are verbatim. LOG() goes through the client
+// Ported from X:UO Assist (gameobjects/gameworld.cpp). The UI-poking call
+// sites (g_Map, g_ObjectInspectorForm, g_TabDisplay, g_CorpseManager,
+// g_PartyManager) run through the events seam / the ported managers; all
+// model state mutations are verbatim. LOG() goes through the client
 // logger; g_Timer.elapsed() became g_Ticks.
 
 #include "gameworld.h"
 #include "gameplayer.h"
 #include "core/global.h"
 #include "core/assistantevents.h"
+#include "../../config/assistantconfig.h" // CorpsesAutoopen / CorpseKeepDelay
+#include "../../managers/corpsemanager.h"
+#include "../../managers/displaymanager.h" // CanRedraw (the title-redraw gate)
+#include "../../managers/partymanager.h"
 #include <common/logging/logging.h>
 
 namespace xuoassist {
@@ -112,8 +116,13 @@ void CGameWorld::RemoveRangedObjects()
             if (GetDistance(g_RemoveRangeXY.x(), g_RemoveRangeXY.y(), go->GetX(), go->GetY()) >
                 objectsRange)
             {
-                // PORT-TODO(party): g_PartyManager.SaveMemberInfo for party
-                // members once managers/partymanager is ported.
+                // was g_PartyManager.SaveMemberInfo (Qt gameworld.cpp:113):
+                // refresh the map-window position of a party member that is
+                // about to leave the view range
+                if (g_PartyManager.Contains(go->GetSerial()))
+                {
+                    g_PartyManager.SaveMemberInfo((CGameCharacter *)go);
+                }
 
                 RemoveObject(go);
             }
@@ -524,10 +533,13 @@ void CGameWorld::UpdateGameObject(
             {
                 g_LastCorpseObject = serial;
 
-                // PORT-TODO(corpse): corpse auto-open bookkeeping
-                // (g_TabMain->CorpsesAutoopen() + g_CorpseManager.Add(...,
-                // g_StartTimer + CorpseKeepDelay())) once tabmain/corpsemanager
-                // are ported.
+                // was the corpse auto-open bookkeeping (Qt gameworld.cpp:532):
+                // g_TabMain->CorpsesAutoopen() + g_CorpseManager.Add(...)
+                if (g_AssistantConfig.CorpsesAutoopen())
+                {
+                    g_CorpseManager.Add(
+                        CCorpseInfo(serial, (int)(g_Ticks + g_AssistantConfig.CorpseKeepDelay())));
+                }
             }
 
             obj = item;
@@ -746,9 +758,12 @@ void CGameWorld::UpdateContainedItem(
 
     MoveToTop(obj);
 
-    // PORT-TODO(display): g_TabDisplay->CheckRedrawTitle(obj) when the object
-    // belongs to the player (obj->GetTopObject() == g_Player) once the display
-    // module is ported.
+    // was g_TabDisplay->CheckRedrawTitle(obj) (Qt gameworld.cpp:790): the
+    // caption may embed counters over player-carried items
+    if (obj->GetTopObject() == g_Player && g_DisplayManager.CanRedraw(obj->GetGraphic(), obj->GetColor()))
+    {
+        g_AssistantEvents->OnTitleRedraw();
+    }
 }
 
 ushort CGameWorld::FixColor(const ushort &color, const ushort &defaultColor)
@@ -780,8 +795,10 @@ ushort CGameWorld::FixColor(const ushort &color, const ushort &defaultColor)
 */
 void CGameWorld::Dump(uchar tCount, uint serial)
 {
-    // PORT-TODO(debug): the Qt app compiled this out unless CLOGGER was enabled;
-    // re-enable as a client-logger dump when the debug tooling round needs it.
+    // DEVIATION: the Qt app compiled this dump out unless CLOGGER was enabled;
+    // the client logger has no equivalent assistant world-dump channel, so
+    // the function stays a no-op (the object inspector covers the same need
+    // interactively).
     (void)tCount;
     (void)serial;
 }

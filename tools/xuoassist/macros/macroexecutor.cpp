@@ -29,6 +29,7 @@
 #include "../model/gameobjects/gameitem.h"
 #include "../model/gameobjects/gameplayer.h"
 #include "../model/gameobjects/gameworld.h"
+#include "Walker/PathFinder.h" // g_PathFinder (the client walker; was the plugin's PathFinder)
 
 namespace xuoassist {
 
@@ -242,6 +243,69 @@ void CMacroExecutor::RecordTargetTile(ushort graphic, int x, int y, int z)
     const int pz = g_Player != nullptr ? g_Player->GetZ() : 0;
     m_RecordBuffer.push_back(
         new CMacroWithTargetTile(MT_WAIT_FOR_TARGET_TILE, graphic, x, y, z, x - px, y - py, z - pz));
+}
+
+void CMacroExecutor::Record(CMacro *macro)
+{
+    // TabMacros::AddAction(macro, false) recording half (tabmacros.cpp:217
+    // SetSelectedItem path): append to the open recording. The packet taps
+    // check IsRecording() before building the action; this only guards the
+    // ownership (a stray action is dropped, not leaked).
+    if (!m_Recording || macro == nullptr)
+    {
+        delete macro;
+        return;
+    }
+    m_RecordBuffer.push_back(macro);
+}
+
+bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)
+{
+    // TabMacros::PlayWaiting (tabmacros.cpp:1023): step back onto the waiting
+    // action and re-run it now that the awaited event arrived.
+    if (m_Playing && m_PlayPosition >= 1 && m_PlayPosition <= (int)m_PlayList.size())
+    {
+        CMacro *macro = m_PlayList[m_PlayPosition - 1];
+
+        if (macro != nullptr)
+        {
+            const MACRO_TYPE type = macro->GetType();
+
+            for (MACRO_TYPE check : types)
+            {
+                if (type == check)
+                {
+                    m_PlayPosition--;
+                    m_NextMacroTick = 0;
+                    ProcessMacro();
+
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+void CMacroExecutor::Reset()
+{
+    // TabMacros::Reset (tabmacros.cpp:366) - the UI half became state reads
+    // (TabMacros_Draw), so this is the state teardown: an open recording is
+    // discarded and playback stops (world teardown in EnterWorld).
+    m_Recording = false;
+    free_macro_list(m_RecordBuffer);
+    m_RecordingIndex = -1;
+    m_Playing = false;
+    m_PlayingIndex = -1;
+    m_Looped = false;
+    m_LoopDelay = 1000;
+    m_WaitingEnabled = false;
+    m_NextMacroTick = 0;
+    m_ArmList.clear();
+    m_DressList.clear();
+    free_macro_list(m_PlayList);
+    m_PlayPosition = 0;
 }
 
 uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
@@ -662,11 +726,54 @@ void CMacroExecutor::ProcessMacro()
                 CPacketGuildMenuRequest().SendServer();
                 break;
             case MT_WALK:
-                // PORT-TODO(phase-4/5): needs the client's walker coordination
-                // (the Qt code drove its own PathFinder via the plugin
-                // interface, commandmanager.cpp:1964); recognized + consumed
-                // as a waiting no-op so a recorded macro stays timed.
+            {
+                // TabMacros::ProcessMacro MT_WALK (tabmacros.cpp:1546): the
+                // step went through CCommandManager::OnCommandStep ->
+                // PathFinder::Walk(run, direction); in-process the client's
+                // own walker (src/Walker, g_PathFinder) is the same walker
+                // the external plugin drove, called directly.
+                if (!EnabledCommandMoving())
+                {
+                    break;
+                }
+
+                int dir = ((CMacroWithIntValue *)macro)->GetValue();
+                int walkDelay = 0;
+
+                if (dir < 0) //Turn
+                {
+                    dir = (-dir) & 7;
+
+                    if ((g_Player->GetDirection() & 7) != dir)
+                    {
+                        g_PathFinder.Walk(false, (uint8_t)dir);
+                        walkDelay = (g_AssistantConfig.FastRotation() ? 50 : 100);
+                    }
+                }
+                else
+                {
+                    g_PathFinder.Walk((dir & 0x80) != 0, (uint8_t)(dir & 7));
+
+                    if (g_Player->FindLayer(OL_MOUNT) != nullptr)
+                    {
+                        walkDelay = ((dir & 0x80) != 0 ? 100 : 200);
+                    }
+                    else
+                    {
+                        walkDelay = ((dir & 0x80) != 0 ? 200 : 400);
+                    }
+                }
+
+                if (walkDelay != 0)
+                {
+                    // was g_Timer.elapsed() + walkDelay + 15 (the executor
+                    // ticks on g_Ticks here)
+                    m_NextMacroTick = g_Ticks + walkDelay + 15;
+                    return;
+                }
+
                 break;
+            }
             case MT_WRESTLING_STUN:
                 CPacketWrestlingStun().SendServer();
                 break;

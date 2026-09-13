@@ -2,22 +2,23 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (gameobjects/gameplayer.cpp). The tiledata lookups
-// (g_FileManager.m_StaticTiledata/...AnimID) go through GetStaticAnimID() until
-// the assistant filemanager round ports the tiledata source (plan §4.1:
-// deduplicate against the client's file readers); with the shim in place
-// UpdateAbilities falls back to the default ability pair.
+// (g_FileManager.m_StaticTiledata/...AnimID) read the client's own tiledata
+// (g_Data.m_Static, version-normalized by xuocore/uodata.cpp LoadTiledata).
 
 #include "gameplayer.h"
 #include "gameitem.h"
 #include "core/global.h"
+#include <xuocore/uodata.h> // g_Data.m_Static
 
 namespace xuoassist {
 
-// PORT-TODO(filemanager): return MulStaticTile1/2 AnimID for the graphic from
-// the assistant tiledata cache once managers/filemanager is ported/deduped.
+// was g_FileManager.m_StaticTiledata[graphic / 32].Tiles[graphic % 32].AnimID
 static ushort GetStaticAnimID(const ushort graphic)
 {
-    (void)graphic;
+    if ((size_t)graphic < g_Data.m_Static.size())
+    {
+        return g_Data.m_Static[graphic].AnimID;
+    }
     return 0;
 }
 

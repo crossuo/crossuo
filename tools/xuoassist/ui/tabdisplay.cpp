@@ -24,6 +24,7 @@
 #if defined(XUO_ASSISTANT)
 
 #include <external/gfx/imgui/imgui.h>
+#include <external/gfx/imgui/imgui_internal.h> // RegisterUserTexture (icon previews)
 
 #include "widgets.h"
 #include "assistanteventsui.h"
@@ -32,10 +33,94 @@
 #include "../core/global.h"
 #include "../managers/displaymanager.h"
 #include "../model/commonitems/displayitem.h"
+#include <map>
 
 namespace xuoassist {
 
 namespace {
+
+// --- icon previews (the Qt items editor showed the decoded static art in
+// --- the list rows; the ImGui list core is text-only, so the preview lives
+// --- next to the selected item's properties) -------------------------------
+
+// the ImGui upload of a decoded CDisplayIcon, cached per (graphic<<16)|hue,
+// LRU-capped (a long session can preview many graphic+hue combos; without
+// the cap the CPU-side pixel buffers accumulate for the process lifetime)
+static constexpr int MAX_ICON_TEXTURES = 64;
+struct CachedIconTexture
+{
+    ImTextureData *tex;
+    int lastUseFrame; // ImGui::GetFrameCount() at the last cache hit / insert
+};
+static std::map<uint, CachedIconTexture> s_IconTextures;
+// evicted entries: queued for the backend destroy, unregistered + freed once
+// it reports Destroyed (they cannot be deleted early: they still sit in the
+// context's UserTextures list)
+vector<ImTextureData *> s_IconRetired;
+
+static void IconReapRetired()
+{
+    for (size_t i = 0; i < s_IconRetired.size();)
+    {
+        ImTextureData *tex = s_IconRetired[i];
+        if (tex->Status == ImTextureStatus_Destroyed)
+        {
+            ImGui::UnregisterUserTexture(tex);
+            delete tex;
+            s_IconRetired.erase(s_IconRetired.begin() + i);
+        }
+        else
+        {
+            i++;
+        }
+    }
+}
+
+static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint key)
+{
+    if (icon == nullptr || icon->Width <= 0 || icon->Height <= 0 ||
+        icon->Pixels.empty() || ImGui::GetCurrentContext() == nullptr)
+    {
+        return nullptr;
+    }
+
+    IconReapRetired();
+
+    const int frame = ImGui::GetFrameCount();
+    auto i = s_IconTextures.find(key);
+    if (i != s_IconTextures.end())
+    {
+        i->second.lastUseFrame = frame;
+        return i->second.tex;
+    }
+
+    if ((int)s_IconTextures.size() >= MAX_ICON_TEXTURES)
+    {
+        // evict the least recently used entry: queue the backend destroy and
+        // move it to the retire list (the canonical sequence of the map resize
+        // retirements in AssMap_RadarTexture)
+        auto oldest = s_IconTextures.begin();
+        for (auto it = s_IconTextures.begin(); it != s_IconTextures.end(); ++it)
+        {
+            if (it->second.lastUseFrame < oldest->second.lastUseFrame)
+            {
+                oldest = it;
+            }
+        }
+        oldest->second.tex->WantDestroyNextFrame = true;
+        s_IconRetired.push_back(oldest->second.tex);
+        s_IconTextures.erase(oldest);
+    }
+
+    ImTextureData *tex = new ImTextureData();
+    tex->Create(ImTextureFormat_RGBA32, icon->Width, icon->Height);
+    tex->SetStatus(ImTextureStatus_WantCreate);
+    tex->UseColors = true;
+    memcpy(tex->GetPixels(), icon->Pixels.data(), (size_t)tex->GetSizeInBytes());
+    ImGui::RegisterUserTexture(tex);
+    s_IconTextures[key] = { tex, frame };
+    return tex;
+}
 
 // --- page state (the Qt widget fields) ---------------------------------------
 char s_TitleData[2048] = { 0 };   // te_DisplayTitleData
@@ -453,6 +538,29 @@ void draw_items_editor_page()
     ImGui::TextUnformatted("Properties");
     ImGui::Separator();
 
+    // the static-art preview of the selected item (the Qt list rows carried
+    // the decoded icon; the ImGui list core is text-only, so the preview
+    // sits with the properties of the selected entry)
+    if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
+    {
+        const CDisplayItem &selItem = items[s_SelectedItem].m_Item;
+        const uint key = (uint)((selItem.GetGraphic() << 16) | selItem.GetHue());
+        ImTextureData *tex = IconTextureFor(g_DisplayManager.GetIcon(selItem), key);
+        if (tex != nullptr)
+        {
+            const float box = 44.0f;
+            const float scale =
+                ImMin(box / tex->Width, box / tex->Height);
+            const float w = tex->Width * scale;
+            const float h = tex->Height * scale;
+            const ImVec2 pos = ImGui::GetCursorScreenPos();
+            ImGui::GetWindowDrawList()->AddImage(
+                tex->GetTexRef(), pos, ImVec2(pos.x + w, pos.y + h));
+            ImGui::Dummy(ImVec2(box, box));
+            ImGui::SameLine();
+        }
+    }
+
     if (ImGui::BeginCombo("Type##display_item", command_at(s_ItemTypeIndex).Name.c_str()))
     {
         const int count = command_count();
@@ -762,6 +870,25 @@ bool TabDisplay_ConsumeTitleDirty()
     }
     s_TitleDirty = false;
     return true;
+}
+
+// Shutdown: frees every cached item-preview icon texture (CPU delete AFTER the
+// ImGui context is gone - the same Phase 2 ordering as the atlas / AssMap /
+// logo: the backend reclaimed the GL names inside ui_shutdown by walking the
+// registered textures with RefCount == 1). Entries evicted at runtime but not
+// yet reaped are plain CPU memory by now as well.
+void TabDisplay_AfterImGuiShutdown()
+{
+    for (auto &kv : s_IconTextures)
+    {
+        delete kv.second.tex;
+    }
+    s_IconTextures.clear();
+    for (ImTextureData *tex : s_IconRetired)
+    {
+        delete tex;
+    }
+    s_IconRetired.clear();
 }
 
 void TabDisplay_RequestTitleRedraw()

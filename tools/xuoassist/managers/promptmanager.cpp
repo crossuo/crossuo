@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/promptmanager.cpp). The macro recording /
-// waiting branches keep PORT-TODO(phase-3) markers.
+// Ported from X:UO Assist (managers/promptmanager.cpp). The macro wait tap
+// (the PlayWaiting port) and the recording branch run through
+// g_MacroExecutor.
 
 #include "promptmanager.h"
 #include "../core/assist.h"
 #include "../core/packets.h"
+#include "../macros/macroexecutor.h"
 #include "../model/gameobjects/gameworld.h"
 #include <common/str.h>
 
@@ -47,8 +49,13 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
     m_ID = reader.ReadUInt32BE();
     m_Exists = true;
 
-    // PORT-TODO(phase-3): was `g_TabMacros->GetPlaying() &&
-    // g_TabMacros->PlayWaiting({ MT_WAIT_FOR_PROMPT })` -> return false.
+    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
+    // MT_WAIT_FOR_PROMPT })` -> return false: a playing macro waiting on the
+    // prompt consumes the packet (tabmacros.cpp:1023 semantics).
+    if (g_MacroExecutor.IsPlaying() && g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_PROMPT }))
+    {
+        return false;
+    }
 
     if (!m_Hooks.empty())
     {
@@ -87,9 +94,33 @@ bool CPromptManager::OnPacketSend(CDataReader &reader)
     {
         m_Exists = false;
 
-        // PORT-TODO(phase-3): the recording branch parsed the response text
-        // and pushed CMacroWithStringValue(MT_WAIT_FOR_PROMPT, text) into
-        // g_TabMacros->AddAction when a macro was recording.
+        // tabmacros recording (Qt promptmanager): parse the response text
+        // the client is about to answer with and record it as the
+        // MT_WAIT_FOR_PROMPT action value
+        if (g_World != nullptr && g_MacroExecutor.IsRecording())
+        {
+            int length = (int)reader.GetSize() - 15;
+            reader.Move(8);
+            uint response = reader.ReadUInt32BE();
+            string text = "";
+
+            if (response != 0u)
+            {
+                if (*reader.GetStart() == 0xC2)
+                {
+                    reader.Move(4);
+                    length = (length - 4) / 2;
+
+                    text = str_from(reader.ReadWString(length));
+                }
+                else
+                {
+                    text = reader.ReadString(length);
+                }
+            }
+
+            g_MacroExecutor.Record(new CMacroWithStringValue(MT_WAIT_FOR_PROMPT, text));
+        }
 
         return true;
     }

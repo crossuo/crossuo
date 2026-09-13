@@ -8,7 +8,8 @@
 // OnCommand* slots are inlined into the handlers below so no signal hub is
 // ported. Bodies that belong to a later round (hotkeys Phase 3, scripts
 // Phase 4, journal Phase 4, text window Phase 2) keep their behavior
-// documented as PORT-TODO(phase-N) markers.
+// landed with those rounds (hotkeys/macros, scripts, journal, text
+// window); the remaining deviations are commented inline as DEVIATION.
 
 #ifndef XUOASSIST_TEXTCOMMANDMANAGER_H
 #define XUOASSIST_TEXTCOMMANDMANAGER_H

@@ -78,6 +78,16 @@ public:
     bool Save(const fs_path &path, bool autoFormat = true) const;
 };
 
+// Crash-safe file write (master plan §8.1 "Config corruption mid-save"):
+// writes `data` to `<path>.tmp` in the same directory, flushes it to disk,
+// preserves the original file mode when the target exists, then atomically
+// renames the temp file over `path` - readers see either the old or the new
+// content, never a partial file, even on a crash mid-write. Any failure
+// leaves the original untouched (the stale temp is removed) and is logged.
+// Load paths simply ignore a leftover `<path>.tmp`; the next successful save
+// truncates it.
+bool AtomicFileWrite(const fs_path &path, const void *data, size_t size);
+
 // Runtime round-trip self-test (verification item 3): parse -> write -> parse
 // on a synthetic document per assistant schema. Returns false on mismatch and
 // logs the failure. Invoked once from AssistantConfig::LoadGlobals (all

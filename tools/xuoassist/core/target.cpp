@@ -3,15 +3,23 @@
 
 // Ported from X:UO Assist (assist/target.cpp); see target.h for the
 // assistant-owned vs client ::g_Target split. The macro-recording branches
-// (g_TabMacros) are Phase 3 and keep PORT-TODO markers.
+// run through g_MacroExecutor; the tile-hook resolution reads the client's
+// own map/statics blocks and tiledata (the Phase-6 replacement for the
+// assistant filemanager's GetTile).
 
 #include "target.h"
 #include "assist.h"
 #include "assistantevents.h"
+#include "clientversion.h" // GetClientVersion (the CV_7090 surface-height gate)
 #include "packets.h"
 #include "../config/assistantconfig.h"
+#include "../macros/macroexecutor.h"
 #include "../model/gameobjects/gameworld.h"
 #include "../model/gameobjects/gameplayer.h"
+#include "../core/textparser.h"
+#include <xuocore/mulstruct.h>  // MAP_BLOCK / STATICS_BLOCK
+#include <xuocore/uodata.h>    // g_Data.m_Static (the client's tiledata)
+#include "Managers/MapManager.h" // ::g_MapManager (map/statics block access)
 
 namespace xuoassist {
 
@@ -25,6 +33,151 @@ static string to_lower_copy(string text)
 }
 
 CTarget g_Target;
+
+namespace {
+
+// The tile flags/name filter of the Qt CFileManager::GetTile path
+// (filemanager.cpp:804). TNF_BY_GRAPHIC is 0: a bare numeric graphic means
+// "match exactly this graphic".
+enum
+{
+    TNF_BY_GRAPHIC = 0x00,
+    TNF_MINE = 0x01,
+    TNF_TREE = 0x02,
+    TNF_WATER = 0x04,
+    TNF_LAND = 0x08,
+    TNF_ANY = 0x10
+};
+
+// One resolved tile (the Qt CTileInfo record).
+struct TARGET_TILE_INFO
+{
+    ushort Graphic;
+    int X;
+    int Y;
+    int Z;
+    bool Land;
+};
+
+// CFileManager::TileNameToFlags (filemanager.cpp:721): "|"-separated tokens;
+// the category words OR into the flags, anything else parses as a graphic.
+void TargetTileNameToFlags(const string &tileName, ushort &graphic, ushort &flags)
+{
+    flags = TNF_BY_GRAPHIC;
+
+    CTextParser parser(tileName, "|", "", "");
+    vector<string> list = parser.ReadTokens();
+
+    for (const string &str : list)
+    {
+        if (str == "mine")
+        {
+            flags |= TNF_MINE;
+        }
+        else if (str == "tree")
+        {
+            flags |= TNF_TREE;
+        }
+        else if (str == "water")
+        {
+            flags |= TNF_WATER;
+        }
+        else if (str == "land")
+        {
+            flags |= TNF_LAND;
+        }
+        else if (str == "any")
+        {
+            flags |= TNF_ANY;
+        }
+        else
+        {
+            graphic = CAssistant::TextToGraphic(str);
+        }
+    }
+}
+
+// CFileManager::GetTile (filemanager.cpp:804) against the client's own
+// map/statics blocks (::g_MapManager - the same access the radar window
+// uses). The mine/tree/water category lists lived in the assistant's own
+// tile caches (m_MineTiles/m_TreeTiles/m_WaterTiles, fed from Config text
+// files that were never part of the ported config); those categories resolve
+// like the original's empty-list path.
+// DEVIATION: "tree"/"water"/"mine" hooks cannot match by category.
+vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const string &tileName)
+{
+    vector<TARGET_TILE_INFO> result;
+
+    ushort tileID = 0;
+    ushort flags = 0;
+    TargetTileNameToFlags(tileName, tileID, flags);
+
+    if (EnabledCommandExtendedTargetTile() && g_World != nullptr)
+    {
+        CIndexMap *index = ::g_MapManager.GetIndex(g_CurrentMap, x >> 3, y >> 3);
+        if (index != nullptr && index->MapAddress != 0)
+        {
+            const int tileX = x & 7;
+            const int tileY = y & 7;
+
+            TARGET_TILE_INFO land = { tileID, x, y, z, false };
+
+            MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
+            const MAP_CELLS &cell = pmb->Cells[(tileY * 8) + tileX];
+            land.Graphic = (ushort)(cell.TileID & 0x3FFF);
+            land.Z = cell.Z;
+            land.Land = true;
+
+            if ((flags & TNF_LAND) != 0)
+            {
+                // CanBeAdded in by-graphic mode needs an exact graphic match
+                // (flags == TNF_BY_GRAPHIC); the LAND bit alone takes the cell
+                if (tileID == 0u || (flags == TNF_BY_GRAPHIC && land.Graphic == tileID))
+                {
+                    result.push_back(land);
+                }
+
+                if (result.empty())
+                {
+                    result.push_back(TARGET_TILE_INFO{ tileID, x, y, z, false });
+                }
+                return result;
+            }
+
+            STATICS_BLOCK *sb = (STATICS_BLOCK *)index->StaticAddress;
+            if (sb != nullptr)
+            {
+                const int count = index->StaticCount;
+                for (int c = 0; c < count; c++, sb++)
+                {
+                    if ((sb->Color != 0u) && sb->Color != 0xFFFF && tileX == sb->X &&
+                        tileY == sb->Y)
+                    {
+                        if ((flags == TNF_BY_GRAPHIC && sb->Color == tileID) ||
+                            (flags & TNF_ANY) != 0)
+                        {
+                            result.push_back(TARGET_TILE_INFO{ sb->Color, x, y, sb->Z, false });
+                        }
+                    }
+                }
+            }
+
+            if ((flags & TNF_ANY) != 0 && result.empty())
+            {
+                result.push_back(land);
+            }
+        }
+    }
+
+    if (result.empty())
+    {
+        result.push_back(TARGET_TILE_INFO{ tileID, x, y, z, false });
+    }
+
+    return result;
+}
+
+} // namespace
 
 CTargetHook::CTargetHook(const uint &serial)
 {
@@ -106,15 +259,38 @@ bool CTarget::CheckHook()
                     z = g_Player->GetZ();
                 }
 
-                // Was g_FileManager.GetTile(x, y, z, hook.Tile) + the
-                // tiledata surface-height fixup:
-                // PORT-TODO(phase-1-filemanager): tile-name resolution needs
-                // the map/tiledata access that lands with the filemanager
-                // dedup round; until then the numeric-graphic fallback below
-                // behaves like the original's empty-tile-list path.
-                ushort tileGraphic = CAssistant::TextToGraphic(hook.Tile);
+                // The GetTile port (Qt filemanager.cpp:804) + the tiledata
+                // surface-height fixup of the Qt CheckHook: the client's own
+                // tiledata (g_Data.m_Static, version-normalized) provides the
+                // surface flags/heights.
+                int tileZ = z;
+                ushort tileGraphic = 0;
 
-                SendTargetTile(tileGraphic, x, y, z);
+                vector<TARGET_TILE_INFO> tileList = GetTileAt(x, y, z, hook.Tile);
+                if (!tileList.empty())
+                {
+                    const TARGET_TILE_INFO &tileInfo = tileList[0];
+
+                    tileGraphic = tileInfo.Graphic;
+                    tileZ = tileInfo.Z;
+
+                    if (!tileInfo.Land && GetClientVersion() >= CV_7090 &&
+                        ((size_t)tileGraphic < g_Data.m_Static.size()))
+                    {
+                        const MulStaticTile2 &st = g_Data.m_Static[tileGraphic];
+
+                        if ((st.Flags & 0x00000200) != 0) // IsSurface
+                        {
+                            tileZ += st.Height;
+                        }
+                    }
+                }
+                else
+                {
+                    tileGraphic = CAssistant::TextToGraphic(hook.Tile);
+                }
+
+                SendTargetTile(tileGraphic, x, y, (short)tileZ);
             }
         }
 
@@ -237,9 +413,13 @@ bool CTarget::SetRecvData(CDataReader &reader)
 
     bool result = (CheckHook() && !m_FromAssist);
 
-    // PORT-TODO(phase-3): when a macro is playing and waits for
-    // MT_WAIT_FOR_TARGET_OBJECT/MT_WAIT_FOR_TARGET_TILE, the original
-    // consumed the target (PlayWaiting) and returned false.
+    // a playing macro waiting on a target cursor consumes the reply and
+    // answers it itself (the Qt PlayWaiting tap, assist/target.cpp:281)
+    if (result && g_MacroExecutor.IsPlaying() &&
+        g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_TARGET_OBJECT, MT_WAIT_FOR_TARGET_TILE }))
+    {
+        return false;
+    }
 
     return result;
 }
@@ -261,7 +441,12 @@ bool CTarget::SetMultiData(CDataReader &reader)
 
     bool result = (CheckHook() && !m_FromAssist);
 
-    // PORT-TODO(phase-3): macro PlayWaiting branch (see SetRecvData).
+    // the SetRecvData PlayWaiting tap (assist/target.cpp:308)
+    if (result && g_MacroExecutor.IsPlaying() &&
+        g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_TARGET_OBJECT, MT_WAIT_FOR_TARGET_TILE }))
+    {
+        return false;
+    }
 
     return result;
 }
