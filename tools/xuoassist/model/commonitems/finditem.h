@@ -21,9 +21,9 @@ enum FIND_TOKEN_STATE
 
 class CFindItem
 {
-    SETGETE(string, Graphic, "", OnChangeGraphic)
-    SETGETE(string, Color, "", OnChangeColor)
-    SETGET(string, Comment, "")
+    SETGETCE(string, Graphic, "", OnChangeGraphic)
+    SETGETCE(string, Color, "", OnChangeColor)
+    SETGETC(string, Comment, "")
 
 protected:
     vector<ushort> m_ListGraphic;

@@ -1,0 +1,238 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+// ImGui widget kit for the assistant UI (master plan §6). Replaces the Qt
+// custom widgets the tab screens were built from:
+//   Icons_*      - the images/* atlas (stb_image -> one registered texture)
+//   IconButton   - QImagedPushButton (flat icon button, hover/pressed colors)
+//   ColorSwatch  - QColoredPushButton (+'...' picker for true RGB fields)
+//   HueSwatch    - 15-bit UO color preview swatch (the 0x02B2-style fields)
+//   ComboGroup   - QComboBox + CComboDelegate ('#' rows = group separators)
+//   ListButtons  - the add/save/remove/from-target icon row shared by all
+//                  list tabs (from-target stays disabled until phase 3)
+//   NameList     - CExtendedListWidget (drag reorder, double-click rename with
+//                  GetFreeName, Delete-key removal, optional check column)
+//   ContentList  - the Find/Ignore "content" rows (graphic/color/comment)
+//   StatusBar    - the 1 s information line (le_Information)
+//
+// Draw-path rules (plan §7 Phase 2): no per-frame allocations - row labels go
+// through a frame-static buffer, the inline rename buffer is a fixed 128
+// bytes shared by all lists (one row edits at a time).
+
+#ifndef XUOASSIST_UI_WIDGETS_H
+#define XUOASSIST_UI_WIDGETS_H
+
+#include <external/gfx/imgui/imgui.h>
+#include <stdint.h>
+
+#include "../core/global.h"
+#include "../model/commonitems/finditem.h"
+#include "../model/commonitems/ignoreitem.h"
+
+namespace xuoassist {
+
+// --- icon atlas (tools/xuoassist/assets/*.png, 32x32 cells) -----------------
+enum XA_ICON
+{
+    XA_ICON_ADD = 0,
+    XA_ICON_SAVE,
+    XA_ICON_REMOVE,
+    XA_ICON_TARGET,
+    XA_ICON_TRAY,
+    XA_ICON_HOTKEY,
+    XA_ICON_MAP,
+    XA_ICON_MACRO_DEFAULT,
+    XA_ICON_MACRO_RECORD,
+    XA_ICON_MACRO_START,
+    XA_ICON_MACRO_STOP,
+    XA_ICON_MACRO_PAUSE,
+    XA_ICON_MACRO_RESUME,
+    XA_ICON_MACRO_EDIT,
+    XA_ICON_CORPSE,
+    XA_ICON_COUNT
+};
+
+// Loads the atlas and registers it with the ImGui backend. Safe to call every
+// frame (idempotent); needs a live ImGui context, so the first draw does it.
+bool Icons_Init();
+// Frees the CPU-side pixels only; must run AFTER ui_shutdown/DestroyContext.
+// The GL texture is reclaimed by the renderer backend during its own shutdown
+// (ImGui_ImplOpenGL3_Shutdown walks the still-registered textures: RefCount
+// must still be 1, so the atlas must NOT be unregistered before that). The
+// assistant window calls this right after ui_shutdown returns.
+void Icons_Shutdown();
+
+// --- IconButton (was QImagedPushButton, imagedpushbutton.cpp:10-24) ---------
+// Flat icon button: hover rgb(192,192,192), pressed rgb(160,160,160) with the
+// 2px press shift. size 0 = one icon cell sized from the font height.
+bool IconButton(
+    XA_ICON icon,
+    const char *tip,
+    bool enabled = true,
+    float size = 0.0f,
+    const char *idSeed = "");
+
+// --- color helpers ----------------------------------------------------------
+// 15-bit UO color -> RGBA preview (approximation: 5-bit channels x8).
+ImU32 UOColorToRGBA(ushort color);
+// Preview-only swatch for the 0x02B2-style hue fields (the Qt app had no RGB
+// picker for those: its '...' button sends a dye packet instead).
+void HueSwatch(ushort uoColor, float size = 18.0f);
+// QColoredPushButton + QColorDialog for true RGB fields (Display tab, phase 4).
+bool ColorSwatch(const char *id, ImU32 *rgba, float size = 18.0f);
+
+// --- ComboGroup (QComboBox rows + CComboDelegate, comboboxdelegate.cpp) -----
+// Items starting with '#' are painted as lightGray group separator rows.
+bool ComboGroup(const char *id, int *current, const char *const items[], int count);
+
+// --- list tab icon button row ----------------------------------------------
+enum
+{
+    XALB_NONE = 0,
+    XALB_ADD = 1,
+    XALB_SAVE = 2,
+    XALB_REMOVE = 4,
+    XALB_TARGET = 8 // reserved (phase 3 target pipeline)
+};
+
+// Draws the add/save/remove/from-target row; returns the pressed buttons as a
+// XALB_* bitmask. The from-target button renders disabled with the phase 3
+// tooltip (plan rule: no target capture in this round). idSeed must be unique
+// per row instance (a tab can host several list panes).
+int ListButtons(const char *idSeed);
+
+// --- hex line edits (the Qt le_* "0x..." fields) -----------------------------
+// The stored value keeps the "0x" prefix; the 'x' is rejected by ImGui's
+// hexadecimal filter, so it is stripped into the edit buffer on edit start and
+// re-prefixed on commit. Returns true when the value was committed.
+bool HexEditField(const char *id, char *value, size_t valueSize, float width = 0.0f);
+bool HexEditField(const char *id, string *value, float width = 0.0f);
+
+// --- generic list core (implemented in widgets.cpp) -------------------------
+struct XA_LIST_RENAME
+{
+    int row;
+    char buf[128];
+    ImGuiID List;    // owning list: a rename never renders/commits elsewhere
+    uint Generation; // container mutation count captured at Begin
+};
+
+// Frame-static scratch buffers/state shared by all list widgets.
+char *ListRowLabel();                          // reused every frame
+bool ListNamesEqual(const string &a, const char *b); // case-insensitive
+XA_LIST_RENAME *ListRenameBegin(ImGuiID list, int row, const char *name);
+XA_LIST_RENAME *ListRenameActive();
+void ListRenameEnd();
+
+struct XA_LIST_VIEW
+{
+    void *Ctx{ nullptr };
+    int (*Count)(void *ctx){ nullptr };
+    const char *(*Name)(void *ctx, int index){ nullptr }; // may use ListRowLabel()
+    void (*SetName)(void *ctx, int index, const char *name){ nullptr };
+    void (*Insert)(void *ctx, int index){ nullptr };      // new row at index
+    void (*Remove)(void *ctx, int index){ nullptr };
+    void (*Move)(void *ctx, int from, int to){ nullptr };
+    bool *(*Check)(void *ctx, int index){ nullptr };      // optional checkbox column
+    bool AllowRename{ true };
+};
+
+// Renders the list (table with clipper, drag reorder, Delete key). Returns
+// true when the container changed so the caller can persist immediately.
+bool ListCore(
+    const char *id,
+    const XA_LIST_VIEW &view,
+    int *selected,
+    bool checkColumn,
+    float height);
+
+// --- NameList (CExtendedListWidget) ----------------------------------------
+// One selectable row per item. label/setLabel name the row's display field
+// (e.g. &CTypeEntry::Name for the config lists, &CFilterSpeechEntry::Text for
+// the speech filters).
+// - double click: inline rename; empty or colliding names are uniquified with
+//   the original GetFreeName algorithm (extendedlistwidget.cpp:50-114)
+// - Delete key: removes the selected row while a row is hovered and the
+//   assistant is not capturing text (does not steal keys the game wants)
+// - drag & drop: reorders rows (Qt emitted itemDropped; the caller saved)
+// - checkColumn: renders the row's Enabled state as a leading checkbox
+//   (friends/enemies rows carried a Qt::CheckState in the Qt app)
+namespace detail {
+
+// friends/enemies rows carry the Qt::CheckState as an Enabled member; other
+// row types have none (the second overload only matches then)
+template <class U> auto RowEnabled(U &item, int) -> decltype(&item.Enabled) { return &item.Enabled; }
+template <class U> bool *RowEnabled(U &, long) { return nullptr; }
+
+} // namespace detail
+
+// context handed to the XA_LIST_VIEW callbacks (captureless lambdas only:
+// plain function pointers keep the draw path free of allocations)
+template <class T> struct XA_NAMED_LIST_CTX
+{
+    vector<T> *Items;
+    const char *(*Label)(const T &);
+    void (*SetLabel)(T &, const char *);
+};
+
+template <class T>
+bool NameList(
+    const char *id,
+    vector<T> &items,
+    int *selected,
+    const char *(*label)(const T &),
+    void (*setLabel)(T &, const char *),
+    bool checkColumn = false,
+    float height = -1.0f)
+{
+    XA_NAMED_LIST_CTX<T> ctx = { &items, label, setLabel };
+    XA_LIST_VIEW view;
+    view.Ctx = &ctx;
+    view.Count = [](void *c) -> int { return (int)((XA_NAMED_LIST_CTX<T> *)c)->Items->size(); };
+    view.Name = [](void *c, int index) -> const char *
+    {
+        XA_NAMED_LIST_CTX<T> *x = (XA_NAMED_LIST_CTX<T> *)c;
+        return x->Label((*x->Items)[index]);
+    };
+    view.SetName = [](void *c, int index, const char *name)
+    {
+        XA_NAMED_LIST_CTX<T> *x = (XA_NAMED_LIST_CTX<T> *)c;
+        x->SetLabel((*x->Items)[index], name);
+    };
+    view.Insert = [](void *c, int index)
+    {
+        vector<T> *v = ((XA_NAMED_LIST_CTX<T> *)c)->Items;
+        v->insert(v->begin() + index, T());
+    };
+    view.Remove = [](void *c, int index)
+    {
+        vector<T> *v = ((XA_NAMED_LIST_CTX<T> *)c)->Items;
+        v->erase(v->begin() + index);
+    };
+    view.Move = [](void *c, int from, int to)
+    {
+        vector<T> *v = ((XA_NAMED_LIST_CTX<T> *)c)->Items;
+        const T item = (*v)[from];
+        v->erase(v->begin() + from);
+        v->insert(v->begin() + (to > from ? to - 1 : to), item);
+    };
+    view.Check = checkColumn
+        ? [](void *c, int index) -> bool *
+          { return detail::RowEnabled((*( (XA_NAMED_LIST_CTX<T> *)c )->Items)[index], 0); }
+        : (bool *(*)(void *, int))nullptr;
+    view.AllowRename = true;
+    return ListCore(id, view, selected, checkColumn, height);
+}
+
+// --- Find/Ignore content rows (CFindListItemListItem / CIgnoreListItem) -----
+// Displays "graphic color comment" / "serial graphic color comment" rows
+// (was CFindItem::UpdateText). Selection fills the editor fields below.
+bool FindContentList(const char *id, vector<CFindItem> &items, int *selected, float height = -1.0f);
+bool IgnoreContentList(const char *id, vector<CIgnoreItem> &items, int *selected, float height = -1.0f);
+
+// --- StatusBar (was the le_Information 1 s timer, assistform.cpp:539-575) ---
+void StatusBar_Draw(uint32_t sessionStartTicks);
+
+} // namespace xuoassist
+
+#endif // XUOASSIST_UI_WIDGETS_H

@@ -10,7 +10,13 @@ set(XUOASSIST_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "")
 
 set(XUOASSIST_SRCS
   "AssistantWindow.cpp"
-  "AssistantUI.cpp"
+  # Phase 2: the assistant shell, widget kit and the simple tabs (§6/§7)
+  "ui/assistantui.cpp"
+  "ui/assistanteventsui.cpp"
+  "ui/widgets.cpp"
+  "ui/tabmain.cpp"
+  "ui/tablists.cpp"
+  "ui/tabfilters.cpp"
   # Phase 1a: Qt-free foundation ported from xuoassist (plan §7 Phase 1 item 1)
   "core/global.cpp"
   "core/textconv.cpp"
@@ -79,3 +85,12 @@ target_include_directories(xuoassist PUBLIC
   ${COMMON_INCLUDE}
   ${CMAKE_SOURCE_DIR}/src
 )
+
+# Phase 2: icon-atlas assets (§6). Copied next to the binary so the runtime
+# lookup (assets/xuoassist, then next to the exe) finds them in dev builds.
+add_custom_command(
+  TARGET xuoassist POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+          "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+          "${CMAKE_BINARY_DIR}/assets/xuoassist"
+  COMMENT "Copying xuoassist icon assets")

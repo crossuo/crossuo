@@ -13,7 +13,7 @@ namespace xuoassist {
 
 class CIgnoreItem : public CFindItem
 {
-    SETGET(string, Serial, "")
+    SETGETC(string, Serial, "")
 
 public:
     CIgnoreItem();

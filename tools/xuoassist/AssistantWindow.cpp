@@ -16,7 +16,8 @@
 #include <external/gfx/ui.h>
 #include <xuocore/enumlist.h>
 #include <xuocore/uodata.h> // ExeFilePath
-#include "AssistantUI.h"
+#include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
+#include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
 #include "Globals.h"        // g_GameState, g_Ticks
 #include "Wisp/WispWindow.h" // Wisp::g_WispWindow
 
@@ -142,6 +143,10 @@ static bool init()
     }
     s_initialized = true;
     s_sessionStartTicks = g_Ticks;
+    xuoassist::AssistantUI_Init(); // journal pane events consumer
+    // icon atlas lifecycle is bound to the ImGui context: registered after it
+    // exists, released after it is destroyed (see AssistantWindow_Shutdown)
+    xuoassist::Icons_Init();
     Info(Assistant, "initialized (ini: %s)", s_iniFile);
     return true;
 }
@@ -168,6 +173,10 @@ bool AssistantWindow_Toggle()
 
 void AssistantWindow_FrameTick()
 {
+    // per-frame assistant logic that must run while visible or not
+    if (s_initialized)
+        xuoassist::AssistantUI_Tick(); // auto-reconnect countdown (was TabMain::m_ReconnectTimer)
+
     // in-game only (ADR D10): logout, disconnect or back-to-main-menu shuts the
     // assistant down, no matter whether its windows are docked or popped out;
     // the client quit path is covered by the shutdown hook in Run()
@@ -246,7 +255,7 @@ void AssistantWindow_DrawOverlay()
     // at all, so this pass (and any popped-out window) freezes until restore;
     // acceptable for now
     ui_newframe(s_ctx);
-    AssistantUI_Draw(&s_visible, s_sessionStartTicks);
+    xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
     ui_draw(s_ctx);
 
     // belt and braces: ui_draw restores the game context, nothing should have
@@ -263,9 +272,21 @@ void AssistantWindow_Shutdown()
         return;
 
     sync_text_input(false);
+    // flush pending edits + uninstall the UI events consumer while the ImGui
+    // context (and the registered icon texture) still exist. The atlas stays
+    // registered with RefCount == 1 so that ui_shutdown below is the one to
+    // release its GL texture (ImGui_ImplOpenGL3_Shutdown -> DestroyDeviceObjects
+    // destroys every registered texture whose RefCount is 1,
+    // imgui_impl_opengl3.cpp:1023-1031); freeing it earlier would leave a
+    // dangling ImTextureData in PlatformIO.Textures (UAF) and leak the GL name
+    xuoassist::AssistantUI_Shutdown();
     // destroys the ImGui context and every platform window it created; must
     // not SDL_Quit: the client keeps running
     ui_shutdown(s_ctx);
+    // only now, with the context gone and the GL name released, may the
+    // CPU-side atlas pixels be freed (Icons_Shutdown is idempotent and only
+    // deletes the ImTextureData object)
+    xuoassist::Icons_Shutdown();
     s_initialized = false;
     s_visible = false;
     s_ctx = ui_context();
