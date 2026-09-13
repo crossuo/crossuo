@@ -321,8 +321,21 @@ if(XUO_WINDOWS)
   set(XUO_FILES ${XUO_FILES} ${CMAKE_SOURCE_DIR}/resources/client.rc)
 endif()
 
-if(XUO_WINDOWS OR XUO_EMSC)
+# The in-client assistant builds ONE self-contained executable (real main(),
+# no crossuo.so plugin split): the dlopen loader exe (CrossApp.cpp) and the
+# reverse plugin-install channel (g_oaReverse / set_install) only exist for
+# the exe+so layout.
+if(XUO_ASSISTANT_ENABLED AND NOT XUO_WINDOWS AND NOT XUO_EMSC)
+  set(XUO_ASSISTANT_STANDALONE On)
+endif()
+
+if(XUO_WINDOWS OR XUO_EMSC OR XUO_ASSISTANT_STANDALONE)
   add_executable(crossuo ${XUO_FILES})
+  # selects the main() entry in Main.cpp (the plugin_main entry of the
+  # exe+so layout is not built here)
+  if(XUO_ASSISTANT_STANDALONE)
+    target_compile_definitions(crossuo PRIVATE XUO_STANDALONE=1)
+  endif()
 else()
   # crossuo loader
   add_executable(client CrossApp.cpp)
@@ -365,6 +378,9 @@ endif()
 
 if(XUO_WINDOWS)
 elseif(XUO_EMSC)
+elseif(XUO_ASSISTANT_STANDALONE)
+  # single-executable assistant build: no libcrossuo.so to copy and no
+  # loader exe to depend on
 else()
   add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
   add_dependencies(crossuo client)

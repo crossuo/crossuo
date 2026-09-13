@@ -33,7 +33,7 @@
 #include "Managers/ConnectionManager.h"
 #include "Managers/PacketManager.h"
 
-#if !defined(XUO_WINDOWS)
+#if !defined(XUO_WINDOWS) && !defined(XUO_STANDALONE)
 #include <dlfcn.h>
 #define XUO_EXPORT extern "C" __attribute__((visibility("default")))
 #else
@@ -589,7 +589,7 @@ static int Run()
     return EXIT_SUCCESS;
 }
 
-#if !defined(XUO_WINDOWS)
+#if !defined(XUO_WINDOWS) && !defined(XUO_STANDALONE)
 XUO_EXPORT int plugin_main(int argc, char **argv)
 #else
 int main(int argc, char **argv)
@@ -704,7 +704,7 @@ int main(int argc, char **argv)
     return ret;
 }
 
-#if !defined(XUO_WINDOWS)
+#if !defined(XUO_WINDOWS) && !defined(XUO_ASSISTANT)
 XUO_EXPORT void set_install(REVERSE_PLUGIN_INTERFACE *p)
 {
     g_oaReverse.Install = p->Install;

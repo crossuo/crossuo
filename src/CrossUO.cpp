@@ -169,7 +169,7 @@
 
 extern po::parser g_cli;
 
-#if !defined(XUO_WINDOWS)
+#if !defined(XUO_WINDOWS) && !defined(XUO_ASSISTANT)
 REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
 
@@ -1276,11 +1276,21 @@ void CGame::LoadPlugins()
     g_PluginClientInterface.PathFinder = &g_Interface_PathFinder;
     g_PluginClientInterface.FileManager = &g_Interface_FileManager;
 
-    // Load X:UO Assist first, it is a special plugin due Qt mainthread issue
+#if defined(XUO_ASSISTANT)
+    // Cutover (master plan Phase 6 item 4): with the assistant linked into
+    // the client, the external Qt-era xuoassist plugin is superseded - its
+    // packet taps, UI and script runtime are all provided in-process now, and
+    // loading both would mean two assistants fighting over the same packets.
+    // (Legacy behavior: X:UO Assist was loaded first, a special plugin due
+    // to the Qt mainthread issue.) The remaining plugin list below is
+    // untouched; users can still load the legacy dll manually (plugins.xml /
+    // a renamed copy) if ever needed.
+#else
 #if defined(XUO_WINDOWS)
     LoadPlugin(ExeFilePath("xuoassist.dll"), "Install", 0xFFFFFFFF);
 #else
     InstallPlugin(g_oaReverse.Install, 0xFFFFFFFF);
+#endif
 #endif
 
     CPluginPacketSkillsList().SendToPlugin();

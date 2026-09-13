@@ -161,5 +161,10 @@ struct REVERSE_PLUGIN_INTERFACE
 };
 #pragma pack(pop)
 
+// the reverse plugin-install channel of the exe+so layout; the single
+// executable assistant build (XUO_ASSISTANT) drops it together with the
+// crossuo.so split
+#if !defined(XUO_ASSISTANT)
 extern REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #define CROSSUO_CLIENT "./crossuo.so"
+#endif
