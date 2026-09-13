@@ -10,7 +10,8 @@
 //   - XMLElement: name + ordered attributes + child elements + optional text.
 //   - XMLDocument: Parse()/Load() a document into Root, Write()/Save() it back.
 //
-// The writer reproduces QXmlStreamWriter's default formatting:
+// The writer's default formatting is kept byte-compatible
+//   with the original profile files:
 //   <?xml version="1.0" encoding="UTF-8"?>\n and 4-space autoformat indents,
 //   <tag a="1"/> for empty elements, entities &amp;&lt;&gt;&quot; (and \n,\r,\t
 //   as character references) inside attribute values.
@@ -21,7 +22,7 @@
 //   - mixed content is not modeled - character data collapses into the
 //     element's Text (our schemas never mix text with child elements);
 //   - comments and processing instructions are skipped on parse;
-//   - attribute order is preserved, not sorted (same as QXmlStreamWriter);
+//   - attribute order is preserved, not sorted;
 //   - the parser is not a general-purpose hardened XML parser: it is built for
 //     the assistant's own profile files.
 
@@ -71,7 +72,7 @@ public:
     bool Parse(const std::string &text);
     bool Load(const fs_path &path);
 
-    // autoFormat mirrors QXmlStreamWriter::setAutoFormatting(true) (the
+    // autoFormat enables the indented formatting above (the
     // assistant writers always used it).
     std::string Write(bool autoFormat = true) const;
     bool Save(const fs_path &path, bool autoFormat = true) const;

@@ -116,7 +116,7 @@ public:
     HANDLER_COMMAND(setpvpcaller);
 
     // Command-body helpers moved out of the replaced CCommandManager
-    // (commandmanager.cpp:493-583 GetFindFlags / GetJournalFlags /
+    // (GetFindFlags / GetJournalFlags /
     // GetSkillsFlags); used by the handlers above.
     static ushort GetFindFlags(const string &text);
     static uchar GetJournalFlags(const string &text);

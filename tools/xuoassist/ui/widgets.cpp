@@ -55,9 +55,8 @@ const char *const DOCS_URL = "https://crossuo.com/book/scripting/scripting.html"
 
 void OpenURL(const char *url)
 {
-    // was QDesktopServices::openUrl (tababout.cpp:26-42); SDL is 2.0.10
-    // (no SDL_OpenURL) so the client's own launcher (Platform::OpenBrowser,
-    // src/Platform.cpp:78/:136 ShellExecute/xdg-open/open) is reused
+    // the client's own launcher (Platform::OpenBrowser: ShellExecute /
+    // xdg-open/open) is reused; SDL is 2.0.10 (no SDL_OpenURL)
     ::Platform::OpenBrowser(url);
 }
 
@@ -215,7 +214,7 @@ static ImTextureRef atlas_texture()
     return s_Atlas != nullptr ? s_Atlas->GetTexRef() : ImTextureRef();
 }
 
-// --- IconButton (QImagedPushButton) -----------------------------------------
+// --- IconButton -----------------------------------------
 
 bool IconButton(XA_ICON icon, const char *tip, bool enabled, float size, const char *idSeed)
 {
@@ -248,7 +247,7 @@ bool IconButton(XA_ICON icon, const char *tip, bool enabled, float size, const c
     const ImVec2 pos = ImGui::GetItemRectMin();
     const ImVec2 end = ImGui::GetItemRectMax();
 
-    // QImagedPushButton stylesheet: hover rgb(192,192,192), pressed rgb(160,160,160)
+    // IconButton look: hover rgb(192,192,192), pressed rgb(160,160,160)
     ImU32 bg = 0;
     if (active)
     {
@@ -476,7 +475,7 @@ int ListButtons(const char *idSeed)
         result |= XALB_REMOVE;
     }
     ImGui::SameLine();
-    // phase 3: the from-target pipeline is live (g_TargetHandler +
+    // the from-target pipeline is live (g_TargetHandler +
     // RequestTarget; the reply arrives as AssistantUIEvents::OnFromTarget)
     if (IconButton(XA_ICON_TARGET, "Select from target", true, 0.0f, idSeed))
     {
@@ -778,7 +777,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
 
     ImGui::EndTable();
 
-    // the global Delete key rule (assistform.cpp:203-230), gated on row hover
+    // the global Delete key rule, gated on row hover
     // and on the assistant not capturing text/keys
     if (*selected >= 0 && rowHovered && !ImGui::GetIO().WantCaptureKeyboard &&
         !ImGui::GetIO().WantTextInput && ImGui::IsKeyChordPressed(ImGuiKey_Delete))
@@ -893,7 +892,7 @@ static const XA_CAP s_Row5[] = {
 void HotkeyKeyboard_Draw(const char *id, int selectedRow)
 {
     (void)id;
-    // the four hotkeysform.cpp:607-710 state colors
+    // the four key-cap state colors
     static const ImU32 COLOR_UNSET = IM_COL32(60, 60, 60, 255); // ImGui button default stand-in
     static const ImU32 COLOR_MODIFIER = IM_COL32(200, 200, 200, 255);
     static const ImU32 COLOR_SET = IM_COL32(183, 255, 183, 255);

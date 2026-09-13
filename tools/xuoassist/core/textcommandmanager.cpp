@@ -645,8 +645,8 @@ HCOMMAND(terminate)
         g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
     }
 
-    // was g_TabScripts->TerminateScript(args[0], functionsSave)
-    // (textcommandmanager.cpp:425): the second argument is the "|"-separated
+    // was g_TabScripts->TerminateScript(args[0], functionsSave):
+    // the second argument is the "|"-separated
     // keep-list for the "all" form; ScriptManager_Terminate owns both.
     if (!args.empty())
     {
@@ -1411,7 +1411,7 @@ HCOMMAND(showjournal)
         return;
     }
 
-    // was g_JournalManager.ShowLines(lines) (journalmanager.cpp:175): dump
+    // was g_JournalManager.ShowLines(lines): dump
     // the ring into the text window (the g_TextDialog port) and show it
     const vector<CJournalMessage> &list = ScriptJournal_Messages();
     const int size = (int)list.size();
@@ -1500,8 +1500,8 @@ HCOMMAND(clearjournal)
         return;
     }
 
-    // was g_JournalManager.Clear(pattern, serial, color, type)
-    // (journalmanager.cpp:96): one consume-pass over the filters, plus the
+    // was g_JournalManager.Clear(pattern, serial, color, type):
+    // one consume-pass over the filters, plus the
     // full wipe when the pattern is empty and nothing matched.
     CJournalMessage *hit =
         ScriptJournal_Find(pattern, CAssistant::TextToSerial(serial), color,

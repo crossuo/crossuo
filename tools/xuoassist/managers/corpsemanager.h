@@ -40,8 +40,7 @@ public:
 
     void Clear();
 
-    // Tick method (was driven by a 10 ms QTimer in AssistForm, now wired to
-    // the frame tick by the UI round, plan D3).
+    // Tick method (was a 10 ms timer, now wired to the frame tick).
     void CheckCorpses();
 
     bool Empty() { return m_List.empty(); }

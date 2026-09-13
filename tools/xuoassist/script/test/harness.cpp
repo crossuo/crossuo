@@ -13,7 +13,7 @@
 //      old uint slot truncated it).
 //   5. The REAL API registration (apiscript.cpp Script_RegisterAPI) over a
 //      live QuickJS context: the engine classes (Gump/File/GumpHook/
-//      ClientMacro) must carry their own prototypes - the fix-round bug had
+//      ClientMacro) must carry their own prototypes - the registration bug had
 //      every class alias the GameObject class, so .Select/.Open/.AddEntry
 //      were missing and the finalizers freed the wrong opaque types. The
 //      client-facing symbols are stubbed in harnessstubs.cpp (disconnected
@@ -477,7 +477,7 @@ int main()
         CHECK(ScriptFile_ReadLine(&file) == "first");
         ScriptFile_Close(&file);
 
-        // sandboxed remove + the missing-file parity (QFile::exists gate)
+        // sandboxed remove + the missing-file parity
         CHECK(ScriptFile_RemovePath("line.txt"));
         CHECK(!ScriptFile_RemovePath("line.txt"));
         CHECK(!ScriptFile_Opened(&file));
@@ -515,7 +515,7 @@ int main()
     }
 
 
-    // --- 6. the engine classes: REAL registration wiring (the fix round) ---
+    // --- 6. the engine classes: REAL registration wiring ---
     {
         std::atomic<int> draining{ 1 };
         std::thread drainer([](std::atomic<int> *running) {
@@ -540,7 +540,7 @@ int main()
         CGump source(0x40000123, 5, 10, 20);
         g_HarnessGump = &source;
 
-        // the fix-round bug shape: every engine class aliased the GameObject
+        // the aliased-class bug shape: every engine class aliased the GameObject
         // class, so the copies came back with the WRONG prototype and the
         // gameobject finalizer freed them as the wrong type. Each `typeof`
         // probe below must report the owning class's method.

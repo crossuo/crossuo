@@ -13,12 +13,12 @@ namespace xuoassist {
 
 class CScriptEngine;
 
-// Installs the global objects + sentinel globals on a fresh context (the
-// newQObject/globalObject().setProperty block of scripthandle.cpp:127-166).
+// Installs the global objects + sentinel globals on a fresh context
+// (the old global-object registration block).
 void Script_RegisterAPI(JSContext *ctx, const string &scriptName);
 
-// Exception -> "lineNumber" + message strings (the QScriptValue
-// lineNumber/toString pair of scripthandle.cpp:169-172).
+// Exception -> "lineNumber" + message strings (the old
+// script-value lineNumber/toString pair).
 void Script_FormatException(JSContext *ctx, string &line, string &message);
 
 } // namespace xuoassist

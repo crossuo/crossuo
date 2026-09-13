@@ -490,7 +490,7 @@ CMacro *CMacroWithTargetTile::Copy()
 
 CMacro *CMacro::Load(const XMLElement &element)
 {
-    // Was CMacro::Load(QXmlStreamAttributes &attributes) - same attributes.
+    // Was CMacro::Load from the XML stream attributes - same attributes.
     CMacro *result = nullptr;
 
     if (element.HasAttribute("type") && element.HasAttribute("convert_type"))

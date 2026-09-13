@@ -192,7 +192,7 @@ void MapWindow_Draw(bool *open)
     const int halfH = height / 2;
     const float scale = MapSettings_Scale();
 
-    // the selected facet: 0xFFFFFFFF follows the client (map.cpp:524-528)
+    // the selected facet: 0xFFFFFFFF follows the client
     int map = (int)g_CurrentMap;
     const uint facet = g_MapSettings.GetFacet();
     if (facet != 0xFFFFFFFF && facet < MAX_MAPS_COUNT)
@@ -200,7 +200,7 @@ void MapWindow_Draw(bool *open)
         map = (int)facet;
     }
 
-    // follow: player-locked center, current facet only (map.cpp:695-708)
+    // follow: player-locked center, current facet only
     CGameCharacter *player = g_Player;
     const bool following =
         (g_World != nullptr && player != nullptr && g_MapSettings.GetFollowPlayer() &&
@@ -217,7 +217,7 @@ void MapWindow_Draw(bool *open)
         s_CenterY = 840;
     }
 
-    // the world rect the canvas covers (the overlay cull, map.cpp:850)
+    // the world rect the canvas covers (the overlay cull)
     const int minX = s_CenterX - int(halfW * scale) - 1;
     const int minY = s_CenterY - int(halfH * scale) - 1;
     const int maxX = s_CenterX + int(halfW * scale) + 1;
@@ -243,7 +243,7 @@ void MapWindow_Draw(bool *open)
 
         // screen displacement -> world displacement through the inverse of
         // the view transform (mapwindow.h); the center moves opposite so the
-        // world point under the cursor follows it (map.cpp:1519-1532)
+        // world point under the cursor follows it
         const float dx = (ImGui::GetIO().MousePos.x - s_PanStartMouse.x) * scale;
         const float dy = (ImGui::GetIO().MousePos.y - s_PanStartMouse.y) * scale;
         int wx;
@@ -259,7 +259,7 @@ void MapWindow_Draw(bool *open)
             wy = s_PanStartCenterY - int(dy + 0.5f);
         }
 
-        // clamp onto the facet (map.cpp:1543-1562)
+        // clamp onto the facet
         if (map >= 0 && map < MAX_MAPS_COUNT)
         {
             const int mapWidth = g_MapSize[map].Width;
@@ -337,7 +337,7 @@ void MapWindow_Draw(bool *open)
     if (g_World != nullptr)
     {
         // party members the mirror does not know: from the packet-fed member
-        // info (map.cpp:835-857)
+        // info
         if (g_MapSettings.GetPartyEnabled() && g_PartyManager.GetLeader() != 0u)
         {
             for (int i = 0; i < 10; i++)
@@ -432,7 +432,7 @@ void MapWindow_Draw(bool *open)
             }
         }
 
-        // the last corpse marker (map.cpp:911-920; the 5 minute window)
+        // the last corpse marker (the 5 minute window)
         if (g_MapSettings.GetShowLastCorpse() &&
             g_LastPlayerDeadTimer != 0u && g_Ticks < g_LastPlayerDeadTimer + 300000u &&
             g_LastPlayerCorpsePosition.X >= minX && g_LastPlayerCorpsePosition.X < maxX &&
@@ -474,7 +474,7 @@ void MapWindow_Draw(bool *open)
 
             if (item.Type == OMCT_CORPSE)
             {
-                // the corpse.png icon + white label (map.cpp:947-966); the
+                // the corpse.png icon + white label; the
                 // atlas cell is 32px downsampled from the 128px asset
                 const float iconSize = 15.0f; // Qt scaled the icon to 15x15
                 IconImage(
@@ -562,7 +562,7 @@ void MapWindow_Draw(bool *open)
         }
     }
 
-    // the coordinate line (map.cpp:727-736)
+    // the coordinate line
     if (g_MapSettings.GetDisplayCoordinates())
     {
         const char *name =

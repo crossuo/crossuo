@@ -620,7 +620,7 @@ JSValue obj_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *ar
 }
 
 // [G] Hits("%")/Mana("%")/Stam("%")/Weight("%"): two queued reads + the same
-// (value * 100) / max formula as CPlayerObject::Hits (playerengine.cpp:22-42).
+// (value * 100) / max formula as CPlayerObject::Hits.
 JSValue obj_get_percent(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv, int magic)
 {
     (void)argc;
@@ -675,9 +675,9 @@ JSValue obj_action(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
 
 JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    // [Q] CScriptEngine::Wait (scriptengine.cpp:29-40): the delay comes from
+    // [Q] CScriptEngine::Wait: the delay comes from
     // the config text table (DelayFromText) + raw ms; the sleep loop checks
-    // pause/terminate every 10 ms (the QThread::msleep granularity).
+    // pause/terminate every 10 ms (the old timer granularity).
     const string text = arg_text(ctx, argv, argc, 0, "");
     auto *parse = sc_make(SC_WAIT_PARSE);
     parse->TextA = text;
@@ -830,7 +830,7 @@ JSValue jsn_useskill(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 }
 
 // [G] SkillValue(nameOrIndex[, type]) - HCOMMAND(skillsvalue) reads
-// g_Skills[] on the main thread (scriptengine.cpp:239-265).
+// g_Skills[] on the main thread.
 JSValue jsn_skillvalue(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_SKILL_VALUE);
@@ -1103,7 +1103,7 @@ JSValue jsn_hook(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     return JS_UNDEFINED;
 }
 
-// [Q] CancelWaitTarget - OnCommandCancelWaitTarget (commandmanager.cpp:1692):
+// [Q] CancelWaitTarget - OnCommandCancelWaitTarget:
 // drops the armed CTarget hooks through the drain (SC_CANCEL_WAIT_TARGET).
 JSValue jsn_cancelwaittarget(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
@@ -1210,8 +1210,7 @@ JSValue jsn_closemenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
 
 // [G] the journal query family: InJournal(...)-> entry | null,
 // WaitJournal(pattern, start[, end[, flags[, serial[, color]]]]) loops with
-// the pause/terminate checks (CScriptEngine::WaitJournal,
-// scriptengine.cpp:894-922).
+// the pause/terminate checks (CScriptEngine::WaitJournal).
 JSValue jsn_injournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_JOURNAL_FIND);
@@ -1575,7 +1574,7 @@ JSValue jsn_lastpos(JSContext *ctx, JSValueConst, int, JSValueConst *, int magic
     return obj;
 }
 
-// [G] BuffExists(name) - OnCommandBuffExists (commandmanager.cpp:3602):
+// [G] BuffExists(name) - OnCommandBuffExists:
 // g_BuffManager.Exists over the trimmed+lowered name; the port reads the
 // buff mirror (scriptstate.cpp) fed by the OnBuffAdd/Remove events.
 JSValue jsn_buffexists(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
@@ -1589,7 +1588,7 @@ JSValue jsn_buffexists(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
 // [Q] the engine-class families of 4b-2 (the notice stub of batch 1 is gone;
 // PlayWav below is the only remaining documented deviation).
 
-// --- the WaitFor* flag family (scriptengine.cpp:3696-3812) ------------------
+// --- the WaitFor* flag family -----------------------------------------------
 // Qt cleared the g_*Received global on the script thread and msleep-polled
 // it; the port clears+polls it inside the drain (SC_EVENT_WAIT clears on the
 // first call - BoolA false - and only reads afterwards), so the main-thread
@@ -2622,8 +2621,8 @@ JSValue jsn_optionset(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
 // --- fix round (Phase 4b-2 wire-now): the remaining scriptengine families ---
 
 // [G] FindFriend/FindEnemy(flags, distance) -> serial text (the CScriptEngine
-// overloads -> CommandFindFriend/Enemy -> CAssistant::FindFriend/FindEnemy,
-// core/assist.cpp:1117/1199; "fast"/"finddistance" were the 1/2-arg defaults).
+// overloads -> CommandFindFriend/Enemy -> CAssistant::FindFriend/FindEnemy;
+// "fast"/"finddistance" were the 1/2-arg defaults).
 JSValue jsn_findfriendenemy(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
     auto *command = sc_make(SC_FRIEND_INFO);
@@ -2813,7 +2812,7 @@ JSValue jsn_windowop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv,
 }
 
 // [G] GetTargetType: the Qt CommandHaveTarget read (cursor type + 1 while a
-// target cursor is up, else 0 - commandmanager.cpp:1850). HaveTarget keeps
+// target cursor is up, else 0). HaveTarget keeps
 // its bool shape; this is the raw value.
 JSValue jsn_targettype(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
@@ -2889,8 +2888,7 @@ JSValue jsn_split(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 
 
 // ---------------------------------------------------------------------------
-// registration (the CScriptHandle::RunEngine global-object block,
-// scripthandle.cpp:127-166)
+// registration (the CScriptHandle::RunEngine global-object block)
 // ---------------------------------------------------------------------------
 
 namespace {
@@ -3359,7 +3357,7 @@ const JSCFunctionListEntry PLAYER_FUNCS[] = {
 };
 
 // The engine-class object tables (the CScriptEngineTextWindow /
-// CClientSelectedTile globals - scripthandle.cpp:116-125 - plus the Gump /
+// CClientSelectedTile globals plus the Gump /
 // Menu / GumpHook / File / ClientMacro prototypes).
 
 const JSCFunctionListEntry TEXTWINDOW_FUNCS[] = {
@@ -3513,7 +3511,7 @@ void Script_RegisterAPI(JSContext *ctx, const string &scriptName)
     journalClass.finalizer = journal_finalizer;
     JS_NewClass(runtime, s_JournalClass, &journalClass);
 
-    // The 4b-2 engine classes (the fix-round bug: the ids and prototypes
+    // The remaining engine classes (the registration bug: the ids and prototypes
     // existed but were never registered, so s_GumpClass..s_FileClass all
     // stayed 0 - aliasing s_GameObjectClass - and every new_gump_object/
     // new_menu_object/... landed in the GameObject class: the gameobject
@@ -4307,7 +4305,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             command->ResultBool = g_Connected;
             break;
         }
-        case SC_OPTIONS_GET: // OnCommandOption* (commandmanager.cpp:2005):
+        case SC_OPTIONS_GET: // OnCommandOption*:
         {                    // g_World + the EnabledCommandOptionsAccess gate
             command->ResultInt =
                 g_World != nullptr && EnabledCommandOptionsAccess() && g_GetInt != nullptr
@@ -4966,7 +4964,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             command->ResultBool = EnabledFeatureShopAgent() && g_ShopAgent.IsActiveShopping();
             break;
         }
-        case SC_EVENT_WAIT: // the WaitFor* flags (scriptengine.cpp:3696+);
+        case SC_EVENT_WAIT: // the WaitFor* flags;
         {                   // first call clears (the Qt g_XReceived = false),
             bool *flag = nullptr; // later calls only read
             switch (command->SubTag)
@@ -5002,7 +5000,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             break;
         }
         case SC_FRIEND_INFO: // the Qt CommandFindFriend/Enemy + Get*List/
-        {                    // Get*Status set (commandmanager.cpp:3765+)
+        {                    // Get*Status set
             // list reads/status target the friend gate, the enemy forms the
             // enemy gate (the same split the Qt slots had)
             const bool enemyForm =

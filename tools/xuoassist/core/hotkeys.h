@@ -173,7 +173,7 @@ enum XA_KEY_ID
     XKI_COUNT
 };
 
-// KeyMap / KeyInfo (hotkeybox.cpp:237): SDL keycode + the modifiers the
+// KeyMap / KeyInfo: SDL keycode + the modifiers the
 // on-screen cap assigns by default (keypad navigation block sets HM_KEYPAD,
 // wheel/X set their mouse flags) + the display name.
 struct XA_KEY_INFO
@@ -186,7 +186,7 @@ struct XA_KEY_INFO
 const XA_KEY_INFO &HotkeyKeyInfo(int id);
 // Reverse lookup used by the "Hotkey" column text (GetKeycodeName).
 const char *HotkeyKeycodeName(uint keycode);
-// QHotkeyBox::GetHotkeyText (hotkeybox.cpp:792): "Alt + Ctrl + Shift + Pad +
+// GetHotkeyText: "Alt + Ctrl + Shift + Pad +
 // KeyName" / "Wheel Up|Down|Press" / "MouseX 1|2".
 void HotkeyFormatText(uint key, uchar modifiers, char *out, size_t size);
 
@@ -201,7 +201,7 @@ public:
     // when a binding is disabled.
     bool ProcessEvent(const SDL_Event &ev);
 
-    // --- capture (was QHotkeyBox: click the field, press a key/wheel/X) ----
+    // --- capture: click the field, press a key/wheel/X ---------------------
     bool IsCapturing() const { return m_Capturing; }
     void BeginCapture();                    // arm the field
     void CancelCapture() { m_Capturing = false; }
@@ -211,7 +211,7 @@ public:
     // duplicate policy (CheckExists): false when a duplicate popup is open
     // (the UI then drives ResolveDuplicate below).
     bool AssignCaptureToRow(int row);
-    // The duplicate question (hotkeysform.cpp:184): 0 = replace the existing
+    // The duplicate question: 0 = replace the existing
     // binding(s), 1 = save the duplicate anyway, 2 = select the existing row.
     void ResolveDuplicate(int answer);
     int DuplicateRow() const { return m_DuplicateRow; }
@@ -223,7 +223,7 @@ public:
     void KeyboardToggleModifier(int keyId); // Shift/Ctrl/Alt caps (sticky)
     uchar StickyModifiers() const { return m_StickyModifiers; }
     bool StickyModifierSet(uchar flag) const { return (m_StickyModifiers & flag) != 0; }
-    // UpdateKeyboard (hotkeysform.cpp:603): per-cap state for the 4 colors.
+    // UpdateKeyboard: per-cap state for the 4 colors.
     // 0 = unset, 1 = set, 2 = duplicate, 3 = currently selected row's key.
     int KeyboardCapState(int keyId, int selectedRow) const;
     void ResetStickyModifiers() { m_StickyModifiers = 0; }
@@ -236,7 +236,7 @@ private:
     // The matcher: walks the config table, fires the action. Returns
     // consumed (HotkeyExistsAndUse semantics).
     bool MatchAndUse(uint key, uchar modifiers);
-    // CheckExists (hotkeybox.cpp:871): a duplicate exists outside `skipRow`.
+    // CheckExists: a duplicate exists outside `skipRow`.
     int FindDuplicate(uint key, uchar modifiers, int skipRow) const;
     // CreateKey + the CheckExists dialog outcomes, funneled: assigns
     // (key, modifiers) to `row` (or defers to the popup); saves on mutation.

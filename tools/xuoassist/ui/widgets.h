@@ -7,9 +7,9 @@
 //   IconButton   - QImagedPushButton (flat icon button, hover/pressed colors)
 //   ColorSwatch  - QColoredPushButton (+'...' picker for true RGB fields)
 //   HueSwatch    - 15-bit UO color preview swatch (the 0x02B2-style fields)
-//   ComboGroup   - QComboBox + CComboDelegate ('#' rows = group separators)
+//   ComboGroup   - grouped combo rows ('#' rows = group separators)
 //   ListButtons  - the add/save/remove/from-target icon row shared by all
-//                  list tabs (from-target stays disabled until phase 3)
+//                  list tabs
 //   NameList     - CExtendedListWidget (drag reorder, double-click rename with
 //                  GetFreeName, Delete-key removal, optional check column)
 //   ContentList  - the Find/Ignore "content" rows (graphic/color/comment)
@@ -78,7 +78,7 @@ void Icons_Shutdown();
 // png-loading UI modules (the About logo).
 fs_path IconAssetPath(const char *file);
 
-// --- IconButton (was QImagedPushButton, imagedpushbutton.cpp:10-24) ---------
+// --- IconButton ------------------------------------------------------------
 // Flat icon button: hover rgb(192,192,192), pressed rgb(160,160,160) with the
 // 2px press shift. size 0 = one icon cell sized from the font height.
 bool IconButton(
@@ -97,13 +97,13 @@ void IconImage(XA_ICON icon, const ImVec2 &topLeft, const ImVec2 &size);
 // Preview-only swatch for the 0x02B2-style hue fields (the Qt app had no RGB
 // picker for those: its '...' button sends a dye packet instead).
 void HueSwatch(ushort uoColor, float size = 18.0f);
-// QColoredPushButton + QColorDialog for true RGB fields (Display tab, phase 4).
+// Swatch + picker popup for true RGB fields (Display tab).
 // commit (optional): set inside the picker popup scope when the edit session
 // ends (ImGui::IsItemDeactivatedAfterEdit - EndPopup restores LastItemData, so
 // the query is only valid here); lets callers throttle saves to the release.
 bool ColorSwatch(const char *id, ImU32 *rgba, float size = 18.0f, bool *commit = nullptr);
 
-// --- ComboGroup (QComboBox rows + CComboDelegate, comboboxdelegate.cpp) -----
+// --- ComboGroup ------------------------------------------------------------
 // Items starting with '#' are painted as lightGray group separator rows.
 bool ComboGroup(const char *id, int *current, const char *const items[], int count);
 
@@ -114,12 +114,11 @@ enum
     XALB_ADD = 1,
     XALB_SAVE = 2,
     XALB_REMOVE = 4,
-    XALB_TARGET = 8 // reserved (phase 3 target pipeline)
+    XALB_TARGET = 8 // the from-target button
 };
 
 // Draws the add/save/remove/from-target row; returns the pressed buttons as a
-// XALB_* bitmask. The from-target button renders disabled with the phase 3
-// tooltip (plan rule: no target capture in this round). idSeed must be unique
+// XALB_* bitmask. idSeed must be unique
 // per row instance (a tab can host several list panes).
 int ListButtons(const char *idSeed);
 
@@ -179,7 +178,7 @@ bool ListCore(
 // (e.g. &CTypeEntry::Name for the config lists, &CFilterSpeechEntry::Text for
 // the speech filters).
 // - double click: inline rename; empty or colliding names are uniquified with
-//   the original GetFreeName algorithm (extendedlistwidget.cpp:50-114)
+//   the original GetFreeName algorithm
 // - Delete key: removes the selected row while a row is hovered and the
 //   assistant is not capturing text (does not steal keys the game wants)
 // - drag & drop: reorders rows (Qt emitted itemDropped; the caller saved)
@@ -271,7 +270,7 @@ void HotkeysForm_KeyboardAssign(int keyId);
 bool FindContentList(const char *id, vector<CFindItem> &items, int *selected, float height = -1.0f);
 bool IgnoreContentList(const char *id, vector<CIgnoreItem> &items, int *selected, float height = -1.0f);
 
-// --- StatusBar (was the le_Information 1 s timer, assistform.cpp:539-575) ---
+// --- StatusBar (was the le_Information 1 s timer) ---------------------------
 void StatusBar_Draw(uint32_t sessionStartTicks);
 
 } // namespace xuoassist

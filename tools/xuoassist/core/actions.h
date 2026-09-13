@@ -7,13 +7,13 @@
 // handler calls the Phase-1 core directly - no QObject marshaling.
 //
 // Sources:
-//   - s_HotkeyTypeName + PlayHotkeyAction (assist/hotkeysform.cpp:34, 1563):
+//   - s_HotkeyTypeName + PlayHotkeyAction:
 //     the type names, the fixed per-type action lists and the executable
 //     bodies (attack/use-object/all-names/cast/skill/targeting/bandage/NTS);
-//   - TabMacros::UpdateMacroList (tabmacros.cpp:69): the "Play macro" action
+//   - TabMacros::UpdateMacroList: the "Play macro" action
 //     list follows the user's macro names;
-//   - the 0xFC OIPMT_SKILL_LIST / OIPMT_SPELL_LIST handlers
-//     (managers/packetmanager.cpp:3274, 3300): "Last" + skill/spell names
+//   - the 0xFC OIPMT_SKILL_LIST / OIPMT_SPELL_LIST handlers:
+//     "Last" + skill/spell names
 //     feed the cast/use-skill action lists through AssistantUI events.
 //
 // Script entries (HT_SCRIPT) keep their stored name this phase: the script
@@ -32,8 +32,8 @@ namespace xuoassist {
 
 struct CHotkeyEntry;
 
-// The type list (s_HotkeyTypeName names, hotkeysform.cpp:38-63; the HT_* enum
-// itself lives in config/assistantconfig.h for the Phase-1c format).
+// The type list (s_HotkeyTypeName names; the HT_* enum itself lives in
+// config/assistantconfig.h).
 const char *Actions_TypeName(uint type);
 uint Actions_TypeCount();
 
@@ -54,7 +54,7 @@ void Actions_Execute(const CHotkeyEntry &entry);
 // prefix, otherwise a logged no-op (script engine = Phase 4).
 void Actions_RunExternalCode(const string &code);
 
-// The 0xFC packet feeds (packetmanager.cpp:3248/3254 equivalents).
+// The 0xFC packet feeds (the hotkey action-list sources).
 void Actions_SetSpellList(const vector<vector<string>> &books);
 void Actions_SetSkillList(const vector<string> &names);
 

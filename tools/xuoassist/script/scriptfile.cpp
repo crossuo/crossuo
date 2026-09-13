@@ -265,7 +265,7 @@ string ScriptFile_ReadLine(XA_SCRIPT_FILE *file)
     {
         if (c == '\n')
         {
-            break; // the trailing \n is dropped (QTextStream::readLine)
+            break; // the trailing \n is dropped, like the old readLine
         }
         line += (char)c;
     }
@@ -283,7 +283,7 @@ string ScriptFile_Read(XA_SCRIPT_FILE *file)
     {
         return "";
     }
-    // QTextStream operator>>: one whitespace-delimited token
+    // whitespace-delimited token, like the old stream extractor
     string token;
     int c = 0;
     do
@@ -337,7 +337,7 @@ bool ScriptFile_RemovePath(const string &path)
     FILE *probe = fopen(clean.c_str(), "r");
     if (probe == nullptr)
     {
-        return false; // QFile::exists gate
+        return false; // missing-file gate
     }
     fclose(probe);
     return remove(clean.c_str()) == 0;

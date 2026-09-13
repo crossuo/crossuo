@@ -35,7 +35,7 @@ string GetString(VALUE_KEY_STRING key, const string &value)
     {
         if (data->m_Unicode)
         {
-            // original: QString::fromWCharArray(data->m_DataW) - wide -> utf8
+            // original: wide-char array converted to utf8
             result = str_from(std::wstring(data->m_DataW));
         }
         else

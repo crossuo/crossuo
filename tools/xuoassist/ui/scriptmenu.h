@@ -4,8 +4,7 @@
 #pragma once
 
 // The script editor command-insert menu (was the ~25-submenu context menu of
-// CScriptPlainTextEdit::onCustomContextMenuRequested, gui/
-// scriptplaintextedit.cpp:509-1522): the menu is DATA - a table of
+// CScriptPlainTextEdit::onCustomContextMenuRequested): the menu is DATA - a table of
 // {menu path, label, insertion text} rows rendered as a nested popup, not
 // hardcoded branches. Paths look like "Objects" or "Skills/SkillValue/real".
 

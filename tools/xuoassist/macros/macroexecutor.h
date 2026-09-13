@@ -34,60 +34,59 @@ namespace xuoassist {
 class CMacroExecutor
 {
 public:
-    // The frame tick (was the 10 ms QTimer -> ProcessMacro).
+    // The frame tick (was a 10 ms timer -> ProcessMacro).
     void Tick();
 
-    // TabMacros::Play(const QString &name, doNotAutoIterrupt) - the hotkey
-    // entry point (hotkeysform.cpp:1458); unknown names are a no-op.
+    // TabMacros::Play(name, doNotAutoIterrupt) - the hotkey
+    // entry point; unknown names are a no-op.
     void Play(const string &name, bool doNotAutoIterrupt);
     // TabMacros::Play(CMacroListItem *, ...) - the Play button entry point.
     // macroIndex indexes g_AssistantConfig.Macros().
     void PlayIndex(int macroIndex, bool doNotAutoIterrupt);
-    // TabMacros::Stop (tabmacros.cpp:988).
+    // TabMacros::Stop.
     void Stop();
 
     // Loop options (the Qt Play read cb_Looped/dsb_LoopTime directly; the UI
     // pushes them here before Play).
     void SetLoopOptions(bool looped, float loopSeconds);
 
-    // The selected macro name (the UI shows Play/Stop for it, tabmacros.cpp:252).
+    // The selected macro name (the UI shows Play/Stop for it).
     bool IsPlaying() const { return m_Playing; }
     int PlayingIndex() const { return m_PlayingIndex; }
     bool IsRecording() const { return m_Recording; }
     int RecordingIndex() const { return m_RecordingIndex; }
 
-    // TabMacros::on_pb_Record_clicked halves (tabmacros.cpp:337): the UI
+    // TabMacros::on_pb_Record_clicked halves: the UI
     // calls RecordStart on the selected macro, target taps append, and
     // RecordStop commits (or discards when nothing was captured).
     void RecordStart(int macroIndex);
     // Returns the captured action count that was committed (0 = discarded).
     int RecordStop();
 
-    // The target-system taps (was g_TabMacros->AddAction from
-    // assist/target.cpp:190/:210).
+    // The target-system taps (was g_TabMacros->AddAction).
     void RecordTargetObject(uint serial, ushort graphic, ushort color);
     void RecordTargetTile(ushort graphic, int x, int y, int z);
 
-    // TabMacros::AddAction(macro, false) recording half (tabmacros.cpp:217):
+    // TabMacros::AddAction(macro, false) recording half:
     // appends an observed action to the open recording; ownership passes to
     // the executor (a stray call while not recording is freed). The packet
     // taps gate on IsRecording() BEFORE building the macro, so the
     // not-recording cost is a single bool check per packet.
     void Record(CMacro *macro);
 
-    // TabMacros::PlayWaiting (tabmacros.cpp:1023): when a playing macro sits
+    // TabMacros::PlayWaiting: when a playing macro sits
     // on a waiting action that one of `types` satisfies, rewind to it and
     // re-run immediately (the awaited event just arrived). true = the wait
     // was consumed and the CALLER consumed the packet (the macro replay
     // answered the server itself, exactly like the Qt app).
     bool PlayWaiting(std::initializer_list<MACRO_TYPE> types);
 
-    // TabMacros::Reset (tabmacros.cpp:366): the client-side world teardown
+    // TabMacros::Reset: the client-side world teardown
     // (EnterWorld re-entry / disconnect) stops any playback and recording.
     void Reset();
 
 private:
-    void ProcessMacro(); // was TabMacros::ProcessMacro (tabmacros.cpp:1105)
+    void ProcessMacro(); // was TabMacros::ProcessMacro
     uint FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType);
 
     bool m_Playing{ false };

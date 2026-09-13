@@ -83,15 +83,15 @@ const char *const FILTER_TABS[] = { "Speech", "Replaces", "Sound" };
 // which phase delivers the remaining tabs (§7)
 const char *const PLACEHOLDER_PHASE[] = {
     "",  // Main
-    "",  // Display (phase 4a)
+    "",  // Display
     "",  // Lists
-    "",  // Hotkeys (phase 3)
-    "",  // Macros (phase 3)
-    "",  // Scripts (phase 4b round 1)
-    "",  // Agents (nested: Dress/Party/Shop, phase 4a)
-    "",  // Skills (phase 4a)
+    "",  // Hotkeys
+    "",  // Macros
+    "",  // Scripts
+    "",  // Agents (nested: Dress/Party/Shop)
+    "",  // Skills
     "",  // Filters
-    "",  // About (phase 5)
+    "",  // About
 };
 
 bool s_Initialized = false;
@@ -99,7 +99,7 @@ CAssistantEvents *s_PreviousEvents = nullptr; // sink to restore on shutdown
 bool s_OptionsDirty = false; // Main/Options pages save on close (Qt semantics)
 uint32_t s_SessionStartTicks = 0;
 
-// auto-reconnect countdown (was TabMain::m_ReconnectTimer, tabmain.cpp:722)
+// auto-reconnect countdown (was TabMain::m_ReconnectTimer)
 int s_ReconnectSeconds = 0;
 uint32_t s_ReconnectLastTick = 0;
 
@@ -109,8 +109,8 @@ string s_LastWindowTitle;
 uint32_t s_LastStepTick = 0;
 
 // the Autostart script run (was AssistForm::RunAutostart's
-// QTimer::singleShot(1000, onAutostartTimer), assistform.cpp:582-588):
-// pending tick stamp, 0 = none. Fired from AssistantUI_Tick.
+// one-second single-shot timer): pending tick stamp, 0 = none. Fired
+// from AssistantUI_Tick.
 uint32_t s_AutostartAt = 0;
 
 // was TabDisplay::RedrawTitle: the config radio -> the display manager mode
@@ -295,8 +295,8 @@ void AssistantUI_Init()
     ScriptFile_SetSandboxRoot(fs_path_str(g_AssistantConfig.GetRootPath()));
     s_Initialized = true;
     // compile the display title data from the just-loaded profile (was
-    // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData,
-    // assistform.cpp:463) and paint the initial caption
+    // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData)
+    // and paint the initial caption
     AssistantUI_RecompileDisplayTitle();
     // the map settings (was the Qt app init order: CMapSettings::Load ran
     // once at startup, mapsettingsform.cpp:72)
@@ -344,12 +344,12 @@ void AssistantUI_Tick()
     ScriptQueue_Drain();
     ScriptManager_Get()->Tick();
     tick_reconnect();
-    // macro playback (was the TabMacros 10 ms QTimer -> ProcessMacro): a
+    // macro playback (was the TabMacros 10 ms timer -> ProcessMacro): a
     // headless frame tick keeps running while the assistant window is hidden
     g_MacroExecutor.Tick();
     // the dress sequence state machine (was the Qt g_EquipScriptName script)
     g_DressAgent.Tick();
-    // the shop engine progress countdown (was the ShopProgressForm QTimer)
+    // the shop engine progress countdown (was the ShopProgressForm timer)
     g_ShopAgent.Tick();
     // the display caption (was the win32 GDI title-bar painter)
     tick_display_title();
@@ -625,7 +625,7 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     // draw pass, so it hides with the assistant shell (the lines stay; the
     // packet handlers keep running - only the pixels are gated)
     ScriptTextWindow_Draw();
-    // the phase 5 windows: the Map (radar + overlays + context menu), its
+    // the secondary windows: the Map (radar + overlays + context menu), its
     // settings form, the Object Inspector sections and the Text Dialog -
     // each gated by its own open flag, viewport-safe like the shell
     MapWindow_Draw(&g_AssistantMapOpen);

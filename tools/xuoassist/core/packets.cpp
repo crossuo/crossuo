@@ -53,7 +53,7 @@ void CPacket::SendServer()
     }
 }
 
-// QString::split(" ", QString::SkipEmptyParts)
+// split on spaces, skipping empty parts
 static vector<string> split_skip_empty(const string &text)
 {
     vector<string> result;

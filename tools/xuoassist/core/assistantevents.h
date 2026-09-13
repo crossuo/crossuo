@@ -33,7 +33,7 @@ enum
     XA_FROM_TARGET_FRIEND,         // TabListsFriends (serial)
     XA_FROM_TARGET_ENEMY,          // TabListsEnemies (serial)
     XA_FROM_TARGET_ANIMAL_NAME,    // AnimalAndVendorControlForm "Name" field
-    XA_FROM_TARGET_PARTY,          // TabAgentsParty (phase 4)
+    XA_FROM_TARGET_PARTY,          // TabAgentsParty
     XA_FROM_TARGET_DRESS_ITEM,     // TabAgentsDress "Add item to set from target"
     XA_FROM_TARGET_DISPLAY_ITEM    // TabDisplay items editor (graphic + hue)
 };
@@ -132,8 +132,7 @@ public:
         (void)macros;
     }
 
-    // --- macros (was g_TabMacros->AddAction from assist/target.cpp:190/:210
-    //     while a recording was open) ----------------------------------------
+    // --- macros (was g_TabMacros->AddAction while a recording was open) ----------
     // graphic/color are 0 when the targeted object is unknown to the world.
     virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color)
     {
@@ -149,7 +148,7 @@ public:
         (void)z;
     }
 
-    // Was g_AssistantForm->RunAutostart (assistform.cpp:582) from the
+    // Was g_AssistantForm->RunAutostart from the
     // EnterWorld handler: the sink checks the Autostart option and starts
     // the "Autostart" script from the editor buffer after 1 second.
     virtual void OnAutostartRequest() {}

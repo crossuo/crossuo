@@ -4,8 +4,7 @@
 // The three Filters sub-tabs (was assist/tabfilters*.ui/.cpp, §2.10):
 // Speech, Replaces (with the Mode/Type combos), Sound. Entries bind to the
 // g_AssistantConfig filter containers; the packet handlers read exactly these
-// through CheckSpeechInFilter / CheckReplaceText / CheckSoundInFilter
-// (managers/packetmanager.cpp:1822-1914, 2507, 2741-2745).
+// through CheckSpeechInFilter / CheckReplaceText / CheckSoundInFilter.
 
 #include "assistantui.h"
 

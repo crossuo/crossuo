@@ -418,7 +418,7 @@ void draw_shop_list_editor()
         }
     }
 
-    // the unsaved-changes question (was QMessageBox::question in InitList)
+    // the unsaved-changes question
     if (s_EditorExitRequested && ImGui::BeginPopupModal("Save changes?", nullptr))
     {
         ImGui::TextUnformatted("You have unsaved changes in this list.\nSave changes?");

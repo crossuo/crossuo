@@ -410,7 +410,7 @@ bool CPacketManager::PacketSend(uint8_t *buf, size_t size)
 
 // --- tap entry points (called from src/, XUO_ASSISTANT guarded) ------------
 
-// Wire the Phase-1a host-bridge pointers to the client implementations. The
+// Wire the host-bridge pointers to the client implementations. The
 // plugin ABI got these as IUltimaOnline function pointers; in-process the same
 // client calls are bound directly (the FUNCBODY_* semantics of
 // src/CommonInterfaces.cpp).
@@ -609,7 +609,7 @@ PACKET_HANDLER(EnterWorld)
     g_GumpReceived = false;
     g_PromptReceived = false;
     g_Target.ClearHooks(); // was: g_Target.ClearHooks(); (assist/target round)
-    // was g_TabMacros->Reset() (tabmacros.cpp:366): discard any open recording
+    // was g_TabMacros->Reset(): discard any open recording
     // and stop playback - the old world's macro state never leaks across
     // login sessions.
     g_MacroExecutor.Reset();
@@ -642,13 +642,13 @@ PACKET_HANDLER(EnterWorld)
     }
     // was: if (runAutostart) g_AssistantForm->RunAutostart(); ->
     // g_AssistantForm->RunAutostart checked g_TabMain->Autostart() and ran
-    // g_TabScripts->RunScript("Autostart", editor text) after 1s
-    // (assistform.cpp:582-588); the UI events sink replays both halves.
+    // g_TabScripts->RunScript("Autostart", editor text) after 1s;
+    // the UI events sink replays both halves.
     if (runAutostart)
     {
         g_AssistantEvents->OnAutostartRequest();
     }
-    // DEVIATION (phase 5): g_UOMapManager.UOAMEnterWorld() was a Windows
+    // DEVIATION: g_UOMapManager.UOAMEnterWorld() was a Windows
     // WM_USER notify to the external UO Auto Map app - no HWND host in-client.
     if (g_MapSettings.GetShowOnLogin())
     {
@@ -684,7 +684,7 @@ PACKET_HANDLER(UpdateHitpoints)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION (phase 5): was g_UOMapManager.UpdateHits() - an
+        // DEVIATION: was g_UOMapManager.UpdateHits() - an
         // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
@@ -716,7 +716,7 @@ PACKET_HANDLER(UpdateMana)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION (phase 5): was g_UOMapManager.UpdateMana() - an
+        // DEVIATION: was g_UOMapManager.UpdateMana() - an
         // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
@@ -747,7 +747,7 @@ PACKET_HANDLER(UpdateStamina)
     if (obj->IsPlayer())
     {
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION (phase 5): was g_UOMapManager.UpdateStam() - an
+        // DEVIATION: was g_UOMapManager.UpdateStam() - an
         // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
@@ -784,7 +784,7 @@ PACKET_HANDLER(MobileAttributes)
         obj->SetStam(ReadInt16BE());
 
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION (phase 5): was g_UOMapManager.UpdateHits/Mana/Stam() -
+        // DEVIATION: was g_UOMapManager.UpdateHits/Mana/Stam() -
         // external-UOAM WM_USER notifies; the client status gump carries them.
     }
 
@@ -965,7 +965,7 @@ PACKET_HANDLER(CharacterStatus)
             g_Player->SetArmor(ReadInt16BE());
             g_Player->SetWeight(ReadUInt16BE());
 
-            // DEVIATION (phase 5): was g_UOMapManager.UpdateHits/Mana/Stam()
+            // DEVIATION: was g_UOMapManager.UpdateHits/Mana/Stam()
             // - external-UOAM WM_USER notifies only; the client status gump
             // already carries these values in-process.
 
@@ -1657,7 +1657,7 @@ PACKET_HANDLER(ClientTalkS)
         g_TextCommandManager.DoCommand(str);
         return false;
     }
-    // DEVIATION (phase 5): a leading '-' went to g_UOMapManager.UOAnotifyCmd
+    // DEVIATION: a leading '-' went to g_UOMapManager.UOAnotifyCmd
     // - the external UOA/UOAM command pipe (Windows WM_USER + atoms); there
     // is no in-process equivalent, the command stays a normal speech line.
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
@@ -1723,7 +1723,7 @@ PACKET_HANDLER(UnicodeClientTalk)
         g_TextCommandManager.DoCommand(str);
         return false;
     }
-    // DEVIATION (phase 5): the '-' UOA command notify (external UOAM command
+    // DEVIATION: the '-' UOA command notify (external UOAM command
     // pipe) - see the ASCII branch above.
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
     {
@@ -2311,7 +2311,7 @@ PACKET_HANDLER(ExtendedCommandR)
 
             if (oldMap != g_CurrentMap)
             {
-                // DEVIATION (phase 5): g_UOMapManager.UOAMnotifyLand() was a
+                // DEVIATION: g_UOMapManager.UOAMnotifyLand() was a
                 // WM_USER notify to the external UOAM app (no host here); the
                 // map window follows g_CurrentMap for the "Current" facet.
                 // g_FileManager.OnMapChange() is superseded: the client loads

@@ -4,8 +4,8 @@
 // The QuickJS-ng wrapper (see engine.h). QuickJS API notes kept from the
 // upstream headers: JS_NewRuntime/JS_NewContext own everything below them;
 // JS_FreeRuntime must be the LAST call. The exception -> journal reporting
-// mirrors CScriptHandle::RunEngine's `result.isError()` branches
-// (scripthandle.cpp:167-178): title + "Line: N\n" + description.
+// mirrors CScriptHandle::RunEngine's `result.isError()` branches:
+// title + "Line: N\n" + description.
 
 #include "engine.h"
 #include "apiscript.h"
@@ -108,7 +108,7 @@ bool CScriptEngine::Evaluate(const string &text)
     {
         return false;
     }
-    // JS_EVAL_TYPE_GLOBAL matches QScriptEngine::evaluate semantics (the
+    // JS_EVAL_TYPE_GLOBAL matches the old script engine's evaluate semantics (the
     // file's `function ...` declarations land on the global object).
     JSValue result = JS_Eval(
         m_Context, text.c_str(), text.length(), "<script>", JS_EVAL_TYPE_GLOBAL);

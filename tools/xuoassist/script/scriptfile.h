@@ -3,8 +3,8 @@
 
 #pragma once
 
-// The script file engine (was script/fileengine.*, CScriptFileObject over
-// QFile/QTextStream): stdio-based, script-thread owned.
+// The script file engine (was script/fileengine.*, CScriptFileObject):
+// stdio-based, script-thread owned.
 //
 // SANDBOX (the plan's security rule; the Qt engine accepted any path):
 // every path a script passes is normalized and resolved under the sandbox
@@ -41,7 +41,7 @@ string ScriptFile_Sanitize(const string &path, const char *api);
 
 // CScriptFileObject surface. `checkExists` fails the call when the file is
 // missing (the Qt overload flag). ReadLine returns "" at end of file; Read
-// returns the next whitespace-delimited token (QTextStream operator>>).
+// returns the next whitespace-delimited token.
 bool ScriptFile_Open(XA_SCRIPT_FILE *file, const string &path, bool checkExists);
 bool ScriptFile_Append(XA_SCRIPT_FILE *file, const string &path, bool checkExists);
 bool ScriptFile_Opened(const XA_SCRIPT_FILE *file);

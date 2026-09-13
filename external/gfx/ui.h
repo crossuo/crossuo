@@ -20,6 +20,9 @@ struct ui_context
 };
 
 ui_context ui_init(win_context &win, bool enable_viewports = true);
+// shared CrossUO launcher/assistant theme: colors + style metrics applied on
+// top of ui_init's default style (fonts and app-specific tweaks stay local)
+void ui_style_launcher();
 void ui_process_event(ui_context &, const SDL_Event *event);
 void ui_newframe(ui_context &ctx);
 void ui_draw(ui_context &ctx);

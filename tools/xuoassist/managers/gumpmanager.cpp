@@ -22,7 +22,7 @@ namespace xuoassist {
 
 static vector<string> split_skip_empty(const string &text, char separator)
 {
-    // Was str.split(" ", QString::SkipEmptyParts).
+    // Was str.split on spaces with empty parts skipped.
     vector<string> out;
     string current;
     for (char c : text)
@@ -301,7 +301,7 @@ bool CGumpManager::OnPacketReceived(CDataReader &reader)
     }
 
     // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
-    // MT_WAIT_FOR_GUMP })` -> return false (tabmacros.cpp:1023): a playing
+    // MT_WAIT_FOR_GUMP })` -> return false: a playing
     // macro waiting on this gump has its wait satisfied and consumes the
     // packet (the macro replay answers the server itself).
     if (g_World != nullptr && g_MacroExecutor.IsPlaying() &&

@@ -20,7 +20,7 @@
 //                       SoundFilter.xml, ShopList.xml, DisplayItems.xml,
 //                       DisplayGroups.xml, Profiles.xml
 //
-// Data that used to live in QListWidget items is kept here as plain structs
+// Data that used to live in the old list-widget items is kept here as plain structs
 // with the original item-class field names; the UI round binds its list
 // widgets directly to these containers.
 
@@ -263,7 +263,7 @@ public:
     fs_path GetProfilePath();
     void EnsureDirectories(); // mkdir Config/, GlobalConfig/, profile/
 
-    // --- profiles (assistform.cpp:165-192, 357-497, 714-780) ---------------
+    // --- profiles ----------------------------------------------------------
     const vector<string> &GetProfiles() const { return m_Profiles; }
     void ScanProfiles();
     bool LoadProfileBySerial(uint serial);

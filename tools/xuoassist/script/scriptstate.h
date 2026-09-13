@@ -29,7 +29,7 @@ namespace xuoassist {
 
 void ScriptGlobal_Set(const string &name, const string &value);
 // Returns "" when the name is not set (Qt OnCommandGetGlobal left the result
-// string untouched, which was the empty QString default).
+// string untouched, the old empty-string default).
 string ScriptGlobal_Get(const string &name);
 void ScriptGlobal_Clear();
 

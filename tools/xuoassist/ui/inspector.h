@@ -38,7 +38,7 @@ namespace xuoassist {
 // The window body (assistantui.cpp draws it while the assistant is visible).
 void InspectorWindow_Draw();
 
-// ObjectInspectorForm::Update (objectinspectorform.cpp:61-93): shows the
+// ObjectInspectorForm::Update: shows the
 // window, focuses the serial's section, (re)building its snapshot. Empty
 // serials are ignored.
 void Inspector_Open(uint serial);

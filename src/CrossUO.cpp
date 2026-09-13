@@ -977,7 +977,7 @@ void CGame::ProcessDelayedClicks()
 void CGame::Process(bool rendering)
 {
 #if defined(XUO_ASSISTANT)
-    // auto-close watcher: the assistant is an in-game-only tool (ADR D10) and
+    // auto-close watcher: the assistant is an in-game-only tool and
     // this runs before the render pass, which the overlay draw checks too
     AssistantWindow_FrameTick();
 #endif

@@ -32,7 +32,7 @@ void AssistantUI_Init();
 void AssistantUI_Tick();
 void AssistantUI_Shutdown();
 
-// The deferred Autostart run (was QTimer::singleShot(1000) in
+// The deferred Autostart run (was a one-second single-shot timer in
 // AssistForm::RunAutostart): arms the 1s delay, then AssistantUI_Tick runs
 // the "Autostart" function from the editor buffer exactly once.
 void AssistantUI_QueueAutostart();
@@ -57,8 +57,8 @@ void AssistantUI_MarkOptionsDirty();
 void AssistantUI_ClearOptionsDirty();
 
 // Recompiles the display title data (g_DisplayManager) from the config - was
-// AssistForm::LoadCurrentProfile's g_TabDisplay->RecompilleData() tail
-// (assistform.cpp:463); called at init and after a profile switch.
+// AssistForm::LoadCurrentProfile's g_TabDisplay->RecompilleData() tail;
+// called at init and after a profile switch.
 void AssistantUI_RecompileDisplayTitle();
 
 // The post-shutdown half of the texture lifecycle (runs from
@@ -71,7 +71,7 @@ void AssistantUI_AfterImGuiShutdown();
 // flips it; the shell draws the window while the assistant is visible).
 extern bool g_AssistantScriptEditorOpen;
 
-// --- phase 5 windows ----------------------------------------------------------
+// --- secondary windows ----------------------------------------------------------
 // The Map window + its settings form (ui/mapwindow.cpp), the Object Inspector
 // (ui/inspector.cpp) and the Text Dialog (ui/textdialog.cpp): dockable/poppable
 // ImGui windows drawn by the shell while the assistant is visible, gated by
@@ -132,7 +132,7 @@ void TabDisplay_AfterImGuiShutdown();
 // Returns and clears the title-redraw flag (AssistantUI_Tick).
 bool TabDisplay_ConsumeTitleDirty();
 
-// Per-tab from-target disarms for the phase 4a tabs (CancelPendingFromTargets,
+// Per-tab from-target disarms (CancelPendingFromTargets,
 // shutdown: a request armed before shutdown must not swallow a 0x6C after
 // re-init).
 void TabDress_CancelPendingFromTargets();

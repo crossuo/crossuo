@@ -160,7 +160,7 @@ uint rgba_to_argb(ImU32 rgba)
     return 0xFF000000u | (r << 16) | (g << 8) | b;
 }
 
-// QColoredPushButton: swatch + picker bound to a stored QRgb. The value is
+// ColorSwatch: swatch + picker bound to a stored RGBA value. The value is
 // written through on every frame of a drag (the live preview); true is
 // returned only on the commit frame (picker deactivated after an edit) so
 // the callers throttle their disk saves to the end of the session.
@@ -320,7 +320,7 @@ void redraw_title()
     s_TitleDirty = true;
 }
 
-// was RecompilleData (tabdisplay.cpp:432). Tracks s_CompiledFrom here as
+// was RecompilleData. Tracks s_CompiledFrom here as
 // well: the Title-data keystroke path recompiles through this, and the
 // TabDisplay_Draw sync pass must not recompile + reseed s_TitleData (the
 // in-flight InputText state) again on the next frame.

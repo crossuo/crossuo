@@ -3,8 +3,8 @@
 
 #pragma once
 
-// The QuickJS-ng runtime wrapper (was the QScriptEngine usage inside
-// CScriptHandle::RunEngine, scripthandle.cpp:120-180): one JSRuntime + one
+// The QuickJS-ng runtime wrapper (replaces the old script engine usage
+// inside CScriptHandle::RunEngine): one JSRuntime + one
 // JSContext per running script, the assistant API surface registered as
 // plain C natives (apiscript.cpp), the sentinel globals from the Qt engine
 // (self/ground/lasttarget/... ) registered on the global object, and the

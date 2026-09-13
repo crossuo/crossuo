@@ -92,7 +92,7 @@ void CAssistantConfig::EnsureDirectories()
 
 void CAssistantConfig::ScanProfiles()
 {
-    // Was AssistForm::Init profile scan (assistform.cpp:165-192): every
+    // Was the AssistForm::Init profile scan: every
     // non-hidden subdirectory of Config/ is a profile; serial-looking names
     // ("0x...") feed the profile map.
     m_Profiles.clear();
@@ -207,7 +207,7 @@ void CAssistantConfig::LoadProfileMap()
 
 bool CAssistantConfig::LoadProfile()
 {
-    // Was AssistForm::LoadCurrentProfile (assistform.cpp:382-478).
+    // Was AssistForm::LoadCurrentProfile.
     if (m_ProfileName.empty())
     {
         return false;
@@ -249,7 +249,7 @@ bool CAssistantConfig::LoadProfile()
 
 bool CAssistantConfig::SaveProfile()
 {
-    // Was AssistForm::SaveCurrentProfile (assistform.cpp:474-497). Note the
+    // Was AssistForm::SaveCurrentProfile. Note the
     // original did NOT save Macros.xml here (macros save on list change) and
     // did not save the profile map; keep both behaviors.
     if (m_ProfileName.empty())
@@ -577,7 +577,7 @@ bool CAssistantConfig::StayOnTop()
 
 void CAssistantConfig::UpdateFeatures()
 {
-    // Was TabMain::UpdateFeatures (tabmain.cpp:38-73): clear every option
+    // Was TabMain::UpdateFeatures: clear every option
     // whose feature flag is not enabled. The original table skipped Object
     // inspector (0) and Save far objects (0); the No gray screen row maps to
     // XAEF_NO_DEATH_SCREEN there and here. The widget checkbox unchecks
@@ -2273,7 +2273,7 @@ bool CAssistantConfig::LoadDress()
 
 void CAssistantConfig::LoadGlobals()
 {
-    // Was the AssistForm::Init global-load sequence (assistform.cpp:153-164).
+    // Was the AssistForm::Init global-load sequence.
     XMLSelfTest(); // config round-trip self-test (all builds, logs on failure)
     LoadTypes();
     LoadFindList();

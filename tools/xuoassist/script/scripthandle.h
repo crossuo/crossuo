@@ -4,8 +4,8 @@
 #pragma once
 
 // The per-script worker thread + the script manager (was CScriptHandle +
-// the running-scripts list bookkeeping of TabScripts, script/scripthandle.*:
-// one QThread per script joined through the finished signal).
+// the running-scripts list bookkeeping of TabScripts: one worker thread
+// per script joined through the finished signal).
 //
 // Lifecycle: Start() spawns the thread (capped at 16 concurrent), the thread
 // builds a CScriptEngine, evaluates the file, calls the function, and exits.

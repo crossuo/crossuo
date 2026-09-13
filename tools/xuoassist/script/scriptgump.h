@@ -19,7 +19,7 @@
 // (SC_TEXT_WINDOW), so all state here is main-thread owned.
 //
 // SaveToFile writes the current lines (the sandbox rules of scriptfile.h
-// apply; the dialog wrote the raw text with the same QFile convention).
+// apply; the dialog wrote the raw text the same way).
 
 #include "../core/global.h"
 

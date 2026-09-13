@@ -30,7 +30,7 @@
 
 namespace xuoassist {
 
-// --- the type table (hotkeysform.cpp:34-63 + Init:262-292) ------------------
+// --- the type table ---------------------------------------------------------
 
 const char *Actions_TypeName(uint type)
 {
@@ -121,7 +121,7 @@ const XA_ACTION_LIST s_FixedLists[] = {
 vector<string> &dynamic_list(uint type)
 {
     // the spell/skill lists: every HT_CAST_*/HT_USE_SKILL_* type shares the
-    // base list (packetmanager.cpp:3248-3254 / tabskills.cpp:85-91)
+    // base list
     static vector<string> s_Spells;
     static vector<string> s_Skills;
     static vector<string> s_Empty;
@@ -197,7 +197,7 @@ void Actions_ActionName(uint type, int action, char *out, size_t size)
     }
 }
 
-// --- the Data column (UpdateHotkeyData, hotkeysform.cpp:899-1289) ------------
+// --- the Data column (UpdateHotkeyData) --------------------------------------
 
 void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
 {
@@ -229,7 +229,7 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
             break;
         case HT_EXTERNAL_CODE:
         {
-            // first non-comment line becomes the label (hotkeysform.cpp:954)
+            // first non-comment line becomes the label
             const string &code = entry.ExternalCode;
             size_t start = 0;
             bool first = true;
@@ -410,7 +410,7 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
     // else: the caller renders "Blank hotkey"
 }
 
-// --- the executor side (PlayHotkeyAction, hotkeysform.cpp:1563-1913) ----------
+// --- the executor side (PlayHotkeyAction) -------------------------------------
 
 namespace {
 
@@ -690,7 +690,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
             }
             else if (action >= 5 && action <= 10)
             {
-                // client-side selection macros (hotkeysform.cpp:1868-1902)
+                // client-side selection macros
                 vector<string> clientMacroActions;
                 vector<string> clientMacroSubActions;
                 if (action == 5 || action == 8)
@@ -717,8 +717,8 @@ void Actions_Execute(const CHotkeyEntry &entry)
 
 void Actions_RunExternalCode(const string &code)
 {
-    // This phase: the external-code text runs through the same text-command
-    // pipeline as typed "_cmd" speech (packetmanager.cpp:1660/:1723) when it
+    // The external-code text runs through the same text-command
+    // pipeline as typed "_cmd" speech when it
     // starts with the configured command prefix; otherwise it is inert (the
     // script engine arrives in Phase 4).
     int prefixLen = g_AssistantConfig.IsCommandPrefix(code);
@@ -736,7 +736,7 @@ void Actions_RunExternalCode(const string &code)
 
 void Actions_SetSpellList(const vector<vector<string>> &books)
 {
-    // packetmanager.cpp:3233-3254: "Last" + every book's names, flattened
+    // "Last" + every book's names, flattened
     vector<string> spells;
     spells.reserve(8);
     spells.push_back("Last");
@@ -758,9 +758,9 @@ void Actions_SetSkillList(const vector<string> &names)
 
 // --- new target system serial ---------------------------------------------------
 
-// Was the assistant virtual-int VKI_NEW_TARGET_SYSTEM_SERIAL
-// (hotkeysform.cpp:1681 GetInt / :1868 g_SetInt): assistant-owned state, so
-// it lives here instead of the client's virtual-int table.
+// Was the assistant virtual-int VKI_NEW_TARGET_SYSTEM_SERIAL:
+// assistant-owned state, so it lives here instead of the client's
+// virtual-int table.
 namespace {
 uint s_NewTargetSystemSerial = 0;
 } // namespace

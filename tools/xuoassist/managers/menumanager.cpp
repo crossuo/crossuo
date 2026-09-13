@@ -137,7 +137,7 @@ bool CMenuManager::OnPacketReceived(CDataReader &reader)
 
     // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
     // MT_WAIT_FOR_MENU })` -> return false: a playing macro waiting on this
-    // menu consumes the packet (tabmacros.cpp:1023 semantics).
+    // menu consumes the packet (the PlayWaiting semantics).
     if (g_World != nullptr && g_MacroExecutor.IsPlaying() &&
         g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_MENU }))
     {

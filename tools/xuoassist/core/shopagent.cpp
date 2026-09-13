@@ -45,7 +45,7 @@ string to_lower_copy(string text)
     return text;
 }
 
-// QString::toInt(&ok) semantics: the WHOLE string must parse as an integer
+// the old toInt semantics: the WHOLE string must parse as an integer
 bool string_to_int(const string &text, int &value)
 {
     if (text.length() == 0)
@@ -82,7 +82,7 @@ string cliloc_name(const string &name, bool &intParsed)
 
 void CShopAgent::Tick()
 {
-    // was ShopProgressForm::on_Timer (50 ms QTimer -> g_Ticks frame ticks)
+    // was ShopProgressForm::on_Timer (50 ms timer -> g_Ticks frame ticks)
     if (!m_ProgressActive)
     {
         return;

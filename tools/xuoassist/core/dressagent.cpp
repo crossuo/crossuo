@@ -2,11 +2,10 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The dress agent engine - see dressagent.h for the port notes. The step
-// order below is lifted 1:1 from the script builder TabAgentsDress::DressSet
-// (tabagentsdress.cpp:449-555), UndressSet (:589-624) and DisarmSet
-// (:557-587); "Client.Unequip(layer)" resolves to the assistant MoveItem into
-// the backpack (commandmanager.cpp:1558-1576) and "Client.Equip(serial)" to
-// g_Assistant.MoveEquip (commandmanager.cpp:1614 OnCommandEquip).
+// order below is lifted 1:1 from the script builder TabAgentsDress::DressSet /
+// UndressSet / DisarmSet; "Client.Unequip(layer)" resolves to the assistant
+// MoveItem into the backpack and "Client.Equip(serial)" to
+// g_Assistant.MoveEquip (OnCommandEquip).
 //
 // Port delta (documented): Tick() paces ONE step per frame - with
 // MoveItemsDelay == 0 the whole sequence still spreads over one step per

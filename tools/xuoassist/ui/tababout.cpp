@@ -69,9 +69,8 @@ bool Logo_Init()
 
 void OpenLink(const char *url)
 {
-    // was QDesktopServices::openUrl (tababout.cpp:26-42); SDL is 2.0.10
-    // (no SDL_OpenURL) so the client's own launcher (Platform::OpenBrowser,
-    // src/Platform.cpp:78/:136 ShellExecute/xdg-open/open) is reused
+    // the client's own launcher (Platform::OpenBrowser: ShellExecute /
+    // xdg-open/open) is reused; SDL is 2.0.10 (no SDL_OpenURL)
     ::Platform::OpenBrowser(url);
 }
 
@@ -135,7 +134,7 @@ void TabAbout_Draw()
 
     ImGui::Separator();
 
-    // the static QTextBrowser block (tababout.ui, links disabled)
+    // the static rich-text block (links disabled)
     ImGui::TextWrapped("Developed by CrossUO Team");
 }
 

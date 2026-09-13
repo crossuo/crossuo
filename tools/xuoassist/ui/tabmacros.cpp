@@ -220,7 +220,7 @@ void TabMacros_Draw()
     ImGui::Button("To script");
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
     {
-        ImGui::SetTooltip("Scripts arrive in phase 4.");
+        ImGui::SetTooltip("Not available.");
     }
     ImGui::EndDisabled();
 

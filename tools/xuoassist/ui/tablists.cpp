@@ -115,7 +115,7 @@ void draw_types_tab()
     }
     if (from_target_poll(ftPending, ftGeneration, XA_FROM_TARGET_TYPE, ftResult))
     {
-        // SetTypeFromTarget (tabliststypes.cpp:338): fill the graphic field
+        // SetTypeFromTarget: fill the graphic field
         snprintf(
             typeGraphic, sizeof(typeGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
     }
@@ -235,7 +235,7 @@ void draw_objects_tab()
     }
     if (from_target_poll(ftPending, ftGeneration, XA_FROM_TARGET_OBJECT, ftResult))
     {
-        // SetObjectFromTarget (tablistsobjects.cpp:367)
+        // SetObjectFromTarget
         snprintf(
             objectSerial, sizeof(objectSerial), "%s", CAssistant::SerialToText(ftResult.Serial).c_str());
     }
@@ -319,7 +319,7 @@ void draw_objects_tab()
 
     ImGui::Separator();
 
-    // dress bag row (tablistsobjects.cpp:166-186, 383-421)
+    // dress bag row
     if (ImGui::Button("Set as dress bag"))
     {
         const uint serial = selected >= 0 && selected < (int)items.size()
@@ -480,14 +480,14 @@ void draw_find_tab()
         static uint ftGeneration = 0;
         if ((itemButtons & XALB_TARGET) != 0)
         {
-            // was on_pb_FindContentFromTarget_clicked (tablistsfind.cpp:189)
+            // was on_pb_FindContentFromTarget_clicked
             from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetFindList,
                                 "Select a object for obtain graphic and color");
         }
         XA_FROM_TARGET_RESULT ftResult;
         if (from_target_poll(ftPending, ftGeneration, XA_FROM_TARGET_FIND_LIST, ftResult))
         {
-            // AddFindListItemInList (tablistsfind.cpp:433)
+            // AddFindListItemInList
             snprintf(itemGraphic, sizeof(itemGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
             snprintf(itemColor, sizeof(itemColor), "%s", CAssistant::GraphicToText(ftResult.Color).c_str());
             snprintf(itemComment, sizeof(itemComment), "%s", ftResult.Name.c_str());
@@ -779,8 +779,7 @@ void draw_world_object_tab(
     const int buttons = ListButtons(listId);
     if ((buttons & XALB_TARGET) != 0)
     {
-        // was on_pb_Friend/EnemyFromTarget_clicked (tablistsfriends.cpp:59 /
-        // tablistsenemies.cpp:147)
+        // was on_pb_Friend/EnemyFromTarget_clicked
         from_target_request(
             ftPending,
             ftGeneration,

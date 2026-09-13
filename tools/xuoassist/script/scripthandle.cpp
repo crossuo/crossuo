@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // See scripthandle.h. The thread body is the CScriptHandle::process +
-// RunEngine port (scripthandle.cpp:80-180): build the engine, evaluate, call
+// RunEngine port: build the engine, evaluate, call
 // the function, report errors through g_Assistant.ScriptError, remove the
 // running row on the way out.
 

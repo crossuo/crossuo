@@ -1,8 +1,7 @@
 # X:UO Assist — the in-client assistant
 
-The CrossUO assistant is the former external X:UO Assist plugin (a Qt
-application plus a Win32 DLL injected into the client) rebuilt as an
-in-process ImGui overlay inside the client. It ships with the client binary
+The CrossUO assistant is an in-process ImGui overlay inside the client. It
+ships with the client binary
 (build flag `XUO_ASSISTANT`, on by default) and needs no DLL, no plugin
 directory entry and no separate app.
 
@@ -40,8 +39,7 @@ directory entry and no separate app.
 
 ## Profiles and files
 
-Everything is stored under the game directory, in the same layout the Qt
-application used:
+Everything is stored under the game directory:
 
 - `Config/<ProfileName>/` — per-profile `Options.xml`, `Hotkeys.xml`,
   `Macros.xml`, `Objects.xml`, `Party.xml`, `Friends.xml`, `Enemies.xml`,
@@ -50,15 +48,16 @@ application used:
   `SpeechFilter.xml`, `TextReplaces.xml`, `SoundFilter.xml`, `ShopList.xml`,
   `DisplayItems.xml`, `DisplayGroups.xml`, `Profiles.xml`, `Map.xml`.
 
-Existing Qt-assistant config files load as-is (the writers reproduce the
-original XML byte for byte; `Hotkeys.xml` also accepts the legacy version 0
+Profiles and files under `Config/<profile>/` written by earlier assistant
+releases load as-is (the writers reproduce the original XML byte for byte;
+`Hotkeys.xml` also accepts the legacy version 0
 records). All saves are crash-safe: content is written to a temporary file in
 the same directory and atomically renamed over the target, so a crash can
 never truncate a profile; leftover `*.tmp` files are ignored and replaced on
 the next save.
 
 Multi-instance note: two clients sharing one game directory share the same
-`Config/` tree. As with the Qt assistant, simultaneous writes to the same
+`Config/` tree. Simultaneous writes to the same
 profile can lose updates — use separate profiles (or directories) per client.
 Files are not locked by design.
 
@@ -69,12 +68,12 @@ Scripts are JavaScript (QuickJS) with the XUO Assist API surface
 GumpHook, ClientMacro, File). The Scripts tab opens/reloads/runs/pauses/stops
 scripts; the API classification ([Q]/[G]/[D] coverage notes) and the
 registration table live in `tools/xuoassist/script/apiscript.cpp`
-(`apiscript.h` only declares the two entry points). Existing Qt
-assistant scripts run unmodified except for the documented deviations
+(`apiscript.h` only declares the two entry points). Earlier assistant
+scripts run unmodified except for the documented deviations
 ("Remaining deviations" in `docs/NOTES.md`: no audio playback, no
 speech-mode variants, `LoadProfile` restrictions).
 
-## Differences from the external Qt assistant
+## Differences from earlier assistant releases
 
 - No system tray icon and no minimize-to-tray: **Alt+U** hides/shows the
   window instead.
@@ -93,8 +92,8 @@ speech-mode variants, `LoadProfile` restrictions).
   the static-art icons instead.
 - `savehotkeys`/`loadhotkeys` target the profile's `Hotkeys.xml` (the chosen
   path argument is not honored); target-hook tile names match by graphic,
-  `land` and `any` — the Qt `tree`/`water`/`mine` category lists were part of
-  the old plugin's own tile caches and are not available.
+  `land` and `any` — the `tree`/`water`/`mine` category lists of earlier
+  releases are not available.
 
 ## Building
 
@@ -102,4 +101,4 @@ speech-mode variants, `LoadProfile` restrictions).
 the automatic load of the external `xuoassist.dll` plugin at startup — the
 built-in assistant supersedes it, and loading both would double-handle
 packets. `XUO_ASSISTANT=OFF` removes the assistant from the build completely
-and restores the original plugin loading path.
+and restores the external plugin loading path.

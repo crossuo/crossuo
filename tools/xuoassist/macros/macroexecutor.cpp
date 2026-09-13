@@ -48,7 +48,7 @@ void free_macro_list(vector<CMacro *> &list)
 
 void warmode_send(uint state)
 {
-    // was CCommandManager::OnCommandWarmode (commandmanager.cpp:931)
+    // was CCommandManager::OnCommandWarmode
     if (g_World == nullptr || g_Player == nullptr)
     {
         return;
@@ -90,7 +90,7 @@ void CMacroExecutor::SetLoopOptions(bool looped, float loopSeconds)
 
 void CMacroExecutor::Play(const string &name, bool doNotAutoIterrupt)
 {
-    // TabMacros::Play(QString) (tabmacros.cpp:1004): find by name, last first
+    // TabMacros::Play: find by name, last first
     const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
     if (m_Playing && m_DoNotAutoIterrupt)
     {
@@ -108,7 +108,7 @@ void CMacroExecutor::Play(const string &name, bool doNotAutoIterrupt)
 
 void CMacroExecutor::PlayIndex(int macroIndex, bool doNotAutoIterrupt)
 {
-    // TabMacros::Play(CMacroListItem *) (tabmacros.cpp:931)
+    // TabMacros::Play(CMacroListItem *)
     const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
     if (macroIndex < 0 || macroIndex >= (int)macros.size())
     {
@@ -143,7 +143,7 @@ void CMacroExecutor::PlayIndex(int macroIndex, bool doNotAutoIterrupt)
 
 void CMacroExecutor::Stop()
 {
-    // TabMacros::Stop (tabmacros.cpp:988)
+    // TabMacros::Stop
     m_Playing = false;
     m_PlayingIndex = -1;
     m_WaitingEnabled = false;
@@ -177,7 +177,7 @@ void CMacroExecutor::RecordStart(int macroIndex)
 
 int CMacroExecutor::RecordStop()
 {
-    // on_pb_Record_clicked stop half (tabmacros.cpp:337): commit the buffer
+    // on_pb_Record_clicked stop half: commit the buffer
     // into the macro; an empty capture is discarded
     m_Recording = false;
     const int committed = (int)m_RecordBuffer.size();
@@ -201,7 +201,6 @@ int CMacroExecutor::RecordStop()
 
 void CMacroExecutor::RecordTargetObject(uint serial, ushort graphic, ushort color)
 {
-    // assist/target.cpp:206-240
     if (!m_Recording)
     {
         return;
@@ -233,7 +232,7 @@ void CMacroExecutor::RecordTargetObject(uint serial, ushort graphic, ushort colo
 
 void CMacroExecutor::RecordTargetTile(ushort graphic, int x, int y, int z)
 {
-    // assist/target.cpp:180-193 (relative coordinates against the player)
+    // relative coordinates against the player
     if (!m_Recording)
     {
         return;
@@ -247,7 +246,7 @@ void CMacroExecutor::RecordTargetTile(ushort graphic, int x, int y, int z)
 
 void CMacroExecutor::Record(CMacro *macro)
 {
-    // TabMacros::AddAction(macro, false) recording half (tabmacros.cpp:217
+    // TabMacros::AddAction(macro, false) recording half (the
     // SetSelectedItem path): append to the open recording. The packet taps
     // check IsRecording() before building the action; this only guards the
     // ownership (a stray action is dropped, not leaked).
@@ -261,7 +260,7 @@ void CMacroExecutor::Record(CMacro *macro)
 
 bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)
 {
-    // TabMacros::PlayWaiting (tabmacros.cpp:1023): step back onto the waiting
+    // TabMacros::PlayWaiting: step back onto the waiting
     // action and re-run it now that the awaited event arrived.
     if (m_Playing && m_PlayPosition >= 1 && m_PlayPosition <= (int)m_PlayList.size())
     {
@@ -290,7 +289,7 @@ bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)
 
 void CMacroExecutor::Reset()
 {
-    // TabMacros::Reset (tabmacros.cpp:366) - the UI half became state reads
+    // TabMacros::Reset - the UI half became state reads
     // (TabMacros_Draw), so this is the state teardown: an open recording is
     // discarded and playback stops (world teardown in EnterWorld).
     m_Recording = false;
@@ -310,7 +309,7 @@ void CMacroExecutor::Reset()
 
 uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
 {
-    // TabMacros::FindObject (tabmacros.cpp:1050)
+    // TabMacros::FindObject
     ushort graphic = macro->GetGraphic();
 
     if (graphic == 0u)
@@ -362,7 +361,7 @@ uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE conv
 
 void CMacroExecutor::ProcessMacro()
 {
-    // TabMacros::ProcessMacro (tabmacros.cpp:1105-1828)
+    // TabMacros::ProcessMacro
     const int dressLayersCount = 18;
     const int dressLayers[dressLayersCount] = { OL_TORSO,    OL_HELMET,   OL_GLOVES,   OL_LEGS,
                                                 OL_WAIST,    OL_ARMS,     OL_TUNIC,    OL_CLOAK,
@@ -564,7 +563,7 @@ void CMacroExecutor::ProcessMacro()
                 {
                     text = "| " + text;
                 }
-                // was g_CommandManager.OnCommandSay (commandmanager.cpp:1144)
+                // was g_CommandManager.OnCommandSay
                 if (g_World != nullptr && !text.empty())
                 {
                     ushort color = 0;
@@ -572,7 +571,7 @@ void CMacroExecutor::ProcessMacro()
                     {
                         color = 0;
                     }
-                    // the command text is ASCII speech: widen like QString::toStdWString
+                    // the command text is ASCII speech: widen like the old toStdWString
                     wstring wide;
                     wide.reserve(text.size());
                     for (char c : text)
@@ -727,7 +726,7 @@ void CMacroExecutor::ProcessMacro()
                 break;
             case MT_WALK:
             {
-                // TabMacros::ProcessMacro MT_WALK (tabmacros.cpp:1546): the
+                // TabMacros::ProcessMacro MT_WALK: the
                 // step went through CCommandManager::OnCommandStep ->
                 // PathFinder::Walk(run, direction); in-process the client's
                 // own walker (src/Walker, g_PathFinder) is the same walker

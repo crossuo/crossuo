@@ -77,19 +77,19 @@ void CAssistantUIEvents::OnSkillsList(const vector<string> &hotkeyActions)
 
 void CAssistantUIEvents::OnRecordTargetObject(uint serial, ushort graphic, ushort color)
 {
-    // was g_TabMacros->AddAction(new CMacroWithObject(...)) (target.cpp:210)
+    // was g_TabMacros->AddAction(new CMacroWithObject(...))
     g_MacroExecutor.RecordTargetObject(serial, graphic, color);
 }
 
 void CAssistantUIEvents::OnRecordTargetTile(ushort graphic, int x, int y, int z)
 {
-    // was g_TabMacros->AddAction(new CMacroWithTargetTile(...)) (target.cpp:190)
+    // was g_TabMacros->AddAction(new CMacroWithTargetTile(...))
     g_MacroExecutor.RecordTargetTile(graphic, x, y, z);
 }
 
 void CAssistantUIEvents::OnAutostartRequest()
 {
-    // was g_AssistantForm->RunAutostart (assistform.cpp:582): the checkbox
+    // was g_AssistantForm->RunAutostart: the checkbox
     // gated the 1s timer; the timer ran the editor buffer as "Autostart"
     if (g_AssistantConfig.Autostart())
     {
@@ -149,12 +149,12 @@ void CAssistantUIEvents::OnTitleRedraw()
 void CAssistantUIEvents::OnTitleRedraw(uint serial)
 {
     // was g_TabDisplay->CheckRedrawTitle(obj): the manager gated on
-    // CanRedraw(graphic, color) before redrawing (packetmanager.cpp:1457)
+    // CanRedraw(graphic, color) before redrawing
     (void)serial;
     TabDisplay_RequestTitleRedraw();
 }
 
-// --- phase 5 ------------------------------------------------------------------
+// --- map + inspector events ------------------------------------------------------------------
 
 void CAssistantUIEvents::OnMapUpdate(uint serial)
 {

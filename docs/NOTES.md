@@ -741,115 +741,145 @@ Known open edges:
 
 ---
 
-# Implementation Notes
+# XUO Assist — assistant internals & decisions
 
-## XUO Assist — Phase 0 foundations (in-client ImGui assistant, `tools/xuoassist/`)
+Topic notes for the in-client assistant (`tools/xuoassist/`): durable
+gotchas, accepted deltas and the reasoning behind them.
 
-Review verdict: PASS_WITH_NOTES (confidence HIGH; runtime pop-out/cursor behavior is
-MEDIUM pending a manual interactive pass). Notes and accepted deltas:
+## Build gates & layout
 
-- **Runtime-verified vs. reasoning-only**: build, symbol/link integrity, renderer gating
-  (GL3/GLES2 on, GL1/GL2 off), lifecycle hook placement and draw-pass placement were
-  verified by compilation and inspection. Actual pop-out behavior (drag-out, dock-back
-  auto-merge, window-X hide, popped-out window freezing while the game window is
-  minimized or the assistant hidden, OS cursor vs. game software cursor overlap) requires
-  an interactive session — flagged for a manual pass before Phase 1.
-- **`sync_text_input` (AssistantWindow.cpp)**: the client never calls SDL_StartTextInput
-  (only the vendored ImGui SDL2 backend, Android-only), so the assistant toggles SDL text
-  input on while `io.WantTextInput` and restores the prior state on hide/shutdown. Known
-  one-frame lag on the first keystroke into an ImGui InputText.
-- **Hidden-but-initialized assistant**: no ImGui NewFrame runs while hidden, so residual
-  platform windows (pop-out) freeze until Alt+U re-shows the assistant. Accepted for
-  Phase 0.
-- **Assistant draws after `RenderDraw_Execute`**: assistant UI paints over the game's
-  software cursor when overlapping; ImGui's SDL backend shows the OS cursor over
-  assistant windows. Cosmetic; revisit during Phase 2 UI polish.
-- **"Items: N" status field**: `CGameWorld` has no items-count accessor in this port, so
-  Phase 0 reports `g_World->m_Map.size()` (all tracked objects). Revisit when the
-  packet-manager port (Phase 1) lands.
-- **Init contract**: init may run from `AssistantWindow_DrawOverlay()` or
-  `AssistantWindow_Toggle()` (Alt+U); both run on the main thread with the game GL
-  context current at the in-game stage. On init failure the hotkey falls through to the
-  game and an error is logged once.
-- **Gotcha for future phases**: a PRIVATE compile definition on the `crossuo` target does
-  not reach the `xuoassist` static lib's own sources — the lib carries its own
-  `target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)` (a missing define went
-  unnoticed at first because Linux allows undefined symbols in shared libs).
-
-## XUO Assist — Phase 6 hardening & cutover
-
-- **Macro action recording wired** (`managers/packetmanager.cpp`,
-  `macros/macroexecutor.{h,cpp}`): the Phase-3 recording markers are closed
-  (19 `IsRecording()` gates / 19 `Record()` creation sites in
-  `packetmanager.cpp`).
-  Every outgoing-packet tap builds the same `CMacro` subclass the Qt site built
-  and hands it to `g_MacroExecutor.Record()` (appends to the recording buffer;
-  `RecordStop` commits). Conversions are verbatim from Qt: `MT_USE` → `MCT_SELF`
-  on the player serial; `MT_ATTACK` → `MCT_LASTATTACK`/`MCT_LASTTARGET`/
-  `MCT_ENEMY` (in that order); `MT_USE_SKILL`/`MT_CAST`/`MT_CAST_FROM_BOOK`/
-  `MT_CAST_NEW` → `MCT_LAST` when the new index compares equal to the previous
-  index's "was-set" flag (the `static_cast<int>(lastSpell) == index` form of
-  `MT_CAST_NEW` is kept literally); `MT_COMBAT_ABILITY` → `MCT_PRIMARY` when the
-  ability byte equals `g_Ability[0]`, else `MCT_SECONDARY` (the packet byte is
-  read only while recording, as in the original); `MT_WALK` records the
-  negative turn encoding when the direction changes facing. Taps are
-  observe-only: a single `IsRecording()` bool check when idle, packet flow
-  untouched.
-- **PlayWaiting ported** (`CMacroExecutor::PlayWaiting`): the gump, menu,
-  context-menu, prompt and target managers now satisfy a playing macro's wait
-  on packet arrival and consume the packet (macro replay answers the server),
-  matching `TabMacros::PlayWaiting` (tabmacros.cpp:1023) semantics.
-- **`MT_WALK` playback** now drives the client's own walker
-  (`g_PathFinder.Walk`) with the Qt walk delays (mount/honor run bits,
-  `FastRotation` turn delay); was the plugin-ABI PathFinder.
-- **Autostart**: EnterWorld → `OnAutostartRequest()` → the UI sink checks the
-  option and arms a 1 s timer (`AssistantUI_QueueAutostart`) that runs the
-  `Autostart` function from the editor buffer (was
-  `AssistForm::RunAutostart` + `QTimer::singleShot`).
-- **Tile-hook resolution** (`core/target.cpp`): `GetTileAt` reads the client's
-  map/statics blocks (`::g_MapManager`) and applies the tiledata
-  surface-height fixup (`g_Data.m_Static`, version-normalized; `CV_7090` gate
-  kept). Categories: numeric graphic, `land`, `any` behave as the Qt
-  `GetTile`; `tree`/`water`/`mine` need the old plugin's Config tile lists and
-  resolve like the original's empty-list path (documented in-code). The
-  `gameplayer.cpp` ability AnimID lookup now reads `g_Data.m_Static` too.
-- **Display icons** (`managers/displaymanager.cpp`): `GetIcon`/
-  `LoadDisplayIcon` decode static art through the client's
-  `g_UOFileReader.GetArtPixels` + `g_ColorManager` hues (gold 0x0EEF fix,
-  stackable double-image, bounding-box crop, exactly the Qt algorithm) into
-  `CDisplayIcon` RGBA buffers; the Display items editor previews them as
-  ImGui user textures (`ui/tabdisplay.cpp`).
-- **Crash-safe saves** (`config/xml.{h,cpp}`): `AtomicFileWrite` =
-  temp file in the target directory → write → `fflush` → `fsync`/`_commit` →
-  preserve the original mode (`stat`/`chmod` on POSIX) → atomic
-  `rename`/`MoveFileEx`. `XMLDocument::Save` (all 18 `doc.Save()` sites incl.
-  `Map.xml`) and `SaveDress` (Dress.coa) funnel through it; the script text
-  window save and the script editor's Save use it as well. Any failure keeps
-  the original file and logs via the Assistant logger; stale `*.tmp` files
-  are ignored on load and truncated on the next save. Multi-instance shares
-  the Qt app's "no locking" semantics (documented in `docs/ASSISTANT.md`).
-- **Cutover** (`src/CrossUO.cpp` `CGame::LoadPlugins`): when
-  `XUO_ASSISTANT` is on, the external `xuoassist.dll` plugin is no longer
-  auto-loaded (the built-in assistant supersedes it; the rest of the plugin
-  list is untouched). With `XUO_ASSISTANT=OFF` the pre-existing load path
-  compiles back in byte-for-byte; the OFF libcrossuo.so contains no
-  xuoassist symbols or strings (verified with `nm`/`strings`).
-- **Single-executable layout** (`src/CMakeLists.txt`): with `XUO_ASSISTANT`
-  on (GL3/GLES2 renderers, non-Windows) the client builds as ONE
-  `crossuo` executable with a real `main()` (`XUO_STANDALONE` in
-  `src/Main.cpp`) instead of the `client` dlopen loader + `libcrossuo.so`
+- Renderer gating: the assistant builds only for GL3/GLES2 (it renders
+  through the vendored ImGui GL3/GLES2 stack). GL1/GL2 builds exclude it
+  (`XUO_ASSISTANT_ENABLED` in the root `CMakeLists.txt`).
+- A PRIVATE compile definition on the `crossuo` target does not reach the
+  `xuoassist` static lib's own sources — the lib carries its own
+  `target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)` (a missing
+  define went unnoticed at first because Linux allows undefined symbols in
+  shared libs).
+- With `XUO_ASSISTANT` on (non-Windows), the client builds as ONE
+  self-contained `crossuo` executable with a real `main()` (`XUO_STANDALONE`
+  in `src/Main.cpp`) instead of the `client` dlopen loader + `libcrossuo.so`
   plugin pair; the reverse plugin-install channel (`g_oaReverse`,
-  `set_install`, `plugin_main`) is compiled out. `XUO_ASSISTANT=OFF`
-  keeps the exe+so layout unchanged.
-- **Harness**: `xuoassist-script-test` gained `script/test/fsimpl.cpp` (the
-  stb-style `common/fs.h` implementation, normally compiled by
-  `xuocore/common.cpp`) plus `config/xml.cpp`, because the text-window save
-  now uses `AtomicFileWrite`. All harness tests pass.
-- **Remaining deviations** (grep `DEVIATION`, all commented in place): the
-  external UOAM/UOA notify pipes (phase 5, 9 sites), the CLOGGER-only world
-  dump, save/load-hotkeys targeting the profile file, tile-hook category
-  lists, and the three script-API items commented in place in
-  `script/apiscript.cpp` (PlayWav/QSound, speech modes, LoadProfile). Kept
-  from the trimmed `apiscript.h` provenance header: the Qt option names
-  cross the VKI ids - e.g. `OptionScaleSpeechDelay` maps to
-  `VKI_SPEECH_DELAY` (visible in the apiscript.cpp registration table).
+  `set_install`, `plugin_main`) is compiled out. `XUO_ASSISTANT=OFF` keeps
+  the exe+so layout and contains no assistant symbols or strings.
+- Link guard: `crossuo` links with `--no-undefined`. The assistant is part
+  of the shared lib, and a declaration that never got a definition used to
+  slip through as an undefined symbol that aborted the client on the first
+  assistant frame.
+- Cutover: with the assistant linked in, the external plugin is no longer
+  auto-loaded (two assistants would fight over the same packets). The rest
+  of the plugin list is untouched; the legacy dll can still be loaded
+  manually.
+
+## Lifecycle & visibility
+
+- Init may run from `AssistantWindow_DrawOverlay()` or
+  `AssistantWindow_Toggle()` (Alt+U); both run on the main thread with the
+  game GL context current at the in-game stage. On init failure the hotkey
+  falls through to the game and an error is logged once.
+- The assistant exists only in-game: logout, character select or disconnect
+  shut it down, whether its windows are docked or popped out.
+- No ImGui NewFrame runs while hidden, so residual pop-out platform windows
+  freeze until the assistant is re-shown. Accepted.
+- The assistant draws after `RenderDraw_Execute`: it paints over the game's
+  software cursor when overlapping; ImGui's SDL backend shows the OS cursor
+  over assistant windows. Cosmetic.
+- Pop-out behavior (drag-out, dock-back auto-merge, popped-out windows
+  while the game window is minimized) was compile/inspection verified; a
+  manual interactive pass is still the real check.
+
+## Rendering & texture lifecycle
+
+- Texture shutdown ordering: free CPU pixels and delete textures only AFTER
+  the ImGui context is gone (`AssistantUI_AfterImGuiShutdown`), because the
+  backend reclaims GL names inside `ui_shutdown` by walking registered
+  textures with `RefCount == 1`. Applies to the icon atlas, AssMap and the
+  About logo alike.
+- Textures stay registered with `RefCount == 1` so the backend's teardown
+  walk can find them; runtime-evicted preview textures use the same rule.
+
+## Command queue & script runtime
+
+- Only script worker threads push; only the main thread drains
+  (`ScriptQueue_Drain`), called from `AssistantUI_Tick` before the agent
+  ticks and before the frame draw — inside the game's frame loop, so the
+  drained commands see the same world state a main-loop consumer would.
+- Every command carries a promise side (mutex + cv + flag); the pushing
+  script blocks on it. The queue is shut down before the script threads
+  join so late pushes fail fast instead of deadlocking.
+- Termination: a JS interrupt handler polls the terminate flag inside every
+  JS loop (between-API-call pauses never reach a tight loop otherwise).
+  The Wait/Pause flag family clears + polls its received-flag inside the
+  drain, so the main-thread flags are never touched cross-thread.
+
+## Input & hotkeys
+
+- The client never calls `SDL_StartTextInput` (only the vendored ImGui SDL2
+  backend, Android-only), so `sync_text_input` toggles SDL text input while
+  `io.WantTextInput` and restores the prior state on hide/shutdown. Known
+  one-frame lag on the first keystroke into an ImGui InputText.
+- While hidden, the hotkey engine keeps working (the assistant could be
+  hidden and its hotkeys keep firing; Pass-keys and the On/Off switch
+  govern it). The capture field ("listening") must see raw events even
+  when the game would; it is gated on `!WantTextInput` so a busy text
+  field always wins.
+- Key auto-repeat never fires a binding: the game only sends non-repeat
+  key events to the engine.
+
+## Persistence
+
+- All saves are crash-safe (`AtomicFileWrite`, `config/xml.{h,cpp}`): temp
+  file in the target directory → write → `fflush` → `fsync`/`_commit` →
+  preserve the original file mode → atomic `rename`/`MoveFileEx`. All
+  `XMLDocument::Save` sites (incl. `Map.xml`), `SaveDress` (Dress.coa), the
+  script text window save and the script editor's Save funnel through it.
+  Any failure keeps the original file; stale `*.tmp` files are ignored on
+  load and truncated on the next save.
+- Format quirks kept for byte compatibility with existing profile files:
+  `FindList.xml`/`IgnoreList.xml`/`Hotkeys.xml` store `size = count+1`;
+  Map.xml spells one attribute `other_sho_name`; Dress.coa strings carry
+  the length+1/0x00 layout and the reader tolerates a full int32 length
+  (names failing the bounds check come back empty, the set is skipped).
+- Multi-instance: two clients sharing one game directory share `Config/`;
+  files are not locked, so simultaneous writes to the same profile can lose
+  updates — use separate profiles per client.
+
+## Packet taps & macro recording
+
+- Every macro-recording tap in `packetmanager.cpp` is observe-only: a
+  single `IsRecording()` check when idle, packet flow untouched. The taps
+  build the same `CMacro` subclasses the actions map to (`MT_USE` →
+  `MCT_SELF`; `MT_ATTACK` → `MCT_LASTATTACK`/`MCT_LASTTARGET`/`MCT_ENEMY`
+  in that order; cast variants → `MCT_LAST` on the previous-index "was-set"
+  comparison; `MT_COMBAT_ABILITY` → primary/secondary via `g_Ability[0]`;
+  `MT_WALK` records the negative turn encoding on facing change).
+- `PlayWaiting`: the gump, menu, context-menu, prompt and target managers
+  satisfy a playing macro's wait on packet arrival and consume the packet
+  (the macro replay answers the server).
+- The shop agent taps the OpenContainer/BuyList/SellList replies in
+  `packetmanager.cpp`; the progress countdown runs on frame ticks.
+- Map window geometry: the legacy `Map.xml` window attributes are honored
+  for first placement only; ongoing geometry lives in the ImGui window ini.
+
+## Script API
+
+- The `[Q]/[G]/[D]` classification and the registration table live in
+  `script/apiscript.cpp`. Option-name natives cross onto the client's VKI
+  ids (e.g. `OptionScaleSpeechDelay` → `VKI_SPEECH_DELAY`).
+- The sentinel globals (`self`, `lasttarget`, ...) are strings, matched by
+  the serial-resolution helpers; scripts keep working unchanged.
+
+## Remaining deviations (grep `DEVIATION`, all commented in place)
+
+- No audio playback (`PlayWav` reports and does nothing).
+- No speech-mode variants (SayBroadcast goes out as normal speech).
+- `LoadProfile` restrictions (script-side profile switching is limited).
+- The external UOAM/UOA notify pipes have no in-process equivalent.
+- The CLOGGER-only assistant world dump is a no-op (no logger channel).
+- `savehotkeys`/`loadhotkeys` target the profile's `Hotkeys.xml`; the
+  explicit path argument is not honored.
+- Tile-hook categories: numeric graphic, `land`, `any` resolve from the
+  client's tiledata; `tree`/`water`/`mine` category lists are not
+  available and resolve like an empty list.
+- Stay-on-top has no effect (the assistant renders in-game, no OS window
+  to keep on top).

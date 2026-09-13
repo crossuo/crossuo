@@ -54,7 +54,7 @@ void refresh_hotkey_text()
 
 void select_row(int row)
 {
-    // on_tw_Hotkeys_clicked (hotkeysform.cpp:1348): load the row into the
+    // on_tw_Hotkeys_clicked: load the row into the
     // info panel (m_Loading guarded in the original)
     s_SelectedRow = row;
     if (row < 0 || row >= (int)g_AssistantConfig.m_Hotkeys.size())
@@ -68,7 +68,7 @@ void select_row(int row)
     s_SelectedAction = (int)entry.Action;
     if (entry.Type == HT_PLAY_MACRO || entry.Type == HT_SCRIPT)
     {
-        // match the stored name against the action list (hotkeysform.cpp:1376)
+        // match the stored name against the action list
         s_SelectedAction = -1;
         char name[128];
         const int count = Actions_ActionCount(entry.Type);
@@ -92,7 +92,7 @@ void select_row(int row)
 
 void commit_action_selection()
 {
-    // on_cb_Action_currentIndexChanged (hotkeysform.cpp:874)
+    // on_cb_Action_currentIndexChanged
     if (s_SelectedRow < 0 || s_SelectedRow >= (int)g_AssistantConfig.m_Hotkeys.size())
     {
         return;
@@ -144,7 +144,7 @@ void HotkeysForm_Draw(bool *open)
         return;
     }
 
-    // --- the duplicate question popup (CheckExists, hotkeysform.cpp:184) ---
+    // --- the duplicate question popup (CheckExists) ---
     if (g_Hotkeys.DuplicateRow() != -1)
     {
         ImGui::OpenPopup("Hotkey exists");
@@ -223,7 +223,7 @@ void HotkeysForm_Draw(bool *open)
         ImGui::EndTable();
     }
 
-    // Add / Delete / Copy (hotkeysform.cpp:1290/1304/1337)
+    // Add / Delete / Copy
     if (ImGui::Button("Add"))
     {
         g_AssistantConfig.m_Hotkeys.push_back(CHotkeyEntry());
@@ -244,7 +244,7 @@ void HotkeysForm_Draw(bool *open)
     ImGui::SameLine();
     if (ImGui::Button("Copy"))
     {
-        // on_copyButton_clicked (hotkeysform.cpp:1304)
+        // on_copyButton_clicked
         if (s_SelectedRow >= 0 && s_SelectedRow < (int)g_AssistantConfig.m_Hotkeys.size())
         {
             CHotkeyEntry copy = g_AssistantConfig.m_Hotkeys[s_SelectedRow];
@@ -261,7 +261,7 @@ void HotkeysForm_Draw(bool *open)
     ImGui::BeginChild("##info", ImVec2(infoWidth, 0.0f));
     ImGui::TextDisabled("Hotkey info");
 
-    // Type combo (on_cb_Type_currentIndexChanged, hotkeysform.cpp:815)
+    // Type combo (on_cb_Type_currentIndexChanged)
     ImGui::SetNextItemWidth(-1.0f);
     {
         static const char *s_TypeItems[HT_LAST] = { nullptr };
@@ -285,7 +285,7 @@ void HotkeysForm_Draw(bool *open)
         }
     }
 
-    // Hotkey capture field (QHotkeyBox): click, then press the key/wheel/X
+    // Hotkey capture field: click, then press the key/wheel/X
     if (g_Hotkeys.IsCapturing())
     {
         ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(183, 183, 255, 255));
@@ -396,7 +396,7 @@ void HotkeysForm_Draw(bool *open)
 
     if (ImGui::Button("OK"))
     {
-        s_FormOpen = false; // on_okButton_clicked (hotkeysform.cpp:1915)
+        s_FormOpen = false; // on_okButton_clicked
     }
 
     ImGui::EndChild();

@@ -62,7 +62,7 @@ bool skill_value_equal(float a, float b)
     return memcmp(&a, &b, sizeof(a)) == 0;
 }
 
-// QDate::currentDate().toString("yyyy-MM-dd") (tabskills.cpp:154)
+// the report date, "yyyy-MM-dd" (local time)
 void report_date(char *buf, size_t size)
 {
     const time_t now = time(nullptr);

@@ -179,7 +179,7 @@ int ScriptJournal_Count()
 }
 
 // Remove-after-read for JournalLine(index, consume). The Qt JournalLine had
-// no consume argument and never removed (commandmanager.cpp:4183) - this is
+// no consume argument and never removed - this is
 // the port extension's removal half. Main thread (drain) only.
 bool ScriptJournal_RemoveAt(int index)
 {

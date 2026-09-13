@@ -32,7 +32,7 @@ string to_lower_copy(string text)
 // lowers at store time, so only the lookup needs it here).
 string buff_key(string name)
 {
-    // leading/trailing space trim (QString::trimmed parity)
+    // leading/trailing space trim (the old trim parity)
     size_t begin = name.find_first_not_of(" \t\r\n");
     if (begin == string::npos)
     {

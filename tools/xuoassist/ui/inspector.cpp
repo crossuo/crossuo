@@ -131,7 +131,7 @@ void BuildRows(vector<XA_INSPECT_ROW> &rows, CGameObject *obj)
     snprintf(num, sizeof(num), "%d", (int)obj->GetMapIndex());
     AddRow(rows, 1, false, "Map: ", num, OIK_MAP);
 
-    // the flags subgroup (tabobjectinspector.cpp:417-442)
+    // the flags subgroup
     snprintf(num, sizeof(num), "0x%x", obj->GetFlags());
     AddRow(rows, 1, true, "Flags: ", num, OIK_FLAGS);
     AddRow(rows, 2, false, "Frozen: ", obj->Frozen() ? "True" : "False", OIK_FLAGS);
@@ -375,7 +375,7 @@ void InspectorWindow_Draw()
             ImGui::TextUnformatted(row.Value.c_str());
             ImGui::Unindent(row.Depth > 1 ? 16.0f * (row.Depth - 1) : 0.0f);
 
-            // leaf click copies the value (tabobjectinspector.cpp:751-769)
+            // leaf click copies the value
             if (ImGui::IsItemClicked())
             {
                 ImGui::SetClipboardText(row.Value.c_str());

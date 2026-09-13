@@ -98,7 +98,7 @@ class CMapSettings
     SETGET(bool, RotateMap, true)
 
     SETGET(int, PlayerFontStyle, 0)
-    SETGET(uint, PlayerColor, 0xFF00FFFF)     // QColor(0, 255, 255).rgba()
+    SETGET(uint, PlayerColor, 0xFF00FFFF)     // rgba(0, 255, 255)
     SETGET(bool, PlayerShowHits, true)
     SETGET(bool, PlayerShowMana, true)
     SETGET(bool, PlayerShowStam, true)
@@ -106,31 +106,31 @@ class CMapSettings
 
     SETGET(bool, PartyEnabled, true)
     SETGET(int, PartyFontStyle, 0)
-    SETGET(uint, PartyColor, 0xFF00FF00)      // QColor(0, 255, 0)
+    SETGET(uint, PartyColor, 0xFF00FF00)      // rgb(0, 255, 0)
     SETGET(bool, PartyShowHits, true)
     SETGET(bool, PartyShowName, true)
 
     SETGET(bool, GuildEnabled, true)
     SETGET(int, GuildFontStyle, 0)
-    SETGET(uint, GuildColor, 0xFF00C887)      // QColor(135, 200, 0)
+    SETGET(uint, GuildColor, 0xFF00C887)      // rgb(135, 200, 0)
     SETGET(bool, GuildShowHits, true)
     SETGET(bool, GuildShowName, true)
 
     SETGET(bool, FriendsEnabled, true)
     SETGET(int, FriendsFontStyle, 0)
-    SETGET(uint, FriendsColor, 0xFFFFFF00)    // QColor(255, 255, 0)
+    SETGET(uint, FriendsColor, 0xFFFFFF00)    // rgb(255, 255, 0)
     SETGET(bool, FriendsShowHits, true)
     SETGET(bool, FriendsShowName, true)
 
     SETGET(bool, EnemiesEnabled, true)
     SETGET(int, EnemiesFontStyle, 0)
-    SETGET(uint, EnemiesColor, 0xFFFF0000)    // QColor(255, 0, 0)
+    SETGET(uint, EnemiesColor, 0xFFFF0000)    // rgb(255, 0, 0)
     SETGET(bool, EnemiesShowHits, true)
     SETGET(bool, EnemiesShowName, true)
 
     SETGET(bool, OtherEnabled, false)
     SETGET(int, OtherFontStyle, 0)
-    SETGET(uint, OtherColor, 0xFFC0C0C0)      // QColor(192, 192, 192)
+    SETGET(uint, OtherColor, 0xFFC0C0C0)      // rgb(192, 192, 192)
     SETGET(bool, OtherShowHits, true)
     SETGET(bool, OtherShowName, true)
 

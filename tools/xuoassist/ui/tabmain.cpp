@@ -61,7 +61,7 @@ const XA_OPTION_ROW s_Options[] = {
 // "Assistant messages show:" (tabmain.ui cb_AssistMessagesLevel)
 const char *const s_MessagesLevels[] = { "Minimum", "Medium", "Show all" };
 
-// Ported from TabMain::OptionChanged (tabmain.cpp:124-276): the checklist
+// Ported from TabMain::OptionChanged: the checklist
 // rows that act on the client immediately when toggled.
 void option_changed(int index, bool state)
 {
@@ -351,7 +351,7 @@ void draw_main_page()
 
     ImGui::Separator();
 
-    // Open map (map_icon.png) - the phase 5 map window
+    // Open map (map_icon.png) - the map window
     if (IconButton(XA_ICON_MAP, "Open map"))
     {
         MapWindow_Open();

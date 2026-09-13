@@ -51,7 +51,7 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
 
     // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
     // MT_WAIT_FOR_PROMPT })` -> return false: a playing macro waiting on the
-    // prompt consumes the packet (tabmacros.cpp:1023 semantics).
+    // prompt consumes the packet (the PlayWaiting semantics).
     if (g_MacroExecutor.IsPlaying() && g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_PROMPT }))
     {
         return false;

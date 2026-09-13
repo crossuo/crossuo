@@ -466,7 +466,7 @@ uint32_t SampleTile(int map, int x, int y)
 
     if (g_MapSettings.GetAltitudeOnly())
     {
-        // map.cpp:405-410: grayscale ramp over the Z range
+        // grayscale ramp over the Z range
         const int z = (cell.Z + 127) * 32 / 256;
         const uint16_t c = uint16_t(((z & 0x1F) << 10) | ((z & 0x1F) << 5) | (z & 0x1F));
         return Color16ToRGBA32(0x8000 | c);

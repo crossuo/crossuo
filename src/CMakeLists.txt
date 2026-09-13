@@ -362,7 +362,7 @@ if(XUO_ASSISTANT_ENABLED)
   add_dependencies(crossuo ${XUOASSIST_PROJECT})
   target_link_libraries(crossuo PUBLIC ${XUOASSIST_PROJECT})
   target_include_directories(crossuo PUBLIC ${XUOASSIST_INCLUDE})
-  # Fix-round 4b-2 guard (Fix 2): the assistant is part of this shared lib,
+  # Link guard: the assistant is part of this shared lib,
   # and a scriptgump declaration that never got a definition used to slip
   # through as an undefined symbol that aborted the client on the first
   # assistant frame. --no-undefined keeps that class of bug out of the .so

@@ -21,7 +21,7 @@ namespace xuoassist {
 
 using std::string;
 
-static const int XML_AUTOFORMAT_INDENT = 4; // QXmlStreamWriter default
+static const int XML_AUTOFORMAT_INDENT = 4; // the original XML writer's default
 
 // ParseElement recursion cap: assistant schemas are flat records (max 3
 // levels); 64 is generous headroom and stops runaway/malformed nesting.

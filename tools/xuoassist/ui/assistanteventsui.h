@@ -44,13 +44,13 @@ public:
     virtual void OnJournalMessage(const CJournalMessage &message) override;
 
     // --- Phase 3 consumers -------------------------------------------------
-    // The hotkey action-list feeds (packetmanager.cpp:3248/3254).
+    // The hotkey action-list feeds (the 0xFC list handlers).
     virtual void OnSpellList(const vector<vector<string>> &books) override;
     virtual void OnSkillsList(const vector<string> &hotkeyActions) override;
     // The script buff mirror (BuffExists reads it through the queue).
     virtual void OnBuffAdd(ushort graphic, uint timer, const string &name) override;
     virtual void OnBuffRemove(ushort graphic) override;
-    // The macro recording taps (target.cpp:190/:210).
+    // The macro recording taps.
     virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color) override;
     virtual void OnRecordTargetTile(ushort graphic, int x, int y, int z) override;
     // The Autostart script run (was AssistForm::RunAutostart from EnterWorld).

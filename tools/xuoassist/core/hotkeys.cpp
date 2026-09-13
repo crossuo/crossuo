@@ -25,7 +25,7 @@
 
 namespace xuoassist {
 
-// --- keymap (hotkeybox.cpp:237 g_Keymap, same order as XA_KEY_ID) -----------
+// --- keymap (the old g_Keymap, same order as XA_KEY_ID) ---------------------
 // { SDL keycode, default modifiers for the on-screen cap, display name }.
 static const XA_KEY_INFO s_Keymap[XKI_COUNT] = {
     { 0, 0, "No Key" },
@@ -164,7 +164,7 @@ const char *HotkeyKeycodeName(uint keycode)
 
 void HotkeyFormatText(uint key, uchar modifiers, char *out, size_t size)
 {
-    // QHotkeyBox::GetHotkeyText (hotkeybox.cpp:792)
+    // the old GetHotkeyText formatting
     if (size == 0)
     {
         return;
@@ -237,7 +237,7 @@ void HotkeyFormatText(uint key, uchar modifiers, char *out, size_t size)
 
 namespace {
 
-// Platform::IsKeypad (platform.cpp:194, the SDL path): the keypad identity of
+// Platform::IsKeypad (the SDL path): the keypad identity of
 // a key event - reproduces the Windows native-modifier bit 24 of the Qt app.
 bool is_keypad_keycode(uint key)
 {
@@ -268,7 +268,7 @@ bool is_keypad_keycode(uint key)
     }
 }
 
-// eventFilter: bare modifier presses are never a binding (hotkeybox.cpp:712).
+// eventFilter parity: bare modifier presses are never a binding.
 bool is_bare_modifier(uint key)
 {
     switch (key)
@@ -285,7 +285,7 @@ bool is_bare_modifier(uint key)
     }
 }
 
-// AddModifiers (hotkeybox.cpp:761): SDL key mod -> the HM_* bitmask.
+// AddModifiers parity: SDL key mod -> the HM_* bitmask.
 uchar modifiers_from_sdl(ushort mod)
 {
     uchar result = HM_NONE;
@@ -387,7 +387,7 @@ bool CHotkeys::ProcessKeyUp(const SDL_Event &)
 
 bool CHotkeys::ProcessMouseButtonDown(const SDL_Event &ev)
 {
-    // eventFilter MouseButtonPress: middle = wheel press, X1/X2 (hotkeybox.cpp:730)
+    // eventFilter MouseButtonPress parity: middle = wheel press, X1/X2
     uint key = 0;
     uchar mouseFlag = HM_NONE;
     if (ev.button.button == SDL_BUTTON_MIDDLE)
@@ -422,7 +422,7 @@ bool CHotkeys::ProcessMouseButtonDown(const SDL_Event &ev)
 
 bool CHotkeys::ProcessWheel(const SDL_Event &ev)
 {
-    // eventFilter Wheel: delta direction picks scroll up/down (hotkeybox.cpp:750)
+    // eventFilter Wheel parity: delta direction picks scroll up/down
     uint key = 0;
     if (ev.wheel.y > 0)
     {
@@ -492,8 +492,8 @@ bool CHotkeys::MatchAndUse(uint key, uchar modifiers)
                     g_MacroExecutor.Stop();
                     break;
                 case HT_SCRIPT:
-                    // No script engine this phase (plan: external code stays
-                    // inert); the binding is still recognized + consumed.
+                    // No script engine attached (external code stays inert);
+                    // the binding is still recognized + consumed.
                     break;
                 case HT_EXTERNAL_CODE:
                     Actions_RunExternalCode(entry.ExternalCode);
@@ -511,7 +511,7 @@ bool CHotkeys::MatchAndUse(uint key, uchar modifiers)
         return false;
     }
 
-    // Alt+F4 always falls through to the game (hotkeysform.cpp:1541)
+    // Alt+F4 always falls through to the game
     if (key == SDLK_F4 && (modifiers & HM_ALT) != 0)
     {
         return false;
@@ -545,7 +545,7 @@ void CHotkeys::CommitKeyToRow(int row, uint key, uchar modifiers)
         return;
     }
 
-    // CheckExists (hotkeysform.cpp:724): the edited row must already exist
+    // CheckExists: the edited row must already exist
     // (a fresh "Blank hotkey" row assigns to itself; Qt required a current
     // row and returned early otherwise)
     const int dup = FindDuplicate(key, modifiers, row);
@@ -631,7 +631,7 @@ void CHotkeys::ApplyPending()
 
 void CHotkeys::KeyboardAssign(int keyId, int row)
 {
-    // on_KeyButtonClicked (hotkeysform.cpp:515): the cap's own default
+    // on_KeyButtonClicked: the cap's own default
     // modifiers plus the sticky/physically-held ones
     const XA_KEY_INFO &info = HotkeyKeyInfo(keyId);
     uchar modifiers = info.Modifiers;
@@ -642,7 +642,7 @@ void CHotkeys::KeyboardAssign(int keyId, int row)
 
 void CHotkeys::KeyboardToggleModifier(int keyId)
 {
-    // on_ModifierKeyButtonClicked (hotkeysform.cpp:538): AltGr behaves like Alt
+    // on_ModifierKeyButtonClicked: AltGr behaves like Alt
     uchar flag = 0;
     switch (keyId)
     {
@@ -666,7 +666,7 @@ void CHotkeys::KeyboardToggleModifier(int keyId)
 
 int CHotkeys::KeyboardCapState(int keyId, int selectedRow) const
 {
-    // UpdateKeyboard (hotkeysform.cpp:603): count the bindings that map to a
+    // UpdateKeyboard: count the bindings that map to a
     // cap while the current modifier set is held; the selected row wins.
     const XA_KEY_INFO &info = HotkeyKeyInfo(keyId);
     if (info.Key == 0)

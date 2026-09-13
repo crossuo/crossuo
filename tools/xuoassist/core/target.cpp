@@ -59,7 +59,7 @@ struct TARGET_TILE_INFO
     bool Land;
 };
 
-// CFileManager::TileNameToFlags (filemanager.cpp:721): "|"-separated tokens;
+// CFileManager::TileNameToFlags: "|"-separated tokens;
 // the category words OR into the flags, anything else parses as a graphic.
 void TargetTileNameToFlags(const string &tileName, ushort &graphic, ushort &flags)
 {
@@ -97,7 +97,7 @@ void TargetTileNameToFlags(const string &tileName, ushort &graphic, ushort &flag
     }
 }
 
-// CFileManager::GetTile (filemanager.cpp:804) against the client's own
+// CFileManager::GetTile against the client's own
 // map/statics blocks (::g_MapManager - the same access the radar window
 // uses). The mine/tree/water category lists lived in the assistant's own
 // tile caches (m_MineTiles/m_TreeTiles/m_WaterTiles, fed from Config text
@@ -352,7 +352,7 @@ bool CTarget::SetSendData(CDataReader &reader)
         m_LastTileGraphic = reader.ReadUInt16BE();
 
         // was g_TabMacros->AddAction(new CMacroWithTargetTile(...)) while a
-        // recording was open (assist/target.cpp:180-193)
+        // recording was open
         if (g_World != nullptr)
         {
             g_AssistantEvents->OnRecordTargetTile(
@@ -374,7 +374,7 @@ bool CTarget::SetSendData(CDataReader &reader)
         }
 
         // was g_TabMacros->AddAction(new CMacroWithObject(...)) while a
-        // recording was open (assist/target.cpp:206-240); the convert-type
+        // recording was open; the convert-type
         // tagging happens in the executor
         g_AssistantEvents->OnRecordTargetObject(serial, graphic, color);
 
@@ -441,7 +441,7 @@ bool CTarget::SetMultiData(CDataReader &reader)
 
     bool result = (CheckHook() && !m_FromAssist);
 
-    // the SetRecvData PlayWaiting tap (assist/target.cpp:308)
+    // the SetRecvData PlayWaiting tap
     if (result && g_MacroExecutor.IsPlaying() &&
         g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_TARGET_OBJECT, MT_WAIT_FOR_TARGET_TILE }))
     {

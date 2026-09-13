@@ -4,7 +4,7 @@
 // The assistant Map window (was assist/map.cpp Map + gui/mapimagewidget.cpp,
 // which only forwarded events): one dockable/poppable ImGui window drawing
 // the radar texture from managers/assmap.cpp with the draw-object overlays,
-// the context menu (map.cpp:1717-1797) and the zoom/rotate/follow/pan input.
+// the context menu and the zoom/rotate/follow/pan input.
 //
 // Coordinate transforms (derived once from the Qt code, both directions):
 //
@@ -12,12 +12,12 @@
 //   half   = (width/2, height/2)                 window content center
 //   d      = world - center                      (wx-cx, wy-cy)
 //
-//   unrotated (map.cpp:651-668, 942-943):
+//   unrotated:
 //       screen = half + d / s                    world->screen
 //       world  = center + (screen - half) * s    screen->world
 //
-//   rotated 45deg isometric basis u=d.x-d.y, v=d.x+d.y (map.cpp:616-647,
-//   929-938): screen = half + (u, v) / s
+//   rotated 45deg isometric basis u=d.x-d.y, v=d.x+d.y:
+//       screen = half + (u, v) / s
 //       inverse: d = (screen-half) * s;
 //                wx = cx + (dx+dy)/2, wy = cy + (dy-dx)/2
 //   the drag pan subtracts the same inverse displacement from the center,
@@ -43,7 +43,7 @@ namespace xuoassist {
 // open: visibility flag (the window X button flips it).
 void MapWindow_Draw(bool *open);
 
-// TabMain::OpenMap (assist/tabmain.cpp:826) / OIPMT_OPEN_MAP / ShowOnLogin.
+// TabMain::OpenMap / OIPMT_OPEN_MAP / ShowOnLogin.
 void MapWindow_Open();
 
 // The window visibility flag (assistantui.cpp draws the window while the
@@ -67,7 +67,7 @@ void MapWindow_OnMapRedraw();
 void MapWindow_OnTrack(bool state, int x, int y);
 
 // The map settings window (ui/mapsettings.cpp; the "Open display settings"
-// context-menu item, map.cpp:1678-1688).
+// context-menu item).
 void MapSettings_Open();
 void MapSettings_Draw();
 void MapSettings_Shutdown();

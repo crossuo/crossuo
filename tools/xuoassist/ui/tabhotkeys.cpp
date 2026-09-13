@@ -40,7 +40,7 @@ char s_AnimalName[64] = "all"; // le_Name default ("all")
 bool s_AnimalFtPending = false;
 uint s_AnimalFtGeneration = 0;
 
-// AnimalAndVendorControlForm::Send (animalandvendorcontrolform.cpp:126)
+// AnimalAndVendorControlForm::Send
 void animal_send(const char *command)
 {
     string text = string(s_AnimalName) + " " + command;
@@ -53,7 +53,7 @@ void animal_send(const char *command)
     CPacketUnicodeSpeechRequest(0, wide).SendClient();
 }
 
-// ShipControlForm::Send (shipcontrolform.cpp:155)
+// ShipControlForm::Send
 void ship_send(const char *text)
 {
     wstring wide;
@@ -67,7 +67,7 @@ void ship_send(const char *text)
 
 void house_send(const wchar_t *text)
 {
-    // HouseControlForm ctor buttons (housecontrolform.cpp:31-61)
+    // HouseControlForm ctor buttons
     CPacketUnicodeSpeechRequest(0, text).SendClient();
 }
 
@@ -276,7 +276,7 @@ void TabHotkeys_Draw()
     bool hotkeysOn = g_AssistantConfig.OnOffHotkeys();
     if (ImGui::Checkbox("On/Off hotkeys", &hotkeysOn))
     {
-        // on_cb_OnOffHotkeys_clicked + SetOnOffHotkeys (tabhotkeys.cpp:167-184)
+        // on_cb_OnOffHotkeys_clicked + SetOnOffHotkeys
         if (g_AssistantConfig.m_OnOffHotkeys != hotkeysOn)
         {
             g_AssistantConfig.m_OnOffHotkeys = hotkeysOn;
