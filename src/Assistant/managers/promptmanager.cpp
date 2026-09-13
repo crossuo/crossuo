@@ -44,7 +44,7 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
         return true;
     }
 
-    m_IsUnicode = (*reader.GetStart() == 0xC2);
+    m_IsUnicode = (*reader.Start == 0xC2);
     m_Serial = reader.ReadUInt32BE();
     m_ID = reader.ReadUInt32BE();
     m_Exists = true;
@@ -99,14 +99,14 @@ bool CPromptManager::OnPacketSend(CDataReader &reader)
         // MT_WAIT_FOR_PROMPT action value
         if (g_World != nullptr && g_MacroExecutor.IsRecording())
         {
-            int length = (int)reader.GetSize() - 15;
+            int length = (int)reader.Size - 15;
             reader.Move(8);
             uint response = reader.ReadUInt32BE();
             string text = "";
 
             if (response != 0u)
             {
-                if (*reader.GetStart() == 0xC2)
+                if (*reader.Start == 0xC2)
                 {
                     reader.Move(4);
                     length = (length - 4) / 2;
@@ -115,7 +115,7 @@ bool CPromptManager::OnPacketSend(CDataReader &reader)
                 }
                 else
                 {
-                    text = reader.ReadString(length);
+                    text = reader.ReadStringChecked(length);
                 }
             }
 

@@ -26,11 +26,11 @@
 #pragma once
 
 #include "core/global.h"
+#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 #include "../model/commonitems/vendorshopitem.h"
 
 namespace xuoassist {
 
-class CDataReader;
 struct CDressSetEntry; // (dressagent.h keeps its own forward decl)
 
 // was SHOP_LIST_WAIT_STATE in tabagentsshop.h (the SLWS_NORNAL typo is fixed)

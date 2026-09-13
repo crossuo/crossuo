@@ -117,7 +117,7 @@ bool CTradeManager::OnPacketReceived(CDataReader &reader)
 
             if (reader.ReadUInt8() != 0)
             {
-                name = reader.ReadString();
+                name = reader.ReadStringChecked();
             }
 
             m_List.push_back(CTradeWindow(serial, id1, id2, name));

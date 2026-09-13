@@ -32,7 +32,6 @@
 #include "../../model/commonitems/journalmessage.h"
 #include "../../model/commonitems/menu.h"
 #include "../../model/commonitems/skill.h"
-#include "../../model/datareader.h"
 #include "../../model/gameobjects/gameitem.h"
 #include "../../model/gameobjects/gameplayer.h"
 #include "../../model/gameobjects/gameworld.h"
@@ -310,10 +309,6 @@ CPacketManager::~CPacketManager() = default;
 void CPacketManager::SavePluginReceivePacket(unsigned char *, int) {}
 
 // --- remaining client/common pieces the real executor references -------------
-xuoassist::CDataReader::CDataReader() {}
-xuoassist::CDataReader::CDataReader(uint8_t *, size_t) {}
-xuoassist::CDataReader::~CDataReader() {}
-CDataWriter::~CDataWriter() {} // xuocore/mappedfile.h (the client packet base)
 wstr_t wstr_from(const astr_t &) { return wstr_t(); }
 
 // the skill table read (SkillValue); empty here

@@ -31,7 +31,7 @@
 #pragma once
 
 #include "global.h"
-#include "../model/datareader.h"
+#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 
 namespace xuoassist {
 

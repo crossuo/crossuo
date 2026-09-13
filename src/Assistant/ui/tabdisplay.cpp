@@ -58,6 +58,13 @@ static std::map<uint, CachedIconTexture> s_IconTextures;
 // context's UserTextures list)
 vector<ImTextureData *> s_IconRetired;
 
+// the project headers above pull in mappedfile.h -> common/logging ->
+// SDL_wrapper -> SDL_syswm.h -> X11/Xlib.h, whose `Status` macro collides
+// with the ImTextureStatus members below; Xlib is fully processed by now
+#ifdef Status
+#undef Status
+#endif
+
 static void IconReapRetired()
 {
     for (size_t i = 0; i < s_IconRetired.size();)

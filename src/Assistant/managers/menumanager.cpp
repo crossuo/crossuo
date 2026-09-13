@@ -115,11 +115,11 @@ bool CMenuManager::OnPacketReceived(CDataReader &reader)
     ushort id = reader.ReadUInt16BE();
 
     uchar nameLen = reader.ReadUInt8();
-    string name = reader.ReadString(nameLen);
+    string name = reader.ReadStringChecked(nameLen);
 
     uchar count = reader.ReadUInt8();
 
-    bool grayMenu = (unpack16(reader.GetPtr()) == 0); //menu/gray menu
+    bool grayMenu = (unpack16(reader.Ptr) == 0); //menu/gray menu
 
     m_LastMenu = new CMenu(serial, id, name, grayMenu);
     m_Items.push_back(m_LastMenu);
@@ -130,7 +130,7 @@ bool CMenuManager::OnPacketReceived(CDataReader &reader)
         ushort color = reader.ReadUInt16BE();
 
         nameLen = reader.ReadUInt8();
-        name = reader.ReadString(nameLen);
+        name = reader.ReadStringChecked(nameLen);
 
         m_LastMenu->m_Items.push_back(CMenuItem(i + 1, graphic, color, name));
     }

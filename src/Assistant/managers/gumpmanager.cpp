@@ -153,7 +153,7 @@ bool CGumpManager::OnPacketReceived(CDataReader &reader)
     m_Items.push_back(m_LastGump);
 
     ushort commandsLength = reader.ReadUInt16BE();
-    string commands = reader.ReadString(commandsLength);
+    string commands = reader.ReadStringChecked(commandsLength);
     CTextParser parser(commands, "", "", "{}");
 
     vector<string> commandList = parser.ReadTokens();

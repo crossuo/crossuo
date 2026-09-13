@@ -400,8 +400,8 @@ void CTarget::SetRecvAssistData(CDataReader &reader)
 bool CTarget::SetRecvData(CDataReader &reader)
 {
     // Copy the buffer
-    m_CurrentClientTarget.resize(reader.GetSize());
-    memcpy(&m_CurrentClientTarget[0], reader.GetStart(), reader.GetSize());
+    m_CurrentClientTarget.resize(reader.Size);
+    memcpy(&m_CurrentClientTarget[0], reader.Start, reader.Size);
 
     // And set the matching values
     m_Type = reader.ReadUInt8();
@@ -426,8 +426,8 @@ bool CTarget::SetRecvData(CDataReader &reader)
 
 bool CTarget::SetMultiData(CDataReader &reader)
 {
-    m_CurrentClientTarget.resize(reader.GetSize());
-    memcpy(&m_CurrentClientTarget[0], reader.GetStart(), reader.GetSize());
+    m_CurrentClientTarget.resize(reader.Size);
+    memcpy(&m_CurrentClientTarget[0], reader.Start, reader.Size);
 
     // And set the matching values
     m_Type = reader.ReadUInt8();

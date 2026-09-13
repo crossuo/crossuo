@@ -13,7 +13,7 @@
 #pragma once
 
 #include "global.h"
-#include "../model/datawriter.h"
+#include <xuocore/mappedfile.h> // ::CDataWriter (the client packet writer base)
 #include "../model/commonitems/gump.h"
 
 namespace xuoassist {

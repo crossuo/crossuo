@@ -72,7 +72,6 @@ set(XUOASSIST_SRCS
   "macros/macro.cpp"
   "config/xml.cpp"
   "config/assistantconfig.cpp"
-  "model/basequeue.cpp"
   "model/gameobjects/gameobject.cpp"
   "model/gameobjects/gameitem.cpp"
   "model/gameobjects/gamecharacter.cpp"
@@ -93,8 +92,6 @@ set(XUOASSIST_SRCS
   "model/commonitems/skill.cpp"
   "model/commonitems/tradewindow.cpp"
   "model/commonitems/vendorshopitem.cpp"
-  "model/datareader.cpp"
-  "model/datawriter.cpp"
 )
 
 add_library(xuoassist STATIC ${XUOASSIST_SRCS})
@@ -151,6 +148,9 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     # the stb-style common/fs.h implementation for this standalone link (the
     # main build gets it from xuocore/common.cpp, which is not linked here)
     script/test/fsimpl.cpp
+    # the client data reader/writer (the real implementation; the harness
+    # links xuocore's sources directly instead of the library)
+    ../../xuocore/mappedfile.cpp
     core/packets.cpp
     model/commonitems/gump.cpp
     model/commonitems/gumpitem.cpp
@@ -158,7 +158,6 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     model/commonitems/menuitem.cpp
     model/commonitems/prompt.cpp
     model/commonitems/journalmessage.cpp
-    model/datawriter.cpp
     script/quickjs/dtoa.c
     script/quickjs/libregexp.c
     script/quickjs/libunicode.c

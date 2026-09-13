@@ -20,7 +20,7 @@
 #include "../managers/displaymanager.h"
 #include "../managers/partymanager.h"
 #include "../model/gameobjects/gameplayer.h"
-#include "../model/datareader.h"
+#include <xuocore/mappedfile.h> // ::CDataReader / ::CDataWriter
 
 namespace xuoassist {
 
@@ -2140,8 +2140,8 @@ bool CAssistantConfig::LoadMacros()
 
 // --- Dress.coa (was TabAgentsDress::LoadDress/SaveDress) --------------------------------------
 //
-// Custom little-endian binary format, ported on top of the namespace-local
-// CDataWriter (the original app used its file-based CFileObject). Layout:
+// Custom little-endian binary format written through ::CDataWriter
+// (xuocore/mappedfile.h). Layout:
 //   uint32 version (=0), int32 setsCount, uint8 undressBefore,
 //   per set: string name, uint8 layerCount, per layer { uint8 layer, uint32 serial },
 //   uint8 doubleClickForEquipment.
@@ -2231,10 +2231,10 @@ bool CAssistantConfig::LoadDress()
         if (!reader.IsEOF())
         {
             const int len = reader.ReadInt32LE();
-            const size_t remaining = size - (reader.GetPtr() - reader.GetStart());
+            const size_t remaining = size - (reader.Ptr - reader.Start);
             if (len > 0 && (size_t)len <= remaining)
             {
-                name = string((const char *)reader.GetPtr(), len);
+                name = string((const char *)reader.Ptr, len);
             }
         }
 

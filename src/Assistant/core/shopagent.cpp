@@ -20,7 +20,7 @@
 #include "packets.h"
 #include "../config/assistantconfig.h"
 #include "../model/commonitems/finditem.h"
-#include "../model/datareader.h"
+#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 #include "../model/gameobjects/gamecharacter.h"
 #include "../model/gameobjects/gameitem.h"
 #include "../model/gameobjects/gameworld.h"
@@ -488,7 +488,7 @@ bool CShopAgent::OnBuyList(CDataReader &reader)
             item->SetPrice(reader.ReadUInt32BE());
 
             uchar nameLen = reader.ReadUInt8();
-            string name = reader.ReadString(nameLen);
+            string name = reader.ReadStringChecked(nameLen);
 
             bool intParsed = false;
             name = cliloc_name(name, intParsed);
@@ -561,7 +561,7 @@ bool CShopAgent::OnSellList(CDataReader &reader)
             ushort count = reader.ReadUInt16BE();
             ushort price = reader.ReadUInt16BE();
             int nameLen = reader.ReadInt16BE();
-            string name = reader.ReadString(nameLen);
+            string name = reader.ReadStringChecked(nameLen);
 
             bool intParsed = false;
             name = cliloc_name(name, intParsed);

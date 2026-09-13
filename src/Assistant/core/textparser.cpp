@@ -48,7 +48,7 @@ CTextParser::CTextParser(
     }
 
     // Compute the end of file
-    m_End = m_File.GetEnd();
+    m_End = m_File.End;
 }
 
 CTextParser::~CTextParser()
@@ -64,14 +64,14 @@ void CTextParser::Restart()
 // Check for end of file
 bool CTextParser::IsEOF()
 {
-    return (m_File.GetPtr() >= m_End);
+    return (m_File.Ptr >= m_End);
 }
 
 // Get the end of line
 void CTextParser::GetEOL()
 {
     // The EOL starts at the current address
-    m_EOL = m_File.GetPtr();
+    m_EOL = m_File.Ptr;
 
     // If the file has not been read to the end
     if (!IsEOF())
@@ -300,12 +300,12 @@ void CTextParser::SaveRawLine()
 
 void CTextParser::SavePosition()
 {
-    m_StartPtr = m_File.GetPtr();
+    m_StartPtr = m_File.Ptr;
 }
 
 void CTextParser::LoadPosition()
 {
-    m_File.SetPtr(m_StartPtr);
+    m_File.Ptr = m_StartPtr;
 }
 
 // Read the tokens from the file
@@ -318,7 +318,7 @@ vector<string> CTextParser::ReadTokens(bool trim)
     if (!IsEOF())
     {
         // Initialize the pointers
-        m_Ptr = m_File.GetPtr();
+        m_Ptr = m_File.Ptr;
         GetEOL();
 
         SaveRawLine();
@@ -349,7 +349,7 @@ vector<string> CTextParser::ReadTokens(bool trim)
             }
         }
 
-        m_File.SetPtr(m_EOL + 1);
+        m_File.Ptr = m_EOL + 1;
     }
 
     return result;

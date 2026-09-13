@@ -637,7 +637,7 @@ PACKET_HANDLER(EnterWorld)
     g_AssistantConfig.LoadProfileBySerial(serial);
     if (g_Player->Dead() && g_AssistantConfig.NoGrayScreen())
     {
-        pack16(m_Start + 9, 0x03DB);
+        pack16(Start + 9, 0x03DB);
         g_OriginalGraphic = 0x03DB;
     }
     // was: if (runAutostart) g_AssistantForm->RunAutostart(); ->
@@ -894,15 +894,15 @@ PACKET_HANDLER(UpdatePlayer)
 
     if (g_MorphGraphic != 0u)
     {
-        pack16(m_Start + 5, g_MorphGraphic);
+        pack16(Start + 5, g_MorphGraphic);
     }
 
     if (g_Player->Dead())
     {
         if (g_AssistantConfig.NoGrayScreen())
         {
-            pack16(m_Start + 5, 0x03DB);
-            m_Start[7] = 0;
+            pack16(Start + 5, 0x03DB);
+            Start[7] = 0;
         }
 
         if (oldDead != g_Player->Dead())
@@ -936,7 +936,7 @@ PACKET_HANDLER(CharacterStatus)
         return true;
     }
 
-    obj->SetName(ReadString(30).c_str());
+    obj->SetName(ReadStringChecked(30).c_str());
 
     obj->SetHits(ReadInt16BE());
     obj->SetMaxHits(ReadInt16BE());
@@ -1194,7 +1194,7 @@ PACKET_HANDLER(UpdateObject)
 
             if (g_MorphGraphic != 0u)
             {
-                pack16(m_Start + 7, g_MorphGraphic);
+                pack16(Start + 7, g_MorphGraphic);
             }
 
             if (g_Player->Dead())
@@ -1203,7 +1203,7 @@ PACKET_HANDLER(UpdateObject)
                 {
                     g_OriginalGraphic = 0x03DB;
                 }
-                pack16(m_Start + 7, 0x03DB);
+                pack16(Start + 7, 0x03DB);
 
                 if (oldDead != g_Player->Dead())
                 {
@@ -1237,7 +1237,7 @@ PACKET_HANDLER(UpdateObject)
         }
     }
 
-    if (*m_Start != 0x78)
+    if (*Start != 0x78)
     {
         Move(6);
     }
@@ -1569,7 +1569,7 @@ PACKET_HANDLER(UpdateSkillsR)
         return true;
     }
 
-    while (m_Ptr < m_End)
+    while (Ptr < End)
     {
         ushort id = ReadUInt16BE();
 
@@ -1618,7 +1618,7 @@ PACKET_HANDLER(TargetS)
     // The assist/target round (Phase 1c) restores the original interception:
     if (g_TargetHandler != nullptr)
     {
-        (g_Assistant.*(g_TargetHandler))(m_Start);
+        (g_Assistant.*(g_TargetHandler))(Start);
         g_TargetHandler = nullptr;
         g_Target.Reset();
         g_Target.RestoreTarget();
@@ -1648,7 +1648,7 @@ PACKET_HANDLER(ClientTalkS)
     ushort fontColor = ReadUInt16BE();
     Move(2);
 
-    string str = ReadString(0);
+    string str = ReadStringChecked(0);
 
     int prefixLen = g_AssistantConfig.IsCommandPrefix(str);
     if (prefixLen != 0)
@@ -1676,7 +1676,7 @@ PACKET_HANDLER(ClientTalkS)
 
     if (replaceFontColor)
     {
-        pack16(m_Start + 4, replaceFontColorValue);
+        pack16(Start + 4, replaceFontColorValue);
     }
 
     return true;
@@ -1709,7 +1709,7 @@ PACKET_HANDLER(UnicodeClientTalk)
             Move(1);
         }
 
-        str = ReadString(0);
+        str = ReadStringChecked(0);
     }
     else
     {
@@ -1741,7 +1741,7 @@ PACKET_HANDLER(UnicodeClientTalk)
 
     if (replaceFontColor)
     {
-        pack16(m_Start + 4, replaceFontColorValue);
+        pack16(Start + 4, replaceFontColorValue);
     }
 
     return true;
@@ -1769,13 +1769,13 @@ PACKET_HANDLER(Talk)
         return true;
     }
 
-    string name = ReadString(0);
+    string name = ReadStringChecked(0);
     string str = "";
 
-    if (m_Size > 44)
+    if (Size > 44)
     {
-        m_Ptr = m_Start + 44;
-        str = ReadString(0);
+        Ptr = Start + 44;
+        str = ReadStringChecked(0);
     }
 
     CJournalMessage message(serial, textColor, str);
@@ -1809,7 +1809,7 @@ PACKET_HANDLER(Talk)
 
                 if (replaceFontColor)
                 {
-                    pack16(m_Start + 10, replaceFontColorValue);
+                    pack16(Start + 10, replaceFontColorValue);
                 }
             }
         }
@@ -1850,13 +1850,13 @@ PACKET_HANDLER(UnicodeTalk)
         return true;
     }
 
-    string name = ReadString(0);
+    string name = ReadStringChecked(0);
     string str = "";
 
-    if (m_Size > 48)
+    if (Size > 48)
     {
-        m_Ptr = m_Start + 48;
-        int strLen = (m_Size - 48) / 2;
+        Ptr = Start + 48;
+        int strLen = (Size - 48) / 2;
         str = str_from(ReadWString(strLen).c_str());
     }
 
@@ -1896,7 +1896,7 @@ PACKET_HANDLER(UnicodeTalk)
 
                 if (replaceFontColor)
                 {
-                    pack16(m_Start + 10, replaceFontColorValue);
+                    pack16(Start + 10, replaceFontColorValue);
                 }
             }
         }
@@ -2337,7 +2337,7 @@ PACKET_HANDLER(ExtendedCommandR)
             }
 
             string str = parse_cliloc_arguments(
-                clilocNum, true, wstr_t((wchar_t *)m_Ptr));
+                clilocNum, true, wstr_t((wchar_t *)Ptr));
             if (str.length() > 0)
             {
                 item->SetName(str);
@@ -2359,7 +2359,7 @@ PACKET_HANDLER(ExtendedCommandR)
                 if (crafterNameLen != 0u)
                 {
                     str = "Crafted by ";
-                    str += ReadString(crafterNameLen).c_str();
+                    str += ReadStringChecked(crafterNameLen).c_str();
                 }
             }
 
@@ -2372,9 +2372,9 @@ PACKET_HANDLER(ExtendedCommandR)
                 str += "[Unidentified";
             }
 
-            uchar *end = m_Start + m_Size - 4;
+            uchar *end = Start + Size - 4;
             uchar count = 0;
-            while (m_Ptr < end)
+            while (Ptr < end)
             {
                 if (count != 0 || next == 0xFFFFFFFD || next == 0xFFFFFFFC)
                 {
@@ -2382,7 +2382,7 @@ PACKET_HANDLER(ExtendedCommandR)
                 }
                 short charges = ReadInt16BE();
                 string attrsString = parse_cliloc_arguments(
-                    next, true, wstr_t((wchar_t *)m_Ptr));
+                    next, true, wstr_t((wchar_t *)Ptr));
                 if (charges == -1)
                 {
                     if (count > 0)
@@ -2550,7 +2550,7 @@ PACKET_HANDLER(GraphicEffect)
 
         if (type > 3)
         {
-            if (type == 4 && *m_Start == 0x70)
+            if (type == 4 && *Start == 0x70)
             {
                 Move(8);
                 ushort val = ReadInt16BE();
@@ -2589,7 +2589,7 @@ PACKET_HANDLER(GraphicEffect)
         uint color = 0;
         uint renderMode = 0;
 
-        if (*m_Start != 0x70)
+        if (*Start != 0x70)
         {
             // 0xC0
             color = ReadUInt32BE();
@@ -2686,7 +2686,7 @@ PACKET_HANDLER(DisplayMap)
         // ushort endX = ReadUInt16BE();
         // ushort endY = ReadUInt16BE();
 
-        if (*m_Start != 0xF5)
+        if (*Start != 0xF5)
         {
             g_LastTMapX = startX;
             g_LastTMapY = startY;
@@ -2712,21 +2712,21 @@ PACKET_HANDLER(DisplayClilocString)
 
     uchar flags = 0;
 
-    if (*m_Start == 0xCC)
+    if (*Start == 0xCC)
     {
         flags = ReadUInt8();
     }
 
-    string name = ReadString(30);
+    string name = ReadStringChecked(30);
 
-    if (*m_Start == 0xCC)
+    if (*Start == 0xCC)
     {
         // (affix is parsed for the pointer side effect, like the original)
-        string affix = ReadString(0);
+        string affix = ReadStringChecked(0);
         (void)affix;
     }
 
-    string str = parse_cliloc_arguments(cliloc, false, wstr_t((wchar_t *)m_Ptr));
+    string str = parse_cliloc_arguments(cliloc, false, wstr_t((wchar_t *)Ptr));
 
     CJournalMessage message(serial, color, str);
 
@@ -2758,7 +2758,7 @@ PACKET_HANDLER(DisplayClilocString)
 
                 if (replaceFontColor)
                 {
-                    pack16(m_Start + 10, replaceFontColorValue);
+                    pack16(Start + 10, replaceFontColorValue);
                 }
             }
         }
@@ -2810,10 +2810,10 @@ PACKET_HANDLER(MegaClilocR)
     string name = "";
     string message = "";
 
-    uchar *end = m_Start + m_Size;
+    uchar *end = Start + Size;
     vector<string> list;
 
-    while (m_Ptr < end)
+    while (Ptr < end)
     {
         uint cliloc = ReadUInt32BE();
 
@@ -2828,8 +2828,8 @@ PACKET_HANDLER(MegaClilocR)
 
         if (len > 0)
         {
-            argument = wstring((wchar_t *)m_Ptr, len / 2);
-            m_Ptr += len;
+            argument = wstring((wchar_t *)Ptr, len / 2);
+            Ptr += len;
         }
 
         string str = parse_cliloc_arguments(cliloc, true, argument);
@@ -3030,7 +3030,7 @@ PACKET_HANDLER(CharacterProfileR)
 
     if (obj != nullptr)
     {
-        string topText = ReadString();
+        string topText = ReadStringChecked();
 
         wstring bottomText = ReadWString();
         wstring dataText = ReadWString() + L"\n" + bottomText;
@@ -3062,7 +3062,7 @@ PACKET_HANDLER(OpenPaperdoll)
 
     if (obj != nullptr)
     {
-        obj->SetTitle(ReadString(60).c_str());
+        obj->SetTitle(ReadStringChecked(60).c_str());
     }
 
     return true;
@@ -3116,7 +3116,7 @@ PACKET_HANDLER(KrriosClientSpecialR)
     const uchar type = ReadUInt8();
     if (type == 1)
     {
-        const int count = int(m_Size - 4) / 9;
+        const int count = int(Size - 4) / 9;
         for (int i = 0; i < count; i++)
         {
             XA_PARTY_MEMBER_INFO info;
@@ -3131,7 +3131,7 @@ PACKET_HANDLER(KrriosClientSpecialR)
     {
         const uchar locations = ReadUInt8();
         const int bytesPerEntry = locations != 0u ? 4 + 6 : 4;
-        const int count = int(m_Size - 4) / bytesPerEntry;
+        const int count = int(Size - 4) / bytesPerEntry;
         for (int i = 0; i < count; i++)
         {
             XA_GUILD_MEMBER_INFO info;
@@ -3149,7 +3149,7 @@ PACKET_HANDLER(KrriosClientSpecialR)
 PACKET_HANDLER(PerformAction)
 {
     uchar type = ReadUInt8();
-    string str = ReadString(m_Size - /*4*/ 5);
+    string str = ReadStringChecked(Size - /*4*/ 5);
 
     bool lastSpell = g_LastSpellIndex != 0;
 
@@ -3443,7 +3443,7 @@ PACKET_HANDLER(ClientMessagesR)
                 for (int i = 0; i < g_SkillsCount; i++)
                 {
                     uchar button = ReadUInt8();
-                    string name = ReadString();
+                    string name = ReadStringChecked();
 
                     if (button != 0u)
                     {
@@ -3473,7 +3473,7 @@ PACKET_HANDLER(ClientMessagesR)
 
                     for (int j = 0; j < spellsCount; j++)
                     {
-                        string spellName = ReadString();
+                        string spellName = ReadStringChecked();
                         hotkeyActions.back().push_back(spellName);
                         int offset = (i * 100) + (i > 2 ? 100 : 0);
                         g_SpellManager.Insert(spellName, j + offset + 1);
@@ -3492,13 +3492,13 @@ PACKET_HANDLER(ClientMessagesR)
                 for (int i = 0; i < count; i++)
                 {
                     std::pair<string, vector<string>> macro;
-                    macro.first = ReadString();
+                    macro.first = ReadStringChecked();
 
                     int actionsCount = ReadUInt16BE();
 
                     for (int j = 0; j < actionsCount; j++)
                     {
-                        macro.second.push_back(ReadString());
+                        macro.second.push_back(ReadStringChecked());
                     }
 
                     macros.push_back(macro);

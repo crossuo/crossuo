@@ -9,7 +9,7 @@
 #include "core/global.h"
 #include "model/commonitems/gump.h"
 #include "model/commonitems/gumphook.h"
-#include "model/datareader.h"
+#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 
 namespace xuoassist {
 

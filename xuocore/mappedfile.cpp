@@ -321,6 +321,36 @@ wstr_t CDataReader::ReadWStringLE(size_t size, const intptr_t &offset)
     return ReadWString(size, false, offset);
 }
 
+// bounds-checked read: an out-of-bounds request returns an empty string
+// without moving the read position (ReadString also leaves the position
+// untouched on out-of-bounds, but the returned bytes are then undefined)
+astr_t CDataReader::ReadStringChecked(size_t size, const intptr_t &offset)
+{
+    DATASTREAM_DEBUG;
+    uint8_t *ptr = Ptr + offset;
+    if (size == 0u)
+    {
+        if (ptr >= Start && ptr <= End)
+        {
+            uint8_t *buf = ptr;
+            while (buf <= End && (*buf != 0u))
+            {
+                buf++;
+            }
+            size = (buf - ptr) + 1;
+        }
+    }
+
+    astr_t result;
+    if (ptr >= Start && ptr + size <= End)
+    {
+        result.resize(size, 0);
+        ReadDataLE((uint8_t *)&result[0], size, offset);
+    }
+
+    return result;
+}
+
 wstr_t CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
 {
     return ReadWString(size, true, offset);

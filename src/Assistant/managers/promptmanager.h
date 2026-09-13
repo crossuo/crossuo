@@ -8,7 +8,7 @@
 
 #include "core/global.h"
 #include "model/commonitems/prompt.h"
-#include "model/datareader.h"
+#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 
 namespace xuoassist {
 

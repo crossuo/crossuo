@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "../basequeue.h"
+#include "BaseQueue.h"
 #include "core/global.h"
 #include "../commonitems/ignoreitem.h"
 
