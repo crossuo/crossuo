@@ -7,6 +7,7 @@
 
 #include "target.h"
 #include "assist.h"
+#include "assistantevents.h"
 #include "packets.h"
 #include "../config/assistantconfig.h"
 #include "../model/gameobjects/gameworld.h"
@@ -174,18 +175,32 @@ bool CTarget::SetSendData(CDataReader &reader)
         m_LastTileZ = reader.ReadUInt16BE();
         m_LastTileGraphic = reader.ReadUInt16BE();
 
-        // PORT-TODO(phase-3): macro recording of MT_WAIT_FOR_TARGET_TILE
-        // (CMacroWithTargetTile with the player-relative offsets).
+        // was g_TabMacros->AddAction(new CMacroWithTargetTile(...)) while a
+        // recording was open (assist/target.cpp:180-193)
+        if (g_World != nullptr)
+        {
+            g_AssistantEvents->OnRecordTargetTile(
+                m_LastTileGraphic, m_LastTileX, m_LastTileY, m_LastTileZ);
+        }
     }
     else
     {
         reader.Move(5);
         uint serial = reader.ReadUInt32BE();
 
-        // PORT-TODO(phase-3): macro recording of MT_WAIT_FOR_TARGET_OBJECT
-        // (CMacroWithObject with MCT_SELF/MCT_LASTATTACK/MCT_LASTTARGET/
-        // MCT_ENEMY/MCT_FRIEND conversions; see the original
-        // CTarget::SetSendData).
+        ushort graphic = 0;
+        ushort color = 0;
+        CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
+        if (obj != nullptr)
+        {
+            graphic = obj->GetGraphic();
+            color = obj->GetColor();
+        }
+
+        // was g_TabMacros->AddAction(new CMacroWithObject(...)) while a
+        // recording was open (assist/target.cpp:206-240); the convert-type
+        // tagging happens in the executor
+        g_AssistantEvents->OnRecordTargetObject(serial, graphic, color);
 
         if (serial != g_PlayerSerial)
         {

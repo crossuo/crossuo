@@ -13,6 +13,18 @@
 
 namespace xuoassist {
 
+// The latest from-target reply (tablists polls this; single-slot since one
+// target cursor can be outstanding at a time).
+struct XA_FROM_TARGET_RESULT
+{
+    int Kind{ -1 };
+    uint Serial{ 0 };
+    ushort Graphic{ 0 };
+    ushort Color{ 0 };
+    string Name;
+    uint Generation{ 0 }; // bumped per reply (poll for change)
+};
+
 class CAssistantUIEvents : public CAssistantEvents
 {
 public:
@@ -26,13 +38,26 @@ public:
     // Was g_JournalManager.Add feeding the Qt journal window.
     virtual void OnJournalMessage(const CJournalMessage &message) override;
 
-    // PORT-TODO(phase-3/4/5): buffs (OnBuffAdd/Remove), corpses
-    // (OnCorpseAdd), party/guild member info, skills, spells, macro lists,
-    // object properties (OnMegaCliloc), inspector, title/map redraws and
-    // tracker updates stay default-inert until their UI rounds land.
+    // --- Phase 3 consumers -------------------------------------------------
+    // The hotkey action-list feeds (packetmanager.cpp:3248/3254).
+    virtual void OnSpellList(const vector<vector<string>> &books) override;
+    virtual void OnSkillsList(const vector<string> &hotkeyActions) override;
+    // The macro recording taps (target.cpp:190/:210).
+    virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color) override;
+    virtual void OnRecordTargetTile(ushort graphic, int x, int y, int z) override;
+    // The from-target replies (HandleTarget* forwards).
+    virtual void OnFromTarget(
+        int kind, uint serial, ushort graphic, ushort color, const string &name) override;
+
+    // PORT-TODO(phase-4/5): buffs (OnBuffAdd/Remove), corpses (OnCorpseAdd),
+    // party/guild member info, macro lists, object properties (OnMegaCliloc),
+    // inspector, title/map redraws and tracker updates stay default-inert
+    // until their UI rounds land.
 
     // Ring of the last N lines (oldest first); capped, event-time copies.
     const vector<Line> &Lines() const { return m_Lines; }
+
+    static XA_FROM_TARGET_RESULT &FromTargetResult();
 
 private:
     enum { LINE_CAP = 256 };

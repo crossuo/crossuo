@@ -1828,13 +1828,33 @@ bool CAssistantConfig::LoadHotkeys()
 
     for (const XMLElement &element : doc.Root.Children)
     {
-        if (element.Name != "hotkey")
+        // v0 also stored bare `<toggle_hotkeys key= modifiers=>` records
+        if (element.Name != "hotkey" &&
+            !(version == 0 && element.Name == "toggle_hotkeys"))
         {
             continue;
         }
 
         if (version == 0)
         {
+            if (element.Name == "toggle_hotkeys")
+            {
+                // Legacy toggle row (hotkeysform.cpp:375-398): a plain
+                // key/modifiers binding of HT_TOGGLE_HOTKEYS, action 0, no
+                // macro/script (the Data column renders the derived action
+                // name, "Hotkeys: toggle", like the Qt UpdateHotkeyData).
+                if (!element.HasAttribute("key") || !element.HasAttribute("modifiers"))
+                {
+                    continue;
+                }
+                CHotkeyEntry entry;
+                entry.Type = HT_TOGGLE_HOTKEYS;
+                entry.Action = 0;
+                entry.Key = (uint)strtoul(element.Attribute("key").c_str(), nullptr, 10);
+                entry.Modifiers = (uchar)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
+                m_Hotkeys.push_back(entry);
+                continue;
+            }
             // Legacy: converted on load to the v1 record shape (a script
             // hotkey, or the special "ExternalCode" entry).
             if (!element.HasAttribute("onescriptrunning") || !element.HasAttribute("key") ||

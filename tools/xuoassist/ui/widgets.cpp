@@ -19,6 +19,8 @@
 
 #include "GameObjects/GameWorld.h" // client g_World (status bar census, like Phase 0)
 
+#include "../core/hotkeys.h" // HotkeyKeyboard engine state (Phase 3)
+
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -429,10 +431,12 @@ int ListButtons(const char *idSeed)
         result |= XALB_REMOVE;
     }
     ImGui::SameLine();
-    // phase 3: the target pipeline exists, the capture flow does not yet
-    ImGui::BeginDisabled();
-    IconButton(XA_ICON_TARGET, "Select from target (available with the hotkey engine, phase 3)", false, 0.0f, idSeed);
-    ImGui::EndDisabled();
+    // phase 3: the from-target pipeline is live (g_TargetHandler +
+    // RequestTarget; the reply arrives as AssistantUIEvents::OnFromTarget)
+    if (IconButton(XA_ICON_TARGET, "Select from target", true, 0.0f, idSeed))
+    {
+        result |= XALB_TARGET;
+    }
     return result;
 }
 
@@ -544,6 +548,11 @@ XA_LIST_RENAME *ListRenameActive()
 void ListRenameEnd()
 {
     s_RenameActive = false;
+}
+
+void ListGenerationBump(ImGuiID id)
+{
+    list_generation_bump(id);
 }
 
 // The CExtendedListWidget::GetFreeName uniquifier: keep the name if no other
@@ -736,6 +745,206 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
     }
 
     return changed;
+}
+
+// --- HotkeyKeyboard (hotkeysform.ui) ------------------------------------------
+//
+// The on-screen keyboard, table-driven from the .ui geometry (rows, wide keys
+// and the numpad block). Delta: the Qt grid had three tall keys (Enter, +,
+// numpad Enter span two rows) - here every cap is one row high, which only
+// affects cosmetics, not the assign semantics. "Prt" stays a dead button like
+// in the original (pb_Prt was not in m_ButtonsMap). The wheel/X caps from the
+// two "Mouse ..." groups sit in their own labeled rows.
+//
+// Draw path: no allocations (static table + ImGui style colors).
+
+struct XA_CAP
+{
+    int KeyId;      // XA_KEY_ID (XKI_INVALID = dead cap like "Prt")
+    bool Modifier;  // Shift/Ctrl/Alt caps toggle the sticky bitmask
+    const char *Label;
+    float Units;    // width in cells (~30px in the .ui)
+};
+
+static const XA_CAP s_RowF[] = {
+    { XKI_ESC, false, "Esc", 1 },
+    { XKI_F1, false, "F1", 1 }, { XKI_F2, false, "F2", 1 },
+    { XKI_F3, false, "F3", 1 }, { XKI_F4, false, "F4", 1 },
+    { XKI_F5, false, "F5", 1 }, { XKI_F6, false, "F6", 1 },
+    { XKI_F7, false, "F7", 1 }, { XKI_F8, false, "F8", 1 },
+    { XKI_F9, false, "F9", 1 }, { XKI_F10, false, "F10", 1 },
+    { XKI_F11, false, "F11", 1 }, { XKI_F12, false, "F12", 1 },
+    { XKI_INVALID, false, "Prt", 1 },
+    { XKI_SLOCK, false, "SLc", 1 },
+    { XKI_PAUSE, false, "Pause", 1 },
+};
+static const XA_CAP s_RowMouse[] = {
+    { XKI_MOUSE_WHEEL_UP, false, "Up", 1.5f },
+    { XKI_MOUSE_WHEEL_PRESS, false, "Press", 1.5f },
+    { XKI_MOUSE_WHEEL_DOWN, false, "Down", 1.5f },
+    { XKI_MOUSE_X1, false, "X1", 1.5f },
+    { XKI_MOUSE_X2, false, "X2", 1.5f },
+};
+static const XA_CAP s_Row1[] = {
+    { XKI_TILDA, false, "`", 0.8f },
+    { XKI_1, false, "1", 1 }, { XKI_2, false, "2", 1 }, { XKI_3, false, "3", 1 },
+    { XKI_4, false, "4", 1 }, { XKI_5, false, "5", 1 }, { XKI_6, false, "6", 1 },
+    { XKI_7, false, "7", 1 }, { XKI_8, false, "8", 1 }, { XKI_9, false, "9", 1 },
+    { XKI_0, false, "0", 1 },
+    { XKI_SUB, false, "-", 1 },
+    { XKI_RESULT, false, "=", 1 },
+    { XKI_BACK, false, "Back", 2 },
+    { XKI_INS, false, "Ins", 1 }, { XKI_HOME, false, "Home", 1 }, { XKI_PGUP, false, "PgUp", 1 },
+    { XKI_NUMLOCK, false, "Num", 1 }, { XKI_NUMDIV, false, "/", 1 },
+    { XKI_NUMMUL, false, "*", 1 }, { XKI_NUMSUB, false, "-", 1 },
+};
+static const XA_CAP s_Row2[] = {
+    { XKI_TAB, false, "Tab", 1 },
+    { XKI_Q, false, "q", 1 }, { XKI_W, false, "w", 1 }, { XKI_E, false, "e", 1 },
+    { XKI_R, false, "r", 1 }, { XKI_T, false, "t", 1 }, { XKI_Y, false, "y", 1 },
+    { XKI_U, false, "u", 1 }, { XKI_I, false, "i", 1 }, { XKI_O, false, "o", 1 },
+    { XKI_P, false, "p", 1 },
+    { XKI_BKTL, false, "[", 1 }, { XKI_BKTR, false, "]", 1 },
+    { XKI_ENTER, false, "Enter", 2 },
+    { XKI_DEL, false, "Del", 1 }, { XKI_END, false, "End", 1 }, { XKI_PGDN, false, "PgDn", 1 },
+    { XKI_NUM7, false, "7", 1 }, { XKI_NUM8, false, "8", 1 }, { XKI_NUM9, false, "9", 1 },
+    { XKI_NUMADD, false, "+", 1 },
+};
+static const XA_CAP s_Row3[] = {
+    { XKI_CAPS, false, "Caps", 1.5f },
+    { XKI_A, false, "a", 1 }, { XKI_S, false, "s", 1 }, { XKI_D, false, "d", 1 },
+    { XKI_F, false, "f", 1 }, { XKI_G, false, "g", 1 }, { XKI_H, false, "h", 1 },
+    { XKI_J, false, "j", 1 }, { XKI_K, false, "k", 1 }, { XKI_L, false, "l", 1 },
+    { XKI_SEMICOLON, false, ";", 1 },
+    { XKI_QUOTE, false, "'", 1 },
+    { XKI_SLASH, false, "\\", 0.8f },
+    { XKI_NUM4, false, "4", 1 }, { XKI_NUM5, false, "5", 1 }, { XKI_NUM6, false, "6", 1 },
+};
+static const XA_CAP s_Row4[] = {
+    { XKI_SHIFT_L, true, "Shift", 2 },
+    { XKI_Z, false, "z", 1 }, { XKI_X, false, "x", 1 }, { XKI_C, false, "c", 1 },
+    { XKI_V, false, "v", 1 }, { XKI_B, false, "b", 1 }, { XKI_N, false, "n", 1 },
+    { XKI_M, false, "m", 1 },
+    { XKI_COMMA, false, ",", 1 }, { XKI_DOT, false, ".", 1 }, { XKI_DIV, false, "/", 1 },
+    { XKI_SHIFT_R, true, "Shift", 1.5f },
+    { XKI_UP, false, "^", 1 },
+    { XKI_NUM1, false, "1", 1 }, { XKI_NUM2, false, "2", 1 }, { XKI_NUM3, false, "3", 1 },
+    { XKI_NUMENTER, false, "Enter", 1 },
+};
+static const XA_CAP s_Row5[] = {
+    { XKI_CTRL_L, true, "Ctrl", 1 },
+    { XKI_WINL, false, "Win", 1 },
+    { XKI_ALT, true, "Alt", 1 },
+    { XKI_SPACE, false, "Space", 7 },
+    { XKI_ALTGR, true, "AltGr", 1.5f },
+    { XKI_WINR, false, "Win", 1 },
+    { XKI_APPS, false, "Apps", 1.5f },
+    { XKI_CTRL_R, true, "Ctrl", 1 },
+    { XKI_LEFT, false, "<", 1 }, { XKI_DOWN, false, "v", 1 }, { XKI_RIGHT, false, ">", 1 },
+    { XKI_NUM0, false, "0", 2 },
+    { XKI_NUMDOT, false, ".", 1 },
+};
+
+void HotkeyKeyboard_Draw(const char *id, int selectedRow)
+{
+    (void)id;
+    // the four hotkeysform.cpp:607-710 state colors
+    static const ImU32 COLOR_UNSET = IM_COL32(60, 60, 60, 255); // ImGui button default stand-in
+    static const ImU32 COLOR_MODIFIER = IM_COL32(200, 200, 200, 255);
+    static const ImU32 COLOR_SET = IM_COL32(183, 255, 183, 255);
+    static const ImU32 COLOR_DUPLICATE = IM_COL32(255, 183, 183, 255);
+    static const ImU32 COLOR_SELECTED = IM_COL32(183, 183, 255, 255);
+
+    const float cell = ImGui::GetTextLineHeight() * 2.1f;
+    const float height = ImGui::GetFrameHeight();
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const ImVec2 size(cell, height);
+
+    struct XA_ROW
+    {
+        const XA_CAP *Caps;
+        int Count;
+    };
+    const XA_ROW rows[] = {
+        { s_RowF, (int)(sizeof(s_RowF) / sizeof(s_RowF[0])) },
+        { s_RowMouse, (int)(sizeof(s_RowMouse) / sizeof(s_RowMouse[0])) },
+        { s_Row1, (int)(sizeof(s_Row1) / sizeof(s_Row1[0])) },
+        { s_Row2, (int)(sizeof(s_Row2) / sizeof(s_Row2[0])) },
+        { s_Row3, (int)(sizeof(s_Row3) / sizeof(s_Row3[0])) },
+        { s_Row4, (int)(sizeof(s_Row4) / sizeof(s_Row4[0])) },
+        { s_Row5, (int)(sizeof(s_Row5) / sizeof(s_Row5[0])) },
+    };
+
+    ImGui::PushID(id);
+    for (const XA_ROW &row : rows)
+    {
+        for (int i = 0; i < row.Count; i++)
+        {
+            const XA_CAP &cap = row.Caps[i];
+            const ImVec2 capSize(cap.Units * cell + (cap.Units - 1.0f) * spacing, height);
+            ImU32 color = COLOR_UNSET;
+            if (cap.Modifier)
+            {
+                uchar flag = 0;
+                if (cap.KeyId == XKI_SHIFT_L || cap.KeyId == XKI_SHIFT_R)
+                {
+                    flag = HM_SHIFT;
+                }
+                else if (cap.KeyId == XKI_CTRL_L || cap.KeyId == XKI_CTRL_R)
+                {
+                    flag = HM_CTRL;
+                }
+                else if (cap.KeyId == XKI_ALT || cap.KeyId == XKI_ALTGR)
+                {
+                    flag = HM_ALT;
+                }
+                if (flag != 0 && g_Hotkeys.StickyModifierSet(flag))
+                {
+                    color = COLOR_MODIFIER;
+                }
+            }
+            else if (cap.KeyId != XKI_INVALID)
+            {
+                switch (g_Hotkeys.KeyboardCapState(cap.KeyId, selectedRow))
+                {
+                    case 1:
+                        color = COLOR_SET;
+                        break;
+                    case 2:
+                        color = COLOR_DUPLICATE;
+                        break;
+                    case 3:
+                        color = COLOR_SELECTED;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_Button, color);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(20, 20, 20, 255));
+            if (ImGui::Button(cap.Label, capSize))
+            {
+                if (cap.Modifier)
+                {
+                    g_Hotkeys.KeyboardToggleModifier(cap.KeyId);
+                }
+                else if (cap.KeyId != XKI_INVALID)
+                {
+                    // the form routes the click to its selected row
+                    HotkeysForm_KeyboardAssign(cap.KeyId);
+                }
+            }
+            ImGui::PopStyleColor(4);
+            if (i + 1 < row.Count)
+            {
+                ImGui::SameLine();
+            }
+        }
+    }
+    ImGui::PopID();
 }
 
 // --- Find/Ignore content rows -----------------------------------------------

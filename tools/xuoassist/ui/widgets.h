@@ -123,6 +123,12 @@ bool ListNamesEqual(const string &a, const char *b); // case-insensitive
 XA_LIST_RENAME *ListRenameBegin(ImGuiID list, int row, const char *name);
 XA_LIST_RENAME *ListRenameActive();
 void ListRenameEnd();
+// Bumps a list's structural generation out of band (the same guard the rename
+// state carries): call when the backing container of an already-drawn list id
+// is swapped for another one without a count change - e.g. the selected list
+// changed on a Find/Ignore tab, so a pending rename must not resume/commit
+// against a foreign container of the same row count.
+void ListGenerationBump(ImGuiID id);
 
 struct XA_LIST_VIEW
 {
@@ -223,6 +229,19 @@ bool NameList(
     view.AllowRename = true;
     return ListCore(id, view, selected, checkColumn, height);
 }
+
+// --- HotkeyKeyboard (the on-screen keyboard from hotkeysform.ui) ------------
+// Table-driven ~110 key caps with the four state colors (hotkeysform.cpp:
+// 607-710): unset / set green rgb(183,255,183) / duplicate red rgb(255,183,183)
+// / selected blue rgb(183,183,255); modifier caps light up gray rgb(200,200,200)
+// while the sticky or physically-held modifiers match. Clicking a key cap
+// assigns it to the selected bindings row through the engine (the same event a
+// physical press would produce); Shift/Ctrl/Alt caps toggle sticky modifiers.
+// selectedRow: the bindings-table row rendered blue (-1 = none).
+void HotkeyKeyboard_Draw(const char *id, int selectedRow);
+// The cap-click route into the owning form (ui/hotkeysform.cpp): forwards to
+// g_Hotkeys.KeyboardAssign(keyId, the form's selected row).
+void HotkeysForm_KeyboardAssign(int keyId);
 
 // --- Find/Ignore content rows (CFindListItemListItem / CIgnoreListItem) -----
 // Displays "graphic color comment" / "serial graphic color comment" rows

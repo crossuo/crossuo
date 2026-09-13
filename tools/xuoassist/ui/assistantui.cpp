@@ -18,10 +18,13 @@
 
 #include "assistanteventsui.h"
 #include "widgets.h"
+#include "tabhotkeys.h"
+#include "tabmacros.h"
 #include "../config/assistantconfig.h"
 #include "../core/assist.h"
 #include "../core/packets.h"
 #include "../core/global.h"
+#include "../macros/macroexecutor.h"
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (journal gating)
 
 #include <revision.h> // PRODUCT_VERSION_STR (generated into the build dir)
@@ -62,8 +65,8 @@ const char *const PLACEHOLDER_PHASE[] = {
     "",       // Main
     "4",      // Display
     "",       // Lists
-    "3",      // Hotkeys
-    "3",      // Macros
+    "",       // Hotkeys (phase 3)
+    "",       // Macros (phase 3)
     "4",      // Scripts
     "",       // Agents (nested: 4)
     "4",      // Skills
@@ -205,10 +208,17 @@ void AssistantUI_Tick()
 {
     // runs from AssistantWindow_FrameTick (every game frame, visible or not)
     tick_reconnect();
+    // macro playback (was the TabMacros 10 ms QTimer -> ProcessMacro): a
+    // headless frame tick keeps running while the assistant window is hidden
+    g_MacroExecutor.Tick();
 }
 
 void AssistantUI_Shutdown()
 {
+    // disarm any from-target request armed before shutdown (CancelPendingFrom
+    // Targets): otherwise the stale g_TargetHandler would swallow the first
+    // legit 0x6C after a re-init
+    CancelPendingFromTargets();
     if (s_Initialized)
     {
         // flush pending Main/Options page edits (the Qt app saved on close)
@@ -231,6 +241,13 @@ void AssistantUI_Shutdown()
 int AssistantUI_ReconnectSecondsLeft()
 {
     return s_ReconnectSeconds;
+}
+
+void CancelPendingFromTargets()
+{
+    g_TargetHandler = nullptr;
+    TabHotkeys_CancelPendingFromTargets();
+    TabLists_CancelPendingFromTargets();
 }
 
 void AssistantUI_MarkOptionsDirty()
@@ -332,6 +349,12 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
                 case MT_LISTS:
                     draw_lists_tabs();
                     break;
+                case MT_HOTKEYS:
+                    TabHotkeys_Draw();
+                    break;
+                case MT_MACROS:
+                    TabMacros_Draw();
+                    break;
                 case MT_FILTERS:
                     draw_filters_tabs();
                     break;
@@ -357,6 +380,11 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
 
     ImGui::End();
     ImGui::PopStyleVar();
+
+    // the pop-out assistant windows (hotkeys form, speech-only control
+    // forms): separate ImGui windows gated by this draw call, i.e. by the
+    // AssistantWindow visibility like everything else
+    TabHotkeys_DrawControlForms();
 }
 
 } // namespace xuoassist

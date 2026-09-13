@@ -33,6 +33,12 @@ void AssistantUI_Init();
 void AssistantUI_Tick();
 void AssistantUI_Shutdown();
 
+// The UI-layer from-target disarm (was implicit in the Qt widget teardown):
+// clears the armed g_TargetHandler plus every tab arm state so a cursor
+// request armed before shutdown cannot consume a 0x6C after re-init. Hide
+// keeps the state on purpose; only shutdown disarms.
+void CancelPendingFromTargets();
+
 // Seconds left in the auto-reconnect countdown (TabMain::l_SecondsToReconnect);
 // 0 when the countdown is not running.
 int AssistantUI_ReconnectSecondsLeft();
@@ -55,6 +61,11 @@ enum TAB_LISTS
     TAB_LISTS_ENEMIES
 };
 void TabLists_Draw(int subTab);
+
+// Drops every list-tab from-target arm state (CancelPendingFromTargets,
+// shutdown: a request armed before shutdown must not swallow a 0x6C after
+// re-init).
+void TabLists_CancelPendingFromTargets();
 // sub-tab indexes inside the Filters nested tab bar (§2.10)
 enum TAB_FILTERS
 {

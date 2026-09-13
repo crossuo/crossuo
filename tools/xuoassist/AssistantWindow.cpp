@@ -18,6 +18,7 @@
 #include <xuocore/uodata.h> // ExeFilePath
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
 #include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
+#include "core/hotkeys.h"   // the hotkey engine (Phase 3 routing)
 #include "Globals.h"        // g_GameState, g_Ticks
 #include "Wisp/WispWindow.h" // Wisp::g_WispWindow
 
@@ -168,6 +169,12 @@ bool AssistantWindow_Toggle()
         return false;
     }
     s_visible = !s_visible;
+    if (!s_visible)
+    {
+        // disarm a pending capture field: with the shell hidden nothing would
+        // commit it, and the engine would keep eating keys into the buffer
+        xuoassist::g_Hotkeys.CancelCapture();
+    }
     return true;
 }
 
@@ -215,25 +222,49 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
     if (!event_belongs_to_game(ev))
         return true; // assistant pop-out platform window
 
-    // hidden: keep ImGui fed (io state upkeep, platform windows) but let the
-    // game play normally; popped-out windows that are still on screen simply
-    // freeze until Alt+U brings the assistant back (no NewFrame, no rendering)
-    if (!s_visible)
-        return false;
-
     const ImGuiIO &io = ImGui::GetIO();
+
+    // The capture field of the hotkeys form ("listening"): it must see the
+    // next raw key/wheel/mouse event even when the game would. Gated on
+    // !WantTextInput so a busy text field always wins (the Qt filter ran
+    // before everything, but there was no competing text input then).
+    if (xuoassist::Hotkeys_IsCapturing() && !io.WantTextInput &&
+        xuoassist::Hotkeys_ProcessCapture(ev))
+    {
+        return true;
+    }
+
+    // Hidden: keep ImGui fed but let the game play normally - EXCEPT the
+    // hotkey engine, which keeps working like the Qt plugin's filter did
+    // (the assistant could be minimized to tray and its hotkeys kept firing;
+    // Pass-keys and the On/Off switch govern it, see core/hotkeys.cpp).
+    if (!s_visible)
+        return xuoassist::Hotkeys_ProcessGameEvent(ev);
+
     switch (ev.type)
     {
         case SDL_MOUSEMOTION:
+            return io.WantCaptureMouse;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
+            // the engine only consumes middle/X buttons with a matching
+            // binding (the plain buttons always pass)
+            if (io.WantCaptureMouse)
+                return true;
+            return xuoassist::Hotkeys_ProcessGameEvent(ev);
         case SDL_MOUSEWHEEL:
-            return io.WantCaptureMouse;
+            if (io.WantCaptureMouse)
+                return true;
+            return xuoassist::Hotkeys_ProcessGameEvent(ev);
         case SDL_KEYDOWN:
         case SDL_KEYUP:
         case SDL_TEXTINPUT:
         case SDL_TEXTEDITING:
-            return io.WantCaptureKeyboard || io.WantTextInput;
+            // ImGui text fields always win: typing in the assistant never
+            // fires a binding
+            if (io.WantCaptureKeyboard || io.WantTextInput)
+                return true;
+            return xuoassist::Hotkeys_ProcessGameEvent(ev);
         default:
             return false;
     }

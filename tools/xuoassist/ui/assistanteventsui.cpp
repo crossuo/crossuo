@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The Phase 2 UI events consumer: journal ring buffer + the journal pane.
+// Phase 3 additions: the spell/skill hotkey action lists (core/actions), the
+// macro recording taps (macros/macroexecutor) and the from-target replies
+// (ui/tablists.cpp polls the latest result slot).
 
 #include "assistanteventsui.h"
 
@@ -10,6 +13,8 @@
 #include <external/gfx/imgui/imgui.h>
 
 #include "widgets.h"
+#include "../core/actions.h"
+#include "../macros/macroexecutor.h"
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (mirror)
 
 namespace xuoassist {
@@ -33,6 +38,49 @@ void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)
     {
         m_Lines.erase(m_Lines.begin());
     }
+}
+
+void CAssistantUIEvents::OnSpellList(const vector<vector<string>> &books)
+{
+    // was g_HotkeysForm->UpdateActionList(HT_CAST*, hotkeyActions)
+    Actions_SetSpellList(books);
+}
+
+void CAssistantUIEvents::OnSkillsList(const vector<string> &hotkeyActions)
+{
+    // was g_HotkeysForm->UpdateActionList(HT_USE_SKILL*, hotkeyActions)
+    Actions_SetSkillList(hotkeyActions);
+}
+
+void CAssistantUIEvents::OnRecordTargetObject(uint serial, ushort graphic, ushort color)
+{
+    // was g_TabMacros->AddAction(new CMacroWithObject(...)) (target.cpp:210)
+    g_MacroExecutor.RecordTargetObject(serial, graphic, color);
+}
+
+void CAssistantUIEvents::OnRecordTargetTile(ushort graphic, int x, int y, int z)
+{
+    // was g_TabMacros->AddAction(new CMacroWithTargetTile(...)) (target.cpp:190)
+    g_MacroExecutor.RecordTargetTile(graphic, x, y, z);
+}
+
+void CAssistantUIEvents::OnFromTarget(
+    int kind, uint serial, ushort graphic, ushort color, const string &name)
+{
+    // the HandleTarget* forwards: park the latest reply for the list tabs
+    XA_FROM_TARGET_RESULT &slot = FromTargetResult();
+    slot.Kind = kind;
+    slot.Serial = serial;
+    slot.Graphic = graphic;
+    slot.Color = color;
+    slot.Name = name;
+    slot.Generation++;
+}
+
+XA_FROM_TARGET_RESULT &CAssistantUIEvents::FromTargetResult()
+{
+    static XA_FROM_TARGET_RESULT s_Result;
+    return s_Result;
 }
 
 void JournalPane_Draw(float height)

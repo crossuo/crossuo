@@ -17,6 +17,13 @@ set(XUOASSIST_SRCS
   "ui/tabmain.cpp"
   "ui/tablists.cpp"
   "ui/tabfilters.cpp"
+  # Phase 3: hotkeys & macros (§7 items 1-4)
+  "core/hotkeys.cpp"
+  "core/actions.cpp"
+  "macros/macroexecutor.cpp"
+  "ui/hotkeysform.cpp"
+  "ui/tabhotkeys.cpp"
+  "ui/tabmacros.cpp"
   # Phase 1a: Qt-free foundation ported from xuoassist (plan §7 Phase 1 item 1)
   "core/global.cpp"
   "core/textconv.cpp"

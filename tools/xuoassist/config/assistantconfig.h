@@ -112,7 +112,14 @@ enum HOTKEY_TYPES
     HT_USE_SKILL_LAST_ATTACK,
     HT_USE_SKILL_ENEMY,
     HT_USE_SKILL_FRIEND,
-    HT_LAST
+    // the Qt enum tail (hotkeysform.h:22-25) - the Phase-1c model stopped at
+    // the skill entries; the stored uint values and the Hotkeys.xml schema
+    // are unchanged (values 0..21 above already match the Qt writer)
+    HT_USE_SKILL_NEW_TARGET_SYSTEM,
+    HT_TARGETING,
+    HT_BANDAGE_HEALING,
+    HT_NEW_TARGETING_SYSTEM_SET,
+    HT_LAST // == the Qt HT_COUNT_OF_ITEMS (26)
 };
 
 // gui/worldobjectlistitem.h (friends / enemies / party accept / decline lists)

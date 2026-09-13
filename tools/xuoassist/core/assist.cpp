@@ -933,14 +933,10 @@ void CAssistant::Track(const bool &state, short x, short y)
 
 void CAssistant::HandleTargetType(uchar *buf)
 {
-    // Was g_TabListsTypes->SetTypeFromTarget(unpack16(buf + 17)); the config
-    // half stores the graphic, the line-edit/autosave UI is Phase 2.
+    // Was g_TabListsTypes->SetTypeFromTarget(unpack16(buf + 17)); the field
+    // update is the Phase 3 from-target flow (UI consumes via OnFromTarget).
     const ushort graphic = unpack16(buf + 17);
-    if (graphic != 0u)
-    {
-        CAssistant::GraphicToText(graphic); // (format helper kept exercised)
-    }
-    // PORT-TODO(phase-2): le_TypeGraphic update + AutosaveAfterTargeting flow.
+    g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_TYPE, 0, graphic, 0, "");
 }
 
 void CAssistant::HandleTargetObject(uchar *buf)
@@ -951,7 +947,7 @@ void CAssistant::HandleTargetObject(uchar *buf)
     {
         Info(Assistant, "object from target: 0x%08X\n", serial);
     }
-    // PORT-TODO(phase-2): le_ObjectSerial update + AutosaveAfterTargeting flow.
+    g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_OBJECT, serial, 0, 0, "");
 }
 
 void CAssistant::HandleTargetDisplayItem(uchar *buf)
@@ -1031,23 +1027,27 @@ void CAssistant::HandleTargetDrop(uchar *buf)
 void CAssistant::HandleTargetFindList(uchar *buf)
 {
     // Was g_TabListsFind->AddFindListItemInList(g_World->FindWorldObject(...)).
-    CGameObject *obj = g_World->FindWorldObject(unpack32(buf + 7));
-    if (g_World != nullptr && obj != nullptr)
+    CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
+    if (obj != nullptr)
     {
-        Info(Assistant, "find list item from target: 0x%08X\n", obj->GetSerial());
+        g_AssistantEvents->OnFromTarget(
+            XA_FROM_TARGET_FIND_LIST, obj->GetSerial(), obj->GetGraphic(), obj->GetColor(),
+            obj->GetName());
     }
-    // PORT-TODO(phase-2): list-widget add + save flow.
+    // Qt also clicked the object to fetch its name when unknown
+    // (CObjectNameReceiver); the comment field just stays empty then.
 }
 
 void CAssistant::HandleTargetIgnoreList(uchar *buf)
 {
     // Was g_TabListsIgnore->AddIgnoreListItemInList(...).
-    CGameObject *obj = g_World->FindWorldObject(unpack32(buf + 7));
-    if (g_World != nullptr && obj != nullptr)
+    CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
+    if (obj != nullptr)
     {
-        Info(Assistant, "ignore list item from target: 0x%08X\n", obj->GetSerial());
+        g_AssistantEvents->OnFromTarget(
+            XA_FROM_TARGET_IGNORE_LIST, obj->GetSerial(), obj->GetGraphic(), obj->GetColor(),
+            obj->GetName());
     }
-    // PORT-TODO(phase-2): list-widget add + save flow.
 }
 
 void CAssistant::HandleTargetPartyObject(uchar *buf)
@@ -1062,27 +1062,43 @@ void CAssistant::HandleTargetPartyObject(uchar *buf)
 void CAssistant::HandleTargetFriendObject(uchar *buf)
 {
     // Was g_TabListsFriends->SetFriendObjectFromTarget(unpack32(buf + 7)).
-    Info(Assistant, "friend from target: 0x%08X\n", unpack32(buf + 7));
-    // PORT-TODO(phase-2): list-widget add flow.
+    const uint serial = unpack32(buf + 7);
+    Info(Assistant, "friend from target: 0x%08X\n", serial);
+    string name;
+    CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
+    if (obj != nullptr)
+    {
+        name = obj->GetName();
+    }
+    g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_FRIEND, serial, 0, 0, name);
 }
 
 void CAssistant::HandleTargetEnemyObject(uchar *buf)
 {
     // Was g_TabListsEnemies->SetEnemyObjectFromTarget(unpack32(buf + 7)).
-    Info(Assistant, "enemy from target: 0x%08X\n", unpack32(buf + 7));
-    // PORT-TODO(phase-2): list-widget add flow.
+    const uint serial = unpack32(buf + 7);
+    Info(Assistant, "enemy from target: 0x%08X\n", serial);
+    string name;
+    CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
+    if (obj != nullptr)
+    {
+        name = obj->GetName();
+    }
+    g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_ENEMY, serial, 0, 0, name);
 }
 
 void CAssistant::HandleTargetAnimalAndVendorControlName(uchar *buf)
 {
     // Was g_AnimalAndVendorControlForm->SetName(obj->GetName()) + window
-    // activate; the control form is Phase 5.
-    CGameObject *obj = g_World->FindWorldObject(unpack32(buf + 7));
+    // activate; the control form is the Phase 3 speech popup.
+    CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
     if (obj != nullptr)
     {
         Info(Assistant, "animal/vendor name from target: %s\n", obj->GetName().c_str());
+        g_AssistantEvents->OnFromTarget(
+            XA_FROM_TARGET_ANIMAL_NAME, obj->GetSerial(), obj->GetGraphic(), obj->GetColor(),
+            obj->GetName());
     }
-    // PORT-TODO(phase-5): g_AnimalAndVendorControlForm->SetName(...).
 }
 
 CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceText)

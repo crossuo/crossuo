@@ -1,0 +1,830 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+// The macro executor implementation (see macroexecutor.h). Every action body
+// is the TabMacros::ProcessMacro case ported 1:1 (tabmacros.cpp:1105-1828);
+// the Qt code's widget reads became config reads (g_TabMain distances ->
+// g_AssistantConfig, g_TabAgentsDress flags -> g_AssistantConfig).
+
+#define LOGGER_MODULE Assistant
+
+#include "macroexecutor.h"
+
+#if defined(XUO_ASSISTANT)
+
+#include <common/logging/logging.h>
+
+#include "../config/assistantconfig.h"
+#include "../core/assist.h"
+#include "../core/global.h"
+#include "../core/packets.h"
+#include "../core/target.h"
+#include "../managers/contextmenumanager.h"
+#include "../managers/gumpmanager.h"
+#include "../managers/menumanager.h"
+#include "../managers/promptmanager.h"
+#include "../managers/skillmanager.h"
+#include "../managers/spellmanager.h"
+#include "../model/commonitems/gumphook.h"
+#include "../model/gameobjects/gameitem.h"
+#include "../model/gameobjects/gameplayer.h"
+#include "../model/gameobjects/gameworld.h"
+
+namespace xuoassist {
+
+CMacroExecutor g_MacroExecutor;
+
+namespace {
+
+void free_macro_list(vector<CMacro *> &list)
+{
+    for (CMacro *macro : list)
+    {
+        delete macro;
+    }
+    list.clear();
+}
+
+void warmode_send(uint state)
+{
+    // was CCommandManager::OnCommandWarmode (commandmanager.cpp:931)
+    if (g_World == nullptr || g_Player == nullptr)
+    {
+        return;
+    }
+    uchar warmode = (uchar)!g_Player->GetWarmode();
+    if (state < 2)
+    {
+        warmode = (uchar)state;
+    }
+    CPacketChangeWarmode(warmode).SendServer();
+}
+
+uint serial_for_convert(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
+{
+    switch (convertType)
+    {
+        case MCT_SELF:
+            return g_PlayerSerial;
+        case MCT_LASTATTACK:
+            return CAssistant::TextToSerial("lastattack");
+        case MCT_LASTTARGET:
+            return CAssistant::TextToSerial("lasttarget");
+        case MCT_ENEMY:
+            return CAssistant::TextToSerial("enemy");
+        case MCT_FRIEND:
+            return CAssistant::TextToSerial("friend");
+        default:
+            return macro != nullptr ? macro->GetSerial() : 0;
+    }
+}
+
+} // namespace
+
+void CMacroExecutor::SetLoopOptions(bool looped, float loopSeconds)
+{
+    m_Looped = looped;
+    m_LoopDelay = (uint)(loopSeconds * 1000.0f);
+}
+
+void CMacroExecutor::Play(const string &name, bool doNotAutoIterrupt)
+{
+    // TabMacros::Play(QString) (tabmacros.cpp:1004): find by name, last first
+    const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
+    if (m_Playing && m_DoNotAutoIterrupt)
+    {
+        return;
+    }
+    for (int i = (int)macros.size() - 1; i >= 0; i--)
+    {
+        if (macros[i].Name == name)
+        {
+            PlayIndex(i, doNotAutoIterrupt);
+            break;
+        }
+    }
+}
+
+void CMacroExecutor::PlayIndex(int macroIndex, bool doNotAutoIterrupt)
+{
+    // TabMacros::Play(CMacroListItem *) (tabmacros.cpp:931)
+    const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
+    if (macroIndex < 0 || macroIndex >= (int)macros.size())
+    {
+        return; // a macro deleted between selection and play: no-op, no crash
+    }
+    const CMacroEntry &entry = macros[macroIndex];
+
+    m_DoNotAutoIterrupt = doNotAutoIterrupt;
+    m_PlayingIndex = macroIndex;
+    m_NextMacroTick = 0;
+    m_ArmList.clear();
+    m_DressList.clear();
+    m_WaitingEnabled = false;
+
+    free_macro_list(m_PlayList);
+    m_PlayPosition = 0;
+
+    for (CMacro *macro : entry.m_Items)
+    {
+        m_PlayList.push_back(macro->Copy());
+    }
+
+    if (m_PlayList.empty())
+    {
+        m_Playing = false; // empty macro: play is a no-op
+        return;
+    }
+
+    m_Playing = true;
+    ProcessMacro();
+}
+
+void CMacroExecutor::Stop()
+{
+    // TabMacros::Stop (tabmacros.cpp:988)
+    m_Playing = false;
+    m_PlayingIndex = -1;
+    m_WaitingEnabled = false;
+    m_NextMacroTick = 0;
+    m_ArmList.clear();
+    m_DressList.clear();
+    free_macro_list(m_PlayList);
+}
+
+void CMacroExecutor::Tick()
+{
+    // was the QTimer(10ms) driving ProcessMacro; a headless frame tick keeps
+    // playback alive while the assistant window is hidden (Qt parity)
+    if (m_Playing)
+    {
+        ProcessMacro();
+    }
+}
+
+void CMacroExecutor::RecordStart(int macroIndex)
+{
+    const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
+    if (m_Playing || macroIndex < 0 || macroIndex >= (int)macros.size())
+    {
+        return;
+    }
+    m_Recording = true;
+    m_RecordingIndex = macroIndex;
+    free_macro_list(m_RecordBuffer);
+}
+
+int CMacroExecutor::RecordStop()
+{
+    // on_pb_Record_clicked stop half (tabmacros.cpp:337): commit the buffer
+    // into the macro; an empty capture is discarded
+    m_Recording = false;
+    const int committed = (int)m_RecordBuffer.size();
+    if (m_RecordingIndex < 0 || m_RecordingIndex >= (int)g_AssistantConfig.Macros().size())
+    {
+        free_macro_list(m_RecordBuffer);
+        m_RecordingIndex = -1;
+        return 0;
+    }
+    if (committed == 0)
+    {
+        m_RecordingIndex = -1;
+        return 0; // discard
+    }
+    CMacroEntry &entry = g_AssistantConfig.m_Macros[m_RecordingIndex];
+    free_macro_list(entry.m_Items);
+    entry.m_Items.swap(m_RecordBuffer);
+    m_RecordingIndex = -1;
+    return committed;
+}
+
+void CMacroExecutor::RecordTargetObject(uint serial, ushort graphic, ushort color)
+{
+    // assist/target.cpp:206-240
+    if (!m_Recording)
+    {
+        return;
+    }
+    CMacroWithObject *macro = new CMacroWithObject(
+        MT_WAIT_FOR_TARGET_OBJECT, serial, graphic, color);
+    if (serial == g_PlayerSerial)
+    {
+        macro->SetConvertType(MCT_SELF);
+    }
+    else if (serial == g_LastAttackObject)
+    {
+        macro->SetConvertType(MCT_LASTATTACK);
+    }
+    else if (serial == g_LastTargetObject)
+    {
+        macro->SetConvertType(MCT_LASTTARGET);
+    }
+    else if (serial == CAssistant::TextToSerial("enemy"))
+    {
+        macro->SetConvertType(MCT_ENEMY);
+    }
+    else if (serial == CAssistant::TextToSerial("friend"))
+    {
+        macro->SetConvertType(MCT_FRIEND);
+    }
+    m_RecordBuffer.push_back(macro);
+}
+
+void CMacroExecutor::RecordTargetTile(ushort graphic, int x, int y, int z)
+{
+    // assist/target.cpp:180-193 (relative coordinates against the player)
+    if (!m_Recording)
+    {
+        return;
+    }
+    const int px = g_Player != nullptr ? g_Player->GetX() : 0;
+    const int py = g_Player != nullptr ? g_Player->GetY() : 0;
+    const int pz = g_Player != nullptr ? g_Player->GetZ() : 0;
+    m_RecordBuffer.push_back(
+        new CMacroWithTargetTile(MT_WAIT_FOR_TARGET_TILE, graphic, x, y, z, x - px, y - py, z - pz));
+}
+
+uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
+{
+    // TabMacros::FindObject (tabmacros.cpp:1050)
+    ushort graphic = macro->GetGraphic();
+
+    if (graphic == 0u)
+    {
+        return macro->GetSerial();
+    }
+
+    const ushort color =
+        ((convertType == MCT_BY_TYPE_COLOR || convertType == MCT_BY_TYPE_COLOR_GROUND) ?
+             macro->GetColor() :
+             0xFFFF);
+
+    vector<CIgnoreItem> ignoreList;
+    vector<string> list;
+
+    if (convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
+    {
+        int distance = g_AssistantConfig.SearchItemsDistance();
+        if (macro->GetType() == MT_USE)
+        {
+            distance = g_AssistantConfig.UseItemsDistance();
+        }
+        g_Assistant.FindType(
+            CFindItem(CAssistant::GraphicToText(graphic), CAssistant::GraphicToText(color)),
+            ignoreList,
+            0xFFFFFFFF,
+            distance,
+            0,
+            FTF_NEAREST,
+            false,
+            list);
+    }
+    else if (g_Player != nullptr)
+    {
+        g_Player->FindType(
+            CFindItem(CAssistant::GraphicToText(graphic), CAssistant::GraphicToText(color)),
+            ignoreList,
+            FTF_FAST,
+            true,
+            list);
+    }
+
+    if (!list.empty())
+    {
+        return CAssistant::TextToSerial(list.front());
+    }
+    return 0;
+}
+
+void CMacroExecutor::ProcessMacro()
+{
+    // TabMacros::ProcessMacro (tabmacros.cpp:1105-1828)
+    const int dressLayersCount = 18;
+    const int dressLayers[dressLayersCount] = { OL_TORSO,    OL_HELMET,   OL_GLOVES,   OL_LEGS,
+                                                OL_WAIST,    OL_ARMS,     OL_TUNIC,    OL_CLOAK,
+                                                OL_ROBE,     OL_SKIRT,    OL_SHIRT,    OL_SHOES,
+                                                OL_PANTS,    OL_BRACELET, OL_EARRINGS, OL_RING,
+                                                OL_NECKLACE, OL_TALISMAN };
+
+    while (m_Playing && m_NextMacroTick < g_Ticks)
+    {
+        const int playListSize = (int)m_PlayList.size();
+
+        if (m_PlayPosition >= playListSize)
+        {
+            m_PlayPosition = 0;
+            m_NextMacroTick = g_Ticks + m_LoopDelay;
+            if (!m_Looped)
+            {
+                Stop();
+            }
+            break;
+        }
+
+        CMacro *macro = m_PlayList[m_PlayPosition];
+        m_PlayPosition++;
+
+        if (macro == nullptr || g_Player == nullptr)
+        {
+            return;
+        }
+
+        const MACRO_TYPE type = macro->GetType();
+        const MACRO_CONVERT_TYPE convertType = macro->GetConvertType();
+
+        switch (type)
+        {
+            case MT_USE:
+            {
+                uint serial = ((CMacroWithObject *)macro)->GetSerial();
+                if (convertType == MCT_BY_TYPE || convertType == MCT_BY_TYPE_COLOR ||
+                    convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
+                {
+                    serial = FindObject((CMacroWithObject *)macro, convertType);
+                }
+                else if (convertType == MCT_LAST)
+                {
+                    serial = CAssistant::TextToSerial("lastobject");
+                }
+                else if (convertType == MCT_SELF)
+                {
+                    serial = g_PlayerSerial;
+                }
+                if (serial != 0u)
+                {
+                    g_Assistant.DoubleClick(serial);
+                }
+                break;
+            }
+            case MT_ATTACK:
+            {
+                // convertType LAST and LASTATTACK both mean "lastattack" here
+                uint serial = ((CMacroWithObject *)macro)->GetSerial();
+                if (convertType == MCT_LAST || convertType == MCT_LASTATTACK)
+                {
+                    serial = CAssistant::TextToSerial("lastattack");
+                }
+                else if (convertType == MCT_LASTTARGET)
+                {
+                    serial = CAssistant::TextToSerial("lasttarget");
+                }
+                else if (convertType == MCT_ENEMY)
+                {
+                    serial = CAssistant::TextToSerial("enemy");
+                }
+                if (serial != 0u)
+                {
+                    g_Assistant.Attack(serial);
+                }
+                break;
+            }
+            case MT_WAIT_FOR_TARGET_OBJECT:
+            {
+                if (!g_Target.IsTargeting())
+                {
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    return;
+                }
+                uint serial = ((CMacroWithObject *)macro)->GetSerial();
+                if (convertType == MCT_BY_TYPE || convertType == MCT_BY_TYPE_COLOR ||
+                    convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
+                {
+                    serial = FindObject((CMacroWithObject *)macro, convertType);
+                }
+                else
+                {
+                    serial = serial_for_convert((CMacroWithObject *)macro, convertType);
+                }
+                if (serial != 0u)
+                {
+                    g_Target.SendTargetObject(serial);
+                    CPacketCancelTarget().SendClient();
+                }
+                else
+                {
+                    g_Target.SendCancelTarget();
+                }
+                break;
+            }
+            case MT_WAIT_FOR_TARGET_TILE:
+            {
+                if (!g_Target.IsTargeting())
+                {
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    return;
+                }
+                if (convertType == MCT_LAST)
+                {
+                    g_Target.SendTargetLastTile();
+                    CPacketCancelTarget().SendClient();
+                }
+                else
+                {
+                    CMacroWithTargetTile *withTarget = (CMacroWithTargetTile *)macro;
+                    ushort graphic = withTarget->GetGraphic();
+                    int x = withTarget->GetX();
+                    int y = withTarget->GetY();
+                    int z = withTarget->GetZ();
+                    if (convertType == MCT_BY_TARGET_RELATIVE)
+                    {
+                        x = g_Player->GetX() + withTarget->GetRelativeX();
+                        y = g_Player->GetY() + withTarget->GetRelativeY();
+                        z = g_Player->GetZ() + withTarget->GetRelativeZ();
+                        // Was g_FileManager.GetTile(...) graphic resolution;
+                        // the numeric-graphic fallback matches the original's
+                        // empty-tile-list path (see core/target.cpp CheckHook)
+                    }
+                    g_Target.SendTargetTile(graphic, x, y, z);
+                    CPacketCancelTarget().SendClient();
+                }
+                break;
+            }
+            case MT_USE_SKILL:
+            {
+                if (convertType == MCT_LAST)
+                {
+                    g_SkillManager.Use("last");
+                }
+                else
+                {
+                    char value[16] = { 0 };
+                    snprintf(value, sizeof(value), "%i", ((CMacroWithIntValue *)macro)->GetValue());
+                    g_SkillManager.Use(value);
+                }
+                break;
+            }
+            case MT_CAST:
+            case MT_CAST_NEW:
+            case MT_CAST_FROM_BOOK:
+            {
+                if (convertType == MCT_LAST)
+                {
+                    g_SpellManager.Cast("last");
+                }
+                else
+                {
+                    char value[16] = { 0 };
+                    snprintf(value, sizeof(value), "%i", ((CMacroWithIntValue *)macro)->GetValue());
+                    g_SpellManager.Cast(value);
+                }
+                break;
+            }
+            case MT_SAY:
+            {
+                string text = ((CMacroWithStringValue *)macro)->GetValue();
+                if (convertType == MCT_SAY_YELL)
+                {
+                    text = "! " + text;
+                }
+                else if (convertType == MCT_SAY_WHISPER)
+                {
+                    text = "; " + text;
+                }
+                else if (convertType == MCT_SAY_EMOTE)
+                {
+                    text = ": " + text;
+                }
+                else if (convertType == MCT_SAY_BROADCAST)
+                {
+                    text = "? " + text;
+                }
+                else if (convertType == MCT_SAY_PARTY)
+                {
+                    text = "/ " + text;
+                }
+                else if (convertType == MCT_SAY_GUILD)
+                {
+                    text = "\\ " + text;
+                }
+                else if (convertType == MCT_SAY_ALLIANCE)
+                {
+                    text = "| " + text;
+                }
+                // was g_CommandManager.OnCommandSay (commandmanager.cpp:1144)
+                if (g_World != nullptr && !text.empty())
+                {
+                    ushort color = 0;
+                    if (!g_AssistantConfig.GetFontColor(color))
+                    {
+                        color = 0;
+                    }
+                    // the command text is ASCII speech: widen like QString::toStdWString
+                    wstring wide;
+                    wide.reserve(text.size());
+                    for (char c : text)
+                    {
+                        wide.push_back((wchar_t)(uchar)c);
+                    }
+                    CPacketUnicodeSpeechRequest(color, wide).SendClient();
+                }
+                break;
+            }
+            case MT_WAIT_FOR_PROMPT:
+            {
+                if (!EnabledCommandPrompts())
+                {
+                    break;
+                }
+                if (!m_WaitingEnabled)
+                {
+                    g_PromptReceived = false;
+                    m_WaitingEnabled = true;
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    return;
+                }
+                m_WaitingEnabled = false;
+                if (g_PromptReceived)
+                {
+                    g_PromptManager.Send(((CMacroWithStringValue *)macro)->GetValue());
+                }
+                break;
+            }
+            case MT_WAIT_FOR_MENU:
+            {
+                if (!m_WaitingEnabled)
+                {
+                    g_MenuReceived = false;
+                    m_WaitingEnabled = true;
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    return;
+                }
+                m_WaitingEnabled = false;
+                if (!g_MenuReceived)
+                {
+                    break;
+                }
+                CMenu *menu = g_MenuManager.GetLastMenu();
+                if (menu == nullptr || menu->GetReplayed())
+                {
+                    break;
+                }
+                if (convertType == MCT_ANY ||
+                    (((CMacroWithMenu *)macro)->GetName() == menu->GetName()))
+                {
+                    if (g_MenuManager.SendMenuChoice(
+                            menu, ((CMacroWithMenu *)macro)->GetItemName(), true))
+                    {
+                        break;
+                    }
+                }
+                break;
+            }
+            case MT_WAIT_FOR_GUMP:
+            {
+                if (!m_WaitingEnabled)
+                {
+                    g_GumpReceived = false;
+                    m_WaitingEnabled = true;
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    return;
+                }
+                m_WaitingEnabled = false;
+                if (!g_GumpReceived)
+                {
+                    break;
+                }
+                CGump *gump = g_GumpManager.GetLastGump();
+                if (gump == nullptr || gump->GetReplayed())
+                {
+                    break;
+                }
+                if (convertType == MCT_ANY || (((CMacroWithGump *)macro)->GetID() == gump->GetID()))
+                {
+                    CGumpHook hook;
+                    hook.SetIndex(((CMacroWithGump *)macro)->GetButton());
+                    if (g_GumpManager.SendGumpChoice(gump, hook))
+                    {
+                        break;
+                    }
+                }
+                break;
+            }
+            case MT_REQUEST_CONTEXT_MENU:
+            {
+                if (!EnabledCommandContextMenu())
+                {
+                    break;
+                }
+                uint serial = serial_for_convert((CMacroWithObject *)macro, convertType);
+                if (serial != 0)
+                {
+                    CPacketContextMenuRequest(serial).SendServer();
+                }
+                break;
+            }
+            case MT_WAIT_FOR_CONTEXT_MENU:
+            {
+                if (!EnabledCommandContextMenu())
+                {
+                    break;
+                }
+                if (!m_WaitingEnabled)
+                {
+                    g_ContextMenuReceived = false;
+                    m_WaitingEnabled = true;
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    return;
+                }
+                m_WaitingEnabled = false;
+                if (!g_ContextMenuReceived)
+                {
+                    break;
+                }
+                if (convertType == MCT_ANY ||
+                    (((CMacroWithObject *)macro)->GetSerial() == g_ContextMenuManager.GetSerial()))
+                {
+                    CPacketContextMenuSelection(
+                        g_ContextMenuManager.GetSerial(),
+                        ((CMacroWithObject *)macro)->GetGraphic())
+                        .SendServer();
+                }
+                break;
+            }
+            case MT_WAR_MODE:
+            {
+                if (convertType == MCT_TOGGLE)
+                {
+                    warmode_send(2);
+                }
+                else
+                {
+                    warmode_send((uint)((CMacroWithIntValue *)macro)->GetValue());
+                }
+                break;
+            }
+            case MT_HELP_MENU_REQUEST:
+                CPacketHelpRequest().SendServer();
+                break;
+            case MT_QUEST_MENU_REQUEST:
+                CPacketQuestMenuRequest().SendServer();
+                break;
+            case MT_GUILD_MENU_REQUEST:
+                CPacketGuildMenuRequest().SendServer();
+                break;
+            case MT_WALK:
+                // PORT-TODO(phase-4/5): needs the client's walker coordination
+                // (the Qt code drove its own PathFinder via the plugin
+                // interface, commandmanager.cpp:1964); recognized + consumed
+                // as a waiting no-op so a recorded macro stays timed.
+                break;
+            case MT_WRESTLING_STUN:
+                CPacketWrestlingStun().SendServer();
+                break;
+            case MT_WRESTLING_DISARM:
+                CPacketWrestlingDisarm().SendServer();
+                break;
+            case MT_COMBAT_ABILITY:
+                CPacketUseAbilityRequest((int)(convertType == MCT_SECONDARY)).SendClient();
+                break;
+            case MT_TOGGLE_GARGOYLE_FLYING:
+                CPacketToggleGargoyleFlying().SendServer();
+                break;
+            case MT_SET_ARM:
+                m_ArmList.clear();
+                for (int i = 1; i < 3; i++)
+                {
+                    CGameItem *obj = g_Player->FindLayer(i);
+                    if (obj != nullptr)
+                    {
+                        m_ArmList.push_back(obj->GetSerial());
+                    }
+                }
+                break;
+            case MT_DISARM:
+            {
+                for (int i = 1; i < 3; i++)
+                {
+                    CGameItem *obj = g_Player->FindLayer(i);
+                    if (obj != nullptr)
+                    {
+                        g_MoveItemData.Reset();
+                        g_MoveItemData.Container = CAssistant::TextToSerial("dressbag");
+                        if (g_MoveItemData.Container == 0u)
+                        {
+                            g_MoveItemData.Container = CAssistant::TextToSerial("backpack");
+                        }
+                        g_Assistant.MoveItem(obj);
+                        m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                        m_PlayPosition--;
+                        return;
+                    }
+                }
+                break;
+            }
+            case MT_ARM:
+            {
+                while (!m_ArmList.empty())
+                {
+                    uint serial = m_ArmList.front();
+                    CGameItem *obj = g_World != nullptr ? g_World->FindWorldItem(serial) : nullptr;
+                    if (obj == nullptr || obj->GetLayer() == obj->GetEquipLayer())
+                    {
+                        m_ArmList.erase(m_ArmList.begin());
+                        continue;
+                    }
+                    CGameItem *equipped = g_Player->FindLayer(obj->GetEquipLayer());
+                    if (equipped != nullptr && g_AssistantConfig.UndressBeforeDressing())
+                    {
+                        g_MoveItemData.Reset();
+                        g_MoveItemData.Container = CAssistant::TextToSerial("dressbag");
+                        if (g_MoveItemData.Container == 0u)
+                        {
+                            g_MoveItemData.Container = CAssistant::TextToSerial("backpack");
+                        }
+                        g_Assistant.MoveItem(equipped);
+                    }
+                    else if (g_AssistantConfig.DoubleClickForEquipItems())
+                    {
+                        g_Assistant.DoubleClick(obj->GetSerial());
+                    }
+                    else
+                    {
+                        g_Assistant.MoveEquip(obj->GetSerial(), obj->GetEquipLayer(), g_PlayerSerial);
+                    }
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_PlayPosition--;
+                    return;
+                }
+                break;
+            }
+            case MT_SET_DRESS:
+                m_DressList.clear();
+                for (int i = 0; i < dressLayersCount; i++)
+                {
+                    CGameItem *obj = g_Player->FindLayer(dressLayers[i]);
+                    if (obj != nullptr)
+                    {
+                        m_DressList.push_back(obj->GetSerial());
+                    }
+                }
+                break;
+            case MT_UNDRESS:
+            {
+                for (int i = 0; i < dressLayersCount; i++)
+                {
+                    CGameItem *obj = g_Player->FindLayer(dressLayers[i]);
+                    if (obj != nullptr)
+                    {
+                        g_MoveItemData.Reset();
+                        g_MoveItemData.Container = CAssistant::TextToSerial("dressbag");
+                        if (g_MoveItemData.Container == 0u)
+                        {
+                            g_MoveItemData.Container = CAssistant::TextToSerial("backpack");
+                        }
+                        g_Assistant.MoveItem(obj);
+                        m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                        m_PlayPosition--;
+                        return;
+                    }
+                }
+                break;
+            }
+            case MT_DRESS:
+            {
+                while (!m_DressList.empty())
+                {
+                    uint serial = m_DressList.front();
+                    CGameItem *obj = g_World != nullptr ? g_World->FindWorldItem(serial) : nullptr;
+                    if (obj == nullptr || obj->GetLayer() == obj->GetEquipLayer())
+                    {
+                        m_DressList.erase(m_DressList.begin());
+                        continue;
+                    }
+                    CGameItem *equipped = g_Player->FindLayer(obj->GetEquipLayer());
+                    if (equipped != nullptr && g_AssistantConfig.UndressBeforeDressing())
+                    {
+                        g_MoveItemData.Reset();
+                        g_MoveItemData.Container = CAssistant::TextToSerial("dressbag");
+                        if (g_MoveItemData.Container == 0u)
+                        {
+                            g_MoveItemData.Container = CAssistant::TextToSerial("backpack");
+                        }
+                        g_Assistant.MoveItem(equipped);
+                    }
+                    else if (g_AssistantConfig.DoubleClickForEquipItems())
+                    {
+                        g_Assistant.DoubleClick(obj->GetSerial());
+                    }
+                    else
+                    {
+                        g_Assistant.MoveEquip(obj->GetSerial(), obj->GetEquipLayer(), g_PlayerSerial);
+                    }
+                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_PlayPosition--;
+                    return;
+                }
+                break;
+            }
+            case MT_WAIT:
+                m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                return;
+            default:
+                break;
+        }
+        m_WaitingEnabled = false;
+    }
+}
+
+} // namespace xuoassist
+
+#endif // XUO_ASSISTANT

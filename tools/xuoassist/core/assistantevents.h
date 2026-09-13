@@ -24,6 +24,19 @@
 
 namespace xuoassist {
 
+// assistantevents.h OnFromTarget kind: which tab requested the target cursor
+enum
+{
+    XA_FROM_TARGET_TYPE = 0,       // TabListsTypes (graphic of the target)
+    XA_FROM_TARGET_OBJECT,         // TabListsObjects (serial)
+    XA_FROM_TARGET_FIND_LIST,      // TabListsFind content (graphic+color)
+    XA_FROM_TARGET_IGNORE_LIST,    // TabListsIgnore content (graphic+color)
+    XA_FROM_TARGET_FRIEND,         // TabListsFriends (serial)
+    XA_FROM_TARGET_ENEMY,          // TabListsEnemies (serial)
+    XA_FROM_TARGET_ANIMAL_NAME,    // AnimalAndVendorControlForm "Name" field
+    XA_FROM_TARGET_PARTY           // TabAgentsParty (phase 4)
+};
+
 // Forward-ported from the Qt app's managers/journalmanager.h (the manager
 // itself lands with the journal round; the flags travel with the messages).
 enum XA_JOURNAL_MESSAGE_FLAGS
@@ -116,6 +129,36 @@ public:
     virtual void OnMacroList(const vector<std::pair<string, vector<string>>> &macros)
     {
         (void)macros;
+    }
+
+    // --- macros (was g_TabMacros->AddAction from assist/target.cpp:190/:210
+    //     while a recording was open) ----------------------------------------
+    // graphic/color are 0 when the targeted object is unknown to the world.
+    virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color)
+    {
+        (void)serial;
+        (void)graphic;
+        (void)color;
+    }
+    virtual void OnRecordTargetTile(ushort graphic, int x, int y, int z)
+    {
+        (void)graphic;
+        (void)x;
+        (void)y;
+        (void)z;
+    }
+
+    // --- from-target requests (the tablists "from target" buttons; the
+    //     HandleTarget* stubs in core/assist.cpp forward the 0x6C reply) ----
+    // XA_FROM_TARGET_* identifies which tab asked; name is the object name
+    // when known (AnimalVendorName requests), "" otherwise.
+    virtual void OnFromTarget(int kind, uint serial, ushort graphic, ushort color, const string &name)
+    {
+        (void)kind;
+        (void)serial;
+        (void)graphic;
+        (void)color;
+        (void)name;
     }
 
     // --- object inspector (was g_ObjectInspectorForm->CheckUpdate(obj)) -----

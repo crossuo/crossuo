@@ -14,8 +14,10 @@
 #include <external/gfx/imgui/imgui.h>
 
 #include "widgets.h"
+#include "assistanteventsui.h"
 #include "../config/assistantconfig.h"
 #include "../core/assist.h"
+#include "../core/assistantevents.h"
 #include "../core/global.h"
 
 namespace xuoassist {
@@ -54,6 +56,44 @@ bool name_in_use(const vector<CTypeEntry> &items, const char *name, int skip)
 
 // --- Types (tabliststypes.cpp) ------------------------------------------------
 
+// The Phase 3 from-target flow (was on_pb_*FromTarget_clicked in the Qt list
+// tabs): the button arms g_TargetHandler + RequestTarget; the next outgoing
+// 0x6C (assistant-requested cursor) is dispatched by PACKET_HANDLER(TargetS)
+// and forwarded here through AssistantUIEvents::OnFromTarget. Each tab polls
+// the result slot with its own pending flag so a tab switch mid-request stays
+// correct.
+static void from_target_request(
+    bool &pending,
+    uint &generation,
+    void (CAssistant::*handler)(uchar *),
+    const char *prompt)
+{
+    pending = true;
+    g_TargetHandler = handler;
+    g_Assistant.RequestTarget(prompt);
+}
+
+static bool from_target_poll(
+    const bool &pending, uint &generation, int kind, XA_FROM_TARGET_RESULT &out)
+{
+    if (!pending)
+    {
+        return false;
+    }
+    XA_FROM_TARGET_RESULT &slot = CAssistantUIEvents::FromTargetResult();
+    if (slot.Generation == generation || slot.Kind != kind)
+    {
+        return false;
+    }
+    generation = slot.Generation;
+    out = slot;
+    return true;
+}
+
+// The per-tab arm states (types/objects/find/ignore/friends/enemies);
+// file-scope so TabLists_CancelPendingFromTargets can drop them on shutdown.
+static bool s_FtPending[6] = { false, false, false, false, false, false };
+
 void draw_types_tab()
 {
     static int selected = -1;
@@ -61,9 +101,24 @@ void draw_types_tab()
     static char typeName[64] = { 0 };
     static char typeGraphic[16] = { 0 };
     static char hint[128] = { 0 };
+    static bool &ftPending = s_FtPending[0];
+    static uint ftGeneration = 0;
+    XA_FROM_TARGET_RESULT ftResult;
 
     vector<CTypeEntry> &items = g_AssistantConfig.m_Types;
     const int buttons = ListButtons("types");
+    if ((buttons & XALB_TARGET) != 0)
+    {
+        // was on_pb_TypeFromTarget_clicked
+        from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetType,
+                            "Select a object for obtain graphic");
+    }
+    if (from_target_poll(ftPending, ftGeneration, XA_FROM_TARGET_TYPE, ftResult))
+    {
+        // SetTypeFromTarget (tabliststypes.cpp:338): fill the graphic field
+        snprintf(
+            typeGraphic, sizeof(typeGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
+    }
     bool changed = NameList("##types", items, &selected, &TypeNameOf, &TypeSetNameOf, false, 180.0f);
     if (selected != lastSelected)
     {
@@ -166,9 +221,24 @@ void draw_objects_tab()
     static char objectName[64] = { 0 };
     static char objectSerial[16] = { 0 };
     static char hint[128] = { 0 };
+    static bool &ftPending = s_FtPending[1];
+    static uint ftGeneration = 0;
+    XA_FROM_TARGET_RESULT ftResult;
 
     vector<CObjectEntry> &items = g_AssistantConfig.m_Objects;
     const int buttons = ListButtons("objects");
+    if ((buttons & XALB_TARGET) != 0)
+    {
+        // was on_pb_ObjectFromTarget_clicked
+        from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetObject,
+                            "Select a object for obtain serial");
+    }
+    if (from_target_poll(ftPending, ftGeneration, XA_FROM_TARGET_OBJECT, ftResult))
+    {
+        // SetObjectFromTarget (tablistsobjects.cpp:367)
+        snprintf(
+            objectSerial, sizeof(objectSerial), "%s", CAssistant::SerialToText(ftResult.Serial).c_str());
+    }
     bool changed = NameList("##objects", items, &selected, &ObjectNameOf, &ObjectSetNameOf, false, 180.0f);
     if (selected != lastSelected)
     {
@@ -311,6 +381,10 @@ void draw_find_tab()
         lastSelectedList = selectedList;
         selectedItem = lastSelectedItem = -1;
         hint[0] = '\0';
+        // the content pane swaps to another container with the same row id:
+        // kill any pending rename on it (same-count lists would otherwise let
+        // a stale rename resume) - the Phase 3 pre-fix from the re-review
+        ListGenerationBump(ImGui::GetID("##find_content"));
         if (selectedList >= 0 && selectedList < (int)lists.size())
         {
             snprintf(findName, sizeof(findName), "%s", lists[selectedList].Name.c_str());
@@ -402,6 +476,22 @@ void draw_find_tab()
     {
         vector<CFindItem> &content = lists[selectedList].m_Items;
         const int itemButtons = ListButtons("find_content");
+        static bool &ftPending = s_FtPending[2];
+        static uint ftGeneration = 0;
+        if ((itemButtons & XALB_TARGET) != 0)
+        {
+            // was on_pb_FindContentFromTarget_clicked (tablistsfind.cpp:189)
+            from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetFindList,
+                                "Select a object for obtain graphic and color");
+        }
+        XA_FROM_TARGET_RESULT ftResult;
+        if (from_target_poll(ftPending, ftGeneration, XA_FROM_TARGET_FIND_LIST, ftResult))
+        {
+            // AddFindListItemInList (tablistsfind.cpp:433)
+            snprintf(itemGraphic, sizeof(itemGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
+            snprintf(itemColor, sizeof(itemColor), "%s", CAssistant::GraphicToText(ftResult.Color).c_str());
+            snprintf(itemComment, sizeof(itemComment), "%s", ftResult.Name.c_str());
+        }
         bool contentChanged = FindContentList("##find_content", content, &selectedItem, 170.0f);
         if (selectedItem != lastSelectedItem)
         {
@@ -491,6 +581,8 @@ void draw_ignore_tab()
         lastSelectedList = selectedList;
         selectedItem = lastSelectedItem = -1;
         hint[0] = '\0';
+        // kill any pending rename on the content pane (same as ##find_content)
+        ListGenerationBump(ImGui::GetID("##ignore_content"));
         if (selectedList >= 0 && selectedList < (int)lists.size())
         {
             snprintf(ignoreName, sizeof(ignoreName), "%s", lists[selectedList].Name.c_str());
@@ -581,6 +673,21 @@ void draw_ignore_tab()
     {
         vector<CIgnoreItem> &content = lists[selectedList].m_Items;
         const int itemButtons = ListButtons("ignore_content");
+        static bool &ftPending = s_FtPending[3];
+        static uint ftGeneration = 0;
+        if ((itemButtons & XALB_TARGET) != 0)
+        {
+            // was on_pb_IgnoreContentFromTarget_clicked
+            from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetIgnoreList,
+                                "Select a object for obtain graphic and color");
+        }
+        XA_FROM_TARGET_RESULT ftResult;
+        if (from_target_poll(ftPending, ftGeneration, XA_FROM_TARGET_IGNORE_LIST, ftResult))
+        {
+            snprintf(itemGraphic, sizeof(itemGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
+            snprintf(itemColor, sizeof(itemColor), "%s", CAssistant::GraphicToText(ftResult.Color).c_str());
+            snprintf(itemComment, sizeof(itemComment), "%s", ftResult.Name.c_str());
+        }
         bool contentChanged = IgnoreContentList("##ignore_content", content, &selectedItem, 170.0f);
         if (selectedItem != lastSelectedItem)
         {
@@ -664,9 +771,37 @@ void draw_world_object_tab(
     char *serial,
     size_t serialSize,
     char *hint,
-    bool &changed)
+    bool &changed,
+    int fromTargetKind,
+    bool &ftPending,
+    uint &ftGeneration)
 {
     const int buttons = ListButtons(listId);
+    if ((buttons & XALB_TARGET) != 0)
+    {
+        // was on_pb_Friend/EnemyFromTarget_clicked (tablistsfriends.cpp:59 /
+        // tablistsenemies.cpp:147)
+        from_target_request(
+            ftPending,
+            ftGeneration,
+            fromTargetKind == XA_FROM_TARGET_FRIEND ? &CAssistant::HandleTargetFriendObject :
+                                                      &CAssistant::HandleTargetEnemyObject,
+            "Select a object for obtain serial");
+    }
+    XA_FROM_TARGET_RESULT ftResult;
+    if (from_target_poll(
+            ftPending,
+            ftGeneration,
+            fromTargetKind,
+            ftResult))
+    {
+        // SetFriend/EnemyObjectFromTarget: serial + name when known
+        snprintf(serial, serialSize, "%s", CAssistant::SerialToText(ftResult.Serial).c_str());
+        if (!ftResult.Name.empty())
+        {
+            snprintf(name, nameSize, "%s", ftResult.Name.c_str());
+        }
+    }
     changed = NameList(listId, items, selected, &WorldObjectNameOf, &WorldObjectSetNameOf, checkColumn, 180.0f);
     if (*selected != *lastSelected)
     {
@@ -748,11 +883,14 @@ void draw_friends_tab()
     static char name[64] = { 0 };
     static char serial[16] = { 0 };
     static char hint[128] = { 0 };
+    static bool &ftPending = s_FtPending[4];
+    static uint ftGeneration = 0;
 
     bool changed = false;
     draw_world_object_tab(
         "##friends", g_AssistantConfig.m_Friends, true, &selected, &lastSelected,
-        name, sizeof(name), serial, sizeof(serial), hint, changed);
+        name, sizeof(name), serial, sizeof(serial), hint, changed,
+        XA_FROM_TARGET_FRIEND, ftPending, ftGeneration);
     if (changed)
     {
         g_AssistantConfig.SaveFriends();
@@ -770,11 +908,14 @@ void draw_enemies_tab()
     static char name[64] = { 0 };
     static char serial[16] = { 0 };
     static char hint[128] = { 0 };
+    static bool &ftPending = s_FtPending[5];
+    static uint ftGeneration = 0;
 
     bool changed = false;
     draw_world_object_tab(
         "##enemies", g_AssistantConfig.m_Enemies, false, &selected, &lastSelected,
-        name, sizeof(name), serial, sizeof(serial), hint, changed);
+        name, sizeof(name), serial, sizeof(serial), hint, changed,
+        XA_FROM_TARGET_ENEMY, ftPending, ftGeneration);
     if (changed)
     {
         g_AssistantConfig.SaveEnemies();
@@ -782,6 +923,14 @@ void draw_enemies_tab()
 }
 
 } // namespace
+
+void TabLists_CancelPendingFromTargets()
+{
+    for (bool &pending : s_FtPending)
+    {
+        pending = false;
+    }
+}
 
 void TabLists_Draw(int subTab)
 {
