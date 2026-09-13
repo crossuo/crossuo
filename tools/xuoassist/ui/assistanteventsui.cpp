@@ -16,6 +16,7 @@
 #include "widgets.h"
 #include "../core/actions.h"
 #include "../macros/macroexecutor.h"
+#include "../script/journal.h" // the script journal mirror feed
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (mirror)
 
 namespace xuoassist {
@@ -29,6 +30,9 @@ CAssistantUIEvents *AssistantUIEvents_Get()
 
 void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)
 {
+    // the script-visible mirror (script/journal.cpp) shares the same ring
+    // semantics the Qt g_JournalManager had
+    ScriptJournal_Add(message);
     // was g_JournalManager.Add: copy the payload, cap the ring
     Line line;
     line.Text = message.GetText();

@@ -53,6 +53,10 @@ void AssistantUI_ClearOptionsDirty();
 // (assistform.cpp:463); called at init and after a profile switch.
 void AssistantUI_RecompileDisplayTitle();
 
+// The script editor window visibility (the Scripts tab "Open editor" button
+// flips it; the shell draws the window while the assistant is visible).
+extern bool g_AssistantScriptEditorOpen;
+
 // --- tab pages (ui/tabmain.cpp, ui/tablists.cpp, ui/tabfilters.cpp) ---------
 void TabMain_Draw();
 // sub-tab indexes inside the Lists nested tab bar (§2.1)

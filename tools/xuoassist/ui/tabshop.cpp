@@ -476,15 +476,17 @@ void draw_shop_progress()
     ImGui::End();
 }
 
+} // namespace
+
 // the progress popup as an always-on UI hook: AssistantUI_Draw calls this
 // outside the tab pages, so the popup renders while the agent is active with
-// any tab (or none) visible (draw_shop_progress itself early-outs otherwise)
+// any tab (or none) visible (draw_shop_progress itself early-outs otherwise).
+// External linkage on purpose: declared in assistantui.h, called from
+// assistantui.cpp (an anonymous-namespace definition never links).
 void TabShop_DrawProgress()
 {
     draw_shop_progress();
 }
-
-} // namespace
 
 void TabShop_Draw()
 {

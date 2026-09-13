@@ -384,6 +384,7 @@ public:
 
     // --- scripts options (TabScripts LoadConfig/SaveConfig) -----------------
     bool SortScripts() const { return m_SortScripts; }
+    void SetSortScripts(bool value) { m_SortScripts = value; }
     const string &ScriptFilePath() const { return m_ScriptFilePath; }
     void SetScriptFilePath(const string &path) { m_ScriptFilePath = path; }
 

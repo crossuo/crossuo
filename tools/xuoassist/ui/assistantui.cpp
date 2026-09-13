@@ -30,11 +30,20 @@
 #include "../core/global.h"
 #include "../managers/displaymanager.h"
 #include "../macros/macroexecutor.h"
+#include "../script/commandqueue.h"
+#include "../script/scripthandle.h"
+#include "scripteditor.h"
+#include "tabscripts.h"
 #include "../model/gameobjects/gameworld.h" // xuoassist::g_World (journal gating)
 
 #include <revision.h> // PRODUCT_VERSION_STR (generated into the build dir)
 
 namespace xuoassist {
+
+// the script editor window flag (declared in assistantui.h inside this
+// namespace - keep the definition in it too, or the compiler warns about a
+// missing matching extern declaration)
+bool g_AssistantScriptEditorOpen = false;
 
 // --- shell state -------------------------------------------------------------
 
@@ -72,7 +81,7 @@ const char *const PLACEHOLDER_PHASE[] = {
     "",       // Lists
     "",       // Hotkeys (phase 3)
     "",       // Macros (phase 3)
-    "4",      // Scripts (phase 4b)
+    "",       // Scripts (phase 4b round 1)
     "",       // Agents (nested: Dress/Party/Shop, phase 4a)
     "",       // Skills (phase 4a)
     "",       // Filters
@@ -288,6 +297,11 @@ void AssistantUI_RecompileDisplayTitle()
 void AssistantUI_Tick()
 {
     // runs from AssistantWindow_FrameTick (every game frame, visible or not)
+    // the script runtime first: the marshaled commands must run on the main
+    // thread before anything else consumes game state this frame (plan:
+    // queue -> agents -> draw)
+    ScriptQueue_Drain();
+    ScriptManager_Get()->Tick();
     tick_reconnect();
     // macro playback (was the TabMacros 10 ms QTimer -> ProcessMacro): a
     // headless frame tick keeps running while the assistant window is hidden
@@ -302,6 +316,16 @@ void AssistantUI_Tick()
 
 void AssistantUI_Shutdown()
 {
+    // the scripts stop first (bounded join; never hang the client), then the
+    // queue is shut down so late pushes fail fast (the Qt app tore the tab
+    // widgets down with the window and the queued signals died with it)
+    ScriptManager_Get()->StopAll(2000);
+    ScriptQueue_Shutdown();
+    // one more brief join pass: with pushes failing fast the stragglers fall
+    // through their pending calls and become joinable (zombie-eligible ones
+    // were detached by the first pass; this catches threads that only needed
+    // the queue closed)
+    ScriptManager_Get()->StopAll(250);
     // disarm any from-target request armed before shutdown (CancelPendingFrom
     // Targets): otherwise the stale g_TargetHandler would swallow the first
     // legit 0x6C after a re-init
@@ -452,6 +476,9 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
                 case MT_MACROS:
                     TabMacros_Draw();
                     break;
+                case MT_SCRIPTS:
+                    TabScripts_Draw();
+                    break;
                 case MT_FILTERS:
                     draw_filters_tabs();
                     break;
@@ -485,6 +512,9 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     // forms): separate ImGui windows gated by this draw call, i.e. by the
     // AssistantWindow visibility like everything else
     TabHotkeys_DrawControlForms();
+    // the script editor window (ScriptEditorDialog): one shared buffer with
+    // the script runtime; drawn only while open
+    ScriptEditorWindow_Draw(&g_AssistantScriptEditorOpen);
     // the shopping progress popup: agent-owned window drawn next to the other
     // always-on UI so it survives leaving the Shop sub-tab (still only while
     // the assistant window is drawn; the popup itself early-outs when the

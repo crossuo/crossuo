@@ -138,6 +138,34 @@ void CTextCommandManager::DoCommand(const string &text)
     }
 }
 
+bool CTextCommandManager::RunCommand(const string &name, const COMMAND_ARGS &args)
+{
+    if (g_World == nullptr)
+    {
+        return false;
+    }
+
+    COMMANDS_MAP::iterator command = m_Commands.find(to_lower_copy(name));
+
+    if (command == m_Commands.end())
+    {
+        g_Assistant.ClientPrint(string("Unknown command: ") + name);
+        return false;
+    }
+
+    CCommand &cmd = command->second.first;
+    CMD_HANDLER handler = command->second.second;
+
+    if (cmd.GetEnabled())
+    {
+        (this->*handler)(args, cmd);
+        return true;
+    }
+
+    g_Assistant.ClientPrint("This command is disabled!");
+    return false;
+}
+
 void CTextCommandManager::UpdateCommands()
 {
     for (COMMANDS_MAP::iterator i = m_Commands.begin(); i != m_Commands.end(); ++i)

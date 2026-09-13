@@ -32,6 +32,17 @@ set(XUOASSIST_SRCS
   "ui/tabshop.cpp"
   "ui/tabskills.cpp"
   "ui/tabdisplay.cpp"
+  # Phase 4b: the script runtime (QuickJS-ng vendored under script/quickjs,
+  # see script/quickjs/VENDOR.md), the Scripts tab and the script editor
+  "script/commandqueue.cpp"
+  "script/journal.cpp"
+  "script/engine.cpp"
+  "script/apiscript.cpp"
+  "script/scripthandle.cpp"
+  "ui/scriptmenu.cpp"
+  "ui/editor.cpp"
+  "ui/scripteditor.cpp"
+  "ui/tabscripts.cpp"
   # Phase 1a: Qt-free foundation ported from xuoassist (plan §7 Phase 1 item 1)
   "core/global.cpp"
   "core/textconv.cpp"
@@ -86,6 +97,22 @@ set(XUOASSIST_SRCS
 )
 
 add_library(xuoassist STATIC ${XUOASSIST_SRCS})
+
+# Vendored QuickJS-ng (script/quickjs/VENDOR.md): the four upstream C sources
+# compile straight into the lib; no upstream file is modified.
+target_sources(xuoassist PRIVATE
+  script/quickjs/dtoa.c
+  script/quickjs/libregexp.c
+  script/quickjs/libunicode.c
+  script/quickjs/quickjs.c
+)
+set_source_files_properties(
+  script/quickjs/dtoa.c
+  script/quickjs/libregexp.c
+  script/quickjs/libunicode.c
+  script/quickjs/quickjs.c
+  PROPERTIES COMPILE_OPTIONS "-w"
+)
 # the define lives on this target for its own sources (mirrors the launcher's
 # target-scoped define on crossuo) and on crossuo for the hook call sites
 target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)
@@ -100,6 +127,34 @@ target_include_directories(xuoassist PUBLIC
   ${COMMON_INCLUDE}
   ${CMAKE_SOURCE_DIR}/src
 )
+
+# Phase 4b: the script-runtime harness (no client deps; the queue drain and
+# the engine flow are stubbed in the harness main)
+option(XUO_ASSISTANT_SCRIPT_TESTS "Build the xuoassist script harness" OFF)
+if(XUO_ASSISTANT_SCRIPT_TESTS)
+  add_executable(xuoassist-script-test
+    script/test/harness.cpp
+    script/commandqueue.cpp
+    script/journal.cpp
+    model/commonitems/journalmessage.cpp
+    script/quickjs/dtoa.c
+    script/quickjs/libregexp.c
+    script/quickjs/libunicode.c
+    script/quickjs/quickjs.c
+  )
+  target_compile_definitions(xuoassist-script-test PRIVATE XUO_ASSISTANT=1)
+  set_source_files_properties(
+    script/quickjs/dtoa.c
+    script/quickjs/libregexp.c
+    script/quickjs/libunicode.c
+    script/quickjs/quickjs.c
+    PROPERTIES COMPILE_OPTIONS "-w"
+  )
+  set_property(TARGET xuoassist-script-test PROPERTY POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(xuoassist-script-test PRIVATE
+    ${XUOASSIST_INCLUDE} ${COMMON_INCLUDE} ${CMAKE_SOURCE_DIR}/src)
+  target_link_libraries(xuoassist-script-test PRIVATE ${COMMON_PROJECT} m pthread)
+endif()
 
 # Phase 2: icon-atlas assets (§6). Copied next to the binary so the runtime
 # lookup (assets/xuoassist, then next to the exe) finds them in dev builds.

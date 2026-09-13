@@ -70,6 +70,11 @@ public:
 
     void DoCommand(const string &text);
 
+    // Runs one command by name with pre-split args (the script runtime's
+    // marshaled [Q] calls; the DoCommand tail after CommandTok's parse).
+    // Returns false for unknown commands (the script layer logs that).
+    bool RunCommand(const string &name, const COMMAND_ARGS &args);
+
     void UpdateCommands();
 
     HANDLER_COMMAND(info);
