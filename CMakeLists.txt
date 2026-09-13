@@ -100,6 +100,14 @@ if (OPENGL_FOUND)
   set(GL_LIBRARIES ${OPENGL_LIBRARIES})
 elseif (GLESv2_FOUND)
   compile_definitions(USE_GLES2=1)
+  # the src renderer gates key off the generic family flag (USE_GLES - the
+  # same name gfx.h derives from USE_GLES2 for the gfx lib), and they sit on
+  # the first lines of the TUs (RenderDraw.cpp:4, RenderState.cpp:4,
+  # RenderDebug.cpp:4, RenderInternal.cpp:5, ...) BEFORE gfx.h gets included,
+  # so the gfx.h mapping never reaches them: define it for the whole tree.
+  # Passed without a value to match gfx.h's empty '#define USE_GLES' (a -1
+  # value would trigger a macro redefinition warning in every gfx.h user).
+  compile_definitions(USE_GLES)
   compile_definitions(NEW_RENDERER_ENABLED=1)
   set(USE_GLES2 1)
   set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR})
