@@ -24,7 +24,9 @@ public:
 
     bool OnPacketSend(CDataReader &reader);
 
-    bool OnPacketReceived(CDataReader &reader);
+    // trade-round bookkeeping over the client handler's parsed values
+    // (the client owns the 0x6F parse; no consume)
+    void OnTradeAction(int action, uint serial, uint id1, uint id2, const string &name);
 
     void Clear();
 

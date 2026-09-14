@@ -85,29 +85,13 @@ bool CTradeManager::OnPacketSend(CDataReader &reader)
     return true;
 }
 
-bool CTradeManager::OnPacketReceived(CDataReader &reader)
+void CTradeManager::OnTradeAction(
+    int action, uint serial, uint id1, uint id2, const string &name)
 {
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    int action = reader.ReadUInt8();
-    uint serial = reader.ReadUInt32BE();
-    uint id1 = reader.ReadUInt32BE();
-    uint id2 = reader.ReadUInt32BE();
-
     switch ((TRADE_ACTIONS)action)
     {
         case TA_OPEN:
         {
-            string name = "";
-
-            if (reader.ReadUInt8() != 0)
-            {
-                name = reader.ReadStringChecked();
-            }
-
             m_List.push_back(CTradeWindow(serial, id1, id2, name));
 
             break;
@@ -124,7 +108,7 @@ bool CTradeManager::OnPacketReceived(CDataReader &reader)
                     // assistant drops only its own trade-window record
                     m_List.erase(m_List.begin() + i);
 
-                    return true;
+                    return;
                 }
             }
 
@@ -140,7 +124,7 @@ bool CTradeManager::OnPacketReceived(CDataReader &reader)
                 {
                     trade.SetCheck1((bool)id1);
                     trade.SetCheck2((bool)id2);
-                    return true;
+                    return;
                 }
             }
 
@@ -150,12 +134,11 @@ bool CTradeManager::OnPacketReceived(CDataReader &reader)
         }
         default:
         {
-            Warning(Assistant, "Warning!!! Unknown trade action\n");
+            // SECURE_TRADE_UPDATEGOLD/UPDATELEDGER (and anything newer) carry
+            // no assistant record - the client gump is the only state
             break;
         }
     }
-
-    return true;
 }
 
 void CTradeManager::Clear()

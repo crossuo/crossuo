@@ -865,10 +865,13 @@ the client's) has been dissolved into the client's handlers. Batches B1-B4
 fused the recv side: every recv handler is now either fused into the client
 handler, kept whole on the recv tap with a rationale, or deleted as a
 duplicate of client state updates. B5 audited and closed the send side.
-Final table composition (`m_Packets` rows carrying handlers): 29 rows —
-4 `RMSGH` recv keeps, 10 `SMSGH` send handlers and 15 `BMSGH` rows (the
-0xBF Extended Command BMSGH is the fifth recv keep, via its recv half).
-0x91 Second Login was demoted to a plain `SMSG` row.
+Final table composition (`m_Packets` rows carrying handlers): 27 rows —
+4 `RMSGH` recv keeps (0x56/0x7C/0x9E/0xB0), 16 `SMSGH` send handlers and
+7 `BMSGH` rows (the 0xBF Extended Command BMSGH is the fifth recv keep,
+via its recv half).
+0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
+0xF0 Krrios client special are plain `BMSG` rows (both directions are
+client-owned; the host fuses the MegaCliloc event).
 
 ### Send tap (permanent seam)
 

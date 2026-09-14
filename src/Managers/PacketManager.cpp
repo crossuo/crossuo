@@ -28,6 +28,7 @@
 #include <core/target.h> // xuoassist::g_Target (WaitTarget hooks, target cursor state)
 #include <core/assist.h> // xuoassist::g_Assistant (status requests)
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
+#include <managers/trademanager.h> // xuoassist::g_TradeManager (trade-round record)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (login reset)
 #include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
 #include <managers/guildmanager.h> // xuoassist::g_GuildManager (guild chat speaker names)
@@ -3589,6 +3590,10 @@ PACKET_HANDLER(ConfirmWalk)
 
     //player->SetDirection(newdir);
 
+#if defined(XUO_ASSISTANT)
+    const uint8_t oldnoto = g_Player->Notoriety;
+#endif
+
     uint8_t newnoto = ReadUInt8() & (~0x40);
 
     if ((newnoto == 0u) || newnoto >= 8)
@@ -3597,6 +3602,15 @@ PACKET_HANDLER(ConfirmWalk)
     }
 
     g_Player->Notoriety = newnoto;
+
+#if defined(XUO_ASSISTANT)
+    // notoriety-watcher: redraw the assistant title row when the notoriety
+    // the client stored changed
+    if (xuoassist::g_AssistantConfig.ApplyNotorietyColorOnName() && newnoto != oldnoto)
+    {
+        xuoassist::g_AssistantEvents->OnTitleRedraw();
+    }
+#endif
 
     g_Walker.ConfirmWalk(sequence);
 
@@ -4500,6 +4514,38 @@ PACKET_HANDLER(KrriosClientSpecial)
     {
         CPacketRazorAnswer().Send();
     }
+#if defined(XUO_ASSISTANT)
+    else if (type == 1)
+    {
+        // party member positions (assistant map markers)
+        const int count = int(Size - 4) / 9;
+        for (int i = 0; i < count; i++)
+        {
+            xuoassist::XA_PARTY_MEMBER_INFO info;
+            info.Serial = ReadUInt32BE();
+            info.X = ReadUInt16BE();
+            info.Y = ReadUInt16BE();
+            info.Map = ReadUInt8();
+            xuoassist::g_AssistantEvents->OnPartyMemberInfo(info);
+        }
+    }
+    else if (type == 2)
+    {
+        // guild member positions (assistant map markers)
+        const uint8_t locations = ReadUInt8();
+        const int bytesPerEntry = locations != 0u ? 4 + 6 : 4;
+        const int count = int(Size - 4) / bytesPerEntry;
+        for (int i = 0; i < count; i++)
+        {
+            xuoassist::XA_GUILD_MEMBER_INFO info;
+            info.Serial = ReadUInt32BE();
+            info.X = ReadUInt16BE();
+            info.Y = ReadUInt16BE();
+            info.Map = ReadUInt8();
+            xuoassist::g_AssistantEvents->OnGuildMemberInfo(info);
+        }
+    }
+#endif
 }
 
 PACKET_HANDLER(AssistVersion)
@@ -4847,6 +4893,16 @@ PACKET_HANDLER(MegaCliloc)
         }
     }
 
+#if defined(XUO_ASSISTANT)
+    // object-properties mirror: `name` is the first unique line and `message`
+    // is the name prepended to the joined remaining lines (old event payload)
+    xuoassist::g_AssistantEvents->OnMegaCliloc(
+        serial,
+        clilocRevision,
+        str_from(name),
+        str_from(data.length() != 0u ? name + L"\n" + data : name));
+#endif
+
     g_ObjectPropertiesManager.Add(serial, CObjectProperty(serial, clilocRevision, name, data));
     if (obj != nullptr && g_ToolTip.m_Object == obj)
     {
@@ -5132,6 +5188,11 @@ PACKET_HANDLER(BuffDebuff)
 
 PACKET_HANDLER(SecureTrading)
 {
+#if defined(XUO_ASSISTANT)
+    // wait-flag for scripts/macros waiting on the trade window; set before
+    // any parse or world gate (BuyList 0x74 precedent)
+    xuoassist::g_TradeReceived = true;
+#endif
     if (g_World == nullptr)
     {
         return;
@@ -5172,21 +5233,35 @@ PACKET_HANDLER(SecureTrading)
             gump->Text = ReadString();
         }
         g_GumpManager.AddGump(gump);
+#if defined(XUO_ASSISTANT)
+        // trade record; the client parse consumed the optional name, so the
+        // record reuses gump->Text (empty when the server sent none)
+        xuoassist::g_TradeManager.OnTradeAction(
+            type, serial, id1, id2, (hasName != 0u) ? gump->Text : astr_t());
+#endif
     }
     else if (type == SECURE_TRADE_CLOSE)
     {
         g_GumpManager.CloseGump(serial, 0, GT_TRADE);
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_TradeManager.OnTradeAction(type, serial, 0, 0, {});
+#endif
     }
     else if (type == SECURE_TRADE_CHANGE)
     {
+        const uint32_t id1 = ReadUInt32BE();
+        const uint32_t id2 = ReadUInt32BE();
         gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
         if (gump != nullptr)
         {
-            const uint32_t id1 = ReadUInt32BE();
-            const uint32_t id2 = ReadUInt32BE();
             gump->StateMine = (id1 != 0);
             gump->StateOpponent = (id2 != 0);
         }
+#if defined(XUO_ASSISTANT)
+        // checkbox record: id1/id2 are the two check states (the record
+        // updates even when the client gump is gone)
+        xuoassist::g_TradeManager.OnTradeAction(type, serial, id1, id2, {});
+#endif
     }
     else if (type == SECURE_TRADE_UPDATEGOLD || type == SECURE_TRADE_UPDATELEDGER)
     {

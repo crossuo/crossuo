@@ -75,7 +75,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x01*/ SMSG("Disconnect", 0x05),
     /*0x02*/ SMSGH("Walk Request", 0x07, WalkRequest),
     /*0x03*/
-    BMSGH("Client Talk", PACKET_VARIABLE_SIZE, ClientTalkS, ClientTalkR),
+    SMSGH("Client Talk", PACKET_VARIABLE_SIZE, ClientTalkS),
     /*0x04*/ SMSG("Request God mode (God client)", 0x02),
     /*0x05*/ SMSGH("Attack", 0x05, AttackRequest),
     /*0x06*/ SMSGH("Double Click", 0x05, DoubleClick),
@@ -106,7 +106,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x1F*/ UMSG(0x08),
     /*0x20*/ UMSG(0x13),
     /*0x21*/ RMSG("Deny Walk", 0x08),
-    /*0x22*/ BMSGH("Confirm Walk", 0x03, Resend, ConfirmWalk),
+    /*0x22*/ SMSGH("Confirm Walk", 0x03, Resend),
     /*0x23*/ RMSG("Drag Animation", 0x1a),
     /*0x24*/ UMSG(0x07),
     /*0x25*/ RMSG("Update Contained Item", 0x14),
@@ -132,7 +132,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x39*/ RMSG("Remove (Group)", 0x09),
     /*0x3A*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x3B*/
-    BMSGH("Vendor Buy Reply", PACKET_VARIABLE_SIZE, BuyReplyS, BuyReplyR),
+    SMSGH("Vendor Buy Reply", PACKET_VARIABLE_SIZE, BuyReplyS),
     /*0x3C*/ RMSG("Update Contained Items", PACKET_VARIABLE_SIZE),
     /*0x3D*/ UMSG(0x02),
     /*0x3E*/ UMSG(0x25),
@@ -187,7 +187,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x6D*/ RMSG("Play Music", 0x03),
     /*0x6E*/ UMSG(0x0e),
     /*0x6F*/
-    BMSGH("Secure Trading", PACKET_VARIABLE_SIZE, SecureTradingS, SecureTradingR),
+    SMSGH("Secure Trading", PACKET_VARIABLE_SIZE, SecureTradingS),
     /*0x70*/ UMSG(0x1c),
     /*0x71*/ BMSG("Bulletin Board Data", PACKET_VARIABLE_SIZE),
     /*0x72*/ SMSGH("War Mode", 0x05, WarmodeS),
@@ -232,7 +232,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x92*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x93*/ RMSG("Open Book", 0x63),
     /*0x94*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x95*/ BMSGH("Dye Data", 0x09, DyeDataS, DyeDataR),
+    /*0x95*/ SMSGH("Dye Data", 0x09, DyeDataS),
     /*0x96*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x97*/ RMSG("Move Player", 0x02),
     /*0x98*/ BMSG("All Names (3D Client Only)", PACKET_VARIABLE_SIZE),
@@ -302,10 +302,9 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xD3*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xD4*/ BMSG("Open Book (New)", PACKET_VARIABLE_SIZE),
     /*0xD5*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xD6*/
-    BMSGH("Mega cliloc", PACKET_VARIABLE_SIZE, MegaClilocS, MegaClilocR),
+    /*0xD6*/ BMSG("Mega cliloc", PACKET_VARIABLE_SIZE),
     /*0xD7*/
-    BMSGH("+AoS command", PACKET_VARIABLE_SIZE, AOSCommandsS, AOSCommandsR),
+    SMSGH("+AoS command", PACKET_VARIABLE_SIZE, AOSCommandsS),
     /*0xD8*/ RMSG("+Custom house", PACKET_VARIABLE_SIZE),
     /*0xD9*/ SMSG("+Metrics", 0x10c),
     /*0xDA*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -330,9 +329,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xED*/ SMSG("Unequip item macro", PACKET_VARIABLE_SIZE),
     /*0xEE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xEF*/ SMSG("KR/2D Client Login/Seed", 0x15),
-    /*0xF0*/
-    BMSGH(
-        "Krrios client special", PACKET_VARIABLE_SIZE, KrriosClientSpecialS, KrriosClientSpecialR),
+    /*0xF0*/ BMSG("Krrios client special", PACKET_VARIABLE_SIZE),
     /*0xF1*/ BMSG("Freeshard List", PACKET_VARIABLE_SIZE),
     /*0xF2*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xF3*/ RMSG("Update Item (SA)", 0x18),
@@ -627,11 +624,6 @@ PACKET_HANDLER(ClientTalkS)
         pack16(Start + 4, replaceFontColorValue);
     }
 
-    return true;
-}
-
-PACKET_HANDLER(ClientTalkR)
-{
     return true;
 }
 
@@ -982,18 +974,6 @@ PACKET_HANDLER(SecureTradingS)
     return g_TradeManager.OnPacketSend(*this); // (trade round)
 }
 
-PACKET_HANDLER(SecureTradingR)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    g_TradeReceived = true;
-
-    return g_TradeManager.OnPacketReceived(*this); // (trade round)
-}
-
 PACKET_HANDLER(DyeDataS)
 {
     uint serial = ReadUInt32BE();
@@ -1006,19 +986,8 @@ PACKET_HANDLER(DyeDataS)
     else if (serial == 0xFFFFFFFE)
     {
         g_AssistantConfig.SetCharactersFontColor(true, ReadUInt16BE());
-
-
     }
 
-
-
-
-
-    return true;
-}
-
-PACKET_HANDLER(DyeDataR)
-{
     return true;
 }
 
@@ -1045,103 +1014,6 @@ PACKET_HANDLER(ChoiceGump)
     }
 
     return g_GumpManager.OnPacketSend(*this); // (gump round)
-}
-
-PACKET_HANDLER(MegaClilocS)
-{
-    return true;
-}
-
-PACKET_HANDLER(MegaClilocR)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    ushort unknown = ReadUInt16BE();
-
-    if (unknown > 1)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    Move(2);
-    uint clilocRevision = ReadUInt32BE();
-
-    string name = "";
-    string message = "";
-
-    uchar *end = Start + Size;
-    vector<string> list;
-
-    while (Ptr < end)
-    {
-        uint cliloc = ReadUInt32BE();
-
-        if (cliloc == 0u)
-        {
-            break;
-        }
-
-        short len = ReadInt16BE();
-
-        wstring argument;
-
-        if (len > 0)
-        {
-            // bounds-checked UTF-16LE read; advances past the argument bytes
-            argument = ReadWStringLE(len / 2);
-        }
-
-        string str = parse_cliloc_arguments(cliloc, true, argument);
-
-        bool found = false;
-
-        if (!list.empty())
-        {
-            for (const string &tempStr : list)
-            {
-                if (tempStr == str)
-                {
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        if (!found)
-        {
-            list.push_back(str);
-        }
-    }
-
-    bool first = true;
-
-    if (!list.empty())
-    {
-        for (const string &str : list)
-        {
-            if (first)
-            {
-                name = str;
-                first = false;
-            }
-
-            if (message.length() != 0)
-            {
-                message += "\n";
-            }
-
-            message += str;
-        }
-    }
-
-    g_AssistantEvents->OnMegaCliloc(serial, clilocRevision, name, message);
-
-    return true;
 }
 
 PACKET_HANDLER(Resend)
@@ -1224,28 +1096,6 @@ PACKET_HANDLER(WalkRequest)
     return true;
 }
 
-PACKET_HANDLER(ConfirmWalk)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    if (g_AssistantConfig.ApplyNotorietyColorOnName())
-    {
-        // the client handler stores the notoriety byte; the assistant only
-        // watches for a change to redraw its title row
-        Move(1);
-        uchar noto = ReadUInt8() & 0x0F;
-        if (noto != g_Player->Notoriety)
-        {
-            g_AssistantEvents->OnTitleRedraw();
-        }
-    }
-
-    return true;
-}
-
 PACKET_HANDLER(ASCIIPromptS)
 {
     return g_PromptManager.OnPacketSend(*this); // (prompt round)
@@ -1315,12 +1165,6 @@ PACKET_HANDLER(BuyReplyS)
     return true;
 }
 
-PACKET_HANDLER(BuyReplyR)
-{
-    // was: return g_TabAgentsShop->OnPacketReceivedBuyReply(*this);
-    return g_ShopAgent.OnBuyReply(*this);
-}
-
 PACKET_HANDLER(SellList)
 {
     // KEEP (recv tap routes 0x9E): the sell fields map 1:1 onto the client
@@ -1337,46 +1181,6 @@ PACKET_HANDLER(SellReply)
 {
     // was: return g_TabAgentsShop->OnPacketSendSellReply();
     g_ShopAgent.OnSellReplySent();
-
-    return true;
-}
-
-PACKET_HANDLER(KrriosClientSpecialS)
-{
-    return true;
-}
-
-PACKET_HANDLER(KrriosClientSpecialR)
-{
-    const uchar type = ReadUInt8();
-    if (type == 1)
-    {
-        const int count = int(Size - 4) / 9;
-        for (int i = 0; i < count; i++)
-        {
-            XA_PARTY_MEMBER_INFO info;
-            info.Serial = ReadUInt32BE();
-            info.X = ReadUInt16BE();
-            info.Y = ReadUInt16BE();
-            info.Map = ReadUInt8();
-            g_AssistantEvents->OnPartyMemberInfo(info);
-        }
-    }
-    else if (type == 2)
-    {
-        const uchar locations = ReadUInt8();
-        const int bytesPerEntry = locations != 0u ? 4 + 6 : 4;
-        const int count = int(Size - 4) / bytesPerEntry;
-        for (int i = 0; i < count; i++)
-        {
-            XA_GUILD_MEMBER_INFO info;
-            info.Serial = ReadUInt32BE();
-            info.X = ReadUInt16BE();
-            info.Y = ReadUInt16BE();
-            info.Map = ReadUInt8();
-            g_AssistantEvents->OnGuildMemberInfo(info);
-        }
-    }
 
     return true;
 }
@@ -1583,11 +1387,6 @@ PACKET_HANDLER(AOSCommandsS)
 
     (void)serial;
 
-    return true;
-}
-
-PACKET_HANDLER(AOSCommandsR)
-{
     return true;
 }
 

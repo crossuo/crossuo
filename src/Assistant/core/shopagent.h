@@ -112,7 +112,6 @@ public:
 
     // --- packet taps (packetmanager.cpp; bool = pass-through, parity with the original) -----
     bool OnOpenContainer(uint serial);
-    bool OnBuyReply(CDataReader &reader);
     bool OnSellList(CDataReader &reader);
     void OnBuyReplySent();
     void OnSellReplySent();

@@ -426,15 +426,6 @@ bool CShopAgent::OnOpenContainer(uint serial)
     return result;
 }
 
-bool CShopAgent::OnBuyReply(CDataReader &reader)
-{
-    (void)reader;
-    //uint serial = reader.ReadUInt32BE();
-    //uchar flag = reader.ReadUInt8();
-
-    return true;
-}
-
 bool CShopAgent::OnSellList(CDataReader &reader)
 {
     // was TabAgentsShop::OnPacketReceivedSellList (line-faithful)

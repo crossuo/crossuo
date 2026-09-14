@@ -69,7 +69,6 @@ protected:
     XA_HANDLER_PACKET(TargetS);
     XA_HANDLER_PACKET(TargetR);
     XA_HANDLER_PACKET(ClientTalkS);
-    XA_HANDLER_PACKET(ClientTalkR);
     XA_HANDLER_PACKET(UnicodeClientTalk);
     XA_HANDLER_PACKET(OpenMenu);
     XA_HANDLER_PACKET(MenuChoice);
@@ -80,16 +79,11 @@ protected:
     XA_HANDLER_PACKET(ExtendedCommandS);
     XA_HANDLER_PACKET(ExtendedCommandR);
     XA_HANDLER_PACKET(SecureTradingS);
-    XA_HANDLER_PACKET(SecureTradingR);
     XA_HANDLER_PACKET(DyeDataS);
-    XA_HANDLER_PACKET(DyeDataR);
     XA_HANDLER_PACKET(OpenGump);
     XA_HANDLER_PACKET(ChoiceGump);
-    XA_HANDLER_PACKET(MegaClilocS);
-    XA_HANDLER_PACKET(MegaClilocR);
     XA_HANDLER_PACKET(Resend);
     XA_HANDLER_PACKET(WalkRequest);
-    XA_HANDLER_PACKET(ConfirmWalk);
     XA_HANDLER_PACKET(ASCIIPromptS);
     XA_HANDLER_PACKET(ASCIIPromptR);
     XA_HANDLER_PACKET(UnicodePromptS);
@@ -97,17 +91,13 @@ protected:
     XA_HANDLER_PACKET(CharacterProfileS);
     XA_HANDLER_PACKET(CharacterProfileR);
     XA_HANDLER_PACKET(BuyReplyS);
-    XA_HANDLER_PACKET(BuyReplyR);
     XA_HANDLER_PACKET(SellList);
     XA_HANDLER_PACKET(SellReply);
-    XA_HANDLER_PACKET(KrriosClientSpecialS);
-    XA_HANDLER_PACKET(KrriosClientSpecialR);
     XA_HANDLER_PACKET(PerformAction);
     XA_HANDLER_PACKET(DoubleClick);
     XA_HANDLER_PACKET(AttackRequest);
     XA_HANDLER_PACKET(HelpRequest);
     XA_HANDLER_PACKET(AOSCommandsS);
-    XA_HANDLER_PACKET(AOSCommandsR);
     XA_HANDLER_PACKET(MapPacket);
 
 public:
