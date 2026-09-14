@@ -22,6 +22,8 @@
 #include "PluginManager.h"
 #if defined(XUO_ASSISTANT)
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
+#include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
+#include <core/assistantevents.h> // xuoassist::g_AssistantEvents (journal, JMT_* flags)
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
@@ -4071,13 +4073,15 @@ PACKET_HANDLER(DisplayClilocString)
     }
 
     const uint32_t serial = ReadUInt32BE();
-    const uint16_t _graphic = ReadUInt16BE();
-    (void)_graphic;
-    const uint8_t _type = ReadUInt8();
-    (void)_type;
+    const uint16_t graphic = ReadUInt16BE();
+    const uint8_t type = ReadUInt8();
     uint16_t color = ReadUInt16BE();
     uint8_t font = (uint8_t)ReadUInt16BE();
     uint32_t cliloc = ReadUInt32BE();
+#if !defined(XUO_ASSISTANT)
+    (void)graphic;
+    (void)type;
+#endif
     if (!g_FontManager.UnicodeFontExists(font))
     {
         font = uint8_t(g_ConfigManager.ChatFont);
@@ -4096,14 +4100,48 @@ PACKET_HANDLER(DisplayClilocString)
     }
 
     auto wc = ReadWStringLE();
-    auto message = g_ClilocManager.ParseArgumentsToClilocString(cliloc, false, wc);
-    message += affix;
+    auto text = g_ClilocManager.ParseArgumentsToClilocString(cliloc, false, wc);
+    text += affix;
 
     CGameObject *obj = g_World->FindWorldObject(serial);
+#if defined(XUO_ASSISTANT)
+    // a journal record for every spoken line, taken before any filter can
+    // drop it; the filters see the packet's wire color, the font-color
+    // setting below re-hues the displayed message only
+    const astr_t textA = str_from(text);
+    const uint16_t wireColor = color;
+    xuoassist::CJournalMessage journal(serial, wireColor, textA);
+    if (serial == 0xFFFFFFFF || (serial == 0u) || (str_lower(name) == "system" && obj == nullptr))
+    {
+        journal.SetFlags(xuoassist::JMT_SYSTEM);
+    }
+    else if (obj != nullptr)
+    {
+        if (serial == g_PlayerSerial)
+        {
+            journal.SetFlags(xuoassist::JMT_MY);
+        }
+        else if (obj->GetName() == name && textA != name)
+        {
+            uint16_t fontColor = 0;
+            if (xuoassist::g_AssistantConfig.GetCharactersFontColor(fontColor))
+            {
+                color = fontColor;
+            }
+        }
+    }
+    xuoassist::g_AssistantEvents->OnJournalMessage(journal);
+    if (xuoassist::g_AssistantConfig.CheckReplaceText(
+            textA, serial, graphic, type, wireColor, font, 0, true) ||
+        xuoassist::g_AssistantConfig.CheckSpeechInFilter(textA, wireColor))
+    {
+        return;
+    }
+#endif
     if (/*type == ST_BROADCAST || type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || (serial == 0u) ||
         (str_lower(name) == "system" && obj == nullptr))
     {
-        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, color, message);
+        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, color, text);
     }
     else
     {
@@ -4128,7 +4166,7 @@ PACKET_HANDLER(DisplayClilocString)
                 }
             }
         }
-        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, color, message);
+        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, color, text);
     }
 }
 

@@ -273,8 +273,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xBF*/
     BMSGH("Extended Command", PACKET_VARIABLE_SIZE, ExtendedCommandS, ExtendedCommandR),
     /*0xC0*/ RMSGH("Graphical Effect", 0x24, GraphicEffect),
-    /*0xC1*/
-    RMSGH("Display cliloc String", PACKET_VARIABLE_SIZE, DisplayClilocString),
+    /*0xC1*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xC2*/
     BMSGH("Unicode prompt", PACKET_VARIABLE_SIZE, UnicodePromptS, UnicodePromptR),
     /*0xC3*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -286,8 +285,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xC9*/ UMSG(0x06),
     /*0xCA*/ UMSG(0x06),
     /*0xCB*/ UMSG(0x07),
-    /*0xCC*/
-    RMSGH("Localized Text Plus String", PACKET_VARIABLE_SIZE, DisplayClilocString),
+    /*0xCC*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xCD*/ UMSG(0x01),
     /*0xCE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xCF*/ UMSG(0x4e),
@@ -1862,8 +1860,7 @@ PACKET_HANDLER(ExtendedCommandR)
             }
 
             (void)item;
-            string str = parse_cliloc_arguments(
-                clilocNum, true, wstr_t((wchar_t *)Ptr));
+            string str = parse_cliloc_arguments(clilocNum, true, wstr_from_bytes(Ptr, End));
             if (str.length() > 0)
             {
                 // the client handler stores the property line as the item
@@ -1909,7 +1906,7 @@ PACKET_HANDLER(ExtendedCommandR)
                 }
                 short charges = ReadInt16BE();
                 string attrsString = parse_cliloc_arguments(
-                    next, true, wstr_t((wchar_t *)Ptr));
+                    next, true, wstr_from_bytes(Ptr, End));
                 if (charges == -1)
                 {
                     if (count > 0)
@@ -2229,88 +2226,6 @@ PACKET_HANDLER(DisplayMap)
     return true;
 }
 
-PACKET_HANDLER(DisplayClilocString)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    uchar type = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    ushort font = (uchar)ReadUInt16BE();
-    uint cliloc = ReadUInt32BE();
-
-    uchar flags = 0;
-
-    if (*Start == 0xCC)
-    {
-        flags = ReadUInt8();
-    }
-
-    string name = ReadStringChecked(30);
-
-    if (*Start == 0xCC)
-    {
-        // (affix is parsed for the pointer side effect, like the original)
-        string affix = ReadStringChecked(0);
-        (void)affix;
-    }
-
-    string str = parse_cliloc_arguments(cliloc, false, wstr_t((wchar_t *)Ptr));
-
-    CJournalMessage message(serial, color, str);
-
-    CGameObject *obj = g_World->FindWorldObject(serial);
-
-    if (/*type == ST_BROADCAST ||*/ serial == 0xFFFFFFFF || (serial == 0u) ||
-        (to_lower(name) == "system" && obj == nullptr))
-    {
-        message.SetFlags(JMT_SYSTEM);
-    }
-    else
-    {
-        if (obj != nullptr)
-        {
-            if (serial == g_PlayerSerial)
-            {
-                message.SetFlags(JMT_MY);
-            }
-            else if (obj->GetName() == name && str != name)
-            {
-                ushort replaceFontColorValue = 0;
-                bool replaceFontColor =
-                    g_AssistantConfig.GetCharactersFontColor(replaceFontColorValue);
-
-                if (replaceFontColor)
-                {
-                    pack16(Start + 10, replaceFontColorValue);
-                }
-            }
-        }
-    }
-
-    g_AssistantEvents->OnJournalMessage(message);
-
-    if (g_AssistantConfig.CheckReplaceText(str, serial, graphic, type, color, font, 0, true))
-    {
-        return false;
-    }
-    if (g_AssistantConfig.CheckSpeechInFilter(str, color))
-    {
-        return false;
-    }
-
-    (void)flags;
-    (void)graphic;
-    (void)type;
-    (void)font;
-
-    return true;
-}
-
 PACKET_HANDLER(MegaClilocS)
 {
     return true;
@@ -2356,8 +2271,8 @@ PACKET_HANDLER(MegaClilocR)
 
         if (len > 0)
         {
-            argument = wstring((wchar_t *)Ptr, len / 2);
-            Ptr += len;
+            // bounds-checked UTF-16LE read; advances past the argument bytes
+            argument = ReadWStringLE(len / 2);
         }
 
         string str = parse_cliloc_arguments(cliloc, true, argument);

@@ -861,6 +861,41 @@ gotchas, accepted deltas and the reasoning behind them.
 - Map window geometry: the legacy `Map.xml` window attributes are honored
   for first placement only; ongoing geometry lives in the ImGui window ini.
 
+## Packet handler fusion
+
+The parallel assistant packetmanager (its own handler table, tapped before
+the client's) is dissolved handler-by-handler into the client's handlers:
+the client handler owns parsing and state, assistant logic becomes injected
+hooks. Per-handler checklist:
+
+1. **Parse owner**: the client handler parses; never re-parse in the
+   assistant. Byte-offset patches from the old pre-parse flow become
+   assignments to the already-parsed client variables (verify the old
+   raw-buffer offset against the client parse layout first).
+2. **Classify** the assistant work: events fired, packet/wire edits, veto
+   (drop the packet), pure bookkeeping.
+3. **Inject** into the client handler behind `#if defined(XUO_ASSISTANT)`
+   at the matching points: events after the client builds its final
+   values, veto/early-return before any client side effect, edits before
+   the value is used. Keep the assistant's `g_World != nullptr` guards if
+   the client handler lacks them. Guarded includes for the assistant
+   config/events headers go with the existing `AssistantPackets_Recv`
+   include block.
+4. **Delete** the assistant handler body, its table row(s) and its
+   declaration in `managers/packetmanager.h`.
+5. **Verify**: same events (same fields, same fire order relative to the
+   veto), same wire edits, veto scope identical to the old `return false`
+   (which skipped the whole client handler).
+
+Completed reference case: **DisplayClilocString** (client
+`src/Managers/PacketManager.cpp`, ids 0xC1 + 0xCC) — journal record with
+system/own-speech flags, the characters-font-color re-hue applied to the
+parsed color (the old flow patched the raw buffer at `Start + 10`, which
+is the color field in both layouts), and the replace-text/speech-filter
+veto. Old-flow veto additionally hid the packet from external plugins
+(the tap sat before `g_PluginManager.PacketRecv`); the fused early-return
+only suppresses client processing.
+
 ## Script API
 
 - The `[Q]/[G]/[D]` classification and the registration table live in
@@ -916,6 +951,11 @@ gotchas, accepted deltas and the reasoning behind them.
   to keep on top).
 
 ## Future dedup & feature proposals
+
+- xuocore CDataReader::ReadWString NUL-scan walks to `buf <= End` and can read up to
+  2 bytes past the exclusive End at a buffer boundary; ReadString has the same family
+  of loose bounds. Harmless inside the larger recv buffers, worth tightening when the
+  datastream is next touched.
 
 Evaluated and deferred; none block the current build.
 

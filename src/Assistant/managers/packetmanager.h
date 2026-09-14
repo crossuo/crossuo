@@ -112,7 +112,6 @@ protected:
     XA_HANDLER_PACKET(GraphicEffect);
     XA_HANDLER_PACKET(CharacterAnimation);
     XA_HANDLER_PACKET(DisplayMap);
-    XA_HANDLER_PACKET(DisplayClilocString);
     XA_HANDLER_PACKET(MegaClilocS);
     XA_HANDLER_PACKET(MegaClilocR);
     XA_HANDLER_PACKET(Resend);

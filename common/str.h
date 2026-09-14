@@ -67,6 +67,7 @@ wstr_t wstr_from_utf8(const astr_t &aStr); // DEPRECATE
 wstr_t wstr_from_utf8_input(const astr_t &aStr);
 astr_t str_camel_case(astr_t aStr);
 wstr_t wstr_camel_case(wstr_t aWstr);
+wstr_t wstr_from_bytes(const unsigned char *ptr, const unsigned char *end);
 
 astr_t str_from(const wstr_t &aWstr);
 astr_t str_from(int val);
@@ -301,6 +302,25 @@ wstr_t wstr_camel_case(wstr_t aWstr)
     }
 
     return aWstr;
+}
+
+// UTF-16LE code units at the read pointer: NUL-terminated and bounded by the
+// packet end; the raw bytes must never be reinterpreted as wchar_t (32-bit on
+// some platforms)
+wstr_t wstr_from_bytes(const unsigned char *ptr, const unsigned char *end)
+{
+    wstr_t result;
+    while (ptr + 1 < end)
+    {
+        const wchar_t c = wchar_t(ptr[0] | (ptr[1] << 8));
+        if (c == 0u)
+        {
+            break;
+        }
+        result.push_back(c);
+        ptr += 2;
+    }
+    return result;
 }
 
 #if !defined(_MSC_VER)
