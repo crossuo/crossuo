@@ -914,3 +914,53 @@ gotchas, accepted deltas and the reasoning behind them.
   available and resolve like an empty list.
 - Stay-on-top has no effect (the assistant renders in-game, no OS window
   to keep on top).
+
+## Future dedup & feature proposals
+
+Evaluated and deferred; none block the current build.
+
+- **Journal record fusion (client `CTextData`).** The client's
+  `CTextData` (src/TextEngine/TextData.h) carries rendering-oriented state
+  (type, font, text, owner object pointer, timers) but not the per-entry
+  serial/color/flags triple the assistant journal record
+  (`model/commonitems/journalmessage` + `script/journal`) exposes to
+  scripts. Fusing would mean extending the client's text engine with
+  script-facing fields; deferred until the journal API needs more than the
+  client engine stores.
+
+- **Shop/trade record fusion.** `vendorshopitem`/`shopitem` and
+  `tradewindow` mirror state the client also holds in its shop and trade
+  gumps, but the script API reads/writes list entries by index, name,
+  amount and price in shapes the client gump state does not preserve
+  verbatim. Revisit when the script trade/shop API surface is next
+  touched.
+
+- **Prompt state unification.** The client keeps transient prompt state
+  (serial, timeout) for its own input gump; the assistant adds hooks on top
+  (`managers/promptmanager`) so scripts can wait for and answer prompts.
+  A shared prompt-state object would remove the second copy of the serial
+  wait; deferred until the prompt flow changes.
+
+- **Shared item-query engine.** `CFindItem` (`model/commonitems/finditem`)
+  implements token/range item queries over the world subtree that any
+  client-side consumer (scripts, macros, UI filters) could reuse. Moving it
+  into a shared client utility is a candidate once a second non-assistant
+  caller exists.
+
+- **Distance-helper unification.** The client computes distances between
+  world objects (`GameWorld`/object helpers) while the assistant keeps the
+  point-based `Distance` in `core/worldutil`. One shared point/serial
+  distance helper would remove the duplicate arithmetic; deferred to avoid
+  touching client headers for a two-line function.
+
+- **0x78 patch-offset investigation.** The assistant's 0x78 morph patch
+  writes at `Start + 7`, which lands on the X field of the packet layout
+  (id 1, serial 4, graphic 2, x) rather than the graphic field
+  (`Start + 5`); servers reportedly accept both. The offset is commented
+  in `managers/packetmanager.cpp`; a capture-backed investigation could
+  pin the correct field and whether the graphic field needs patching too.
+
+- **StealthSteps counter.** `GamePlayer::StealthSteps` exists but nothing
+  increments or reads it; implementing the stealth step countdown (hide/
+  reveal after N steps) is feature work, not dedup.
+

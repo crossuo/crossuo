@@ -4,6 +4,16 @@
 // Ported from X:UO Assist (managers/partymanager.cpp). The auto accept /
 // decline invitation lists live in the AssistantConfig module (Party.xml) —
 // the original code asked TabAgentsParty.
+//
+// This parser is not redundant with the client's CParty::ParsePacketData
+// (src/Party.cpp): the assistant recv tap runs before the client's 0xBF
+// handler, and the client parse does not retain what the accept/decline
+// decision needs — sub 7 keeps only the first dword (g_Party.Inviter, never
+// cleared when an invitation is answered, only on disband), so a deferred
+// decision cannot tell a fresh invitation from stale state, and subs 3/4
+// feed the assistant journal record (the client routes party chat into its
+// own text engine). Subs 1/2 also differ: the client takes Member[0] as
+// leader and clears on count <= 1, this manager marks the leader on join.
 
 #include "partymanager.h"
 #include "../core/assistantevents.h"
@@ -39,8 +49,8 @@ bool CPartyManager::Contains(const uint &serial)
     }
 
     return result;
-    return result;
 }
+
 
 void CPartyManager::Clear()
 {
