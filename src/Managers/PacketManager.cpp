@@ -23,6 +23,7 @@
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
 #include <core/assistantevents.h> // xuoassist::g_AssistantEvents (journal, JMT_* flags)
+#include <core/global.h> // xuoassist mirrored state (light, weather, season, status requests)
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
@@ -756,6 +757,20 @@ void CPacketManager::ProcessAssistantPackets()
     UNLOCK(m_Mutex);
 }
 
+namespace
+{
+// RAII guard: guarantees m_AssistantInjecting is reset even if a handler
+// early-returns, so the injection marker can never get stuck on.
+struct AssistantInjectGuard
+{
+    bool &Flag;
+    explicit AssistantInjectGuard(bool &flag) : Flag(flag) { Flag = true; }
+    ~AssistantInjectGuard() { Flag = false; }
+    AssistantInjectGuard(const AssistantInjectGuard &) = delete;
+    AssistantInjectGuard &operator=(const AssistantInjectGuard &) = delete;
+};
+} // namespace
+
 void CPacketManager::AssistantReceiveHandler(uint8_t *buf, int size)
 {
     SetData(buf, size);
@@ -784,6 +799,7 @@ void CPacketManager::AssistantReceiveHandler(uint8_t *buf, int size)
         {
             Ptr += 2;
         }
+        const AssistantInjectGuard injecting(m_AssistantInjecting);
         (this->*(info.Handler))();
     }
 }
@@ -1077,6 +1093,13 @@ PACKET_HANDLER(UpdateHitpoints)
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
+#if defined(XUO_ASSISTANT)
+    if (serial == g_PlayerSerial)
+    {
+        xuoassist::g_AssistantEvents->OnTitleRedraw();
+    }
+    xuoassist::g_AssistantEvents->OnMapUpdate(serial);
+#endif
 }
 
 PACKET_HANDLER(UpdateMana)
@@ -1097,6 +1120,13 @@ PACKET_HANDLER(UpdateMana)
     obj->MaxMana = ReadUInt16BE();
     obj->Mana = ReadUInt16BE();
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
+#if defined(XUO_ASSISTANT)
+    if (serial == g_PlayerSerial)
+    {
+        xuoassist::g_AssistantEvents->OnTitleRedraw();
+    }
+    xuoassist::g_AssistantEvents->OnMapUpdate(serial);
+#endif
 }
 
 PACKET_HANDLER(UpdateStamina)
@@ -1117,6 +1147,13 @@ PACKET_HANDLER(UpdateStamina)
     obj->MaxStam = ReadUInt16BE();
     obj->Stam = ReadUInt16BE();
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
+#if defined(XUO_ASSISTANT)
+    if (serial == g_PlayerSerial)
+    {
+        xuoassist::g_AssistantEvents->OnTitleRedraw();
+    }
+    xuoassist::g_AssistantEvents->OnMapUpdate(serial);
+#endif
 }
 
 PACKET_HANDLER(MobileAttributes)
@@ -1146,6 +1183,13 @@ PACKET_HANDLER(MobileAttributes)
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
+#if defined(XUO_ASSISTANT)
+    if (serial == g_PlayerSerial)
+    {
+        xuoassist::g_AssistantEvents->OnTitleRedraw();
+    }
+    xuoassist::g_AssistantEvents->OnMapUpdate(serial);
+#endif
 }
 
 PACKET_HANDLER(NewHealthbarUpdate)
@@ -1218,6 +1262,12 @@ PACKET_HANDLER(NewHealthbarUpdate)
     }
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
+#if defined(XUO_ASSISTANT)
+    if (serial == g_PlayerSerial)
+    {
+        xuoassist::g_AssistantEvents->OnTitleRedraw();
+    }
+#endif
 }
 
 PACKET_HANDLER(UpdatePlayer)
@@ -1405,6 +1455,20 @@ PACKET_HANDLER(CharacterStatus)
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
+#if defined(XUO_ASSISTANT)
+    xuoassist::g_AssistantEvents->OnMapUpdate(serial);
+    if (flag > 0 && serial == g_PlayerSerial)
+    {
+        xuoassist::g_AssistantEvents->OnSkillsRefreshed();
+        xuoassist::g_AssistantEvents->OnTitleRedraw();
+    }
+    if (serial == xuoassist::g_LastStatusRequest)
+    {
+        xuoassist::g_LastStatusRequest = 0;
+        xuoassist::g_LastStatusObject = serial;
+    }
+    xuoassist::g_AssistantEvents->OnInspectorUpdate(serial);
+#endif
 }
 
 PACKET_HANDLER(UpdateItem)
@@ -2247,11 +2311,27 @@ PACKET_HANDLER(Ping)
 
 PACKET_HANDLER(SetWeather)
 {
+    const uint8_t type = ReadUInt8();
+    const uint8_t count = ReadUInt8();
+    const uint8_t temperature = ReadUInt8();
+
+#if defined(XUO_ASSISTANT)
+    // the assistant mirrors the weather report for its weather controls;
+    // while the weather filter is on, server updates do not reach the
+    // client (the assistant's own weather packets bypass this gate)
+    xuoassist::g_Weather.Type = type;
+    xuoassist::g_Weather.Count = count;
+    xuoassist::g_Weather.Temperature = temperature;
+    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.WeatherFilter())
+    {
+        return;
+    }
+#endif
+
     g_Weather.Reset();
 
-    uint8_t type = ReadUInt8();
     g_Weather.Type = type;
-    g_Weather.Count = ReadUInt8();
+    g_Weather.Count = count;
 
     bool showMessage = (g_Weather.Count > 0);
 
@@ -2260,7 +2340,7 @@ PACKET_HANDLER(SetWeather)
         g_Weather.Count = 70;
     }
 
-    g_Weather.Temperature = ReadUInt8();
+    g_Weather.Temperature = temperature;
     g_Weather.Timer = g_Ticks + WEATHER_TIMER;
     g_Weather.Generate();
 
@@ -2321,16 +2401,27 @@ PACKET_HANDLER(SetWeather)
 PACKET_HANDLER(PersonalLightLevel)
 {
     uint32_t serial = ReadUInt32BE();
+    uint8_t level = ReadUInt8();
+
+    if (level > 0x1F)
+    {
+        level = 0x1F;
+    }
+
+#if defined(XUO_ASSISTANT)
+    // the assistant tracks the player's light for its light controls;
+    // while "always light" is on, server updates leave the held light
+    // untouched (the assistant's own light packets bypass this gate)
+    xuoassist::g_PersonalLightLevel = level;
+    // the veto scope is deliberately packet-wide: it applies to every 0x4E
+    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.LightFilter())
+    {
+        return;
+    }
+#endif
 
     if (serial == g_PlayerSerial)
     {
-        uint8_t level = ReadUInt8();
-
-        if (level > 0x1F)
-        {
-            level = 0x1F;
-        }
-
         g_PersonalLightLevel = level;
     }
 }
@@ -2343,6 +2434,17 @@ PACKET_HANDLER(LightLevel)
     {
         level = 0x1F;
     }
+
+#if defined(XUO_ASSISTANT)
+    // the assistant tracks the ambient light for its light controls; while
+    // "always light" is on, server updates leave the held light untouched
+    // (the assistant's own light packets bypass this gate)
+    xuoassist::g_LightLevel = level;
+    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.LightFilter())
+    {
+        return;
+    }
+#endif
 
     g_LightLevel = level;
 }
@@ -3540,7 +3642,18 @@ PACKET_HANDLER(GraphicEffect)
         {
             Move(8);
             uint16_t val = ReadInt16BE();
+#if defined(XUO_ASSISTANT)
+            if (xuoassist::g_AssistantConfig.EffectEcho())
+            {
+                char text[512] = { 0 };
+                snprintf(text, sizeof(text), "effectecho: type=%i mode=%i", type, val);
 
+                xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+                message.SetFlags(xuoassist::JMT_SYSTEM);
+
+                xuoassist::g_AssistantEvents->OnJournalMessage(message);
+            }
+#endif
             if (val > SET_TO_BLACK_VERY_FAST)
             {
                 val = SET_TO_BLACK_VERY_FAST;
@@ -3548,7 +3661,18 @@ PACKET_HANDLER(GraphicEffect)
 
             g_ScreenEffectManager.Use(SEM_SUNSET, (SCREEN_EFFECT_TYPE)val, true);
         }
+#if defined(XUO_ASSISTANT)
+        else if (xuoassist::g_AssistantConfig.EffectEcho())
+        {
+            char text[512] = { 0 };
+            snprintf(text, sizeof(text), "effectecho: type=%i", type);
 
+            xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+            message.SetFlags(xuoassist::JMT_SYSTEM);
+
+            xuoassist::g_AssistantEvents->OnJournalMessage(message);
+        }
+#endif
         return;
     }
 
@@ -3587,6 +3711,40 @@ PACKET_HANDLER(GraphicEffect)
 			*/
         }
     }
+
+#if defined(XUO_ASSISTANT)
+    if (xuoassist::g_AssistantConfig.EffectEcho())
+    {
+        char text[512] = { 0 };
+        snprintf(
+            text,
+            sizeof(text),
+            "effectecho: type=%i src_serial=0x%08X src_x=%i src_y=%i src_z=%i "
+            "dest_serial=0x%08X dest_x=%i dest_y=%i dest_z=%i graphic=0x%04X "
+            "speed=%i duration=%i fixed=%i explode=%i color=%i render_mode=%i",
+            type,
+            sourceSerial,
+            sourceX,
+            sourceY,
+            sourceZ,
+            destSerial,
+            destX,
+            destY,
+            destZ,
+            graphic,
+            speed,
+            duration,
+            fixedDirection,
+            explode,
+            color,
+            renderMode);
+
+        xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+        message.SetFlags(xuoassist::JMT_SYSTEM);
+
+        xuoassist::g_AssistantEvents->OnJournalMessage(message);
+    }
+#endif
 
     CGameEffect *effect = nullptr;
     if (type == 0u) //Moving
@@ -3698,6 +3856,33 @@ PACKET_HANDLER(PlaySoundEffect)
     (void)_volume;
     uint16_t xCoord = ReadUInt16BE(); // CHECK: unsigned for position?
     uint16_t yCoord = ReadUInt16BE();
+#if defined(XUO_ASSISTANT)
+    if (g_World != nullptr)
+    {
+        if (xuoassist::g_AssistantConfig.SoundEcho())
+        {
+            char text[128] = { 0 };
+            snprintf(
+                text,
+                sizeof(text),
+                "soundecho: id=0x%04X volume=%i x=%i y=%i",
+                index,
+                _volume,
+                xCoord,
+                yCoord);
+
+            xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+            message.SetFlags(xuoassist::JMT_SYSTEM);
+
+            xuoassist::g_AssistantEvents->OnJournalMessage(message);
+        }
+
+        if (xuoassist::g_AssistantConfig.CheckSoundInFilter(index))
+        {
+            return;
+        }
+    }
+#endif
     g_Game.PlaySoundEffectAtPosition(index, xCoord, yCoord);
 }
 
@@ -3881,15 +4066,39 @@ PACKET_HANDLER(CharacterAnimation)
     }
 
     const auto serial = ReadUInt32BE();
+    const auto action = ReadUInt16BE();
+    const auto frameCount = checked_cast<uint8_t>(ReadUInt16BE());
+    const auto repeatMode = checked_cast<uint8_t>(ReadUInt16BE());
+    const bool forward = (ReadUInt8() == 0); // true - forward, false - backward
+    const bool repeat = (ReadUInt8() != 0);
+    const uint8_t delay = ReadUInt8();
+#if defined(XUO_ASSISTANT)
+    // DEVIATION: echo prints the parsed frame count; the legacy build echoed 0.
+    if (xuoassist::g_AssistantConfig.AnimationEcho())
+    {
+        char text[256] = { 0 };
+        snprintf(
+            text,
+            sizeof(text),
+            "animationecho: serial=0x%08X action=%i count=%i "
+            "repeat_mode=%i forward=%i repeat=%i delay=%i",
+            serial,
+            action,
+            frameCount,
+            repeatMode,
+            static_cast<int>(forward),
+            static_cast<int>(repeat),
+            delay);
+
+        xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+        message.SetFlags(xuoassist::JMT_SYSTEM);
+
+        xuoassist::g_AssistantEvents->OnJournalMessage(message);
+    }
+#endif
     auto *obj = g_World->FindWorldCharacter(serial);
     if (obj != nullptr)
     {
-        const auto action = ReadUInt16BE();
-        const auto frameCount = checked_cast<uint8_t>(ReadUInt16BE());
-        const auto repeatMode = checked_cast<uint8_t>(ReadUInt16BE());
-        const bool forward = (ReadUInt8() == 0); // true - forward, false - backward
-        const bool repeat = (ReadUInt8() != 0);
-        const uint8_t delay = ReadUInt8();
         const auto group = g_AnimationManager.GetReplacedObjectAnimation(obj, action);
         obj->SetAnimation(group, delay, frameCount, repeatMode, repeat, forward);
         obj->AnimationFromServer = true;
@@ -3998,6 +4207,19 @@ PACKET_HANDLER(Season)
     }
 
     uint8_t season = ReadUInt8();
+    const uint8_t music = ReadUInt8();
+
+#if defined(XUO_ASSISTANT)
+    // the assistant mirrors the season report for its season controls;
+    // while the season filter is on, server updates do not reach the
+    // client (the assistant's own season packets bypass this gate)
+    xuoassist::g_Season.Index = season;
+    xuoassist::g_Season.Music = music;
+    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.SeasonFilter())
+    {
+        return;
+    }
+#endif
 
     if (season > ST_DESOLATION)
     {
@@ -4011,7 +4233,7 @@ PACKET_HANDLER(Season)
     }
 
     g_OldSeason = (SEASON_TYPE)season;
-    g_OldSeasonMusic = ReadUInt8();
+    g_OldSeasonMusic = music;
 
     if (g_Season == ST_DESOLATION)
     {

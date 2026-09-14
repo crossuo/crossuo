@@ -72,6 +72,9 @@ private:
     std::unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
     std::vector<uint32_t> m_MegaClilocRequests;
     std::deque<std::vector<uint8_t>> m_AssistantData;
+    // true while a packet from the assistant's own injection queue is being
+    // dispatched; per-packet assistant gates in the handlers let these through
+    bool m_AssistantInjecting = false;
 
     bool AutoLoginNameExists(const astr_t &name);
     void AddHTMLGumps(class CGump *gump, std::vector<HTMLGumpDataInfo> &list);

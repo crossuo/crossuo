@@ -62,17 +62,9 @@ private:
 protected:
     //! Packet handlers
     XA_HANDLER_PACKET(SecondLogin);
-    XA_HANDLER_PACKET(LightLevel);
-    XA_HANDLER_PACKET(PersonalLightLevel);
     XA_HANDLER_PACKET(LoginComplete);
     XA_HANDLER_PACKET(EnterWorld);
-    XA_HANDLER_PACKET(UpdateHitpoints);
-    XA_HANDLER_PACKET(UpdateMana);
-    XA_HANDLER_PACKET(UpdateStamina);
-    XA_HANDLER_PACKET(MobileAttributes);
-    XA_HANDLER_PACKET(NewHealthbarUpdate);
     XA_HANDLER_PACKET(UpdatePlayer);
-    XA_HANDLER_PACKET(CharacterStatus);
     XA_HANDLER_PACKET(UpdateObject);
     XA_HANDLER_PACKET(EquipItem);
     XA_HANDLER_PACKET(DeleteObject);
@@ -87,8 +79,6 @@ protected:
     XA_HANDLER_PACKET(UnicodeClientTalk);
     XA_HANDLER_PACKET(Talk);
     XA_HANDLER_PACKET(UnicodeTalk);
-    XA_HANDLER_PACKET(SetWeather);
-    XA_HANDLER_PACKET(Season);
     XA_HANDLER_PACKET(DisplayDeath);
     XA_HANDLER_PACKET(MultiPlacement);
     XA_HANDLER_PACKET(OpenMenu);
@@ -108,9 +98,6 @@ protected:
     XA_HANDLER_PACKET(DyeDataR);
     XA_HANDLER_PACKET(OpenGump);
     XA_HANDLER_PACKET(ChoiceGump);
-    XA_HANDLER_PACKET(PlaySoundEffect);
-    XA_HANDLER_PACKET(GraphicEffect);
-    XA_HANDLER_PACKET(CharacterAnimation);
     XA_HANDLER_PACKET(DisplayMap);
     XA_HANDLER_PACKET(MegaClilocS);
     XA_HANDLER_PACKET(MegaClilocR);

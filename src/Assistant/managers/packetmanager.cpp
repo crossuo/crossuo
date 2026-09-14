@@ -89,14 +89,13 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x0E*/ UMSG(0x01),
     /*0x0F*/ UMSG(0x3d),
     /*0x10*/ UMSG(0xd7),
-    /*0x11*/ RMSGH("Character Status", PACKET_VARIABLE_SIZE, CharacterStatus),
+    /*0x11*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x12*/ SMSGH("Perform Action", PACKET_VARIABLE_SIZE, PerformAction),
     /*0x13*/ SMSG("Client Equip Item", 0x0a),
     /*0x14*/ SMSG("Send elevation (God client)", 0x06),
     /*0x15*/ BMSG("Follow", 0x09),
     /*0x16*/ UMSG(0x01),
-    /*0x17*/
-    RMSGH("Health status bar update (KR)", PACKET_VARIABLE_SIZE, NewHealthbarUpdate),
+    /*0x17*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x18*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x19*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x1A*/ RMSG("Update Item", PACKET_VARIABLE_SIZE),
@@ -118,7 +117,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x2A*/ UMSG(0x05),
     /*0x2B*/ UMSG(0x02),
     /*0x2C*/ BMSGH("Death Screen", 0x02, DeathScreenS, DeathScreenR),
-    /*0x2D*/ RMSGH("Mobile Attributes", 0x11, MobileAttributes),
+    /*0x2D*/ UMSG(0x11),
     /*0x2E*/ RMSGH("Server Equip Item", 0x0f, EquipItem),
     /*0x2F*/ RMSG("Combat Notification", 0x0a),
     /*0x30*/ RMSG("Attack ok", 0x05),
@@ -153,13 +152,13 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x4B*/ UMSG(0x09),
     /*0x4C*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x4D*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x4E*/ RMSGH("Personal Light Level", 0x06, PersonalLightLevel),
-    /*0x4F*/ RMSGH("Global Light Level", 0x02, LightLevel),
+    /*0x4E*/ UMSG(0x06),
+    /*0x4F*/ UMSG(0x02),
     /*0x50*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x51*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x52*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x53*/ RMSG("Error Code", 0x02),
-    /*0x54*/ RMSGH("Sound Effect", 0x0c, PlaySoundEffect),
+    /*0x54*/ UMSG(0x0c),
     /*0x55*/ RMSGH("Login Complete", 0x01, LoginComplete),
     /*0x56*/ RMSGH("Map Data", 0x0b, MapPacket),
     /*0x57*/ BMSG("Update Regions", 0x6e),
@@ -176,7 +175,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x62*/ UMSG(0x0f),
     /*0x63*/ UMSG(0x0d),
     /*0x64*/ UMSG(0x01),
-    /*0x65*/ RMSGH("Set Weather", 0x04, SetWeather),
+    /*0x65*/ UMSG(0x04),
     /*0x66*/ BMSG("Book Page Data", PACKET_VARIABLE_SIZE),
     /*0x67*/ UMSG(0x15),
     /*0x68*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -185,10 +184,10 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x6B*/ UMSG(0x09),
     /*0x6C*/ BMSGH("Target Data", 0x13, TargetS, TargetR),
     /*0x6D*/ RMSG("Play Music", 0x03),
-    /*0x6E*/ RMSGH("Character Animation", 0x0e, CharacterAnimation),
+    /*0x6E*/ UMSG(0x0e),
     /*0x6F*/
     BMSGH("Secure Trading", PACKET_VARIABLE_SIZE, SecureTradingS, SecureTradingR),
-    /*0x70*/ RMSGH("Graphic Effect", 0x1c, GraphicEffect),
+    /*0x70*/ UMSG(0x1c),
     /*0x71*/ BMSG("Bulletin Board Data", PACKET_VARIABLE_SIZE),
     /*0x72*/ SMSGH("War Mode", 0x05, WarmodeS),
     /*0x73*/ BMSG("Ping", 0x02),
@@ -238,9 +237,9 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x9E*/ RMSGH("Vendor Sell List", PACKET_VARIABLE_SIZE, SellList),
     /*0x9F*/ SMSGH("Vendor Sell Reply", PACKET_VARIABLE_SIZE, SellReply),
     /*0xA0*/ SMSG("Select Server", 0x03),
-    /*0xA1*/ RMSGH("Update Hitpoints", 0x09, UpdateHitpoints),
-    /*0xA2*/ RMSGH("Update Mana", 0x09, UpdateMana),
-    /*0xA3*/ RMSGH("Update Stamina", 0x09, UpdateStamina),
+    /*0xA1*/ UMSG(0x09),
+    /*0xA2*/ UMSG(0x09),
+    /*0xA3*/ UMSG(0x09),
     /*0xA4*/ SMSG("System Information", 0x95),
     /*0xA5*/ RMSG("Open URL", PACKET_VARIABLE_SIZE),
     /*0xA6*/ RMSG("Tip Window", PACKET_VARIABLE_SIZE),
@@ -267,12 +266,12 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xB9*/ RMSG("Enable locked client features", 0x03),
     /*0xBA*/ RMSG("Display Quest Arrow", 0x06),
     /*0xBB*/ SMSG("Account ID ?", 0x09),
-    /*0xBC*/ RMSGH("Season", 0x03, Season),
+    /*0xBC*/ UMSG(0x03),
     /*0xBD*/ BMSG("Client Version", PACKET_VARIABLE_SIZE),
     /*0xBE*/ BMSG("Assist Version", PACKET_VARIABLE_SIZE),
     /*0xBF*/
     BMSGH("Extended Command", PACKET_VARIABLE_SIZE, ExtendedCommandS, ExtendedCommandR),
-    /*0xC0*/ RMSGH("Graphical Effect", 0x24, GraphicEffect),
+    /*0xC0*/ UMSG(0x24),
     /*0xC1*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xC2*/
     BMSGH("Unicode prompt", PACKET_VARIABLE_SIZE, UnicodePromptS, UnicodePromptR),
@@ -280,7 +279,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xC4*/ UMSG(0x06),
     /*0xC5*/ UMSG(0xcb),
     /*0xC6*/ UMSG(0x01),
-    /*0xC7*/ RMSGH("Graphical Effect", 0x31, GraphicEffect),
+    /*0xC7*/ UMSG(0x31),
     /*0xC8*/ BMSG("Client View Range", 0x02),
     /*0xC9*/ UMSG(0x06),
     /*0xCA*/ UMSG(0x06),
@@ -543,41 +542,6 @@ PACKET_HANDLER(SecondLogin)
     return true;
 }
 
-PACKET_HANDLER(LightLevel)
-{
-    uchar level = ReadUInt8();
-
-    if (level > 0x1F)
-    {
-        level = 0x1F;
-    }
-
-    g_LightLevel = level;
-
-    return !g_AssistantConfig.LightFilter(); // was: return !g_TabMain->LightFilter();
-    return true;
-}
-
-PACKET_HANDLER(PersonalLightLevel)
-{
-    uint serial = ReadUInt32BE();
-
-    if (serial == g_PlayerSerial)
-    {
-        uchar level = ReadUInt8();
-
-        if (level > 0x1F)
-        {
-            level = 0x1F;
-        }
-
-        g_PersonalLightLevel = level;
-    }
-
-    return !g_AssistantConfig.LightFilter(); // was: return !g_TabMain->LightFilter();
-    return true;
-}
-
 PACKET_HANDLER(LoginComplete)
 {
     g_Connected = true;
@@ -649,138 +613,6 @@ PACKET_HANDLER(EnterWorld)
     return true;
 }
 
-PACKET_HANDLER(UpdateHitpoints)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    // the client handler carries the values into the world object; the
-    // assistant keeps only its own reactions
-    if (serial == g_PlayerSerial)
-    {
-        g_AssistantEvents->OnTitleRedraw();
-    }
-
-    g_AssistantEvents->OnMapUpdate(serial);
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateMana)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    if (serial == g_PlayerSerial)
-    {
-        g_AssistantEvents->OnTitleRedraw();
-    }
-
-    g_AssistantEvents->OnMapUpdate(serial);
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateStamina)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    if (serial == g_PlayerSerial)
-    {
-        g_AssistantEvents->OnTitleRedraw();
-    }
-
-    g_AssistantEvents->OnMapUpdate(serial);
-
-    return true;
-}
-
-PACKET_HANDLER(MobileAttributes)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    if (serial == g_PlayerSerial)
-    {
-        g_AssistantEvents->OnTitleRedraw();
-    }
-
-    g_AssistantEvents->OnMapUpdate(serial);
-
-    return true;
-}
-
-PACKET_HANDLER(NewHealthbarUpdate)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    if (serial == g_PlayerSerial)
-    {
-        // the client handler applies the poison/yellow flag bits to the
-        // world object; the assistant redraws its own title row
-        g_AssistantEvents->OnTitleRedraw();
-    }
-
-    return true;
-}
-
 PACKET_HANDLER(UpdatePlayer)
 {
     if (g_World == nullptr)
@@ -822,49 +654,6 @@ PACKET_HANDLER(UpdatePlayer)
 static string parse_cliloc_arguments(int cliloc, bool toCamelCase, wstr_t args)
 {
     return str_from(g_ClilocManager.ParseArgumentsToClilocString(cliloc, toCamelCase, args));
-}
-
-PACKET_HANDLER(CharacterStatus)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    g_AssistantEvents->OnMapUpdate(serial);
-
-    // the client handler parses the name, hits and the flag-gated stat block
-    // into the world object; the assistant keeps its own reactions
-    Move(30); // name
-    Move(2); // hits
-    Move(2); // max hits
-    Move(1); // can-change-name
-    uchar flag = ReadUInt8();
-
-    if (flag > 0 && serial == g_PlayerSerial)
-    {
-        g_AssistantEvents->OnSkillsRefreshed();
-        g_AssistantEvents->OnTitleRedraw();
-    }
-
-    if (serial == g_LastStatusRequest)
-    {
-        g_LastStatusRequest = 0;
-        g_LastStatusObject = serial;
-    }
-
-    g_AssistantEvents->OnInspectorUpdate(serial);
-
-    return true;
 }
 
 PACKET_HANDLER(UpdateObject)
@@ -1444,23 +1233,6 @@ PACKET_HANDLER(UnicodeTalk)
     return true;
 }
 
-PACKET_HANDLER(SetWeather)
-{
-    g_Weather.Type = ReadUInt8();
-    g_Weather.Count = ReadUInt8();
-    g_Weather.Temperature = ReadUInt8();
-
-    return !g_AssistantConfig.WeatherFilter(); // was: return !g_TabMain->WeatherFilter();
-}
-
-PACKET_HANDLER(Season)
-{
-    g_Season.Index = ReadUInt8();
-    g_Season.Music = ReadUInt8();
-
-    return !g_AssistantConfig.SeasonFilter(); // was: return !g_TabMain->SeasonFilter();
-}
-
 PACKET_HANDLER(DisplayDeath)
 {
     if (g_World == nullptr)
@@ -2037,168 +1809,6 @@ PACKET_HANDLER(ChoiceGump)
     }
 
     return g_GumpManager.OnPacketSend(*this); // (gump round)
-}
-
-PACKET_HANDLER(PlaySoundEffect)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    Move(1);
-    ushort index = ReadUInt16BE();
-    ushort volume = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-
-    if (g_AssistantConfig.SoundEcho())
-    {
-        char text[128] = { 0 };
-        snprintf(text, sizeof(text), "soundecho: id=0x%04X volume=%i x=%i y=%i", index, volume, x, y);
-
-        CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-        message.SetFlags(JMT_SYSTEM);
-
-        g_AssistantEvents->OnJournalMessage(message);
-    }
-
-    return !g_AssistantConfig.CheckSoundInFilter(index);
-}
-
-PACKET_HANDLER(GraphicEffect)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    if (g_AssistantConfig.EffectEcho())
-    {
-        uchar type = ReadUInt8();
-
-        char text[512] = { 0 };
-
-        if (type > 3)
-        {
-            if (type == 4 && *Start == 0x70)
-            {
-                Move(8);
-                ushort val = ReadInt16BE();
-
-                snprintf(text, sizeof(text), "effectecho: type=%i mode=%i", type, val);
-            }
-            else
-            {
-                snprintf(text, sizeof(text), "effectecho: type=%i", type);
-            }
-
-            CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-            message.SetFlags(JMT_SYSTEM);
-
-            g_AssistantEvents->OnJournalMessage(message);
-
-            return true;
-        }
-
-        uint sourceSerial = ReadUInt32BE();
-        uint destSerial = ReadUInt32BE();
-        ushort graphic = ReadUInt16BE();
-        short sourceX = ReadInt16BE();
-        short sourceY = ReadInt16BE();
-        char sourceZ = ReadInt8();
-        short destX = ReadInt16BE();
-        short destY = ReadInt16BE();
-        char destZ = ReadInt8();
-        uchar speed = ReadUInt8();
-        short duration = short(ReadUInt8()) * 50;
-        // what is in 24-25 bytes?
-        Move(2);
-        uchar fixedDirection = ReadUInt8();
-        uchar explode = ReadUInt8();
-
-        uint color = 0;
-        uint renderMode = 0;
-
-        if (*Start != 0x70)
-        {
-            // 0xC0
-            color = ReadUInt32BE();
-            renderMode = ReadUInt32BE() % 7;
-        }
-
-        snprintf(
-            text,
-            sizeof(text),
-            "effectecho: type=%i src_serial=0x%08X src_x=%i src_y=%i src_z=%i "
-            "dest_serial=0x%08X dest_x=%i dest_y=%i dest_z=%i graphic=0x%04X "
-            "speed=%i duration=%i fixed=%i explode=%i color=%i render_mode=%i",
-            type,
-            sourceSerial,
-            sourceX,
-            sourceY,
-            sourceZ,
-            destSerial,
-            destX,
-            destY,
-            destZ,
-            graphic,
-            speed,
-            duration,
-            fixedDirection,
-            explode,
-            color,
-            renderMode);
-
-        CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-        message.SetFlags(JMT_SYSTEM);
-
-        g_AssistantEvents->OnJournalMessage(message);
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(CharacterAnimation)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    if (g_AssistantConfig.AnimationEcho())
-    {
-        uint serial = ReadUInt32BE();
-        ushort action = ReadUInt16BE();
-        ushort frameCount = ReadUInt16BE();
-        frameCount = 0;
-        ushort repeatMode = ReadUInt16BE();
-        bool frameDirection = (ReadUInt8() == 0); // true - forward, false -
-                                                  // backward
-        bool repeat = (ReadUInt8() != 0);
-        uchar delay = ReadUInt8();
-
-        char text[256] = { 0 };
-        snprintf(
-            text,
-            sizeof(text),
-            "animationecho: serial=0x%08X action=%i count=%i "
-            "repeat_mode=%i forward=%i repeat=%i delay=%i",
-            serial,
-            action,
-            frameCount,
-            repeatMode,
-            static_cast<int>(frameDirection),
-            static_cast<int>(repeat),
-            delay);
-
-        CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-        message.SetFlags(JMT_SYSTEM);
-
-        g_AssistantEvents->OnJournalMessage(message);
-    }
-
-    return true;
 }
 
 PACKET_HANDLER(DisplayMap)
