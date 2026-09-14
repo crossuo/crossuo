@@ -221,7 +221,14 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x8E*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x8F*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x90*/ UMSG(0x13),
-    /*0x91*/ SMSGH("Second Login", 0x41, SecondLogin),
+    /*0x91*/
+    // (fusion closeout) the old SecondLogin handler only reset g_Connected; 0x91
+    // is sent once per game-server session by CGame::RelayServer during the
+    // login relay, before the game stage is entered, where
+    // AssistantPackets_CheckDisconnect has already cleared g_Connected - the
+    // reset was a no-op. Row kept plain: the integrity guard below counts 256
+    // named rows.
+    SMSG("Second Login", 0x41),
     /*0x92*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x93*/ RMSG("Open Book", 0x63),
     /*0x94*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -534,7 +541,7 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
 
     AssistantPackets_CheckDisconnect();
 
-    if (!g_Connected && *buf != 0x91) // Second Login
+    if (!g_Connected)
     {
         return;
     }
@@ -543,13 +550,6 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
 }
 
 #define PACKET_HANDLER(name) bool CPacketManager::Handle##name()
-
-PACKET_HANDLER(SecondLogin)
-{
-    g_Connected = false;
-
-    return true;
-}
 
 static string parse_cliloc_arguments(int cliloc, bool toCamelCase, wstr_t args)
 {

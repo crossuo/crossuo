@@ -858,26 +858,101 @@ gotchas, accepted deltas and the reasoning behind them.
 - Map window geometry: the legacy `Map.xml` window attributes are honored
   for first placement only; ongoing geometry lives in the ImGui window ini.
 
-## Packet handler fusion
+## Packet handler fusion — COMPLETE
 
-## Fusion batches (remaining)
+The parallel assistant packetmanager (its own handler table, tapped before
+the client's) has been dissolved into the client's handlers. Batches B1-B4
+fused the recv side: every recv handler is now either fused into the client
+handler, kept whole on the recv tap with a rationale, or deleted as a
+duplicate of client state updates. B5 audited and closed the send side.
+Final table composition (`m_Packets` rows carrying handlers): 29 rows —
+4 `RMSGH` recv keeps, 10 `SMSGH` send handlers and 15 `BMSGH` rows (the
+0xBF Extended Command BMSGH is the fifth recv keep, via its recv half).
+0x91 Second Login was demoted to a plain `SMSG` row.
 
-- B1 simple recv observers/filters: CharacterStatus, Update Hitpoints/Mana/Stamina,
-  Health-KR, MobileAttributes, Personal/Global Light, Sound Effect, Set Weather,
-  Season, Character Animation, Graphic Effect x2 - inject event/filter call into the
-  client handler, delete the assistant row.
-- B2 medium recv state actors: Enter World, Login Complete, Update Player, Update
-  Character (+New), Update Object (+New), Equip Item, Delete Object, Open Container,
-  Attack Reply, Multi Placement - wire edits and bookkeeping must survive the move.
-- B3 talk family: Server Talk, Unicode Server Talk - journal + filters + font-color
-  veto (same pattern as DisplayClilocString).
-- B4 assistant-owned taps: Vendor Buy/Sell List, Open Gump, Open Menu, Map Data,
-  Display Map, Display New Map, Buff/Debuff, party 0xBF - inject where clean, else
-  document the keep; then dissolve the assistant recv tap.
-- B5 send side: the 11 SMSGH recording/bookkeeping taps collapse into one assistant
-  dispatch in CGame::Send; delete the assistant send table.
+### Send tap (permanent seam)
 
-B4 outcome (the recv tap survives for the KEEP ids only):
+The assistant's single send-side interception point is one call in
+`CGame::Send` (src/CrossUO.cpp, pre-encryption, before the wire). It
+dispatches through the assistant's own table: the `SMSGH` rows plus the
+send halves of the `BMSGH` rows in
+`src/Assistant/managers/packetmanager.cpp`. The client's send path is a
+single function, so every producer (UI actions, macro playback, scripts)
+funnels through it — there is no parallel client parse to drift from and no
+second call site. The tap is observe/mutate-only: `AssistantPackets_Send`
+returns void and the packet always reaches the wire; a handler's
+`return false` (the "consumed" convention) has no send-side
+effect. The table + tap is kept over collapsing the handlers into one
+dispatch function because the `BMSGH` send halves already dispatch through
+the same table — collapsing only the `SMSGH` rows would create two send
+mechanisms, not one.
+
+B5 send audit — each `SMSGH` handler is assistant-owned recording /
+bookkeeping with no client send processing duplicated (the client sets its
+own `g_Last*` mirrors inside its action functions; the assistant sets its
+own `xuoassist::` mirrors from the wire, which also covers producers that
+bypass the client action helpers):
+
+- 0x02 Walk Request: auto-open-door probe + `MT_WALK` recording (observe).
+- 0x05 Attack: `MT_ATTACK` recording with
+  MCT_LASTATTACK/LASTTARGET/ENEMY conversions (observe).
+- 0x06 Double Click: `MT_USE` recording + `g_LastUseObject` mirror
+  (observe).
+- 0x12 Perform Action: skill/spell/cast-from-book recording + last indexes
+  + title redraw (observe).
+- 0x72 War Mode: `MT_WAR_MODE` recording (observe).
+- 0x7D Menu Choice: `g_MenuManager.OnPacketSend` (auto-menu agent
+  bookkeeping).
+- 0x9B Help Request: `MT_HELP_MENU_REQUEST` recording (observe).
+- 0x9F Vendor Sell Reply: `g_ShopAgent.OnSellReplySent` (auto-sell agent;
+  the recv-side keep 0x9E carries the auto-sell consume itself).
+- 0xAD Unicode Client Talk: command-prefix interception, `MT_SAY`
+  recording, own-speech font-color enforcement (the only send handler that
+  edits wire bytes).
+- 0xB1 Gump Choice: `g_GumpManager.OnPacketSend` (auto-gump agent
+  bookkeeping).
+- 0x91 Second Login: deleted (see below).
+
+Target-hook interception (the from-target pipeline) is self-contained in
+`CTarget` (core/target.{h,cpp}): arming `g_TargetHandler` opens the cursor,
+the next outgoing 0x6C response feeds the armed handler, and
+`RestoreTarget` re-dispatches the client's own saved request. The outgoing
+0x6C is never dropped — the player's response still reaches the server; the
+consume that keeps the client cursor-free happens on the recv side
+(`TargetR`/`SetRecvData` PlayWaiting path).
+
+Second Login (0x91): the assistant handler only reset `g_Connected`. 0x91
+is sent exactly once per game-server session by `CGame::RelayServer` during
+the login relay, before the game stage is entered, and
+`AssistantPackets_CheckDisconnect` (top of `AssistantPackets_Send`) has
+already cleared `g_Connected` whenever the stage is out of the game — the
+reset was a no-op, so the handler was deleted and the send dispatch gate no
+longer exempts 0x91. The row stays as a plain `SMSG` (the table-integrity
+guard counts 256 named rows).
+
+### Injection-guard policy
+
+Assistant-injected client-bound packets (the `CPacket::SendClient` queue,
+dispatched through the client table under the `AssistantInjectGuard` RAII
+flag `m_AssistantInjecting`) run the same fused handlers as server packets.
+This is safe by construction, and the invariant to preserve is:
+
+- The injection set contains only assistant-published client-bound packets
+  (system prints and text-replace reprints 0x1C/0xAE, light/weather/season
+  sets, target requests/cursor re-dispatches, UI close/dye/reconnect
+  packets). None of them may re-enter assistant filters or re-trigger
+  state mirrors.
+- The hooks that must not re-run on injected traffic are gated on
+  `!m_AssistantInjecting`: the speech journal/filter/font-color re-entry
+  gates, the weather/light/season filters, the morph patch (0x20/0x78),
+  the no-gray-screen effect veto and the shop-agent OpenContainer consume.
+- The state-mirroring hooks in EnterWorld/UpdatePlayer/UpdateObject etc.
+  are ungated; that is safe because the injection set contains none of
+  those ids. A sender adding a new injected id must check this invariant:
+  if the id carries a fused state-mirror hook (or any filter/veto hook not
+  gated above), the new injection must gate on `!m_AssistantInjecting`.
+
+Recv keeps (consume-capable handler rows; the tap dispatches every packet to the assistant table):
 
 - Injected: DisplayDeath 0xAF (last-corpse + auto-open hook sits before the
   owner-not-found early return, matching the old run-always tap); DisplayMap
@@ -889,7 +964,7 @@ B4 outcome (the recv tap survives for the KEEP ids only):
   the client's buff-window guard, which has no side effects, so the buff
   mirror fires for own buffs whether or not the window gump exists; the
   script-visible name table became AssistantBuffName in assistantevents).
-- Kept (the recv tap routes exactly 0x56, 0x7C, 0x9E, 0xB0, 0xBF): Map Data
+- Kept (consume-capable rows): Map Data
   mapecho translates the 0x56 edit-response pin into absolute "map opened to"
   coordinates + tracker points - assistant map-engine state with no
   client-side producer; Open Menu/Open Gump feed their own agent models and a
@@ -902,8 +977,8 @@ B4 outcome (the recv tap survives for the KEEP ids only):
   unaffected: every kept id arrives only with a world.
 
 
-The parallel assistant packetmanager (its own handler table, tapped before
-the client's) is dissolved handler-by-handler into the client's handlers:
+The parallel assistant packetmanager was dissolved handler-by-handler into
+the client's handlers:
 the client handler owns parsing and state, assistant logic becomes injected
 hooks. Per-handler checklist:
 
@@ -1050,8 +1125,9 @@ Evaluated and deferred; none block the current build.
   writes at `Start + 7`, which lands on the X field of the packet layout
   (id 1, serial 4, graphic 2, x) rather than the graphic field
   (`Start + 5`); servers reportedly accept both. The offset is commented
-  in `managers/packetmanager.cpp`; a capture-backed investigation could
-  pin the correct field and whether the graphic field needs patching too.
+  in the client's `src/Managers/PacketManager.cpp`; a capture-backed
+  investigation could pin the correct field and whether the graphic field
+  needs patching too.
 
 - **StealthSteps counter.** `GamePlayer::StealthSteps` exists but nothing
   increments or reads it; implementing the stealth step countdown (hide/

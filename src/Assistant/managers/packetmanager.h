@@ -65,7 +65,6 @@ private:
 
 protected:
     //! Packet handlers
-    XA_HANDLER_PACKET(SecondLogin);
     XA_HANDLER_PACKET(WarmodeS);
     XA_HANDLER_PACKET(TargetS);
     XA_HANDLER_PACKET(TargetR);
