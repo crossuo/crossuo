@@ -16,7 +16,7 @@
 #include "widgets.h"
 #include "mapwindow.h"
 #include "../config/assistantconfig.h"
-#include "../model/gameobjects/gameplayer.h" // g_Player
+#include "../core/world.h" // g_Player
 #include "../core/assist.h"
 #include "../core/global.h"
 #include "../core/packets.h"
@@ -148,9 +148,9 @@ void option_changed(int index, bool state)
                 ushort graphic = 0;
                 if (!state)
                 {
-                    if (g_Player->Dead() || (g_MorphGraphic == 0u))
+                    if (g_Player->IsDead() || (g_MorphGraphic == 0u))
                     {
-                        graphic = g_Player->GetGraphic();
+                        graphic = g_Player->Graphic;
                     }
                     else
                     {
@@ -159,7 +159,7 @@ void option_changed(int index, bool state)
                 }
                 else
                 {
-                    if (g_Player->Dead())
+                    if (g_Player->IsDead())
                     {
                         graphic = 0x03DB;
                     }
@@ -169,7 +169,7 @@ void option_changed(int index, bool state)
                     }
                     else
                     {
-                        graphic = g_Player->GetGraphic();
+                        graphic = g_Player->Graphic;
                     }
                 }
                 if (graphic != 0u)

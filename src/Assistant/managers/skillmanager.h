@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/skillmanager.h): the assistant-owned
-// name->index lookup maps. The skill VALUES/lock state itself lives in
-// g_Skills[] (model/commonitems/skill.h, ported in Phase 1a); the client's
-// g_SkillsManager is not used for this lookup table.
+// The assistant-owned name/number -> index lookup for the skill-cast text
+// commands and hotkeys. The skill values/lock state themselves live in the
+// client's skill table (g_SkillsManager); Use/TargetUse resolve through it.
 
 #pragma once
 
@@ -20,7 +19,6 @@ class CSkillManager
 {
 private:
     SKILLS_MAP m_AllSkills;
-    SKILLS_MAP m_Skills;
 
 public:
     CSkillManager();
@@ -40,4 +38,3 @@ public:
 extern CSkillManager g_SkillManager;
 
 } // namespace xuoassist
-

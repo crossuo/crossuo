@@ -12,7 +12,7 @@
 #include "../core/packets.h"
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "../macros/macroexecutor.h"
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h"
 #include <stdlib.h>
 #include <common/logging/logging.h>
 

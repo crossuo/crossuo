@@ -21,7 +21,7 @@
 #include "actions.h"
 #include "assistantevents.h"
 #include "../macros/macroexecutor.h"
-#include "../model/gameobjects/gameworld.h"
+#include "world.h"
 
 namespace xuoassist {
 

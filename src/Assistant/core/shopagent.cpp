@@ -21,9 +21,7 @@
 #include "../config/assistantconfig.h"
 #include "../model/commonitems/finditem.h"
 #include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
-#include "../model/gameobjects/gamecharacter.h"
-#include "../model/gameobjects/gameitem.h"
-#include "../model/gameobjects/gameworld.h"
+#include "world.h"
 #include "Managers/ClilocManager.h" // ::g_ClilocManager (client)
 
 namespace xuoassist {
@@ -393,13 +391,13 @@ bool CShopAgent::OnOpenContainer(uint serial)
                 QFOR(obj, container->m_Items, CGameItem *)
                 {
                     CVendorShopItem item;
-                    item.SetSerial(obj->GetSerial());
-                    item.SetGraphic(obj->GetGraphic());
-                    item.SetColor(obj->GetColor());
-                    item.SetCount(obj->GetCount());
-                    item.SetPrice(obj->GetPrice());
+                    item.SetSerial(obj->Serial);
+                    item.SetGraphic(obj->Graphic);
+                    item.SetColor(obj->Color);
+                    item.SetCount(obj->Count);
+                    item.SetPrice(obj->Price);
                     item.SetName(obj->GetName());
-                    item.SetNameFromCliloc(obj->GetNameFromCliloc());
+                    item.SetNameFromCliloc(obj->NameFromCliloc);
 
                     m_VendorItems.push_back(item);
                 }
@@ -430,88 +428,10 @@ bool CShopAgent::OnOpenContainer(uint serial)
 
 bool CShopAgent::OnBuyList(CDataReader &reader)
 {
-    // was TabAgentsShop::OnPacketReceivedBuyList (line-faithful; the price
-    // list parse below is the whole handler in this pipeline)
-    if (g_World == nullptr || !EnabledFeatureShopAgent())
-    {
-        return true;
-    }
-
-    uint serial = reader.ReadUInt32BE();
-
-    CGameItem *container = g_World->FindWorldItem(serial);
-
-    if (container == nullptr)
-    {
-        Error(Assistant, "shop agent: buy container is not found");
-        return true;
-    }
-
-    uint vendorSerial = container->GetContainer();
-
-    m_VendorSerial = vendorSerial;
-
-    CGameCharacter *vendor = g_World->FindWorldCharacter(vendorSerial);
-
-    if (vendor == nullptr)
-    {
-        Error(Assistant, "shop agent: buy vendor is not found");
-        return true;
-    }
-
-    if (container->GetLayer() == OL_BUY_RESTOCK || container->GetLayer() == OL_BUY)
-    {
-        uchar count = reader.ReadUInt8();
-
-        CGameItem *item = (CGameItem *)container->m_Items;
-        //oldp spams this packet twice in a row on NPC verndors. nullptr check is needed t
-        if (item == nullptr)
-        {
-            return true;
-        }
-
-        bool reverse = (item->GetX() > 1);
-
-        if (reverse)
-        {
-            item = (CGameItem *)container->Last();
-        }
-
-        for (int i = 0; i < count; i++)
-        {
-            if (item == nullptr)
-            {
-                Error(Assistant, "shop agent: buy item is not found");
-                break;
-            }
-
-            item->SetPrice(reader.ReadUInt32BE());
-
-            uchar nameLen = reader.ReadUInt8();
-            string name = reader.ReadStringChecked(nameLen);
-
-            bool intParsed = false;
-            name = cliloc_name(name, intParsed);
-
-            item->SetName(name);
-
-            item->SetNameFromCliloc(false);
-
-            if (reverse)
-            {
-                item = (CGameItem *)item->m_Prev;
-            }
-            else
-            {
-                item = (CGameItem *)item->m_Next;
-            }
-        }
-    }
-    else
-    {
-        Warning(Assistant, "shop agent: unknown layer for buy container");
-    }
-
+    (void)reader;
+    // the client handler stores the buy list (price/name) on the vendor
+    // items; the vendor snapshot is taken from those items when the
+    // container opens
     return true;
 }
 

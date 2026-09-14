@@ -22,9 +22,7 @@
 
 #include "assist.h"
 #include "../config/assistantconfig.h"
-#include "../model/gameobjects/gameitem.h"
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h"
+#include "world.h"
 
 namespace xuoassist {
 
@@ -68,7 +66,7 @@ void CDressAgent::DressSet(const CDressSetEntry *set)
             {
                 CGameItem *obj = g_Player->FindLayer(layer);
 
-                if (obj != nullptr && obj->GetSerial() != serial)
+                if (obj != nullptr && obj->Serial != serial)
                 {
                     ignoreLayer1_2 = true;
 
@@ -94,7 +92,7 @@ void CDressAgent::DressSet(const CDressSetEntry *set)
 
                 if (obj != nullptr)
                 {
-                    equipped = (obj->GetSerial() == serial);
+                    equipped = (obj->Serial == serial);
 
                     if (g_AssistantConfig.UndressBeforeDressing() && !equipped)
                     {

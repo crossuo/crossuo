@@ -17,10 +17,8 @@
 
 #include "../core/global.h"
 #include "../core/textconv.h"
-#include "../model/gameobjects/gamecharacter.h"
-#include "../model/gameobjects/gameitem.h"
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h"
+#include "../core/worldutil.h"
 
 namespace xuoassist {
 
@@ -106,21 +104,21 @@ void BuildRows(vector<XA_INSPECT_ROW> &rows, CGameObject *obj)
     rows.clear();
 
     AddRow(rows, 0, true, "Game Object", "", OIK_GROUP);
-    AddRow(rows, 1, false, "Serial: ", SerialToText(obj->GetSerial()), OIK_SERIAL);
-    AddRow(rows, 1, false, "Container: ", SerialToText(obj->GetContainer()), OIK_CONTAINER);
+    AddRow(rows, 1, false, "Serial: ", SerialToText(obj->Serial), OIK_SERIAL);
+    AddRow(rows, 1, false, "Container: ", SerialToText(obj->Container), OIK_CONTAINER);
 
     CGameObject *topObject = obj->GetTopObject();
     const uint topObjectSerial =
-        ((topObject != nullptr && topObject != obj) ? topObject->GetSerial() : 0xFFFFFFFF);
+        ((topObject != nullptr && topObject != obj) ? topObject->Serial : 0xFFFFFFFF);
     AddRow(rows, 1, false, "Top Object: ", SerialToText(topObjectSerial), OIK_TOP_OBJECT);
 
     AddRow(rows, 1, false, "Name: ", obj->GetName(), OIK_NAME);
-    AddRow(rows, 1, false, "Graphic: ", GraphicToText(obj->GetGraphic()), OIK_GRAPHIC);
-    AddRow(rows, 1, false, "Color: ", GraphicToText(obj->GetColor()), OIK_COLOR);
+    AddRow(rows, 1, false, "Graphic: ", GraphicToText(obj->Graphic), OIK_GRAPHIC);
+    AddRow(rows, 1, false, "Color: ", GraphicToText(obj->Color), OIK_COLOR);
 
     char num[32] = { 0 };
 
-    snprintf(num, sizeof(num), "%u", obj->GetCount());
+    snprintf(num, sizeof(num), "%u", obj->Count);
     AddRow(rows, 1, false, "Count: ", num, OIK_COUNT);
     snprintf(num, sizeof(num), "%d", obj->GetX());
     AddRow(rows, 1, false, "X: ", num, OIK_X);
@@ -128,23 +126,23 @@ void BuildRows(vector<XA_INSPECT_ROW> &rows, CGameObject *obj)
     AddRow(rows, 1, false, "Y: ", num, OIK_Y);
     snprintf(num, sizeof(num), "%d", obj->GetZ());
     AddRow(rows, 1, false, "Z: ", num, OIK_Z);
-    snprintf(num, sizeof(num), "%d", (int)obj->GetMapIndex());
+    snprintf(num, sizeof(num), "%d", (int)obj->MapIndex);
     AddRow(rows, 1, false, "Map: ", num, OIK_MAP);
 
     // the flags subgroup
     snprintf(num, sizeof(num), "0x%x", obj->GetFlags());
     AddRow(rows, 1, true, "Flags: ", num, OIK_FLAGS);
-    AddRow(rows, 2, false, "Frozen: ", obj->Frozen() ? "True" : "False", OIK_FLAGS);
-    AddRow(rows, 2, false, "Poisoned: ", obj->Poisoned() ? "True" : "False", OIK_FLAGS);
+    AddRow(rows, 2, false, "Frozen: ", obj->IsParalyzed() ? "True" : "False", OIK_FLAGS);
+    AddRow(rows, 2, false, "Poisoned: ", obj->IsPoisoned() ? "True" : "False", OIK_FLAGS);
     AddRow(rows, 2, false, "Yellow Hits: ", obj->YellowHits() ? "True" : "False", OIK_FLAGS);
     AddRow(rows, 2, false, "Locked: ", obj->Locked() ? "True" : "False", OIK_FLAGS);
     AddRow(rows, 2, false, "In War Mode: ", obj->InWarMode() ? "True" : "False", OIK_FLAGS);
     AddRow(rows, 2, false, "Hidden: ", obj->Hidden() ? "True" : "False", OIK_FLAGS);
-    AddRow(rows, 2, false, "Flying: ", obj->Flying() ? "True" : "False", OIK_FLAGS);
+    AddRow(rows, 2, false, "Flying: ", obj->IsFlying() ? "True" : "False", OIK_FLAGS);
 
-    AddRow(rows, 1, false, "Ignored: ", obj->GetIgnored() ? "True" : "False", OIK_IGNORED);
+    AddRow(rows, 1, false, "Ignored: ", obj->Ignored ? "True" : "False", OIK_IGNORED);
 
-    if (!obj->GetNPC())
+    if (!obj->NPC)
     {
         CGameItem *item = (CGameItem *)obj;
         string title = "Game Item";
@@ -153,8 +151,8 @@ void BuildRows(vector<XA_INSPECT_ROW> &rows, CGameObject *obj)
             title += " (Corpse)";
         }
         AddRow(rows, 0, true, title.c_str(), "", OIK_GROUP);
-        const string layer = g_LayerName[item->GetLayer() % 30] + " (" +
-                             std::to_string((int)item->GetLayer()) + ")";
+        const string layer = g_LayerName[item->Layer % 30] + " (" +
+                             std::to_string((int)item->Layer) + ")";
         AddRow(rows, 1, false, "Layer: ", layer, OIK_LAYER);
     }
     else
@@ -172,73 +170,73 @@ void BuildRows(vector<XA_INSPECT_ROW> &rows, CGameObject *obj)
             snprintf(num, sizeof(num), "%d", value);
             return (const char *)num;
         };
-        AddRow(rows, 1, false, "Hits: ", snum(character->GetHits()), OIK_HITS);
-        AddRow(rows, 1, false, "Max Hits: ", snum(character->GetMaxHits()), OIK_HITS);
-        AddRow(rows, 1, false, "Mana: ", snum(character->GetMana()), OIK_HITS);
-        AddRow(rows, 1, false, "Max Mana: ", snum(character->GetMaxMana()), OIK_HITS);
-        AddRow(rows, 1, false, "Stam: ", snum(character->GetStam()), OIK_HITS);
-        AddRow(rows, 1, false, "Max Stam: ", snum(character->GetMaxStam()), OIK_HITS);
-        AddRow(rows, 1, false, "Sex: ", character->GetSex() ? "Man" : "Woman", OIK_STATS);
+        AddRow(rows, 1, false, "Hits: ", snum(character->Hits), OIK_HITS);
+        AddRow(rows, 1, false, "Max Hits: ", snum(character->MaxHits), OIK_HITS);
+        AddRow(rows, 1, false, "Mana: ", snum(character->Mana), OIK_HITS);
+        AddRow(rows, 1, false, "Max Mana: ", snum(character->MaxMana), OIK_HITS);
+        AddRow(rows, 1, false, "Stam: ", snum(character->Stam), OIK_HITS);
+        AddRow(rows, 1, false, "Max Stam: ", snum(character->MaxStam), OIK_HITS);
+        AddRow(rows, 1, false, "Sex: ", character->Gender == GENDER_FEMALE ? "Woman" : "Man", OIK_STATS);
         static const char *const raceNames[3] = { "Human", "Elf", "Gargoyle" };
         AddRow(
             rows,
             1,
             false,
             "Race: ",
-            raceNames[((int)character->GetRace() - 1) % 3],
+            raceNames[((int)character->Race - 1) % 3],
             OIK_STATS);
-        AddRow(rows, 1, false, "Direction: ", snum(character->GetDirection()), OIK_STATS);
+        AddRow(rows, 1, false, "Direction: ", snum(character->Direction), OIK_STATS);
         AddRow(
             rows,
             1,
             false,
             "Running: ",
-            ((character->GetDirection() & 0x80) != 0) ? "True" : "False",
+            ((character->Direction & 0x80) != 0) ? "True" : "False",
             OIK_STATS);
-        AddRow(rows, 1, false, "Notoriety: ", snum(character->GetNotoriety()), OIK_NOTORIETY);
+        AddRow(rows, 1, false, "Notoriety: ", snum(character->Notoriety), OIK_NOTORIETY);
         AddRow(
             rows,
             1,
             false,
             "Can Change Name: ",
-            character->GetCanChangeName() ? "True" : "False",
+            character->CanChangeName ? "True" : "False",
             OIK_STATS);
 
         if (obj->IsPlayer())
         {
             CPlayer *player = (CPlayer *)obj;
             AddRow(rows, 0, true, "Game Player", "", OIK_GROUP);
-            AddRow(rows, 1, false, "Str: ", snum(player->GetStr()), OIK_STATS);
-            AddRow(rows, 1, false, "Int: ", snum(player->GetInt()), OIK_STATS);
-            AddRow(rows, 1, false, "Dex: ", snum(player->GetDex()), OIK_STATS);
-            AddRow(rows, 1, false, "Stats Cap: ", snum(player->GetStatsCap()), OIK_STATS);
+            AddRow(rows, 1, false, "Str: ", snum(player->Str), OIK_STATS);
+            AddRow(rows, 1, false, "Int: ", snum(player->Int), OIK_STATS);
+            AddRow(rows, 1, false, "Dex: ", snum(player->Dex), OIK_STATS);
+            AddRow(rows, 1, false, "Stats Cap: ", snum(player->StatsCap), OIK_STATS);
             static const char *const lockNames[3] = { "Up", "Down", "Lock" };
-            AddRow(rows, 1, false, "Lock State Str: ", lockNames[player->GetLockStr() % 3], OIK_STATS);
-            AddRow(rows, 1, false, "Lock State Int: ", lockNames[player->GetLockInt() % 3], OIK_STATS);
-            AddRow(rows, 1, false, "Lock State Dex: ", lockNames[player->GetLockDex() % 3], OIK_STATS);
-            AddRow(rows, 1, false, "Weight: ", snum(player->GetWeight()), OIK_STATS);
-            AddRow(rows, 1, false, "Max Weight: ", snum(player->GetMaxWeight()), OIK_STATS);
-            AddRow(rows, 1, false, "Armor: ", snum(player->GetArmor()), OIK_RESISTS);
-            AddRow(rows, 1, false, "Gold: ", snum((int)player->GetGold()), OIK_STATS);
-            AddRow(rows, 1, false, "Warmode: ", player->GetWarmode() ? "True" : "False", OIK_STATS);
-            AddRow(rows, 1, false, "Followers: ", snum(player->GetFollowers()), OIK_STATS);
-            AddRow(rows, 1, false, "Max Followers: ", snum(player->GetMaxFollowers()), OIK_STATS);
-            AddRow(rows, 1, false, "Fire Resistance: ", snum(player->GetFireResistance()), OIK_RESISTS);
-            AddRow(rows, 1, false, "Cold Resistance: ", snum(player->GetColdResistance()), OIK_RESISTS);
+            AddRow(rows, 1, false, "Lock State Str: ", lockNames[player->LockStr % 3], OIK_STATS);
+            AddRow(rows, 1, false, "Lock State Int: ", lockNames[player->LockInt % 3], OIK_STATS);
+            AddRow(rows, 1, false, "Lock State Dex: ", lockNames[player->LockDex % 3], OIK_STATS);
+            AddRow(rows, 1, false, "Weight: ", snum(player->Weight), OIK_STATS);
+            AddRow(rows, 1, false, "Max Weight: ", snum(player->MaxWeight), OIK_STATS);
+            AddRow(rows, 1, false, "Armor: ", snum(player->Armor), OIK_RESISTS);
+            AddRow(rows, 1, false, "Gold: ", snum((int)player->Gold), OIK_STATS);
+            AddRow(rows, 1, false, "Warmode: ", player->Warmode ? "True" : "False", OIK_STATS);
+            AddRow(rows, 1, false, "Followers: ", snum(player->Followers), OIK_STATS);
+            AddRow(rows, 1, false, "Max Followers: ", snum(player->MaxFollowers), OIK_STATS);
+            AddRow(rows, 1, false, "Fire Resistance: ", snum(player->FireResistance), OIK_RESISTS);
+            AddRow(rows, 1, false, "Cold Resistance: ", snum(player->ColdResistance), OIK_RESISTS);
             AddRow(
-                rows, 1, false, "Poison Resistance: ", snum(player->GetPoisonResistance()), OIK_RESISTS);
+                rows, 1, false, "Poison Resistance: ", snum(player->PoisonResistance), OIK_RESISTS);
             AddRow(
                 rows,
                 1,
                 false,
                 "Energy Resistance: ",
-                snum(player->GetEnergyResistance()),
+                snum(player->EnergyResistance),
                 OIK_RESISTS);
-            AddRow(rows, 1, false, "Luck: ", snum(player->GetLuck()), OIK_RESISTS);
-            AddRow(rows, 1, false, "Min Damage: ", snum(player->GetMinDamage()), OIK_RESISTS);
-            AddRow(rows, 1, false, "Max Damage: ", snum(player->GetMaxDamage()), OIK_RESISTS);
-            AddRow(rows, 1, false, "Tithing Points: ", snum((int)player->GetTithingPoints()), OIK_STATS);
-            AddRow(rows, 1, false, "Stealth Steps: ", snum(player->GetStealthSteps()), OIK_STATS);
+            AddRow(rows, 1, false, "Luck: ", snum(player->Luck), OIK_RESISTS);
+            AddRow(rows, 1, false, "Min Damage: ", snum(player->MinDamage), OIK_RESISTS);
+            AddRow(rows, 1, false, "Max Damage: ", snum(player->MaxDamage), OIK_RESISTS);
+            AddRow(rows, 1, false, "Tithing Points: ", snum((int)player->TithingPoints), OIK_STATS);
+            AddRow(rows, 1, false, "Stealth Steps: ", snum(player->StealthSteps), OIK_STATS);
         }
     }
 }

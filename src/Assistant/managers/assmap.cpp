@@ -29,8 +29,7 @@
 #include "../config/assistantconfig.h" // GetGlobalConfigPath
 #include "../core/assist.h"            // RawStringToBool/BoolToText
 #include "../core/textconv.h"          // TextToSerial/SerialToText
-#include "../model/gameobjects/gamecharacter.h"
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h"
 #include "../managers/partymanager.h"
 #include "../managers/guildmanager.h"
 

@@ -869,6 +869,37 @@ gotchas, accepted deltas and the reasoning behind them.
 - The sentinel globals (`self`, `lasttarget`, ...) are strings, matched by
   the serial-resolution helpers; scripts keep working unchanged.
 
+## World model & skill data
+
+- The client's own world objects are the assistant's world model: the
+  assistant reads (and keeps its bookkeeping on) the client `g_World`/
+  `g_Player` singletons and the global `CGameObject`/`CGameItem`/
+  `CGameCharacter`/`CGamePlayer` types; `::g_SkillsManager` is the skill
+  table (names, buttons, values, lock state, plus `OldValue` for the
+  skills-tab delta column); `::g_CorpseManager` owns the corpse auto-open
+  queue. There is no second object model in `src/Assistant/`.
+- Packet taps run BEFORE the client handlers (the plugin-ABI OnRecv seat).
+  Handlers whose state the client already fills (stats, hits/mana/stam,
+  healthbar flags, notoriety, body updates, container/equipment updates,
+  skill values, object names from talk/mega-cliloc, removals) are pure
+  observers: they only fire assistant events, edit the outgoing/incoming
+  packet bytes (morph, no-gray-screen, font/color filters) or keep
+  assistant-owned state. Everything else on a world object is assistant
+  bookkeeping written through the client types (backpack serial, last
+  corpse, ignore marks, profile cache/block, party member refresh).
+- The client may keep an object a few frames after 0x1D (party members and
+  corpses stay on purpose), so find/count/dress paths must tolerate
+  briefly-stale objects; the assistant no longer removes objects itself.
+- Assistant world helpers that operate on the client objects live in
+  `core/worldutil.{h,cpp}` (subtree find/count, equip-layer fallback,
+  ignore-mark reset, point distance). `core/world.h` is the seam: it pulls
+  the client object headers, and the script harness swaps in stand-in
+  declarations (`script/test/worldstubs.h`) for the same names.
+- The assistant's skill-cast path (`CSkillManager::Use/TargetUse`) resolves
+  names through `g_SkillsManager::Find` (exact name wins, partial fallback,
+  button skills only); its own name/number→index map only backs
+  `GetIndex`-style lookups.
+
 ## Remaining deviations (grep `DEVIATION`, all commented in place)
 
 - No audio playback (`PlayWav` reports and does nothing).

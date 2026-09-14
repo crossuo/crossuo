@@ -14,8 +14,7 @@
 #include "packets.h"
 #include "../config/assistantconfig.h"
 #include "../macros/macroexecutor.h"
-#include "../model/gameobjects/gameworld.h"
-#include "../model/gameobjects/gameplayer.h"
+#include "world.h"
 #include "../core/textparser.h"
 #include <xuocore/mulstruct.h>  // MAP_BLOCK / STATICS_BLOCK
 #include <xuocore/uodata.h>    // g_Data.m_Static (the client's tiledata)
@@ -369,8 +368,8 @@ bool CTarget::SetSendData(CDataReader &reader)
         CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
         if (obj != nullptr)
         {
-            graphic = obj->GetGraphic();
-            color = obj->GetColor();
+            graphic = obj->Graphic;
+            color = obj->Color;
         }
 
         // was g_TabMacros->AddAction(new CMacroWithObject(...)) while a

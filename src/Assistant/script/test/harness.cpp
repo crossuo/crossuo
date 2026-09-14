@@ -28,7 +28,7 @@
 #include "../../config/xml.h" // AtomicFileWrite (the crash-safe save path)
 #include "../../core/global.h"
 #include "../../core/assistantevents.h" // JMT_* (the journal type flags)
-#include "../../model/gameobjects/gameworld.h" // g_World (section 6 executor gate)
+#include "../../core/world.h" // g_World stand-in (section 6 executor gate)
 #include "../apiscript.h"
 #include "../../model/commonitems/gump.h"
 
@@ -534,7 +534,7 @@ int main()
         // manager hands it this one (harnessstubs.cpp). The executor is the
         // real one, so the world pointer + the command gates must read
         // "connected" for the GetGump path to run.
-        CGameWorld world(0);
+        CGameWorld world;
         g_World = &world;
         g_EnabledCommands = ~0ULL;
         CGump source(0x40000123, 5, 10, 20);

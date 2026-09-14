@@ -9,7 +9,7 @@
 #include "../core/assist.h"
 #include "../core/packets.h"
 #include "../macros/macroexecutor.h"
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h"
 #include <common/str.h>
 
 namespace xuoassist {

@@ -20,7 +20,7 @@
 #include "../managers/guildmanager.h"
 #include "../script/journal.h" // the script journal mirror feed
 #include "../script/scriptstate.h" // the script buff mirror feed
-#include "../model/gameobjects/gameworld.h" // xuoassist::g_World (mirror)
+#include "../core/world.h"
 #include "Party.h" // ::g_Party (shared party data)
 #include "mapwindow.h"
 #include "inspector.h"

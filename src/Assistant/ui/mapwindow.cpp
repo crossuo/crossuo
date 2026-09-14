@@ -25,9 +25,7 @@
 #include "../config/assistantconfig.h"
 #include "../managers/assmap.h"
 #include "../managers/guildmanager.h"
-#include "../model/gameobjects/gamecharacter.h"
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h"
 #include "Party.h" // ::g_Party (shared party data)
 #include "widgets.h"
 
@@ -201,7 +199,7 @@ void MapWindow_Draw(bool *open)
     }
 
     // follow: player-locked center, current facet only
-    CGameCharacter *player = g_Player;
+    CPlayer *player = g_Player;
     const bool following =
         (g_World != nullptr && player != nullptr && g_MapSettings.GetFollowPlayer() &&
          facet == 0xFFFFFFFF);
@@ -363,7 +361,7 @@ void MapWindow_Draw(bool *open)
         // bounds check could not reject a foreign-facet character.
         QFOR(obj, g_World->m_Items, CGameObject *)
         {
-            if (!obj->GetNPC() || obj->GetMapIndex() != map)
+            if (!obj->NPC || obj->MapIndex != map)
             {
                 continue;
             }
@@ -373,7 +371,7 @@ void MapWindow_Draw(bool *open)
                 continue;
             }
 
-            const uint serial = obj->GetSerial();
+            const uint serial = obj->Serial;
             const CLIENT_MAP_CHARACTER_TYPE type = AssMap_GetCharacterType(serial);
             if (type >= OMCT_CORPSE || !table[type].Enabled)
             {
@@ -501,7 +499,7 @@ void MapWindow_Draw(bool *open)
             const MAP_DRAW_STYLE &style = table[item.Type];
             const ImU32 color = StyleColor(style);
             const bool dead =
-                (item.Ptr != nullptr && item.Ptr->Dead() && g_MapSettings.GetMarkDeadMobiles());
+                (item.Ptr != nullptr && item.Ptr->IsDead() && g_MapSettings.GetMarkDeadMobiles());
 
             const float dotW = dead ? 6.0f : style.Width;
             const float dotH = dead ? 6.0f : style.Height;
@@ -549,14 +547,14 @@ void MapWindow_Draw(bool *open)
                     }
                 };
 
-                draw_bar(item.Ptr->GetHits(), item.Ptr->GetMaxHits(), 1.0f);
+                draw_bar(item.Ptr->Hits, item.Ptr->MaxHits, 1.0f);
                 if (style.DrawMana)
                 {
-                    draw_bar(item.Ptr->GetMana(), item.Ptr->GetMaxMana(), offY + 3.0f);
+                    draw_bar(item.Ptr->Mana, item.Ptr->MaxMana, offY + 3.0f);
                 }
                 if (style.DrawStam)
                 {
-                    draw_bar(item.Ptr->GetStam(), item.Ptr->GetMaxStam(), offY + 5.0f);
+                    draw_bar(item.Ptr->Stam, item.Ptr->MaxStam, offY + 5.0f);
                 }
             }
         }

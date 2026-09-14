@@ -17,8 +17,8 @@
 #include "textconv.h"
 #include "target.h"
 #include "assistantevents.h"
-#include "../model/gameobjects/gameworld.h"
-#include "../model/gameobjects/gameplayer.h"
+#include "world.h"
+#include "worldutil.h"
 #include "textparser.h"
 #include "../managers/packetmanager.h"
 #include "../config/assistantconfig.h"
@@ -264,7 +264,7 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
 
     if (g_AssistantConfig.ObjectInspector())
     {
-        g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
+        g_AssistantEvents->OnInspectorUpdate(obj->Serial);
         return;
     }
 
@@ -272,9 +272,9 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
     // 4b-2 text window below; the same text goes through the OnJournalMessage
     // seam (the original app did both)
     int layer = 0;
-    if (!obj->GetNPC())
+    if (!obj->NPC)
     {
-        layer = ((CGameItem *)obj)->GetLayer();
+        layer = ((CGameItem *)obj)->Layer;
     }
 
     char text[512] = { 0 };
@@ -282,16 +282,16 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
         text,
         sizeof(text),
         "Serial=0x%08X Graphic=0x%04X Name=%s\nCount: %i  Color: 0x%04X  Layer: %i\nX=%i Y=%i Z=%i C=0x%08X F=0x%02X\n",
-        obj->GetSerial(),
-        obj->GetGraphic(),
+        obj->Serial,
+        obj->Graphic,
         obj->GetName().c_str(),
-        obj->GetCount(),
-        obj->GetColor(),
+        obj->Count,
+        obj->Color,
         layer,
         obj->GetX(),
         obj->GetY(),
         obj->GetZ(),
-        obj->GetContainer(),
+        obj->Container,
         obj->GetFlags());
 
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
@@ -346,7 +346,7 @@ void CAssistant::Attack(const uint &serial)
     {
         CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-        if (obj != nullptr && (obj->GetMaxHits() == 0))
+        if (obj != nullptr && (obj->MaxHits == 0))
         {
             CPacketStatusRequest(serial).SendServer();
         }
@@ -483,7 +483,7 @@ CGameObject *CAssistant::FindList(
 
         if (found != nullptr)
         {
-            result.push_back(CAssistant::SerialToText(found->GetSerial()));
+            result.push_back(CAssistant::SerialToText(found->Serial));
         }
     }
 
@@ -575,7 +575,7 @@ CGameObject *CAssistant::FindType(
 
         if (found != nullptr)
         {
-            result.push_back(CAssistant::SerialToText(found->GetSerial()));
+            result.push_back(CAssistant::SerialToText(found->Serial));
         }
     }
 
@@ -648,14 +648,14 @@ CGameObject *CAssistant::FindType(
 
     QFOR(item, start, CGameObject *)
     {
-        if (!item->GetIgnored() && (!checkDistance || GetDistance(g_Player, item) <= distance) &&
-            findListItem.Found(item->GetGraphic(), item->GetColor()))
+        if (!item->Ignored && (!checkDistance || GetDistance(g_Player, item) <= distance) &&
+            findListItem.Found(item->Graphic, item->Color))
         {
-            if (mobileOnly && !item->GetNPC())
+            if (mobileOnly && !item->NPC)
             {
                 continue;
             }
-            if (item->GetNPC())
+            if (item->NPC)
             {
                 if (itemsOnly)
                 {
@@ -666,7 +666,7 @@ CGameObject *CAssistant::FindType(
                     continue;
                 }
 
-                bool dead = ((CGameCharacter *)item)->Dead();
+                bool dead = ((CGameCharacter *)item)->IsDead();
                 if (liveOnly && dead)
                 {
                     continue;
@@ -675,11 +675,11 @@ CGameObject *CAssistant::FindType(
                 {
                     continue;
                 }
-                if (ignoreFriends && g_AssistantConfig.InFriendList(item->GetSerial()))
+                if (ignoreFriends && g_AssistantConfig.InFriendList(item->Serial))
                 {
                     continue;
                 }
-                if (ignoreEnemies && g_AssistantConfig.InEnemyList(item->GetSerial()))
+                if (ignoreEnemies && g_AssistantConfig.InEnemyList(item->Serial))
                 {
                     continue;
                 }
@@ -691,7 +691,7 @@ CGameObject *CAssistant::FindType(
             {
                 for (const CIgnoreItem &ii : ignoreList)
                 {
-                    if (ii.Found(item->GetSerial(), item->GetGraphic(), item->GetColor()))
+                    if (ii.Found(item->Serial, item->Graphic, item->Color))
                     {
                         ignored = true;
                         break;
@@ -701,10 +701,10 @@ CGameObject *CAssistant::FindType(
 
             if (!ignored && (notoriety != 0u))
             {
-                if (item->GetNPC())
+                if (item->NPC)
                 {
                     ignored = true;
-                    uchar itemNoto = ((CGameCharacter *)item)->GetNotoriety();
+                    uchar itemNoto = ((CGameCharacter *)item)->Notoriety;
 
                     if (((notoriety & NTF_INNOCENT) != 0) && itemNoto == NT_INNOCENT)
                     {
@@ -739,7 +739,7 @@ CGameObject *CAssistant::FindType(
 
             if (!ignored)
             {
-                list.push_back(CAssistant::SerialToText(item->GetSerial()));
+                list.push_back(CAssistant::SerialToText(item->Serial));
 
                 if ((flags & FTF_NEAREST) != 0)
                 {
@@ -762,7 +762,7 @@ CGameObject *CAssistant::FindType(
         }
 
         if (recurseSearch && !item->Empty() &&
-            (item->GetNPC() || ((CGameItem *)item)->GetLayer() != OL_BANK))
+            (item->NPC || ((CGameItem *)item)->Layer != OL_BANK))
         {
             containers.push_back(item);
         }
@@ -772,7 +772,7 @@ CGameObject *CAssistant::FindType(
     {
         for (CGameObject *item : containers)
         {
-            CGameObject *temp = item->FindType(findListItem, ignoreList, flags, recurseSearch, list);
+            CGameObject *temp = xuoassist::FindType(item, findListItem, ignoreList, flags, recurseSearch, list);
 
             if (temp != nullptr)
             {
@@ -848,16 +848,16 @@ int CAssistant::CountType(
 
     QFOR(item, start, CGameObject *)
     {
-        if (findListItem.Found(item->GetGraphic(), item->GetColor()) &&
+        if (findListItem.Found(item->Graphic, item->Color) &&
             (!checkDistance || GetDistance(g_Player, item) <= distance))
         {
-            count += item->GetCount();
+            count += item->Count;
         }
 
         if (recurseSearch && !item->Empty() &&
-            (item->GetNPC() || ((CGameItem *)item)->GetLayer() != OL_BANK))
+            (item->NPC || ((CGameItem *)item)->Layer != OL_BANK))
         {
-            count += item->CountItems(findListItem, recurseSearch);
+            count += CountItems(item, findListItem, recurseSearch);
         }
     }
 
@@ -874,7 +874,7 @@ void CAssistant::UseType(
 
     if (item != nullptr)
     {
-        DoubleClick(item->GetSerial());
+        DoubleClick(item->Serial);
     }
 }
 
@@ -887,11 +887,11 @@ void CAssistant::MoveItem(CGameItem *item)
         return;
     }
 
-    uint serial = item->GetSerial();
+    uint serial = item->Serial;
 
     if (g_MoveItemData.Count < 1)
     {
-        g_MoveItemData.Count = item->GetCount();
+        g_MoveItemData.Count = item->Count;
     }
 
     CPacketPickupRequest(serial, g_MoveItemData.Count).SendServer();
@@ -969,7 +969,7 @@ void CAssistant::HandleTargetDisplayItem(uchar *buf)
 
         if (obj != nullptr)
         {
-            color = obj->GetColor();
+            color = obj->Color;
         }
     }
 
@@ -1011,7 +1011,7 @@ void CAssistant::HandleTargetDressItem(uchar *buf)
 
     if (item != nullptr)
     {
-        int layer = item->GetEquipLayer();
+        int layer = EquipLayer(item);
 
         if ((layer != 0) && layer < OL_MOUNT && layer != OL_BACKPACK)
         {
@@ -1019,8 +1019,8 @@ void CAssistant::HandleTargetDressItem(uchar *buf)
             // edit is the Phase 4 tab (the tab re-resolves the item/layer
             // through the serial)
             g_AssistantEvents->OnFromTarget(
-                XA_FROM_TARGET_DRESS_ITEM, item->GetSerial(), item->GetGraphic(),
-                item->GetColor(), "");
+                XA_FROM_TARGET_DRESS_ITEM, item->Serial, item->Graphic,
+                item->Color, "");
         }
     }
 }
@@ -1042,7 +1042,7 @@ void CAssistant::HandleTargetFindList(uchar *buf)
     if (obj != nullptr)
     {
         g_AssistantEvents->OnFromTarget(
-            XA_FROM_TARGET_FIND_LIST, obj->GetSerial(), obj->GetGraphic(), obj->GetColor(),
+            XA_FROM_TARGET_FIND_LIST, obj->Serial, obj->Graphic, obj->Color,
             obj->GetName());
     }
     // The original also clicked the object to fetch its name when unknown
@@ -1056,7 +1056,7 @@ void CAssistant::HandleTargetIgnoreList(uchar *buf)
     if (obj != nullptr)
     {
         g_AssistantEvents->OnFromTarget(
-            XA_FROM_TARGET_IGNORE_LIST, obj->GetSerial(), obj->GetGraphic(), obj->GetColor(),
+            XA_FROM_TARGET_IGNORE_LIST, obj->Serial, obj->Graphic, obj->Color,
             obj->GetName());
     }
 }
@@ -1118,7 +1118,7 @@ void CAssistant::HandleTargetAnimalAndVendorControlName(uchar *buf)
     {
         Info(Assistant, "animal/vendor name from target: %s\n", obj->GetName().c_str());
         g_AssistantEvents->OnFromTarget(
-            XA_FROM_TARGET_ANIMAL_NAME, obj->GetSerial(), obj->GetGraphic(), obj->GetColor(),
+            XA_FROM_TARGET_ANIMAL_NAME, obj->Serial, obj->Graphic, obj->Color,
             obj->GetName());
     }
 }
@@ -1133,7 +1133,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
     {
         QFOR(item, start, CGameObject *)
         {
-            if (item->GetSerial() == g_LastFriendFound)
+            if (item->Serial == g_LastFriendFound)
             {
                 start = (CGameObject *)item->m_Next;
                 break;
@@ -1143,11 +1143,11 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
 
     QFOR(item, start, CGameObject *)
     {
-        if (item->GetIgnored() || !item->GetNPC())
+        if (item->Ignored || !item->NPC)
         {
             continue;
         }
-        if (!g_AssistantConfig.InFriendList(item->GetSerial()))
+        if (!g_AssistantConfig.InFriendList(item->Serial))
         {
             continue;
         }
@@ -1158,7 +1158,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
 
         CGameCharacter *gc = (CGameCharacter *)item;
 
-        bool dead = gc->Dead();
+        bool dead = gc->IsDead();
 
         if (((flags & FTF_LIVE) != 0) && dead)
         {
@@ -1168,7 +1168,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
         {
             continue;
         }
-        if (((flags & FTF_INJURED) != 0) && ((gc->GetHits() == 0) || gc->GetHits() >= gc->GetMaxHits()))
+        if (((flags & FTF_INJURED) != 0) && ((gc->Hits == 0) || gc->Hits >= gc->MaxHits))
         {
             continue;
         }
@@ -1186,7 +1186,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
         }
         else if (((flags & FTF_INJURED) != 0) && found != nullptr)
         {
-            if (gc->GetHits() < ((CGameCharacter *)found)->GetHits())
+            if (gc->Hits < ((CGameCharacter *)found)->Hits)
             {
                 found = item;
             }
@@ -1215,7 +1215,7 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
     {
         QFOR(item, start, CGameObject *)
         {
-            if (item->GetSerial() == g_LastEnemyFound)
+            if (item->Serial == g_LastEnemyFound)
             {
                 start = (CGameObject *)item->m_Next;
                 break;
@@ -1225,11 +1225,11 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
 
     QFOR(item, g_World->m_Items, CGameObject *)
     {
-        if (item->GetIgnored() || !item->GetNPC())
+        if (item->Ignored || !item->NPC)
         {
             continue;
         }
-        if (!g_AssistantConfig.InEnemyList(item->GetSerial()))
+        if (!g_AssistantConfig.InEnemyList(item->Serial))
         {
             continue;
         }
@@ -1240,7 +1240,7 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
 
         CGameCharacter *gc = (CGameCharacter *)item;
 
-        bool dead = gc->Dead();
+        bool dead = gc->IsDead();
 
         if (((flags & FTF_LIVE) != 0) && dead)
         {
@@ -1250,7 +1250,7 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
         {
             continue;
         }
-        if (((flags & FTF_INJURED) != 0) && ((gc->GetHits() == 0) || gc->GetHits() >= gc->GetMaxHits()))
+        if (((flags & FTF_INJURED) != 0) && ((gc->Hits == 0) || gc->Hits >= gc->MaxHits))
         {
             continue;
         }
@@ -1268,7 +1268,7 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
         }
         else if (((flags & FTF_INJURED) != 0) && found != nullptr)
         {
-            if (gc->GetHits() < ((CGameCharacter *)found)->GetHits())
+            if (gc->Hits < ((CGameCharacter *)found)->Hits)
             {
                 found = item;
             }
@@ -1291,9 +1291,9 @@ void CAssistant::GetFriendsStatus()
 {
     QFOR(item, g_World->m_Items, CGameObject *)
     {
-        if (g_AssistantConfig.InFriendList(item->GetSerial()))
+        if (g_AssistantConfig.InFriendList(item->Serial))
         {
-            GetStatus(item->GetSerial());
+            GetStatus(item->Serial);
         }
     }
 }
@@ -1302,9 +1302,9 @@ void CAssistant::GetEnemiesStatus()
 {
     QFOR(item, g_World->m_Items, CGameObject *)
     {
-        if (g_AssistantConfig.InEnemyList(item->GetSerial()))
+        if (g_AssistantConfig.InEnemyList(item->Serial))
         {
-            GetStatus(item->GetSerial());
+            GetStatus(item->Serial);
         }
     }
 }
@@ -1334,7 +1334,7 @@ bool CAssistant::IsNoDrawTile(const ushort &graphic)
         long long flags = g_GetStaticFlags(graphic);
 
         if (!IsNoDiagonal(flags) ||
-            (IsAnimated(flags) && g_Player != nullptr && g_Player->GetRace() == RT_GARGOYLE))
+            (IsAnimated(flags) && g_Player != nullptr && g_Player->Race == RT_GARGOYLE))
         {
             return false;
         }
@@ -1356,9 +1356,9 @@ void CAssistant::SetDressBag(const uint &serial)
     {
         CGameObject *obj = g_World->FindWorldObject(serial);
 
-        if (obj != nullptr && !obj->GetNPC() && (obj->GetGraphic() != 0u))
+        if (obj != nullptr && !obj->NPC && (obj->Graphic != 0u))
         {
-            if (!IsContainer(g_GetStaticFlags(obj->GetGraphic())))
+            if (!IsContainer(g_GetStaticFlags(obj->Graphic)))
             {
                 ClientPrintDebugLevel1("This item is not a container!", 0x0021);
                 return;
@@ -1398,7 +1398,7 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
         int maxZ = z + 10;
         QFOR(obj, g_World->m_Items, CGameObject *)
         {
-            if (obj->GetNPC() || !IsDoor(((CGameItem *)obj)->GetTiledataFlags()) ||
+            if (obj->NPC || !IsDoor(g_GetStaticFlags(obj->Graphic)) ||
                 obj->GetX() != x || obj->GetY() != y)
             {
                 continue;
@@ -1409,7 +1409,7 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
             {
                 continue;
             }
-            doorToOpen = obj->GetSerial();
+            doorToOpen = obj->Serial;
             break;
         }
     }

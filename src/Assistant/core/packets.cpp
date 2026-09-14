@@ -20,10 +20,8 @@
 #include <common/str.h> // wstr_from
 #include "Managers/PacketManager.h"      // ::g_PacketManager (client, inject)
 #include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
-#include "../model/gameobjects/gameworld.h"
-#include "Managers/PacketManager.h"      // ::g_PacketManager (client, inject)
+#include "../core/world.h"
 #include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
-#include "../model/gameobjects/gameworld.h"
 
 namespace xuoassist {
 
@@ -641,7 +639,7 @@ CPacketTargetObject::CPacketTargetObject(
         WriteUInt16BE(obj->GetX());
         WriteUInt16BE(obj->GetY());
         WriteUInt16BE(obj->GetZ());
-        WriteUInt16BE(obj->GetGraphic());
+        WriteUInt16BE(obj->Graphic);
     }
 }
 

@@ -12,14 +12,16 @@
 #pragma once
 
 #include "global.h"
-#include "../model/commonitems/skill.h"
 #include "../model/commonitems/finditem.h"
 #include "../model/commonitems/ignoreitem.h"
 
-namespace xuoassist {
-
+// the client's world objects (the assistant has no world model of its own)
 class CGameObject;
 class CGameItem;
+class CPlayer;
+
+namespace xuoassist {
+
 
 class CAssistant;
 typedef void (CAssistant::*TARGET_HANDLER)(uchar *buf);

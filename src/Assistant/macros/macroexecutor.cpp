@@ -26,9 +26,8 @@
 #include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
 #include "../model/commonitems/gumphook.h"
-#include "../model/gameobjects/gameitem.h"
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h"
+#include "../core/worldutil.h"
 #include "Walker/PathFinder.h" // g_PathFinder (the client walker; was the plugin's PathFinder)
 
 namespace xuoassist {
@@ -53,7 +52,7 @@ void warmode_send(uint state)
     {
         return;
     }
-    uchar warmode = (uchar)!g_Player->GetWarmode();
+    uchar warmode = (uchar)!g_Player->Warmode;
     if (state < 2)
     {
         warmode = (uchar)state;
@@ -344,7 +343,8 @@ uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE conv
     }
     else if (g_Player != nullptr)
     {
-        g_Player->FindType(
+        FindType(
+            g_Player,
             CFindItem(CAssistant::GraphicToText(graphic), CAssistant::GraphicToText(color)),
             ignoreList,
             FTF_FAST,
@@ -743,7 +743,7 @@ void CMacroExecutor::ProcessMacro()
                 {
                     dir = (-dir) & 7;
 
-                    if ((g_Player->GetDirection() & 7) != dir)
+                    if ((g_Player->Direction & 7) != dir)
                     {
                         g_PathFinder.Walk(false, (uint8_t)dir);
                         walkDelay = (g_AssistantConfig.FastRotation() ? 50 : 100);
@@ -792,7 +792,7 @@ void CMacroExecutor::ProcessMacro()
                     CGameItem *obj = g_Player->FindLayer(i);
                     if (obj != nullptr)
                     {
-                        m_ArmList.push_back(obj->GetSerial());
+                        m_ArmList.push_back(obj->Serial);
                     }
                 }
                 break;
@@ -823,12 +823,12 @@ void CMacroExecutor::ProcessMacro()
                 {
                     uint serial = m_ArmList.front();
                     CGameItem *obj = g_World != nullptr ? g_World->FindWorldItem(serial) : nullptr;
-                    if (obj == nullptr || obj->GetLayer() == obj->GetEquipLayer())
+                    if (obj == nullptr || obj->Layer == EquipLayer(obj))
                     {
                         m_ArmList.erase(m_ArmList.begin());
                         continue;
                     }
-                    CGameItem *equipped = g_Player->FindLayer(obj->GetEquipLayer());
+                    CGameItem *equipped = g_Player->FindLayer(EquipLayer(obj));
                     if (equipped != nullptr && g_AssistantConfig.UndressBeforeDressing())
                     {
                         g_MoveItemData.Reset();
@@ -841,11 +841,11 @@ void CMacroExecutor::ProcessMacro()
                     }
                     else if (g_AssistantConfig.DoubleClickForEquipItems())
                     {
-                        g_Assistant.DoubleClick(obj->GetSerial());
+                        g_Assistant.DoubleClick(obj->Serial);
                     }
                     else
                     {
-                        g_Assistant.MoveEquip(obj->GetSerial(), obj->GetEquipLayer(), g_PlayerSerial);
+                        g_Assistant.MoveEquip(obj->Serial, EquipLayer(obj), g_PlayerSerial);
                     }
                     m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
                     m_PlayPosition--;
@@ -860,7 +860,7 @@ void CMacroExecutor::ProcessMacro()
                     CGameItem *obj = g_Player->FindLayer(dressLayers[i]);
                     if (obj != nullptr)
                     {
-                        m_DressList.push_back(obj->GetSerial());
+                        m_DressList.push_back(obj->Serial);
                     }
                 }
                 break;
@@ -891,12 +891,12 @@ void CMacroExecutor::ProcessMacro()
                 {
                     uint serial = m_DressList.front();
                     CGameItem *obj = g_World != nullptr ? g_World->FindWorldItem(serial) : nullptr;
-                    if (obj == nullptr || obj->GetLayer() == obj->GetEquipLayer())
+                    if (obj == nullptr || obj->Layer == EquipLayer(obj))
                     {
                         m_DressList.erase(m_DressList.begin());
                         continue;
                     }
-                    CGameItem *equipped = g_Player->FindLayer(obj->GetEquipLayer());
+                    CGameItem *equipped = g_Player->FindLayer(EquipLayer(obj));
                     if (equipped != nullptr && g_AssistantConfig.UndressBeforeDressing())
                     {
                         g_MoveItemData.Reset();
@@ -909,11 +909,11 @@ void CMacroExecutor::ProcessMacro()
                     }
                     else if (g_AssistantConfig.DoubleClickForEquipItems())
                     {
-                        g_Assistant.DoubleClick(obj->GetSerial());
+                        g_Assistant.DoubleClick(obj->Serial);
                     }
                     else
                     {
-                        g_Assistant.MoveEquip(obj->GetSerial(), obj->GetEquipLayer(), g_PlayerSerial);
+                        g_Assistant.MoveEquip(obj->Serial, EquipLayer(obj), g_PlayerSerial);
                     }
                     m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
                     m_PlayPosition--;

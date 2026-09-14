@@ -51,6 +51,10 @@ public:
     short OldY = 0;
     char OldZ = 0;
 
+    // Stealth steps taken since the last hidden-flag change (read by the
+    // assistant's inspector and script API)
+    int StealthSteps = 0;
+
     CPlayer(int serial);
     virtual ~CPlayer();
 

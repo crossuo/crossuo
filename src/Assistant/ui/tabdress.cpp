@@ -19,9 +19,8 @@
 #include "../core/assist.h"
 #include "../core/dressagent.h"
 #include "../core/global.h"
-#include "../model/gameobjects/gameitem.h"
-#include "../model/gameobjects/gameplayer.h" // g_Player
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h" // g_Player
+#include "../core/worldutil.h"
 
 namespace xuoassist {
 
@@ -142,7 +141,7 @@ void apply_from_equipment(int minLayer, int maxLayer, bool checkSafe)
     bool changed = false;
     QFOR(item, g_Player->m_Items, CGameItem *)
     {
-        const int layer = item->GetEquipLayer();
+        const int layer = EquipLayer(item);
 
         if (layer < minLayer || layer > maxLayer)
         {
@@ -162,7 +161,7 @@ void apply_from_equipment(int minLayer, int maxLayer, bool checkSafe)
         }
         if (slot < s_WorkRowCount && s_WorkRows[slot].Layer == layer)
         {
-            s_WorkRows[slot].Serial = item->GetSerial();
+            s_WorkRows[slot].Serial = item->Serial;
         }
         else if (s_WorkRowCount < s_WorkRowMax)
         {
@@ -171,7 +170,7 @@ void apply_from_equipment(int minLayer, int maxLayer, bool checkSafe)
                 s_WorkRows[shift] = s_WorkRows[shift - 1];
             }
             s_WorkRows[slot].Layer = layer;
-            s_WorkRows[slot].Serial = item->GetSerial();
+            s_WorkRows[slot].Serial = item->Serial;
             s_WorkRowCount++;
         }
         changed = true;
@@ -229,7 +228,7 @@ void TabDress_Draw()
             CGameItem *item = g_World->FindWorldItem(ftResult.Serial);
             if (item != nullptr)
             {
-                work_add_item(item->GetEquipLayer(), item->GetSerial());
+                work_add_item(EquipLayer(item), item->Serial);
             }
         }
     }

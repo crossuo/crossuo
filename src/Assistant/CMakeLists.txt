@@ -48,6 +48,7 @@ set(XUOASSIST_SRCS
   "ui/tababout.cpp"
   "ui/textdialog.cpp"
   "core/global.cpp"
+  "core/worldutil.cpp"
   "core/textconv.cpp"
   "core/textparser.cpp"
   "core/assistantevents.cpp"
@@ -71,11 +72,6 @@ set(XUOASSIST_SRCS
   "macros/macro.cpp"
   "config/xml.cpp"
   "config/assistantconfig.cpp"
-  "model/gameobjects/gameobject.cpp"
-  "model/gameobjects/gameitem.cpp"
-  "model/gameobjects/gamecharacter.cpp"
-  "model/gameobjects/gameplayer.cpp"
-  "model/gameobjects/gameworld.cpp"
   "model/commonitems/finditem.cpp"
   "model/commonitems/ignoreitem.cpp"
   "model/commonitems/displayitem.cpp"
@@ -87,7 +83,6 @@ set(XUOASSIST_SRCS
   "model/commonitems/menuitem.cpp"
   "model/commonitems/prompt.cpp"
   "model/commonitems/shopitem.cpp"
-  "model/commonitems/skill.cpp"
   "model/commonitems/tradewindow.cpp"
   "model/commonitems/vendorshopitem.cpp"
 )
@@ -161,7 +156,7 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     script/quickjs/libunicode.c
     script/quickjs/quickjs.c
   )
-  target_compile_definitions(xuoassist-script-test PRIVATE XUO_ASSISTANT=1)
+  target_compile_definitions(xuoassist-script-test PRIVATE XUO_ASSISTANT=1 XUO_ASSISTANT_HARNESS=1)
   set_source_files_properties(
     script/quickjs/dtoa.c
     script/quickjs/libregexp.c

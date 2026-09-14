@@ -6,6 +6,7 @@
 #include "skillmanager.h"
 #include "../core/assist.h"
 #include "../core/packets.h"
+#include "Managers/SkillsManager.h" // ::g_SkillsManager
 
 namespace xuoassist {
 
@@ -26,14 +27,10 @@ CSkillManager::~CSkillManager() {}
 
 void CSkillManager::Insert(const string &name, const bool &usable, const int &index)
 {
+    (void)usable;
+
     m_AllSkills.insert(std::make_pair(name, index));
     m_AllSkills.insert(std::make_pair(std::to_string(index), index));
-
-    if (usable)
-    {
-        m_Skills.insert(std::make_pair(name, index));
-        m_Skills.insert(std::make_pair(std::to_string(index), index));
-    }
 }
 
 int CSkillManager::GetIndex(const string &name)
@@ -50,19 +47,9 @@ int CSkillManager::GetIndex(const string &name)
 
 int CSkillManager::Find(const string &name)
 {
-    if (name == "last" || name == "lastskill")
-    {
-        return g_LastSkillIndex;
-    }
-
-    SKILLS_MAP::iterator it = m_Skills.find(name);
-
-    if (it != m_Skills.end())
-    {
-        return it->second;
-    }
-
-    return -1;
+    // the client lookup handles the "last" aliases, exact names and partial
+    // names (button skills only)
+    return g_SkillsManager.Find(name);
 }
 
 void CSkillManager::Use(const string &name)

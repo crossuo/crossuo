@@ -19,7 +19,7 @@
 #include "../macros/macro.h"
 #include "../managers/displaymanager.h"
 #include "../managers/partymanager.h"
-#include "../model/gameobjects/gameplayer.h"
+#include "../core/world.h"
 #include <xuocore/mappedfile.h> // ::CDataReader / ::CDataWriter
 
 namespace xuoassist {

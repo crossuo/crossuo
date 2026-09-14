@@ -3,10 +3,9 @@
 
 // TabSkills (was assist/tabskills.ui/.cpp, §2.9): the live stats row, the
 // skills table (Name/Base/Real/Delta/Cap), the clipboard copies and the delta
-// reset. The data lives in g_Skills[]/g_SkillsCount (fed by the packet
-// pipeline: the 0xFC skill list names the rows, 0xDF/0x3A carry the values
-// and lock states) - the table reads it live every frame, like the original table
-// was updated from UpdateSkill/UpdateStatsAndSkillsInfo.
+// reset. The data lives in the client's skill table (g_SkillsManager, fed by
+// the client's 0x3A/0xDF pipeline) - the table reads it live every frame,
+// like the original table was updated from UpdateSkill/UpdateStatsAndSkillsInfo.
 //
 // Delta note: the original delta column showed Value - OldValue, suppressed while
 // (int)(delta * 10) == 0; "Reset skills delta" set OldValue = Value for every
@@ -27,8 +26,8 @@
 #include "widgets.h"
 #include "../core/assist.h"
 #include "../core/global.h"
-#include "../model/commonitems/skill.h"
-#include "../model/gameobjects/gameplayer.h"
+#include "../core/world.h" // g_Player
+#include "Managers/SkillsManager.h" // g_SkillsManager (the client skill table)
 
 namespace xuoassist {
 
@@ -71,30 +70,44 @@ void report_date(char *buf, size_t size)
 
 } // namespace
 
+// the client skill-table row (nullptr when the index is out of range)
+static const CSkill *skill_at(int index)
+{
+    if (index < 0 || (uint32_t)index >= g_SkillsManager.Count)
+    {
+        return nullptr;
+    }
+    return g_SkillsManager.Get((uint32_t)index);
+}
+
 void TabSkills_Draw()
 {
     // --- the stats info row (l_Str/l_Int/l_Dex/l_Statsum/l_Skillsum) --------
     float skillSum = 0.0f;
-    for (int i = 0; i < g_SkillsCount; i++)
+    for (uint32_t i = 0; i < g_SkillsManager.Count; i++)
     {
-        skillSum += g_Skills[i].GetValue();
+        const CSkill *skill = g_SkillsManager.Get(i);
+        if (skill != nullptr)
+        {
+            skillSum += skill->Value;
+        }
     }
 
     int statSum = 0;
     if (g_Player != nullptr)
     {
-        statSum = g_Player->GetStr() + g_Player->GetInt() + g_Player->GetDex();
+        statSum = g_Player->Str + g_Player->Int + g_Player->Dex;
         ImGui::Text(
             "Str: %i   Int: %i   Dex: %i   Statsum: %i   Skillsum: %.1f",
-            g_Player->GetStr(),
-            g_Player->GetInt(),
-            g_Player->GetDex(),
+            g_Player->Str,
+            g_Player->Int,
+            g_Player->Dex,
             statSum,
             skillSum);
     }
     else
     {
-        // not logged in (g_Skills empty): the original labels showed zeros
+        // not logged in (no stats yet): the labels show zeros
         ImGui::Text("Str: 0   Int: 0   Dex: 0   Statsum: 0   Skillsum: %.1f", skillSum);
     }
     ImGui::TextDisabled("Stats info:");
@@ -115,13 +128,17 @@ void TabSkills_Draw()
         ImGui::TableHeadersRow();
 
         ImGuiListClipper clipper;
-        clipper.Begin(g_SkillsCount);
+        clipper.Begin((int)g_SkillsManager.Count);
         while (clipper.Step())
         {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
             {
-                const CSkill &skill = g_Skills[i];
-                const float delta = skill.GetValue() - skill.GetOldValue();
+                const CSkill *skill = skill_at(i);
+                if (skill == nullptr)
+                {
+                    continue;
+                }
+                const float delta = skill->Value - skill->OldValue;
 
                 ImGui::PushID(i);
                 ImGui::TableNextRow();
@@ -131,20 +148,20 @@ void TabSkills_Draw()
                     nameCell,
                     sizeof(nameCell),
                     "%s  %s",
-                    skill_lock_style(skill.GetStatus()),
-                    skill.GetName().c_str());
+                    skill_lock_style(skill->Status),
+                    skill->Name.c_str());
                 if (ImGui::Selectable(nameCell, selected == i, ImGuiSelectableFlags_SpanAllColumns))
                 {
                     selected = i;
                 }
                 if (ImGui::IsItemHovered())
                 {
-                    ImGui::SetTooltip("%s", s_LockStyles[skill.GetStatus() > 2 ? 3 : skill.GetStatus()].Tip);
+                    ImGui::SetTooltip("%s", s_LockStyles[skill->Status > 2 ? 3 : skill->Status].Tip);
                 }
                 ImGui::TableNextColumn();
-                ImGui::Text("%.1f", skill.GetBaseValue());
+                ImGui::Text("%.1f", skill->BaseValue);
                 ImGui::TableNextColumn();
-                ImGui::Text("%.1f", skill.GetValue());
+                ImGui::Text("%.1f", skill->Value);
                 ImGui::TableNextColumn();
                 // was UpdateSkill: the delta cell stayed empty while
                 // (int)(valueDelta * 10) == 0
@@ -153,7 +170,7 @@ void TabSkills_Draw()
                     ImGui::Text("%3.1f", delta);
                 }
                 ImGui::TableNextColumn();
-                ImGui::Text("%.1f", skill.GetCap());
+                ImGui::Text("%.1f", skill->Cap);
                 ImGui::PopID();
             }
         }
@@ -164,14 +181,14 @@ void TabSkills_Draw()
     if (ImGui::Button("Copy selected to clipboard"))
     {
         // was on_bt_CopySelectedToClipboard_clicked
-        if (selected >= 0 && selected < g_SkillsCount)
+        const CSkill *skill = skill_at(selected);
+        if (skill != nullptr)
         {
-            const CSkill &skill = g_Skills[selected];
             char buf[192];
 
-            if (skill_value_equal(skill.GetValue(), skill.GetOldValue()))
+            if (skill_value_equal(skill->Value, skill->OldValue))
             {
-                snprintf(buf, sizeof(buf), "\t%.1f\n", skill.GetValue());
+                snprintf(buf, sizeof(buf), "\t%.1f\n", skill->Value);
             }
             else
             {
@@ -179,15 +196,15 @@ void TabSkills_Draw()
                     buf,
                     sizeof(buf),
                     "\t%.1f\t %.1f\n",
-                    skill.GetValue(),
-                    skill.GetValue() - skill.GetOldValue());
+                    skill->Value,
+                    skill->Value - skill->OldValue);
             }
 
-            string text = skill.GetName() + buf;
+            string text = skill->Name + buf;
             ImGui::SetClipboardText(text.c_str());
         }
     }
-    if (ImGui::IsItemHovered() && (selected < 0 || selected >= g_SkillsCount))
+    if (ImGui::IsItemHovered() && skill_at(selected) == nullptr)
     {
         ImGui::SetTooltip("Click a skill row first");
     }
@@ -203,10 +220,14 @@ void TabSkills_Draw()
 
         float reportSkillSum = 0.0f;
 
-        for (int i = 0; i < g_SkillsCount; i++)
+        for (uint32_t i = 0; i < g_SkillsManager.Count; i++)
         {
-            const CSkill &skill = g_Skills[i];
-            string nameBuf = skill.GetName();
+            const CSkill *skill = g_SkillsManager.Get(i);
+            if (skill == nullptr)
+            {
+                continue;
+            }
+            string nameBuf = skill->Name;
 
             if (nameBuf.length() < 8)
             {
@@ -223,12 +244,12 @@ void TabSkills_Draw()
 
             result += nameBuf;
 
-            reportSkillSum += skill.GetValue();
+            reportSkillSum += skill->Value;
 
             char buf[64];
-            if (skill_value_equal(skill.GetValue(), skill.GetOldValue()))
+            if (skill_value_equal(skill->Value, skill->OldValue))
             {
-                snprintf(buf, sizeof(buf), "%.1f\n", skill.GetValue());
+                snprintf(buf, sizeof(buf), "%.1f\n", skill->Value);
             }
             else
             {
@@ -236,8 +257,8 @@ void TabSkills_Draw()
                     buf,
                     sizeof(buf),
                     "%.1f\t%.1f\n",
-                    skill.GetValue(),
-                    skill.GetValue() - skill.GetOldValue());
+                    skill->Value,
+                    skill->Value - skill->OldValue);
             }
 
             result += buf;
@@ -246,14 +267,14 @@ void TabSkills_Draw()
         char buf[128];
         if (g_Player != nullptr)
         {
-            const int statCap = g_Player->GetStr() + g_Player->GetInt() + g_Player->GetDex();
+            const int statCap = g_Player->Str + g_Player->Int + g_Player->Dex;
             snprintf(
                 buf,
                 sizeof(buf),
                 "Str %i Int %i Dex %i\n___Skillcap: %.1f Statcap: %i___\n",
-                g_Player->GetStr(),
-                g_Player->GetInt(),
-                g_Player->GetDex(),
+                g_Player->Str,
+                g_Player->Int,
+                g_Player->Dex,
                 reportSkillSum,
                 statCap);
         }
@@ -271,9 +292,13 @@ void TabSkills_Draw()
     {
         // was on_bt_Reset_SkillsDelta_clicked: OldValue = Value for all
         // skills (deltas only - no packet, no server interaction)
-        for (int i = g_SkillsCount - 1; i >= 0; i--)
+        for (uint32_t i = 0; i < g_SkillsManager.Count; i++)
         {
-            g_Skills[i].SetOldValue(g_Skills[i].GetValue());
+            CSkill *skill = g_SkillsManager.Get(i);
+            if (skill != nullptr)
+            {
+                skill->OldValue = skill->Value;
+            }
         }
     }
 }

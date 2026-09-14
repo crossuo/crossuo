@@ -13,8 +13,8 @@
 #include "../script/journal.h"    // the script journal ring (the g_JournalManager port)
 #include "../script/scripthandle.h" // ScriptManager_Terminate (the running-script registry)
 #include "../config/assistantconfig.h"
-#include "../model/gameobjects/gameworld.h"
-#include "../model/gameobjects/gameplayer.h"
+#include "world.h"
+#include "worldutil.h"
 #include "../managers/spellmanager.h"
 #include "../managers/skillmanager.h"
 #include "../managers/menumanager.h"
@@ -523,7 +523,7 @@ HCOMMAND(usetype)
 
     if (found != nullptr)
     {
-        g_Assistant.DoubleClick(found->GetSerial());
+        g_Assistant.DoubleClick(found->Serial);
     }
 }
 
@@ -564,7 +564,7 @@ HCOMMAND(usefromground)
 
     if (found != nullptr)
     {
-        g_Assistant.DoubleClick(found->GetSerial());
+        g_Assistant.DoubleClick(found->Serial);
     }
 }
 
@@ -846,7 +846,7 @@ HCOMMAND(warmode)
         state = (uint)CAssistant::RawStringToBool(args[0]);
     }
 
-    uchar warmode = (uchar)!g_Player->GetWarmode();
+    uchar warmode = (uchar)!g_Player->Warmode;
 
     if (state < 2)
     {
@@ -1215,11 +1215,11 @@ HCOMMAND(setarm)
     {
         QFOR(item, g_Player->m_Items, CGameItem *)
         {
-            int layer = item->GetEquipLayer();
+            int layer = EquipLayer(item);
 
             if ((layer != 0) && layer <= OL_2_HAND)
             {
-                (*list).m_Items[layer] = item->GetSerial();
+                (*list).m_Items[layer] = item->Serial;
             }
         }
     }
@@ -1276,11 +1276,11 @@ HCOMMAND(setdress)
     {
         QFOR(item, g_Player->m_Items, CGameItem *)
         {
-            int layer = item->GetEquipLayer();
+            int layer = EquipLayer(item);
 
             if (layer > OL_2_HAND && layer < OL_MOUNT && layer != OL_BACKPACK && g_LayerSafe[layer])
             {
-                (*list).m_Items[layer] = item->GetSerial();
+                (*list).m_Items[layer] = item->Serial;
             }
         }
     }
@@ -1539,7 +1539,7 @@ HCOMMAND(ignorereset)
         return;
     }
 
-    g_World->IgnoreReset();
+    IgnoreReset();
 }
 
 HCOMMAND(infogump)

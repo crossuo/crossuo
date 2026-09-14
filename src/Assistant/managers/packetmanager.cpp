@@ -22,14 +22,12 @@
 #include "../managers/spellmanager.h"
 #include "../managers/trademanager.h"
 #include "../macros/macroexecutor.h" // g_MacroExecutor (macro recording/playing taps)
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h"
-#include "../model/commonitems/skill.h"
+#include "../core/world.h"
 #include "../model/commonitems/journalmessage.h"
 #include <common/str.h> // str_from/wstr_from (wstr <-> utf8)
 #include "Managers/ClilocManager.h" // ::g_ClilocManager (client)
-#include "Managers/ColorManager.h" // ::g_ColorManager
 #include "Managers/CorpseManager.h" // ::g_CorpseManager (corpse auto-open)
+#include "Managers/SkillsManager.h" // ::g_SkillsManager (the client skill table)
 #include "Party.h" // ::g_Party (shared party data)
 
 #define LOGGER_MODULE Assistant
@@ -101,7 +99,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     RMSGH("Health status bar update (KR)", PACKET_VARIABLE_SIZE, NewHealthbarUpdate),
     /*0x18*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x19*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x1A*/ RMSGH("Update Item", PACKET_VARIABLE_SIZE, UpdateItem),
+    /*0x1A*/ RMSG("Update Item", PACKET_VARIABLE_SIZE),
     /*0x1B*/ RMSGH("Enter World", 0x25, EnterWorld),
     /*0x1C*/ RMSGH("Server Talk", PACKET_VARIABLE_SIZE, Talk),
     /*0x1D*/ RMSGH("Delete Object", 0x05, DeleteObject),
@@ -112,7 +110,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x22*/ BMSGH("Confirm Walk", 0x03, Resend, ConfirmWalk),
     /*0x23*/ RMSG("Drag Animation", 0x1a),
     /*0x24*/ RMSGH("Open Container", 0x07, OpenContainer),
-    /*0x25*/ RMSGH("Update Contained Item", 0x14, UpdateContainedItem),
+    /*0x25*/ RMSG("Update Contained Item", 0x14),
     /*0x26*/ UMSG(0x05),
     /*0x27*/ RMSG("Deny Move Item", 0x02),
     /*0x28*/ UMSG(0x05),
@@ -137,8 +135,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     BMSGH("Update Skills", PACKET_VARIABLE_SIZE, UpdateSkillsS, UpdateSkillsR),
     /*0x3B*/
     BMSGH("Vendor Buy Reply", PACKET_VARIABLE_SIZE, BuyReplyS, BuyReplyR),
-    /*0x3C*/
-    RMSGH("Update Contained Items", PACKET_VARIABLE_SIZE, UpdateContainedItems),
+    /*0x3C*/ RMSG("Update Contained Items", PACKET_VARIABLE_SIZE),
     /*0x3D*/ UMSG(0x02),
     /*0x3E*/ UMSG(0x25),
     /*0x3F*/ RMSG("Update Statics (God Client)", PACKET_VARIABLE_SIZE),
@@ -193,7 +190,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     BMSGH("Secure Trading", PACKET_VARIABLE_SIZE, SecureTradingS, SecureTradingR),
     /*0x70*/ RMSGH("Graphic Effect", 0x1c, GraphicEffect),
     /*0x71*/ BMSG("Bulletin Board Data", PACKET_VARIABLE_SIZE),
-    /*0x72*/ BMSGH("War Mode", 0x05, WarmodeS, WarmodeR),
+    /*0x72*/ SMSGH("War Mode", 0x05, WarmodeS),
     /*0x73*/ BMSG("Ping", 0x02),
     /*0x74*/ RMSGH("Vendor Buy List", PACKET_VARIABLE_SIZE, BuyList),
     /*0x75*/ SMSG("Rename Character", 0x23),
@@ -215,7 +212,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x85*/ RMSG("Character List Notification", 0x02),
     /*0x86*/ RMSG("Resend Character List", PACKET_VARIABLE_SIZE),
     /*0x87*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x88*/ RMSGH("Open Paperdoll", 0x42, OpenPaperdoll),
+    /*0x88*/ RMSG("Open Paperdoll", 0x42),
     /*0x89*/ RMSG("Corpse Equipment", PACKET_VARIABLE_SIZE),
     /*0x8A*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x8B*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -333,7 +330,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
         "Krrios client special", PACKET_VARIABLE_SIZE, KrriosClientSpecialS, KrriosClientSpecialR),
     /*0xF1*/ BMSG("Freeshard List", PACKET_VARIABLE_SIZE),
     /*0xF2*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xF3*/ RMSGH("Update Item (SA)", 0x18, UpdateItemSA),
+    /*0xF3*/ RMSG("Update Item (SA)", 0x18),
     /*0xF4*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xF5*/ RMSGH("Display New Map", 0x15, DisplayMap),
     /*0xF6*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -463,10 +460,9 @@ static void AssistantPackets_Init()
 }
 
 // The assistant's "logged in" gate: handlers only run while the assistant
-// considers itself connected (the original app relied on the host's OnDisconnect
-// callback; in-process the game stage is the disconnect signal, mirroring the
-// assistant lifecycle of Phase 0 / ADR D10). Handshake packets are let through
-// so the state machine can engage (EnterWorld/LoginComplete set g_Connected).
+// considers itself connected, and the game stage is the disconnect signal.
+// Handshake packets are let through so the state machine can engage
+// (EnterWorld/LoginComplete set g_Connected).
 static bool AssistantPackets_GameStage()
 {
     return g_GameState == GS_GAME || g_GameState == GS_GAME_BLOCKED;
@@ -474,11 +470,11 @@ static bool AssistantPackets_GameStage()
 
 static void AssistantPackets_CheckDisconnect()
 {
-    if ((g_Connected || g_World != nullptr) && !AssistantPackets_GameStage())
+    if (g_Connected && !AssistantPackets_GameStage())
     {
-        // Original host callback (mainscript.cpp OnClientDisconnect):
-        // delete the mirror world and drop the connected flag.
-        RELEASE_POINTER(g_World);
+        // The client tears its own world down on the same stage change; the
+        // assistant drops its connected flag and resets its own state only.
+        g_MacroExecutor.Reset();
         g_Connected = false;
     }
 }
@@ -521,6 +517,16 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
 }
 
 #define PACKET_HANDLER(name) bool CPacketManager::Handle##name()
+
+// The dead body graphics the client treats as dead (CGameCharacter::IsDead)
+static bool dead_body_graphic(ushort graphic)
+{
+    return (
+        IN_RANGE(graphic, 0x0192, 0x0193) || /*dead h_male, h_female*/
+        IN_RANGE(graphic, 0x025F, 0x0260) || /*dead elf h_male1, h_female1*/
+        IN_RANGE(graphic, 0x02B6, 0x02B7) || /*dead gargoyle_male, gargoyle_female*/
+        0);
+}
 
 static string to_lower(string text)
 {
@@ -583,16 +589,7 @@ PACKET_HANDLER(LoginComplete)
 PACKET_HANDLER(EnterWorld)
 {
     uint serial = ReadUInt32BE();
-    bool runAutostart = false;
-
-    if (g_World != nullptr)
-    {
-        Warning(Assistant, "Error!!! Duplicate enter world message\n");
-    }
-    else
-    {
-        runAutostart = true;
-    }
+    bool runAutostart = g_World == nullptr;
 
     g_LastPlayerCorpsePosition = CPoint2Di(-1, -1);
     g_LastPlayerDeadTimer = 0;
@@ -610,34 +607,23 @@ PACKET_HANDLER(EnterWorld)
     g_MenuReceived = false;
     g_GumpReceived = false;
     g_PromptReceived = false;
-    g_Target.ClearHooks(); // was: g_Target.ClearHooks(); (assist/target round)
-    // was g_TabMacros->Reset(): discard any open recording
-    // and stop playback - the old world's macro state never leaks across
-    // login sessions.
+    g_Target.ClearHooks();
+    // discard any open recording and stop playback - macro state never
+    // leaks across login sessions
     g_MacroExecutor.Reset();
 
-    RELEASE_POINTER(g_World);
+    // the client handler owns the world (re)creation and the player parse;
+    // the assistant reads only what its own state needs
+    Move(4); // unused
 
-    g_World = new CGameWorld(serial);
-
-    Move(4);
-
-    g_Player->SetGraphic(ReadUInt16BE());
-    g_OriginalGraphic = g_Player->GetGraphic();
-
-    g_Player->SetX(ReadUInt16BE());
-    g_Player->SetY(ReadUInt16BE());
-    Move(1);
-    g_Player->SetZ(ReadUInt8());
-    g_Player->SetDirection(ReadUInt8());
+    g_OriginalGraphic = ReadUInt16BE(); // the player body graphic
 
     Info(Assistant, "Player 0x%08X entered the world.\n", serial);
 
     g_Connected = true;
 
-    // was: g_AssistantForm->LoadProfileBySerial(serial);
     g_AssistantConfig.LoadProfileBySerial(serial);
-    if (g_Player->Dead() && g_AssistantConfig.NoGrayScreen())
+    if (dead_body_graphic(g_OriginalGraphic) && g_AssistantConfig.NoGrayScreen())
     {
         pack16(Start + 9, 0x03DB);
         g_OriginalGraphic = 0x03DB;
@@ -680,18 +666,14 @@ PACKET_HANDLER(UpdateHitpoints)
         return true;
     }
 
-    obj->SetMaxHits(ReadInt16BE());
-    obj->SetHits(ReadInt16BE());
-
-    if (obj->IsPlayer())
+    // the client handler carries the values into the world object; the
+    // assistant keeps only its own reactions
+    if (serial == g_PlayerSerial)
     {
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION: was g_UOMapManager.UpdateHits() - an
-        // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
-    // was: if (g_Map != nullptr && g_Map->isVisible()) g_Map->CheckForUpdate(serial);
-    g_AssistantEvents->OnMapUpdate(obj->GetSerial());
+    g_AssistantEvents->OnMapUpdate(serial);
 
     return true;
 }
@@ -712,17 +694,12 @@ PACKET_HANDLER(UpdateMana)
         return true;
     }
 
-    obj->SetMaxMana(ReadInt16BE());
-    obj->SetMana(ReadInt16BE());
-
-    if (obj->IsPlayer())
+    if (serial == g_PlayerSerial)
     {
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION: was g_UOMapManager.UpdateMana() - an
-        // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
-    g_AssistantEvents->OnMapUpdate(obj->GetSerial());
+    g_AssistantEvents->OnMapUpdate(serial);
 
     return true;
 }
@@ -743,17 +720,12 @@ PACKET_HANDLER(UpdateStamina)
         return true;
     }
 
-    obj->SetMaxStam(ReadInt16BE());
-    obj->SetStam(ReadInt16BE());
-
-    if (obj->IsPlayer())
+    if (serial == g_PlayerSerial)
     {
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION: was g_UOMapManager.UpdateStam() - an
-        // external-UOAM WM_USER notify; the client status gump carries it.
     }
 
-    g_AssistantEvents->OnMapUpdate(obj->GetSerial());
+    g_AssistantEvents->OnMapUpdate(serial);
 
     return true;
 }
@@ -774,23 +746,12 @@ PACKET_HANDLER(MobileAttributes)
         return true;
     }
 
-    obj->SetMaxHits(ReadInt16BE());
-    obj->SetHits(ReadInt16BE());
-
-    if (obj->IsPlayer())
+    if (serial == g_PlayerSerial)
     {
-        obj->SetMaxMana(ReadInt16BE());
-        obj->SetMana(ReadInt16BE());
-
-        obj->SetMaxStam(ReadInt16BE());
-        obj->SetStam(ReadInt16BE());
-
         g_AssistantEvents->OnTitleRedraw();
-        // DEVIATION: was g_UOMapManager.UpdateHits/Mana/Stam() -
-        // external-UOAM WM_USER notifies; the client status gump carries them.
     }
 
-    g_AssistantEvents->OnMapUpdate(obj->GetSerial());
+    g_AssistantEvents->OnMapUpdate(serial);
 
     return true;
 }
@@ -811,60 +772,10 @@ PACKET_HANDLER(NewHealthbarUpdate)
         return true;
     }
 
-    ushort count = ReadUInt16BE();
-
-    for (int i = 0; i < count; i++)
+    if (serial == g_PlayerSerial)
     {
-        ushort type = ReadUInt16BE();
-        uchar enable = ReadUInt8(); // enable/disable
-
-        uchar flags = obj->GetFlags();
-
-        if (type == 1) // Poison, enable as poisonlevel + 1
-        {
-            if (enable != 0u)
-            {
-                if (m_ClientVersion >= CV_7000)
-                {
-                    obj->SetSA_Poisoned(true);
-                }
-                else
-                {
-                    flags |= 0x04;
-                }
-            }
-            else
-            {
-                if (m_ClientVersion >= CV_7000)
-                {
-                    obj->SetSA_Poisoned(false);
-                }
-                else
-                {
-                    flags &= ~0x04;
-                }
-            }
-        }
-        else if (type == 2) // Yellow hits
-        {
-            if (enable != 0u)
-            {
-                flags |= 0x08;
-            }
-            else
-            {
-                flags &= ~0x08;
-            }
-        }
-        else if (type == 3) // Red?
-        {
-        }
-
-        obj->SetFlags(flags);
-    }
-
-    if (obj->IsPlayer())
-    {
+        // the client handler applies the poison/yellow flag bits to the
+        // world object; the assistant redraws its own title row
         g_AssistantEvents->OnTitleRedraw();
     }
 
@@ -880,26 +791,11 @@ PACKET_HANDLER(UpdatePlayer)
 
     uint serial = ReadUInt32BE();
     ushort graphic = ReadUInt16BE();
-    uchar graphicIncrement = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    ushort serverID = ReadUInt16BE();
-    uchar direction = ReadUInt8();
-    char z = ReadUInt8();
 
-    bool oldDead = g_Player->Dead();
-
-    g_World->UpdatePlayer(
-        serial, graphic, graphicIncrement, color, flags, x, y, serverID, direction, z);
-
-    if (g_MorphGraphic != 0u)
-    {
-        pack16(Start + 5, g_MorphGraphic);
-    }
-
-    if (g_Player->Dead())
+    // the client handler carries the body update into the world; the
+    // assistant edits the packet (morph / no-gray-screen) and tracks the
+    // alive -> dead transition for its corpse marker
+    if (serial == g_PlayerSerial && dead_body_graphic(graphic))
     {
         if (g_AssistantConfig.NoGrayScreen())
         {
@@ -907,11 +803,18 @@ PACKET_HANDLER(UpdatePlayer)
             Start[7] = 0;
         }
 
-        if (oldDead != g_Player->Dead())
+        // only the corpse stamp is transition-gated; the patch above fires on
+        // every packet carrying a dead-body graphic (pre-image behavior)
+        if (!g_Player->IsDead())
         {
             g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
             g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
         }
+    }
+
+    if (g_MorphGraphic != 0u)
+    {
+        pack16(Start + 5, g_MorphGraphic);
     }
 
     return true;
@@ -938,78 +841,20 @@ PACKET_HANDLER(CharacterStatus)
         return true;
     }
 
-    obj->SetName(ReadStringChecked(30).c_str());
+    g_AssistantEvents->OnMapUpdate(serial);
 
-    obj->SetHits(ReadInt16BE());
-    obj->SetMaxHits(ReadInt16BE());
-
-    g_AssistantEvents->OnMapUpdate(obj->GetSerial());
-
-    obj->SetCanChangeName(ReadUInt8() != 0);
-
+    // the client handler parses the name, hits and the flag-gated stat block
+    // into the world object; the assistant keeps its own reactions
+    Move(30); // name
+    Move(2); // hits
+    Move(2); // max hits
+    Move(1); // can-change-name
     uchar flag = ReadUInt8();
 
-    if (flag > 0)
+    if (flag > 0 && serial == g_PlayerSerial)
     {
-        obj->SetSex(ReadUInt8() != 0u);
-
-        if (serial == g_PlayerSerial)
-        {
-            g_Player->SetStr(ReadInt16BE());
-            g_Player->SetDex(ReadInt16BE());
-            g_Player->SetInt(ReadInt16BE());
-
-            g_Player->SetStam(ReadInt16BE());
-            g_Player->SetMaxStam(ReadInt16BE());
-            g_Player->SetMana(ReadInt16BE());
-            g_Player->SetMaxMana(ReadInt16BE());
-            g_Player->SetGold(ReadUInt32BE());
-            g_Player->SetArmor(ReadInt16BE());
-            g_Player->SetWeight(ReadUInt16BE());
-
-            // DEVIATION: was g_UOMapManager.UpdateHits/Mana/Stam()
-            // - external-UOAM WM_USER notifies only; the client status gump
-            // already carries these values in-process.
-
-            if (flag >= 5)
-            {
-                g_Player->SetMaxWeight(ReadUInt16BE());
-                g_Player->SetRace(RACE_TYPE(ReadUInt8()));
-            }
-            else
-            {
-                if (m_ClientVersion >= CV_500A)
-                {
-                    g_Player->SetMaxWeight(7 * (g_Player->GetStr() / 2) + 40);
-                }
-                else
-                {
-                    g_Player->SetMaxWeight((g_Player->GetStr() * 4) + 25);
-                }
-            }
-
-            if (flag >= 3)
-            {
-                g_Player->SetStatsCap(ReadUInt16BE());
-                g_Player->SetFollowers(ReadUInt8());
-                g_Player->SetMaxFollowers(ReadUInt8());
-            }
-
-            if (flag >= 4)
-            {
-                g_Player->SetFireResistance(ReadInt16BE());
-                g_Player->SetColdResistance(ReadInt16BE());
-                g_Player->SetPoisonResistance(ReadInt16BE());
-                g_Player->SetEnergyResistance(ReadInt16BE());
-                g_Player->SetLuck(ReadInt16BE());
-                g_Player->SetMinDamage(ReadInt16BE());
-                g_Player->SetMaxDamage(ReadInt16BE());
-                g_Player->SetTithingPoints(ReadUInt32BE());
-            }
-
-            g_AssistantEvents->OnSkillsRefreshed();
-            g_AssistantEvents->OnTitleRedraw();
-        }
+        g_AssistantEvents->OnSkillsRefreshed();
+        g_AssistantEvents->OnTitleRedraw();
     }
 
     if (serial == g_LastStatusRequest)
@@ -1018,149 +863,7 @@ PACKET_HANDLER(CharacterStatus)
         g_LastStatusObject = serial;
     }
 
-    g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateItem)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    UPDATE_GAME_OBJECT_TYPE updateType = UGOT_ITEM;
-    uint serial = ReadUInt32BE();
-    ushort count = 0;
-    uchar graphicIncrement = 0;
-    uchar direction = 0;
-    ushort color = 0;
-    uchar flags = 0;
-
-    if ((serial & 0x80000000) != 0u)
-    {
-        serial &= 0x7FFFFFFF;
-        count = 1;
-    }
-
-    ushort graphic = ReadUInt16BE();
-
-    if ((graphic & 0x8000) != 0)
-    {
-        graphic &= 0x7FFF;
-        graphicIncrement = ReadUInt8();
-    }
-
-    if (count != 0u)
-    {
-        count = ReadUInt16BE();
-    }
-    else
-    {
-        count++;
-    }
-
-    ushort x = ReadUInt16BE();
-
-    if ((x & 0x8000) != 0)
-    {
-        x &= 0x7FFF;
-        direction = 1;
-    }
-
-    ushort y = ReadUInt16BE();
-
-    if ((y & 0x8000) != 0)
-    {
-        y &= 0x7FFF;
-        color = 1;
-    }
-
-    if ((y & 0x4000) != 0)
-    {
-        y &= 0x3FFF;
-        flags = 1;
-    }
-
-    if (direction != 0u)
-    {
-        direction = ReadUInt8();
-    }
-
-    auto z = ReadInt8();
-    if (color != 0u)
-    {
-        color = ReadUInt16BE();
-    }
-
-    if (flags != 0u)
-    {
-        flags = ReadUInt8();
-    }
-
-    if (graphic >= 0x4000)
-    {
-        updateType = UGOT_MULTI;
-    }
-
-    if (serial != g_PlayerSerial)
-    {
-        g_World->UpdateGameObject(
-            serial,
-            graphic,
-            graphicIncrement,
-            count,
-            x,
-            y,
-            z,
-            direction,
-            color,
-            flags,
-            count,
-            updateType,
-            1);
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateItemSA)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    Move(2);
-    auto updateType = UPDATE_GAME_OBJECT_TYPE(ReadUInt8());
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    uchar graphicIncrement = ReadUInt8();
-    ushort count = ReadUInt16BE();
-    ushort unknown = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    char z = ReadInt8();
-    uchar direction = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    ushort unknown2 = ReadUInt16BE();
-
-    g_World->UpdateGameObject(
-        serial,
-        graphic,
-        graphicIncrement,
-        count,
-        x,
-        y,
-        z,
-        direction,
-        color,
-        flags,
-        unknown,
-        updateType,
-        unknown2);
+    g_AssistantEvents->OnInspectorUpdate(serial);
 
     return true;
 }
@@ -1174,51 +877,45 @@ PACKET_HANDLER(UpdateObject)
 
     uint serial = ReadUInt32BE();
     ushort graphic = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    uchar z = ReadUInt8();
-    uchar direction = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    uchar notoriety = ReadUInt8();
+    Move(2); // x
+    Move(2); // y
+    Move(1); // z
+    Move(1); // direction
+    Move(2); // color
+    Move(1); // flags
+    Move(1); // notoriety
 
     if (serial == g_PlayerSerial)
     {
-        if (g_Player != nullptr)
+        // the client handler applies the body update to the player object;
+        // the assistant edits the packet (morph / no-gray-screen) and tracks
+        // the alive -> dead transition for its corpse marker
+        g_OriginalGraphic = graphic;
+
+        // NOTE: Start + 7 lands on the X field of the 0x78 layout (id 1, serial
+        // 4, graphic 2, x) — this offset is the long-standing upstream assistant
+        // behavior, not the graphic field (Start + 5); do not "fix" it blindly.
+        if (g_MorphGraphic != 0u)
         {
-            bool oldDead = g_Player->Dead();
+            pack16(Start + 7, g_MorphGraphic);
+        }
 
-            g_Player->SetGraphic(graphic);
-            g_Player->SetColor(g_ColorManager.FixColor(color, 0));
-            g_Player->SetFlags(flags);
-
-            g_OriginalGraphic = graphic;
-
-            if (g_MorphGraphic != 0u)
+        if (g_Player != nullptr && dead_body_graphic(graphic))
+        {
+            if (g_AssistantConfig.NoGrayScreen())
             {
-                pack16(Start + 7, g_MorphGraphic);
+                g_OriginalGraphic = 0x03DB;
             }
+            pack16(Start + 7, 0x03DB);
 
-            if (g_Player->Dead())
+            // only the corpse stamp is transition-gated; the patch above fires
+            // on every packet carrying a dead-body graphic (pre-image behavior)
+            if (!g_Player->IsDead())
             {
-                if (g_AssistantConfig.NoGrayScreen())
-                {
-                    g_OriginalGraphic = 0x03DB;
-                }
-                pack16(Start + 7, 0x03DB);
-
-                if (oldDead != g_Player->Dead())
-                {
-                    g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
-                    g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
-                }
+                g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
+                g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
             }
         }
-    }
-    else
-    {
-        g_World->UpdateGameObject(
-            serial, graphic, 0, 0, x, y, z, direction, color, flags, 0, UGOT_ITEM, 1);
     }
 
     CGameObject *obj = g_World->FindWorldObject(serial);
@@ -1228,14 +925,15 @@ PACKET_HANDLER(UpdateObject)
         return true;
     }
 
-    if (obj->GetNPC())
+    if (obj->NPC)
     {
-        ((CGameCharacter *)obj)->SetNotoriety(notoriety);
-        g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
+        // the client handler stores the notoriety byte; the assistant asks
+        // the server for the status of characters it knows nothing about
+        g_AssistantEvents->OnInspectorUpdate(serial);
 
-        if (((CGameCharacter *)obj)->GetMaxHits() == 0)
+        if (((CGameCharacter *)obj)->MaxHits == 0)
         {
-            g_Assistant.GetStatus(obj->GetSerial());
+            g_Assistant.GetStatus(serial);
         }
     }
 
@@ -1250,42 +948,23 @@ PACKET_HANDLER(UpdateObject)
     {
         ushort itemGraphic = ReadUInt16BE();
         uchar layer = ReadUInt8();
-        ushort itemColor = 0;
-
         if (m_ClientVersion >= CV_70331)
         {
-            itemColor = ReadUInt16BE();
+            Move(2); // item color
         }
         else if ((itemGraphic & 0x8000) != 0)
         {
-            itemGraphic &= 0x7FFF;
-            itemColor = ReadUInt16BE();
+            Move(2); // item color
         }
-
-        CGameItem *item = g_World->GetWorldItem(itemSerial);
-
-        item->SetMapIndex(g_CurrentMap);
-
-        item->SetGraphic(itemGraphic);
-        item->SetTiledataFlags(g_GetStaticFlags(itemGraphic));
-        item->SetColor(g_ColorManager.FixColor(itemColor, 0));
 
         if (layer == OL_BACKPACK && obj->IsPlayer())
         {
             g_Backpack = itemSerial;
         }
 
-        g_AssistantEvents->OnInspectorUpdate(item->GetSerial());
-        g_World->PutEquipment(item, obj, layer);
-
-        g_World->MoveToTop(item);
+        g_AssistantEvents->OnInspectorUpdate(itemSerial);
 
         itemSerial = ReadUInt32BE();
-    }
-
-    if (obj->IsPlayer())
-    {
-        g_Player->UpdateAbilities();
     }
 
     return true;
@@ -1298,127 +977,21 @@ PACKET_HANDLER(EquipItem)
         return true;
     }
 
+    // the client handler equips the item into its container; the assistant
+    // tracks the player's backpack serial and refreshes its inspector
     uint serial = ReadUInt32BE();
-
-    CGameItem *obj = g_World->GetWorldItem(serial);
-    obj->SetMapIndex(g_CurrentMap);
-    ushort graphic = ReadUInt16BE();
-    obj->SetGraphic(graphic);
-    obj->SetTiledataFlags(g_GetStaticFlags(graphic));
-    Move(1);
+    Move(2); // graphic
+    Move(1); // layer padding
     int layer = ReadUInt8();
     uint cserial = ReadUInt32BE();
-    obj->SetColor(g_ColorManager.FixColor(ReadUInt16BE(), 0));
+    Move(2); // color
 
-    g_World->PutEquipment(obj, cserial, layer);
-
-    if (layer >= OL_BUY_RESTOCK && layer <= OL_SELL)
-    {
-        obj->Clear();
-    }
-    else if (layer == OL_BACKPACK && cserial == g_PlayerSerial)
+    if (layer == OL_BACKPACK && cserial == g_PlayerSerial)
     {
         g_Backpack = serial;
     }
 
-    if (cserial == g_PlayerSerial && (layer == OL_1_HAND || layer == OL_2_HAND))
-    {
-        g_Player->UpdateAbilities();
-    }
-
-    g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateContainedItem)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    uchar graphicIncrement = ReadUInt8();
-    ushort count = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-
-    if (m_ClientVersion >= CV_6017)
-    {
-        Move(1);
-    }
-
-    uint containerSerial = ReadUInt32BE();
-    ushort color = ReadUInt16BE();
-
-    CGameItem *contobj = g_World->FindWorldItem(containerSerial);
-
-    // do not update items inside spellbook. Bug with oldstyle spellbooks.
-    if (contobj != nullptr && contobj->GetGraphic() == 0x0EFA)
-    {
-        return true;
-    }
-
-    g_World->UpdateContainedItem(
-        serial, graphic, graphicIncrement, count, x, y, containerSerial, color);
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateContainedItems)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    ushort itemsCount = ReadUInt16BE();
-
-    for (int i = 0; i < itemsCount; i++)
-    {
-        uint serial = ReadUInt32BE();
-        ushort graphic = ReadUInt16BE();
-        uchar graphicIncrement = ReadUInt8();
-        ushort count = ReadUInt16BE();
-        ushort x = ReadUInt16BE();
-        ushort y = ReadUInt16BE();
-
-        if (m_ClientVersion >= CV_6017)
-        {
-            Move(1);
-        }
-
-        uint containerSerial = ReadUInt32BE();
-        ushort color = ReadUInt16BE();
-
-        if (i == 0)
-        {
-            CGameObject *container = g_World->FindWorldObject(containerSerial);
-
-            if (container != nullptr)
-            {
-                // do not update items inside spellbook. Bug with oldstyle spellbooks.
-                if (container->GetGraphic() == 0x0EFA)
-                {
-                    break;
-                }
-
-                if (container->IsCorpse())
-                {
-                    container->ClearUnequipped();
-                }
-                else
-                {
-                    container->Clear();
-                }
-            }
-        }
-
-        g_World->UpdateContainedItem(
-            serial, graphic, graphicIncrement, count, x, y, containerSerial, color);
-    }
+    g_AssistantEvents->OnInspectorUpdate(serial);
 
     return true;
 }
@@ -1441,44 +1014,30 @@ PACKET_HANDLER(DeleteObject)
 
     if (obj != nullptr)
     {
-        bool updateAbilities = false;
+        // the client handler owns the removal (party members and corpses stay
+        // on purpose); the assistant keeps only its own bookkeeping
         CGameObject *top = obj->GetTopObject();
 
         if (top != nullptr && top->IsPlayer())
         {
-            g_AssistantEvents->OnTitleRedraw(obj->GetSerial());
-
-            CGameItem *item = (CGameItem *)obj;
-            updateAbilities = (item->GetLayer() == OL_1_HAND || item->GetLayer() == OL_2_HAND);
+            g_AssistantEvents->OnTitleRedraw(serial);
         }
         else if (EnabledCommandRemovedPtrPosition())
         {
-            if (obj->GetSerial() == g_LastTargetObject)
+            if (serial == g_LastTargetObject)
             {
                 g_LastTargetPosition = CPoint2Di(obj->GetX(), obj->GetY());
             }
-            else if (obj->GetSerial() == g_LastAttackObject)
+            else if (serial == g_LastAttackObject)
             {
                 g_LastAttackPosition = CPoint2Di(obj->GetX(), obj->GetY());
             }
         }
 
-        if (g_Party.Contains((int)obj->GetSerial()))
+        if (g_Party.Contains((int)serial))
         {
-            g_Party.SetMemberInfo(
-                obj->GetSerial(),
-                obj->GetX(),
-                obj->GetY(),
-                obj->GetMapIndex(),
-                obj->GetName());
-            g_AssistantEvents->OnMapUpdate(obj->GetSerial());
-        }
-
-        g_World->RemoveObject(obj);
-
-        if (updateAbilities)
-        {
-            g_Player->UpdateAbilities();
+            g_Party.SetMemberInfo(serial, obj->GetX(), obj->GetY(), obj->MapIndex, obj->GetName());
+            g_AssistantEvents->OnMapUpdate(serial);
         }
     }
 
@@ -1500,33 +1059,12 @@ PACKET_HANDLER(UpdateCharacter)
         return true;
     }
 
-    ushort graphic = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    auto z = ReadUInt8();
-    uchar direction = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    uchar notoriety = ReadUInt8();
-
-    obj->SetNotoriety(notoriety);
-
-    if (obj->IsPlayer())
+    // the client handler applies the update; the assistant asks the server
+    // for the status of characters it knows nothing about
+    if (!obj->IsPlayer() && obj->MaxHits == 0)
     {
-        obj->SetFlags(flags);
+        g_Assistant.GetStatus(serial);
     }
-    else
-    {
-        if (obj->GetMaxHits() == 0)
-        {
-            g_Assistant.GetStatus(serial);
-        }
-
-        g_World->UpdateGameObject(
-            serial, graphic, 0, 0, x, y, z, direction, color, flags, 0, UGOT_ITEM, 1);
-    }
-
-    g_World->MoveToTop(obj);
 
     return true;
 }
@@ -1543,24 +1081,18 @@ PACKET_HANDLER(WarmodeS)
     return true;
 }
 
-PACKET_HANDLER(WarmodeR)
-{
-    if (g_World != nullptr)
-    {
-        g_Player->SetWarmode(ReadUInt8() != 0u);
-        g_World->MoveToTop(g_Player);
-    }
-
-    return true;
-}
-
 PACKET_HANDLER(UpdateSkillsS)
 {
+    // the lock-change request: the client skill table is updated
+    // optimistically so the skills tab reflects the requested state before
+    // the server echo
     ushort id = ReadUInt16BE();
+    char lock = ReadInt8();
 
-    if (id < g_SkillsCount)
+    CSkill *skill = g_SkillsManager.Get(id);
+    if (skill != nullptr)
     {
-        g_Skills[id].SetStatus(ReadInt8());
+        skill->Status = (uint8_t)lock;
         g_AssistantEvents->OnSkillUpdated(id);
     }
 
@@ -1590,27 +1122,24 @@ PACKET_HANDLER(UpdateSkillsR)
             id--;
         }
 
-        ushort baseVal = ReadUInt16BE();
+        Move(2); // base value
         ushort realVal = ReadUInt16BE();
-        char lock = ReadInt8();
-        ushort cap = 0;
+        Move(1); // lock
 
         if (haveCap)
         {
-            cap = ReadUInt16BE();
+            Move(2); // cap
         }
 
-        if (id < g_SkillsCount)
+        // the client handler fills BaseValue/Value/Cap/Status; the assistant
+        // seeds its skill-delta baseline (the real value) on the first update
+        if (id < g_SkillsManager.Count)
         {
-            CSkill &skill = g_Skills[id];
-            skill.SetBaseValue((float)(baseVal / 10.0f));
-            skill.SetValue((float)(realVal / 10.0f));
-            if ((int)skill.GetOldValue() == 0)
+            CSkill *skill = g_SkillsManager.Get(id);
+            if (skill != nullptr && skill->OldValue == 0.0f)
             {
-                skill.SetOldValue(skill.GetValue());
+                skill->OldValue = (float)(realVal / 10.0f);
             }
-            skill.SetCap((float)(cap / 10.0f));
-            skill.SetStatus(lock);
 
             g_AssistantEvents->OnSkillUpdated(id);
         }
@@ -1799,12 +1328,6 @@ PACKET_HANDLER(Talk)
     {
         if (obj != nullptr)
         {
-            if (obj->GetName().length() == 0)
-            {
-                obj->SetName(name);
-                g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
-            }
-
             if (serial == g_PlayerSerial)
             {
                 message.SetFlags(JMT_MY);
@@ -1886,12 +1409,6 @@ PACKET_HANDLER(UnicodeTalk)
     {
         if (obj != nullptr)
         {
-            if (obj->GetName().length() == 0)
-            {
-                obj->SetName(name);
-                g_AssistantEvents->OnInspectorUpdate(obj->GetSerial());
-            }
-
             if (serial == g_PlayerSerial)
             {
                 message.SetFlags(JMT_MY);
@@ -2009,7 +1526,6 @@ PACKET_HANDLER(OpenContainer)
 
     if (graphic == 0x0030)
     {
-        // was: return g_TabAgentsShop->OnPacketReceivedOpenContaier(serial);
         return g_ShopAgent.OnOpenContainer(serial);
     }
 
@@ -2095,7 +1611,8 @@ PACKET_HANDLER(BuffDebuff)
                                                    "spell plague",
                                                    "0x758D",
                                                    "0x0000",
-                                                   "0x758E",
+
+
                                                    "0x094B",
                                                    "0x094C",
                                                    "0x094D",
@@ -2344,12 +1861,14 @@ PACKET_HANDLER(ExtendedCommandR)
                 return true;
             }
 
+            (void)item;
             string str = parse_cliloc_arguments(
                 clilocNum, true, wstr_t((wchar_t *)Ptr));
             if (str.length() > 0)
             {
-                item->SetName(str);
-                g_AssistantEvents->OnInspectorUpdate(item->GetSerial());
+                // the client handler stores the property line as the item
+                // name; the assistant refreshes its inspector row
+                g_AssistantEvents->OnInspectorUpdate(serial);
             }
 
             if (str.length() != 0)
@@ -2484,7 +2003,13 @@ PACKET_HANDLER(DyeDataS)
     else if (serial == 0xFFFFFFFE)
     {
         g_AssistantConfig.SetCharactersFontColor(true, ReadUInt16BE());
+
+
     }
+
+
+
+
 
     return true;
 }
@@ -2749,11 +2274,6 @@ PACKET_HANDLER(DisplayClilocString)
     {
         if (obj != nullptr)
         {
-            if (obj->GetName().length() == 0)
-            {
-                obj->SetName(name);
-            }
-
             if (serial == g_PlayerSerial)
             {
                 message.SetFlags(JMT_MY);
@@ -2883,13 +2403,6 @@ PACKET_HANDLER(MegaClilocR)
         }
     }
 
-    CGameObject *obj = g_World->FindWorldObject(serial);
-
-    if (obj != nullptr && !obj->GetNPC())
-    {
-        obj->SetName(name);
-    }
-
     g_AssistantEvents->OnMegaCliloc(serial, clilocRevision, name, message);
 
     return true;
@@ -2943,7 +2456,7 @@ PACKET_HANDLER(WalkRequest)
     };
 
     // The auto-open-door step (config round + assist core):
-    if (g_Player != nullptr && g_AssistantConfig.AutoOpenDoors() && !g_Player->Dead() &&
+    if (g_Player != nullptr && g_AssistantConfig.AutoOpenDoors() && !g_Player->IsDead() &&
         !g_Player->IsGM() && ((direction % 2) == 0))
     {
         int x = g_Player->GetX();
@@ -2951,7 +2464,7 @@ PACKET_HANDLER(WalkRequest)
 
         getNewXY(direction, x, y);
 
-        if ((direction & 7) == (g_Player->GetDirection() & 7))
+        if ((direction & 7) == (g_Player->Direction & 7))
         {
             getNewXY(direction, x, y);
         }
@@ -2964,7 +2477,7 @@ PACKET_HANDLER(WalkRequest)
     // value - the MT_WALK turn encoding.
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
     {
-        if ((direction & 7) != (g_Player->GetDirection() & 7))
+        if ((direction & 7) != (g_Player->Direction & 7))
         {
             direction = -(direction | 0x80);
         }
@@ -2984,11 +2497,12 @@ PACKET_HANDLER(ConfirmWalk)
 
     if (g_AssistantConfig.ApplyNotorietyColorOnName())
     {
+        // the client handler stores the notoriety byte; the assistant only
+        // watches for a change to redraw its title row
         Move(1);
         uchar noto = ReadUInt8() & 0x0F;
-        if (noto != g_Player->GetNotoriety())
+        if (noto != g_Player->Notoriety)
         {
-            g_Player->SetNotoriety(noto);
             g_AssistantEvents->OnTitleRedraw();
         }
     }
@@ -3043,34 +2557,15 @@ PACKET_HANDLER(CharacterProfileR)
         wstring bottomText = ReadWString();
         wstring dataText = ReadWString() + L"\n" + bottomText;
 
-        obj->SetProfileReceived(true);
-        obj->SetProfile(topText + "\n" + str_from(dataText));
-        bool block = obj->GetBlockProfile();
-        obj->SetBlockProfile(false);
+        obj->ProfileReceived = true;
+        obj->Profile = topText + "\n" + str_from(dataText);
+        bool block = obj->BlockProfile;
+        obj->BlockProfile = false;
 
         if (block)
         {
             return false;
         }
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(OpenPaperdoll)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj != nullptr)
-    {
-        obj->SetTitle(ReadStringChecked(60).c_str());
     }
 
     return true;
@@ -3231,8 +2726,7 @@ PACKET_HANDLER(DoubleClick)
     uint serial = ReadUInt32BE();
 
     // tabmacros recording (DoubleClick): the graphic/color come from the
-    // world object when known; MCT_SELF on the player (the MCT_LAST branch
-    // on g_LastUseObject is commented out in the original - kept that way).
+    // world object when known; the player records as MCT_SELF
     if (g_World != nullptr && g_MacroExecutor.IsRecording())
     {
         CGameObject *obj = g_World->FindWorldObject(serial);
@@ -3241,7 +2735,7 @@ PACKET_HANDLER(DoubleClick)
 
         if (obj != nullptr)
         {
-            macro = new CMacroWithObject(MT_USE, serial, obj->GetGraphic(), obj->GetColor());
+            macro = new CMacroWithObject(MT_USE, serial, obj->Graphic, obj->Color);
         }
         else
         {
@@ -3275,7 +2769,7 @@ PACKET_HANDLER(AttackRequest)
 
         if (obj != nullptr)
         {
-            macro = new CMacroWithObject(MT_ATTACK, serial, obj->GetGraphic(), obj->GetColor());
+            macro = new CMacroWithObject(MT_ATTACK, serial, obj->Graphic, obj->Color);
         }
         else
         {
@@ -3442,13 +2936,14 @@ PACKET_HANDLER(ClientMessagesR)
         {
             case OIPMT_SKILL_LIST:
             {
-                // was: g_TabSkills->SkillsListUpdated(*this) (parse below) plus a
-                // hotkey action-list update (UI round consumes the event).
-                g_SkillsCount = ReadUInt16BE();
+                // the skill names/buttons themselves live in the client skill
+                // table; the assistant keeps its name->index lookup and the
+                // hotkey action list
+                int count = ReadUInt16BE();
                 vector<string> hotkeyActions;
                 hotkeyActions.push_back("Last");
 
-                for (int i = 0; i < g_SkillsCount; i++)
+                for (int i = 0; i < count; i++)
                 {
                     uchar button = ReadUInt8();
                     string name = ReadStringChecked();
@@ -3458,8 +2953,6 @@ PACKET_HANDLER(ClientMessagesR)
                         hotkeyActions.push_back(name);
                     }
 
-                    g_Skills[i].SetButton(button != 0u);
-                    g_Skills[i].SetName(name);
                     g_SkillManager.Insert(name, (button != 0u), i);
                 }
 

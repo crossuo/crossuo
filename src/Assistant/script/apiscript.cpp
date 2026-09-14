@@ -60,15 +60,11 @@ extern "C" {
 #include "../managers/trademanager.h"
 #include "../managers/contextmenumanager.h"
 #include "../core/shopagent.h"
-#include "../model/commonitems/skill.h"
+#include "../core/world.h"
+#include "../core/worldutil.h"
 #include "../model/commonitems/gump.h"
 #include "../model/commonitems/gumphook.h"
 #include "../model/commonitems/menu.h"
-#include "../model/gameobjects/gamecharacter.h"
-#include "../model/gameobjects/gameitem.h"
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h"
-
 #include "../core/packets.h" // the assistant packet wrappers
 #include "Network/Packets.h" // the client packets the wrappers build on
 #include "ScreenshotBuilder.h" // g_ScreenshotBuilder (Client.Screenshot)
@@ -829,8 +825,8 @@ JSValue jsn_useskill(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     return JS_UNDEFINED;
 }
 
-// [G] SkillValue(nameOrIndex[, type]) - HCOMMAND(skillsvalue) reads
-// g_Skills[] on the main thread.
+// [G] SkillValue(nameOrIndex[, type]) - HCOMMAND(skillsvalue) reads the
+// client skill table (g_SkillsManager) on the main thread.
 JSValue jsn_skillvalue(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_SKILL_VALUE);
@@ -1999,7 +1995,9 @@ JSValue gump_close(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *)
     return gump_select(ctx, thisVal, 0, nullptr);
 }
 
+
 // --- the menu object (menuengine.cpp) ----------------------------------------
+
 
 JSValue menu_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv, int magic)
 {
@@ -3646,16 +3644,16 @@ bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue
     switch (field)
     {
         case OF_TEXT_SERIAL:
-            textValue = CAssistant::SerialToText(object->GetSerial());
+            textValue = CAssistant::SerialToText(object->Serial);
             break;
         case OF_TEXT_GRAPHIC:
-            textValue = CAssistant::GraphicToText(object->GetGraphic());
+            textValue = CAssistant::GraphicToText(object->Graphic);
             break;
         case OF_TEXT_COLOR:
-            textValue = CAssistant::GraphicToText(object->GetColor());
+            textValue = CAssistant::GraphicToText(object->Color);
             break;
         case OF_TEXT_CONTAINER:
-            textValue = CAssistant::SerialToText(object->GetContainer());
+            textValue = CAssistant::SerialToText(object->Container);
             break;
         case OF_TEXT_NAME:
             textValue = object->GetName();
@@ -3670,28 +3668,28 @@ bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue
             intValue = object->GetZ();
             break;
         case OF_INT_MAP:
-            intValue = object->GetMapIndex();
+            intValue = object->MapIndex;
             break;
         case OF_INT_COUNT:
-            intValue = (int)object->GetCount();
+            intValue = (int)object->Count;
             break;
         case OF_INT_FLAGS:
             intValue = object->GetFlags();
             break;
         case OF_BOOL_MOBILE:
-            boolValue = object->GetNPC();
+            boolValue = object->NPC;
             break;
         case OF_BOOL_IGNORED:
-            boolValue = object->GetIgnored();
+            boolValue = object->Ignored;
             break;
         case OF_BOOL_FROZEN:
-            boolValue = object->Frozen();
+            boolValue = object->IsParalyzed();
             break;
         case OF_BOOL_POISONED:
-            boolValue = object->Poisoned();
+            boolValue = object->IsPoisoned();
             break;
         case OF_BOOL_FLYING:
-            boolValue = object->Flying();
+            boolValue = object->IsFlying();
             break;
         case OF_BOOL_YELLOWHITS:
             boolValue = object->YellowHits();
@@ -3718,131 +3716,131 @@ bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue
             boolValue = object->IsCorpse();
             break;
         case OF_INT_LAYER:
-            intValue = ((CGameItem *)object)->GetLayer();
+            intValue = ((CGameItem *)object)->Layer;
             break;
         case OF_BOOL_ISMULTI:
             boolValue = false; // the model has no multi flag; 4b-2 with the
                                // multi round (the original engine read the same 0)
             break;
         case OF_INT_EQUIPLAYER:
-            intValue = ((CGameItem *)object)->GetEquipLayer();
+            intValue = EquipLayer((CGameItem *)object);
             break;
         case OF_INT_HITS:
-            intValue = ((CGameCharacter *)object)->GetHits();
+            intValue = ((CGameCharacter *)object)->Hits;
             break;
         case OF_INT_MAXHITS:
-            intValue = ((CGameCharacter *)object)->GetMaxHits();
+            intValue = ((CGameCharacter *)object)->MaxHits;
             break;
         case OF_INT_MANA:
-            intValue = ((CGameCharacter *)object)->GetMana();
+            intValue = ((CGameCharacter *)object)->Mana;
             break;
         case OF_INT_MAXMANA:
-            intValue = ((CGameCharacter *)object)->GetMaxMana();
+            intValue = ((CGameCharacter *)object)->MaxMana;
             break;
         case OF_INT_STAM:
-            intValue = ((CGameCharacter *)object)->GetStam();
+            intValue = ((CGameCharacter *)object)->Stam;
             break;
         case OF_INT_MAXSTAM:
-            intValue = ((CGameCharacter *)object)->GetMaxStam();
+            intValue = ((CGameCharacter *)object)->MaxStam;
             break;
         case OF_BOOL_FEMALE:
-            boolValue = ((CGameCharacter *)object)->GetSex();
+            boolValue = ((CGameCharacter *)object)->Gender == GENDER_FEMALE;
             break;
         case OF_INT_RACE:
-            intValue = ((CGameCharacter *)object)->GetRace();
+            intValue = ((CGameCharacter *)object)->Race;
             break;
         case OF_INT_DIRECTION:
-            intValue = ((CGameCharacter *)object)->GetDirection();
+            intValue = ((CGameCharacter *)object)->Direction;
             break;
         case OF_INT_NOTORIETY:
-            intValue = ((CGameCharacter *)object)->GetNotoriety();
+            intValue = ((CGameCharacter *)object)->Notoriety;
             break;
         case OF_BOOL_CANCHANGENAME:
-            boolValue = ((CGameCharacter *)object)->GetCanChangeName();
+            boolValue = ((CGameCharacter *)object)->CanChangeName;
             break;
         case OF_BOOL_DEAD:
-            boolValue = object->IsCorpse() || ((CGameCharacter *)object)->GetHits() <= 0;
+            boolValue = object->IsCorpse() || ((CGameCharacter *)object)->Hits == 0;
             break;
         case OF_BOOL_EXISTS:
             boolValue = true;
             break;
         case OF_TEXT_PROPERTIES:
-            textValue = g_ObjectPropertiesManager.GetData(object->GetSerial());
+            textValue = g_ObjectPropertiesManager.GetData(object->Serial);
             break;
         case OF_BOOL_PROFILERECV:
-            boolValue = ((CGameCharacter *)object)->GetProfileReceived();
+            boolValue = ((CGameCharacter *)object)->ProfileReceived;
             break;
         case OF_TEXT_PROFILE:
-            textValue = ((CGameCharacter *)object)->GetProfile();
+            textValue = ((CGameCharacter *)object)->Profile;
             break;
         case OF_TEXT_TITLE:
-            textValue = ((CGameCharacter *)object)->GetTitle();
+            textValue = ((CGameCharacter *)object)->Title;
             break;
         case OF_INT_STR:
-            intValue = ((CPlayer *)object)->GetStr();
+            intValue = ((CPlayer *)object)->Str;
             break;
         case OF_INT_INT:
-            intValue = ((CPlayer *)object)->GetInt();
+            intValue = ((CPlayer *)object)->Int;
             break;
         case OF_INT_DEX:
-            intValue = ((CPlayer *)object)->GetDex();
+            intValue = ((CPlayer *)object)->Dex;
             break;
         case OF_INT_LOCKSTR:
-            intValue = ((CPlayer *)object)->GetLockStr();
+            intValue = ((CPlayer *)object)->LockStr;
             break;
         case OF_INT_LOCKINT:
-            intValue = ((CPlayer *)object)->GetLockInt();
+            intValue = ((CPlayer *)object)->LockInt;
             break;
         case OF_INT_LOCKDEX:
-            intValue = ((CPlayer *)object)->GetLockDex();
+            intValue = ((CPlayer *)object)->LockDex;
             break;
         case OF_INT_WEIGHT:
-            intValue = ((CPlayer *)object)->GetWeight();
+            intValue = ((CPlayer *)object)->Weight;
             break;
         case OF_INT_MAXWEIGHT:
-            intValue = ((CPlayer *)object)->GetMaxWeight();
+            intValue = ((CPlayer *)object)->MaxWeight;
             break;
         case OF_INT_ARMOR:
-            intValue = ((CPlayer *)object)->GetArmor();
+            intValue = ((CPlayer *)object)->Armor;
             break;
         case OF_INT_GOLD:
-            intValue = (int)((CPlayer *)object)->GetGold();
+            intValue = (int)((CPlayer *)object)->Gold;
             break;
         case OF_INT_STATSCAP:
-            intValue = ((CPlayer *)object)->GetStatsCap();
+            intValue = ((CPlayer *)object)->StatsCap;
             break;
         case OF_INT_FOLLOWERS:
-            intValue = ((CPlayer *)object)->GetFollowers();
+            intValue = ((CPlayer *)object)->Followers;
             break;
         case OF_INT_MAXFOLLOWERS:
-            intValue = ((CPlayer *)object)->GetMaxFollowers();
+            intValue = ((CPlayer *)object)->MaxFollowers;
             break;
         case OF_INT_FIRERES:
-            intValue = ((CPlayer *)object)->GetFireResistance();
+            intValue = ((CPlayer *)object)->FireResistance;
             break;
         case OF_INT_COLDRES:
-            intValue = ((CPlayer *)object)->GetColdResistance();
+            intValue = ((CPlayer *)object)->ColdResistance;
             break;
         case OF_INT_POISONRES:
-            intValue = ((CPlayer *)object)->GetPoisonResistance();
+            intValue = ((CPlayer *)object)->PoisonResistance;
             break;
         case OF_INT_ENERGYRES:
-            intValue = ((CPlayer *)object)->GetEnergyResistance();
+            intValue = ((CPlayer *)object)->EnergyResistance;
             break;
         case OF_INT_LUCK:
-            intValue = ((CPlayer *)object)->GetLuck();
+            intValue = ((CPlayer *)object)->Luck;
             break;
         case OF_INT_MINDMG:
-            intValue = ((CPlayer *)object)->GetMinDamage();
+            intValue = ((CPlayer *)object)->MinDamage;
             break;
         case OF_INT_MAXDMG:
-            intValue = ((CPlayer *)object)->GetMaxDamage();
+            intValue = ((CPlayer *)object)->MaxDamage;
             break;
         case OF_INT_TITHING:
-            intValue = (int)((CPlayer *)object)->GetTithingPoints();
+            intValue = (int)((CPlayer *)object)->TithingPoints;
             break;
         case OF_INT_STEALTH:
-            intValue = ((CPlayer *)object)->GetStealthSteps();
+            intValue = ((CPlayer *)object)->StealthSteps;
             break;
         default:
             return false;
@@ -3998,8 +3996,13 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 g_SkillManager.TargetUse(name, CAssistant::TextToSerial(command->TextB));
             }
             else if (!command->TextA.empty())
+
             {
+
+
                 g_SkillManager.Use(command->TextA);
+
+
             }
             else
             {
@@ -4015,15 +4018,18 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 index = g_SkillManager.GetIndex(command->TextA);
             }
             const int type = CTextCommandManager::GetSkillsFlags(command->TextB);
-            if (index >= 0 && index < g_SkillsCount)
+            if (index >= 0 && index < (int)g_SkillsManager.Count)
             {
-                const CSkill &skill = g_Skills[index];
-                command->ResultInt = (int)(type == SF_BASE ? skill.GetBaseValue()
-                    : type == SF_CAP ? skill.GetCap()
-                                     : skill.GetValue());
-                if (type == SF_LOCK)
+                const CSkill *skill = g_SkillsManager.Get((uint32_t)index);
+                if (skill != nullptr)
                 {
-                    command->ResultInt = skill.GetStatus();
+                    command->ResultInt = (int)(type == SF_BASE ? skill->BaseValue
+                        : type == SF_CAP ? skill->Cap
+                        : skill->Value);
+                    if (type == SF_LOCK)
+                    {
+                        command->ResultInt = skill->Status;
+                    }
                 }
             }
             break;
@@ -4074,7 +4080,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             if (found != nullptr)
             {
-                g_Assistant.DoubleClick(found->GetSerial());
+                g_Assistant.DoubleClick(found->Serial);
                 command->ResultBool = true;
             }
             break;
@@ -4123,13 +4129,13 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     CGameObject *object = world_object(CAssistant::TextToSerial(command->TextA));
                     if (object != nullptr)
                     {
-                        command->ResultInt = xuoassist::GetDistance(g_Player->GetX(),
-                            g_Player->GetY(), object->GetX(), object->GetY());
+                        command->ResultInt = Distance(g_Player->GetX(), g_Player->GetY(),
+                            object->GetX(), object->GetY());
                     }
                 }
                 else
                 {
-                    command->ResultInt = xuoassist::GetDistance(
+                    command->ResultInt = Distance(
                         g_Player->GetX(), g_Player->GetY(), command->IntA, command->IntB);
                 }
             }
@@ -4153,7 +4159,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 CGameItem *item = object->FindLayer(CAssistant::TextToLayer(command->TextA));
                 if (item != nullptr)
                 {
-                    command->ResultSerial = item->GetSerial();
+                    command->ResultSerial = item->Serial;
                 }
             }
             break;
@@ -4323,7 +4329,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     CGameItem *bandage = g_Player->FindBandage();
                     if (bandage != nullptr)
                     {
-                        CPacketTargetUseObject(bandage->GetSerial(),
+                        CPacketTargetUseObject(bandage->Serial,
                             CAssistant::TextToSerial(command->TextA))
                             .SendClient();
                     }
@@ -4391,7 +4397,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     CGameObject *object = world_object(
                         CAssistant::TextToSerial(command->TextA));
                     command->ResultText = object != nullptr
-                        ? CAssistant::SerialToText(object->GetContainer())
+                        ? CAssistant::SerialToText(object->Container)
                         : string();
                     break;
                 }
@@ -4674,7 +4680,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     CGameItem *item = g_Player != nullptr ? g_Player->FindLayer(layer) : nullptr;
                     if (item != nullptr)
                     {
-                        g_Assistant.MoveEquip(item->GetSerial(), layer, g_PlayerSerial);
+                        g_Assistant.MoveEquip(item->Serial, layer, g_PlayerSerial);
                     }
                     break;
                 }
@@ -4687,7 +4693,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     CGameObject *object = world_object(serial);
                     if (object != nullptr && g_Player != nullptr)
                     {
-                        g_Assistant.MoveEquip(serial, ((CGameItem *)object)->GetLayer(), g_PlayerSerial);
+                        g_Assistant.MoveEquip(serial, ((CGameItem *)object)->Layer, g_PlayerSerial);
                     }
                     break;
                 }
@@ -5036,7 +5042,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         CTextCommandManager::GetFindFlags(command->TextA), command->TextB);
                     if (found != nullptr)
                     {
-                        command->ResultText = CAssistant::SerialToText(found->GetSerial());
+                        command->ResultText = CAssistant::SerialToText(found->Serial);
                     }
                     break;
                 }
@@ -5046,7 +5052,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         CTextCommandManager::GetFindFlags(command->TextA), command->TextB);
                     if (found != nullptr)
                     {
-                        command->ResultText = CAssistant::SerialToText(found->GetSerial());
+                        command->ResultText = CAssistant::SerialToText(found->Serial);
                     }
                     break;
                 }

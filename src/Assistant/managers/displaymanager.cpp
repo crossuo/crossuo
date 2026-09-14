@@ -11,8 +11,8 @@
 #include "../core/assistantevents.h"
 #include "../config/assistantconfig.h"
 #include "../core/textparser.h"
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h" // g_World (Redraw caption gating)
+#include "../core/world.h" // g_Player / g_World
+#include "../core/worldutil.h"
 #include <common/logging/logging.h>
 #include <map>
 #include <stdlib.h>
@@ -313,11 +313,11 @@ void CDisplayManager::GetValues(
 
             if (useNotoriety)
             {
-                if (g_Player->GetNotoriety() == 3 || g_Player->GetNotoriety() == 4)
+                if (g_Player->Notoriety == 3 || g_Player->Notoriety == 4)
                 {
                     textColor = item.GetBackgroundMidColor(); //gray
                 }
-                else if (g_Player->GetNotoriety() == 5 || g_Player->GetNotoriety() == 6)
+                else if (g_Player->Notoriety == 5 || g_Player->Notoriety == 6)
                 {
                     textColor = item.GetBackgroundMinColor(); //red
                 }
@@ -344,8 +344,8 @@ void CDisplayManager::GetValues(
         case DIT_MAX_HITS:
         case DIT_HITS_MAX_HITS:
         {
-            iVal = g_Player->GetHits();
-            iMaxVal = g_Player->GetMaxHits();
+            iVal = g_Player->Hits;
+            iMaxVal = g_Player->MaxHits;
             inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_HITS);
             break;
         }
@@ -353,8 +353,8 @@ void CDisplayManager::GetValues(
         case DIT_MAX_MANA:
         case DIT_MANA_MAX_MANA:
         {
-            iVal = g_Player->GetMana();
-            iMaxVal = g_Player->GetMaxMana();
+            iVal = g_Player->Mana;
+            iMaxVal = g_Player->MaxMana;
             inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_MANA);
             break;
         }
@@ -362,43 +362,43 @@ void CDisplayManager::GetValues(
         case DIT_MAX_STAM:
         case DIT_STAM_MAX_STAM:
         {
-            iVal = g_Player->GetStam();
-            iMaxVal = g_Player->GetMaxStam();
+            iVal = g_Player->Stam;
+            iMaxVal = g_Player->MaxStam;
             inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_STAM);
             break;
         }
         case DIT_STR:
         {
-            iVal = g_Player->GetStr();
+            iVal = g_Player->Str;
             break;
         }
         case DIT_INT:
         {
-            iVal = g_Player->GetInt();
+            iVal = g_Player->Int;
             break;
         }
         case DIT_DEX:
         {
-            iVal = g_Player->GetDex();
+            iVal = g_Player->Dex;
             break;
         }
         case DIT_WEIGHT:
         case DIT_MAX_WEIGHT:
         case DIT_WEIGHT_MAX_WEIGHT:
         {
-            iVal = g_Player->GetWeight();
-            iMaxVal = g_Player->GetMaxWeight();
+            iVal = g_Player->Weight;
+            iMaxVal = g_Player->MaxWeight;
             inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_WEIGHT);
             break;
         }
         case DIT_ARMOR:
         {
-            iVal = g_Player->GetArmor();
+            iVal = g_Player->Armor;
             break;
         }
         case DIT_GOLD:
         {
-            iVal = g_Player->GetGold();
+            iVal = g_Player->Gold;
             break;
         }
         case DIT_X:
@@ -424,7 +424,7 @@ void CDisplayManager::GetValues(
         }
         case DIT_OBJECT:
         {
-            iVal = g_Player->CountItems(item.GetGraphic(), item.GetHue(), true);
+            iVal = CountItems(g_Player, item.GetGraphic(), item.GetHue(), true);
             break;
         }
         case DIT_NONE:

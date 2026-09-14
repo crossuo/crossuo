@@ -8,11 +8,13 @@
 // stay script-side or hit the fake hooks below (g_HarnessGump).
 //
 // Not-a-client warning: the executor's g_World/g_Player gated blocks stay
-// inert (the globals are null/false here), mirroring a disconnected client.
+// inert (the globals are null/false here), matching a disconnected client.
 
 #define XUO_ASSISTANT 1
+#define XUO_ASSISTANT_HARNESS 1
 
 #include "../../core/global.h"
+#include "../../core/world.h" // the worldstubs.h stand-ins (disconnected)
 #include "../../core/assist.h"
 #include "../../core/dressagent.h"
 #include "../../core/packets.h"
@@ -31,13 +33,10 @@
 #include "../../model/commonitems/gump.h"
 #include "../../model/commonitems/journalmessage.h"
 #include "../../model/commonitems/menu.h"
-#include "../../model/commonitems/skill.h"
-#include "../../model/gameobjects/gameitem.h"
-#include "../../model/gameobjects/gameplayer.h"
-#include "../../model/gameobjects/gameworld.h"
 #include "Network/Packets.h"
 #include "ScreenshotBuilder.h"
 #include "Walker/PathFinder.h"
+#include <stdlib.h> // abs (the Distance stub)
 
 // Minimal stand-ins for the two client connection globals the real assistant
 // packet sends land in (core/packets.cpp is linked). The real client headers
@@ -219,9 +218,6 @@ void CTarget::SetObjectsHook(const vector<string> &) {}
 void CTarget::SetTileHook(const string &, const int &, const int &, const int &, const bool &) {}
 void CTarget::SetRecvAssistData(CDataReader &) {}
 
-// --- world model (a disconnected client) -------------------------------------
-CGameWorld *g_World = nullptr;
-CPlayer *g_Player = nullptr;
 uint g_PlayerSerial = 0;
 bool g_Connected = false;
 uint64_t g_EnabledCommands = 0;
@@ -239,24 +235,32 @@ bool g_ShopReceived = false;
 bool g_TradeReceived = false;
 bool g_ContextMenuReceived = false;
 UOI_SELECTED_TILE g_SelectedClientWorldObject;
-int GetDistance(const int &, const int &, const int &, const int &) { return 0; }
 FUNCDEF_GET_VALUE_INT *g_GetInt = nullptr;
 FUNCDEF_SET_VALUE_INT *g_SetInt = nullptr;
 TARGET_HANDLER g_TargetHandler = nullptr;
+} // namespace xuoassist
 
-// model pieces the executor's getter paths reference
-bool CGameObject::Flying() { return false; }
-bool CGameObject::Poisoned() { return false; }
-CGameItem *CGameObject::FindLayer(const int &) { return nullptr; }
-int CGameItem::GetEquipLayer() { return 0; }
-CGameObject *CGameWorld::FindWorldObject(const uint &) { return nullptr; }
-CGameItem *CPlayer::FindBandage() { return nullptr; }
-CGameWorld::CGameWorld(const uint &serial)
+// world-model stand-in globals (global namespace, as declared in worldstubs.h)
+CGameWorld *g_World = nullptr;
+CPlayer *g_Player = nullptr;
+CSkillsManager g_SkillsManager;
+
+// world stand-in out-of-line bodies (global namespace)
+CGameObject *CGameWorld::FindWorldObject(uint32_t) { return nullptr; }
+CGameItem *CGameWorld::FindWorldItem(uint32_t) { return nullptr; }
+CGameCharacter *CGameWorld::FindWorldCharacter(uint32_t) { return nullptr; }
+// CPlayer::FindBandage is defined inline in worldstubs.h
+
+// worldutil.h bodies (worldutil.cpp is not linked here)
+int xuoassist::EquipLayer(const CGameItem *) { return 0; }
+int xuoassist::Distance(int x1, int y1, int x2, int y2)
 {
-    (void)serial;
-    m_Items = nullptr;
+    int distx = abs(x2 - x1);
+    int disty = abs(y2 - y1);
+    return distx > disty ? distx : disty;
 }
-CGameWorld::~CGameWorld() {}
+
+namespace xuoassist {
 
 CAssistant::CAssistant() {}
 CAssistant::~CAssistant() {}
@@ -311,10 +315,7 @@ void CPacketManager::SavePluginReceivePacket(unsigned char *, int) {}
 // --- remaining client/common pieces the real executor references -------------
 wstr_t wstr_from(const astr_t &) { return wstr_t(); }
 
-// the skill table read (SkillValue); empty here
 namespace xuoassist {
-CSkill g_Skills[MAX_SKILLS_COUNT];
-int g_SkillsCount = 0;
 void ScriptManager_LoadScriptFile(const string &) {}
 void ScriptManager_Terminate(const string &, const string &) {}
 bool ScriptManager_Running(const string &) { return false; }

@@ -40,7 +40,7 @@
 #include "inspector.h"
 #include "textdialog.h"
 #include "../managers/assmap.h"
-#include "../model/gameobjects/gameworld.h" // xuoassist::g_World (journal gating)
+#include "Managers/CorpseManager.h" // ::g_CorpseManager (corpse auto-open)
 
 #include <revision.h> // PRODUCT_VERSION_STR (generated into the build dir)
 
@@ -347,6 +347,18 @@ void AssistantUI_Tick()
     // macro playback (was the TabMacros 10 ms timer -> ProcessMacro): a
     // headless frame tick keeps running while the assistant window is hidden
     g_MacroExecutor.Tick();
+    // corpse auto-open (was the 10 ms corpse timer): the client manager holds
+    // the queue, the assistant owns the config and the shared use-delay stamp
+    if (g_AssistantConfig.CorpsesAutoopen())
+    {
+        if (::g_CorpseManager.CheckCorpses(
+                g_AssistantConfig.OpenCorpsesDistance(),
+                g_AssistantConfig.UseItemsDelay(),
+                g_LastUseObjectTimer))
+        {
+            g_LastUseObjectTimer = g_Ticks;
+        }
+    }
     // the dress sequence state machine (was the g_EquipScriptName script)
     g_DressAgent.Tick();
     // the shop engine progress countdown (was the ShopProgressForm timer)

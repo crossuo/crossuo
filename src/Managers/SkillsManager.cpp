@@ -75,7 +75,25 @@ int CSkillsManager::Find(const astr_t &name)
 
     const astr_t query = str_lower(name);
 
-    // Only skills with a use button are addressable by name
+    // An empty query would match every name (std::string::find("")),
+    // so it addresses nothing
+    if (query.empty())
+    {
+        return -1;
+    }
+
+    // An exact (case-insensitive) name match wins over an earlier
+    // partial match
+    for (uint32_t i = 0; i < Count; i++)
+    {
+        if (m_Skills[i].Button && str_lower(m_Skills[i].Name) == query)
+        {
+            return (int)i;
+        }
+    }
+
+    // Only skills with a use button are addressable by name; the first
+    // partial match is the fallback
     for (uint32_t i = 0; i < Count; i++)
     {
         if (m_Skills[i].Button && str_lower(m_Skills[i].Name).find(query) != astr_t::npos)

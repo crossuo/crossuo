@@ -4,7 +4,7 @@
 // Ported from X:UO Assist (managers/trademanager.cpp).
 
 #include "trademanager.h"
-#include "../model/gameobjects/gameworld.h"
+#include "../core/world.h"
 #include "../core/assist.h"
 #include <common/logging/logging.h>
 
@@ -48,20 +48,8 @@ bool CTradeManager::OnPacketSend(CDataReader &reader)
 
                 if (trade.GetID1() == id)
                 {
-                    CGameObject *obj = g_World->FindWorldObject(trade.GetID1());
-
-                    if (obj != nullptr)
-                    {
-                        g_World->RemoveObject(obj);
-                    }
-
-                    obj = g_World->FindWorldObject(trade.GetID2());
-
-                    if (obj != nullptr)
-                    {
-                        g_World->RemoveObject(obj);
-                    }
-
+                    // the client handler removes the trade box objects; the
+                    // assistant drops only its own trade-window record
                     m_List.erase(m_List.begin() + i);
 
                     return true;
@@ -132,20 +120,8 @@ bool CTradeManager::OnPacketReceived(CDataReader &reader)
 
                 if (trade.GetID1() == serial)
                 {
-                    CGameObject *obj = g_World->FindWorldObject(trade.GetID1());
-
-                    if (obj != nullptr)
-                    {
-                        g_World->RemoveObject(obj);
-                    }
-
-                    obj = g_World->FindWorldObject(trade.GetID2());
-
-                    if (obj != nullptr)
-                    {
-                        g_World->RemoveObject(obj);
-                    }
-
+                    // the client handler removes the trade box objects; the
+                    // assistant drops only its own trade-window record
                     m_List.erase(m_List.begin() + i);
 
                     return true;

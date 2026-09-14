@@ -23,9 +23,7 @@
 #include "../managers/gumpmanager.h"
 #include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
-#include "../model/gameobjects/gameitem.h"
-#include "../model/gameobjects/gameplayer.h"
-#include "../model/gameobjects/gameworld.h"
+#include "world.h"
 #include "target.h"
 
 namespace xuoassist {
@@ -470,7 +468,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
                 CGameItem *objAtLayer = g_Player->FindLayer(OL_1_HAND);
                 if (objAtLayer != nullptr)
                 {
-                    serial = objAtLayer->GetSerial();
+                    serial = objAtLayer->Serial;
                 }
             }
             if (serial != 0u)
@@ -494,14 +492,14 @@ void Actions_Execute(const CHotkeyEntry &entry)
                 {
                     if (showCorpses)
                     {
-                        g_Assistant.Click(obj->GetSerial());
+                        g_Assistant.Click(obj->Serial);
                     }
                 }
-                else if (obj->GetNPC() && !obj->IsPlayer())
+                else if (obj->NPC && !obj->IsPlayer())
                 {
                     if (showMobiles || (showHumanoids && obj->IsHuman()))
                     {
-                        g_Assistant.Click(obj->GetSerial());
+                        g_Assistant.Click(obj->Serial);
                     }
                 }
             }
@@ -644,7 +642,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
             {
                 if (action == 3)
                 {
-                    CPacketTargetUseObject(bandage->GetSerial(), Actions_NewTargetSystemSerial())
+                    CPacketTargetUseObject(bandage->Serial, Actions_NewTargetSystemSerial())
                         .SendServer();
                 }
                 else
@@ -661,7 +659,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
                     {
                         hook_objects("lasttarget");
                     }
-                    g_Assistant.DoubleClick(bandage->GetSerial());
+                    g_Assistant.DoubleClick(bandage->Serial);
                 }
             }
             break;

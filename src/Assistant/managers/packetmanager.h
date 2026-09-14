@@ -73,16 +73,11 @@ protected:
     XA_HANDLER_PACKET(NewHealthbarUpdate);
     XA_HANDLER_PACKET(UpdatePlayer);
     XA_HANDLER_PACKET(CharacterStatus);
-    XA_HANDLER_PACKET(UpdateItem);
-    XA_HANDLER_PACKET(UpdateItemSA);
     XA_HANDLER_PACKET(UpdateObject);
     XA_HANDLER_PACKET(EquipItem);
-    XA_HANDLER_PACKET(UpdateContainedItem);
-    XA_HANDLER_PACKET(UpdateContainedItems);
     XA_HANDLER_PACKET(DeleteObject);
     XA_HANDLER_PACKET(UpdateCharacter);
     XA_HANDLER_PACKET(WarmodeS);
-    XA_HANDLER_PACKET(WarmodeR);
     XA_HANDLER_PACKET(UpdateSkillsS);
     XA_HANDLER_PACKET(UpdateSkillsR);
     XA_HANDLER_PACKET(TargetS);
@@ -129,7 +124,6 @@ protected:
     XA_HANDLER_PACKET(UnicodePromptR);
     XA_HANDLER_PACKET(CharacterProfileS);
     XA_HANDLER_PACKET(CharacterProfileR);
-    XA_HANDLER_PACKET(OpenPaperdoll);
     XA_HANDLER_PACKET(BuyList);
     XA_HANDLER_PACKET(BuyReplyS);
     XA_HANDLER_PACKET(BuyReplyR);
@@ -168,4 +162,3 @@ bool AssistantPackets_Recv(uint8_t *buf, size_t size);
 void AssistantPackets_Send(uint8_t *buf, size_t size);
 
 } // namespace xuoassist
-

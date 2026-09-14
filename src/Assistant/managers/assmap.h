@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include "../core/world.h" // ::CGameCharacter (the client's map mobile)
+
 #include "../core/global.h"
 #include <external/gfx/imgui/imgui.h>
 
@@ -60,15 +62,15 @@ enum CLIENT_MAP_ACTION
     OMA_ROTATE_MAP
 };
 
-// One map overlay marker (the original CMapDrawObject; strings are std::string,
-// the CGameCharacter* stays a mirror pointer valid for the frame only).
+// One map overlay marker (the original CMapDrawObject): the character pointer
+// stays valid for the frame it was collected on.
 struct XA_MAP_DRAW_OBJECT
 {
     CLIENT_MAP_CHARACTER_TYPE Type{ OMCT_INVALID };
     int X{ 0 };
     int Y{ 0 };
     string Name{ "" };
-    class CGameCharacter *Ptr{ nullptr };
+    CGameCharacter *Ptr{ nullptr };
 };
 
 // The map settings record (the original CMapSettings): every

@@ -8,7 +8,7 @@
 #include "macro.h"
 #include "../core/assist.h"
 #include "../managers/spellmanager.h"
-#include "../model/commonitems/skill.h"
+#include "Managers/SkillsManager.h" // ::g_SkillsManager
 #include <algorithm>
 
 namespace xuoassist {
@@ -171,8 +171,10 @@ string CMacro::GetText()
                 return "UseSkill: last";
             }
 
-            return "UseSkill: " +
-                   g_Skills[(GetClass() == MCLASS_INT_VALUE ? (CMacroWithIntValue *)this : nullptr)->GetValue()].GetName();
+            const CSkill *skill = g_SkillsManager.Get(
+                (GetClass() == MCLASS_INT_VALUE ? (CMacroWithIntValue *)this : nullptr)->GetValue());
+
+            return "UseSkill: " + (skill != nullptr ? skill->Name : string());
         }
         case MT_CAST:
         case MT_CAST_NEW:
