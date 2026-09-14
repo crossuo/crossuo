@@ -865,13 +865,21 @@ the client's) has been dissolved into the client's handlers. Batches B1-B4
 fused the recv side: every recv handler is now either fused into the client
 handler, kept whole on the recv tap with a rationale, or deleted as a
 duplicate of client state updates. B5 audited and closed the send side.
-Final table composition (`m_Packets` rows carrying handlers): 25 rows —
-4 `RMSGH` recv keeps (0x56/0x7C/0x9E/0xB0), 18 `SMSGH` send handlers and
-3 `BMSGH` rows (0x6C Target and 0xBF Extended Command carry the recv keeps,
-0xFC submessages ride the connected-gate exemption).
+Table composition after B8 (`m_Packets` rows carrying handlers): 25 rows —
+16 `SMSGH` send handlers, 3 `SMSGHB` rows (0x6C Target, 0x9A ASCII Prompt,
+0xC2 Unicode Prompt; each send half records/intercepts the outgoing round
+and its recv half is fused into the client handler), 2 `BMSGH` rows and 4
+`RMSGH` recv keeps (0x56/0x7C/0x9E/0xB0). The recv-capable set is the 4
+`RMSGH` keeps plus the 0xBF/0xFC `BMSGH` recv halves.
 0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
 0xF0 Krrios client special are plain `BMSG` rows (both directions are
 client-owned; the host fuses the MegaCliloc event).
+
+Fusion checklist rule: a fused consume hook that parses the shared reader
+must be Ptr-neutral (e.g. `CTarget::SetMultiData` calls `reader.ResetPtr()`)
+or must restore the reader position before the client body runs — 0x6C
+Target is the reference fix (`Ptr = Start + 1;` after the fused
+`SetRecvData` parse so the client `SetData` reads from the payload start).
 
 ### Send tap (permanent seam)
 
@@ -921,8 +929,8 @@ Target-hook interception (the from-target pipeline) is self-contained in
 the next outgoing 0x6C response feeds the armed handler, and
 `RestoreTarget` re-dispatches the client's own saved request. The outgoing
 0x6C is never dropped — the player's response still reaches the server; the
-consume that keeps the client cursor-free happens on the recv side
-(`TargetR`/`SetRecvData` PlayWaiting path).
+consume that keeps the client cursor-free lives in the fused client handler
+(0x6C Target, via `SetRecvData`'s CheckHook/PlayWaiting consume).
 
 Second Login (0x91): the assistant handler only reset `g_Connected`. 0x91
 is sent exactly once per game-server session by `CGame::RelayServer` during
@@ -1047,6 +1055,21 @@ B7 (death/prompt/profile) completes the BMSGH recv halves:
   from the client parse: top + data + bottom lines) plus the one-shot
   `BlockProfile` consume before `CGumpProfile` is added. Row demoted to
   `UMSG` (the send half was a no-op; profile requests are client packets).
+- Target cursor 0x6C: the fused block sits at the top of the client handler
+  (0x99 shape): both dispatchers enter a fixed-size handler at `Start+1`
+  (0x6C is fixed-size 0x13, so no length skip) — the same position the old
+  tap dispatched `TargetR` from, so `SetRecvData` (which copies the whole
+  packet from `Start` and reads type/cursor-id/cursor-type from offset 1)
+  sees identical bytes. A WaitTarget hook answer (CheckHook) or a playing
+  macro waiting on the cursor consumes the packet; the client then keeps no
+  cursor state and skips the PartyHelper replay. Assistant-published
+  replays (`RestoreTarget` → `SendClient(m_CurrentClientTarget)`) arrive
+  under `m_AssistantInjecting` and run the client body: the client opens
+  its own cursor from the saved bytes. Row demoted to `SMSGHB` (the send
+  half keeps recording/intercepting the outgoing 0x6C replies; the
+  assistant's own cursor replies go out through the `CPacketTarget*`
+  builders, never through the table). This was the last recv half: the
+  assistant table now dispatches recv to the 4 `RMSGH` keeps only.
 
 ## Script API
 

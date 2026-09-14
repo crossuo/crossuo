@@ -187,7 +187,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x69*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x6A*/ UMSG(0x03),
     /*0x6B*/ UMSG(0x09),
-    /*0x6C*/ BMSGH("Target Data", 0x13, TargetS, TargetR),
+    /*0x6C*/ SMSGHB("Target Data", 0x13, TargetS),
     /*0x6D*/ RMSG("Play Music", 0x03),
     /*0x6E*/ UMSG(0x0e),
     /*0x6F*/
@@ -513,10 +513,10 @@ static void AssistantPackets_CheckDisconnect()
 // Returns the consumption result: true when the assistant consumed the packet
 // and the client must skip its own processing. The internal handler chain keeps
 // the reverse convention (true = pass through, false = consumed), so the
-// result is inverted here. The only current producer of "consumed" is the
-// WaitTarget hook path (TargetR/0x6C via CTarget::SetRecvData -> CheckHook,
-// and its MultiPlacement/0x99 sibling): the auto-target swallows the reply so
-// the client keeps no open cursor.
+// result is inverted here. The current producers of "consumed" are the fused
+// WaitTarget hook paths in the client handlers (0x6C Target and 0x99
+// MultiPlacement via CTarget::SetRecvData/SetMultiData -> CheckHook): the
+// auto-target swallows the reply so the client keeps no open cursor.
 bool AssistantPackets_Recv(uint8_t *buf, size_t size)
 {
     AssistantPackets_Init();
@@ -579,13 +579,6 @@ PACKET_HANDLER(TargetS)
     }
 
     return g_Target.SetSendData(*this);
-}
-
-PACKET_HANDLER(TargetR)
-{
-    g_TargetReceived = true;
-
-    return g_Target.SetRecvData(*this); // (assist/target round)
 }
 
 PACKET_HANDLER(ClientTalkS)

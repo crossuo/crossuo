@@ -67,7 +67,6 @@ protected:
     //! Packet handlers
     XA_HANDLER_PACKET(WarmodeS);
     XA_HANDLER_PACKET(TargetS);
-    XA_HANDLER_PACKET(TargetR);
     XA_HANDLER_PACKET(ClientTalkS);
     XA_HANDLER_PACKET(UnicodeClientTalk);
     XA_HANDLER_PACKET(OpenMenu);

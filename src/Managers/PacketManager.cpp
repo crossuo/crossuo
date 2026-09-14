@@ -3625,6 +3625,26 @@ PACKET_HANDLER(OpenUrl)
 
 PACKET_HANDLER(Target)
 {
+#if defined(XUO_ASSISTANT)
+    // the WaitTarget hook path (CTarget::CheckHook) or a playing macro
+    // waiting on the target cursor consumes the cursor reply: the client
+    // keeps no open cursor and skips its own processing (the old recv-tap
+    // veto; assistant-published replays bypass it)
+    if (!m_AssistantInjecting)
+    {
+        xuoassist::g_TargetReceived = true;
+        if (!xuoassist::g_Target.SetRecvData(*this))
+        {
+            return;
+        }
+        // SetRecvData advanced the shared reader (Start+1 -> Start+7):
+        // restore the position so the client body below parses the cursor
+        // from the 0x6C payload offset (Type=buf[1], CursorID=buf[2..5],
+        // CursorType=buf[6]) on the pass-through path
+        Ptr = Start + 1;
+    }
+#endif
+
     g_Target.SetData(*this);
 
     if (g_PartyHelperTimer > g_Ticks && (g_PartyHelperTarget != 0u))
