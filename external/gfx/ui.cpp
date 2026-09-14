@@ -170,7 +170,10 @@ ui_context ui_init(win_context &win, bool enable_viewports)
     static const ImWchar icons_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
     ImFontConfig config;
     config.MergeMode = true;
-    io.Fonts->AddFontDefault();
+    // both fonts must carry an explicit reference size for MergeMode
+    ImFontConfig baseConfig;
+    baseConfig.SizePixels = fontSize;
+    io.Fonts->AddFontDefault(&baseConfig);
     io.Fonts->AddFontFromMemoryCompressedTTF(
         iconsforkawesome_compressed_data,
         iconsforkawesome_compressed_size,
