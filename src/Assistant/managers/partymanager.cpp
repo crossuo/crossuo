@@ -118,7 +118,6 @@ bool CPartyManager::OnPacketReceived(CDataReader &reader)
         }
         case 7:
         {
-            uint serial = reader.ReadUInt32BE();
             m_Inviter = reader.ReadUInt32BE();
 
             if (g_AssistantConfig.PartyInviteCanBeAutoAccepted(serial))

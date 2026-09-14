@@ -102,9 +102,9 @@ void CParty::Clear()
 
 void CParty::ParsePacketData(CDataReader &reader)
 {
-    uint8_t code = reader.ReadUInt8();
+    uint8_t subCmd = reader.ReadUInt8();
 
-    switch (code)
+    switch (subCmd)
     {
         case 1: //Add member
         {
