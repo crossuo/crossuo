@@ -159,6 +159,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x53*/ RMSG("Error Code", 0x02),
     /*0x54*/ UMSG(0x0c),
     /*0x55*/ UMSG(0x01),
+    // KEEP (recv tap routes 0x56): assistant map engine — the edit-response
+    // pin translates into absolute coords + tracker points; no client producer.
     /*0x56*/ RMSGH("Map Data", 0x0b, MapPacket),
     /*0x57*/ BMSG("Update Regions", 0x6e),
     /*0x58*/ UMSG(0x6a),
@@ -190,7 +192,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x71*/ BMSG("Bulletin Board Data", PACKET_VARIABLE_SIZE),
     /*0x72*/ SMSGH("War Mode", 0x05, WarmodeS),
     /*0x73*/ BMSG("Ping", 0x02),
-    /*0x74*/ RMSGH("Vendor Buy List", PACKET_VARIABLE_SIZE, BuyList),
+    /*0x74*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x75*/ SMSG("Rename Character", 0x23),
     /*0x76*/ RMSG("New Subserver", 0x10),
     /*0x77*/ UMSG(0x11),
@@ -218,7 +220,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x8D*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x8E*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x8F*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x90*/ RMSGH("Display Map", 0x13, DisplayMap),
+    /*0x90*/ UMSG(0x13),
     /*0x91*/ SMSGH("Second Login", 0x41, SecondLogin),
     /*0x92*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x93*/ RMSG("Open Book", 0x63),
@@ -251,7 +253,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xAD*/
     SMSGH("Unicode Client Talk", PACKET_VARIABLE_SIZE, UnicodeClientTalk),
     /*0xAE*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xAF*/ RMSGH("Display Death", 0x0d, DisplayDeath),
+    /*0xAF*/ UMSG(0x0d),
     /*0xB0*/ RMSGH("Open Gump", PACKET_VARIABLE_SIZE, OpenGump),
     /*0xB1*/ SMSGH("Gump Choice", PACKET_VARIABLE_SIZE, ChoiceGump),
     /*0xB2*/ BMSG("Chat Data", PACKET_VARIABLE_SIZE),
@@ -304,7 +306,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xDC*/ RMSG("OPL Info Packet", 9),
     /*0xDD*/ RMSG("Compressed Gump", PACKET_VARIABLE_SIZE),
     /*0xDE*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xDF*/ RMSGH("Buff/Debuff", PACKET_VARIABLE_SIZE, BuffDebuff),
+    /*0xDF*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xE0*/ SMSG("Bug Report KR", PACKET_VARIABLE_SIZE),
     /*0xE1*/ SMSG("Client Type KR/SA", 0x09),
     /*0xE2*/ RMSG("New Character Animation", 0xa),
@@ -328,7 +330,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xF2*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xF3*/ RMSG("Update Item (SA)", 0x18),
     /*0xF4*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xF5*/ RMSGH("Display New Map", 0x15, DisplayMap),
+    /*0xF5*/ UMSG(0x15),
     /*0xF6*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xF7*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xF8*/ SMSG("Character Creation (7.0.16.0)", 0x6a),
@@ -693,26 +695,12 @@ PACKET_HANDLER(UnicodeClientTalk)
     return true;
 }
 
-PACKET_HANDLER(DisplayDeath)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    g_LastCorpseObject = ReadUInt32BE(4);
-
-    if (g_AssistantConfig.CorpsesAutoopen())
-    {
-        g_CorpseManager.AddAutoOpen(
-            g_LastCorpseObject, (int)(g_Ticks + g_AssistantConfig.CorpseKeepDelay()));
-    }
-
-    return true;
-}
-
 PACKET_HANDLER(OpenMenu)
 {
+    // KEEP (recv tap routes 0x7C): the menu agent parses its own CMenu model
+    // for the auto-answer hooks and a playing macro can consume the packet
+    // (the client then keeps no menu gump); the client parse builds only the
+    // UI gump.
     g_MenuReceived = true;
 
     return g_MenuManager.OnPacketReceived(*this); // (menu round)
@@ -744,198 +732,6 @@ PACKET_HANDLER(DeathScreenR)
         {
             g_Assistant.ClientPrint("You are DEAD!");
             return false;
-        }
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(BuffDebuff)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    const int tableCount = 126;
-
-    static const ushort table[tableCount] = {
-        0x754C, 0x754A, 0x0000, 0x0000, 0x755E, 0x7549, 0x7551, 0x7556, 0x753A, 0x754D, 0x754E,
-        0x7565, 0x753B, 0x7543, 0x7544, 0x7546, 0x755C, 0x755F, 0x7566, 0x7554, 0x7540, 0x7568,
-        0x754F, 0x7550, 0x7553, 0x753E, 0x755D, 0x7563, 0x7562, 0x753F, 0x7559, 0x7557, 0x754B,
-        0x753D, 0x7561, 0x7558, 0x755B, 0x7560, 0x7541, 0x7545, 0x7552, 0x7569, 0x7548, 0x755A,
-        0x753C, 0x7547, 0x7567, 0x7542, 0x758A, 0x758B, 0x758C, 0x758D, 0x0000, 0x758E, 0x094B,
-        0x094C, 0x094D, 0x094E, 0x094F, 0x0950, 0x753E, 0x5011, 0x7590, 0x7591, 0x7592, 0x7593,
-        0x7594, 0x7595, 0x7596, 0x7598, 0x7599, 0x759B, 0x759C, 0x759E, 0x759F, 0x75A0, 0x75A1,
-        0x75A3, 0x75A4, 0x75A5, 0x75A6, 0x75A7, 0x75C0, 0x75C1, 0x75C2, 0x75C3, 0x75C4, 0x75F2,
-        0x75F3, 0x75F4, 0x75F5, 0x75F6, 0x75F7, 0x75F8, 0x75F9, 0x75FA, 0x75FB, 0x75FC, 0x75FD,
-        0x75FE, 0x75FF, 0x7600, 0x7601, 0x7602, 0x7603, 0x7604, 0x7605, 0x7606, 0x7607, 0x7608,
-        0x7609, 0x760A, 0x760B, 0x760C, 0x760D, 0x760E, 0x760F, 0x7610, 0x7611, 0x7612, 0x7613,
-        0x7614, 0x7615, 0x75C5, 0x75F6, 0x761B
-    };
-
-    static const string nameTable[tableCount] = { "dismount",
-                                                   "disarm",
-                                                   "0x0000",
-                                                   "0x0000",
-                                                   "night sight",
-                                                   "death strike",
-                                                   "evil omen",
-                                                   "0x7556",
-                                                   "regeneration",
-                                                   "divine fury",
-                                                   "enemy of one",
-                                                   "hiding",
-                                                   "meditation",
-                                                   "blood oath caster",
-                                                   "blood oath",
-                                                   "corpse skin",
-                                                   "mind rot",
-                                                   "pain spike",
-                                                   "strangle",
-                                                   "gift of renewal",
-                                                   "attune weapon",
-                                                   "thunderstorm",
-                                                   "essence of wind",
-                                                   "ethereal voyage",
-                                                   "gift of life",
-                                                   "arcane empowerment",
-                                                   "mortal strike",
-                                                   "reactive armor",
-                                                   "protection",
-                                                   "arch protection",
-                                                   "magic reflection",
-                                                   "incognito",
-                                                   "disguised",
-                                                   "animal form",
-                                                   "polymorph",
-                                                   "invisibility",
-                                                   "paralyze",
-                                                   "poison",
-                                                   "bleed",
-                                                   "clumsy",
-                                                   "feeblemind",
-                                                   "weaken",
-                                                   "curse",
-                                                   "mass curse",
-                                                   "agility",
-                                                   "cunning",
-                                                   "strength",
-                                                   "bless",
-                                                   "sleep",
-                                                   "0x758B",
-                                                   "spell plague",
-                                                   "0x758D",
-                                                   "0x0000",
-
-
-                                                   "0x094B",
-                                                   "0x094C",
-                                                   "0x094D",
-                                                   "0x094E",
-                                                   "0x094F",
-                                                   "0x0950",
-                                                   "0x753E",
-                                                   "0x5011",
-                                                   "0x7590",
-                                                   "0x7591",
-                                                   "0x7592",
-                                                   "0x7593",
-                                                   "0x7594",
-                                                   "0x7595",
-                                                   "0x7596",
-                                                   "0x7598",
-                                                   "0x7599",
-                                                   "0x759B",
-                                                   "0x759C",
-                                                   "0x759E",
-                                                   "0x759F",
-                                                   "0x75A0",
-                                                   "0x75A1",
-                                                   "0x75A3",
-                                                   "0x75A4",
-                                                   "0x75A5",
-                                                   "0x75A6",
-                                                   "0x75A7",
-                                                   "0x75C0",
-                                                   "0x75C1",
-                                                   "0x75C2",
-                                                   "0x75C3",
-                                                   "0x75C4",
-                                                   "0x75F2",
-                                                   "0x75F3",
-                                                   "0x75F4",
-                                                   "0x75F5",
-                                                   "0x75F6",
-                                                   "0x75F7",
-                                                   "0x75F8",
-                                                   "counter attack",
-                                                   "0x75FA",
-                                                   "0x75FB",
-                                                   "0x75FC",
-                                                   "0x75FD",
-                                                   "0x75FE",
-                                                   "0x75FF",
-                                                   "0x7600",
-                                                   "0x7601",
-                                                   "0x7602",
-                                                   "0x7603",
-                                                   "0x7604",
-                                                   "0x7605",
-                                                   "0x7606",
-                                                   "0x7607",
-                                                   "0x7608",
-                                                   "0x7609",
-                                                   "0x760A",
-                                                   "0x760B",
-                                                   "0x760C",
-                                                   "0x760D",
-                                                   "0x760E",
-                                                   "0x760F",
-                                                   "0x7610",
-                                                   "0x7611",
-                                                   "0x7612",
-                                                   "0x7613",
-                                                   "0x7614",
-                                                   "0x7615",
-                                                   "0x75C5",
-                                                   "0x75F6",
-                                                   "0x761B" };
-
-    const ushort buffIconStart = 0x03E9;
-
-    uint serial = ReadUInt32BE();
-
-    ushort iconID = ReadUInt16BE() - buffIconStart;
-
-    if (iconID < tableCount && serial == g_PlayerSerial) // buff
-    {
-        ushort mode = ReadUInt16BE();
-
-        if (mode != 0u)
-        {
-            Move(12);
-
-            ushort timer = ReadUInt16BE();
-
-            Move(3);
-
-            /*uint titleCliloc =*/ReadUInt32BE();
-            uint descriptionCliloc = ReadUInt32BE();
-            /*uint wtfCliloc =*/ReadUInt32BE();
-
-            Move(4);
-
-            if (descriptionCliloc != 0u)
-            {
-                ReadWString(0, false);
-            }
-
-            g_AssistantEvents->OnBuffAdd(table[iconID], timer, nameTable[iconID]);
-        }
-        else
-        {
-            g_AssistantEvents->OnBuffRemove(table[iconID]);
         }
     }
 
@@ -1020,6 +816,10 @@ PACKET_HANDLER(ExtendedCommandS)
 
 PACKET_HANDLER(ExtendedCommandR)
 {
+    // KEEP (recv tap routes 0xBF): the client's party parse (case 6) drops
+    // the invite events and party chat the party agent needs; the
+    // equipment-info journal/inspector round, the context-menu round and the
+    // assistant facet map (case 8) ride the same row.
     ushort cmd = ReadUInt16BE();
 
     switch (cmd)
@@ -1224,6 +1024,9 @@ PACKET_HANDLER(DyeDataR)
 
 PACKET_HANDLER(OpenGump)
 {
+    // KEEP (recv tap routes 0xB0): the gump hooks parse the command/text-line
+    // stream into their own gump model and a playing macro can consume the
+    // packet; the client parse builds only the UI gump.
     if (g_World == nullptr)
     {
         return true;
@@ -1242,32 +1045,6 @@ PACKET_HANDLER(ChoiceGump)
     }
 
     return g_GumpManager.OnPacketSend(*this); // (gump round)
-}
-
-PACKET_HANDLER(DisplayMap)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    if (EnabledFeatureMapEcho())
-    {
-        Move(6);
-
-        ushort startX = ReadUInt16BE();
-        ushort startY = ReadUInt16BE();
-        // ushort endX = ReadUInt16BE();
-        // ushort endY = ReadUInt16BE();
-
-        if (*Start != 0xF5)
-        {
-            g_LastTMapX = startX;
-            g_LastTMapY = startY;
-        }
-    }
-
-    return true;
 }
 
 PACKET_HANDLER(MegaClilocS)
@@ -1530,14 +1307,6 @@ PACKET_HANDLER(CharacterProfileR)
     return true;
 }
 
-PACKET_HANDLER(BuyList)
-{
-    g_ShopReceived = true;
-
-    // was: return g_TabAgentsShop->OnPacketReceivedBuyList(*this); (Phase 4)
-    return g_ShopAgent.OnBuyList(*this);
-}
-
 PACKET_HANDLER(BuyReplyS)
 {
     // was: return g_TabAgentsShop->OnPacketSendBuyReply();
@@ -1554,6 +1323,10 @@ PACKET_HANDLER(BuyReplyR)
 
 PACKET_HANDLER(SellList)
 {
+    // KEEP (recv tap routes 0x9E): the sell fields map 1:1 onto the client
+    // parse, but the auto-sell agent consumes the packet when it replays the
+    // list itself (the client then keeps no sell gump); an in-handler hook
+    // cannot preserve that consume.
     g_ShopReceived = true;
 
     // was: return g_TabAgentsShop->OnPacketReceivedSellList(*this); (Phase 4)

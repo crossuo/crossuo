@@ -877,6 +877,30 @@ gotchas, accepted deltas and the reasoning behind them.
 - B5 send side: the 11 SMSGH recording/bookkeeping taps collapse into one assistant
   dispatch in CGame::Send; delete the assistant send table.
 
+B4 outcome (the recv tap survives for the KEEP ids only):
+
+- Injected: DisplayDeath 0xAF (last-corpse + auto-open hook sits before the
+  owner-not-found early return, matching the old run-always tap); DisplayMap
+  0x90/0xF5 (one client handler serves both ids; the map-echo corner
+  assignments keep the 0xF5 exclusion); BuyList 0x74 (the shop agent's
+  OnBuyList was already a no-op - the client stores price/name on the vendor
+  items - so only the g_ShopReceived wait flag moved, set before the client's
+  g_World gate); BuffDebuff 0xDF (the mode/timer/cliloc reads moved ahead of
+  the client's buff-window guard, which has no side effects, so the buff
+  mirror fires for own buffs whether or not the window gump exists; the
+  script-visible name table became AssistantBuffName in assistantevents).
+- Kept (the recv tap routes exactly 0x56, 0x7C, 0x9E, 0xB0, 0xBF): Map Data
+  mapecho translates the 0x56 edit-response pin into absolute "map opened to"
+  coordinates + tracker points - assistant map-engine state with no
+  client-side producer; Open Menu/Open Gump feed their own agent models and a
+  playing macro (or a menu/gump hook) can consume the packet so the client
+  keeps no gump - a veto an in-handler hook cannot express; SellList fields
+  are 1:1 with the client parse but the auto-sell consume has the same veto
+  problem; 0xBF stays whole (client party parse drops invite events + party
+  chat; equipment-info journal, context-menu round and the assistant facet
+  map ride the row). The connected-gate exemption list (0x1B/0x55/0xFC) is
+  unaffected: every kept id arrives only with a world.
+
 
 The parallel assistant packetmanager (its own handler table, tapped before
 the client's) is dissolved handler-by-handler into the client's handlers:

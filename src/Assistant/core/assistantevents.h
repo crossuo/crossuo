@@ -91,7 +91,6 @@ public:
         (void)name;
     }
     virtual void OnBuffRemove(ushort graphic) { (void)graphic; }
-
     // --- corpses (was g_CorpseManager.Add; auto-open bookkeeping) ----------
     // expireTicks is an absolute g_Ticks stamp.
     virtual void OnCorpseAdd(uint serial, uint expireTicks)
@@ -197,6 +196,10 @@ public:
 // The installed sink. Never null: assistantevents.cpp installs the default
 // instance at static-init; a UI round replaces (and later restores) it.
 extern CAssistantEvents *g_AssistantEvents;
+
+// Script-visible buff display name for the 0xDF mirror (the old recv-tap
+// handler's static name table); iconIndex is the icon id minus 0x03E9.
+const string &AssistantBuffName(ushort iconIndex);
 
 } // namespace xuoassist
 

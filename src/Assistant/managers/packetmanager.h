@@ -72,14 +72,12 @@ protected:
     XA_HANDLER_PACKET(ClientTalkS);
     XA_HANDLER_PACKET(ClientTalkR);
     XA_HANDLER_PACKET(UnicodeClientTalk);
-    XA_HANDLER_PACKET(DisplayDeath);
     XA_HANDLER_PACKET(OpenMenu);
     XA_HANDLER_PACKET(MenuChoice);
     XA_HANDLER_PACKET(DeathScreenS);
     XA_HANDLER_PACKET(DeathScreenR);
     XA_HANDLER_PACKET(ClientMessagesS);
     XA_HANDLER_PACKET(ClientMessagesR);
-    XA_HANDLER_PACKET(BuffDebuff);
     XA_HANDLER_PACKET(ExtendedCommandS);
     XA_HANDLER_PACKET(ExtendedCommandR);
     XA_HANDLER_PACKET(SecureTradingS);
@@ -88,7 +86,6 @@ protected:
     XA_HANDLER_PACKET(DyeDataR);
     XA_HANDLER_PACKET(OpenGump);
     XA_HANDLER_PACKET(ChoiceGump);
-    XA_HANDLER_PACKET(DisplayMap);
     XA_HANDLER_PACKET(MegaClilocS);
     XA_HANDLER_PACKET(MegaClilocR);
     XA_HANDLER_PACKET(Resend);
@@ -100,7 +97,6 @@ protected:
     XA_HANDLER_PACKET(UnicodePromptR);
     XA_HANDLER_PACKET(CharacterProfileS);
     XA_HANDLER_PACKET(CharacterProfileR);
-    XA_HANDLER_PACKET(BuyList);
     XA_HANDLER_PACKET(BuyReplyS);
     XA_HANDLER_PACKET(BuyReplyR);
     XA_HANDLER_PACKET(SellList);

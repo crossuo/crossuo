@@ -4608,6 +4608,16 @@ PACKET_HANDLER(DisplayDeath)
 
     auto serial = ReadUInt32BE();
     const auto corpseSerial = ReadUInt32BE();
+#if defined(XUO_ASSISTANT)
+    // the assistant tracks the last corpse for the auto-open feature; the old
+    // recv-tap hook ran for every 0xAF, not only for characters still found
+    xuoassist::g_LastCorpseObject = corpseSerial;
+    if (xuoassist::g_AssistantConfig.CorpsesAutoopen())
+    {
+        g_CorpseManager.AddAutoOpen(
+            corpseSerial, (int)(g_Ticks + xuoassist::g_AssistantConfig.CorpseKeepDelay()));
+    }
+#endif
     const auto running = ReadUInt32BE();
     auto *owner = g_World->FindWorldCharacter(serial);
     if (owner == nullptr)
@@ -4625,7 +4635,6 @@ PACKET_HANDLER(DisplayDeath)
     const auto group = g_AnimationManager.GetDieGroupIndex(owner->Graphic, running != 0, true);
     owner->SetAnimation(group, 0, 5, 1, false, false);
     owner->AnimIndex = 0;
-    // TODO: auto open corpse
 }
 
 PACKET_HANDLER(OpenChat)
@@ -5040,27 +5049,55 @@ PACKET_HANDLER(BuffDebuff)
 
     const uint16_t buffIconStart = 0x03E9; //0x03EA ???
     const uint32_t _serial = ReadUInt32BE();
-    (void)_serial;
+    (void)_serial; // consumed only by the assistant buff mirror below
     uint16_t iconID = ReadUInt16BE() - buffIconStart;
     if (iconID < tableCount) //buff
     {
         CGumpBuff *gump = (CGumpBuff *)g_GumpManager.UpdateGump(0, 0, GT_BUFF);
+        const uint16_t mode = ReadUInt16BE();
+
+        // parsed ahead of the buff-window guard: the assistant mirror fires
+        // for own buffs whether or not the buff window gump exists, and the
+        // reads themselves have no client side effect
+        uint16_t timer = 0;
+        uint32_t titleCliloc = 0;
+        uint32_t descriptionCliloc = 0;
+        uint32_t wtfCliloc = 0;
+        if (mode != 0u)
+        {
+            Move(12);
+
+            timer = ReadUInt16BE();
+
+            Move(3);
+
+            titleCliloc = ReadUInt32BE();
+            descriptionCliloc = ReadUInt32BE();
+            wtfCliloc = ReadUInt32BE();
+
+            Move(4);
+        }
+
+#if defined(XUO_ASSISTANT)
+        if (_serial == g_PlayerSerial)
+        {
+            // the script-visible buff mirror (the old recv-tap hook)
+            if (mode != 0u)
+            {
+                xuoassist::g_AssistantEvents->OnBuffAdd(
+                    table[iconID], timer, xuoassist::AssistantBuffName(iconID));
+            }
+            else
+            {
+                xuoassist::g_AssistantEvents->OnBuffRemove(table[iconID]);
+            }
+        }
+#endif
 
         if (gump != nullptr)
         {
-            uint16_t mode = ReadUInt16BE();
             if (mode != 0u)
             {
-                Move(12);
-
-                uint16_t timer = ReadUInt16BE();
-                Move(3);
-
-                uint32_t titleCliloc = ReadUInt32BE();
-                uint32_t descriptionCliloc = ReadUInt32BE();
-                uint32_t wtfCliloc = ReadUInt32BE();
-                Move(4);
-
                 auto title = g_ClilocManager.Cliloc(g_Language)->GetW(titleCliloc, true);
                 wstr_t description;
                 wstr_t wtf;
@@ -6048,6 +6085,16 @@ PACKET_HANDLER(DisplayMap)
 
     uint16_t startX = ReadUInt16BE();
     uint16_t startY = ReadUInt16BE();
+#if defined(XUO_ASSISTANT)
+    // the mapecho feature keys its 0x56 "map opened to" coordinates off the
+    // last opened map's start corner (the 0xF5 facet variant is excluded);
+    // the old recv-tap hook assigned the same parsed fields
+    if (xuoassist::EnabledFeatureMapEcho() && *Start != 0xF5)
+    {
+        xuoassist::g_LastTMapX = startX;
+        xuoassist::g_LastTMapY = startY;
+    }
+#endif
     uint16_t endX = ReadUInt16BE();
     uint16_t endY = ReadUInt16BE();
     uint16_t width = ReadUInt16BE();
@@ -6441,6 +6488,12 @@ PACKET_HANDLER(BookData)
 
 PACKET_HANDLER(BuyList)
 {
+#if defined(XUO_ASSISTANT)
+    // wait-flag for scripts/macros waiting on the shop gump; the old recv-tap
+    // row set it before any parse (the price/name bookkeeping itself already
+    // lives in this handler)
+    xuoassist::g_ShopReceived = true;
+#endif
     if (g_World == nullptr)
     {
         return;

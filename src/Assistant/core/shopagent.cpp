@@ -426,15 +426,6 @@ bool CShopAgent::OnOpenContainer(uint serial)
     return result;
 }
 
-bool CShopAgent::OnBuyList(CDataReader &reader)
-{
-    (void)reader;
-    // the client handler stores the buy list (price/name) on the vendor
-    // items; the vendor snapshot is taken from those items when the
-    // container opens
-    return true;
-}
-
 bool CShopAgent::OnBuyReply(CDataReader &reader)
 {
     (void)reader;
