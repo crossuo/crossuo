@@ -100,7 +100,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x19*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x1A*/ RMSG("Update Item", PACKET_VARIABLE_SIZE),
     /*0x1B*/ UMSG(0x25),
-    /*0x1C*/ RMSGH("Server Talk", PACKET_VARIABLE_SIZE, Talk),
+    /*0x1C*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x1D*/ UMSG(0x05),
     /*0x1E*/ UMSG(0x04),
     /*0x1F*/ UMSG(0x08),
@@ -250,7 +250,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xAC*/ SMSG("Text Entry Dialog Reply", PACKET_VARIABLE_SIZE),
     /*0xAD*/
     SMSGH("Unicode Client Talk", PACKET_VARIABLE_SIZE, UnicodeClientTalk),
-    /*0xAE*/ RMSGH("Unicode Server Talk", PACKET_VARIABLE_SIZE, UnicodeTalk),
+    /*0xAE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xAF*/ RMSGH("Display Death", 0x0d, DisplayDeath),
     /*0xB0*/ RMSGH("Open Gump", PACKET_VARIABLE_SIZE, OpenGump),
     /*0xB1*/ SMSGH("Gump Choice", PACKET_VARIABLE_SIZE, ChoiceGump),
@@ -340,8 +340,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     // deliver 0xFC packets through the server stream.
     /*0xFC*/
     BMSGH("CrossUO messages", PACKET_VARIABLE_SIZE, ClientMessagesS, ClientMessagesR),
-    /*0xFE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xFD*/ RMSG("Razor Handshake", 0x8),
+    /*0xFE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xFF*/ UMSG(PACKET_VARIABLE_SIZE)
 };
 
@@ -439,6 +439,32 @@ static void CDECL Bridge_SetValueString(VALUE_KEY_STRING key, const char *value)
     g_Game.ValueString(key, value);
 }
 
+// Table-integrity guard: m_Packets is a fixed [0x100] array initialized
+// positionally (each row is commented /*0xNN*/), so a row deleted from the
+// initializer silently shifts every later opcode by one and zero-fills the
+// tail. Every real row names its packet (UMSG rows are "?"); zero-filled rows
+// have a null Name, so counting named rows catches any gap. Runs once, at
+// init, and only logs on mismatch.
+void CPacketManager::CheckPacketsTable()
+{
+    int named = 0;
+    for (int i = 0; i < 0x100; i++)
+    {
+        if (m_Packets[i].Name != nullptr)
+        {
+            named++;
+        }
+    }
+    if (named != 0x100)
+    {
+        Warning(
+            Assistant,
+            "packet table incomplete: %d/256 entries (a row is missing from "
+            "the m_Packets initializer)\n",
+            named);
+    }
+}
+
 static void AssistantPackets_Init()
 {
     static bool s_initialized = false;
@@ -448,6 +474,7 @@ static void AssistantPackets_Init()
     }
 
     s_initialized = true;
+    CPacketManager::CheckPacketsTable();
 
     g_GetStaticFlags = Bridge_GetStaticFlags;
     g_GetInt = Bridge_GetValueInt;
@@ -514,15 +541,6 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
 }
 
 #define PACKET_HANDLER(name) bool CPacketManager::Handle##name()
-
-static string to_lower(string text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
 
 PACKET_HANDLER(SecondLogin)
 {
@@ -671,167 +689,6 @@ PACKET_HANDLER(UnicodeClientTalk)
     {
         pack16(Start + 4, replaceFontColorValue);
     }
-
-    return true;
-}
-
-PACKET_HANDLER(Talk)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    auto type = SPEECH_TYPE(ReadUInt8());
-    ushort textColor = ReadUInt16BE();
-    ushort font = ReadUInt16BE();
-
-    if ((serial == 0u) && font == 0xFFFF && textColor == 0xFFFF)
-    {
-        return true;
-    }
-    if (font >= 10)
-    {
-        return true;
-    }
-
-    string name = ReadStringChecked(0);
-    string str = "";
-
-    if (Size > 44)
-    {
-        Ptr = Start + 44;
-        str = ReadStringChecked(0);
-    }
-
-    CJournalMessage message(serial, textColor, str);
-
-    CGameObject *obj = g_World->FindWorldObject(serial);
-
-    if (type == ST_BROADCAST || serial == 0xFFFFFFFF || (serial == 0u) ||
-        (to_lower(name) == "system" && obj == nullptr))
-    {
-        message.SetFlags(JMT_SYSTEM);
-    }
-    else
-    {
-        if (obj != nullptr)
-        {
-            if (serial == g_PlayerSerial)
-            {
-                message.SetFlags(JMT_MY);
-            }
-            else if (obj->GetName() == name && str != name)
-            {
-                ushort replaceFontColorValue = 0;
-                bool replaceFontColor =
-                    g_AssistantConfig.GetCharactersFontColor(replaceFontColorValue);
-
-                if (replaceFontColor)
-                {
-                    pack16(Start + 10, replaceFontColorValue);
-                }
-            }
-        }
-    }
-
-    g_AssistantEvents->OnJournalMessage(message);
-
-    if (g_AssistantConfig.CheckReplaceText(str, serial, graphic, type, textColor, font, 0, false))
-    {
-        return false;
-    }
-    if (g_AssistantConfig.CheckSpeechInFilter(str, textColor))
-    {
-        return false;
-    }
-
-    (void)graphic;
-
-    return true;
-}
-
-PACKET_HANDLER(UnicodeTalk)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    auto type = SPEECH_TYPE(ReadUInt8());
-    ushort textColor = ReadUInt16BE();
-    ushort font = ReadUInt16BE();
-    uint language = ReadUInt32BE();
-
-    if ((serial == 0u) && font == 0xFFFF && textColor == 0xFFFF)
-    {
-        return true;
-    }
-
-    string name = ReadStringChecked(0);
-    string str = "";
-
-    if (Size > 48)
-    {
-        Ptr = Start + 48;
-        int strLen = (Size - 48) / 2;
-        str = str_from(ReadWString(strLen).c_str());
-    }
-
-    CJournalMessage message(serial, textColor, str);
-
-    CGameObject *obj = g_World->FindWorldObject(serial);
-
-    if (type == ST_GUILD_CHAT && (name.length() != 0))
-    {
-        g_GuildManager.SetMemberName(serial, name); // (agents round)
-    }
-
-    if (type == ST_BROADCAST || serial == 0xFFFFFFFF || (serial == 0u) ||
-        (to_lower(name) == "system" && obj == nullptr))
-    {
-        message.SetFlags(JMT_SYSTEM);
-    }
-    else
-    {
-        if (obj != nullptr)
-        {
-            if (serial == g_PlayerSerial)
-            {
-                message.SetFlags(JMT_MY);
-            }
-            else if (obj->GetName() == name && str != name)
-            {
-                ushort replaceFontColorValue = 0;
-                bool replaceFontColor =
-                    g_AssistantConfig.GetCharactersFontColor(replaceFontColorValue);
-
-                if (replaceFontColor)
-                {
-                    pack16(Start + 10, replaceFontColorValue);
-                }
-            }
-        }
-    }
-
-    g_AssistantEvents->OnJournalMessage(message);
-
-    if (g_AssistantConfig.CheckReplaceText(
-            str, serial, graphic, type, textColor, font, language, true))
-    {
-        return false;
-    }
-    if (g_AssistantConfig.CheckSpeechInFilter(str, textColor))
-    {
-        return false;
-    }
-
-    (void)graphic;
-    (void)language;
 
     return true;
 }

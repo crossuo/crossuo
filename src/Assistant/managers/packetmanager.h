@@ -56,6 +56,10 @@ class CPacketManager : public CDataReader
 {
     SETGET(CLIENT_VERSION, ClientVersion, CV_OLD)
 
+public:
+    // init-time completeness check over m_Packets (see packetmanager.cpp)
+    static void CheckPacketsTable();
+
 private:
     static CPacketInfo m_Packets[0x100];
 
@@ -68,8 +72,6 @@ protected:
     XA_HANDLER_PACKET(ClientTalkS);
     XA_HANDLER_PACKET(ClientTalkR);
     XA_HANDLER_PACKET(UnicodeClientTalk);
-    XA_HANDLER_PACKET(Talk);
-    XA_HANDLER_PACKET(UnicodeTalk);
     XA_HANDLER_PACKET(DisplayDeath);
     XA_HANDLER_PACKET(OpenMenu);
     XA_HANDLER_PACKET(MenuChoice);

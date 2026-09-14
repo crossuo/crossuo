@@ -24,12 +24,13 @@
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
 #include <core/assistantevents.h> // xuoassist::g_AssistantEvents (journal, JMT_* flags)
 #include <core/global.h> // xuoassist mirrored state (light, weather, season, status requests)
-#include "../Misc.h" // pack16 (in-place packet patch kept from the old pre-parse flow)
+#include "../Misc.h" // pack16 (the morph/corpse-graphic in-place 0x78 patches)
 #include <core/target.h> // xuoassist::g_Target (WaitTarget hooks, target cursor state)
 #include <core/assist.h> // xuoassist::g_Assistant (status requests)
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (login reset)
 #include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
+#include <managers/guildmanager.h> // xuoassist::g_GuildManager (guild chat speaker names)
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
@@ -3650,11 +3651,6 @@ PACKET_HANDLER(Talk)
         return;
     }
 
-    if (font >= g_FontManager.FontCount)
-    {
-        return;
-    }
-
     astr_t str;
     if (Size > 44)
     {
@@ -3662,9 +3658,52 @@ PACKET_HANDLER(Talk)
         str = text; //ReadString();
     }
 
-    Info(Network, "%s: %s", name.c_str(), str.c_str());
-
     CGameObject *obj = g_World->FindWorldObject(serial);
+#if defined(XUO_ASSISTANT)
+    // journal record for every spoken line, taken before any filter can drop
+    // it; the filters see the packet's wire color, the font-color setting
+    // below re-hues the displayed message only; speech published by the
+    // assistant itself (SendClient queue) skips the tap entirely
+    if (!m_AssistantInjecting && font < 10)
+    {
+        const uint16_t wireColor = textColor;
+        xuoassist::CJournalMessage message(serial, wireColor, str);
+        if (type == ST_BROADCAST || serial == 0xFFFFFFFF || serial == 0u ||
+            (str_lower(name) == "system" && obj == nullptr))
+        {
+            message.SetFlags(xuoassist::JMT_SYSTEM);
+        }
+        else if (obj != nullptr)
+        {
+            if (serial == g_PlayerSerial)
+            {
+                message.SetFlags(xuoassist::JMT_MY);
+            }
+            else if (obj->GetName() == name && str != name)
+            {
+                uint16_t replaceFontColor = 0;
+                if (xuoassist::g_AssistantConfig.GetCharactersFontColor(replaceFontColor))
+                {
+                    textColor = replaceFontColor;
+                }
+            }
+        }
+
+        xuoassist::g_AssistantEvents->OnJournalMessage(message);
+        if (xuoassist::g_AssistantConfig.CheckReplaceText(
+                str, serial, graphic, type, wireColor, font, 0, false) ||
+            xuoassist::g_AssistantConfig.CheckSpeechInFilter(str, wireColor))
+        {
+            return;
+        }
+    }
+#endif
+    if (font >= g_FontManager.FontCount)
+    {
+        return;
+    }
+
+    Info(Network, "%s: %s", name.c_str(), str.c_str());
 
     if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || serial == 0u ||
         (str_lower(name) == "system" && obj == nullptr))
@@ -3744,7 +3783,9 @@ PACKET_HANDLER(UnicodeTalk)
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
     const uint32_t _language = ReadUInt32BE();
+#if !defined(XUO_ASSISTANT)
     (void)_language;
+#endif
     auto name = ReadString();
 
     if (serial == 0u && graphic == 0u && type == ST_NORMAL && font == 0xFFFF &&
@@ -3761,9 +3802,55 @@ PACKET_HANDLER(UnicodeTalk)
         str = ReadWStringBE((Size - 48) / 2);
     }
 
+    CGameObject *obj = g_World->FindWorldObject(serial);
+#if defined(XUO_ASSISTANT)
+    // same journal/filter/font-color tap as the ASCII talk; the filters see
+    // the packet's wire color, the font-color setting below re-hues the
+    // displayed message only; speech published by the assistant itself
+    // (SendClient queue) skips the tap entirely
+    if (!m_AssistantInjecting &&
+        !(serial == 0u && font == 0xFFFF && textColor == 0xFFFF))
+    {
+        const astr_t textA = str_from(str);
+        const uint16_t wireColor = textColor;
+        if (type == ST_GUILD_CHAT && name.length() != 0)
+        {
+            xuoassist::g_GuildManager.SetMemberName(serial, name); // (agents round)
+        }
+
+        xuoassist::CJournalMessage message(serial, wireColor, textA);
+        if (type == ST_BROADCAST || serial == 0xFFFFFFFF || serial == 0u ||
+            (str_lower(name) == "system" && obj == nullptr))
+        {
+            message.SetFlags(xuoassist::JMT_SYSTEM);
+        }
+        else if (obj != nullptr)
+        {
+            if (serial == g_PlayerSerial)
+            {
+                message.SetFlags(xuoassist::JMT_MY);
+            }
+            else if (obj->GetName() == name && textA != name)
+            {
+                uint16_t replaceFontColor = 0;
+                if (xuoassist::g_AssistantConfig.GetCharactersFontColor(replaceFontColor))
+                {
+                    textColor = replaceFontColor;
+                }
+            }
+        }
+
+        xuoassist::g_AssistantEvents->OnJournalMessage(message);
+        if (xuoassist::g_AssistantConfig.CheckReplaceText(
+                textA, serial, graphic, type, wireColor, font, _language, true) ||
+            xuoassist::g_AssistantConfig.CheckSpeechInFilter(textA, wireColor))
+        {
+            return;
+        }
+    }
+#endif
     Info(Network, "%s: %s", name.c_str(), str_from(str).c_str());
 
-    CGameObject *obj = g_World->FindWorldObject(serial);
     if (type == ST_GUILD_CHAT)
     {
         type = ST_BROADCAST;

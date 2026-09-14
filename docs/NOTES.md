@@ -910,6 +910,21 @@ is the color field in both layouts), and the replace-text/speech-filter
 veto. The veto early-return only suppresses client processing (the tap sits
 before the client handler dispatch).
 
+Speech tap (0x1C + 0xAE, fused in B3) adds two facts:
+
+- Assistant-injected prints (`CPacket::SendClient` queue → client-table
+  dispatch under `m_AssistantInjecting`) are `CPacketToClientSystemPrint`/
+  `CharacterPrint`/`TextReplacePrintA|W`, i.e. 0x1C/0xAE. They never ran the
+  assistant tap pre-fusion, so both speech hooks gate on `!m_AssistantInjecting`
+  — without it every replace-text reprint would be journaled twice and
+  re-run through the filters (a reprint matching its own filter loops).
+  `DisplayClilocString`'s hook stays ungated: no builder injects 0xC1/0xCC.
+- The ASCII tap sits before the client's `font >= g_FontManager.FontCount`
+  early-return, matching the pre-fusion order where the assistant journaled
+  lines the client then dropped for an invalid font (the assistant's own
+  gate was `font >= 10`, which also covers the `0xFFFF` ack probe). The
+  unicode tap gates only on the `serial==0 && font/color==0xFFFF` probe.
+
 ## Script API
 
 - The `[Q]/[G]/[D]` classification and the registration table live in
