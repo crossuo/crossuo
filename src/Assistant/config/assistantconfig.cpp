@@ -18,7 +18,7 @@
 #include "../core/packets.h"
 #include "../macros/macro.h"
 #include "../managers/displaymanager.h"
-#include "../managers/partymanager.h"
+#include "Party.h" // ::g_Party (party membership for the friends option)
 #include "../core/world.h"
 #include <xuocore/mappedfile.h> // ::CDataReader / ::CDataWriter
 
@@ -678,7 +678,7 @@ CIgnoreListEntry *CAssistantConfig::GetIgnoreList(const string &name)
 bool CAssistantConfig::InFriendList(uint serial)
 {
     // Was TabListsFriends::InFriendList.
-    if (m_FeelPartyMembersAsFriends && g_PartyManager.Contains(serial))
+    if (m_FeelPartyMembersAsFriends && g_Party.Contains((int)serial))
     {
         return true;
     }

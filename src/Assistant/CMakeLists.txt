@@ -64,7 +64,6 @@ set(XUOASSIST_SRCS
   "managers/guildmanager.cpp"
   "managers/menumanager.cpp"
   "managers/objectpropertiesmanager.cpp"
-  "managers/partymanager.cpp"
   "managers/promptmanager.cpp"
   "managers/skillmanager.cpp"
   "managers/spellmanager.cpp"

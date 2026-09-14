@@ -22,6 +22,7 @@
 
 #include "Managers/MapManager.h"    // ::g_MapManager (radar blocks via GetIndex)
 #include "Managers/ColorManager.h" // ::g_ColorManager (radarcol + hue)
+#include "Party.h"                 // ::g_Party (party member map color)
 #include "CrossUO.h"              // ::g_Game (season graphics)
 #include "GameObjects/RenderStaticObject.h" // CRenderStaticObject::IsNoDrawTile
 
@@ -30,7 +31,6 @@
 #include "../core/assist.h"            // RawStringToBool/BoolToText
 #include "../core/textconv.h"          // TextToSerial/SerialToText
 #include "../core/world.h"
-#include "../managers/partymanager.h"
 #include "../managers/guildmanager.h"
 
 namespace xuoassist {
@@ -66,7 +66,7 @@ CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint &serial)
         return OMCT_PLAYER;
     }
 
-    if (g_PartyManager.Contains(serial))
+    if (g_Party.Contains((int)serial))
     {
         return OMCT_PARTY_MEMBER;
     }

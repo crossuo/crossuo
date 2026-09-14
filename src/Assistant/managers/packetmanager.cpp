@@ -16,7 +16,6 @@
 #include "../managers/guildmanager.h"
 #include "../managers/gumpmanager.h"
 #include "../managers/menumanager.h"
-#include "../managers/partymanager.h"
 #include "../managers/promptmanager.h"
 #include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
@@ -775,18 +774,12 @@ PACKET_HANDLER(ExtendedCommandS)
 
 PACKET_HANDLER(ExtendedCommandR)
 {
-    // KEEP (recv tap routes 0xBF): the client's party parse (case 6) drops
-    // the invite events and party chat the party agent needs; the
-    // equipment-info journal/inspector round, the context-menu round and the
-    // assistant facet map (case 8) ride the same row.
+    // the equipment-info journal/inspector round, the context-menu round and
+    // the assistant facet map (case 8) ride this row
     ushort cmd = ReadUInt16BE();
 
     switch (cmd)
     {
-        case 6: // party
-        {
-            return g_PartyManager.OnPacketReceived(*this); // (agents/party round)
-        }
         case 8: //
         {
             uint oldMap = g_CurrentMap;

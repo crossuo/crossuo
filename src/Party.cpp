@@ -12,6 +12,11 @@
 #include "GameObjects/GameWorld.h"
 #include "GameObjects/GameCharacter.h"
 #include "Gumps/GumpStatusbar.h"
+#if defined(XUO_ASSISTANT)
+#include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (invitation rules)
+#include <core/assistantevents.h>   // xuoassist::g_AssistantEvents (party chat journal)
+#include <core/global.h>            // xuoassist::EnabledFeaturePartyAgent
+#endif
 
 CParty g_Party;
 
@@ -120,12 +125,12 @@ void CParty::ParsePacketData(CDataReader &reader)
                 for (int i = 0; i < 10; i++)
                 {
                     CPartyObject &member = Member[i];
-                    if (member.Character == nullptr)
+                    if (member.Serial == 0u)
                     {
                         break;
                     }
-                    CGumpStatusbar *gump = (CGumpStatusbar *)g_GumpManager.UpdateContent(
-                        member.Character->Serial, 0, GT_STATUSBAR);
+                    CGumpStatusbar *gump =
+                        (CGumpStatusbar *)g_GumpManager.UpdateContent(member.Serial, 0, GT_STATUSBAR);
                     if (gump != nullptr)
                     {
                         gump->WantRedraw = true;
@@ -135,24 +140,56 @@ void CParty::ParsePacketData(CDataReader &reader)
                 g_GumpManager.UpdateContent(0, 0, GT_PARTY_MANIFEST);
                 break;
             }
-            Clear();
+            // A remove lists the whole party: the entry matching the removed
+            // serial is dropped, the player or the first entry (the leader)
+            // being the removed one takes the whole party down
+            uint32_t toRemove = 0xFFFFFFFF;
+            if (subCmd == 2u)
+            {
+                toRemove = reader.ReadUInt32BE();
+            }
+
+            bool removeAll = (subCmd == 2u && toRemove == g_PlayerSerial);
+            int done = 0;
+
             CPoint2Di oldPos = g_MouseManager.Position;
             CPoint2Di mousePos(76, 30);
             g_MouseManager.Position = mousePos;
             CGumpStatusbar *prevGump = nullptr;
 
+            // the packet carries the full manifest: stale tail entries from a
+            // larger party must not survive a shrink
+            Clear();
+
             for (int i = 0; i < count; i++)
             {
                 uint32_t serial = reader.ReadUInt32BE();
-                Member[i].Serial = serial;
-                Member[i].Character = g_World->FindWorldCharacter(serial);
-                if (i == 0)
+                const bool remove = (subCmd == 2u && serial == toRemove);
+
+                if (remove && i == 0)
                 {
-                    g_Party.Leader = serial;
+                    removeAll = true;
                 }
 
                 CGumpStatusbar *gump =
                     (CGumpStatusbar *)g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
+
+                if (remove || removeAll)
+                {
+                    if (gump != nullptr)
+                    {
+                        gump->WantRedraw = true;
+                    }
+                    continue;
+                }
+
+                Member[i].Serial = serial;
+                Member[i].Character = g_World->FindWorldCharacter(serial);
+                if (i == 0)
+                {
+                    Leader = serial;
+                }
+                done++;
 
                 if (gump == nullptr)
                 {
@@ -181,6 +218,28 @@ void CParty::ParsePacketData(CDataReader &reader)
             }
 
             g_MouseManager.Position = oldPos;
+
+            // a remove that leaves the leader alone disbands the party
+            if (done <= 1 && subCmd == 2u)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    CPartyObject &member = Member[i];
+                    if (member.Serial == 0u)
+                    {
+                        break;
+                    }
+                    CGumpStatusbar *gump =
+                        (CGumpStatusbar *)g_GumpManager.UpdateContent(member.Serial, 0, GT_STATUSBAR);
+                    if (gump != nullptr)
+                    {
+                        gump->WantRedraw = true;
+                    }
+                }
+
+                Clear();
+            }
+
             g_GumpManager.UpdateContent(0, 0, GT_PARTY_MANIFEST);
             break;
         }
@@ -189,6 +248,16 @@ void CParty::ParsePacketData(CDataReader &reader)
         {
             uint32_t serial = reader.ReadUInt32BE();
             auto name = reader.ReadWStringBE();
+
+#if defined(XUO_ASSISTANT)
+            // the party chat record keeps the speaker serial and the message
+            // text (the speaker name resolves from the member list)
+            if (xuoassist::EnabledFeaturePartyAgent())
+            {
+                xuoassist::CJournalMessage message(serial, 0x0044, str_from(name));
+                xuoassist::g_AssistantEvents->OnJournalMessage(message);
+            }
+#endif
 
             for (int i = 0; i < 10; i++)
             {
@@ -206,7 +275,28 @@ void CParty::ParsePacketData(CDataReader &reader)
         }
         case 7: //Party invition
         {
-            g_Party.Inviter = reader.ReadUInt32BE();
+            Inviter = reader.ReadUInt32BE();
+
+#if defined(XUO_ASSISTANT)
+            // the party agent answers the invitation during the parse: the
+            // accept rules take precedence over the decline rules, and an
+            // answered invitation is cleared like a manual answer
+            if (xuoassist::EnabledFeaturePartyAgent())
+            {
+                if (xuoassist::g_AssistantConfig.PartyInviteCanBeAutoAccepted(Inviter))
+                {
+                    CPacketPartyAccept(Inviter).Send();
+                    Leader = Inviter;
+                    Inviter = 0;
+                }
+                else if (xuoassist::g_AssistantConfig.PartyInviteCanBeAutoDeclined(Inviter))
+                {
+                    CPacketPartyDecline(Inviter).Send();
+                    Inviter = 0;
+                }
+            }
+#endif
+            // TODO: Party Invite Gump?
             break;
         }
         default:

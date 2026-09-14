@@ -3,8 +3,8 @@
 
 // TabAgentsParty (was assist/tabagentsparty.ui/.cpp, §2.8): the accept /
 // decline lists (Name/Serial/from-target) and the four auto-response
-// checkboxes. The DECISION logic itself is packet-driven and already lives in
-// managers/partymanager.cpp (OnPacketReceived case 7 -> config
+// checkboxes. The DECISION logic itself is packet-driven and lives in the
+// client's party parse (src/Party.cpp case 7 -> config
 // PartyInviteCanBeAutoAccepted/AutoDeclined) - this tab edits the very
 // structures it consults (Party.xml, saved on every mutation).
 
