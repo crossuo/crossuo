@@ -69,6 +69,10 @@ const int PACKET_VARIABLE_SIZE = 0;
     {                                                                                              \
         name, size, DIR_BOTH, &CPacketManager::Handle##smethod, &CPacketManager::Handle##rmethod   \
     }
+#define SMSGHB(name, size, smethod)                                                                \
+    {                                                                                              \
+        name, size, DIR_BOTH, &CPacketManager::Handle##smethod, nullptr                            \
+    }
 
 CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x00*/ SMSG("Create Character", 0x68),
@@ -116,7 +120,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x29*/ RMSG("Drop Item Approved", 0x01),
     /*0x2A*/ UMSG(0x05),
     /*0x2B*/ UMSG(0x02),
-    /*0x2C*/ BMSGH("Death Screen", 0x02, DeathScreenS, DeathScreenR),
+    /*0x2C*/ UMSG(0x02),
     /*0x2D*/ UMSG(0x11),
     /*0x2E*/ UMSG(0x0f),
     /*0x2F*/ RMSG("Combat Notification", 0x0a),
@@ -237,8 +241,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x97*/ RMSG("Move Player", 0x02),
     /*0x98*/ BMSG("All Names (3D Client Only)", PACKET_VARIABLE_SIZE),
     /*0x99*/ UMSG(0x1a),
-    /*0x9A*/
-    BMSGH("ASCII Prompt", PACKET_VARIABLE_SIZE, ASCIIPromptS, ASCIIPromptR),
+    /*0x9A*/ SMSGHB("ASCII Prompt", PACKET_VARIABLE_SIZE, ASCIIPromptS),
     /*0x9B*/ SMSGH("Help Request", 0x102, HelpRequest),
     /*0x9C*/ UMSG(0x135),
     /*0x9D*/ UMSG(0x33),
@@ -269,8 +272,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xB5*/ BMSG("Open Chat Window", 0x40),
     /*0xB6*/ SMSG("Popup Help Request", 0x09),
     /*0xB7*/ RMSG("Popup Help Data", PACKET_VARIABLE_SIZE),
-    /*0xB8*/
-    BMSGH("Character Profile", PACKET_VARIABLE_SIZE, CharacterProfileS, CharacterProfileR),
+    /*0xB8*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xB9*/ RMSG("Enable locked client features", 0x03),
     /*0xBA*/ RMSG("Display Quest Arrow", 0x06),
     /*0xBB*/ SMSG("Account ID ?", 0x09),
@@ -281,8 +283,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     BMSGH("Extended Command", PACKET_VARIABLE_SIZE, ExtendedCommandS, ExtendedCommandR),
     /*0xC0*/ UMSG(0x24),
     /*0xC1*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xC2*/
-    BMSGH("Unicode prompt", PACKET_VARIABLE_SIZE, UnicodePromptS, UnicodePromptR),
+    /*0xC2*/ SMSGHB("Unicode prompt", PACKET_VARIABLE_SIZE, UnicodePromptS),
     /*0xC3*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xC4*/ UMSG(0x06),
     /*0xC5*/ UMSG(0xcb),
@@ -703,33 +704,6 @@ PACKET_HANDLER(MenuChoice)
     return g_MenuManager.OnPacketSend(*this); // (menu round)
 }
 
-PACKET_HANDLER(DeathScreenS)
-{
-    return true;
-}
-
-PACKET_HANDLER(DeathScreenR)
-{
-    if (g_World != nullptr /*&& !ReadUInt8()*/)
-    {
-        if (g_AssistantConfig.Tracker())
-        {
-            g_Assistant.Track(true, -1, -1);
-        }
-
-        g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
-        g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
-
-        if (g_AssistantConfig.NoDeathScreen())
-        {
-            g_Assistant.ClientPrint("You are DEAD!");
-            return false;
-        }
-    }
-
-    return true;
-}
-
 PACKET_HANDLER(ExtendedCommandS)
 {
     ushort cmd = ReadUInt16BE();
@@ -1101,60 +1075,9 @@ PACKET_HANDLER(ASCIIPromptS)
     return g_PromptManager.OnPacketSend(*this); // (prompt round)
 }
 
-PACKET_HANDLER(ASCIIPromptR)
-{
-    g_PromptReceived = true;
-
-    return g_PromptManager.OnPacketReceived(*this);
-}
-
 PACKET_HANDLER(UnicodePromptS)
 {
     return g_PromptManager.OnPacketSend(*this);
-}
-
-PACKET_HANDLER(UnicodePromptR)
-{
-    g_PromptReceived = true;
-
-    return g_PromptManager.OnPacketReceived(*this);
-}
-
-PACKET_HANDLER(CharacterProfileS)
-{
-    return true;
-}
-
-PACKET_HANDLER(CharacterProfileR)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj != nullptr)
-    {
-        string topText = ReadStringChecked();
-
-        wstring bottomText = ReadWString();
-        wstring dataText = ReadWString() + L"\n" + bottomText;
-
-        obj->ProfileReceived = true;
-        obj->Profile = topText + "\n" + str_from(dataText);
-        bool block = obj->BlockProfile;
-        obj->BlockProfile = false;
-
-        if (block)
-        {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 PACKET_HANDLER(BuyReplyS)

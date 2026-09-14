@@ -865,10 +865,10 @@ the client's) has been dissolved into the client's handlers. Batches B1-B4
 fused the recv side: every recv handler is now either fused into the client
 handler, kept whole on the recv tap with a rationale, or deleted as a
 duplicate of client state updates. B5 audited and closed the send side.
-Final table composition (`m_Packets` rows carrying handlers): 27 rows —
-4 `RMSGH` recv keeps (0x56/0x7C/0x9E/0xB0), 16 `SMSGH` send handlers and
-7 `BMSGH` rows (the 0xBF Extended Command BMSGH is the fifth recv keep,
-via its recv half).
+Final table composition (`m_Packets` rows carrying handlers): 25 rows —
+4 `RMSGH` recv keeps (0x56/0x7C/0x9E/0xB0), 18 `SMSGH` send handlers and
+3 `BMSGH` rows (0x6C Target and 0xBF Extended Command carry the recv keeps,
+0xFC submessages ride the connected-gate exemption).
 0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
 0xF0 Krrios client special are plain `BMSG` rows (both directions are
 client-owned; the host fuses the MegaCliloc event).
@@ -1026,6 +1026,27 @@ Speech tap (0x1C + 0xAE, fused in B3) adds two facts:
   lines the client then dropped for an invalid font (the assistant's own
   gate was `font >= 10`, which also covers the `0xFFFF` ack probe). The
   unicode tap gates only on the `serial==0 && font/color==0xFFFF` probe.
+
+B7 (death/prompt/profile) completes the BMSGH recv halves:
+
+- Death Screen 0x2C: the g_World-gated bookkeeping (tracker point,
+  last-corpse position, 5-minute dead timer) sits after the action parse;
+  the `NoDeathScreen` veto early-returns before the client's screen-effect
+  block (skipping effect, weather/target reset, drag-gump close, music,
+  warmode exit and the death-screen timer) but still prints "You are
+  DEAD!". Row demoted to `UMSG` (the send half was a no-op).
+- ASCII/Unicode Prompt 0x9A/0xC2: the hook sits pre-parse at the top of the
+  client handlers (0x99 shape): both dispatchers enter a variable-size
+  handler at `Start+3` (id + length), so `OnPacketReceived` reads
+  serial/id from the identical position as the old tap and its
+  `*Start == 0xC2` detection is unaffected (Start never moves). A playing
+  macro waiting on the prompt consumes the packet; the client then keeps no
+  `g_ConsolePrompt`/last-prompt state (its reply path echoes that state).
+  Rows demoted to `SMSGH` (the send halves record the prompt round).
+- Character Profile 0xB8: profile store (`ProfileReceived`/`Profile`, built
+  from the client parse: top + data + bottom lines) plus the one-shot
+  `BlockProfile` consume before `CGumpProfile` is added. Row demoted to
+  `UMSG` (the send half was a no-op; profile requests are client packets).
 
 ## Script API
 

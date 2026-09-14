@@ -72,8 +72,6 @@ protected:
     XA_HANDLER_PACKET(UnicodeClientTalk);
     XA_HANDLER_PACKET(OpenMenu);
     XA_HANDLER_PACKET(MenuChoice);
-    XA_HANDLER_PACKET(DeathScreenS);
-    XA_HANDLER_PACKET(DeathScreenR);
     XA_HANDLER_PACKET(ClientMessagesS);
     XA_HANDLER_PACKET(ClientMessagesR);
     XA_HANDLER_PACKET(ExtendedCommandS);
@@ -85,11 +83,7 @@ protected:
     XA_HANDLER_PACKET(Resend);
     XA_HANDLER_PACKET(WalkRequest);
     XA_HANDLER_PACKET(ASCIIPromptS);
-    XA_HANDLER_PACKET(ASCIIPromptR);
     XA_HANDLER_PACKET(UnicodePromptS);
-    XA_HANDLER_PACKET(UnicodePromptR);
-    XA_HANDLER_PACKET(CharacterProfileS);
-    XA_HANDLER_PACKET(CharacterProfileR);
     XA_HANDLER_PACKET(BuyReplyS);
     XA_HANDLER_PACKET(SellList);
     XA_HANDLER_PACKET(SellReply);

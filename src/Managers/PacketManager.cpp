@@ -32,6 +32,7 @@
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (login reset)
 #include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
 #include <managers/guildmanager.h> // xuoassist::g_GuildManager (guild chat speaker names)
+#include <managers/promptmanager.h> // xuoassist::g_PromptManager (prompt round, macro wait)
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
@@ -4188,6 +4189,31 @@ PACKET_HANDLER(DeathScreen)
 {
     uint8_t action = ReadUInt8();
 
+#if defined(XUO_ASSISTANT)
+    if (g_World != nullptr && !m_AssistantInjecting)
+    {
+        // last-corpse bookkeeping: tracker point, last known position and
+        // the 5-minute dead timer (assistant state, no client parallel)
+        if (xuoassist::g_AssistantConfig.Tracker())
+        {
+            xuoassist::g_Assistant.Track(true, -1, -1);
+        }
+
+        xuoassist::g_LastPlayerCorpsePosition =
+            xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
+        xuoassist::g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: 5 min
+    }
+
+    // NoDeathScreen: the veto skips the whole client handler (screen effect,
+    // weather/target reset, drag-gump close, death music, warmode exit,
+    // death-screen timer); the dead print still fires
+    if (g_World != nullptr && !m_AssistantInjecting && xuoassist::g_AssistantConfig.NoDeathScreen())
+    {
+        xuoassist::g_Assistant.ClientPrint("You are DEAD!");
+        return;
+    }
+#endif
+
     if (action != 1)
     {
         g_GameScreen.SmoothScreenAction = 0;
@@ -4399,6 +4425,20 @@ PACKET_HANDLER(CorpseEquipment)
 
 PACKET_HANDLER(ASCIIPrompt)
 {
+#if defined(XUO_ASSISTANT)
+    // the prompt hook runs pre-parse (MultiPlacement 0x99 shape): the reader
+    // sits on the serial field and *Start is still the packet id, the entry
+    // state the PromptManager expects; a playing macro waiting on the prompt
+    // consumes the packet and the client keeps no prompt input state
+    if (!m_AssistantInjecting)
+    {
+        xuoassist::g_PromptReceived = true;
+        if (!xuoassist::g_PromptManager.OnPacketReceived(*this))
+        {
+            return;
+        }
+    }
+#endif
     if (g_World == nullptr)
     {
         return;
@@ -4410,6 +4450,16 @@ PACKET_HANDLER(ASCIIPrompt)
 
 PACKET_HANDLER(UnicodePrompt)
 {
+#if defined(XUO_ASSISTANT)
+    if (!m_AssistantInjecting)
+    {
+        xuoassist::g_PromptReceived = true;
+        if (!xuoassist::g_PromptManager.OnPacketReceived(*this))
+        {
+            return;
+        }
+    }
+#endif
     if (g_World == nullptr)
     {
         return;
@@ -6301,6 +6351,25 @@ PACKET_HANDLER(CharacterProfile)
     auto topText = wstr_from(ReadString());
     auto bottomText = ReadWStringBE();
     auto dataText = ReadWStringBE();
+#if defined(XUO_ASSISTANT)
+    // profile store + the one-shot BlockProfile consume: the flag resets on
+    // the first profile arrival and that profile's gump is kept from the
+    // client (the old recv-tap veto); skipped for client-injected copies
+    if (!m_AssistantInjecting)
+    {
+        CGameCharacter *obj = g_World->FindWorldCharacter(serial);
+        if (obj != nullptr)
+        {
+            obj->ProfileReceived = true;
+            obj->Profile = str_from(topText) + "\n" + str_from(dataText) + "\n" + str_from(bottomText);
+            if (obj->BlockProfile)
+            {
+                obj->BlockProfile = false;
+                return;
+            }
+        }
+    }
+#endif
     CGumpProfile *gump = new CGumpProfile(serial, 170, 90, topText, bottomText, dataText);
     g_GumpManager.AddGump(gump);
 }
