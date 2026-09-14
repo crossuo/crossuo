@@ -99,16 +99,16 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x18*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x19*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x1A*/ RMSG("Update Item", PACKET_VARIABLE_SIZE),
-    /*0x1B*/ RMSGH("Enter World", 0x25, EnterWorld),
+    /*0x1B*/ UMSG(0x25),
     /*0x1C*/ RMSGH("Server Talk", PACKET_VARIABLE_SIZE, Talk),
-    /*0x1D*/ RMSGH("Delete Object", 0x05, DeleteObject),
+    /*0x1D*/ UMSG(0x05),
     /*0x1E*/ UMSG(0x04),
     /*0x1F*/ UMSG(0x08),
-    /*0x20*/ RMSGH("Update Player", 0x13, UpdatePlayer),
+    /*0x20*/ UMSG(0x13),
     /*0x21*/ RMSG("Deny Walk", 0x08),
     /*0x22*/ BMSGH("Confirm Walk", 0x03, Resend, ConfirmWalk),
     /*0x23*/ RMSG("Drag Animation", 0x1a),
-    /*0x24*/ RMSGH("Open Container", 0x07, OpenContainer),
+    /*0x24*/ UMSG(0x07),
     /*0x25*/ RMSG("Update Contained Item", 0x14),
     /*0x26*/ UMSG(0x05),
     /*0x27*/ RMSG("Deny Move Item", 0x02),
@@ -118,7 +118,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x2B*/ UMSG(0x02),
     /*0x2C*/ BMSGH("Death Screen", 0x02, DeathScreenS, DeathScreenR),
     /*0x2D*/ UMSG(0x11),
-    /*0x2E*/ RMSGH("Server Equip Item", 0x0f, EquipItem),
+    /*0x2E*/ UMSG(0x0f),
     /*0x2F*/ RMSG("Combat Notification", 0x0a),
     /*0x30*/ RMSG("Attack ok", 0x05),
     /*0x31*/ RMSG("Attack end", 0x01),
@@ -130,8 +130,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x37*/ UMSG(0x08),
     /*0x38*/ BMSG("Pathfinding in Client", 0x07),
     /*0x39*/ RMSG("Remove (Group)", 0x09),
-    /*0x3A*/
-    BMSGH("Update Skills", PACKET_VARIABLE_SIZE, UpdateSkillsS, UpdateSkillsR),
+    /*0x3A*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x3B*/
     BMSGH("Vendor Buy Reply", PACKET_VARIABLE_SIZE, BuyReplyS, BuyReplyR),
     /*0x3C*/ RMSG("Update Contained Items", PACKET_VARIABLE_SIZE),
@@ -159,7 +158,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x52*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x53*/ RMSG("Error Code", 0x02),
     /*0x54*/ UMSG(0x0c),
-    /*0x55*/ RMSGH("Login Complete", 0x01, LoginComplete),
+    /*0x55*/ UMSG(0x01),
     /*0x56*/ RMSGH("Map Data", 0x0b, MapPacket),
     /*0x57*/ BMSG("Update Regions", 0x6e),
     /*0x58*/ UMSG(0x6a),
@@ -194,8 +193,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x74*/ RMSGH("Vendor Buy List", PACKET_VARIABLE_SIZE, BuyList),
     /*0x75*/ SMSG("Rename Character", 0x23),
     /*0x76*/ RMSG("New Subserver", 0x10),
-    /*0x77*/ RMSGH("Update Character", 0x11, UpdateCharacter),
-    /*0x78*/ RMSGH("Update Object", PACKET_VARIABLE_SIZE, UpdateObject),
+    /*0x77*/ UMSG(0x11),
+    /*0x78*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x79*/ UMSG(0x09),
     /*0x7A*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x7B*/ UMSG(0x02),
@@ -228,7 +227,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x96*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x97*/ RMSG("Move Player", 0x02),
     /*0x98*/ BMSG("All Names (3D Client Only)", PACKET_VARIABLE_SIZE),
-    /*0x99*/ RMSGH("Multi Placement", 0x1a, MultiPlacement),
+    /*0x99*/ UMSG(0x1a),
     /*0x9A*/
     BMSGH("ASCII Prompt", PACKET_VARIABLE_SIZE, ASCIIPromptS, ASCIIPromptR),
     /*0x9B*/ SMSGH("Help Request", 0x102, HelpRequest),
@@ -246,7 +245,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xA7*/ SMSG("Request Tip", 0x04),
     /*0xA8*/ RMSG("Server List", PACKET_VARIABLE_SIZE),
     /*0xA9*/ RMSG("Character List", PACKET_VARIABLE_SIZE),
-    /*0xAA*/ RMSGH("Attack Reply", 0x05, AttackCharacter),
+    /*0xAA*/ UMSG(0x05),
     /*0xAB*/ RMSG("Text Entry Dialog", PACKET_VARIABLE_SIZE),
     /*0xAC*/ SMSG("Text Entry Dialog Reply", PACKET_VARIABLE_SIZE),
     /*0xAD*/
@@ -290,8 +289,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xCF*/ UMSG(0x4e),
     /*0xD0*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xD1*/ UMSG(0x02),
-    /*0xD2*/ RMSGH("Update Character (New)", 0x19, UpdateCharacter),
-    /*0xD3*/ RMSGH("Update Object (New)", PACKET_VARIABLE_SIZE, UpdateObject),
+    /*0xD2*/ UMSG(0x19),
+    /*0xD3*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xD4*/ BMSG("Open Book (New)", PACKET_VARIABLE_SIZE),
     /*0xD5*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xD6*/
@@ -516,16 +515,6 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
 
 #define PACKET_HANDLER(name) bool CPacketManager::Handle##name()
 
-// The dead body graphics the client treats as dead (CGameCharacter::IsDead)
-static bool dead_body_graphic(ushort graphic)
-{
-    return (
-        IN_RANGE(graphic, 0x0192, 0x0193) || /*dead h_male, h_female*/
-        IN_RANGE(graphic, 0x025F, 0x0260) || /*dead elf h_male1, h_female1*/
-        IN_RANGE(graphic, 0x02B6, 0x02B7) || /*dead gargoyle_male, gargoyle_female*/
-        0);
-}
-
 static string to_lower(string text)
 {
     for (char &c : text)
@@ -542,319 +531,9 @@ PACKET_HANDLER(SecondLogin)
     return true;
 }
 
-PACKET_HANDLER(LoginComplete)
-{
-    g_Connected = true;
-
-    return true;
-}
-
-PACKET_HANDLER(EnterWorld)
-{
-    uint serial = ReadUInt32BE();
-    bool runAutostart = g_World == nullptr;
-
-    g_LastPlayerCorpsePosition = CPoint2Di(-1, -1);
-    g_LastPlayerDeadTimer = 0;
-
-    g_LastTargetObject = 0;
-    g_LastAttackObject = 0;
-    g_MorphGraphic = 0;
-    g_OriginalGraphic = 0;
-    g_LastCorpseObject = 0;
-    g_LastContainerObject = 0;
-    g_LastStatusRequest = 0;
-    g_LastStatusObject = 0;
-    g_LastUseObject = 0;
-    g_TargetReceived = false;
-    g_MenuReceived = false;
-    g_GumpReceived = false;
-    g_PromptReceived = false;
-    g_Target.ClearHooks();
-    // discard any open recording and stop playback - macro state never
-    // leaks across login sessions
-    g_MacroExecutor.Reset();
-
-    // the client handler owns the world (re)creation and the player parse;
-    // the assistant reads only what its own state needs
-    Move(4); // unused
-
-    g_OriginalGraphic = ReadUInt16BE(); // the player body graphic
-
-    Info(Assistant, "Player 0x%08X entered the world.\n", serial);
-
-    g_Connected = true;
-
-    g_AssistantConfig.LoadProfileBySerial(serial);
-    if (dead_body_graphic(g_OriginalGraphic) && g_AssistantConfig.NoGrayScreen())
-    {
-        pack16(Start + 9, 0x03DB);
-        g_OriginalGraphic = 0x03DB;
-    }
-    // was: if (runAutostart) g_AssistantForm->RunAutostart(); ->
-    // g_AssistantForm->RunAutostart checked g_TabMain->Autostart() and ran
-    // g_TabScripts->RunScript("Autostart", editor text) after 1s;
-    // the UI events sink replays both halves.
-    if (runAutostart)
-    {
-        g_AssistantEvents->OnAutostartRequest();
-    }
-    // DEVIATION: g_UOMapManager.UOAMEnterWorld() was a Windows
-    // WM_USER notify to the external UO Auto Map app - no HWND host in-client.
-    if (g_MapSettings.GetShowOnLogin())
-    {
-        // was: if (g_MapSettings.GetShowOnLogin()) g_TabMain->OpenMap();
-        g_AssistantEvents->OnMapOpenRequest();
-    }
-
-    // was: if (g_Map != nullptr && g_Map->isVisible()) g_Map->SetWantRedraw(true);
-    g_AssistantEvents->OnMapRedraw();
-
-    return true;
-}
-
-PACKET_HANDLER(UpdatePlayer)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-
-    // the client handler carries the body update into the world; the
-    // assistant edits the packet (morph / no-gray-screen) and tracks the
-    // alive -> dead transition for its corpse marker
-    if (serial == g_PlayerSerial && dead_body_graphic(graphic))
-    {
-        if (g_AssistantConfig.NoGrayScreen())
-        {
-            pack16(Start + 5, 0x03DB);
-            Start[7] = 0;
-        }
-
-        // only the corpse stamp is transition-gated; the patch above fires on
-        // every packet carrying a dead-body graphic (pre-image behavior)
-        if (!g_Player->IsDead())
-        {
-            g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
-            g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
-        }
-    }
-
-    if (g_MorphGraphic != 0u)
-    {
-        pack16(Start + 5, g_MorphGraphic);
-    }
-
-    return true;
-}
-
 static string parse_cliloc_arguments(int cliloc, bool toCamelCase, wstr_t args)
 {
     return str_from(g_ClilocManager.ParseArgumentsToClilocString(cliloc, toCamelCase, args));
-}
-
-PACKET_HANDLER(UpdateObject)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    Move(2); // x
-    Move(2); // y
-    Move(1); // z
-    Move(1); // direction
-    Move(2); // color
-    Move(1); // flags
-    Move(1); // notoriety
-
-    if (serial == g_PlayerSerial)
-    {
-        // the client handler applies the body update to the player object;
-        // the assistant edits the packet (morph / no-gray-screen) and tracks
-        // the alive -> dead transition for its corpse marker
-        g_OriginalGraphic = graphic;
-
-        // NOTE: Start + 7 lands on the X field of the 0x78 layout (id 1, serial
-        // 4, graphic 2, x) — this offset is the long-standing upstream assistant
-        // behavior, not the graphic field (Start + 5); do not "fix" it blindly.
-        if (g_MorphGraphic != 0u)
-        {
-            pack16(Start + 7, g_MorphGraphic);
-        }
-
-        if (g_Player != nullptr && dead_body_graphic(graphic))
-        {
-            if (g_AssistantConfig.NoGrayScreen())
-            {
-                g_OriginalGraphic = 0x03DB;
-            }
-            pack16(Start + 7, 0x03DB);
-
-            // only the corpse stamp is transition-gated; the patch above fires
-            // on every packet carrying a dead-body graphic (pre-image behavior)
-            if (!g_Player->IsDead())
-            {
-                g_LastPlayerCorpsePosition = CPoint2Di(g_Player->GetX(), g_Player->GetY());
-                g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
-            }
-        }
-    }
-
-    CGameObject *obj = g_World->FindWorldObject(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    if (obj->NPC)
-    {
-        // the client handler stores the notoriety byte; the assistant asks
-        // the server for the status of characters it knows nothing about
-        g_AssistantEvents->OnInspectorUpdate(serial);
-
-        if (((CGameCharacter *)obj)->MaxHits == 0)
-        {
-            g_Assistant.GetStatus(serial);
-        }
-    }
-
-    if (*Start != 0x78)
-    {
-        Move(6);
-    }
-
-    uint itemSerial = ReadUInt32BE();
-
-    while (itemSerial != 0 && !IsEOF())
-    {
-        ushort itemGraphic = ReadUInt16BE();
-        uchar layer = ReadUInt8();
-        if (m_ClientVersion >= CV_70331)
-        {
-            Move(2); // item color
-        }
-        else if ((itemGraphic & 0x8000) != 0)
-        {
-            Move(2); // item color
-        }
-
-        if (layer == OL_BACKPACK && obj->IsPlayer())
-        {
-            g_Backpack = itemSerial;
-        }
-
-        g_AssistantEvents->OnInspectorUpdate(itemSerial);
-
-        itemSerial = ReadUInt32BE();
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(EquipItem)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    // the client handler equips the item into its container; the assistant
-    // tracks the player's backpack serial and refreshes its inspector
-    uint serial = ReadUInt32BE();
-    Move(2); // graphic
-    Move(1); // layer padding
-    int layer = ReadUInt8();
-    uint cserial = ReadUInt32BE();
-    Move(2); // color
-
-    if (layer == OL_BACKPACK && cserial == g_PlayerSerial)
-    {
-        g_Backpack = serial;
-    }
-
-    g_AssistantEvents->OnInspectorUpdate(serial);
-
-    return true;
-}
-
-PACKET_HANDLER(DeleteObject)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-
-    if (serial == g_PlayerSerial)
-    {
-        return true;
-    }
-
-    CGameObject *obj = g_World->FindWorldObject(serial);
-
-    if (obj != nullptr)
-    {
-        // the client handler owns the removal (party members and corpses stay
-        // on purpose); the assistant keeps only its own bookkeeping
-        CGameObject *top = obj->GetTopObject();
-
-        if (top != nullptr && top->IsPlayer())
-        {
-            g_AssistantEvents->OnTitleRedraw(serial);
-        }
-        else if (EnabledCommandRemovedPtrPosition())
-        {
-            if (serial == g_LastTargetObject)
-            {
-                g_LastTargetPosition = CPoint2Di(obj->GetX(), obj->GetY());
-            }
-            else if (serial == g_LastAttackObject)
-            {
-                g_LastAttackPosition = CPoint2Di(obj->GetX(), obj->GetY());
-            }
-        }
-
-        if (g_Party.Contains((int)serial))
-        {
-            g_Party.SetMemberInfo(serial, obj->GetX(), obj->GetY(), obj->MapIndex, obj->GetName());
-            g_AssistantEvents->OnMapUpdate(serial);
-        }
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateCharacter)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    uint serial = ReadUInt32BE();
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj == nullptr)
-    {
-        return true;
-    }
-
-    // the client handler applies the update; the assistant asks the server
-    // for the status of characters it knows nothing about
-    if (!obj->IsPlayer() && obj->MaxHits == 0)
-    {
-        g_Assistant.GetStatus(serial);
-    }
-
-    return true;
 }
 
 PACKET_HANDLER(WarmodeS)
@@ -865,75 +544,6 @@ PACKET_HANDLER(WarmodeS)
     {
         g_MacroExecutor.Record(new CMacroWithIntValue(MT_WAR_MODE, ReadUInt8()));
     }
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateSkillsS)
-{
-    // the lock-change request: the client skill table is updated
-    // optimistically so the skills tab reflects the requested state before
-    // the server echo
-    ushort id = ReadUInt16BE();
-    char lock = ReadInt8();
-
-    CSkill *skill = g_SkillsManager.Get(id);
-    if (skill != nullptr)
-    {
-        skill->Status = (uint8_t)lock;
-        g_AssistantEvents->OnSkillUpdated(id);
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(UpdateSkillsR)
-{
-    int type = ReadUInt8();
-    bool haveCap = (type == 0x02 || type == 0xDF);
-
-    if (type == 0xFE)
-    {
-        return true;
-    }
-
-    while (Ptr < End)
-    {
-        ushort id = ReadUInt16BE();
-
-        if ((id == 0u) && (type == 0))
-        {
-            break;
-        }
-        if ((type == 0) || type == 0x02)
-        {
-            id--;
-        }
-
-        Move(2); // base value
-        ushort realVal = ReadUInt16BE();
-        Move(1); // lock
-
-        if (haveCap)
-        {
-            Move(2); // cap
-        }
-
-        // the client handler fills BaseValue/Value/Cap/Status; the assistant
-        // seeds its skill-delta baseline (the real value) on the first update
-        if (id < g_SkillsManager.Count)
-        {
-            CSkill *skill = g_SkillsManager.Get(id);
-            if (skill != nullptr && skill->OldValue == 0.0f)
-            {
-                skill->OldValue = (float)(realVal / 10.0f);
-            }
-
-            g_AssistantEvents->OnSkillUpdated(id);
-        }
-    }
-
-    g_AssistantEvents->OnSkillsRefreshed();
 
     return true;
 }
@@ -958,13 +568,6 @@ PACKET_HANDLER(TargetR)
     g_TargetReceived = true;
 
     return g_Target.SetRecvData(*this); // (assist/target round)
-}
-
-PACKET_HANDLER(MultiPlacement)
-{
-    g_TargetReceived = true;
-
-    return g_Target.SetMultiData(*this); // (assist/target round)
 }
 
 PACKET_HANDLER(ClientTalkS)
@@ -1290,21 +893,6 @@ PACKET_HANDLER(DeathScreenR)
     return true;
 }
 
-PACKET_HANDLER(OpenContainer)
-{
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-
-    if (graphic == 0x0030)
-    {
-        return g_ShopAgent.OnOpenContainer(serial);
-    }
-
-    g_LastContainerObject = serial;
-
-    return true;
-}
-
 PACKET_HANDLER(BuffDebuff)
 {
     if (g_World == nullptr)
@@ -1492,18 +1080,6 @@ PACKET_HANDLER(BuffDebuff)
         {
             g_AssistantEvents->OnBuffRemove(table[iconID]);
         }
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(AttackCharacter)
-{
-    uint serial = ReadUInt32BE();
-
-    if (serial != 0u)
-    {
-        g_LastAttackObject = serial;
     }
 
     return true;

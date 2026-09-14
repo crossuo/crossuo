@@ -24,6 +24,12 @@
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
 #include <core/assistantevents.h> // xuoassist::g_AssistantEvents (journal, JMT_* flags)
 #include <core/global.h> // xuoassist mirrored state (light, weather, season, status requests)
+#include "../Misc.h" // pack16 (in-place packet patch kept from the old pre-parse flow)
+#include <core/target.h> // xuoassist::g_Target (WaitTarget hooks, target cursor state)
+#include <core/assist.h> // xuoassist::g_Assistant (status requests)
+#include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (login reset)
+#include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
@@ -759,6 +765,18 @@ void CPacketManager::ProcessAssistantPackets()
 
 namespace
 {
+#if defined(XUO_ASSISTANT)
+// The dead body graphics the client treats as dead (CGameCharacter::IsDead)
+bool dead_body_graphic(uint16_t graphic)
+{
+    return (
+        IN_RANGE(graphic, 0x0192, 0x0193) || /*dead h_male, h_female*/
+        IN_RANGE(graphic, 0x025F, 0x0260) || /*dead elf h_male1, h_female1*/
+        IN_RANGE(graphic, 0x02B6, 0x02B7) || /*dead gargoyle_male, gargoyle_female*/
+        0);
+}
+#endif
+
 // RAII guard: guarantees m_AssistantInjecting is reset even if a handler
 // early-returns, so the injection marker can never get stuck on.
 struct AssistantInjectGuard
@@ -972,6 +990,11 @@ PACKET_HANDLER(ResendCharacterList)
 
 PACKET_HANDLER(LoginComplete)
 {
+#if defined(XUO_ASSISTANT)
+    // mirror of the assistant LoginComplete tap: the assistant dispatch gate
+    // (AssistantPackets_Recv) opens here; no skill bookkeeping was attached
+    xuoassist::g_Connected = true;
+#endif
     g_PacketLoginComplete = true;
     g_Game.LoginComplete(false);
 }
@@ -988,6 +1011,51 @@ PACKET_HANDLER(EnterWorld)
     uint32_t serial = ReadUInt32BE();
     ConfigSerial = serial;
     bool loadConfig = false;
+
+#if defined(XUO_ASSISTANT)
+    // the assistant session reset runs before the client tears down the old
+    // world (runAutostart must observe the pre-enter world state, and the old
+    // tap fired the login events ahead of all client processing); the
+    // no-gray-screen body patch is applied to the parsed graphic below (the
+    // old flow patched the packet at Start + 9, the body field, pre-parse)
+    const bool runAutostart = g_World == nullptr;
+
+    xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(-1, -1);
+    xuoassist::g_LastPlayerDeadTimer = 0;
+
+    xuoassist::g_LastTargetObject = 0;
+    xuoassist::g_LastAttackObject = 0;
+    xuoassist::g_MorphGraphic = 0;
+    xuoassist::g_OriginalGraphic = 0;
+    xuoassist::g_LastCorpseObject = 0;
+    xuoassist::g_LastContainerObject = 0;
+    xuoassist::g_LastStatusRequest = 0;
+    xuoassist::g_LastStatusObject = 0;
+    xuoassist::g_LastUseObject = 0;
+    xuoassist::g_TargetReceived = false;
+    xuoassist::g_MenuReceived = false;
+    xuoassist::g_GumpReceived = false;
+    xuoassist::g_PromptReceived = false;
+    xuoassist::g_Target.ClearHooks();
+    // discard any open recording and stop playback - macro state never
+    // leaks across login sessions
+    xuoassist::g_MacroExecutor.Reset();
+
+    Info(Assistant, "Player 0x%08X entered the world.\n", serial);
+
+    xuoassist::g_Connected = true;
+
+    xuoassist::g_AssistantConfig.LoadProfileBySerial(serial);
+    if (runAutostart)
+    {
+        xuoassist::g_AssistantEvents->OnAutostartRequest();
+    }
+    if (xuoassist::g_MapSettings.GetShowOnLogin())
+    {
+        xuoassist::g_AssistantEvents->OnMapOpenRequest();
+    }
+    xuoassist::g_AssistantEvents->OnMapRedraw();
+#endif
 
     if (g_World != nullptr)
     {
@@ -1010,6 +1078,15 @@ PACKET_HANDLER(EnterWorld)
     }
 
     g_Player->Graphic = ReadUInt16BE();
+#if defined(XUO_ASSISTANT)
+    xuoassist::g_OriginalGraphic = g_Player->Graphic;
+    if (dead_body_graphic(g_Player->Graphic) && xuoassist::g_AssistantConfig.NoGrayScreen())
+    {
+        // the value the old pre-parse buffer patch fed the client parse
+        g_Player->Graphic = 0x03DB;
+        xuoassist::g_OriginalGraphic = 0x03DB;
+    }
+#endif
     g_Player->OnGraphicChange();
 
     g_Player->SetX(ReadUInt16BE());
@@ -1287,6 +1364,34 @@ PACKET_HANDLER(UpdatePlayer)
     uint16_t serverID = ReadUInt16BE();
     uint8_t direction = ReadUInt8();
     char z = ReadUInt8();
+
+#if defined(XUO_ASSISTANT)
+    // the assistant edits the values the client applies (morph /
+    // no-gray-screen; the old flow patched the packet at Start + 5, the body
+    // field, and zeroed the increment byte at Start + 7 pre-parse) and
+    // tracks the alive -> dead transition for its corpse marker
+    if (serial == g_PlayerSerial && dead_body_graphic(graphic))
+    {
+        if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.NoGrayScreen())
+        {
+            graphic = 0x03DB;
+            graphicIncrement = 0;
+        }
+
+        // only the corpse stamp is transition-gated; the patch above fires on
+        // every packet carrying a dead-body graphic (pre-image behavior)
+        if (!g_Player->IsDead())
+        {
+            xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
+            xuoassist::g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
+        }
+    }
+
+    if (!m_AssistantInjecting && xuoassist::g_MorphGraphic != 0u)
+    {
+        graphic = xuoassist::g_MorphGraphic;
+    }
+#endif
 
     // Invert character wakthrough bit.
     flags ^= 0x10;
@@ -1648,6 +1753,43 @@ PACKET_HANDLER(UpdateObject)
 
     if (serial == g_PlayerSerial)
     {
+#if defined(XUO_ASSISTANT)
+        // the assistant mirrors the body and edits the packet (morph /
+        // no-gray-screen) and tracks the alive -> dead transition for its
+        // corpse marker. NOTE: the patch offset Start + 7 lands on the X
+        // field of the 0x78 layout (id 1, serial 4, graphic 2, x) — this is
+        // the long-standing upstream assistant behavior, not the graphic
+        // field (Start + 5); the client never reads those bytes back (the
+        // parsed x/y are unused on the player path), so the write stays an
+        // in-place edit and the graphic mirror keeps the real packet value.
+        xuoassist::g_OriginalGraphic = graphic;
+
+        if (!m_AssistantInjecting && xuoassist::g_MorphGraphic != 0u)
+        {
+            pack16(Start + 7, xuoassist::g_MorphGraphic);
+        }
+
+        if (g_Player != nullptr && dead_body_graphic(graphic))
+        {
+            if (!m_AssistantInjecting)
+            {
+                if (xuoassist::g_AssistantConfig.NoGrayScreen())
+                {
+                    xuoassist::g_OriginalGraphic = 0x03DB;
+                }
+                pack16(Start + 7, 0x03DB);
+            }
+
+            // only the corpse stamp is transition-gated; the patch above fires
+            // on every packet carrying a dead-body graphic (pre-image behavior)
+            if (!g_Player->IsDead())
+            {
+                xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
+                xuoassist::g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
+            }
+        }
+#endif
+
         if (g_Player != nullptr)
         {
             bool updateStatusbar = (g_Player->GetFlags() != flags);
@@ -1681,6 +1823,16 @@ PACKET_HANDLER(UpdateObject)
 
     if (obj->NPC)
     {
+#if defined(XUO_ASSISTANT)
+        // the client handler stores the notoriety byte; the assistant asks
+        // the server for the status of characters it knows nothing about
+        xuoassist::g_AssistantEvents->OnInspectorUpdate(serial);
+
+        if (((CGameCharacter *)obj)->MaxHits == 0)
+        {
+            xuoassist::g_Assistant.GetStatus(serial);
+        }
+#endif
         ((CGameCharacter *)obj)->Notoriety = notoriety;
         g_GumpManager.UpdateContent(serial, 0, GT_PAPERDOLL);
     }
@@ -1707,6 +1859,15 @@ PACKET_HANDLER(UpdateObject)
             itemGraphic &= 0x7FFF;
             itemColor = ReadUInt16BE();
         }
+
+#if defined(XUO_ASSISTANT)
+        if (layer == OL_BACKPACK && obj->IsPlayer())
+        {
+            xuoassist::g_Backpack = itemSerial;
+        }
+
+        xuoassist::g_AssistantEvents->OnInspectorUpdate(itemSerial);
+#endif
 
         CGameItem *item = g_World->GetWorldItem(itemSerial);
 
@@ -1758,6 +1919,17 @@ PACKET_HANDLER(EquipItem)
     const uint8_t layer = ReadUInt8();
     const uint32_t containerSerial = ReadUInt32BE();
     const uint16_t color = ReadUInt16BE();
+
+#if defined(XUO_ASSISTANT)
+    // the client handler equips the item into its container; the assistant
+    // tracks the player's backpack serial and refreshes its inspector
+    if (layer == OL_BACKPACK && containerSerial == g_PlayerSerial)
+    {
+        xuoassist::g_Backpack = serial;
+    }
+
+    xuoassist::g_AssistantEvents->OnInspectorUpdate(serial);
+#endif
 
     CGameItem *obj = g_World->GetWorldItem(serial);
     obj->MapIndex = g_CurrentMap;
@@ -2072,6 +2244,34 @@ PACKET_HANDLER(DeleteObject)
     CGameObject *obj = g_World->FindWorldObject(serial);
     if (obj != nullptr)
     {
+#if defined(XUO_ASSISTANT)
+        // the client handler owns the removal (party members and corpses stay
+        // on purpose); the assistant keeps only its bookkeeping, read here
+        // before the object goes away
+        CGameObject *assistTop = obj->GetTopObject();
+
+        if (assistTop != nullptr && assistTop->IsPlayer())
+        {
+            xuoassist::g_AssistantEvents->OnTitleRedraw(serial);
+        }
+        else if (xuoassist::EnabledCommandRemovedPtrPosition())
+        {
+            if (serial == xuoassist::g_LastTargetObject)
+            {
+                xuoassist::g_LastTargetPosition = xuoassist::CPoint2Di(obj->GetX(), obj->GetY());
+            }
+            else if (serial == xuoassist::g_LastAttackObject)
+            {
+                xuoassist::g_LastAttackPosition = xuoassist::CPoint2Di(obj->GetX(), obj->GetY());
+            }
+        }
+
+        if (g_Party.Contains((int)serial))
+        {
+            g_Party.SetMemberInfo(serial, obj->GetX(), obj->GetY(), obj->MapIndex, obj->GetName());
+            xuoassist::g_AssistantEvents->OnMapUpdate(serial);
+        }
+#endif
         bool updateAbilities = false;
         const uint32_t cont = obj->Container & 0x7FFFFFFF;
         if (obj->Container != 0xFFFFFFFF)
@@ -2174,6 +2374,15 @@ PACKET_HANDLER(UpdateCharacter)
     {
         return;
     }
+
+#if defined(XUO_ASSISTANT)
+    // the client handler applies the update; the assistant asks the server
+    // for the status of characters it knows nothing about
+    if (!obj->IsPlayer() && obj->MaxHits == 0)
+    {
+        xuoassist::g_Assistant.GetStatus(serial);
+    }
+#endif
 
     uint16_t graphic = ReadUInt16BE();
     uint16_t x = ReadUInt16BE();
@@ -2475,6 +2684,14 @@ PACKET_HANDLER(OpenContainer)
     uint32_t serial = ReadUInt32BE();
     uint16_t gumpid = ReadUInt16BE();
 
+#if defined(XUO_ASSISTANT)
+    if (gumpid != 0x0030)
+    {
+        // the assistant tracks the last opened (non-shop) container
+        xuoassist::g_LastContainerObject = serial;
+    }
+#endif
+
     CGump *gump = nullptr;
 
     if (gumpid == 0xFFFF) //Spellbook
@@ -2502,6 +2719,16 @@ PACKET_HANDLER(OpenContainer)
     }
     else if (gumpid == 0x0030) //Buylist
     {
+#if defined(XUO_ASSISTANT)
+        // the shop agent snapshots the vendor stock and can consume the open
+        // (an auto-buy replays the list itself); the client then keeps its
+        // shop gump closed (the old recv-tap veto; assistant-published
+        // packets bypass it)
+        if (!m_AssistantInjecting && !xuoassist::g_ShopAgent.OnOpenContainer(serial))
+        {
+            return;
+        }
+#endif
         g_GumpManager.CloseGump(serial, 0, GT_SHOP);
 
         CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
@@ -2803,6 +3030,17 @@ PACKET_HANDLER(UpdateSkills)
             skill->Cap = (float)(cap / 10.0f);
             skill->LockStatus = lock;
 
+#if defined(XUO_ASSISTANT)
+            // the assistant seeds its skill-delta baseline (the real value)
+            // on the first update and mirrors the refresh for its skills tab
+            if (skill->OldValue == 0.0f)
+            {
+                skill->OldValue = (float)(realVal / 10.0f);
+            }
+
+            xuoassist::g_AssistantEvents->OnSkillUpdated((int)id);
+#endif
+
             if (gump != nullptr)
             {
                 gump->UpdateSkillValue(id);
@@ -2827,6 +3065,13 @@ PACKET_HANDLER(UpdateSkills)
             break;
         }
     }
+
+#if defined(XUO_ASSISTANT)
+    // the assistant skills-tab refresh (fired once per 0x3A packet, after the
+    // per-skill walk; the 0xFE skill-list build returns above, as the old tap
+    // did)
+    xuoassist::g_AssistantEvents->OnSkillsRefreshed();
+#endif
 
     g_SkillsManager.UpdateSkillsSum();
 
@@ -3616,6 +3861,21 @@ PACKET_HANDLER(ClientTalk)
 
 PACKET_HANDLER(MultiPlacement)
 {
+#if defined(XUO_ASSISTANT)
+    // the WaitTarget hook path (CTarget::CheckHook) or a playing macro
+    // waiting on the target cursor consumes the placement reply: the client
+    // keeps no open cursor and skips its own processing (the old recv-tap
+    // veto; assistant-published replays bypass it)
+    if (!m_AssistantInjecting)
+    {
+        xuoassist::g_TargetReceived = true;
+        if (!xuoassist::g_Target.SetMultiData(*this))
+        {
+            return;
+        }
+    }
+#endif
+
     if (g_World == nullptr)
     {
         return;
@@ -4187,6 +4447,15 @@ PACKET_HANDLER(ErrorCode)
 PACKET_HANDLER(AttackCharacter)
 {
     g_LastAttackObject = ReadUInt32BE();
+
+#if defined(XUO_ASSISTANT)
+    // the assistant keeps its own last-attack mirror for the script API; the
+    // mirror only takes real serials (the client global also records zeroes)
+    if (g_LastAttackObject != 0u)
+    {
+        xuoassist::g_LastAttackObject = g_LastAttackObject;
+    }
+#endif
 
     if (g_LastAttackObject != 0 && g_World != nullptr)
     {

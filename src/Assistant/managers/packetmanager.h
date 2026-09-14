@@ -62,16 +62,7 @@ private:
 protected:
     //! Packet handlers
     XA_HANDLER_PACKET(SecondLogin);
-    XA_HANDLER_PACKET(LoginComplete);
-    XA_HANDLER_PACKET(EnterWorld);
-    XA_HANDLER_PACKET(UpdatePlayer);
-    XA_HANDLER_PACKET(UpdateObject);
-    XA_HANDLER_PACKET(EquipItem);
-    XA_HANDLER_PACKET(DeleteObject);
-    XA_HANDLER_PACKET(UpdateCharacter);
     XA_HANDLER_PACKET(WarmodeS);
-    XA_HANDLER_PACKET(UpdateSkillsS);
-    XA_HANDLER_PACKET(UpdateSkillsR);
     XA_HANDLER_PACKET(TargetS);
     XA_HANDLER_PACKET(TargetR);
     XA_HANDLER_PACKET(ClientTalkS);
@@ -80,16 +71,13 @@ protected:
     XA_HANDLER_PACKET(Talk);
     XA_HANDLER_PACKET(UnicodeTalk);
     XA_HANDLER_PACKET(DisplayDeath);
-    XA_HANDLER_PACKET(MultiPlacement);
     XA_HANDLER_PACKET(OpenMenu);
     XA_HANDLER_PACKET(MenuChoice);
     XA_HANDLER_PACKET(DeathScreenS);
     XA_HANDLER_PACKET(DeathScreenR);
     XA_HANDLER_PACKET(ClientMessagesS);
     XA_HANDLER_PACKET(ClientMessagesR);
-    XA_HANDLER_PACKET(OpenContainer);
     XA_HANDLER_PACKET(BuffDebuff);
-    XA_HANDLER_PACKET(AttackCharacter);
     XA_HANDLER_PACKET(ExtendedCommandS);
     XA_HANDLER_PACKET(ExtendedCommandR);
     XA_HANDLER_PACKET(SecureTradingS);

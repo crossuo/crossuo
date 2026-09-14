@@ -16,6 +16,9 @@
 #include "../Managers/SkillsManager.h"
 #include "../Managers/SkillGroupManager.h"
 #include "../Network/Packets.h"
+#if defined(XUO_ASSISTANT)
+#include <core/assistantevents.h> // xuoassist::g_AssistantEvents (skill-lock echo)
+#endif
 #include "../GameObjects/GamePlayer.h"
 
 enum
@@ -643,6 +646,12 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
 
                 CPacketSkillsStatusChangeRequest(index, status).Send();
                 skill->LockStatus = status;
+
+#if defined(XUO_ASSISTANT)
+                // lock-change echo: the assistant skills tab mirrors the
+                // optimistic lock update (was the 0x3A send-side tap)
+                xuoassist::g_AssistantEvents->OnSkillUpdated(index);
+#endif
 
                 CGUISkillItem *skillItem = GetSkill(index);
 
