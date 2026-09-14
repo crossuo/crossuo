@@ -6,8 +6,7 @@
 // them. Changes vs the original app (plan §4.1): the only framework bits were the `emit`
 // marshaling calls in CPacket::SendClient/SendServer — in-process they go
 // straight to the client (SendClient injects into the client's receive path,
-// SendServer goes to g_ConnectionManager.Send, mirroring the UOMSG_*
-// round-trip the external plugin used, minus the SDL event hop).
+// SendServer goes to g_ConnectionManager.Send).
 // Lists are std::vector, ../managers/gumpmanager.h -> the ported CGump.
 
 #pragma once

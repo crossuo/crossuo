@@ -40,10 +40,6 @@ public:
     void SendTargetObject(int Serial);
     void SendTargetTile(uint16_t tileID, short x, short Y, char z);
     void SendCancelTarget();
-    void Plugin_SendTargetObject(int Serial);
-    void Plugin_SendTargetTile(uint16_t tileID, short x, short Y, char z);
-    void Plugin_SendCancelTarget();
-    void Plugin_SendTarget();
     void SendLastTarget();
     void SendTarget();
     void LoadMulti(int offsetX, int offsetY, char offsetZ);

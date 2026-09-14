@@ -13,6 +13,14 @@
 #include "Constants.h"
 #include <xuocore/enumlist.h>
 
+#define USER_MESSAGE_ID 0x0400
+#if _WIN32
+#include <Windows.h>
+#define WindowHandle HWND
+#else
+#define WindowHandle void *
+#endif // _WIN32
+
 #define IS_MOBILE(serial) ((serial & 0x40000000) == 0)
 #define IS_ITEM(serial) ((serial & 0x40000000) != 0)
 #define IS_PLAYER(serial) (serial == g_PlayerSerial)
@@ -405,16 +413,6 @@ extern astr_t g_PingString; // Debug Info
 #define UOFONT_UNDERLINE 0x10    // Underlined
 #define UOFONT_FIXED 0x20        // Fixed Length
 #define UOFONT_CROPPED 0x40      // Fixed length with ellipsis
-#define UOFONT_BQ 0x80           // Indent for the BQ tag
-
-#define PLUGIN_FLAGS_PARSE_RECV 0x01
-#define PLUGIN_FLAGS_PARSE_SEND 0x02
-#define PLUGIN_FLAGS_RECV 0x04
-#define PLUGIN_FLAGS_SEND 0x08
-#define PLUGIN_FLAGS_EVENT_PROC 0x10
-#define PLUGIN_FLAGS_CLIENT_ACCESS 0x20
-#define PLUGIN_FLAGS_GAME_WORLD_DRAW 0x40
-#define PLUGIN_FLAGS_SCENE_DRAW 0x80
-#define PLUGIN_FLAGS_WORLD_MAP_DRAW 0x100
+#define UOFONT_BQ 0x80 // Indent for the BQ tag
 
 #define RANDOM_FIDGET_ANIMATION_DELAY (30000 + (rand() % 30000))

@@ -71,7 +71,7 @@ private:
     static CPacketInfo m_Packets[0x100];
     std::unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
     std::vector<uint32_t> m_MegaClilocRequests;
-    std::deque<std::vector<uint8_t>> m_PluginData;
+    std::deque<std::vector<uint8_t>> m_AssistantData;
 
     bool AutoLoginNameExists(const astr_t &name);
     void AddHTMLGumps(class CGump *gump, std::vector<HTMLGumpDataInfo> &list);
@@ -199,9 +199,9 @@ public:
     CPacketInfo &GetInfo(uint8_t buf) const { return m_Packets[buf]; }
     void SendMegaClilocRequests();
     void AddMegaClilocRequest(int serial);
-    void SavePluginReceivePacket(uint8_t *buf, int size);
-    void ProcessPluginPackets();
-    void PluginReceiveHandler(uint8_t *buf, int size);
+    void SaveAssistantReceivePacket(uint8_t *buf, int size);
+    void ProcessAssistantPackets();
+    void AssistantReceiveHandler(uint8_t *buf, int size);
     void SetCachedGumpCoords(uint32_t id, int x, int y);
 };
 

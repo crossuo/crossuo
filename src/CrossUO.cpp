@@ -7,9 +7,8 @@
 #include "SDL_wrapper.h"
 #if defined(XUO_ASSISTANT)
 #include "AssistantWindow.h"
-#if defined(XUO_ASSISTANT)
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Send (in-client assistant)
-#endif
+#include <core/global.h> // xuoassist::g_SelectedClientWorldObject (selected-tile feed)
 #endif
 
 #include "revision.h"
@@ -45,7 +44,6 @@
 #include "Crypt/CryptEntry.h"
 #include <common/checksum.h>
 #include <xuocore/mappedfile.h>
-#include <xuocore/commoninterfaces.h>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
 #include <xuocore/vfs.h>
@@ -90,7 +88,6 @@
 #include "Managers/MouseManager.h"
 #include "Managers/OptionsMacroManager.h"
 #include "Managers/PacketManager.h"
-#include "Managers/PluginManager.h"
 #include "Managers/ProfessionManager.h"
 #include "Managers/ScreenEffectManager.h"
 #include "Managers/SkillGroupManager.h"
@@ -168,18 +165,6 @@
 #include "Renderer/RenderAPI.h"
 
 extern po::parser g_cli;
-
-#if !defined(XUO_WINDOWS) && !defined(XUO_ASSISTANT)
-REVERSE_PLUGIN_INTERFACE g_oaReverse;
-#endif
-
-PLUGIN_CLIENT_INTERFACE g_PluginClientInterface = {};
-
-bool CDECL PluginRecvFunction(uint8_t *buf, size_t size);
-bool CDECL PluginSendFunction(uint8_t *buf, size_t size);
-
-typedef void CDECL PLUGIN_INIT_TYPE(PLUGIN_INFO *);
-static PLUGIN_INIT_TYPE *g_PluginInit = nullptr;
 
 struct CFileWriter
 {
@@ -1101,7 +1086,9 @@ void CGame::Process(bool rendering)
                     g_GameScreen.PrepareContent();
                     g_GameScreen.Render();
 
-                    UOI_SELECTED_TILE uoiSelectedObject;
+#if defined(XUO_ASSISTANT)
+                    // selected-tile snapshot for the assistant's script API
+                    xuoassist::SelectedTile &uoiSelectedObject = xuoassist::g_SelectedClientWorldObject;
                     if (g_SelectedObject.Object != nullptr &&
                         g_SelectedObject.Object->IsWorldObject())
                     {
@@ -1145,7 +1132,7 @@ void CGame::Process(bool rendering)
                     {
                         memset(&uoiSelectedObject, 0, sizeof(uoiSelectedObject));
                     }
-                    PLUGIN_EVENT(UOMSG_SELECTED_TILE, &uoiSelectedObject);
+#endif
                 }
                 g_Target.UnloadMulti();
                 g_GameScreen.RenderListInitalized = false;
@@ -1211,139 +1198,14 @@ void CGame::LoadStartupConfig(int serial)
     }
 }
 
-void CGame::LoadPlugin(const fs_path &libpath, const astr_t &function, int flags)
+void CGame::SendAssistantLists()
 {
-    Info(Client, "Loading plugin: %s", fs_path_ascii(libpath));
-    auto dll = SDL_LoadObject(fs_path_ascii(libpath));
-    if (dll != nullptr)
-    {
-        auto initFunc = (PluginEntry *)SDL_LoadFunction(dll, function.c_str());
-        if (!InstallPlugin(initFunc, flags))
-        {
-            SDL_UnloadObject(dll);
-        }
-        // FIXME: dll leaks, pass handle into CPlugin to be closed
-    }
-    else
-    {
-        Info(Client, "Failed with error: %s", SDL_GetError());
-    }
-}
-
-bool CGame::InstallPlugin(PluginEntry *initFunc, int flags)
-{
-    CPlugin *plugin = nullptr;
-    if (initFunc != nullptr)
-    {
-        plugin = new CPlugin(flags);
-        initFunc(plugin->m_PPS);
-    }
-
-    if (plugin == nullptr)
-    {
-        return false;
-    }
-
-    plugin->m_PPS->Owner = plugin;
-    if (plugin->CanClientAccess())
-    {
-        plugin->m_PPS->Client = &g_PluginClientInterface;
-    }
-
-    if (plugin->CanParseRecv())
-    {
-        plugin->m_PPS->Recv = PluginRecvFunction;
-    }
-
-    if (plugin->CanParseSend())
-    {
-        plugin->m_PPS->Send = PluginSendFunction;
-    }
-
-    initFunc(plugin->m_PPS);
-    g_PluginManager.Add(plugin);
-    return true;
-}
-
-void CGame::LoadPlugins()
-{
-    g_PluginClientInterface.Version = 2;
-    g_PluginClientInterface.Size = sizeof(g_PluginClientInterface);
-    g_PluginClientInterface.GL = &g_Interface_GL;
-    g_PluginClientInterface.UO = &g_Interface_UO;
-    g_PluginClientInterface.ClilocManager = &g_Interface_ClilocManager;
-    g_PluginClientInterface.ColorManager = &g_Interface_ColorManager;
-    g_PluginClientInterface.PathFinder = &g_Interface_PathFinder;
-    g_PluginClientInterface.FileManager = &g_Interface_FileManager;
-
 #if defined(XUO_ASSISTANT)
-    // embedded
-#else
-#if defined(XUO_WINDOWS)
-    LoadPlugin(ExeFilePath("xuoassist.dll"), "Install", 0xFFFFFFFF);
-#else
-    InstallPlugin(g_oaReverse.Install, 0xFFFFFFFF);
+    // the assistant builds its skill/spell/macro books from these lists
+    CPluginPacketSkillsList().SendToAssistant();
+    CPluginPacketSpellsList().SendToAssistant();
+    CPluginPacketMacrosList().SendToAssistant();
 #endif
-#endif
-
-    CPluginPacketSkillsList().SendToPlugin();
-    CPluginPacketSpellsList().SendToPlugin();
-    CPluginPacketMacrosList().SendToPlugin();
-
-    // FIXME: Load any additional plugin here
-
-    std::vector<astr_t> libName;
-    std::vector<astr_t> functions;
-    std::vector<uint32_t> flags;
-
-    size_t pluginsInfoCount = Crypt::GetPluginsCount();
-    if (pluginsInfoCount == 0u)
-    {
-        return;
-    }
-
-    PLUGIN_INFO *pluginsInfo = new PLUGIN_INFO[pluginsInfoCount];
-    g_PluginInit(pluginsInfo);
-    for (int i = 0; i < (int)pluginsInfoCount; i++)
-    {
-        libName.push_back(pluginsInfo[i].FileName);
-        functions.push_back(pluginsInfo[i].FunctionName);
-        flags.push_back((uint32_t)pluginsInfo[i].Flags);
-    }
-    delete[] pluginsInfo;
-
-    for (int i = 0; i < (int)libName.size(); i++)
-    {
-        LoadPlugin(ExeFilePath(libName[i].c_str()), functions[i], flags[i]);
-    }
-
-    if (g_PluginManager.m_Items != nullptr)
-    {
-        CPluginPacketSkillsList().SendToPlugin();
-        CPluginPacketSpellsList().SendToPlugin();
-        CPluginPacketMacrosList().SendToPlugin();
-
-        // Share memory with assistant
-        /*g_FileManager.SendFilesInfo();
-
-		for (auto i = 0; i < 0x10000; i++)
-		{
-			CIndexObjectStatic &staticObj = m_StaticDataIndex[i];
-
-			if (staticObj.Address)
-			{
-				uint64_t compressedSize = 0;
-
-				if (staticObj.UopBlock)
-					compressedSize = staticObj.UopBlock->CompressedSize;
-
-				CPluginPacketStaticArtGraphicDataInfo(i, staticObj.Address, staticObj.DataSize, compressedSize).SendToPlugin();
-			}
-		}
-
-		CPluginPacketFilesTransfered().SendToPlugin();*/
-    }
-
     g_GameWindow.Raise();
 }
 
@@ -1639,7 +1501,6 @@ void CGame::Connect()
 void CGame::Disconnect()
 {
     g_AbyssPacket03First = true;
-    g_PluginManager.Disconnect();
 
     g_ConnectionManager.Disconnect();
 
@@ -1692,14 +1553,11 @@ int CGame::Send(uint8_t *buf, int size)
     else
     {
 #if defined(XUO_ASSISTANT)
-        // in-client assistant observes outgoing packets at the same spot as
-        // the plugin ABI's OnSend (pre-encryption, before the wire)
+        // the in-client assistant observes outgoing packets pre-encryption,
+        // before the wire
         xuoassist::AssistantPackets_Send(buf, (size_t)size);
 #endif
-        if (g_PluginManager.PacketSend(buf, size))
-        {
-            result = g_ConnectionManager.Send(buf, size);
-        }
+        result = g_ConnectionManager.Send(buf, size);
     }
 
     if (result != 0)
@@ -1721,8 +1579,6 @@ void CGame::ServerSelection(int pos)
         auto name = g_ServerList.GetSelectedServer()->Name;
         g_ServerList.LastServerName = name;
         static auto sn = FixServerName(name);
-        const char *data = sn.c_str();
-        PLUGIN_EVENT(UOMSG_SET_SERVER_NAME, data);
         CPacketSelectServer((uint8_t)server->Index).Send();
     }
 }
@@ -1752,7 +1608,6 @@ void CGame::CharacterSelection(int pos)
     InitScreen(GS_GAME_CONNECT);
     g_ConnectionScreen.SetType(CST_GAME);
     g_CharacterList.LastCharacterName = g_CharacterList.GetName(pos);
-    PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, g_CharacterList.LastCharacterName.c_str());
     CPacketSelectCharacter(pos, g_CharacterList.LastCharacterName).Send();
 }
 
@@ -5900,30 +5755,6 @@ void CGame::OpenStatus(uint32_t serial)
     g_GumpManager.AddGump(new CGumpStatusbar(serial, x, y, true));
 }
 
-void CGame::DisplayStatusbarGump(int serial, int x, int y)
-{
-    CPacketStatusRequest packet(serial);
-    UOMsg_Send(packet.Data().data(), packet.Data().size());
-    CGump *gump = g_GumpManager.GetGump(serial, 0, GT_STATUSBAR);
-    if (gump != nullptr)
-    {
-        if (gump->Minimized)
-        {
-            gump->MinimizedX = x;
-            gump->MinimizedY = y;
-        }
-        else
-        {
-            gump->SetX(x);
-            gump->SetY(y);
-        }
-    }
-    else
-    {
-        g_GumpManager.AddGump(new CGumpStatusbar(serial, x, y, true));
-    }
-}
-
 void CGame::OpenMinimap()
 {
     g_GumpManager.AddGump(new CGumpMinimap(0, 0, true));
@@ -5931,13 +5762,6 @@ void CGame::OpenMinimap()
 
 void CGame::OpenWorldMap()
 {
-    size_t pluginsInfoCount = Crypt::GetPluginsCount();
-    if (pluginsInfoCount > 0u)
-    {
-        CPluginPacketOpenMap().SendToPlugin(); //TODO: query if plugin supports world map
-        return;
-    }
-
     int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 200;
     int y = g_ConfigManager.GameWindowY + (g_ConfigManager.GameWindowHeight / 2) - 150;
 

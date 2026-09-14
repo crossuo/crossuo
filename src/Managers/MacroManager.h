@@ -15,7 +15,6 @@ class CMacroManager : public CBaseQueue
 public:
     bool WaitingBandageTarget = false;
     uint32_t WaitForTargetTimer = 0;
-    bool SendNotificationToPlugin = false;
 
 private:
     uint32_t m_NextTimer{ 0 };

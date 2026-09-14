@@ -11,7 +11,7 @@ public:
     CPluginPacket();
     CPluginPacket(int size, bool autoResize = false);
 
-    void SendToPlugin();
+    void SendToAssistant();
 };
 
 class CPluginPacketSkillsList : public CPluginPacket

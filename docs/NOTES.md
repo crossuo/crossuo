@@ -757,19 +757,16 @@ gotchas, accepted deltas and the reasoning behind them.
   define went unnoticed at first because Linux allows undefined symbols in
   shared libs).
 - With `XUO_ASSISTANT` on (non-Windows), the client builds as ONE
-  self-contained `crossuo` executable with a real `main()` (`XUO_STANDALONE`
-  in `src/Main.cpp`) instead of the `client` dlopen loader + `libcrossuo.so`
-  plugin pair; the reverse plugin-install channel (`g_oaReverse`,
-  `set_install`, `plugin_main`) is compiled out. `XUO_ASSISTANT=OFF` keeps
-  the exe+so layout and contains no assistant symbols or strings.
+  self-contained `crossuo` executable with a real `main()`. `XUO_ASSISTANT=OFF`
+  builds the same single executable without assistant symbols or strings; the
+  old `client` dlopen loader + `libcrossuo.so` plugin pair is gone.
 - Link guard: `crossuo` links with `--no-undefined`. The assistant is part
   of the shared lib, and a declaration that never got a definition used to
   slip through as an undefined symbol that aborted the client on the first
   assistant frame.
-- Cutover: with the assistant linked in, the external plugin is no longer
-  auto-loaded (two assistants would fight over the same packets). The rest
-  of the plugin list is untouched; the legacy dll can still be loaded
-  manually.
+- Cutover: the assistant is the only consumer of the client's packet taps;
+  the 0xFC list feed (skill/spell/macro lists) is sent at startup via
+  `CGame::SendAssistantLists()`.
 
 ## Lifecycle & visibility
 
@@ -863,6 +860,24 @@ gotchas, accepted deltas and the reasoning behind them.
 
 ## Packet handler fusion
 
+## Fusion batches (remaining)
+
+- B1 simple recv observers/filters: CharacterStatus, Update Hitpoints/Mana/Stamina,
+  Health-KR, MobileAttributes, Personal/Global Light, Sound Effect, Set Weather,
+  Season, Character Animation, Graphic Effect x2 - inject event/filter call into the
+  client handler, delete the assistant row.
+- B2 medium recv state actors: Enter World, Login Complete, Update Player, Update
+  Character (+New), Update Object (+New), Equip Item, Delete Object, Open Container,
+  Attack Reply, Multi Placement - wire edits and bookkeeping must survive the move.
+- B3 talk family: Server Talk, Unicode Server Talk - journal + filters + font-color
+  veto (same pattern as DisplayClilocString).
+- B4 assistant-owned taps: Vendor Buy/Sell List, Open Gump, Open Menu, Map Data,
+  Display Map, Display New Map, Buff/Debuff, party 0xBF - inject where clean, else
+  document the keep; then dissolve the assistant recv tap.
+- B5 send side: the 11 SMSGH recording/bookkeeping taps collapse into one assistant
+  dispatch in CGame::Send; delete the assistant send table.
+
+
 The parallel assistant packetmanager (its own handler table, tapped before
 the client's) is dissolved handler-by-handler into the client's handlers:
 the client handler owns parsing and state, assistant logic becomes injected
@@ -892,9 +907,8 @@ Completed reference case: **DisplayClilocString** (client
 system/own-speech flags, the characters-font-color re-hue applied to the
 parsed color (the old flow patched the raw buffer at `Start + 10`, which
 is the color field in both layouts), and the replace-text/speech-filter
-veto. Old-flow veto additionally hid the packet from external plugins
-(the tap sat before `g_PluginManager.PacketRecv`); the fused early-return
-only suppresses client processing.
+veto. The veto early-return only suppresses client processing (the tap sits
+before the client handler dispatch).
 
 ## Script API
 
@@ -913,7 +927,7 @@ only suppresses client processing.
   table (names, buttons, values, lock state, plus `OldValue` for the
   skills-tab delta column); `::g_CorpseManager` owns the corpse auto-open
   queue. There is no second object model in `src/Assistant/`.
-- Packet taps run BEFORE the client handlers (the plugin-ABI OnRecv seat).
+- Packet taps run BEFORE the client handlers.
   Handlers whose state the client already fills (stats, hits/mana/stam,
   healthbar flags, notoriety, body updates, container/equipment updates,
   skill values, object names from talk/mega-cliloc, removals) are pure

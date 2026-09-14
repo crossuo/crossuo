@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (assist/assist.h), trimmed per assistant-plan.md
-// §4.1: the base object, the cross-thread signal pair (signal_SendClient/
-// signal_SendServer -> direct g_SendClient/g_SendServer calls) and the
-// parsing helpers are dropped; FIND_TYPE_FLAGS /
-// NOTORIETY_TYPE_FLAGS moved to core/global.h (shared with the model layer).
+// Core assistant object: journal, speech filters, find/count/ignore
+// engine and the client/server send helpers. FIND_TYPE_FLAGS /
+// NOTORIETY_TYPE_FLAGS live in core/global.h.
 // The data-list lookups that used to poke g_TabLists* widget globals consult
 // the AssistantConfig module instead (same module that loads/saves them).
 

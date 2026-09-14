@@ -410,12 +410,6 @@ void CMacroManager::LoadFromOptions()
 void CMacroManager::ChangePointer(CMacroObject *macro)
 {
     g_MacroPointer = macro;
-
-    if (g_MacroPointer == nullptr && SendNotificationToPlugin)
-    {
-        SendNotificationToPlugin = false;
-        PLUGIN_EVENT(UOMSG_END_MACRO_PLAYING, nullptr);
-    }
 }
 
 void CMacroManager::Execute()
@@ -1123,7 +1117,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 
                 g_LastTargetObject = obj->Serial;
                 g_LastAttackObject = obj->Serial;
-                PLUGIN_EVENT(UOMSG_STATUS_REQUEST, obj->Serial);
             }
             break;
         }

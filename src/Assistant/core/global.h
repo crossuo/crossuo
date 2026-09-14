@@ -16,13 +16,8 @@
 #include <vector>
 
 #include <common/utils.h> // countof
-// Shared UO protocol types, owned by the client (same lineage as the original app's
-// common/ headers): enums (CLIENT_VERSION, RACE_TYPE, OL_*, AT_*, VKI_*,
-// PROMPT_TYPE, UPDATE_GAME_OBJECT_TYPE), FUNCDEF_* bridge typedefs,
-// PACKET_PROC/UOI_SELECTED_TILE/WindowHandle.
 #include <xuocore/enumlist.h>
 #include <xuocore/commoninterfaces.h>
-#include <xuocore/plugininterface.h>
 #include "Globals.h" // client g_Ticks (ms) - supersedes the original app's tick timer
 
 namespace xuoassist {
@@ -69,8 +64,6 @@ enum NOTORIETY_TYPE_FLAGS
     NTF_INVULNERABLE = 0x40
 };
 
-extern PACKET_PROC *g_SendClient;
-extern PACKET_PROC *g_SendServer;
 extern FUNCDEF_GET_STATIC_FLAGS *g_GetStaticFlags;
 extern FUNCDEF_GET_VALUE_INT *g_GetInt;
 extern FUNCDEF_SET_VALUE_INT *g_SetInt;
@@ -497,6 +490,20 @@ struct CPoint2Di
     int y() const { return Y; }
 };
 
+struct SelectedTile
+{
+    unsigned int Serial;
+    unsigned short Graphic;
+    unsigned short Color;
+    int X;
+    int Y;
+    int Z;
+    unsigned short LandGraphic;
+    int LandX;
+    int LandY;
+    int LandZ;
+};
+
 extern uint g_PlayerSerial;
 extern uint g_Backpack;
 extern uint g_FindItem;
@@ -524,7 +531,7 @@ extern CPoint2Di g_LastAttackPosition;
 extern uint g_LastStatusRequest;
 extern uint g_LastStatusObject;
 extern uint g_LastUseObject;
-extern UOI_SELECTED_TILE g_SelectedClientWorldObject;
+extern SelectedTile g_SelectedClientWorldObject;
 extern bool g_ClientMacroPlayed;
 extern CPoint2Di g_LastPlayerCorpsePosition;
 extern uint g_LastPlayerDeadTimer;
@@ -830,4 +837,3 @@ template <typename T, typename U> static inline T checked_cast(U *value)
 }
 
 } // namespace xuoassist
-

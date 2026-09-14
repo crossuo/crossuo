@@ -32,7 +32,6 @@
 #include "../Managers/GumpManager.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/ClilocManager.h"
-#include "../Managers/PluginManager.h"
 #include "../Managers/MacroManager.h"
 #include "../Managers/ObjectPropertiesManager.h"
 #include "../Managers/ScreenEffectManager.h"
@@ -1483,8 +1482,6 @@ void CGameScreen::DrawGameWindow(bool render)
         {
             m_ObjectHandlesList[i]->DrawObjectHandlesTexture();
         }
-
-        g_PluginManager.WorldDraw();
     }
     else
     {
@@ -1808,7 +1805,6 @@ void CGameScreen::PrepareContent()
                     g_Game.OpenStatus(selchar->Serial);
                     g_GeneratedMouseDown = true;
                     g_GameWindow.EmulateOnLeftMouseButtonDown();
-                    PLUGIN_EVENT(UOMSG_STATUS_REQUEST, selchar->Serial);
                 }
             }
         }
@@ -2182,9 +2178,6 @@ void CGameScreen::Render()
             g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 18,
             TS_LEFT,
             UOFONT_BLACK_BORDER | UOFONT_FIXED);
-        GL_DEBUG_MARKER_POP();
-        GL_DEBUG_MARKER_PUSH("Scene");
-        g_PluginManager.SceneDraw();
         GL_DEBUG_MARKER_POP();
         if (g_GameState == GS_GAME_BLOCKED)
         {

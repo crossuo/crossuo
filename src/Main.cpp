@@ -33,15 +33,6 @@
 #include "Managers/ConnectionManager.h"
 #include "Managers/PacketManager.h"
 
-#if !defined(XUO_WINDOWS) && !defined(XUO_STANDALONE)
-#include <dlfcn.h>
-#define XUO_EXPORT extern "C" __attribute__((visibility("default")))
-#else
-#define XUO_EXPORT
-#endif
-
-//#include <xuocore/plugininterface.h>
-
 extern bool g_var_DisableRenderGame;
 bool g_var_DisableRenderGame = false;
 
@@ -552,7 +543,7 @@ static int Run()
         // 2] Run main loop, packets, rendering etc..
         g_Ticks = SDL_GetTicks();
         g_ConnectionManager.Recv();
-        g_PacketManager.ProcessPluginPackets();
+        g_PacketManager.ProcessAssistantPackets();
         g_PacketManager.SendMegaClilocRequests();
         g_Game.Process(true);
 
@@ -589,11 +580,7 @@ static int Run()
     return EXIT_SUCCESS;
 }
 
-#if !defined(XUO_WINDOWS) && !defined(XUO_STANDALONE)
-XUO_EXPORT int plugin_main(int argc, char **argv)
-#else
 int main(int argc, char **argv)
-#endif
 {
 #if 0 // TEST encoding
     str_init();
@@ -694,7 +681,7 @@ int main(int argc, char **argv)
     }
 
     g_Game.ProcessCommandLine();
-    g_Game.LoadPlugins();
+    g_Game.SendAssistantLists();
     auto ret = Run();
     SDL_Quit();
     str_terminate();
@@ -703,10 +690,3 @@ int main(int argc, char **argv)
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
     return ret;
 }
-
-#if !defined(XUO_WINDOWS) && !defined(XUO_ASSISTANT)
-XUO_EXPORT void set_install(REVERSE_PLUGIN_INTERFACE *p)
-{
-    g_oaReverse.Install = p->Install;
-}
-#endif

@@ -2,8 +2,6 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "Walker.h"
-#include <xuocore/plugininterface.h> // FIXME: UOI_PLAYER_XYZ_DATA, UOMSG_UPDATE_RMEOVE_POS
-#include "../Wisp/WispWindow.h"      // FIXME: PLUGIN_EVENT
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
 
@@ -54,9 +52,6 @@ void CWalker::DenyWalk(uint8_t sequence, int x, int y, char z)
 
         g_RemoveRangeXY.X = x;
         g_RemoveRangeXY.Y = y;
-
-        UOI_PLAYER_XYZ_DATA xyzData = { g_RemoveRangeXY.X, g_RemoveRangeXY.Y, 0 };
-        PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData);
     }
 }
 
@@ -119,10 +114,5 @@ void CWalker::ConfirmWalk(uint8_t sequence)
         WalkingFailed = true;
         StepsCount = 0;
         CurrentWalkSequence = 0;
-    }
-    else
-    {
-        UOI_PLAYER_XYZ_DATA xyzData = { g_RemoveRangeXY.X, g_RemoveRangeXY.Y, 0 };
-        PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData);
     }
 }

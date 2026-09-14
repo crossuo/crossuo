@@ -180,7 +180,6 @@ set(managers_src
   Managers/ObjectPropertiesManager.cpp
   Managers/OptionsMacroManager.cpp
   Managers/PacketManager.cpp
-  Managers/PluginManager.cpp
   Managers/ProfessionManager.cpp
   Managers/ScreenEffectManager.cpp
   Managers/SkillGroupManager.cpp
@@ -327,29 +326,8 @@ if(XUO_WINDOWS)
   set(XUO_FILES ${XUO_FILES} ${CMAKE_SOURCE_DIR}/resources/client.rc)
 endif()
 
-# The in-client assistant builds ONE self-contained executable (real main(),
-# no crossuo.so plugin split): the dlopen loader exe (CrossApp.cpp) and the
-# reverse plugin-install channel (g_oaReverse / set_install) only exist for
-# the exe+so layout.
-if(XUO_ASSISTANT_ENABLED AND NOT XUO_WINDOWS AND NOT XUO_EMSC)
-  set(XUO_ASSISTANT_STANDALONE On)
-endif()
-
-if(XUO_WINDOWS OR XUO_EMSC OR XUO_ASSISTANT_STANDALONE)
-  add_executable(crossuo ${XUO_FILES})
-  # selects the main() entry in Main.cpp (the plugin_main entry of the
-  # exe+so layout is not built here)
-  if(XUO_ASSISTANT_STANDALONE)
-    target_compile_definitions(crossuo PRIVATE XUO_STANDALONE=1)
-  endif()
-else()
-  # crossuo loader
-  add_executable(client CrossApp.cpp)
-  add_dependencies(client ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT})
-  set_target_properties(client PROPERTIES OUTPUT_NAME crossuo)
-  target_link_libraries(client PUBLIC ${LOADER} ${THREAD} ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT})
-  add_library(crossuo SHARED ${XUO_FILES})
-endif()
+# The client builds ONE self-contained executable with a real main().
+add_executable(crossuo ${XUO_FILES})
 
 add_dependencies(crossuo ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${3RDPARTY_STATIC})
 target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${GLM_LIBRARIES} ${THREAD} ${CURL_LIBRARIES})
@@ -380,16 +358,6 @@ endif()
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_CI})
   add_dependencies(crossuo clang-format-7)
-endif()
-
-if(XUO_WINDOWS)
-elseif(XUO_EMSC)
-elseif(XUO_ASSISTANT_STANDALONE)
-  # single-executable assistant build: no libcrossuo.so to copy and no
-  # loader exe to depend on
-else()
-  add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
-  add_dependencies(crossuo client)
 endif()
 
 xuo_disable_console(crossuo)

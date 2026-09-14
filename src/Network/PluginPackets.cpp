@@ -4,7 +4,6 @@
 #include "PluginPackets.h"
 #include "../Macro.h"
 #include "../Managers/SkillsManager.h"
-#include "../Managers/PluginManager.h"
 #if defined(XUO_ASSISTANT)
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
 #endif
@@ -22,18 +21,17 @@ CPluginPacket::CPluginPacket(int size, bool autoResize)
 {
 }
 
-void CPluginPacket::SendToPlugin()
+void CPluginPacket::SendToAssistant()
 {
     if (m_Data.size() >= 5)
     {
         pack16(&m_Data[1], (uint16_t)m_Data.size());
 #if defined(XUO_ASSISTANT)
-        // the in-client assistant rides the same plugin channel: the 0xFC
-        // OIPMT_* submessages (skill/spell/macro lists, open map) reach its
-        // ClientMessagesR handler exactly as they reached the external plugin
+        // the 0xFC OIPMT_* submessages (skill/spell/macro lists, open map)
+        // reach the in-client assistant's ClientMessagesR handler; its recv
+        // gate lets 0xFC through before any world exists
         xuoassist::AssistantPackets_Recv(&m_Data[0], (size_t)m_Data.size());
 #endif
-        g_PluginManager.PacketRecv(&m_Data[0], (int)m_Data.size());
     }
 }
 

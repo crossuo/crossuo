@@ -6,15 +6,14 @@
 #ifndef WISP_WIN_H
 #define WISP_WIN_H
 
+#include "../Globals.h"
 #include "../SDL_wrapper.h"
-#include <xuocore/plugininterface.h>
 #include <stdint.h>
 #include "../Platform.h"
 #include "../Point.h"
 
 #define PUSH_EVENT(id, data1, data2)                                                               \
     Wisp::CWindow::PushEvent(id, (void *)(uintptr_t)(data1), (void *)(uintptr_t)(data2))
-#define PLUGIN_EVENT(id, data) Wisp::CWindow::PluginEvent(id, (const void *)(uintptr_t)(data))
 
 void GetDisplaySize(int *x, int *y);
 
@@ -45,7 +44,6 @@ public:
     void Destroy();
 
     static uint32_t PushEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);
-    static uint32_t PluginEvent(uint32_t id, const void *data = nullptr);
 
     void ShowMessage(const astr_t &text, const astr_t &title);
     void ShowMessage(const wstr_t &text, const wstr_t &title);
@@ -78,14 +76,10 @@ protected:
     virtual void OnMidMouseButtonUp() {}
     virtual bool OnMidMouseButtonDoubleClick() { return false; }
     virtual void OnMidMouseButtonScroll(bool up) {}
-    virtual void OnXMouseButton(bool up) {}
     virtual void OnDragging() {}
     virtual void OnActivate() {}
     virtual void OnDeactivate() {}
-    virtual void OnShow(bool show) {}
     virtual void OnTimer(uint32_t id) {}
-    virtual void OnSetText(const char *text){};
-    virtual bool OnRepaint(const PaintEvent &ev) { return false; };
     virtual bool OnUserMessages(const UserEvent &ev) { return true; }
     virtual void OnTextInput(const TextEvent &ev) {}
     virtual void OnKeyDown(const KeyEvent &ev) {}

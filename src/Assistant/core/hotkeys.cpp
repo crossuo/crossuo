@@ -381,7 +381,7 @@ bool CHotkeys::ProcessKeyDown(const SDL_Event &ev)
 
 bool CHotkeys::ProcessKeyUp(const SDL_Event &)
 {
-    // UOMSG_INPUT_KEYUP was a no-op in the original app
+    // key-up bindings never fire (parity with the original app's filter)
     return false;
 }
 

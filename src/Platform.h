@@ -34,7 +34,6 @@
 typedef void *HDC;
 typedef void *HGLRC;
 
-// Plugin Event
 #define WM_MOUSEWHEEL 1
 #define WM_MBUTTONUP 2
 #define WM_MBUTTONDOWN 3

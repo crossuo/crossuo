@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/partymanager.cpp). The auto accept /
 // decline invitation lists live in the AssistantConfig module (Party.xml) —
 // the original code asked TabAgentsParty.
 //

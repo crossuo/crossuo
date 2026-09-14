@@ -21,9 +21,8 @@
 //     reaches the game), with the Alt+F4 exception (never consumed);
 //   - wheel/X-button/middle-click bindings behave like any other binding.
 // Deltas (in-client port): key auto-repeat never fires a binding (the original
-// capture filter skipped repeats; the keydown path always re-fired, an
-// artifact of the client re-sending UOMSG_INPUT_KEYDOWN - here the game only
-// sends non-repeat events to the engine, see AssistantWindow.cpp).
+// capture filter skipped repeats); non-repeat key events reach the engine
+// from AssistantWindow.cpp (the game window sends only those).
 
 #pragma once
 

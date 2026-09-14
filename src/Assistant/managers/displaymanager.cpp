@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/displaymanager.cpp) - data-only port:
 // the info-command table, the 26 default items, the display-key parser and
 // the title-data compiler are here; the win32 GDI Redraw/icon bodies are
 // Phase 2/4 (see displaymanager.h).

@@ -9,7 +9,6 @@
 #include <common/str.h>
 #include <deque>
 #include "GameObjects/GameWorld.h"
-#include <xuocore/plugininterface.h> // PluginEntry typedef
 
 struct fs_path;
 
@@ -52,8 +51,6 @@ private:
     uint16_t TextToGraphic(const char *text);
     void CheckStaticTileFilterFiles();
     astr_t DecodeArgumentString(const char *text, int length);
-    void LoadPlugin(const fs_path &libpath, const astr_t &function, int flags);
-    bool InstallPlugin(PluginEntry *initFunc, int flags);
     void LoadContainerOffsets();
 
 public:
@@ -62,7 +59,7 @@ public:
 
     bool Install();
     void Uninstall();
-    void LoadPlugins();
+    void SendAssistantLists();
     void ProcessCommandLine();
 
     void InitScreen(GAME_STATE state);
@@ -195,7 +192,6 @@ public:
     void ResumeSound() const;
 
     void OpenStatus(uint32_t serial);
-    void DisplayStatusbarGump(int serial, int x, int y);
     void OpenMinimap();
     void OpenWorldMap();
     void OpenJournal();

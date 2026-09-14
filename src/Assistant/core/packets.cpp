@@ -5,8 +5,8 @@
 // identical to the originals (protocol-critical; plan "must-follow" rule).
 // Only the transport changed: the original app's `emit g_Assistant.signal_*`
 // cross-thread marshaling becomes direct client calls (plan §4.1):
-//   SendClient -> client receive injection (was UOMSG_RECV)
-//   SendServer -> g_ConnectionManager.Send  (was UOMSG_SEND)
+//   SendClient -> client receive injection (queued to the client's packet loop)
+//   SendServer -> g_ConnectionManager.Send
 // String split/toInt/wide-conversion helpers replaced by local std equivalents.
 
 // SDL types must come first: xuocore/plugininterface.h maps its event structs
@@ -34,9 +34,8 @@ void CPacket::SendClient()
 {
     if (!m_Data.empty())
     {
-        // was: emit g_Assistant.signal_SendClient(m_Data) -> UOMSG_RECV ->
-        // SavePluginReceivePacket. Same sink, no SDL event hop.
-        ::g_PacketManager.SavePluginReceivePacket(&m_Data[0], (int)m_Data.size());
+        // client-bound injection: queued for the client's packet loop
+        ::g_PacketManager.SaveAssistantReceivePacket(&m_Data[0], (int)m_Data.size());
     }
 }
 
@@ -44,9 +43,7 @@ void CPacket::SendServer()
 {
     if (!m_Data.empty())
     {
-        // was: emit g_Assistant.signal_SendServer(m_Data) -> UOMSG_SEND ->
-        // g_ConnectionManager.Send. Same destination, no SDL event hop, and
-        // (like the plugin path) the assistant's own send tap does not see it.
+        // direct wire send; the assistant's own send tap does not see it
         ::g_ConnectionManager.Send(&m_Data[0], (int)m_Data.size());
     }
 }

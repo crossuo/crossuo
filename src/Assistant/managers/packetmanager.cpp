@@ -337,6 +337,9 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xF9*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xFA*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xFB*/ UMSG(PACKET_VARIABLE_SIZE),
+    // 0xFC submessages are the in-band extension channel: the client itself
+    // builds some (skill/spell/macro lists), and external applications may
+    // deliver 0xFC packets through the server stream.
     /*0xFC*/
     BMSGH("CrossUO messages", PACKET_VARIABLE_SIZE, ClientMessagesS, ClientMessagesR),
     /*0xFE*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -407,10 +410,8 @@ bool CPacketManager::PacketSend(uint8_t *buf, size_t size)
 
 // --- tap entry points (called from src/, XUO_ASSISTANT guarded) ------------
 
-// Wire the host-bridge pointers to the client implementations. The
-// plugin ABI got these as IUltimaOnline function pointers; in-process the same
-// client calls are bound directly (the FUNCBODY_* semantics of
-// src/CommonInterfaces.cpp).
+// Wire the host-bridge pointers to the client implementations. The same
+// client calls the bridge typedefs name are bound directly here.
 static uint64_t CDECL Bridge_GetStaticFlags(unsigned short graphic)
 {
     return g_Game.GetStaticFlags(graphic);
@@ -479,11 +480,11 @@ static void AssistantPackets_CheckDisconnect()
 
 // Returns the consumption result: true when the assistant consumed the packet
 // and the client must skip its own processing. The internal handler chain keeps
-// the plugin ABI convention (true = pass through, false = consumed), so the
+// the reverse convention (true = pass through, false = consumed), so the
 // result is inverted here. The only current producer of "consumed" is the
 // WaitTarget hook path (TargetR/0x6C via CTarget::SetRecvData -> CheckHook,
 // and its MultiPlacement/0x99 sibling): the auto-target swallows the reply so
-// the client keeps no open cursor, exactly like the external plugin did.
+// the client keeps no open cursor.
 bool AssistantPackets_Recv(uint8_t *buf, size_t size)
 {
     AssistantPackets_Init();
@@ -491,8 +492,8 @@ bool AssistantPackets_Recv(uint8_t *buf, size_t size)
     AssistantPackets_CheckDisconnect();
 
     if (!g_Connected && *buf != 0x1B && *buf != 0x55 // EnterWorld / LoginComplete
-        && *buf != 0xFC) // plugin submessages (skill/spell/macro lists are
-                         // injected at plugin load, before any world exists)
+        && *buf != 0xFC) // 0xFC submessages (skill/spell/macro lists are
+                         // injected at startup, before any world exists)
     {
         return false;
     }
@@ -2835,11 +2836,9 @@ PACKET_HANDLER(ClientMessagesS)
 
 PACKET_HANDLER(ClientMessagesR)
 {
-    // 0xFC "CrossUO messages". In the external-plugin days the client pushed
-    // its CPluginPacket buffers to plugins via g_PluginManager.PacketRecv
-    // (src/Network/PluginPackets.cpp SendToPlugin); the assistant now sits on
-    // the same two paths (OnPacket tap + SendToPlugin tap, see the src/ taps)
-    // so this handler sees exactly the submessages the plugin ABI saw.
+    // 0xFC "CrossUO messages". The client delivers its 0xFC builders here via
+    // the SendToAssistant tap (src/Network/PluginPackets.cpp); server traffic
+    // reaches this handler through the OnPacket tap in the client's recv path.
 
     ushort message = ReadUInt16BE();
     ushort application = (message >> 12);

@@ -5202,7 +5202,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_SELECTED_TILE: // the CClientSelectedTile getters (the direct
         {                      // g_SelectedClientWorldObject reads)
-            const UOI_SELECTED_TILE &tile = g_SelectedClientWorldObject;
+            const SelectedTile &tile = g_SelectedClientWorldObject;
             switch (command->SubTag)
             {
                 case ST_SERIAL:

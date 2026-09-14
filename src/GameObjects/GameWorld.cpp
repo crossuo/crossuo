@@ -1060,9 +1060,6 @@ void CGameWorld::UpdatePlayer(
         g_RemoveRangeXY.X = x;
         g_RemoveRangeXY.Y = y;
 
-        UOI_PLAYER_XYZ_DATA xyzData = { g_RemoveRangeXY.X, g_RemoveRangeXY.Y, 0 };
-        PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData);
-
         g_GameScreen.UpdateDrawPos = true;
 
         const bool oldDead = g_Player->IsDead();

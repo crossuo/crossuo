@@ -10,7 +10,6 @@
 #include "icon_client.h"
 #include "../Point.h"
 #include "../GameWindow.h"
-#include "../Managers/PluginManager.h"
 
 namespace Wisp
 {
@@ -329,7 +328,6 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
                 case SDL_WINDOWEVENT_SHOWN:
                 {
-                    OnShow(true); // Plugin
                     OnActivate(); // Sound + FPS
                 }
                 break;
@@ -362,7 +360,6 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
                 case SDL_WINDOWEVENT_HIDDEN:
                 {
-                    OnShow(false);  // Plugin
                     OnDeactivate(); // Sound + FPS
                 }
                 break;
@@ -570,10 +567,6 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     }
                     break;
 
-                case SDL_BUTTON_X1:
-                    OnXMouseButton(!isDown);
-                    break;
-
                 case SDL_BUTTON_X2:
                     break;
 
@@ -665,11 +658,6 @@ uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
     SDL_PushEvent(&event);
 
     return 0;
-}
-
-uint32_t CWindow::PluginEvent(uint32_t id, const void *data)
-{
-    return g_PluginManager.OnEvent(id, data);
 }
 }; // namespace Wisp
 

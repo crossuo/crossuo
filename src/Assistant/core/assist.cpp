@@ -14,6 +14,8 @@
 #include "assist.h"
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "packets.h"
+#include "Managers/PacketManager.h"      // ::g_PacketManager (client, inject)
+#include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
 #include "textconv.h"
 #include "target.h"
 #include "assistantevents.h"
@@ -54,12 +56,12 @@ void CAssistant::ScriptError(const string &title, const string &text)
 
 void CAssistant::SendClient(uint8_t *buf, size_t size)
 {
-    g_SendClient(buf, size);
+    ::g_PacketManager.SaveAssistantReceivePacket(buf, (int)size);
 }
 
 void CAssistant::SendServer(uint8_t *buf, size_t size)
 {
-    g_SendServer(buf, size);
+    ::g_ConnectionManager.Send(buf, size);
 }
 
 uint CAssistant::RawStringToUInt(const string &value)

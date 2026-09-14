@@ -3,17 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#include "../SDL_wrapper.h" // plugininterface.h
+#include "../SDL_wrapper.h"
 #include "CryptEntry.h"
 #include "../Misc.h"
 #include <common/fs.h>
 #include <xuocore/enumlist.h>
-#include <xuocore/plugininterface.h>
 #include "../Config.h"
 #include "LoginCrypt.h"
 #include "GameCrypt.h"
-
-static size_t s_CryptPluginsCount = 0;
 
 namespace Crypt
 {
@@ -87,11 +84,6 @@ void Decrypt(uint8_t *src, uint8_t *dest, int size)
     {
         memcpy(dest, src, size);
     }
-}
-
-size_t GetPluginsCount()
-{
-    return s_CryptPluginsCount;
 }
 
 } // namespace Crypt

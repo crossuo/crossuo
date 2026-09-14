@@ -54,7 +54,7 @@ class CPacketManager
 public:
     CPacketManager();
     virtual ~CPacketManager();
-    void SavePluginReceivePacket(unsigned char *, int);
+    void SaveAssistantReceivePacket(unsigned char *, int);
 };
 
 namespace xuoassist {
@@ -234,7 +234,7 @@ bool g_PromptReceived = false;
 bool g_ShopReceived = false;
 bool g_TradeReceived = false;
 bool g_ContextMenuReceived = false;
-UOI_SELECTED_TILE g_SelectedClientWorldObject;
+SelectedTile g_SelectedClientWorldObject;
 FUNCDEF_GET_VALUE_INT *g_GetInt = nullptr;
 FUNCDEF_SET_VALUE_INT *g_SetInt = nullptr;
 TARGET_HANDLER g_TargetHandler = nullptr;
@@ -310,7 +310,7 @@ extern CPacketManager g_PacketManager;
 CPacketManager g_PacketManager;
 CPacketManager::CPacketManager() {}
 CPacketManager::~CPacketManager() = default;
-void CPacketManager::SavePluginReceivePacket(unsigned char *, int) {}
+void CPacketManager::SaveAssistantReceivePacket(unsigned char *, int) {}
 
 // --- remaining client/common pieces the real executor references -------------
 wstr_t wstr_from(const astr_t &) { return wstr_t(); }

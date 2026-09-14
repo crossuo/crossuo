@@ -124,7 +124,7 @@ public:
     // "Last" + every use-button skill name, in packet order.
     virtual void OnSkillsList(const vector<string> &hotkeyActions) { (void)hotkeyActions; }
 
-    // --- spells / macros from the client's plugin packets (0xFC) -----------
+    // --- spells / macros from the client's 0xFC packets --------------------
     // One entry per spellbook (circles), spell names in packet order.
     virtual void OnSpellList(const vector<vector<string>> &books) { (void)books; }
     virtual void OnMacroList(const vector<std::pair<string, vector<string>>> &macros)

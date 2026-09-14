@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/clientmacromanager.cpp). The cache is fed
-// from the client's 0xFC OIPMT_MACRO_LIST plugin packet (packetmanager).
+// from the client's 0xFC OIPMT_MACRO_LIST packet (packetmanager).
 
 #include "clientmacromanager.h"
 

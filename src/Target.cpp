@@ -7,7 +7,6 @@
 #include "Multi.h"
 #include <xuocore/uodata.h>
 #include <xuocore/mulstruct.h>
-#include <xuocore/commoninterfaces.h>
 #include "Network/Packets.h"
 #include "Managers/MouseManager.h"
 #include "Managers/MapManager.h"
@@ -194,90 +193,6 @@ void CTarget::SendCancelTarget()
     }
 }
 
-void CTarget::Plugin_SendTargetObject(int serial)
-{
-    if (!Targeting)
-    {
-        return; //Если в клиенте нет таргета - выход
-    }
-
-    //Пишем серийник объекта, на который ткнули прицелом, остальное - затираем
-    pack32(m_Data + 7, serial);
-    m_Data[1] = 0;
-
-    CGameObject *obj = (g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr);
-
-    if (obj != nullptr)
-    {
-        pack16(m_Data + 11, obj->GetX());
-        pack16(m_Data + 13, obj->GetY());
-        m_Data[15] = 0xFF;
-        m_Data[16] = obj->GetZ();
-        pack16(m_Data + 17, obj->Graphic);
-    }
-    else
-    {
-        pack32(m_Data + 11, 0);
-        pack32(m_Data + 15, 0);
-    }
-
-    if (serial != g_PlayerSerial)
-    {
-        g_LastTargetObject = serial;
-
-        //Скопируем для LastTarget
-        memcpy(m_LastData, m_Data, sizeof(m_Data));
-
-        if (obj != nullptr && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
-        {
-            CPacketStatusRequest packet(serial);
-            UOMsg_Send(packet.Data().data(), packet.Data().size());
-        }
-    }
-
-    Plugin_SendTarget();
-}
-
-void CTarget::Plugin_SendTargetTile(uint16_t tileID, short x, short y, char z)
-{
-    if (!Targeting)
-    {
-        return; //Если в клиенте нет таргета - выход
-    }
-
-    m_Data[1] = 1;
-
-    //Пишем координаты и индекс тайла, на который ткнули, остальное трем
-    pack32(m_Data + 7, 0);
-    pack16(m_Data + 11, x);
-    pack16(m_Data + 13, y);
-
-    //m_Data[15] = 0xFF;
-    //m_Data[16] = z;
-    pack16(m_Data + 15, (short)z);
-    pack16(m_Data + 17, tileID);
-
-    //Скопируем для LastTarget
-    memcpy(m_LastData, m_Data, sizeof(m_Data));
-
-    Plugin_SendTarget();
-}
-
-void CTarget::Plugin_SendCancelTarget()
-{
-    if (!Targeting)
-    {
-        return; //Если в клиенте нет таргета - выход
-    }
-
-    //Уходят только нули
-    pack32(m_Data + 7, 0);
-    pack32(m_Data + 11, 0xFFFFFFFF);
-    pack32(m_Data + 15, 0);
-
-    Plugin_SendTarget();
-}
-
 void CTarget::SendLastTarget()
 {
     if (!Targeting)
@@ -302,16 +217,6 @@ void CTarget::SendTarget()
         g_Game.Send(m_Data, sizeof(m_Data));
     }
 
-    memset(m_Data, 0, sizeof(m_Data));
-    Targeting = false;
-    MultiGraphic = 0;
-
-    g_MouseManager.CancelDoubleClick = true;
-}
-
-void CTarget::Plugin_SendTarget()
-{
-    UOMsg_Send(m_Data, sizeof(m_Data));
     memset(m_Data, 0, sizeof(m_Data));
     Targeting = false;
     MultiGraphic = 0;

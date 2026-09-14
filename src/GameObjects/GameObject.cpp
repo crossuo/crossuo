@@ -112,7 +112,6 @@ void CGameObject::SetName(const astr_t &newName)
             }
             g_GameWindow.SetTitle(title); // FIXME: remove this dependency from here
         }
-        PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, newName.c_str());
     }
     m_Name = newName;
 }

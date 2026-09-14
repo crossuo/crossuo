@@ -19,7 +19,6 @@
 #include "SkillsManager.h"
 #include "MapManager.h"
 #include "ConnectionManager.h"
-#include "PluginManager.h"
 #if defined(XUO_ASSISTANT)
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
@@ -665,7 +664,6 @@ void CPacketManager::OnReadFailed()
     g_Game.DisconnectGump();
     //g_Game. Disconnect();
     g_AbyssPacket03First = true;
-    g_PluginManager.Disconnect();
     g_ConnectionManager.Disconnect();
 }
 
@@ -712,57 +710,53 @@ void CPacketManager::OnPacket()
     else
     {
 #if defined(XUO_ASSISTANT)
-        // in-client assistant observes every server packet before the client
-        // handlers, exactly where the plugin ABI's OnRecv sits; the assistant
-        // may consume packets exactly like the external plugin did (WaitTarget
-        // auto-target swallows the 0x6C reply so the client keeps no open
-        // cursor), and a consumed packet skips the client parsing below
+        // the in-client assistant observes every server packet before the
+        // client handlers; it may consume packets (the WaitTarget auto-target
+        // swallows the 0x6C reply so the client keeps no open cursor), and a
+        // consumed packet skips the client parsing below
         if (xuoassist::AssistantPackets_Recv(Start, (size_t)Size))
         {
             return;
         }
 #endif
-        if (g_PluginManager.PacketRecv(Start, (int)Size))
+        if (info.Handler != 0)
         {
-            if (info.Handler != 0)
+            Ptr = Start + 1;
+            if (info.Size == 0)
             {
-                Ptr = Start + 1;
-                if (info.Size == 0)
-                {
-                    Ptr += 2;
-                }
-                (this->*(info.Handler))();
+                Ptr += 2;
             }
+            (this->*(info.Handler))();
         }
     }
 }
 
-void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
+void CPacketManager::SaveAssistantReceivePacket(uint8_t *buf, int size)
 {
     std::vector<uint8_t> packet(size);
     memcpy(&packet[0], &buf[0], size);
 
     LOCK(m_Mutex);
-    m_PluginData.push_front(packet);
+    m_AssistantData.push_front(packet);
     UNLOCK(m_Mutex);
 }
 
-void CPacketManager::ProcessPluginPackets()
+void CPacketManager::ProcessAssistantPackets()
 {
     LOCK(m_Mutex);
-    while (!m_PluginData.empty())
+    while (!m_AssistantData.empty())
     {
-        std::vector<uint8_t> &packet = m_PluginData.back();
+        std::vector<uint8_t> &packet = m_AssistantData.back();
 
-        PluginReceiveHandler(&packet[0], (int)packet.size());
+        AssistantReceiveHandler(&packet[0], (int)packet.size());
         packet.clear();
 
-        m_PluginData.pop_back();
+        m_AssistantData.pop_back();
     }
     UNLOCK(m_Mutex);
 }
 
-void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
+void CPacketManager::AssistantReceiveHandler(uint8_t *buf, int size)
 {
     SetData(buf, size);
 
@@ -771,7 +765,7 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
     CPacketInfo &info = m_Packets[*Start];
     DEBUG(
         Network,
-        "--- ^(%d) r(+%zd => %d) Plugin->Client:: %s",
+        "--- ^(%d) r(+%zd => %d) Assistant->Client:: %s",
         ticks - g_LastPacketTime,
         Size,
         g_TotalRecvSize,
@@ -1015,9 +1009,6 @@ PACKET_HANDLER(EnterWorld)
 
     g_RemoveRangeXY.X = g_Player->GetX();
     g_RemoveRangeXY.Y = g_Player->GetY();
-
-    UOI_PLAYER_XYZ_DATA xyzData = { g_RemoveRangeXY.X, g_RemoveRangeXY.Y, 0 };
-    PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData);
 
     g_Player->OffsetX = 0;
     g_Player->OffsetY = 0;
@@ -6474,7 +6465,6 @@ PACKET_HANDLER(CrossMessages)
             existsMacros.Clear();
 
             g_MacroPointer = nullptr;
-            g_MacroManager.SendNotificationToPlugin = true;
             for (int m = 0; m < count; m++)
             {
                 auto name = ReadString();

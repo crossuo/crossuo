@@ -12,7 +12,6 @@
 #include "ClickObject.h"
 #include "Target.h"
 #include "Managers/ConfigManager.h"
-#include "Managers/PluginManager.h"
 #include "Managers/ScreenEffectManager.h"
 #include "Managers/SoundManager.h"
 #include "Managers/GumpManager.h"
@@ -93,7 +92,6 @@ bool CGameWindow::OnCreate()
 void CGameWindow::OnDestroy()
 {
     g_SoundManager.Free();
-    PLUGIN_EVENT(UOMSG_WIN_CLOSE, nullptr);
     g_Game.Uninstall();
 }
 
@@ -264,11 +262,6 @@ bool CGameWindow::OnRightMouseButtonDoubleClick()
 
 void CGameWindow::OnMidMouseButtonDown()
 {
-    if (PLUGIN_EVENT(UOMSG_INPUT_MBUTTONDOWN, 0x11110000))
-    {
-        return;
-    }
-
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnMidMouseButtonDown();
@@ -277,11 +270,6 @@ void CGameWindow::OnMidMouseButtonDown()
 
 void CGameWindow::OnMidMouseButtonUp()
 {
-    if (PLUGIN_EVENT(UOMSG_INPUT_MBUTTONDOWN, 0))
-    {
-        return;
-    }
-
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnMidMouseButtonUp();
@@ -300,23 +288,10 @@ bool CGameWindow::OnMidMouseButtonDoubleClick()
 
 void CGameWindow::OnMidMouseButtonScroll(bool up)
 {
-    if (PLUGIN_EVENT(UOMSG_INPUT_MOUSEWHEEL, up ? 0 : 0x11110000))
-    {
-        return;
-    }
-
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->SelectObject();
         g_CurrentScreen->OnMidMouseButtonScroll(up);
-    }
-}
-
-void CGameWindow::OnXMouseButton(bool up)
-{
-    if (PLUGIN_EVENT(UOMSG_INPUT_XBUTTONDOWN, up ? 0 : 0x11110000))
-    {
-        return;
     }
 }
 
@@ -332,10 +307,6 @@ void CGameWindow::OnActivate()
 {
     g_Game.ResumeSound();
     SetRenderTimerDelay(g_FrameDelay[WINDOW_ACTIVE]);
-    if (!g_PluginManager.Empty())
-    {
-        PLUGIN_EVENT(UOMSG_WIN_ACTIVATE, 1);
-    }
 }
 
 void CGameWindow::OnDeactivate()
@@ -349,22 +320,10 @@ void CGameWindow::OnDeactivate()
     {
         SetRenderTimerDelay(g_FrameDelay[WINDOW_INACTIVE]);
     }
-
-    if (!g_PluginManager.Empty())
-    {
-        PLUGIN_EVENT(UOMSG_WIN_ACTIVATE, 0);
-    }
 }
 
 void CGameWindow::OnTextInput(const TextEvent &ev)
 {
-    if (PLUGIN_EVENT(UOMSG_INPUT_CHAR, &ev))
-    {
-        return;
-    }
-
-    //const auto ch = EvChar(ev);
-    //if (IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnTextInput(ev);
@@ -373,11 +332,6 @@ void CGameWindow::OnTextInput(const TextEvent &ev)
 
 void CGameWindow::OnKeyDown(const KeyEvent &ev)
 {
-    if (PLUGIN_EVENT(UOMSG_INPUT_KEYDOWN, &ev))
-    {
-        return;
-    }
-
     const auto key = EvKey(ev);
     const bool acceptKey = true;
     if (acceptKey && g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
@@ -405,12 +359,6 @@ void CGameWindow::OnKeyDown(const KeyEvent &ev)
 
 void CGameWindow::OnKeyUp(const KeyEvent &ev)
 {
-    // FIXME: Send struct events to plugins
-    if (PLUGIN_EVENT(UOMSG_INPUT_KEYUP, &ev))
-    {
-        return;
-    }
-
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnKeyUp(ev);
@@ -423,33 +371,6 @@ void CGameWindow::OnKeyUp(const KeyEvent &ev)
     }
 }
 
-bool CGameWindow::OnRepaint(const PaintEvent &ev)
-{
-    if (!g_PluginManager.Empty())
-    {
-        return PLUGIN_EVENT(UOMSG_WIN_PAINT, &ev) != 0u;
-    }
-    return false;
-}
-
-void CGameWindow::OnShow(bool show)
-{
-    if (!g_PluginManager.Empty())
-    {
-        PLUGIN_EVENT(UOMSG_WIN_SHOW, show);
-    }
-}
-
-void CGameWindow::OnSetText(const char *str)
-{
-    if (!g_PluginManager.Empty())
-    {
-        // CHECK: str was second parameter, why?
-        // Anyway, we're wilingly breaking compatibility with old stuff
-        PLUGIN_EVENT(UOMSG_WIN_SETTEXT, str);
-    }
-}
-
 void CGameWindow::OnTimer(uint32_t id)
 {
     if (id == FASTLOGIN_TIMER_ID)
@@ -459,130 +380,10 @@ void CGameWindow::OnTimer(uint32_t id)
     }
 }
 
-struct AutoFree
-{
-    AutoFree(void *p)
-        : _p(p)
-    {
-    }
-    ~AutoFree()
-    {
-        if (_p)
-        {
-            free(_p);
-        }
-    }
-
-private:
-    void *_p = nullptr;
-};
-
 bool CGameWindow::OnUserMessages(const UserEvent &ev)
 {
     switch (ev.code)
     {
-        case UOMSG_RECV:
-        {
-            AutoFree p(ev.data1);
-
-            g_PacketManager.SavePluginReceivePacket(
-                (uint8_t *)ev.data1, checked_cast<int>(ev.data2));
-            return true;
-        }
-        break;
-
-        case UOMSG_SEND:
-        {
-            AutoFree p(ev.data1);
-
-            uint32_t ticks = g_Ticks;
-            uint8_t *buf = (uint8_t *)ev.data1;
-            int size = checked_cast<int>(ev.data2);
-
-            g_TotalSendSize += size;
-
-            CPacketInfo &type = g_PacketManager.GetInfo(*buf);
-            (void)type;
-
-            DEBUG(
-                Plugin,
-                "--- ^(%d) s(+%d => %d) Plugin->Server:: %s",
-                ticks - g_LastPacketTime,
-                size,
-                g_TotalSendSize,
-                type.Name);
-
-            g_LastPacketTime = ticks;
-            g_LastSendTime = ticks;
-
-            if (*buf == 0x80 || *buf == 0x91)
-            {
-                DEBUG_DUMP(Plugin, "SEND:", buf, 1);
-                SAFE_DEBUG_DUMP(Plugin, "SEND:", buf, size);
-                DEBUG(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
-            }
-            else
-            {
-                DEBUG_DUMP(Plugin, "SEND:", buf, size);
-            }
-            g_ConnectionManager.Send((uint8_t *)ev.data1, checked_cast<int>(ev.data2));
-            return true;
-        }
-        break;
-
-        case UOMSG_PATHFINDING:
-        {
-            const auto xy = checked_cast<uint32_t>(ev.data1);
-            const auto zd = checked_cast<uint32_t>(ev.data2);
-            return !g_PathFinder.WalkTo(
-                (xy >> 16) & 0xFFFF, xy & 0xFFFF, (zd >> 16) & 0xFFFF, zd & 0xFFFF);
-        }
-        break;
-
-        case UOMSG_WALK:
-        {
-            const auto run = (ev.data1 != 0u);
-            const auto dir = checked_cast<uint8_t>(ev.data2);
-            return !g_PathFinder.Walk(run, dir);
-        }
-        break;
-
-        case UOMSG_MENU_RESPONSE:
-        {
-            auto data = unique_cast<UOI_MENU_RESPONSE>(ev.data1);
-            if ((data->Serial == 0u) && (data->ID == 0u))
-            {
-                for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
-                {
-                    CGump *next = (CGump *)gump->m_Next;
-                    if (gump->GumpType == GT_MENU || gump->GumpType == GT_GRAY_MENU)
-                    {
-                        CPacketMenuResponse(gump, data->Code).Send();
-                        g_GumpManager.RemoveGump(gump);
-                    }
-                    gump = next;
-                }
-                break;
-            }
-
-            CGump *gump = g_GumpManager.GetGump(data->Serial, data->ID, GT_MENU);
-            if (gump == nullptr)
-            {
-                gump = g_GumpManager.GetGump(data->Serial, data->ID, GT_GRAY_MENU);
-                if (gump != nullptr)
-                {
-                    CPacketGrayMenuResponse(gump, data->Code).Send();
-                    g_GumpManager.RemoveGump(gump);
-                }
-            }
-            else
-            {
-                CPacketMenuResponse(gump, data->Code).Send();
-                g_GumpManager.RemoveGump(gump);
-            }
-        }
-        break;
-
 #if USE_PING
         case CPingThread::MessageID:
         {

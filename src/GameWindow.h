@@ -39,14 +39,10 @@ protected:
     virtual void OnMidMouseButtonUp() override;
     virtual bool OnMidMouseButtonDoubleClick() override;
     virtual void OnMidMouseButtonScroll(bool up) override;
-    virtual void OnXMouseButton(bool up) override;
     virtual void OnDragging() override;
     virtual void OnActivate() override;
     virtual void OnDeactivate() override;
-    virtual void OnShow(bool show) override;
-    virtual void OnSetText(const char *str) override;
     virtual void OnTimer(uint32_t id) override;
-    virtual bool OnRepaint(const PaintEvent &ev) override;
     virtual bool OnUserMessages(const UserEvent &ev) override;
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

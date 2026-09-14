@@ -729,8 +729,7 @@ void CMacroExecutor::ProcessMacro()
                 // TabMacros::ProcessMacro MT_WALK: the
                 // step went through CCommandManager::OnCommandStep ->
                 // PathFinder::Walk(run, direction); in-process the client's
-                // own walker (src/Walker, g_PathFinder) is the same walker
-                // the external plugin drove, called directly.
+                // own walker (src/Walker, g_PathFinder) is driven directly.
                 if (!EnabledCommandMoving())
                 {
                     break;

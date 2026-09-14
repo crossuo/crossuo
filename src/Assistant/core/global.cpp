@@ -50,8 +50,6 @@ string GetString(VALUE_KEY_STRING key, const string &value)
 uint64_t g_EnabledFeature = XAEF_DEFAULT;
 uint64_t g_EnabledCommands = XAEC_DEFAULT;
 
-PACKET_PROC *g_SendClient = nullptr;
-PACKET_PROC *g_SendServer = nullptr;
 FUNCDEF_GET_STATIC_FLAGS *g_GetStaticFlags = nullptr;
 FUNCDEF_GET_VALUE_INT *g_GetInt = nullptr;
 FUNCDEF_SET_VALUE_INT *g_SetInt = nullptr;
@@ -95,7 +93,7 @@ CPoint2Di g_LastAttackPosition(0, 0);
 uint g_LastStatusRequest = 0;
 uint g_LastStatusObject = 0;
 uint g_LastUseObject = 0;
-UOI_SELECTED_TILE g_SelectedClientWorldObject = {};
+SelectedTile g_SelectedClientWorldObject = {};
 bool g_ClientMacroPlayed = false;
 CPoint2Di g_LastPlayerCorpsePosition = CPoint2Di(-1, -1);
 uint g_LastPlayerDeadTimer = 0;
