@@ -626,7 +626,7 @@ void CConfigManager::SetDrawStatusState(uint8_t val)
     {
         if ((state != 0u) && (m_DrawStatusState == 0u))
         {
-            QFOR(item, g_World->m_Items, CGameObject *)
+            for (CGameObject *item = (CGameObject *)g_World->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
             {
                 if (item->NPC)
                 {
@@ -749,7 +749,7 @@ void CConfigManager::SetSpellIconAlpha(uint8_t val)
     {
         float alpha = val / 255.0f;
         const bool redraw = g_ConfigManager.TransparentSpellIcons;
-        QFOR(gump, g_GumpManager.m_Items, CGump *)
+        for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
         {
             if (gump->GumpType == GT_SPELL)
             {
@@ -786,7 +786,7 @@ void CConfigManager::SetOriginalPartyStatusbar(bool val)
     {
         if (g_Party.Leader != 0)
         {
-            QFOR(gump, g_GumpManager.m_Items, CGump *)
+            for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
             {
                 if (gump->GumpType == GT_STATUSBAR &&
                     (g_Party.Leader == gump->Serial || g_Party.Contains(gump->Serial)))
@@ -809,7 +809,7 @@ void CConfigManager::SetChangeFieldsGraphic(bool val)
 
     if (this == &g_ConfigManager && g_World != nullptr)
     {
-        QFOR(item, g_World->m_Items, CGameObject *)
+        for (CGameObject *item = (CGameObject *)g_World->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
         {
             if (!item->NPC)
             {
@@ -824,7 +824,7 @@ void CConfigManager::SetPaperdollSlots(bool val)
     m_PaperdollSlots = val;
     if (this == &g_ConfigManager && g_World != nullptr)
     {
-        QFOR(gump, g_GumpManager.m_Items, CGump *)
+        for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
         {
             if (gump->GumpType == GT_PAPERDOLL)
             {
@@ -840,7 +840,7 @@ void CConfigManager::SetScaleImagesInPaperdollSlots(bool val)
     m_ScaleImagesInPaperdollSlots = val;
     if (this == &g_ConfigManager && g_World != nullptr)
     {
-        QFOR(gump, g_GumpManager.m_Items, CGump *)
+        for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
         {
             if (gump->GumpType == GT_PAPERDOLL)
             {
@@ -856,7 +856,7 @@ void CConfigManager::SetUseGlobalMapLayer(bool val)
     m_UseGlobalMapLayer = val;
     if (this == &g_ConfigManager && val)
     {
-        QFOR(gump, g_GumpManager.m_Items, CGump *)
+        for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
         {
             if (gump->GumpType == GT_WORLD_MAP)
             {

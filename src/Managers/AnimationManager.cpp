@@ -1627,7 +1627,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         memset(&m_CharacterLayerGraphic[0], 0, sizeof(m_CharacterLayerGraphic));
         memset(&m_CharacterLayerAnimID[0], 0, sizeof(m_CharacterLayerAnimID));
 
-        QFOR(item, gameObject->m_Items, CGameItem *)
+        for (CGameItem *item = (CGameItem *)gameObject->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
         {
             if (item->Layer < OL_MOUNT)
             {

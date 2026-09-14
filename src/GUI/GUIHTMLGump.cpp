@@ -37,7 +37,7 @@ CGUIHTMLGump::~CGUIHTMLGump()
 
 void CGUIHTMLGump::PrepareTextures()
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     item->PrepareTextures();
 }
 
@@ -272,7 +272,7 @@ void CGUIHTMLGump::CalculateDataSize()
 
 bool CGUIHTMLGump::EntryPointerHere()
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Visible && item->EntryPointerHere())
         {

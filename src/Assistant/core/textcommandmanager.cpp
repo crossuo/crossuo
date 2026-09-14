@@ -1213,7 +1213,7 @@ HCOMMAND(setarm)
 
     if (g_Player != nullptr)
     {
-        QFOR(item, g_Player->m_Items, CGameItem *)
+        for (CGameItem *item = (CGameItem *)g_Player->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
         {
             int layer = EquipLayer(item);
 
@@ -1274,7 +1274,7 @@ HCOMMAND(setdress)
 
     if (g_Player != nullptr)
     {
-        QFOR(item, g_Player->m_Items, CGameItem *)
+        for (CGameItem *item = (CGameItem *)g_Player->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
         {
             int layer = EquipLayer(item);
 

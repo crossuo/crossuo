@@ -34,7 +34,7 @@ int CountItems(const CGameObject *root, const CFindItem &findListItem, bool recu
 
     int count = 0;
 
-    QFOR(item, root->m_Items, CGameItem *)
+    for (CGameItem *item = (CGameItem *)root->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
     {
         if (findListItem.Found(item->Graphic, item->Color))
         {
@@ -59,7 +59,7 @@ int CountItems(const CGameObject *root, ushort graphic, ushort color, bool recur
 
     int count = 0;
 
-    QFOR(item, root->m_Items, CGameItem *)
+    for (CGameItem *item = (CGameItem *)root->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
     {
         if ((graphic == 0xFFFF || graphic == item->Graphic) &&
             (color == 0xFFFF || color == item->Color))
@@ -93,7 +93,7 @@ CGameObject *FindType(
 
     vector<CGameObject *> containers;
 
-    QFOR(item, root->m_Items, CGameItem *)
+    for (CGameItem *item = (CGameItem *)root->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
     {
         if (!item->Ignored && findListItem.Found(item->Graphic, item->Color))
         {

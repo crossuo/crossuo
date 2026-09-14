@@ -179,7 +179,7 @@ void CGumpScreenSelectTown::GUMP_BUTTON_EVENT_C
 
 void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXTENTRY)
         {

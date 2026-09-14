@@ -49,7 +49,7 @@ CGameWorld::~CGameWorld()
 
 void CGameWorld::ResetObjectHandlesState()
 {
-    QFOR(obj, m_Items, CGameObject *) { obj->ClosedObjectHandle = false; }
+    for (CGameObject *obj = (CGameObject *)m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next) { obj->ClosedObjectHandle = false; }
 }
 
 void CGameWorld::ProcessFootstepsSound(int ticks, CGameCharacter *gc)
@@ -95,7 +95,7 @@ void CGameWorld::ProcessAnimation()
                                                             XUO_CHARACTERS_ANIMATION_DELAY);
     g_AnimCharactersDelayValue = (float)delay;
     std::deque<CGameObject *> toRemove;
-    QFOR(obj, m_Items, CGameObject *)
+    for (CGameObject *obj = (CGameObject *)m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next)
     {
         if (obj->NPC) // Mobile
         {
@@ -410,7 +410,7 @@ void CGameWorld::ReplaceObject(CGameObject *obj, uint32_t newSerial)
     m_Map[obj->Serial] = nullptr;
     m_Map.erase(obj->Serial);
 
-    QFOR(item, obj->m_Items, CGameObject *)
+    for (CGameObject *item = (CGameObject *)obj->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
     item->Container = newSerial;
 
     m_Map[newSerial] = obj;

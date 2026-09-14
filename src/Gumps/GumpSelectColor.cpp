@@ -87,7 +87,7 @@ void CGumpSelectColor::GUMP_BUTTON_EVENT_C
 {
     if (serial == ID_GSC_BUTTON_OKAY && m_DataBox != nullptr)
     {
-        QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Serial == m_SelectedIndex)
             {
@@ -102,7 +102,7 @@ void CGumpSelectColor::GUMP_BUTTON_EVENT_C
         m_SelectedIndex = serial;
         WantRedraw = true;
 
-        QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         ((CGUIColoredPolygone *)item)->Focused = (item->Serial == m_SelectedIndex);
     }
 }

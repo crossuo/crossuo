@@ -433,7 +433,7 @@ void CGameScreen::CalculateRenderList()
     bool useObjectHandles =
         (!g_GrayedPixels && g_ConfigManager.ObjectHandles && g_ShiftPressed && g_CtrlPressed);
 
-    QFOR(go, g_World->m_Items, CGameObject *)
+    for (CGameObject *go = (CGameObject *)g_World->m_Items; go != nullptr; go = (CGameObject *)go->m_Next)
     {
         if (go->NPC || go->IsCorpse())
         {
@@ -593,7 +593,7 @@ void CGameScreen::CalculateRenderList()
         m_ObjectHandlesCount = MAX_OBJECT_HANDLES;
     }
 
-    QFOR(go, g_World->m_Items, CGameObject *)
+    for (CGameObject *go = (CGameObject *)g_World->m_Items; go != nullptr; go = (CGameObject *)go->m_Next)
     {
         if (go->UseInRender != RenderIndex && (go->NPC || go->IsCorpse()) &&
             go->m_TextControl->m_Items != nullptr)
@@ -1678,7 +1678,7 @@ void CGameScreen::DrawGameWindowText(bool render)
             }
         }
 
-        QFOR(obj, g_World->m_Items, CGameObject *)
+        for (CGameObject *obj = (CGameObject *)g_World->m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next)
         {
             if (obj->NPC)
             {
@@ -1688,7 +1688,7 @@ void CGameScreen::DrawGameWindowText(bool render)
                     continue;
                 }
 
-                QFOR(text, textContainer.m_Items, CTextData *)
+                for (CTextData *text = (CTextData *)textContainer.m_Items; text != nullptr; text = (CTextData *)text->m_Next)
                 {
                     if (!text->m_TextSprite.Empty())
                     {

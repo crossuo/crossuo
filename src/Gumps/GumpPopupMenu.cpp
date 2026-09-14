@@ -165,7 +165,7 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
         resizepic->Width = width;
         resizepic->Height = height;
 
-        QFOR(item, menu->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)menu->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_PAGE && (((CGUIPage *)item)->Index != 0))
             {
@@ -216,7 +216,7 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
         int width = 0;
         int height = 20;
 
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_RESIZEPIC)
             {
@@ -237,7 +237,7 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
 
         width += 20;
 
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_HITBOX)
             {

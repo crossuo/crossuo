@@ -10,12 +10,12 @@ CGUIDataBox::CGUIDataBox()
 
 void CGUIDataBox::PrepareTextures()
 {
-    QFOR(item, m_Items, CBaseGUI *) { item->PrepareTextures(); }
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next) { item->PrepareTextures(); }
 }
 
 bool CGUIDataBox::EntryPointerHere()
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Visible && item->EntryPointerHere())
         {

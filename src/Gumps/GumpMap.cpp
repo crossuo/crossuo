@@ -169,7 +169,7 @@ void CGumpMap::PrepareContent()
     {
         int serial = 1;
 
-        QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             item->Serial = serial;
 
@@ -214,7 +214,7 @@ void CGumpMap::GenerateFrame()
     {
         int idx = 0;
 
-        QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             int drawX = item->GetX() + 18;
             int drawY = item->GetY() + 21;
@@ -245,7 +245,7 @@ void CGumpMap::GenerateFrame()
     {
         int idx = 1;
 
-        QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             int drawX = item->GetX() + 18;
             int drawY = item->GetY() + 21;
@@ -321,7 +321,7 @@ CRenderObject *CGumpMap::Select()
         g_MouseManager.Position =
             CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
-        QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             int drawX = item->GetX() + 18;
             int drawY = item->GetY() + 21;

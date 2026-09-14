@@ -57,7 +57,7 @@ int CGumpManager::GetNonpartyStatusbarsCount()
 {
     int count = 0;
 
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (gump->GumpType == GT_STATUSBAR && gump->Serial != g_PlayerSerial &&
             !g_Party.Contains(gump->Serial))
@@ -83,7 +83,7 @@ void CGumpManager::AddGump(CGump *obj)
             (obj->GumpType != GT_GENERIC && obj->GumpType != GT_MENU && obj->GumpType != GT_TRADE &&
              obj->GumpType != GT_BULLETIN_BOARD_ITEM);
 
-        QFOR(gump, m_Items, CGump *)
+        for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
         {
             GUMP_TYPE gumpType = gump->GumpType;
             if (gumpType == obj->GumpType && canCheck)
@@ -189,7 +189,7 @@ void CGumpManager::AddGump(CGump *obj)
         GetNonpartyStatusbarsCount() > 10)
     {
         //RemoveGump(obj);
-        QFOR(gump, m_Items, CGump *)
+        for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
         {
             if (gump->GumpType == GT_STATUSBAR && gump->Serial != g_PlayerSerial &&
                 !g_Party.Contains(gump->Serial))
@@ -248,7 +248,7 @@ void CGumpManager::AddGump(CGump *obj)
 
 CGump *CGumpManager::GetTextEntryOwner()
 {
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (gump->EntryPointerHere())
         {
@@ -261,7 +261,7 @@ CGump *CGumpManager::GetTextEntryOwner()
 
 CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 {
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (gumpID == (uintptr_t)gump)
         {
@@ -518,7 +518,7 @@ void CGumpManager::RemoveMarked()
 
 void CGumpManager::PrepareTextures()
 {
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         g_CurrentCheckGump = gump;
         gump->PrepareTextures();
@@ -620,7 +620,7 @@ void CGumpManager::InitToolTip()
 
 void CGumpManager::RedrawAll()
 {
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     gump->WantRedraw = true;
 }
 
@@ -631,7 +631,7 @@ void CGumpManager::OnLeftMouseButtonDown(bool blocked)
         return;
     }
 
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_SelectedObject.Gump == gump && !gump->NoProcess)
         {
@@ -664,7 +664,7 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
         return false;
     }
 
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_PressedObject.LeftGump == gump && !gump->NoProcess)
         {
@@ -827,7 +827,7 @@ bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
         return result;
     }
 
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_SelectedObject.Gump == gump && !gump->NoProcess)
         {
@@ -853,7 +853,7 @@ void CGumpManager::OnRightMouseButtonDown(bool blocked)
         return;
     }
 
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_SelectedObject.Gump == gump && !gump->NoProcess)
         {
@@ -886,7 +886,7 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
         return;
     }
 
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_PressedObject.RightGump == gump && !gump->NoProcess && !gump->NoClose &&
             (gump->CanBeMoved() || gump->GumpType == GT_GENERIC))
@@ -1052,7 +1052,7 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
 
 void CGumpManager::OnMidMouseButtonScroll(bool up, bool blocked)
 {
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_SelectedObject.Gump == gump && !gump->NoProcess)
         {
@@ -1065,7 +1065,7 @@ void CGumpManager::OnMidMouseButtonScroll(bool up, bool blocked)
 
 void CGumpManager::OnDragging(bool blocked)
 {
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_PressedObject.LeftGump == gump && !gump->NoProcess)
         {
@@ -1582,7 +1582,7 @@ void CGumpManager::Save(const fs_path &path)
 
     std::vector<CGump *> containerList;
     std::vector<CGump *> spellInGroupList;
-    QFOR(gump, m_Items, CGump *)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         switch (gump->GumpType)
         {
@@ -1742,7 +1742,7 @@ void CGumpManager::Save(const fs_path &path)
         CGameObject *owner = g_World->FindWorldObject(containerSerial);
         if (owner != nullptr)
         {
-            QFOR(item, owner->m_Items, CGameItem *)
+            for (CGameItem *item = (CGameItem *)owner->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
             {
                 if (item->Opened)
                 {

@@ -50,7 +50,7 @@ void CGUISkillGroup::UpdateDataPositions()
 {
     int y = 0;
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         item->SetY(y);
         y += 17;
@@ -63,7 +63,7 @@ void CGUISkillGroup::PrepareTextures()
     g_Game.ExecuteGump(0x0835);
     m_Name->PrepareTextures();
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     item->PrepareTextures();
 }
 
@@ -85,7 +85,7 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
         CPoint2Di oldMouse = g_MouseManager.Position;
         g_MouseManager.Position = CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Select())
             {
@@ -175,7 +175,7 @@ void CGUISkillGroup::Draw(bool checktrans)
             g_renderCmdList, SetModelViewTranslationCmd{ { 0.0f, 19.0f, 0.0f } });
 #endif
 
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         item->Draw(checktrans);
 
 #ifndef NEW_RENDERER_ENABLED
@@ -206,7 +206,7 @@ bool CGUISkillGroup::Select()
         CPoint2Di oldMouse = g_MouseManager.Position;
         g_MouseManager.Position = CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Select())
             {

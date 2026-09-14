@@ -2055,13 +2055,13 @@ PACKET_HANDLER(DeleteObject)
 
                 if (bbGump != nullptr && bbGump->m_HTMLGump != nullptr)
                 {
-                    QFOR(go, bbGump->m_HTMLGump->m_Items, CBaseGUI *)
+                    for (CBaseGUI *go = (CBaseGUI *)bbGump->m_HTMLGump->m_Items; go != nullptr; go = (CBaseGUI *)go->m_Next)
                     {
                         if (go->Serial == serial)
                         {
                             bbGump->m_HTMLGump->Delete(go);
                             int posY = 0;
-                            QFOR(go1, bbGump->m_HTMLGump->m_Items, CBaseGUI *)
+                            for (CBaseGUI *go1 = (CBaseGUI *)bbGump->m_HTMLGump->m_Items; go1 != nullptr; go1 = (CBaseGUI *)go1->m_Next)
                             {
                                 if (go1->Type == GOT_BB_OBJECT)
                                 {
@@ -2449,7 +2449,7 @@ PACKET_HANDLER(OpenContainer)
 
                 int currentY = 0;
 
-                QFOR(shopItem, htmlGump->m_Items, CBaseGUI *)
+                for (CBaseGUI *shopItem = (CBaseGUI *)htmlGump->m_Items; shopItem != nullptr; shopItem = (CBaseGUI *)shopItem->m_Next)
                 {
                     if (shopItem->Type == GOT_SHOPITEM)
                     {
@@ -4243,7 +4243,7 @@ PACKET_HANDLER(MegaCliloc)
         if (gump != nullptr)
         {
             CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
-            QFOR(shopItem, htmlGump->m_Items, CBaseGUI *)
+            for (CBaseGUI *shopItem = (CBaseGUI *)htmlGump->m_Items; shopItem != nullptr; shopItem = (CBaseGUI *)shopItem->m_Next)
             {
                 if (shopItem->Type == GOT_SHOPITEM && shopItem->Serial == serial &&
                     ((CGUIShopItem *)shopItem)->NameFromCliloc)
@@ -4258,7 +4258,7 @@ PACKET_HANDLER(MegaCliloc)
                     int delta = si->GetSize().Height - oldHeight;
                     if ((delta != 0) && shopItem->m_Next != nullptr)
                     {
-                        QFOR(shopItem2, shopItem->m_Next, CBaseGUI *)
+                        for (CBaseGUI *shopItem2 = (CBaseGUI *)shopItem->m_Next; shopItem2 != nullptr; shopItem2 = (CBaseGUI *)shopItem2->m_Next)
                         {
                             if (shopItem2->Type == GOT_SHOPITEM)
                             {
@@ -6275,7 +6275,7 @@ PACKET_HANDLER(CrossMessages)
             uint32_t serial = ReadUInt32BE();
             uint32_t id = ReadUInt32BE();
             uint8_t all = ReadUInt8();
-            QFOR(gump, g_GumpManager.m_Items, CGump *)
+            for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
             {
                 if (gump->GumpType == GT_GENERIC && gump->Serial == serial && gump->ID == id)
                 {

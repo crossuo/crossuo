@@ -79,7 +79,7 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
         int currentIndex = 0;
         int currentY = 0;
 
-        QFOR(group, g_SkillGroupManager.m_Groups, CSkillGroupObject *)
+        for (CSkillGroupObject *group = (CSkillGroupObject *)g_SkillGroupManager.m_Groups; group != nullptr; group = (CSkillGroupObject *)group->m_Next)
         {
             CGUISkillGroup *skillGroup = (CGUISkillGroup *)m_HTMLGump->Add(new CGUISkillGroup(
                 ID_GS_GROUP + currentIndex,
@@ -202,7 +202,7 @@ void CGumpSkills::UpdateGroupPositions()
     int index = 0;
     int currentY = 0;
 
-    QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *group = (CBaseGUI *)m_HTMLGump->m_Items; group != nullptr; group = (CBaseGUI *)group->m_Next)
     {
         if (group->Type == GOT_SKILLGROUP)
         {
@@ -228,7 +228,7 @@ CGUISkillGroup *CGumpSkills::GetSkillGroup(int index)
 {
     int currentIndex = 0;
 
-    QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *group = (CBaseGUI *)m_HTMLGump->m_Items; group != nullptr; group = (CBaseGUI *)group->m_Next)
     {
         if (group->Type == GOT_SKILLGROUP)
         {
@@ -246,11 +246,11 @@ CGUISkillGroup *CGumpSkills::GetSkillGroup(int index)
 
 CGUISkillItem *CGumpSkills::GetSkill(int index)
 {
-    QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *group = (CBaseGUI *)m_HTMLGump->m_Items; group != nullptr; group = (CBaseGUI *)group->m_Next)
     {
         if (group->Type == GOT_SKILLGROUP)
         {
-            QFOR(item, group->m_Items, CBaseGUI *)
+            for (CBaseGUI *item = (CBaseGUI *)group->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_SKILLITEM && ((CGUISkillItem *)item)->Index == index)
                 {
@@ -265,11 +265,11 @@ CGUISkillItem *CGumpSkills::GetSkill(int index)
 
 void CGumpSkills::UpdateSkillValue(int index)
 {
-    QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *group = (CBaseGUI *)m_HTMLGump->m_Items; group != nullptr; group = (CBaseGUI *)group->m_Next)
     {
         if (group->Type == GOT_SKILLGROUP)
         {
-            QFOR(item, group->m_Items, CBaseGUI *)
+            for (CBaseGUI *item = (CBaseGUI *)group->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_SKILLITEM && ((CGUISkillItem *)item)->Index == index)
                 {
@@ -291,11 +291,11 @@ void CGumpSkills::UpdateSkillValue(int index)
 
 void CGumpSkills::UpdateSkillValues()
 {
-    QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *group = (CBaseGUI *)m_HTMLGump->m_Items; group != nullptr; group = (CBaseGUI *)group->m_Next)
     {
         if (group->Type == GOT_SKILLGROUP)
         {
-            QFOR(item, group->m_Items, CBaseGUI *)
+            for (CBaseGUI *item = (CBaseGUI *)group->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_SKILLITEM)
                 {
@@ -316,7 +316,7 @@ void CGumpSkills::UpdateSkillsSum()
 void CGumpSkills::Init()
 {
     //Свернем все доступные группы
-    QFOR(group, g_SkillGroupManager.m_Groups, CSkillGroupObject *)
+    for (CSkillGroupObject *group = (CSkillGroupObject *)g_SkillGroupManager.m_Groups; group != nullptr; group = (CSkillGroupObject *)group->m_Next)
     group->Maximized = false;
 }
 
@@ -376,13 +376,13 @@ void CGumpSkills::PrepareContent()
                 CGUISkillGroup *currentGroup = nullptr;
                 int currentIndex = 0;
 
-                QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
+                for (CBaseGUI *group = (CBaseGUI *)m_HTMLGump->m_Items; group != nullptr; group = (CBaseGUI *)group->m_Next)
                 {
                     if (group->Type == GOT_SKILLGROUP)
                     {
                         if (currentGroup == nullptr)
                         {
-                            QFOR(item, group->m_Items, CBaseGUI *)
+                            for (CBaseGUI *item = (CBaseGUI *)group->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
                             {
                                 if (item->Serial == serial)
                                 {
@@ -477,7 +477,7 @@ CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
         int drawY = m_HTMLGump->DataOffset.Y - m_HTMLGump->CurrentOffset.Y;
         CSkillGroupObject *group = g_SkillGroupManager.m_Groups;
 
-        QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_SKILLGROUP)
             {
@@ -506,7 +506,7 @@ CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
 
 void CGumpSkills::UpdateGroupText()
 {
-    QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SKILLGROUP)
         {
@@ -540,7 +540,7 @@ void CGumpSkills::SetGroupTextFromEntry()
 {
     CSkillGroupObject *groupItem = g_SkillGroupManager.m_Groups;
 
-    QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SKILLGROUP)
         {
@@ -668,7 +668,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
             int index = serial - ID_GS_GROUP_MINIMIZE;
             int currentIndex = 0;
 
-            QFOR(group, g_SkillGroupManager.m_Groups, CSkillGroupObject *)
+            for (CSkillGroupObject *group = (CSkillGroupObject *)g_SkillGroupManager.m_Groups; group != nullptr; group = (CSkillGroupObject *)group->m_Next)
             {
                 if (index == currentIndex)
                 {
@@ -771,7 +771,7 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
             CSkillGroupObject *groupItem = g_SkillGroupManager.m_Groups;
             CGUISkillGroup *first = nullptr;
 
-            QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
+            for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_SKILLGROUP)
                 {

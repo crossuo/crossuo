@@ -373,7 +373,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int pageAmount)
     CGUIComboBox *combo = nullptr;
     int page = 0;
     bool canDraw = ((pageAmount == 0) || (page >= currentPage && page <= currentPage + pageAmount));
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_PAGE)
         {
@@ -486,7 +486,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int pageAmou
 
     CPoint2Di oldPos = g_MouseManager.Position;
 
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_PAGE)
         {
@@ -644,7 +644,7 @@ void CGump::TestItemsLeftMouseDown(
         htmlTextBackgroundCanBeColored = false;
     }
 
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (count == 0)
         {
@@ -720,7 +720,7 @@ void CGump::TestItemsLeftMouseDown(
 
                     int tempPage = -1;
                     bool tempCanDraw = true;
-                    QFOR(testItem, start, CBaseGUI *)
+                    for (CBaseGUI *testItem = (CBaseGUI *)start; testItem != nullptr; testItem = (CBaseGUI *)testItem->m_Next)
                     {
                         if (testItem->Type == GOT_PAGE)
                         {
@@ -871,7 +871,7 @@ void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, 
     int group = 0;
     int page = 0;
     bool canDraw = ((pageAmount == 0) || (page >= currentPage && page <= currentPage + pageAmount));
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_PAGE)
         {
@@ -997,7 +997,7 @@ void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, 
                     CGUIRadio *radio = (CGUIRadio *)item;
                     int radioPage = 0;
                     int radioGroup = 0;
-                    QFOR(testRadio, start, CBaseGUI *)
+                    for (CBaseGUI *testRadio = (CBaseGUI *)start; testRadio != nullptr; testRadio = (CBaseGUI *)testRadio->m_Next)
                     {
                         if (testRadio->Type == GOT_PAGE)
                         {
@@ -1099,7 +1099,7 @@ void CGump::TestItemsScrolling(
     int page = 0;
     bool canDraw = ((pageAmount == 0) || (page >= currentPage && page <= currentPage + pageAmount));
 
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_PAGE)
         {
@@ -1208,7 +1208,7 @@ void CGump::TestItemsDragging(
         ((page == -1) || ((page == 0) && (pageAmount == 0)) ||
          (page >= currentPage && page <= currentPage + pageAmount));
 
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (count == 0)
         {
@@ -1302,13 +1302,13 @@ void CGump::TestItemsDragging(
 
 void CGump::PrepareTextures()
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     item->PrepareTextures();
 }
 
 bool CGump::EntryPointerHere()
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Visible && item->EntryPointerHere())
         {
@@ -1637,7 +1637,7 @@ void CGump::GetItemsSize(
     int page = 0;
     bool canDraw = ((pageAmount == 0) || (page >= currentPage && page <= currentPage + pageAmount));
 
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (count == 0)
         {

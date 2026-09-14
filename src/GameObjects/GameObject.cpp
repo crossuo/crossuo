@@ -446,7 +446,7 @@ void CGameObject::DrawEffects(int x, int y)
         y += gc->OffsetY - (int)gc->OffsetZ - 3;
     }
 
-    QFOR(effect, m_Effects, CGameEffect *)
+    for (CGameEffect *effect = (CGameEffect *)m_Effects; effect != nullptr; effect = (CGameEffect *)effect->m_Next)
     {
         effect->ApplyRenderMode();
         if (effect->EffectType == EF_LIGHTING)
@@ -624,7 +624,7 @@ CGameObject *CGameObject::GetTopObject()
 
 CGameItem *CGameObject::FindLayer(int layer) const
 {
-    QFOR(obj, m_Items, CGameItem *)
+    for (CGameItem *obj = (CGameItem *)m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
     {
         if (obj->Layer == layer)
         {

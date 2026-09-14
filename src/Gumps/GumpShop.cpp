@@ -168,7 +168,7 @@ void CGumpShop::UpdateTotalPrice()
     {
         int totalPrice = 0;
 
-        QFOR(item, m_ItemList[1]->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_SHOPRESULT)
             {
@@ -248,7 +248,7 @@ void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
 
     bool deleteItem = false;
 
-    QFOR(item, m_ItemList[0]->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_ItemList[0]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPITEM && item->Serial == minmax->Serial)
         {
@@ -314,7 +314,7 @@ bool CGumpShop::OnLeftMouseButtonDoubleClick()
 
             int posY = 0;
 
-            QFOR(item, m_ItemList[1]->m_Items, CBaseGUI *)
+            for (CBaseGUI *item = (CBaseGUI *)m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_SHOPRESULT)
                 {

@@ -95,7 +95,7 @@ void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const wstr_t &text)
         ticks = g_Ticks + (timer * 1000);
     }
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_BUFF && item->Graphic == id)
         {
@@ -120,7 +120,7 @@ void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const wstr_t &text)
 
 void CGumpBuff::DeleteBuff(uint16_t id)
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_BUFF && item->Graphic == id)
         {
@@ -140,7 +140,7 @@ void CGumpBuff::InitToolTip()
     }
     else if (g_SelectedObject.Object != nullptr)
     {
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item != g_SelectedObject.Object)
             {
@@ -253,7 +253,7 @@ void CGumpBuff::GetGumpStatus(
 
     CPoint2Di itemsOfs = items;
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type != GOT_BUFF)
         {
@@ -370,7 +370,7 @@ void CGumpBuff::UpdateContent()
 
     gui = nullptr;
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type != GOT_BUFF)
         {

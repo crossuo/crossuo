@@ -78,7 +78,7 @@ void CBaseQueue::Delete(int index)
 int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
 {
     int index = 0;
-    BQFOR (current, m_Items)
+    for (CBaseQueueItem *current = (CBaseQueueItem *)m_Items; current != nullptr; current = (CBaseQueueItem *)current->m_Next)
     {
         if (current == item)
         {
@@ -92,7 +92,7 @@ int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
 int CBaseQueue::GetItemsCount()
 {
     int count = 0;
-    BQFOR (current, m_Items)
+    for (CBaseQueueItem *current = (CBaseQueueItem *)m_Items; current != nullptr; current = (CBaseQueueItem *)current->m_Next)
     {
         count++;
     }

@@ -571,7 +571,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     int textLinesCount = 0;
     int textLinesLength = 0;
 
-    QFOR(item, gump->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         switch (item->Type)
         {
@@ -611,7 +611,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     WriteUInt32BE(code);
     WriteUInt32BE(switchesCount);
 
-    QFOR(item, gump->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_CHECKBOX || item->Type == GOT_RADIO)
         {
@@ -624,7 +624,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
 
     WriteUInt32BE(textLinesCount);
 
-    QFOR(item, gump->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXTENTRY)
         {
@@ -663,7 +663,7 @@ CPacketMenuResponse::CPacketMenuResponse(CGump *gump, int code)
     {
         WriteUInt16BE(code);
 
-        QFOR(item, gump->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Serial == code && item->Type == GOT_MENUOBJECT)
             {
@@ -1359,7 +1359,7 @@ CPacketBuyRequest::CPacketBuyRequest(CGumpShop *gump)
     size_t size = 8;
     int count = 0;
 
-    QFOR(item, gump->m_ItemList[1]->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPRESULT)
         {
@@ -1378,7 +1378,7 @@ CPacketBuyRequest::CPacketBuyRequest(CGumpShop *gump)
     {
         WriteUInt8(0x02);
 
-        QFOR(item, gump->m_ItemList[1]->m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_SHOPRESULT)
             {
@@ -1400,7 +1400,7 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
     size_t size = 9;
     int count = 0;
 
-    QFOR(item, gump->m_ItemList[1]->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPRESULT)
         {
@@ -1416,7 +1416,7 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
     WriteUInt32BE(gump->Serial);
     WriteUInt16BE(count);
 
-    QFOR(item, gump->m_ItemList[1]->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPRESULT)
         {

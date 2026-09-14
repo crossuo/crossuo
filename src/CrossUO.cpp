@@ -1797,13 +1797,13 @@ void CGame::LoginComplete(bool reload)
 void CGame::ChangeSeason(const SEASON_TYPE &season, int music)
 {
     g_Season = season;
-    QFOR(item, g_MapManager.m_Items, CMapBlock *)
+    for (CMapBlock *item = (CMapBlock *)g_MapManager.m_Items; item != nullptr; item = (CMapBlock *)item->m_Next)
     {
         for (int x = 0; x < 8; x++)
         {
             for (int y = 0; y < 8; y++)
             {
-                QFOR(obj, item->GetRender((int)x, (int)y), CRenderWorldObject *)
+                for (CRenderWorldObject *obj = (CRenderWorldObject *)item->GetRender((int)x, (int)y); obj != nullptr; obj = (CRenderWorldObject *)obj->m_Next)
                 {
                     obj->UpdateGraphicBySeason();
                 }

@@ -374,7 +374,7 @@ void CMacroManager::Save(const fs_path &path)
     writer.WriteInt16LE(count);
     writer.WriteBuffer();
 
-    QFOR(obj, m_Items, CMacro *)
+    for (CMacro *obj = (CMacro *)m_Items; obj != nullptr; obj = (CMacro *)obj->m_Next)
     obj->Save(writer);
 
     writer.WriteUInt32LE(0); //EOF
@@ -404,7 +404,7 @@ void CMacroManager::LoadFromOptions()
 {
     Clear();
     ChangePointer(nullptr);
-    QFOR(obj, g_OptionsMacroManager.m_Items, CMacro *) { Add(obj->GetCopy()); }
+    for (CMacro *obj = (CMacro *)g_OptionsMacroManager.m_Items; obj != nullptr; obj = (CMacro *)obj->m_Next) { Add(obj->GetCopy()); }
 }
 
 void CMacroManager::ChangePointer(CMacroObject *macro)
@@ -635,7 +635,7 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_MASTERY_SPELLBOOK:
                 {
                     //gump = g_GumpManager.GetGump(0, 0, GT_SPELLBOOK);
-                    QFOR(item, g_GumpManager.m_Items, CGump *)
+                    for (CGump *item = (CGump *)g_GumpManager.m_Items; item != nullptr; item = (CGump *)item->m_Next)
                     {
                         if (item->GumpType == GT_SPELLBOOK)
                         {

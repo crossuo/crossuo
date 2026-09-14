@@ -294,7 +294,7 @@ void CGumpMinimap::UpdateContent()
     m_DataBox->Add(new CGUIExternalTexture(&m_Sprite, false, 0, 0));
     if (m_Count < 6)
     {
-        QFOR(go, g_World->m_Items, CGameObject *)
+        for (CGameObject *go = (CGameObject *)g_World->m_Items; go != nullptr; go = (CGameObject *)go->m_Next)
         {
             if (go->Container != 0xFFFFFFFF || ((CGameItem *)go)->MultiBody)
             {

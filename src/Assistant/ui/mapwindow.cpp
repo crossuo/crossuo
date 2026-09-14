@@ -359,7 +359,7 @@ void MapWindow_Draw(bool *open)
 
         // the mirror NPCs. MapIndex guard added: the original
         // bounds check could not reject a foreign-facet character.
-        QFOR(obj, g_World->m_Items, CGameObject *)
+        for (CGameObject *obj = (CGameObject *)g_World->m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next)
         {
             if (!obj->NPC || obj->MapIndex != map)
             {

@@ -1477,7 +1477,7 @@ void CGameCharacter::UpdateAnimationInfo_ProcessSteps(uint8_t &dir, bool canChan
 
 CGameItem *CGameCharacter::FindSecureTradeBox()
 {
-    QFOR(obj, m_Items, CGameItem *)
+    for (CGameItem *obj = (CGameItem *)m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
     {
         if (obj->Graphic == 0x1E5E && (obj->Layer == 0u))
         {

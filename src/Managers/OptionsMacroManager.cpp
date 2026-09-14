@@ -19,7 +19,7 @@ void COptionsMacroManager::LoadFromMacro()
 {
     Clear();
 
-    QFOR(obj, g_MacroManager.m_Items, CMacro *) { Add(obj->GetCopy()); }
+    for (CMacro *obj = (CMacro *)g_MacroManager.m_Items; obj != nullptr; obj = (CMacro *)obj->m_Next) { Add(obj->GetCopy()); }
 
     if (m_Items == nullptr)
     {

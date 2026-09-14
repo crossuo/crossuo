@@ -159,7 +159,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
         int index = 0;
 
-        QFOR(child, obj->m_Items, CBaseProfession *)
+        for (CBaseProfession *child = (CBaseProfession *)obj->m_Items; child != nullptr; child = (CBaseProfession *)child->m_Next)
         {
             Add(new CGUIGumppic(0x0589, 500, 100 + offsY));
 
@@ -330,7 +330,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
         int offsY = 0;
         int index = 0;
 
-        QFOR(child, obj->m_Items, CBaseProfession *)
+        for (CBaseProfession *child = (CBaseProfession *)obj->m_Items; child != nullptr; child = (CBaseProfession *)child->m_Next)
         {
             Add(new CGUIResizepic(ID_SPS_LABEL + index, 0x0BB8, 145 + offsX, 168 + offsY, 175, 34));
 
@@ -552,7 +552,7 @@ void CGumpScreenSelectProfession::InitToolTip()
 
         int index = 0;
 
-        QFOR(child, obj->m_Items, CBaseProfession *)
+        for (CBaseProfession *child = (CBaseProfession *)obj->m_Items; child != nullptr; child = (CBaseProfession *)child->m_Next)
         {
             if (id == ID_SPS_LABEL + index)
             {
@@ -656,7 +656,7 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
     {
         int index = 0;
 
-        QFOR(child, obj->m_Items, CBaseProfession *)
+        for (CBaseProfession *child = (CBaseProfession *)obj->m_Items; child != nullptr; child = (CBaseProfession *)child->m_Next)
         {
             if (serial == ID_SPS_LABEL + index)
             {

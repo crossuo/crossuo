@@ -636,7 +636,7 @@ void CDECL FUNCBODY_GetFileInfo(unsigned int index, XUO_RAW_FILE_INFO &info)
         }
         case OFI_CLILOC_MUL:
         {
-            QFOR(item, g_ClilocManager.m_Items, CCliloc *)
+            for (CCliloc *item = (CCliloc *)g_ClilocManager.m_Items; item != nullptr; item = (CCliloc *)item->m_Next)
             {
                 if (item->Loaded && item->m_File.Start != nullptr && item->Language == "enu")
                 {

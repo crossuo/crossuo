@@ -302,7 +302,7 @@ bool CRenderStaticObject::TextCanBeTransparent(CRenderTextObject *text)
 {
     bool result = true;
 
-    QFOR(item, m_TextControl->m_Items, CTextData *)
+    for (CTextData *item = (CTextData *)m_TextControl->m_Items; item != nullptr; item = (CTextData *)item->m_Next)
     {
         if (text == item)
         {

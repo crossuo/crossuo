@@ -229,7 +229,7 @@ void CGumpConsoleType::GUMP_TEXT_ENTRY_EVENT_C
     const auto type = (GAME_CONSOLE_TEXT_TYPE)m_SelectedType;
     CGameConsole::DeleteConsoleTypePrefix(type);
     m_SelectedType = serial - 1;
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXTENTRY)
         {

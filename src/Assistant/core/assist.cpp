@@ -646,7 +646,7 @@ CGameObject *CAssistant::FindType(
 
     vector<CGameObject *> containers;
 
-    QFOR(item, start, CGameObject *)
+    for (CGameObject *item = (CGameObject *)start; item != nullptr; item = (CGameObject *)item->m_Next)
     {
         if (!item->Ignored && (!checkDistance || GetDistance(g_Player, item) <= distance) &&
             findListItem.Found(item->Graphic, item->Color))
@@ -846,7 +846,7 @@ int CAssistant::CountType(
         }
     }
 
-    QFOR(item, start, CGameObject *)
+    for (CGameObject *item = (CGameObject *)start; item != nullptr; item = (CGameObject *)item->m_Next)
     {
         if (findListItem.Found(item->Graphic, item->Color) &&
             (!checkDistance || GetDistance(g_Player, item) <= distance))
@@ -1131,7 +1131,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
 
     if (((flags & FTF_NEXT) != 0) && (g_LastFriendFound != 0u))
     {
-        QFOR(item, start, CGameObject *)
+        for (CGameObject *item = (CGameObject *)start; item != nullptr; item = (CGameObject *)item->m_Next)
         {
             if (item->Serial == g_LastFriendFound)
             {
@@ -1141,7 +1141,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
         }
     }
 
-    QFOR(item, start, CGameObject *)
+    for (CGameObject *item = (CGameObject *)start; item != nullptr; item = (CGameObject *)item->m_Next)
     {
         if (item->Ignored || !item->NPC)
         {
@@ -1213,7 +1213,7 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
 
     if (((flags & FTF_NEXT) != 0) && (g_LastEnemyFound != 0u))
     {
-        QFOR(item, start, CGameObject *)
+        for (CGameObject *item = (CGameObject *)start; item != nullptr; item = (CGameObject *)item->m_Next)
         {
             if (item->Serial == g_LastEnemyFound)
             {
@@ -1223,7 +1223,7 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
         }
     }
 
-    QFOR(item, g_World->m_Items, CGameObject *)
+    for (CGameObject *item = (CGameObject *)g_World->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
     {
         if (item->Ignored || !item->NPC)
         {
@@ -1289,7 +1289,7 @@ CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceTe
 
 void CAssistant::GetFriendsStatus()
 {
-    QFOR(item, g_World->m_Items, CGameObject *)
+    for (CGameObject *item = (CGameObject *)g_World->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
     {
         if (g_AssistantConfig.InFriendList(item->Serial))
         {
@@ -1300,7 +1300,7 @@ void CAssistant::GetFriendsStatus()
 
 void CAssistant::GetEnemiesStatus()
 {
-    QFOR(item, g_World->m_Items, CGameObject *)
+    for (CGameObject *item = (CGameObject *)g_World->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
     {
         if (g_AssistantConfig.InEnemyList(item->Serial))
         {
@@ -1396,7 +1396,7 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
     {
         int minZ = z - 10;
         int maxZ = z + 10;
-        QFOR(obj, g_World->m_Items, CGameObject *)
+        for (CGameObject *obj = (CGameObject *)g_World->m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next)
         {
             if (obj->NPC || !IsDoor(g_GetStaticFlags(obj->Graphic)) ||
                 obj->GetX() != x || obj->GetY() != y)

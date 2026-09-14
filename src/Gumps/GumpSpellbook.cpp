@@ -390,7 +390,7 @@ void CGumpSpellbook::UpdateContent()
         return;
     }
 
-    QFOR(item, spellbook->m_Items, CGameItem *)
+    for (CGameItem *item = (CGameItem *)spellbook->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
     {
         const int currentCount = item->Count;
         if (currentCount > 0 && currentCount <= book.SpellCount)

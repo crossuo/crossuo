@@ -147,7 +147,7 @@ CCliloc *CClilocManager::Cliloc(const astr_t &lang)
         return m_LastCliloc;
     }
 
-    QFOR(obj, m_Items, CCliloc *)
+    for (CCliloc *obj = (CCliloc *)m_Items; obj != nullptr; obj = (CCliloc *)obj->m_Next)
     {
         if (obj->Language == language)
         {

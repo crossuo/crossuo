@@ -1586,7 +1586,7 @@ void CGumpStatusbar::UpdateContent()
         m_StatusbarUnlocker->Visible = InGroup();
     }
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Serial != ID_GSB_MINIMIZE)
         {
@@ -1834,7 +1834,7 @@ void CGumpStatusbar::OnKeyDown(const KeyEvent &ev)
 
 void CGumpStatusbar::SendRenameRequest()
 {
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type != GOT_TEXTENTRY)
         {

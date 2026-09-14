@@ -262,7 +262,7 @@ void CGumpContainer::UpdateContent()
 
     IsGameBoard = (ID == 0x091A || ID == 0x092E);
 
-    QFOR(obj, container->m_Items, CGameItem *)
+    for (CGameItem *obj = (CGameItem *)container->m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
     {
         int count = obj->Count;
 

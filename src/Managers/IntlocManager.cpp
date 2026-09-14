@@ -72,7 +72,7 @@ wstr_t CIntloc::Get(int id, bool toCamelCase)
 
 CIntloc *CIntlocManager::Intloc(int fileIndex, const astr_t &lang)
 {
-    QFOR(obj, m_Items, CIntloc *)
+    for (CIntloc *obj = (CIntloc *)m_Items; obj != nullptr; obj = (CIntloc *)obj->m_Next)
     {
         if (obj->Language == lang && obj->FileIndex == fileIndex)
         {
@@ -90,7 +90,7 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const astr_t &lang)
         return obj;
     }
 
-    QFOR(obj2, m_Items, CIntloc *)
+    for (CIntloc *obj2 = (CIntloc *)m_Items; obj2 != nullptr; obj2 = (CIntloc *)obj2->m_Next)
     {
         if (obj2->Language == "enu" && obj2->FileIndex == fileIndex)
         {

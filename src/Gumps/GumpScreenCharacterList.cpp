@@ -188,7 +188,7 @@ void CGumpScreenCharacterList::GUMP_TEXT_ENTRY_EVENT_C
         if (serial == (ID_CS_CHARACTERS + i))
         {
             g_CharacterList.Selected = i;
-            QFOR(item, m_Items, CBaseGUI *)
+            for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_TEXTENTRY)
                 {

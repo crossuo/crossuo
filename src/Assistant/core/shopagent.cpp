@@ -388,7 +388,7 @@ bool CShopAgent::OnOpenContainer(uint serial)
                     continue;
                 }
 
-                QFOR(obj, container->m_Items, CGameItem *)
+                for (CGameItem *obj = (CGameItem *)container->m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
                 {
                     CVendorShopItem item;
                     item.SetSerial(obj->Serial);

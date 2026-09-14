@@ -83,7 +83,7 @@ CPluginManager::CPluginManager()
 uint32_t CPluginManager::OnEvent(uint32_t msg, const void *data)
 {
     uint32_t result = 0;
-    QFOR(plugin, m_Items, CPlugin *)
+    for (CPlugin *plugin = (CPlugin *)m_Items; plugin != nullptr; plugin = (CPlugin *)plugin->m_Next)
     {
         if (plugin->CanEvent() && plugin->m_PPS->OnEvent != nullptr)
         {
@@ -96,7 +96,7 @@ uint32_t CPluginManager::OnEvent(uint32_t msg, const void *data)
 bool CPluginManager::PacketRecv(uint8_t *buf, size_t size)
 {
     bool result = true;
-    QFOR(plugin, m_Items, CPlugin *)
+    for (CPlugin *plugin = (CPlugin *)m_Items; plugin != nullptr; plugin = (CPlugin *)plugin->m_Next)
     {
         if (plugin->CanParseRecv() && plugin->m_PPS->OnRecv != nullptr)
         {
@@ -113,7 +113,7 @@ bool CPluginManager::PacketRecv(uint8_t *buf, size_t size)
 bool CPluginManager::PacketSend(uint8_t *buf, size_t size)
 {
     bool result = true;
-    QFOR(plugin, m_Items, CPlugin *)
+    for (CPlugin *plugin = (CPlugin *)m_Items; plugin != nullptr; plugin = (CPlugin *)plugin->m_Next)
     {
         if (plugin->CanParseSend() && plugin->m_PPS->OnSend != nullptr)
         {
@@ -129,7 +129,7 @@ bool CPluginManager::PacketSend(uint8_t *buf, size_t size)
 
 void CPluginManager::Disconnect()
 {
-    QFOR(plugin, m_Items, CPlugin *)
+    for (CPlugin *plugin = (CPlugin *)m_Items; plugin != nullptr; plugin = (CPlugin *)plugin->m_Next)
     {
         if (plugin->m_PPS->OnDisconnect != nullptr)
         {
@@ -140,7 +140,7 @@ void CPluginManager::Disconnect()
 
 void CPluginManager::WorldDraw()
 {
-    QFOR(plugin, m_Items, CPlugin *)
+    for (CPlugin *plugin = (CPlugin *)m_Items; plugin != nullptr; plugin = (CPlugin *)plugin->m_Next)
     {
         if (plugin->CanEnterWorldRender() && plugin->m_PPS->OnWorldDraw != nullptr)
         {
@@ -151,7 +151,7 @@ void CPluginManager::WorldDraw()
 
 void CPluginManager::SceneDraw()
 {
-    QFOR(plugin, m_Items, CPlugin *)
+    for (CPlugin *plugin = (CPlugin *)m_Items; plugin != nullptr; plugin = (CPlugin *)plugin->m_Next)
     {
         if (plugin->CanEnterSceneRender() && plugin->m_PPS->OnSceneDraw != nullptr)
         {
@@ -162,7 +162,7 @@ void CPluginManager::SceneDraw()
 
 void CPluginManager::WorldMapDraw()
 {
-    QFOR(plugin, m_Items, CPlugin *)
+    for (CPlugin *plugin = (CPlugin *)m_Items; plugin != nullptr; plugin = (CPlugin *)plugin->m_Next)
     {
         if (plugin->CanEnterWorldMapRender() && plugin->m_PPS->OnWorldMapDraw != nullptr)
         {

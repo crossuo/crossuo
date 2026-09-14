@@ -68,7 +68,7 @@ CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
     m_TextShowClient = (CGUIText *)Add(new CGUIText(0x0386, 233, Height - 2));
     m_TextShowClient->CreateTextureA(1, "Client");
 
-    QFOR(item, g_Journal.m_Items, CTextData *)
+    for (CTextData *item = (CTextData *)g_Journal.m_Items; item != nullptr; item = (CTextData *)item->m_Next)
     AddText(item);
 }
 
@@ -155,7 +155,7 @@ int CGumpJournal::RecalculateHeight()
 {
     int height = 0;
 
-    QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXT)
         {
@@ -223,7 +223,7 @@ void CGumpJournal::AddText(CTextData *obj)
 
 void CGumpJournal::DeleteText(CTextData *obj)
 {
-    QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXT && item->TextData == obj)
         {

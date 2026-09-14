@@ -401,7 +401,7 @@ void CTarget::AddMultiObject(CMultiObject *obj)
 
         if (multi != nullptr)
         {
-            QFOR(multiobj, multi->m_Items, CMultiObject *)
+            for (CMultiObject *multiobj = (CMultiObject *)multi->m_Items; multiobj != nullptr; multiobj = (CMultiObject *)multiobj->m_Next)
             {
                 if (obj->GetZ() < multiobj->GetZ())
                 {

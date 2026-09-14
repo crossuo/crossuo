@@ -194,7 +194,7 @@ void CGumpSecureTrading::UpdateContent()
     TRACE(Client, "Container1 %016lx ID1: %08x", (intptr_t)container, ID);
     if (container != nullptr && container->m_Items != nullptr)
     {
-        QFOR(item, container->m_Items, CGameItem *)
+        for (CGameItem *item = (CGameItem *)container->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
         {
             TRACE(Client, " - Item %08x Name: %s", item->Serial, item->GetName().c_str());
             bool doubleDraw = false;
@@ -225,7 +225,7 @@ void CGumpSecureTrading::UpdateContent()
     TRACE(Client, "Container2 %016lx ID2: %08x", (intptr_t)container, ID2);
     if (container != nullptr && container->m_Items != nullptr)
     {
-        QFOR(item, container->m_Items, CGameItem *)
+        for (CGameItem *item = (CGameItem *)container->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
         {
             TRACE(Client, " - Item %08x Name: %s", item->Serial, item->GetName().c_str());
             bool doubleDraw = false;

@@ -3894,7 +3894,7 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
         if (obj != nullptr)
         {
             CGUITextEntry *entry = nullptr;
-            QFOR(item, m_MacroDataBox->m_Items, CBaseGUI *)
+            for (CBaseGUI *item = (CBaseGUI *)m_MacroDataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_TEXTENTRY &&
                     g_EntryPointer == &((CGUITextEntry *)item)->m_Entry)
@@ -3998,7 +3998,7 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
                 {
                     CGUITextEntry *entry = nullptr;
 
-                    QFOR(item, m_MacroDataBox->m_Items, CBaseGUI *)
+                    for (CBaseGUI *item = (CBaseGUI *)m_MacroDataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
                     {
                         if (item->Type == GOT_TEXTENTRY &&
                             g_EntryPointer == &((CGUITextEntry *)item)->m_Entry)
@@ -4277,7 +4277,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.EnemyColor = g_OptionsConfig.EnemyColor;
             g_ConfigManager.MurdererColor = g_OptionsConfig.MurdererColor;
             g_ConfigManager.CriminalActionsQuery = g_OptionsConfig.CriminalActionsQuery;
-            QFOR(gump, g_GumpManager.m_Items, CGump *)
+            for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
             {
                 if (gump->GumpType == GT_STATUSBAR)
                 {

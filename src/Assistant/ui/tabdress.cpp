@@ -139,7 +139,7 @@ void apply_from_equipment(int minLayer, int maxLayer, bool checkSafe)
     }
 
     bool changed = false;
-    QFOR(item, g_Player->m_Items, CGameItem *)
+    for (CGameItem *item = (CGameItem *)g_Player->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
     {
         const int layer = EquipLayer(item);
 

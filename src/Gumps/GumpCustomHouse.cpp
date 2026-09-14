@@ -1346,9 +1346,9 @@ void CGumpCustomHouse::UpdateContent()
 
     if (foundationItem != nullptr)
     {
-        QFOR(multi, foundationItem->m_Items, CMulti *)
+        for (CMulti *multi = (CMulti *)foundationItem->m_Items; multi != nullptr; multi = (CMulti *)multi->m_Next)
         {
-            QFOR(item, multi->m_Items, CMultiObject *)
+            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
             {
                 if (item->IsCustomHouseMulti() && ((item->State & CHMOF_GENERIC_INTERNAL) == 0))
                 {
@@ -1697,7 +1697,7 @@ bool CGumpCustomHouse::CanBuildHere(
 
                 if (multi != nullptr)
                 {
-                    QFOR(multiObject, multi->m_Items, CMultiObject *)
+                    for (CMultiObject *multiObject = (CMultiObject *)multi->m_Items; multiObject != nullptr; multiObject = (CMultiObject *)multiObject->m_Next)
                     {
                         if (multiObject->IsCustomHouseMulti() &&
                             ((multiObject->State & CHMOF_GENERIC_INTERNAL) == 0) &&
@@ -1772,7 +1772,7 @@ bool CGumpCustomHouse::ValidatePlaceStructure(
         return false;
     }
 
-    QFOR(item, multi->m_Items, CMultiObject *)
+    for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
     {
         std::vector<CPoint2Di> validatedFloors;
 
@@ -2365,9 +2365,9 @@ void CGumpCustomHouse::GenerateFloorPlace()
     {
         foundationItem->ClearCustomHouseMultis(CHMOF_GENERIC_INTERNAL);
 
-        QFOR(multi, foundationItem->m_Items, CMulti *)
+        for (CMulti *multi = (CMulti *)foundationItem->m_Items; multi != nullptr; multi = (CMulti *)multi->m_Next)
         {
-            QFOR(item, multi->m_Items, CMultiObject *)
+            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
             {
                 if (!item->IsCustomHouseMulti())
                 {
@@ -2492,7 +2492,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                 CMultiObject *floorMulti = nullptr;
                 CMultiObject *floorCustomMulti = nullptr;
 
-                QFOR(item, multi->m_Items, CMultiObject *)
+                for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                 {
                     if (item->GetZ() != z || ((item->State & CHMOF_FLOOR) == 0))
                     {
@@ -2557,7 +2557,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                             continue;
                         }
 
-                        QFOR(item, multi->m_Items, CMultiObject *)
+                        for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                         {
                             if (!item->IsCustomHouseMulti())
                             {
@@ -2614,7 +2614,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                             continue;
                         }
 
-                        QFOR(item, multi->m_Items, CMultiObject *)
+                        for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                         {
                             if (item->IsCustomHouseMulti() && ((item->State & CHMOF_FLOOR) != 0) &&
                                 item->GetZ() >= minZ && item->GetZ() < maxZ)
@@ -2637,7 +2637,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 continue;
                             }
 
-                            QFOR(item, multi->m_Items, CMultiObject *)
+                            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                             {
                                 if (item->IsCustomHouseMulti() &&
                                     ((item->State & CHMOF_FLOOR) != 0) &&
@@ -2665,7 +2665,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 continue;
                             }
 
-                            QFOR(item, multi->m_Items, CMultiObject *)
+                            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                             {
                                 if (item->IsCustomHouseMulti() &&
                                     ((item->State & CHMOF_FLOOR) != 0) &&
@@ -2693,7 +2693,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 continue;
                             }
 
-                            QFOR(item, multi->m_Items, CMultiObject *)
+                            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                             {
                                 if (item->IsCustomHouseMulti() &&
                                     ((item->State & CHMOF_FLOOR) != 0) &&
@@ -2720,7 +2720,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 continue;
                             }
 
-                            QFOR(item, multi->m_Items, CMultiObject *)
+                            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                             {
                                 if (item->IsCustomHouseMulti() &&
                                     ((item->State & CHMOF_FLOOR) != 0) &&
@@ -2748,7 +2748,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 continue;
                             }
 
-                            QFOR(item, multi->m_Items, CMultiObject *)
+                            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                             {
                                 if (item->IsCustomHouseMulti() &&
                                     ((item->State & CHMOF_FLOOR) != 0) &&
@@ -2776,7 +2776,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 continue;
                             }
 
-                            QFOR(item, multi->m_Items, CMultiObject *)
+                            for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = (CMultiObject *)item->m_Next)
                             {
                                 if (item->IsCustomHouseMulti() &&
                                     ((item->State & CHMOF_FLOOR) != 0) &&
@@ -2829,7 +2829,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
 
 void CGumpCustomHouse::GUMP_TEXT_ENTRY_EVENT_C
 {
-    QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXTENTRY)
         {
@@ -2845,7 +2845,7 @@ void CGumpCustomHouse::OnLeftMouseButtonUp()
 {
     CGump::OnLeftMouseButtonUp();
 
-    QFOR(item, m_DataBox->m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_DataBox->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXTENTRY)
         {

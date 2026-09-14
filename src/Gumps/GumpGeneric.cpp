@@ -78,7 +78,7 @@ void CGumpGeneric::AddText(
         start = (CBaseGUI *)m_Items;
     }
 
-    QFOR(item, start, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         switch (item->Type)
         {

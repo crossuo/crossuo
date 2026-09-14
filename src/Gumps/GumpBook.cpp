@@ -177,7 +177,7 @@ CGUITextEntry *CGumpBook::GetEntry(int page)
 {
     int currentPage = -1;
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_PAGE)
         {

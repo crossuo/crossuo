@@ -75,7 +75,7 @@ void CGUIComboBox::RecalculateWidth()
     if (!CompositeBackground)
     {
         OpenedWidth = 0;
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_TEXT)
             {
@@ -130,7 +130,7 @@ CBaseGUI *CGUIComboBox::SkipToStart()
 
     int index = 0;
 
-    QFOR(item, m_Items, CBaseGUI *)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXT)
         {
@@ -211,7 +211,7 @@ void CGUIComboBox::Draw(bool checktrans)
         CBaseGUI *start = SkipToStart();
         int count = 0;
 
-        QFOR(item, start, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_TEXT)
             {
@@ -257,7 +257,7 @@ void CGUIComboBox::Draw(bool checktrans)
         CGUIText *selected = nullptr;
         int index = 0;
 
-        QFOR(item, m_Items, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_TEXT)
             {
@@ -399,7 +399,7 @@ CBaseGUI *CGUIComboBox::SelectedItem()
         CBaseGUI *start = SkipToStart();
         int count = 0;
 
-        QFOR(item, start, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_TEXT)
             {
@@ -433,7 +433,7 @@ int CGUIComboBox::IsSelectedItem()
         CBaseGUI *start = SkipToStart();
         int count = 0;
 
-        QFOR(item, start, CBaseGUI *)
+        for (CBaseGUI *item = (CBaseGUI *)start; item != nullptr; item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_TEXT)
             {

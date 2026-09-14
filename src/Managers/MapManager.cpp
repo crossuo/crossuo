@@ -155,7 +155,7 @@ void CMapManager::UpdatePatched()
     std::deque<CRenderWorldObject *> objectsList;
     if (m_Blocks != nullptr)
     {
-        QFOR(block, m_Items, CMapBlock *)
+        for (CMapBlock *block = (CMapBlock *)m_Items; block != nullptr; block = (CMapBlock *)block->m_Next)
         {
             for (int x = 0; x < 8; x++)
             {

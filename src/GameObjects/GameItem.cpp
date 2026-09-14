@@ -891,7 +891,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
         CMulti *multi = GetMultiAtXY(obj->GetX(), obj->GetY());
         if (multi != nullptr)
         {
-            QFOR(multiobj, multi->m_Items, CMultiObject *)
+            for (CMultiObject *multiobj = (CMultiObject *)multi->m_Items; multiobj != nullptr; multiobj = (CMultiObject *)multiobj->m_Next)
             {
                 if (obj->GetZ() < multiobj->GetZ())
                 {
@@ -928,7 +928,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
             obj->m_Next = nullptr;
             obj->m_Prev = nullptr;
 
-            QFOR(subMulti, m_Items, CMulti *)
+            for (CMulti *subMulti = (CMulti *)m_Items; subMulti != nullptr; subMulti = (CMulti *)subMulti->m_Next)
             {
                 if (subMulti->m_Next == nullptr)
                 {
@@ -943,7 +943,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
 
 CMulti *CGameItem::GetMultiAtXY(short x, short y)
 {
-    QFOR(multi, m_Items, CMulti *)
+    for (CMulti *multi = (CMulti *)m_Items; multi != nullptr; multi = (CMulti *)multi->m_Next)
     {
         if (multi->X == x && multi->Y == y)
         {
@@ -961,7 +961,7 @@ CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
     if (color == 0xFFFF) //Поиск по минимальному цвету
     {
         uint16_t minColor = 0xFFFF;
-        QFOR(obj, m_Items, CGameItem *)
+        for (CGameItem *obj = (CGameItem *)m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
         {
             if (obj->Graphic == graphic)
             {
@@ -986,7 +986,7 @@ CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
     }
     else //стандартный поиск
     {
-        QFOR(obj, m_Items, CGameItem *)
+        for (CGameItem *obj = (CGameItem *)m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
         {
             if (obj->Graphic == graphic && obj->Color == color)
             {
