@@ -287,10 +287,12 @@ bool CGumpManager::Consume()
     return false;
 }
 
-bool CGumpManager::OnPacketSend(CDataReader &reader)
+void CGumpManager::OnGumpChoiceSent(uint serial, uint id, uint button)
 {
-    uint serial = reader.ReadUInt32BE();
-    uint id = reader.ReadUInt32BE();
+    if (g_World == nullptr)
+    {
+        return;
+    }
 
     for (size_t i = 0; i < m_Items.size(); i++)
     {
@@ -298,8 +300,6 @@ bool CGumpManager::OnPacketSend(CDataReader &reader)
 
         if (!gump->Replayed && gump->Serial == serial && gump->ID == id)
         {
-            uint button = reader.ReadUInt32BE();
-
             gump->Replayed = true;
             gump->ReplyID = button;
 
@@ -320,8 +320,6 @@ bool CGumpManager::OnPacketSend(CDataReader &reader)
             break;
         }
     }
-
-    return true;
 }
 
 bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)

@@ -9,6 +9,7 @@
 #include "AssistantWindow.h"
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Send (in-client assistant)
 #include <core/global.h> // xuoassist::g_SelectedClientWorldObject (selected-tile feed)
+#include <managers/promptmanager.h> // xuoassist::g_PromptManager.OnPromptSent (prompt taps)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.Record* (macro taps)
 #endif
 
@@ -5717,10 +5718,20 @@ void CGame::ConsolePromptSend()
     if (g_ConsolePrompt == PT_ASCII)
     {
         CPacketASCIIPromptResponse(g_GameConsole.GetTextA(), cancel).Send();
+#if defined(XUO_ASSISTANT)
+        // (prompt round) was the 0x9A send tap parsing the answer out of the
+        // packet buffer; the value recorded is the console text itself
+        xuoassist::g_PromptManager.OnPromptSent(g_GameConsole.GetTextA(), cancel);
+#endif
     }
     else if (g_ConsolePrompt == PT_UNICODE)
     {
         CPacketUnicodePromptResponse(g_GameConsole.GetTextW(), g_Language, cancel).Send();
+#if defined(XUO_ASSISTANT)
+        // (prompt round) the 0xC2 twin of the 0x9A tap; the recorded value is
+        // the console text in the macro string encoding
+        xuoassist::g_PromptManager.OnPromptSent(str_from(g_GameConsole.GetTextW()), cancel);
+#endif
     }
     g_ConsolePrompt = PT_NONE;
 }
@@ -5730,10 +5741,20 @@ void CGame::ConsolePromptCancel()
     if (g_ConsolePrompt == PT_ASCII)
     {
         CPacketASCIIPromptResponse({}, true).Send();
+#if defined(XUO_ASSISTANT)
+        // (prompt round) a cancel records an empty answer, like the old
+        // zero response-field check did
+        xuoassist::g_PromptManager.OnPromptSent("", true);
+#endif
     }
     else if (g_ConsolePrompt == PT_UNICODE)
     {
         CPacketUnicodePromptResponse({}, g_Language, true).Send();
+#if defined(XUO_ASSISTANT)
+        // (prompt round) a cancel records an empty answer, like the old
+        // zero response-field check did
+        xuoassist::g_PromptManager.OnPromptSent("", true);
+#endif
     }
     g_ConsolePrompt = PT_NONE;
 }

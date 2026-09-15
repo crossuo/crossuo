@@ -68,16 +68,9 @@ protected:
     XA_HANDLER_PACKET(TargetS);
     XA_HANDLER_PACKET(ClientTalkS);
     XA_HANDLER_PACKET(UnicodeClientTalk);
-    XA_HANDLER_PACKET(MenuChoice);
     XA_HANDLER_PACKET(ClientMessagesS);
     XA_HANDLER_PACKET(ClientMessagesR);
     XA_HANDLER_PACKET(ExtendedCommandS);
-    XA_HANDLER_PACKET(SecureTradingS);
-    XA_HANDLER_PACKET(ChoiceGump);
-    XA_HANDLER_PACKET(ASCIIPromptS);
-    XA_HANDLER_PACKET(UnicodePromptS);
-    XA_HANDLER_PACKET(BuyReplyS);
-    XA_HANDLER_PACKET(SellReply);
     XA_HANDLER_PACKET(AOSCommandsS);
 
 public:

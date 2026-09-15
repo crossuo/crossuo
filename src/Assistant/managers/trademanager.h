@@ -7,7 +7,6 @@
 
 #include "core/global.h"
 #include "model/commonitems/tradewindow.h"
-#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 
 namespace xuoassist {
 
@@ -22,11 +21,14 @@ public:
     CTradeManager();
     virtual ~CTradeManager();
 
-    bool OnPacketSend(CDataReader &reader);
-
     // trade-round bookkeeping over the client handler's parsed values
     // (the client owns the 0x6F parse; no consume)
     void OnTradeAction(int action, uint serial, uint id1, uint id2, const string &name);
+
+    // the client's 0x6F send sites report the user's trade answer here (was
+    // the 0x6F SecureTradingS send tap in the assistant's packetmanager);
+    // check is the sender's own check state (the TA_CHECK wire field)
+    void OnTradeSent(int action, uint id, bool check);
 
     void Clear();
 

@@ -143,19 +143,14 @@ bool CMenuManager::OnMenuReceived(
     return true;
 }
 
-bool CMenuManager::OnPacketSend(CDataReader &reader)
+void CMenuManager::OnMenuChoiceSent(uint serial, ushort id, ushort index)
 {
-    uint serial = reader.ReadUInt32BE();
-    uint id = reader.ReadUInt16BE();
-
     for (size_t i = 0; i < m_Items.size(); i++)
     {
         CMenu *menu = m_Items[i];
 
         if (!menu->Replayed && menu->Serial == serial && menu->ID == id)
         {
-            uint index = reader.ReadUInt16BE();
-
             menu->Replayed = true;
             menu->ReplyID = index;
 
@@ -190,8 +185,6 @@ bool CMenuManager::OnPacketSend(CDataReader &reader)
             break;
         }
     }
-
-    return true;
 }
 
 bool CMenuManager::SendChoiceIfMenuExists(

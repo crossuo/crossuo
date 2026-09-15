@@ -9,6 +9,9 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../Network/Packets.h"
+#if defined(XUO_ASSISTANT)
+#include <managers/gumpmanager.h> // xuoassist::g_GumpManager (gump-choice tap)
+#endif
 
 CGumpGeneric::CGumpGeneric(uint32_t serial, short x, short y, uint32_t id)
     : CGump(GT_GENERIC, serial, x, y)
@@ -138,6 +141,12 @@ void CGumpGeneric::SendGumpResponse(int index)
 {
     //Ответ на гамп
     CPacketGumpResponse(this, index).Send();
+#if defined(XUO_ASSISTANT)
+    // (gump round) was the 0xB1 ChoiceGump send tap; the recorded id is the
+    // one written to the wire (the master gump id when one is set)
+    xuoassist::g_GumpManager.OnGumpChoiceSent(
+        Serial, (MasterGump != 0u) ? MasterGump : ID, index);
+#endif
 
     //Удаляем использованный гамп
     RemoveMark = true;
@@ -165,6 +174,11 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
     {
         //Ответ на гамп
         CPacketVirtueGumpResponse(this, g_PressedObject.LeftSerial).Send();
+#if defined(XUO_ASSISTANT)
+        // (gump round) the virtue answer rides the same 0xB1 send tap
+        xuoassist::g_GumpManager.OnGumpChoiceSent(
+            Serial, 0x000001CD, g_PressedObject.LeftSerial);
+#endif
 
         //Удаляем использованный гамп
         RemoveMark = true;

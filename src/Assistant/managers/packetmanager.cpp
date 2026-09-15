@@ -5,7 +5,6 @@
 #include "../core/assistantevents.h"
 #include "../core/assist.h"
 #include "../core/packets.h"
-#include "../core/shopagent.h"
 #include "../core/clientversion.h"
 #include "../core/target.h"
 #include "../core/textcommandmanager.h"
@@ -14,12 +13,8 @@
 #include "../managers/clientmacromanager.h"
 #include "../managers/contextmenumanager.h"
 #include "../managers/guildmanager.h"
-#include "../managers/gumpmanager.h"
-#include "../managers/menumanager.h"
-#include "../managers/promptmanager.h"
 #include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
-#include "../managers/trademanager.h"
 #include "../macros/macroexecutor.h" // g_MacroExecutor (macro recording/playing taps)
 #include "../core/world.h"
 #include "../model/commonitems/journalmessage.h"
@@ -134,8 +129,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x38*/ BMSG("Pathfinding in Client", 0x07),
     /*0x39*/ RMSG("Remove (Group)", 0x09),
     /*0x3A*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x3B*/
-    SMSGH("Vendor Buy Reply", PACKET_VARIABLE_SIZE, BuyReplyS),
+    // the 0x3B send tap moved to CGumpShop::SendList (shop agent replay flag)
+    /*0x3B*/ SMSG("Vendor Buy Reply", PACKET_VARIABLE_SIZE),
     /*0x3C*/ RMSG("Update Contained Items", PACKET_VARIABLE_SIZE),
     /*0x3D*/ UMSG(0x02),
     /*0x3E*/ UMSG(0x25),
@@ -189,8 +184,9 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x6C*/ SMSGHB("Target Data", 0x13, TargetS),
     /*0x6D*/ RMSG("Play Music", 0x03),
     /*0x6E*/ UMSG(0x0e),
-    /*0x6F*/
-    SMSGH("Secure Trading", PACKET_VARIABLE_SIZE, SecureTradingS),
+    // both halves own no assistant code: the send tap moved to the client's
+    // trade gumps, the recv half fused into the client's 0x6F handler
+    /*0x6F*/ BMSG("Secure Trading", PACKET_VARIABLE_SIZE),
     /*0x70*/ UMSG(0x1c),
     /*0x71*/ BMSG("Bulletin Board Data", PACKET_VARIABLE_SIZE),
     /*0x72*/ SMSG("War Mode", 0x05),
@@ -204,7 +200,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x7A*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x7B*/ UMSG(0x02),
     /*0x7C*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x7D*/ SMSGH("Menu Choice", 0x0d, MenuChoice),
+    // the 0x7D send tap moved to the client's menu-choice send sites
+    /*0x7D*/ SMSG("Menu Choice", 0x0d),
     /*0x7E*/ UMSG(0x02),
     /*0x7F*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x80*/ SMSG("First Login", 0x3e),
@@ -240,12 +237,15 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x97*/ RMSG("Move Player", 0x02),
     /*0x98*/ BMSG("All Names (3D Client Only)", PACKET_VARIABLE_SIZE),
     /*0x99*/ UMSG(0x1a),
-    /*0x9A*/ SMSGHB("ASCII Prompt", PACKET_VARIABLE_SIZE, ASCIIPromptS),
+    // the send taps moved to the client's prompt-response send sites; the
+    // rows stay both-direction (the server sends prompts, fused recv-side)
+    /*0x9A*/ BMSG("ASCII Prompt", PACKET_VARIABLE_SIZE),
     /*0x9B*/ SMSG("Help Request", 0x102),
     /*0x9C*/ UMSG(0x135),
     /*0x9D*/ UMSG(0x33),
     /*0x9E*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x9F*/ SMSGH("Vendor Sell Reply", PACKET_VARIABLE_SIZE, SellReply),
+    // the 0x9F send tap moved to CGumpShop::SendList (shop agent replay flag)
+    /*0x9F*/ SMSG("Vendor Sell Reply", PACKET_VARIABLE_SIZE),
     /*0xA0*/ SMSG("Select Server", 0x03),
     /*0xA1*/ UMSG(0x09),
     /*0xA2*/ UMSG(0x09),
@@ -264,7 +264,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xAE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xAF*/ UMSG(0x0d),
     /*0xB0*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xB1*/ SMSGH("Gump Choice", PACKET_VARIABLE_SIZE, ChoiceGump),
+    // the 0xB1 send tap moved to the client's gump-choice send sites
+    /*0xB1*/ SMSG("Gump Choice", PACKET_VARIABLE_SIZE),
     /*0xB2*/ BMSG("Chat Data", PACKET_VARIABLE_SIZE),
     /*0xB3*/ RMSG("Chat Text ?", PACKET_VARIABLE_SIZE),
     /*0xB4*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -286,7 +287,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     SMSGHB("Extended Command", PACKET_VARIABLE_SIZE, ExtendedCommandS),
     /*0xC0*/ UMSG(0x24),
     /*0xC1*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0xC2*/ SMSGHB("Unicode prompt", PACKET_VARIABLE_SIZE, UnicodePromptS),
+    /*0xC2*/ BMSG("Unicode prompt", PACKET_VARIABLE_SIZE),
     /*0xC3*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xC4*/ UMSG(0x06),
     /*0xC5*/ UMSG(0xcb),
@@ -667,11 +668,6 @@ PACKET_HANDLER(UnicodeClientTalk)
     return true;
 }
 
-PACKET_HANDLER(MenuChoice)
-{
-    return g_MenuManager.OnPacketSend(*this); // (menu round)
-}
-
 PACKET_HANDLER(ExtendedCommandS)
 {
     ushort cmd = ReadUInt16BE();
@@ -717,52 +713,6 @@ PACKET_HANDLER(ExtendedCommandS)
             g_MacroExecutor.Record(new CMacro(MT_TOGGLE_GARGOYLE_FLYING));
         }
     }
-
-    return true;
-}
-
-PACKET_HANDLER(SecureTradingS)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    return g_TradeManager.OnPacketSend(*this); // (trade round)
-}
-
-PACKET_HANDLER(ChoiceGump)
-{
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    return g_GumpManager.OnPacketSend(*this); // (gump round)
-}
-
-PACKET_HANDLER(ASCIIPromptS)
-{
-    return g_PromptManager.OnPacketSend(*this); // (prompt round)
-}
-
-PACKET_HANDLER(UnicodePromptS)
-{
-    return g_PromptManager.OnPacketSend(*this);
-}
-
-PACKET_HANDLER(BuyReplyS)
-{
-    // was: return g_TabAgentsShop->OnPacketSendBuyReply();
-    g_ShopAgent.OnBuyReplySent();
-
-    return true;
-}
-
-PACKET_HANDLER(SellReply)
-{
-    // was: return g_TabAgentsShop->OnPacketSendSellReply();
-    g_ShopAgent.OnSellReplySent();
 
     return true;
 }

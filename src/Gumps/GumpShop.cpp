@@ -10,6 +10,9 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
+#if defined(XUO_ASSISTANT)
+#include <core/shopagent.h> // xuoassist::g_ShopAgent (shop agent replay flag)
+#endif
 
 enum
 {
@@ -155,10 +158,18 @@ void CGumpShop::SendList()
     if (IsBuyGump)
     {
         CPacketBuyRequest(this).Send();
+#if defined(XUO_ASSISTANT)
+        // (shop round) was the 0x3B Vendor Buy Reply send tap
+        xuoassist::g_ShopAgent.OnBuyReplySent();
+#endif
     }
     else
     {
         CPacketSellRequest(this).Send();
+#if defined(XUO_ASSISTANT)
+        // (shop round) was the 0x9F Vendor Sell Reply send tap
+        xuoassist::g_ShopAgent.OnSellReplySent();
+#endif
     }
 }
 

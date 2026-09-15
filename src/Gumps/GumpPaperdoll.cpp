@@ -17,6 +17,9 @@
 #include "../Managers/UOFileReader.h"
 #include "../GameObjects/GameItem.h"
 #include "../GameObjects/GameWorld.h"
+#if defined(XUO_ASSISTANT)
+#include <managers/gumpmanager.h> // xuoassist::g_GumpManager (gump-choice tap)
+#endif
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
@@ -1044,6 +1047,11 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
         else if (serial == ID_GP_BUTTON_VIRTUE)
         {
             CPacketVirtueRequest(1).Send();
+#if defined(XUO_ASSISTANT)
+            // (gump round) the virtue request rides the 0xB1 packet id, so the
+            // old ChoiceGump send tap saw it with these wire values
+            xuoassist::g_GumpManager.OnGumpChoiceSent(g_PlayerSerial, 0x000001CD, 1);
+#endif
 
             result = true;
         }

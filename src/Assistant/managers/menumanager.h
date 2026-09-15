@@ -8,7 +8,6 @@
 
 #include "core/global.h"
 #include "model/commonitems/menu.h"
-#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 
 namespace xuoassist {
 
@@ -61,7 +60,9 @@ public:
     bool OnMenuReceived(
         uint serial, ushort id, const string &name, bool grayMenu, const vector<CMenuItem> &items);
 
-    bool OnPacketSend(CDataReader &reader);
+    // the client's 0x7D send sites report the user's menu choice here (was the
+    // 0x7D MenuChoice send tap in the assistant's packetmanager)
+    void OnMenuChoiceSent(uint serial, ushort id, ushort index);
 
     bool SendChoiceIfMenuExists(const string &name, const string &itemName, const bool &sendPacket);
 

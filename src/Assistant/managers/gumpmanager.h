@@ -9,7 +9,6 @@
 #include "core/global.h"
 #include "model/commonitems/gump.h"
 #include "model/commonitems/gumphook.h"
-#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 
 namespace xuoassist {
 
@@ -36,7 +35,11 @@ public:
     void SetLastGumpText(const wstr_t &text);
     void RemoveLastGump();
     bool Consume();
-    bool OnPacketSend(CDataReader &reader);
+
+    // the client's 0xB1 send sites report the user's gump choice here (was the
+    // 0xB1 ChoiceGump send tap in the assistant's packetmanager); the id is
+    // the value written to the wire (the master gump id when one is set)
+    void OnGumpChoiceSent(uint serial, uint id, uint button);
     bool SendGumpChoice(CGump *gump, CGumpHook &hook);
     void InfoGump(const string &gumpIndex);
 };

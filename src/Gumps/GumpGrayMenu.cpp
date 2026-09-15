@@ -5,6 +5,9 @@
 #include "../CrossUO.h"
 #include "../ScreenStages/GameBlockedScreen.h"
 #include "../Network/Packets.h"
+#if defined(XUO_ASSISTANT)
+#include <managers/menumanager.h> // xuoassist::g_MenuManager (menu-choice tap)
+#endif
 
 CGumpGrayMenu::CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_GRAY_MENU, serial, x, y)
@@ -58,6 +61,10 @@ void CGumpGrayMenu::SendMenuResponse(int index)
 {
     //Ответ на меню
     CPacketGrayMenuResponse(this, index).Send();
+#if defined(XUO_ASSISTANT)
+    // (menu round) the gray answer rides the same 0x7D send tap
+    xuoassist::g_MenuManager.OnMenuChoiceSent(Serial, ID, index);
+#endif
 
     //Удаляем использованный гамп
     RemoveMark = true;

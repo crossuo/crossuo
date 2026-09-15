@@ -88,44 +88,22 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
     return true;
 }
 
-bool CPromptManager::OnPacketSend(CDataReader &reader)
+void CPromptManager::OnPromptSent(const string &text, bool cancel)
 {
     if (Exists)
     {
         Exists = false;
 
-        // tabmacros recording (promptmanager handler): parse the response text
-        // the client is about to answer with and record it as the
-        // MT_WAIT_FOR_PROMPT action value
+        // tabmacros recording (promptmanager handler): the answer text is
+        // recorded as the MT_WAIT_FOR_PROMPT action value; the value is the
+        // console text itself (the old buffer parse read the wide string as
+        // big-endian and kept the ascii string's trailing NUL)
         if (g_World != nullptr && g_MacroExecutor.IsRecording())
         {
-            int length = (int)reader.Size - 15;
-            reader.Move(8);
-            uint response = reader.ReadUInt32BE();
-            string text = "";
-
-            if (response != 0u)
-            {
-                if (*reader.Start == 0xC2)
-                {
-                    reader.Move(4);
-                    length = (length - 4) / 2;
-
-                    text = str_from(reader.ReadWString(length));
-                }
-                else
-                {
-                    text = reader.ReadStringChecked(length);
-                }
-            }
-
-            g_MacroExecutor.Record(new CMacroWithStringValue(MT_WAIT_FOR_PROMPT, text));
+            g_MacroExecutor.Record(
+                new CMacroWithStringValue(MT_WAIT_FOR_PROMPT, cancel ? string("") : text));
         }
-
-        return true;
     }
-
-    return false;
 }
 
 void CPromptManager::Send(string text)

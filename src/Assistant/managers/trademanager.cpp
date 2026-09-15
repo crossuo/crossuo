@@ -28,15 +28,12 @@ CTradeManager::~CTradeManager()
     m_List.clear();
 }
 
-bool CTradeManager::OnPacketSend(CDataReader &reader)
+void CTradeManager::OnTradeSent(int action, uint id, bool check)
 {
     if (g_World == nullptr)
     {
-        return true;
+        return;
     }
-
-    int action = reader.ReadUInt8();
-    uint id = reader.ReadUInt32BE();
 
     switch ((TRADE_ACTIONS)action)
     {
@@ -52,7 +49,7 @@ bool CTradeManager::OnPacketSend(CDataReader &reader)
                     // assistant drops only its own trade-window record
                     m_List.erase(m_List.begin() + i);
 
-                    return true;
+                    return;
                 }
             }
 
@@ -66,8 +63,11 @@ bool CTradeManager::OnPacketSend(CDataReader &reader)
             {
                 if (trade.ID1 == id)
                 {
-                    trade.Check1 = (bool)reader.ReadUInt8();
-                    return true;
+                    // the old tap read the high byte of the big-endian check
+                    // field (0 for either check state); the site passes the
+                    // state the client actually wrote
+                    trade.Check1 = check;
+                    return;
                 }
             }
 
@@ -81,8 +81,6 @@ bool CTradeManager::OnPacketSend(CDataReader &reader)
             break;
         }
     }
-
-    return true;
 }
 
 void CTradeManager::OnTradeAction(

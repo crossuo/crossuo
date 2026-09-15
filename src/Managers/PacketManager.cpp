@@ -7296,6 +7296,10 @@ PACKET_HANDLER(CrossMessages)
                     if (gump->GumpType == GT_MENU || gump->GumpType == GT_GRAY_MENU)
                     {
                         CPacketMenuResponse(gump, code).Send();
+#if defined(XUO_ASSISTANT)
+                        // (menu round) was the 0x7D MenuChoice send tap
+                        xuoassist::g_MenuManager.OnMenuChoiceSent(gump->Serial, gump->ID, code);
+#endif
                         g_GumpManager.RemoveGump(gump);
                     }
                     gump = next;
@@ -7311,12 +7315,20 @@ PACKET_HANDLER(CrossMessages)
                 if (gump != nullptr)
                 {
                     CPacketGrayMenuResponse(gump, code).Send();
+#if defined(XUO_ASSISTANT)
+                    // (menu round) the gray answer rides the same 0x7D send tap
+                    xuoassist::g_MenuManager.OnMenuChoiceSent(gump->Serial, gump->ID, code);
+#endif
                     g_GumpManager.RemoveGump(gump);
                 }
             }
             else
             {
                 CPacketMenuResponse(gump, code).Send();
+#if defined(XUO_ASSISTANT)
+                // (menu round) was the 0x7D MenuChoice send tap
+                xuoassist::g_MenuManager.OnMenuChoiceSent(gump->Serial, gump->ID, code);
+#endif
                 g_GumpManager.RemoveGump(gump);
             }
             break;
@@ -7391,7 +7403,9 @@ PACKET_HANDLER(CrossMessages)
             if (gump != nullptr)
             {
                 gump->StateMine = (ReadUInt8() != 0);
-                CPacketTradeResponse(gump, 2).Send();
+                // (trade round) the send (and the trade-record tap) lives in
+                // CGumpSecureTrading::SendTradingResponse
+                gump->SendTradingResponse(2);
             }
             break;
         }
@@ -7401,8 +7415,10 @@ PACKET_HANDLER(CrossMessages)
             auto gump = (CGumpSecureTrading *)g_GumpManager.GetGump(id1, 0, GT_TRADE);
             if (gump != nullptr)
             {
-                gump->RemoveMark = true;
-                CPacketTradeResponse(gump, 1).Send();
+                // (trade round) the send (and the trade-record tap) lives in
+                // CGumpSecureTrading::SendTradingResponse, which also marks
+                // the gump for removal on the close code
+                gump->SendTradingResponse(1);
             }
             break;
         }
