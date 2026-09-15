@@ -557,6 +557,19 @@ void CMacroExecutor::RecordWaitContextMenu(uint serial, ushort menuID)
     Record(new CMacroWithObject(MT_WAIT_FOR_CONTEXT_MENU, serial, menuID, 0));
 }
 
+void CMacroExecutor::RecordSay(const string &text)
+{
+    // were the 0x03 ClientTalkS / 0xAD UnicodeClientTalk send taps
+    // (packetmanager.cpp). Gate is the old handler's verbatim
+    // (g_World != nullptr && IsRecording()) - see the header note.
+    if (g_World == nullptr || !IsRecording())
+    {
+        return;
+    }
+
+    Record(new CMacroWithStringValue(MT_SAY, text));
+}
+
 void CMacroExecutor::RecordToggleGargoyleFlying()
 {
     // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand

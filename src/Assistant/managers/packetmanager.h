@@ -8,13 +8,12 @@
 // or, in later rounds, a direct manager/executor call; no marker remains.
 //
 // The class keeps the original CPacketManager name inside namespace xuoassist
-// (the client's global-namespace CPacketManager is a different class); the
-// PACKET_DIRECTION/CPacketInfo/HANDLER_PACKET pieces collide with the client
-// header's macro, so the handler declaration macro is XA_HANDLER_PACKET here.
+// (the client's global-namespace CPacketManager is a different class).
 
 #pragma once
 
 #include "../core/global.h"
+#include <common/str.h> // astr_t (the speech-intercept entry)
 #include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 
 namespace xuoassist {
@@ -50,8 +49,6 @@ public:
     PACKET_FUNCTION RecvHandler;
 };
 
-#define XA_HANDLER_PACKET(name) bool Handle##name()
-
 class CPacketManager : public CDataReader
 {
 public:
@@ -62,14 +59,6 @@ public:
 
 private:
     static CPacketInfo m_Packets[0x100];
-
-protected:
-    //! Packet handlers
-    XA_HANDLER_PACKET(TargetS);
-    XA_HANDLER_PACKET(ClientTalkS);
-    XA_HANDLER_PACKET(UnicodeClientTalk);
-    XA_HANDLER_PACKET(ClientMessagesS);
-    XA_HANDLER_PACKET(ClientMessagesR);
 
 public:
     CPacketManager();
@@ -92,5 +81,17 @@ extern CPacketManager g_PacketManager;
 // Returns true when the packet was consumed by the assistant.
 bool AssistantPackets_Recv(uint8_t *buf, size_t size);
 void AssistantPackets_Send(uint8_t *buf, size_t size);
+
+// The client's speech send sites (game console tail, MacroManager's say
+// actions, CGame::SendASCIIText): were the 0x03 ClientTalkS / 0xAD
+// UnicodeClientTalk send taps (the two rows differed only in text extraction
+// from the wire - the 0xAD row decoded the encoded-command form to recover
+// the typed text, which the send sites already hold). Runs the command-prefix
+// intercept (returns false - the caller suppresses the send; the old taps
+// returned "consumed" into a void entry point, so prefixed lines both ran
+// the command and went out as raw speech, and the client-site early return
+// restores the interception's purpose), records the say line and applies the
+// font-color override to `color` by reference.
+bool AssistantPackets_SpeechIntercept(astr_t &text, uint16_t &color);
 
 } // namespace xuoassist

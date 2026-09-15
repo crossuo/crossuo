@@ -14,6 +14,10 @@
 #include "GameObjects/GameCharacter.h"
 #include "GameObjects/CustomHouseMultiObject.h"
 #include "Gumps/GumpCustomHouse.h"
+#if defined(XUO_ASSISTANT)
+#include <core/assist.h> // xuoassist::g_TargetHandler (the armed from-target interception)
+#include <core/target.h> // xuoassist::g_Target (target tap recording + cursor state)
+#endif
 
 CTarget g_Target;
 
@@ -214,6 +218,31 @@ void CTarget::SendTarget()
 {
     if (Type != 2)
     {
+#if defined(XUO_ASSISTANT)
+        // was the 0x6C TargetS send tap (assistant packetmanager): with a
+        // from-target hook armed, the raw cursor packet feeds the armed
+        // handler first, then the assistant cursor state resets and any
+        // assistant-requested cursor re-dispatches through RestoreTarget;
+        // the reply was never dropped (the tap's "consumed" result had no
+        // send-side effect), so it still goes out here. Without an armed
+        // hook the reply records (the macro target round + the LastTarget
+        // mirror) - SetSendData parses the wire bytes like the tap did,
+        // covering every SendTargetObject/SendTargetTile/SendCancelTarget/
+        // SendLastTarget producer at this single choke point.
+        if (xuoassist::g_TargetHandler != nullptr)
+        {
+            (xuoassist::g_Assistant.*(xuoassist::g_TargetHandler))(m_Data);
+            xuoassist::g_TargetHandler = nullptr;
+            xuoassist::g_Target.Reset();
+            xuoassist::g_Target.RestoreTarget();
+        }
+        else
+        {
+            CDataReader reader(m_Data, sizeof(m_Data));
+            reader.Move(1); // the tap dispatcher skipped the fixed-size id byte
+            (void)xuoassist::g_Target.SetSendData(reader);
+        }
+#endif
         g_Game.Send(m_Data, sizeof(m_Data));
     }
 

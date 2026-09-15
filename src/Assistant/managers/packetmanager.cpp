@@ -51,29 +51,16 @@ const int PACKET_VARIABLE_SIZE = 0;
     {                                                                                              \
         name, size, DIR_BOTH, nullptr, nullptr                                                     \
     }
-#define RMSGH(name, size, rmethod)                                                                 \
+#define BMSG(name, size)                                                                           \
     {                                                                                              \
-        name, size, DIR_RECV, nullptr, &CPacketManager::Handle##rmethod                            \
+        name, size, DIR_BOTH, nullptr, nullptr                                                     \
     }
-#define SMSGH(name, size, smethod)                                                                 \
-    {                                                                                              \
-        name, size, DIR_SEND, &CPacketManager::Handle##smethod, nullptr                            \
-    }
-#define BMSGH(name, size, smethod, rmethod)                                                        \
-    {                                                                                              \
-        name, size, DIR_BOTH, &CPacketManager::Handle##smethod, &CPacketManager::Handle##rmethod   \
-    }
-#define SMSGHB(name, size, smethod)                                                                \
-    {                                                                                              \
-        name, size, DIR_BOTH, &CPacketManager::Handle##smethod, nullptr                            \
-    }
-
 CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x00*/ SMSG("Create Character", 0x68),
     /*0x01*/ SMSG("Disconnect", 0x05),
     /*0x02*/ SMSG("Walk Request", 0x07),
     /*0x03*/
-    SMSGH("Client Talk", PACKET_VARIABLE_SIZE, ClientTalkS),
+    SMSG("Client Talk", PACKET_VARIABLE_SIZE),
     /*0x04*/ SMSG("Request God mode (God client)", 0x02),
     /*0x05*/ SMSG("Attack", 0x05),
     /*0x06*/ SMSG("Double Click", 0x05),
@@ -181,7 +168,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x69*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x6A*/ UMSG(0x03),
     /*0x6B*/ UMSG(0x09),
-    /*0x6C*/ SMSGHB("Target Data", 0x13, TargetS),
+    /*0x6C*/ SMSG("Target Data", 0x13),
     /*0x6D*/ RMSG("Play Music", 0x03),
     /*0x6E*/ UMSG(0x0e),
     // both halves own no assistant code: the send tap moved to the client's
@@ -260,7 +247,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xAB*/ RMSG("Text Entry Dialog", PACKET_VARIABLE_SIZE),
     /*0xAC*/ SMSG("Text Entry Dialog Reply", PACKET_VARIABLE_SIZE),
     /*0xAD*/
-    SMSGH("Unicode Client Talk", PACKET_VARIABLE_SIZE, UnicodeClientTalk),
+    SMSG("Unicode Client Talk", PACKET_VARIABLE_SIZE),
     /*0xAE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xAF*/ UMSG(0x0d),
     /*0xB0*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -551,122 +538,45 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
     g_PacketManager.PacketSend(buf, size);
 }
 
-#define PACKET_HANDLER(name) bool CPacketManager::Handle##name()
-
 // parse_cliloc_arguments was only used by the fused 0xBF equipment-info
 // half; the client calls g_ClilocManager.ParseArgumentsToClilocString
 // directly in the injected block.
 
-PACKET_HANDLER(TargetS)
+// The fused 0x03 ClientTalkS / 0xAD UnicodeClientTalk send taps (the two
+// handlers differed only in text extraction from the wire; the 0xAD row
+// decoded the encoded-command form - the keyword-code blob preceding the
+// UTF-8 text - to recover the typed text, which the send sites already
+// hold). Called at each client speech send site before the packet build;
+// the packet is then built from the (possibly color-adjusted) values.
+bool AssistantPackets_SpeechIntercept(astr_t &text, uint16_t &color)
 {
-    // The assist/target round (Phase 1c) restores the original interception:
-    if (g_TargetHandler != nullptr)
-    {
-        (g_Assistant.*(g_TargetHandler))(Start);
-        g_TargetHandler = nullptr;
-        g_Target.Reset();
-        g_Target.RestoreTarget();
-        return false;
-    }
-
-    return g_Target.SetSendData(*this);
-}
-
-PACKET_HANDLER(ClientTalkS)
-{
-    Move(1);
-    ushort fontColor = ReadUInt16BE();
-    Move(2);
-
-    string str = ReadStringChecked(0);
-
-    int prefixLen = g_AssistantConfig.IsCommandPrefix(str);
+    // Command prefix: run the assistant command and suppress the send. The
+    // old taps returned "consumed" into a void tap entry, so a prefixed line
+    // both ran the command and went out as raw speech; the client-site early
+    // return restores the interception's purpose.
+    int prefixLen = g_AssistantConfig.IsCommandPrefix(text);
     if (prefixLen != 0)
     {
-        str.erase(0, prefixLen);
-        g_TextCommandManager.DoCommand(str);
+        g_TextCommandManager.DoCommand(text.substr(prefixLen));
         return false;
     }
     // DEVIATION: a leading '-' went to g_UOMapManager.UOAnotifyCmd
     // - the external UOA/UOAM command pipe (Windows WM_USER + atoms); there
     // is no in-process equivalent, the command stays a normal speech line.
-    if (g_World != nullptr && g_MacroExecutor.IsRecording())
-    {
-        g_MacroExecutor.Record(new CMacroWithStringValue(MT_SAY, str));
-    }
+
+    g_MacroExecutor.RecordSay(text);
 
     ushort replaceFontColorValue = 0;
     bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
 
-    if (!replaceFontColor && replaceFontColorValue != fontColor)
+    if (!replaceFontColor && replaceFontColorValue != color)
     {
-        replaceFontColorValue = fontColor;
-        g_AssistantConfig.SetFontColor(false, fontColor);
+        g_AssistantConfig.SetFontColor(false, color);
     }
 
     if (replaceFontColor)
     {
-        pack16(Start + 4, replaceFontColorValue);
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(UnicodeClientTalk)
-{
-    SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
-
-    ushort fontColor = ReadUInt16BE();
-
-    Move(6);
-    string str = "";
-
-    if ((type & ST_ENCODED_COMMAND) != 0)
-    {
-        ushort word = ReadUInt16BE();
-
-        int bits = (word >> 4) * 12 - 4;
-
-        Move(bits / 8);
-
-        if ((bits % 8) != 0)
-        {
-            Move(1);
-        }
-
-        str = ReadStringChecked(0);
-    }
-    else
-    {
-        str = str_from(ReadWString());
-    }
-
-    int prefixLen = g_AssistantConfig.IsCommandPrefix(str);
-    if (prefixLen != 0)
-    {
-        str.erase(0, prefixLen);
-        g_TextCommandManager.DoCommand(str);
-        return false;
-    }
-    // DEVIATION: the '-' UOA command notify (external UOAM command
-    // pipe) - see the ASCII branch above.
-    if (g_World != nullptr && g_MacroExecutor.IsRecording())
-    {
-        g_MacroExecutor.Record(new CMacroWithStringValue(MT_SAY, str));
-    }
-
-    ushort replaceFontColorValue = 0;
-    bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
-
-    if (!replaceFontColor && replaceFontColorValue != fontColor)
-    {
-        replaceFontColorValue = fontColor;
-        g_AssistantConfig.SetFontColor(false, fontColor);
-    }
-
-    if (replaceFontColor)
-    {
-        pack16(Start + 4, replaceFontColorValue);
+        color = replaceFontColorValue;
     }
 
     return true;

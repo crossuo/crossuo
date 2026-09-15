@@ -5507,7 +5507,19 @@ void CGame::AttackReq(uint32_t serial)
 
 void CGame::SendASCIIText(const char *str, SPEECH_TYPE type)
 {
+#if defined(XUO_ASSISTANT)
+    // was the 0x03 ClientTalkS send tap: a prefixed line runs the assistant
+    // command instead of going out as speech
+    astr_t speechText = str;
+    uint16_t speechColor = g_ConfigManager.SpeechColor;
+    if (!xuoassist::AssistantPackets_SpeechIntercept(speechText, speechColor))
+    {
+        return;
+    }
+    CPacketASCIISpeechRequest(str, type, 3, speechColor).Send();
+#else
     CPacketASCIISpeechRequest(str, type, 3, g_ConfigManager.SpeechColor).Send();
+#endif
 }
 
 void CGame::CastSpell(int index)

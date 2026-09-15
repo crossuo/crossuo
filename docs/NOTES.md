@@ -924,12 +924,16 @@ bypass the client action helpers):
 - 0x9F Vendor Sell Reply: `g_ShopAgent.OnSellReplySent` (auto-sell agent;
   the recv-side 0x9E snapshot + auto-sell consume is fused into the client
   SellList handler, B10).
-- 0xAD Unicode Client Talk: command-prefix interception, `MT_SAY`
-  recording, own-speech font-color enforcement (the only send handler that
-  edits wire bytes).
-- 0xB1 Gump Choice: `g_GumpManager.OnPacketSend` (auto-gump agent
+- 0x03 ASCII / 0xAD Unicode speech: fused into the client speech sites
+  (CGame::SendASCIIText, GameConsole, macro speech) via the speech
+  intercept - prefixed commands run and are no longer sent to the wire,
+  MT_SAY records, own-speech font-color applies to the parsed color.
+- 0x6C Target: interception + recording fused into CTarget::SendTarget.
+- 0xB1 Gump Choice: `g_GumpManager.OnGumpChoiceSent` (auto-gump agent
   bookkeeping).
 - 0x91 Second Login: deleted (see below).
+All send handlers are migrated; the send tap and the assistant send
+table no longer exist.
 
 Target-hook interception (the from-target pipeline) is self-contained in
 `CTarget` (core/target.{h,cpp}): arming `g_TargetHandler` opens the cursor,

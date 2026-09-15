@@ -155,6 +155,15 @@ public:
     void RecordContextMenuRequest(uint serial);
     void RecordWaitContextMenu(uint serial, ushort menuID);
 
+    // The client's speech send sites (the game console tail, MacroManager's
+    // MC_SAY/EMOTE/WHISPER/YELL actions, CGame::SendASCIIText): the MT_SAY
+    // observation tap (were the 0x03 ClientTalkS / 0xAD UnicodeClientTalk
+    // send taps, in packetmanager.cpp). The old wire taps gated on
+    // IsRecording() directly - assistant speech reaches the wire through the
+    // console path (unlike the builder-bypassed actions), so the recording
+    // suspension does not apply here.
+    void RecordSay(const string &text);
+
     // The client's gargoyle flying send sites (the CGumpRacialAbility button,
     // and MacroManager's macro action): the MT_TOGGLE_GARGOYLE_FLYING
     // observation tap (was the 0xBF ExtendedCommandS send tap, subcommand

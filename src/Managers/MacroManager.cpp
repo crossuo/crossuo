@@ -30,6 +30,7 @@
 #include "../Walker/PathFinder.h"
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.Record* (macro taps)
+#include <managers/packetmanager.h> // xuoassist::AssistantPackets_SpeechIntercept (speech taps)
 #endif
 #include <algorithm>
 
@@ -843,17 +844,26 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                         break;
                 }
 
+                uint16_t speechColor = g_ConfigManager.SpeechColor;
+#if defined(XUO_ASSISTANT)
+                // were the 0x03 ClientTalkS / 0xAD UnicodeClientTalk send
+                // taps: prefixed macro-say lines run the assistant command
+                // instead of going out as speech
+                astr_t speechText = mos->m_String;
+                if (!xuoassist::AssistantPackets_SpeechIntercept(speechText, speechColor))
+                {
+                    break;
+                }
+#endif
                 if (g_Config.ClientVersion >= CV_500A)
                 {
                     CPacketUnicodeSpeechRequest(
-                        wstr_from(mos->m_String), st, 3, g_ConfigManager.SpeechColor, g_Language)
+                        wstr_from(mos->m_String), st, 3, speechColor, g_Language)
                         .Send();
                 }
                 else
                 {
-                    CPacketASCIISpeechRequest(
-                        mos->m_String.c_str(), st, 3, g_ConfigManager.SpeechColor)
-                        .Send();
+                    CPacketASCIISpeechRequest(mos->m_String.c_str(), st, 3, speechColor).Send();
                 }
             }
 

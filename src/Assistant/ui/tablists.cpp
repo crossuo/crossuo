@@ -56,10 +56,10 @@ bool name_in_use(const vector<CTypeEntry> &items, const char *name, int skip)
 
 // --- Types (tabliststypes.cpp) ------------------------------------------------
 
-// The Phase 3 from-target flow (was on_pb_*FromTarget_clicked in the original list
-// tabs): the button arms g_TargetHandler + RequestTarget; the next outgoing
-// 0x6C (assistant-requested cursor) is dispatched by PACKET_HANDLER(TargetS)
-// and forwarded here through AssistantUIEvents::OnFromTarget. Each tab polls
+// The from-target flow: the button arms g_TargetHandler + RequestTarget; the
+// next outgoing 0x6C (assistant-requested cursor) is intercepted in
+// CTarget::SendTarget and forwarded here through AssistantUIEvents::OnFromTarget.
+// Each tab polls
 // the result slot with its own pending flag so a tab switch mid-request stays
 // correct.
 static void from_target_request(
