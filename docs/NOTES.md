@@ -865,18 +865,18 @@ the client's) has been dissolved into the client's handlers. Batches B1-B4
 fused the recv side: every recv handler is now either fused into the client
 handler, kept whole on the recv tap with a rationale, or deleted as a
 duplicate of client state updates. B5 audited and closed the send side.
-Table composition (`m_Packets` rows carrying handlers): 22 rows —
+Table composition (`m_Packets` rows carrying handlers): 21 rows —
 16 `SMSGH` send handlers, 4 `SMSGHB` rows (0x6C Target, 0x9A ASCII Prompt,
 0xC2 Unicode Prompt, 0xBF Extended Command send half; each send half
 records/intercepts the outgoing round and its recv half is fused into the
-client handler), 1 `BMSGH` row (0xFC) and 1 `RMSGH` recv keep
-(0xB0). 0x56 Map Data, 0x9E Vendor Sell List and 0x7C Open Menu are fused
-into the
-client MapData/SellList/OpenMenu handlers (mapecho gated on the negotiated map-echo
+client handler) and 1 `BMSGH` row (0xFC, the last recv-capable row).
+0x56 Map Data, 0x9E Vendor Sell List, 0x7C Open Menu and 0xB0 Open Gump are
+fused into the
+client MapData/SellList/OpenMenu/OpenGump handlers (mapecho gated on the negotiated map-echo
 bit; the shop agent snapshot + auto-sell consume; the menu agent feed +
-macro/hook consume). The remaining
-recv-side seams are the `RMSGH` keep (0xB0 Open Gump),
-the 0xBF party send half and the 0xFC channel.
+macro/hook consume; the gump agent feed + macro/hook consume). The remaining
+recv-side seams are the
+0xBF party send half and the 0xFC channel.
 0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
 0xF0 Krrios client special are plain `BMSG` rows (both directions are
 client-owned; the host fuses the MegaCliloc event).
@@ -987,15 +987,15 @@ Recv keeps (consume-capable handler rows; the tap dispatches every packet to the
   with no client-side producer; fused into the client MapData handler, the
   journal lines + tracker points fire only when the negotiated map-echo
   feature bit is set).
-- Kept (consume-capable rows): Open Gump feeds its own agent model and a
-  gump hook can consume the packet so the client
-  keeps no gump - a veto an in-handler hook cannot express; 0xBF left the
+- Kept then fused: 0xBF left the
   keeps in B9: the party round was already fused and the remaining
   subcommands injected cleanly (see below); the SellList keep followed in
-  B10 once the auto-sell consume moved in-handler, and the Open Menu keep
-  followed in B11 the same way. The
-  connected-gate exemption list (0x1B/0x55/0xFC) is unaffected: every kept
-  id arrives only with a world.
+  B10 once the auto-sell consume moved in-handler, the Open Menu keep
+  followed in B11 the same way, and the Open Gump keep followed in B12
+  (the in-handler sub-reader feed made the consume expressible). No kept
+  row remains: 0xFC is the only recv-capable assistant row. The
+  connected-gate exemption list (0x1B/0x55/0xFC) is unaffected: every fused
+  feed id arrives only with a world.
 
 B9 (0xBF ExtendedCommand recv half) fuses the last recv-capable non-keep
 row, subcommand by subcommand inside the client's switch:
@@ -1083,6 +1083,39 @@ every packet entry. No `m_AssistantInjecting` gate: no
 rides the 0xFC OCT_SELECT_MENU channel; macro/hook answers send 0x7D,
 whose SMSGH send row stays). Row demoted to `UMSG`.
 
+B12 (0xB0 Open Gump, the last keep besides 0xFC) fuses into the client
+OpenGump handler: the handler feeds the gump agent at the top, pre-parse,
+where both dispatchers enter variable-size rows (Start + 3, the position the
+old recv tap used). Reader contract: the agent's parse walks the whole
+command/text block, so it reads a stack `CDataReader` over the same view
+(`Ptr, End - Ptr`) instead of the shared reader - the 0x6C-style save/restore
+is unnecessary because the client's reader is never handed over; the client
+parse then re-reads serial/id/x/y/commands/text untouched. Record parity:
+`OnPacketReceived` keeps its own `g_World` gate, `RemoveLastGump` detach and
+unconditional `m_Items` push, so every 0xB0 with a world stores a record
+before any consume decision (multiple gumps with the same serial/id
+accumulate; `OnPacketSend` on the kept 0xB1 `SMSGH` row still retires them).
+`g_GumpReceived` is set before the feed (the old tap set it before the agent
+run). Only two consumes, both skipping the entire client gump build (the old
+`return false` skipped the handler's whole downstream: coords cache,
+CGumpGeneric construction, command loop, htmlgumps, text lines,
+`g_EntryPointer`, `g_GumpManager.AddGump`): a playing macro whose
+`PlayWaiting({ MT_WAIT_FOR_GUMP })` fires (the macro replay answers the
+server itself), or the front gump hook when `SendGumpChoice` answers it
+(0xB1 response to the server, 0xFC/OCT_CLOSE_GENERIC_GUMP_WITHOUT_RESPONSE(100) close-gump injection queued via
+SendClient; the response is SendServer-bound so no recv re-entry). A hook
+that does not resolve stays queued and the client gump builds normally.
+Edge parity: 0-command/0-text gumps record empty lists (the wire counts are
+read either way); the bounded reads (`ReadStringChecked`, `ReadWString`) sit
+out at `End` without advancing, and the text loop is wire-count bounded, so a
+truncated gump parses finite. No `m_AssistantInjecting` gate: no
+`CPacket::SendClient` builder produces 0xB0 (compressed 0xDD gumps are
+decompressed and re-dispatched in-process by OpenCompressedGump, a
+server-data path, not an injection; script gumps build client CGumps
+directly and macro/script hook answers call `SendGumpChoice` directly).
+Row demoted to `UMSG`; with 0xFC the assistant table now dispatches recv to
+one row only.
+
 
 The parallel assistant packetmanager was dissolved handler-by-handler into
 the client's handlers:
@@ -1165,8 +1198,8 @@ B7 (death/prompt/profile) completes the BMSGH recv halves:
   half keeps recording/intercepting the outgoing 0x6C replies; the
   assistant's own cursor replies go out through the `CPacketTarget*`
   builders, never through the table). B8 left 0xBF/0xFC as the only
-  `BMSGH` recv halves; 0xBF followed in B9 - the assistant table now
-  dispatches recv to the `RMSGH` keep (0xB0) plus 0xFC only.
+  `BMSGH` recv halves; 0xBF followed in B9, the `RMSGH` keep (0xB0) in B12
+  - the assistant table dispatches recv to 0xFC only.
 
 ## Script API
 

@@ -263,7 +263,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     SMSGH("Unicode Client Talk", PACKET_VARIABLE_SIZE, UnicodeClientTalk),
     /*0xAE*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xAF*/ UMSG(0x0d),
-    /*0xB0*/ RMSGH("Open Gump", PACKET_VARIABLE_SIZE, OpenGump),
+    /*0xB0*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xB1*/ SMSGH("Gump Choice", PACKET_VARIABLE_SIZE, ChoiceGump),
     /*0xB2*/ BMSG("Chat Data", PACKET_VARIABLE_SIZE),
     /*0xB3*/ RMSG("Chat Text ?", PACKET_VARIABLE_SIZE),
@@ -789,21 +789,6 @@ PACKET_HANDLER(DyeDataS)
     }
 
     return true;
-}
-
-PACKET_HANDLER(OpenGump)
-{
-    // KEEP (recv tap routes 0xB0): the gump hooks parse the command/text-line
-    // stream into their own gump model and a playing macro can consume the
-    // packet; the client parse builds only the UI gump.
-    if (g_World == nullptr)
-    {
-        return true;
-    }
-
-    g_GumpReceived = true;
-
-    return g_GumpManager.OnPacketReceived(*this); // (gump round)
 }
 
 PACKET_HANDLER(ChoiceGump)

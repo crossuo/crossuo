@@ -35,6 +35,7 @@
 #include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
 #include <managers/guildmanager.h> // xuoassist::g_GuildManager (guild chat speaker names)
 #include <managers/promptmanager.h> // xuoassist::g_PromptManager (prompt round, macro wait)
+#include <managers/gumpmanager.h> // xuoassist::g_GumpManager (0xB0 gump round)
 #include <managers/contextmenumanager.h> // xuoassist::g_ContextMenuManager (0x14 context-menu round)
 #endif
 #include <external/zlib_amalg.h>
@@ -3305,10 +3306,10 @@ PACKET_HANDLER(ExtendedCommand)
             // the context-menu round: the wait flag for scripts/macros, then
             // the agent parse. A playing macro waiting on this menu
             // (PlayWaiting) or the auto-select entry hook consumes the packet
-            // - the client keeps no popup gump (the old recv-tap veto). No
-            // m_AssistantInjecting gate: no SendClient builder produces 0xBF
-            // with the fused subcommands (8/0x10/0x14); the only injected
-            // subcommand is 0x16 (close paperdoll), which carries no
+            // - the client keeps no popup gump. No m_AssistantInjecting gate:
+            // no SendClient builder produces 0xBF with the fused subcommands
+            // (8/0x10/0x14); the only injected subcommand is 0x16 (close
+            // paperdoll), which carries no
             // assistant logic. The feed-only path restores the reader:
             // the popup parse re-reads the fields from the payload start.
             xuoassist::g_ContextMenuReceived = true;
@@ -5676,6 +5677,25 @@ PACKET_HANDLER(OpenGump)
     {
         return;
     }
+
+#if defined(XUO_ASSISTANT)
+    // the gump round: the agent stores a record for every gump (script
+    // GetGump/InfoGump queries resolve later) and consumes the packet only
+    // when a playing macro answers from its MT_WAIT_FOR_GUMP wait or a gump
+    // hook auto-responds (SendGumpChoice replies to the server and closes
+    // the gump) - the early-return then skips the client gump build below.
+    // The agent's parse walks the whole command/text block, so it reads
+    // through a sub-reader over the same view (variable-size rows are
+    // dispatched at Start + 3, where Ptr still sits at this pre-parse point);
+    // this reader is left untouched for the client parse. No builder
+    // injects 0xB0.
+    xuoassist::g_GumpReceived = true;
+    CDataReader gumpRound(Ptr, size_t(End - Ptr));
+    if (!xuoassist::g_GumpManager.OnPacketReceived(gumpRound))
+    {
+        return;
+    }
+#endif
 
     std::vector<HTMLGumpDataInfo> htmlGumlList;
 

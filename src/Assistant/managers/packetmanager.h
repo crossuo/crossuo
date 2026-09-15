@@ -75,7 +75,6 @@ protected:
     XA_HANDLER_PACKET(ExtendedCommandS);
     XA_HANDLER_PACKET(SecureTradingS);
     XA_HANDLER_PACKET(DyeDataS);
-    XA_HANDLER_PACKET(OpenGump);
     XA_HANDLER_PACKET(ChoiceGump);
     XA_HANDLER_PACKET(Resend);
     XA_HANDLER_PACKET(WalkRequest);
