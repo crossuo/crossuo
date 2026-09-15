@@ -24,6 +24,8 @@
 #include "textparser.h"
 #include "../managers/packetmanager.h"
 #include "../config/assistantconfig.h"
+#include "../macros/macroexecutor.h" // RecordingSuspension (assistant-initiated sends do not self-record)
+#include "CrossUO.h" // ::g_Game (the client send bridge)
 #include <common/str.h>
 #include <common/logging/logging.h>
 #include <stdlib.h>
@@ -342,17 +344,11 @@ void CAssistant::DoubleClick(const uint &serial)
 
 void CAssistant::Attack(const uint &serial)
 {
-    CPacketAttackRequest(serial).SendServer();
+    // assistant-initiated attacks must not record themselves; the client's
+    // CGame::AttackReq is the recording tap
+    RecordingSuspension suspension;
 
-    if (g_World != nullptr)
-    {
-        CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-        if (obj != nullptr && (obj->MaxHits == 0))
-        {
-            CPacketStatusRequest(serial).SendServer();
-        }
-    }
+    g_Game.AttackReq(serial);
 }
 
 uchar CAssistant::GetNotorietyFlags(const string &text)

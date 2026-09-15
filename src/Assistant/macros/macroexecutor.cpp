@@ -257,6 +257,44 @@ void CMacroExecutor::Record(CMacro *macro)
     m_RecordBuffer.push_back(macro);
 }
 
+void CMacroExecutor::RecordAttack(uint serial)
+{
+    // was the 0x05 AttackRequest send tap (packetmanager.cpp): the original's
+    // MCT_LASTATTACK / MCT_LASTTARGET / MCT_ENEMY conversions, in that order.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
+
+    CMacro *macro = nullptr;
+
+    if (obj != nullptr)
+    {
+        macro = new CMacroWithObject(MT_ATTACK, serial, obj->Graphic, obj->Color);
+    }
+    else
+    {
+        macro = new CMacroWithObject(MT_ATTACK, serial, 0, 0);
+    }
+
+    if (serial == g_LastAttackObject)
+    {
+        macro->ConvertType = MCT_LASTATTACK;
+    }
+    else if (serial == g_LastTargetObject)
+    {
+        macro->ConvertType = MCT_LASTTARGET;
+    }
+    else if (serial == CAssistant::TextToSerial("enemy"))
+    {
+        macro->ConvertType = MCT_ENEMY;
+    }
+
+    Record(macro);
+}
+
 bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)
 {
     // TabMacros::PlayWaiting: step back onto the waiting

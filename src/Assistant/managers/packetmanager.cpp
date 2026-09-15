@@ -80,7 +80,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x03*/
     SMSGH("Client Talk", PACKET_VARIABLE_SIZE, ClientTalkS),
     /*0x04*/ SMSG("Request God mode (God client)", 0x02),
-    /*0x05*/ SMSGH("Attack", 0x05, AttackRequest),
+    /*0x05*/ SMSG("Attack", 0x05),
     /*0x06*/ SMSGH("Double Click", 0x05, DoubleClick),
     /*0x07*/ SMSG("Pick Up Item", 0x07),
     /*0x08*/ SMSG("Drop Item", 0x0e),
@@ -1005,46 +1005,6 @@ PACKET_HANDLER(DoubleClick)
     }
 
     g_LastUseObject = serial;
-
-    return true;
-}
-
-PACKET_HANDLER(AttackRequest)
-{
-    // tabmacros recording (AttackRequest): MCT_LASTATTACK / MCT_LASTTARGET
-    // / MCT_ENEMY conversions, in the original's order.
-    if (g_World != nullptr && g_MacroExecutor.IsRecording())
-    {
-        uint serial = ReadUInt32BE();
-
-        CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-        CMacro *macro = nullptr;
-
-        if (obj != nullptr)
-        {
-            macro = new CMacroWithObject(MT_ATTACK, serial, obj->Graphic, obj->Color);
-        }
-        else
-        {
-            macro = new CMacroWithObject(MT_ATTACK, serial, 0, 0);
-        }
-
-        if (serial == g_LastAttackObject)
-        {
-            macro->ConvertType = MCT_LASTATTACK;
-        }
-        else if (serial == g_LastTargetObject)
-        {
-            macro->ConvertType = MCT_LASTTARGET;
-        }
-        else if (serial == CAssistant::TextToSerial("enemy"))
-        {
-            macro->ConvertType = MCT_ENEMY;
-        }
-
-        g_MacroExecutor.Record(macro);
-    }
 
     return true;
 }

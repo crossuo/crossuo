@@ -58,7 +58,6 @@ DEFINE_PACKET(ToClientTargetRequest);
 DEFINE_PACKET(StatusRequest, uint32_t serial);
 DEFINE_PACKET(ClickRequest, uint32_t serial);
 DEFINE_PACKET(DoubleClickRequest, uint32_t serial);
-DEFINE_PACKET(AttackRequest, uint32_t serial);
 DEFINE_PACKET(Weather, const WEATHER_DATA &data);
 DEFINE_PACKET(Season, const SEASON_DATA &data);
 DEFINE_PACKET(HelpRequest);

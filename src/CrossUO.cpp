@@ -9,6 +9,7 @@
 #include "AssistantWindow.h"
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Send (in-client assistant)
 #include <core/global.h> // xuoassist::g_SelectedClientWorldObject (selected-tile feed)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordAttack (macro tap)
 #endif
 
 #include "revision.h"
@@ -5484,6 +5485,9 @@ void CGame::AttackReq(uint32_t serial)
     g_LastAttackObject = serial;
     //CPacketStatusRequest(serial).Send();
     CPacketAttackRequest(serial).Send();
+#if defined(XUO_ASSISTANT)
+    xuoassist::g_MacroExecutor.RecordAttack(serial);
+#endif
 }
 
 void CGame::SendASCIIText(const char *str, SPEECH_TYPE type)

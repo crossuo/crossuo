@@ -14,9 +14,10 @@
 //     macros restart with m_NextMacroTick = now + loopDelay (ProcessMacro
 //     1123-1135), loop delay 0 (checkbox off) stops.
 //   - the recording buffer (on_pb_Record_clicked:337) is fed by the packet
-//     observation taps (packetmanager.cpp WarmodeS/DoubleClick/AttackRequest/
-//     PerformAction/... - the exact conversions of the original sites) and the
-//     target system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
+//     observation taps (packetmanager.cpp WarmodeS/DoubleClick/PerformAction/
+//     ... - the exact conversions of the original sites), the client's send
+//     sites (CGame::AttackReq -> RecordAttack) and the target system taps
+//     (assist/target.cpp:190/:210 -> CAssistantEvents)
 //     while the game sends its target cursors; RecordStop replaces the
 //     selected macro's action list (an empty capture is discarded).
 // Agent-dependent bodies (dress/arm lists use the config dressbag and move
@@ -67,6 +68,11 @@ public:
     void RecordTargetObject(uint serial, ushort graphic, ushort color);
     void RecordTargetTile(ushort graphic, int x, int y, int z);
 
+    // The client's attack send site (CGame::AttackReq): the MT_ATTACK
+    // observation tap (was the 0x05 AttackRequest send tap in
+    // packetmanager.cpp, same conversions in the same order).
+    void RecordAttack(uint serial);
+
     // TabMacros::AddAction(macro, false) recording half:
     // appends an observed action to the open recording; ownership passes to
     // the executor (a stray call while not recording is freed). The packet
@@ -84,6 +90,14 @@ public:
     // TabMacros::Reset: the client-side world teardown
     // (EnterWorld re-entry / disconnect) stops any playback and recording.
     void Reset();
+
+    // Recording suspension: assistant-initiated game actions wrap their client
+    // calls in a RecordingSuspension scope so they do not record themselves.
+    // Depth counted, so scopes nest; every Record* method checks CanRecord()
+    // first and no-ops while suspended (call sites stay a single RAII scope).
+    void SuspendRecording() { ++m_SuspendDepth; }
+    void ResumeRecording() { --m_SuspendDepth; }
+    bool CanRecord() const { return m_Recording && m_SuspendDepth == 0; }
 
 private:
     void ProcessMacro(); // was TabMacros::ProcessMacro
@@ -103,9 +117,20 @@ private:
     vector<uint> m_ArmList;      // MT_SET_ARM / MT_ARM queue (serials)
     vector<uint> m_DressList;    // MT_SET_DRESS / MT_DRESS queue (serials)
     vector<CMacro *> m_RecordBuffer; // the open recording
+    int m_SuspendDepth{ 0 };         // RecordingSuspension scopes in flight
 };
 
 extern CMacroExecutor g_MacroExecutor;
+
+// RAII scope that suppresses recording for its lifetime.
+class RecordingSuspension
+{
+public:
+    RecordingSuspension() { g_MacroExecutor.SuspendRecording(); }
+    ~RecordingSuspension() { g_MacroExecutor.ResumeRecording(); }
+    RecordingSuspension(const RecordingSuspension &) = delete;
+    RecordingSuspension &operator=(const RecordingSuspension &) = delete;
+};
 
 } // namespace xuoassist
 

@@ -239,13 +239,6 @@ CPacketDoubleClickRequest::CPacketDoubleClickRequest(uint32_t serial)
     WriteUInt32BE(serial);
 }
 
-CPacketAttackRequest::CPacketAttackRequest(uint32_t serial)
-    : CPacket(5)
-{
-    WriteUInt8(0x05);
-    WriteUInt32BE(serial);
-}
-
 CPacketWeather::CPacketWeather(const WEATHER_DATA &data)
     : CPacket(4)
 {

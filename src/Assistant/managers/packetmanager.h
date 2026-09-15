@@ -84,7 +84,6 @@ protected:
     XA_HANDLER_PACKET(SellReply);
     XA_HANDLER_PACKET(PerformAction);
     XA_HANDLER_PACKET(DoubleClick);
-    XA_HANDLER_PACKET(AttackRequest);
     XA_HANDLER_PACKET(HelpRequest);
     XA_HANDLER_PACKET(AOSCommandsS);
 
