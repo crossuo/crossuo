@@ -99,6 +99,12 @@ CGump *CGumpManager::GetGump(const uint &serial, const uint &id)
     return nullptr;
 }
 
+void CGumpManager::AddGump(uint serial, int x, int y, uint id)
+{
+    m_LastGump = new CGump(serial, id, x, y);
+    m_Items.push_back(m_LastGump);
+}
+
 void CGumpManager::RemoveLastGump()
 {
     for (size_t i = 0; i < m_Items.size(); i++)
@@ -135,179 +141,138 @@ void CGumpManager::ClearHooks()
     m_Hooks.clear();
 }
 
-bool CGumpManager::OnPacketReceived(CDataReader &reader)
+// dispatches on the lower-cased command word (cmd) but records the full
+// command line (line) so replay/hook responses can parse the numeric fields
+void CGumpManager::SetLastGumpType(const astr_t &cmd, const astr_t &line)
 {
-    RemoveLastGump();
-
-    if (g_World == nullptr)
+    GUMP_ITEM_TYPE type = GIT_INVALID_TYPE;
+    if (cmd == "nodispose")
     {
-        return true;
+        m_LastGump->NoDispose = true;
+        type = GIT_NODISPOSE;
+    }
+    else if (cmd == "nomove")
+    {
+        m_LastGump->NoMove = true;
+        type = GIT_NOMOVE;
+    }
+    else if (cmd == "noclose")
+    {
+        m_LastGump->NoClose = true;
+        type = GIT_NOCLOSE;
+    }
+    else if (cmd == "page")
+    {
+        type = GIT_PAGE;
+    }
+    else if (cmd == "group")
+    {
+        type = GIT_GROUP;
+    }
+    else if (cmd == "endgroup")
+    {
+        type = GIT_GROUP;
+    }
+    else if (cmd == "resizepic")
+    {
+        type = GIT_RESIZEPIC;
+    }
+    else if (cmd == "checkertrans")
+    {
+        type = GIT_CHECKERTRANS;
+    }
+    else if (cmd == "button")
+    {
+        type = GIT_BUTTON;
+    }
+    else if (cmd == "buttontileart")
+    {
+        type = GIT_BUTTONTILEART;
+    }
+    else if (cmd == "checkbox")
+    {
+        type = GIT_CHECKBOX;
+    }
+    else if (cmd == "radio")
+    {
+        type = GIT_RADIO;
+    }
+    else if (cmd == "text")
+    {
+        type = GIT_TEXT;
+    }
+    else if (cmd == "croppedtext")
+    {
+        type = GIT_CROPPEDTEXT;
+    }
+    else if (cmd == "textentry")
+    {
+        type = GIT_TEXTENTRY;
+    }
+    else if (cmd == "textentrylimited")
+    {
+        type = GIT_TEXTENTRYLIMITED;
+    }
+    else if (cmd == "tilepic")
+    {
+        type = GIT_TILEPIC;
+    }
+    else if (cmd == "tilepichue")
+    {
+        type = GIT_TILEPICHUE;
+    }
+    else if (cmd == "gumppic")
+    {
+        type = GIT_GUMPPIC;
+    }
+    else if (cmd == "gumppictiled")
+    {
+        type = GIT_GUMPPICTILED;
+    }
+    else if (cmd == "htmlgump")
+    {
+        type = GIT_HTMLGUMP;
+    }
+    else if (cmd == "xmfhtmlgump")
+    {
+        type = GIT_XMFHTMLGUMP;
+    }
+    else if (cmd == "xmfhtmlgumpcolor")
+    {
+        type = GIT_XMLHTMLGUMPCOLOR;
+    }
+    else if (cmd == "xmfhtmltok")
+    {
+        type = GIT_XMLHTMLTOK;
+    }
+    else if (cmd == "tooltip")
+    {
+        type = GIT_TOOLTIP;
+    }
+    else if (cmd == "mastergump")
+    {
+        type = GIT_MASTERGUMP;
     }
 
-    uint serial = reader.ReadUInt32BE();
-    uint id = reader.ReadUInt32BE();
-    int x = reader.ReadInt32BE();
-    int y = reader.ReadInt32BE();
-
-    m_LastGump = new CGump(serial, id, x, y);
-    m_Items.push_back(m_LastGump);
-
-    ushort commandsLength = reader.ReadUInt16BE();
-    string commands = reader.ReadStringChecked(commandsLength);
-    CTextParser parser(commands, "", "", "{}");
-
-    vector<string> commandList = parser.ReadTokens();
-
-    for (const string &str : commandList)
+    if (type != GIT_INVALID_TYPE)
     {
-        vector<string> list = split_skip_empty(str, ' ');
-
-        if (list.empty())
-        {
-            continue;
-        }
-
-        string cmd = to_lower_copy(list.at(0));
-
-        GUMP_ITEM_TYPE type = GIT_INVALID_TYPE;
-
-        if (cmd == "nodispose")
-        {
-            m_LastGump->NoDispose = true;
-            type = GIT_NODISPOSE;
-        }
-        else if (cmd == "nomove")
-        {
-            m_LastGump->NoMove = true;
-            type = GIT_NOMOVE;
-        }
-        else if (cmd == "noclose")
-        {
-            m_LastGump->NoClose = true;
-            type = GIT_NOCLOSE;
-        }
-        else if (cmd == "page")
-        {
-            type = GIT_PAGE;
-        }
-        else if (cmd == "group")
-        {
-            type = GIT_GROUP;
-        }
-        else if (cmd == "endgroup")
-        {
-            type = GIT_GROUP;
-        }
-        else if (cmd == "resizepic")
-        {
-            type = GIT_RESIZEPIC;
-        }
-        else if (cmd == "checkertrans")
-        {
-            type = GIT_CHECKERTRANS;
-        }
-        else if (cmd == "button")
-        {
-            type = GIT_BUTTON;
-        }
-        else if (cmd == "buttontileart")
-        {
-            type = GIT_BUTTONTILEART;
-        }
-        else if (cmd == "checkbox")
-        {
-            type = GIT_CHECKBOX;
-        }
-        else if (cmd == "radio")
-        {
-            type = GIT_RADIO;
-        }
-        else if (cmd == "text")
-        {
-            type = GIT_TEXT;
-        }
-        else if (cmd == "croppedtext")
-        {
-            type = GIT_CROPPEDTEXT;
-        }
-        else if (cmd == "textentry")
-        {
-            type = GIT_TEXTENTRY;
-        }
-        else if (cmd == "textentrylimited")
-        {
-            type = GIT_TEXTENTRYLIMITED;
-        }
-        else if (cmd == "tilepic")
-        {
-            type = GIT_TILEPIC;
-        }
-        else if (cmd == "tilepichue")
-        {
-            type = GIT_TILEPICHUE;
-        }
-        else if (cmd == "gumppic")
-        {
-            type = GIT_GUMPPIC;
-        }
-        else if (cmd == "gumppictiled")
-        {
-            type = GIT_GUMPPICTILED;
-        }
-        else if (cmd == "htmlgump")
-        {
-            type = GIT_HTMLGUMP;
-        }
-        else if (cmd == "xmfhtmlgump")
-        {
-            type = GIT_XMFHTMLGUMP;
-        }
-        else if (cmd == "xmfhtmlgumpcolor")
-        {
-            type = GIT_XMLHTMLGUMPCOLOR;
-        }
-        else if (cmd == "xmfhtmltok")
-        {
-            type = GIT_XMLHTMLTOK;
-        }
-        else if (cmd == "tooltip")
-        {
-            type = GIT_TOOLTIP;
-        }
-        else if (cmd == "mastergump")
-        {
-            type = GIT_MASTERGUMP;
-        }
-
-        if (type != GIT_INVALID_TYPE)
-        {
-            m_LastGump->m_Items.push_back(CGumpItem(type, str));
-        }
+        m_LastGump->m_Items.push_back(CGumpItem(type, line));
     }
+}
 
-    int textLinesCount = reader.ReadInt16BE();
+void CGumpManager::SetLastGumpText(const wstr_t &text)
+{
+    m_LastGump->m_Text.push_back(str_from(text));
+}
 
-    for (int i = 0; i < textLinesCount; i++)
-    {
-        int linelen = reader.ReadInt16BE();
-        string line = "";
-
-        if (linelen != 0)
-        {
-            line = str_from(reader.ReadWString(linelen, true));
-        }
-
-        m_LastGump->m_Text.push_back(line);
-    }
-
-    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
-    // MT_WAIT_FOR_GUMP })` -> return false: a playing
-    // macro waiting on this gump has its wait satisfied and consumes the
-    // packet (the macro replay answers the server itself).
+bool CGumpManager::Consume()
+{
+    // a playing macro waiting on this gump has its wait satisfied and
+    // consumes the gump (the macro replay answers the server itself).
     if (g_World != nullptr && g_MacroExecutor.IsPlaying() &&
         g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_GUMP }))
     {
-        return false;
+        return true;
     }
 
     if (!m_Hooks.empty())
@@ -315,11 +280,11 @@ bool CGumpManager::OnPacketReceived(CDataReader &reader)
         if (SendGumpChoice(m_LastGump, m_Hooks.front()))
         {
             m_Hooks.erase(m_Hooks.begin());
-            return false;
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 bool CGumpManager::OnPacketSend(CDataReader &reader)

@@ -16,42 +16,31 @@ namespace xuoassist {
 class CGumpManager
 {
 private:
-    CGump *m_LastGump{ nullptr };
-
     vector<CGumpHook> m_Hooks;
-
+    CGump *m_LastGump{ nullptr };
     vector<CGump *> m_Items;
-
-    void RemoveLastGump();
 
 public:
     CGumpManager();
     virtual ~CGumpManager();
 
     int GetGumpCount();
-
     CGump *GetLastGump();
-
     CGump *GetGump(const uint &index);
-
     CGump *GetGump(const uint &serial, const uint &id);
-
     void ClearGumps();
-
     void AddHook(CGumpHook *hook);
-
     void ClearHooks();
-
-    bool OnPacketReceived(CDataReader &reader);
-
+    void AddGump(uint serial, int x, int y, uint id);
+    void SetLastGumpType(const astr_t &cmd, const astr_t &line);
+    void SetLastGumpText(const wstr_t &text);
+    void RemoveLastGump();
+    bool Consume();
     bool OnPacketSend(CDataReader &reader);
-
     bool SendGumpChoice(CGump *gump, CGumpHook &hook);
-
     void InfoGump(const string &gumpIndex);
 };
 
 extern CGumpManager g_GumpManager;
 
 } // namespace xuoassist
-

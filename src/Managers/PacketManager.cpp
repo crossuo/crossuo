@@ -5679,22 +5679,8 @@ PACKET_HANDLER(OpenGump)
     }
 
 #if defined(XUO_ASSISTANT)
-    // the gump round: the agent stores a record for every gump (script
-    // GetGump/InfoGump queries resolve later) and consumes the packet only
-    // when a playing macro answers from its MT_WAIT_FOR_GUMP wait or a gump
-    // hook auto-responds (SendGumpChoice replies to the server and closes
-    // the gump) - the early-return then skips the client gump build below.
-    // The agent's parse walks the whole command/text block, so it reads
-    // through a sub-reader over the same view (variable-size rows are
-    // dispatched at Start + 3, where Ptr still sits at this pre-parse point);
-    // this reader is left untouched for the client parse. No builder
-    // injects 0xB0.
     xuoassist::g_GumpReceived = true;
-    CDataReader gumpRound(Ptr, size_t(End - Ptr));
-    if (!xuoassist::g_GumpManager.OnPacketReceived(gumpRound))
-    {
-        return;
-    }
+    xuoassist::g_GumpManager.RemoveLastGump();
 #endif
 
     std::vector<HTMLGumpDataInfo> htmlGumlList;
@@ -5716,9 +5702,12 @@ PACKET_HANDLER(OpenGump)
     }
 
     CGumpGeneric *gump = new CGumpGeneric(serial, locX, locY, id);
+#if defined(XUO_ASSISTANT)
+    xuoassist::g_GumpManager.AddGump(serial, locX, locY, id);
+#endif
 
     uint16_t commandsLength = ReadUInt16BE();
-    auto commands = ReadString(commandsLength);
+    auto commands = ReadStringChecked(commandsLength);
 
     TextFileParser parser({}, " ", "", "{}");
     TextFileParser cmdParser({}, " ", "", "");
@@ -5745,6 +5734,9 @@ PACKET_HANDLER(OpenGump)
         CBaseGUI *go = nullptr;
         if (cmd == "nodispose")
         {
+#if defined(XUO_ASSISTANT)
+            gump->NoDispose = true;
+#endif
         }
         else if (cmd == "nomove")
         {
@@ -6169,6 +6161,11 @@ PACKET_HANDLER(OpenGump)
                 gump->MasterGump = str_to_int(list[1]);
             }
         }
+
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_GumpManager.SetLastGumpType(cmd, str);
+#endif
+
         if (go != nullptr)
         {
             lastGumpObject = go;
@@ -6189,15 +6186,27 @@ PACKET_HANDLER(OpenGump)
     for (int i = 0; i < textLinesCount; i++)
     {
         const int linelen = ReadInt16BE();
+        wstr_t line;
         if (linelen > 0)
         {
-            gump->AddText(i, ReadWStringBE(linelen));
+            line = ReadWStringBE(linelen);
         }
-        else
-        {
-            gump->AddText(i, {});
-        }
+        gump->AddText(i, line);
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_GumpManager.SetLastGumpText(line);
+#endif
     }
+
+#if defined(XUO_ASSISTANT)
+    if (xuoassist::g_GumpManager.Consume())
+    {
+        // the client gump was only built to feed the assistant record while
+        // parsing; a consumed gump is answered without being shown, so drop it
+        delete gump;
+        return;
+    }
+#endif
+
     if (EntryChanged)
     {
         g_EntryPointer = ChangeEntry;

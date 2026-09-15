@@ -42,6 +42,9 @@ public:
     uint32_t ID = 0;
     int MinimizedX = 0;
     int MinimizedY = 0;
+#if defined(XUO_ASSISTANT)
+    bool NoDispose = false;
+#endif
     bool NoMove = false;
     bool NoClose = false;
     bool Minimized = false;
