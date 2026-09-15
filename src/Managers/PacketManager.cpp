@@ -29,6 +29,7 @@
 #include <core/target.h> // xuoassist::g_Target (WaitTarget hooks, target cursor state)
 #include <core/assist.h> // xuoassist::g_Assistant (status requests)
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
+#include <managers/menumanager.h> // xuoassist::g_MenuManager (0x7C menu round)
 #include <managers/trademanager.h> // xuoassist::g_TradeManager (trade-round record)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (login reset)
 #include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
@@ -5458,43 +5459,72 @@ PACKET_HANDLER(OpenMenu)
         return;
     }
 
+#if defined(XUO_ASSISTANT)
+    // wait-flag for scripts/macros waiting on the menu gump (the old tap set
+    // it before the agent's own world gate)
+    xuoassist::g_MenuReceived = true;
+#endif
+
     uint32_t serial = ReadUInt32BE();
     uint32_t id = ReadUInt16BE();
-
     uint8_t nameLen = ReadUInt8();
-    auto name = ReadString(nameLen);
-
+    const auto menuName = ReadString(nameLen);
     uint8_t count = ReadUInt8();
+    const bool colorMenu = (unpack16(Ptr) != 0u); //menu/gray menu
 
-    if (unpack16(Ptr) != 0u) //menu
+    // the entries are parsed once; the menu gumps below and the menu agent
+    // record both consume the parsed list
+    struct MenuEntry
+    {
+        uint16_t Graphic;
+        uint16_t Color;
+        astr_t Name;
+    };
+    std::vector<MenuEntry> entries;
+
+    for (int i = 0; i < count; i++)
+    {
+        uint16_t graphic = ReadUInt16BE();
+        uint16_t color = ReadUInt16BE();
+        nameLen = ReadUInt8();
+        const auto entryName = ReadString(nameLen);
+        entries.push_back({ graphic, color, entryName });
+    }
+
+#if defined(XUO_ASSISTANT)
+    // send items to the agent, if it consumes we skip the handling on client side
+    std::vector<xuoassist::CMenuItem> menuItems;
+    for (int i = 0; i < count; i++)
+    {
+        menuItems.push_back(
+            xuoassist::CMenuItem(i + 1, entries[i].Graphic, entries[i].Color, entries[i].Name));
+    }
+    if (!xuoassist::g_MenuManager.OnMenuReceived(
+            serial, (uint16_t)id, menuName, !colorMenu, menuItems))
+    {
+        return;
+    }
+#endif
+
+    if (colorMenu) //menu
     {
         CGumpMenu *gump = new CGumpMenu(serial, id, 0, 0);
-
         gump->Add(new CGUIGumppic(0x0910, 0, 0));
-
         gump->Add(new CGUIColoredPolygone(0, 0, 40, 42, 217, 49, 0xFF000001));
 
         CGUIText *text = (CGUIText *)gump->Add(new CGUIText(0x0386, 39, 18));
-        text->CreateTextureA(1, name, 200, TS_LEFT, UOFONT_FIXED);
+        text->CreateTextureA(1, menuName, 200, TS_LEFT, UOFONT_FIXED);
 
         CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)gump->Add(
             new CGUIHTMLGump(CGumpMenu::ID_GM_HTMLGUMP, 0, 40, 42, 217, 49, false, true));
         htmlGump->Initalize(true);
-
         htmlGump->Add(new CGUIShader(&g_ColorizerShader, true));
 
         int posX = 0;
-
         for (int i = 0; i < count; i++)
         {
-            uint16_t graphic = ReadUInt16BE();
-            uint16_t color = ReadUInt16BE();
-
-            nameLen = ReadUInt8();
-            name = ReadString(nameLen);
-
-            CSize size = g_Game.GetStaticArtDimension(graphic);
-
+            const MenuEntry &entry = entries[i];
+            CSize size = g_Game.GetStaticArtDimension(entry.Graphic);
             if ((size.Width != 0) && (size.Height != 0))
             {
                 int posY = size.Height;
@@ -5508,19 +5538,17 @@ PACKET_HANDLER(OpenMenu)
                     posY = ((47 - posY) / 2);
                 }
 
-                htmlGump->Add(new CGUIMenuObject((int)i + 1, graphic, color, posX, posY, name));
+                htmlGump->Add(
+                    new CGUIMenuObject((int)i + 1, entry.Graphic, entry.Color, posX, posY, entry.Name));
 
                 posX += size.Width;
             }
         }
 
         htmlGump->Add(new CGUIShader(&g_ColorizerShader, false));
-
         htmlGump->CalculateDataSize();
-
         gump->m_TextObject = (CGUIText *)gump->Add(new CGUIText(0x0386, 42, 105));
         //gump->m_TextObject->CreateTextureA(1, name, 200, TS_LEFT, UOFONT_FIXED); //На данный момнт создавать нечего
-
         g_GumpManager.AddGump(gump);
     }
     else //gray menu
@@ -5529,32 +5557,23 @@ PACKET_HANDLER(OpenMenu)
         int y = (g_GameWindow.GetSize().Height / 2) - ((121 + (count * 21)) / 2);
 
         CGumpGrayMenu *gump = new CGumpGrayMenu(serial, id, x, y);
-
         CGUIResizepic *background =
             (CGUIResizepic *)gump->Add(new CGUIResizepic(0, 0x13EC, 0, 0, 400, 11111));
-
         CGUIText *text = (CGUIText *)gump->Add(new CGUIText(0x0386, 20, 16));
-        text->CreateTextureA(1, name, 370);
+        text->CreateTextureA(1, menuName, 370);
 
         int offsetY = 35 + text->m_Texture.Height;
         int gumpHeight = 70 + offsetY;
-
         for (int i = 0; i < count; i++)
         {
-            Move(4);
-
-            nameLen = ReadUInt8();
-            name = ReadString(nameLen);
-
+            const auto &entryName = entries[i].Name;
             gump->Add(new CGUIRadio((int)i + 1, 0x138A, 0x138B, 0x138A, 20, offsetY)); //Button
-
             offsetY += 2;
 
             text = (CGUIText *)gump->Add(new CGUIText(0x0386, 50, offsetY));
-            text->CreateTextureA(1, name, 340);
+            text->CreateTextureA(1, entryName, 340);
 
             int addHeight = text->m_Texture.Height;
-
             if (addHeight < 21)
             {
                 addHeight = 21;
@@ -5563,7 +5582,6 @@ PACKET_HANDLER(OpenMenu)
             offsetY += addHeight - 1;
             gumpHeight += addHeight;
         }
-
         offsetY += 5;
 
         gump->Add(new CGUIButton(
@@ -5572,7 +5590,6 @@ PACKET_HANDLER(OpenMenu)
             CGumpGrayMenu::ID_GGM_CONTINUE, 0x13B2, 0x13B2, 0x13B3, 200, offsetY)); //CONTINUE
 
         background->Height = gumpHeight;
-
         g_GumpManager.AddGump(gump);
     }
 }

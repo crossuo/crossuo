@@ -865,15 +865,17 @@ the client's) has been dissolved into the client's handlers. Batches B1-B4
 fused the recv side: every recv handler is now either fused into the client
 handler, kept whole on the recv tap with a rationale, or deleted as a
 duplicate of client state updates. B5 audited and closed the send side.
-Table composition (`m_Packets` rows carrying handlers): 23 rows —
+Table composition (`m_Packets` rows carrying handlers): 22 rows —
 16 `SMSGH` send handlers, 4 `SMSGHB` rows (0x6C Target, 0x9A ASCII Prompt,
 0xC2 Unicode Prompt, 0xBF Extended Command send half; each send half
 records/intercepts the outgoing round and its recv half is fused into the
-client handler), 1 `BMSGH` row (0xFC) and 2 `RMSGH` recv keeps
-(0x7C/0xB0). 0x56 Map Data and 0x9E Vendor Sell List are fused into the
-client MapData/SellList handlers (mapecho gated on the negotiated map-echo
-bit; the shop agent snapshot + auto-sell consume). The remaining
-recv-side seams are the 2 `RMSGH` keeps (0x7C Open Menu, 0xB0 Open Gump),
+client handler), 1 `BMSGH` row (0xFC) and 1 `RMSGH` recv keep
+(0xB0). 0x56 Map Data, 0x9E Vendor Sell List and 0x7C Open Menu are fused
+into the
+client MapData/SellList/OpenMenu handlers (mapecho gated on the negotiated map-echo
+bit; the shop agent snapshot + auto-sell consume; the menu agent feed +
+macro/hook consume). The remaining
+recv-side seams are the `RMSGH` keep (0xB0 Open Gump),
 the 0xBF party send half and the 0xFC channel.
 0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
 0xF0 Krrios client special are plain `BMSG` rows (both directions are
@@ -985,13 +987,13 @@ Recv keeps (consume-capable handler rows; the tap dispatches every packet to the
   with no client-side producer; fused into the client MapData handler, the
   journal lines + tracker points fire only when the negotiated map-echo
   feature bit is set).
-- Kept (consume-capable rows): Open Menu/Open Gump feed their own agent
-  models and a
-  playing macro (or a menu/gump hook) can consume the packet so the client
+- Kept (consume-capable rows): Open Gump feeds its own agent model and a
+  gump hook can consume the packet so the client
   keeps no gump - a veto an in-handler hook cannot express; 0xBF left the
   keeps in B9: the party round was already fused and the remaining
   subcommands injected cleanly (see below); the SellList keep followed in
-  B10 once the auto-sell consume moved in-handler. The
+  B10 once the auto-sell consume moved in-handler, and the Open Menu keep
+  followed in B11 the same way. The
   connected-gate exemption list (0x1B/0x55/0xFC) is unaffected: every kept
   id arrives only with a world.
 
@@ -1051,6 +1053,35 @@ old `return false` (which skipped the whole client handler). The
 precedent). No `m_AssistantInjecting` gate: no `CPacket::SendClient`
 builder produces 0x9E (the queued replay sends 0x9F, whose SMSGH send row
 stays). Row demoted to `UMSG`.
+
+B11 (0x7C Open Menu, the last menu keep) fuses into the client OpenMenu
+handler: the client parses the menu once (serial, id, name, gray/color
+shape, per-entry graphic/color/name - the gray branch's `Move(4)` skipped
+the same 4 bytes the color branch reads, so one entry loop serves both
+shapes) and feeds the menu agent from the parsed values (inline
+`CMenuItem` mapping, the 0x9E style); the reader-based
+`OnPacketReceived(CDataReader&)` became
+`OnMenuReceived(serial, id, name, grayMenu, items)`. Record parity: the
+menu record (`m_LastMenu` + `m_Items`) is stored on every 0x7C with a
+world, exactly as the old tap stored it before deciding; the feed also
+keeps the tap's `RemoveLastMenu` detach and its own `g_World` gate, which
+is why it sits before the client's world early-out. Only the answer
+consumes: a playing macro whose `PlayWaiting({ MT_WAIT_FOR_MENU })` fires
+(it returns true only when the current macro step is the waiting step,
+rewinds and re-runs it) or the front WaitMenu hook when
+`SendChoiceIfMenuExists` answers it (CPacketMenuResponse/
+CPacketGrayMenuResponse to the server, reply 0 for cancel) returns false
+and the early-return skips the menu gump build - the only downstream work
+the handler owns. A macro wait that expires is not an answer: PlayWaiting
+then returns false and the client gump builds normally.
+`g_MenuReceived` is set before the parse (the old tap set it before the
+agent's world gate). Edge parity: 0-item menus record an empty entry list
+and build empty gumps; entries whose art resolves to 0-size are still
+recorded (the color gump just skips drawing them), as the old tap recorded
+every packet entry. No `m_AssistantInjecting` gate: no
+`CPacket::SendClient` builder produces 0x7C (the in-client auto-select
+rides the 0xFC OCT_SELECT_MENU channel; macro/hook answers send 0x7D,
+whose SMSGH send row stays). Row demoted to `UMSG`.
 
 
 The parallel assistant packetmanager was dissolved handler-by-handler into
@@ -1135,7 +1166,7 @@ B7 (death/prompt/profile) completes the BMSGH recv halves:
   assistant's own cursor replies go out through the `CPacketTarget*`
   builders, never through the table). B8 left 0xBF/0xFC as the only
   `BMSGH` recv halves; 0xBF followed in B9 - the assistant table now
-  dispatches recv to the 2 `RMSGH` keeps (0x7C/0xB0) plus 0xFC only.
+  dispatches recv to the `RMSGH` keep (0xB0) plus 0xFC only.
 
 ## Script API
 

@@ -69,7 +69,6 @@ protected:
     XA_HANDLER_PACKET(TargetS);
     XA_HANDLER_PACKET(ClientTalkS);
     XA_HANDLER_PACKET(UnicodeClientTalk);
-    XA_HANDLER_PACKET(OpenMenu);
     XA_HANDLER_PACKET(MenuChoice);
     XA_HANDLER_PACKET(ClientMessagesS);
     XA_HANDLER_PACKET(ClientMessagesR);

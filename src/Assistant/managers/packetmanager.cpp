@@ -203,7 +203,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x79*/ UMSG(0x09),
     /*0x7A*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x7B*/ UMSG(0x02),
-    /*0x7C*/ RMSGH("Open Menu", PACKET_VARIABLE_SIZE, OpenMenu),
+    /*0x7C*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x7D*/ SMSGH("Menu Choice", 0x0d, MenuChoice),
     /*0x7E*/ UMSG(0x02),
     /*0x7F*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -681,17 +681,6 @@ PACKET_HANDLER(UnicodeClientTalk)
     }
 
     return true;
-}
-
-PACKET_HANDLER(OpenMenu)
-{
-    // KEEP (recv tap routes 0x7C): the menu agent parses its own CMenu model
-    // for the auto-answer hooks and a playing macro can consume the packet
-    // (the client then keeps no menu gump); the client parse builds only the
-    // UI gump.
-    g_MenuReceived = true;
-
-    return g_MenuManager.OnPacketReceived(*this); // (menu round)
 }
 
 PACKET_HANDLER(MenuChoice)

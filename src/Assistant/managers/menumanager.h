@@ -56,7 +56,10 @@ public:
 
     void ClearHooks();
 
-    bool OnPacketReceived(CDataReader &reader);
+    // fed from the client's parsed 0x7C values (serial, id, name, gray-menu
+    // flag, the entries); bool = pass-through, parity with the original
+    bool OnMenuReceived(
+        uint serial, ushort id, const string &name, bool grayMenu, const vector<CMenuItem> &items);
 
     bool OnPacketSend(CDataReader &reader);
 

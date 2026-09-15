@@ -102,7 +102,8 @@ void CMenuManager::ClearHooks()
     m_Hooks.clear();
 }
 
-bool CMenuManager::OnPacketReceived(CDataReader &reader)
+bool CMenuManager::OnMenuReceived(
+    uint serial, ushort id, const string &name, bool grayMenu, const vector<CMenuItem> &items)
 {
     RemoveLastMenu();
 
@@ -111,28 +112,12 @@ bool CMenuManager::OnPacketReceived(CDataReader &reader)
         return true;
     }
 
-    uint serial = reader.ReadUInt32BE();
-    ushort id = reader.ReadUInt16BE();
-
-    uchar nameLen = reader.ReadUInt8();
-    string name = reader.ReadStringChecked(nameLen);
-
-    uchar count = reader.ReadUInt8();
-
-    bool grayMenu = (unpack16(reader.Ptr) == 0); //menu/gray menu
-
     m_LastMenu = new CMenu(serial, id, name, grayMenu);
     m_Items.push_back(m_LastMenu);
 
-    for (int i = 0; i < count; i++)
+    for (const CMenuItem &item : items)
     {
-        ushort graphic = reader.ReadUInt16BE();
-        ushort color = reader.ReadUInt16BE();
-
-        nameLen = reader.ReadUInt8();
-        name = reader.ReadStringChecked(nameLen);
-
-        m_LastMenu->m_Items.push_back(CMenuItem(i + 1, graphic, color, name));
+        m_LastMenu->m_Items.push_back(item);
     }
 
     // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
