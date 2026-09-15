@@ -78,7 +78,6 @@ protected:
     XA_HANDLER_PACKET(UnicodePromptS);
     XA_HANDLER_PACKET(BuyReplyS);
     XA_HANDLER_PACKET(SellReply);
-    XA_HANDLER_PACKET(PerformAction);
     XA_HANDLER_PACKET(AOSCommandsS);
 
 public:

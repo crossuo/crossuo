@@ -13,13 +13,13 @@
 //   - m_PlayList holds copies of the macro's actions (Play:931), looped
 //     macros restart with m_NextMacroTick = now + loopDelay (ProcessMacro
 //     1123-1135), loop delay 0 (checkbox off) stops.
-//   - the recording buffer (on_pb_Record_clicked:337) is fed by the packet
-//     observation taps (packetmanager.cpp PerformAction/... - the exact
-//     conversions of the original sites), the client's send sites
-//     (CGame::AttackReq -> RecordAttack, CGame::DoubleClick / PaperdollReq ->
-//     RecordUse, CPathFinder::Walk -> RecordWalk, CGame::ChangeWarmode ->
-//     RecordWarMode, the help gumps -> RecordHelpRequest) and the target
-//     system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
+//   - the recording buffer (on_pb_Record_clicked:337) is fed by the client's
+//     send sites (CGame::AttackReq -> RecordAttack, CGame::DoubleClick /
+//     PaperdollReq -> RecordUse, CPathFinder::Walk -> RecordWalk,
+//     CGame::ChangeWarmode -> RecordWarMode, the help gumps ->
+//     RecordHelpRequest, CGame::UseSkill / CastSpell / CastSpellFromBook ->
+//     RecordUseSkill / RecordCast / RecordCastFromBook / RecordCastNew) and
+//     the target system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
 //     while the game sends its target cursors; RecordStop replaces the
 //     selected macro's action list (an empty capture is discarded).
 // Agent-dependent bodies (dress/arm lists use the config dressbag and move
@@ -98,6 +98,35 @@ public:
     // MT_HELP_MENU_REQUEST observation tap (was the 0x9B HelpRequest send tap
     // in packetmanager.cpp).
     void RecordHelpRequest();
+
+    // The client's skill send sites (CGame::UseSkill, and the client
+    // PacketManager's UseSkillRequest message): the MT_USE_SKILL observation
+    // tap (was the 0x12 Perform Action send tap, type 0x24, in
+    // packetmanager.cpp, same conversions in the same order). MCT_LAST
+    // compares against the previous g_LastSkillIndex BEFORE the update below
+    // it; the update and the title-redraw check ran outside the recording
+    // gate in the old tap and still do.
+    void RecordUseSkill(int index);
+
+    // The client's spell send sites (CGame::CastSpell / CastSpellFromBook,
+    // and the client PacketManager's CastSpellRequest message) below client
+    // 6.0.14.2: the MT_CAST / MT_CAST_FROM_BOOK observation taps (were the
+    // 0x12 Perform Action send taps, types 0x56 / 0x27, in packetmanager.cpp,
+    // same conversions in the same order). MCT_LAST compares against the
+    // previous g_LastSpellIndex BEFORE the update below it; the update and
+    // the title-redraw check ran outside the recording gate in the old tap
+    // and still do.
+    void RecordCast(int index);
+    void RecordCastFromBook(int index);
+
+    // The client's spell send sites from client 6.0.14.2 (the same
+    // CGame::CastSpell / PacketManager CastSpellRequest call sites sending
+    // the 0xBF extended cast instead of 0x12): the MT_CAST_NEW observation
+    // tap (was the 0xBF ExtendedCommandS send tap, subcommand 0x001C, in
+    // packetmanager.cpp, same conversions in the same order - the update of
+    // g_LastSpellIndex happens BEFORE the MCT_LAST comparison here, so the
+    // comparison semantics differ from RecordCast).
+    void RecordCastNew(int index);
 
     // TabMacros::AddAction(macro, false) recording half:
     // appends an observed action to the open recording; ownership passes to

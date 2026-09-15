@@ -32,6 +32,11 @@ public:
 
     void Use(const string &name);
 
+    // the raw-index send (apiscript's numeric Cast/UseSkill form): the
+    // client call site inside a recording suspension so assistant-initiated
+    // uses do not record themselves
+    void UseIndex(int index);
+
     void TargetUse(const string &name, const uint &serial);
 };
 

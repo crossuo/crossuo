@@ -891,24 +891,6 @@ CPacketSelectMenuInClient::CPacketSelectMenuInClient(uint32_t serial, uint32_t i
     WriteInt32BE(code);
 }
 
-CPacketCastSpellRequest::CPacketCastSpellRequest(int32_t id)
-    : CPacket(9)
-{
-    WriteUInt8(0xFC);
-    WriteUInt16BE(0x0009);
-    WriteUInt16BE(OCT_CAST_SPELL_REQUEST);
-    WriteInt32BE(id);
-}
-
-CPacketUseSkillRequest::CPacketUseSkillRequest(int32_t id)
-    : CPacket(9)
-{
-    WriteUInt8(0xFC);
-    WriteUInt16BE(0x0009);
-    WriteUInt16BE(OCT_USE_SKILL_REQUEST);
-    WriteInt32BE(id);
-}
-
 CPacketDrawStatusbar::CPacketDrawStatusbar(uint32_t serial, int32_t x, int32_t y, bool minimized)
     : CPacket(18)
 {

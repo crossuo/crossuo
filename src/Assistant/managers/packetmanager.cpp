@@ -93,7 +93,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x0F*/ UMSG(0x3d),
     /*0x10*/ UMSG(0xd7),
     /*0x11*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x12*/ SMSGH("Perform Action", PACKET_VARIABLE_SIZE, PerformAction),
+    /*0x12*/ SMSG("Perform Action", PACKET_VARIABLE_SIZE),
     /*0x13*/ SMSG("Client Equip Item", 0x0a),
     /*0x14*/ SMSG("Send elevation (God client)", 0x06),
     /*0x15*/ BMSG("Follow", 0x09),
@@ -690,33 +690,6 @@ PACKET_HANDLER(ExtendedCommandS)
             g_MacroExecutor.Record(new CMacro(MT_WRESTLING_DISARM));
         }
     }
-    else if (cmd == 0x001C) // Cast spell
-    {
-        bool lastSpell = g_LastSpellIndex != 0;
-
-        Move(2);
-        g_LastSpellIndex = ReadInt16BE();
-
-        if (static_cast<int>(lastSpell) != g_LastSpellIndex)
-        {
-            g_AssistantEvents->OnTitleRedraw();
-        }
-
-        // tabmacros recording (ExtendedCommandS 0x001C): the MCT_LAST
-        // conversion fires when the new spell index equals the previous
-        // index's "was set" flag - kept verbatim from the original site.
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            CMacro *macro = new CMacroWithIntValue(MT_CAST_NEW, g_LastSpellIndex);
-
-            if (static_cast<int>(lastSpell) == g_LastSpellIndex)
-            {
-                macro->ConvertType = MCT_LAST;
-            }
-
-            g_MacroExecutor.Record(macro);
-        }
-    }
     else if (cmd == 0x0013) // Context menu request
     {
         uint serial = ReadUInt32BE();
@@ -790,78 +763,6 @@ PACKET_HANDLER(SellReply)
 {
     // was: return g_TabAgentsShop->OnPacketSendSellReply();
     g_ShopAgent.OnSellReplySent();
-
-    return true;
-}
-
-PACKET_HANDLER(PerformAction)
-{
-    uchar type = ReadUInt8();
-    string str = ReadStringChecked(Size - /*4*/ 5);
-
-    bool lastSpell = g_LastSpellIndex != 0;
-
-    if (type == 0x24) // Skill
-    {
-        int index = atoi(str.c_str());
-
-        // the conversion compares against the PREVIOUS index (the assignment
-        // below) - tabmacros recording, kept verbatim
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            CMacro *macro = new CMacroWithIntValue(MT_USE_SKILL, index);
-
-            if (index == g_LastSkillIndex)
-            {
-                macro->ConvertType = MCT_LAST;
-            }
-
-            g_MacroExecutor.Record(macro);
-        }
-
-        g_LastSkillIndex = index;
-    }
-    else if (type == 0x56) // Spell
-    {
-        int index = atoi(str.c_str());
-
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            CMacro *macro = new CMacroWithIntValue(MT_CAST, index);
-
-            if (index == g_LastSpellIndex)
-            {
-                macro->ConvertType = MCT_LAST;
-            }
-
-            g_MacroExecutor.Record(macro);
-        }
-
-        g_LastSpellIndex = index;
-    }
-    else if (type == 0x27) // Spell from book
-    {
-        int index = atoi(str.c_str());
-
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            CMacro *macro = new CMacroWithIntValue(MT_CAST_FROM_BOOK, index);
-
-            if (index == g_LastSpellIndex)
-            {
-                macro->ConvertType = MCT_LAST;
-            }
-
-            g_MacroExecutor.Record(macro);
-        }
-
-        g_LastSpellIndex = index;
-    }
-
-    if (static_cast<int>(lastSpell) != g_LastSpellIndex)
-    {
-        g_AssistantEvents->OnTitleRedraw();
-    }
 
     return true;
 }

@@ -193,12 +193,14 @@ CSkillManager::~CSkillManager() {}
 CSkillManager g_SkillManager;
 int CSkillManager::GetIndex(const string &) { return -1; }
 void CSkillManager::Use(const string &) {}
+void CSkillManager::UseIndex(int) {}
 void CSkillManager::TargetUse(const string &, const uint &) {}
 
 CSpellManager::CSpellManager() {}
 CSpellManager::~CSpellManager() {}
 CSpellManager g_SpellManager;
 void CSpellManager::Cast(const string &) {}
+void CSpellManager::CastIndex(int) {}
 void CSpellManager::TargetCast(const string &, const uint &) {}
 
 CTextCommandManager::CTextCommandManager() {}

@@ -7326,8 +7326,9 @@ PACKET_HANDLER(CrossMessages)
             int id = ReadUInt32BE();
             if (id >= 0)
             {
-                g_LastSpellIndex = id;
-                CPacketCastSpell(id).Send();
+                // the send (and, with the assistant, the macro tap) lives in
+                // CGame::CastSpell
+                g_Game.CastSpell(id);
             }
             break;
         }
@@ -7336,8 +7337,9 @@ PACKET_HANDLER(CrossMessages)
             int id = ReadUInt32BE();
             if (id >= 0)
             {
-                g_LastSkillIndex = id;
-                CPacketUseSkill(id).Send();
+                // the send (and, with the assistant, the macro tap) lives in
+                // CGame::UseSkill
+                g_Game.UseSkill(id);
             }
             break;
         }

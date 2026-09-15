@@ -5,7 +5,9 @@
 
 #include "skillmanager.h"
 #include "../core/assist.h"
-#include "../core/packets.h"
+#include "../core/packets.h" // CPacketTargetUseSkill (the targeted 0xBF builder)
+#include "../macros/macroexecutor.h" // RecordingSuspension (assistant-originated uses do not record)
+#include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Managers/SkillsManager.h" // ::g_SkillsManager
 
 namespace xuoassist {
@@ -58,12 +60,22 @@ void CSkillManager::Use(const string &name)
 
     if (index != -1)
     {
-        CPacketUseSkillRequest(index).SendClient();
+        UseIndex(index);
     }
     else
     {
         g_Assistant.ClientPrint("Skill '" + name + "' is not found.");
     }
+}
+
+void CSkillManager::UseIndex(int index)
+{
+    // assistant-initiated skill uses must not record themselves; the client's
+    // CGame::UseSkill is the recording tap (was: the 0xFC UseSkillRequest
+    // injection, whose client handler performed the same send)
+    RecordingSuspension suspension;
+
+    g_Game.UseSkill(index);
 }
 
 void CSkillManager::TargetUse(const string &name, const uint &serial)
@@ -72,6 +84,11 @@ void CSkillManager::TargetUse(const string &name, const uint &serial)
 
     if (index != -1)
     {
+        // the targeted 0xBF 0x002E send has no client call site (the client's
+        // builders target spellbooks, not objects) - the builder stays, and
+        // the direct wire send is wrapped like the client-call paths above
+        RecordingSuspension suspension;
+
         CPacketTargetUseSkill(index + 1, serial).SendServer();
     }
     else

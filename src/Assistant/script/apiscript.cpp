@@ -792,7 +792,7 @@ JSValue jsn_cast(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     else if (JS_IsNumber(argv[0]))
     {
         auto *command = sc_make(SC_CAST);
-        command->IntA = arg_int(ctx, argv, argc, 0, 0); // CPacketCastSpellRequest path
+        command->IntA = arg_int(ctx, argv, argc, 0, 0); // raw-index path (CSpellManager::CastIndex)
         ScriptQueue_Exec(command);
         delete command;
     }
@@ -805,7 +805,7 @@ JSValue jsn_cast(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 }
 
 // [Q] UseSkill(nameOrIndex[, targetSerial]) - HCOMMAND(useskill) /
-// CSkillManager::TargetUse; the numeric form sends CPacketUseSkill directly.
+// CSkillManager::TargetUse; the numeric form sends the raw skill index.
 JSValue jsn_useskill(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     const string target = arg_text(ctx, argv, argc, 1, "");
@@ -3972,9 +3972,9 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     g_SpellManager.TargetCast(int_to_text(command->IntA), serial);
                 }
             }
-            else if (command->TextA.empty()) // numeric: direct packet
+            else if (command->TextA.empty()) // numeric: raw index
             {
-                CPacketCastSpellRequest(command->IntA).SendClient();
+                g_SpellManager.CastIndex(command->IntA);
             }
             else
             {
@@ -4006,7 +4006,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             else
             {
-                CPacketUseSkillRequest(command->IntA).SendClient();
+                g_SkillManager.UseIndex(command->IntA);
             }
             break;
         }

@@ -16,6 +16,7 @@
 
 #include "../config/assistantconfig.h"
 #include "../core/assist.h"
+#include "../core/assistantevents.h" // g_AssistantEvents->OnTitleRedraw (the old send taps fired it)
 #include "../core/global.h"
 #include "../core/packets.h"
 #include "../core/target.h"
@@ -375,6 +376,114 @@ void CMacroExecutor::RecordHelpRequest()
     }
 
     Record(new CMacro(MT_HELP_MENU_REQUEST));
+}
+
+void CMacroExecutor::RecordUseSkill(int index)
+{
+    // was the 0x12 Perform Action send tap (packetmanager.cpp), type 0x24:
+    // the MCT_LAST conversion compares against the previous index (the
+    // assignment below), and the skill branch shares the spell redraw check.
+    bool lastSpell = g_LastSpellIndex != 0;
+
+    if (g_World != nullptr && CanRecord())
+    {
+        CMacro *macro = new CMacroWithIntValue(MT_USE_SKILL, index);
+
+        if (index == g_LastSkillIndex)
+        {
+            macro->ConvertType = MCT_LAST;
+        }
+
+        Record(macro);
+    }
+
+    g_LastSkillIndex = index;
+
+    if (static_cast<int>(lastSpell) != g_LastSpellIndex)
+    {
+        g_AssistantEvents->OnTitleRedraw();
+    }
+}
+
+void CMacroExecutor::RecordCast(int index)
+{
+    // was the 0x12 Perform Action send tap (packetmanager.cpp), type 0x56:
+    // the MCT_LAST conversion compares against the previous index (the
+    // assignment below).
+    bool lastSpell = g_LastSpellIndex != 0;
+
+    if (g_World != nullptr && CanRecord())
+    {
+        CMacro *macro = new CMacroWithIntValue(MT_CAST, index);
+
+        if (index == g_LastSpellIndex)
+        {
+            macro->ConvertType = MCT_LAST;
+        }
+
+        Record(macro);
+    }
+
+    g_LastSpellIndex = index;
+
+    if (static_cast<int>(lastSpell) != g_LastSpellIndex)
+    {
+        g_AssistantEvents->OnTitleRedraw();
+    }
+}
+
+void CMacroExecutor::RecordCastFromBook(int index)
+{
+    // was the 0x12 Perform Action send tap (packetmanager.cpp), type 0x27:
+    // the MCT_LAST conversion compares against the previous index (the
+    // assignment below).
+    bool lastSpell = g_LastSpellIndex != 0;
+
+    if (g_World != nullptr && CanRecord())
+    {
+        CMacro *macro = new CMacroWithIntValue(MT_CAST_FROM_BOOK, index);
+
+        if (index == g_LastSpellIndex)
+        {
+            macro->ConvertType = MCT_LAST;
+        }
+
+        Record(macro);
+    }
+
+    g_LastSpellIndex = index;
+
+    if (static_cast<int>(lastSpell) != g_LastSpellIndex)
+    {
+        g_AssistantEvents->OnTitleRedraw();
+    }
+}
+
+void CMacroExecutor::RecordCastNew(int index)
+{
+    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
+    // 0x001C: the index is stored BEFORE the MCT_LAST comparison, which
+    // compares the new index against the previous index's "was set" flag.
+    bool lastSpell = g_LastSpellIndex != 0;
+
+    g_LastSpellIndex = index;
+
+    if (static_cast<int>(lastSpell) != g_LastSpellIndex)
+    {
+        g_AssistantEvents->OnTitleRedraw();
+    }
+
+    if (g_World != nullptr && CanRecord())
+    {
+        CMacro *macro = new CMacroWithIntValue(MT_CAST_NEW, index);
+
+        if (static_cast<int>(lastSpell) == g_LastSpellIndex)
+        {
+            macro->ConvertType = MCT_LAST;
+        }
+
+        Record(macro);
+    }
 }
 
 bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)

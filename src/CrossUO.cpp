@@ -5512,6 +5512,19 @@ void CGame::CastSpell(int index)
     {
         g_LastSpellIndex = index;
         CPacketCastSpell(index).Send();
+#if defined(XUO_ASSISTANT)
+        // below 6.0.14.2 the cast rides 0x12 (MT_CAST), from 6.0.14.2 it
+        // rides the 0xBF extended cast (MT_CAST_NEW) - the two recorded with
+        // different MCT_LAST comparison orders
+        if (g_Config.ProtocolClientVersion >= CV_60142)
+        {
+            xuoassist::g_MacroExecutor.RecordCastNew(index);
+        }
+        else
+        {
+            xuoassist::g_MacroExecutor.RecordCast(index);
+        }
+#endif
     }
 }
 
@@ -5521,6 +5534,9 @@ void CGame::CastSpellFromBook(int index, uint32_t serial)
     {
         g_LastSpellIndex = index;
         CPacketCastSpellFromBook(index, serial).Send();
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_MacroExecutor.RecordCastFromBook(index);
+#endif
     }
 }
 
@@ -5530,6 +5546,9 @@ void CGame::UseSkill(int index)
     {
         g_LastSkillIndex = index;
         CPacketUseSkill(index).Send();
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_MacroExecutor.RecordUseSkill(index);
+#endif
     }
 }
 
