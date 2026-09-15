@@ -28,6 +28,9 @@
 #include "../Gumps/GumpSpellbook.h"
 #include "../Network/Packets.h"
 #include "../Walker/PathFinder.h"
+#if defined(XUO_ASSISTANT)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.Record* (macro taps)
+#endif
 #include <algorithm>
 
 CMacroManager g_MacroManager;
@@ -561,11 +564,17 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_GUILD:
                 {
                     CPacketGuildMenuRequest().Send();
+#if defined(XUO_ASSISTANT)
+                    xuoassist::g_MacroExecutor.RecordGuildMenuRequest();
+#endif
                     break;
                 }
                 case MSC_G2_QUEST_LOG:
                 {
                     CPacketQuestMenuRequest().Send();
+#if defined(XUO_ASSISTANT)
+                    xuoassist::g_MacroExecutor.RecordQuestMenuRequest();
+#endif
                     break;
                 }
                 case MSC_G2_PARTY_CHAT:
@@ -1434,6 +1443,9 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             if (g_Player->Race == RT_GARGOYLE)
             {
                 CPacketToggleGargoyleFlying().Send();
+#if defined(XUO_ASSISTANT)
+                xuoassist::g_MacroExecutor.RecordToggleGargoyleFlying();
+#endif
             }
             break;
         }

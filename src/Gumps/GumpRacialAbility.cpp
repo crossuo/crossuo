@@ -6,6 +6,9 @@
 #include "../Managers/ClilocManager.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
+#if defined(XUO_ASSISTANT)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordToggleGargoyleFlying (macro tap)
+#endif
 
 CGumpRacialAbility::CGumpRacialAbility(int serial, int x, int y)
     : CGump(GT_RACIAL_ABILITY, serial, x, y)
@@ -41,6 +44,9 @@ void CGumpRacialAbility::OnAbilityUse(uint16_t index)
             if (g_Player->Race == RT_GARGOYLE)
             {
                 CPacketToggleGargoyleFlying().Send();
+#if defined(XUO_ASSISTANT)
+                xuoassist::g_MacroExecutor.RecordToggleGargoyleFlying();
+#endif
             }
 
             break;

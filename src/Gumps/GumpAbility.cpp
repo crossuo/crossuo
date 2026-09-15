@@ -7,6 +7,9 @@
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
 #include "../Globals.h" // g_Ability
+#if defined(XUO_ASSISTANT)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordCombatAbility (macro tap)
+#endif
 
 CGumpAbility::CGumpAbility(int serial, int x, int y)
     : CGump(GT_ABILITY, serial, x, y)
@@ -70,10 +73,16 @@ void CGumpAbility::OnAbilityUse(int index)
         }
 
         CPacketUseCombatAbility(ability).Send();
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_MacroExecutor.RecordCombatAbility(ability);
+#endif
     }
     else
     {
         CPacketUseCombatAbility(0).Send();
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_MacroExecutor.RecordCombatAbility(0);
+#endif
     }
 
     ability ^= 0x80;

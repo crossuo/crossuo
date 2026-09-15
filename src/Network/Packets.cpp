@@ -1468,22 +1468,6 @@ CPacketCustomHouseDataReq::CPacketCustomHouseDataReq(int serial)
     WriteUInt32BE(serial);
 }
 
-CPacketStunReq::CPacketStunReq()
-    : CPacket(5)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x05);
-    WriteUInt16BE(0x09);
-}
-
-CPacketDisarmReq::CPacketDisarmReq()
-    : CPacket(5)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x05);
-    WriteUInt16BE(0x0A);
-}
-
 CPacketResend::CPacketResend()
     : CPacket(3)
 {

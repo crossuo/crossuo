@@ -9,6 +9,9 @@
 #include "../Managers/IntlocManager.h"
 #include "../Network/Packets.h"
 #include "../Globals.h" // g_Language, CONTEXT_MENU_FONT
+#if defined(XUO_ASSISTANT)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordWaitContextMenu (macro tap)
+#endif
 
 struct CPopupMenuItemInfo
 {
@@ -257,6 +260,10 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
     else
     {
         CPacketPopupMenuSelection(Serial, serial - 1).Send();
+#if defined(XUO_ASSISTANT)
+        // the menu id rides the graphic field, like the original CMacroWithObject
+        xuoassist::g_MacroExecutor.RecordWaitContextMenu(Serial, serial - 1);
+#endif
 
         RemoveMark = true;
     }

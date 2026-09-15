@@ -280,11 +280,13 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xBD*/ BMSG("Client Version", PACKET_VARIABLE_SIZE),
     /*0xBE*/ BMSG("Assist Version", PACKET_VARIABLE_SIZE),
     /*0xBF*/
-    // recv half fused into the client's ExtendedCommand handler (facet map,
-    // equipment-info journal, context-menu round; 0x18 is a no-op) - the
-    // server sends 0xBF constantly (party chat), so the row stays DIR_BOTH
-    // with no recv handler instead of a warning-per-packet DIR_SEND
-    SMSGHB("Extended Command", PACKET_VARIABLE_SIZE, ExtendedCommandS),
+    // both halves left the table: the recv half is fused into the client's
+    // ExtendedCommand handler (facet map, equipment-info journal,
+    // context-menu round; 0x18 is a no-op) and the send subcommands are
+    // recorded at their client call sites - the server sends 0xBF constantly
+    // (party chat), so the row stays DIR_BOTH instead of a
+    // warning-per-packet DIR_SEND
+    BMSG("Extended Command", PACKET_VARIABLE_SIZE),
     /*0xC0*/ UMSG(0x24),
     /*0xC1*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xC2*/ BMSG("Unicode prompt", PACKET_VARIABLE_SIZE),
@@ -309,7 +311,9 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xD5*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xD6*/ BMSG("Mega cliloc", PACKET_VARIABLE_SIZE),
     /*0xD7*/
-    SMSGH("+AoS command", PACKET_VARIABLE_SIZE, AOSCommandsS),
+    // the 0xD7 send tap moved to the client's call sites (combat ability,
+    // guild/quest menu requests)
+    UMSG(PACKET_VARIABLE_SIZE),
     /*0xD8*/ RMSG("+Custom house", PACKET_VARIABLE_SIZE),
     /*0xD9*/ SMSG("+Metrics", 0x10c),
     /*0xDA*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -664,104 +668,6 @@ PACKET_HANDLER(UnicodeClientTalk)
     {
         pack16(Start + 4, replaceFontColorValue);
     }
-
-    return true;
-}
-
-PACKET_HANDLER(ExtendedCommandS)
-{
-    ushort cmd = ReadUInt16BE();
-
-    if (cmd == 0x0009) // Wrestling stun ability
-    {
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            g_MacroExecutor.Record(new CMacro(MT_WRESTLING_STUN));
-        }
-    }
-    else if (cmd == 0x000A) // Wrestling disarm ability
-    {
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            g_MacroExecutor.Record(new CMacro(MT_WRESTLING_DISARM));
-        }
-    }
-    else if (cmd == 0x0013) // Context menu request
-    {
-        uint serial = ReadUInt32BE();
-
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            g_MacroExecutor.Record(new CMacroWithObject(MT_REQUEST_CONTEXT_MENU, serial, 0, 0));
-        }
-    }
-    else if (cmd == 0x0015) // Context menu selection
-    {
-        uint serial = ReadUInt32BE();
-        ushort menuID = ReadUInt16BE();
-
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            // the menu id rides the graphic field, like the original CMacroWithObject
-            g_MacroExecutor.Record(new CMacroWithObject(MT_WAIT_FOR_CONTEXT_MENU, serial, menuID, 0));
-        }
-    }
-    else if (cmd == 0x0032) // Toggle gargoyle flying
-    {
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            g_MacroExecutor.Record(new CMacro(MT_TOGGLE_GARGOYLE_FLYING));
-        }
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(AOSCommandsS)
-{
-    uint serial = ReadUInt32BE();
-    ushort cmd = ReadUInt16BE();
-
-    if (cmd == 0x0019) // Combat ability
-    {
-        // the ability byte is read only while recording (the original read
-        // nothing outside the gate - the send packet is a copy here, so the
-        // position is the assistant's own cursor)
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            Move(4);
-            uchar ability = ReadUInt8();
-
-            CMacro *macro = new CMacro(MT_COMBAT_ABILITY);
-
-            if (g_Ability[0] == ability)
-            {
-                macro->ConvertType = MCT_PRIMARY;
-            }
-            else
-            {
-                macro->ConvertType = MCT_SECONDARY;
-            }
-
-            g_MacroExecutor.Record(macro);
-        }
-    }
-    else if (cmd == 0x0028) // Guild
-    {
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            g_MacroExecutor.Record(new CMacro(MT_GUILD_MENU_REQUEST));
-        }
-    }
-    else if (cmd == 0x0032) // Quests
-    {
-        if (g_World != nullptr && g_MacroExecutor.IsRecording())
-        {
-            g_MacroExecutor.Record(new CMacro(MT_QUEST_MENU_REQUEST));
-        }
-    }
-
-    (void)serial;
 
     return true;
 }

@@ -949,6 +949,9 @@ void CGame::ProcessDelayedClicks()
                 if (g_PopupEnabled && (!g_ConfigManager.HoldShiftForContextMenus || g_ShiftPressed))
                 {
                     CPacketRequestPopupMenu(serial).Send();
+#if defined(XUO_ASSISTANT)
+                    xuoassist::g_MacroExecutor.RecordContextMenuRequest(serial);
+#endif
                 }
             }
         }

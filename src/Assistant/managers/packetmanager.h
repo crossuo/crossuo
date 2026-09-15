@@ -70,8 +70,6 @@ protected:
     XA_HANDLER_PACKET(UnicodeClientTalk);
     XA_HANDLER_PACKET(ClientMessagesS);
     XA_HANDLER_PACKET(ClientMessagesR);
-    XA_HANDLER_PACKET(ExtendedCommandS);
-    XA_HANDLER_PACKET(AOSCommandsS);
 
 public:
     CPacketManager();

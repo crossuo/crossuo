@@ -503,18 +503,6 @@ public:
     CPacketCustomHouseDataReq(int serial);
 };
 
-class CPacketStunReq : public CPacket
-{
-public:
-    CPacketStunReq();
-};
-
-class CPacketDisarmReq : public CPacket
-{
-public:
-    CPacketDisarmReq();
-};
-
 class CPacketResend : public CPacket
 {
 public:

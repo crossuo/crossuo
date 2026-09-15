@@ -18,7 +18,13 @@
 //     PaperdollReq -> RecordUse, CPathFinder::Walk -> RecordWalk,
 //     CGame::ChangeWarmode -> RecordWarMode, the help gumps ->
 //     RecordHelpRequest, CGame::UseSkill / CastSpell / CastSpellFromBook ->
-//     RecordUseSkill / RecordCast / RecordCastFromBook / RecordCastNew) and
+//     RecordUseSkill / RecordCast / RecordCastFromBook / RecordCastNew,
+//     CGumpAbility::OnAbilityUse -> RecordCombatAbility, the guild/quest
+//     buttons and gump-menu macro actions -> RecordGuildMenuRequest /
+//     RecordQuestMenuRequest, CGame::ProcessDelayedClicks /
+//     CGumpPopupMenu -> RecordContextMenuRequest / RecordWaitContextMenu,
+//     the gargoyle flying button and macro action ->
+//     RecordToggleGargoyleFlying) and
 //     the target system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
 //     while the game sends its target cursors; RecordStop replaces the
 //     selected macro's action list (an empty capture is discarded).
@@ -127,6 +133,33 @@ public:
     // g_LastSpellIndex happens BEFORE the MCT_LAST comparison here, so the
     // comparison semantics differ from RecordCast).
     void RecordCastNew(int index);
+
+    // The client's combat ability send site (CGumpAbility::OnAbilityUse): the
+    // MT_COMBAT_ABILITY observation tap (was the 0xD7 AOSCommandsS send tap,
+    // subcommand 0x0019, in packetmanager.cpp, same conversion - the byte is
+    // compared against g_Ability[0] for the MCT_PRIMARY / MCT_SECONDARY pick).
+    void RecordCombatAbility(uint8_t ability);
+
+    // The client's guild/quest menu send sites (the CGumpPaperdoll buttons,
+    // and MacroManager's gump-menu macro actions): the MT_GUILD_MENU_REQUEST
+    // / MT_QUEST_MENU_REQUEST observation taps (were the 0xD7 AOSCommandsS
+    // send tap, subcommands 0x0028 / 0x0032, in packetmanager.cpp).
+    void RecordGuildMenuRequest();
+    void RecordQuestMenuRequest();
+
+    // The client's context menu send sites (CGame::ProcessDelayedClicks, and
+    // the CGumpPopupMenu selection): the MT_REQUEST_CONTEXT_MENU /
+    // MT_WAIT_FOR_CONTEXT_MENU observation taps (were the 0xBF
+    // ExtendedCommandS send tap, subcommands 0x0013 / 0x0015, in
+    // packetmanager.cpp; the menu id rides the graphic field).
+    void RecordContextMenuRequest(uint serial);
+    void RecordWaitContextMenu(uint serial, ushort menuID);
+
+    // The client's gargoyle flying send sites (the CGumpRacialAbility button,
+    // and MacroManager's macro action): the MT_TOGGLE_GARGOYLE_FLYING
+    // observation tap (was the 0xBF ExtendedCommandS send tap, subcommand
+    // 0x0032, in packetmanager.cpp).
+    void RecordToggleGargoyleFlying();
 
     // TabMacros::AddAction(macro, false) recording half:
     // appends an observed action to the open recording; ownership passes to

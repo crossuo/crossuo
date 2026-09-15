@@ -843,6 +843,9 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
             if (g_Config.ClientVersion >= CV_500A)
             {
                 CPacketQuestMenuRequest().Send();
+#if defined(XUO_ASSISTANT)
+                xuoassist::g_MacroExecutor.RecordQuestMenuRequest();
+#endif
             }
             else
             {
@@ -860,6 +863,9 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
             if (g_Config.ClientVersion >= CV_500A)
             {
                 CPacketGuildMenuRequest().Send();
+#if defined(XUO_ASSISTANT)
+                xuoassist::g_MacroExecutor.RecordGuildMenuRequest();
+#endif
             }
             else
             {

@@ -486,6 +486,89 @@ void CMacroExecutor::RecordCastNew(int index)
     }
 }
 
+void CMacroExecutor::RecordCombatAbility(uint8_t ability)
+{
+    // was the 0xD7 AOSCommandsS send tap (packetmanager.cpp), subcommand
+    // 0x0019: the ability byte is compared against g_Ability[0] for the
+    // primary/secondary conversion.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    CMacro *macro = new CMacro(MT_COMBAT_ABILITY);
+
+    if (g_Ability[0] == ability)
+    {
+        macro->ConvertType = MCT_PRIMARY;
+    }
+    else
+    {
+        macro->ConvertType = MCT_SECONDARY;
+    }
+
+    Record(macro);
+}
+
+void CMacroExecutor::RecordGuildMenuRequest()
+{
+    // was the 0xD7 AOSCommandsS send tap (packetmanager.cpp), subcommand 0x0028.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    Record(new CMacro(MT_GUILD_MENU_REQUEST));
+}
+
+void CMacroExecutor::RecordQuestMenuRequest()
+{
+    // was the 0xD7 AOSCommandsS send tap (packetmanager.cpp), subcommand 0x0032.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    Record(new CMacro(MT_QUEST_MENU_REQUEST));
+}
+
+void CMacroExecutor::RecordContextMenuRequest(uint serial)
+{
+    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
+    // 0x0013.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    Record(new CMacroWithObject(MT_REQUEST_CONTEXT_MENU, serial, 0, 0));
+}
+
+void CMacroExecutor::RecordWaitContextMenu(uint serial, ushort menuID)
+{
+    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
+    // 0x0015: the menu id rides the graphic field, like the original
+    // CMacroWithObject.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    Record(new CMacroWithObject(MT_WAIT_FOR_CONTEXT_MENU, serial, menuID, 0));
+}
+
+void CMacroExecutor::RecordToggleGargoyleFlying()
+{
+    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
+    // 0x0032.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    Record(new CMacro(MT_TOGGLE_GARGOYLE_FLYING));
+}
+
 bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)
 {
     // TabMacros::PlayWaiting: step back onto the waiting
