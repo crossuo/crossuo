@@ -865,12 +865,13 @@ the client's) has been dissolved into the client's handlers. Batches B1-B4
 fused the recv side: every recv handler is now either fused into the client
 handler, kept whole on the recv tap with a rationale, or deleted as a
 duplicate of client state updates. B5 audited and closed the send side.
-Table composition after B8 (`m_Packets` rows carrying handlers): 25 rows —
-16 `SMSGH` send handlers, 3 `SMSGHB` rows (0x6C Target, 0x9A ASCII Prompt,
-0xC2 Unicode Prompt; each send half records/intercepts the outgoing round
-and its recv half is fused into the client handler), 2 `BMSGH` rows and 4
-`RMSGH` recv keeps (0x56/0x7C/0x9E/0xB0). The recv-capable set is the 4
-`RMSGH` keeps plus the 0xBF/0xFC `BMSGH` recv halves.
+Table composition after B9 (`m_Packets` rows carrying handlers): 25 rows —
+16 `SMSGH` send handlers, 4 `SMSGHB` rows (0x6C Target, 0x9A ASCII Prompt,
+0xC2 Unicode Prompt, 0xBF Extended Command send half; each send half
+records/intercepts the outgoing round and its recv half is fused into the
+client handler), 1 `BMSGH` row (0xFC) and 4 `RMSGH` recv keeps
+(0x56/0x7C/0x9E/0xB0). The recv-capable set is the 4 `RMSGH` keeps plus
+0xFC only.
 0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
 0xF0 Krrios client special are plain `BMSG` rows (both directions are
 client-owned; the host fuses the MegaCliloc event).
@@ -982,10 +983,43 @@ Recv keeps (consume-capable handler rows; the tap dispatches every packet to the
   playing macro (or a menu/gump hook) can consume the packet so the client
   keeps no gump - a veto an in-handler hook cannot express; SellList fields
   are 1:1 with the client parse but the auto-sell consume has the same veto
-  problem; 0xBF stays whole (client party parse drops invite events + party
-  chat; equipment-info journal, context-menu round and the assistant facet
-  map ride the row). The connected-gate exemption list (0x1B/0x55/0xFC) is
-  unaffected: every kept id arrives only with a world.
+  problem; 0xBF left the keeps in B9: the party round was already fused and
+  the remaining subcommands injected cleanly (see below). The
+  connected-gate exemption list (0x1B/0x55/0xFC) is unaffected: every kept
+  id arrives only with a world.
+
+B9 (0xBF ExtendedCommand recv half) fuses the last recv-capable non-keep
+row, subcommand by subcommand inside the client's switch:
+
+- Case 8 facet map: the assistant half only wrote its own `g_CurrentMap`
+  copy (clamped >5 → 0) for the map window's "Current" display; the client's
+  `ChangeMap` applies the same clamp and drives the world, so the injection
+  is the one-line sync `xuoassist::g_CurrentMap = ::g_CurrentMap`.
+- Case 0x10 equipment info: the journal/inspector record rides the client
+  handler's own gates (item found, main cliloc set): the inspector row
+  refresh (`OnInspectorUpdate`), then a JMT_SYSTEM journal record at the
+  0x3B2 color for the main line and a second one for the crafter/
+  "[Unidentified"/attribute tail. The record re-reads the payload fields
+  because the journal text substitutes the per-entry cliloc arguments
+  (`ParseArgumentsToClilocString`) that the client render discards; the
+  reader position is saved/restored so the client parse still starts at the
+  serial field.
+- Case 0x14 context menu: `g_ContextMenuReceived` is set, then the manager
+  feed runs pre-parse (0x99 shape). Consume semantics preserved: a playing
+  macro waiting on the menu (`PlayWaiting`) or the auto-select entry hook
+  returning false vetoes `CGumpPopupMenu::Parse` (the client keeps no popup
+  gump - the only downstream work the switch case owns); the feed-only path
+  restores the reader before the popup parse re-reads the fields (the hook
+  walk can consume entry bytes without a verdict). No `m_AssistantInjecting`
+  gate: no `CPacket::SendClient` builder produces 0xBF with the fused
+  subcommands (8/0x10/0x14); the only injected subcommand is 0x16 (close
+  paperdoll), which carries no assistant logic - there is no replay path.
+- Case 0x18 map patches: the assistant half was a no-op (the client applies
+  the patches itself) - nothing to inject.
+  Row demoted to `SMSGHB` (DIR_BOTH, send-only): the send half keeps the
+  wrestling/cast/context-menu recording taps, and a `DIR_SEND` row would
+  warn per packet because the server sends 0xBF constantly (party chat).
+  The now-unused `parse_cliloc_arguments` helper went with the handler.
 
 
 The parallel assistant packetmanager was dissolved handler-by-handler into
@@ -1068,8 +1102,9 @@ B7 (death/prompt/profile) completes the BMSGH recv halves:
   its own cursor from the saved bytes. Row demoted to `SMSGHB` (the send
   half keeps recording/intercepting the outgoing 0x6C replies; the
   assistant's own cursor replies go out through the `CPacketTarget*`
-  builders, never through the table). This was the last recv half: the
-  assistant table now dispatches recv to the 4 `RMSGH` keeps only.
+  builders, never through the table). B8 left 0xBF/0xFC as the only
+  `BMSGH` recv halves; 0xBF followed in B9 - the assistant table now
+  dispatches recv to the 4 `RMSGH` keeps plus 0xFC only.
 
 ## Script API
 

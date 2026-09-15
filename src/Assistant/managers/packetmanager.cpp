@@ -279,7 +279,11 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xBD*/ BMSG("Client Version", PACKET_VARIABLE_SIZE),
     /*0xBE*/ BMSG("Assist Version", PACKET_VARIABLE_SIZE),
     /*0xBF*/
-    BMSGH("Extended Command", PACKET_VARIABLE_SIZE, ExtendedCommandS, ExtendedCommandR),
+    // recv half fused into the client's ExtendedCommand handler (facet map,
+    // equipment-info journal, context-menu round; 0x18 is a no-op) - the
+    // server sends 0xBF constantly (party chat), so the row stays DIR_BOTH
+    // with no recv handler instead of a warning-per-packet DIR_SEND
+    SMSGHB("Extended Command", PACKET_VARIABLE_SIZE, ExtendedCommandS),
     /*0xC0*/ UMSG(0x24),
     /*0xC1*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0xC2*/ SMSGHB("Unicode prompt", PACKET_VARIABLE_SIZE, UnicodePromptS),
@@ -548,10 +552,9 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
 
 #define PACKET_HANDLER(name) bool CPacketManager::Handle##name()
 
-static string parse_cliloc_arguments(int cliloc, bool toCamelCase, wstr_t args)
-{
-    return str_from(g_ClilocManager.ParseArgumentsToClilocString(cliloc, toCamelCase, args));
-}
+// parse_cliloc_arguments was only used by the fused 0xBF equipment-info
+// half; the client calls g_ClilocManager.ParseArgumentsToClilocString
+// directly in the injected block.
 
 PACKET_HANDLER(WarmodeS)
 {
@@ -767,158 +770,6 @@ PACKET_HANDLER(ExtendedCommandS)
         {
             g_MacroExecutor.Record(new CMacro(MT_TOGGLE_GARGOYLE_FLYING));
         }
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(ExtendedCommandR)
-{
-    // the equipment-info journal/inspector round, the context-menu round and
-    // the assistant facet map (case 8) ride this row
-    ushort cmd = ReadUInt16BE();
-
-    switch (cmd)
-    {
-        case 8: //
-        {
-            uint oldMap = g_CurrentMap;
-            g_CurrentMap = ReadUInt8();
-
-            if (g_CurrentMap > 5)
-            {
-                g_CurrentMap = 0;
-            }
-
-            if (oldMap != g_CurrentMap)
-            {
-                // DEVIATION: g_UOMapManager.UOAMnotifyLand() was a
-                // WM_USER notify to the external UOAM app (no host here); the
-                // map window follows g_CurrentMap for the "Current" facet.
-                // g_FileManager.OnMapChange() is superseded: the client loads
-                // and patches its own maps (g_MapManager tracks the facets).
-            }
-
-            break;
-        }
-        case 0x10: // DisplayEquipmentInfo
-        {
-            ushort textColor = 0x3B2;
-            uint serial = ReadUInt32BE();
-            CGameItem *item = g_World->FindWorldItem(serial);
-            if (item == nullptr)
-            {
-                return true;
-            }
-
-            uint clilocNum = ReadUInt32BE();
-            if (clilocNum == 0u)
-            {
-                return true;
-            }
-
-            (void)item;
-            string str = parse_cliloc_arguments(clilocNum, true, wstr_from_bytes(Ptr, End));
-            if (str.length() > 0)
-            {
-                // the client handler stores the property line as the item
-                // name; the assistant refreshes its inspector row
-                g_AssistantEvents->OnInspectorUpdate(serial);
-            }
-
-            if (str.length() != 0)
-            {
-                CJournalMessage message(serial, textColor, str);
-                message.SetFlags(JMT_SYSTEM);
-                g_AssistantEvents->OnJournalMessage(message);
-            }
-
-            ushort crafterNameLen = 0;
-            uint next = ReadUInt32BE();
-            if (next == 0xFFFFFFFD)
-            {
-                crafterNameLen = ReadUInt16BE();
-                if (crafterNameLen != 0u)
-                {
-                    str = "Crafted by ";
-                    str += ReadStringChecked(crafterNameLen).c_str();
-                }
-            }
-
-            if (crafterNameLen != 0)
-            {
-                next = ReadUInt32BE();
-            }
-            if (next == 0xFFFFFFFC)
-            {
-                str += "[Unidentified";
-            }
-
-            uchar *end = Start + Size - 4;
-            uchar count = 0;
-            while (Ptr < end)
-            {
-                if (count != 0 || next == 0xFFFFFFFD || next == 0xFFFFFFFC)
-                {
-                    next = ReadInt32BE();
-                }
-                short charges = ReadInt16BE();
-                string attrsString = parse_cliloc_arguments(
-                    next, true, wstr_from_bytes(Ptr, End));
-                if (charges == -1)
-                {
-                    if (count > 0)
-                    {
-                        str += "/";
-                        str += attrsString;
-                    }
-                    else
-                    {
-                        str += " [";
-                        str += attrsString;
-                    }
-                }
-                else
-                {
-                    str += "\n[";
-                    str += attrsString;
-                    str += " : ";
-                    str += std::to_string(charges);
-                    str += "]";
-                    count += 20;
-                }
-                count++;
-            }
-            if ((count < 20 && count > 0) || (next == 0xFFFFFFFC && count == 0))
-            {
-                str += "]";
-            }
-
-            if (str.length() != 0)
-            {
-                CJournalMessage message(serial, textColor, str);
-                message.SetFlags(JMT_SYSTEM);
-                g_AssistantEvents->OnJournalMessage(message);
-            }
-            break;
-        }
-        case 0x14: // Display Popup/context menu (2D and KR)
-        {
-            g_ContextMenuReceived = true;
-
-            return g_ContextMenuManager.OnPacketReceived(*this);
-        }
-        case 0x18: // Enable map (diff) patches
-        {
-            // RESOLVED (phase 5): was g_FileManager.ApplyPatches(*this) on the
-            // original side after its file transfer; the client applies the patches
-            // itself in its own 0x18 handler (g_MapManager.ApplyPatches,
-            // src/Managers/PacketManager.cpp:2952) - no assistant action.
-
-            break;
-        }
-        default:
-            break;
     }
 
     return true;

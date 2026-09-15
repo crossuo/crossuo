@@ -33,6 +33,7 @@
 #include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
 #include <managers/guildmanager.h> // xuoassist::g_GuildManager (guild chat speaker names)
 #include <managers/promptmanager.h> // xuoassist::g_PromptManager (prompt round, macro wait)
+#include <managers/contextmenumanager.h> // xuoassist::g_ContextMenuManager (0x14 context-menu round)
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
@@ -3144,6 +3145,13 @@ PACKET_HANDLER(ExtendedCommand)
         {
             g_Game.ChangeMap(ReadUInt8());
 
+#if defined(XUO_ASSISTANT)
+            // the assistant map window reads its own facet copy for the
+            // "Current" display; ChangeMap applied the same >5 clamp the old
+            // assistant half did
+            xuoassist::g_CurrentMap = ::g_CurrentMap;
+#endif
+
             break;
         }
         case 0xC: //Close statusbar gump
@@ -3162,22 +3170,14 @@ PACKET_HANDLER(ExtendedCommand)
                 return;
             }
 
-            item->JournalPrefix = "";
-            wstr_t str;
-            int clilocNum = ReadInt32BE();
-            if (clilocNum != 0)
+            struct SAttrEntry
             {
-                str = g_ClilocManager.Cliloc(g_Language)->GetW(clilocNum, true);
-                if (str.length() > 0)
-                {
-                    item->SetName(str_from(str));
-                }
+                uint32_t ClilocNum{ 0 };
+                short Charges{ 0 };
+            };
 
-                const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
-                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, 0x3B2, str);
-            }
-
-            str = {};
+            const uint32_t clilocNum = ReadUInt32BE();
+            astr_t crafterName;
             uint16_t crafterNameLen = 0;
             uint32_t next = ReadUInt32BE();
             if (next == 0xFFFFFFFD)
@@ -3185,31 +3185,75 @@ PACKET_HANDLER(ExtendedCommand)
                 crafterNameLen = ReadUInt16BE();
                 if (crafterNameLen != 0u)
                 {
-                    str = L"Crafted by " + wstr_from_utf8(ReadString(crafterNameLen));
+                    // bounds-checked read, truncated at the first NUL like the
+                    // ReadString/c_str() text the two halves used before
+                    crafterName = astr_t(ReadStringChecked(crafterNameLen).c_str());
                 }
             }
-
             if (crafterNameLen != 0)
             {
                 next = ReadUInt32BE();
+            }
+
+            // -4 because the last 4 bytes of the packet are 0xFFFFFFFF
+            uint8_t *end = Start + Size - 4;
+            std::vector<SAttrEntry> entries;
+            entries.reserve(size_t(end - Ptr) / 6u + 1u); // 6 bytes minimum per entry
+            uint8_t walkCount = 0; // mirror of the per-entry count evolution
+            while (Ptr < end)
+            {
+                if (walkCount != 0 || next == 0xFFFFFFFD || next == 0xFFFFFFFC)
+                {
+                    next = ReadInt32BE();
+                }
+                SAttrEntry entry;
+                entry.ClilocNum = next;
+                entry.Charges = ReadInt16BE();
+                entries.push_back(entry);
+                if (entry.Charges != -1)
+                {
+                    walkCount += 20;
+                }
+                walkCount++;
+            }
+
+            item->JournalPrefix = "";
+            wstr_t str;
+            const uint16_t textColor = 0x3B2;
+            if (clilocNum != 0)
+            {
+                str = g_ClilocManager.Cliloc(g_Language)->GetW(clilocNum, true);
+                if (str.length() > 0)
+                {
+#if defined(XUO_ASSISTANT)
+                    xuoassist::g_AssistantEvents->OnInspectorUpdate(serial);
+#endif
+                    item->SetName(str_from(str));
+                }
+#if defined(XUO_ASSISTANT)
+                xuoassist::CJournalMessage message(serial, textColor, str_from(str));
+                message.SetFlags(xuoassist::JMT_SYSTEM);
+                xuoassist::g_AssistantEvents->OnJournalMessage(message);
+#endif
+                const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
+                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, 0x3B2, str);
+            }
+
+            str = {};
+            if (crafterNameLen != 0)
+            {
+                str = L"Crafted by " + wstr_from_utf8(crafterName);
             }
             if (next == 0xFFFFFFFC)
             {
                 str += L"[Unidentified";
             }
 
-            // -4 потому что последние 4 байта в пакете 0xFFFFFFFF
-            uint8_t *end = Start + Size - 4;
             uint8_t count = 0;
-            while (Ptr < end)
+            for (const SAttrEntry &entry : entries)
             {
-                if (count != 0 || next == 0xFFFFFFFD || next == 0xFFFFFFFC)
-                {
-                    next = ReadInt32BE();
-                }
-                short charges = ReadInt16BE();
-                auto attrsString = g_ClilocManager.Cliloc(g_Language)->GetW(next, true);
-                if (charges == -1)
+                auto attrsString = g_ClilocManager.Cliloc(g_Language)->GetW(entry.ClilocNum, true);
+                if (entry.Charges == -1)
                 {
                     if (count > 0)
                     {
@@ -3227,7 +3271,7 @@ PACKET_HANDLER(ExtendedCommand)
                     str += L"\n[";
                     str += attrsString;
                     str += L" : ";
-                    str += wstr_from(charges);
+                    str += wstr_from(entry.Charges);
                     str += L"]";
                     count += 20;
                 }
@@ -3240,6 +3284,11 @@ PACKET_HANDLER(ExtendedCommand)
 
             if (str.length() != 0u)
             {
+#if defined(XUO_ASSISTANT)
+                xuoassist::CJournalMessage message(serial, textColor, str_from(str));
+                message.SetFlags(xuoassist::JMT_SYSTEM);
+                xuoassist::g_AssistantEvents->OnJournalMessage(message);
+#endif
                 const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
                 g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, 0x3B2, str);
             }
@@ -3248,6 +3297,26 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x14: //Display Popup/context menu (2D and KR)
         {
+#if defined(XUO_ASSISTANT)
+            // the context-menu round: the wait flag for scripts/macros, then
+            // the agent parse. A playing macro waiting on this menu
+            // (PlayWaiting) or the auto-select entry hook consumes the packet
+            // - the client keeps no popup gump (the old recv-tap veto). No
+            // m_AssistantInjecting gate: no SendClient builder produces 0xBF
+            // with the fused subcommands (8/0x10/0x14); the only injected
+            // subcommand is 0x16 (close paperdoll), which carries no
+            // assistant logic. The feed-only path restores the reader:
+            // the popup parse re-reads the fields from the payload start.
+            xuoassist::g_ContextMenuReceived = true;
+            {
+                uint8_t *savedPtr = Ptr;
+                if (!xuoassist::g_ContextMenuManager.OnPacketReceived(*this))
+                {
+                    return;
+                }
+                Ptr = savedPtr;
+            }
+#endif
             CGumpPopupMenu::Parse(*this);
 
             break;

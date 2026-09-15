@@ -74,7 +74,6 @@ protected:
     XA_HANDLER_PACKET(ClientMessagesS);
     XA_HANDLER_PACKET(ClientMessagesR);
     XA_HANDLER_PACKET(ExtendedCommandS);
-    XA_HANDLER_PACKET(ExtendedCommandR);
     XA_HANDLER_PACKET(SecureTradingS);
     XA_HANDLER_PACKET(DyeDataS);
     XA_HANDLER_PACKET(OpenGump);
