@@ -60,8 +60,6 @@ DEFINE_PACKET(ClickRequest, uint32_t serial);
 DEFINE_PACKET(DoubleClickRequest, uint32_t serial);
 DEFINE_PACKET(Weather, const WEATHER_DATA &data);
 DEFINE_PACKET(Season, const SEASON_DATA &data);
-DEFINE_PACKET(HelpRequest);
-DEFINE_PACKET(ChangeWarmode, uint8_t state);
 DEFINE_PACKET(Resend);
 DEFINE_PACKET(EmoteAction, const char *action);
 DEFINE_PACKET(HideObject, uint32_t serial);

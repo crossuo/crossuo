@@ -15,6 +15,10 @@
 #include "../Network/Packets.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include <xuocore/uodata.h> // g_MapBlockSize
+#if defined(XUO_ASSISTANT)
+#include <core/assist.h> // xuoassist::g_Assistant.WalkAutoOpenDoor (auto-open doors on walk)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordWalk (macro tap)
+#endif
 
 CPathFinder g_PathFinder;
 
@@ -700,6 +704,14 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
 
     g_Player->m_Steps.push_back(
         CWalkData(x, y, z, direction, g_Player->Graphic, g_Player->GetFlags()));
+
+#if defined(XUO_ASSISTANT)
+    // the assistant's walk-send tap home (was the 0x02 WalkRequest handler in
+    // xuoassist's packetmanager): the auto-open-door probe and the macro walk
+    // recording ride every outgoing walk packet, before the send
+    xuoassist::g_Assistant.WalkAutoOpenDoor(direction);
+    xuoassist::g_MacroExecutor.RecordWalk(direction);
+#endif
 
     CPacketWalkRequest(direction, g_Walker.WalkSequence, g_Player->m_FastWalkStack.GetValue())
         .Send();

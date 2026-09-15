@@ -14,10 +14,12 @@
 //     macros restart with m_NextMacroTick = now + loopDelay (ProcessMacro
 //     1123-1135), loop delay 0 (checkbox off) stops.
 //   - the recording buffer (on_pb_Record_clicked:337) is fed by the packet
-//     observation taps (packetmanager.cpp WarmodeS/DoubleClick/PerformAction/
-//     ... - the exact conversions of the original sites), the client's send
-//     sites (CGame::AttackReq -> RecordAttack) and the target system taps
-//     (assist/target.cpp:190/:210 -> CAssistantEvents)
+//     observation taps (packetmanager.cpp PerformAction/... - the exact
+//     conversions of the original sites), the client's send sites
+//     (CGame::AttackReq -> RecordAttack, CGame::DoubleClick / PaperdollReq ->
+//     RecordUse, CPathFinder::Walk -> RecordWalk, CGame::ChangeWarmode ->
+//     RecordWarMode, the help gumps -> RecordHelpRequest) and the target
+//     system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
 //     while the game sends its target cursors; RecordStop replaces the
 //     selected macro's action list (an empty capture is discarded).
 // Agent-dependent bodies (dress/arm lists use the config dressbag and move
@@ -72,6 +74,30 @@ public:
     // observation tap (was the 0x05 AttackRequest send tap in
     // packetmanager.cpp, same conversions in the same order).
     void RecordAttack(uint serial);
+
+    // The client's use send sites (CGame::DoubleClick, and
+    // CGame::PaperdollReq with the 0x80000000 bit set): the MT_USE
+    // observation tap (was the 0x06 DoubleClick send tap in
+    // packetmanager.cpp, same conversions) plus the g_LastUseObject mirror
+    // feed (the tap fed it outside the recording gate).
+    void RecordUse(uint serial);
+
+    // The client's walk send site (CPathFinder::Walk): the MT_WALK
+    // observation tap (was the 0x02 WalkRequest send tap in
+    // packetmanager.cpp) - a direction differing from the current facing
+    // records as the negative -(direction | 0x80) turn encoding. Not
+    // suspension-gated: the old tap saw every walk packet the client sent,
+    // however the walk was started (walker autowalk included).
+    void RecordWalk(int direction);
+
+    // The client's warmode send site (CGame::ChangeWarmode): the MT_WAR_MODE
+    // observation tap (was the 0x72 WarmodeS send tap in packetmanager.cpp).
+    void RecordWarMode(uint8_t status);
+
+    // The client's help gump send sites (CGumpMenubar / CGumpPaperdoll): the
+    // MT_HELP_MENU_REQUEST observation tap (was the 0x9B HelpRequest send tap
+    // in packetmanager.cpp).
+    void RecordHelpRequest();
 
     // TabMacros::AddAction(macro, false) recording half:
     // appends an observed action to the open recording; ownership passes to

@@ -339,7 +339,11 @@ void CAssistant::DoubleClick(const uint &serial)
 {
     g_LastUseObject = serial;
     g_LastUseObjectTimer = g_Ticks;
-    CPacketDoubleClickRequest(serial).SendServer();
+    // assistant-initiated uses must not record themselves; the client's
+    // CGame::DoubleClick is the recording tap
+    RecordingSuspension suspension;
+
+    g_Game.DoubleClick(serial);
 }
 
 void CAssistant::Attack(const uint &serial)
@@ -1379,6 +1383,69 @@ void CAssistant::SetDressBag(const uint &serial)
 void CAssistant::OpenDoor()
 {
     CPacketOpenDoorRequest().SendClient();
+}
+
+void CAssistant::WalkAutoOpenDoor(const int &direction)
+{
+    // Was the front half of the 0x02 WalkRequest send tap (packetmanager.cpp):
+    // probe the tile the walk steps onto (two tiles out when continuing
+    // straight ahead) and open a door found there. The config gates the whole
+    // step.
+    if (g_Player == nullptr || !g_AssistantConfig.AutoOpenDoors() || g_Player->IsDead() ||
+        g_Player->IsGM() || ((direction % 2) != 0))
+    {
+        return;
+    }
+
+    // dir is a plain value copy: a reference parameter named like the outer
+    // direction local shadows it (gcc -Wshadow) for no benefit
+    auto getNewXY = [](const int dir, int &x, int &y) {
+        switch (dir & 7)
+        {
+            case 0:
+                y--;
+                break;
+            case 1:
+                x++;
+                y--;
+                break;
+            case 2:
+                x++;
+                break;
+            case 3:
+                x++;
+                y++;
+                break;
+            case 4:
+                y++;
+                break;
+            case 5:
+                x--;
+                y++;
+                break;
+            case 6:
+                x--;
+                break;
+            case 7:
+                x--;
+                y--;
+                break;
+            default:
+                break;
+        }
+    };
+
+    int x = g_Player->GetX();
+    int y = g_Player->GetY();
+
+    getNewXY(direction, x, y);
+
+    if ((direction & 7) == (g_Player->Direction & 7))
+    {
+        getNewXY(direction, x, y);
+    }
+
+    AutoOpenDoor(x, y, g_Player->GetZ());
 }
 
 void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)

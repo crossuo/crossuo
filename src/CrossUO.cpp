@@ -9,7 +9,7 @@
 #include "AssistantWindow.h"
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Send (in-client assistant)
 #include <core/global.h> // xuoassist::g_SelectedClientWorldObject (selected-tile feed)
-#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordAttack (macro tap)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.Record* (macro taps)
 #endif
 
 #include "revision.h"
@@ -5422,6 +5422,9 @@ void CGame::ChangeWarmode(uint8_t status)
     }
 
     CPacketChangeWarmode(newstatus).Send();
+#if defined(XUO_ASSISTANT)
+    xuoassist::g_MacroExecutor.RecordWarMode(newstatus);
+#endif
 }
 
 void CGame::Click(uint32_t serial)
@@ -5443,6 +5446,9 @@ void CGame::DoubleClick(uint32_t serial)
     }
 
     CPacketDoubleClickRequest(serial).Send();
+#if defined(XUO_ASSISTANT)
+    xuoassist::g_MacroExecutor.RecordUse(serial);
+#endif
 }
 
 void CGame::PaperdollReq(uint32_t serial)
@@ -5450,6 +5456,11 @@ void CGame::PaperdollReq(uint32_t serial)
     //g_LastUseObject = serial;
 
     CPacketDoubleClickRequest(serial | 0x80000000).Send();
+#if defined(XUO_ASSISTANT)
+    // the old send tap saw the already-ORed wire serial, and fed the
+    // assistant's g_LastUseObject mirror with it
+    xuoassist::g_MacroExecutor.RecordUse(serial | 0x80000000);
+#endif
 }
 
 void CGame::Attack(uint32_t serial)

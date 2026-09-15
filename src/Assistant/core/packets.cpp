@@ -256,20 +256,6 @@ CPacketSeason::CPacketSeason(const SEASON_DATA &data)
     WriteUInt8(data.Music);
 }
 
-CPacketHelpRequest::CPacketHelpRequest()
-    : CPacket(258)
-{
-    WriteUInt8(0x9B);
-}
-
-CPacketChangeWarmode::CPacketChangeWarmode(uint8_t state)
-    : CPacket(5)
-{
-    WriteUInt8(0x72);
-    WriteUInt8(state);
-    WriteUInt16BE(0x0032);
-}
-
 CPacketResend::CPacketResend()
     : CPacket(3)
 {

@@ -150,6 +150,11 @@ public:
     // now, exactly like the timer's immediate-fire path).
     void AutoOpenDoor(const int &x, const int &y, const int &z);
 
+    // The auto-open-door half of the walk send (was the front half of the 0x02
+    // WalkRequest send tap, packetmanager.cpp): called from the client's
+    // CPathFinder::Walk with the packet's direction byte.
+    void WalkAutoOpenDoor(const int &direction);
+
     void HandleTargetType(uchar *buf);
     void HandleTargetObject(uchar *buf);
     void HandleTargetDisplayItem(uchar *buf);

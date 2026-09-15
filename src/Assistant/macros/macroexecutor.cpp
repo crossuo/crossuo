@@ -29,6 +29,8 @@
 #include "../core/world.h"
 #include "../core/worldutil.h"
 #include "Walker/PathFinder.h" // g_PathFinder (the client walker; was the plugin's PathFinder)
+#include "CrossUO.h" // ::g_Game (the client send bridge)
+#include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
 
 namespace xuoassist {
 
@@ -57,7 +59,11 @@ void warmode_send(uint state)
     {
         warmode = (uchar)state;
     }
-    CPacketChangeWarmode(warmode).SendServer();
+    // assistant-initiated warmode changes must not record themselves; the
+    // client's CGame::ChangeWarmode is the recording tap
+    RecordingSuspension suspension;
+
+    g_Game.ChangeWarmode(warmode);
 }
 
 uint serial_for_convert(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
@@ -293,6 +299,82 @@ void CMacroExecutor::RecordAttack(uint serial)
     }
 
     Record(macro);
+}
+
+void CMacroExecutor::RecordUse(uint serial)
+{
+    // was the 0x06 DoubleClick send tap (packetmanager.cpp): the graphic/color
+    // come from the world object when known; the player records as MCT_SELF.
+    // The g_LastUseObject mirror was fed outside the recording gate.
+    g_LastUseObject = serial;
+
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    CGameObject *obj = g_World->FindWorldObject(serial);
+
+    CMacro *macro = nullptr;
+
+    if (obj != nullptr)
+    {
+        macro = new CMacroWithObject(MT_USE, serial, obj->Graphic, obj->Color);
+    }
+    else
+    {
+        macro = new CMacroWithObject(MT_USE, serial, 0, 0);
+    }
+
+    if (serial == g_PlayerSerial)
+    {
+        macro->ConvertType = MCT_SELF;
+    }
+
+    Record(macro);
+}
+
+void CMacroExecutor::RecordWalk(int direction)
+{
+    // was the 0x02 WalkRequest send tap (packetmanager.cpp): a turn (the run
+    // bit set on a direction that differs from the current facing) records as
+    // a negative value - the MT_WALK turn encoding. Not suspension-gated: the
+    // old tap saw walker packets regardless of what started the walk.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    if ((direction & 7) != (g_Player->Direction & 7))
+    {
+        direction = -(direction | 0x80);
+    }
+
+    Record(new CMacroWithIntValue(MT_WALK, direction));
+}
+
+void CMacroExecutor::RecordWarMode(uint8_t status)
+{
+    // was the 0x72 WarmodeS send tap (packetmanager.cpp): observe-only - the
+    // macro action is noted from the outgoing packet, which still flows to
+    // the server.
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    Record(new CMacroWithIntValue(MT_WAR_MODE, status));
+}
+
+void CMacroExecutor::RecordHelpRequest()
+{
+    // was the 0x9B HelpRequest send tap (packetmanager.cpp).
+    if (!CanRecord() || g_World == nullptr)
+    {
+        return;
+    }
+
+    Record(new CMacro(MT_HELP_MENU_REQUEST));
 }
 
 bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)
@@ -754,8 +836,15 @@ void CMacroExecutor::ProcessMacro()
                 break;
             }
             case MT_HELP_MENU_REQUEST:
-                CPacketHelpRequest().SendServer();
+            {
+                // assistant-initiated help requests must not record
+                // themselves; the client's help gump buttons are the
+                // recording taps
+                RecordingSuspension suspension;
+
+                ::CPacketHelpRequest().Send();
                 break;
+            }
             case MT_QUEST_MENU_REQUEST:
                 CPacketQuestMenuRequest().SendServer();
                 break;

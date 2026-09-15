@@ -20,6 +20,9 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
+#if defined(XUO_ASSISTANT)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordHelpRequest (macro tap)
+#endif
 #include "../TextEngine/TextData.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
@@ -817,6 +820,9 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
         case ID_GP_BUTTON_HELP: //Paperdoll button Help
         {
             CPacketHelpRequest().Send();
+#if defined(XUO_ASSISTANT)
+            xuoassist::g_MacroExecutor.RecordHelpRequest();
+#endif
             break;
         }
         case ID_GP_BUTTON_OPTIONS: //Paperdoll button Options

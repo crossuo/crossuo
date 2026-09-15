@@ -65,7 +65,6 @@ private:
 
 protected:
     //! Packet handlers
-    XA_HANDLER_PACKET(WarmodeS);
     XA_HANDLER_PACKET(TargetS);
     XA_HANDLER_PACKET(ClientTalkS);
     XA_HANDLER_PACKET(UnicodeClientTalk);
@@ -74,17 +73,12 @@ protected:
     XA_HANDLER_PACKET(ClientMessagesR);
     XA_HANDLER_PACKET(ExtendedCommandS);
     XA_HANDLER_PACKET(SecureTradingS);
-    XA_HANDLER_PACKET(DyeDataS);
     XA_HANDLER_PACKET(ChoiceGump);
-    XA_HANDLER_PACKET(Resend);
-    XA_HANDLER_PACKET(WalkRequest);
     XA_HANDLER_PACKET(ASCIIPromptS);
     XA_HANDLER_PACKET(UnicodePromptS);
     XA_HANDLER_PACKET(BuyReplyS);
     XA_HANDLER_PACKET(SellReply);
     XA_HANDLER_PACKET(PerformAction);
-    XA_HANDLER_PACKET(DoubleClick);
-    XA_HANDLER_PACKET(HelpRequest);
     XA_HANDLER_PACKET(AOSCommandsS);
 
 public:

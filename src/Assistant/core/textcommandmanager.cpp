@@ -13,6 +13,9 @@
 #include "../script/journal.h"    // the script journal ring (the g_JournalManager port)
 #include "../script/scripthandle.h" // ScriptManager_Terminate (the running-script registry)
 #include "../config/assistantconfig.h"
+#include "../macros/macroexecutor.h" // RecordingSuspension (assistant-initiated sends do not self-record)
+#include "CrossUO.h" // ::g_Game (the client send bridge)
+#include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
 #include "world.h"
 #include "worldutil.h"
 #include "../managers/spellmanager.h"
@@ -811,7 +814,11 @@ HCOMMAND(helpgump)
         return;
     }
 
-    CPacketHelpRequest().SendServer();
+    // assistant-initiated help requests must not record themselves; the
+    // client's help gump buttons are the recording taps
+    RecordingSuspension suspension;
+
+    ::CPacketHelpRequest().Send();
 }
 
 HCOMMAND(closeuo)
@@ -853,7 +860,11 @@ HCOMMAND(warmode)
         warmode = (uchar)state;
     }
 
-    CPacketChangeWarmode(warmode).SendServer();
+    // assistant-initiated warmode changes must not record themselves; the
+    // client's CGame::ChangeWarmode is the recording tap
+    RecordingSuspension suspension;
+
+    g_Game.ChangeWarmode(warmode);
 }
 
 HCOMMAND(morph)

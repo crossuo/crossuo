@@ -76,12 +76,12 @@ const int PACKET_VARIABLE_SIZE = 0;
 CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x00*/ SMSG("Create Character", 0x68),
     /*0x01*/ SMSG("Disconnect", 0x05),
-    /*0x02*/ SMSGH("Walk Request", 0x07, WalkRequest),
+    /*0x02*/ SMSG("Walk Request", 0x07),
     /*0x03*/
     SMSGH("Client Talk", PACKET_VARIABLE_SIZE, ClientTalkS),
     /*0x04*/ SMSG("Request God mode (God client)", 0x02),
     /*0x05*/ SMSG("Attack", 0x05),
-    /*0x06*/ SMSGH("Double Click", 0x05, DoubleClick),
+    /*0x06*/ SMSG("Double Click", 0x05),
     /*0x07*/ SMSG("Pick Up Item", 0x07),
     /*0x08*/ SMSG("Drop Item", 0x0e),
     /*0x09*/ SMSG("Single Click", 0x05),
@@ -109,7 +109,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x1F*/ UMSG(0x08),
     /*0x20*/ UMSG(0x13),
     /*0x21*/ RMSG("Deny Walk", 0x08),
-    /*0x22*/ SMSGH("Confirm Walk", 0x03, Resend),
+    /*0x22*/ SMSG("Confirm Walk", 0x03),
     /*0x23*/ RMSG("Drag Animation", 0x1a),
     /*0x24*/ UMSG(0x07),
     /*0x25*/ RMSG("Update Contained Item", 0x14),
@@ -193,7 +193,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     SMSGH("Secure Trading", PACKET_VARIABLE_SIZE, SecureTradingS),
     /*0x70*/ UMSG(0x1c),
     /*0x71*/ BMSG("Bulletin Board Data", PACKET_VARIABLE_SIZE),
-    /*0x72*/ SMSGH("War Mode", 0x05, WarmodeS),
+    /*0x72*/ SMSG("War Mode", 0x05),
     /*0x73*/ BMSG("Ping", 0x02),
     /*0x74*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x75*/ SMSG("Rename Character", 0x23),
@@ -235,13 +235,13 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x92*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x93*/ RMSG("Open Book", 0x63),
     /*0x94*/ UMSG(PACKET_VARIABLE_SIZE),
-    /*0x95*/ SMSGH("Dye Data", 0x09, DyeDataS),
+    /*0x95*/ SMSG("Dye Data", 0x09),
     /*0x96*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x97*/ RMSG("Move Player", 0x02),
     /*0x98*/ BMSG("All Names (3D Client Only)", PACKET_VARIABLE_SIZE),
     /*0x99*/ UMSG(0x1a),
     /*0x9A*/ SMSGHB("ASCII Prompt", PACKET_VARIABLE_SIZE, ASCIIPromptS),
-    /*0x9B*/ SMSGH("Help Request", 0x102, HelpRequest),
+    /*0x9B*/ SMSG("Help Request", 0x102),
     /*0x9C*/ UMSG(0x135),
     /*0x9D*/ UMSG(0x33),
     /*0x9E*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -552,18 +552,6 @@ void AssistantPackets_Send(uint8_t *buf, size_t size)
 // half; the client calls g_ClilocManager.ParseArgumentsToClilocString
 // directly in the injected block.
 
-PACKET_HANDLER(WarmodeS)
-{
-    // tabmacros recording (the WarmodeS handler): observe-only - the macro action is
-    // noted from the outgoing packet, which still flows to the server.
-    if (g_World != nullptr && g_MacroExecutor.IsRecording())
-    {
-        g_MacroExecutor.Record(new CMacroWithIntValue(MT_WAR_MODE, ReadUInt8()));
-    }
-
-    return true;
-}
-
 PACKET_HANDLER(TargetS)
 {
     // The assist/target round (Phase 1c) restores the original interception:
@@ -770,23 +758,6 @@ PACKET_HANDLER(SecureTradingS)
     return g_TradeManager.OnPacketSend(*this); // (trade round)
 }
 
-PACKET_HANDLER(DyeDataS)
-{
-    uint serial = ReadUInt32BE();
-    Move(2);
-
-    if (serial == 0xFFFFFFFF)
-    {
-        g_AssistantConfig.SetFontColor(true, ReadUInt16BE());
-    }
-    else if (serial == 0xFFFFFFFE)
-    {
-        g_AssistantConfig.SetCharactersFontColor(true, ReadUInt16BE());
-    }
-
-    return true;
-}
-
 PACKET_HANDLER(ChoiceGump)
 {
     if (g_World == nullptr)
@@ -795,86 +766,6 @@ PACKET_HANDLER(ChoiceGump)
     }
 
     return g_GumpManager.OnPacketSend(*this); // (gump round)
-}
-
-PACKET_HANDLER(Resend)
-{
-    return true;
-}
-
-PACKET_HANDLER(WalkRequest)
-{
-    int direction = ReadUInt8();
-
-    // dir is a plain value copy: a reference parameter named like the outer
-    // direction local shadows it (gcc -Wshadow) for no benefit
-    auto getNewXY = [](const int dir, int &x, int &y) {
-        switch (dir & 7)
-        {
-            case 0:
-                y--;
-                break;
-            case 1:
-                x++;
-                y--;
-                break;
-            case 2:
-                x++;
-                break;
-            case 3:
-                x++;
-                y++;
-                break;
-            case 4:
-                y++;
-                break;
-            case 5:
-                x--;
-                y++;
-                break;
-            case 6:
-                x--;
-                break;
-            case 7:
-                x--;
-                y--;
-                break;
-            default:
-                break;
-        }
-    };
-
-    // The auto-open-door step (config round + assist core):
-    if (g_Player != nullptr && g_AssistantConfig.AutoOpenDoors() && !g_Player->IsDead() &&
-        !g_Player->IsGM() && ((direction % 2) == 0))
-    {
-        int x = g_Player->GetX();
-        int y = g_Player->GetY();
-
-        getNewXY(direction, x, y);
-
-        if ((direction & 7) == (g_Player->Direction & 7))
-        {
-            getNewXY(direction, x, y);
-        }
-
-        g_Assistant.AutoOpenDoor(x, y, g_Player->GetZ());
-    }
-
-    // tabmacros recording (WalkRequest): a turn (the run bit set on a
-    // direction that differs from the current facing) records as a negative
-    // value - the MT_WALK turn encoding.
-    if (g_World != nullptr && g_MacroExecutor.IsRecording())
-    {
-        if ((direction & 7) != (g_Player->Direction & 7))
-        {
-            direction = -(direction | 0x80);
-        }
-
-        g_MacroExecutor.Record(new CMacroWithIntValue(MT_WALK, direction));
-    }
-
-    return true;
 }
 
 PACKET_HANDLER(ASCIIPromptS)
@@ -970,50 +861,6 @@ PACKET_HANDLER(PerformAction)
     if (static_cast<int>(lastSpell) != g_LastSpellIndex)
     {
         g_AssistantEvents->OnTitleRedraw();
-    }
-
-    return true;
-}
-
-PACKET_HANDLER(DoubleClick)
-{
-    uint serial = ReadUInt32BE();
-
-    // tabmacros recording (DoubleClick): the graphic/color come from the
-    // world object when known; the player records as MCT_SELF
-    if (g_World != nullptr && g_MacroExecutor.IsRecording())
-    {
-        CGameObject *obj = g_World->FindWorldObject(serial);
-
-        CMacro *macro = nullptr;
-
-        if (obj != nullptr)
-        {
-            macro = new CMacroWithObject(MT_USE, serial, obj->Graphic, obj->Color);
-        }
-        else
-        {
-            macro = new CMacroWithObject(MT_USE, serial, 0, 0);
-        }
-
-        if (serial == g_PlayerSerial)
-        {
-            macro->ConvertType = MCT_SELF;
-        }
-
-        g_MacroExecutor.Record(macro);
-    }
-
-    g_LastUseObject = serial;
-
-    return true;
-}
-
-PACKET_HANDLER(HelpRequest)
-{
-    if (g_World != nullptr && g_MacroExecutor.IsRecording())
-    {
-        g_MacroExecutor.Record(new CMacro(MT_HELP_MENU_REQUEST));
     }
 
     return true;

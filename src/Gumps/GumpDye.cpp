@@ -3,6 +3,9 @@
 
 #include "GumpDye.h"
 #include "../Network/Packets.h"
+#if defined(XUO_ASSISTANT)
+#include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (font color capture)
+#endif
 
 CGumpDye::CGumpDye(uint32_t serial, int16_t x, int16_t y, uint16_t graphic)
     : CGumpSelectColor(serial, x, y, SCGS_OPT_TOOLTIP_TEXT)
@@ -60,6 +63,18 @@ void CGumpDye::UpdateContent()
 void CGumpDye::OnSelectColor(uint16_t color)
 {
     CPacketDyeDataResponse(Serial, Graphic, color + 1).Send();
+#if defined(XUO_ASSISTANT)
+    // the assistant's font color capture (was the 0x95 DyeDataS send tap in
+    // xuoassist's packetmanager); the wire hue is the gump color + 1
+    if (Serial == 0xFFFFFFFF)
+    {
+        xuoassist::g_AssistantConfig.SetFontColor(true, (ushort)(color + 1));
+    }
+    else if (Serial == 0xFFFFFFFE)
+    {
+        xuoassist::g_AssistantConfig.SetCharactersFontColor(true, (ushort)(color + 1));
+    }
+#endif
     RemoveMark = true;
 }
 

@@ -7,6 +7,9 @@
 #include "../SelectedObject.h"
 #include "../Managers/ClilocManager.h"
 #include "../Network/Packets.h"
+#if defined(XUO_ASSISTANT)
+#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordHelpRequest (macro tap)
+#endif
 
 enum
 {
@@ -217,6 +220,9 @@ void CGumpMenubar::GUMP_BUTTON_EVENT_C
         case ID_GMB_HELP:
         {
             CPacketHelpRequest().Send();
+#if defined(XUO_ASSISTANT)
+            xuoassist::g_MacroExecutor.RecordHelpRequest();
+#endif
             break;
         }
         case ID_GMB_WORLD_MAP:
