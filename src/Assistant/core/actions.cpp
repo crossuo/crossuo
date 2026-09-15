@@ -18,6 +18,7 @@
 #include "assistantevents.h"
 #include "global.h"
 #include "packets.h"
+#include "Network/Packets.h" // ::CPacketTargetSelectedObject (the client's own 0xBF/0x2C builder)
 #include "textcommandmanager.h"
 #include "../macros/macroexecutor.h"
 #include "../managers/gumpmanager.h"
@@ -642,8 +643,8 @@ void Actions_Execute(const CHotkeyEntry &entry)
             {
                 if (action == 3)
                 {
-                    CPacketTargetUseObject(bandage->Serial, Actions_NewTargetSystemSerial())
-                        .SendServer();
+                    ::CPacketTargetSelectedObject(bandage->Serial, Actions_NewTargetSystemSerial())
+                        .Send();
                 }
                 else
                 {

@@ -14,6 +14,7 @@
 #include "assist.h"
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "packets.h"
+#include "Network/Packets.h" // ::CPacketStatusRequest and the other client send builders
 #include "Managers/PacketManager.h"      // ::g_PacketManager (client, inject)
 #include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
 #include "textconv.h"
@@ -328,12 +329,12 @@ void CAssistant::DumpTileInfo(const ushort &graphic, const short &x, const short
 void CAssistant::GetStatus(const uint &serial)
 {
     g_LastStatusRequest = serial;
-    CPacketStatusRequest(serial).SendServer();
+    ::CPacketStatusRequest(serial).Send();
 }
 
 void CAssistant::Click(const uint &serial)
 {
-    CPacketClickRequest(serial).SendServer();
+    ::CPacketClickRequest(serial).Send();
 }
 
 void CAssistant::DoubleClick(const uint &serial)
@@ -897,26 +898,26 @@ void CAssistant::MoveItem(CGameItem *item)
         g_MoveItemData.Count = item->Count;
     }
 
-    CPacketPickupRequest(serial, g_MoveItemData.Count).SendServer();
+    ::CPacketPickupRequest(serial, g_MoveItemData.Count).Send();
 
     if (GetClientVersion() >= CV_6017)
     {
-        CPacketDropRequestNew(
+        ::CPacketDropRequestNew(
             serial, g_MoveItemData.X, g_MoveItemData.Y, g_MoveItemData.Z, 0, g_MoveItemData.Container)
-            .SendServer();
+            .Send();
     }
     else
     {
-        CPacketDropRequestOld(
+        ::CPacketDropRequestOld(
             serial, g_MoveItemData.X, g_MoveItemData.Y, g_MoveItemData.Z, g_MoveItemData.Container)
-            .SendServer();
+            .Send();
     }
 }
 
 void CAssistant::MoveEquip(const uint &serial, const int &layer, const uint &container)
 {
-    CPacketPickupRequest(serial, 1).SendServer();
-    CPacketEquipRequest(serial, layer, container).SendServer();
+    ::CPacketPickupRequest(serial, 1).Send();
+    ::CPacketEquipRequest(serial, layer, container).Send();
 }
 
 void CAssistant::Track(const bool &state, short x, short y)

@@ -2582,7 +2582,7 @@ JSValue jsn_globalget(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
 }
 
 // [Q] BandageSelf/BandageTarget - OnCommandBandageTarget: find the
-// backpack bandage, CPacketTargetUseObject(bandage, serial).
+// backpack bandage, CPacketTargetSelectedObject(bandage, serial).
 JSValue jsn_bandage(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
@@ -4330,9 +4330,9 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     CGameItem *bandage = g_Player->FindBandage();
                     if (bandage != nullptr)
                     {
-                        CPacketTargetUseObject(bandage->Serial,
+                        ::CPacketTargetSelectedObject(bandage->Serial,
                             CAssistant::TextToSerial(command->TextA))
-                            .SendClient();
+                            .Send();
                     }
                     break;
                 }
@@ -4490,7 +4490,10 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     }
                     if (index != 0xFF)
                     {
-                        CPacketUseCombatAbility(index).SendClient();
+                        // 0xD7 has no receive handler in the client table, so the
+                        // old SendClient() injection was silently dropped; go via
+                        // CGame::Send (which does not record) instead.
+                        ::CPacketUseCombatAbility(index).Send();
                     }
                     break;
                 }
@@ -4566,8 +4569,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    CPacketDoubleClickRequest(CAssistant::TextToSerial(command->TextA) | 0x80000000)
-                        .SendServer();
+                    ::CPacketDoubleClickRequest(CAssistant::TextToSerial(command->TextA) | 0x80000000)
+                        .Send();
                     break;
                 case 341: // ClosePaperdoll(serial)
                     if (g_World == nullptr || command->TextA.empty())
@@ -5178,8 +5181,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             switch (command->SubTag)
             {
                 case 0:
-                    CPacketContextMenuRequest(CAssistant::TextToSerial(command->TextA))
-                        .SendServer();
+                    ::CPacketRequestPopupMenu(CAssistant::TextToSerial(command->TextA)).Send();
                     break;
                 case 1:
                     g_ContextMenuManager.SetHook(

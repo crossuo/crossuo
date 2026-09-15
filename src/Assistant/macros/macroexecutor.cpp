@@ -996,7 +996,7 @@ void CMacroExecutor::ProcessMacro()
                 uint serial = serial_for_convert((CMacroWithObject *)macro, convertType);
                 if (serial != 0)
                 {
-                    CPacketContextMenuRequest(serial).SendServer();
+                    ::CPacketRequestPopupMenu(serial).Send();
                 }
                 break;
             }
@@ -1021,10 +1021,10 @@ void CMacroExecutor::ProcessMacro()
                 if (convertType == MCT_ANY ||
                     (((CMacroWithObject *)macro)->Serial == g_ContextMenuManager.Serial))
                 {
-                    CPacketContextMenuSelection(
+                    ::CPacketPopupMenuSelection(
                         g_ContextMenuManager.Serial,
                         ((CMacroWithObject *)macro)->Graphic)
-                        .SendServer();
+                        .Send();
                 }
                 break;
             }
@@ -1051,10 +1051,10 @@ void CMacroExecutor::ProcessMacro()
                 break;
             }
             case MT_QUEST_MENU_REQUEST:
-                CPacketQuestMenuRequest().SendServer();
+                ::CPacketQuestMenuRequest().Send();
                 break;
             case MT_GUILD_MENU_REQUEST:
-                CPacketGuildMenuRequest().SendServer();
+                ::CPacketGuildMenuRequest().Send();
                 break;
             case MT_WALK:
             {
@@ -1114,7 +1114,7 @@ void CMacroExecutor::ProcessMacro()
                 CPacketUseAbilityRequest((int)(convertType == MCT_SECONDARY)).SendClient();
                 break;
             case MT_TOGGLE_GARGOYLE_FLYING:
-                CPacketToggleGargoyleFlying().SendServer();
+                ::CPacketToggleGargoyleFlying().Send();
                 break;
             case MT_SET_ARM:
                 m_ArmList.clear();

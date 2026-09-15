@@ -54,34 +54,16 @@ DEFINE_PACKET(
     uint16_t font,
     uint32_t lang);
 DEFINE_PACKET(ToClientTargetRequest);
-DEFINE_PACKET(StatusRequest, uint32_t serial);
-DEFINE_PACKET(ClickRequest, uint32_t serial);
-DEFINE_PACKET(DoubleClickRequest, uint32_t serial);
 DEFINE_PACKET(Weather, const WEATHER_DATA &data);
 DEFINE_PACKET(Season, const SEASON_DATA &data);
-DEFINE_PACKET(Resend);
-DEFINE_PACKET(EmoteAction, const char *action);
 DEFINE_PACKET(HideObject, uint32_t serial);
 DEFINE_PACKET(PlaySound, uint16_t index, int16_t x, int16_t y, int8_t z);
-DEFINE_PACKET(PickupRequest, uint32_t serial, uint16_t count);
-DEFINE_PACKET(
-    DropRequestOld, uint32_t serial, uint16_t x, uint16_t y, uint8_t z, uint32_t container);
-DEFINE_PACKET(
-    DropRequestNew,
-    uint32_t serial,
-    uint16_t x,
-    uint16_t y,
-    uint8_t z,
-    uint8_t slot,
-    uint32_t container);
-DEFINE_PACKET(EquipRequest, uint32_t serial, uint8_t layer, uint32_t container);
 DEFINE_PACKET(QuestArrowOld, bool enabled, int16_t x, int16_t y);
 DEFINE_PACKET(QuestArrowNew, bool enabled, int16_t x, int16_t y);
 DEFINE_PACKET(
     MenuResponse, uint32_t serial, uint32_t id, int32_t code, uint16_t graphic, uint16_t color);
 DEFINE_PACKET(GrayMenuResponse, uint32_t serial, uint32_t id, int32_t code);
 DEFINE_PACKET(DyeData, uint32_t serial);
-DEFINE_PACKET(UseCombatAbility, uint8_t index);
 DEFINE_PACKET(WrestlingStun);
 DEFINE_PACKET(WrestlingDisarm);
 DEFINE_PACKET(CancelTarget);
@@ -110,16 +92,9 @@ DEFINE_PACKET(BuyRequest, uint32_t serial, const vector<std::pair<uint, int>> &l
 DEFINE_PACKET(SellRequest, uint32_t serial, const vector<std::pair<uint, int>> &list);
 DEFINE_PACKET(LogOut);
 DEFINE_PACKET(ClosePaperdoll, uint32_t serial);
-DEFINE_PACKET(ContextMenuRequest, uint32_t serial);
-DEFINE_PACKET(ContextMenuSelection, uint32_t serial, uint32_t index);
-DEFINE_PACKET(TargetUseObject, uint32_t useObjectSerial, uint32_t targetObjectSerial);
 DEFINE_PACKET(TargetCastSpell, uint16_t spell, uint32_t targetObjectSerial);
 DEFINE_PACKET(TargetUseSkill, uint16_t skill, uint32_t targetObjectSerial);
 DEFINE_PACKET(ClientViewRange, uchar range);
-DEFINE_PACKET(GuildMenuRequest);
-DEFINE_PACKET(QuestMenuRequest);
-DEFINE_PACKET(ToggleGargoyleFlying);
-
 DEFINE_PACKET(CloseGenericGumpWithoutResponse, CGump *gump, bool all);
 DEFINE_PACKET(SelectMenuInClient, uint32_t serial, uint32_t id, int32_t code);
 DEFINE_PACKET(CastSpellRequest, int32_t id);

@@ -5,8 +5,8 @@
 
 #include "contextmenumanager.h"
 #include "../core/assist.h"
-#include "../core/packets.h"
 #include "../macros/macroexecutor.h"
+#include "Network/Packets.h" // ::CPacketPopupMenuSelection (the client's own 0xBF/0x15 builder)
 #include <common/logging/logging.h>
 
 namespace xuoassist {
@@ -64,7 +64,7 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
                 {
                     index = reader.ReadUInt16BE();
                     HookEnabled = false;
-                    CPacketContextMenuSelection(Serial, index).SendServer();
+                    ::CPacketPopupMenuSelection(Serial, (uint16_t)index).Send();
                     return false;
                 }
 
@@ -79,7 +79,7 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
                 {
                     index = reader.ReadUInt16BE();
                     HookEnabled = false;
-                    CPacketContextMenuSelection(Serial, index).SendServer();
+                    ::CPacketPopupMenuSelection(Serial, (uint16_t)index).Send();
                     return false;
                 }
 

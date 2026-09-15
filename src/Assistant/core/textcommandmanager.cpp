@@ -916,7 +916,7 @@ HCOMMAND(resend)
 
     lastResendTime = currentTime + 10000;
 
-    CPacketResend().SendServer();
+    ::CPacketResend().Send();
 }
 
 HCOMMAND(sound)
@@ -953,7 +953,7 @@ HCOMMAND(emoteaction)
         return;
     }
 
-    CPacketEmoteAction(args[0].c_str()).SendServer();
+    ::CPacketEmoteAction(args[0].c_str()).Send();
 }
 
 HCOMMAND(hide)

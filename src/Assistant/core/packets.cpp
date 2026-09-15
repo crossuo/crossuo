@@ -208,29 +208,6 @@ CPacketToClientTargetRequest::CPacketToClientTargetRequest()
     g_Target.SetRecvAssistData(reader);
 }
 
-CPacketStatusRequest::CPacketStatusRequest(uint32_t serial)
-    : CPacket(10)
-{
-    WriteUInt8(0x34);
-    WriteUInt32BE(0xEDEDEDED);
-    WriteUInt8(4);
-    WriteUInt32BE(serial);
-}
-
-CPacketClickRequest::CPacketClickRequest(uint32_t serial)
-    : CPacket(5)
-{
-    WriteUInt8(0x09);
-    WriteUInt32BE(serial);
-}
-
-CPacketDoubleClickRequest::CPacketDoubleClickRequest(uint32_t serial)
-    : CPacket(5)
-{
-    WriteUInt8(0x06);
-    WriteUInt32BE(serial);
-}
-
 CPacketWeather::CPacketWeather(const WEATHER_DATA &data)
     : CPacket(4)
 {
@@ -246,21 +223,6 @@ CPacketSeason::CPacketSeason(const SEASON_DATA &data)
     WriteUInt8(0xBC);
     WriteUInt8(data.Index);
     WriteUInt8(data.Music);
-}
-
-CPacketResend::CPacketResend()
-    : CPacket(3)
-{
-    WriteUInt8(0x22);
-}
-
-CPacketEmoteAction::CPacketEmoteAction(const char *action)
-    : CPacket(5 + strlen(action))
-{
-    WriteUInt8(0x12);
-    WriteUInt16BE(checked_cast<uint16_t>(5 + strlen(action)));
-    WriteUInt8(0xC7);
-    WriteString(action);
 }
 
 CPacketHideObject::CPacketHideObject(uint32_t serial)
@@ -280,48 +242,6 @@ CPacketPlaySound::CPacketPlaySound(uint16_t index, int16_t x, int16_t y, int8_t 
     WriteInt16BE(x);
     WriteInt16BE(y);
     WriteInt8(z);
-}
-
-CPacketPickupRequest::CPacketPickupRequest(uint32_t serial, uint16_t count)
-    : CPacket(7)
-{
-    WriteUInt8(0x07);
-    WriteUInt32BE(serial);
-    WriteUInt16BE(count);
-}
-
-CPacketDropRequestOld::CPacketDropRequestOld(
-    uint32_t serial, uint16_t x, uint16_t y, uint8_t z, uint32_t container)
-    : CPacket(14)
-{
-    WriteUInt8(0x08);
-    WriteUInt32BE(serial);
-    WriteUInt16BE(x);
-    WriteUInt16BE(y);
-    WriteUInt8(z);
-    WriteUInt32BE(container);
-}
-
-CPacketDropRequestNew::CPacketDropRequestNew(
-    uint32_t serial, uint16_t x, uint16_t y, uint8_t z, uint8_t slot, uint32_t container)
-    : CPacket(15)
-{
-    WriteUInt8(0x08);
-    WriteUInt32BE(serial);
-    WriteUInt16BE(x);
-    WriteUInt16BE(y);
-    WriteUInt8(z);
-    WriteUInt8(slot);
-    WriteUInt32BE(container);
-}
-
-CPacketEquipRequest::CPacketEquipRequest(uint32_t serial, uint8_t layer, uint32_t container)
-    : CPacket(10)
-{
-    WriteUInt8(0x13);
-    WriteUInt32BE(serial);
-    WriteUInt8(layer);
-    WriteUInt32BE(container);
 }
 
 CPacketQuestArrowOld::CPacketQuestArrowOld(bool enabled, int16_t x, int16_t y)
@@ -371,18 +291,6 @@ CPacketDyeData::CPacketDyeData(uint32_t serial)
     WriteUInt32BE(serial);
     WriteUInt16BE(0);
     WriteUInt16BE(0x0FAB);
-}
-
-CPacketUseCombatAbility::CPacketUseCombatAbility(uint8_t index)
-    : CPacket(15)
-{
-    WriteUInt8(0xD7);
-    WriteUInt16BE(0x000F);
-    WriteUInt32BE(g_PlayerSerial);
-    WriteUInt16BE(0x0019);
-    WriteUInt32BE(0x00000000);
-    WriteUInt8(index);
-    WriteUInt8(0x0A);
 }
 
 CPacketWrestlingStun::CPacketWrestlingStun()
@@ -658,36 +566,6 @@ CPacketClosePaperdoll::CPacketClosePaperdoll(uint32_t serial)
     WriteUInt32BE(serial);
 }
 
-CPacketContextMenuRequest::CPacketContextMenuRequest(uint32_t serial)
-    : CPacket(9)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x0009);
-    WriteUInt16BE(0x0013);
-    WriteUInt32BE(serial);
-}
-
-CPacketContextMenuSelection::CPacketContextMenuSelection(uint32_t serial, uint32_t index)
-    : CPacket(11)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x000B);
-    WriteUInt16BE(0x0015);
-    WriteUInt32BE(serial);
-    WriteUInt16BE(checked_cast<uint16_t>(index));
-}
-
-CPacketTargetUseObject::CPacketTargetUseObject(
-    uint32_t useObjectSerial, uint32_t targetObjectSerial)
-    : CPacket(13)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x000D);
-    WriteUInt16BE(0x002C);
-    WriteUInt32BE(useObjectSerial);
-    WriteUInt32BE(targetObjectSerial);
-}
-
 CPacketTargetCastSpell::CPacketTargetCastSpell(uint16_t spell, uint32_t targetObjectSerial)
     : CPacket(11)
 {
@@ -723,36 +601,6 @@ CPacketClientViewRange::CPacketClientViewRange(uchar range)
     }
 
     WriteUInt8(range);
-}
-
-CPacketGuildMenuRequest::CPacketGuildMenuRequest()
-    : CPacket(10)
-{
-    WriteUInt8(0xD7);
-    WriteUInt16BE(0x000A);
-    WriteUInt32BE(g_PlayerSerial);
-    WriteUInt16BE(0x0028);
-    WriteUInt8(0x0A);
-}
-
-CPacketQuestMenuRequest::CPacketQuestMenuRequest()
-    : CPacket(10)
-{
-    WriteUInt8(0xD7);
-    WriteUInt16BE(0x000A);
-    WriteUInt32BE(g_PlayerSerial);
-    WriteUInt16BE(0x0032);
-    WriteUInt8(0x0A);
-}
-
-CPacketToggleGargoyleFlying::CPacketToggleGargoyleFlying()
-    : CPacket(11)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x000B);
-    WriteUInt16BE(0x0032);
-    WriteUInt16BE(0x0001);
-    WriteUInt32BE(0x00000000);
 }
 
 CPacketCloseGenericGumpWithoutResponse::CPacketCloseGenericGumpWithoutResponse(
