@@ -19,8 +19,9 @@ bool AssistantWindow_Toggle();
 // first and events it wants to capture are kept away from the game.
 // Returns true when the event must not reach the game.
 bool AssistantWindow_ProcessEvent(const SDL_Event &ev);
-// Per-frame gating check (called from CGame::Process): shuts the assistant
-// down as soon as the client leaves the in-game stage.
+// Per-frame gating check (called from CGame::Process): wires the host bridge
+// once, resets the assistant connected state as soon as the client leaves the
+// in-game stage, and shuts the assistant down.
 void AssistantWindow_FrameTick();
 // Renders the assistant overlay at the end of the in-game render pass; the
 // first call lazily initializes the assistant. Initialization may run from

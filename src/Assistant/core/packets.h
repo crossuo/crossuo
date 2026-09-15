@@ -34,7 +34,6 @@ public:
 };
 
 DEFINE_PACKET(Light, uint8_t light);
-DEFINE_PACKET(PersonalLight, uint32_t serial, uint8_t light);
 DEFINE_PACKET(ToClientSystemPrint, const wstring &text, uint16_t color);
 DEFINE_PACKET(ToClientCharacterPrint, uint32_t serial, const wstring &text, uint16_t color);
 DEFINE_PACKET(
@@ -81,17 +80,11 @@ DEFINE_PACKET(QuestArrowNew, bool enabled, int16_t x, int16_t y);
 DEFINE_PACKET(
     MenuResponse, uint32_t serial, uint32_t id, int32_t code, uint16_t graphic, uint16_t color);
 DEFINE_PACKET(GrayMenuResponse, uint32_t serial, uint32_t id, int32_t code);
-DEFINE_PACKET(GraphicEffect, uint16_t graphic, uint8_t duration, int16_t x, int16_t y, uint8_t z);
-DEFINE_PACKET(PartyAccept, uint32_t serial);
-DEFINE_PACKET(PartyDecline, uint32_t serial);
-DEFINE_PACKET(TradeClose, uint32_t id);
-DEFINE_PACKET(TradeCheckState, uint32_t id, bool state);
 DEFINE_PACKET(DyeData, uint32_t serial);
 DEFINE_PACKET(UseCombatAbility, uint8_t index);
 DEFINE_PACKET(WrestlingStun);
 DEFINE_PACKET(WrestlingDisarm);
 DEFINE_PACKET(CancelTarget);
-DEFINE_PACKET(InvokeVirtureRequest, uint8_t id);
 DEFINE_PACKET(GumpResponse, CGump *gump, int32_t code);
 DEFINE_PACKET(TargetCancel, uint8_t type, uint32_t targetSerial, uint8_t targetType);
 DEFINE_PACKET(
@@ -105,7 +98,6 @@ DEFINE_PACKET(
     uint16_t x,
     uint16_t y,
     uint8_t z);
-DEFINE_PACKET(ProfileRequest, uint32_t serial);
 DEFINE_PACKET(ASCIIPromptResponse, uint32_t serial, uint32_t id, const string &text, bool cancel);
 DEFINE_PACKET(
     UnicodePromptResponse,
@@ -124,9 +116,6 @@ DEFINE_PACKET(TargetUseObject, uint32_t useObjectSerial, uint32_t targetObjectSe
 DEFINE_PACKET(TargetCastSpell, uint16_t spell, uint32_t targetObjectSerial);
 DEFINE_PACKET(TargetUseSkill, uint16_t skill, uint32_t targetObjectSerial);
 DEFINE_PACKET(ClientViewRange, uchar range);
-DEFINE_PACKET(ConfirmWalk, uint8_t direction, uint8_t notoriety);
-DEFINE_PACKET(MapUOPartyInfo);
-DEFINE_PACKET(MapUOGuildInfo);
 DEFINE_PACKET(GuildMenuRequest);
 DEFINE_PACKET(QuestMenuRequest);
 DEFINE_PACKET(ToggleGargoyleFlying);
@@ -140,7 +129,6 @@ DEFINE_PACKET(CloseStatusbar, uint32_t serial);
 DEFINE_PACKET(SecureTradeCheck, uint32_t id1, bool state);
 DEFINE_PACKET(SecureTradeClose, uint32_t id1);
 DEFINE_PACKET(UnicodeSpeechRequest, uint16_t color, const wstring &text);
-DEFINE_PACKET(RenameMountRequest, uint32_t serial, const string &name);
 DEFINE_PACKET(Reconnect);
 DEFINE_PACKET(PlayMacro, const vector<string> &actionList, const vector<string> &subActionList);
 DEFINE_PACKET(MovePaperdoll, uint32_t serial, int32_t x, int32_t y);

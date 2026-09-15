@@ -111,7 +111,7 @@ public:
     // Cancel shopping! (drops the queued request)
     void CancelProgress();
 
-    // --- packet taps (packetmanager.cpp; bool = pass-through, parity with the original) -----
+    // --- client call-ins (were the packetmanager.cpp taps; bool = pass-through, parity with the original) -----
     bool OnOpenContainer(uint serial);
     // fed from the client's parsed 0x9E values (vendor serial, lookup result,
     // the sell entries); bool = pass-through, parity with the original

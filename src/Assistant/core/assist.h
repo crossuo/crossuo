@@ -180,5 +180,11 @@ public:
 
 extern CAssistant g_Assistant;
 
+// The client's speech send sites (game console tail, MacroManager's say
+// actions, CGame::SendASCIIText): runs the command-prefix intercept (returns
+// false when the caller must suppress the send), records the say line and
+// applies the font-color override to `color` by reference.
+bool AssistantSpeechIntercept(astr_t &text, uint16_t &color);
+
 } // namespace xuoassist
 

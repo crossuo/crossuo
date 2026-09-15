@@ -12,16 +12,17 @@
 //     bodies (attack/use-object/all-names/cast/skill/targeting/bandage/NTS);
 //   - TabMacros::UpdateMacroList: the "Play macro" action
 //     list follows the user's macro names;
-//   - the 0xFC OIPMT_SKILL_LIST / OIPMT_SPELL_LIST handlers:
-//     "Last" + skill/spell names
-//     feed the cast/use-skill action lists through AssistantUI events.
+//   - the 0xFC OIPMT_SKILL_LIST / OIPMT_SPELL_LIST handlers fed
+//     "Last" + skill/spell names into the cast/use-skill action
+//     lists through AssistantUI events (no producer since the
+//     plugin-era 0xFC path was removed).
 //
 // Script entries (HT_SCRIPT) keep their stored name this phase: the script
 // engine lands in Phase 4, so the handler is inert (documented delta). The
 // external-code entries run through the text-command pipeline when the text
 // starts with the configured command prefix (typed "_cmd" commands historically
-// arrived as outgoing speech and are intercepted in managers/packetmanager.cpp
-// :1660/:1723 - the same DoCommand call is reused here); anything else is
+// arrived as outgoing speech and are now intercepted by AssistantSpeechIntercept
+// in core/assist.cpp - the same DoCommand call is reused here); anything else is
 // inert with a UI tooltip.
 
 #pragma once
@@ -37,9 +38,9 @@ struct CHotkeyEntry;
 const char *Actions_TypeName(uint type);
 uint Actions_TypeCount();
 
-// The action combo contents (Content lists). Fixed for most types; spells and
-// skills are filled from the client list packets (Actions_SetSpellList /
-// Actions_SetSkillList), the macro list follows g_AssistantConfig.Macros().
+// The action combo contents (Content lists). Fixed for most types; the spell
+// and skill lists follow the (currently producer-less) Actions_SetSpellList /
+// Actions_SetSkillList feeds, the macro list follows g_AssistantConfig.Macros().
 int Actions_ActionCount(uint type);
 // Writes into a caller buffer (draw paths build no strings).
 void Actions_ActionName(uint type, int action, char *out, size_t size);

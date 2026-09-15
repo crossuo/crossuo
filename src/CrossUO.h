@@ -59,7 +59,6 @@ public:
 
     bool Install();
     void Uninstall();
-    void SendAssistantLists();
     void ProcessCommandLine();
 
     void InitScreen(GAME_STATE state);

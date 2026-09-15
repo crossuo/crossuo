@@ -9,7 +9,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
 #if defined(XUO_ASSISTANT)
-#include <managers/packetmanager.h> // xuoassist::AssistantPackets_SpeechIntercept (speech taps)
+#include <core/assist.h> // xuoassist::AssistantSpeechIntercept (speech taps)
 #endif
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
@@ -319,7 +319,7 @@ void SendConsoleText(wstr_t text, uint16_t defaultColor)
     // was the 0xAD UnicodeClientTalk send tap: prefixed lines run the
     // assistant command instead of going out as speech
     astr_t speechText = str_from(text);
-    if (!xuoassist::AssistantPackets_SpeechIntercept(speechText, sendColor))
+    if (!xuoassist::AssistantSpeechIntercept(speechText, sendColor))
     {
         return;
     }

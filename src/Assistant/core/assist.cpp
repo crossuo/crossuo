@@ -22,7 +22,8 @@
 #include "world.h"
 #include "worldutil.h"
 #include "textparser.h"
-#include "../managers/packetmanager.h"
+#include "textcommandmanager.h" // g_TextCommandManager (the command-prefix intercept)
+#include "clientversion.h" // GetClientVersion (the negotiated client version)
 #include "../config/assistantconfig.h"
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-initiated sends do not self-record)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
@@ -898,7 +899,7 @@ void CAssistant::MoveItem(CGameItem *item)
 
     CPacketPickupRequest(serial, g_MoveItemData.Count).SendServer();
 
-    if (g_PacketManager.ClientVersion >= CV_6017)
+    if (GetClientVersion() >= CV_6017)
     {
         CPacketDropRequestNew(
             serial, g_MoveItemData.X, g_MoveItemData.Y, g_MoveItemData.Z, 0, g_MoveItemData.Container)
@@ -930,7 +931,7 @@ void CAssistant::Track(const bool &state, short x, short y)
         y = g_Player->GetY();
     }
 
-    if (g_PacketManager.ClientVersion >= CV_7090)
+    if (GetClientVersion() >= CV_7090)
     {
         CPacketQuestArrowNew(state, x, y).SendClient();
     }
@@ -1490,6 +1491,47 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
             OpenDoor();
         }
     }
+}
+
+// The client's speech send sites (game console tail, MacroManager's say
+// actions, CGame::SendASCIIText): were the 0x03 ClientTalkS / 0xAD
+// UnicodeClientTalk send taps (the two rows differed only in text extraction
+// from the wire - the 0xAD row decoded the encoded-command form to recover
+// the typed text, which the send sites already hold). Runs the command-prefix
+// intercept (returns false - the caller suppresses the send; the old taps
+// returned "consumed" into a void entry point, so prefixed lines both ran
+// the command and went out as raw speech, and the client-site early return
+// restores the interception's purpose), records the say line and applies the
+// font-color override to `color` by reference.
+bool AssistantSpeechIntercept(astr_t &text, uint16_t &color)
+{
+    // Command prefix: run the assistant command and suppress the send.
+    int prefixLen = g_AssistantConfig.IsCommandPrefix(text);
+    if (prefixLen != 0)
+    {
+        g_TextCommandManager.DoCommand(text.substr(prefixLen));
+        return false;
+    }
+    // DEVIATION: a leading '-' went to g_UOMapManager.UOAnotifyCmd
+    // - the external UOA/UOAM command pipe (Windows WM_USER + atoms); there
+    // is no in-process equivalent, the command stays a normal speech line.
+
+    g_MacroExecutor.RecordSay(text);
+
+    ushort replaceFontColorValue = 0;
+    bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
+
+    if (!replaceFontColor && replaceFontColorValue != color)
+    {
+        g_AssistantConfig.SetFontColor(false, color);
+    }
+
+    if (replaceFontColor)
+    {
+        color = replaceFontColorValue;
+    }
+
+    return true;
 }
 
 } // namespace xuoassist

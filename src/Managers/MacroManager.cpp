@@ -30,7 +30,7 @@
 #include "../Walker/PathFinder.h"
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.Record* (macro taps)
-#include <managers/packetmanager.h> // xuoassist::AssistantPackets_SpeechIntercept (speech taps)
+#include <core/assist.h> // xuoassist::AssistantSpeechIntercept (speech taps)
 #endif
 #include <algorithm>
 
@@ -850,7 +850,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 // taps: prefixed macro-say lines run the assistant command
                 // instead of going out as speech
                 astr_t speechText = mos->m_String;
-                if (!xuoassist::AssistantPackets_SpeechIntercept(speechText, speechColor))
+                if (!xuoassist::AssistantSpeechIntercept(speechText, speechColor))
                 {
                     break;
                 }

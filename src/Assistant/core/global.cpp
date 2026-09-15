@@ -2,12 +2,13 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (global.cpp). The external-DLL host bridge pointers
-// stay null until the packet-manager round wires them to client internals;
-// GetInt/GetString are null-safe for the same reason.
+// stay null until Bridge_Init (the first frame tick) wires them to client
+// internals; GetInt/GetString are null-safe for the same reason.
 
 #include "global.h"
 #include <cstring>
 #include <common/str.h> // str_from (wide -> utf8)
+#include "CrossUO.h"    // ::g_Game (ValueInt/ValueString/GetStaticFlags bridge)
 
 namespace xuoassist {
 
@@ -45,6 +46,51 @@ string GetString(VALUE_KEY_STRING key, const string &value)
     }
 
     return result;
+}
+
+// Backing storage for the IGameString contract (the client's CommonInterfaces
+// uses one static instance for the same purpose).
+static IGameString s_BridgeGameString;
+
+static uint64_t CDECL Bridge_GetStaticFlags(unsigned short graphic)
+{
+    return g_Game.GetStaticFlags(graphic);
+}
+
+static int CDECL Bridge_GetValueInt(VALUE_KEY_INT key, int value)
+{
+    return g_Game.ValueInt(key, value);
+}
+
+static void CDECL Bridge_SetValueInt(VALUE_KEY_INT key, int value)
+{
+    g_Game.ValueInt(key, value);
+}
+
+static IGameString *CDECL Bridge_GetValueString(VALUE_KEY_STRING key, const char *value)
+{
+    return &s_BridgeGameString(g_Game.ValueString(key, value));
+}
+
+static void CDECL Bridge_SetValueString(VALUE_KEY_STRING key, const char *value)
+{
+    g_Game.ValueString(key, value);
+}
+
+void Bridge_Init()
+{
+    static bool s_initialized = false;
+    if (s_initialized)
+    {
+        return;
+    }
+
+    s_initialized = true;
+    g_GetStaticFlags = Bridge_GetStaticFlags;
+    g_GetInt = Bridge_GetValueInt;
+    g_SetInt = Bridge_SetValueInt;
+    g_GetString = Bridge_GetValueString;
+    g_SetString = Bridge_SetValueString;
 }
 
 uint64_t g_EnabledFeature = XAEF_DEFAULT;

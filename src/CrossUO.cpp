@@ -7,7 +7,7 @@
 #include "SDL_wrapper.h"
 #if defined(XUO_ASSISTANT)
 #include "AssistantWindow.h"
-#include <managers/packetmanager.h> // xuoassist::AssistantPackets_Send (in-client assistant)
+#include <core/assist.h> // xuoassist::AssistantSpeechIntercept (speech taps)
 #include <core/global.h> // xuoassist::g_SelectedClientWorldObject (selected-tile feed)
 #include <managers/promptmanager.h> // xuoassist::g_PromptManager.OnPromptSent (prompt taps)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.Record* (macro taps)
@@ -69,7 +69,6 @@
 
 #include "Network/UOHuffman.h"
 #include "Network/Packets.h"
-#include "Network/PluginPackets.h"
 #include "Network/Connection.h"
 
 #include "Managers/AnimationManager.h"
@@ -1203,17 +1202,6 @@ void CGame::LoadStartupConfig(int serial)
     }
 }
 
-void CGame::SendAssistantLists()
-{
-#if defined(XUO_ASSISTANT)
-    // the assistant builds its skill/spell/macro books from these lists
-    CPluginPacketSkillsList().SendToAssistant();
-    CPluginPacketSpellsList().SendToAssistant();
-    CPluginPacketMacrosList().SendToAssistant();
-#endif
-    g_GameWindow.Raise();
-}
-
 astr_t CGame::FixServerName(astr_t name)
 {
     size_t i = 0;
@@ -1557,11 +1545,6 @@ int CGame::Send(uint8_t *buf, int size)
     }
     else
     {
-#if defined(XUO_ASSISTANT)
-        // the in-client assistant observes outgoing packets pre-encryption,
-        // before the wire
-        xuoassist::AssistantPackets_Send(buf, (size_t)size);
-#endif
         result = g_ConnectionManager.Send(buf, size);
     }
 
@@ -5512,7 +5495,7 @@ void CGame::SendASCIIText(const char *str, SPEECH_TYPE type)
     // command instead of going out as speech
     astr_t speechText = str;
     uint16_t speechColor = g_ConfigManager.SpeechColor;
-    if (!xuoassist::AssistantPackets_SpeechIntercept(speechText, speechColor))
+    if (!xuoassist::AssistantSpeechIntercept(speechText, speechColor))
     {
         return;
     }

@@ -80,14 +80,6 @@ CPacketLight::CPacketLight(uint8_t light)
     WriteUInt8(light);
 }
 
-CPacketPersonalLight::CPacketPersonalLight(uint32_t serial, uint8_t light)
-    : CPacket(6)
-{
-    WriteUInt8(0x4E);
-    WriteUInt32BE(serial);
-    WriteUInt8(light);
-}
-
 CPacketToClientSystemPrint::CPacketToClientSystemPrint(const wstring &text, uint16_t color)
     : CPacket(1)
 {
@@ -372,67 +364,6 @@ CPacketGrayMenuResponse::CPacketGrayMenuResponse(uint32_t serial, uint32_t id, i
     WriteUInt16BE(code);
 }
 
-CPacketGraphicEffect::CPacketGraphicEffect(
-    uint16_t graphic, uint8_t duration, int16_t x, int16_t y, uint8_t z)
-    : CPacket(28)
-{
-    WriteUInt8(0x70);
-    WriteUInt8(2);             //EF_STAY_AT_POS
-    WriteUInt32BE(0x00000000); //sourceSerial
-    WriteUInt32BE(0x00000000); //destSerial
-    WriteUInt16BE(graphic);
-    WriteInt16BE(x); //src pos
-    WriteInt16BE(y);
-    WriteUInt8(z);
-    WriteUInt16BE(0); //dest pos
-    WriteUInt16BE(0);
-    WriteUInt8(0);
-    WriteUInt8(1);        //speed
-    WriteUInt8(duration); //duration
-    WriteUInt16BE(0);     //??
-    WriteUInt8(0);        //fixedDirection
-    WriteUInt8(0);        //explode
-}
-
-CPacketPartyAccept::CPacketPartyAccept(uint32_t serial)
-    : CPacket(10)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x000a);
-    WriteUInt16BE(0x0006);
-    WriteUInt8(0x08);
-    WriteUInt32BE(serial);
-}
-
-CPacketPartyDecline::CPacketPartyDecline(uint32_t serial)
-    : CPacket(10)
-{
-    WriteUInt8(0xBF);
-    WriteUInt16BE(0x000a);
-    WriteUInt16BE(0x0006);
-    WriteUInt8(0x09);
-    WriteUInt32BE(serial);
-}
-
-CPacketTradeClose::CPacketTradeClose(uint32_t id)
-    : CPacket(17)
-{
-    WriteUInt8(0x6F);
-    WriteUInt16BE(17);
-    WriteUInt8(0x01);
-    WriteUInt32BE(id);
-}
-
-CPacketTradeCheckState::CPacketTradeCheckState(uint32_t id, bool state)
-    : CPacket(17)
-{
-    WriteUInt8(0x6F);
-    WriteUInt16BE(17);
-    WriteUInt8(0x02);
-    WriteUInt32BE(id);
-    WriteUInt32BE(state);
-}
-
 CPacketDyeData::CPacketDyeData(uint32_t serial)
     : CPacket(9)
 {
@@ -477,16 +408,6 @@ CPacketCancelTarget::CPacketCancelTarget()
     WriteUInt8(0x00);
     WriteUInt32BE(0x00000000);
     WriteUInt8(0x03);
-}
-
-CPacketInvokeVirtureRequest::CPacketInvokeVirtureRequest(uint8_t id)
-    : CPacket(6)
-{
-    WriteUInt8(0x12);
-    WriteUInt16BE(0x0006);
-    WriteUInt8(0xF4);
-    WriteUInt8(id);
-    WriteUInt8(0x00);
 }
 
 CPacketGumpResponse::CPacketGumpResponse(CGump *gump, int32_t code)
@@ -638,15 +559,6 @@ CPacketTargetTile::CPacketTargetTile(
     WriteUInt16BE(y);
     WriteUInt16BE(z);
     WriteUInt16BE(graphic);
-}
-
-CPacketProfileRequest::CPacketProfileRequest(uint32_t serial)
-    : CPacket(8)
-{
-    WriteUInt8(0xB8);
-    WriteUInt16BE(0x0008);
-    WriteUInt8(0);
-    WriteUInt32BE(serial);
 }
 
 CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(
@@ -813,31 +725,6 @@ CPacketClientViewRange::CPacketClientViewRange(uchar range)
     WriteUInt8(range);
 }
 
-CPacketConfirmWalk::CPacketConfirmWalk(uint8_t direction, uint8_t notoriety)
-    : CPacket(3)
-{
-    WriteUInt8(0x22);
-    WriteUInt8(direction);
-    WriteUInt8(notoriety);
-}
-
-CPacketMapUOPartyInfo::CPacketMapUOPartyInfo()
-    : CPacket(4)
-{
-    WriteUInt8(0xF0);
-    WriteUInt16BE(4);
-    WriteUInt8(0x00);
-}
-
-CPacketMapUOGuildInfo::CPacketMapUOGuildInfo()
-    : CPacket(5)
-{
-    WriteUInt8(0xF0);
-    WriteUInt16BE(5);
-    WriteUInt8(0x01);
-    WriteUInt8(0x01);
-}
-
 CPacketGuildMenuRequest::CPacketGuildMenuRequest()
     : CPacket(10)
 {
@@ -942,19 +829,6 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(uint16_t color, const w
     WriteUInt16BE(OCT_UNICODE_SPEECH_REQUEST);
     WriteUInt16BE(color);
     WriteWString(text);
-}
-
-CPacketRenameMountRequest::CPacketRenameMountRequest(uint32_t serial, const string &name)
-    : CPacket(1)
-{
-    auto size = 9 + name.length() + 1;
-    Resize(size, true);
-
-    WriteUInt8(0xFC);
-    WriteUInt16BE(checked_cast<uint16_t>(size));
-    WriteUInt16BE(OCT_RENAME_MOUNT_REQUEST);
-    WriteUInt32BE(serial);
-    WriteString(name);
 }
 
 CPacketReconnect::CPacketReconnect()

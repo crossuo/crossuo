@@ -62,8 +62,8 @@ public:
         int kind, uint serial, ushort graphic, ushort color, const string &name) override;
 
     // --- Phase 4a consumers -------------------------------------------------
-    // The display caption redraw requests (packetmanager.cpp OnTitleRedraw
-    // call sites; was g_TabDisplay->RedrawTitle/CheckRedrawTitle).
+    // The display caption redraw requests (fired from the client's send and
+    // recv sites; was g_TabDisplay->RedrawTitle/CheckRedrawTitle).
     virtual void OnTitleRedraw() override;
     virtual void OnTitleRedraw(uint serial) override;
 

@@ -76,11 +76,16 @@ extern uint g_TotalRecvSize;
 extern uchar g_LightLevel;
 extern uchar g_PersonalLightLevel;
 
-// Host bridge accessors; null-safe until the packet-manager round attaches the
-// in-client implementations (the original app relied on the host DLL always being
-// attached). Returning the default keeps pre-wiring behavior inert.
+// Host bridge accessors; null-safe until Bridge_Init (the first frame tick)
+// attaches the in-client implementations. Returning the default keeps
+// pre-wiring behavior inert.
 int GetInt(VALUE_KEY_INT key, int value = -1);
 string GetString(VALUE_KEY_STRING key, const string &value = "");
+
+// One-time wiring of the bridge pointers to the client implementations
+// (g_Game accessors). Called from AssistantWindow_FrameTick before any
+// script, hotkey or manager can consume them.
+void Bridge_Init();
 
 enum XA_ENABLED_FEATURES
 {

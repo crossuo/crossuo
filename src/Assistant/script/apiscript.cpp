@@ -1534,7 +1534,8 @@ JSValue jsn_assistversion(JSContext *ctx, JSValueConst, int, JSValueConst *)
     return JS_NewString(ctx, PRODUCT_VERSION_STR);
 }
 
-// [Q] Connected() - the packetmanager connection state.
+// [Q] Connected() - the assistant connection state (g_Connected; set by the
+// EnterWorld/LoginComplete hooks, cleared by the frame tick).
 JSValue jsn_connected(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     return JS_NewBool(ctx, result_bool(sc_exec(SC_CONNECTED)));

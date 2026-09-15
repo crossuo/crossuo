@@ -18,7 +18,9 @@
 #include <xuocore/uodata.h> // ExeFilePath
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
 #include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
+#include "core/global.h"    // Bridge_Init, g_Connected (xuoassist)
 #include "core/hotkeys.h"   // the hotkey engine (Phase 3 routing)
+#include "macros/macroexecutor.h" // g_MacroExecutor.Reset (disconnect reset)
 #include "Globals.h"        // g_GameState, g_Ticks
 #include "Wisp/WispWindow.h" // Wisp::g_WispWindow
 
@@ -180,9 +182,29 @@ bool AssistantWindow_Toggle()
 
 void AssistantWindow_FrameTick()
 {
+    // one-time host-bridge wiring: was lazily done by the (now deleted) packet
+    // taps; the frame tick is the first point where
+    // scripts, hotkeys or managers can run, so the bridge is always ready
+    // before first use
+    static bool s_bridged = false;
+    if (!s_bridged)
+    {
+        s_bridged = true;
+        xuoassist::Bridge_Init();
+    }
+
     // per-frame assistant logic that must run while visible or not
     if (s_initialized)
         xuoassist::AssistantUI_Tick(); // auto-reconnect countdown (was TabMain::m_ReconnectTimer)
+
+    // disconnect stage-gate (was run from the packet taps): when the client leaves the in-game stage the assistant
+    // drops its connected flag and resets its own state; running here instead
+    // of per packet means a stage change is noticed within one frame
+    if (xuoassist::g_Connected && !at_game_stage())
+    {
+        xuoassist::g_MacroExecutor.Reset();
+        xuoassist::g_Connected = false;
+    }
 
     // in-game only (ADR D10): logout, disconnect or back-to-main-menu shuts the
     // assistant down, no matter whether its windows are docked or popped out;

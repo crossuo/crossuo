@@ -192,7 +192,6 @@ set(managers_src
 set(network_src
   Network/Connection.cpp
   Network/Packets.cpp
-  Network/PluginPackets.cpp
   Network/UOHuffman.cpp
 )
 

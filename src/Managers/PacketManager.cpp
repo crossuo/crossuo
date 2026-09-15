@@ -21,7 +21,6 @@
 #include "ConnectionManager.h"
 #include <cstdint>
 #if defined(XUO_ASSISTANT)
-#include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
 #include <core/assistantevents.h> // xuoassist::g_AssistantEvents (journal, JMT_* flags)
 #include <core/global.h> // xuoassist mirrored state (light, weather, season, status requests)
@@ -723,16 +722,6 @@ void CPacketManager::OnPacket()
     }
     else
     {
-#if defined(XUO_ASSISTANT)
-        // the in-client assistant observes every server packet before the
-        // client handlers; it may consume packets (the WaitTarget auto-target
-        // swallows the 0x6C reply so the client keeps no open cursor), and a
-        // consumed packet skips the client parsing below
-        if (xuoassist::AssistantPackets_Recv(Start, (size_t)Size))
-        {
-            return;
-        }
-#endif
         if (info.Handler != 0)
         {
             Ptr = Start + 1;
@@ -998,8 +987,9 @@ PACKET_HANDLER(ResendCharacterList)
 PACKET_HANDLER(LoginComplete)
 {
 #if defined(XUO_ASSISTANT)
-    // mirror of the assistant LoginComplete tap: the assistant dispatch gate
-    // (AssistantPackets_Recv) opens here; no skill bookkeeping was attached
+    // the assistant's connected handshake opens here: EnterWorld marks the
+    // assistant connected; the disconnect reset lives in the frame tick
+    // (AssistantWindow_FrameTick)
     xuoassist::g_Connected = true;
 #endif
     g_PacketLoginComplete = true;

@@ -681,7 +681,10 @@ int main(int argc, char **argv)
     }
 
     g_Game.ProcessCommandLine();
-    g_Game.SendAssistantLists();
+    // was CGame::SendAssistantLists: the plugin-era 0xFC skill/spell/macro
+    // list sends are gone (the assistant reads the client managers directly);
+    // only the game-window raise survived
+    g_GameWindow.Raise();
     auto ret = Run();
     SDL_Quit();
     str_terminate();
