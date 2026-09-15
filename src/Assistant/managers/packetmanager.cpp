@@ -244,7 +244,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x9B*/ SMSGH("Help Request", 0x102, HelpRequest),
     /*0x9C*/ UMSG(0x135),
     /*0x9D*/ UMSG(0x33),
-    /*0x9E*/ RMSGH("Vendor Sell List", PACKET_VARIABLE_SIZE, SellList),
+    /*0x9E*/ UMSG(PACKET_VARIABLE_SIZE),
     /*0x9F*/ SMSGH("Vendor Sell Reply", PACKET_VARIABLE_SIZE, SellReply),
     /*0xA0*/ SMSG("Select Server", 0x03),
     /*0xA1*/ UMSG(0x09),
@@ -923,18 +923,6 @@ PACKET_HANDLER(BuyReplyS)
     g_ShopAgent.OnBuyReplySent();
 
     return true;
-}
-
-PACKET_HANDLER(SellList)
-{
-    // KEEP (recv tap routes 0x9E): the sell fields map 1:1 onto the client
-    // parse, but the auto-sell agent consumes the packet when it replays the
-    // list itself (the client then keeps no sell gump); an in-handler hook
-    // cannot preserve that consume.
-    g_ShopReceived = true;
-
-    // was: return g_TabAgentsShop->OnPacketReceivedSellList(*this); (Phase 4)
-    return g_ShopAgent.OnSellList(*this);
 }
 
 PACKET_HANDLER(SellReply)

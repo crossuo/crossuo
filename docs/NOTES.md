@@ -865,14 +865,16 @@ the client's) has been dissolved into the client's handlers. Batches B1-B4
 fused the recv side: every recv handler is now either fused into the client
 handler, kept whole on the recv tap with a rationale, or deleted as a
 duplicate of client state updates. B5 audited and closed the send side.
-Table composition after B9 (`m_Packets` rows carrying handlers): 25 rows —
+Table composition (`m_Packets` rows carrying handlers): 23 rows —
 16 `SMSGH` send handlers, 4 `SMSGHB` rows (0x6C Target, 0x9A ASCII Prompt,
 0xC2 Unicode Prompt, 0xBF Extended Command send half; each send half
 records/intercepts the outgoing round and its recv half is fused into the
-client handler), 1 `BMSGH` row (0xFC) and 3 `RMSGH` recv keeps
-(0x7C/0x9E/0xB0). 0x56 Map Data is fused into the client MapData handler
-(mapecho gated on the negotiated map-echo bit). The recv-capable set is the
-3 `RMSGH` keeps plus 0xFC only.
+client handler), 1 `BMSGH` row (0xFC) and 2 `RMSGH` recv keeps
+(0x7C/0xB0). 0x56 Map Data and 0x9E Vendor Sell List are fused into the
+client MapData/SellList handlers (mapecho gated on the negotiated map-echo
+bit; the shop agent snapshot + auto-sell consume). The remaining
+recv-side seams are the 2 `RMSGH` keeps (0x7C Open Menu, 0xB0 Open Gump),
+the 0xBF party send half and the 0xFC channel.
 0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
 0xF0 Krrios client special are plain `BMSG` rows (both directions are
 client-owned; the host fuses the MegaCliloc event).
@@ -918,7 +920,8 @@ bypass the client action helpers):
   bookkeeping).
 - 0x9B Help Request: `MT_HELP_MENU_REQUEST` recording (observe).
 - 0x9F Vendor Sell Reply: `g_ShopAgent.OnSellReplySent` (auto-sell agent;
-  the recv-side keep 0x9E carries the auto-sell consume itself).
+  the recv-side 0x9E snapshot + auto-sell consume is fused into the client
+  SellList handler, B10).
 - 0xAD Unicode Client Talk: command-prefix interception, `MT_SAY`
   recording, own-speech font-color enforcement (the only send handler that
   edits wire bytes).
@@ -985,10 +988,10 @@ Recv keeps (consume-capable handler rows; the tap dispatches every packet to the
 - Kept (consume-capable rows): Open Menu/Open Gump feed their own agent
   models and a
   playing macro (or a menu/gump hook) can consume the packet so the client
-  keeps no gump - a veto an in-handler hook cannot express; SellList fields
-  are 1:1 with the client parse but the auto-sell consume has the same veto
-  problem; 0xBF left the keeps in B9: the party round was already fused and
-  the remaining subcommands injected cleanly (see below). The
+  keeps no gump - a veto an in-handler hook cannot express; 0xBF left the
+  keeps in B9: the party round was already fused and the remaining
+  subcommands injected cleanly (see below); the SellList keep followed in
+  B10 once the auto-sell consume moved in-handler. The
   connected-gate exemption list (0x1B/0x55/0xFC) is unaffected: every kept
   id arrives only with a world.
 
@@ -1024,6 +1027,30 @@ row, subcommand by subcommand inside the client's switch:
   wrestling/cast/context-menu recording taps, and a `DIR_SEND` row would
   warn per packet because the server sends 0xBF constantly (party chat).
   The now-unused `parse_cliloc_arguments` helper went with the handler.
+
+B10 (0x9E Vendor Sell List, the last recv-side shop keep) fuses into the
+client SellList handler: the client parses the entries once (serial, vendor
+lookup, per-entry graphic/color/count/price/name with the client's `GetA`
+cliloc resolution - the snapshot names now carry the same text the sell
+gump shows, where the old tap used `ParseArgumentsToClilocString` with
+empty args) and feeds the shop agent from the parsed values (inline
+`CVendorShopItem` mapping, the SecureTrading 0x6F style); the reader-based
+`OnSellList(CDataReader&)` parse is gone, with the `cliloc_name` helper.
+The vendor snapshot (serial + items) updates on every 0x9E regardless of
+auto-sell, so the Shop List Editor keeps showing the vendor list while
+auto-sell runs. The hook sits after the entry parse but before the
+client's vendor/itemsCount early-outs - the recv tap ran before the client
+handler, and the tap's state updates and its own "vendor is not found"/
+"list is empty" log lines survive on those paths. Consume parity: the
+agent returns `ProcessShopList`'s verdict and `ProcessShopList` returns
+pass-through when it cannot engage (empty vendor list, no matching shop
+list, no matching items), so only a queued replay consumes; the
+early-return sits before `CloseGump`/gump build, identical in scope to the
+old `return false` (which skipped the whole client handler). The
+`g_ShopReceived` wait flag is set before the g_World gate (BuyList 0x74
+precedent). No `m_AssistantInjecting` gate: no `CPacket::SendClient`
+builder produces 0x9E (the queued replay sends 0x9F, whose SMSGH send row
+stays). Row demoted to `UMSG`.
 
 
 The parallel assistant packetmanager was dissolved handler-by-handler into
@@ -1108,7 +1135,7 @@ B7 (death/prompt/profile) completes the BMSGH recv halves:
   assistant's own cursor replies go out through the `CPacketTarget*`
   builders, never through the table). B8 left 0xBF/0xFC as the only
   `BMSGH` recv halves; 0xBF followed in B9 - the assistant table now
-  dispatches recv to the 4 `RMSGH` keeps plus 0xFC only.
+  dispatches recv to the 2 `RMSGH` keeps (0x7C/0xB0) plus 0xFC only.
 
 ## Script API
 

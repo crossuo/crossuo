@@ -83,7 +83,6 @@ protected:
     XA_HANDLER_PACKET(ASCIIPromptS);
     XA_HANDLER_PACKET(UnicodePromptS);
     XA_HANDLER_PACKET(BuyReplyS);
-    XA_HANDLER_PACKET(SellList);
     XA_HANDLER_PACKET(SellReply);
     XA_HANDLER_PACKET(PerformAction);
     XA_HANDLER_PACKET(DoubleClick);

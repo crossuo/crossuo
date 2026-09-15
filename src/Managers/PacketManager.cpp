@@ -6856,28 +6856,29 @@ PACKET_HANDLER(SellList)
         return;
     }
 
+    #if defined(XUO_ASSISTANT)
+        // wait-flag for scripts/macros waiting on the shop gump
+        xuoassist::g_ShopReceived = true;
+    #endif
+
     uint32_t serial = ReadUInt32BE();
-
     CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
-
-    if (vendor == nullptr)
-    {
-        Error(Network, "sell vendor not found");
-        return;
-    }
-
     uint16_t itemsCount = ReadUInt16BE();
-    if (itemsCount == 0u)
+
+    // the entries are parsed once; the sell gump below and the shop agent
+    // snapshot both consume the parsed list
+    struct SellEntry
     {
-        Error(Network, "sell list is empty");
-        return;
-    }
+        uint32_t Serial;
+        uint16_t Graphic;
+        uint16_t Color;
+        uint16_t Count;
+        uint16_t Price;
+        astr_t Name;
+        bool NameFromCliloc;
+    };
+    std::vector<SellEntry> entries;
 
-    g_GumpManager.CloseGump(0, 0, GT_SHOP);
-
-    CGumpShop *gump = new CGumpShop(serial, false, 100, 0);
-    CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
-    int currentY = 0;
     for (int i = 0; i < itemsCount; i++)
     {
         uint32_t itemSerial = ReadUInt32BE();
@@ -6897,9 +6898,53 @@ PACKET_HANDLER(SellList)
             nameFromCliloc = true;
         }
 
+        entries.push_back({ itemSerial, graphic, color, count, price, name, nameFromCliloc });
+    }
+
+#if defined(XUO_ASSISTANT)
+    // send items to the agent, if it consumes we skip the handling on client side
+    std::vector<xuoassist::CVendorShopItem> vendorItems;
+    for (const SellEntry &entry : entries)
+    {
+        xuoassist::CVendorShopItem vendorItem;
+        vendorItem.Serial = entry.Serial;
+        vendorItem.Graphic = entry.Graphic;
+        vendorItem.Color = entry.Color;
+        vendorItem.Count = entry.Count;
+        vendorItem.Price = entry.Price;
+        vendorItem.Name = entry.Name;
+        vendorItem.NameFromCliloc = entry.NameFromCliloc;
+        vendorItems.push_back(vendorItem);
+    }
+    if (!xuoassist::g_ShopAgent.OnSellList(serial, vendor, vendorItems))
+    {
+        return;
+    }
+#endif
+
+    if (vendor == nullptr)
+    {
+        Error(Network, "sell vendor not found");
+        return;
+    }
+
+    if (itemsCount == 0u)
+    {
+        Error(Network, "sell list is empty");
+        return;
+    }
+
+    g_GumpManager.CloseGump(0, 0, GT_SHOP);
+
+    CGumpShop *gump = new CGumpShop(serial, false, 100, 0);
+    CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
+    int currentY = 0;
+    for (int i = 0; i < (int)entries.size(); i++)
+    {
+        const SellEntry &entry = entries[i];
         CGUIShopItem *shopItem = (CGUIShopItem *)htmlGump->Add(
-            new CGUIShopItem(itemSerial, graphic, color, count, price, name, 0, currentY));
-        shopItem->NameFromCliloc = nameFromCliloc;
+            new CGUIShopItem(entry.Serial, entry.Graphic, entry.Color, entry.Count, entry.Price, entry.Name, 0, currentY));
+        shopItem->NameFromCliloc = entry.NameFromCliloc;
 
         if (i == 0)
         {

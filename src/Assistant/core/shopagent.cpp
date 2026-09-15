@@ -20,9 +20,7 @@
 #include "packets.h"
 #include "../config/assistantconfig.h"
 #include "../model/commonitems/finditem.h"
-#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 #include "world.h"
-#include "Managers/ClilocManager.h" // ::g_ClilocManager (client)
 
 namespace xuoassist {
 
@@ -44,36 +42,6 @@ string to_lower_copy(string text)
 }
 
 // the old toInt semantics: the WHOLE string must parse as an integer
-bool string_to_int(const string &text, int &value)
-{
-    if (text.length() == 0)
-    {
-        return false;
-    }
-    char *end = nullptr;
-    const long parsed = strtol(text.c_str(), &end, 10);
-    if (*end != '\0')
-    {
-        return false;
-    }
-    value = (int)parsed;
-    return true;
-}
-
-string cliloc_name(const string &name, bool &intParsed)
-{
-    int clilocNum = 0;
-    intParsed = string_to_int(name, clilocNum);
-
-    if (intParsed)
-    {
-        // was g_ClilocManager.Get(clilocNum, true) (the assistant's own
-        // manager): the client's cliloc parser with empty args
-        return str_from(g_ClilocManager.ParseArgumentsToClilocString(clilocNum, true, wstr_from("")));
-    }
-
-    return name;
-}
 
 } // namespace
 
@@ -426,9 +394,11 @@ bool CShopAgent::OnOpenContainer(uint serial)
     return result;
 }
 
-bool CShopAgent::OnSellList(CDataReader &reader)
+bool CShopAgent::OnSellList(uint serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items)
 {
-    // was TabAgentsShop::OnPacketReceivedSellList (line-faithful)
+    // was TabAgentsShop::OnPacketReceivedSellList (line-faithful); the 0x9E
+    // fields arrive mapped from the client parse (vendor serial, lookup
+    // result, the sell entries with the client's cliloc names)
     if (g_World == nullptr)
     {
         return true;
@@ -443,10 +413,6 @@ bool CShopAgent::OnSellList(CDataReader &reader)
     m_IsBuyList = false;
     m_VendorItems.clear();
 
-    uint serial = reader.ReadUInt32BE();
-
-    CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
-
     m_VendorSerial = serial;
 
     if (vendor == nullptr)
@@ -455,35 +421,10 @@ bool CShopAgent::OnSellList(CDataReader &reader)
         return true;
     }
 
-    ushort itemsCount = reader.ReadUInt16BE();
-    if (itemsCount == 0u)
+    m_VendorItems = items;
+    if (items.empty())
     {
         Warning(Assistant, "shop agent: sell list is empty");
-    }
-
-    for (int i = 0; i < itemsCount; i++)
-    {
-        uint itemSerial = reader.ReadUInt32BE();
-        ushort graphic = reader.ReadUInt16BE();
-        ushort color = reader.ReadUInt16BE();
-        ushort count = reader.ReadUInt16BE();
-        ushort price = reader.ReadUInt16BE();
-        int nameLen = reader.ReadInt16BE();
-        string name = reader.ReadStringChecked(nameLen);
-
-        bool intParsed = false;
-        name = cliloc_name(name, intParsed);
-
-        CVendorShopItem item;
-        item.Serial = itemSerial;
-        item.Graphic = graphic;
-        item.Color = color;
-        item.Count = count;
-        item.Price = price;
-        item.Name = name;
-        item.NameFromCliloc = intParsed;
-
-        m_VendorItems.push_back(item);
     }
 
     if (m_AutoSell || (m_State == SLWS_SELL && m_WaitTimeout >= g_Ticks))

@@ -12,8 +12,8 @@
 // Behavior parity notes:
 //  - the flow is speech-driven ("<vendor name> buy" / "sell"); the reply
 //    packets (OpenContainer gump 0x0030, BuyList 0x74, SellList 0x9E) are
-//    tapped from managers/packetmanager.cpp exactly where the original handlers
-//    called g_TabAgentsShop;
+//    tapped from the client's packet manager (src/Managers/PacketManager.cpp)
+//    exactly where the original handlers called g_TabAgentsShop;
 //  - the per-list "Auto" buy/sell checkboxes were UI-only in the original app
 //    (never serialized into ShopList.xml) - they stay runtime state here;
 //  - the progress countdown sends the queued Buy/Sell request when it
@@ -26,8 +26,9 @@
 #pragma once
 
 #include "core/global.h"
-#include <xuocore/mappedfile.h> // ::CDataReader (the client data reader)
 #include "../model/commonitems/vendorshopitem.h"
+
+class CGameCharacter; // the client's world character (global namespace)
 
 namespace xuoassist {
 
@@ -112,7 +113,9 @@ public:
 
     // --- packet taps (packetmanager.cpp; bool = pass-through, parity with the original) -----
     bool OnOpenContainer(uint serial);
-    bool OnSellList(CDataReader &reader);
+    // fed from the client's parsed 0x9E values (vendor serial, lookup result,
+    // the sell entries); bool = pass-through, parity with the original
+    bool OnSellList(uint serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items);
     void OnBuyReplySent();
     void OnSellReplySent();
 
