@@ -13,21 +13,21 @@ CJournalMessage::CJournalMessage()
 }
 
 CJournalMessage::CJournalMessage(const CJournalMessage &msg)
-    : m_Serial(msg.GetSerial())
-    , m_Timer(msg.GetTimer())
-    , m_Color(msg.GetColor())
-    , m_Text(msg.GetText())
-    , m_Flags(msg.GetFlags())
-    , m_FindTextID(msg.GetFindTextID())
+    : Serial(msg.Serial)
+    , Timer(msg.Timer)
+    , Color(msg.Color)
+    , Text(msg.Text)
+    , Flags(msg.Flags)
+    , FindTextID(msg.FindTextID)
 {
 }
 
 CJournalMessage::CJournalMessage(const uint &serial, const ushort &color, const string &text)
-    : m_Serial(serial)
-    , m_Timer(g_Ticks)
-    , m_Color(color)
-    , m_Text(text)
-    , m_Flags(0)
+    : Serial(serial)
+    , Timer(g_Ticks)
+    , Color(color)
+    , Text(text)
+    , Flags(0)
 {
 }
 

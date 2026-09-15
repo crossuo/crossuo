@@ -54,16 +54,17 @@ public:
 
 class CTarget
 {
-    SETGET(uchar, Type, 0)
-    SETGET(uchar, CursorType, 0)
-    SETGET(ushort, MultiGraphic, 0)
-    SETGET(bool, FromAssist, false)
-    SETGET(bool, ClientWantTarget, false)
+public:
+    uchar Type = 0;
+    uchar CursorType = 0;
+    ushort MultiGraphic = 0;
+    bool FromAssist = false;
+    bool ClientWantTarget = false;
 
-    SETGET(ushort, LastTileGraphic, 0)
-    SETGET(ushort, LastTileX, 0)
-    SETGET(ushort, LastTileY, 0)
-    SETGET(ushort, LastTileZ, 0)
+    ushort LastTileGraphic = 0;
+    ushort LastTileX = 0;
+    ushort LastTileY = 0;
+    ushort LastTileZ = 0;
 
 private:
     uint m_CursorID{ 0 };

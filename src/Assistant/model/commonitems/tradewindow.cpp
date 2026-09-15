@@ -12,10 +12,10 @@ CTradeWindow::CTradeWindow()
 }
 
 CTradeWindow::CTradeWindow(const uint &serial, const uint &id1, const uint &id2, const string &name)
-    : m_Serial(serial)
-    , m_ID1(id1)
-    , m_ID2(id2)
-    , m_Name(name)
+    : Serial(serial)
+    , ID1(id1)
+    , ID2(id2)
+    , Name(name)
 {
 }
 

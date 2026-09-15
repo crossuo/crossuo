@@ -20,9 +20,22 @@ enum FIND_TOKEN_STATE
 
 class CFindItem
 {
-    SETGETCE(string, Graphic, "", OnChangeGraphic)
-    SETGETCE(string, Color, "", OnChangeColor)
-    SETGETC(string, Comment, "")
+public:
+    string Graphic = "";
+    string Color = "";
+    string Comment = "";
+
+    // setters keep firing the OnChange* list reparsers on every mutation
+    void SetGraphic(const string &val)
+    {
+        OnChangeGraphic(val);
+        Graphic = val;
+    }
+    void SetColor(const string &val)
+    {
+        OnChangeColor(val);
+        Color = val;
+    }
 
 protected:
     vector<ushort> m_ListGraphic;
@@ -41,6 +54,9 @@ public:
     CFindItem();
     CFindItem(const string &graphic, const string &color);
     virtual ~CFindItem();
+
+    void OnChangeGraphic(const string &val);
+    void OnChangeColor(const string &val);
 
     bool Found(const ushort &graphic, const ushort &color) const;
 };

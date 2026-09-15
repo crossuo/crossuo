@@ -24,16 +24,16 @@ enum SKILLS_FLAGS
 
 class CCommand
 {
-    SETGET(bool, Enabled, false)
-    SETGET(string, Description, "")
-    SETGET(uint64_t, Flags, 0)
-
 public:
+    bool Enabled = false;
+    string Description = "";
+    uint64_t Flags = 0;
+
     CCommand() {}
     CCommand(const bool &enabled, const uint64_t &flags, const string &description)
-        : m_Enabled(enabled)
-        , m_Description(description)
-        , m_Flags(flags)
+        : Enabled(enabled)
+        , Description(description)
+        , Flags(flags)
     {
     }
     ~CCommand() {}

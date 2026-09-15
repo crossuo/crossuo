@@ -12,12 +12,12 @@ namespace xuoassist {
 
 class CContextMenuManager
 {
-    SETGET(uint, Serial, 0)
-    SETGET(bool, HookEnabled, false)
-    SETGET(uint, HookID, 0)
-    SETGET(uint, HookIndex, 0)
-
 public:
+    uint Serial = 0;
+    bool HookEnabled = false;
+    uint HookID = 0;
+    uint HookIndex = 0;
+
     CContextMenuManager();
 
     void SetHook(const uint &id, const uint &index);

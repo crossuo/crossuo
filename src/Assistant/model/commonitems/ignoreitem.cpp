@@ -13,7 +13,7 @@ CIgnoreItem::CIgnoreItem()
 
 CIgnoreItem::CIgnoreItem(const string &serial, const string &graphic, const string &color)
     : CFindItem(graphic, color)
-    , m_Serial(serial)
+    , Serial(serial)
 {
 }
 
@@ -24,7 +24,7 @@ CIgnoreItem::~CIgnoreItem()
 bool CIgnoreItem::Found(const uint &serial, const ushort &graphic, const ushort &color) const
 {
     uint currentSerial = 0;
-    uint flagsSerial = ParseToken(m_Serial, currentSerial, false);
+    uint flagsSerial = ParseToken(Serial, currentSerial, false);
 
     if ((currentSerial != 0u) && TestValues(serial, currentSerial, flagsSerial))
     {

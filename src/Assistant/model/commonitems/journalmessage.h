@@ -12,14 +12,14 @@ namespace xuoassist {
 
 class CJournalMessage
 {
-    SETGET(uint, Serial, 0)
-    SETGET(uint, Timer, 0)
-    SETGET(ushort, Color, 0)
-    SETGET(string, Text, "")
-    SETGET(uchar, Flags, 0)
-    SETGET(int, FindTextID, 0)
-
 public:
+    uint Serial = 0;
+    uint Timer = 0;
+    ushort Color = 0;
+    string Text = "";
+    uchar Flags = 0;
+    int FindTextID = 0;
+
     CJournalMessage();
     CJournalMessage(const CJournalMessage &msg);
     CJournalMessage(const uint &serial, const ushort &color, const string &text);

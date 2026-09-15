@@ -256,7 +256,7 @@ bool CShopAgent::ProcessShopList()
         for (size_t vi = 0; vi < vendorItems.size(); vi++)
         {
             CVendorShopItem &vendorItem = vendorItems[vi];
-            int price = (int)vendorItem.GetPrice();
+            int price = (int)vendorItem.Price;
 
             if (checkPrice != 0)
             {
@@ -275,15 +275,15 @@ bool CShopAgent::ProcessShopList()
                 }
             }
 
-            if (findItem.Found(vendorItem.GetGraphic(), vendorItem.GetColor()) &&
+            if (findItem.Found(vendorItem.Graphic, vendorItem.Color) &&
                 ((checkName.length() == 0) ||
-                 checkName == to_lower_copy(vendorItem.GetName())))
+                 checkName == to_lower_copy(vendorItem.Name)))
             {
                 int count = shopItem.Count;
 
-                if ((count == 0) || count > (int)vendorItem.GetCount())
+                if ((count == 0) || count > (int)vendorItem.Count)
                 {
-                    count = (int)vendorItem.GetCount();
+                    count = (int)vendorItem.Count;
                 }
 
                 int currentPrice = count * price;
@@ -301,7 +301,7 @@ bool CShopAgent::ProcessShopList()
                 if (count != 0)
                 {
                     totalPrice += currentPrice;
-                    result.push_back(std::pair<uint, int>(vendorItem.GetSerial(), count));
+                    result.push_back(std::pair<uint, int>(vendorItem.Serial, count));
 
                     if ((maxStacks != 0) && (int)result.size() >= maxStacks)
                     {
@@ -391,13 +391,13 @@ bool CShopAgent::OnOpenContainer(uint serial)
                 for (CGameItem *obj = (CGameItem *)container->m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
                 {
                     CVendorShopItem item;
-                    item.SetSerial(obj->Serial);
-                    item.SetGraphic(obj->Graphic);
-                    item.SetColor(obj->Color);
-                    item.SetCount(obj->Count);
-                    item.SetPrice(obj->Price);
-                    item.SetName(obj->GetName());
-                    item.SetNameFromCliloc(obj->NameFromCliloc);
+                    item.Serial = obj->Serial;
+                    item.Graphic = obj->Graphic;
+                    item.Color = obj->Color;
+                    item.Count = obj->Count;
+                    item.Price = obj->Price;
+                    item.Name = obj->GetName();
+                    item.NameFromCliloc = obj->NameFromCliloc;
 
                     m_VendorItems.push_back(item);
                 }
@@ -469,13 +469,13 @@ bool CShopAgent::OnSellList(CDataReader &reader)
             name = cliloc_name(name, intParsed);
 
             CVendorShopItem item;
-            item.SetSerial(itemSerial);
-            item.SetGraphic(graphic);
-            item.SetColor(color);
-            item.SetCount(count);
-            item.SetPrice(price);
-            item.SetName(name);
-            item.SetNameFromCliloc(intParsed);
+            item.Serial = itemSerial;
+            item.Graphic = graphic;
+            item.Color = color;
+            item.Count = count;
+            item.Price = price;
+            item.Name = name;
+            item.NameFromCliloc = intParsed;
 
             m_VendorItems.push_back(item);
         }

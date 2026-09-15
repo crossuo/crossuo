@@ -121,31 +121,31 @@ ImU32 StyleColor(const MAP_DRAW_STYLE &style)
 
 void fill_styles(MAP_DRAW_STYLE table[6])
 {
-    table[OMCT_PLAYER] = { 6.0f, 6.0f, g_MapSettings.GetPlayerColor(), true,
-                           g_MapSettings.GetPlayerShowName() != 0,
-                           g_MapSettings.GetPlayerShowHits() != 0,
-                           g_MapSettings.GetPlayerShowMana() != 0,
-                           g_MapSettings.GetPlayerShowStam() != 0 };
-    table[OMCT_PARTY_MEMBER] = { 4.0f, 4.0f, g_MapSettings.GetPartyColor(),
-                                 g_MapSettings.GetPartyEnabled() != 0,
-                                 g_MapSettings.GetPartyShowName() != 0,
-                                 g_MapSettings.GetPartyShowHits() != 0, false, false };
-    table[OMCT_GUILD_MEMBER] = { 4.0f, 4.0f, g_MapSettings.GetGuildColor(),
-                                 g_MapSettings.GetGuildEnabled() != 0,
-                                 g_MapSettings.GetGuildShowName() != 0,
-                                 g_MapSettings.GetGuildShowHits() != 0, false, false };
-    table[OMCT_FRIEND] = { 4.0f, 4.0f, g_MapSettings.GetFriendsColor(),
-                           g_MapSettings.GetFriendsEnabled() != 0,
-                           g_MapSettings.GetFriendsShowName() != 0,
-                           g_MapSettings.GetFriendsShowHits() != 0, false, false };
-    table[OMCT_ENEMY] = { 4.0f, 4.0f, g_MapSettings.GetEnemiesColor(),
-                          g_MapSettings.GetEnemiesEnabled() != 0,
-                          g_MapSettings.GetEnemiesShowName() != 0,
-                          g_MapSettings.GetEnemiesShowHits() != 0, false, false };
-    table[OMCT_OTHER] = { 4.0f, 4.0f, g_MapSettings.GetOtherColor(),
-                          g_MapSettings.GetOtherEnabled() != 0,
-                          g_MapSettings.GetOtherShowName() != 0,
-                          g_MapSettings.GetOtherShowHits() != 0, false, false };
+    table[OMCT_PLAYER] = { 6.0f, 6.0f, g_MapSettings.PlayerColor, true,
+                           g_MapSettings.PlayerShowName != 0,
+                           g_MapSettings.PlayerShowHits != 0,
+                           g_MapSettings.PlayerShowMana != 0,
+                           g_MapSettings.PlayerShowStam != 0 };
+    table[OMCT_PARTY_MEMBER] = { 4.0f, 4.0f, g_MapSettings.PartyColor,
+                                 g_MapSettings.PartyEnabled != 0,
+                                 g_MapSettings.PartyShowName != 0,
+                                 g_MapSettings.PartyShowHits != 0, false, false };
+    table[OMCT_GUILD_MEMBER] = { 4.0f, 4.0f, g_MapSettings.GuildColor,
+                                 g_MapSettings.GuildEnabled != 0,
+                                 g_MapSettings.GuildShowName != 0,
+                                 g_MapSettings.GuildShowHits != 0, false, false };
+    table[OMCT_FRIEND] = { 4.0f, 4.0f, g_MapSettings.FriendsColor,
+                           g_MapSettings.FriendsEnabled != 0,
+                           g_MapSettings.FriendsShowName != 0,
+                           g_MapSettings.FriendsShowHits != 0, false, false };
+    table[OMCT_ENEMY] = { 4.0f, 4.0f, g_MapSettings.EnemiesColor,
+                          g_MapSettings.EnemiesEnabled != 0,
+                          g_MapSettings.EnemiesShowName != 0,
+                          g_MapSettings.EnemiesShowHits != 0, false, false };
+    table[OMCT_OTHER] = { 4.0f, 4.0f, g_MapSettings.OtherColor,
+                          g_MapSettings.OtherEnabled != 0,
+                          g_MapSettings.OtherShowName != 0,
+                          g_MapSettings.OtherShowHits != 0, false, false };
 }
 
 } // namespace
@@ -162,16 +162,16 @@ void MapWindow_Draw(bool *open)
     // per-window opacity (the original setWindowOpacity): alpha =
     // (100 - opacity*25)/100 with the opacity steps 0/25/50 - pushed around
     // this window only, never the global style
-    const float alpha = 1.0f - (g_MapSettings.GetOpacity() * 0.25f);
+    const float alpha = 1.0f - (g_MapSettings.Opacity * 0.25f);
     ImGui::PushStyleVar(
         ImGuiStyleVar_Alpha, alpha < 0.25f ? 0.25f : (alpha > 1.0f ? 1.0f : alpha));
 
     ImGui::SetNextWindowSize(
         ImVec2(MAP_WINDOW_DEFAULT_WIDTH, MAP_WINDOW_DEFAULT_HEIGHT), ImGuiCond_FirstUseEver);
-    if ((g_MapSettings.GetWindowX() != 0) && (g_MapSettings.GetWindowY() != 0))
+    if ((g_MapSettings.WindowX != 0) && (g_MapSettings.WindowY != 0))
     {
         ImGui::SetNextWindowPos(
-            ImVec2((float)g_MapSettings.GetWindowX(), (float)g_MapSettings.GetWindowY()),
+            ImVec2((float)g_MapSettings.WindowX, (float)g_MapSettings.WindowY),
             ImGuiCond_Once);
     }
 
@@ -192,7 +192,7 @@ void MapWindow_Draw(bool *open)
 
     // the selected facet: 0xFFFFFFFF follows the client
     int map = (int)g_CurrentMap;
-    const uint facet = g_MapSettings.GetFacet();
+    const uint facet = g_MapSettings.Facet;
     if (facet != 0xFFFFFFFF && facet < MAX_MAPS_COUNT)
     {
         map = (int)facet;
@@ -201,7 +201,7 @@ void MapWindow_Draw(bool *open)
     // follow: player-locked center, current facet only
     CPlayer *player = g_Player;
     const bool following =
-        (g_World != nullptr && player != nullptr && g_MapSettings.GetFollowPlayer() &&
+        (g_World != nullptr && player != nullptr && g_MapSettings.FollowPlayer &&
          facet == 0xFFFFFFFF);
     if (following)
     {
@@ -246,7 +246,7 @@ void MapWindow_Draw(bool *open)
         const float dy = (ImGui::GetIO().MousePos.y - s_PanStartMouse.y) * scale;
         int wx;
         int wy;
-        if (g_MapSettings.GetRotateMap())
+        if (g_MapSettings.RotateMap)
         {
             wx = s_PanStartCenterX - int((dx + dy) / 2 + 0.5f);
             wy = s_PanStartCenterY - int((dy - dx) / 2 + 0.5f);
@@ -294,14 +294,14 @@ void MapWindow_Draw(bool *open)
     // (!= 0.0f) equality test is needed here
     if (canvasHovered)
     {
-        const int zoom = g_MapSettings.GetZoom();
+        const int zoom = g_MapSettings.Zoom;
         if (ImGui::GetIO().MouseWheel > 0.0f && zoom > 1)
         {
-            g_MapSettings.SetZoom(zoom == 16 ? 8 : zoom - 1);
+            g_MapSettings.Zoom = zoom == 16 ? 8 : zoom - 1;
         }
         else if (ImGui::GetIO().MouseWheel < 0.0f && zoom <= 8)
         {
-            g_MapSettings.SetZoom(zoom == 8 ? 16 : zoom + 1);
+            g_MapSettings.Zoom = zoom == 8 ? 16 : zoom + 1;
         }
     }
 
@@ -311,7 +311,7 @@ void MapWindow_Draw(bool *open)
     view.CX = s_CenterX;
     view.CY = s_CenterY;
     view.Scale = scale;
-    view.Rotated = g_MapSettings.GetRotateMap() != 0;
+    view.Rotated = g_MapSettings.RotateMap != 0;
 
     ImDrawList *dl = ImGui::GetWindowDrawList();
     const ImTextureRef tex = AssMap_RadarTexture(width, height, view);
@@ -336,7 +336,7 @@ void MapWindow_Draw(bool *open)
     {
         // party members the mirror does not know: from the packet-fed member
         // info
-        if (g_MapSettings.GetPartyEnabled() && g_Party.Leader != 0u)
+        if (g_MapSettings.PartyEnabled && g_Party.Leader != 0u)
         {
             for (int i = 0; i < 10; i++)
             {
@@ -431,7 +431,7 @@ void MapWindow_Draw(bool *open)
         }
 
         // the last corpse marker (the 5 minute window)
-        if (g_MapSettings.GetShowLastCorpse() &&
+        if (g_MapSettings.ShowLastCorpse &&
             g_LastPlayerDeadTimer != 0u && g_Ticks < g_LastPlayerDeadTimer + 300000u &&
             g_LastPlayerCorpsePosition.X >= minX && g_LastPlayerCorpsePosition.X < maxX &&
             g_LastPlayerCorpsePosition.Y >= minY && g_LastPlayerCorpsePosition.Y < maxY)
@@ -499,7 +499,7 @@ void MapWindow_Draw(bool *open)
             const MAP_DRAW_STYLE &style = table[item.Type];
             const ImU32 color = StyleColor(style);
             const bool dead =
-                (item.Ptr != nullptr && item.Ptr->IsDead() && g_MapSettings.GetMarkDeadMobiles());
+                (item.Ptr != nullptr && item.Ptr->IsDead() && g_MapSettings.MarkDeadMobiles);
 
             const float dotW = dead ? 6.0f : style.Width;
             const float dotH = dead ? 6.0f : style.Height;
@@ -561,7 +561,7 @@ void MapWindow_Draw(bool *open)
     }
 
     // the coordinate line
-    if (g_MapSettings.GetDisplayCoordinates())
+    if (g_MapSettings.DisplayCoordinates)
     {
         const char *name =
             (map >= 0 && map < 6) ? g_FacetName[map] : g_FacetName[0];
@@ -600,7 +600,7 @@ void MapWindow_Draw(bool *open)
 
         if (ImGui::BeginMenu("Follow (only for Current facet)"))
         {
-            if (ImGui::MenuItem("Player", nullptr, g_MapSettings.GetFollowPlayer() != 0))
+            if (ImGui::MenuItem("Player", nullptr, g_MapSettings.FollowPlayer != 0))
             {
                 MapWindow_OnAction(OMA_FOLLOW_CHARACTER, g_PlayerSerial);
             }
@@ -620,7 +620,7 @@ void MapWindow_Draw(bool *open)
                           { "x4.0", 16 } };
             for (const auto &z : zooms)
             {
-                if (ImGui::MenuItem(z.Label, nullptr, g_MapSettings.GetZoom() == z.Index))
+                if (ImGui::MenuItem(z.Label, nullptr, g_MapSettings.Zoom == z.Index))
                 {
                     MapWindow_OnAction(OMA_ZOOM, (uint)z.Index);
                 }
@@ -630,25 +630,25 @@ void MapWindow_Draw(bool *open)
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Rotate map", nullptr, g_MapSettings.GetRotateMap() != 0))
+        if (ImGui::MenuItem("Rotate map", nullptr, g_MapSettings.RotateMap != 0))
         {
             MapWindow_OnAction(OMA_ROTATE_MAP, 0);
         }
-        if (ImGui::MenuItem("Show coordinates", nullptr, g_MapSettings.GetDisplayCoordinates() != 0))
+        if (ImGui::MenuItem("Show coordinates", nullptr, g_MapSettings.DisplayCoordinates != 0))
         {
             MapWindow_OnAction(OMA_DISPLAY_COORDINATES, 0);
         }
-        if (ImGui::MenuItem("Show altitude map", nullptr, g_MapSettings.GetAltitudeOnly() != 0))
+        if (ImGui::MenuItem("Show altitude map", nullptr, g_MapSettings.AltitudeOnly != 0))
         {
             MapWindow_OnAction(OMA_ALTITUDE_ONLY, 0);
         }
-        if (!g_MapSettings.GetAltitudeOnly())
+        if (!g_MapSettings.AltitudeOnly)
         {
-            if (ImGui::MenuItem("Show statics", nullptr, g_MapSettings.GetShowStatics() != 0))
+            if (ImGui::MenuItem("Show statics", nullptr, g_MapSettings.ShowStatics != 0))
             {
                 MapWindow_OnAction(OMA_SHOW_STATICS, 0);
             }
-            if (ImGui::MenuItem("Apply altitude", nullptr, g_MapSettings.GetApplyAltitude() != 0))
+            if (ImGui::MenuItem("Apply altitude", nullptr, g_MapSettings.ApplyAltitude != 0))
             {
                 MapWindow_OnAction(OMA_APPLY_ALTITUDE, 0);
             }
@@ -665,7 +665,7 @@ void MapWindow_Draw(bool *open)
             } opacities[] = { { "Opaque", 0 }, { "25%", 1 }, { "50%", 2 } };
             for (const auto &o : opacities)
             {
-                if (ImGui::MenuItem(o.Label, nullptr, g_MapSettings.GetOpacity() == o.Value))
+                if (ImGui::MenuItem(o.Label, nullptr, g_MapSettings.Opacity == o.Value))
                 {
                     MapWindow_OnAction(OMA_TRANSPARENT_WINDOW, (uint)o.Value);
                 }
@@ -696,50 +696,50 @@ void MapWindow_OnAction(uint type, uint extra)
     {
         case OMA_FACET:
         {
-            if (g_MapSettings.GetFacet() != extra)
+            if (g_MapSettings.Facet != extra)
             {
-                g_MapSettings.SetFacet(extra);
+                g_MapSettings.Facet = extra;
                 wantUpdateImage = true;
             }
             break;
         }
         case OMA_FOLLOW_CHARACTER:
         {
-            g_MapSettings.SetFollowPlayer(!g_MapSettings.GetFollowPlayer());
+            g_MapSettings.FollowPlayer = !g_MapSettings.FollowPlayer;
             break;
         }
         case OMA_ZOOM:
         {
-            g_MapSettings.SetZoom((int)extra);
+            g_MapSettings.Zoom = (int)extra;
             break;
         }
         case OMA_SHOW_STATICS:
         {
-            g_MapSettings.SetShowStatics(!g_MapSettings.GetShowStatics());
+            g_MapSettings.ShowStatics = !g_MapSettings.ShowStatics;
             wantUpdateImage = true;
             break;
         }
         case OMA_APPLY_ALTITUDE:
         {
-            g_MapSettings.SetApplyAltitude(!g_MapSettings.GetApplyAltitude());
+            g_MapSettings.ApplyAltitude = !g_MapSettings.ApplyAltitude;
             wantUpdateImage = true;
             break;
         }
         case OMA_ALTITUDE_ONLY:
         {
-            g_MapSettings.SetAltitudeOnly(!g_MapSettings.GetAltitudeOnly());
+            g_MapSettings.AltitudeOnly = !g_MapSettings.AltitudeOnly;
             wantUpdateImage = true;
             break;
         }
         case OMA_TRANSPARENT_WINDOW:
         {
-            g_MapSettings.SetOpacity((int)extra);
+            g_MapSettings.Opacity = (int)extra;
             wantRedraw = false;
             break;
         }
         case OMA_DISPLAY_COORDINATES:
         {
-            g_MapSettings.SetDisplayCoordinates(!g_MapSettings.GetDisplayCoordinates());
+            g_MapSettings.DisplayCoordinates = !g_MapSettings.DisplayCoordinates;
             break;
         }
         case OMA_OPEN_SETTINGS:
@@ -749,7 +749,7 @@ void MapWindow_OnAction(uint type, uint extra)
         }
         case OMA_ROTATE_MAP:
         {
-            g_MapSettings.SetRotateMap(!g_MapSettings.GetRotateMap());
+            g_MapSettings.RotateMap = !g_MapSettings.RotateMap;
             break;
         }
         default:

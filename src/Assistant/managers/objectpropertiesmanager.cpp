@@ -23,7 +23,7 @@ string CObjectPropertiesManager::GetData(const uint &serial)
         return "";
     }
 
-    return it->second.GetData();
+    return it->second.Data;
 }
 
 void CObjectPropertiesManager::Add(const uint &serial, const CObjectProperty &objectProperty)

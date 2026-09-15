@@ -12,12 +12,12 @@ namespace xuoassist {
 
 class CMenuItem
 {
-    SETGET(uint, ID, 0)
-    SETGET(ushort, Graphic, 0)
-    SETGET(ushort, Color, 0)
-    SETGET(string, Name, "")
-
 public:
+    uint ID = 0;
+    ushort Graphic = 0;
+    ushort Color = 0;
+    string Name = "";
+
     CMenuItem();
     CMenuItem(const uint &id, const ushort &graphic, const ushort &color, const string &name);
     virtual ~CMenuItem();

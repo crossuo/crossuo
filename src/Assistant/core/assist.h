@@ -50,7 +50,6 @@ class CAssistant
     string m_UsedIgnoreList;
 
 public:
-    // SETGET(UsedIgnoreList) in the original
     string GetUsedIgnoreList() const { return m_UsedIgnoreList; }
     void SetUsedIgnoreList(const string &val) { m_UsedIgnoreList = val; }
 

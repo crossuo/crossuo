@@ -11,14 +11,14 @@ namespace xuoassist {
 
 class CShopItem
 {
-    SETGET(string, Graphic, "")
-    SETGET(string, Color, "")
-    SETGET(string, Name, "")
-    SETGET(int, Count, 0)
-    SETGET(uint, Price, 0)
-    SETGET(string, Comment, "")
-
 public:
+    string Graphic = "";
+    string Color = "";
+    string Name = "";
+    int Count = 0;
+    uint Price = 0;
+    string Comment = "";
+
     CShopItem() {}
     CShopItem(
         const string &graphic,

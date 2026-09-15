@@ -304,20 +304,20 @@ bool CTarget::CheckHook()
 void CTarget::Reset()
 {
     // pure cleanup
-    m_Type = 0;
-    m_CursorType = 0;
+    Type = 0;
+    CursorType = 0;
     m_CursorID = 0;
     m_Targeting = false;
-    m_MultiGraphic = 0;
+    MultiGraphic = 0;
 }
 
 void CTarget::RestoreTarget()
 {
-    if (m_FromAssist)
+    if (FromAssist)
     {
-        m_FromAssist = false;
+        FromAssist = false;
 
-        if (m_ClientWantTarget)
+        if (ClientWantTarget)
         {
             CDataReader reader(&m_CurrentClientTarget[0], m_CurrentClientTarget.size());
 
@@ -340,22 +340,22 @@ void CTarget::RestoreTarget()
 bool CTarget::SetSendData(CDataReader &reader)
 {
     m_Targeting = false;
-    m_ClientWantTarget = false;
+    ClientWantTarget = false;
 
     if (reader.ReadUInt8() == 1) // tile
     {
         reader.Move(9);
-        m_LastTileX = reader.ReadUInt16BE();
-        m_LastTileY = reader.ReadUInt16BE();
-        m_LastTileZ = reader.ReadUInt16BE();
-        m_LastTileGraphic = reader.ReadUInt16BE();
+        LastTileX = reader.ReadUInt16BE();
+        LastTileY = reader.ReadUInt16BE();
+        LastTileZ = reader.ReadUInt16BE();
+        LastTileGraphic = reader.ReadUInt16BE();
 
         // was g_TabMacros->AddAction(new CMacroWithTargetTile(...)) while a
         // recording was open
         if (g_World != nullptr)
         {
             g_AssistantEvents->OnRecordTargetTile(
-                m_LastTileGraphic, m_LastTileX, m_LastTileY, m_LastTileZ);
+                LastTileGraphic, LastTileX, LastTileY, LastTileZ);
         }
     }
     else
@@ -389,11 +389,11 @@ bool CTarget::SetSendData(CDataReader &reader)
 void CTarget::SetRecvAssistData(CDataReader &reader)
 {
     // And set the matching values (the target the assistant requested).
-    m_Type = reader.ReadUInt8();
+    Type = reader.ReadUInt8();
     m_CursorID = reader.ReadUInt32BE();
-    m_CursorType = reader.ReadUInt8();
-    m_Targeting = (m_CursorType < 3);
-    m_MultiGraphic = 0;
+    CursorType = reader.ReadUInt8();
+    m_Targeting = (CursorType < 3);
+    MultiGraphic = 0;
 }
 
 bool CTarget::SetRecvData(CDataReader &reader)
@@ -403,14 +403,14 @@ bool CTarget::SetRecvData(CDataReader &reader)
     memcpy(&m_CurrentClientTarget[0], reader.Start, reader.Size);
 
     // And set the matching values
-    m_Type = reader.ReadUInt8();
+    Type = reader.ReadUInt8();
     m_CursorID = reader.ReadUInt32BE();
-    m_CursorType = reader.ReadUInt8();
-    m_Targeting = (m_CursorType < 3);
-    m_MultiGraphic = 0;
-    m_ClientWantTarget = true;
+    CursorType = reader.ReadUInt8();
+    m_Targeting = (CursorType < 3);
+    MultiGraphic = 0;
+    ClientWantTarget = true;
 
-    bool result = (CheckHook() && !m_FromAssist);
+    bool result = (CheckHook() && !FromAssist);
 
     // a playing macro waiting on a target cursor consumes the reply and
     // answers it itself (the original PlayWaiting tap)
@@ -429,16 +429,16 @@ bool CTarget::SetMultiData(CDataReader &reader)
     memcpy(&m_CurrentClientTarget[0], reader.Start, reader.Size);
 
     // And set the matching values
-    m_Type = reader.ReadUInt8();
+    Type = reader.ReadUInt8();
     m_CursorID = reader.ReadUInt32BE();
-    m_CursorType = reader.ReadUInt8();
-    m_Targeting = (m_CursorType < 3);
-    m_ClientWantTarget = true;
+    CursorType = reader.ReadUInt8();
+    m_Targeting = (CursorType < 3);
+    ClientWantTarget = true;
 
     reader.Move(10);
-    m_MultiGraphic = reader.ReadUInt16BE() + 1;
+    MultiGraphic = reader.ReadUInt16BE() + 1;
 
-    bool result = (CheckHook() && !m_FromAssist);
+    bool result = (CheckHook() && !FromAssist);
 
     // the SetRecvData PlayWaiting tap
     if (result && g_MacroExecutor.IsPlaying() &&
@@ -452,7 +452,7 @@ bool CTarget::SetMultiData(CDataReader &reader)
 
 void CTarget::DumpLastTileInfo()
 {
-    g_Assistant.DumpTileInfo(m_LastTileGraphic, m_LastTileX, m_LastTileY, m_LastTileZ);
+    g_Assistant.DumpTileInfo(LastTileGraphic, LastTileX, LastTileY, LastTileZ);
 }
 
 void CTarget::SendTargetObject(const uint &serial)
@@ -462,10 +462,10 @@ void CTarget::SendTargetObject(const uint &serial)
         return;
     }
 
-    CPacketTargetObject(0, m_CursorID, m_CursorType, serial).SendServer();
+    CPacketTargetObject(0, m_CursorID, CursorType, serial).SendServer();
     m_Targeting = false;
-    m_MultiGraphic = 0;
-    m_ClientWantTarget = false;
+    MultiGraphic = 0;
+    ClientWantTarget = false;
 }
 
 void CTarget::SendTargetTile(const ushort &tileID, const short &x, const short &y, short z)
@@ -475,15 +475,15 @@ void CTarget::SendTargetTile(const ushort &tileID, const short &x, const short &
         return;
     }
 
-    CPacketTargetTile(1, m_CursorID, m_CursorType, tileID, x, y, z).SendServer();
+    CPacketTargetTile(1, m_CursorID, CursorType, tileID, x, y, z).SendServer();
     m_Targeting = false;
-    m_MultiGraphic = 0;
-    m_ClientWantTarget = false;
+    MultiGraphic = 0;
+    ClientWantTarget = false;
 }
 
 void CTarget::SendTargetLastTile()
 {
-    SendTargetTile(m_LastTileGraphic, m_LastTileX, m_LastTileY, m_LastTileZ);
+    SendTargetTile(LastTileGraphic, LastTileX, LastTileY, LastTileZ);
 }
 
 void CTarget::SendCancelTarget()
@@ -493,10 +493,10 @@ void CTarget::SendCancelTarget()
         return;
     }
 
-    CPacketTargetCancel(m_Type, m_CursorID, m_CursorType).SendServer();
+    CPacketTargetCancel(Type, m_CursorID, CursorType).SendServer();
     m_Targeting = false;
-    m_MultiGraphic = 0;
-    m_ClientWantTarget = false;
+    MultiGraphic = 0;
+    ClientWantTarget = false;
 }
 
 void CTarget::SendTargetLastTarget()

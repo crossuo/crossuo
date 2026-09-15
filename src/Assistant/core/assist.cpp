@@ -253,7 +253,7 @@ void CAssistant::RequestTarget(const string &text)
         ClientPrintDebugLevel2(text);
     }
 
-    g_Target.SetFromAssist(true);
+    g_Target.FromAssist = true;
     CPacketToClientTargetRequest().SendClient();
 }
 
@@ -297,7 +297,7 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
         obj->GetFlags());
 
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
-    message.SetFlags(JMT_SYSTEM);
+    message.Flags = JMT_SYSTEM;
     g_AssistantEvents->OnJournalMessage(message);
 
     // the g_TextDialog->ClearText/AddText(text) + show port (scriptgump.cpp,
@@ -313,7 +313,7 @@ void CAssistant::DumpTileInfo(const ushort &graphic, const short &x, const short
     snprintf(text, sizeof(text), "0x%04X %i %i %i\n", graphic, x, y, z);
 
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
-    message.SetFlags(JMT_SYSTEM);
+    message.Flags = JMT_SYSTEM;
     g_AssistantEvents->OnJournalMessage(message);
 
     // the g_TextDialog body port (see DumpObjectInfo)
@@ -898,7 +898,7 @@ void CAssistant::MoveItem(CGameItem *item)
 
     CPacketPickupRequest(serial, g_MoveItemData.Count).SendServer();
 
-    if (g_PacketManager.GetClientVersion() >= CV_6017)
+    if (g_PacketManager.ClientVersion >= CV_6017)
     {
         CPacketDropRequestNew(
             serial, g_MoveItemData.X, g_MoveItemData.Y, g_MoveItemData.Z, 0, g_MoveItemData.Container)
@@ -930,7 +930,7 @@ void CAssistant::Track(const bool &state, short x, short y)
         y = g_Player->GetY();
     }
 
-    if (g_PacketManager.GetClientVersion() >= CV_7090)
+    if (g_PacketManager.ClientVersion >= CV_7090)
     {
         CPacketQuestArrowNew(state, x, y).SendClient();
     }

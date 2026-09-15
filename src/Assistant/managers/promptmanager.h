@@ -15,10 +15,11 @@ typedef vector<CPrompt> PROMPT_LIST;
 
 class CPromptManager
 {
-    SETGET(bool, IsUnicode, false)
-    SETGET(bool, Exists, false)
-    SETGET(uint, Serial, 0)
-    SETGET(uint, ID, 0)
+public:
+    bool IsUnicode = false;
+    bool Exists = false;
+    uint Serial = 0;
+    uint ID = 0;
 
 private:
     PROMPT_LIST m_Hooks;

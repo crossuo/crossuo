@@ -11,14 +11,14 @@ namespace xuoassist {
 
 class CTradeWindow
 {
-    SETGET(uint, Serial, 0)
-    SETGET(uint, ID1, 0)
-    SETGET(uint, ID2, 0)
-    SETGET(string, Name, "")
-    SETGET(bool, Check1, false)
-    SETGET(bool, Check2, false)
-
 public:
+    uint Serial = 0;
+    uint ID1 = 0;
+    uint ID2 = 0;
+    string Name = "";
+    bool Check1 = false;
+    bool Check2 = false;
+
     CTradeWindow();
     CTradeWindow(const uint &serial, const uint &id1, const uint &id2, const string &name);
     virtual ~CTradeWindow();

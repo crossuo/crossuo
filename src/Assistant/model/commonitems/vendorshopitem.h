@@ -11,15 +11,15 @@ namespace xuoassist {
 
 class CVendorShopItem
 {
-    SETGET(uint, Serial, 0)
-    SETGET(ushort, Graphic, 0)
-    SETGET(ushort, Color, 0)
-    SETGET(string, Name, "")
-    SETGET(int, Count, 0)
-    SETGET(uint, Price, 0)
-    SETGET(bool, NameFromCliloc, false)
-
 public:
+    uint Serial = 0;
+    ushort Graphic = 0;
+    ushort Color = 0;
+    string Name = "";
+    int Count = 0;
+    uint Price = 0;
+    bool NameFromCliloc = false;
+
     CVendorShopItem() {}
 };
 

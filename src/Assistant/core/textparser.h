@@ -13,8 +13,9 @@ namespace xuoassist {
 
 class CTextParser
 {
-    SETGET(string, RawLine, "")
-    SETGET(bool, SaveQuotes, false)
+public:
+    string RawLine = "";
+    bool SaveQuotes = false;
 
 private:
     // Loaded text

@@ -81,62 +81,62 @@ struct XA_MAP_DRAW_OBJECT
 // file stays byte-compatible).
 class CMapSettings
 {
-    SETGET(int, WindowX, 0)
-    SETGET(int, WindowY, 0)
-    SETGET(int, WindowWidth, 0)
-    SETGET(int, WindowHeight, 0)
-    SETGET(uint, Facet, 0xFFFFFFFF) // 0xFFFFFFFF = current client facet
-    SETGET(bool, FollowPlayer, true)
-    SETGET(int, Zoom, 2) // the original: index 1..16, scale = index * 0.25
-    SETGET(bool, ShowStatics, true)
-    SETGET(bool, ApplyAltitude, true)
-    SETGET(bool, AltitudeOnly, false)
-    SETGET(bool, SmoothImage, true) // menu-disabled in the original; kept for format parity
-    SETGET(int, Opacity, 0)         // 0=opaque, then 25%/50% steps (map.cpp:73)
-    SETGET(bool, DisplayCoordinates, true)
-    SETGET(bool, ShowOnLogin, false)
-    SETGET(bool, ShowLastCorpse, true)
-    SETGET(bool, MarkDeadMobiles, true)
-    SETGET(bool, RotateMap, true)
-
-    SETGET(int, PlayerFontStyle, 0)
-    SETGET(uint, PlayerColor, 0xFF00FFFF)     // rgba(0, 255, 255)
-    SETGET(bool, PlayerShowHits, true)
-    SETGET(bool, PlayerShowMana, true)
-    SETGET(bool, PlayerShowStam, true)
-    SETGET(bool, PlayerShowName, true)
-
-    SETGET(bool, PartyEnabled, true)
-    SETGET(int, PartyFontStyle, 0)
-    SETGET(uint, PartyColor, 0xFF00FF00)      // rgb(0, 255, 0)
-    SETGET(bool, PartyShowHits, true)
-    SETGET(bool, PartyShowName, true)
-
-    SETGET(bool, GuildEnabled, true)
-    SETGET(int, GuildFontStyle, 0)
-    SETGET(uint, GuildColor, 0xFF00C887)      // rgb(135, 200, 0)
-    SETGET(bool, GuildShowHits, true)
-    SETGET(bool, GuildShowName, true)
-
-    SETGET(bool, FriendsEnabled, true)
-    SETGET(int, FriendsFontStyle, 0)
-    SETGET(uint, FriendsColor, 0xFFFFFF00)    // rgb(255, 255, 0)
-    SETGET(bool, FriendsShowHits, true)
-    SETGET(bool, FriendsShowName, true)
-
-    SETGET(bool, EnemiesEnabled, true)
-    SETGET(int, EnemiesFontStyle, 0)
-    SETGET(uint, EnemiesColor, 0xFFFF0000)    // rgb(255, 0, 0)
-    SETGET(bool, EnemiesShowHits, true)
-    SETGET(bool, EnemiesShowName, true)
-
-    SETGET(bool, OtherEnabled, false)
-    SETGET(int, OtherFontStyle, 0)
-    SETGET(uint, OtherColor, 0xFFC0C0C0)      // rgb(192, 192, 192)
-    SETGET(bool, OtherShowHits, true)
-    SETGET(bool, OtherShowName, true)
-
 public:
+    int WindowX = 0;
+    int WindowY = 0;
+    int WindowWidth = 0;
+    int WindowHeight = 0;
+    uint Facet = 0xFFFFFFFF; // 0xFFFFFFFF = current client facet
+    bool FollowPlayer = true;
+    int Zoom = 2; // the original: index 1..16, scale = index * 0.25
+    bool ShowStatics = true;
+    bool ApplyAltitude = true;
+    bool AltitudeOnly = false;
+    bool SmoothImage = true; // menu-disabled in the original; kept for format parity
+    int Opacity = 0; // 0=opaque, then 25%/50% steps (map.cpp:73)
+    bool DisplayCoordinates = true;
+    bool ShowOnLogin = false;
+    bool ShowLastCorpse = true;
+    bool MarkDeadMobiles = true;
+    bool RotateMap = true;
+
+    int PlayerFontStyle = 0;
+    uint PlayerColor = 0xFF00FFFF; // rgba(0, 255, 255)
+    bool PlayerShowHits = true;
+    bool PlayerShowMana = true;
+    bool PlayerShowStam = true;
+    bool PlayerShowName = true;
+
+    bool PartyEnabled = true;
+    int PartyFontStyle = 0;
+    uint PartyColor = 0xFF00FF00; // rgb(0, 255, 0)
+    bool PartyShowHits = true;
+    bool PartyShowName = true;
+
+    bool GuildEnabled = true;
+    int GuildFontStyle = 0;
+    uint GuildColor = 0xFF00C887; // rgb(135, 200, 0)
+    bool GuildShowHits = true;
+    bool GuildShowName = true;
+
+    bool FriendsEnabled = true;
+    int FriendsFontStyle = 0;
+    uint FriendsColor = 0xFFFFFF00; // rgb(255, 255, 0)
+    bool FriendsShowHits = true;
+    bool FriendsShowName = true;
+
+    bool EnemiesEnabled = true;
+    int EnemiesFontStyle = 0;
+    uint EnemiesColor = 0xFFFF0000; // rgb(255, 0, 0)
+    bool EnemiesShowHits = true;
+    bool EnemiesShowName = true;
+
+    bool OtherEnabled = false;
+    int OtherFontStyle = 0;
+    uint OtherColor = 0xFFC0C0C0; // rgb(192, 192, 192)
+    bool OtherShowHits = true;
+    bool OtherShowName = true;
+
     CMapSettings() {}
 
     void Copy(const CMapSettings &settings);
@@ -144,15 +144,15 @@ public:
     void Save();
 
     // pointer accessors for the settings form (ui/mapsettings.cpp binds the
-    // working copy's fields directly; the SETGET members stay protected)
-    int *WindowXPtr() { return &m_WindowX; }
-    int *WindowYPtr() { return &m_WindowY; }
-    int *WindowWidthPtr() { return &m_WindowWidth; }
-    int *WindowHeightPtr() { return &m_WindowHeight; }
-    uint *FacetPtr() { return &m_Facet; }
-    int *ZoomPtr() { return &m_Zoom; }
-    int *OpacityPtr() { return &m_Opacity; }
-#define XA_MAP_FIELD_PTR(name, type) type *name##Ptr() { return &m_##name; }
+    // working copy's fields through these)
+    int *WindowXPtr() { return &WindowX; }
+    int *WindowYPtr() { return &WindowY; }
+    int *WindowWidthPtr() { return &WindowWidth; }
+    int *WindowHeightPtr() { return &WindowHeight; }
+    uint *FacetPtr() { return &Facet; }
+    int *ZoomPtr() { return &Zoom; }
+    int *OpacityPtr() { return &Opacity; }
+#define XA_MAP_FIELD_PTR(name, type) type *name##Ptr() { return &name; }
     XA_MAP_FIELD_PTR(FollowPlayer, bool)
     XA_MAP_FIELD_PTR(ShowStatics, bool)
     XA_MAP_FIELD_PTR(ApplyAltitude, bool)

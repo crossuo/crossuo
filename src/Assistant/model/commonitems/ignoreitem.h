@@ -12,9 +12,9 @@ namespace xuoassist {
 
 class CIgnoreItem : public CFindItem
 {
-    SETGETC(string, Serial, "")
-
 public:
+    string Serial = "";
+
     CIgnoreItem();
     CIgnoreItem(const string &serial, const string &graphic, const string &color);
     virtual ~CIgnoreItem();

@@ -8,9 +8,9 @@
 namespace xuoassist {
 
 CPrompt::CPrompt(const uint &serial, const string &text, const PROMPT_TYPE &type)
-    : m_Serial(serial)
-    , m_Text(text)
-    , m_Type(type)
+    : Serial(serial)
+    , Text(text)
+    , Type(type)
 {
 }
 

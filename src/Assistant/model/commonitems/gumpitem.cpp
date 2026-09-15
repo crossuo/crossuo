@@ -12,8 +12,8 @@ CGumpItem::CGumpItem()
 }
 
 CGumpItem::CGumpItem(const GUMP_ITEM_TYPE &type, const string &command)
-    : m_Type(type)
-    , m_Command(command)
+    : Type(type)
+    , Command(command)
 {
 }
 
@@ -23,17 +23,17 @@ CGumpItem::~CGumpItem()
 
 void CGumpItem::RestoreCommand(const vector<string> &list)
 {
-    m_Command = "";
+    Command = "";
 
     if (!list.empty())
     {
         for (const string &str : list)
         {
-            if (m_Command.length() != 0)
+            if (Command.length() != 0)
             {
-                m_Command += " ";
+                Command += " ";
             }
-            m_Command += str;
+            Command += str;
         }
     }
 }

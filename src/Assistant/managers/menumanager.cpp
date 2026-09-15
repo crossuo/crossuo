@@ -48,7 +48,7 @@ CMenu *CMenuManager::GetMenu(const string &name)
     for (size_t i = 0; i < m_Items.size(); i++)
     {
         // indexOf(name, 0, CaseInsensitive) == 0 -> starts-with, case-insensitive
-        const string itemNameLower = to_lower_copy(m_Items[i]->GetName());
+        const string itemNameLower = to_lower_copy(m_Items[i]->Name);
         if (itemNameLower.size() >= name.size() &&
             itemNameLower.compare(0, name.size(), to_lower_copy(name)) == 0)
         {
@@ -167,12 +167,12 @@ bool CMenuManager::OnPacketSend(CDataReader &reader)
     {
         CMenu *menu = m_Items[i];
 
-        if (!menu->GetReplayed() && menu->GetSerial() == serial && menu->GetID() == id)
+        if (!menu->Replayed && menu->Serial == serial && menu->ID == id)
         {
             uint index = reader.ReadUInt16BE();
 
-            menu->SetReplayed(true);
-            menu->SetReplyID(index);
+            menu->Replayed = true;
+            menu->ReplyID = index;
 
             // tabmacros recording (menumanager handler): CMacroWithMenu(
             // MT_WAIT_FOR_MENU, menu name, item name, item graphic, item
@@ -181,15 +181,15 @@ bool CMenuManager::OnPacketSend(CDataReader &reader)
             {
                 for (const CMenuItem &item : menu->m_Items)
                 {
-                    if (item.GetID() == index)
+                    if (item.ID == index)
                     {
                         g_MacroExecutor.Record(
                             new CMacroWithMenu(
                                 MT_WAIT_FOR_MENU,
-                                menu->GetName(),
-                                item.GetName(),
-                                item.GetGraphic(),
-                                item.GetColor()));
+                                menu->Name,
+                                item.Name,
+                                item.Graphic,
+                                item.Color));
                         break;
                     }
                 }
@@ -216,9 +216,9 @@ bool CMenuManager::SendChoiceIfMenuExists(
     {
         CMenu *menu = m_Items[i];
 
-        if (!menu->GetReplayed() &&
-            to_lower_copy(menu->GetName()).size() >= name.size() &&
-            to_lower_copy(menu->GetName()).compare(0, name.size(), to_lower_copy(name)) == 0)
+        if (!menu->Replayed &&
+            to_lower_copy(menu->Name).size() >= name.size() &&
+            to_lower_copy(menu->Name).compare(0, name.size(), to_lower_copy(name)) == 0)
         {
             if (SendMenuChoice(menu, itemName, sendPacket))
             {
@@ -243,14 +243,14 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
     {
         if (sendPacket)
         {
-            CPacketMenuResponse(menu->GetSerial(), menu->GetID(), 0, 0, 0).SendServer();
+            CPacketMenuResponse(menu->Serial, menu->ID, 0, 0, 0).SendServer();
 
-            menu->SetReplayed(true);
-            menu->SetReplyID(0);
+            menu->Replayed = true;
+            menu->ReplyID = 0;
         }
         else
         {
-            CPacketSelectMenuInClient(menu->GetSerial(), menu->GetID(), 0).SendClient();
+            CPacketSelectMenuInClient(menu->Serial, menu->ID, 0).SendClient();
         }
 
         return true;
@@ -259,29 +259,29 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
     for (const CMenuItem &item : menu->m_Items)
     {
         // indexOf(itemName) == 0 -> starts-with
-        if (item.GetName().size() >= itemName.size() &&
-            item.GetName().compare(0, itemName.size(), itemName) == 0)
+        if (item.Name.size() >= itemName.size() &&
+            item.Name.compare(0, itemName.size(), itemName) == 0)
         {
             if (sendPacket)
             {
-                if (menu->GetGrayMenu())
+                if (menu->GrayMenu)
                 {
-                    CPacketGrayMenuResponse(menu->GetSerial(), menu->GetID(), item.GetID())
+                    CPacketGrayMenuResponse(menu->Serial, menu->ID, item.ID)
                         .SendServer();
                 }
                 else
                 {
                     CPacketMenuResponse(
-                        menu->GetSerial(), menu->GetID(), item.GetID(), item.GetGraphic(), item.GetColor())
+                        menu->Serial, menu->ID, item.ID, item.Graphic, item.Color)
                         .SendServer();
                 }
 
-                menu->SetReplayed(true);
-                menu->SetReplyID(item.GetID());
+                menu->Replayed = true;
+                menu->ReplyID = item.ID;
             }
             else
             {
-                CPacketSelectMenuInClient(menu->GetSerial(), menu->GetID(), item.GetID()).SendClient();
+                CPacketSelectMenuInClient(menu->Serial, menu->ID, item.ID).SendClient();
             }
 
             return true;
@@ -308,23 +308,23 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
 
         if (sendPacket)
         {
-            if (menu->GetGrayMenu())
+            if (menu->GrayMenu)
             {
-                CPacketGrayMenuResponse(menu->GetSerial(), menu->GetID(), item.GetID()).SendServer();
+                CPacketGrayMenuResponse(menu->Serial, menu->ID, item.ID).SendServer();
             }
             else
             {
                 CPacketMenuResponse(
-                    menu->GetSerial(), menu->GetID(), item.GetID(), item.GetGraphic(), item.GetColor())
+                    menu->Serial, menu->ID, item.ID, item.Graphic, item.Color)
                     .SendServer();
             }
 
-            menu->SetReplayed(true);
-            menu->SetReplyID(item.GetID());
+            menu->Replayed = true;
+            menu->ReplyID = item.ID;
         }
         else
         {
-            CPacketSelectMenuInClient(menu->GetSerial(), menu->GetID(), item.GetID()).SendClient();
+            CPacketSelectMenuInClient(menu->Serial, menu->ID, item.ID).SendClient();
         }
 
         return true;
@@ -361,12 +361,12 @@ void CMenuManager::InfoMenu(const string &menuIndex)
     // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow -
     // restored by the 4b-2 text window (scriptgump.cpp); the parse below
     // matches the original text pieces.
-    string text = menu->GetGrayMenu() ? "Gray menu information:\nName: " : "Menu information:\nName: ";
-    text += menu->GetName();
+    string text = menu->GrayMenu ? "Gray menu information:\nName: " : "Menu information:\nName: ";
+    text += menu->Name;
 
-    if (menu->GetReplayed())
+    if (menu->Replayed)
     {
-        text += "\nMenu replayed with id: " + std::to_string(menu->GetReplyID());
+        text += "\nMenu replayed with id: " + std::to_string(menu->ReplyID);
     }
 
     for (const CMenuItem &item : menu->m_Items)
@@ -376,15 +376,15 @@ void CMenuManager::InfoMenu(const string &menuIndex)
             buf,
             sizeof(buf),
             "\nItem: ID=%i Graphic=0x%04X Color=0x%04X Name=%s",
-            item.GetID(),
-            item.GetGraphic(),
-            item.GetColor(),
-            item.GetName().c_str());
+            item.ID,
+            item.Graphic,
+            item.Color,
+            item.Name.c_str());
         text += buf;
     }
 
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
-    message.SetFlags(JMT_SYSTEM);
+    message.Flags = JMT_SYSTEM;
     g_AssistantEvents->OnJournalMessage(message);
 
     // the g_TextDialog->ClearText/AddText + show port (scriptgump.cpp)

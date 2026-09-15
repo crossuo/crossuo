@@ -20,7 +20,6 @@ public:
     {
     }
 
-    // SETGET(Name) in the original
     string GetName() const { return m_Name; }
     void SetName(const string &val) { m_Name = val; }
 

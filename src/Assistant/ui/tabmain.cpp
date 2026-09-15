@@ -285,7 +285,7 @@ void draw_main_page()
     // Profiles: combo + Save (was the editable cb_ProfileList + pb_SaveProfile)
     const vector<string> &profiles = g_AssistantConfig.GetProfiles();
     static int currentProfile = -1;
-    const string &currentName = g_AssistantConfig.GetProfileName();
+    const string currentName = g_AssistantConfig.ProfileName;
     if (currentProfile < 0 || (currentProfile < (int)profiles.size() && profiles[currentProfile] != currentName))
     {
         currentProfile = -1;

@@ -11,15 +11,15 @@ namespace xuoassist {
 
 class CSkill
 {
-    SETGET(bool, Button, 0)
-    SETGET(string, Name, "")
-    SETGET(float, BaseValue, 0.0f)
-    SETGET(float, Value, 0.0f)
-    SETGET(float, OldValue, 0.0f)
-    SETGET(float, Cap, 0.0f)
-    SETGET(uchar, Status, 0)
-
 public:
+    bool Button = 0;
+    string Name = "";
+    float BaseValue = 0.0f;
+    float Value = 0.0f;
+    float OldValue = 0.0f;
+    float Cap = 0.0f;
+    uchar Status = 0;
+
     CSkill() {}
     CSkill(const bool &haveButton, const string &name);
     ~CSkill() {}

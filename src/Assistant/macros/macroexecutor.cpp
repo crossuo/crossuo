@@ -75,7 +75,7 @@ uint serial_for_convert(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
         case MCT_FRIEND:
             return CAssistant::TextToSerial("friend");
         default:
-            return macro != nullptr ? macro->GetSerial() : 0;
+            return macro != nullptr ? macro->Serial : 0;
     }
 }
 
@@ -208,23 +208,23 @@ void CMacroExecutor::RecordTargetObject(uint serial, ushort graphic, ushort colo
         MT_WAIT_FOR_TARGET_OBJECT, serial, graphic, color);
     if (serial == g_PlayerSerial)
     {
-        macro->SetConvertType(MCT_SELF);
+        macro->ConvertType = MCT_SELF;
     }
     else if (serial == g_LastAttackObject)
     {
-        macro->SetConvertType(MCT_LASTATTACK);
+        macro->ConvertType = MCT_LASTATTACK;
     }
     else if (serial == g_LastTargetObject)
     {
-        macro->SetConvertType(MCT_LASTTARGET);
+        macro->ConvertType = MCT_LASTTARGET;
     }
     else if (serial == CAssistant::TextToSerial("enemy"))
     {
-        macro->SetConvertType(MCT_ENEMY);
+        macro->ConvertType = MCT_ENEMY;
     }
     else if (serial == CAssistant::TextToSerial("friend"))
     {
-        macro->SetConvertType(MCT_FRIEND);
+        macro->ConvertType = MCT_FRIEND;
     }
     m_RecordBuffer.push_back(macro);
 }
@@ -267,7 +267,7 @@ bool CMacroExecutor::PlayWaiting(std::initializer_list<MACRO_TYPE> types)
 
         if (macro != nullptr)
         {
-            const MACRO_TYPE type = macro->GetType();
+            const MACRO_TYPE type = macro->Type;
 
             for (MACRO_TYPE check : types)
             {
@@ -309,16 +309,16 @@ void CMacroExecutor::Reset()
 uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
 {
     // TabMacros::FindObject
-    ushort graphic = macro->GetGraphic();
+    ushort graphic = macro->Graphic;
 
     if (graphic == 0u)
     {
-        return macro->GetSerial();
+        return macro->Serial;
     }
 
     const ushort color =
         ((convertType == MCT_BY_TYPE_COLOR || convertType == MCT_BY_TYPE_COLOR_GROUND) ?
-             macro->GetColor() :
+             macro->Color :
              0xFFFF);
 
     vector<CIgnoreItem> ignoreList;
@@ -327,7 +327,7 @@ uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE conv
     if (convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
     {
         int distance = g_AssistantConfig.SearchItemsDistance();
-        if (macro->GetType() == MT_USE)
+        if (macro->Type == MT_USE)
         {
             distance = g_AssistantConfig.UseItemsDistance();
         }
@@ -392,14 +392,14 @@ void CMacroExecutor::ProcessMacro()
             return;
         }
 
-        const MACRO_TYPE type = macro->GetType();
-        const MACRO_CONVERT_TYPE convertType = macro->GetConvertType();
+        const MACRO_TYPE type = macro->Type;
+        const MACRO_CONVERT_TYPE convertType = macro->ConvertType;
 
         switch (type)
         {
             case MT_USE:
             {
-                uint serial = ((CMacroWithObject *)macro)->GetSerial();
+                uint serial = ((CMacroWithObject *)macro)->Serial;
                 if (convertType == MCT_BY_TYPE || convertType == MCT_BY_TYPE_COLOR ||
                     convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
                 {
@@ -422,7 +422,7 @@ void CMacroExecutor::ProcessMacro()
             case MT_ATTACK:
             {
                 // convertType LAST and LASTATTACK both mean "lastattack" here
-                uint serial = ((CMacroWithObject *)macro)->GetSerial();
+                uint serial = ((CMacroWithObject *)macro)->Serial;
                 if (convertType == MCT_LAST || convertType == MCT_LASTATTACK)
                 {
                     serial = CAssistant::TextToSerial("lastattack");
@@ -445,10 +445,10 @@ void CMacroExecutor::ProcessMacro()
             {
                 if (!g_Target.IsTargeting())
                 {
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
-                uint serial = ((CMacroWithObject *)macro)->GetSerial();
+                uint serial = ((CMacroWithObject *)macro)->Serial;
                 if (convertType == MCT_BY_TYPE || convertType == MCT_BY_TYPE_COLOR ||
                     convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
                 {
@@ -473,7 +473,7 @@ void CMacroExecutor::ProcessMacro()
             {
                 if (!g_Target.IsTargeting())
                 {
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
                 if (convertType == MCT_LAST)
@@ -484,15 +484,15 @@ void CMacroExecutor::ProcessMacro()
                 else
                 {
                     CMacroWithTargetTile *withTarget = (CMacroWithTargetTile *)macro;
-                    ushort graphic = withTarget->GetGraphic();
-                    int x = withTarget->GetX();
-                    int y = withTarget->GetY();
-                    int z = withTarget->GetZ();
+                    ushort graphic = withTarget->Graphic;
+                    int x = withTarget->X;
+                    int y = withTarget->Y;
+                    int z = withTarget->Z;
                     if (convertType == MCT_BY_TARGET_RELATIVE)
                     {
-                        x = g_Player->GetX() + withTarget->GetRelativeX();
-                        y = g_Player->GetY() + withTarget->GetRelativeY();
-                        z = g_Player->GetZ() + withTarget->GetRelativeZ();
+                        x = g_Player->GetX() + withTarget->RelativeX;
+                        y = g_Player->GetY() + withTarget->RelativeY;
+                        z = g_Player->GetZ() + withTarget->RelativeZ;
                         // Was g_FileManager.GetTile(...) graphic resolution;
                         // the numeric-graphic fallback matches the original's
                         // empty-tile-list path (see core/target.cpp CheckHook)
@@ -511,7 +511,7 @@ void CMacroExecutor::ProcessMacro()
                 else
                 {
                     char value[16] = { 0 };
-                    snprintf(value, sizeof(value), "%i", ((CMacroWithIntValue *)macro)->GetValue());
+                    snprintf(value, sizeof(value), "%i", ((CMacroWithIntValue *)macro)->Value);
                     g_SkillManager.Use(value);
                 }
                 break;
@@ -527,14 +527,14 @@ void CMacroExecutor::ProcessMacro()
                 else
                 {
                     char value[16] = { 0 };
-                    snprintf(value, sizeof(value), "%i", ((CMacroWithIntValue *)macro)->GetValue());
+                    snprintf(value, sizeof(value), "%i", ((CMacroWithIntValue *)macro)->Value);
                     g_SpellManager.Cast(value);
                 }
                 break;
             }
             case MT_SAY:
             {
-                string text = ((CMacroWithStringValue *)macro)->GetValue();
+                string text = ((CMacroWithStringValue *)macro)->Value;
                 if (convertType == MCT_SAY_YELL)
                 {
                     text = "! " + text;
@@ -592,13 +592,13 @@ void CMacroExecutor::ProcessMacro()
                 {
                     g_PromptReceived = false;
                     m_WaitingEnabled = true;
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
                 m_WaitingEnabled = false;
                 if (g_PromptReceived)
                 {
-                    g_PromptManager.Send(((CMacroWithStringValue *)macro)->GetValue());
+                    g_PromptManager.Send(((CMacroWithStringValue *)macro)->Value);
                 }
                 break;
             }
@@ -608,7 +608,7 @@ void CMacroExecutor::ProcessMacro()
                 {
                     g_MenuReceived = false;
                     m_WaitingEnabled = true;
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
                 m_WaitingEnabled = false;
@@ -617,15 +617,15 @@ void CMacroExecutor::ProcessMacro()
                     break;
                 }
                 CMenu *menu = g_MenuManager.GetLastMenu();
-                if (menu == nullptr || menu->GetReplayed())
+                if (menu == nullptr || menu->Replayed)
                 {
                     break;
                 }
                 if (convertType == MCT_ANY ||
-                    (((CMacroWithMenu *)macro)->GetName() == menu->GetName()))
+                    (((CMacroWithMenu *)macro)->Name == menu->Name))
                 {
                     if (g_MenuManager.SendMenuChoice(
-                            menu, ((CMacroWithMenu *)macro)->GetItemName(), true))
+                            menu, ((CMacroWithMenu *)macro)->ItemName, true))
                     {
                         break;
                     }
@@ -638,7 +638,7 @@ void CMacroExecutor::ProcessMacro()
                 {
                     g_GumpReceived = false;
                     m_WaitingEnabled = true;
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
                 m_WaitingEnabled = false;
@@ -647,14 +647,14 @@ void CMacroExecutor::ProcessMacro()
                     break;
                 }
                 CGump *gump = g_GumpManager.GetLastGump();
-                if (gump == nullptr || gump->GetReplayed())
+                if (gump == nullptr || gump->Replayed)
                 {
                     break;
                 }
-                if (convertType == MCT_ANY || (((CMacroWithGump *)macro)->GetID() == gump->GetID()))
+                if (convertType == MCT_ANY || (((CMacroWithGump *)macro)->ID == gump->ID))
                 {
                     CGumpHook hook;
-                    hook.SetIndex(((CMacroWithGump *)macro)->GetButton());
+                    hook.Index = ((CMacroWithGump *)macro)->Button;
                     if (g_GumpManager.SendGumpChoice(gump, hook))
                     {
                         break;
@@ -685,7 +685,7 @@ void CMacroExecutor::ProcessMacro()
                 {
                     g_ContextMenuReceived = false;
                     m_WaitingEnabled = true;
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
                 m_WaitingEnabled = false;
@@ -694,11 +694,11 @@ void CMacroExecutor::ProcessMacro()
                     break;
                 }
                 if (convertType == MCT_ANY ||
-                    (((CMacroWithObject *)macro)->GetSerial() == g_ContextMenuManager.GetSerial()))
+                    (((CMacroWithObject *)macro)->Serial == g_ContextMenuManager.Serial))
                 {
                     CPacketContextMenuSelection(
-                        g_ContextMenuManager.GetSerial(),
-                        ((CMacroWithObject *)macro)->GetGraphic())
+                        g_ContextMenuManager.Serial,
+                        ((CMacroWithObject *)macro)->Graphic)
                         .SendServer();
                 }
                 break;
@@ -711,7 +711,7 @@ void CMacroExecutor::ProcessMacro()
                 }
                 else
                 {
-                    warmode_send((uint)((CMacroWithIntValue *)macro)->GetValue());
+                    warmode_send((uint)((CMacroWithIntValue *)macro)->Value);
                 }
                 break;
             }
@@ -735,7 +735,7 @@ void CMacroExecutor::ProcessMacro()
                     break;
                 }
 
-                int dir = ((CMacroWithIntValue *)macro)->GetValue();
+                int dir = ((CMacroWithIntValue *)macro)->Value;
                 int walkDelay = 0;
 
                 if (dir < 0) //Turn
@@ -809,7 +809,7 @@ void CMacroExecutor::ProcessMacro()
                             g_MoveItemData.Container = CAssistant::TextToSerial("backpack");
                         }
                         g_Assistant.MoveItem(obj);
-                        m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                        m_NextMacroTick = g_Ticks + macro->WaitingTime;
                         m_PlayPosition--;
                         return;
                     }
@@ -846,7 +846,7 @@ void CMacroExecutor::ProcessMacro()
                     {
                         g_Assistant.MoveEquip(obj->Serial, EquipLayer(obj), g_PlayerSerial);
                     }
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     m_PlayPosition--;
                     return;
                 }
@@ -877,7 +877,7 @@ void CMacroExecutor::ProcessMacro()
                             g_MoveItemData.Container = CAssistant::TextToSerial("backpack");
                         }
                         g_Assistant.MoveItem(obj);
-                        m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                        m_NextMacroTick = g_Ticks + macro->WaitingTime;
                         m_PlayPosition--;
                         return;
                     }
@@ -914,14 +914,14 @@ void CMacroExecutor::ProcessMacro()
                     {
                         g_Assistant.MoveEquip(obj->Serial, EquipLayer(obj), g_PlayerSerial);
                     }
-                    m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                    m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     m_PlayPosition--;
                     return;
                 }
                 break;
             }
             case MT_WAIT:
-                m_NextMacroTick = g_Ticks + macro->GetWaitingTime();
+                m_NextMacroTick = g_Ticks + macro->WaitingTime;
                 return;
             default:
                 break;

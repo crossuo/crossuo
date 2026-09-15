@@ -53,9 +53,9 @@ void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)
     ScriptJournal_Add(message);
     // was g_JournalManager.Add: copy the payload, cap the ring
     Line line;
-    line.Text = message.GetText();
-    line.Color = message.GetColor();
-    line.Flags = message.GetFlags();
+    line.Text = message.Text;
+    line.Color = message.Color;
+    line.Flags = message.Flags;
     m_Lines.push_back(line);
     while ((int)m_Lines.size() > LINE_CAP)
     {

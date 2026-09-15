@@ -62,19 +62,19 @@ void TextDialog_Draw()
 
     // the prompt state line (the original dialog had no such line; this surfaces
     // where Send/Cancel land - the response flow, not the display flow)
-    if (g_PromptManager.GetExists())
+    if (g_PromptManager.Exists)
     {
         ImGui::Text(
             "Prompt %s pending (serial 0x%08X).",
-            g_PromptManager.GetIsUnicode() ? "unicode" : "ascii",
-            g_PromptManager.GetSerial());
+            g_PromptManager.IsUnicode ? "unicode" : "ascii",
+            g_PromptManager.Serial);
     }
 
     // Send/Cancel -> g_PromptManager.Send (packets CPacket*PromptResponse;
     // an empty send is the cancel, promptmanager.cpp Send)
     if (ImGui::Button("Send"))
     {
-        if (g_PromptManager.GetExists())
+        if (g_PromptManager.Exists)
         {
             g_PromptManager.Send(s_Text);
         }
@@ -82,7 +82,7 @@ void TextDialog_Draw()
     ImGui::SameLine();
     if (ImGui::Button("Cancel"))
     {
-        if (g_PromptManager.GetExists())
+        if (g_PromptManager.Exists)
         {
             g_PromptManager.Send("");
         }

@@ -129,7 +129,7 @@ void CTextCommandManager::DoCommand(const string &text)
         CCommand &cmd = command->second.first;
         CMD_HANDLER handler = command->second.second;
 
-        if (cmd.GetEnabled())
+        if (cmd.Enabled)
         {
             list.erase(list.begin());
             (this->*handler)(list, cmd);
@@ -159,7 +159,7 @@ bool CTextCommandManager::RunCommand(const string &name, const COMMAND_ARGS &arg
     CCommand &cmd = command->second.first;
     CMD_HANDLER handler = command->second.second;
 
-    if (cmd.GetEnabled())
+    if (cmd.Enabled)
     {
         (this->*handler)(args, cmd);
         return true;
@@ -174,15 +174,15 @@ void CTextCommandManager::UpdateCommands()
     for (COMMANDS_MAP::iterator i = m_Commands.begin(); i != m_Commands.end(); ++i)
     {
         CCommand &command = i->second.first;
-        uint64_t flags = command.GetFlags();
+        uint64_t flags = command.Flags;
 
         if ((flags == 0u) || ((g_EnabledCommands & flags) == flags))
         {
-            command.SetEnabled(true);
+            command.Enabled = true;
         }
         else
         {
-            command.SetEnabled(false);
+            command.Enabled = false;
         }
     }
 }
@@ -477,7 +477,7 @@ HCOMMAND(usetype)
 
     if (size == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -533,7 +533,7 @@ HCOMMAND(usefromground)
 
     if (size == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -642,7 +642,7 @@ HCOMMAND(terminate)
 
     if (args.empty() || args[0].length() == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
     }
 
     // was g_TabScripts->TerminateScript(args[0], functionsSave):
@@ -666,7 +666,7 @@ HCOMMAND(setlight)
 
     if (size == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -700,7 +700,7 @@ HCOMMAND(setweather)
 
     if (size == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -741,7 +741,7 @@ HCOMMAND(setseason)
 
     if (size == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -771,7 +771,7 @@ HCOMMAND(cast)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -789,7 +789,7 @@ HCOMMAND(useskill)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -914,7 +914,7 @@ HCOMMAND(sound)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -933,7 +933,7 @@ HCOMMAND(emoteaction)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -973,7 +973,7 @@ HCOMMAND(blockmoving)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -993,7 +993,7 @@ HCOMMAND(drop)
 
     if (size == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1193,7 +1193,7 @@ HCOMMAND(setarm)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1231,7 +1231,7 @@ HCOMMAND(unsetarm)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1254,7 +1254,7 @@ HCOMMAND(setdress)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1292,7 +1292,7 @@ HCOMMAND(unsetdress)
 
     if (args.empty())
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1317,7 +1317,7 @@ HCOMMAND(savehotkeys)
 
     if (size == 0 || args[0].length() == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1338,7 +1338,7 @@ HCOMMAND(loadhotkeys)
 
     if (size == 0 || args[0].length() == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1359,7 +1359,7 @@ HCOMMAND(track)
 
     if (size == 0)
     {
-        g_Assistant.ClientPrintDebugLevel1(command.GetDescription());
+        g_Assistant.ClientPrintDebugLevel1(command.Description);
         return;
     }
 
@@ -1439,11 +1439,11 @@ HCOMMAND(showjournal)
         const CJournalMessage &item = list[i];
 
         string line = "";
-        if ((item.GetFlags() & JMT_SYSTEM) != 0)
+        if ((item.Flags & JMT_SYSTEM) != 0)
         {
             line = "sys ";
         }
-        else if ((item.GetFlags() & JMT_MY) != 0)
+        else if ((item.Flags & JMT_MY) != 0)
         {
             line = "my ";
         }
@@ -1453,9 +1453,9 @@ HCOMMAND(showjournal)
             buf,
             sizeof(buf),
             "[s=0x%08X c=0x%04X]: %s",
-            item.GetSerial(),
-            item.GetColor(),
-            item.GetText().c_str());
+            item.Serial,
+            item.Color,
+            item.Text.c_str());
         line += buf;
 
         ScriptTextWindow_Command(TW_PRINT, line, 0, 0, "");

@@ -41,7 +41,7 @@ const char *g_FacetName[6] = { "Felucca", "Trammel", "Ilshenar", "Malas", "Tokun
 
 float MapSettings_Scale()
 {
-    float scale = g_MapSettings.GetZoom() * 0.25f;
+    float scale = g_MapSettings.Zoom * 0.25f;
 
     if (scale < 0.25f)
     {
@@ -90,52 +90,52 @@ CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint &serial)
 
 void CMapSettings::Copy(const CMapSettings &settings)
 {
-    m_ShowStatics = settings.GetShowStatics();
-    m_ApplyAltitude = settings.GetApplyAltitude();
-    m_AltitudeOnly = settings.GetAltitudeOnly();
-    m_SmoothImage = settings.GetSmoothImage();
-    m_DisplayCoordinates = settings.GetDisplayCoordinates();
-    m_ShowOnLogin = settings.GetShowOnLogin();
-    m_ShowLastCorpse = settings.GetShowLastCorpse();
-    m_MarkDeadMobiles = settings.GetMarkDeadMobiles();
-    m_RotateMap = settings.GetRotateMap();
+    ShowStatics = settings.ShowStatics;
+    ApplyAltitude = settings.ApplyAltitude;
+    AltitudeOnly = settings.AltitudeOnly;
+    SmoothImage = settings.SmoothImage;
+    DisplayCoordinates = settings.DisplayCoordinates;
+    ShowOnLogin = settings.ShowOnLogin;
+    ShowLastCorpse = settings.ShowLastCorpse;
+    MarkDeadMobiles = settings.MarkDeadMobiles;
+    RotateMap = settings.RotateMap;
 
-    m_PlayerFontStyle = settings.GetPlayerFontStyle();
-    m_PlayerColor = settings.GetPlayerColor();
-    m_PlayerShowHits = settings.GetPlayerShowHits();
-    m_PlayerShowMana = settings.GetPlayerShowMana();
-    m_PlayerShowStam = settings.GetPlayerShowStam();
-    m_PlayerShowName = settings.GetPlayerShowName();
+    PlayerFontStyle = settings.PlayerFontStyle;
+    PlayerColor = settings.PlayerColor;
+    PlayerShowHits = settings.PlayerShowHits;
+    PlayerShowMana = settings.PlayerShowMana;
+    PlayerShowStam = settings.PlayerShowStam;
+    PlayerShowName = settings.PlayerShowName;
 
-    m_PartyEnabled = settings.GetPartyEnabled();
-    m_PartyFontStyle = settings.GetPartyFontStyle();
-    m_PartyColor = settings.GetPartyColor();
-    m_PartyShowHits = settings.GetPartyShowHits();
-    m_PartyShowName = settings.GetPartyShowName();
+    PartyEnabled = settings.PartyEnabled;
+    PartyFontStyle = settings.PartyFontStyle;
+    PartyColor = settings.PartyColor;
+    PartyShowHits = settings.PartyShowHits;
+    PartyShowName = settings.PartyShowName;
 
-    m_GuildEnabled = settings.GetGuildEnabled();
-    m_GuildFontStyle = settings.GetGuildFontStyle();
-    m_GuildColor = settings.GetGuildColor();
-    m_GuildShowHits = settings.GetGuildShowHits();
-    m_GuildShowName = settings.GetGuildShowName();
+    GuildEnabled = settings.GuildEnabled;
+    GuildFontStyle = settings.GuildFontStyle;
+    GuildColor = settings.GuildColor;
+    GuildShowHits = settings.GuildShowHits;
+    GuildShowName = settings.GuildShowName;
 
-    m_FriendsEnabled = settings.GetFriendsEnabled();
-    m_FriendsFontStyle = settings.GetFriendsFontStyle();
-    m_FriendsColor = settings.GetFriendsColor();
-    m_FriendsShowHits = settings.GetFriendsShowHits();
-    m_FriendsShowName = settings.GetFriendsShowName();
+    FriendsEnabled = settings.FriendsEnabled;
+    FriendsFontStyle = settings.FriendsFontStyle;
+    FriendsColor = settings.FriendsColor;
+    FriendsShowHits = settings.FriendsShowHits;
+    FriendsShowName = settings.FriendsShowName;
 
-    m_EnemiesEnabled = settings.GetEnemiesEnabled();
-    m_EnemiesFontStyle = settings.GetEnemiesFontStyle();
-    m_EnemiesColor = settings.GetEnemiesColor();
-    m_EnemiesShowHits = settings.GetEnemiesShowHits();
-    m_EnemiesShowName = settings.GetEnemiesShowName();
+    EnemiesEnabled = settings.EnemiesEnabled;
+    EnemiesFontStyle = settings.EnemiesFontStyle;
+    EnemiesColor = settings.EnemiesColor;
+    EnemiesShowHits = settings.EnemiesShowHits;
+    EnemiesShowName = settings.EnemiesShowName;
 
-    m_OtherEnabled = settings.GetOtherEnabled();
-    m_OtherFontStyle = settings.GetOtherFontStyle();
-    m_OtherColor = settings.GetOtherColor();
-    m_OtherShowHits = settings.GetOtherShowHits();
-    m_OtherShowName = settings.GetOtherShowName();
+    OtherEnabled = settings.OtherEnabled;
+    OtherFontStyle = settings.OtherFontStyle;
+    OtherColor = settings.OtherColor;
+    OtherShowHits = settings.OtherShowHits;
+    OtherShowName = settings.OtherShowName;
 }
 
 // attribute helpers over the shared xml module (the original code inlined
@@ -194,60 +194,60 @@ void CMapSettings::Load()
 
     const XMLElement &e = doc.Root;
 
-    load_int(e, "window_x", &m_WindowX);
-    load_int(e, "window_y", &m_WindowY);
-    load_int(e, "window_width", &m_WindowWidth);
-    load_int(e, "window_height", &m_WindowHeight);
+    load_int(e, "window_x", &WindowX);
+    load_int(e, "window_y", &WindowY);
+    load_int(e, "window_width", &WindowWidth);
+    load_int(e, "window_height", &WindowHeight);
 
-    load_bool(e, "show_statics", &m_ShowStatics);
-    load_bool(e, "apply_altitude", &m_ApplyAltitude);
-    load_bool(e, "altitude_only", &m_AltitudeOnly);
-    load_bool(e, "smooth_image", &m_SmoothImage);
-    load_bool(e, "display_coordinates", &m_DisplayCoordinates);
-    load_bool(e, "show_on_login", &m_ShowOnLogin);
-    load_bool(e, "show_last_corpse", &m_ShowLastCorpse);
-    load_bool(e, "mark_dead_mobiles", &m_MarkDeadMobiles);
-    load_int(e, "opacity", &m_Opacity);
-    load_bool(e, "rotate_map", &m_RotateMap);
+    load_bool(e, "show_statics", &ShowStatics);
+    load_bool(e, "apply_altitude", &ApplyAltitude);
+    load_bool(e, "altitude_only", &AltitudeOnly);
+    load_bool(e, "smooth_image", &SmoothImage);
+    load_bool(e, "display_coordinates", &DisplayCoordinates);
+    load_bool(e, "show_on_login", &ShowOnLogin);
+    load_bool(e, "show_last_corpse", &ShowLastCorpse);
+    load_bool(e, "mark_dead_mobiles", &MarkDeadMobiles);
+    load_int(e, "opacity", &Opacity);
+    load_bool(e, "rotate_map", &RotateMap);
 
-    load_int(e, "player_font_style", &m_PlayerFontStyle);
-    load_color(e, "player_color", &m_PlayerColor);
-    load_bool(e, "player_show_hits", &m_PlayerShowHits);
-    load_bool(e, "player_show_mana", &m_PlayerShowMana);
-    load_bool(e, "player_show_stam", &m_PlayerShowStam);
-    load_bool(e, "player_show_name", &m_PlayerShowName);
+    load_int(e, "player_font_style", &PlayerFontStyle);
+    load_color(e, "player_color", &PlayerColor);
+    load_bool(e, "player_show_hits", &PlayerShowHits);
+    load_bool(e, "player_show_mana", &PlayerShowMana);
+    load_bool(e, "player_show_stam", &PlayerShowStam);
+    load_bool(e, "player_show_name", &PlayerShowName);
 
-    load_bool(e, "party_enabled", &m_PartyEnabled);
-    load_int(e, "party_font_style", &m_PartyFontStyle);
-    load_color(e, "party_color", &m_PartyColor);
-    load_bool(e, "party_show_hits", &m_PartyShowHits);
-    load_bool(e, "party_show_name", &m_PartyShowName);
+    load_bool(e, "party_enabled", &PartyEnabled);
+    load_int(e, "party_font_style", &PartyFontStyle);
+    load_color(e, "party_color", &PartyColor);
+    load_bool(e, "party_show_hits", &PartyShowHits);
+    load_bool(e, "party_show_name", &PartyShowName);
 
-    load_bool(e, "guild_enabled", &m_GuildEnabled);
-    load_int(e, "guild_font_style", &m_GuildFontStyle);
-    load_color(e, "guild_color", &m_GuildColor);
-    load_bool(e, "guild_show_hits", &m_GuildShowHits);
-    load_bool(e, "guild_show_name", &m_GuildShowName);
+    load_bool(e, "guild_enabled", &GuildEnabled);
+    load_int(e, "guild_font_style", &GuildFontStyle);
+    load_color(e, "guild_color", &GuildColor);
+    load_bool(e, "guild_show_hits", &GuildShowHits);
+    load_bool(e, "guild_show_name", &GuildShowName);
 
-    load_bool(e, "friends_enabled", &m_FriendsEnabled);
-    load_int(e, "friends_font_style", &m_FriendsFontStyle);
-    load_color(e, "friends_color", &m_FriendsColor);
-    load_bool(e, "friends_show_hits", &m_FriendsShowHits);
-    load_bool(e, "friends_show_name", &m_FriendsShowName);
+    load_bool(e, "friends_enabled", &FriendsEnabled);
+    load_int(e, "friends_font_style", &FriendsFontStyle);
+    load_color(e, "friends_color", &FriendsColor);
+    load_bool(e, "friends_show_hits", &FriendsShowHits);
+    load_bool(e, "friends_show_name", &FriendsShowName);
 
-    load_bool(e, "enemies_enabled", &m_EnemiesEnabled);
-    load_int(e, "enemies_font_style", &m_EnemiesFontStyle);
-    load_color(e, "enemies_color", &m_EnemiesColor);
-    load_bool(e, "enemies_show_hits", &m_EnemiesShowHits);
-    load_bool(e, "enemies_show_name", &m_EnemiesShowName);
+    load_bool(e, "enemies_enabled", &EnemiesEnabled);
+    load_int(e, "enemies_font_style", &EnemiesFontStyle);
+    load_color(e, "enemies_color", &EnemiesColor);
+    load_bool(e, "enemies_show_hits", &EnemiesShowHits);
+    load_bool(e, "enemies_show_name", &EnemiesShowName);
 
-    load_bool(e, "other_enabled", &m_OtherEnabled);
-    load_int(e, "other_font_style", &m_OtherFontStyle);
-    load_color(e, "other_color", &m_OtherColor);
-    load_bool(e, "other_show_hits", &m_OtherShowHits);
+    load_bool(e, "other_enabled", &OtherEnabled);
+    load_int(e, "other_font_style", &OtherFontStyle);
+    load_color(e, "other_color", &OtherColor);
+    load_bool(e, "other_show_hits", &OtherShowHits);
     // Format quirk: this attribute is spelled
     // "other_sho_name" in BOTH write/read directions - kept for byte compatibility.
-    load_bool(e, "other_sho_name", &m_OtherShowName);
+    load_bool(e, "other_sho_name", &OtherShowName);
 }
 
 void CMapSettings::Save()
@@ -256,58 +256,58 @@ void CMapSettings::Save()
     XMLElement &e = doc.Root;
     e.Name = "data";
 
-    set_int(e, "window_x", m_WindowX);
-    set_int(e, "window_y", m_WindowY);
-    set_int(e, "window_width", m_WindowWidth);
-    set_int(e, "window_height", m_WindowHeight);
+    set_int(e, "window_x", WindowX);
+    set_int(e, "window_y", WindowY);
+    set_int(e, "window_width", WindowWidth);
+    set_int(e, "window_height", WindowHeight);
 
-    set_bool(e, "show_statics", m_ShowStatics);
-    set_bool(e, "apply_altitude", m_ApplyAltitude);
-    set_bool(e, "altitude_only", m_AltitudeOnly);
-    set_bool(e, "smooth_image", m_SmoothImage);
-    set_bool(e, "display_coordinates", m_DisplayCoordinates);
-    set_bool(e, "show_on_login", m_ShowOnLogin);
-    set_bool(e, "show_last_corpse", m_ShowLastCorpse);
-    set_bool(e, "mark_dead_mobiles", m_MarkDeadMobiles);
-    set_int(e, "opacity", m_Opacity);
-    set_bool(e, "rotate_map", m_RotateMap);
+    set_bool(e, "show_statics", ShowStatics);
+    set_bool(e, "apply_altitude", ApplyAltitude);
+    set_bool(e, "altitude_only", AltitudeOnly);
+    set_bool(e, "smooth_image", SmoothImage);
+    set_bool(e, "display_coordinates", DisplayCoordinates);
+    set_bool(e, "show_on_login", ShowOnLogin);
+    set_bool(e, "show_last_corpse", ShowLastCorpse);
+    set_bool(e, "mark_dead_mobiles", MarkDeadMobiles);
+    set_int(e, "opacity", Opacity);
+    set_bool(e, "rotate_map", RotateMap);
 
-    set_int(e, "player_font_style", m_PlayerFontStyle);
-    set_color(e, "player_color", m_PlayerColor);
-    set_bool(e, "player_show_hits", m_PlayerShowHits);
-    set_bool(e, "player_show_mana", m_PlayerShowMana);
-    set_bool(e, "player_show_stam", m_PlayerShowStam);
-    set_bool(e, "player_show_name", m_PlayerShowName);
+    set_int(e, "player_font_style", PlayerFontStyle);
+    set_color(e, "player_color", PlayerColor);
+    set_bool(e, "player_show_hits", PlayerShowHits);
+    set_bool(e, "player_show_mana", PlayerShowMana);
+    set_bool(e, "player_show_stam", PlayerShowStam);
+    set_bool(e, "player_show_name", PlayerShowName);
 
-    set_bool(e, "party_enabled", m_PartyEnabled);
-    set_int(e, "party_font_style", m_PartyFontStyle);
-    set_color(e, "party_color", m_PartyColor);
-    set_bool(e, "party_show_hits", m_PartyShowHits);
-    set_bool(e, "party_show_name", m_PartyShowName);
+    set_bool(e, "party_enabled", PartyEnabled);
+    set_int(e, "party_font_style", PartyFontStyle);
+    set_color(e, "party_color", PartyColor);
+    set_bool(e, "party_show_hits", PartyShowHits);
+    set_bool(e, "party_show_name", PartyShowName);
 
-    set_bool(e, "guild_enabled", m_GuildEnabled);
-    set_int(e, "guild_font_style", m_GuildFontStyle);
-    set_color(e, "guild_color", m_GuildColor);
-    set_bool(e, "guild_show_hits", m_GuildShowHits);
-    set_bool(e, "guild_show_name", m_GuildShowName);
+    set_bool(e, "guild_enabled", GuildEnabled);
+    set_int(e, "guild_font_style", GuildFontStyle);
+    set_color(e, "guild_color", GuildColor);
+    set_bool(e, "guild_show_hits", GuildShowHits);
+    set_bool(e, "guild_show_name", GuildShowName);
 
-    set_bool(e, "friends_enabled", m_FriendsEnabled);
-    set_int(e, "friends_font_style", m_FriendsFontStyle);
-    set_color(e, "friends_color", m_FriendsColor);
-    set_bool(e, "friends_show_hits", m_FriendsShowHits);
-    set_bool(e, "friends_show_name", m_FriendsShowName);
+    set_bool(e, "friends_enabled", FriendsEnabled);
+    set_int(e, "friends_font_style", FriendsFontStyle);
+    set_color(e, "friends_color", FriendsColor);
+    set_bool(e, "friends_show_hits", FriendsShowHits);
+    set_bool(e, "friends_show_name", FriendsShowName);
 
-    set_bool(e, "enemies_enabled", m_EnemiesEnabled);
-    set_int(e, "enemies_font_style", m_EnemiesFontStyle);
-    set_color(e, "enemies_color", m_EnemiesColor);
-    set_bool(e, "enemies_show_hits", m_EnemiesShowHits);
-    set_bool(e, "enemies_show_name", m_EnemiesShowName);
+    set_bool(e, "enemies_enabled", EnemiesEnabled);
+    set_int(e, "enemies_font_style", EnemiesFontStyle);
+    set_color(e, "enemies_color", EnemiesColor);
+    set_bool(e, "enemies_show_hits", EnemiesShowHits);
+    set_bool(e, "enemies_show_name", EnemiesShowName);
 
-    set_bool(e, "other_enabled", m_OtherEnabled);
-    set_int(e, "other_font_style", m_OtherFontStyle);
-    set_color(e, "other_color", m_OtherColor);
-    set_bool(e, "other_show_hits", m_OtherShowHits);
-    set_bool(e, "other_sho_name", m_OtherShowName); // format quirk, see Load
+    set_bool(e, "other_enabled", OtherEnabled);
+    set_int(e, "other_font_style", OtherFontStyle);
+    set_color(e, "other_color", OtherColor);
+    set_bool(e, "other_show_hits", OtherShowHits);
+    set_bool(e, "other_sho_name", OtherShowName); // format quirk, see Load
 
     doc.Save(fs_path_join(CAssistantConfig::GetGlobalConfigPath(), "Map.xml"));
 }
@@ -457,13 +457,13 @@ uint32_t SampleTile(int map, int x, int y)
         s_Memo.BlockY = blockY;
         s_Memo.Block = RADAR_MAP_BLOCK{};
         GetRadarMapBlockForMap(
-            map, blockX, blockY, g_MapSettings.GetShowStatics(), s_Memo.Block);
+            map, blockX, blockY, g_MapSettings.ShowStatics, s_Memo.Block);
         s_Memo.Valid = true;
     }
 
     const RADAR_MAP_CELLS &cell = s_Memo.Block.Cells[x & 7][y & 7];
 
-    if (g_MapSettings.GetAltitudeOnly())
+    if (g_MapSettings.AltitudeOnly)
     {
         // grayscale ramp over the Z range
         const int z = (cell.Z + 127) * 32 / 256;
@@ -472,7 +472,7 @@ uint32_t SampleTile(int map, int x, int y)
     }
 
     uint16_t color = RadarCellColor(cell);
-    if (g_MapSettings.GetApplyAltitude() && cell.IsLand != 0 && cell.Graphic < 0x4000)
+    if (g_MapSettings.ApplyAltitude && cell.IsLand != 0 && cell.Graphic < 0x4000)
     {
         // map.cpp:411-416 blended with a per-channel saturating add here,
         // while the original masked the sum with & 0x1F, letting bright land colors
@@ -605,9 +605,9 @@ ImTextureRef AssMap_RadarTexture(int width, int height, const XA_MAP_VIEW &view)
     hash = fnv1a(hash, &view.CY, sizeof(view.CY));
     hash = fnv1a(hash, &view.Scale, sizeof(view.Scale));
     hash = fnv1a(hash, &view.Rotated, sizeof(view.Rotated));
-    const bool statics = g_MapSettings.GetShowStatics();
-    const bool altitude = g_MapSettings.GetApplyAltitude();
-    const bool altitudeOnly = g_MapSettings.GetAltitudeOnly();
+    const bool statics = g_MapSettings.ShowStatics;
+    const bool altitude = g_MapSettings.ApplyAltitude;
+    const bool altitudeOnly = g_MapSettings.AltitudeOnly;
     hash = fnv1a(hash, &statics, sizeof(statics));
     hash = fnv1a(hash, &altitude, sizeof(altitude));
     hash = fnv1a(hash, &altitudeOnly, sizeof(altitudeOnly));

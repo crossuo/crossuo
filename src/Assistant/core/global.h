@@ -601,62 +601,6 @@ const string g_InvokeVirtureName[MAX_INVOKE_VIRTURE_COUNT] = { "Honor", "Sacrifi
     }
 #endif
 
-//! Set/Get ordinary class property
-#define SETGET(type, name, defaultValue)                                                           \
-protected:                                                                                         \
-    type m_##name{ defaultValue };                                                                 \
-                                                                                                   \
-public:                                                                                            \
-    inline void Set##name(type val) { m_##name = val; }                                            \
-    inline type Get##name() const { return m_##name; }
-
-//! Set/Get ordinary class property (const-ref getter: no copy when reading,
-//! for string fields read by the draw path every frame)
-#define SETGETC(type, name, defaultValue)                                                          \
-protected:                                                                                         \
-    type m_##name{ defaultValue };                                                                 \
-                                                                                                   \
-public:                                                                                            \
-    inline void Set##name(type val) { m_##name = val; }                                            \
-    inline const type &Get##name() const { return m_##name; }
-
-//! Set/Get ordinary class property
-#define SETGETE(type, name, defaultValue, event)                                                   \
-protected:                                                                                         \
-    type m_##name{ defaultValue };                                                                 \
-                                                                                                   \
-public:                                                                                            \
-    void event(const type &val);                                                                   \
-    inline void Set##name(type val)                                                                \
-    {                                                                                              \
-        event(val);                                                                                \
-        m_##name = val;                                                                            \
-    }                                                                                              \
-    inline type Get##name() const { return m_##name; }
-
-//! Set/Get ordinary class property with a change event (const-ref getter: no
-//! copy when reading, for string fields read by the draw path every frame)
-#define SETGETCE(type, name, defaultValue, event)                                                  \
-protected:                                                                                         \
-    type m_##name{ defaultValue };                                                                 \
-                                                                                                   \
-public:                                                                                            \
-    void event(const type &val);                                                                   \
-    inline void Set##name(type val)                                                                \
-    {                                                                                              \
-        event(val);                                                                                \
-        m_##name = val;                                                                            \
-    }                                                                                              \
-    inline const type &Get##name() const { return m_##name; }
-
-//! Set/Get ordinary class property for pointers
-#define SETGETP(type, name, defaultValue)                                                          \
-protected:                                                                                         \
-    type m_##name = defaultValue;                                                                  \
-                                                                                                   \
-public:                                                                                            \
-    inline void Set##name(type val) { m_##name = val; }                                            \
-    inline type Get##name() const { return m_##name; }
 
 inline bool IsBackground(const uint64_t &flags)
 {

@@ -120,28 +120,28 @@ CJournalMessage *ScriptJournal_Find(
     {
         CJournalMessage &message = s_Messages[i];
 
-        if (serial != 0u && serial != message.GetSerial())
+        if (serial != 0u && serial != message.Serial)
         {
             continue;
         }
-        if (color != 0xFFFF && color != message.GetColor())
+        if (color != 0xFFFF && color != message.Color)
         {
             continue;
         }
-        if (type != 0u && (type & message.GetFlags()) == 0)
+        if (type != 0u && (type & message.Flags) == 0)
         {
             continue;
         }
-        if (message.GetTimer() < startTime)
+        if (message.Timer < startTime)
         {
             continue;
         }
-        if (endTime != 0u && message.GetTimer() > endTime)
+        if (endTime != 0u && message.Timer > endTime)
         {
             continue;
         }
 
-        string text = message.GetText();
+        string text = message.Text;
         if (ignoreCase)
         {
             text = to_lower_copy(text);
@@ -152,7 +152,7 @@ CJournalMessage *ScriptJournal_Find(
         {
             if (contains(text, p))
             {
-                message.SetFindTextID(findID);
+                message.FindTextID = findID;
                 if (remove)
                 {
                     CJournalMessage *copy = new CJournalMessage(message);

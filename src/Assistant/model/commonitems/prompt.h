@@ -11,11 +11,11 @@ namespace xuoassist {
 
 class CPrompt
 {
-    SETGET(uint, Serial, 0)
-    SETGET(string, Text, "")
-    SETGET(PROMPT_TYPE, Type, PT_NONE)
-
 public:
+    uint Serial = 0;
+    string Text = "";
+    PROMPT_TYPE Type = PT_NONE;
+
     CPrompt() {}
     CPrompt(const uint &serial, const string &text, const PROMPT_TYPE &type);
 };

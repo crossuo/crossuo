@@ -97,7 +97,7 @@ bool CScriptEngine::Setup(const string &scriptName)
     {
         return false;
     }
-    SetName(scriptName);
+    Name = scriptName;
     Script_RegisterAPI(m_Context, scriptName); // apiscript.cpp
     return true;
 }
@@ -174,7 +174,7 @@ bool CScriptEngine::CallFunction(const string &functionName, const vector<string
 void CScriptEngine::RequestTerminate()
 {
     m_TerminateFlag = 1;
-    SetTerminated(true); // the flag the Wait/Pause loops watched
+    Terminated = true; // the flag the Wait/Pause loops watched
 }
 
 } // namespace xuoassist

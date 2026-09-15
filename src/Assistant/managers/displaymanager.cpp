@@ -132,16 +132,16 @@ CDisplayIcon *CDisplayManager::GetIcon(const CDisplayItem &item)
     // hue, fed by LoadDisplayIcon from the assistant filemanager's raw
     // static-art access. In-process the pixels come from the client's own
     // art reader (g_UOFileReader.GetArtPixels) and the client hue manager.
-    if (item.GetGraphic() == 0u)
+    if (item.Graphic == 0u)
     {
         return nullptr;
     }
 
-    const uint serial = (uint)((item.GetGraphic() << 16) | item.GetHue());
+    const uint serial = (uint)((item.Graphic << 16) | item.Hue);
     auto i = m_Icons.find(serial);
     if (i == m_Icons.end() || i->second == nullptr)
     {
-        CDisplayIcon *icon = LoadDisplayIcon(item.GetGraphic(), item.GetHue());
+        CDisplayIcon *icon = LoadDisplayIcon(item.Graphic, item.Hue);
         m_Icons[serial] = icon;
         return icon;
     }
@@ -303,7 +303,7 @@ void CDisplayManager::GetValues(
     int iMaxVal = 0;
     bool inPercents = false;
 
-    switch (item.GetType())
+    switch (item.Type)
     {
         case DIT_NAME:
         {
@@ -314,20 +314,20 @@ void CDisplayManager::GetValues(
             {
                 if (g_Player->Notoriety == 3 || g_Player->Notoriety == 4)
                 {
-                    textColor = item.GetBackgroundMidColor(); //gray
+                    textColor = item.BackgroundMidColor; //gray
                 }
                 else if (g_Player->Notoriety == 5 || g_Player->Notoriety == 6)
                 {
-                    textColor = item.GetBackgroundMinColor(); //red
+                    textColor = item.BackgroundMinColor; //red
                 }
                 else
                 {
-                    textColor = item.GetBackgroundColor(); //blue
+                    textColor = item.BackgroundColor; //blue
                 }
             }
             else
             {
-                textColor = item.GetColor();
+                textColor = item.Color;
             }
 
             return;
@@ -335,8 +335,8 @@ void CDisplayManager::GetValues(
         case DIT_SERVER:
         {
             value = g_ServerName;
-            textColor = item.GetColor();
-            backgroundColor = item.GetBackgroundColor();
+            textColor = item.Color;
+            backgroundColor = item.BackgroundColor;
             return;
         }
         case DIT_HITS:
@@ -345,7 +345,7 @@ void CDisplayManager::GetValues(
         {
             iVal = g_Player->Hits;
             iMaxVal = g_Player->MaxHits;
-            inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_HITS);
+            inPercents = (item.Percents && item.Type != DIT_MAX_HITS);
             break;
         }
         case DIT_MANA:
@@ -354,7 +354,7 @@ void CDisplayManager::GetValues(
         {
             iVal = g_Player->Mana;
             iMaxVal = g_Player->MaxMana;
-            inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_MANA);
+            inPercents = (item.Percents && item.Type != DIT_MAX_MANA);
             break;
         }
         case DIT_STAM:
@@ -363,7 +363,7 @@ void CDisplayManager::GetValues(
         {
             iVal = g_Player->Stam;
             iMaxVal = g_Player->MaxStam;
-            inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_STAM);
+            inPercents = (item.Percents && item.Type != DIT_MAX_STAM);
             break;
         }
         case DIT_STR:
@@ -387,7 +387,7 @@ void CDisplayManager::GetValues(
         {
             iVal = g_Player->Weight;
             iMaxVal = g_Player->MaxWeight;
-            inPercents = (item.GetPercents() && item.GetType() != DIT_MAX_WEIGHT);
+            inPercents = (item.Percents && item.Type != DIT_MAX_WEIGHT);
             break;
         }
         case DIT_ARMOR:
@@ -403,32 +403,32 @@ void CDisplayManager::GetValues(
         case DIT_X:
         {
             value = std::to_string(g_Player->GetX());
-            textColor = item.GetColor();
-            backgroundColor = item.GetBackgroundColor();
+            textColor = item.Color;
+            backgroundColor = item.BackgroundColor;
             return;
         }
         case DIT_Y:
         {
             value = std::to_string(g_Player->GetY());
-            textColor = item.GetColor();
-            backgroundColor = item.GetBackgroundColor();
+            textColor = item.Color;
+            backgroundColor = item.BackgroundColor;
             return;
         }
         case DIT_Z:
         {
             value = std::to_string(g_Player->GetZ());
-            textColor = item.GetColor();
-            backgroundColor = item.GetBackgroundColor();
+            textColor = item.Color;
+            backgroundColor = item.BackgroundColor;
             return;
         }
         case DIT_OBJECT:
         {
-            iVal = CountItems(g_Player, item.GetGraphic(), item.GetHue(), true);
+            iVal = CountItems(g_Player, item.Graphic, item.Hue, true);
             break;
         }
         case DIT_NONE:
         {
-            textColor = item.GetColor();
+            textColor = item.Color;
             break;
         }
         default:
@@ -443,20 +443,20 @@ void CDisplayManager::GetValues(
         iVal = int((iVal * 100) / float(iMaxVal));
     }
 
-    if (iVal <= item.GetMinValue())
+    if (iVal <= item.MinValue)
     {
-        textColor = item.GetMinColor();
-        backgroundColor = item.GetBackgroundMinColor();
+        textColor = item.MinColor;
+        backgroundColor = item.BackgroundMinColor;
     }
-    else if (iVal <= item.GetMidValue())
+    else if (iVal <= item.MidValue)
     {
-        textColor = item.GetMidColor();
-        backgroundColor = item.GetBackgroundMidColor();
+        textColor = item.MidColor;
+        backgroundColor = item.BackgroundMidColor;
     }
     else
     {
-        textColor = item.GetColor();
-        backgroundColor = item.GetBackgroundColor();
+        textColor = item.Color;
+        backgroundColor = item.BackgroundColor;
     }
 
     // The colors land in the drawn text/bg (Phase 2/4); the value logic above
@@ -471,8 +471,8 @@ bool CDisplayManager::CanRedraw(const ushort &graphic, const ushort &color)
     {
         CDisplayItem &obj = m_Commands[i];
 
-        if (obj.GetType() == DIT_OBJECT && obj.GetGraphic() == graphic &&
-            (obj.GetHue() == 0xFFFF || obj.GetHue() == color))
+        if (obj.Type == DIT_OBJECT && obj.Graphic == graphic &&
+            (obj.Hue == 0xFFFF || obj.Hue == color))
         {
             return true;
         }
@@ -530,9 +530,9 @@ void CDisplayManager::Redraw(
 
             GetValues(obj, value, maxValue, textColor, compiledBgColor, useNotoriety);
 
-            title += obj.GetText();
+            title += obj.Text;
 
-            switch (obj.GetType())
+            switch (obj.Type)
             {
                 case DIT_MAX_HITS:
                 case DIT_MAX_MANA:
@@ -579,7 +579,7 @@ CDisplayItem CDisplayManager::GetDisplayItemByName(const string &name)
 {
     CDisplayItem item = g_AssistantConfig.GetCustomDisplayItemByName(name);
 
-    if (item.GetType() == DIT_NONE)
+    if (item.Type == DIT_NONE)
     {
         for (size_t i = 0; i < m_InfoCommands.size(); i++)
         {
@@ -610,67 +610,67 @@ void CDisplayManager::ApplyAttributeToDisplayItem(
             {
                 case DKI_TEXT:
                 {
-                    obj.SetText(value);
+                    obj.Text = value;
                     break;
                 }
                 case DKI_ID:
                 {
-                    obj.SetGraphic((ushort)CAssistant::TextToGraphic(to_lower_copy(value)));
+                    obj.Graphic = (ushort)CAssistant::TextToGraphic(to_lower_copy(value));
                     break;
                 }
                 case DKI_HUE:
                 {
-                    obj.SetHue((ushort)CAssistant::TextToGraphic(to_lower_copy(value)));
+                    obj.Hue = (ushort)CAssistant::TextToGraphic(to_lower_copy(value));
                     break;
                 }
                 case DKI_COLOR_MIN:
                 {
-                    obj.SetMinColor(CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.MinColor = CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_COLOR_MID:
                 {
-                    obj.SetMidColor(CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.MidColor = CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_COLOR:
                 {
-                    obj.SetColor(CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.Color = CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_BACKGROUND:
                 {
-                    obj.SetBackground(CAssistant::RawStringToBool(to_lower_copy(value)));
+                    obj.Background = CAssistant::RawStringToBool(to_lower_copy(value));
                     break;
                 }
                 case DKI_BG_COLOR_MIN:
                 {
-                    obj.SetBackgroundMinColor(CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.BackgroundMinColor = CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_BG_COLOR_MID:
                 {
-                    obj.SetBackgroundMidColor(CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.BackgroundMidColor = CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_BG_COLOR:
                 {
-                    obj.SetBackgroundColor(CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.BackgroundColor = CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_MIN_VAULE:
                 {
-                    obj.SetMinValue((int)CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.MinValue = (int)CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_MID_VALUE:
                 {
-                    obj.SetMidValue((int)CAssistant::RawStringToUInt(to_lower_copy(value)));
+                    obj.MidValue = (int)CAssistant::RawStringToUInt(to_lower_copy(value));
                     break;
                 }
                 case DKI_PERCENTS:
                 {
-                    obj.SetPercents(CAssistant::RawStringToBool(to_lower_copy(value)));
+                    obj.Percents = CAssistant::RawStringToBool(to_lower_copy(value));
                     break;
                 }
                 default:
@@ -747,7 +747,7 @@ void CDisplayManager::CompilleData(const string &text, uint textColor)
                         }
                     }
 
-                    if (tagData.GetType() >= DIT_X && tagData.GetType() <= DIT_Z)
+                    if (tagData.Type >= DIT_X && tagData.Type <= DIT_Z)
                     {
                         g_UpdateDisplayOnStep = true;
                     }

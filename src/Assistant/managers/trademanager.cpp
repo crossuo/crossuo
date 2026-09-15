@@ -46,7 +46,7 @@ bool CTradeManager::OnPacketSend(CDataReader &reader)
             {
                 CTradeWindow &trade = m_List[i];
 
-                if (trade.GetID1() == id)
+                if (trade.ID1 == id)
                 {
                     // the client handler removes the trade box objects; the
                     // assistant drops only its own trade-window record
@@ -64,9 +64,9 @@ bool CTradeManager::OnPacketSend(CDataReader &reader)
         {
             for (CTradeWindow &trade : m_List)
             {
-                if (trade.GetID1() == id)
+                if (trade.ID1 == id)
                 {
-                    trade.SetCheck1((bool)reader.ReadUInt8());
+                    trade.Check1 = (bool)reader.ReadUInt8();
                     return true;
                 }
             }
@@ -102,7 +102,7 @@ void CTradeManager::OnTradeAction(
             {
                 CTradeWindow &trade = m_List[i];
 
-                if (trade.GetID1() == serial)
+                if (trade.ID1 == serial)
                 {
                     // the client handler removes the trade box objects; the
                     // assistant drops only its own trade-window record
@@ -120,10 +120,10 @@ void CTradeManager::OnTradeAction(
         {
             for (CTradeWindow &trade : m_List)
             {
-                if (trade.GetID1() == serial)
+                if (trade.ID1 == serial)
                 {
-                    trade.SetCheck1((bool)id1);
-                    trade.SetCheck2((bool)id2);
+                    trade.Check1 = (bool)id1;
+                    trade.Check2 = (bool)id2;
                     return;
                 }
             }
@@ -162,7 +162,7 @@ CTradeWindow *CTradeManager::GetTrade(const string &serial)
 
         for (size_t i = 0; i < m_List.size(); i++)
         {
-            if (m_List[i].GetSerial() == index)
+            if (m_List[i].Serial == index)
             {
                 return &m_List[i];
             }

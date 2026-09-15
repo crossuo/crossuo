@@ -99,11 +99,11 @@ enum MACRO_EDIT_FLAGS
 
 class CMacro
 {
-    SETGET(MACRO_TYPE, Type, MT_NONE)
-    SETGET(MACRO_CONVERT_TYPE, ConvertType, MCT_NONE)
-    SETGET(int, WaitingTime, 1000)
-
 public:
+    MACRO_TYPE Type = MT_NONE;
+    MACRO_CONVERT_TYPE ConvertType = MCT_NONE;
+    int WaitingTime = 1000;
+
     // Class-kind tag replacing the original code's dynamic_cast (the client builds
     // with -fno-rtti); each subclass reports its kind and the GetText()/copy
     // paths static_cast after checking it, exactly where the original
@@ -122,13 +122,13 @@ public:
     virtual MACRO_CLASS GetClass() const { return MCLASS_BASE; }
 
     CMacro(const MACRO_TYPE &type)
-        : m_Type(type)
+        : Type(type)
     {
     }
     CMacro(CMacro *macro)
-        : m_Type(macro->GetType())
-        , m_ConvertType(macro->GetConvertType())
-        , m_WaitingTime(macro->GetWaitingTime())
+        : Type(macro->Type)
+        , ConvertType(macro->ConvertType)
+        , WaitingTime(macro->WaitingTime)
     {
     }
     virtual ~CMacro() {}
@@ -148,17 +148,17 @@ class CMacroWithIntValue : public CMacro
 {
     virtual MACRO_CLASS GetClass() const { return MCLASS_INT_VALUE; }
 
-    SETGET(int, Value, 0)
-
 public:
+    int Value = 0;
+
     CMacroWithIntValue(const MACRO_TYPE &type, const int &value)
         : CMacro(type)
-        , m_Value(value)
+        , Value(value)
     {
     }
     CMacroWithIntValue(CMacroWithIntValue *macro)
         : CMacro(macro)
-        , m_Value(macro->GetValue())
+        , Value(macro->Value)
     {
     }
     virtual ~CMacroWithIntValue() {}
@@ -172,17 +172,17 @@ class CMacroWithStringValue : public CMacro
 {
     virtual MACRO_CLASS GetClass() const { return MCLASS_STRING_VALUE; }
 
-    SETGET(string, Value, "")
-
 public:
+    string Value = "";
+
     CMacroWithStringValue(const MACRO_TYPE &type, const string &value)
         : CMacro(type)
-        , m_Value(value)
+        , Value(value)
     {
     }
     CMacroWithStringValue(CMacroWithStringValue *macro)
         : CMacro(macro)
-        , m_Value(macro->GetValue())
+        , Value(macro->Value)
     {
     }
     virtual ~CMacroWithStringValue() {}
@@ -196,23 +196,23 @@ class CMacroWithObject : public CMacro
 {
     virtual MACRO_CLASS GetClass() const { return MCLASS_OBJECT; }
 
-    SETGET(uint, Serial, 0)
-    SETGET(ushort, Graphic, 0)
-    SETGET(ushort, Color, 0)
-
 public:
+    uint Serial = 0;
+    ushort Graphic = 0;
+    ushort Color = 0;
+
     CMacroWithObject(MACRO_TYPE type, uint serial, ushort graphic, ushort color)
         : CMacro(type)
-        , m_Serial(serial)
-        , m_Graphic(graphic)
-        , m_Color(color)
+        , Serial(serial)
+        , Graphic(graphic)
+        , Color(color)
     {
     }
     CMacroWithObject(CMacroWithObject *macro)
         : CMacro(macro)
-        , m_Serial(macro->GetSerial())
-        , m_Graphic(macro->GetGraphic())
-        , m_Color(macro->GetColor())
+        , Serial(macro->Serial)
+        , Graphic(macro->Graphic)
+        , Color(macro->Color)
     {
     }
     virtual ~CMacroWithObject() {}
@@ -226,23 +226,23 @@ class CMacroWithGump : public CMacro
 {
     virtual MACRO_CLASS GetClass() const { return MCLASS_GUMP; }
 
-    SETGET(uint, Serial, 0)
-    SETGET(uint, ID, 0)
-    SETGET(uint, Button, 0)
-
 public:
+    uint Serial = 0;
+    uint ID = 0;
+    uint Button = 0;
+
     CMacroWithGump(const MACRO_TYPE &type, const uint &serial, const uint &id, const uint &button)
         : CMacro(type)
-        , m_Serial(serial)
-        , m_ID(id)
-        , m_Button(button)
+        , Serial(serial)
+        , ID(id)
+        , Button(button)
     {
     }
     CMacroWithGump(CMacroWithGump *macro)
         : CMacro(macro)
-        , m_Serial(macro->GetSerial())
-        , m_ID(macro->GetID())
-        , m_Button(macro->GetButton())
+        , Serial(macro->Serial)
+        , ID(macro->ID)
+        , Button(macro->Button)
     {
     }
     virtual ~CMacroWithGump() {}
@@ -256,12 +256,12 @@ class CMacroWithMenu : public CMacro
 {
     virtual MACRO_CLASS GetClass() const { return MCLASS_MENU; }
 
-    SETGET(string, Name, "")
-    SETGET(string, ItemName, "")
-    SETGET(ushort, Graphic, 0)
-    SETGET(ushort, Color, 0)
-
 public:
+    string Name = "";
+    string ItemName = "";
+    ushort Graphic = 0;
+    ushort Color = 0;
+
     CMacroWithMenu(
         const MACRO_TYPE &type,
         const string &name,
@@ -269,18 +269,18 @@ public:
         const ushort &graphic,
         const ushort &color)
         : CMacro(type)
-        , m_Name(name)
-        , m_ItemName(itemName)
-        , m_Graphic(graphic)
-        , m_Color(color)
+        , Name(name)
+        , ItemName(itemName)
+        , Graphic(graphic)
+        , Color(color)
     {
     }
     CMacroWithMenu(CMacroWithMenu *macro)
         : CMacro(macro)
-        , m_Name(macro->GetName())
-        , m_ItemName(macro->GetItemName())
-        , m_Graphic(macro->GetGraphic())
-        , m_Color(macro->GetColor())
+        , Name(macro->Name)
+        , ItemName(macro->ItemName)
+        , Graphic(macro->Graphic)
+        , Color(macro->Color)
     {
     }
     virtual ~CMacroWithMenu() {}
@@ -294,15 +294,15 @@ class CMacroWithTargetTile : public CMacro
 {
     virtual MACRO_CLASS GetClass() const { return MCLASS_TARGET_TILE; }
 
-    SETGET(ushort, Graphic, 0)
-    SETGET(int, X, 0)
-    SETGET(int, Y, 0)
-    SETGET(int, Z, 0)
-    SETGET(int, RelativeX, 0)
-    SETGET(int, RelativeY, 0)
-    SETGET(int, RelativeZ, 0)
-
 public:
+    ushort Graphic = 0;
+    int X = 0;
+    int Y = 0;
+    int Z = 0;
+    int RelativeX = 0;
+    int RelativeY = 0;
+    int RelativeZ = 0;
+
     CMacroWithTargetTile(
         const MACRO_TYPE &type,
         const ushort &graphic,
@@ -313,24 +313,24 @@ public:
         const int &relativeY,
         const int &relativeZ)
         : CMacro(type)
-        , m_Graphic(graphic)
-        , m_X(x)
-        , m_Y(y)
-        , m_Z(z)
-        , m_RelativeX(relativeX)
-        , m_RelativeY(relativeY)
-        , m_RelativeZ(relativeZ)
+        , Graphic(graphic)
+        , X(x)
+        , Y(y)
+        , Z(z)
+        , RelativeX(relativeX)
+        , RelativeY(relativeY)
+        , RelativeZ(relativeZ)
     {
     }
     CMacroWithTargetTile(CMacroWithTargetTile *macro)
         : CMacro(macro)
-        , m_Graphic(macro->GetGraphic())
-        , m_X(macro->GetX())
-        , m_Y(macro->GetY())
-        , m_Z(macro->GetZ())
-        , m_RelativeX(macro->GetRelativeX())
-        , m_RelativeY(macro->GetRelativeY())
-        , m_RelativeZ(macro->GetRelativeZ())
+        , Graphic(macro->Graphic)
+        , X(macro->X)
+        , Y(macro->Y)
+        , Z(macro->Z)
+        , RelativeX(macro->RelativeX)
+        , RelativeY(macro->RelativeY)
+        , RelativeZ(macro->RelativeZ)
     {
     }
     virtual ~CMacroWithTargetTile() {}

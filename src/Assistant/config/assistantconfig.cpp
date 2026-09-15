@@ -78,7 +78,7 @@ fs_path CAssistantConfig::GetConfigPath()
 
 fs_path CAssistantConfig::GetProfilePath()
 {
-    return fs_path_join(GetConfigPath(), m_ProfileName);
+    return fs_path_join(GetConfigPath(), ProfileName);
 }
 
 void CAssistantConfig::EnsureDirectories()
@@ -137,7 +137,7 @@ void CAssistantConfig::ScanProfiles()
 void CAssistantConfig::SetCurrentProfile(const string &name)
 {
     const string nameLower = to_lower(name);
-    if (to_lower(m_ProfileName) == nameLower)
+    if (to_lower(ProfileName) == nameLower)
     {
         return;
     }
@@ -145,11 +145,11 @@ void CAssistantConfig::SetCurrentProfile(const string &name)
     {
         if (to_lower(profile) == nameLower)
         {
-            m_ProfileName = profile;
+            ProfileName = profile;
             return;
         }
     }
-    m_ProfileName = name;
+    ProfileName = name;
 }
 
 bool CAssistantConfig::LoadProfileBySerial(uint serial)
@@ -170,7 +170,7 @@ void CAssistantConfig::SaveProfileMap()
     EnsureDirectories();
     if (g_Connected && g_Player != nullptr)
     {
-        m_ProfileMap[g_PlayerSerial] = m_ProfileName;
+        m_ProfileMap[g_PlayerSerial] = ProfileName;
     }
 
     XMLDocument doc;
@@ -208,7 +208,7 @@ void CAssistantConfig::LoadProfileMap()
 bool CAssistantConfig::LoadProfile()
 {
     // Was AssistForm::LoadCurrentProfile.
-    if (m_ProfileName.empty())
+    if (ProfileName.empty())
     {
         return false;
     }
@@ -243,7 +243,7 @@ bool CAssistantConfig::LoadProfile()
         g_SetInt(VKI_IGNORE_STAMINA_CHECK, 1);
     }
 
-    g_Assistant.ClientPrint("Profile '" + m_ProfileName + "' loaded!");
+    g_Assistant.ClientPrint("Profile '" + ProfileName + "' loaded!");
     return true;
 }
 
@@ -252,7 +252,7 @@ bool CAssistantConfig::SaveProfile()
     // Was AssistForm::SaveCurrentProfile. Note the
     // original did NOT save Macros.xml here (macros save on list change) and
     // did not save the profile map; keep both behaviors.
-    if (m_ProfileName.empty())
+    if (ProfileName.empty())
     {
         return false;
     }
@@ -1180,9 +1180,9 @@ void CAssistantConfig::SaveFindList()
         for (const CFindItem &item : entry.m_Items)
         {
             XMLElement &itemElement = element.AddChild("item");
-            itemElement.SetAttribute("graphic", item.GetGraphic());
-            itemElement.SetAttribute("color", item.GetColor());
-            itemElement.SetAttribute("comment", item.GetComment());
+            itemElement.SetAttribute("graphic", item.Graphic);
+            itemElement.SetAttribute("color", item.Color);
+            itemElement.SetAttribute("comment", item.Comment);
         }
     }
 
@@ -1212,7 +1212,7 @@ void CAssistantConfig::LoadFindList()
                     CFindItem fi(item.Attribute("graphic"), item.Attribute("color"));
                     if (item.HasAttribute("comment"))
                     {
-                        fi.SetComment(item.Attribute("comment"));
+                        fi.Comment = item.Attribute("comment");
                     }
                     entry.m_Items.push_back(fi);
                 }
@@ -1241,10 +1241,10 @@ void CAssistantConfig::SaveIgnoreList()
         for (const CIgnoreItem &item : entry.m_Items)
         {
             XMLElement &itemElement = element.AddChild("item");
-            itemElement.SetAttribute("serial", item.GetSerial());
-            itemElement.SetAttribute("graphic", item.GetGraphic());
-            itemElement.SetAttribute("color", item.GetColor());
-            itemElement.SetAttribute("comment", item.GetComment());
+            itemElement.SetAttribute("serial", item.Serial);
+            itemElement.SetAttribute("graphic", item.Graphic);
+            itemElement.SetAttribute("color", item.Color);
+            itemElement.SetAttribute("comment", item.Comment);
         }
     }
 
@@ -1277,7 +1277,7 @@ void CAssistantConfig::LoadIgnoreList()
                         item.Attribute("color"));
                     if (item.HasAttribute("comment"))
                     {
-                        ii.SetComment(item.Attribute("comment"));
+                        ii.Comment = item.Attribute("comment");
                     }
                     entry.m_Items.push_back(ii);
                 }
@@ -1536,20 +1536,20 @@ void CAssistantConfig::SaveDisplayItems()
         const CDisplayItem &di = entry.m_Item;
         XMLElement &element = doc.Root.AddChild("item");
         element.SetAttribute("name", entry.Name);
-        element.SetAttribute("type", std::to_string((int)di.GetType()));
-        element.SetAttribute("text", di.GetText());
-        element.SetAttribute("id", CAssistant::GraphicToText(di.GetGraphic()));
-        element.SetAttribute("hue", CAssistant::GraphicToText(di.GetHue()));
-        element.SetAttribute("mincolor", CAssistant::ColorToText(di.GetMinColor()));
-        element.SetAttribute("midcolor", CAssistant::ColorToText(di.GetMidColor()));
-        element.SetAttribute("color", CAssistant::ColorToText(di.GetColor()));
-        element.SetAttribute("background", (di.GetBackground() ? "true" : "false"));
-        element.SetAttribute("bgmincolor", CAssistant::ColorToText(di.GetBackgroundMinColor()));
-        element.SetAttribute("bgmidcolor", CAssistant::ColorToText(di.GetBackgroundMidColor()));
-        element.SetAttribute("bgcolor", CAssistant::ColorToText(di.GetBackgroundColor()));
-        element.SetAttribute("minvalue", std::to_string(di.GetMinValue()));
-        element.SetAttribute("midvalue", std::to_string(di.GetMidValue()));
-        element.SetAttribute("percents", (di.GetPercents() ? "true" : "false"));
+        element.SetAttribute("type", std::to_string((int)di.Type));
+        element.SetAttribute("text", di.Text);
+        element.SetAttribute("id", CAssistant::GraphicToText(di.Graphic));
+        element.SetAttribute("hue", CAssistant::GraphicToText(di.Hue));
+        element.SetAttribute("mincolor", CAssistant::ColorToText(di.MinColor));
+        element.SetAttribute("midcolor", CAssistant::ColorToText(di.MidColor));
+        element.SetAttribute("color", CAssistant::ColorToText(di.Color));
+        element.SetAttribute("background", (di.Background ? "true" : "false"));
+        element.SetAttribute("bgmincolor", CAssistant::ColorToText(di.BackgroundMinColor));
+        element.SetAttribute("bgmidcolor", CAssistant::ColorToText(di.BackgroundMidColor));
+        element.SetAttribute("bgcolor", CAssistant::ColorToText(di.BackgroundColor));
+        element.SetAttribute("minvalue", std::to_string(di.MinValue));
+        element.SetAttribute("midvalue", std::to_string(di.MidValue));
+        element.SetAttribute("percents", (di.Percents ? "true" : "false"));
     }
 
     doc.Save(fs_path_join(GetGlobalConfigPath(), "DisplayItems.xml"));
@@ -1572,63 +1572,59 @@ void CAssistantConfig::LoadDisplayItems()
             entry.Name = element.Attribute("name");
             if (element.HasAttribute("type"))
             {
-                entry.m_Item.SetType((DISPLAY_ITEM_TYPE)element.AttributeInt("type"));
+                entry.m_Item.Type = (DISPLAY_ITEM_TYPE)element.AttributeInt("type");
             }
             if (element.HasAttribute("text"))
             {
-                entry.m_Item.SetText(element.Attribute("text"));
+                entry.m_Item.Text = element.Attribute("text");
             }
             if (element.HasAttribute("id"))
             {
-                entry.m_Item.SetGraphic((ushort)strtoul(element.Attribute("id").c_str(), nullptr, 16));
+                entry.m_Item.Graphic = (ushort)strtoul(element.Attribute("id").c_str(), nullptr, 16);
             }
             if (element.HasAttribute("hue"))
             {
-                entry.m_Item.SetHue((ushort)strtoul(element.Attribute("hue").c_str(), nullptr, 16));
+                entry.m_Item.Hue = (ushort)strtoul(element.Attribute("hue").c_str(), nullptr, 16);
             }
             if (element.HasAttribute("mincolor"))
             {
-                entry.m_Item.SetMinColor(CAssistant::RawStringToUInt(element.Attribute("mincolor")));
+                entry.m_Item.MinColor = CAssistant::RawStringToUInt(element.Attribute("mincolor"));
             }
             if (element.HasAttribute("midcolor"))
             {
-                entry.m_Item.SetMidColor(CAssistant::RawStringToUInt(element.Attribute("midcolor")));
+                entry.m_Item.MidColor = CAssistant::RawStringToUInt(element.Attribute("midcolor"));
             }
             if (element.HasAttribute("color"))
             {
-                entry.m_Item.SetColor(CAssistant::RawStringToUInt(element.Attribute("color")));
+                entry.m_Item.Color = CAssistant::RawStringToUInt(element.Attribute("color"));
             }
             if (element.HasAttribute("background"))
             {
-                entry.m_Item.SetBackground(
-                    CAssistant::RawStringToBool(element.Attribute("background")));
+                entry.m_Item.Background = CAssistant::RawStringToBool(element.Attribute("background"));
             }
             if (element.HasAttribute("bgmincolor"))
             {
-                entry.m_Item.SetBackgroundMinColor(
-                    CAssistant::RawStringToUInt(element.Attribute("bgmincolor")));
+                entry.m_Item.BackgroundMinColor = CAssistant::RawStringToUInt(element.Attribute("bgmincolor"));
             }
             if (element.HasAttribute("bgmidcolor"))
             {
-                entry.m_Item.SetBackgroundMidColor(
-                    CAssistant::RawStringToUInt(element.Attribute("bgmidcolor")));
+                entry.m_Item.BackgroundMidColor = CAssistant::RawStringToUInt(element.Attribute("bgmidcolor"));
             }
             if (element.HasAttribute("bgcolor"))
             {
-                entry.m_Item.SetBackgroundColor(
-                    CAssistant::RawStringToUInt(element.Attribute("bgcolor")));
+                entry.m_Item.BackgroundColor = CAssistant::RawStringToUInt(element.Attribute("bgcolor"));
             }
             if (element.HasAttribute("minvalue"))
             {
-                entry.m_Item.SetMinValue(element.AttributeInt("minvalue"));
+                entry.m_Item.MinValue = element.AttributeInt("minvalue");
             }
             if (element.HasAttribute("midvalue"))
             {
-                entry.m_Item.SetMidValue(element.AttributeInt("midvalue"));
+                entry.m_Item.MidValue = element.AttributeInt("midvalue");
             }
             if (element.HasAttribute("percents"))
             {
-                entry.m_Item.SetPercents(CAssistant::RawStringToBool(element.Attribute("percents")));
+                entry.m_Item.Percents = CAssistant::RawStringToBool(element.Attribute("percents"));
             }
             m_DisplayItems.push_back(entry);
         }
@@ -1645,7 +1641,7 @@ void CAssistantConfig::LoadDisplayItems()
                 continue;
             }
             CDisplayItem di = g_DisplayManager.GetDisplayItemByName(info.Command);
-            if (di.GetType() != DIT_NONE && di.GetType() != DIT_OBJECT)
+            if (di.Type != DIT_NONE && di.Type != DIT_OBJECT)
             {
                 CDisplayItemEntry entry;
                 entry.Name = info.Command;
@@ -1675,7 +1671,7 @@ void CAssistantConfig::LoadDisplayItems()
                 10,
                 20,
                 false);
-            entry.m_Item.SetText(i < 9 ? string(defNames[i]) + ":" : string("b:"));
+            entry.m_Item.Text = i < 9 ? string(defNames[i]) + ":" : string("b:");
             m_DisplayItems.push_back(entry);
         }
 

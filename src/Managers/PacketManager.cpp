@@ -1054,7 +1054,7 @@ PACKET_HANDLER(EnterWorld)
     {
         xuoassist::g_AssistantEvents->OnAutostartRequest();
     }
-    if (xuoassist::g_MapSettings.GetShowOnLogin())
+    if (xuoassist::g_MapSettings.ShowOnLogin)
     {
         xuoassist::g_AssistantEvents->OnMapOpenRequest();
     }
@@ -3219,7 +3219,9 @@ PACKET_HANDLER(ExtendedCommand)
 
             item->JournalPrefix = "";
             wstr_t str;
+#if defined(XUO_ASSISTANT)
             const uint16_t textColor = 0x3B2;
+#endif
             if (clilocNum != 0)
             {
                 str = g_ClilocManager.Cliloc(g_Language)->GetW(clilocNum, true);
@@ -3232,7 +3234,7 @@ PACKET_HANDLER(ExtendedCommand)
                 }
 #if defined(XUO_ASSISTANT)
                 xuoassist::CJournalMessage message(serial, textColor, str_from(str));
-                message.SetFlags(xuoassist::JMT_SYSTEM);
+                message.Flags = xuoassist::JMT_SYSTEM;
                 xuoassist::g_AssistantEvents->OnJournalMessage(message);
 #endif
                 const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
@@ -3286,7 +3288,7 @@ PACKET_HANDLER(ExtendedCommand)
             {
 #if defined(XUO_ASSISTANT)
                 xuoassist::CJournalMessage message(serial, textColor, str_from(str));
-                message.SetFlags(xuoassist::JMT_SYSTEM);
+                message.Flags = xuoassist::JMT_SYSTEM;
                 xuoassist::g_AssistantEvents->OnJournalMessage(message);
 #endif
                 const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
@@ -3775,13 +3777,13 @@ PACKET_HANDLER(Talk)
         if (type == ST_BROADCAST || serial == 0xFFFFFFFF || serial == 0u ||
             (str_lower(name) == "system" && obj == nullptr))
         {
-            message.SetFlags(xuoassist::JMT_SYSTEM);
+            message.Flags = xuoassist::JMT_SYSTEM;
         }
         else if (obj != nullptr)
         {
             if (serial == g_PlayerSerial)
             {
-                message.SetFlags(xuoassist::JMT_MY);
+                message.Flags = xuoassist::JMT_MY;
             }
             else if (obj->GetName() == name && str != name)
             {
@@ -3926,13 +3928,13 @@ PACKET_HANDLER(UnicodeTalk)
         if (type == ST_BROADCAST || serial == 0xFFFFFFFF || serial == 0u ||
             (str_lower(name) == "system" && obj == nullptr))
         {
-            message.SetFlags(xuoassist::JMT_SYSTEM);
+            message.Flags = xuoassist::JMT_SYSTEM;
         }
         else if (obj != nullptr)
         {
             if (serial == g_PlayerSerial)
             {
-                message.SetFlags(xuoassist::JMT_MY);
+                message.Flags = xuoassist::JMT_MY;
             }
             else if (obj->GetName() == name && textA != name)
             {
@@ -4100,7 +4102,7 @@ PACKET_HANDLER(GraphicEffect)
                 snprintf(text, sizeof(text), "effectecho: type=%i mode=%i", type, val);
 
                 xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-                message.SetFlags(xuoassist::JMT_SYSTEM);
+                message.Flags = xuoassist::JMT_SYSTEM;
 
                 xuoassist::g_AssistantEvents->OnJournalMessage(message);
             }
@@ -4119,7 +4121,7 @@ PACKET_HANDLER(GraphicEffect)
             snprintf(text, sizeof(text), "effectecho: type=%i", type);
 
             xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-            message.SetFlags(xuoassist::JMT_SYSTEM);
+            message.Flags = xuoassist::JMT_SYSTEM;
 
             xuoassist::g_AssistantEvents->OnJournalMessage(message);
         }
@@ -4191,7 +4193,7 @@ PACKET_HANDLER(GraphicEffect)
             renderMode);
 
         xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-        message.SetFlags(xuoassist::JMT_SYSTEM);
+        message.Flags = xuoassist::JMT_SYSTEM;
 
         xuoassist::g_AssistantEvents->OnJournalMessage(message);
     }
@@ -4348,7 +4350,7 @@ PACKET_HANDLER(PlaySoundEffect)
                 yCoord);
 
             xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-            message.SetFlags(xuoassist::JMT_SYSTEM);
+            message.Flags = xuoassist::JMT_SYSTEM;
 
             xuoassist::g_AssistantEvents->OnJournalMessage(message);
         }
@@ -4591,7 +4593,7 @@ PACKET_HANDLER(CharacterAnimation)
             delay);
 
         xuoassist::CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-        message.SetFlags(xuoassist::JMT_SYSTEM);
+        message.Flags = xuoassist::JMT_SYSTEM;
 
         xuoassist::g_AssistantEvents->OnJournalMessage(message);
     }
@@ -4876,13 +4878,13 @@ PACKET_HANDLER(DisplayClilocString)
     xuoassist::CJournalMessage journal(serial, wireColor, textA);
     if (serial == 0xFFFFFFFF || (serial == 0u) || (str_lower(name) == "system" && obj == nullptr))
     {
-        journal.SetFlags(xuoassist::JMT_SYSTEM);
+        journal.Flags = xuoassist::JMT_SYSTEM;
     }
     else if (obj != nullptr)
     {
         if (serial == g_PlayerSerial)
         {
-            journal.SetFlags(xuoassist::JMT_MY);
+            journal.Flags = xuoassist::JMT_MY;
         }
         else if (obj->GetName() == name && textA != name)
         {

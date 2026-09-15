@@ -12,13 +12,13 @@ namespace xuoassist {
 
 class CGumpHookCheck
 {
-    SETGET(int, Index, 0)
-    SETGET(bool, State, false)
-
 public:
+    int Index = 0;
+    bool State = false;
+
     CGumpHookCheck(const int &index, const bool &state)
-        : m_Index(index)
-        , m_State(state)
+        : Index(index)
+        , State(state)
     {
     }
     ~CGumpHookCheck() {}
@@ -26,13 +26,13 @@ public:
 
 class CGumpHookEntry
 {
-    SETGET(int, Index, 0)
-    SETGET(string, Text, "")
-
 public:
+    int Index = 0;
+    string Text = "";
+
     CGumpHookEntry(const int &index, const string &text)
-        : m_Index(index)
-        , m_Text(text)
+        : Index(index)
+        , Text(text)
     {
     }
     ~CGumpHookEntry() {}
@@ -40,9 +40,9 @@ public:
 
 class CGumpHook
 {
-    SETGET(int, Index, 0)
-
 public:
+    int Index = 0;
+
     CGumpHook() {}
     CGumpHook(CGumpHook *original);
     ~CGumpHook() {}

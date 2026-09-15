@@ -519,12 +519,12 @@ CPacketGumpResponse::CPacketGumpResponse(CGump *gump, int32_t code)
 
     for (CGumpItem &item : gump->m_Items)
     {
-        switch (item.GetType())
+        switch (item.Type)
         {
             case GIT_CHECKBOX:
             case GIT_RADIO:
             {
-                vector<string> commands = split_skip_empty(item.GetCommand());
+                vector<string> commands = split_skip_empty(item.Command);
 
                 if (commands.size() >= 7 && (atoi(commands[5].c_str()) != 0))
                 {
@@ -536,7 +536,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGump *gump, int32_t code)
             case GIT_TEXTENTRY:
             case GIT_TEXTENTRYLIMITED:
             {
-                vector<string> commands = split_skip_empty(item.GetCommand());
+                vector<string> commands = split_skip_empty(item.Command);
 
                 if (commands.size() >= 8)
                 {
@@ -561,16 +561,16 @@ CPacketGumpResponse::CPacketGumpResponse(CGump *gump, int32_t code)
 
     WriteUInt8(0xB1);
     WriteUInt16BE(checked_cast<uint16_t>(size));
-    WriteUInt32BE(gump->GetSerial());
-    WriteUInt32BE(gump->GetID());
+    WriteUInt32BE(gump->Serial);
+    WriteUInt32BE(gump->ID);
     WriteUInt32BE(code);
     WriteUInt32BE(switchesCount);
 
     for (CGumpItem &item : gump->m_Items)
     {
-        if (item.GetType() == GIT_CHECKBOX || item.GetType() == GIT_RADIO)
+        if (item.Type == GIT_CHECKBOX || item.Type == GIT_RADIO)
         {
-            vector<string> commands = split_skip_empty(item.GetCommand());
+            vector<string> commands = split_skip_empty(item.Command);
 
             if (commands.size() >= 7 && (atoi(commands[5].c_str()) != 0))
             {
@@ -583,9 +583,9 @@ CPacketGumpResponse::CPacketGumpResponse(CGump *gump, int32_t code)
 
     for (CGumpItem &item : gump->m_Items)
     {
-        if (item.GetType() == GIT_TEXTENTRY || item.GetType() == GIT_TEXTENTRYLIMITED)
+        if (item.Type == GIT_TEXTENTRY || item.Type == GIT_TEXTENTRYLIMITED)
         {
-            vector<string> commands = split_skip_empty(item.GetCommand());
+            vector<string> commands = split_skip_empty(item.Command);
 
             if (commands.size() >= 8)
             {
@@ -896,8 +896,8 @@ CPacketCloseGenericGumpWithoutResponse::CPacketCloseGenericGumpWithoutResponse(
     WriteUInt8(0xFC);
     WriteUInt16BE(0x000E);
     WriteUInt16BE(OCT_CLOSE_GENERIC_GUMP_WITHOUT_RESPONSE);
-    WriteUInt32BE(gump->GetSerial());
-    WriteUInt32BE(gump->GetID());
+    WriteUInt32BE(gump->Serial);
+    WriteUInt32BE(gump->ID);
     WriteUInt8(all ? 1 : 0);
 }
 

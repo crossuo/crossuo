@@ -12,8 +12,8 @@ namespace xuoassist {
 CTextParser::CTextParser(
     const string &text, const char *delimiters, const char *comentaries, const char *quotes,
     const bool &saveQuotes)
-    : m_RawLine("")
-    , m_SaveQuotes(saveQuotes)
+    : RawLine("")
+    , SaveQuotes(saveQuotes)
     , m_Text(text)
     , m_Ptr(nullptr)
     , m_StartPtr(nullptr)
@@ -257,7 +257,7 @@ string CTextParser::ObtainQuotedData()
                 }
             }
 
-            if (m_SaveQuotes)
+            if (SaveQuotes)
             {
                 result.insert(result.begin(), m_Quotes[i]);
                 result = string(result) + endQuote;
@@ -283,18 +283,18 @@ void CTextParser::SaveRawLine()
 
     if (size > 0)
     {
-        m_RawLine.resize(size, 0);
-        memcpy(&m_RawLine[0], &m_Ptr[0], size);
+        RawLine.resize(size, 0);
+        memcpy(&RawLine[0], &m_Ptr[0], size);
 
-        while ((m_RawLine.length() != 0u) &&
-               (m_RawLine[size - 1] == '\r' || m_RawLine[size - 1] == '\n'))
+        while ((RawLine.length() != 0u) &&
+               (RawLine[size - 1] == '\r' || RawLine[size - 1] == '\n'))
         {
-            m_RawLine.resize(m_RawLine.length() - 1);
+            RawLine.resize(RawLine.length() - 1);
         }
     }
     else
     {
-        m_RawLine = "";
+        RawLine = "";
     }
 }
 

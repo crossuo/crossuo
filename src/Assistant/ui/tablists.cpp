@@ -498,9 +498,9 @@ void draw_find_tab()
             lastSelectedItem = selectedItem;
             if (selectedItem >= 0 && selectedItem < (int)content.size())
             {
-                snprintf(itemGraphic, sizeof(itemGraphic), "%s", content[selectedItem].GetGraphic().c_str());
-                snprintf(itemColor, sizeof(itemColor), "%s", content[selectedItem].GetColor().c_str());
-                snprintf(itemComment, sizeof(itemComment), "%s", content[selectedItem].GetComment().c_str());
+                snprintf(itemGraphic, sizeof(itemGraphic), "%s", content[selectedItem].Graphic.c_str());
+                snprintf(itemColor, sizeof(itemColor), "%s", content[selectedItem].Color.c_str());
+                snprintf(itemComment, sizeof(itemComment), "%s", content[selectedItem].Comment.c_str());
             }
         }
 
@@ -514,7 +514,7 @@ void draw_find_tab()
             else
             {
                 CFindItem item(itemGraphic, itemColor);
-                item.SetComment(itemComment);
+                item.Comment = itemComment;
                 content.push_back(item);
                 selectedItem = lastSelectedItem = (int)content.size() - 1;
                 contentChanged = true;
@@ -525,7 +525,7 @@ void draw_find_tab()
         {
             content[selectedItem].SetGraphic(itemGraphic);
             content[selectedItem].SetColor(itemColor);
-            content[selectedItem].SetComment(itemComment);
+            content[selectedItem].Comment = itemComment;
             contentChanged = true;
             hint[0] = '\0';
         }
@@ -694,10 +694,10 @@ void draw_ignore_tab()
             lastSelectedItem = selectedItem;
             if (selectedItem >= 0 && selectedItem < (int)content.size())
             {
-                snprintf(itemSerial, sizeof(itemSerial), "%s", content[selectedItem].GetSerial().c_str());
-                snprintf(itemGraphic, sizeof(itemGraphic), "%s", content[selectedItem].GetGraphic().c_str());
-                snprintf(itemColor, sizeof(itemColor), "%s", content[selectedItem].GetColor().c_str());
-                snprintf(itemComment, sizeof(itemComment), "%s", content[selectedItem].GetComment().c_str());
+                snprintf(itemSerial, sizeof(itemSerial), "%s", content[selectedItem].Serial.c_str());
+                snprintf(itemGraphic, sizeof(itemGraphic), "%s", content[selectedItem].Graphic.c_str());
+                snprintf(itemColor, sizeof(itemColor), "%s", content[selectedItem].Color.c_str());
+                snprintf(itemComment, sizeof(itemComment), "%s", content[selectedItem].Comment.c_str());
             }
         }
 
@@ -711,7 +711,7 @@ void draw_ignore_tab()
             else
             {
                 CIgnoreItem item(itemSerial, itemGraphic, itemColor);
-                item.SetComment(itemComment);
+                item.Comment = itemComment;
                 content.push_back(item);
                 selectedItem = lastSelectedItem = (int)content.size() - 1;
                 contentChanged = true;
@@ -720,10 +720,10 @@ void draw_ignore_tab()
         }
         if ((itemButtons & XALB_SAVE) != 0 && selectedItem >= 0 && selectedItem < (int)content.size())
         {
-            content[selectedItem].SetSerial(itemSerial);
+            content[selectedItem].Serial = itemSerial;
             content[selectedItem].SetGraphic(itemGraphic);
             content[selectedItem].SetColor(itemColor);
-            content[selectedItem].SetComment(itemComment);
+            content[selectedItem].Comment = itemComment;
             contentChanged = true;
             hint[0] = '\0';
         }

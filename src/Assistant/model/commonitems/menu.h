@@ -12,14 +12,14 @@ namespace xuoassist {
 
 class CMenu
 {
-    SETGET(uint, Serial, 0)
-    SETGET(ushort, ID, 0)
-    SETGET(bool, GrayMenu, false)
-    SETGET(string, Name, "")
-    SETGET(bool, Replayed, false)
-    SETGET(uint, ReplyID, 0)
-
 public:
+    uint Serial = 0;
+    ushort ID = 0;
+    bool GrayMenu = false;
+    string Name = "";
+    bool Replayed = false;
+    uint ReplyID = 0;
+
     CMenu();
     CMenu(const uint &serial, const ushort &id, const string &name, const bool &grayMenu);
     virtual ~CMenu();

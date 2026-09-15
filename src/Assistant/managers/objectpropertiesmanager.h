@@ -14,14 +14,14 @@ namespace xuoassist {
 
 class CObjectProperty
 {
-    SETGET(uint, Revision, 0)
-    SETGET(string, Data, "")
-
 public:
+    uint Revision = 0;
+    string Data = "";
+
     CObjectProperty() {}
     CObjectProperty(const uint &revision, const string &data)
-        : m_Revision(revision)
-        , m_Data(data)
+        : Revision(revision)
+        , Data(data)
     {
     }
 };

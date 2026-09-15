@@ -14,12 +14,12 @@ CShopItem::CShopItem(
     const int &count,
     const uint &price,
     const string &comment)
-    : m_Graphic(graphic)
-    , m_Color(color)
-    , m_Name(name)
-    , m_Count(count)
-    , m_Price(price)
-    , m_Comment(comment)
+    : Graphic(graphic)
+    , Color(color)
+    , Name(name)
+    , Count(count)
+    , Price(price)
+    , Comment(comment)
 {
 }
 

@@ -36,11 +36,11 @@ constexpr size_t SCRIPT_MEMORY_LIMIT = 64 * 1024 * 1024; // per-script runtime
 
 class CScriptEngine
 {
-    SETGET(bool, Paused, false)
-    SETGET(bool, Terminated, false)
-    SETGET(string, Name, "")
-
 public:
+    bool Paused = false;
+    bool Terminated = false;
+    string Name = "";
+
     CScriptEngine();
     ~CScriptEngine();
 

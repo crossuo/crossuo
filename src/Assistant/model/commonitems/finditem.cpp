@@ -32,8 +32,8 @@ CFindItem::CFindItem()
 }
 
 CFindItem::CFindItem(const string &graphic, const string &color)
-    : m_Graphic(graphic)
-    , m_Color(color)
+    : Graphic(graphic)
+    , Color(color)
 {
     OnChangeGraphic(graphic);
     OnChangeColor(color);

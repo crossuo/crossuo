@@ -12,17 +12,17 @@ namespace xuoassist {
 
 class CGump
 {
-    SETGET(uint, Serial, 0)
-    SETGET(uint, ID, 0)
-    SETGET(int, X, 0)
-    SETGET(int, Y, 0)
-    SETGET(bool, Replayed, false)
-    SETGET(uint, ReplyID, 0)
-    SETGET(bool, NoMove, false)
-    SETGET(bool, NoClose, false)
-    SETGET(bool, NoDispose, false)
-
 public:
+    uint Serial = 0;
+    uint ID = 0;
+    int X = 0;
+    int Y = 0;
+    bool Replayed = false;
+    uint ReplyID = 0;
+    bool NoMove = false;
+    bool NoClose = false;
+    bool NoDispose = false;
+
     CGump();
     CGump(const uint &serial, const uint &id, const int &x, const int &y);
     virtual ~CGump();

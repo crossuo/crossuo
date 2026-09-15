@@ -54,9 +54,9 @@ public:
 
 class CPacketManager : public CDataReader
 {
-    SETGET(CLIENT_VERSION, ClientVersion, CV_OLD)
-
 public:
+    CLIENT_VERSION ClientVersion = CV_OLD;
+
     // init-time completeness check over m_Packets (see packetmanager.cpp)
     static void CheckPacketsTable();
 

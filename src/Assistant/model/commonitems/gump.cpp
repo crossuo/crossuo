@@ -12,10 +12,10 @@ CGump::CGump()
 }
 
 CGump::CGump(const uint &serial, const uint &id, const int &x, const int &y)
-    : m_Serial(serial)
-    , m_ID(id)
-    , m_X(x)
-    , m_Y(y)
+    : Serial(serial)
+    , ID(id)
+    , X(x)
+    , Y(y)
 {
 }
 

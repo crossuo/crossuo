@@ -12,10 +12,10 @@ CMenuItem::CMenuItem()
 }
 
 CMenuItem::CMenuItem(const uint &id, const ushort &graphic, const ushort &color, const string &name)
-    : m_ID(id)
-    , m_Graphic(graphic)
-    , m_Color(color)
-    , m_Name(name)
+    : ID(id)
+    , Graphic(graphic)
+    , Color(color)
+    , Name(name)
 {
 }
 

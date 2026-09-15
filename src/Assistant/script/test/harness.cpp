@@ -304,7 +304,7 @@ int main()
             oneShot.join();
             CHECK(!command->ResultDropped);
             auto *entry = (CJournalMessage *)command->PointerA;
-            CHECK(entry != nullptr && entry->GetText() == "poisoned");
+            CHECK(entry != nullptr && entry->Text == "poisoned");
             delete entry; // the script thread owns the handed-over copy
             delete command;
             ScriptJournal_Clear();
@@ -378,18 +378,18 @@ int main()
     // --- 3. journal mirror ------------------------------------------------
     {
         CJournalMessage mine(0x1, 0x02B2, "You have been poisoned");
-        mine.SetFlags(JMT_MY);
+        mine.Flags = JMT_MY;
         CJournalMessage sys(0xFFFFFFFF, 0x03B2, "World is saving");
-        sys.SetFlags(JMT_SYSTEM);
+        sys.Flags = JMT_SYSTEM;
         ScriptJournal_Add(mine);
         ScriptJournal_Add(sys);
 
         CJournalMessage *hit = ScriptJournal_Find("poisoned", 0, 0xFFFF, 0, 0, 0, false);
-        CHECK(hit != nullptr && hit->GetFindTextID() == 0);
+        CHECK(hit != nullptr && hit->FindTextID == 0);
         delete hit;
 
         hit = ScriptJournal_Find("saving|poisoned", 0, 0xFFFF, 0, 0, 0, false);
-        CHECK(hit != nullptr && hit->GetFindTextID() == 0); // newest first
+        CHECK(hit != nullptr && hit->FindTextID == 0); // newest first
         delete hit;
 
         hit = ScriptJournal_Find("poisoned", 0, 0xFFFF, JMT_SYSTEM, 0, 0, false);

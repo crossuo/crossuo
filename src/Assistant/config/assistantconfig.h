@@ -247,9 +247,9 @@ struct CMacroEntry
 
 class CAssistantConfig
 {
-    SETGET(string, ProfileName, "Default")
-
 public:
+    string ProfileName = "Default";
+
     CAssistantConfig();
 
     // --- paths (plan §4.3: <binary dir>/Config/<profile>/) -----------------

@@ -58,22 +58,22 @@ public:
 
 class CDisplayItem
 {
-    SETGET(DISPLAY_ITEM_TYPE, Type, DIT_NONE)
-    SETGET(string, Text, "")
-    SETGET(ushort, Graphic, 0)
-    SETGET(ushort, Hue, 0)
-    SETGET(uint, MinColor, 0)
-    SETGET(uint, MidColor, 0)
-    SETGET(uint, Color, 0)
-    SETGET(bool, Background, false)
-    SETGET(uint, BackgroundMinColor, 0x007F0000)
-    SETGET(uint, BackgroundMidColor, 0x00FFFF00)
-    SETGET(uint, BackgroundColor, 0)
-    SETGET(int, MinValue, 0)
-    SETGET(int, MidValue, 0)
-    SETGET(bool, Percents, false)
-
 public:
+    DISPLAY_ITEM_TYPE Type = DIT_NONE;
+    string Text = "";
+    ushort Graphic = 0;
+    ushort Hue = 0;
+    uint MinColor = 0;
+    uint MidColor = 0;
+    uint Color = 0;
+    bool Background = false;
+    uint BackgroundMinColor = 0x007F0000;
+    uint BackgroundMidColor = 0x00FFFF00;
+    uint BackgroundColor = 0;
+    int MinValue = 0;
+    int MidValue = 0;
+    bool Percents = false;
+
     CDisplayItem() {}
     CDisplayItem(
         const DISPLAY_ITEM_TYPE &type,

@@ -1009,7 +1009,7 @@ bool FindContentList(const char *id, vector<CFindItem> &items, int *selected, fl
     {
         const CFindItem &item = (*(vector<CFindItem> *)ctx)[index];
         char *buf = ListRowLabel();
-        snprintf(buf, 512, "%s %s %s", item.GetGraphic().c_str(), item.GetColor().c_str(), item.GetComment().c_str());
+        snprintf(buf, 512, "%s %s %s", item.Graphic.c_str(), item.Color.c_str(), item.Comment.c_str());
         return buf;
     };
     view.Insert = [](void *ctx, int index)
@@ -1044,10 +1044,10 @@ bool IgnoreContentList(const char *id, vector<CIgnoreItem> &items, int *selected
             buf,
             512,
             "%s %s %s %s",
-            item.GetSerial().c_str(),
-            item.GetGraphic().c_str(),
-            item.GetColor().c_str(),
-            item.GetComment().c_str());
+            item.Serial.c_str(),
+            item.Graphic.c_str(),
+            item.Color.c_str(),
+            item.Comment.c_str());
         return buf;
     };
     view.Insert = [](void *ctx, int index)

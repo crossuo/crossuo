@@ -42,10 +42,10 @@ enum GUMP_ITEM_TYPE
 
 class CGumpItem
 {
-    SETGET(GUMP_ITEM_TYPE, Type, GIT_INVALID_TYPE)
-    SETGET(string, Command, "")
-
 public:
+    GUMP_ITEM_TYPE Type = GIT_INVALID_TYPE;
+    string Command = "";
+
     CGumpItem();
     CGumpItem(const GUMP_ITEM_TYPE &type, const string &command);
     virtual ~CGumpItem();

@@ -90,7 +90,7 @@ CGump *CGumpManager::GetGump(const uint &serial, const uint &id)
 {
     for (size_t i = 0; i < m_Items.size(); i++)
     {
-        if (m_Items[i]->GetSerial() == serial && m_Items[i]->GetID() == id)
+        if (m_Items[i]->Serial == serial && m_Items[i]->ID == id)
         {
             return m_Items[i];
         }
@@ -173,17 +173,17 @@ bool CGumpManager::OnPacketReceived(CDataReader &reader)
 
         if (cmd == "nodispose")
         {
-            m_LastGump->SetNoDispose(true);
+            m_LastGump->NoDispose = true;
             type = GIT_NODISPOSE;
         }
         else if (cmd == "nomove")
         {
-            m_LastGump->SetNoMove(true);
+            m_LastGump->NoMove = true;
             type = GIT_NOMOVE;
         }
         else if (cmd == "noclose")
         {
-            m_LastGump->SetNoClose(true);
+            m_LastGump->NoClose = true;
             type = GIT_NOCLOSE;
         }
         else if (cmd == "page")
@@ -331,12 +331,12 @@ bool CGumpManager::OnPacketSend(CDataReader &reader)
     {
         CGump *gump = m_Items[i];
 
-        if (!gump->GetReplayed() && gump->GetSerial() == serial && gump->GetID() == id)
+        if (!gump->Replayed && gump->Serial == serial && gump->ID == id)
         {
             uint button = reader.ReadUInt32BE();
 
-            gump->SetReplayed(true);
-            gump->SetReplyID(button);
+            gump->Replayed = true;
+            gump->ReplyID = button;
 
             // tabmacros recording (gumpmanager handler): CMacroWithGump(
             // MT_WAIT_FOR_GUMP, serial, id, button)
@@ -361,15 +361,15 @@ bool CGumpManager::OnPacketSend(CDataReader &reader)
 
 bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
 {
-    if (gump == nullptr || gump->GetReplayed())
+    if (gump == nullptr || gump->Replayed)
     {
         return false;
     }
 
     int returnCode = -1;
-    int hookIndex = hook.GetIndex();
+    int hookIndex = hook.Index;
 
-    if ((hookIndex == 0) && !gump->GetNoClose())
+    if ((hookIndex == 0) && !gump->NoClose)
     {
         returnCode = 0;
     }
@@ -377,9 +377,9 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
     {
         for (const CGumpItem &item : gump->m_Items)
         {
-            if (item.GetType() == GIT_BUTTON || item.GetType() == GIT_BUTTONTILEART)
+            if (item.Type == GIT_BUTTON || item.Type == GIT_BUTTONTILEART)
             {
-                vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+                vector<string> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 8 && (to_int(commands[5]) != 0))
                 {
@@ -409,18 +409,18 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
 
         for (CGumpItem &item : gump->m_Items)
         {
-            if (item.GetType() == GIT_PAGE)
+            if (item.Type == GIT_PAGE)
             {
-                vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+                vector<string> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 2)
                 {
                     page = to_int(commands[1]);
                 }
             }
-            else if (item.GetType() == GIT_GROUP)
+            else if (item.Type == GIT_GROUP)
             {
-                vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+                vector<string> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 2)
                 {
@@ -432,10 +432,10 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                 }
             }
             else if (
-                (item.GetType() == GIT_CHECKBOX || item.GetType() == GIT_RADIO) &&
+                (item.Type == GIT_CHECKBOX || item.Type == GIT_RADIO) &&
                 !hook.m_Checks.empty())
             {
-                vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+                vector<string> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 7)
                 {
@@ -443,19 +443,19 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                     {
                         CGumpHookCheck &checkHook = hook.m_Checks[i];
 
-                        if (to_int(commands[6]) == checkHook.GetIndex())
+                        if (to_int(commands[6]) == checkHook.Index)
                         {
-                            if (item.GetType() == GIT_RADIO)
+                            if (item.Type == GIT_RADIO)
                             {
                                 int usedPage = 0;
                                 int usedGroup = 0;
 
                                 for (CGumpItem &tempItem : gump->m_Items)
                                 {
-                                    if (tempItem.GetType() == GIT_RADIO)
+                                    if (tempItem.Type == GIT_RADIO)
                                     {
                                         vector<string> tempCommands =
-                                            split_skip_empty(tempItem.GetCommand(), ' ');
+                                            split_skip_empty(tempItem.Command, ' ');
 
                                         if (tempCommands.size() >= 7 &&
                                             ((usedPage <= 1 && page <= 1) || (usedPage == page)))
@@ -468,20 +468,20 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                                             }
                                         }
                                     }
-                                    else if (tempItem.GetType() == GIT_PAGE)
+                                    else if (tempItem.Type == GIT_PAGE)
                                     {
                                         vector<string> tempCommands =
-                                            split_skip_empty(tempItem.GetCommand(), ' ');
+                                            split_skip_empty(tempItem.Command, ' ');
 
                                         if (tempCommands.size() >= 2)
                                         {
                                             usedPage = to_int(tempCommands[1]);
                                         }
                                     }
-                                    else if (tempItem.GetType() == GIT_GROUP)
+                                    else if (tempItem.Type == GIT_GROUP)
                                     {
                                         vector<string> tempCommands =
-                                            split_skip_empty(tempItem.GetCommand(), ' ');
+                                            split_skip_empty(tempItem.Command, ' ');
 
                                         if (tempCommands.size() >= 2)
                                         {
@@ -495,7 +495,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                                 }
                             }
 
-                            commands[5] = (checkHook.GetState() ? "1" : "0");
+                            commands[5] = (checkHook.State ? "1" : "0");
                             item.RestoreCommand(commands);
 
                             hook.m_Checks.erase(hook.m_Checks.begin() + i);
@@ -505,16 +505,16 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                 }
             }
             else if (
-                (item.GetType() == GIT_TEXTENTRY || item.GetType() == GIT_TEXTENTRYLIMITED) &&
+                (item.Type == GIT_TEXTENTRY || item.Type == GIT_TEXTENTRYLIMITED) &&
                 !hook.m_Entries.empty())
             {
-                vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+                vector<string> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 8)
                 {
                     int maxLength = 0;
 
-                    if (item.GetType() == GIT_TEXTENTRYLIMITED && commands.size() >= 9)
+                    if (item.Type == GIT_TEXTENTRYLIMITED && commands.size() >= 9)
                     {
                         maxLength = to_int(commands[8]);
                     }
@@ -523,13 +523,13 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                     {
                         CGumpHookEntry &entryHook = hook.m_Entries[i];
 
-                        if (to_int(commands[6]) == entryHook.GetIndex())
+                        if (to_int(commands[6]) == entryHook.Index)
                         {
                             uint textIndex = to_uint(commands[7]);
 
                             if (textIndex < (uint)gump->m_Text.size())
                             {
-                                string text = entryHook.GetText();
+                                string text = entryHook.Text;
 
                                 if ((maxLength != 0) && text.length() > (size_t)maxLength)
                                 {
@@ -552,8 +552,8 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
     CPacketGumpResponse(gump, returnCode).SendServer();
     CPacketCloseGenericGumpWithoutResponse(gump, true).SendClient();
 
-    gump->SetReplayed(true);
-    gump->SetReplyID(returnCode);
+    gump->Replayed = true;
+    gump->ReplyID = returnCode;
 
     return true;
 }
@@ -593,27 +593,27 @@ void CGumpManager::InfoGump(const string &gumpIndex)
         buf,
         sizeof(buf),
         "Gump information:\nSerial=0x%08X\nID=0x%08X\nX=%i\nY=%i\n",
-        gump->GetSerial(),
-        gump->GetID(),
-        gump->GetX(),
-        gump->GetY());
+        gump->Serial,
+        gump->ID,
+        gump->X,
+        gump->Y);
     text += buf;
 
-    if (gump->GetReplayed())
+    if (gump->Replayed)
     {
-        text += "\nGump replayed with id: " + std::to_string(gump->GetReplyID()) + "\n";
+        text += "\nGump replayed with id: " + std::to_string(gump->ReplyID) + "\n";
     }
 
     text += "\nGump buttons:";
     for (const CGumpItem &item : gump->m_Items)
     {
-        if (item.GetType() == GIT_BUTTON || item.GetType() == GIT_BUTTONTILEART)
+        if (item.Type == GIT_BUTTON || item.Type == GIT_BUTTONTILEART)
         {
-            vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+            vector<string> commands = split_skip_empty(item.Command, ' ');
 
             if (commands.size() >= 8)
             {
-                text += "\n[" + commands[7] + "]\t" + item.GetCommand();
+                text += "\n[" + commands[7] + "]\t" + item.Command;
             }
         }
     }
@@ -621,13 +621,13 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     text += "\n\nGump checks & radios:";
     for (const CGumpItem &item : gump->m_Items)
     {
-        if (item.GetType() == GIT_CHECKBOX || item.GetType() == GIT_RADIO)
+        if (item.Type == GIT_CHECKBOX || item.Type == GIT_RADIO)
         {
-            vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+            vector<string> commands = split_skip_empty(item.Command, ' ');
 
             if (commands.size() >= 7)
             {
-                text += "\n[" + commands[6] + "]\t" + item.GetCommand();
+                text += "\n[" + commands[6] + "]\t" + item.Command;
             }
         }
     }
@@ -635,19 +635,19 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     text += "\n\nGump entries:";
     for (const CGumpItem &item : gump->m_Items)
     {
-        if (item.GetType() == GIT_TEXTENTRY || item.GetType() == GIT_TEXTENTRYLIMITED)
+        if (item.Type == GIT_TEXTENTRY || item.Type == GIT_TEXTENTRYLIMITED)
         {
-            vector<string> commands = split_skip_empty(item.GetCommand(), ' ');
+            vector<string> commands = split_skip_empty(item.Command, ' ');
 
             if (commands.size() >= 8)
             {
-                text += "\n[" + commands[6] + "]\t" + item.GetCommand();
+                text += "\n[" + commands[6] + "]\t" + item.Command;
             }
         }
     }
 
     text += "\n\nGump all commands:";
-    for (const CGumpItem &item : gump->m_Items) { text += "\n" + item.GetCommand(); }
+    for (const CGumpItem &item : gump->m_Items) { text += "\n" + item.Command; }
 
     index = 0;
     text += "\n\nGump text:";
@@ -658,7 +658,7 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     }
 
     CJournalMessage message(0xFFFFFFFF, g_MessagesColor, text);
-    message.SetFlags(JMT_SYSTEM);
+    message.Flags = JMT_SYSTEM;
     g_AssistantEvents->OnJournalMessage(message);
 
     // the g_TextDialog->ClearText/AddText + show port (scriptgump.cpp)

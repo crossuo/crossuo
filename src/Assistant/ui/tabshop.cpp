@@ -264,9 +264,9 @@ void draw_shop_list_editor()
             {
                 const CVendorShopItem &v = vendorItems[s_VendorSelected];
                 CShopItemEntry item;
-                item.Graphic = CAssistant::GraphicToText(v.GetGraphic());
-                item.Color = CAssistant::GraphicToText(v.GetColor());
-                item.Name = v.GetName();
+                item.Graphic = CAssistant::GraphicToText(v.Graphic);
+                item.Color = CAssistant::GraphicToText(v.Color);
+                item.Name = v.Name;
                 item.Comment = "";
                 item.Count = 0;
                 item.Price = 0;
@@ -298,11 +298,11 @@ void draw_shop_list_editor()
                     row,
                     sizeof(row),
                     "%s %s %s %u %u",
-                    CAssistant::GraphicToText(v.GetGraphic()).c_str(),
-                    CAssistant::GraphicToText(v.GetColor()).c_str(),
-                    v.GetName().c_str(),
-                    v.GetCount(),
-                    v.GetPrice());
+                    CAssistant::GraphicToText(v.Graphic).c_str(),
+                    CAssistant::GraphicToText(v.Color).c_str(),
+                    v.Name.c_str(),
+                    v.Count,
+                    v.Price);
                 ImGui::PushID(i);
                 if (ImGui::Selectable(row, s_VendorSelected == i))
                 {
@@ -313,9 +313,9 @@ void draw_shop_list_editor()
                 {
                     // was on_lw_VendorList_doubleClicked -> copy
                     CShopItemEntry item;
-                    item.Graphic = CAssistant::GraphicToText(v.GetGraphic());
-                    item.Color = CAssistant::GraphicToText(v.GetColor());
-                    item.Name = v.GetName();
+                    item.Graphic = CAssistant::GraphicToText(v.Graphic);
+                    item.Color = CAssistant::GraphicToText(v.Color);
+                    item.Name = v.Name;
                     item.Comment = "";
                     item.Count = 0;
                     item.Price = 0;

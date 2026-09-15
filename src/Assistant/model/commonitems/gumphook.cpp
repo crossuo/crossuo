@@ -11,7 +11,7 @@ CGumpHook::CGumpHook(CGumpHook *original)
 {
     if (original != nullptr)
     {
-        m_Index = original->GetIndex();
+        Index = original->Index;
 
         if (!original->m_Entries.empty())
         {

@@ -18,21 +18,21 @@ CContextMenuManager::CContextMenuManager() {}
 void CContextMenuManager::SetHook(const uint &id, const uint &index)
 {
     Info(Assistant, "CContextMenuManager::SetHook: 0x%08X %i\n", id, index);
-    m_HookEnabled = true;
-    m_HookID = id;
-    m_HookIndex = index;
+    HookEnabled = true;
+    HookID = id;
+    HookIndex = index;
 }
 
 void CContextMenuManager::RemoveHook()
 {
-    m_HookEnabled = false;
+    HookEnabled = false;
 }
 
 bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
 {
     ushort mode = reader.ReadUInt16BE();
     bool isNewClilocs = (mode >= 2);
-    m_Serial = reader.ReadUInt32BE();
+    Serial = reader.ReadUInt32BE();
 
     // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
     // MT_WAIT_FOR_CONTEXT_MENU })` -> return false: a playing macro waiting
@@ -43,16 +43,16 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
         return false;
     }
 
-    if (m_HookEnabled)
+    if (HookEnabled)
     {
-        if ((m_HookID != 0u) && m_Serial != m_HookID)
+        if ((HookID != 0u) && Serial != HookID)
         {
             return true;
         }
 
         uchar count = reader.ReadUInt8();
 
-        uint index = m_HookIndex;
+        uint index = HookIndex;
 
         for (int i = 0; i < count; i++)
         {
@@ -63,8 +63,8 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
                 if (index == 0u)
                 {
                     index = reader.ReadUInt16BE();
-                    m_HookEnabled = false;
-                    CPacketContextMenuSelection(m_Serial, index).SendServer();
+                    HookEnabled = false;
+                    CPacketContextMenuSelection(Serial, index).SendServer();
                     return false;
                 }
 
@@ -78,8 +78,8 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
                 if (index == 0u)
                 {
                     index = reader.ReadUInt16BE();
-                    m_HookEnabled = false;
-                    CPacketContextMenuSelection(m_Serial, index).SendServer();
+                    HookEnabled = false;
+                    CPacketContextMenuSelection(Serial, index).SendServer();
                     return false;
                 }
 

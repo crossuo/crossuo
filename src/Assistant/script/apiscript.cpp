@@ -290,7 +290,7 @@ void pause_gate(JSContext *ctx)
     {
         return;
     }
-    while (engine->GetPaused() && !engine->GetTerminated())
+    while (engine->Paused && !engine->Terminated)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -683,9 +683,9 @@ JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     const int step = 10;
-    while (delay > 0 && engine != nullptr && !engine->GetTerminated())
+    while (delay > 0 && engine != nullptr && !engine->Terminated)
     {
-        if (engine->GetPaused())
+        if (engine->Paused)
         {
             pause_gate(ctx);
             continue;
@@ -1243,7 +1243,7 @@ JSValue jsn_waitjournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     while ((endTime == 0u) || g_Ticks < endTime)
     {
-        if (engine != nullptr && engine->GetTerminated())
+        if (engine != nullptr && engine->Terminated)
         {
             return JS_NULL;
         }
@@ -1340,18 +1340,18 @@ JSValue journal_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
     {
         case 0: // Text()
             return JS_NewStringLen(
-                ctx, message->GetText().c_str(), message->GetText().size());
+                ctx, message->Text.c_str(), message->Text.size());
         case 1: // Color()
-            return JS_NewInt32(ctx, message->GetColor());
+            return JS_NewInt32(ctx, message->Color);
         case 2: // Timer()
-            return JS_NewInt32(ctx, (int32_t)message->GetTimer());
+            return JS_NewInt32(ctx, (int32_t)message->Timer);
         case 3: // Flags()
-            return JS_NewInt32(ctx, message->GetFlags());
+            return JS_NewInt32(ctx, message->Flags);
         case 4: // Serial()
-            return JS_NewStringLen(ctx, CAssistant::SerialToText(message->GetSerial()).c_str(),
-                CAssistant::SerialToText(message->GetSerial()).size());
+            return JS_NewStringLen(ctx, CAssistant::SerialToText(message->Serial).c_str(),
+                CAssistant::SerialToText(message->Serial).size());
         case 5: // FindTextID()
-            return JS_NewInt32(ctx, message->GetFindTextID());
+            return JS_NewInt32(ctx, message->FindTextID);
         default:
             return JS_UNDEFINED;
     }
@@ -1366,7 +1366,7 @@ JSValue journal_settext(JSContext *ctx, JSValueConst thisVal, int argc, JSValueC
     {
         return JS_EXCEPTION;
     }
-    data->Message->SetText(arg_text(ctx, argv, argc, 0, ""));
+    data->Message->Text = arg_text(ctx, argv, argc, 0, "");
     return JS_UNDEFINED;
 }
 
@@ -1627,7 +1627,7 @@ JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     bool armed = false; // the caller-side marker: the first call clears the
     while (true)        // flag, later calls only read it (the reset+poll)
     {
-        if (engine != nullptr && engine->GetTerminated())
+        if (engine != nullptr && engine->Terminated)
         {
             delete command;
             return JS_FALSE; // terminate beats the wait (plan rule)
@@ -1838,12 +1838,12 @@ JSValue gump_get(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *, int 
     }
     switch (magic)
     {
-        case 0: return JS_NewInt32(ctx, (int32_t)gump->GetSerial());
-        case 1: return JS_NewInt32(ctx, (int32_t)gump->GetID());
-        case 2: return JS_NewInt32(ctx, gump->GetX());
-        case 3: return JS_NewInt32(ctx, gump->GetY());
-        case 4: return JS_NewBool(ctx, gump->GetReplayed());
-        default: return JS_NewInt32(ctx, (int32_t)gump->GetReplyID());
+        case 0: return JS_NewInt32(ctx, (int32_t)gump->Serial);
+        case 1: return JS_NewInt32(ctx, (int32_t)gump->ID);
+        case 2: return JS_NewInt32(ctx, gump->X);
+        case 3: return JS_NewInt32(ctx, gump->Y);
+        case 4: return JS_NewBool(ctx, gump->Replayed);
+        default: return JS_NewInt32(ctx, (int32_t)gump->ReplyID);
     }
 }
 
@@ -1857,37 +1857,37 @@ vector<string> gump_commands_of(const CGump *gump, int filter)
         switch (filter)
         {
             case 0: // buttons
-                if (item.GetType() != GIT_BUTTON && item.GetType() != GIT_BUTTONTILEART)
+                if (item.Type != GIT_BUTTON && item.Type != GIT_BUTTONTILEART)
                 {
                     continue;
                 }
                 break;
             case 1: // checkboxes
-                if (item.GetType() != GIT_CHECKBOX)
+                if (item.Type != GIT_CHECKBOX)
                 {
                     continue;
                 }
                 break;
             case 2: // radios
-                if (item.GetType() != GIT_RADIO)
+                if (item.Type != GIT_RADIO)
                 {
                     continue;
                 }
                 break;
             case 3: // tilepics
-                if (item.GetType() != GIT_TILEPIC && item.GetType() != GIT_TILEPICHUE)
+                if (item.Type != GIT_TILEPIC && item.Type != GIT_TILEPICHUE)
                 {
                     continue;
                 }
                 break;
             case 4: // gumppics
-                if (item.GetType() != GIT_GUMPPIC && item.GetType() != GIT_GUMPPICTILED)
+                if (item.Type != GIT_GUMPPIC && item.Type != GIT_GUMPPICTILED)
                 {
                     continue;
                 }
                 break;
             case 5: // text entries
-                if (item.GetType() != GIT_TEXTENTRY && item.GetType() != GIT_TEXTENTRYLIMITED)
+                if (item.Type != GIT_TEXTENTRY && item.Type != GIT_TEXTENTRYLIMITED)
                 {
                     continue;
                 }
@@ -1895,7 +1895,7 @@ vector<string> gump_commands_of(const CGump *gump, int filter)
             default: // the whole command list
                 break;
         }
-        result.push_back(item.GetCommand());
+        result.push_back(item.Command);
     }
     return result;
 }
@@ -1937,7 +1937,7 @@ JSValue gump_command(JSContext *ctx, JSValueConst thisVal, int argc, JSValueCons
     const int index = arg_int(ctx, argv, argc, 0, 0);
     if (index >= 0 && index < (int)gump->m_Items.size())
     {
-        const string &command = gump->m_Items[index].GetCommand();
+        const string &command = gump->m_Items[index].Command;
         return JS_NewStringLen(ctx, command.c_str(), command.size());
     }
     return JS_NewString(ctx, "");
@@ -1972,8 +1972,8 @@ JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
         return JS_EXCEPTION;
     }
     auto *command = sc_make(SC_GUMP_SELECT);
-    command->TextA = int_to_text((int)gump->GetSerial());
-    command->TextB = int_to_text((int)gump->GetID());
+    command->TextA = int_to_text((int)gump->Serial);
+    command->TextB = int_to_text((int)gump->ID);
     if (argc >= 1 && JS_IsObject(argv[0]))
     {
         auto *hook = gumphook_of(ctx, argv[0]);
@@ -2010,18 +2010,18 @@ JSValue menu_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *a
     {
         case 0: // Serial -> serial text
         {
-            const string text = CAssistant::SerialToText(menu->GetSerial());
+            const string text = CAssistant::SerialToText(menu->Serial);
             return JS_NewStringLen(ctx, text.c_str(), text.size());
         }
         case 1: // ID -> graphic text
         {
-            const string text = CAssistant::GraphicToText(menu->GetID());
+            const string text = CAssistant::GraphicToText(menu->ID);
             return JS_NewStringLen(ctx, text.c_str(), text.size());
         }
         case 2: // Name
-            return JS_NewStringLen(ctx, menu->GetName().c_str(), menu->GetName().size());
+            return JS_NewStringLen(ctx, menu->Name.c_str(), menu->Name.size());
         case 3: // IsGrayMenu
-            return JS_NewBool(ctx, menu->GetGrayMenu());
+            return JS_NewBool(ctx, menu->GrayMenu);
         case 4: // ItemsCount
             return JS_NewInt32(ctx, (int32_t)menu->m_Items.size());
         default: // the item accessors (index argument)
@@ -2036,20 +2036,20 @@ JSValue menu_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *a
             switch (magic)
             {
                 case 5: // ItemID
-                    return JS_NewInt32(ctx, item.GetID());
+                    return JS_NewInt32(ctx, item.ID);
                 case 6: // ItemGraphic
                 {
-                    const string text = CAssistant::GraphicToText(item.GetGraphic());
+                    const string text = CAssistant::GraphicToText(item.Graphic);
                     return JS_NewStringLen(ctx, text.c_str(), text.size());
                 }
                 case 7: // ItemColor
                 {
-                    const string text = CAssistant::GraphicToText(item.GetColor());
+                    const string text = CAssistant::GraphicToText(item.Color);
                     return JS_NewStringLen(ctx, text.c_str(), text.size());
                 }
                 default: // ItemName
                     return JS_NewStringLen(
-                        ctx, item.GetName().c_str(), item.GetName().size());
+                        ctx, item.Name.c_str(), item.Name.size());
             }
         }
     }
@@ -2073,7 +2073,7 @@ JSValue menu_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
             pause_gate(ctx);
             return JS_FALSE; // the int form no-op'd out of range
         }
-        itemName = menu->m_Items[index].GetName();
+        itemName = menu->m_Items[index].Name;
     }
     else
     {
@@ -2081,7 +2081,7 @@ JSValue menu_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
     }
 
     auto *command = sc_make(SC_MENU_SELECT);
-    command->TextA = menu->GetName();
+    command->TextA = menu->Name;
     command->TextB = itemName;
     ScriptQueue_Exec(command);
     bool result = result_bool(command);
@@ -2098,7 +2098,7 @@ JSValue menu_close(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *)
         return JS_EXCEPTION;
     }
     auto *command = sc_make(SC_MENU_SELECT);
-    command->TextA = menu->GetName();
+    command->TextA = menu->Name;
     command->BoolA = true; // close
     ScriptQueue_Exec(command);
     delete command;
@@ -2211,7 +2211,7 @@ JSValue jsn_shop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
 
     // the original loop polled IsShopping every 10 ms; the terminate check is the
     // Phase-3 addition (it had none and outlived Terminate)
-    while (engine == nullptr || !engine->GetTerminated())
+    while (engine == nullptr || !engine->Terminated)
     {
         auto *state = sc_make(SC_SHOP_STATE);
         ScriptQueue_Exec(state);
@@ -2343,7 +2343,7 @@ JSValue macro_play(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
 
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     const uint deadline = g_Ticks + delay;
-    while (wait && (engine == nullptr || !engine->GetTerminated()) && g_Ticks < deadline)
+    while (wait && (engine == nullptr || !engine->Terminated) && g_Ticks < deadline)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         pause_gate(ctx);
@@ -4212,7 +4212,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_HAVE_TARGET:
         {
-            command->ResultInt = g_Target.IsTargeting() ? g_Target.GetCursorType() + 1 : 0;
+            command->ResultInt = g_Target.IsTargeting() ? g_Target.CursorType + 1 : 0;
             break;
         }
         case SC_WAIT_TARGET:
@@ -4768,7 +4768,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 break;
             }
             CGumpHook hook;
-            hook.SetIndex(command->IntA);
+            hook.Index = command->IntA;
             for (size_t i = 0; i + 1 < command->ListA.size(); i += 2)
             {
                 hook.m_Entries.push_back(
@@ -4827,7 +4827,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 break;
             }
             CGumpHook hook;
-            hook.SetIndex(command->IntA);
+            hook.Index = command->IntA;
             for (size_t i = 0; i + 1 < command->ListA.size(); i += 2)
             {
                 hook.m_Entries.push_back(
@@ -4865,13 +4865,13 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             switch (command->SubTag)
             {
                 case 0:
-                    command->ResultBool = g_PromptManager.GetExists();
+                    command->ResultBool = g_PromptManager.Exists;
                     break;
                 case 1:
-                    command->ResultSerial = g_PromptManager.GetSerial();
+                    command->ResultSerial = g_PromptManager.Serial;
                     break;
                 default:
-                    command->ResultSerial = g_PromptManager.GetID();
+                    command->ResultSerial = g_PromptManager.ID;
                     break;
             }
             break;
@@ -4905,17 +4905,17 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             {
                 case 1: // container: opponent != 0 -> ID1, else ID2
                     command->ResultText = CAssistant::SerialToText(
-                        command->IntA != 0 ? trade->GetID1() : trade->GetID2());
+                        command->IntA != 0 ? trade->ID1 : trade->ID2);
                     break;
                 case 2: // opponent serial
-                    command->ResultText = CAssistant::SerialToText(trade->GetSerial());
+                    command->ResultText = CAssistant::SerialToText(trade->Serial);
                     break;
                 case 3: // name
-                    command->ResultText = trade->GetName();
+                    command->ResultText = trade->Name;
                     break;
                 default: // check state: opponent != 0 -> Check1, else Check2
                     command->ResultBool =
-                        command->IntA != 0 ? trade->GetCheck1() : trade->GetCheck2();
+                        command->IntA != 0 ? trade->Check1 : trade->Check2;
                     break;
             }
             break;
@@ -4933,11 +4933,11 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             if (command->SubTag == 0)
             {
-                CPacketSecureTradeCheck(trade->GetID1(), command->BoolA).SendClient();
+                CPacketSecureTradeCheck(trade->ID1, command->BoolA).SendClient();
             }
             else
             {
-                CPacketSecureTradeClose(trade->GetID1()).SendClient();
+                CPacketSecureTradeClose(trade->ID1).SendClient();
             }
             break;
         }

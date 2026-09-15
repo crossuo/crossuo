@@ -12,10 +12,10 @@ CMenu::CMenu()
 }
 
 CMenu::CMenu(const uint &serial, const ushort &id, const string &name, const bool &grayMenu)
-    : m_Serial(serial)
-    , m_ID(id)
-    , m_GrayMenu(grayMenu)
-    , m_Name(name)
+    : Serial(serial)
+    , ID(id)
+    , GrayMenu(grayMenu)
+    , Name(name)
 {
 }
 

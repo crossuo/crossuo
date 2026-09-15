@@ -44,10 +44,10 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
         return true;
     }
 
-    m_IsUnicode = (*reader.Start == 0xC2);
-    m_Serial = reader.ReadUInt32BE();
-    m_ID = reader.ReadUInt32BE();
-    m_Exists = true;
+    IsUnicode = (*reader.Start == 0xC2);
+    Serial = reader.ReadUInt32BE();
+    ID = reader.ReadUInt32BE();
+    Exists = true;
 
     // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
     // MT_WAIT_FOR_PROMPT })` -> return false: a playing macro waiting on the
@@ -61,24 +61,24 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
     {
         const CPrompt &prompt = m_Hooks.front();
 
-        if (prompt.GetType() != PT_NONE)
+        if (prompt.Type != PT_NONE)
         {
-            if (!m_IsUnicode && prompt.GetType() == PT_UNICODE)
+            if (!IsUnicode && prompt.Type == PT_UNICODE)
             {
                 return true;
             }
-            if (m_IsUnicode && prompt.GetType() == PT_ASCII)
+            if (IsUnicode && prompt.Type == PT_ASCII)
             {
                 return true;
             }
         }
 
-        if ((prompt.GetSerial() != 0u) && prompt.GetSerial() != m_Serial)
+        if ((prompt.Serial != 0u) && prompt.Serial != Serial)
         {
             return true;
         }
 
-        Send(prompt.GetText());
+        Send(prompt.Text);
 
         m_Hooks.erase(m_Hooks.begin());
 
@@ -90,9 +90,9 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
 
 bool CPromptManager::OnPacketSend(CDataReader &reader)
 {
-    if (m_Exists)
+    if (Exists)
     {
-        m_Exists = false;
+        Exists = false;
 
         // tabmacros recording (promptmanager handler): parse the response text
         // the client is about to answer with and record it as the
@@ -130,7 +130,7 @@ bool CPromptManager::OnPacketSend(CDataReader &reader)
 
 void CPromptManager::Send(string text)
 {
-    if (m_Exists)
+    if (Exists)
     {
         bool cancel = ((text.length() == 0) || to_lower_copy(text) == "cancel");
 
@@ -139,16 +139,16 @@ void CPromptManager::Send(string text)
             text = "";
         }
 
-        if (m_IsUnicode)
+        if (IsUnicode)
         {
-            CPacketUnicodePromptResponse(m_Serial, m_ID, wstr_from(text), "ENU", cancel).SendServer();
+            CPacketUnicodePromptResponse(Serial, ID, wstr_from(text), "ENU", cancel).SendServer();
         }
         else
         {
-            CPacketASCIIPromptResponse(m_Serial, m_ID, text, cancel).SendServer();
+            CPacketASCIIPromptResponse(Serial, ID, text, cancel).SendServer();
         }
 
-        m_Exists = false;
+        Exists = false;
     }
 }
 

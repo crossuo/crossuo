@@ -373,7 +373,7 @@ bool CPacketManager::PacketRecv(uint8_t *buf, size_t size)
     // The client logs packets itself (CPacketManager::OnPacket DEBUG_DUMP);
     // the assistant's XUOA line is dropped (see file header).
 
-    SetClientVersion(GetClientVersion());
+    ClientVersion = GetClientVersion();
 
     if (packet.Direction != DIR_RECV && packet.Direction != DIR_BOTH)
     {
@@ -398,7 +398,7 @@ bool CPacketManager::PacketSend(uint8_t *buf, size_t size)
     g_LastPacketTime = ticks;
     g_TotalSendSize += size;
 
-    SetClientVersion(GetClientVersion());
+    ClientVersion = GetClientVersion();
 
     if (packet.Direction != DIR_SEND && packet.Direction != DIR_BOTH)
     {
@@ -738,7 +738,7 @@ PACKET_HANDLER(ExtendedCommandS)
 
             if (static_cast<int>(lastSpell) == g_LastSpellIndex)
             {
-                macro->SetConvertType(MCT_LAST);
+                macro->ConvertType = MCT_LAST;
             }
 
             g_MacroExecutor.Record(macro);
@@ -964,7 +964,7 @@ PACKET_HANDLER(PerformAction)
 
             if (index == g_LastSkillIndex)
             {
-                macro->SetConvertType(MCT_LAST);
+                macro->ConvertType = MCT_LAST;
             }
 
             g_MacroExecutor.Record(macro);
@@ -982,7 +982,7 @@ PACKET_HANDLER(PerformAction)
 
             if (index == g_LastSpellIndex)
             {
-                macro->SetConvertType(MCT_LAST);
+                macro->ConvertType = MCT_LAST;
             }
 
             g_MacroExecutor.Record(macro);
@@ -1000,7 +1000,7 @@ PACKET_HANDLER(PerformAction)
 
             if (index == g_LastSpellIndex)
             {
-                macro->SetConvertType(MCT_LAST);
+                macro->ConvertType = MCT_LAST;
             }
 
             g_MacroExecutor.Record(macro);
@@ -1040,7 +1040,7 @@ PACKET_HANDLER(DoubleClick)
 
         if (serial == g_PlayerSerial)
         {
-            macro->SetConvertType(MCT_SELF);
+            macro->ConvertType = MCT_SELF;
         }
 
         g_MacroExecutor.Record(macro);
@@ -1074,15 +1074,15 @@ PACKET_HANDLER(AttackRequest)
 
         if (serial == g_LastAttackObject)
         {
-            macro->SetConvertType(MCT_LASTATTACK);
+            macro->ConvertType = MCT_LASTATTACK;
         }
         else if (serial == g_LastTargetObject)
         {
-            macro->SetConvertType(MCT_LASTTARGET);
+            macro->ConvertType = MCT_LASTTARGET;
         }
         else if (serial == CAssistant::TextToSerial("enemy"))
         {
-            macro->SetConvertType(MCT_ENEMY);
+            macro->ConvertType = MCT_ENEMY;
         }
 
         g_MacroExecutor.Record(macro);
@@ -1120,11 +1120,11 @@ PACKET_HANDLER(AOSCommandsS)
 
             if (g_Ability[0] == ability)
             {
-                macro->SetConvertType(MCT_PRIMARY);
+                macro->ConvertType = MCT_PRIMARY;
             }
             else
             {
-                macro->SetConvertType(MCT_SECONDARY);
+                macro->ConvertType = MCT_SECONDARY;
             }
 
             g_MacroExecutor.Record(macro);
@@ -1190,7 +1190,7 @@ PACKET_HANDLER(MapPacket)
             text = buf;
         }
         CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-        message.SetFlags(JMT_SYSTEM);
+        message.Flags = JMT_SYSTEM;
 
         g_AssistantEvents->OnJournalMessage(message);
 

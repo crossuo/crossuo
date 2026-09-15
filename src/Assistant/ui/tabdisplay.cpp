@@ -225,7 +225,7 @@ void item_to_fields(const CDisplayItem &item, bool fullUpdate)
         s_ItemTypeIndex = 0;
         for (size_t i = 0; i < commands().size(); i++)
         {
-            if (commands()[i].Type == item.GetType() && commands()[i].Name.length() != 0)
+            if (commands()[i].Type == item.Type && commands()[i].Name.length() != 0)
             {
                 const int count = command_count();
                 for (int j = 0; j < count; j++)
@@ -241,11 +241,11 @@ void item_to_fields(const CDisplayItem &item, bool fullUpdate)
         }
     }
 
-    snprintf(s_ItemText, sizeof(s_ItemText), "%s", item.GetText().c_str());
-    snprintf(s_ItemGraphic, sizeof(s_ItemGraphic), "%s", CAssistant::GraphicToText(item.GetGraphic()).c_str());
-    snprintf(s_ItemHue, sizeof(s_ItemHue), "%s", CAssistant::GraphicToText(item.GetHue()).c_str());
-    s_ItemMidValue = item.GetMidValue();
-    s_ItemMinValue = item.GetMinValue();
+    snprintf(s_ItemText, sizeof(s_ItemText), "%s", item.Text.c_str());
+    snprintf(s_ItemGraphic, sizeof(s_ItemGraphic), "%s", CAssistant::GraphicToText(item.Graphic).c_str());
+    snprintf(s_ItemHue, sizeof(s_ItemHue), "%s", CAssistant::GraphicToText(item.Hue).c_str());
+    s_ItemMidValue = item.MidValue;
+    s_ItemMinValue = item.MinValue;
 }
 
 // was SaveDisplayItemData: the editor fields -> the entry (+ save + recompile).
@@ -260,16 +260,16 @@ void fields_to_item(CDisplayItemEntry &entry)
     {
         if (commands()[i].Name == info.Name)
         {
-            di.SetType(commands()[i].Type);
+            di.Type = commands()[i].Type;
             break;
         }
     }
 
-    di.SetText(s_ItemText);
-    di.SetGraphic((ushort)CAssistant::TextToGraphic(s_ItemGraphic));
-    di.SetHue((ushort)CAssistant::TextToGraphic(s_ItemHue));
-    di.SetMidValue(s_ItemMidValue);
-    di.SetMinValue(s_ItemMinValue);
+    di.Text = s_ItemText;
+    di.Graphic = (ushort)CAssistant::TextToGraphic(s_ItemGraphic);
+    di.Hue = (ushort)CAssistant::TextToGraphic(s_ItemHue);
+    di.MidValue = s_ItemMidValue;
+    di.MinValue = s_ItemMinValue;
 
     g_AssistantConfig.SaveDisplayItems();
     s_TitleDirty = true; // RecompilleData + RedrawTitle
@@ -551,7 +551,7 @@ void draw_items_editor_page()
     if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
     {
         const CDisplayItem &selItem = items[s_SelectedItem].m_Item;
-        const uint key = (uint)((selItem.GetGraphic() << 16) | selItem.GetHue());
+        const uint key = (uint)((selItem.Graphic << 16) | selItem.Hue);
         ImTextureData *tex = IconTextureFor(g_DisplayManager.GetIcon(selItem), key);
         if (tex != nullptr)
         {
@@ -621,17 +621,17 @@ void draw_items_editor_page()
         // the two 3-swatch groups read/write the entry directly (the original page
         // saved only through the Save icon; the checks were bound to the item)
         CDisplayItem &di = items[s_SelectedItem].m_Item;
-        bool background = di.GetBackground();
+        bool background = di.Background;
         if (ImGui::Checkbox("With background", &background))
         {
-            di.SetBackground(background);
+            di.Background = background;
             changed = true;
         }
         ImGui::SameLine();
-        bool percents = di.GetPercents();
+        bool percents = di.Percents;
         if (ImGui::Checkbox("Calculate colors in percents", &percents))
         {
-            di.SetPercents(percents);
+            di.Percents = percents;
             changed = true;
         }
 
@@ -639,30 +639,30 @@ void draw_items_editor_page()
         // grid of 6 color swatch buttons)
         ImGui::TextUnformatted("Colors - Text:");
         ImGui::SameLine();
-        uint c = di.GetColor();
+        uint c = di.Color;
         changed |= color_field("##item_text_c", &c);
-        di.SetColor(c);
+        di.Color = c;
         ImGui::SameLine();
-        c = di.GetMidColor();
+        c = di.MidColor;
         changed |= color_field("##item_text_mc", &c);
-        di.SetMidColor(c);
+        di.MidColor = c;
         ImGui::SameLine();
-        c = di.GetMinColor();
+        c = di.MinColor;
         changed |= color_field("##item_text_min", &c);
-        di.SetMinColor(c);
+        di.MinColor = c;
         ImGui::TextUnformatted("Colors - Bg:");
         ImGui::SameLine();
-        c = di.GetBackgroundColor();
+        c = di.BackgroundColor;
         changed |= color_field("##item_bg_c", &c);
-        di.SetBackgroundColor(c);
+        di.BackgroundColor = c;
         ImGui::SameLine();
-        c = di.GetBackgroundMidColor();
+        c = di.BackgroundMidColor;
         changed |= color_field("##item_bg_mc", &c);
-        di.SetBackgroundMidColor(c);
+        di.BackgroundMidColor = c;
         ImGui::SameLine();
-        c = di.GetBackgroundMinColor();
+        c = di.BackgroundMinColor;
         changed |= color_field("##item_bg_min", &c);
-        di.SetBackgroundMinColor(c);
+        di.BackgroundMinColor = c;
     }
 
     // Name: field (le_DisplayItemName)
