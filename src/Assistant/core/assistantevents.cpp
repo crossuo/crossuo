@@ -4,6 +4,7 @@
 #include "assistantevents.h"
 #include "packets.h"
 #include <common/str.h> // wstr_from
+#include <config/assistantconfig.h>
 
 namespace xuoassist {
 
@@ -28,6 +29,40 @@ CAssistantEvents *g_AssistantEvents = &s_DefaultAssistantEvents;
 void CAssistantEvents::OnClientPrint(const string &text, ushort color)
 {
     CPacketToClientSystemPrint(wstr_from(text), color).SendClient();
+}
+
+void CAssistantEvents::OnMapData(uint16_t x, uint16_t y)
+{
+    x *= 2;
+    y *= 2;
+
+    x += g_LastTMapX;
+    y += g_LastTMapY;
+
+    string text = "";
+    {
+        char buf[64] = { 0 };
+        snprintf(buf, sizeof(buf), "g_Map opened to: %i:%i", x, y);
+        text = buf;
+    }
+    g_AssistantEvents->OnClientPrint(text);
+
+    {
+        char buf[64] = { 0 };
+        snprintf(buf, sizeof(buf), "mapecho: x=%i y=%i", x, y);
+        text = buf;
+    }
+    CJournalMessage message(0xFFFFFFFF, 0x0000, text);
+    message.Flags = JMT_SYSTEM;
+
+    g_AssistantEvents->OnJournalMessage(message);
+
+    // was: if (g_AssistantConfig.Tracker()) g_Assistant.Track(true, x, y)
+    // (the assistant map draws the point now - see CAssistant::Track)
+    if (g_AssistantConfig.Tracker())
+    {
+        g_AssistantEvents->OnTrack(true, x, y);
+    }
 }
 
 namespace {

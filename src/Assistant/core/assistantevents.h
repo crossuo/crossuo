@@ -191,6 +191,8 @@ public:
         (void)x;
         (void)y;
     }
+
+    virtual void OnMapData(uint16_t x, uint16_t y);
 };
 
 // The installed sink. Never null: assistantevents.cpp installs the default
@@ -202,4 +204,3 @@ extern CAssistantEvents *g_AssistantEvents;
 const string &AssistantBuffName(ushort iconIndex);
 
 } // namespace xuoassist
-

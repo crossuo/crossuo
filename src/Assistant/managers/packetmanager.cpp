@@ -162,9 +162,9 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x53*/ RMSG("Error Code", 0x02),
     /*0x54*/ UMSG(0x0c),
     /*0x55*/ UMSG(0x01),
-    // KEEP (recv tap routes 0x56): assistant map engine — the edit-response
-    // pin translates into absolute coords + tracker points; no client producer.
-    /*0x56*/ RMSGH("Map Data", 0x0b, MapPacket),
+    // plain row: the mapecho/tracker work lives fused in the client MapData
+    // handler, gated on EnabledFeatureMapEcho
+    /*0x56*/ RMSG("Map Data", 0x0b),
     /*0x57*/ BMSG("Update Regions", 0x6e),
     /*0x58*/ UMSG(0x6a),
     /*0x59*/ UMSG(PACKET_VARIABLE_SIZE),
@@ -1147,60 +1147,6 @@ PACKET_HANDLER(AOSCommandsS)
 
     (void)serial;
 
-    return true;
-}
-
-PACKET_HANDLER(MapPacket)
-{
-    if (EnabledFeatureMapEcho())
-    {
-        Move(4);
-
-        ushort Aflag = ReadUInt8();
-        ushort pinID = ReadUInt8();
-        ushort x = ReadUInt16BE();
-        ushort y = ReadUInt16BE();
-
-        if (Aflag != 1)
-        {
-            return true;
-        }
-        if (pinID != 0)
-        {
-            return true;
-        }
-
-        x *= 2;
-        y *= 2;
-
-        x += g_LastTMapX;
-        y += g_LastTMapY;
-
-        string text = "";
-        {
-            char buf[64] = { 0 };
-            snprintf(buf, sizeof(buf), "g_Map opened to: %i:%i", x, y);
-            text = buf;
-        }
-        g_AssistantEvents->OnClientPrint(text);
-
-        {
-            char buf[64] = { 0 };
-            snprintf(buf, sizeof(buf), "mapecho: x=%i y=%i", x, y);
-            text = buf;
-        }
-        CJournalMessage message(0xFFFFFFFF, 0x0000, text);
-        message.Flags = JMT_SYSTEM;
-
-        g_AssistantEvents->OnJournalMessage(message);
-
-        // was: if (g_AssistantConfig.Tracker()) g_Assistant.Track(true, x, y)
-        // (the assistant map draws the point now - see CAssistant::Track)
-        if (g_AssistantConfig.Tracker())
-        {
-            g_AssistantEvents->OnTrack(true, x, y);
-        }
-    }
     return true;
 }
 

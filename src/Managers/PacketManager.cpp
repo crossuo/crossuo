@@ -19,6 +19,7 @@
 #include "SkillsManager.h"
 #include "MapManager.h"
 #include "ConnectionManager.h"
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <managers/packetmanager.h> // xuoassist::AssistantPackets_Recv (in-client assistant)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
@@ -6360,18 +6361,24 @@ PACKET_HANDLER(MapData)
 
     if (gump != nullptr && gump->m_DataBox != nullptr)
     {
-        switch ((MAP_MESSAGE)ReadUInt8()) //Action
+        const MAP_MESSAGE action = (MAP_MESSAGE)ReadUInt8();
+        const uint8_t pin_or_mode = ReadUInt8();
+        const uint16_t x = ReadUInt16BE();
+        const uint16_t y = ReadUInt16BE();
+        switch (action)
         {
             case MM_ADD: //Add Pin
             {
-                Move(1);
-
-                short x = ReadUInt16BE();
-                short y = ReadUInt16BE();
-
                 gump->m_DataBox->Add(new CGUIGumppic(0x139B, x, y));
                 gump->WantRedraw = true;
-
+#if defined(XUO_ASSISTANT)
+                // no injection path for 0x56 (no SendClient builder produces it), so no m_AssistantInjecting gate
+                // the echo/tracker hooks run whenever the data arrives, with no gump-open check of their own (pre-image parity)
+                if (xuoassist::EnabledFeatureMapEcho() && pin_or_mode == 0)
+                {
+                    xuoassist::g_AssistantEvents->OnMapData(x, y);
+                }
+#endif
                 break;
             }
             case MM_INSERT: //Insert New Pin
@@ -6393,9 +6400,13 @@ PACKET_HANDLER(MapData)
 
                 break;
             }
+            case MM_EDIT: //Edit Pins
+            {
+                break;
+            }
             case MM_EDIT_RESPONSE: //Reply From Server to Action 6 (Plotting request)
             {
-                gump->SetPlotState(ReadUInt8());
+                gump->SetPlotState(pin_or_mode);
 
                 break;
             }
@@ -6856,7 +6867,6 @@ PACKET_HANDLER(SellList)
     }
 
     uint16_t itemsCount = ReadUInt16BE();
-
     if (itemsCount == 0u)
     {
         Error(Network, "sell list is empty");
@@ -6867,9 +6877,7 @@ PACKET_HANDLER(SellList)
 
     CGumpShop *gump = new CGumpShop(serial, false, 100, 0);
     CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
-
     int currentY = 0;
-
     for (int i = 0; i < itemsCount; i++)
     {
         uint32_t itemSerial = ReadUInt32BE();

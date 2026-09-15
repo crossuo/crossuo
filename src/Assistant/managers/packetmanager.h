@@ -90,7 +90,6 @@ protected:
     XA_HANDLER_PACKET(AttackRequest);
     XA_HANDLER_PACKET(HelpRequest);
     XA_HANDLER_PACKET(AOSCommandsS);
-    XA_HANDLER_PACKET(MapPacket);
 
 public:
     CPacketManager();

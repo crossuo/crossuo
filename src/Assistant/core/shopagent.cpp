@@ -429,7 +429,12 @@ bool CShopAgent::OnOpenContainer(uint serial)
 bool CShopAgent::OnSellList(CDataReader &reader)
 {
     // was TabAgentsShop::OnPacketReceivedSellList (line-faithful)
-    if (g_World == nullptr || !EnabledFeatureShopAgent())
+    if (g_World == nullptr)
+    {
+        return true;
+    }
+
+    if (!EnabledFeatureShopAgent())
     {
         return true;
     }
@@ -444,53 +449,49 @@ bool CShopAgent::OnSellList(CDataReader &reader)
 
     m_VendorSerial = serial;
 
-    bool result = true;
-
-    if (vendor != nullptr)
-    {
-        ushort itemsCount = reader.ReadUInt16BE();
-
-        if (itemsCount == 0u)
-        {
-            Warning(Assistant, "shop agent: sell list is empty");
-        }
-
-        for (int i = 0; i < itemsCount; i++)
-        {
-            uint itemSerial = reader.ReadUInt32BE();
-            ushort graphic = reader.ReadUInt16BE();
-            ushort color = reader.ReadUInt16BE();
-            ushort count = reader.ReadUInt16BE();
-            ushort price = reader.ReadUInt16BE();
-            int nameLen = reader.ReadInt16BE();
-            string name = reader.ReadStringChecked(nameLen);
-
-            bool intParsed = false;
-            name = cliloc_name(name, intParsed);
-
-            CVendorShopItem item;
-            item.Serial = itemSerial;
-            item.Graphic = graphic;
-            item.Color = color;
-            item.Count = count;
-            item.Price = price;
-            item.Name = name;
-            item.NameFromCliloc = intParsed;
-
-            m_VendorItems.push_back(item);
-        }
-
-        if (m_AutoSell || (m_State == SLWS_SELL && m_WaitTimeout >= g_Ticks))
-        {
-            result = ProcessShopList();
-        }
-    }
-    else
+    if (vendor == nullptr)
     {
         Error(Assistant, "shop agent: sell vendor is not found");
+        return true;
     }
 
-    return result;
+    ushort itemsCount = reader.ReadUInt16BE();
+    if (itemsCount == 0u)
+    {
+        Warning(Assistant, "shop agent: sell list is empty");
+    }
+
+    for (int i = 0; i < itemsCount; i++)
+    {
+        uint itemSerial = reader.ReadUInt32BE();
+        ushort graphic = reader.ReadUInt16BE();
+        ushort color = reader.ReadUInt16BE();
+        ushort count = reader.ReadUInt16BE();
+        ushort price = reader.ReadUInt16BE();
+        int nameLen = reader.ReadInt16BE();
+        string name = reader.ReadStringChecked(nameLen);
+
+        bool intParsed = false;
+        name = cliloc_name(name, intParsed);
+
+        CVendorShopItem item;
+        item.Serial = itemSerial;
+        item.Graphic = graphic;
+        item.Color = color;
+        item.Count = count;
+        item.Price = price;
+        item.Name = name;
+        item.NameFromCliloc = intParsed;
+
+        m_VendorItems.push_back(item);
+    }
+
+    if (m_AutoSell || (m_State == SLWS_SELL && m_WaitTimeout >= g_Ticks))
+    {
+        return ProcessShopList();
+    }
+
+    return true;
 }
 
 void CShopAgent::OnBuyReplySent()

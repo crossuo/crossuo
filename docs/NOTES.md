@@ -869,9 +869,10 @@ Table composition after B9 (`m_Packets` rows carrying handlers): 25 rows —
 16 `SMSGH` send handlers, 4 `SMSGHB` rows (0x6C Target, 0x9A ASCII Prompt,
 0xC2 Unicode Prompt, 0xBF Extended Command send half; each send half
 records/intercepts the outgoing round and its recv half is fused into the
-client handler), 1 `BMSGH` row (0xFC) and 4 `RMSGH` recv keeps
-(0x56/0x7C/0x9E/0xB0). The recv-capable set is the 4 `RMSGH` keeps plus
-0xFC only.
+client handler), 1 `BMSGH` row (0xFC) and 3 `RMSGH` recv keeps
+(0x7C/0x9E/0xB0). 0x56 Map Data is fused into the client MapData handler
+(mapecho gated on the negotiated map-echo bit). The recv-capable set is the
+3 `RMSGH` keeps plus 0xFC only.
 0x91 Second Login was demoted to a plain `SMSG` row; 0xD6 Mega Cliloc and
 0xF0 Krrios client special are plain `BMSG` rows (both directions are
 client-owned; the host fuses the MegaCliloc event).
@@ -975,11 +976,14 @@ Recv keeps (consume-capable handler rows; the tap dispatches every packet to the
   g_World gate); BuffDebuff 0xDF (the mode/timer/cliloc reads moved ahead of
   the client's buff-window guard, which has no side effects, so the buff
   mirror fires for own buffs whether or not the window gump exists; the
-  script-visible name table became AssistantBuffName in assistantevents).
-- Kept (consume-capable rows): Map Data
-  mapecho translates the 0x56 edit-response pin into absolute "map opened to"
-  coordinates + tracker points - assistant map-engine state with no
-  client-side producer; Open Menu/Open Gump feed their own agent models and a
+  script-visible name table became AssistantBuffName in assistantevents);
+  Map Data 0x56 (mapecho translates the edit-response pin into absolute
+  "map opened to" coordinates + tracker points - assistant map-engine state
+  with no client-side producer; fused into the client MapData handler, the
+  journal lines + tracker points fire only when the negotiated map-echo
+  feature bit is set).
+- Kept (consume-capable rows): Open Menu/Open Gump feed their own agent
+  models and a
   playing macro (or a menu/gump hook) can consume the packet so the client
   keeps no gump - a veto an in-handler hook cannot express; SellList fields
   are 1:1 with the client parse but the auto-sell consume has the same veto
