@@ -512,6 +512,10 @@ static void FrameStatsTick()
 static int Run()
 {
     bool quit = false;
+    // one-time bring-to-front after the first frame is shown: the raise in
+    // CWindow::Create runs before the window is mapped and some window
+    // managers ignore it, leaving the client behind other applications
+    bool raised = false;
     while (!quit)
     {
         FrameStatsTick();
@@ -568,6 +572,12 @@ static int Run()
                     SDL_Delay(delay);
                 }
             }
+        }
+
+        if (!raised)
+        {
+            raised = true;
+            g_GameWindow.Raise(); // once, now that the first frame is on screen
         }
     }
 #if defined(XUO_LAUNCHER_EMBEDDED)
