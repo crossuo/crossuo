@@ -25,7 +25,6 @@
 #include <core/assistantevents.h> // xuoassist::g_AssistantEvents (journal, JMT_* flags)
 #include <core/global.h> // xuoassist mirrored state (light, weather, season, status requests)
 #include "../Misc.h" // pack16 (the morph/corpse-graphic in-place 0x78 patches)
-#include <core/target.h> // xuoassist::g_Target (WaitTarget hooks, target cursor state)
 #include <core/assist.h> // xuoassist::g_Assistant (status requests)
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
 #include <managers/menumanager.h> // xuoassist::g_MenuManager (0x7C menu round)
@@ -967,7 +966,7 @@ PACKET_HANDLER(EnterWorld)
     xuoassist::g_MenuReceived = false;
     xuoassist::g_GumpReceived = false;
     xuoassist::g_PromptReceived = false;
-    xuoassist::g_Target.ClearHooks();
+    g_Target.ClearHooks();
     // discard any open recording and stop playback - macro state never
     // leaks across login sessions
     xuoassist::g_MacroExecutor.Reset();
@@ -3638,21 +3637,17 @@ PACKET_HANDLER(Target)
 {
 #if defined(XUO_ASSISTANT)
     // the WaitTarget hook path (CTarget::CheckHook) or a playing macro
-    // waiting on the target cursor consumes the cursor reply: the client
-    // keeps no open cursor and skips its own processing
+    // waiting on the target cursor consumes the cursor reply inside
+    // SetData: the client keeps no open cursor and skips its own
+    // processing (the consume parse reads a private reader over the same
+    // buffer, the pass-through body re-parses from the shared reader)
     xuoassist::g_TargetReceived = true;
-    if (!xuoassist::g_Target.SetRecvData(*this))
+#endif
+
+    if (!g_Target.SetData(*this))
     {
         return;
     }
-    // SetRecvData advanced the shared reader (Start+1 -> Start+7):
-    // restore the position so the client body below parses the cursor
-    // from the 0x6C payload offset (Type=buf[1], CursorID=buf[2..5],
-    // CursorType=buf[6]) on the pass-through path
-    Ptr = Start + 1;
-#endif
-
-    g_Target.SetData(*this);
 
     if (g_PartyHelperTimer > g_Ticks && (g_PartyHelperTarget != 0u))
     {
@@ -4022,23 +4017,20 @@ PACKET_HANDLER(MultiPlacement)
 #if defined(XUO_ASSISTANT)
     // the WaitTarget hook path (CTarget::CheckHook) or a playing macro
     // waiting on the target cursor consumes the placement reply: the client
-    // keeps no open cursor and skips its own processing
+    // keeps no open cursor and skips its own processing. The consume parse
+    // runs before the client world gate (the pre-image tap had no world
+    // gate): the reply still reaches the cursor mirror/hook state when the
+    // world is not up. A consumed reply skips the client processing.
     xuoassist::g_TargetReceived = true;
-    if (!xuoassist::g_Target.SetMultiData(*this))
-    {
-        return;
-    }
+    const bool pass = g_Target.SetMultiData(*this);
+#else
+    const bool pass = true;
 #endif
 
-    if (g_World == nullptr)
+    if (g_World == nullptr || !pass)
     {
         return;
     }
-
-    //uint32_t serial = unpack32(buf + 2);
-    //uint16_t graphic = unpack16(buf + 18);
-
-    g_Target.SetMultiData(*this);
 }
 
 PACKET_HANDLER(GraphicEffect)

@@ -49,7 +49,6 @@ extern "C" {
 #include "../core/actions.h"
 #include "../core/assist.h"
 #include "../core/dressagent.h"
-#include "../core/target.h"
 #include "../core/textcommandmanager.h"
 #include "../managers/skillmanager.h"
 #include "../managers/objectpropertiesmanager.h"
@@ -67,7 +66,7 @@ extern "C" {
 #include "../model/commonitems/menu.h"
 #include "Network/Packets.h" // the client packets the wrappers build on
 #include "Gumps/GumpCombatBook.h" // ::CGumpCombatBook::m_AbilityName (UseAbility names)
-#include "Target.h"         // ::g_Target (the client target cursor: CancelCursor)
+#include "Target.h"         // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
 #include "Managers/GumpManager.h"   // ::g_GumpManager (statusbar/paperdoll/trade)
 #include "Managers/MacroManager.h"  // ::g_MacroManager (PlayClientMacro)
@@ -4215,7 +4214,11 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_HAVE_TARGET:
         {
-            command->ResultInt = g_Target.IsTargeting() ? g_Target.CursorType + 1 : 0;
+            // the effective target state: a WaitTarget that consumed a cursor
+            // leaves the client Targeting false while the hook mirror
+            // (HookTargeting) stays true — the union is the old mirror read
+            command->ResultInt =
+                (g_Target.IsTargeting() || g_Target.HookTargeting()) ? g_Target.CursorType + 1 : 0;
             break;
         }
         case SC_WAIT_TARGET:
@@ -4380,7 +4383,10 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    if (g_Target.IsTargeting())
+                    // the effective target state (Targeting || HookTargeting):
+                    // a WaitTarget-consumed cursor keeps the client Targeting
+                    // false but the cancel must still run (old mirror read)
+                    if (g_Target.IsTargeting() || g_Target.HookTargeting())
                     {
                         g_Target.SendCancelTarget();
                         ::g_Target.CancelCursor();

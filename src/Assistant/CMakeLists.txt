@@ -52,7 +52,6 @@ set(XUOASSIST_SRCS
   "core/textconv.cpp"
   "core/assistantevents.cpp"
   "core/assist.cpp"
-  "core/target.cpp"
   "core/textcommandmanager.cpp"
   "managers/contextmenumanager.cpp"
   "managers/displaymanager.cpp"

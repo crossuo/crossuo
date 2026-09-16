@@ -18,7 +18,7 @@
 #include "../../core/assist.h"
 #include "../../core/dressagent.h"
 #include "../../core/shopagent.h"
-#include "../../core/target.h"
+#include "Target.h" // the fused target cursor (the harness stubs it below)
 #include "../../core/textcommandmanager.h"
 #include "../../config/assistantconfig.h"
 #include "../../managers/contextmenumanager.h"
@@ -254,15 +254,6 @@ ushort CTextCommandManager::GetFindFlags(const astr_t &) { return 0; }
 uchar CTextCommandManager::GetJournalFlags(const astr_t &) { return 0; }
 uchar CTextCommandManager::GetSkillsFlags(const astr_t &) { return 0; }
 
-CTarget::CTarget() {}
-CTarget g_Target;
-bool CTarget::CheckHook() { return false; }
-void CTarget::ClearHooks() {}
-void CTarget::SendCancelTarget() {}
-void CTarget::SetObjectsHook(const vector<astr_t> &) {}
-void CTarget::SetTileHook(const astr_t &, const int &, const int &, const int &, const bool &) {}
-void CTarget::SetRecvAssistData(CDataReader &) {}
-
 bool g_Connected = false;
 uint64_t g_EnabledCommands = 0;
 uint64_t g_EnabledFeature = 0;
@@ -365,12 +356,28 @@ const astr_t CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
     "Mystic Arc",         "Disrobe"
 };
 
-// the client target cursor: the apiscript cancel-cursor swap stubs it; nothing
-// in the harness opens or drains a client cursor
+// the fused target cursor (Target.h): the apiscript hook/cancel calls stub
+// against it; nothing in the harness opens, drains or consumes a cursor
 CTarget g_Target;
 CTarget::CTarget() {}
 void CTarget::RequestCursor() {}
 void CTarget::CancelCursor() {}
+bool CTarget::CheckHook() { return false; }
+void CTarget::ClearHooks() {}
+void CTarget::SetObjectsHook(const std::vector<astr_t> &) {}
+void CTarget::SetTileHook(const astr_t &, const int &, const int &, const int &, const bool &) {}
+void CTarget::RestoreTarget() {}
+void CTarget::SendTargetObject(int) {}
+void CTarget::SendTargetTile(uint16_t, short, short, char) {}
+void CTarget::SendCancelTarget() {}
+void CTarget::SendLastTarget() {}
+void CTarget::SendTarget() {}
+void CTarget::SendHookTargetObject(const uint &) {}
+void CTarget::SendHookTargetTile(const uint16_t, const short &, const short &, short) {}
+void CTarget::SendHookTargetLastTile() {}
+void CTarget::SendHookCancelTarget() {}
+bool CTarget::SetData(CDataReader &) { return false; }
+bool CTarget::SetMultiData(CDataReader &) { return false; }
 
 // pulled in by the PathFinder/point includes (client-side, never exercised)
 CPathNode::CPathNode() {}

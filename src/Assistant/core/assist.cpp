@@ -17,8 +17,7 @@
 #include "Network/Packets.h" // ::CPacketStatusRequest and the other client send builders
 #include "Managers/PacketManager.h"      // ::g_PacketManager (DisplayTalkTextW, DeleteObject)
 #include "textconv.h"
-#include "target.h"
-#include "Target.h" // ::g_Target (the client target cursor: RequestCursor)
+#include "Target.h" // ::g_Target (the fused target cursor: RequestCursor, FromAssist)
 #include "assistantevents.h"
 #include "world.h"
 #include "worldutil.h"

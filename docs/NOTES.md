@@ -945,7 +945,10 @@ the next outgoing 0x6C response feeds the armed handler, and
 `RestoreTarget` re-dispatches the client's own saved request. The outgoing
 0x6C is never dropped — the player's response still reaches the server; the
 consume that keeps the client cursor-free lives in the fused client handler
-(0x6C Target, via `SetRecvData`'s CheckHook/PlayWaiting consume).
+(0x6C Target, via `SetRecvData`'s CheckHook/PlayWaiting consume). Script
+target-state queries (`HaveTarget`/`GetTargetType`, the CancelTarget gate)
+read `Targeting() || HookTargeting()` — the union equals the old mirror
+`Targeting`, which stayed true while a WaitTarget had consumed the cursor.
 
 Second Login (0x91): the assistant handler only reset `g_Connected`. 0x91
 is sent exactly once per game-server session by `CGame::RelayServer` during

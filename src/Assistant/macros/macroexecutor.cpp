@@ -18,7 +18,6 @@
 #include "../core/assist.h"
 #include "../core/assistantevents.h" // g_AssistantEvents->OnTitleRedraw (the old send taps fired it)
 #include "../core/global.h"
-#include "../core/target.h"
 #include "../managers/contextmenumanager.h"
 #include "../managers/gumpmanager.h"
 #include "../managers/menumanager.h"
@@ -31,7 +30,7 @@
 #include "Walker/PathFinder.h" // g_PathFinder (the client walker; was the plugin's PathFinder)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
-#include "Target.h"         // ::g_Target (the client target cursor: CancelCursor)
+#include "Target.h"         // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say command)
 #include "Gumps/GumpAbility.h"      // ::CGumpAbility::OnAbilityUse (combat abilities)
 
@@ -770,7 +769,7 @@ void CMacroExecutor::ProcessMacro()
             }
             case MT_WAIT_FOR_TARGET_OBJECT:
             {
-                if (!g_Target.IsTargeting())
+                if (!g_Target.HookTargeting())
                 {
                     m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
@@ -787,25 +786,25 @@ void CMacroExecutor::ProcessMacro()
                 }
                 if (serial != 0u)
                 {
-                    g_Target.SendTargetObject(serial);
+                    g_Target.SendHookTargetObject(serial);
                     ::g_Target.CancelCursor();
                 }
                 else
                 {
-                    g_Target.SendCancelTarget();
+                    g_Target.SendHookCancelTarget();
                 }
                 break;
             }
             case MT_WAIT_FOR_TARGET_TILE:
             {
-                if (!g_Target.IsTargeting())
+                if (!g_Target.HookTargeting())
                 {
                     m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
                 if (convertType == MCT_LAST)
                 {
-                    g_Target.SendTargetLastTile();
+                    g_Target.SendHookTargetLastTile();
                     ::g_Target.CancelCursor();
                 }
                 else
@@ -822,9 +821,9 @@ void CMacroExecutor::ProcessMacro()
                         z = g_Player->GetZ() + withTarget->RelativeZ;
                         // Was g_FileManager.GetTile(...) graphic resolution;
                         // the numeric-graphic fallback matches the original's
-                        // empty-tile-list path (see core/target.cpp CheckHook)
+                        // empty-tile-list path (see Target.cpp CheckHook)
                     }
-                    g_Target.SendTargetTile(graphic, x, y, z);
+                    g_Target.SendHookTargetTile(graphic, x, y, z);
                     ::g_Target.CancelCursor();
                 }
                 break;

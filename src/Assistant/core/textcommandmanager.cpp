@@ -7,7 +7,6 @@
 #include "textcommandmanager.h"
 #include "assist.h"
 #include "textconv.h"
-#include "target.h"
 #include "assistantevents.h"
 #include "../script/scriptgump.h" // the text window (the g_TextDialog port)
 #include "../script/journal.h"    // the script journal ring (the g_JournalManager port)
@@ -17,6 +16,7 @@
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
 #include "Managers/PacketManager.h" // ::g_PacketManager (the light/weather/season/sound/hide apply-cores)
+#include "Target.h" // ::g_Target (the fused target cursor: LastTile info, RequestCursor)
 #include "world.h"
 #include "worldutil.h"
 #include "../managers/spellmanager.h"
@@ -361,7 +361,8 @@ HCOMMAND(infotile)
 
     if (to_lower_copy(lasttile) == "lasttile")
     {
-        g_Target.DumpLastTileInfo();
+        g_Assistant.DumpTileInfo(
+            g_Target.LastTileGraphic, g_Target.LastTileX, g_Target.LastTileY, g_Target.LastTileZ);
     }
     else
     {

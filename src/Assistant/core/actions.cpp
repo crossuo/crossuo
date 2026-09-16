@@ -18,7 +18,7 @@
 #include "assistantevents.h"
 #include "global.h"
 #include "Network/Packets.h" // ::CPacketTargetSelectedObject (the client's own 0xBF/0x2C builder)
-#include "Target.h" // ::g_Target (the client target cursor: CancelCursor)
+#include "Target.h" // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
 #include "Managers/MacroManager.h" // ::g_MacroManager (client-side selection macros)
 #include "textcommandmanager.h"
 #include "../macros/macroexecutor.h"
@@ -26,7 +26,6 @@
 #include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
 #include "world.h"
-#include "target.h"
 
 namespace xuoassist {
 
@@ -628,7 +627,13 @@ void Actions_Execute(const CHotkeyEntry &entry)
             }
             if (action == 5)
             {
-                g_Target.SendTargetLastTile();
+                // the last tile a tile-target answered with (was the
+                // assistant sender; the fused client sender records)
+                g_Target.SendTargetTile(
+                    g_Target.LastTileGraphic,
+                    g_Target.LastTileX,
+                    g_Target.LastTileY,
+                    (char)g_Target.LastTileZ);
             }
             else if (serial != 0u)
             {
