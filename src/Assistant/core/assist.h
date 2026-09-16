@@ -188,4 +188,10 @@ extern CAssistant g_Assistant;
 // applies the font-color override to `color` by reference.
 bool AssistantSpeechIntercept(astr_t &text, uint16_t &color);
 
+// The client's EnterWorld handler: resets the per-session assistant and
+// script state (session mirrors, target hooks, macro executor), marks the
+// assistant connected, loads the profile for the entering character `serial`
+// and fires the autostart/map login events.
+void AssistantOnEnterWorld(uint32_t serial);
+
 } // namespace xuoassist

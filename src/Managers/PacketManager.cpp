@@ -941,50 +941,9 @@ PACKET_HANDLER(EnterWorld)
     bool loadConfig = false;
 
 #if defined(XUO_ASSISTANT)
-    // the assistant session reset runs before the client tears down the old
-    // world (runAutostart must observe the pre-enter world state, and the old
-    // tap fired the login events ahead of all client processing); the
-    // no-gray-screen body patch is applied to the parsed graphic below (the
-    // old flow patched the packet at Start + 9, the body field, pre-parse)
-    const bool runAutostart = g_World == nullptr;
-
-    xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(-1, -1);
-    xuoassist::g_LastPlayerDeadTimer = 0;
-
-    // the fused assistant/script session reset: scripts observe LastTarget=0
-    // per session, matching the old assistant-copy behavior
-    g_LastTargetObject = 0;
-    g_LastAttackObject = 0;
-    xuoassist::g_MorphGraphic = 0;
-    xuoassist::g_OriginalGraphic = 0;
-    xuoassist::g_LastCorpseObject = 0;
-    xuoassist::g_LastContainerObject = 0;
-    xuoassist::g_LastStatusRequest = 0;
-    xuoassist::g_LastStatusObject = 0;
-    xuoassist::g_LastUseObject = 0;
-    xuoassist::g_TargetReceived = false;
-    xuoassist::g_MenuReceived = false;
-    xuoassist::g_GumpReceived = false;
-    xuoassist::g_PromptReceived = false;
-    g_Target.ClearHooks();
-    // discard any open recording and stop playback - macro state never
-    // leaks across login sessions
-    xuoassist::g_MacroExecutor.Reset();
-
-    Info(Assistant, "Player 0x%08X entered the world.\n", serial);
-
-    xuoassist::g_Connected = true;
-
-    xuoassist::g_AssistantConfig.LoadProfileBySerial(serial);
-    if (runAutostart)
-    {
-        xuoassist::g_AssistantEvents->OnAutostartRequest();
-    }
-    if (xuoassist::g_MapSettings.ShowOnLogin)
-    {
-        xuoassist::g_AssistantEvents->OnMapOpenRequest();
-    }
-    xuoassist::g_AssistantEvents->OnMapRedraw();
+    // the assistant session init runs before the client tears down the old
+    // world: the helper's autostart gate reads the pre-enter world state
+    xuoassist::AssistantOnEnterWorld(serial);
 #endif
 
     if (g_World != nullptr)

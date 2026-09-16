@@ -24,6 +24,7 @@
 #include "textconv.h"
 #include "textcommandmanager.h" // g_TextCommandManager (the command-prefix intercept)
 #include "../config/assistantconfig.h"
+#include "../managers/assmap.h" // ::g_MapSettings (the ShowOnLogin option)
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-initiated sends do not self-record)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include <common/str.h>
@@ -1516,6 +1517,51 @@ bool AssistantSpeechIntercept(astr_t &text, uint16_t &color)
     }
 
     return true;
+}
+
+void AssistantOnEnterWorld(const uint32_t serial)
+{
+    // the autostart gate reads the world state as of EnterWorld: the client
+    // has not yet torn down the old world when this runs
+    const bool runAutostart = g_World == nullptr;
+
+    g_LastPlayerCorpsePosition = CPoint2Di(-1, -1);
+    g_LastPlayerDeadTimer = 0;
+
+    // the fused assistant/script session reset: scripts observe LastTarget=0
+    // per session, matching the old assistant-copy behavior
+    g_LastTargetObject = 0;
+    g_LastAttackObject = 0;
+    g_MorphGraphic = 0;
+    g_OriginalGraphic = 0;
+    g_LastCorpseObject = 0;
+    g_LastContainerObject = 0;
+    g_LastStatusRequest = 0;
+    g_LastStatusObject = 0;
+    g_LastUseObject = 0;
+    g_TargetReceived = false;
+    g_MenuReceived = false;
+    g_GumpReceived = false;
+    g_PromptReceived = false;
+    g_Target.ClearHooks();
+    // discard any open recording and stop playback - macro state never
+    // leaks across login sessions
+    g_MacroExecutor.Reset();
+
+    Info(Assistant, "Player 0x%08X entered the world.\n", serial);
+
+    g_Connected = true;
+
+    g_AssistantConfig.LoadProfileBySerial(serial);
+    if (runAutostart)
+    {
+        g_AssistantEvents->OnAutostartRequest();
+    }
+    if (g_MapSettings.ShowOnLogin)
+    {
+        g_AssistantEvents->OnMapOpenRequest();
+    }
+    g_AssistantEvents->OnMapRedraw();
 }
 
 } // namespace xuoassist
