@@ -26,7 +26,7 @@ CAssistantEvents::~CAssistantEvents()
 
 CAssistantEvents *g_AssistantEvents = &s_DefaultAssistantEvents;
 
-void CAssistantEvents::OnClientPrint(const astr_t &text, ushort color)
+void CAssistantEvents::OnClientPrint(const astr_t &text, uint16_t color)
 {
     ::g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
@@ -202,7 +202,7 @@ static const astr_t nameTable[nameTableCount] = { "dismount",
 
 } // namespace
 
-const astr_t &AssistantBuffName(ushort iconIndex)
+const astr_t &AssistantBuffName(uint16_t iconIndex)
 {
     static const astr_t unnamed;
     if (iconIndex >= nameTableCount)

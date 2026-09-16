@@ -202,7 +202,7 @@ void tokenize_line(const astr_t &line, vector<TOKEN_RUN> &runs)
 struct EDITOR_STATE
 {
     astr_t *Buffer{ nullptr };
-    uint BufferGeneration{ 0 }; // the shared-buffer token (stale-resplit fix)
+    uint32_t BufferGeneration{ 0 }; // the shared-buffer token (stale-resplit fix)
     vector<astr_t> LineBuffer;
     int CursorLine{ 0 };
     int CursorCol{ 0 };
@@ -217,7 +217,7 @@ struct EDITOR_STATE
         vector<TOKEN_RUN> runs;
     };
     std::unordered_map<int, CACHE_ENTRY> Cache;
-    uint LastUndoTick{ 0 };
+    uint32_t LastUndoTick{ 0 };
 
     const vector<TOKEN_RUN> &runs_for(int lineIndex, const astr_t &line)
     {
@@ -388,7 +388,7 @@ EDITOR_STATE *editor_state(ImGuiID id, astr_t *buffer)
     // replace the contents of the same astr_t object - the pointer never
     // changes, so without the token the widget kept drawing stale lines and
     // an edit rejoined the old content over the new file).
-    const uint generation = ScriptEditor_Generation();
+    const uint32_t generation = ScriptEditor_Generation();
     if (state.Buffer != buffer || state.BufferGeneration != generation)
     {
         state.Buffer = buffer;

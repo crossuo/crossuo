@@ -25,14 +25,14 @@ int EquipLayer(const CGameItem *item);
 // Sum of Count over the matching items in the object's subtree; the bank
 // container is skipped when recursing. A 0xFFFF graphic/color matches any.
 int CountItems(const CGameObject *root, const CFindItem &findListItem, bool recurse);
-int CountItems(const CGameObject *root, ushort graphic, ushort color, bool recurse);
+int CountItems(const CGameObject *root, uint16_t graphic, uint16_t color, bool recurse);
 
 // First match in the object's subtree; matched serials append to list
 CGameObject *FindType(
     const CGameObject *root,
     const CFindItem &findListItem,
     const vector<CIgnoreItem> &ignoreList,
-    uchar flags,
+    uint8_t flags,
     bool recurseSearch,
     vector<astr_t> &list);
 

@@ -192,7 +192,7 @@ void MapWindow_Draw(bool *open)
 
     // the selected facet: 0xFFFFFFFF follows the client
     int map = (int)g_CurrentMap;
-    const uint facet = g_MapSettings.Facet;
+    const uint32_t facet = g_MapSettings.Facet;
     if (facet != 0xFFFFFFFF && facet < MAX_MAPS_COUNT)
     {
         map = (int)facet;
@@ -340,7 +340,7 @@ void MapWindow_Draw(bool *open)
         {
             for (int i = 0; i < 10; i++)
             {
-                const uint serial = g_Party.Member[i].Serial;
+                const uint32_t serial = g_Party.Member[i].Serial;
                 if (serial == 0u || g_World->FindWorldCharacter(serial) != nullptr)
                 {
                     continue;
@@ -371,7 +371,7 @@ void MapWindow_Draw(bool *open)
                 continue;
             }
 
-            const uint serial = obj->Serial;
+            const uint32_t serial = obj->Serial;
             const CLIENT_MAP_CHARACTER_TYPE type = AssMap_GetCharacterType(serial);
             if (type >= OMCT_CORPSE || !table[type].Enabled)
             {
@@ -420,7 +420,7 @@ void MapWindow_Draw(bool *open)
             for (const auto &it : g_GuildManager.GetMembersMap())
             {
                 const GUILD_MEMBER_INFO &member = it.second;
-                if (member.Map == (uint)map && member.X != 0 && member.Y != 0 && member.X >= minX &&
+                if (member.Map == (uint32_t)map && member.X != 0 && member.Y != 0 && member.X >= minX &&
                     member.X < maxX && member.Y >= minY && member.Y < maxY)
                 {
                     XA_MAP_DRAW_OBJECT item = { OMCT_PARTY_MEMBER, member.X, member.Y, member.Name,
@@ -590,9 +590,9 @@ void MapWindow_Draw(bool *open)
                 {
                     continue;
                 }
-                if (ImGui::MenuItem(g_FacetName[i], nullptr, facet == (uint)i))
+                if (ImGui::MenuItem(g_FacetName[i], nullptr, facet == (uint32_t)i))
                 {
-                    MapWindow_OnAction(OMA_FACET, (uint)i);
+                    MapWindow_OnAction(OMA_FACET, (uint32_t)i);
                 }
             }
             ImGui::EndMenu();
@@ -622,7 +622,7 @@ void MapWindow_Draw(bool *open)
             {
                 if (ImGui::MenuItem(z.Label, nullptr, g_MapSettings.Zoom == z.Index))
                 {
-                    MapWindow_OnAction(OMA_ZOOM, (uint)z.Index);
+                    MapWindow_OnAction(OMA_ZOOM, (uint32_t)z.Index);
                 }
             }
             ImGui::EndMenu();
@@ -667,7 +667,7 @@ void MapWindow_Draw(bool *open)
             {
                 if (ImGui::MenuItem(o.Label, nullptr, g_MapSettings.Opacity == o.Value))
                 {
-                    MapWindow_OnAction(OMA_TRANSPARENT_WINDOW, (uint)o.Value);
+                    MapWindow_OnAction(OMA_TRANSPARENT_WINDOW, (uint32_t)o.Value);
                 }
             }
             ImGui::EndMenu();
@@ -687,7 +687,7 @@ void MapWindow_Draw(bool *open)
 
 // The original Map::OnActionSelect: the context-menu -> settings
 // transitions. Kept as a free function so the menu reads like the original.
-void MapWindow_OnAction(uint type, uint extra)
+void MapWindow_OnAction(uint32_t type, uint32_t extra)
 {
     bool wantRedraw = true;
     bool wantUpdateImage = false;

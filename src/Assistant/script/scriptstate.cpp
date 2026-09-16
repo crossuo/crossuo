@@ -16,11 +16,11 @@ namespace xuoassist {
 namespace {
 
 std::map<astr_t, astr_t> s_Globals;
-std::map<astr_t, uint> s_Timers; // stored stamp: g_Ticks - value
+std::map<astr_t, uint32_t> s_Timers; // stored stamp: g_Ticks - value
 // key -> icon graphic: the lowered buff name, plus its "0x%04X" graphic text
 // (so scripts can ask by either form and the remove event - graphic-only -
 // can erase every key of the icon)
-std::map<astr_t, ushort> s_Buffs;
+std::map<astr_t, uint16_t> s_Buffs;
 
 // The original BuffExists body trimmed + lowered the script argument (the port
 // lowers at store time, so only the lookup needs it here).
@@ -64,12 +64,12 @@ void ScriptGlobal_Clear()
 
 void ScriptTimer_Set(const astr_t &name, int value)
 {
-    s_Timers[name] = g_Ticks - (uint)value; // was m_Time.elapsed() - value
+    s_Timers[name] = g_Ticks - (uint32_t)value; // was m_Time.elapsed() - value
 }
 
 int ScriptTimer_Get(const astr_t &name)
 {
-    std::map<astr_t, uint>::const_iterator it = s_Timers.find(name);
+    std::map<astr_t, uint32_t>::const_iterator it = s_Timers.find(name);
     return it != s_Timers.end() ? (int)(g_Ticks - it->second) : -1;
 }
 
@@ -90,7 +90,7 @@ void ScriptTimer_Clear()
 
 // --- buffs -----------------------------------------------------------------
 
-void ScriptBuffs_Add(ushort graphic, uint timer, const astr_t &name)
+void ScriptBuffs_Add(uint16_t graphic, uint32_t timer, const astr_t &name)
 {
     (void)timer;
     const astr_t key = buff_key(name);
@@ -103,14 +103,14 @@ void ScriptBuffs_Add(ushort graphic, uint timer, const astr_t &name)
     s_Buffs[graphicText] = graphic;
 }
 
-void ScriptBuffs_Remove(ushort graphic)
+void ScriptBuffs_Remove(uint16_t graphic)
 {
     // the remove event carries only the icon id: erase its graphic key plus
     // every name key mapped to it
     char graphicText[16] = { 0 };
     snprintf(graphicText, sizeof(graphicText), "0x%04X", graphic);
     s_Buffs.erase(graphicText);
-    for (std::map<astr_t, ushort>::iterator it = s_Buffs.begin(); it != s_Buffs.end();)
+    for (std::map<astr_t, uint16_t>::iterator it = s_Buffs.begin(); it != s_Buffs.end();)
     {
         if (it->second == graphic && it->first != graphicText)
         {
@@ -136,7 +136,7 @@ bool ScriptBuffs_Exists(const astr_t &name)
     }
     // the script may pass the icon id as text ("0x754C")
     char graphicText[16] = { 0 };
-    snprintf(graphicText, sizeof(graphicText), "0x%04X", (ushort)strtoul(key.c_str(), nullptr, 16));
+    snprintf(graphicText, sizeof(graphicText), "0x%04X", (uint16_t)strtoul(key.c_str(), nullptr, 16));
     return s_Buffs.find(graphicText) != s_Buffs.end();
 }
 

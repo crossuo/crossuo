@@ -68,11 +68,11 @@ void CGumpDye::OnSelectColor(uint16_t color)
     // xuoassist's packetmanager); the wire hue is the gump color + 1
     if (Serial == 0xFFFFFFFF)
     {
-        xuoassist::g_AssistantConfig.SetFontColor(true, (ushort)(color + 1));
+        xuoassist::g_AssistantConfig.SetFontColor(true, (uint16_t)(color + 1));
     }
     else if (Serial == 0xFFFFFFFE)
     {
-        xuoassist::g_AssistantConfig.SetCharactersFontColor(true, (ushort)(color + 1));
+        xuoassist::g_AssistantConfig.SetCharactersFontColor(true, (uint16_t)(color + 1));
     }
 #endif
     RemoveMark = true;

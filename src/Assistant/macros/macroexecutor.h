@@ -73,20 +73,20 @@ public:
     int RecordStop();
 
     // The target-system taps (was g_TabMacros->AddAction).
-    void RecordTargetObject(uint serial, ushort graphic, ushort color);
-    void RecordTargetTile(ushort graphic, int x, int y, int z);
+    void RecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color);
+    void RecordTargetTile(uint16_t graphic, int x, int y, int z);
 
     // The client's attack send site (CGame::AttackReq): the MT_ATTACK
     // observation tap (was the 0x05 AttackRequest send tap in
     // packetmanager.cpp, same conversions in the same order).
-    void RecordAttack(uint serial);
+    void RecordAttack(uint32_t serial);
 
     // The client's use send sites (CGame::DoubleClick, and
     // CGame::PaperdollReq with the 0x80000000 bit set): the MT_USE
     // observation tap (was the 0x06 DoubleClick send tap in
     // packetmanager.cpp, same conversions) plus the g_LastUseObject mirror
     // feed (the tap fed it outside the recording gate).
-    void RecordUse(uint serial);
+    void RecordUse(uint32_t serial);
 
     // The client's walk send site (CPathFinder::Walk): the MT_WALK
     // observation tap (was the 0x02 WalkRequest send tap in
@@ -152,8 +152,8 @@ public:
     // MT_WAIT_FOR_CONTEXT_MENU observation taps (were the 0xBF
     // ExtendedCommandS send tap, subcommands 0x0013 / 0x0015, in
     // packetmanager.cpp; the menu id rides the graphic field).
-    void RecordContextMenuRequest(uint serial);
-    void RecordWaitContextMenu(uint serial, ushort menuID);
+    void RecordContextMenuRequest(uint32_t serial);
+    void RecordWaitContextMenu(uint32_t serial, uint16_t menuID);
 
     // The client's speech send sites (the game console tail, MacroManager's
     // MC_SAY/EMOTE/WHISPER/YELL actions, CGame::SendASCIIText): the MT_SAY
@@ -198,7 +198,7 @@ public:
 
 private:
     void ProcessMacro(); // was TabMacros::ProcessMacro
-    uint FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType);
+    uint32_t FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType);
 
     bool m_Playing{ false };
     bool m_Recording{ false };
@@ -208,11 +208,11 @@ private:
     int m_PlayingIndex{ -1 };
     int m_RecordingIndex{ -1 };
     int m_PlayPosition{ 0 };
-    uint m_NextMacroTick{ 0 };
-    uint m_LoopDelay{ 1000 };
+    uint32_t m_NextMacroTick{ 0 };
+    uint32_t m_LoopDelay{ 1000 };
     vector<CMacro *> m_PlayList; // copies, freed by Play/Stop (Play:955)
-    vector<uint> m_ArmList;      // MT_SET_ARM / MT_ARM queue (serials)
-    vector<uint> m_DressList;    // MT_SET_DRESS / MT_DRESS queue (serials)
+    vector<uint32_t> m_ArmList;      // MT_SET_ARM / MT_ARM queue (serials)
+    vector<uint32_t> m_DressList;    // MT_SET_DRESS / MT_DRESS queue (serials)
     vector<CMacro *> m_RecordBuffer; // the open recording
     int m_SuspendDepth{ 0 };         // RecordingSuspension scopes in flight
 };

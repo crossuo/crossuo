@@ -56,11 +56,11 @@ bool ScriptJournal_IgnoreCase()
 
 CJournalMessage *ScriptJournal_Find(
     const astr_t &pattern,
-    uint serial,
-    ushort color,
-    uchar type,
-    uint startTime,
-    uint endTime,
+    uint32_t serial,
+    uint16_t color,
+    uint8_t type,
+    uint32_t startTime,
+    uint32_t endTime,
     bool remove)
 {
     if (pattern.empty() || s_Messages.empty())

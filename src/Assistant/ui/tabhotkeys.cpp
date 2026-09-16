@@ -38,7 +38,7 @@ char s_AnimalName[64] = "all"; // le_Name default ("all")
 // 76): armed by the target button, polled on the next frame, cancellable from
 // CancelPendingFromTargets (shutdown).
 bool s_AnimalFtPending = false;
-uint s_AnimalFtGeneration = 0;
+uint32_t s_AnimalFtGeneration = 0;
 
 // AnimalAndVendorControlForm::Send
 void animal_send(const char *command)
@@ -48,7 +48,7 @@ void animal_send(const char *command)
     wide.reserve(text.size());
     for (char c : text)
     {
-        wide.push_back((wchar_t)(uchar)c);
+        wide.push_back((wchar_t)(uint8_t)c);
     }
     SendConsoleText(wide, 0);
 }
@@ -60,7 +60,7 @@ void ship_send(const char *text)
     wide.reserve(strlen(text));
     for (const char *c = text; *c != '\0'; ++c)
     {
-        wide.push_back((wchar_t)(uchar)*c);
+        wide.push_back((wchar_t)(uint8_t)*c);
     }
     SendConsoleText(wide, 0);
 }

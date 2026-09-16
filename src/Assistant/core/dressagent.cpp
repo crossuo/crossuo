@@ -60,7 +60,7 @@ void CDressAgent::DressSet(const CDressSetEntry *set)
     {
         for (int layer = 1; layer < 3; layer++)
         {
-            uint serial = set->m_Items[layer];
+            uint32_t serial = set->m_Items[layer];
 
             if (serial != 0)
             {
@@ -81,7 +81,7 @@ void CDressAgent::DressSet(const CDressSetEntry *set)
 
     for (int layer = 1; layer < 25; layer++)
     {
-        uint serial = set->m_Items[layer];
+        uint32_t serial = set->m_Items[layer];
 
         if (serial != 0 && g_LayerSafe[layer])
         {
@@ -241,7 +241,7 @@ void CDressAgent::Tick()
     }
 
     // was the "Client.Wait(MoveItemsDelay)" after each scripted action
-    m_NextTick = g_Ticks + (uint)(m_Delay > 0 ? m_Delay : 0);
+    m_NextTick = g_Ticks + (uint32_t)(m_Delay > 0 ? m_Delay : 0);
 
     if (m_Next >= m_Steps.size())
     {

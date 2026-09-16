@@ -187,11 +187,11 @@ void CTextCommandManager::UpdateCommands()
     }
 }
 
-ushort CTextCommandManager::GetFindFlags(const astr_t &text)
+uint16_t CTextCommandManager::GetFindFlags(const astr_t &text)
 {
     // Was CCommandManager::GetFindFlags.
-    ushort flags = FTF_NORMAL;
-    ushort flagsType = FTF_NORMAL;
+    uint16_t flags = FTF_NORMAL;
+    uint16_t flagsType = FTF_NORMAL;
 
     TextFileParser parser({}, "|", "", "");
 
@@ -248,10 +248,10 @@ ushort CTextCommandManager::GetFindFlags(const astr_t &text)
     return flags | flagsType;
 }
 
-uchar CTextCommandManager::GetJournalFlags(const astr_t &text)
+uint8_t CTextCommandManager::GetJournalFlags(const astr_t &text)
 {
     // Was CCommandManager::GetJournalFlags.
-    uchar flags = 0;
+    uint8_t flags = 0;
 
     TextFileParser parser({}, "|", "", "");
 
@@ -272,10 +272,10 @@ uchar CTextCommandManager::GetJournalFlags(const astr_t &text)
     return flags;
 }
 
-uchar CTextCommandManager::GetSkillsFlags(const astr_t &text)
+uint8_t CTextCommandManager::GetSkillsFlags(const astr_t &text)
 {
     // Was CCommandManager::GetSkillsFlags.
-    uchar flags = SF_REAL;
+    uint8_t flags = SF_REAL;
 
     TextFileParser parser({}, "|", "", "");
 
@@ -672,13 +672,13 @@ HCOMMAND(setlight)
     }
 
     bool on = CAssistant::RawStringToBool(args[0]);
-    uchar value = 0;
+    uint8_t value = 0;
 
     if (on)
     {
         if (size > 1)
         {
-            value = (uchar)atoi(args[1].c_str());
+            value = (uint8_t)atoi(args[1].c_str());
         }
         else
         {
@@ -715,15 +715,15 @@ HCOMMAND(setweather)
     }
     else if (size > 1)
     {
-        weather.Type = (uchar)atoi(args[1].c_str());
+        weather.Type = (uint8_t)atoi(args[1].c_str());
 
         if (size > 2)
         {
-            weather.Count = (uchar)atoi(args[2].c_str());
+            weather.Count = (uint8_t)atoi(args[2].c_str());
 
             if (size > 3)
             {
-                weather.Temperature = (uchar)atoi(args[3].c_str());
+                weather.Temperature = (uint8_t)atoi(args[3].c_str());
             }
         }
     }
@@ -759,11 +759,11 @@ HCOMMAND(setseason)
     }
     else if (size > 1)
     {
-        season.Index = (uchar)atoi(args[1].c_str());
+        season.Index = (uint8_t)atoi(args[1].c_str());
 
         if (size > 2)
         {
-            season.Music = (uchar)atoi(args[2].c_str());
+            season.Music = (uint8_t)atoi(args[2].c_str());
         }
     }
 
@@ -850,18 +850,18 @@ HCOMMAND(warmode)
         return;
     }
 
-    uint state = 2;
+    uint32_t state = 2;
 
     if (!args.empty())
     {
-        state = (uint)CAssistant::RawStringToBool(args[0]);
+        state = (uint32_t)CAssistant::RawStringToBool(args[0]);
     }
 
-    uchar warmode = (uchar)!g_Player->Warmode;
+    uint8_t warmode = (uint8_t)!g_Player->Warmode;
 
     if (state < 2)
     {
-        warmode = (uchar)state;
+        warmode = (uint8_t)state;
     }
 
     // assistant-initiated warmode changes must not record themselves; the
@@ -880,7 +880,7 @@ HCOMMAND(morph)
         return;
     }
 
-    ushort graphic = 0;
+    uint16_t graphic = 0;
 
     if (!args.empty())
     {
@@ -910,8 +910,8 @@ HCOMMAND(resend)
         return;
     }
 
-    static uint lastResendTime = g_Ticks;
-    uint currentTime = g_Ticks;
+    static uint32_t lastResendTime = g_Ticks;
+    uint32_t currentTime = g_Ticks;
 
     if (lastResendTime > currentTime)
     {
@@ -939,8 +939,8 @@ HCOMMAND(sound)
     }
 
     ::g_PacketManager.PlaySoundEffect(
-        (ushort)CAssistant::TextToGraphic(args[0]), 0, (ushort)g_Player->GetX(),
-        (ushort)g_Player->GetY());
+        (uint16_t)CAssistant::TextToGraphic(args[0]), 0, (uint16_t)g_Player->GetX(),
+        (uint16_t)g_Player->GetY());
 }
 
 HCOMMAND(emoteaction)
@@ -1023,8 +1023,8 @@ HCOMMAND(drop)
     astr_t serial = args[0];
 
     int count = 0;
-    ushort x = 0xFFFF;
-    ushort y = 0xFFFF;
+    uint16_t x = 0xFFFF;
+    uint16_t y = 0xFFFF;
     char z = -1;
 
     if (size > 1)
@@ -1033,8 +1033,8 @@ HCOMMAND(drop)
 
         if (size > 3)
         {
-            x = (ushort)atoi(args[2].c_str());
-            y = (ushort)atoi(args[3].c_str());
+            x = (uint16_t)atoi(args[2].c_str());
+            y = (uint16_t)atoi(args[3].c_str());
 
             if (size > 4)
             {
@@ -1076,7 +1076,7 @@ HCOMMAND(drop)
                 g_MoveItemData.Y = g_Player->GetY();
             }
 
-            if ((uchar)z != 0xFF)
+            if ((uint8_t)z != 0xFF)
             {
                 g_MoveItemData.Z = z;
             }
@@ -1141,8 +1141,8 @@ HCOMMAND(moveitem)
     astr_t serial = "";
     astr_t container = "backpack";
     int count = 0;
-    ushort x = 0xFFFF;
-    ushort y = 0xFFFF;
+    uint16_t x = 0xFFFF;
+    uint16_t y = 0xFFFF;
     char z = -1;
 
     g_MoveItemData.Reset();
@@ -1162,8 +1162,8 @@ HCOMMAND(moveitem)
 
                 if (size > 4)
                 {
-                    x = (ushort)atoi(args[3].c_str());
-                    y = (ushort)atoi(args[4].c_str());
+                    x = (uint16_t)atoi(args[3].c_str());
+                    y = (uint16_t)atoi(args[4].c_str());
 
                     if (size > 5)
                     {
@@ -1486,7 +1486,7 @@ HCOMMAND(clearjournal)
 
     astr_t pattern = "";
     astr_t serial = "0xFFFFFFFF";
-    ushort color = 0xFFFF;
+    uint16_t color = 0xFFFF;
     astr_t type = "";
 
     int size = (int)args.size();

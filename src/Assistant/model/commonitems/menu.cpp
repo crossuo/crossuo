@@ -11,7 +11,7 @@ CMenu::CMenu()
 {
 }
 
-CMenu::CMenu(const uint &serial, const ushort &id, const astr_t &name, const bool &grayMenu)
+CMenu::CMenu(const uint32_t &serial, const uint16_t &id, const astr_t &name, const bool &grayMenu)
     : Serial(serial)
     , ID(id)
     , GrayMenu(grayMenu)

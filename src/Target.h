@@ -20,12 +20,12 @@ class CTargetHook
 {
 public:
     CTargetHook() {}
-    explicit CTargetHook(const uint &serial);
+    explicit CTargetHook(const uint32_t &serial);
     CTargetHook(const astr_t &tile, const int &x, const int &y, const int &z, const bool &relative);
     ~CTargetHook() {}
 
     bool TargetOnObject{ true };
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
     astr_t Tile{ "" };
     int X{ 0 };
     int Y{ 0 };
@@ -118,7 +118,7 @@ public:
     // The consume-path senders: raw 0x6C builders for answers to a cursor
     // the client never saw (no recording, no LastTarget bookkeeping, no
     // route through SendTarget).
-    void SendHookTargetObject(const uint &serial);
+    void SendHookTargetObject(const uint32_t &serial);
     void SendHookTargetTile(const uint16_t tileID, const short &x, const short &y, short z);
     void SendHookTargetLastTile();
     void SendHookCancelTarget();

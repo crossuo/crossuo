@@ -18,8 +18,8 @@ class CPromptManager
 public:
     bool IsUnicode = false;
     bool Exists = false;
-    uint Serial = 0;
-    uint ID = 0;
+    uint32_t Serial = 0;
+    uint32_t ID = 0;
 
 private:
     PROMPT_LIST m_Hooks;

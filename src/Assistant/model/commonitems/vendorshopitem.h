@@ -12,12 +12,12 @@ namespace xuoassist {
 class CVendorShopItem
 {
 public:
-    uint Serial = 0;
-    ushort Graphic = 0;
-    ushort Color = 0;
+    uint32_t Serial = 0;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
     astr_t Name = "";
     int Count = 0;
-    uint Price = 0;
+    uint32_t Price = 0;
     bool NameFromCliloc = false;
 
     CVendorShopItem() {}

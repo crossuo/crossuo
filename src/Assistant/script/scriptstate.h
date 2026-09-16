@@ -44,8 +44,8 @@ void ScriptTimer_Clear();
 
 // --- buffs -----------------------------------------------------------------
 
-void ScriptBuffs_Add(ushort graphic, uint timer, const astr_t &name);
-void ScriptBuffs_Remove(ushort graphic);
+void ScriptBuffs_Add(uint16_t graphic, uint32_t timer, const astr_t &name);
+void ScriptBuffs_Remove(uint16_t graphic);
 // Case-insensitive name match (the original body trimmed + lowered the script
 // argument; the mirror stores lowered names at event time).
 bool ScriptBuffs_Exists(const astr_t &name);

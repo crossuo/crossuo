@@ -16,8 +16,8 @@ namespace xuoassist {
 
 namespace {
 
-constexpr uint DEFAULT_CAPACITY = 512;
-constexpr uint PRINT_THROTTLE_MS = 100;
+constexpr uint32_t DEFAULT_CAPACITY = 512;
+constexpr uint32_t PRINT_THROTTLE_MS = 100;
 
 // One queued call. The queue owns the node from push until the reclaim pass
 // deletes it; the caller's XA_SCRIPT_COMMAND record is only linked through
@@ -37,12 +37,12 @@ struct QUEUE_NODE
 std::mutex s_QueueMutex;
 std::deque<QUEUE_NODE *> s_Queue;     // pending, drain-executes in order
 std::deque<QUEUE_NODE *> s_Retired;   // completed, waiting Ack/Abandoned
-uint s_Capacity = DEFAULT_CAPACITY;
+uint32_t s_Capacity = DEFAULT_CAPACITY;
 bool s_Shutdown = false;
 
 std::mutex s_ThrottleMutex;
-uint s_LastPrintTick = 0;
-uint s_Suppressed = 0;
+uint32_t s_LastPrintTick = 0;
+uint32_t s_Suppressed = 0;
 
 // Completes a node the way every path does: copy the results into the
 // caller's record (unless the waiter abandoned) and release the waiter. The
@@ -110,7 +110,7 @@ void reclaim_locked()
 
 } // namespace
 
-void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint timeoutMs)
+void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs)
 {
     if (command == nullptr)
     {
@@ -193,7 +193,7 @@ void ScriptQueue_Drain()
     // Bounded per frame: a print loop can enqueue far faster than the frame
     // runs; the remainder wait for the next frame (the getters simply see a
     // slightly older world - exactly the original event-loop behavior).
-    uint budget = 64;
+    uint32_t budget = 64;
     for (;;)
     {
         QUEUE_NODE *node = nullptr;
@@ -236,7 +236,7 @@ void ScriptQueue_Shutdown()
     reclaim_locked();
 }
 
-uint ScriptQueue_Capacity()
+uint32_t ScriptQueue_Capacity()
 {
     std::lock_guard<std::mutex> lock(s_QueueMutex);
     return s_Capacity;
@@ -248,16 +248,16 @@ void ScriptQueue_Reset()
     s_Shutdown = false;
 }
 
-void ScriptQueue_SetCapacity(uint entries)
+void ScriptQueue_SetCapacity(uint32_t entries)
 {
     std::lock_guard<std::mutex> lock(s_QueueMutex);
     s_Capacity = entries > 16 ? entries : 16;
 }
 
-bool ScriptQueue_PrintThrottled(uint &suppressedCount)
+bool ScriptQueue_PrintThrottled(uint32_t &suppressedCount)
 {
     suppressedCount = 0;
-    const uint now = g_Ticks;
+    const uint32_t now = g_Ticks;
     std::lock_guard<std::mutex> lock(s_ThrottleMutex);
     if (s_LastPrintTick != 0 && (now - s_LastPrintTick) < PRINT_THROTTLE_MS)
     {

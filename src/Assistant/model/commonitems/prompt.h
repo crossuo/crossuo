@@ -12,12 +12,12 @@ namespace xuoassist {
 class CPrompt
 {
 public:
-    uint Serial = 0;
+    uint32_t Serial = 0;
     astr_t Text = "";
     PROMPT_TYPE Type = PT_NONE;
 
     CPrompt() {}
-    CPrompt(const uint &serial, const astr_t &text, const PROMPT_TYPE &type);
+    CPrompt(const uint32_t &serial, const astr_t &text, const PROMPT_TYPE &type);
 };
 
 } // namespace xuoassist

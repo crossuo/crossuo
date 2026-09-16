@@ -18,7 +18,7 @@ public:
     float Value = 0.0f;
     float OldValue = 0.0f;
     float Cap = 0.0f;
-    uchar Status = 0;
+    uint8_t Status = 0;
 
     CSkill() {}
     CSkill(const bool &haveButton, const astr_t &name);

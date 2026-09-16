@@ -21,9 +21,6 @@
 
 namespace xuoassist {
 
-using uchar = uint8_t;
-using ushort = uint16_t;
-using uint = uint32_t;
 
 // Client tick source (plan §4.2: the old timer objects -> g_Ticks).
 using ::g_Ticks;
@@ -61,8 +58,8 @@ enum NOTORIETY_TYPE_FLAGS
     NTF_INVULNERABLE = 0x40
 };
 
-extern uchar g_LightLevel;
-extern uchar g_PersonalLightLevel;
+extern uint8_t g_LightLevel;
+extern uint8_t g_PersonalLightLevel;
 
 enum XA_ENABLED_FEATURES
 {
@@ -395,15 +392,15 @@ enum TRADE_ACTIONS
 
 struct SEASON_DATA
 {
-    uchar Index;
-    uchar Music;
+    uint8_t Index;
+    uint8_t Music;
 };
 
 struct WEATHER_DATA
 {
-    uchar Type;
-    uchar Count;
-    uchar Temperature;
+    uint8_t Type;
+    uint8_t Count;
+    uint8_t Temperature;
 };
 
 // Season/weather filter state written by the packet handlers (0x65/0xBC).
@@ -430,31 +427,31 @@ struct SelectedTile
 // The client-owned player serial; the client PacketManager keeps it current
 // post-login.
 using ::g_PlayerSerial;
-extern uint g_Backpack;
+extern uint32_t g_Backpack;
 // The client-owned current facet; ChangeMap updates it.
 using ::g_CurrentMap;
 extern bool g_UpdateDisplayOnStep;
-extern uint g_DressBag;
-extern ushort g_MessagesColor;
-extern ushort g_MorphGraphic;
-extern ushort g_OriginalGraphic;
-extern uint g_LastCorpseObject;
-extern uint g_LastContainerObject;
+extern uint32_t g_DressBag;
+extern uint16_t g_MessagesColor;
+extern uint16_t g_MorphGraphic;
+extern uint16_t g_OriginalGraphic;
+extern uint32_t g_LastCorpseObject;
+extern uint32_t g_LastContainerObject;
 //! Tick stamps (g_Ticks) replacing the original app's timer objects.
-extern uint g_LastUseObjectTimer;
+extern uint32_t g_LastUseObjectTimer;
 extern bool g_Connected;
-extern uint g_LastFriendFound;
-extern uint g_LastEnemyFound;
+extern uint32_t g_LastFriendFound;
+extern uint32_t g_LastEnemyFound;
 // The client-owned combat ability table (GamePlayer/CrossUO keep it current).
 using ::g_Ability;
 extern CPoint2Di g_LastTargetPosition;
 extern CPoint2Di g_LastAttackPosition;
-extern uint g_LastStatusRequest;
-extern uint g_LastStatusObject;
-extern uint g_LastUseObject;
+extern uint32_t g_LastStatusRequest;
+extern uint32_t g_LastStatusObject;
+extern uint32_t g_LastUseObject;
 extern SelectedTile g_SelectedClientWorldObject;
 extern CPoint2Di g_LastPlayerCorpsePosition;
-extern uint g_LastPlayerDeadTimer;
+extern uint32_t g_LastPlayerDeadTimer;
 // The client-owned last-cast/last-used indexes (client send sites update
 // them before the macro Record taps run).
 using ::g_LastSkillIndex;
@@ -466,8 +463,8 @@ extern bool g_PromptReceived;
 extern bool g_ContextMenuReceived;
 extern bool g_TradeReceived;
 extern bool g_ShopReceived;
-extern uint g_LastTMapX;
-extern uint g_LastTMapY;
+extern uint32_t g_LastTMapX;
+extern uint32_t g_LastTMapY;
 
 static const bool g_LayerSafe[30] = { false, // 0
                                       true,  true, true,  true,  true,  true,  true,  true,

@@ -52,7 +52,7 @@ struct CachedIconTexture
     ImTextureData *tex;
     int lastUseFrame; // ImGui::GetFrameCount() at the last cache hit / insert
 };
-static std::map<uint, CachedIconTexture> s_IconTextures;
+static std::map<uint32_t, CachedIconTexture> s_IconTextures;
 // evicted entries: queued for the backend destroy, unregistered + freed once
 // it reports Destroyed (they cannot be deleted early: they still sit in the
 // context's UserTextures list)
@@ -83,7 +83,7 @@ static void IconReapRetired()
     }
 }
 
-static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint key)
+static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint32_t key)
 {
     if (icon == nullptr || icon->Width <= 0 || icon->Height <= 0 ||
         icon->Pixels.empty() || ImGui::GetCurrentContext() == nullptr)
@@ -150,20 +150,20 @@ char s_GroupName[64] = { 0 };     // le_DisplayGroupName
 char s_GroupData[2048] = { 0 };   // te_DisplayGroupTitleData
 
 bool s_FtPending = false;         // the items editor from-target
-uint s_FtGeneration = 0;
+uint32_t s_FtGeneration = 0;
 
 // 0xFFRRGGBB (what the original writers stored) <-> ImGui IM_COL32 RGBA
-ImU32 argb_to_rgba(uint argb)
+ImU32 argb_to_rgba(uint32_t argb)
 {
     return IM_COL32((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, 0xFF);
 }
 
-uint rgba_to_argb(ImU32 rgba)
+uint32_t rgba_to_argb(ImU32 rgba)
 {
     const ImVec4 f = ImGui::ColorConvertU32ToFloat4(rgba);
-    const uint r = (uint)(f.x * 255.0f + 0.5f);
-    const uint g = (uint)(f.y * 255.0f + 0.5f);
-    const uint b = (uint)(f.z * 255.0f + 0.5f);
+    const uint32_t r = (uint32_t)(f.x * 255.0f + 0.5f);
+    const uint32_t g = (uint32_t)(f.y * 255.0f + 0.5f);
+    const uint32_t b = (uint32_t)(f.z * 255.0f + 0.5f);
     return 0xFF000000u | (r << 16) | (g << 8) | b;
 }
 
@@ -171,7 +171,7 @@ uint rgba_to_argb(ImU32 rgba)
 // written through on every frame of a drag (the live preview); true is
 // returned only on the commit frame (picker deactivated after an edit) so
 // the callers throttle their disk saves to the end of the session.
-bool color_field(const char *id, uint *argb)
+bool color_field(const char *id, uint32_t *argb)
 {
     ImU32 rgba = argb_to_rgba(*argb);
     bool commit = false;
@@ -266,8 +266,8 @@ void fields_to_item(CDisplayItemEntry &entry)
     }
 
     di.Text = s_ItemText;
-    di.Graphic = (ushort)CAssistant::TextToGraphic(s_ItemGraphic);
-    di.Hue = (ushort)CAssistant::TextToGraphic(s_ItemHue);
+    di.Graphic = (uint16_t)CAssistant::TextToGraphic(s_ItemGraphic);
+    di.Hue = (uint16_t)CAssistant::TextToGraphic(s_ItemHue);
     di.MidValue = s_ItemMidValue;
     di.MinValue = s_ItemMinValue;
 
@@ -409,7 +409,7 @@ void draw_configuration_page()
 
     // the flag checkboxes (cb_DisplayDoubleImage 0x01 / ...OnName 0x02 /
     // cb_DisplayHightFont 0x04 / cb_HighlightReagents 0x08)
-    uint flags = g_AssistantConfig.DisplayFlags();
+    uint32_t flags = g_AssistantConfig.DisplayFlags();
     bool flagsChanged = false;
     bool flagValue;
     flagValue = (flags & 0x01) != 0;
@@ -444,7 +444,7 @@ void draw_configuration_page()
     }
 
     // the color swatches (pb_DisplayBackgroundColor / pb_DisplayTextColor)
-    uint bgcolor = g_AssistantConfig.DisplayBackgroundColor();
+    uint32_t bgcolor = g_AssistantConfig.DisplayBackgroundColor();
     ImGui::TextUnformatted("Background color:");
     ImGui::SameLine();
     if (color_field("##display_bg", &bgcolor))
@@ -453,7 +453,7 @@ void draw_configuration_page()
         g_AssistantConfig.SaveMainOptions();
         redraw_title();
     }
-    uint textcolor = g_AssistantConfig.DisplayTextColor();
+    uint32_t textcolor = g_AssistantConfig.DisplayTextColor();
     ImGui::TextUnformatted("Text color:");
     ImGui::SameLine();
     if (color_field("##display_text", &textcolor))
@@ -551,7 +551,7 @@ void draw_items_editor_page()
     if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
     {
         const CDisplayItem &selItem = items[s_SelectedItem].m_Item;
-        const uint key = (uint)((selItem.Graphic << 16) | selItem.Hue);
+        const uint32_t key = (uint32_t)((selItem.Graphic << 16) | selItem.Hue);
         ImTextureData *tex = IconTextureFor(g_DisplayManager.GetIcon(selItem), key);
         if (tex != nullptr)
         {
@@ -639,7 +639,7 @@ void draw_items_editor_page()
         // grid of 6 color swatch buttons)
         ImGui::TextUnformatted("Colors - Text:");
         ImGui::SameLine();
-        uint c = di.Color;
+        uint32_t c = di.Color;
         changed |= color_field("##item_text_c", &c);
         di.Color = c;
         ImGui::SameLine();

@@ -13,14 +13,14 @@ namespace xuoassist {
 class CContextMenuManager
 {
 public:
-    uint Serial = 0;
+    uint32_t Serial = 0;
     bool HookEnabled = false;
-    uint HookID = 0;
-    uint HookIndex = 0;
+    uint32_t HookID = 0;
+    uint32_t HookIndex = 0;
 
     CContextMenuManager();
 
-    void SetHook(const uint &id, const uint &index);
+    void SetHook(const uint32_t &id, const uint32_t &index);
 
     void RemoveHook();
 

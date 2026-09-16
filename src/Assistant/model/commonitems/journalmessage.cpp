@@ -22,7 +22,7 @@ CJournalMessage::CJournalMessage(const CJournalMessage &msg)
 {
 }
 
-CJournalMessage::CJournalMessage(const uint &serial, const ushort &color, const astr_t &text)
+CJournalMessage::CJournalMessage(const uint32_t &serial, const uint16_t &color, const astr_t &text)
     : Serial(serial)
     , Timer(g_Ticks)
     , Color(color)

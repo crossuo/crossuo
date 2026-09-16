@@ -124,36 +124,36 @@ extern CGump *g_HarnessGump;
 CGump *g_HarnessGump = nullptr;
 
 
-uint CAssistant::TextToSerial(astr_t text)
+uint32_t CAssistant::TextToSerial(astr_t text)
 {
     // Parity with the original for the tests: plain hex text
-    return (uint)strtoul(text.c_str(), nullptr, 16);
+    return (uint32_t)strtoul(text.c_str(), nullptr, 16);
 }
-astr_t CAssistant::SerialToText(const uint &value)
+astr_t CAssistant::SerialToText(const uint32_t &value)
 {
     char buf[16] = { 0 };
     snprintf(buf, sizeof(buf), "0x%X", value);
     return buf;
 }
-astr_t CAssistant::GraphicToText(const ushort &value)
+astr_t CAssistant::GraphicToText(const uint16_t &value)
 {
     char buf[16] = { 0 };
     snprintf(buf, sizeof(buf), "0x%X", value);
     return buf;
 }
-ushort CAssistant::TextToGraphic(astr_t text)
+uint16_t CAssistant::TextToGraphic(astr_t text)
 {
-    return (ushort)strtoul(text.c_str(), nullptr, 16);
+    return (uint16_t)strtoul(text.c_str(), nullptr, 16);
 }
-void CAssistant::ClientPrint(const astr_t &, const ushort &) {}
-void CAssistant::ClientCharPrint(const uint &, const astr_t &, const ushort &) {}
-void CAssistant::DoubleClick(const uint &) {}
-void CAssistant::MoveEquip(const uint &, const int &, const uint &) {}
+void CAssistant::ClientPrint(const astr_t &, const uint16_t &) {}
+void CAssistant::ClientCharPrint(const uint32_t &, const astr_t &, const uint16_t &) {}
+void CAssistant::DoubleClick(const uint32_t &) {}
+void CAssistant::MoveEquip(const uint32_t &, const int &, const uint32_t &) {}
 void CAssistant::GetFriendsStatus() {}
 void CAssistant::GetEnemiesStatus() {}
-void CAssistant::HandleSetPVPCaller(uchar *) {}
-CGameObject *CAssistant::FindFriend(const ushort &, const astr_t &) { return nullptr; }
-CGameObject *CAssistant::FindEnemy(const ushort &, const astr_t &) { return nullptr; }
+void CAssistant::HandleSetPVPCaller(uint8_t *) {}
+CGameObject *CAssistant::FindFriend(const uint16_t &, const astr_t &) { return nullptr; }
+CGameObject *CAssistant::FindEnemy(const uint16_t &, const astr_t &) { return nullptr; }
 int CAssistant::TextToLayer(astr_t) { return 0; }
 void CAssistant::RequestTarget(const astr_t &) {}
 int CAssistant::CountType(const vector<astr_t> &, const vector<astr_t> &, const astr_t &,
@@ -162,11 +162,11 @@ int CAssistant::CountType(const vector<astr_t> &, const vector<astr_t> &, const 
     return 0;
 }
 CGameObject *CAssistant::FindType(const vector<astr_t> &, const vector<astr_t> &, const astr_t &,
-    const astr_t &, const ushort &, const astr_t &, bool, vector<astr_t> &)
+    const astr_t &, const uint16_t &, const astr_t &, bool, vector<astr_t> &)
 {
     return nullptr;
 }
-CGameObject *CAssistant::FindList(const astr_t &, const astr_t &, const astr_t &, const ushort &,
+CGameObject *CAssistant::FindList(const astr_t &, const astr_t &, const astr_t &, const uint16_t &,
     const astr_t &, bool, vector<astr_t> &)
 {
     return nullptr;
@@ -180,10 +180,10 @@ CAssistantConfig::CAssistantConfig()
 CAssistantConfig g_AssistantConfig;
 CMacroEntry::~CMacroEntry() = default;
 int CAssistantConfig::DelayFromText(astr_t text) { return (int)text.size(); }
-bool CAssistantConfig::GetFontColor(ushort &) { return false; }
-void CAssistantConfig::SetFontColor(const bool &, ushort) {}
-bool CAssistantConfig::GetCharactersFontColor(ushort &) { return false; }
-void CAssistantConfig::SetCharactersFontColor(const bool &, ushort) {}
+bool CAssistantConfig::GetFontColor(uint16_t &) { return false; }
+void CAssistantConfig::SetFontColor(const bool &, uint16_t) {}
+bool CAssistantConfig::GetCharactersFontColor(uint16_t &) { return false; }
+void CAssistantConfig::SetCharactersFontColor(const bool &, uint16_t) {}
 void CAssistantConfig::SaveHotkeys() {}
 bool CAssistantConfig::LoadHotkeys() { return true; }
 
@@ -191,8 +191,8 @@ bool CAssistantConfig::LoadHotkeys() { return true; }
 CGumpManager::CGumpManager() {}
 CGumpManager::~CGumpManager() {}
 CGumpManager g_GumpManager;
-CGump *CGumpManager::GetGump(const uint &) { return g_HarnessGump; }
-CGump *CGumpManager::GetGump(const uint &, const uint &) { return g_HarnessGump; }
+CGump *CGumpManager::GetGump(const uint32_t &) { return g_HarnessGump; }
+CGump *CGumpManager::GetGump(const uint32_t &, const uint32_t &) { return g_HarnessGump; }
 CGump *CGumpManager::GetLastGump() { return g_HarnessGump; }
 int CGumpManager::GetGumpCount()
 {
@@ -230,7 +230,7 @@ CTradeWindow *CTradeManager::GetTrade(const astr_t &) { return nullptr; }
 
 CContextMenuManager::CContextMenuManager() {}
 CContextMenuManager g_ContextMenuManager;
-void CContextMenuManager::SetHook(const uint &, const uint &) {}
+void CContextMenuManager::SetHook(const uint32_t &, const uint32_t &) {}
 void CContextMenuManager::RemoveHook() {}
 
 } // namespace xuoassist
@@ -238,7 +238,7 @@ void CContextMenuManager::RemoveHook() {}
 // the fused client manager (global namespace, per Managers/ObjectPropertiesManager.h)
 CObjectPropertiesManager g_ObjectPropertiesManager;
 CObjectPropertiesManager::~CObjectPropertiesManager() = default;
-astr_t CObjectPropertiesManager::GetData(const uint &) { return {}; }
+astr_t CObjectPropertiesManager::GetData(const uint32_t &) { return {}; }
 
 namespace xuoassist {
 
@@ -260,20 +260,20 @@ CSpellManager::~CSpellManager() {}
 CSpellManager g_SpellManager;
 void CSpellManager::Cast(const astr_t &) {}
 void CSpellManager::CastIndex(int) {}
-void CSpellManager::TargetCast(const astr_t &, const uint &) {}
+void CSpellManager::TargetCast(const astr_t &, const uint32_t &) {}
 
 CTextCommandManager::CTextCommandManager() {}
 CTextCommandManager::~CTextCommandManager() {}
 CTextCommandManager g_TextCommandManager;
 bool CTextCommandManager::RunCommand(const astr_t &, const vector<astr_t> &) { return false; }
-ushort CTextCommandManager::GetFindFlags(const astr_t &) { return 0; }
-uchar CTextCommandManager::GetJournalFlags(const astr_t &) { return 0; }
-uchar CTextCommandManager::GetSkillsFlags(const astr_t &) { return 0; }
+uint16_t CTextCommandManager::GetFindFlags(const astr_t &) { return 0; }
+uint8_t CTextCommandManager::GetJournalFlags(const astr_t &) { return 0; }
+uint8_t CTextCommandManager::GetSkillsFlags(const astr_t &) { return 0; }
 
 bool g_Connected = false;
 uint64_t g_EnabledCommands = 0;
 uint64_t g_EnabledFeature = 0;
-ushort g_MessagesColor = 0x02B2;
+uint16_t g_MessagesColor = 0x02B2;
 CPoint2Di g_LastTargetPosition;
 CPoint2Di g_LastAttackPosition;
 bool g_TargetReceived = false;
@@ -387,7 +387,7 @@ void CTarget::SendTargetTile(uint16_t, short, short, char) {}
 void CTarget::SendCancelTarget() {}
 void CTarget::SendLastTarget() {}
 void CTarget::SendTarget() {}
-void CTarget::SendHookTargetObject(const uint &) {}
+void CTarget::SendHookTargetObject(const uint32_t &) {}
 void CTarget::SendHookTargetTile(const uint16_t, const short &, const short &, short) {}
 void CTarget::SendHookTargetLastTile() {}
 void CTarget::SendHookCancelTarget() {}

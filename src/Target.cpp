@@ -442,10 +442,10 @@ void CTarget::SendTarget()
             else
             {
                 reader.Move(5);
-                uint serial = reader.ReadUInt32BE();
+                uint32_t serial = reader.ReadUInt32BE();
 
-                ushort graphic = 0;
-                ushort color = 0;
+                uint16_t graphic = 0;
+                uint16_t color = 0;
                 CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
                 if (obj != nullptr)
                 {
@@ -633,7 +633,7 @@ CMulti *CTarget::GetMultiAtXY(short x, short y)
 // xuoassist::CTarget): the hook answers and the macro PlayWaiting answers go
 // out as raw 0x6C packets from here, while the client Targeting stays false.
 
-CTargetHook::CTargetHook(const uint &serial)
+CTargetHook::CTargetHook(const uint32_t &serial)
 {
     TargetOnObject = true;
     Serial = serial;
@@ -667,7 +667,7 @@ enum
 // One resolved tile (the original CTileInfo record).
 struct TARGET_TILE_INFO
 {
-    ushort Graphic;
+    uint16_t Graphic;
     int X;
     int Y;
     int Z;
@@ -676,7 +676,7 @@ struct TARGET_TILE_INFO
 
 // CFileManager::TileNameToFlags: "|"-separated tokens;
 // the category words OR into the flags, anything else parses as a graphic.
-void TargetTileNameToFlags(const astr_t &tileName, ushort &graphic, ushort &flags)
+void TargetTileNameToFlags(const astr_t &tileName, uint16_t &graphic, uint16_t &flags)
 {
     flags = TNF_BY_GRAPHIC;
 
@@ -723,8 +723,8 @@ std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileN
 {
     std::vector<TARGET_TILE_INFO> result;
 
-    ushort tileID = 0;
-    ushort flags = 0;
+    uint16_t tileID = 0;
+    uint16_t flags = 0;
     TargetTileNameToFlags(tileName, tileID, flags);
 
     if (xuoassist::EnabledCommandExtendedTargetTile() && g_World != nullptr)
@@ -739,7 +739,7 @@ std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileN
 
             MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
             const MAP_CELLS &cell = pmb->Cells[(tileY * 8) + tileX];
-            land.Graphic = (ushort)(cell.TileID & 0x3FFF);
+            land.Graphic = (uint16_t)(cell.TileID & 0x3FFF);
             land.Z = cell.Z;
             land.Land = true;
 
@@ -862,7 +862,7 @@ bool CTarget::CheckHook()
                 // tiledata (g_Data.m_Static, version-normalized) provides the
                 // surface flags/heights.
                 int tileZ = z;
-                ushort tileGraphic = 0;
+                uint16_t tileGraphic = 0;
 
                 std::vector<TARGET_TILE_INFO> tileList = GetTileAt(x, y, z, hook.Tile);
                 if (!tileList.empty())
@@ -913,7 +913,7 @@ void CTarget::RestoreTarget()
     }
 }
 
-void CTarget::SendHookTargetObject(const uint &serial)
+void CTarget::SendHookTargetObject(const uint32_t &serial)
 {
     if (!m_HookTargeting)
     {

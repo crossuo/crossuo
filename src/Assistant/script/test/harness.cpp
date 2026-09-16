@@ -10,7 +10,7 @@
 //   3. The journal mirror: Find pattern/flags/time filters + remove.
 //   4. Pointer marshaling: the result pointer slot survives a round trip
 //      through the queue even for a heap block above the 4GB boundary (the
-//      old uint slot truncated it).
+//      old uint32_t slot truncated it).
 //   5. The REAL API registration (apiscript.cpp Script_RegisterAPI) over a
 //      live QuickJS context: the engine classes (Gump/File/GumpHook/
 //      ClientMacro) must carry their own prototypes - the registration bug had
@@ -50,7 +50,7 @@ extern "C" {
 
 // the client normally provides g_Ticks (Globals.cpp)
 using ::astr_t;
-uint g_Ticks = 0;
+uint32_t g_Ticks = 0;
 
 // the stack-line parser copy of apiscript.cpp Script_FormatException (the
 // full function needs the client world; the parser is what the harness checks)

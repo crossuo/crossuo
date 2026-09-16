@@ -29,7 +29,7 @@ namespace {
 
 bool s_FormOpen = false;
 int s_SelectedRow = -1;      // the bindings table selection
-uint s_SelectedType = 0;     // the info panel "Type" combo
+uint32_t s_SelectedType = 0;     // the info panel "Type" combo
 int s_SelectedAction = 0;    // the info panel "Action" combo
 char s_HotkeyText[96] = { 0 };  // the capture field label
 char s_ExternalCode[2048] = { 0 }; // the "External code" editor (plain text)
@@ -109,7 +109,7 @@ void commit_action_selection()
     }
     else
     {
-        entry.Action = (uint)s_SelectedAction;
+        entry.Action = (uint32_t)s_SelectedAction;
     }
     g_AssistantConfig.SaveHotkeys();
 }
@@ -267,7 +267,7 @@ void HotkeysForm_Draw(bool *open)
         static const char *s_TypeItems[HT_LAST] = { nullptr };
         if (s_TypeItems[0] == nullptr)
         {
-            for (uint i = 0; i < HT_LAST; i++)
+            for (uint32_t i = 0; i < HT_LAST; i++)
             {
                 s_TypeItems[i] = Actions_TypeName(i);
             }
@@ -275,7 +275,7 @@ void HotkeysForm_Draw(bool *open)
         int typeIndex = (int)s_SelectedType;
         if (ComboGroup("##type", &typeIndex, s_TypeItems, (int)HT_LAST))
         {
-            s_SelectedType = (uint)typeIndex;
+            s_SelectedType = (uint32_t)typeIndex;
             if (s_SelectedRow >= 0 && s_SelectedRow < (int)g_AssistantConfig.m_Hotkeys.size())
             {
                 g_AssistantConfig.m_Hotkeys[s_SelectedRow].Type = s_SelectedType;
@@ -319,7 +319,7 @@ void HotkeysForm_Draw(bool *open)
         // Heap-held names (no fixed clamp): the spell/skill lists run to
         // ~450 entries and every one must stay selectable.
         static vector<astr_t> s_ActionItems;
-        static uint s_ActionItemsType = 0xFFFFFFFF;
+        static uint32_t s_ActionItemsType = 0xFFFFFFFF;
         if (s_ActionItemsType != s_SelectedType)
         {
             s_ActionItemsType = s_SelectedType;

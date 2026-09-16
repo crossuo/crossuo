@@ -17,7 +17,7 @@ CTradeManager::~CTradeManager()
     m_List.clear();
 }
 
-void CTradeManager::OnTradeSent(int action, uint id, bool check)
+void CTradeManager::OnTradeSent(int action, uint32_t id, bool check)
 {
     if (g_World == nullptr)
     {
@@ -73,7 +73,7 @@ void CTradeManager::OnTradeSent(int action, uint id, bool check)
 }
 
 void CTradeManager::OnTradeAction(
-    int action, uint serial, uint id1, uint id2, const astr_t &name)
+    int action, uint32_t serial, uint32_t id1, uint32_t id2, const astr_t &name)
 {
     switch ((TRADE_ACTIONS)action)
     {
@@ -140,7 +140,7 @@ int CTradeManager::Count()
 
 CTradeWindow *CTradeManager::GetTrade(const astr_t &serial)
 {
-    uint index = 0xFFFFFFFF;
+    uint32_t index = 0xFFFFFFFF;
 
     astr_t lower = str_lower(serial);
     if (lower.compare(0, 2, "0x") == 0)
@@ -157,9 +157,9 @@ CTradeWindow *CTradeManager::GetTrade(const astr_t &serial)
     }
     else
     {
-        index = (uint)atoi(serial.c_str());
+        index = (uint32_t)atoi(serial.c_str());
 
-        if (index < (uint)m_List.size())
+        if (index < (uint32_t)m_List.size())
         {
             return &m_List[index];
         }

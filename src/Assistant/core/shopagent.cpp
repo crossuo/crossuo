@@ -109,7 +109,7 @@ void CShopAgent::SendShopRequest(int state, const astr_t &listName, const astr_t
     m_WaitShopDelay = 0;
     m_WaitShopListName = listName;
     m_State = state;
-    m_WaitTimeout = g_Ticks + (uint)(g_AssistantConfig.m_ShopTimeout * 1000);
+    m_WaitTimeout = g_Ticks + (uint32_t)(g_AssistantConfig.m_ShopTimeout * 1000);
     SendConsoleText(wstr_from(text), 0);
 }
 
@@ -191,7 +191,7 @@ bool CShopAgent::ProcessShopList()
 
     int totalPrice = 0;
 
-    vector<std::pair<uint, int>> result;
+    vector<std::pair<uint32_t, int>> result;
 
     for (size_t si = 0; si < shopItems.size(); si++)
     {
@@ -249,7 +249,7 @@ bool CShopAgent::ProcessShopList()
                 if (count != 0)
                 {
                     totalPrice += currentPrice;
-                    result.push_back(std::pair<uint, int>(vendorItem.Serial, count));
+                    result.push_back(std::pair<uint32_t, int>(vendorItem.Serial, count));
 
                     if ((maxStacks != 0) && (int)result.size() >= maxStacks)
                     {
@@ -307,7 +307,7 @@ bool CShopAgent::ProcessShopList()
     return false;
 }
 
-bool CShopAgent::OnOpenContainer(uint serial)
+bool CShopAgent::OnOpenContainer(uint32_t serial)
 {
     // was TabAgentsShop::OnPacketReceivedOpenContaier (line-faithful)
     if (g_World == nullptr || !EnabledFeatureShopAgent())
@@ -374,7 +374,7 @@ bool CShopAgent::OnOpenContainer(uint serial)
     return result;
 }
 
-bool CShopAgent::OnSellList(uint serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items)
+bool CShopAgent::OnSellList(uint32_t serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items)
 {
     // was TabAgentsShop::OnPacketReceivedSellList (line-faithful); the 0x9E
     // fields arrive mapped from the client parse (vendor serial, lookup

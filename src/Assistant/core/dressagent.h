@@ -38,14 +38,14 @@ struct XA_DRESS_STEP
 {
     int Op{ XA_DRESS_OP_UNEQUIP };
     int Layer{ 0 };
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
 };
 
 class CDressAgent
 {
     vector<XA_DRESS_STEP> m_Steps;
     size_t m_Next{ 0 };
-    uint m_NextTick{ 0 };
+    uint32_t m_NextTick{ 0 };
     int m_Delay{ 0 }; // the inter-step wait (MoveItemsDelay at request time)
     bool m_Active{ false };
 

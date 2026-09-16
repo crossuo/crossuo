@@ -15,7 +15,7 @@ CContextMenuManager g_ContextMenuManager;
 
 CContextMenuManager::CContextMenuManager() {}
 
-void CContextMenuManager::SetHook(const uint &id, const uint &index)
+void CContextMenuManager::SetHook(const uint32_t &id, const uint32_t &index)
 {
     Info(Assistant, "CContextMenuManager::SetHook: 0x%08X %i\n", id, index);
     HookEnabled = true;
@@ -30,7 +30,7 @@ void CContextMenuManager::RemoveHook()
 
 bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
 {
-    ushort mode = reader.ReadUInt16BE();
+    uint16_t mode = reader.ReadUInt16BE();
     bool isNewClilocs = (mode >= 2);
     Serial = reader.ReadUInt32BE();
 
@@ -50,9 +50,9 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
             return true;
         }
 
-        uchar count = reader.ReadUInt8();
+        uint8_t count = reader.ReadUInt8();
 
-        uint index = HookIndex;
+        uint32_t index = HookIndex;
 
         for (int i = 0; i < count; i++)
         {
@@ -86,7 +86,7 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
                 index--;
 
                 reader.Move(2);
-                ushort flags = reader.ReadUInt16BE();
+                uint16_t flags = reader.ReadUInt16BE();
 
                 if ((flags & 0x84) != 0)
                 {

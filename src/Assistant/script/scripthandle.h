@@ -52,7 +52,7 @@ public:
     // Spawns the worker thread (the manager calls this after the cap check).
     void Start();
     // Joins the thread with a bounded wait; the caller never blocks forever.
-    void Join(uint timeoutMs);
+    void Join(uint32_t timeoutMs);
 
 private:
     void RunEngine(); // the CScriptHandle::RunEngine port
@@ -79,7 +79,7 @@ public:
         const vector<astr_t> &args = vector<astr_t>());
 
     void Tick(); // drops finished handles (the slot_RemoveRunningScriptItem flow)
-    void StopAll(uint joinTimeoutMs = 2000);
+    void StopAll(uint32_t joinTimeoutMs = 2000);
 
     bool Running(const astr_t &functionName) const;
     const vector<CScriptHandle *> &Handles() const { return m_Handles; }
@@ -109,7 +109,7 @@ void ScriptEditor_SetPath(const astr_t &path);
 void ScriptEditor_SetText(const astr_t &text);
 // The buffer-generation token: every external buffer replace bumps it; the
 // editor widget compares and forces a re-split when it moved.
-uint ScriptEditor_Generation();
+uint32_t ScriptEditor_Generation();
 vector<astr_t> ScriptEditor_FunctionList(); // the `function NAME(` parse
 
 } // namespace xuoassist

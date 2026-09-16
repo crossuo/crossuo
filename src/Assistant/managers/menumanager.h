@@ -58,11 +58,11 @@ public:
     // fed from the client's parsed 0x7C values (serial, id, name, gray-menu
     // flag, the entries); bool = pass-through, parity with the original
     bool OnMenuReceived(
-        uint serial, ushort id, const astr_t &name, bool grayMenu, const vector<CMenuItem> &items);
+        uint32_t serial, uint16_t id, const astr_t &name, bool grayMenu, const vector<CMenuItem> &items);
 
     // the client's 0x7D send sites report the user's menu choice here (was the
     // 0x7D MenuChoice send tap in the assistant's packetmanager)
-    void OnMenuChoiceSent(uint serial, ushort id, ushort index);
+    void OnMenuChoiceSent(uint32_t serial, uint16_t id, uint16_t index);
 
     bool SendChoiceIfMenuExists(const astr_t &name, const astr_t &itemName, const bool &sendPacket);
 

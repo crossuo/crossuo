@@ -61,15 +61,15 @@ class CDisplayItem
 public:
     DISPLAY_ITEM_TYPE Type = DIT_NONE;
     astr_t Text = "";
-    ushort Graphic = 0;
-    ushort Hue = 0;
-    uint MinColor = 0;
-    uint MidColor = 0;
-    uint Color = 0;
+    uint16_t Graphic = 0;
+    uint16_t Hue = 0;
+    uint32_t MinColor = 0;
+    uint32_t MidColor = 0;
+    uint32_t Color = 0;
     bool Background = false;
-    uint BackgroundMinColor = 0x007F0000;
-    uint BackgroundMidColor = 0x00FFFF00;
-    uint BackgroundColor = 0;
+    uint32_t BackgroundMinColor = 0x007F0000;
+    uint32_t BackgroundMidColor = 0x00FFFF00;
+    uint32_t BackgroundColor = 0;
     int MinValue = 0;
     int MidValue = 0;
     bool Percents = false;
@@ -78,15 +78,15 @@ public:
     CDisplayItem(
         const DISPLAY_ITEM_TYPE &type,
         astr_t text,
-        ushort graphic,
-        ushort hue,
-        uint minColor,
-        uint midColor,
-        uint color,
+        uint16_t graphic,
+        uint16_t hue,
+        uint32_t minColor,
+        uint32_t midColor,
+        uint32_t color,
         bool background,
-        uint backgroundMinColor,
-        uint backgroundMidColor,
-        uint backgroundColor,
+        uint32_t backgroundMinColor,
+        uint32_t backgroundMidColor,
+        uint32_t backgroundColor,
         int minValue,
         int midValue,
         bool percents);

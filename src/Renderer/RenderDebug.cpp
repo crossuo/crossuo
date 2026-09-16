@@ -86,7 +86,7 @@ static void EnableOpenGLMessage(GLuint id, bool shouldAssert, bool shouldLog)
 }
 
 static void APIENTRY OGLDebugMsgCallback(
-    uint source,
+    uint32_t source,
     GLenum type,
     GLuint id,
     GLenum severity,

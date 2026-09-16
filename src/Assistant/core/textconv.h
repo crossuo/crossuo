@@ -17,11 +17,11 @@
 
 namespace xuoassist {
 
-uint TextToUInt(const astr_t &text);
-uint TextToSerial(astr_t text);
-ushort TextToGraphic(astr_t text);
-astr_t SerialToText(const uint &value);
-astr_t GraphicToText(const ushort &value);
+uint32_t TextToUInt(const astr_t &text);
+uint32_t TextToSerial(astr_t text);
+uint16_t TextToGraphic(astr_t text);
+astr_t SerialToText(const uint32_t &value);
+astr_t GraphicToText(const uint16_t &value);
 
 // Tokenizes one line of text with the X:UO Assist text-parser semantics
 // (delimiters and comment markers are single-character sets; `quotes` is a

@@ -36,7 +36,7 @@ char s_Hint[128] = { 0 };
 
 // the from-target arm state (see tablists.cpp for the pattern)
 bool s_FtPending = false;
-uint s_FtGeneration = 0;
+uint32_t s_FtGeneration = 0;
 
 const char *DressNameOf(const CDressSetEntry &entry)
 {
@@ -54,7 +54,7 @@ void DressSetNameOf(CDressSetEntry &entry, const char *name)
 struct XA_DRESS_ITEM_ROW
 {
     int Layer;
-    uint Serial;
+    uint32_t Serial;
 };
 
 const int s_WorkRowMax = 25;
@@ -89,7 +89,7 @@ void work_into_set(CDressSetEntry &set)
 }
 
 // was AddDressItemInList(list, layer, serial): replace the same-layer entry
-void work_add_item(int layer, uint serial)
+void work_add_item(int layer, uint32_t serial)
 {
     if (layer <= 0 || layer >= 25)
     {

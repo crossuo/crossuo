@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "../core/global.h" // uint/typedefs
+#include "../core/global.h"
 
 #if defined(XUO_ASSISTANT)
 
@@ -41,11 +41,11 @@ void InspectorWindow_Draw();
 // ObjectInspectorForm::Update: shows the
 // window, focuses the serial's section, (re)building its snapshot. Empty
 // serials are ignored.
-void Inspector_Open(uint serial);
+void Inspector_Open(uint32_t serial);
 
 // OnInspectorUpdate (was ObjectInspectorForm::CheckUpdate): refreshes the
 // serial's snapshot from the mirror when the section exists.
-void Inspector_OnInspectorUpdate(uint serial);
+void Inspector_OnInspectorUpdate(uint32_t serial);
 
 // Shutdown (context alive): drops the sections.
 void Inspector_Shutdown();

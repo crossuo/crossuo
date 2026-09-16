@@ -184,9 +184,9 @@ bool result_bool(XA_SCRIPT_COMMAND *command, bool fallback = false)
     return value;
 }
 
-uint result_serial(XA_SCRIPT_COMMAND *command, uint fallback = 0)
+uint32_t result_serial(XA_SCRIPT_COMMAND *command, uint32_t fallback = 0)
 {
-    const uint value = command->ResultDropped ? fallback : command->ResultSerial;
+    const uint32_t value = command->ResultDropped ? fallback : command->ResultSerial;
     delete command;
     return value;
 }
@@ -332,7 +332,7 @@ JSClassID s_JournalClass = 0;
 
 typedef struct
 {
-    uint Serial;
+    uint32_t Serial;
 } XA_JS_GAMEOBJECT;
 
 typedef struct
@@ -523,7 +523,7 @@ enum XA_OBJ_FIELD
     OF_INT_STEALTH
 };
 
-JSValue new_game_object(JSContext *ctx, uint serial)
+JSValue new_game_object(JSContext *ctx, uint32_t serial)
 {
     auto *data = new XA_JS_GAMEOBJECT();
     data->Serial = serial;
@@ -880,7 +880,7 @@ JSValue jsn_charprint(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->SubTag = SAY_CHARPRINT;
     command->TextA = arg_text(ctx, argv, argc, 0, "self");
     command->TextB = arg_text(ctx, argv, argc, 2, "");
-    command->UshortA = (ushort)strtoul(arg_text(ctx, argv, argc, 1, "0xFFFF").c_str(), nullptr, 16);
+    command->UshortA = (uint16_t)strtoul(arg_text(ctx, argv, argc, 1, "0xFFFF").c_str(), nullptr, 16);
     ScriptQueue_Exec(command);
     delete command;
     return JS_UNDEFINED;
@@ -1034,7 +1034,7 @@ JSValue jsn_findobject(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     auto *command = sc_make(SC_FIND_OBJECT);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     ScriptQueue_Exec(command);
-    const uint serial = result_serial(command);
+    const uint32_t serial = result_serial(command);
     pause_gate(ctx);
     return serial != 0 ? new_game_object(ctx, serial) : JS_NULL;
 }
@@ -1066,7 +1066,7 @@ JSValue jsn_objatlayer(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->TextB = arg_text(ctx, argv, argc, 1, "");
     ScriptQueue_Exec(command);
-    const uint serial = result_serial(command);
+    const uint32_t serial = result_serial(command);
     pause_gate(ctx);
     return serial != 0 ? new_game_object(ctx, serial) : JS_NULL;
 }
@@ -1244,8 +1244,8 @@ JSValue jsn_waitjournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
     const astr_t flagsText = arg_text(ctx, argv, argc, 1, "");
     const astr_t serialText = arg_text(ctx, argv, argc, 2, "0");
     const astr_t colorText = arg_text(ctx, argv, argc, 3, "0xFFFF");
-    const uint startTime = (uint)arg_int(ctx, argv, argc, 4, 0);
-    uint endTime = (uint)arg_int(ctx, argv, argc, 5, 0);
+    const uint32_t startTime = (uint32_t)arg_int(ctx, argv, argc, 4, 0);
+    uint32_t endTime = (uint32_t)arg_int(ctx, argv, argc, 5, 0);
 
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     while ((endTime == 0u) || g_Ticks < endTime)
@@ -1388,8 +1388,8 @@ JSValue jsn_move(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     command->IntA = 200 + magic;
     command->IntB = arg_int(ctx, argv, argc, 0, 0);
     command->IntC = arg_int(ctx, argv, argc, 1, 0);
-    command->SerialA = (uint)arg_int(ctx, argv, argc, 2, 0);
-    command->UshortA = (ushort)arg_int(ctx, argv, argc, 3, 0);
+    command->SerialA = (uint32_t)arg_int(ctx, argv, argc, 2, 0);
+    command->UshortA = (uint16_t)arg_int(ctx, argv, argc, 3, 0);
     command->BoolA = arg_bool(ctx, argv, argc, magic == 1 ? 1 : 4, false); // Step's run flag
     ScriptQueue_Exec(command);
     const bool value = result_bool(command);
@@ -1555,7 +1555,7 @@ JSValue jsn_lastserial(JSContext *ctx, JSValueConst, int, JSValueConst *, int ma
     auto *command = sc_make(SC_TARGET_SYSTEM_SERIAL);
     command->SubTag = magic; // 0=lasttarget 1=lastattack 2=target system serial
     ScriptQueue_Exec(command);
-    const uint serial = result_serial(command);
+    const uint32_t serial = result_serial(command);
     return JS_NewStringLen(ctx, CAssistant::SerialToText(serial).c_str(),
         CAssistant::SerialToText(serial).size());
 }
@@ -1612,8 +1612,8 @@ enum XA_WAIT_FLAG
 JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
-    const uint maxDelay = (uint)(argc >= 1 ? arg_int(ctx, argv, argc, 0, 1000) : 1000);
-    const uint deadline = g_Ticks + maxDelay;
+    const uint32_t maxDelay = (uint32_t)(argc >= 1 ? arg_int(ctx, argv, argc, 0, 1000) : 1000);
+    const uint32_t deadline = g_Ticks + maxDelay;
 
     // the immediate pre-check: WaitForTarget
     // returned true at once when a target cursor was already up. Queued:
@@ -1786,7 +1786,7 @@ JSValue jsn_getgump(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
         int32_t id = 0;
         JS_ToInt32(ctx, &serial, argv[0]);
         JS_ToInt32(ctx, &id, argv[1]);
-        command->SerialA = (uint)serial;
+        command->SerialA = (uint32_t)serial;
         command->IntB = id;
     }
     else
@@ -2341,7 +2341,7 @@ JSValue macro_play(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
     const bool wait = argc >= 1 ? arg_bool(ctx, argv, argc, 0, false) : false;
     // the original default delay was 100500; nothing ever
     // flipped g_ClientMacroPlayed there, so wait=true meant "sleep the delay"
-    const uint delay = (uint)(argc >= 2 ? arg_int(ctx, argv, argc, 1, 100500) : 100500);
+    const uint32_t delay = (uint32_t)(argc >= 2 ? arg_int(ctx, argv, argc, 1, 100500) : 100500);
 
     auto *command = sc_make(SC_CLIENT_MACRO);
     command->ListA = macro->Actions;
@@ -2350,7 +2350,7 @@ JSValue macro_play(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
     delete command;
 
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
-    const uint deadline = g_Ticks + delay;
+    const uint32_t deadline = g_Ticks + delay;
     while (wait && (engine == nullptr || !engine->Terminated) && g_Ticks < deadline)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -3631,7 +3631,7 @@ void RunDressTextCommand(const char *name, const astr_t &arg)
     g_TextCommandManager.RunCommand(name, args);
 }
 
-CGameObject *world_object(uint serial)
+CGameObject *world_object(uint32_t serial)
 {
     return g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
 }
@@ -3912,7 +3912,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     if (command->SubTag == SAY_PRINT)
                     {
                         // flood throttle: drop lines above ~10/s with one notice
-                        uint suppressed = 0;
+                        uint32_t suppressed = 0;
                         if (ScriptQueue_PrintThrottled(suppressed))
                         {
                             if (suppressed > 0)
@@ -3920,9 +3920,9 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                                 g_Assistant.ClientPrint(
                                     sc_int_text((int)suppressed) + " script print lines dropped.");
                             }
-                            const ushort color = command->TextA == "0xFFFF"
+                            const uint16_t color = command->TextA == "0xFFFF"
                                 ? g_MessagesColor
-                                : (ushort)strtoul(command->TextA.c_str(), nullptr, 16);
+                                : (uint16_t)strtoul(command->TextA.c_str(), nullptr, 16);
                             g_Assistant.ClientPrint(command->TextB, color);
                         }
                     }
@@ -3935,7 +3935,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 }
                 case SAY_BROADCAST:
                 {
-                    ushort color = 0;
+                    uint16_t color = 0;
                     if (!g_AssistantConfig.GetFontColor(color))
                     {
                         color = 0;
@@ -3948,7 +3948,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 }
                 default: // Say + the prefix variants
                 {
-                    ushort color = 0;
+                    uint16_t color = 0;
                     if (!g_AssistantConfig.GetFontColor(color))
                     {
                         color = 0;
@@ -3968,7 +3968,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             if (command->BoolA) // targeted form
             {
-                const uint serial = CAssistant::TextToSerial(command->TextB);
+                const uint32_t serial = CAssistant::TextToSerial(command->TextB);
                 if (!command->TextA.empty())
                 {
                     g_SpellManager.TargetCast(command->TextA, serial);
@@ -4132,7 +4132,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_FIND_OBJECT:
         {
-            const uint serial = CAssistant::TextToSerial(command->TextA);
+            const uint32_t serial = CAssistant::TextToSerial(command->TextA);
             command->ResultSerial = world_object(serial) != nullptr ? serial : 0;
             break;
         }
@@ -4165,7 +4165,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             {
                 break;
             }
-            uint objSerial = g_PlayerSerial;
+            uint32_t objSerial = g_PlayerSerial;
             if (!command->TextB.empty())
             {
                 objSerial = CAssistant::TextToSerial(command->TextB);
@@ -4183,13 +4183,13 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_JOURNAL_FIND:
         {
-            const ushort color = (ushort)strtoul(command->TextD.c_str(), nullptr, 16);
+            const uint16_t color = (uint16_t)strtoul(command->TextD.c_str(), nullptr, 16);
             CJournalMessage *message = ScriptJournal_Find(command->TextA,
                 CAssistant::TextToSerial(command->TextC), color,
-                CTextCommandManager::GetJournalFlags(command->TextB), (uint)command->IntA,
-                (uint)command->IntB, command->BoolA);
+                CTextCommandManager::GetJournalFlags(command->TextB), (uint32_t)command->IntA,
+                (uint32_t)command->IntB, command->BoolA);
             // hand the copy across the queue in the pointer slot (the old
-            // uint slot truncated 64-bit heap pointers); the script thread
+            // uint32_t slot truncated 64-bit heap pointers); the script thread
             // deletes it
             command->PointerA = message;
             break;
@@ -4558,7 +4558,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    ushort color = 0;
+                    uint16_t color = 0;
                     command->ResultBool = command->IntA == 331
                         ? g_AssistantConfig.GetFontColor(color)
                         : g_AssistantConfig.GetCharactersFontColor(color);
@@ -4571,7 +4571,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    ushort color = 0;
+                    uint16_t color = 0;
                     if (command->IntA == 332)
                     {
                         g_AssistantConfig.GetFontColor(color);
@@ -4714,7 +4714,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 case DK_EQUIP_T:
                 {
                     // the direct MoveEquip path of OnCommandEquip
-                    const uint serial = CAssistant::TextToSerial(
+                    const uint32_t serial = CAssistant::TextToSerial(
                         command->SubTag == DK_EQUIP ? command->TextA : command->TextA);
                     CGameObject *object = world_object(serial);
                     if (object != nullptr && g_Player != nullptr)
@@ -4829,11 +4829,11 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             {
                 // -1 was the GetLastGump path (GetGump(-1) -> GetLastGump)
                 gump = command->IntA == -1 ? g_GumpManager.GetLastGump()
-                                           : g_GumpManager.GetGump((uint)command->IntA);
+                                           : g_GumpManager.GetGump((uint32_t)command->IntA);
             }
             else
             {
-                gump = g_GumpManager.GetGump(command->SerialA, (uint)command->IntB);
+                gump = g_GumpManager.GetGump(command->SerialA, (uint32_t)command->IntB);
             }
             // deep copy for the script thread (the CScriptGumpObject ctor)
             command->PointerA = gump != nullptr ? new CGump(*gump) : nullptr;
@@ -4846,8 +4846,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 break;
             }
             CGump *gump = g_GumpManager.GetGump(
-                (uint)strtoul(command->TextA.c_str(), nullptr, 10),
-                (uint)strtoul(command->TextB.c_str(), nullptr, 10));
+                (uint32_t)strtoul(command->TextA.c_str(), nullptr, 10),
+                (uint32_t)strtoul(command->TextB.c_str(), nullptr, 10));
             if (gump == nullptr)
             {
                 break;
@@ -5103,7 +5103,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             vector<CWorldObjectEntry> &list = command->SubTag < 3 ? g_AssistantConfig.m_Friends
                                                                   : g_AssistantConfig.m_Enemies;
-            const uint serial = CAssistant::TextToSerial(command->TextB);
+            const uint32_t serial = CAssistant::TextToSerial(command->TextB);
             if (command->SubTag == 0 || command->SubTag == 3) // Add*
             {
                 if (!command->TextA.empty())
@@ -5207,7 +5207,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     break;
                 case 1:
                     g_ContextMenuManager.SetHook(
-                        CAssistant::TextToSerial(command->TextA), (uint)command->IntA);
+                        CAssistant::TextToSerial(command->TextA), (uint32_t)command->IntA);
                     break;
                 default:
                     g_ContextMenuManager.RemoveHook();

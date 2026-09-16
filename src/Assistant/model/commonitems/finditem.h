@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (commonitems/finditem.h): strings are astr_t,
-// astr_t lists are std::vector<astr_t>, ushort lists are std::vector<ushort>.
+// astr_t lists are std::vector<astr_t>, uint16_t lists are std::vector<uint16_t>.
 
 #pragma once
 
@@ -38,17 +38,17 @@ public:
     }
 
 protected:
-    vector<ushort> m_ListGraphic;
-    vector<ushort> m_ListGraphicFlags;
-    vector<ushort> m_IgnoreGraphics;
+    vector<uint16_t> m_ListGraphic;
+    vector<uint16_t> m_ListGraphicFlags;
+    vector<uint16_t> m_IgnoreGraphics;
 
-    vector<ushort> m_ListColor;
-    vector<ushort> m_ListColorFlags;
-    vector<ushort> m_IgnoreColors;
+    vector<uint16_t> m_ListColor;
+    vector<uint16_t> m_ListColorFlags;
+    vector<uint16_t> m_IgnoreColors;
 
-    uint ParseToken(astr_t str, uint &value, const bool &isGraphic) const;
+    uint32_t ParseToken(astr_t str, uint32_t &value, const bool &isGraphic) const;
 
-    bool TestValues(const uint &original, const uint &test, const uint &flags) const;
+    bool TestValues(const uint32_t &original, const uint32_t &test, const uint32_t &flags) const;
 
 public:
     CFindItem();
@@ -58,7 +58,7 @@ public:
     void OnChangeGraphic(const astr_t &val);
     void OnChangeColor(const astr_t &val);
 
-    bool Found(const ushort &graphic, const ushort &color) const;
+    bool Found(const uint16_t &graphic, const uint16_t &color) const;
 };
 
 } // namespace xuoassist

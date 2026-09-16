@@ -29,7 +29,7 @@ namespace xuoassist {
 
 // --- the type table ---------------------------------------------------------
 
-const char *Actions_TypeName(uint type)
+const char *Actions_TypeName(uint32_t type)
 {
     static const char *const NAMES[] = {
         "Play macro",                            // HT_PLAY_MACRO
@@ -66,9 +66,9 @@ const char *Actions_TypeName(uint type)
     return "";
 }
 
-uint Actions_TypeCount()
+uint32_t Actions_TypeCount()
 {
-    return (uint)HT_LAST; // the original HT_COUNT_OF_ITEMS (26 entries)
+    return (uint32_t)HT_LAST; // the original HT_COUNT_OF_ITEMS (26 entries)
 }
 
 namespace {
@@ -76,7 +76,7 @@ namespace {
 // The fixed action lists (Init:262-292); spells/skills/macros are dynamic.
 struct XA_ACTION_LIST
 {
-    uint Type;
+    uint32_t Type;
     const char *const *Items;
     int Count;
 };
@@ -115,7 +115,7 @@ const XA_ACTION_LIST s_FixedLists[] = {
     { HT_NEW_TARGETING_SYSTEM_SET, NTS_SET_ITEMS, 11 },
 };
 
-vector<astr_t> &dynamic_list(uint type)
+vector<astr_t> &dynamic_list(uint32_t type)
 {
     // the spell/skill lists: every HT_CAST_*/HT_USE_SKILL_* type shares the
     // base list
@@ -135,7 +135,7 @@ vector<astr_t> &dynamic_list(uint type)
 
 } // namespace
 
-int Actions_ActionCount(uint type)
+int Actions_ActionCount(uint32_t type)
 {
     if (type == HT_PLAY_MACRO)
     {
@@ -156,7 +156,7 @@ int Actions_ActionCount(uint type)
     return 0;
 }
 
-void Actions_ActionName(uint type, int action, char *out, size_t size)
+void Actions_ActionName(uint32_t type, int action, char *out, size_t size)
 {
     if (size == 0)
     {
@@ -203,8 +203,8 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
         return;
     }
     out[0] = '\0';
-    const uint type = entry.Type;
-    const uint action = entry.Action;
+    const uint32_t type = entry.Type;
+    const uint32_t action = entry.Action;
 
     char name[256] = { 0 };
     switch (type)
@@ -422,7 +422,7 @@ void hook_objects(const astr_t &a)
 
 void Actions_Execute(const CHotkeyEntry &entry)
 {
-    const uint type = entry.Type;
+    const uint32_t type = entry.Type;
     const int action = (int)entry.Action;
 
     switch (type)
@@ -433,7 +433,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
             break;
         case HT_ATTACK:
         {
-            uint serial = 0;
+            uint32_t serial = 0;
             if (action == 0)
             {
                 serial = CAssistant::TextToSerial("lastattack");
@@ -454,7 +454,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
         }
         case HT_USE_OBJECT:
         {
-            uint serial = 0;
+            uint32_t serial = 0;
             if (action == 0)
             {
                 serial = CAssistant::TextToSerial("lastobject");
@@ -612,7 +612,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
         }
         case HT_TARGETING:
         {
-            uint serial = 0;
+            uint32_t serial = 0;
             if (action == 0)
             {
                 serial = g_PlayerSerial;
@@ -775,15 +775,15 @@ void Actions_SetSkillList(const vector<astr_t> &names)
 // assistant-owned state, so it lives here instead of the client's
 // virtual-int table.
 namespace {
-uint s_NewTargetSystemSerial = 0;
+uint32_t s_NewTargetSystemSerial = 0;
 } // namespace
 
-uint Actions_NewTargetSystemSerial()
+uint32_t Actions_NewTargetSystemSerial()
 {
     return s_NewTargetSystemSerial;
 }
 
-void Actions_SetNewTargetSystemSerial(uint serial)
+void Actions_SetNewTargetSystemSerial(uint32_t serial)
 {
     s_NewTargetSystemSerial = serial;
 }

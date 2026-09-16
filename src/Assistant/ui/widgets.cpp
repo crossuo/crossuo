@@ -154,7 +154,7 @@ bool Icons_Init()
                 {
                     const int sx = x * srcStep < copyW ? x * srcStep : copyW - 1;
                     // 2x2 box filter: average the four source pixels
-                    uint sum[4] = { 0, 0, 0, 0 };
+                    uint32_t sum[4] = { 0, 0, 0, 0 };
                     for (int by = 0; by < 2; by++)
                     {
                         const int py = sy + by < copyH ? sy + by : copyH - 1;
@@ -295,16 +295,16 @@ void IconImage(XA_ICON icon, const ImVec2 &topLeft, const ImVec2 &size)
 
 // --- color helpers ----------------------------------------------------------
 
-ImU32 UOColorToRGBA(ushort color)
+ImU32 UOColorToRGBA(uint16_t color)
 {
     // 15-bit (5-5-5) UO color, channels scaled x8 like the common conversions
-    const uint r = ((color >> 10) & 0x1F) * 8;
-    const uint g = ((color >> 5) & 0x1F) * 8;
-    const uint b = (color & 0x1F) * 8;
+    const uint32_t r = ((color >> 10) & 0x1F) * 8;
+    const uint32_t g = ((color >> 5) & 0x1F) * 8;
+    const uint32_t b = (color & 0x1F) * 8;
     return IM_COL32(r, g, b, 255);
 }
 
-void HueSwatch(ushort uoColor, float size)
+void HueSwatch(uint16_t uoColor, float size)
 {
     ImDrawList *dl = ImGui::GetWindowDrawList();
     const ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -498,7 +498,7 @@ struct XA_LIST_GENERATION
 {
     ImGuiID Id;      // 0 = free slot
     int Count;
-    uint Generation;
+    uint32_t Generation;
 };
 static const int XA_MAX_TRACKED_LISTS = 16;
 static XA_LIST_GENERATION s_ListGenerations[XA_MAX_TRACKED_LISTS] = {};
@@ -526,7 +526,7 @@ static XA_LIST_GENERATION *list_generation_slot(ImGuiID id)
 // Called once per list draw: bumps the generation when the row count changed
 // since the last frame (an add/remove happened anywhere, including the tab
 // level) and returns the current generation.
-static uint list_generation_track(ImGuiID id, int count)
+static uint32_t list_generation_track(ImGuiID id, int count)
 {
     XA_LIST_GENERATION *slot = list_generation_slot(id);
     if (slot == nullptr)
@@ -656,7 +656,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
     // the inline rename is scoped to its owning list: a different list id, a
     // container mutation (add/remove/move) or an out-of-range row cancels it
     // instead of rendering/committing it into the wrong container
-    const uint generation = list_generation_track(listId, count);
+    const uint32_t generation = list_generation_track(listId, count);
     XA_LIST_RENAME *rename = ListRenameActive();
     if (rename != nullptr)
     {
@@ -929,7 +929,7 @@ void HotkeyKeyboard_Draw(const char *id, int selectedRow)
             ImU32 color = COLOR_UNSET;
             if (cap.Modifier)
             {
-                uchar flag = 0;
+                uint8_t flag = 0;
                 if (cap.KeyId == XKI_SHIFT_L || cap.KeyId == XKI_SHIFT_R)
                 {
                     flag = HM_SHIFT;

@@ -14,7 +14,7 @@ GuildManager::GuildManager() {}
 
 void GuildManager::SetMemberInfo(const GUILD_MEMBER_INFO &info)
 {
-    std::unordered_map<uint, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(info.Serial);
+    std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(info.Serial);
 
     if (found != m_GuildMembers.end())
     {
@@ -31,9 +31,9 @@ void GuildManager::SetMemberInfo(const GUILD_MEMBER_INFO &info)
     g_AssistantEvents->OnMapUpdate(info.Serial);
 }
 
-void GuildManager::SetMemberName(uint serial, astr_t &name)
+void GuildManager::SetMemberName(uint32_t serial, astr_t &name)
 {
-    std::unordered_map<uint, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(serial);
+    std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(serial);
 
     if (found != m_GuildMembers.end())
     {
@@ -51,7 +51,7 @@ vector<GUILD_MEMBER_INFO> GuildManager::GetMembers()
 {
     vector<GUILD_MEMBER_INFO> members;
 
-    for (std::unordered_map<uint, GUILD_MEMBER_INFO>::iterator i = m_GuildMembers.begin();
+    for (std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator i = m_GuildMembers.begin();
          i != m_GuildMembers.end();
          ++i)
     {
@@ -61,9 +61,9 @@ vector<GUILD_MEMBER_INFO> GuildManager::GetMembers()
     return members;
 }
 
-bool GuildManager::Contains(const uint &serial)
+bool GuildManager::Contains(const uint32_t &serial)
 {
-    std::unordered_map<uint, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(serial);
+    std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(serial);
     return found != m_GuildMembers.end();
 }
 

@@ -177,17 +177,17 @@ enum XA_KEY_ID
 // wheel/X set their mouse flags) + the display name.
 struct XA_KEY_INFO
 {
-    uint Key;
-    uchar Modifiers;
+    uint32_t Key;
+    uint8_t Modifiers;
     const char *KeyName;
 };
 
 const XA_KEY_INFO &HotkeyKeyInfo(int id);
 // Reverse lookup used by the "Hotkey" column text (GetKeycodeName).
-const char *HotkeyKeycodeName(uint keycode);
+const char *HotkeyKeycodeName(uint32_t keycode);
 // GetHotkeyText: "Alt + Ctrl + Shift + Pad +
 // KeyName" / "Wheel Up|Down|Press" / "MouseX 1|2".
-void HotkeyFormatText(uint key, uchar modifiers, char *out, size_t size);
+void HotkeyFormatText(uint32_t key, uint8_t modifiers, char *out, size_t size);
 
 // The engine. The binding table itself lives in g_AssistantConfig.m_Hotkeys.
 class CHotkeys
@@ -204,8 +204,8 @@ public:
     bool IsCapturing() const { return m_Capturing; }
     void BeginCapture();                    // arm the field
     void CancelCapture() { m_Capturing = false; }
-    uint CaptureKey() const { return m_CaptureKey; }
-    uchar CaptureModifiers() const { return m_CaptureModifiers; }
+    uint32_t CaptureKey() const { return m_CaptureKey; }
+    uint8_t CaptureModifiers() const { return m_CaptureModifiers; }
     // Commits the captured (key, modifiers) into config row `row` with the original
     // duplicate policy (CheckExists): false when a duplicate popup is open
     // (the UI then drives ResolveDuplicate below).
@@ -220,8 +220,8 @@ public:
     // exact payload a physical press would produce (on_KeyButtonClicked).
     void KeyboardAssign(int keyId, int row);
     void KeyboardToggleModifier(int keyId); // Shift/Ctrl/Alt caps (sticky)
-    uchar StickyModifiers() const { return m_StickyModifiers; }
-    bool StickyModifierSet(uchar flag) const { return (m_StickyModifiers & flag) != 0; }
+    uint8_t StickyModifiers() const { return m_StickyModifiers; }
+    bool StickyModifierSet(uint8_t flag) const { return (m_StickyModifiers & flag) != 0; }
     // UpdateKeyboard: per-cap state for the 4 colors.
     // 0 = unset, 1 = set, 2 = duplicate, 3 = currently selected row's key.
     int KeyboardCapState(int keyId, int selectedRow) const;
@@ -234,24 +234,24 @@ private:
     bool ProcessWheel(const SDL_Event &ev);
     // The matcher: walks the config table, fires the action. Returns
     // consumed (HotkeyExistsAndUse semantics).
-    bool MatchAndUse(uint key, uchar modifiers);
+    bool MatchAndUse(uint32_t key, uint8_t modifiers);
     // CheckExists: a duplicate exists outside `skipRow`.
-    int FindDuplicate(uint key, uchar modifiers, int skipRow) const;
+    int FindDuplicate(uint32_t key, uint8_t modifiers, int skipRow) const;
     // CreateKey + the CheckExists dialog outcomes, funneled: assigns
     // (key, modifiers) to `row` (or defers to the popup); saves on mutation.
-    void CommitKeyToRow(int row, uint key, uchar modifiers);
+    void CommitKeyToRow(int row, uint32_t key, uint8_t modifiers);
     // Apply the pending assignment after ResolveDuplicate.
     void ApplyPending();
 
     bool m_Capturing{ false };
-    uint m_CaptureKey{ 0 };
-    uchar m_CaptureModifiers{ 0 };
+    uint32_t m_CaptureKey{ 0 };
+    uint8_t m_CaptureModifiers{ 0 };
     // pending duplicate resolution (row index in m_Hotkeys, -1 = none)
     int m_DuplicateRow{ -1 };
-    uint m_PendingKey{ 0 };
-    uchar m_PendingModifiers{ 0 };
+    uint32_t m_PendingKey{ 0 };
+    uint8_t m_PendingModifiers{ 0 };
     int m_PendingTargetRow{ -1 };
-    uchar m_StickyModifiers{ 0 };
+    uint8_t m_StickyModifiers{ 0 };
 };
 
 extern CHotkeys g_Hotkeys;

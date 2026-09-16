@@ -117,9 +117,9 @@ public:
     // Command-body helpers moved out of the replaced CCommandManager
     // (GetFindFlags / GetJournalFlags /
     // GetSkillsFlags); used by the handlers above.
-    static ushort GetFindFlags(const astr_t &text);
-    static uchar GetJournalFlags(const astr_t &text);
-    static uchar GetSkillsFlags(const astr_t &text);
+    static uint16_t GetFindFlags(const astr_t &text);
+    static uint8_t GetJournalFlags(const astr_t &text);
+    static uint8_t GetSkillsFlags(const astr_t &text);
 };
 
 extern CTextCommandManager g_TextCommandManager;

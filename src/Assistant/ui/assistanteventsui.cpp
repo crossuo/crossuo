@@ -34,14 +34,14 @@ CAssistantUIEvents *AssistantUIEvents_Get()
     return &s_UIEvents;
 }
 
-void CAssistantUIEvents::OnBuffAdd(ushort graphic, uint timer, const astr_t &name)
+void CAssistantUIEvents::OnBuffAdd(uint16_t graphic, uint32_t timer, const astr_t &name)
 {
     // the script-visible buff mirror (was g_BuffManager.Add feeding
     // OnCommandBuffExists); main-thread event context
     ScriptBuffs_Add(graphic, timer, name);
 }
 
-void CAssistantUIEvents::OnBuffRemove(ushort graphic)
+void CAssistantUIEvents::OnBuffRemove(uint16_t graphic)
 {
     ScriptBuffs_Remove(graphic);
 }
@@ -75,13 +75,13 @@ void CAssistantUIEvents::OnSkillsList(const vector<astr_t> &hotkeyActions)
     Actions_SetSkillList(hotkeyActions);
 }
 
-void CAssistantUIEvents::OnRecordTargetObject(uint serial, ushort graphic, ushort color)
+void CAssistantUIEvents::OnRecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color)
 {
     // was g_TabMacros->AddAction(new CMacroWithObject(...))
     g_MacroExecutor.RecordTargetObject(serial, graphic, color);
 }
 
-void CAssistantUIEvents::OnRecordTargetTile(ushort graphic, int x, int y, int z)
+void CAssistantUIEvents::OnRecordTargetTile(uint16_t graphic, int x, int y, int z)
 {
     // was g_TabMacros->AddAction(new CMacroWithTargetTile(...))
     g_MacroExecutor.RecordTargetTile(graphic, x, y, z);
@@ -105,7 +105,7 @@ void CAssistantUIEvents::OnClientCloseRequest()
 }
 
 void CAssistantUIEvents::OnFromTarget(
-    int kind, uint serial, ushort graphic, ushort color, const astr_t &name)
+    int kind, uint32_t serial, uint16_t graphic, uint16_t color, const astr_t &name)
 {
     // the HandleTarget* forwards: park the latest reply for the list tabs
     XA_FROM_TARGET_RESULT &slot = FromTargetResult();
@@ -124,7 +124,7 @@ XA_FROM_TARGET_RESULT &CAssistantUIEvents::FromTargetResult()
 }
 
 bool UI_PollFromTarget(
-    bool &pending, uint &generation, int kind, XA_FROM_TARGET_RESULT &out)
+    bool &pending, uint32_t &generation, int kind, XA_FROM_TARGET_RESULT &out)
 {
     if (!pending)
     {
@@ -146,7 +146,7 @@ void CAssistantUIEvents::OnTitleRedraw()
     TabDisplay_RequestTitleRedraw();
 }
 
-void CAssistantUIEvents::OnTitleRedraw(uint serial)
+void CAssistantUIEvents::OnTitleRedraw(uint32_t serial)
 {
     // was g_TabDisplay->CheckRedrawTitle(obj): the manager gated on
     // CanRedraw(graphic, color) before redrawing
@@ -156,7 +156,7 @@ void CAssistantUIEvents::OnTitleRedraw(uint serial)
 
 // --- map + inspector events ------------------------------------------------------------------
 
-void CAssistantUIEvents::OnMapUpdate(uint serial)
+void CAssistantUIEvents::OnMapUpdate(uint32_t serial)
 {
     // was g_Map->CheckForUpdate(serial): the overlays are recomputed from the
     // mirror per frame; the window records the dirtiness
@@ -184,7 +184,7 @@ void CAssistantUIEvents::OnTrack(bool state, int x, int y)
     MapWindow_OnTrack(state, x, y);
 }
 
-void CAssistantUIEvents::OnInspectorUpdate(uint serial)
+void CAssistantUIEvents::OnInspectorUpdate(uint32_t serial)
 {
     // was g_ObjectInspectorForm->CheckUpdate/Update (DumpObjectInfo, the
     // mirror pokes and the status-item updates)

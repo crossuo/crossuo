@@ -13,13 +13,13 @@ namespace xuoassist {
 class CMenuItem
 {
 public:
-    uint ID = 0;
-    ushort Graphic = 0;
-    ushort Color = 0;
+    uint32_t ID = 0;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
     astr_t Name = "";
 
     CMenuItem();
-    CMenuItem(const uint &id, const ushort &graphic, const ushort &color, const astr_t &name);
+    CMenuItem(const uint32_t &id, const uint16_t &graphic, const uint16_t &color, const astr_t &name);
     virtual ~CMenuItem();
 };
 

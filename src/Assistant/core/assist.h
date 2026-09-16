@@ -22,15 +22,15 @@ namespace xuoassist {
 
 
 class CAssistant;
-typedef void (CAssistant::*TARGET_HANDLER)(uchar *buf);
+typedef void (CAssistant::*TARGET_HANDLER)(uint8_t *buf);
 extern TARGET_HANDLER g_TargetHandler;
 
 struct MOVITEM_DATA
 {
     int Count{ 0 };
-    uint Container{ 0xFFFFFFFF };
-    ushort X{ 0xFFFF };
-    ushort Y{ 0xFFFF };
+    uint32_t Container{ 0xFFFFFFFF };
+    uint16_t X{ 0xFFFF };
+    uint16_t Y{ 0xFFFF };
     char Z{ 0 };
 
     void Reset()
@@ -58,21 +58,21 @@ public:
 
     void Init() {}
 
-    static uint RawStringToUInt(const astr_t &value);
+    static uint32_t RawStringToUInt(const astr_t &value);
     static bool RawStringToBool(astr_t value);
-    static uint TextToUInt(const astr_t &text);
-    static uint TextToSerial(astr_t text);
-    static ushort TextToGraphic(astr_t text);
+    static uint32_t TextToUInt(const astr_t &text);
+    static uint32_t TextToSerial(astr_t text);
+    static uint16_t TextToGraphic(astr_t text);
     static int TextToLayer(astr_t text);
-    static astr_t ColorToText(const uint &value);
-    static astr_t SerialToText(const uint &value);
-    static astr_t GraphicToText(const ushort &value);
+    static astr_t ColorToText(const uint32_t &value);
+    static astr_t SerialToText(const uint32_t &value);
+    static astr_t GraphicToText(const uint16_t &value);
     static astr_t BoolToText(const bool &value);
 
-    void ClientPrint(const astr_t &text, const ushort &color = g_MessagesColor);
-    void ClientCharPrint(const uint &serial, const astr_t &text, const ushort &color = g_MessagesColor);
-    void ClientPrintDebugLevel1(const astr_t &text, const ushort &color = g_MessagesColor);
-    void ClientPrintDebugLevel2(const astr_t &text, const ushort &color = g_MessagesColor);
+    void ClientPrint(const astr_t &text, const uint16_t &color = g_MessagesColor);
+    void ClientCharPrint(const uint32_t &serial, const astr_t &text, const uint16_t &color = g_MessagesColor);
+    void ClientPrintDebugLevel1(const astr_t &text, const uint16_t &color = g_MessagesColor);
+    void ClientPrintDebugLevel2(const astr_t &text, const uint16_t &color = g_MessagesColor);
 
     void RequestTarget(const astr_t &text);
 
@@ -82,19 +82,19 @@ public:
     void LogOut();
 
     void DumpObjectInfo(class CGameObject *obj);
-    void DumpTileInfo(const ushort &graphic, const short &x, const short &y, const char &z);
+    void DumpTileInfo(const uint16_t &graphic, const short &x, const short &y, const char &z);
 
-    void GetStatus(const uint &serial);
-    void Click(const uint &serial);
-    void DoubleClick(const uint &serial);
-    void Attack(const uint &serial);
-    uchar GetNotorietyFlags(const astr_t &text);
+    void GetStatus(const uint32_t &serial);
+    void Click(const uint32_t &serial);
+    void DoubleClick(const uint32_t &serial);
+    void Attack(const uint32_t &serial);
+    uint8_t GetNotorietyFlags(const astr_t &text);
 
     class CGameObject *FindList(
         const astr_t &findListName,
         const astr_t &containerText,
         const astr_t &distanceText,
-        const ushort &flags,
+        const uint16_t &flags,
         const astr_t &notorietyText,
         bool recurseSearch,
         vector<astr_t> &result);
@@ -103,21 +103,21 @@ public:
         const vector<astr_t> &color,
         const astr_t &containerText,
         const astr_t &distanceText,
-        const ushort &flags,
+        const uint16_t &flags,
         const astr_t &notorietyText,
         bool recurseSearch,
         vector<astr_t> &result);
     class CGameObject *FindType(
         const CFindItem &findListItem,
         const vector<CIgnoreItem> &ignoreList,
-        const uint &container,
+        const uint32_t &container,
         const int &distance,
-        ushort flags,
-        const uchar &notoriety,
+        uint16_t flags,
+        const uint8_t &notoriety,
         bool recurseSearch,
         vector<astr_t> &list);
-    class CGameObject *FindFriend(const ushort &flags, const astr_t &distanceText);
-    class CGameObject *FindEnemy(const ushort &flags, const astr_t &distanceText);
+    class CGameObject *FindFriend(const uint16_t &flags, const astr_t &distanceText);
+    class CGameObject *FindEnemy(const uint16_t &flags, const astr_t &distanceText);
     void GetFriendsStatus();
     void GetEnemiesStatus();
     int CountType(
@@ -128,21 +128,21 @@ public:
         bool recurseSearch);
     int CountType(
         const CFindItem &findListItem,
-        const uint &container,
+        const uint32_t &container,
         const int &distance,
         bool recurseSearch);
     void UseType(
         const CFindItem &findListItem,
-        const uint &container,
+        const uint32_t &container,
         const int &distance,
         const bool &recurseSearch);
     void MoveItem(class CGameItem *item);
-    void MoveEquip(const uint &serial, const int &layer, const uint &container);
+    void MoveEquip(const uint32_t &serial, const int &layer, const uint32_t &container);
     void Track(const bool &state, short x, short y);
 
     // Moved from the original TabListsObjects::SetDressBag (the dress bag is config
     // data; the container check + assistant messages were its logic).
-    void SetDressBag(const uint &serial);
+    void SetDressBag(const uint32_t &serial);
 
     // Moved from the original AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (the
     // single-shot 20 ms timer collapsed - the scan and the open are one step
@@ -154,25 +154,25 @@ public:
     // CPathFinder::Walk with the packet's direction byte.
     void WalkAutoOpenDoor(const int &direction);
 
-    void HandleTargetType(uchar *buf);
-    void HandleTargetObject(uchar *buf);
-    void HandleTargetDisplayItem(uchar *buf);
-    void HandleTargetInfo(uchar *buf);
-    void HandleTargetInfoTile(uchar *buf);
-    void HandleTargetDressBag(uchar *buf);
-    void HandleTargetDressItem(uchar *buf);
-    void HandleTargetHide(uchar *buf);
-    void HandleTargetDrop(uchar *buf);
-    void HandleTargetFindList(uchar *buf);
-    void HandleTargetIgnoreList(uchar *buf);
-    void HandleTargetPartyObject(uchar *buf);
-    void HandleTargetFriendObject(uchar *buf);
-    void HandleTargetEnemyObject(uchar *buf);
-    void HandleTargetAnimalAndVendorControlName(uchar *buf);
-    void HandleSetPVPCaller(uchar *buf);
+    void HandleTargetType(uint8_t *buf);
+    void HandleTargetObject(uint8_t *buf);
+    void HandleTargetDisplayItem(uint8_t *buf);
+    void HandleTargetInfo(uint8_t *buf);
+    void HandleTargetInfoTile(uint8_t *buf);
+    void HandleTargetDressBag(uint8_t *buf);
+    void HandleTargetDressItem(uint8_t *buf);
+    void HandleTargetHide(uint8_t *buf);
+    void HandleTargetDrop(uint8_t *buf);
+    void HandleTargetFindList(uint8_t *buf);
+    void HandleTargetIgnoreList(uint8_t *buf);
+    void HandleTargetPartyObject(uint8_t *buf);
+    void HandleTargetFriendObject(uint8_t *buf);
+    void HandleTargetEnemyObject(uint8_t *buf);
+    void HandleTargetAnimalAndVendorControlName(uint8_t *buf);
+    void HandleSetPVPCaller(uint8_t *buf);
     void OpenDoor();
 
-    static bool IsNoDrawTile(const ushort &graphic);
+    static bool IsNoDrawTile(const uint16_t &graphic);
 
     void ScriptError(const astr_t &title, const astr_t &text);
 };

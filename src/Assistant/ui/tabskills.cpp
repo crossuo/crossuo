@@ -48,12 +48,12 @@ const XA_SKILL_LOCK_STYLE s_LockStyles[] = {
     { "?", "Unknown lock state" },       // skill_wtf.bmp
 };
 
-const char *skill_lock_style(uchar status)
+const char *skill_lock_style(uint8_t status)
 {
     return s_LockStyles[status > 2 ? 3 : status].Glyph;
 }
 
-// the original code compared the packet-derived floats directly (the same ushort
+// the original code compared the packet-derived floats directly (the same uint16_t
 // /10.0f conversion on both sides makes exact equality meaningful); memcmp
 // keeps the exact-value semantics without tripping -Wfloat-equal
 bool skill_value_equal(float a, float b)

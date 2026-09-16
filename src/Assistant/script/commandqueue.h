@@ -149,8 +149,8 @@ struct XA_SCRIPT_COMMAND
     int IntA{ 0 };
     int IntB{ 0 };
     int IntC{ 0 };
-    uint SerialA{ 0 };
-    ushort UshortA{ 0 };
+    uint32_t SerialA{ 0 };
+    uint16_t UshortA{ 0 };
     bool BoolA{ false };
     // Pointer results ride here, never in SerialA: a 32-bit slot truncates
     // 64-bit heap pointers (the journal round used to corrupt them).
@@ -164,7 +164,7 @@ struct XA_SCRIPT_COMMAND
 
     // result side (written by the drain, read by the caller after Exec)
     int ResultInt{ 0 };
-    uint ResultSerial{ 0 };
+    uint32_t ResultSerial{ 0 };
     bool ResultBool{ false };
     bool ResultDropped{ false }; // true = no data (timeout/drop/shutdown)
     astr_t ResultText;
@@ -182,7 +182,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command);
 // down. Returns with Result* filled and ResultDropped set when the value
 // must be treated as "no data" (timeout/shutdown). The command record stays
 // caller-owned: the caller reads the results and deletes it afterwards.
-void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint timeoutMs = 2000);
+void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs = 2000);
 
 // The main-thread drain: executes every pending command in order. Called
 // once per frame from AssistantUI_Tick (before the agent ticks). Draining is
@@ -200,11 +200,11 @@ void ScriptQueue_Reset();
 
 // Queue capacity (drop-oldest beyond this). The default covers interactive
 // scripts many times over; the drop policy is the flood protection.
-uint ScriptQueue_Capacity();
-void ScriptQueue_SetCapacity(uint entries);
+uint32_t ScriptQueue_Capacity();
+void ScriptQueue_SetCapacity(uint32_t entries);
 
 // Journal-side flood throttle state (used by Client.Print): returns true when
 // a line with this stamp may be emitted (>= 100 ms since the last one).
-bool ScriptQueue_PrintThrottled(uint &suppressedCount);
+bool ScriptQueue_PrintThrottled(uint32_t &suppressedCount);
 
 } // namespace xuoassist

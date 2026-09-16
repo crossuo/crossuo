@@ -55,7 +55,7 @@ float MapSettings_Scale()
     return scale;
 }
 
-CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint &serial)
+CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint32_t &serial)
 {
     if (g_World == nullptr)
     {
@@ -156,9 +156,9 @@ static void load_int(const XMLElement &e, const char *name, int *value)
     }
 }
 
-// Packed RGBA text form (the original code round-tripped the ARGB uint through
+// Packed RGBA text form (the original code round-tripped the ARGB uint32_t through
 // CAssistant::SerialToText/TextToSerial - same helpers here)
-static void load_color(const XMLElement &e, const char *name, uint *value)
+static void load_color(const XMLElement &e, const char *name, uint32_t *value)
 {
     if (e.HasAttribute(name))
     {
@@ -178,7 +178,7 @@ static void set_int(XMLElement &e, const char *name, int value)
     e.SetAttribute(name, buf);
 }
 
-static void set_color(XMLElement &e, const char *name, uint value)
+static void set_color(XMLElement &e, const char *name, uint32_t value)
 {
     e.SetAttribute(name, CAssistant::SerialToText(value));
 }

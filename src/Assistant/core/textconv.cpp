@@ -12,9 +12,9 @@
 
 namespace xuoassist {
 
-uint TextToUInt(const astr_t &text)
+uint32_t TextToUInt(const astr_t &text)
 {
-    uint result = (uint)strtoul(text.c_str(), nullptr, 10);
+    uint32_t result = (uint32_t)strtoul(text.c_str(), nullptr, 10);
 
     if (result == 0u)
     {
@@ -31,21 +31,21 @@ uint TextToUInt(const astr_t &text)
 
         if (!decimal)
         {
-            result = (uint)strtoul(str, nullptr, 16);
+            result = (uint32_t)strtoul(str, nullptr, 16);
         }
     }
 
     return result;
 }
 
-uint TextToSerial(astr_t text)
+uint32_t TextToSerial(astr_t text)
 {
     for (char &c : text)
     {
         c = (char)tolower(c);
     }
 
-    uint result = 0;
+    uint32_t result = 0;
 
     if (text == "self")
     {
@@ -96,24 +96,24 @@ uint TextToSerial(astr_t text)
     return result;
 }
 
-ushort TextToGraphic(astr_t text)
+uint16_t TextToGraphic(astr_t text)
 {
     for (char &c : text)
     {
         c = (char)tolower(c);
     }
 
-    ushort result = g_AssistantConfig.SeekType(text);
+    uint16_t result = g_AssistantConfig.SeekType(text);
 
     if (result == 0u)
     {
-        result = (ushort)TextToUInt(text);
+        result = (uint16_t)TextToUInt(text);
     }
 
     return result;
 }
 
-astr_t SerialToText(const uint &value)
+astr_t SerialToText(const uint32_t &value)
 {
     char buf[64] = { 0 };
     snprintf(buf, sizeof(buf), "0x%08X", value);
@@ -121,7 +121,7 @@ astr_t SerialToText(const uint &value)
     return buf;
 }
 
-astr_t GraphicToText(const ushort &value)
+astr_t GraphicToText(const uint16_t &value)
 {
     char buf[64] = { 0 };
     snprintf(buf, sizeof(buf), "0x%04X", value);

@@ -274,7 +274,7 @@ astr_t CMacro::GetText()
         case MT_WAIT_FOR_GUMP:
         {
             char text[256] = { 0 };
-            uint button = ((CMacroWithGump *)this)->Button;
+            uint32_t button = ((CMacroWithGump *)this)->Button;
 
             if (ConvertType == MCT_ANY)
             {

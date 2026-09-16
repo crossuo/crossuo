@@ -142,7 +142,7 @@ const XA_KEY_INFO &HotkeyKeyInfo(int id)
     return s_Keymap[id];
 }
 
-const char *HotkeyKeycodeName(uint keycode)
+const char *HotkeyKeycodeName(uint32_t keycode)
 {
     // GetKeycodeName: linear scan over the same table
     for (int i = 1; i < XKI_COUNT; i++)
@@ -162,7 +162,7 @@ const char *HotkeyKeycodeName(uint keycode)
     return s_Keymap[XKI_INVALID].KeyName;
 }
 
-void HotkeyFormatText(uint key, uchar modifiers, char *out, size_t size)
+void HotkeyFormatText(uint32_t key, uint8_t modifiers, char *out, size_t size)
 {
     // the old GetHotkeyText formatting
     if (size == 0)
@@ -239,7 +239,7 @@ namespace {
 
 // Platform::IsKeypad (the SDL path): the keypad identity of
 // a key event - reproduces the Windows native-modifier bit 24 of the original app.
-bool is_keypad_keycode(uint key)
+bool is_keypad_keycode(uint32_t key)
 {
     switch (key)
     {
@@ -269,7 +269,7 @@ bool is_keypad_keycode(uint key)
 }
 
 // eventFilter parity: bare modifier presses are never a binding.
-bool is_bare_modifier(uint key)
+bool is_bare_modifier(uint32_t key)
 {
     switch (key)
     {
@@ -286,9 +286,9 @@ bool is_bare_modifier(uint key)
 }
 
 // AddModifiers parity: SDL key mod -> the HM_* bitmask.
-uchar modifiers_from_sdl(ushort mod)
+uint8_t modifiers_from_sdl(uint16_t mod)
 {
-    uchar result = HM_NONE;
+    uint8_t result = HM_NONE;
     if ((mod & KMOD_ALT) != 0)
     {
         result |= HM_ALT;
@@ -351,8 +351,8 @@ bool CHotkeys::ProcessEvent(const SDL_Event &ev)
 
 bool CHotkeys::ProcessKeyDown(const SDL_Event &ev)
 {
-    const uint key = (uint)ev.key.keysym.sym;
-    uchar modifiers = modifiers_from_sdl(ev.key.keysym.mod);
+    const uint32_t key = (uint32_t)ev.key.keysym.sym;
+    uint8_t modifiers = modifiers_from_sdl(ev.key.keysym.mod);
     if (is_keypad_keycode(key))
     {
         modifiers |= HM_KEYPAD;
@@ -388,8 +388,8 @@ bool CHotkeys::ProcessKeyUp(const SDL_Event &)
 bool CHotkeys::ProcessMouseButtonDown(const SDL_Event &ev)
 {
     // eventFilter MouseButtonPress parity: middle = wheel press, X1/X2
-    uint key = 0;
-    uchar mouseFlag = HM_NONE;
+    uint32_t key = 0;
+    uint8_t mouseFlag = HM_NONE;
     if (ev.button.button == SDL_BUTTON_MIDDLE)
     {
         key = MOUSE_WHEEL_PRESS;
@@ -410,7 +410,7 @@ bool CHotkeys::ProcessMouseButtonDown(const SDL_Event &ev)
         return false;
     }
 
-    const uchar modifiers = modifiers_from_sdl(SDL_GetModState()) | mouseFlag;
+    const uint8_t modifiers = modifiers_from_sdl(SDL_GetModState()) | mouseFlag;
     if (m_Capturing)
     {
         m_CaptureKey = key;
@@ -423,7 +423,7 @@ bool CHotkeys::ProcessMouseButtonDown(const SDL_Event &ev)
 bool CHotkeys::ProcessWheel(const SDL_Event &ev)
 {
     // eventFilter Wheel parity: delta direction picks scroll up/down
-    uint key = 0;
+    uint32_t key = 0;
     if (ev.wheel.y > 0)
     {
         key = MOUSE_WHEEL_SCROLL_UP;
@@ -437,7 +437,7 @@ bool CHotkeys::ProcessWheel(const SDL_Event &ev)
         return false;
     }
 
-    const uchar modifiers = modifiers_from_sdl(SDL_GetModState()) | HM_MOUSE_WHEEL;
+    const uint8_t modifiers = modifiers_from_sdl(SDL_GetModState()) | HM_MOUSE_WHEEL;
     if (m_Capturing)
     {
         m_CaptureKey = key;
@@ -447,7 +447,7 @@ bool CHotkeys::ProcessWheel(const SDL_Event &ev)
     return MatchAndUse(key, modifiers);
 }
 
-bool CHotkeys::MatchAndUse(uint key, uchar modifiers)
+bool CHotkeys::MatchAndUse(uint32_t key, uint8_t modifiers)
 {
     // HotkeyExistsAndUse: the original loop bailed out when
     // not logged in (g_World == nullptr)
@@ -468,8 +468,8 @@ bool CHotkeys::MatchAndUse(uint key, uchar modifiers)
         }
 
         matched = true;
-        const uint type = entry.Type;
-        const uint action = entry.Action;
+        const uint32_t type = entry.Type;
+        const uint32_t action = entry.Action;
         if (type == HT_TOGGLE_HOTKEYS)
         {
             const bool state = (action == 0) ? !g_AssistantConfig.OnOffHotkeys() : (action == 1);
@@ -520,7 +520,7 @@ bool CHotkeys::MatchAndUse(uint key, uchar modifiers)
     return !g_AssistantConfig.PassHotkeys();
 }
 
-int CHotkeys::FindDuplicate(uint key, uchar modifiers, int skipRow) const
+int CHotkeys::FindDuplicate(uint32_t key, uint8_t modifiers, int skipRow) const
 {
     const vector<CHotkeyEntry> &hotkeys = g_AssistantConfig.m_Hotkeys;
     for (int i = 0; i < (int)hotkeys.size(); i++)
@@ -537,7 +537,7 @@ int CHotkeys::FindDuplicate(uint key, uchar modifiers, int skipRow) const
     return -1;
 }
 
-void CHotkeys::CommitKeyToRow(int row, uint key, uchar modifiers)
+void CHotkeys::CommitKeyToRow(int row, uint32_t key, uint8_t modifiers)
 {
     vector<CHotkeyEntry> &hotkeys = g_AssistantConfig.m_Hotkeys;
     if (row < 0 || row >= (int)hotkeys.size())
@@ -634,16 +634,16 @@ void CHotkeys::KeyboardAssign(int keyId, int row)
     // on_KeyButtonClicked: the cap's own default
     // modifiers plus the sticky/physically-held ones
     const XA_KEY_INFO &info = HotkeyKeyInfo(keyId);
-    uchar modifiers = info.Modifiers;
-    const uchar live = modifiers_from_sdl(SDL_GetModState());
-    modifiers |= (uchar)(m_StickyModifiers | live);
+    uint8_t modifiers = info.Modifiers;
+    const uint8_t live = modifiers_from_sdl(SDL_GetModState());
+    modifiers |= (uint8_t)(m_StickyModifiers | live);
     CommitKeyToRow(row, info.Key, modifiers);
 }
 
 void CHotkeys::KeyboardToggleModifier(int keyId)
 {
     // on_ModifierKeyButtonClicked: AltGr behaves like Alt
-    uchar flag = 0;
+    uint8_t flag = 0;
     switch (keyId)
     {
         case XKI_SHIFT_L:
@@ -661,7 +661,7 @@ void CHotkeys::KeyboardToggleModifier(int keyId)
         default:
             return;
     }
-    m_StickyModifiers = (uchar)(m_StickyModifiers ^ flag);
+    m_StickyModifiers = (uint8_t)(m_StickyModifiers ^ flag);
 }
 
 int CHotkeys::KeyboardCapState(int keyId, int selectedRow) const
@@ -673,8 +673,8 @@ int CHotkeys::KeyboardCapState(int keyId, int selectedRow) const
     {
         return 0;
     }
-    const uchar addMods = HM_ALT | HM_CTRL | HM_SHIFT;
-    const uchar currentMods = (uchar)(m_StickyModifiers | modifiers_from_sdl(SDL_GetModState()));
+    const uint8_t addMods = HM_ALT | HM_CTRL | HM_SHIFT;
+    const uint8_t currentMods = (uint8_t)(m_StickyModifiers | modifiers_from_sdl(SDL_GetModState()));
     const vector<CHotkeyEntry> &hotkeys = g_AssistantConfig.m_Hotkeys;
     int found = 0;
     int selected = 0;

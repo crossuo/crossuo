@@ -38,12 +38,12 @@ const char *const FONT_STYLES[MAP_FONT_STYLES_COUNT] = { "Small 1", "Small 2", "
                                                          "Big 2",   "Big 3",   "Big 4",
                                                          "Big 5" };
 
-ImU32 RgbaToCol(uint rgba)
+ImU32 RgbaToCol(uint32_t rgba)
 {
     return IM_COL32((rgba >> 16) & 0xFF, (rgba >> 8) & 0xFF, rgba & 0xFF, (rgba >> 24) & 0xFF);
 }
 
-uint ColToRgba(ImU32 col)
+uint32_t ColToRgba(ImU32 col)
 {
     return (((col & 0xFF000000u)) | (((col >> 16) & 0xFF) << 16) | (((col >> 8) & 0xFF) << 8) |
             (col & 0xFF));
@@ -61,7 +61,7 @@ bool StyleCombo(const char *id, int *value)
     return changed;
 }
 
-bool ColorField(const char *id, uint *rgba)
+bool ColorField(const char *id, uint32_t *rgba)
 {
     ImU32 col = RgbaToCol(*rgba);
     if (ColorSwatch(id, &col))
@@ -80,7 +80,7 @@ void CharacterGroup(
     bool *enabled,
     bool hasEnabled,
     int *fontStyle,
-    uint *color,
+    uint32_t *color,
     bool *showName,
     bool *showHits)
 {

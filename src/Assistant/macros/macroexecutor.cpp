@@ -48,17 +48,17 @@ void free_macro_list(vector<CMacro *> &list)
     list.clear();
 }
 
-void warmode_send(uint state)
+void warmode_send(uint32_t state)
 {
     // was CCommandManager::OnCommandWarmode
     if (g_World == nullptr || g_Player == nullptr)
     {
         return;
     }
-    uchar warmode = (uchar)!g_Player->Warmode;
+    uint8_t warmode = (uint8_t)!g_Player->Warmode;
     if (state < 2)
     {
-        warmode = (uchar)state;
+        warmode = (uint8_t)state;
     }
     // assistant-initiated warmode changes must not record themselves; the
     // client's CGame::ChangeWarmode is the recording tap
@@ -67,7 +67,7 @@ void warmode_send(uint state)
     g_Game.ChangeWarmode(warmode);
 }
 
-uint serial_for_convert(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
+uint32_t serial_for_convert(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
 {
     switch (convertType)
     {
@@ -91,7 +91,7 @@ uint serial_for_convert(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
 void CMacroExecutor::SetLoopOptions(bool looped, float loopSeconds)
 {
     m_Looped = looped;
-    m_LoopDelay = (uint)(loopSeconds * 1000.0f);
+    m_LoopDelay = (uint32_t)(loopSeconds * 1000.0f);
 }
 
 void CMacroExecutor::Play(const astr_t &name, bool doNotAutoIterrupt)
@@ -205,7 +205,7 @@ int CMacroExecutor::RecordStop()
     return committed;
 }
 
-void CMacroExecutor::RecordTargetObject(uint serial, ushort graphic, ushort color)
+void CMacroExecutor::RecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color)
 {
     if (!m_Recording)
     {
@@ -236,7 +236,7 @@ void CMacroExecutor::RecordTargetObject(uint serial, ushort graphic, ushort colo
     m_RecordBuffer.push_back(macro);
 }
 
-void CMacroExecutor::RecordTargetTile(ushort graphic, int x, int y, int z)
+void CMacroExecutor::RecordTargetTile(uint16_t graphic, int x, int y, int z)
 {
     // relative coordinates against the player
     if (!m_Recording)
@@ -264,7 +264,7 @@ void CMacroExecutor::Record(CMacro *macro)
     m_RecordBuffer.push_back(macro);
 }
 
-void CMacroExecutor::RecordAttack(uint serial)
+void CMacroExecutor::RecordAttack(uint32_t serial)
 {
     // was the 0x05 AttackRequest send tap (packetmanager.cpp): the original's
     // MCT_LASTATTACK / MCT_LASTTARGET / MCT_ENEMY conversions, in that order.
@@ -302,7 +302,7 @@ void CMacroExecutor::RecordAttack(uint serial)
     Record(macro);
 }
 
-void CMacroExecutor::RecordUse(uint serial)
+void CMacroExecutor::RecordUse(uint32_t serial)
 {
     // was the 0x06 DoubleClick send tap (packetmanager.cpp): the graphic/color
     // come from the world object when known; the player records as MCT_SELF.
@@ -532,7 +532,7 @@ void CMacroExecutor::RecordQuestMenuRequest()
     Record(new CMacro(MT_QUEST_MENU_REQUEST));
 }
 
-void CMacroExecutor::RecordContextMenuRequest(uint serial)
+void CMacroExecutor::RecordContextMenuRequest(uint32_t serial)
 {
     // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
     // 0x0013.
@@ -544,7 +544,7 @@ void CMacroExecutor::RecordContextMenuRequest(uint serial)
     Record(new CMacroWithObject(MT_REQUEST_CONTEXT_MENU, serial, 0, 0));
 }
 
-void CMacroExecutor::RecordWaitContextMenu(uint serial, ushort menuID)
+void CMacroExecutor::RecordWaitContextMenu(uint32_t serial, uint16_t menuID)
 {
     // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
     // 0x0015: the menu id rides the graphic field, like the original
@@ -631,17 +631,17 @@ void CMacroExecutor::Reset()
     m_PlayPosition = 0;
 }
 
-uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
+uint32_t CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
 {
     // TabMacros::FindObject
-    ushort graphic = macro->Graphic;
+    uint16_t graphic = macro->Graphic;
 
     if (graphic == 0u)
     {
         return macro->Serial;
     }
 
-    const ushort color =
+    const uint16_t color =
         ((convertType == MCT_BY_TYPE_COLOR || convertType == MCT_BY_TYPE_COLOR_GROUND) ?
              macro->Color :
              0xFFFF);
@@ -724,7 +724,7 @@ void CMacroExecutor::ProcessMacro()
         {
             case MT_USE:
             {
-                uint serial = ((CMacroWithObject *)macro)->Serial;
+                uint32_t serial = ((CMacroWithObject *)macro)->Serial;
                 if (convertType == MCT_BY_TYPE || convertType == MCT_BY_TYPE_COLOR ||
                     convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
                 {
@@ -747,7 +747,7 @@ void CMacroExecutor::ProcessMacro()
             case MT_ATTACK:
             {
                 // convertType LAST and LASTATTACK both mean "lastattack" here
-                uint serial = ((CMacroWithObject *)macro)->Serial;
+                uint32_t serial = ((CMacroWithObject *)macro)->Serial;
                 if (convertType == MCT_LAST || convertType == MCT_LASTATTACK)
                 {
                     serial = CAssistant::TextToSerial("lastattack");
@@ -773,7 +773,7 @@ void CMacroExecutor::ProcessMacro()
                     m_NextMacroTick = g_Ticks + macro->WaitingTime;
                     return;
                 }
-                uint serial = ((CMacroWithObject *)macro)->Serial;
+                uint32_t serial = ((CMacroWithObject *)macro)->Serial;
                 if (convertType == MCT_BY_TYPE || convertType == MCT_BY_TYPE_COLOR ||
                     convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
                 {
@@ -809,7 +809,7 @@ void CMacroExecutor::ProcessMacro()
                 else
                 {
                     CMacroWithTargetTile *withTarget = (CMacroWithTargetTile *)macro;
-                    ushort graphic = withTarget->Graphic;
+                    uint16_t graphic = withTarget->Graphic;
                     int x = withTarget->X;
                     int y = withTarget->Y;
                     int z = withTarget->Z;
@@ -889,7 +889,7 @@ void CMacroExecutor::ProcessMacro()
                 // was g_CommandManager.OnCommandSay
                 if (g_World != nullptr && !text.empty())
                 {
-                    ushort color = 0;
+                    uint16_t color = 0;
                     if (!g_AssistantConfig.GetFontColor(color))
                     {
                         color = 0;
@@ -899,7 +899,7 @@ void CMacroExecutor::ProcessMacro()
                     wide.reserve(text.size());
                     for (char c : text)
                     {
-                        wide.push_back((wchar_t)(uchar)c);
+                        wide.push_back((wchar_t)(uint8_t)c);
                     }
                     SendConsoleText(wide, color);
                 }
@@ -991,7 +991,7 @@ void CMacroExecutor::ProcessMacro()
                 {
                     break;
                 }
-                uint serial = serial_for_convert((CMacroWithObject *)macro, convertType);
+                uint32_t serial = serial_for_convert((CMacroWithObject *)macro, convertType);
                 if (serial != 0)
                 {
                     ::CPacketRequestPopupMenu(serial).Send();
@@ -1034,7 +1034,7 @@ void CMacroExecutor::ProcessMacro()
                 }
                 else
                 {
-                    warmode_send((uint)((CMacroWithIntValue *)macro)->Value);
+                    warmode_send((uint32_t)((CMacroWithIntValue *)macro)->Value);
                 }
                 break;
             }
@@ -1150,7 +1150,7 @@ void CMacroExecutor::ProcessMacro()
             {
                 while (!m_ArmList.empty())
                 {
-                    uint serial = m_ArmList.front();
+                    uint32_t serial = m_ArmList.front();
                     CGameItem *obj = g_World != nullptr ? g_World->FindWorldItem(serial) : nullptr;
                     if (obj == nullptr || obj->Layer == EquipLayer(obj))
                     {
@@ -1218,7 +1218,7 @@ void CMacroExecutor::ProcessMacro()
             {
                 while (!m_DressList.empty())
                 {
-                    uint serial = m_DressList.front();
+                    uint32_t serial = m_DressList.front();
                     CGameItem *obj = g_World != nullptr ? g_World->FindWorldItem(serial) : nullptr;
                     if (obj == nullptr || obj->Layer == EquipLayer(obj))
                     {

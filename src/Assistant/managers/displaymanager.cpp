@@ -129,7 +129,7 @@ CDisplayIcon *CDisplayManager::GetIcon(const CDisplayItem &item)
         return nullptr;
     }
 
-    const uint serial = (uint)((item.Graphic << 16) | item.Hue);
+    const uint32_t serial = (uint32_t)((item.Graphic << 16) | item.Hue);
     auto i = m_Icons.find(serial);
     if (i == m_Icons.end() || i->second == nullptr)
     {
@@ -141,7 +141,7 @@ CDisplayIcon *CDisplayManager::GetIcon(const CDisplayItem &item)
     return i->second;
 }
 
-CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
+CDisplayIcon *CDisplayManager::LoadDisplayIcon(uint16_t graphic, uint16_t color)
 {
     // The original LoadDisplayIcon verbatim, with the raw
     // art decode delegated to the client's g_UOFileReader.GetArtPixels (the
@@ -176,7 +176,7 @@ CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
 
     const int imageWidth = dataWidth + stackOffset;
     const int imageHeight = dataHeight + stackOffset;
-    vector<uint> pix((size_t)imageWidth * imageHeight, 0);
+    vector<uint32_t> pix((size_t)imageWidth * imageHeight, 0);
 
     for (int y = 0; y < dataHeight; y++)
     {
@@ -188,7 +188,7 @@ CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
                 continue; // transparent (the original run decode skipped 0 pixels)
             }
 
-            uint col = 0;
+            uint32_t col = 0;
             uint16_t c = raw;
             if (color != 0u)
             {
@@ -213,7 +213,7 @@ CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
             const int dstPosY = (j + stackOffset) * imageWidth;
             for (int i = dataWidth - 1; i >= 0; i--)
             {
-                const uint pixel = pix[srcPosY + i];
+                const uint32_t pixel = pix[srcPosY + i];
                 if (pixel != 0u)
                 {
                     pix[dstPosY + i + stackOffset] = pixel;
@@ -274,7 +274,7 @@ CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
 
         for (int x = 0; x < realWidth; x++)
         {
-            const uint col = pix[srcY + x + minX];
+            const uint32_t col = pix[srcY + x + minX];
             // 0x00BBGGRR -> opaque RGBA32 (0 stays fully transparent)
             icon->Pixels[dstY + x] = col != 0u ? (col | 0xFF000000u) : 0u;
         }
@@ -287,8 +287,8 @@ void CDisplayManager::GetValues(
     const CDisplayItem &item,
     astr_t &value,
     astr_t &maxValue,
-    uint textColor,
-    uint backgroundColor,
+    uint32_t textColor,
+    uint32_t backgroundColor,
     bool useNotoriety)
 {
     int iVal = 0;
@@ -457,7 +457,7 @@ void CDisplayManager::GetValues(
     (void)backgroundColor;
 }
 
-bool CDisplayManager::CanRedraw(const ushort &graphic, const ushort &color)
+bool CDisplayManager::CanRedraw(const uint16_t &graphic, const uint16_t &color)
 {
     for (size_t i = 0; i < m_Commands.size(); i++)
     {
@@ -479,7 +479,7 @@ void CDisplayManager::Redraw(
     bool hightFont,
     bool highlightReagents,
     bool displayAppIcon,
-    uint backgroundColor)
+    uint32_t backgroundColor)
 {
     // Was the win32 GDI title-bar painter (displaymanager.cpp:500-...). The
     // caption text is composed here (the original RDM_TEXTUAL branch, verbatim);
@@ -517,8 +517,8 @@ void CDisplayManager::Redraw(
 
             astr_t value = "";
             astr_t maxValue = "";
-            uint textColor = 0;
-            uint compiledBgColor = 0;
+            uint32_t textColor = 0;
+            uint32_t compiledBgColor = 0;
 
             GetValues(obj, value, maxValue, textColor, compiledBgColor, useNotoriety);
 
@@ -607,12 +607,12 @@ void CDisplayManager::ApplyAttributeToDisplayItem(
                 }
                 case DKI_ID:
                 {
-                    obj.Graphic = (ushort)CAssistant::TextToGraphic(str_lower(value));
+                    obj.Graphic = (uint16_t)CAssistant::TextToGraphic(str_lower(value));
                     break;
                 }
                 case DKI_HUE:
                 {
-                    obj.Hue = (ushort)CAssistant::TextToGraphic(str_lower(value));
+                    obj.Hue = (uint16_t)CAssistant::TextToGraphic(str_lower(value));
                     break;
                 }
                 case DKI_COLOR_MIN:
@@ -674,7 +674,7 @@ void CDisplayManager::ApplyAttributeToDisplayItem(
     }
 }
 
-void CDisplayManager::RecompilleData(const astr_t &text, uint textColor)
+void CDisplayManager::RecompilleData(const astr_t &text, uint32_t textColor)
 {
     g_UpdateDisplayOnStep = false;
     m_Commands.clear();
@@ -682,7 +682,7 @@ void CDisplayManager::RecompilleData(const astr_t &text, uint textColor)
     CompilleData(text, textColor);
 }
 
-void CDisplayManager::CompilleData(const astr_t &text, uint textColor)
+void CDisplayManager::CompilleData(const astr_t &text, uint32_t textColor)
 {
     // Tokenized line by line, one token list per line, like the original
     // X:UO Assist text parser; the "{}" quote pair keeps the braces on tag

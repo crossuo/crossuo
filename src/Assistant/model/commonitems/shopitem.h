@@ -16,7 +16,7 @@ public:
     astr_t Color = "";
     astr_t Name = "";
     int Count = 0;
-    uint Price = 0;
+    uint32_t Price = 0;
     astr_t Comment = "";
 
     CShopItem() {}
@@ -25,7 +25,7 @@ public:
         const astr_t &color,
         const astr_t &name,
         const int &count,
-        const uint &price,
+        const uint32_t &price,
         const astr_t &comment);
 };
 

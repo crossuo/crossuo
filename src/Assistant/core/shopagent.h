@@ -46,12 +46,12 @@ class CShopAgent
 {
     // waiting for the vendor reply (SendShopRequest state)
     int m_State{ SLWS_NORMAL };
-    uint m_WaitTimeout{ 0 }; // absolute g_Ticks stamp
+    uint32_t m_WaitTimeout{ 0 }; // absolute g_Ticks stamp
     int m_WaitShopDelay{ 0 };
     astr_t m_WaitShopListName;
 
     // vendor snapshot (was ShopListEditorForm state)
-    uint m_VendorSerial{ 0 };
+    uint32_t m_VendorSerial{ 0 };
     vector<CVendorShopItem> m_VendorItems;
     bool m_IsBuyList{ true };
     bool m_ShopListReplayed{ false };
@@ -68,10 +68,10 @@ class CShopAgent
     bool m_ProgressActive{ false };
     bool m_ProgressShow{ false };
     int m_ProgressDelay{ 0 };
-    uint m_ProgressStart{ 0 };
+    uint32_t m_ProgressStart{ 0 };
     bool m_ProgressIsBuy{ false };
-    uint m_ProgressVendorSerial{ 0 };
-    vector<std::pair<uint, int>> m_ProgressList;
+    uint32_t m_ProgressVendorSerial{ 0 };
+    vector<std::pair<uint32_t, int>> m_ProgressList;
 
 public:
     // the le_VendorName field (not serialized, parity with the original)
@@ -112,16 +112,16 @@ public:
     void CancelProgress();
 
     // --- client call-ins (were the packetmanager.cpp taps; bool = pass-through, parity with the original) -----
-    bool OnOpenContainer(uint serial);
+    bool OnOpenContainer(uint32_t serial);
     // fed from the client's parsed 0x9E values (vendor serial, lookup result,
     // the sell entries); bool = pass-through, parity with the original
-    bool OnSellList(uint serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items);
+    bool OnSellList(uint32_t serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items);
     void OnBuyReplySent();
     void OnSellReplySent();
 
     // --- vendor snapshot for the Shop List Editor -----------------------------
-    uint GetVendorSerial() const { return m_VendorSerial; }
-    void SetVendorSerial(uint serial) { m_VendorSerial = serial; }
+    uint32_t GetVendorSerial() const { return m_VendorSerial; }
+    void SetVendorSerial(uint32_t serial) { m_VendorSerial = serial; }
     bool GetIsBuyList() const { return m_IsBuyList; }
     void SetIsBuyList(bool state) { m_IsBuyList = state; }
     bool GetShopListReplayed() const { return m_ShopListReplayed; }

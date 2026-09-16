@@ -12,15 +12,15 @@ namespace xuoassist {
 class CTradeWindow
 {
 public:
-    uint Serial = 0;
-    uint ID1 = 0;
-    uint ID2 = 0;
+    uint32_t Serial = 0;
+    uint32_t ID1 = 0;
+    uint32_t ID2 = 0;
     astr_t Name = "";
     bool Check1 = false;
     bool Check2 = false;
 
     CTradeWindow();
-    CTradeWindow(const uint &serial, const uint &id1, const uint &id2, const astr_t &name);
+    CTradeWindow(const uint32_t &serial, const uint32_t &id1, const uint32_t &id2, const astr_t &name);
     virtual ~CTradeWindow();
 };
 

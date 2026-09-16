@@ -12,7 +12,7 @@ CShopItem::CShopItem(
     const astr_t &color,
     const astr_t &name,
     const int &count,
-    const uint &price,
+    const uint32_t &price,
     const astr_t &comment)
     : Graphic(graphic)
     , Color(color)

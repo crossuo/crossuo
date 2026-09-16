@@ -112,7 +112,7 @@ enum HOTKEY_TYPES
     HT_USE_SKILL_ENEMY,
     HT_USE_SKILL_FRIEND,
     // the enum tail - the Phase-1c model stopped at
-    // the skill entries; the stored uint values and the Hotkeys.xml schema
+    // the skill entries; the stored uint32_t values and the Hotkeys.xml schema
     // are unchanged (values 0..21 above already match the original writer)
     HT_USE_SKILL_NEW_TARGET_SYSTEM,
     HT_TARGETING,
@@ -124,7 +124,7 @@ enum HOTKEY_TYPES
 // gui/worldobjectlistitem.h (friends / enemies / party accept / decline lists)
 struct CWorldObjectEntry
 {
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
     astr_t Name{ "" };
     bool Enabled{ false }; // was the item's checked state
 };
@@ -133,14 +133,14 @@ struct CWorldObjectEntry
 struct CTypeEntry
 {
     astr_t Name{ "" };
-    ushort Type{ 0 };
+    uint16_t Type{ 0 };
 };
 
 // gui/objectlistitem.h
 struct CObjectEntry
 {
     astr_t Name{ "" };
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
 };
 
 // gui/findlistitem.h
@@ -219,7 +219,7 @@ struct CDisplayItemEntry
 struct CDressSetEntry
 {
     astr_t Name{ "" };
-    uint m_Items[25];
+    uint32_t m_Items[25];
 
     CDressSetEntry() { memset(&m_Items[0], 0, sizeof(m_Items)); }
 };
@@ -227,10 +227,10 @@ struct CDressSetEntry
 // gui/hotkeytableitem.h (data subset; SDL key codes since Hotkeys version 1)
 struct CHotkeyEntry
 {
-    uint Key{ 0 };
-    uchar Modifiers{ 0 };
-    uint Type{ 0 };
-    uint Action{ 0 };
+    uint32_t Key{ 0 };
+    uint8_t Modifiers{ 0 };
+    uint32_t Type{ 0 };
+    uint32_t Action{ 0 };
     astr_t ScriptOrMacroName{ "" };
     astr_t ExternalCode{ "" };
     bool RunningMode{ false };
@@ -266,13 +266,13 @@ public:
     // --- profiles ----------------------------------------------------------
     const vector<astr_t> &GetProfiles() const { return m_Profiles; }
     void ScanProfiles();
-    bool LoadProfileBySerial(uint serial);
+    bool LoadProfileBySerial(uint32_t serial);
     void SetCurrentProfile(const astr_t &name); // case-insensitive, like TabMain
     bool LoadProfile();                         // was AssistForm::LoadCurrentProfile
     bool SaveProfile();                         // was AssistForm::SaveCurrentProfile
     void SaveProfileMap();                      // GlobalConfig/Profiles.xml
     void LoadProfileMap();
-    const std::map<uint, astr_t> &GetProfileMap() const { return m_ProfileMap; }
+    const std::map<uint32_t, astr_t> &GetProfileMap() const { return m_ProfileMap; }
 
     // --- Options.xml (assistform.cpp SaveMainOptions + 4 tab SaveConfigs) ---
     void SaveMainOptions();
@@ -358,20 +358,20 @@ public:
     bool DoubleClickForOpenDoors() const { return m_DoubleClickForOpenDoors; }
 
     // Text-window font colors (TabMain::GetFontColor / SetFontColor).
-    bool GetFontColor(ushort &value);
-    void SetFontColor(const bool &state, ushort value);
-    bool GetCharactersFontColor(ushort &value);
-    void SetCharactersFontColor(const bool &state, ushort value);
+    bool GetFontColor(uint16_t &value);
+    void SetFontColor(const bool &state, uint16_t value);
+    bool GetCharactersFontColor(uint16_t &value);
+    void SetCharactersFontColor(const bool &state, uint16_t value);
 
     // --- display options (TabDisplay LoadConfig/SaveConfig + checkboxes) ----
     int DisplayType() const { return m_DisplayType; } // 0=off 1=text 2=colored text 3=colored gfx
-    uint DisplayFlags() const { return m_DisplayFlags; }
+    uint32_t DisplayFlags() const { return m_DisplayFlags; }
     bool DoubleImage() const { return (m_DisplayFlags & 0x01) != 0; }
     bool ApplyNotorietyColorOnName() const { return (m_DisplayFlags & 0x02) != 0; }
     bool HightFont() const { return (m_DisplayFlags & 0x04) != 0; }
     bool HighlightReagents() const { return (m_DisplayFlags & 0x08) != 0; }
-    uint DisplayTextColor() const { return m_DisplayTextColor; }
-    uint DisplayBackgroundColor() const { return m_DisplayBackgroundColor; }
+    uint32_t DisplayTextColor() const { return m_DisplayTextColor; }
+    uint32_t DisplayBackgroundColor() const { return m_DisplayBackgroundColor; }
     const astr_t &DisplayTitleData() const { return m_DisplayTitleData; }
 
     // --- hotkeys options (TabHotkeys LoadConfig/SaveConfig) -----------------
@@ -393,12 +393,12 @@ public:
     void UpdateFeatures();
 
     // --- list queries (were TabListsTypes/Objects/Friends/Enemies) ----------
-    ushort SeekType(const astr_t &text);
-    uint SeekObject(const astr_t &text);
+    uint16_t SeekType(const astr_t &text);
+    uint32_t SeekObject(const astr_t &text);
     CFindListEntry *GetFindList(const astr_t &name);
     CIgnoreListEntry *GetIgnoreList(const astr_t &name);
-    bool InFriendList(uint serial);
-    bool InEnemyList(uint serial);
+    bool InFriendList(uint32_t serial);
+    bool InEnemyList(uint32_t serial);
     bool FeelPartyMembersAsFriends() const { return m_FeelPartyMembersAsFriends; }
     void AddType(const astr_t &name, const astr_t &type);     // was TabListsTypes::AddType
     void RemoveType(const astr_t &name);
@@ -406,23 +406,23 @@ public:
     void RemoveObject(const astr_t &name);
 
     // --- party agent (TabAgentsParty) ----------------------------------------
-    bool PartyInviteCanBeAutoAccepted(uint serial);
-    bool PartyInviteCanBeAutoDeclined(uint serial);
+    bool PartyInviteCanBeAutoAccepted(uint32_t serial);
+    bool PartyInviteCanBeAutoDeclined(uint32_t serial);
 
     // --- filters (were TabFiltersSpeech/Replaces/Sound; consulted by the
     //     packet handlers exactly like the original code did) -----------------------
-    bool CheckSpeechInFilter(const astr_t &text, const ushort &color);
+    bool CheckSpeechInFilter(const astr_t &text, const uint16_t &color);
     // Returns true when the text matched a replace rule; the caller (the talk
     // handlers, which hold the display context) renders the replacement carried
     // by the out-params — the reprint is no longer an injected packet.
     bool CheckReplaceText(
         const astr_t &text,
-        const uint &serial,
-        const ushort &color,
+        const uint32_t &serial,
+        const uint16_t &color,
         const bool &unicode,
         astr_t &replacedText,
-        ushort &replacedColor);
-    bool CheckSoundInFilter(const ushort &index);
+        uint16_t &replacedColor);
+    bool CheckSoundInFilter(const uint16_t &index);
 
     // --- distance / delay text helpers (were AssistForm methods) -------------
     int DistanceFromText(astr_t text);
@@ -462,9 +462,9 @@ public:
     astr_t m_CharactersFontColor{ "0x02B2" };
 
     int m_DisplayType{ 0 };
-    uint m_DisplayFlags{ 0 };
-    uint m_DisplayTextColor{ 0 };
-    uint m_DisplayBackgroundColor{ 0 };
+    uint32_t m_DisplayFlags{ 0 };
+    uint32_t m_DisplayTextColor{ 0 };
+    uint32_t m_DisplayBackgroundColor{ 0 };
     astr_t m_DisplayTitleData{ "" };
 
     bool m_OnOffHotkeys{ true }; // cb_OnOffHotkeys is checked by default
@@ -508,7 +508,7 @@ public:
 
     vector<CMacroEntry> m_Macros;
 
-    std::map<uint, astr_t> m_ProfileMap;
+    std::map<uint32_t, astr_t> m_ProfileMap;
 
 private:
     vector<astr_t> m_Profiles;

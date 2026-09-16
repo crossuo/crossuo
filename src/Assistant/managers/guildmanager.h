@@ -13,10 +13,10 @@ namespace xuoassist {
 
 struct GUILD_MEMBER_INFO
 {
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
     int X{ 0 };
     int Y{ 0 };
-    uint Map{ 0 };
+    uint32_t Map{ 0 };
     astr_t Name{ "guild member" };
 };
 
@@ -25,7 +25,7 @@ class GuildManager
 public:
     GuildManager();
 
-    void SetMemberName(uint serial, astr_t &name);
+    void SetMemberName(uint32_t serial, astr_t &name);
 
     void SetMemberInfo(const GUILD_MEMBER_INFO &info);
 
@@ -33,15 +33,15 @@ public:
 
     // the live store for the map window overlay pass (GetMembers() copies;
     // the draw path must not allocate per frame)
-    const std::unordered_map<uint, GUILD_MEMBER_INFO> &GetMembersMap() const
+    const std::unordered_map<uint32_t, GUILD_MEMBER_INFO> &GetMembersMap() const
     {
         return m_GuildMembers;
     }
 
-    bool Contains(const uint &serial);
+    bool Contains(const uint32_t &serial);
 
 private:
-    std::unordered_map<uint, GUILD_MEMBER_INFO> m_GuildMembers;
+    std::unordered_map<uint32_t, GUILD_MEMBER_INFO> m_GuildMembers;
 };
 
 extern GuildManager g_GuildManager;

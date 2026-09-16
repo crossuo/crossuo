@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "../core/global.h" // uint/typedefs
+#include "../core/global.h"
 
 #if defined(XUO_ASSISTANT)
 
@@ -50,7 +50,7 @@ void MapWindow_Open();
 extern bool g_AssistantMapOpen;
 
 // The original Map::OnActionSelect: the context-menu transition.
-void MapWindow_OnAction(uint type, uint extra);
+void MapWindow_OnAction(uint32_t type, uint32_t extra);
 
 // Shutdown (context alive): persists the window geometry into g_MapSettings
 // and clears the per-session state (follow center, tracker, overlays).

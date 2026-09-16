@@ -47,9 +47,9 @@ CMenu *CMenuManager::GetMenu(const astr_t &name)
         }
     }
 
-    uint index = (uint)atoi(name.c_str());
+    uint32_t index = (uint32_t)atoi(name.c_str());
 
-    if (index < (uint)m_Items.size())
+    if (index < (uint32_t)m_Items.size())
     {
         return m_Items[index];
     }
@@ -94,7 +94,7 @@ void CMenuManager::ClearHooks()
 }
 
 bool CMenuManager::OnMenuReceived(
-    uint serial, ushort id, const astr_t &name, bool grayMenu, const vector<CMenuItem> &items)
+    uint32_t serial, uint16_t id, const astr_t &name, bool grayMenu, const vector<CMenuItem> &items)
 {
     RemoveLastMenu();
 
@@ -134,7 +134,7 @@ bool CMenuManager::OnMenuReceived(
     return true;
 }
 
-void CMenuManager::OnMenuChoiceSent(uint serial, ushort id, ushort index)
+void CMenuManager::OnMenuChoiceSent(uint32_t serial, uint16_t id, uint16_t index)
 {
     for (size_t i = 0; i < m_Items.size(); i++)
     {
@@ -264,7 +264,7 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const astr_t &itemName, const boo
     }
 
     bool ok = false;
-    uint index = 0;
+    uint32_t index = 0;
 
     if (str_lower(itemName) == "random" && !menu->m_Items.empty())
     {
@@ -273,11 +273,11 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const astr_t &itemName, const boo
     }
     else
     {
-        index = (uint)atoi(itemName.c_str());
+        index = (uint32_t)atoi(itemName.c_str());
         ok = (index != 0 || itemName == "0");
     }
 
-    if (ok && index < (uint)menu->m_Items.size())
+    if (ok && index < (uint32_t)menu->m_Items.size())
     {
         CMenuItem &item = menu->m_Items[index];
 

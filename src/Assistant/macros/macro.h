@@ -197,11 +197,11 @@ class CMacroWithObject : public CMacro
     virtual MACRO_CLASS GetClass() const { return MCLASS_OBJECT; }
 
 public:
-    uint Serial = 0;
-    ushort Graphic = 0;
-    ushort Color = 0;
+    uint32_t Serial = 0;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
 
-    CMacroWithObject(MACRO_TYPE type, uint serial, ushort graphic, ushort color)
+    CMacroWithObject(MACRO_TYPE type, uint32_t serial, uint16_t graphic, uint16_t color)
         : CMacro(type)
         , Serial(serial)
         , Graphic(graphic)
@@ -227,11 +227,11 @@ class CMacroWithGump : public CMacro
     virtual MACRO_CLASS GetClass() const { return MCLASS_GUMP; }
 
 public:
-    uint Serial = 0;
-    uint ID = 0;
-    uint Button = 0;
+    uint32_t Serial = 0;
+    uint32_t ID = 0;
+    uint32_t Button = 0;
 
-    CMacroWithGump(const MACRO_TYPE &type, const uint &serial, const uint &id, const uint &button)
+    CMacroWithGump(const MACRO_TYPE &type, const uint32_t &serial, const uint32_t &id, const uint32_t &button)
         : CMacro(type)
         , Serial(serial)
         , ID(id)
@@ -259,15 +259,15 @@ class CMacroWithMenu : public CMacro
 public:
     astr_t Name = "";
     astr_t ItemName = "";
-    ushort Graphic = 0;
-    ushort Color = 0;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
 
     CMacroWithMenu(
         const MACRO_TYPE &type,
         const astr_t &name,
         const astr_t &itemName,
-        const ushort &graphic,
-        const ushort &color)
+        const uint16_t &graphic,
+        const uint16_t &color)
         : CMacro(type)
         , Name(name)
         , ItemName(itemName)
@@ -295,7 +295,7 @@ class CMacroWithTargetTile : public CMacro
     virtual MACRO_CLASS GetClass() const { return MCLASS_TARGET_TILE; }
 
 public:
-    ushort Graphic = 0;
+    uint16_t Graphic = 0;
     int X = 0;
     int Y = 0;
     int Z = 0;
@@ -305,7 +305,7 @@ public:
 
     CMacroWithTargetTile(
         const MACRO_TYPE &type,
-        const ushort &graphic,
+        const uint16_t &graphic,
         const int &x,
         const int &y,
         const int &z,

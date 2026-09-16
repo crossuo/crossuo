@@ -49,7 +49,7 @@ static vector<astr_t> split_skip_empty(const astr_t &text, char separator)
 
 
 static int to_int(const astr_t &text) { return atoi(text.c_str()); }
-static uint to_uint(const astr_t &text) { return (uint)strtoul(text.c_str(), nullptr, 10); }
+static uint32_t to_uint(const astr_t &text) { return (uint32_t)strtoul(text.c_str(), nullptr, 10); }
 
 CGumpManager g_GumpManager;
 
@@ -67,9 +67,9 @@ CGump *CGumpManager::GetLastGump()
     return m_LastGump;
 }
 
-CGump *CGumpManager::GetGump(const uint &index)
+CGump *CGumpManager::GetGump(const uint32_t &index)
 {
-    if (index < (uint)m_Items.size())
+    if (index < (uint32_t)m_Items.size())
     {
         return m_Items[index];
     }
@@ -77,7 +77,7 @@ CGump *CGumpManager::GetGump(const uint &index)
     return nullptr;
 }
 
-CGump *CGumpManager::GetGump(const uint &serial, const uint &id)
+CGump *CGumpManager::GetGump(const uint32_t &serial, const uint32_t &id)
 {
     for (size_t i = 0; i < m_Items.size(); i++)
     {
@@ -90,7 +90,7 @@ CGump *CGumpManager::GetGump(const uint &serial, const uint &id)
     return nullptr;
 }
 
-void CGumpManager::AddGump(uint serial, int x, int y, uint id)
+void CGumpManager::AddGump(uint32_t serial, int x, int y, uint32_t id)
 {
     m_LastGump = new CGump(serial, id, x, y);
     m_Items.push_back(m_LastGump);
@@ -278,7 +278,7 @@ bool CGumpManager::Consume()
     return false;
 }
 
-void CGumpManager::OnGumpChoiceSent(uint serial, uint id, uint button)
+void CGumpManager::OnGumpChoiceSent(uint32_t serial, uint32_t id, uint32_t button)
 {
     if (g_World == nullptr)
     {
@@ -479,9 +479,9 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
 
                         if (to_int(commands[6]) == entryHook.Index)
                         {
-                            uint textIndex = to_uint(commands[7]);
+                            uint32_t textIndex = to_uint(commands[7]);
 
-                            if (textIndex < (uint)gump->m_Text.size())
+                            if (textIndex < (uint32_t)gump->m_Text.size())
                             {
                                 astr_t text = entryHook.Text;
 
@@ -534,9 +534,9 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
 
                 if (commands.size() >= 8)
                 {
-                    uint textIndex = (uint)strtoul(commands[7].c_str(), nullptr, 10);
+                    uint32_t textIndex = (uint32_t)strtoul(commands[7].c_str(), nullptr, 10);
 
-                    if (textIndex < (uint)gump->m_Text.size())
+                    if (textIndex < (uint32_t)gump->m_Text.size())
                     {
                         textLines.push_back(
                             std::make_pair((uint16_t)atoi(commands[6].c_str()), gump->m_Text[textIndex]));

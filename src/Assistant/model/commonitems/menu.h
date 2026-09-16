@@ -13,15 +13,15 @@ namespace xuoassist {
 class CMenu
 {
 public:
-    uint Serial = 0;
-    ushort ID = 0;
+    uint32_t Serial = 0;
+    uint16_t ID = 0;
     bool GrayMenu = false;
     astr_t Name = "";
     bool Replayed = false;
-    uint ReplyID = 0;
+    uint32_t ReplyID = 0;
 
     CMenu();
-    CMenu(const uint &serial, const ushort &id, const astr_t &name, const bool &grayMenu);
+    CMenu(const uint32_t &serial, const uint16_t &id, const astr_t &name, const bool &grayMenu);
     virtual ~CMenu();
 
     MENU_LIST m_Items;

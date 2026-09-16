@@ -7,7 +7,7 @@
 
 namespace xuoassist {
 
-CPrompt::CPrompt(const uint &serial, const astr_t &text, const PROMPT_TYPE &type)
+CPrompt::CPrompt(const uint32_t &serial, const astr_t &text, const PROMPT_TYPE &type)
     : Serial(serial)
     , Text(text)
     , Type(type)

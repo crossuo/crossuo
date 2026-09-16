@@ -59,7 +59,7 @@ struct XA_INSPECT_ROW
 
 struct XA_INSPECTOR_SECTION
 {
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
     bool OutOfRange{ false };
     vector<XA_INSPECT_ROW> Rows;
     uint32_t LastBuildTick{ 0 };
@@ -67,9 +67,9 @@ struct XA_INSPECTOR_SECTION
 
 vector<XA_INSPECTOR_SECTION> s_Sections;
 bool s_WindowOpen = false;
-uint s_FocusSerial = 0; // scroll-to request from Inspector_Open
+uint32_t s_FocusSerial = 0; // scroll-to request from Inspector_Open
 
-XA_INSPECTOR_SECTION *FindSection(uint serial)
+XA_INSPECTOR_SECTION *FindSection(uint32_t serial)
 {
     for (XA_INSPECTOR_SECTION &section : s_Sections)
     {
@@ -108,7 +108,7 @@ void BuildRows(vector<XA_INSPECT_ROW> &rows, CGameObject *obj)
     AddRow(rows, 1, false, "Container: ", SerialToText(obj->Container), OIK_CONTAINER);
 
     CGameObject *topObject = obj->GetTopObject();
-    const uint topObjectSerial =
+    const uint32_t topObjectSerial =
         ((topObject != nullptr && topObject != obj) ? topObject->Serial : 0xFFFFFFFF);
     AddRow(rows, 1, false, "Top Object: ", SerialToText(topObjectSerial), OIK_TOP_OBJECT);
 
@@ -260,7 +260,7 @@ void RebuildSection(XA_INSPECTOR_SECTION &section)
 
 } // namespace
 
-void Inspector_Open(uint serial)
+void Inspector_Open(uint32_t serial)
 {
     if (serial == 0u)
     {
@@ -282,7 +282,7 @@ void Inspector_Open(uint serial)
     RebuildSection(*section);
 }
 
-void Inspector_OnInspectorUpdate(uint serial)
+void Inspector_OnInspectorUpdate(uint32_t serial)
 {
     XA_INSPECTOR_SECTION *section = FindSection(serial);
     if (section != nullptr)

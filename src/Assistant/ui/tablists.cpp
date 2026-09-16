@@ -64,8 +64,8 @@ bool name_in_use(const vector<CTypeEntry> &items, const char *name, int skip)
 // correct.
 static void from_target_request(
     bool &pending,
-    uint &generation,
-    void (CAssistant::*handler)(uchar *),
+    uint32_t &generation,
+    void (CAssistant::*handler)(uint8_t *),
     const char *prompt)
 {
     pending = true;
@@ -74,7 +74,7 @@ static void from_target_request(
 }
 
 static bool from_target_poll(
-    const bool &pending, uint &generation, int kind, XA_FROM_TARGET_RESULT &out)
+    const bool &pending, uint32_t &generation, int kind, XA_FROM_TARGET_RESULT &out)
 {
     if (!pending)
     {
@@ -102,7 +102,7 @@ void draw_types_tab()
     static char typeGraphic[16] = { 0 };
     static char hint[128] = { 0 };
     static bool &ftPending = s_FtPending[0];
-    static uint ftGeneration = 0;
+    static uint32_t ftGeneration = 0;
     XA_FROM_TARGET_RESULT ftResult;
 
     vector<CTypeEntry> &items = g_AssistantConfig.m_Types;
@@ -151,7 +151,7 @@ void draw_types_tab()
         {
             CTypeEntry entry;
             entry.Name = typeName;
-            entry.Type = (ushort)CAssistant::TextToUInt(typeGraphic);
+            entry.Type = (uint16_t)CAssistant::TextToUInt(typeGraphic);
             items.push_back(entry);
             selected = lastSelected = (int)items.size() - 1;
             changed = true;
@@ -180,7 +180,7 @@ void draw_types_tab()
         else
         {
             items[selected].Name = typeName;
-            items[selected].Type = (ushort)CAssistant::TextToUInt(typeGraphic);
+            items[selected].Type = (uint16_t)CAssistant::TextToUInt(typeGraphic);
             changed = true;
             hint[0] = '\0';
         }
@@ -222,7 +222,7 @@ void draw_objects_tab()
     static char objectSerial[16] = { 0 };
     static char hint[128] = { 0 };
     static bool &ftPending = s_FtPending[1];
-    static uint ftGeneration = 0;
+    static uint32_t ftGeneration = 0;
     XA_FROM_TARGET_RESULT ftResult;
 
     vector<CObjectEntry> &items = g_AssistantConfig.m_Objects;
@@ -322,7 +322,7 @@ void draw_objects_tab()
     // dress bag row
     if (ImGui::Button("Set as dress bag"))
     {
-        const uint serial = selected >= 0 && selected < (int)items.size()
+        const uint32_t serial = selected >= 0 && selected < (int)items.size()
             ? items[selected].Serial
             : CAssistant::TextToSerial(objectSerial);
         if (serial == 0u)
@@ -343,7 +343,7 @@ void draw_objects_tab()
     ImGui::SameLine();
     // rebuild the text only when the value changed (draw path: no per-frame
     // SerialToText allocation)
-    static uint lastDressBag = 0;
+    static uint32_t lastDressBag = 0;
     static astr_t dressBagText = CAssistant::SerialToText(lastDressBag);
     if (g_DressBag != lastDressBag)
     {
@@ -477,7 +477,7 @@ void draw_find_tab()
         vector<CFindItem> &content = lists[selectedList].m_Items;
         const int itemButtons = ListButtons("find_content");
         static bool &ftPending = s_FtPending[2];
-        static uint ftGeneration = 0;
+        static uint32_t ftGeneration = 0;
         if ((itemButtons & XALB_TARGET) != 0)
         {
             // was on_pb_FindContentFromTarget_clicked
@@ -674,7 +674,7 @@ void draw_ignore_tab()
         vector<CIgnoreItem> &content = lists[selectedList].m_Items;
         const int itemButtons = ListButtons("ignore_content");
         static bool &ftPending = s_FtPending[3];
-        static uint ftGeneration = 0;
+        static uint32_t ftGeneration = 0;
         if ((itemButtons & XALB_TARGET) != 0)
         {
             // was on_pb_IgnoreContentFromTarget_clicked
@@ -774,7 +774,7 @@ void draw_world_object_tab(
     bool &changed,
     int fromTargetKind,
     bool &ftPending,
-    uint &ftGeneration)
+    uint32_t &ftGeneration)
 {
     const int buttons = ListButtons(listId);
     if ((buttons & XALB_TARGET) != 0)
@@ -883,7 +883,7 @@ void draw_friends_tab()
     static char serial[16] = { 0 };
     static char hint[128] = { 0 };
     static bool &ftPending = s_FtPending[4];
-    static uint ftGeneration = 0;
+    static uint32_t ftGeneration = 0;
 
     bool changed = false;
     draw_world_object_tab(
@@ -908,7 +908,7 @@ void draw_enemies_tab()
     static char serial[16] = { 0 };
     static char hint[128] = { 0 };
     static bool &ftPending = s_FtPending[5];
-    static uint ftGeneration = 0;
+    static uint32_t ftGeneration = 0;
 
     bool changed = false;
     draw_world_object_tab(

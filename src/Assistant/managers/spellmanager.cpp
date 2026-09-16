@@ -61,7 +61,7 @@ void CSpellManager::CastIndex(int index)
     g_Game.CastSpell(index);
 }
 
-void CSpellManager::TargetCast(const astr_t &name, const uint &serial)
+void CSpellManager::TargetCast(const astr_t &name, const uint32_t &serial)
 {
     int index = Find(str_lower(name));
 

@@ -90,13 +90,13 @@ bool IconButton(
 
 // --- color helpers ----------------------------------------------------------
 // 15-bit UO color -> RGBA preview (approximation: 5-bit channels x8).
-ImU32 UOColorToRGBA(ushort color);
+ImU32 UOColorToRGBA(uint16_t color);
 // Renders an atlas icon at an explicit draw-list rectangle (map corpse
 // marker); atlas lazy-init like IconButton.
 void IconImage(XA_ICON icon, const ImVec2 &topLeft, const ImVec2 &size);
 // Preview-only swatch for the 0x02B2-style hue fields (the original app had no RGB
 // picker for those: its '...' button sends a dye packet instead).
-void HueSwatch(ushort uoColor, float size = 18.0f);
+void HueSwatch(uint16_t uoColor, float size = 18.0f);
 // Swatch + picker popup for true RGB fields (Display tab).
 // commit (optional): set inside the picker popup scope when the edit session
 // ends (ImGui::IsItemDeactivatedAfterEdit - EndPopup restores LastItemData, so
@@ -135,7 +135,7 @@ struct XA_LIST_RENAME
     int row;
     char buf[128];
     ImGuiID List;    // owning list: a rename never renders/commits elsewhere
-    uint Generation; // container mutation count captured at Begin
+    uint32_t Generation; // container mutation count captured at Begin
 };
 
 // Frame-static scratch buffers/state shared by all list widgets.

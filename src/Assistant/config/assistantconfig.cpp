@@ -117,7 +117,7 @@ void CAssistantConfig::ScanProfiles()
         m_Profiles.push_back(name);
         if (name.size() > 2 && name[0] == '0' && name[1] == 'x')
         {
-            const uint serial = CAssistant::TextToSerial(name);
+            const uint32_t serial = CAssistant::TextToSerial(name);
             if (serial != 0u && m_ProfileMap.find(serial) == m_ProfileMap.end())
             {
                 m_ProfileMap.insert(std::make_pair(serial, name));
@@ -152,10 +152,10 @@ void CAssistantConfig::SetCurrentProfile(const astr_t &name)
     ProfileName = name;
 }
 
-bool CAssistantConfig::LoadProfileBySerial(uint serial)
+bool CAssistantConfig::LoadProfileBySerial(uint32_t serial)
 {
     LoadProfileMap();
-    std::map<uint, astr_t>::iterator it = m_ProfileMap.find(serial);
+    std::map<uint32_t, astr_t>::iterator it = m_ProfileMap.find(serial);
     if (it != m_ProfileMap.end())
     {
         SetCurrentProfile(it->second);
@@ -175,7 +175,7 @@ void CAssistantConfig::SaveProfileMap()
 
     XMLDocument doc;
     doc.Root = XMLElement("data");
-    for (std::map<uint, astr_t>::iterator i = m_ProfileMap.begin(); i != m_ProfileMap.end(); ++i)
+    for (std::map<uint32_t, astr_t>::iterator i = m_ProfileMap.begin(); i != m_ProfileMap.end(); ++i)
     {
         XMLElement &element = doc.Root.AddChild("profile");
         element.SetAttribute("serial", CAssistant::SerialToText(i->first));
@@ -199,7 +199,7 @@ void CAssistantConfig::LoadProfileMap()
         if (element.Name == "profile" && element.HasAttribute("serial") &&
             element.HasAttribute("file"))
         {
-            const uint serial = CAssistant::TextToSerial(element.Attribute("serial"));
+            const uint32_t serial = CAssistant::TextToSerial(element.Attribute("serial"));
             m_ProfileMap[serial] = element.Attribute("file");
         }
     }
@@ -272,7 +272,7 @@ bool CAssistantConfig::SaveProfile()
 
 // --- Options.xml -------------------------------------------------------------
 
-bool CAssistantConfig::GetFontColor(ushort &value)
+bool CAssistantConfig::GetFontColor(uint16_t &value)
 {
     bool result = m_UseFontColor;
     if (!m_FontColor.empty())
@@ -286,7 +286,7 @@ bool CAssistantConfig::GetFontColor(ushort &value)
     return result;
 }
 
-void CAssistantConfig::SetFontColor(const bool &state, ushort value)
+void CAssistantConfig::SetFontColor(const bool &state, uint16_t value)
 {
     if (value > 0x0400)
     {
@@ -296,7 +296,7 @@ void CAssistantConfig::SetFontColor(const bool &state, ushort value)
     m_FontColor = CAssistant::GraphicToText(value);
 }
 
-bool CAssistantConfig::GetCharactersFontColor(ushort &value)
+bool CAssistantConfig::GetCharactersFontColor(uint16_t &value)
 {
     bool result = m_UseCharactersFontColor;
     if (!m_CharactersFontColor.empty())
@@ -310,7 +310,7 @@ bool CAssistantConfig::GetCharactersFontColor(ushort &value)
     return result;
 }
 
-void CAssistantConfig::SetCharactersFontColor(const bool &state, ushort value)
+void CAssistantConfig::SetCharactersFontColor(const bool &state, uint16_t value)
 {
     if (value > 0x0400)
     {
@@ -336,7 +336,7 @@ void CAssistantConfig::LoadMainOptions()
         {
             if (element.HasAttribute("flags"))
             {
-                const uint flags = (uint)element.AttributeInt("flags");
+                const uint32_t flags = (uint32_t)element.AttributeInt("flags");
                 for (int i = 0; i < CLBI_COUNT; i++)
                 {
                     m_Options[i] = (flags & (1 << i)) != 0u;
@@ -417,7 +417,7 @@ void CAssistantConfig::LoadMainOptions()
             }
             if (element.HasAttribute("flags"))
             {
-                m_DisplayFlags = (uint)element.AttributeInt("flags");
+                m_DisplayFlags = (uint32_t)element.AttributeInt("flags");
             }
             if (element.HasAttribute("textcolor"))
             {
@@ -478,7 +478,7 @@ void CAssistantConfig::SaveMainOptions()
     doc.Root.SetAttribute("version", "0");
 
     XMLElement &main = doc.Root.AddChild("main");
-    uint flags = 0;
+    uint32_t flags = 0;
     for (int i = 0; i < CLBI_COUNT; i++)
     {
         if (m_Options[i])
@@ -582,7 +582,7 @@ void CAssistantConfig::UpdateFeatures()
     // inspector (0) and Save far objects (0); the No gray screen row maps to
     // XAEF_NO_DEATH_SCREEN there and here. The widget checkbox unchecks
     // became direct option clears.
-    const uint table[CLBI_COUNT] = {
+    const uint32_t table[CLBI_COUNT] = {
         XAEF_CORPSES_AUTOOPEN,
         XAEF_STEALTH_STEP_COUNTER,
         XAEF_SOUND_FILTER,
@@ -609,7 +609,7 @@ void CAssistantConfig::UpdateFeatures()
 
     for (int i = 0; i < CLBI_COUNT; i++)
     {
-        const uint &flags = table[i];
+        const uint32_t &flags = table[i];
 
         if ((flags == 0u) || ((g_EnabledFeature & flags) != 0u))
         {
@@ -625,7 +625,7 @@ void CAssistantConfig::UpdateFeatures()
 
 // --- list queries --------------------------------------------------------------
 
-ushort CAssistantConfig::SeekType(const astr_t &text)
+uint16_t CAssistantConfig::SeekType(const astr_t &text)
 {
     // Was TabListsTypes::SeekType.
     for (const CTypeEntry &entry : m_Types)
@@ -638,7 +638,7 @@ ushort CAssistantConfig::SeekType(const astr_t &text)
     return 0;
 }
 
-uint CAssistantConfig::SeekObject(const astr_t &text)
+uint32_t CAssistantConfig::SeekObject(const astr_t &text)
 {
     // Was TabListsObjects::SeekObject.
     for (const CObjectEntry &entry : m_Objects)
@@ -675,7 +675,7 @@ CIgnoreListEntry *CAssistantConfig::GetIgnoreList(const astr_t &name)
     return nullptr;
 }
 
-bool CAssistantConfig::InFriendList(uint serial)
+bool CAssistantConfig::InFriendList(uint32_t serial)
 {
     // Was TabListsFriends::InFriendList.
     if (m_FeelPartyMembersAsFriends && g_Party.Contains((int)serial))
@@ -692,7 +692,7 @@ bool CAssistantConfig::InFriendList(uint serial)
     return false;
 }
 
-bool CAssistantConfig::InEnemyList(uint serial)
+bool CAssistantConfig::InEnemyList(uint32_t serial)
 {
     // Was TabListsEnemies::InEnemyList.
     for (const CWorldObjectEntry &entry : m_Enemies)
@@ -782,7 +782,7 @@ void CAssistantConfig::RemoveObject(const astr_t &name)
 
 // --- party agent -----------------------------------------------------------------
 
-bool CAssistantConfig::PartyInviteCanBeAutoAccepted(uint serial)
+bool CAssistantConfig::PartyInviteCanBeAutoAccepted(uint32_t serial)
 {
     // Was TabAgentsParty::PartyInviteCanBeAutoAccepted.
     if (m_PartyAutoAcceptAll)
@@ -803,7 +803,7 @@ bool CAssistantConfig::PartyInviteCanBeAutoAccepted(uint serial)
     return false;
 }
 
-bool CAssistantConfig::PartyInviteCanBeAutoDeclined(uint serial)
+bool CAssistantConfig::PartyInviteCanBeAutoDeclined(uint32_t serial)
 {
     // Was TabAgentsParty::PartyInviteCanBeAutoDeclined.
     if (m_PartyAutoDeclineAll)
@@ -826,7 +826,7 @@ bool CAssistantConfig::PartyInviteCanBeAutoDeclined(uint serial)
 
 // --- filters ----------------------------------------------------------------------
 
-bool CAssistantConfig::CheckSpeechInFilter(const astr_t &text, const ushort &color)
+bool CAssistantConfig::CheckSpeechInFilter(const astr_t &text, const uint16_t &color)
 {
     // Was TabFiltersSpeech::CheckSpeechInFilter.
     if (!SpeechFilter())
@@ -835,7 +835,7 @@ bool CAssistantConfig::CheckSpeechInFilter(const astr_t &text, const ushort &col
     }
     for (const CFilterSpeechEntry &item : m_SpeechFilters)
     {
-        const ushort itemColor = CAssistant::TextToGraphic(item.Color);
+        const uint16_t itemColor = CAssistant::TextToGraphic(item.Color);
         if (itemColor == 0xFFFF || itemColor == color)
         {
             bool found = false;
@@ -858,11 +858,11 @@ bool CAssistantConfig::CheckSpeechInFilter(const astr_t &text, const ushort &col
 
 bool CAssistantConfig::CheckReplaceText(
     const astr_t &text,
-    const uint &serial,
-    const ushort &color,
+    const uint32_t &serial,
+    const uint16_t &color,
     const bool &unicode,
     astr_t &replacedText,
-    ushort &replacedColor)
+    uint16_t &replacedColor)
 {
     // Was TabFiltersReplaces::CheckReplaceText. On a match the replacement is
     // returned instead of queuing a reprint packet: the caller displays it
@@ -883,7 +883,7 @@ bool CAssistantConfig::CheckReplaceText(
         {
             continue;
         }
-        ushort itemColor = CAssistant::TextToGraphic(item.OriginalColor);
+        uint16_t itemColor = CAssistant::TextToGraphic(item.OriginalColor);
         if (itemColor != 0xFFFF && itemColor != color)
         {
             continue;
@@ -931,7 +931,7 @@ bool CAssistantConfig::CheckReplaceText(
     return false;
 }
 
-bool CAssistantConfig::CheckSoundInFilter(const ushort &index)
+bool CAssistantConfig::CheckSoundInFilter(const uint16_t &index)
 {
     // Was TabFiltersSound::CheckSoundInFilter.
     if (!SoundFilter())
@@ -1563,11 +1563,11 @@ void CAssistantConfig::LoadDisplayItems()
             }
             if (element.HasAttribute("id"))
             {
-                entry.m_Item.Graphic = (ushort)strtoul(element.Attribute("id").c_str(), nullptr, 16);
+                entry.m_Item.Graphic = (uint16_t)strtoul(element.Attribute("id").c_str(), nullptr, 16);
             }
             if (element.HasAttribute("hue"))
             {
-                entry.m_Item.Hue = (ushort)strtoul(element.Attribute("hue").c_str(), nullptr, 16);
+                entry.m_Item.Hue = (uint16_t)strtoul(element.Attribute("hue").c_str(), nullptr, 16);
             }
             if (element.HasAttribute("mincolor"))
             {
@@ -1829,8 +1829,8 @@ bool CAssistantConfig::LoadHotkeys()
                 CHotkeyEntry entry;
                 entry.Type = HT_TOGGLE_HOTKEYS;
                 entry.Action = 0;
-                entry.Key = (uint)strtoul(element.Attribute("key").c_str(), nullptr, 10);
-                entry.Modifiers = (uchar)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
+                entry.Key = (uint32_t)strtoul(element.Attribute("key").c_str(), nullptr, 10);
+                entry.Modifiers = (uint8_t)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
                 m_Hotkeys.push_back(entry);
                 continue;
             }
@@ -1853,8 +1853,8 @@ bool CAssistantConfig::LoadHotkeys()
             entry.ScriptOrMacroName = name;
             entry.ExternalCode = element.Attribute("externalcode");
             entry.RunningMode = CAssistant::RawStringToBool(element.Attribute("onescriptrunning"));
-            entry.Key = (uint)strtoul(element.Attribute("key").c_str(), nullptr, 10);
-            entry.Modifiers = (uchar)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
+            entry.Key = (uint32_t)strtoul(element.Attribute("key").c_str(), nullptr, 10);
+            entry.Modifiers = (uint8_t)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
             m_Hotkeys.push_back(entry);
         }
         else if (version == 1)
@@ -1872,10 +1872,10 @@ bool CAssistantConfig::LoadHotkeys()
             entry.ScriptOrMacroName = element.Attribute("name");
             entry.ExternalCode = element.Attribute("external_code");
             // SDLK codes (see GetKeycodeFromVK in the original comment)
-            entry.Key = (uint)strtoul(element.Attribute("key").c_str(), nullptr, 10);
-            entry.Modifiers = (uchar)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
-            entry.Type = (uint)strtoul(element.Attribute("type").c_str(), nullptr, 10);
-            entry.Action = (uint)strtoul(element.Attribute("action").c_str(), nullptr, 10);
+            entry.Key = (uint32_t)strtoul(element.Attribute("key").c_str(), nullptr, 10);
+            entry.Modifiers = (uint8_t)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
+            entry.Type = (uint32_t)strtoul(element.Attribute("type").c_str(), nullptr, 10);
+            entry.Action = (uint32_t)strtoul(element.Attribute("action").c_str(), nullptr, 10);
             m_Hotkeys.push_back(entry);
         }
     }
@@ -2166,7 +2166,7 @@ bool CAssistantConfig::SaveDress()
 
         for (int layer = 0; layer < XA_DRESS_MAX_LAYERS; layer++)
         {
-            const uint serial = entry.m_Items[layer];
+            const uint32_t serial = entry.m_Items[layer];
             if (serial != 0u)
             {
                 writer.WriteUInt8((uint8_t)layer);
@@ -2225,11 +2225,11 @@ bool CAssistantConfig::LoadDress()
         CDressSetEntry entry;
         entry.Name = name;
 
-        const uchar layerCount = reader.ReadUInt8();
+        const uint8_t layerCount = reader.ReadUInt8();
         for (int j = 0; j < layerCount && !reader.IsEOF(); j++)
         {
-            const uchar layer = reader.ReadUInt8();
-            const uint serial = reader.ReadUInt32LE();
+            const uint8_t layer = reader.ReadUInt8();
+            const uint32_t serial = reader.ReadUInt32LE();
             if (layer < XA_DRESS_MAX_LAYERS)
             {
                 entry.m_Items[layer] = serial;

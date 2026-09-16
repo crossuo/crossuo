@@ -75,7 +75,7 @@ void option_changed(int index, bool state)
                 g_AssistantConfig.SetOption(index, false);
                 state = false;
             }
-            ::g_PacketManager.SetLightLevel((uchar)(state ? 0 : g_LightLevel));
+            ::g_PacketManager.SetLightLevel((uint8_t)(state ? 0 : g_LightLevel));
             break;
         }
         case CLBI_FILTER_WEATHER:
@@ -146,7 +146,7 @@ void option_changed(int index, bool state)
             }
             if (g_Player != nullptr)
             {
-                ushort graphic = 0;
+                uint16_t graphic = 0;
                 if (!state)
                 {
                     if (g_Player->IsDead() || (g_MorphGraphic == 0u))
@@ -208,7 +208,7 @@ void font_color_row(const char *label, bool *use, astr_t *color, uint32_t dyeSer
         AssistantUI_MarkOptionsDirty();
     }
     ImGui::SameLine();
-    HueSwatch((ushort)CAssistant::TextToGraphic(*color));
+    HueSwatch((uint16_t)CAssistant::TextToGraphic(*color));
     ImGui::SameLine();
     // was on_tb_SelectFontColor_clicked: opens the client's dye gump; the 0x95
     // response writes the color into the config

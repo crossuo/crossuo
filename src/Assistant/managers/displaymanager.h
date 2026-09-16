@@ -62,21 +62,21 @@ class CDisplayManager
 private:
     vector<CDisplayInfo> m_InfoCommands;
     vector<CDisplayItem> m_Commands;
-    std::map<uint, CDisplayIcon *> m_Icons;
+    std::map<uint32_t, CDisplayIcon *> m_Icons;
     astr_t m_TitleText;
 
     static const CDisplayItem m_DefaultItems[26];
     static const DISPLAY_KEY_ITEM m_KeysList[DKI_COUNT];
 
-    CDisplayIcon *LoadDisplayIcon(ushort graphic, uint16_t color);
+    CDisplayIcon *LoadDisplayIcon(uint16_t graphic, uint16_t color);
     void ApplyAttributeToDisplayItem(CDisplayItem &obj, const astr_t &name, const astr_t &value);
-    void CompilleData(const astr_t &text, uint textColor);
+    void CompilleData(const astr_t &text, uint32_t textColor);
     void GetValues(
         const CDisplayItem &item,
         astr_t &value,
         astr_t &maxValue,
-        uint textColor,
-        uint backgroundColor,
+        uint32_t textColor,
+        uint32_t backgroundColor,
         bool useNotoriety);
 
 public:
@@ -106,14 +106,14 @@ public:
         bool hightFont,
         bool highlightReagents,
         bool displayAppIcon,
-        uint backgroundColor);
+        uint32_t backgroundColor);
 
     // The last composed caption (Redraw output; the original's local title string)
     const astr_t &GetTitleText() const { return m_TitleText; }
 
-    void RecompilleData(const astr_t &text, uint textColor);
+    void RecompilleData(const astr_t &text, uint32_t textColor);
 
-    bool CanRedraw(const ushort &graphic, const ushort &color);
+    bool CanRedraw(const uint16_t &graphic, const uint16_t &color);
 };
 
 extern CDisplayManager g_DisplayManager;

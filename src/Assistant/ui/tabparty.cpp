@@ -29,7 +29,7 @@ char s_Name[64] = { 0 };
 char s_Serial[16] = { 0 };
 char s_Hint[128] = { 0 };
 bool s_FtPending = false;
-uint s_FtGeneration = 0;
+uint32_t s_FtGeneration = 0;
 
 const char *PartyNameOf(const CWorldObjectEntry &entry)
 {
@@ -42,12 +42,12 @@ void PartySetNameOf(CWorldObjectEntry &entry, const char *name)
 }
 
 // the original tabs compared CAssistant::TextToSerial(serial) != 0
-uint serial_from_field()
+uint32_t serial_from_field()
 {
     return CAssistant::TextToSerial(s_Serial);
 }
 
-bool serial_in_use(const vector<CWorldObjectEntry> &items, uint serial, int skip)
+bool serial_in_use(const vector<CWorldObjectEntry> &items, uint32_t serial, int skip)
 {
     for (int i = 0; i < (int)items.size(); i++)
     {
@@ -63,7 +63,7 @@ bool serial_in_use(const vector<CWorldObjectEntry> &items, uint serial, int skip
 // target container (was on_pb_PartyAutoAccept*/PartyAutoDecline*_clicked)
 void list_add(vector<CWorldObjectEntry> &items, bool &changed)
 {
-    const uint serial = serial_from_field();
+    const uint32_t serial = serial_from_field();
     if (serial == 0u)
     {
         snprintf(s_Hint, sizeof(s_Hint), "Enter the object serial!");
@@ -85,7 +85,7 @@ void list_add(vector<CWorldObjectEntry> &items, bool &changed)
 
 void list_save(vector<CWorldObjectEntry> &items, int selected, bool &changed)
 {
-    const uint serial = serial_from_field();
+    const uint32_t serial = serial_from_field();
     if (serial == 0u)
     {
         snprintf(s_Hint, sizeof(s_Hint), "Enter the object serial!");

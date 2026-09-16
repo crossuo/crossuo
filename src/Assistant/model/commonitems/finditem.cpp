@@ -55,8 +55,8 @@ void CFindItem::OnChangeGraphic(const astr_t &val)
     {
         for (const astr_t &strGraphic : listGraphic)
         {
-            uint currentGraphic = 0;
-            uint flagsGraphic = ParseToken(strGraphic, currentGraphic, true);
+            uint32_t currentGraphic = 0;
+            uint32_t flagsGraphic = ParseToken(strGraphic, currentGraphic, true);
 
             if ((flagsGraphic & FTS_NOT_EQUAL) != 0u)
             {
@@ -90,8 +90,8 @@ void CFindItem::OnChangeColor(const astr_t &val)
     {
         for (const astr_t &strColor : listColor)
         {
-            uint currentColor = 0;
-            uint flagsColor = ParseToken(strColor, currentColor, true);
+            uint32_t currentColor = 0;
+            uint32_t flagsColor = ParseToken(strColor, currentColor, true);
 
             if ((flagsColor & FTS_NOT_EQUAL) != 0u)
             {
@@ -112,10 +112,10 @@ void CFindItem::OnChangeColor(const astr_t &val)
     }
 }
 
-uint CFindItem::ParseToken(astr_t str, uint &value, const bool &isGraphic) const
+uint32_t CFindItem::ParseToken(astr_t str, uint32_t &value, const bool &isGraphic) const
 {
     str = qtrimmed(str);
-    uint result = FTS_NORMAL;
+    uint32_t result = FTS_NORMAL;
 
     while (str.length() != 0)
     {
@@ -152,7 +152,7 @@ uint CFindItem::ParseToken(astr_t str, uint &value, const bool &isGraphic) const
     return result;
 }
 
-bool CFindItem::TestValues(const uint &original, const uint &test, const uint &flags) const
+bool CFindItem::TestValues(const uint32_t &original, const uint32_t &test, const uint32_t &flags) const
 {
     if (test != 0xFFFF)
     {
@@ -177,11 +177,11 @@ bool CFindItem::TestValues(const uint &original, const uint &test, const uint &f
     return true;
 }
 
-bool CFindItem::Found(const ushort &graphic, const ushort &color) const
+bool CFindItem::Found(const uint16_t &graphic, const uint16_t &color) const
 {
     if (!m_IgnoreGraphics.empty())
     {
-        for (const ushort &item : m_IgnoreGraphics)
+        for (const uint16_t &item : m_IgnoreGraphics)
         {
             if (item == graphic)
             {
@@ -192,7 +192,7 @@ bool CFindItem::Found(const ushort &graphic, const ushort &color) const
 
     if (!m_IgnoreColors.empty())
     {
-        for (const ushort &item : m_IgnoreColors)
+        for (const uint16_t &item : m_IgnoreColors)
         {
             if (item == color)
             {

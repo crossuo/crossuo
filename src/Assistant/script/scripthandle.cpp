@@ -30,7 +30,7 @@ astr_t s_EditorPath;
 // the editor only re-split on the buffer POINTER changing - which never
 // happens for the shared astr_t - so Open/New/Reload left stale lines and an
 // edit rejoined the OLD content over the new file (data loss on save).
-uint s_EditorGeneration = 0;
+uint32_t s_EditorGeneration = 0;
 } // namespace
 
 astr_t &ScriptEditor_Text()
@@ -44,7 +44,7 @@ void ScriptEditor_SetText(const astr_t &text)
     s_EditorGeneration++;
 }
 
-uint ScriptEditor_Generation()
+uint32_t ScriptEditor_Generation()
 {
     return s_EditorGeneration;
 }
@@ -135,18 +135,18 @@ void CScriptHandle::Terminate()
     m_Paused = 0;
 }
 
-void CScriptHandle::Join(uint timeoutMs)
+void CScriptHandle::Join(uint32_t timeoutMs)
 {
     if (!m_Thread.joinable())
     {
         return;
     }
-    const uint start = g_Ticks;
+    const uint32_t start = g_Ticks;
     // bounded wait: poll the flag (std::thread has no timed join)
     while (m_State != SS_ZOMBIE)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        if ((uint)(g_Ticks - start) > timeoutMs)
+        if ((uint32_t)(g_Ticks - start) > timeoutMs)
         {
             m_State = SS_ZOMBIE;
             m_Thread.detach(); // never hang the client on a stuck script
@@ -249,7 +249,7 @@ void CScriptManager::Tick()
         m_Handles.end());
 }
 
-void CScriptManager::StopAll(uint joinTimeoutMs)
+void CScriptManager::StopAll(uint32_t joinTimeoutMs)
 {
     for (CScriptHandle *handle : m_Handles)
     {

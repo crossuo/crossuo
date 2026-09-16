@@ -11,7 +11,7 @@ CGump::CGump()
 {
 }
 
-CGump::CGump(const uint &serial, const uint &id, const int &x, const int &y)
+CGump::CGump(const uint32_t &serial, const uint32_t &id, const int &x, const int &y)
     : Serial(serial)
     , ID(id)
     , X(x)

@@ -21,10 +21,10 @@ CIgnoreItem::~CIgnoreItem()
 {
 }
 
-bool CIgnoreItem::Found(const uint &serial, const ushort &graphic, const ushort &color) const
+bool CIgnoreItem::Found(const uint32_t &serial, const uint16_t &graphic, const uint16_t &color) const
 {
-    uint currentSerial = 0;
-    uint flagsSerial = ParseToken(Serial, currentSerial, false);
+    uint32_t currentSerial = 0;
+    uint32_t flagsSerial = ParseToken(Serial, currentSerial, false);
 
     if ((currentSerial != 0u) && TestValues(serial, currentSerial, flagsSerial))
     {

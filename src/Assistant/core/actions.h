@@ -35,15 +35,15 @@ struct CHotkeyEntry;
 
 // The type list (s_HotkeyTypeName names; the HT_* enum itself lives in
 // config/assistantconfig.h).
-const char *Actions_TypeName(uint type);
-uint Actions_TypeCount();
+const char *Actions_TypeName(uint32_t type);
+uint32_t Actions_TypeCount();
 
 // The action combo contents (Content lists). Fixed for most types; the spell
 // and skill lists follow the (currently producer-less) Actions_SetSpellList /
 // Actions_SetSkillList feeds, the macro list follows g_AssistantConfig.Macros().
-int Actions_ActionCount(uint type);
+int Actions_ActionCount(uint32_t type);
 // Writes into a caller buffer (draw paths build no strings).
-void Actions_ActionName(uint type, int action, char *out, size_t size);
+void Actions_ActionName(uint32_t type, int action, char *out, size_t size);
 
 // The Data column text (UpdateHotkeyData, hotkeysform.cpp:899). Writes into a
 // caller buffer; empty result means the original "Blank hotkey" placeholder.
@@ -61,7 +61,7 @@ void Actions_SetSkillList(const vector<astr_t> &names);
 
 // The new-target-system serial (was the VKI_NEW_TARGET_SYSTEM_VIRTUAL_INT
 // variable: GetInt/SetInt(VKI_NEW_TARGET_SYSTEM_SERIAL) in hotkeysform.cpp).
-uint Actions_NewTargetSystemSerial();
-void Actions_SetNewTargetSystemSerial(uint serial);
+uint32_t Actions_NewTargetSystemSerial();
+void Actions_SetNewTargetSystemSerial(uint32_t serial);
 
 } // namespace xuoassist

@@ -48,15 +48,15 @@ void CAssistant::ScriptError(const astr_t &title, const astr_t &text)
     ClientPrint(text, 0x0021);
 }
 
-uint CAssistant::RawStringToUInt(const astr_t &value)
+uint32_t CAssistant::RawStringToUInt(const astr_t &value)
 {
-    uint result = 0;
+    uint32_t result = 0;
 
     if (value.length() > 1)
     {
         if (value.at(0) == '#')
         {
-            result = (uint)strtoul(("0x" + value.substr(1)).c_str(), nullptr, 16);
+            result = (uint32_t)strtoul(("0x" + value.substr(1)).c_str(), nullptr, 16);
         }
         else if (value == "red")
         {
@@ -152,17 +152,17 @@ bool CAssistant::RawStringToBool(astr_t value)
     return result;
 }
 
-uint CAssistant::TextToUInt(const astr_t &text)
+uint32_t CAssistant::TextToUInt(const astr_t &text)
 {
     return ::xuoassist::TextToUInt(text); // core/textconv (shared with the model)
 }
 
-uint CAssistant::TextToSerial(astr_t text)
+uint32_t CAssistant::TextToSerial(astr_t text)
 {
     return ::xuoassist::TextToSerial(str_lower(text));
 }
 
-ushort CAssistant::TextToGraphic(astr_t text)
+uint16_t CAssistant::TextToGraphic(astr_t text)
 {
     return ::xuoassist::TextToGraphic(str_lower(text));
 }
@@ -182,19 +182,19 @@ int CAssistant::TextToLayer(astr_t text)
     return atoi(text.c_str());
 }
 
-astr_t CAssistant::ColorToText(const uint &value)
+astr_t CAssistant::ColorToText(const uint32_t &value)
 {
     char buf[64] = { 0 };
     snprintf(buf, sizeof(buf), "#%08X", value);
     return buf;
 }
 
-astr_t CAssistant::SerialToText(const uint &value)
+astr_t CAssistant::SerialToText(const uint32_t &value)
 {
     return ::xuoassist::SerialToText(value);
 }
 
-astr_t CAssistant::GraphicToText(const ushort &value)
+astr_t CAssistant::GraphicToText(const uint16_t &value)
 {
     return ::xuoassist::GraphicToText(value);
 }
@@ -204,13 +204,13 @@ astr_t CAssistant::BoolToText(const bool &value)
     return value ? "true" : "false";
 }
 
-void CAssistant::ClientPrint(const astr_t &text, const ushort &color)
+void CAssistant::ClientPrint(const astr_t &text, const uint16_t &color)
 {
     g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
 }
 
-void CAssistant::ClientCharPrint(const uint &serial, const astr_t &text, const ushort &color)
+void CAssistant::ClientCharPrint(const uint32_t &serial, const astr_t &text, const uint16_t &color)
 {
     g_PacketManager.DisplayTalkTextW(
         serial,
@@ -221,7 +221,7 @@ void CAssistant::ClientCharPrint(const uint &serial, const astr_t &text, const u
         ST_NORMAL);
 }
 
-void CAssistant::ClientPrintDebugLevel1(const astr_t &text, const ushort &color)
+void CAssistant::ClientPrintDebugLevel1(const astr_t &text, const uint16_t &color)
 {
     if (g_AssistantConfig.GetMessagesLevel() >= 1)
     {
@@ -229,7 +229,7 @@ void CAssistant::ClientPrintDebugLevel1(const astr_t &text, const ushort &color)
     }
 }
 
-void CAssistant::ClientPrintDebugLevel2(const astr_t &text, const ushort &color)
+void CAssistant::ClientPrintDebugLevel2(const astr_t &text, const uint16_t &color)
 {
     if (g_AssistantConfig.GetMessagesLevel() >= 2)
     {
@@ -303,7 +303,7 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
     ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
-void CAssistant::DumpTileInfo(const ushort &graphic, const short &x, const short &y, const char &z)
+void CAssistant::DumpTileInfo(const uint16_t &graphic, const short &x, const short &y, const char &z)
 {
     char text[64] = { 0 };
     snprintf(text, sizeof(text), "0x%04X %i %i %i\n", graphic, x, y, z);
@@ -318,18 +318,18 @@ void CAssistant::DumpTileInfo(const ushort &graphic, const short &x, const short
     ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
-void CAssistant::GetStatus(const uint &serial)
+void CAssistant::GetStatus(const uint32_t &serial)
 {
     g_LastStatusRequest = serial;
     ::CPacketStatusRequest(serial).Send();
 }
 
-void CAssistant::Click(const uint &serial)
+void CAssistant::Click(const uint32_t &serial)
 {
     ::CPacketClickRequest(serial).Send();
 }
 
-void CAssistant::DoubleClick(const uint &serial)
+void CAssistant::DoubleClick(const uint32_t &serial)
 {
     g_LastUseObject = serial;
     g_LastUseObjectTimer = g_Ticks;
@@ -340,7 +340,7 @@ void CAssistant::DoubleClick(const uint &serial)
     g_Game.DoubleClick(serial);
 }
 
-void CAssistant::Attack(const uint &serial)
+void CAssistant::Attack(const uint32_t &serial)
 {
     // assistant-initiated attacks must not record themselves; the client's
     // CGame::AttackReq is the recording tap
@@ -349,9 +349,9 @@ void CAssistant::Attack(const uint &serial)
     g_Game.AttackReq(serial);
 }
 
-uchar CAssistant::GetNotorietyFlags(const astr_t &text)
+uint8_t CAssistant::GetNotorietyFlags(const astr_t &text)
 {
-    uchar flags = NTF_ALL;
+    uint8_t flags = NTF_ALL;
 
     TextFileParser parser({}, "| ", "", "");
 
@@ -396,7 +396,7 @@ CGameObject *CAssistant::FindList(
     const astr_t &findListName,
     const astr_t &containerText,
     const astr_t &distanceText,
-    const ushort &flags,
+    const uint16_t &flags,
     const astr_t &notorietyText,
     bool recurseSearch,
     vector<astr_t> &result)
@@ -440,8 +440,8 @@ CGameObject *CAssistant::FindList(
         }
     }
 
-    uchar notoriety = GetNotorietyFlags(notorietyText);
-    uint container = TextToSerial(containerText);
+    uint8_t notoriety = GetNotorietyFlags(notorietyText);
+    uint32_t container = TextToSerial(containerText);
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     CGameObject *found = nullptr;
 
@@ -491,7 +491,7 @@ CGameObject *CAssistant::FindType(
     const vector<astr_t> &color,
     const astr_t &containerText,
     const astr_t &distanceText,
-    const ushort &flags,
+    const uint16_t &flags,
     const astr_t &notorietyText,
     bool recurseSearch,
     vector<astr_t> &result)
@@ -522,8 +522,8 @@ CGameObject *CAssistant::FindType(
         }
     }
 
-    uchar notoriety = GetNotorietyFlags(notorietyText);
-    uint container = TextToSerial(containerText);
+    uint8_t notoriety = GetNotorietyFlags(notorietyText);
+    uint32_t container = TextToSerial(containerText);
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     int graphicSize = (int)graphic.size();
     int colorSize = (int)color.size();
@@ -581,10 +581,10 @@ CGameObject *CAssistant::FindType(
 CGameObject *CAssistant::FindType(
     const CFindItem &findListItem,
     const vector<CIgnoreItem> &ignoreList,
-    const uint &container,
+    const uint32_t &container,
     const int &distance,
-    ushort flags,
-    const uchar &notoriety,
+    uint16_t flags,
+    const uint8_t &notoriety,
     bool recurseSearch,
     vector<astr_t> &list)
 {
@@ -700,7 +700,7 @@ CGameObject *CAssistant::FindType(
                 if (item->NPC)
                 {
                     ignored = true;
-                    uchar itemNoto = ((CGameCharacter *)item)->Notoriety;
+                    uint8_t itemNoto = ((CGameCharacter *)item)->Notoriety;
 
                     if (((notoriety & NTF_INNOCENT) != 0) && itemNoto == NT_INNOCENT)
                     {
@@ -797,7 +797,7 @@ int CAssistant::CountType(
         return 0;
     }
 
-    uint container = TextToSerial(containerText);
+    uint32_t container = TextToSerial(containerText);
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     int graphicSize = (int)graphic.size();
     int colorSize = (int)color.size();
@@ -815,7 +815,7 @@ int CAssistant::CountType(
 }
 
 int CAssistant::CountType(
-    const CFindItem &findListItem, const uint &container, const int &distance, bool recurseSearch)
+    const CFindItem &findListItem, const uint32_t &container, const int &distance, bool recurseSearch)
 {
     if (g_World == nullptr)
     {
@@ -861,7 +861,7 @@ int CAssistant::CountType(
 }
 
 void CAssistant::UseType(
-    const CFindItem &findListItem, const uint &container, const int &distance, const bool &recurseSearch)
+    const CFindItem &findListItem, const uint32_t &container, const int &distance, const bool &recurseSearch)
 {
     vector<astr_t> list;
 
@@ -883,7 +883,7 @@ void CAssistant::MoveItem(CGameItem *item)
         return;
     }
 
-    uint serial = item->Serial;
+    uint32_t serial = item->Serial;
 
     if (g_MoveItemData.Count < 1)
     {
@@ -906,7 +906,7 @@ void CAssistant::MoveItem(CGameItem *item)
     }
 }
 
-void CAssistant::MoveEquip(const uint &serial, const int &layer, const uint &container)
+void CAssistant::MoveEquip(const uint32_t &serial, const int &layer, const uint32_t &container)
 {
     ::CPacketPickupRequest(serial, 1).Send();
     ::CPacketEquipRequest(serial, layer, container).Send();
@@ -931,18 +931,18 @@ void CAssistant::Track(const bool &state, short x, short y)
     g_AssistantEvents->OnTrack(state, x, y);
 }
 
-void CAssistant::HandleTargetType(uchar *buf)
+void CAssistant::HandleTargetType(uint8_t *buf)
 {
     // Was g_TabListsTypes->SetTypeFromTarget(unpack16(buf + 17)); the field
     // update is the Phase 3 from-target flow (UI consumes via OnFromTarget).
-    const ushort graphic = unpack16(buf + 17);
+    const uint16_t graphic = unpack16(buf + 17);
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_TYPE, 0, graphic, 0, "");
 }
 
-void CAssistant::HandleTargetObject(uchar *buf)
+void CAssistant::HandleTargetObject(uint8_t *buf)
 {
     // Was g_TabListsObjects->SetObjectFromTarget(unpack32(buf + 7)).
-    const uint serial = unpack32(buf + 7);
+    const uint32_t serial = unpack32(buf + 7);
     if (serial != 0u)
     {
         Info(Assistant, "object from target: 0x%08X\n", serial);
@@ -950,9 +950,9 @@ void CAssistant::HandleTargetObject(uchar *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_OBJECT, serial, 0, 0, "");
 }
 
-void CAssistant::HandleTargetDisplayItem(uchar *buf)
+void CAssistant::HandleTargetDisplayItem(uint8_t *buf)
 {
-    ushort color = 0;
+    uint16_t color = 0;
 
     if (g_World != nullptr)
     {
@@ -970,7 +970,7 @@ void CAssistant::HandleTargetDisplayItem(uchar *buf)
         XA_FROM_TARGET_DISPLAY_ITEM, 0, unpack16(buf + 17), color, "");
 }
 
-void CAssistant::HandleTargetInfo(uchar *buf)
+void CAssistant::HandleTargetInfo(uint8_t *buf)
 {
     if (g_World != nullptr)
     {
@@ -978,7 +978,7 @@ void CAssistant::HandleTargetInfo(uchar *buf)
     }
 }
 
-void CAssistant::HandleTargetInfoTile(uchar *buf)
+void CAssistant::HandleTargetInfoTile(uint8_t *buf)
 {
     if (g_World != nullptr)
     {
@@ -986,12 +986,12 @@ void CAssistant::HandleTargetInfoTile(uchar *buf)
     }
 }
 
-void CAssistant::HandleTargetDressBag(uchar *buf)
+void CAssistant::HandleTargetDressBag(uint8_t *buf)
 {
     SetDressBag(unpack32(buf + 7));
 }
 
-void CAssistant::HandleTargetDressItem(uchar *buf)
+void CAssistant::HandleTargetDressItem(uint8_t *buf)
 {
     if (g_World == nullptr)
     {
@@ -1016,17 +1016,17 @@ void CAssistant::HandleTargetDressItem(uchar *buf)
     }
 }
 
-void CAssistant::HandleTargetHide(uchar *buf)
+void CAssistant::HandleTargetHide(uint8_t *buf)
 {
     ::g_PacketManager.DeleteObject(unpack32(buf + 7));
 }
 
-void CAssistant::HandleTargetDrop(uchar *buf)
+void CAssistant::HandleTargetDrop(uint8_t *buf)
 {
     MoveItem(g_World->FindWorldItem(unpack32(buf + 7)));
 }
 
-void CAssistant::HandleTargetFindList(uchar *buf)
+void CAssistant::HandleTargetFindList(uint8_t *buf)
 {
     // Was g_TabListsFind->AddFindListItemInList(g_World->FindWorldObject(...)).
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
@@ -1040,7 +1040,7 @@ void CAssistant::HandleTargetFindList(uchar *buf)
     // (CObjectNameReceiver); the comment field just stays empty then.
 }
 
-void CAssistant::HandleTargetIgnoreList(uchar *buf)
+void CAssistant::HandleTargetIgnoreList(uint8_t *buf)
 {
     // Was g_TabListsIgnore->AddIgnoreListItemInList(...).
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
@@ -1052,11 +1052,11 @@ void CAssistant::HandleTargetIgnoreList(uchar *buf)
     }
 }
 
-void CAssistant::HandleTargetPartyObject(uchar *buf)
+void CAssistant::HandleTargetPartyObject(uint8_t *buf)
 {
     // was g_TabAgentsParty->SetPartyObjectFromTarget(unpack32(buf + 7)); the
     // serial/name fields are Phase 4 tab state
-    const uint serial = unpack32(buf + 7);
+    const uint32_t serial = unpack32(buf + 7);
     astr_t name;
 
     if (g_World != nullptr)
@@ -1072,10 +1072,10 @@ void CAssistant::HandleTargetPartyObject(uchar *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_PARTY, serial, 0, 0, name);
 }
 
-void CAssistant::HandleTargetFriendObject(uchar *buf)
+void CAssistant::HandleTargetFriendObject(uint8_t *buf)
 {
     // Was g_TabListsFriends->SetFriendObjectFromTarget(unpack32(buf + 7)).
-    const uint serial = unpack32(buf + 7);
+    const uint32_t serial = unpack32(buf + 7);
     Info(Assistant, "friend from target: 0x%08X\n", serial);
     astr_t name;
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
@@ -1086,10 +1086,10 @@ void CAssistant::HandleTargetFriendObject(uchar *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_FRIEND, serial, 0, 0, name);
 }
 
-void CAssistant::HandleTargetEnemyObject(uchar *buf)
+void CAssistant::HandleTargetEnemyObject(uint8_t *buf)
 {
     // Was g_TabListsEnemies->SetEnemyObjectFromTarget(unpack32(buf + 7)).
-    const uint serial = unpack32(buf + 7);
+    const uint32_t serial = unpack32(buf + 7);
     Info(Assistant, "enemy from target: 0x%08X\n", serial);
     astr_t name;
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
@@ -1100,7 +1100,7 @@ void CAssistant::HandleTargetEnemyObject(uchar *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_ENEMY, serial, 0, 0, name);
 }
 
-void CAssistant::HandleTargetAnimalAndVendorControlName(uchar *buf)
+void CAssistant::HandleTargetAnimalAndVendorControlName(uint8_t *buf)
 {
     // Was g_AnimalAndVendorControlForm->SetName(obj->GetName()) + window
     // activate; the control form is the Phase 3 speech popup.
@@ -1114,7 +1114,7 @@ void CAssistant::HandleTargetAnimalAndVendorControlName(uchar *buf)
     }
 }
 
-CGameObject *CAssistant::FindFriend(const ushort &flags, const astr_t &distanceText)
+CGameObject *CAssistant::FindFriend(const uint16_t &flags, const astr_t &distanceText)
 {
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     CGameObject *found = nullptr;
@@ -1196,7 +1196,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const astr_t &distanceT
     return found;
 }
 
-CGameObject *CAssistant::FindEnemy(const ushort &flags, const astr_t &distanceText)
+CGameObject *CAssistant::FindEnemy(const uint16_t &flags, const astr_t &distanceText)
 {
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     CGameObject *found = nullptr;
@@ -1300,7 +1300,7 @@ void CAssistant::GetEnemiesStatus()
     }
 }
 
-bool CAssistant::IsNoDrawTile(const ushort &graphic)
+bool CAssistant::IsNoDrawTile(const uint16_t &graphic)
 {
     switch (graphic)
     {
@@ -1334,12 +1334,12 @@ bool CAssistant::IsNoDrawTile(const ushort &graphic)
     return true;
 }
 
-void CAssistant::HandleSetPVPCaller(uchar *buf)
+void CAssistant::HandleSetPVPCaller(uint8_t *buf)
 {
     g_Game.ValueInt(VKI_SET_PVPCALLER, unpack32(buf + 7));
 }
 
-void CAssistant::SetDressBag(const uint &serial)
+void CAssistant::SetDressBag(const uint32_t &serial)
 {
     // Was TabListsObjects::SetDressBag (minus the label color updates; the
     // red/green dress-bag label is Phase 2 UI).
@@ -1444,7 +1444,7 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
     // it (double click or the OpenDoor packet, per the config option). The
     // original timer was single-shot with an immediate-fire path; the immediate
     // path is the behavior here.
-    uint doorToOpen = 0;
+    uint32_t doorToOpen = 0;
 
     if (g_World != nullptr)
     {
@@ -1506,7 +1506,7 @@ bool AssistantSpeechIntercept(astr_t &text, uint16_t &color)
 
     g_MacroExecutor.RecordSay(text);
 
-    ushort replaceFontColorValue = 0;
+    uint16_t replaceFontColorValue = 0;
     bool replaceFontColor = g_AssistantConfig.GetFontColor(replaceFontColorValue);
 
     if (!replaceFontColor && replaceFontColorValue != color)

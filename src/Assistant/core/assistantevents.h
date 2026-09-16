@@ -53,19 +53,19 @@ enum XA_JOURNAL_MESSAGE_FLAGS
 // astr_t per §4.2.
 struct XA_PARTY_MEMBER_INFO
 {
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
     int X{ 0 };
     int Y{ 0 };
-    uint Map{ 0 };
+    uint32_t Map{ 0 };
     astr_t Name{ "" };
 };
 
 struct XA_GUILD_MEMBER_INFO
 {
-    uint Serial{ 0 };
+    uint32_t Serial{ 0 };
     int X{ 0 };
     int Y{ 0 };
-    uint Map{ 0 };
+    uint32_t Map{ 0 };
     astr_t Name{ "" };
 };
 
@@ -81,19 +81,19 @@ public:
 
     // Was CAssistant::ClientPrint: inject a system print into the client.
     // Default reproduces the original packet injection exactly.
-    virtual void OnClientPrint(const astr_t &text, ushort color = g_MessagesColor);
+    virtual void OnClientPrint(const astr_t &text, uint16_t color = g_MessagesColor);
 
     // --- buffs (was g_BuffManager.Add/Remove) ------------------------------
-    virtual void OnBuffAdd(ushort graphic, uint timer, const astr_t &name)
+    virtual void OnBuffAdd(uint16_t graphic, uint32_t timer, const astr_t &name)
     {
         (void)graphic;
         (void)timer;
         (void)name;
     }
-    virtual void OnBuffRemove(ushort graphic) { (void)graphic; }
+    virtual void OnBuffRemove(uint16_t graphic) { (void)graphic; }
     // --- corpses (was g_CorpseManager.Add; auto-open bookkeeping) ----------
     // expireTicks is an absolute g_Ticks stamp.
-    virtual void OnCorpseAdd(uint serial, uint expireTicks)
+    virtual void OnCorpseAdd(uint32_t serial, uint32_t expireTicks)
     {
         (void)serial;
         (void)expireTicks;
@@ -105,8 +105,8 @@ public:
 
     // --- object properties (was g_ObjectPropertiesManager.Add) -------------
     virtual void OnMegaCliloc(
-        uint serial,
-        uint revision,
+        uint32_t serial,
+        uint32_t revision,
         const astr_t &name,
         const astr_t &properties)
     {
@@ -133,13 +133,13 @@ public:
 
     // --- macros (was g_TabMacros->AddAction while a recording was open) ----------
     // graphic/color are 0 when the targeted object is unknown to the world.
-    virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color)
+    virtual void OnRecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color)
     {
         (void)serial;
         (void)graphic;
         (void)color;
     }
-    virtual void OnRecordTargetTile(ushort graphic, int x, int y, int z)
+    virtual void OnRecordTargetTile(uint16_t graphic, int x, int y, int z)
     {
         (void)graphic;
         (void)x;
@@ -160,7 +160,7 @@ public:
     //     HandleTarget* stubs in core/assist.cpp forward the 0x6C reply) ----
     // XA_FROM_TARGET_* identifies which tab asked; name is the object name
     // when known (AnimalVendorName requests), "" otherwise.
-    virtual void OnFromTarget(int kind, uint serial, ushort graphic, ushort color, const astr_t &name)
+    virtual void OnFromTarget(int kind, uint32_t serial, uint16_t graphic, uint16_t color, const astr_t &name)
     {
         (void)kind;
         (void)serial;
@@ -170,15 +170,15 @@ public:
     }
 
     // --- object inspector (was g_ObjectInspectorForm->CheckUpdate(obj)) -----
-    virtual void OnInspectorUpdate(uint serial) { (void)serial; }
+    virtual void OnInspectorUpdate(uint32_t serial) { (void)serial; }
 
     // --- display tab title bar (was g_TabDisplay->RedrawTitle /
     //     CheckRedrawTitle(obj)) ---------------------------------------------
     virtual void OnTitleRedraw() {}
-    virtual void OnTitleRedraw(uint serial) { (void)serial; }
+    virtual void OnTitleRedraw(uint32_t serial) { (void)serial; }
 
     // --- map window (was g_Map->CheckForUpdate / SetWantRedraw) -------------
-    virtual void OnMapUpdate(uint serial) { (void)serial; }
+    virtual void OnMapUpdate(uint32_t serial) { (void)serial; }
     virtual void OnMapRedraw() {}
     // Was g_TabMain->OpenMap: the OIPMT_OPEN_MAP app packet, the MapSettings
     // "Show on log in" flag and the hotkey launchers.
@@ -201,6 +201,6 @@ extern CAssistantEvents *g_AssistantEvents;
 
 // Script-visible buff display name for the 0xDF mirror (the old recv-tap
 // handler's static name table); iconIndex is the icon id minus 0x03E9.
-const astr_t &AssistantBuffName(ushort iconIndex);
+const astr_t &AssistantBuffName(uint16_t iconIndex);
 
 } // namespace xuoassist

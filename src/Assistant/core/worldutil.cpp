@@ -50,7 +50,7 @@ int CountItems(const CGameObject *root, const CFindItem &findListItem, bool recu
     return count;
 }
 
-int CountItems(const CGameObject *root, ushort graphic, ushort color, bool recurse)
+int CountItems(const CGameObject *root, uint16_t graphic, uint16_t color, bool recurse)
 {
     if (root == nullptr)
     {
@@ -80,7 +80,7 @@ CGameObject *FindType(
     const CGameObject *root,
     const CFindItem &findListItem,
     const vector<CIgnoreItem> &ignoreList,
-    uchar flags,
+    uint8_t flags,
     bool recurseSearch,
     vector<astr_t> &list)
 {

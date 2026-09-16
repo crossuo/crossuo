@@ -36,7 +36,7 @@ public:
     // uses do not record themselves
     void CastIndex(int index);
 
-    void TargetCast(const astr_t &name, const uint &serial);
+    void TargetCast(const astr_t &name, const uint32_t &serial);
 };
 
 extern CSpellManager g_SpellManager;
