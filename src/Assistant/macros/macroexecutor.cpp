@@ -969,7 +969,7 @@ void CMacroExecutor::ProcessMacro()
                 {
                     break;
                 }
-                CGump *gump = g_GumpManager.GetLastGump();
+                GumpData *gump = g_GumpManager.GetLastGump();
                 if (gump == nullptr || gump->Replayed)
                 {
                     break;

@@ -62,12 +62,12 @@ int CGumpManager::GetGumpCount()
     return (int)m_Items.size();
 }
 
-CGump *CGumpManager::GetLastGump()
+GumpData *CGumpManager::GetLastGump()
 {
     return m_LastGump;
 }
 
-CGump *CGumpManager::GetGump(const uint32_t &index)
+GumpData *CGumpManager::GetGump(const uint32_t &index)
 {
     if (index < (uint32_t)m_Items.size())
     {
@@ -77,9 +77,9 @@ CGump *CGumpManager::GetGump(const uint32_t &index)
     return nullptr;
 }
 
-CGump *CGumpManager::GetGump(const uint32_t &serial, const uint32_t &id)
+GumpData *CGumpManager::GetGump(const uint32_t &serial, const uint32_t &id)
 {
-    for (CGump *gump : m_Items)
+    for (GumpData *gump : m_Items)
     {
         if (gump->Serial == serial && gump->ID == id)
         {
@@ -92,13 +92,20 @@ CGump *CGumpManager::GetGump(const uint32_t &serial, const uint32_t &id)
 
 void CGumpManager::AddGump(uint32_t serial, int x, int y, uint32_t id)
 {
-    m_LastGump = new CGump(serial, id, x, y);
+    // was the CGump(serial, id, x, y) constructor (the record is a plain
+    // struct now; the remaining fields keep their default initializers)
+    auto *gump = new GumpData();
+    gump->Serial = serial;
+    gump->ID = id;
+    gump->X = x;
+    gump->Y = y;
+    m_LastGump = gump;
     m_Items.push_back(m_LastGump);
 }
 
 void CGumpManager::RemoveLastGump()
 {
-    for (CGump *gump : m_Items)
+    for (GumpData *gump : m_Items)
     {
         if (gump == m_LastGump)
         {
@@ -113,7 +120,7 @@ void CGumpManager::RemoveLastGump()
 
 void CGumpManager::ClearGumps()
 {
-    for (CGump *gump : m_Items)
+    for (GumpData *gump : m_Items)
     {
         delete gump;
     }
@@ -287,7 +294,7 @@ void CGumpManager::OnGumpChoiceSent(uint32_t serial, uint32_t id, uint32_t butto
 
     for (size_t i = 0; i < m_Items.size(); i++)
     {
-        CGump *gump = m_Items[i];
+        GumpData *gump = m_Items[i];
 
         if (!gump->Replayed && gump->Serial == serial && gump->ID == id)
         {
@@ -313,7 +320,7 @@ void CGumpManager::OnGumpChoiceSent(uint32_t serial, uint32_t id, uint32_t butto
     }
 }
 
-bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
+bool CGumpManager::SendGumpChoice(GumpData *gump, CGumpHook &hook)
 {
     if (gump == nullptr || gump->Replayed)
     {
@@ -571,7 +578,7 @@ void CGumpManager::InfoGump(const astr_t &gumpIndex)
         index = to_int(gumpIndex);
     }
 
-    CGump *gump = nullptr;
+    GumpData *gump = nullptr;
 
     if (index == -1)
     {

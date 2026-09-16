@@ -60,7 +60,6 @@ extern "C" {
 #include "../core/world.h"
 #include "../core/worldutil.h"
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-originated uses do not record)
-#include "../model/commonitems/gump.h"
 #include "../model/commonitems/gumphook.h"
 #include "../model/commonitems/menu.h"
 #include "Network/Packets.h" // the client packets the wrappers build on
@@ -366,10 +365,10 @@ JSClassID s_GumpHookClass = 0;
 JSClassID s_ClientMacroClass = 0;
 JSClassID s_FileClass = 0;
 
-// opaque = CGump* (deep copy; owned)
+// opaque = GumpData* (deep copy; owned)
 void gump_finalizer(JSRuntime *rt, JSValue val)
 {
-    auto *gump = (CGump *)JS_GetOpaque(val, s_GumpClass);
+    auto *gump = (GumpData *)JS_GetOpaque(val, s_GumpClass);
     delete gump;
     (void)rt;
 }
@@ -433,7 +432,7 @@ void file_finalizer(JSRuntime *rt, JSValue val)
     (void)rt;
 }
 
-JSValue new_gump_object(JSContext *ctx, CGump *copy)
+JSValue new_gump_object(JSContext *ctx, GumpData *copy)
 {
     JSValue obj = JS_NewObjectClass(ctx, s_GumpClass);
     if (JS_IsException(obj))
@@ -1803,7 +1802,7 @@ JSValue jsn_getgump(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
         command->IntA = arg_int(ctx, argv, argc, 0, -1);
     }
     ScriptQueue_Exec(command);
-    CGump *gump = command->ResultDropped ? nullptr : (CGump *)command->PointerA;
+    GumpData *gump = command->ResultDropped ? nullptr : (GumpData *)command->PointerA;
     delete command;
     pause_gate(ctx);
     if (gump == nullptr)
@@ -1847,7 +1846,7 @@ JSValue gumphook_addcheck(JSContext *ctx, JSValueConst thisVal, int argc, JSValu
 // the CScriptGumpObject surface over the script-owned copy
 JSValue gump_get(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *, int magic)
 {
-    CGump *gump = (CGump *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
+    GumpData *gump = (GumpData *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
     if (gump == nullptr)
     {
         return JS_EXCEPTION;
@@ -1865,7 +1864,7 @@ JSValue gump_get(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *, int 
 
 // filters the item commands by control type (the ButtonList..CommandList
 // bodies of gumpengine.cpp)
-vector<astr_t> gump_commands_of(const CGump *gump, int filter)
+vector<astr_t> gump_commands_of(const GumpData *gump, int filter)
 {
     vector<astr_t> result;
     for (const CGumpItem &item : gump->m_Items)
@@ -1918,7 +1917,7 @@ vector<astr_t> gump_commands_of(const CGump *gump, int filter)
 
 JSValue gump_list(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *, int magic)
 {
-    CGump *gump = (CGump *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
+    GumpData *gump = (GumpData *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
     if (gump == nullptr)
     {
         return JS_EXCEPTION;
@@ -1945,7 +1944,7 @@ JSValue gump_list(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *, int
 
 JSValue gump_command(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
 {
-    CGump *gump = (CGump *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
+    GumpData *gump = (GumpData *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
     if (gump == nullptr)
     {
         return JS_EXCEPTION;
@@ -1961,7 +1960,7 @@ JSValue gump_command(JSContext *ctx, JSValueConst thisVal, int argc, JSValueCons
 
 JSValue gump_text(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
 {
-    CGump *gump = (CGump *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
+    GumpData *gump = (GumpData *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
     if (gump == nullptr)
     {
         return JS_EXCEPTION;
@@ -1982,7 +1981,7 @@ JSValue gump_text(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *
 // packet, no dangling window.
 JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
 {
-    CGump *gump = (CGump *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
+    GumpData *gump = (GumpData *)JS_GetOpaque2(ctx, thisVal, s_GumpClass);
     if (gump == nullptr)
     {
         return JS_EXCEPTION;
@@ -3527,7 +3526,7 @@ void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName)
     // existed but were never registered, so s_GumpClass..s_FileClass all
     // stayed 0 - aliasing s_GameObjectClass - and every new_gump_object/
     // new_menu_object/... landed in the GameObject class: the gameobject
-    // finalizer then freed CGump*/CMenu* deep copies as XA_JS_GAMEOBJECT
+    // finalizer then freed GumpData*/CMenu* deep copies as XA_JS_GAMEOBJECT
     // (type-confused delete, real record leaked) and the instances carried
     // the wrong prototype, so obj.Select/.Open/.AddEntry were missing).
     struct XA_ENGINE_CLASS
@@ -4832,7 +4831,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 g_GumpManager.InfoGump(command->TextA);
                 break;
             }
-            CGump *gump = nullptr;
+            GumpData *gump = nullptr;
             if (command->SubTag == 1)
             {
                 // -1 was the GetLastGump path (GetGump(-1) -> GetLastGump)
@@ -4844,7 +4843,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 gump = g_GumpManager.GetGump(command->SerialA, (uint32_t)command->IntB);
             }
             // deep copy for the script thread (the CScriptGumpObject ctor)
-            command->PointerA = gump != nullptr ? new CGump(*gump) : nullptr;
+            command->PointerA = gump != nullptr ? new GumpData(*gump) : nullptr;
             break;
         }
         case SC_GUMP_SELECT: // OnCommandSelectGump (4224); re-resolves the
@@ -4853,7 +4852,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             {
                 break;
             }
-            CGump *gump = g_GumpManager.GetGump(
+            GumpData *gump = g_GumpManager.GetGump(
                 (uint32_t)strtoul(command->TextA.c_str(), nullptr, 10),
                 (uint32_t)strtoul(command->TextB.c_str(), nullptr, 10));
             if (gump == nullptr)

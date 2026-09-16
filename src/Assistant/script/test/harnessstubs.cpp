@@ -30,7 +30,6 @@
 #include "../../managers/promptmanager.h"
 #include "../../managers/spellmanager.h"
 #include "../../managers/trademanager.h"
-#include "../../model/commonitems/gump.h"
 #include "../../model/commonitems/journalmessage.h"
 #include "../../model/commonitems/menu.h"
 #include "Network/Packets.h"
@@ -116,12 +115,12 @@ void SendConsoleText(wstr_t, uint16_t) {}
 
 namespace xuoassist {
 
-extern CGump *g_HarnessGump;
+extern GumpData *g_HarnessGump;
 
 // --- harness hooks -----------------------------------------------------------
 // The executor deep-copies the manager record for GetGump; the harness points
 // the fake manager at this one.
-CGump *g_HarnessGump = nullptr;
+GumpData *g_HarnessGump = nullptr;
 
 
 uint32_t CAssistant::TextToSerial(astr_t text)
@@ -191,16 +190,16 @@ bool CAssistantConfig::LoadHotkeys() { return true; }
 CGumpManager::CGumpManager() {}
 CGumpManager::~CGumpManager() {}
 CGumpManager g_GumpManager;
-CGump *CGumpManager::GetGump(const uint32_t &) { return g_HarnessGump; }
-CGump *CGumpManager::GetGump(const uint32_t &, const uint32_t &) { return g_HarnessGump; }
-CGump *CGumpManager::GetLastGump() { return g_HarnessGump; }
+GumpData *CGumpManager::GetGump(const uint32_t &) { return g_HarnessGump; }
+GumpData *CGumpManager::GetGump(const uint32_t &, const uint32_t &) { return g_HarnessGump; }
+GumpData *CGumpManager::GetLastGump() { return g_HarnessGump; }
 int CGumpManager::GetGumpCount()
 {
     return g_HarnessGump != nullptr ? 1 : 0;
 }
 void CGumpManager::AddHook(CGumpHook *) {}
 void CGumpManager::ClearHooks() {}
-bool CGumpManager::SendGumpChoice(CGump *, CGumpHook &) { return false; }
+bool CGumpManager::SendGumpChoice(GumpData *, CGumpHook &) { return false; }
 void CGumpManager::InfoGump(const astr_t &) {}
 
 CMenuManager::CMenuManager() {}

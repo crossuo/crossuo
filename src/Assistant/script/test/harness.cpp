@@ -31,7 +31,7 @@
 #include "../../core/assistantevents.h" // JMT_* (the journal type flags)
 #include "../../core/world.h" // g_World stand-in (section 6 executor gate)
 #include "../apiscript.h"
-#include "../../model/commonitems/gump.h"
+#include "../../managers/gumpmanager.h"
 
 extern "C" {
 #include "../quickjs/quickjs.h"
@@ -95,7 +95,7 @@ static void harness_format_line(JSContext *ctx, astr_t &line, astr_t &message)
 namespace xuoassist {
 
 // the fake gump the executor deep-copies for GetGump (see harnessstubs.cpp)
-extern CGump *g_HarnessGump;
+extern GumpData *g_HarnessGump;
 
 } // namespace xuoassist
 
@@ -538,7 +538,11 @@ int main()
         CGameWorld world;
         g_World = &world;
         g_EnabledCommands = ~0ULL;
-        CGump source(0x40000123, 5, 10, 20);
+        GumpData source;
+        source.Serial = 0x40000123;
+        source.ID = 5;
+        source.X = 10;
+        source.Y = 20;
         g_HarnessGump = &source;
 
         // the aliased-class bug shape: every engine class aliased the GameObject
@@ -598,7 +602,7 @@ int main()
         draining = 0;
         drainer.join();
         // the runtime teardown runs the class finalizers (the gump deep copy
-        // is freed through CGump's destructor now, not the GameObject one)
+        // is freed through GumpData's destructor now, not the GameObject one)
         JS_FreeContext(ctx);
         JS_FreeRuntime(rt);
         g_HarnessGump = nullptr;

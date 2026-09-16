@@ -7,17 +7,37 @@
 #pragma once
 
 #include "core/global.h"
-#include "model/commonitems/gump.h"
+#include "model/commonitems/gumpitem.h"
 #include "model/commonitems/gumphook.h"
 
 namespace xuoassist {
+
+// the assistant gump record (was class CGump in model/commonitems/gump.h,
+// ported from X:UO Assist): the parsed 0xB1 gump layout (item command lines
+// and text lines) plus the replay state; the script Gump wrappers hold deep
+// copies of it
+struct GumpData
+{
+    uint32_t Serial = 0;
+    uint32_t ID = 0;
+    int X = 0;
+    int Y = 0;
+    bool Replayed = false;
+    uint32_t ReplyID = 0;
+    bool NoMove = false;
+    bool NoClose = false;
+    bool NoDispose = false;
+
+    GUMP_LIST m_Items;
+    vector<astr_t> m_Text;
+};
 
 class CGumpManager
 {
 private:
     vector<CGumpHook> m_Hooks;
-    CGump *m_LastGump{ nullptr };
-    vector<CGump *> m_Items;
+    GumpData *m_LastGump{ nullptr };
+    vector<GumpData *> m_Items;
 
 public:
     CGumpManager();
@@ -27,9 +47,9 @@ public:
     CGumpManager &operator=(const CGumpManager &) = delete;
 
     int GetGumpCount();
-    CGump *GetLastGump();
-    CGump *GetGump(const uint32_t &index);
-    CGump *GetGump(const uint32_t &serial, const uint32_t &id);
+    GumpData *GetLastGump();
+    GumpData *GetGump(const uint32_t &index);
+    GumpData *GetGump(const uint32_t &serial, const uint32_t &id);
     void ClearGumps();
     void AddHook(CGumpHook *hook);
     void ClearHooks();
@@ -43,7 +63,7 @@ public:
     // 0xB1 ChoiceGump send tap in the assistant's packetmanager); the id is
     // the value written to the wire (the master gump id when one is set)
     void OnGumpChoiceSent(uint32_t serial, uint32_t id, uint32_t button);
-    bool SendGumpChoice(CGump *gump, CGumpHook &hook);
+    bool SendGumpChoice(GumpData *gump, CGumpHook &hook);
     void InfoGump(const astr_t &gumpIndex);
 };
 

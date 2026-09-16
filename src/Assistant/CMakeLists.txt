@@ -67,7 +67,6 @@ set(XUOASSIST_SRCS
   "model/commonitems/finditem.cpp"
   "model/commonitems/ignoreitem.cpp"
   "model/commonitems/displayitem.cpp"
-  "model/commonitems/gump.cpp"
   "model/commonitems/gumphook.cpp"
   "model/commonitems/gumpitem.cpp"
   "model/commonitems/journalmessage.cpp"
@@ -136,7 +135,6 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     # the client data reader/writer (the real implementation; the harness
     # links xuocore's sources directly instead of the library)
     ../../xuocore/mappedfile.cpp
-    model/commonitems/gump.cpp
     model/commonitems/gumpitem.cpp
     model/commonitems/menu.cpp
     model/commonitems/menuitem.cpp
