@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/spellmanager.h), trimmed
-// (maps are std::map, string lists are vector<vector<string>>).
+// (maps are std::map, astr_t lists are vector<vector<astr_t>>).
 
 #pragma once
 
@@ -12,7 +12,7 @@
 
 namespace xuoassist {
 
-typedef std::map<string, int> SPELLS_MAP;
+typedef std::map<astr_t, int> SPELLS_MAP;
 
 class CSpellManager
 {
@@ -23,23 +23,22 @@ public:
     CSpellManager();
     ~CSpellManager();
 
-    vector<vector<string>> m_SpellbookSpellNames;
+    vector<vector<astr_t>> m_SpellbookSpellNames;
 
-    void Insert(const string &name, const int &index);
+    void Insert(const astr_t &name, const int &index);
 
-    int Find(string name);
+    int Find(astr_t name);
 
-    void Cast(const string &name);
+    void Cast(const astr_t &name);
 
     // the raw-index send (apiscript's numeric Cast/UseSkill form): the
     // client call site inside a recording suspension so assistant-initiated
     // uses do not record themselves
     void CastIndex(int index);
 
-    void TargetCast(const string &name, const uint &serial);
+    void TargetCast(const astr_t &name, const uint &serial);
 };
 
 extern CSpellManager g_SpellManager;
 
 } // namespace xuoassist
-

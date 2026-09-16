@@ -36,7 +36,7 @@ bool ScriptJournal_IgnoreCase();
 // end, consume) overload). Returns a copy for the queue result, or nullptr
 // when nothing matched (caller deletes).
 CJournalMessage *ScriptJournal_Find(
-    const string &pattern,
+    const astr_t &pattern,
     uint serial,
     ushort color,
     uchar type,
@@ -52,4 +52,3 @@ int ScriptJournal_Count();
 bool ScriptJournal_RemoveAt(int index);
 
 } // namespace xuoassist
-

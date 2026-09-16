@@ -39,9 +39,9 @@ bool s_ShowGoto = false;
 bool s_ShowFilePicker = false;
 bool s_FilePickerSave = false;
 char s_FilePickerName[256] = { 0 };
-string s_FilePickerDir = ".";
-string s_Status = "Ready";
-string s_PendingOpenPath;
+astr_t s_FilePickerDir = ".";
+astr_t s_Status = "Ready";
+astr_t s_PendingOpenPath;
 
 // tiny in-ImGui file picker over std::filesystem-like readdir (plan §8.2):
 // lists the directory, `..` to go up, double-click a .oajs/.js file to pick.
@@ -62,7 +62,7 @@ bool draw_file_picker()
     if (ImGui::Button("Up"))
     {
         size_t slash = s_FilePickerDir.find_last_of('/');
-        s_FilePickerDir = slash == string::npos ? "." : s_FilePickerDir.substr(0, slash);
+        s_FilePickerDir = slash == astr_t::npos ? "." : s_FilePickerDir.substr(0, slash);
         if (s_FilePickerDir.empty())
         {
             s_FilePickerDir = "/";
@@ -76,16 +76,16 @@ bool draw_file_picker()
     if (dir != nullptr)
     {
         struct dirent *entry = nullptr;
-        vector<string> directories;
-        vector<string> files;
+        vector<astr_t> directories;
+        vector<astr_t> files;
         while ((entry = readdir(dir)) != nullptr)
         {
-            const string name = entry->d_name;
+            const astr_t name = entry->d_name;
             if (name == "." || name.empty())
             {
                 continue;
             }
-            const string full = s_FilePickerDir + "/" + name;
+            const astr_t full = s_FilePickerDir + "/" + name;
             struct stat st = {};
             if (stat(full.c_str(), &st) != 0)
             {
@@ -107,14 +107,14 @@ bool draw_file_picker()
 
         std::sort(directories.begin(), directories.end());
         std::sort(files.begin(), files.end());
-        for (const string &name : directories)
+        for (const astr_t &name : directories)
         {
             if (ImGui::Selectable((name + "/").c_str()))
             {
                 s_FilePickerDir = s_FilePickerDir == "/" ? "/" + name : s_FilePickerDir + "/" + name;
             }
         }
-        for (const string &name : files)
+        for (const astr_t &name : files)
         {
             if (ImGui::Selectable(name.c_str()))
             {
@@ -140,7 +140,7 @@ bool draw_file_picker()
     return picked;
 }
 
-bool read_file(const string &path, string &out)
+bool read_file(const astr_t &path, astr_t &out)
 {
     FILE *file = fopen(path.c_str(), "rb");
     if (file == nullptr)
@@ -157,16 +157,16 @@ bool read_file(const string &path, string &out)
     return true;
 }
 
-bool write_file(const string &path, const string &text)
+bool write_file(const astr_t &path, const astr_t &text)
 {
     // the script editor's Save button: the crash-safe temp+rename path so a
     // crash mid-save cannot truncate a user script (plan §8.1)
     return AtomicFileWrite(fs_path_from(path), text.data(), text.size());
 }
 
-void open_path(const string &path)
+void open_path(const astr_t &path)
 {
-    string text;
+    astr_t text;
     if (read_file(path, text))
     {
         ScriptEditor_SetText(text); // bumps the buffer generation (re-split)
@@ -179,7 +179,7 @@ void open_path(const string &path)
     }
 }
 
-void save_path(const string &path)
+void save_path(const astr_t &path)
 {
     if (write_file(path, ScriptEditor_Text()))
     {
@@ -237,7 +237,7 @@ void ScriptEditorWindow_Draw(bool *open)
     if (ImGui::Button("Save"))
     {
         // TabScripts::SaveScript fallback: an empty path saves Autoload.oajs
-        const string path = ScriptEditor_Path().empty() ? "./Autoload.oajs" : ScriptEditor_Path();
+        const astr_t path = ScriptEditor_Path().empty() ? "./Autoload.oajs" : ScriptEditor_Path();
         save_path(path);
     }
     ImGui::SameLine();
@@ -276,7 +276,7 @@ void ScriptEditorWindow_Draw(bool *open)
     {
         ImGui::OpenPopup("ScriptCommandMenu");
     }
-    string inserted;
+    astr_t inserted;
     if (ScriptMenu_Draw("ScriptCommandMenu", inserted))
     {
         TextEditor_InsertAtCursor(inserted);
@@ -356,14 +356,14 @@ void ScriptEditorWindow_Draw(bool *open)
 
     // --- the statusbar -------------------------------------------------------
     ImGui::Separator();
-    const vector<string> functions = ScriptEditor_FunctionList();
+    const vector<astr_t> functions = ScriptEditor_FunctionList();
     ImGui::Text("%s | %d lines | %d functions", s_Status.c_str(),
         (int)(std::count(ScriptEditor_Text().begin(), ScriptEditor_Text().end(), '\n') + 1),
         (int)functions.size());
 
     if (draw_file_picker())
     {
-        const string path = (s_FilePickerDir == "/" ? "/" : s_FilePickerDir + "/") + s_FilePickerName;
+        const astr_t path = (s_FilePickerDir == "/" ? "/" : s_FilePickerDir + "/") + s_FilePickerName;
         if (s_FilePickerSave)
         {
             save_path(path);

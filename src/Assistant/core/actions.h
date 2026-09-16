@@ -53,11 +53,11 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size);
 void Actions_Execute(const CHotkeyEntry &entry);
 // HT_EXTERNAL_CODE body: text-commands when the text carries the command
 // prefix, otherwise a logged no-op (script engine = Phase 4).
-void Actions_RunExternalCode(const string &code);
+void Actions_RunExternalCode(const astr_t &code);
 
 // The 0xFC packet feeds (the hotkey action-list sources).
-void Actions_SetSpellList(const vector<vector<string>> &books);
-void Actions_SetSkillList(const vector<string> &names);
+void Actions_SetSpellList(const vector<vector<astr_t>> &books);
+void Actions_SetSkillList(const vector<astr_t> &names);
 
 // The new-target-system serial (was the VKI_NEW_TARGET_SYSTEM_VIRTUAL_INT
 // variable: GetInt/SetInt(VKI_NEW_TARGET_SYSTEM_SERIAL) in hotkeysform.cpp).
@@ -65,4 +65,3 @@ uint Actions_NewTargetSystemSerial();
 void Actions_SetNewTargetSystemSerial(uint serial);
 
 } // namespace xuoassist
-

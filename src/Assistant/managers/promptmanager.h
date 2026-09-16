@@ -36,12 +36,11 @@ public:
     // the client's 0x9A/0xC2 prompt-response send sites report the answer
     // here (was the 0x9A/0xC2 send taps parsing the text out of the buffer);
     // cancel records an empty answer, like the old response-field check
-    void OnPromptSent(const string &text, bool cancel);
+    void OnPromptSent(const astr_t &text, bool cancel);
 
-    void Send(string text);
+    void Send(astr_t text);
 };
 
 extern CPromptManager g_PromptManager;
 
 } // namespace xuoassist
-

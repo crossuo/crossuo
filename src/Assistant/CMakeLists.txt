@@ -50,7 +50,6 @@ set(XUOASSIST_SRCS
   "core/global.cpp"
   "core/worldutil.cpp"
   "core/textconv.cpp"
-  "core/textparser.cpp"
   "core/assistantevents.cpp"
   "core/assist.cpp"
   "core/target.cpp"

@@ -6,12 +6,13 @@
 #include "textconv.h"
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include "global.h"
 #include "../config/assistantconfig.h"
 
 namespace xuoassist {
 
-uint TextToUInt(const string &text)
+uint TextToUInt(const astr_t &text)
 {
     uint result = (uint)strtoul(text.c_str(), nullptr, 10);
 
@@ -37,7 +38,7 @@ uint TextToUInt(const string &text)
     return result;
 }
 
-uint TextToSerial(string text)
+uint TextToSerial(astr_t text)
 {
     for (char &c : text)
     {
@@ -95,7 +96,7 @@ uint TextToSerial(string text)
     return result;
 }
 
-ushort TextToGraphic(string text)
+ushort TextToGraphic(astr_t text)
 {
     for (char &c : text)
     {
@@ -112,7 +113,7 @@ ushort TextToGraphic(string text)
     return result;
 }
 
-string SerialToText(const uint &value)
+astr_t SerialToText(const uint &value)
 {
     char buf[64] = { 0 };
     snprintf(buf, sizeof(buf), "0x%08X", value);
@@ -120,12 +121,192 @@ string SerialToText(const uint &value)
     return buf;
 }
 
-string GraphicToText(const ushort &value)
+astr_t GraphicToText(const ushort &value)
 {
     char buf[64] = { 0 };
     snprintf(buf, sizeof(buf), "0x%04X", value);
 
     return buf;
+}
+
+vector<astr_t> ParseTextTokens(
+    const astr_t &line, const char *delimiters, const char *comentaries, const char *quotes,
+    bool trim, bool saveQuotes)
+{
+    vector<astr_t> result;
+
+    const size_t comentsSize = strlen(comentaries);
+    const size_t quotesSize = strlen(quotes);
+    const char *const end = line.data() + line.size();
+    const char *ptr = line.data();
+
+    const auto isDelimiter = [&](char c)
+    {
+        return c != '\0' && strchr(delimiters, c) != nullptr;
+    };
+
+    // A doubled marker ("//") comments only when it appears twice; a lone
+    // marker char still comments once the doubled pair is ruled out.
+    const auto isComment = [&](const char *at)
+    {
+        bool matched = false;
+
+        for (size_t i = 0; i < comentsSize && !matched; i++)
+        {
+            matched = (*at == comentaries[i]);
+
+            if (matched && i + 1 < comentsSize && comentaries[i] == comentaries[i + 1] &&
+                at + 1 < end)
+            {
+                matched = (at[0] == at[1]);
+                i++;
+            }
+        }
+
+        return matched;
+    };
+
+    const auto isQuoteChar = [&](char c)
+    {
+        for (size_t i = 0; i < quotesSize; i++)
+        {
+            if (c == quotes[i])
+            {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const auto isSecondQuote = [&](const char *at)
+    {
+        for (size_t i = 0; i < quotesSize; i += 2)
+        {
+            if (*at == quotes[i + 1])
+            {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const auto obtainData = [&]()
+    {
+        astr_t out;
+
+        while (ptr < end && *ptr != '\0')
+        {
+            if (isDelimiter(*ptr) || isQuoteChar(*ptr))
+            {
+                break;
+            }
+
+            if (isComment(ptr))
+            {
+                ptr = end;
+                break;
+            }
+
+            if (*ptr != '\r' && (!trim || (*ptr != ' ' && *ptr != '\t')))
+            {
+                out += *ptr;
+            }
+
+            ptr++;
+        }
+
+        return out;
+    };
+
+    const auto obtainQuoted = [&]()
+    {
+        bool quoted = false;
+        astr_t out;
+
+        for (size_t i = 0; i < quotesSize; i += 2)
+        {
+            if (*ptr == quotes[i])
+            {
+                const char endQuote = quotes[i + 1];
+                quoted = true;
+                ptr++;
+                const char *scan = ptr;
+
+                while (scan < end && *scan != '\0' && *scan != endQuote)
+                {
+                    scan++;
+                }
+
+                const size_t size = (size_t)(scan - ptr);
+
+                if (size > 0)
+                {
+                    // The X:UO Assist tokenizer allocates one extra byte and
+                    // stores the terminator inside the token, so quoted tokens
+                    // keep a trailing NUL (the '\r' strip nulls in place too);
+                    // kept for token-for-token parity with the original.
+                    out.resize(size + 1);
+                    memcpy(&out[0], ptr, size);
+                    out[size] = '\0';
+
+                    for (size_t j = size; j-- > 0 && out[j] == '\r';)
+                    {
+                        out[j] = '\0';
+                    }
+
+                    ptr = scan;
+
+                    if (ptr < end && *ptr == endQuote)
+                    {
+                        ptr++;
+                    }
+                }
+
+                if (saveQuotes)
+                {
+                    out.insert(out.begin(), quotes[i]);
+                    out = astr_t(out) + endQuote;
+                }
+
+                break;
+            }
+        }
+
+        if (!quoted)
+        {
+            out = obtainData();
+        }
+
+        return out;
+    };
+
+    while (ptr < end)
+    {
+        while (ptr < end && *ptr != '\0' && isDelimiter(*ptr))
+        {
+            ptr++;
+        }
+
+        if (isComment(ptr))
+        {
+            break;
+        }
+
+        const astr_t buf = obtainQuoted();
+
+        if (!buf.empty())
+        {
+            result.push_back(buf);
+        }
+        else if (isSecondQuote(ptr))
+        {
+            ptr++;
+        }
+    }
+
+    return result;
 }
 
 } // namespace xuoassist

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/gumpmanager.h), trimmed
-// (lists are std::vector, strings are std::string).
+// (lists are std::vector, strings are astr_t).
 
 #pragma once
 
@@ -41,7 +41,7 @@ public:
     // the value written to the wire (the master gump id when one is set)
     void OnGumpChoiceSent(uint serial, uint id, uint button);
     bool SendGumpChoice(CGump *gump, CGumpHook &hook);
-    void InfoGump(const string &gumpIndex);
+    void InfoGump(const astr_t &gumpIndex);
 };
 
 extern CGumpManager g_GumpManager;

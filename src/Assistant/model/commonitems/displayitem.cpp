@@ -9,7 +9,7 @@ namespace xuoassist {
 
 CDisplayItem::CDisplayItem(
     const DISPLAY_ITEM_TYPE &type,
-    string text,
+    astr_t text,
     ushort graphic,
     ushort hue,
     uint minColor,

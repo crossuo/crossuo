@@ -24,10 +24,10 @@ namespace xuoassist {
 // size 0 = fill the remaining window space. lineOffset/gotoRequest let the
 // owner (scripteditor) drive GoToLine.
 bool TextEditor_Draw(
-    const char *id, string *buffer, float height = 0.0f, int gotoLine = 0, bool *gotoPending = nullptr);
+    const char *id, astr_t *buffer, float height = 0.0f, int gotoLine = 0, bool *gotoPending = nullptr);
 
 // Inserts text at the cursor (the command-insert menu target).
-void TextEditor_InsertAtCursor(const string &text);
+void TextEditor_InsertAtCursor(const astr_t &text);
 
 // The current selection comment/uncomment helper (the toolbar
 // Comment-selection action): returns the edited range or false.
@@ -42,4 +42,3 @@ bool TextEditor_ReplaceAll(const char *findText, const char *replaceText, bool c
 int TextEditor_CurrentLine();
 
 } // namespace xuoassist
-

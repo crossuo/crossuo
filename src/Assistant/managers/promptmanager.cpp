@@ -14,7 +14,7 @@
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -88,7 +88,7 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
     return true;
 }
 
-void CPromptManager::OnPromptSent(const string &text, bool cancel)
+void CPromptManager::OnPromptSent(const astr_t &text, bool cancel)
 {
     if (Exists)
     {
@@ -101,12 +101,12 @@ void CPromptManager::OnPromptSent(const string &text, bool cancel)
         if (g_World != nullptr && g_MacroExecutor.IsRecording())
         {
             g_MacroExecutor.Record(
-                new CMacroWithStringValue(MT_WAIT_FOR_PROMPT, cancel ? string("") : text));
+                new CMacroWithStringValue(MT_WAIT_FOR_PROMPT, cancel ? astr_t("") : text));
         }
     }
 }
 
-void CPromptManager::Send(string text)
+void CPromptManager::Send(astr_t text)
 {
     if (Exists)
     {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/displayitem.h): strings are std::string.
+// Ported from X:UO Assist (commonitems/displayitem.h): strings are astr_t.
 
 #pragma once
 
@@ -44,15 +44,15 @@ class CDisplayInfo
 {
 public:
     CDisplayInfo() {}
-    CDisplayInfo(const string &name, const string &command, const DISPLAY_ITEM_TYPE &type)
+    CDisplayInfo(const astr_t &name, const astr_t &command, const DISPLAY_ITEM_TYPE &type)
         : Name(name)
         , Command(command)
         , Type(type)
     {
     }
     ~CDisplayInfo() {}
-    string Name{ "" };
-    string Command{ "" };
+    astr_t Name{ "" };
+    astr_t Command{ "" };
     DISPLAY_ITEM_TYPE Type{ DIT_NONE };
 };
 
@@ -60,7 +60,7 @@ class CDisplayItem
 {
 public:
     DISPLAY_ITEM_TYPE Type = DIT_NONE;
-    string Text = "";
+    astr_t Text = "";
     ushort Graphic = 0;
     ushort Hue = 0;
     uint MinColor = 0;
@@ -77,7 +77,7 @@ public:
     CDisplayItem() {}
     CDisplayItem(
         const DISPLAY_ITEM_TYPE &type,
-        string text,
+        astr_t text,
         ushort graphic,
         ushort hue,
         uint minColor,
@@ -98,4 +98,3 @@ public:
 };
 
 } // namespace xuoassist
-

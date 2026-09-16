@@ -125,60 +125,60 @@ enum HOTKEY_TYPES
 struct CWorldObjectEntry
 {
     uint Serial{ 0 };
-    string Name{ "" };
+    astr_t Name{ "" };
     bool Enabled{ false }; // was the item's checked state
 };
 
 // gui/typelistitem.h
 struct CTypeEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     ushort Type{ 0 };
 };
 
 // gui/objectlistitem.h
 struct CObjectEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     uint Serial{ 0 };
 };
 
 // gui/findlistitem.h
 struct CFindListEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     vector<CFindItem> m_Items;
 };
 
 // gui/ignorelistitem.h
 struct CIgnoreListEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     vector<CIgnoreItem> m_Items;
 };
 
 // gui/filterspeechlistitem.h
 struct CFilterSpeechEntry
 {
-    string Text{ "" };
-    string Color{ "" };
+    astr_t Text{ "" };
+    astr_t Color{ "" };
     bool FullMatch{ false };
 };
 
 // gui/filtersoundlistitem.h
 struct CFilterSoundEntry
 {
-    string Index{ "" };
-    string Name{ "" };
+    astr_t Index{ "" };
+    astr_t Name{ "" };
 };
 
 // gui/filterreplacelistitem.h
 struct CFilterReplaceEntry
 {
-    string OriginalText{ "" };
-    string OriginalColor{ "" };
-    string ReplacedText{ "" };
-    string ReplacedColor{ "" };
+    astr_t OriginalText{ "" };
+    astr_t OriginalColor{ "" };
+    astr_t ReplacedText{ "" };
+    astr_t ReplacedColor{ "" };
     int Type{ 0 };
     int Mode{ 0 };
     bool FullMatch{ false };
@@ -187,38 +187,38 @@ struct CFilterReplaceEntry
 // gui/shoplistitem.h (the CShopItem payload fields)
 struct CShopItemEntry
 {
-    string Graphic{ "" };
-    string Color{ "" };
-    string Name{ "" };
-    string Comment{ "" };
+    astr_t Graphic{ "" };
+    astr_t Color{ "" };
+    astr_t Name{ "" };
+    astr_t Comment{ "" };
     int Count{ 0 };
     int Price{ 0 };
 };
 
 struct CShopListEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     vector<CShopItemEntry> m_Items;
 };
 
 // gui/displaygrouplistitem.h
 struct CDisplayGroupEntry
 {
-    string Name{ "" };
-    string TitleData{ "" };
+    astr_t Name{ "" };
+    astr_t TitleData{ "" };
 };
 
 // gui/displayitemlistitem.h
 struct CDisplayItemEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     CDisplayItem m_Item;
 };
 
 // gui/dresslistitem.h - 25 layer slots (equip layers up to OL_24)
 struct CDressSetEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     uint m_Items[25];
 
     CDressSetEntry() { memset(&m_Items[0], 0, sizeof(m_Items)); }
@@ -231,15 +231,15 @@ struct CHotkeyEntry
     uchar Modifiers{ 0 };
     uint Type{ 0 };
     uint Action{ 0 };
-    string ScriptOrMacroName{ "" };
-    string ExternalCode{ "" };
+    astr_t ScriptOrMacroName{ "" };
+    astr_t ExternalCode{ "" };
     bool RunningMode{ false };
 };
 
 // gui/macrolistitem.h (owner of the CMacro action list)
 struct CMacroEntry
 {
-    string Name{ "" };
+    astr_t Name{ "" };
     vector<CMacro *> m_Items;
 
     ~CMacroEntry();
@@ -248,7 +248,7 @@ struct CMacroEntry
 class CAssistantConfig
 {
 public:
-    string ProfileName = "Default";
+    astr_t ProfileName = "Default";
 
     CAssistantConfig();
 
@@ -264,15 +264,15 @@ public:
     void EnsureDirectories(); // mkdir Config/, GlobalConfig/, profile/
 
     // --- profiles ----------------------------------------------------------
-    const vector<string> &GetProfiles() const { return m_Profiles; }
+    const vector<astr_t> &GetProfiles() const { return m_Profiles; }
     void ScanProfiles();
     bool LoadProfileBySerial(uint serial);
-    void SetCurrentProfile(const string &name); // case-insensitive, like TabMain
+    void SetCurrentProfile(const astr_t &name); // case-insensitive, like TabMain
     bool LoadProfile();                         // was AssistForm::LoadCurrentProfile
     bool SaveProfile();                         // was AssistForm::SaveCurrentProfile
     void SaveProfileMap();                      // GlobalConfig/Profiles.xml
     void LoadProfileMap();
-    const std::map<uint, string> &GetProfileMap() const { return m_ProfileMap; }
+    const std::map<uint, astr_t> &GetProfileMap() const { return m_ProfileMap; }
 
     // --- Options.xml (assistform.cpp SaveMainOptions + 4 tab SaveConfigs) ---
     void SaveMainOptions();
@@ -372,20 +372,20 @@ public:
     bool HighlightReagents() const { return (m_DisplayFlags & 0x08) != 0; }
     uint DisplayTextColor() const { return m_DisplayTextColor; }
     uint DisplayBackgroundColor() const { return m_DisplayBackgroundColor; }
-    const string &DisplayTitleData() const { return m_DisplayTitleData; }
+    const astr_t &DisplayTitleData() const { return m_DisplayTitleData; }
 
     // --- hotkeys options (TabHotkeys LoadConfig/SaveConfig) -----------------
     bool OnOffHotkeys() const { return m_OnOffHotkeys; }
     bool PassHotkeys() const { return m_PassHotkeys; }
-    const string &CommandPrefix() const { return m_CommandPrefix; }
+    const astr_t &CommandPrefix() const { return m_CommandPrefix; }
     // Was TabHotkeys::IsCommandPrefix.
-    int IsCommandPrefix(const string &text) const;
+    int IsCommandPrefix(const astr_t &text) const;
 
     // --- scripts options (TabScripts LoadConfig/SaveConfig) -----------------
     bool SortScripts() const { return m_SortScripts; }
     void SetSortScripts(bool value) { m_SortScripts = value; }
-    const string &ScriptFilePath() const { return m_ScriptFilePath; }
-    void SetScriptFilePath(const string &path) { m_ScriptFilePath = path; }
+    const astr_t &ScriptFilePath() const { return m_ScriptFilePath; }
+    void SetScriptFilePath(const astr_t &path) { m_ScriptFilePath = path; }
 
     // Was TabMain::UpdateFeatures: clears the user's checklist choices for
     // options whose server feature flag is not enabled (the CLBI->XAEF
@@ -393,17 +393,17 @@ public:
     void UpdateFeatures();
 
     // --- list queries (were TabListsTypes/Objects/Friends/Enemies) ----------
-    ushort SeekType(const string &text);
-    uint SeekObject(const string &text);
-    CFindListEntry *GetFindList(const string &name);
-    CIgnoreListEntry *GetIgnoreList(const string &name);
+    ushort SeekType(const astr_t &text);
+    uint SeekObject(const astr_t &text);
+    CFindListEntry *GetFindList(const astr_t &name);
+    CIgnoreListEntry *GetIgnoreList(const astr_t &name);
     bool InFriendList(uint serial);
     bool InEnemyList(uint serial);
     bool FeelPartyMembersAsFriends() const { return m_FeelPartyMembersAsFriends; }
-    void AddType(const string &name, const string &type);     // was TabListsTypes::AddType
-    void RemoveType(const string &name);
-    void AddObject(const string &name, const string &serial); // was TabListsObjects::AddObject
-    void RemoveObject(const string &name);
+    void AddType(const astr_t &name, const astr_t &type);     // was TabListsTypes::AddType
+    void RemoveType(const astr_t &name);
+    void AddObject(const astr_t &name, const astr_t &serial); // was TabListsObjects::AddObject
+    void RemoveObject(const astr_t &name);
 
     // --- party agent (TabAgentsParty) ----------------------------------------
     bool PartyInviteCanBeAutoAccepted(uint serial);
@@ -411,30 +411,30 @@ public:
 
     // --- filters (were TabFiltersSpeech/Replaces/Sound; consulted by the
     //     packet handlers exactly like the original code did) -----------------------
-    bool CheckSpeechInFilter(const string &text, const ushort &color);
+    bool CheckSpeechInFilter(const astr_t &text, const ushort &color);
     // Returns true when the text matched a replace rule; the caller (the talk
     // handlers, which hold the display context) renders the replacement carried
     // by the out-params — the reprint is no longer an injected packet.
     bool CheckReplaceText(
-        const string &text,
+        const astr_t &text,
         const uint &serial,
         const ushort &color,
         const bool &unicode,
-        string &replacedText,
+        astr_t &replacedText,
         ushort &replacedColor);
     bool CheckSoundInFilter(const ushort &index);
 
     // --- distance / delay text helpers (were AssistForm methods) -------------
-    int DistanceFromText(string text);
-    int DelayFromText(string text);
+    int DistanceFromText(astr_t text);
+    int DelayFromText(astr_t text);
 
     // --- display items / groups (were TabDisplay helpers) --------------------
-    CDisplayItem GetCustomDisplayItemByName(const string &name);
-    string GetGroupContent(const string &name);
+    CDisplayItem GetCustomDisplayItemByName(const astr_t &name);
+    astr_t GetGroupContent(const astr_t &name);
 
     // --- dress sets (data helpers from TabAgentsDress/commandmanager) --------
-    CDressSetEntry *GetDressSet(const string &name);
-    CDressSetEntry *AddDressSet(const string &name);
+    CDressSetEntry *GetDressSet(const astr_t &name);
+    CDressSetEntry *AddDressSet(const astr_t &name);
     void ClearDressSet(CDressSetEntry *set);
     bool UndressBeforeDressing() const { return m_DressUndressBeforeDress; }
     bool DoubleClickForEquipItems() const { return m_DressDoubleClickForEquipment; }
@@ -457,22 +457,22 @@ public:
     int m_AutoReconnectSeconds{ 60 };
     bool m_DoubleClickForOpenDoors{ false };
     bool m_UseFontColor{ false };
-    string m_FontColor{ "0x02B2" };
+    astr_t m_FontColor{ "0x02B2" };
     bool m_UseCharactersFontColor{ false };
-    string m_CharactersFontColor{ "0x02B2" };
+    astr_t m_CharactersFontColor{ "0x02B2" };
 
     int m_DisplayType{ 0 };
     uint m_DisplayFlags{ 0 };
     uint m_DisplayTextColor{ 0 };
     uint m_DisplayBackgroundColor{ 0 };
-    string m_DisplayTitleData{ "" };
+    astr_t m_DisplayTitleData{ "" };
 
     bool m_OnOffHotkeys{ true }; // cb_OnOffHotkeys is checked by default
     bool m_PassHotkeys{ false };
-    string m_CommandPrefix{ "_" };
+    astr_t m_CommandPrefix{ "_" };
 
     bool m_SortScripts{ false };
-    string m_ScriptFilePath{ "" };
+    astr_t m_ScriptFilePath{ "" };
 
     vector<CTypeEntry> m_Types;
     vector<CObjectEntry> m_Objects;
@@ -508,13 +508,12 @@ public:
 
     vector<CMacroEntry> m_Macros;
 
-    std::map<uint, string> m_ProfileMap;
+    std::map<uint, astr_t> m_ProfileMap;
 
 private:
-    vector<string> m_Profiles;
+    vector<astr_t> m_Profiles;
 };
 
 extern CAssistantConfig g_AssistantConfig;
 
 } // namespace xuoassist
-

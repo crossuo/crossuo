@@ -50,14 +50,14 @@ enum XA_JOURNAL_MESSAGE_FLAGS
 // Forward-ported from the original app's managers/partymanager.h and
 // managers/guildmanager.h (the managers land with the agents round; the packet
 // handler parses these today and hands them over as-is). Name is
-// std::string per §4.2.
+// astr_t per §4.2.
 struct XA_PARTY_MEMBER_INFO
 {
     uint Serial{ 0 };
     int X{ 0 };
     int Y{ 0 };
     uint Map{ 0 };
-    string Name{ "" };
+    astr_t Name{ "" };
 };
 
 struct XA_GUILD_MEMBER_INFO
@@ -66,7 +66,7 @@ struct XA_GUILD_MEMBER_INFO
     int X{ 0 };
     int Y{ 0 };
     uint Map{ 0 };
-    string Name{ "" };
+    astr_t Name{ "" };
 };
 
 class CAssistantEvents
@@ -81,10 +81,10 @@ public:
 
     // Was CAssistant::ClientPrint: inject a system print into the client.
     // Default reproduces the original packet injection exactly.
-    virtual void OnClientPrint(const string &text, ushort color = g_MessagesColor);
+    virtual void OnClientPrint(const astr_t &text, ushort color = g_MessagesColor);
 
     // --- buffs (was g_BuffManager.Add/Remove) ------------------------------
-    virtual void OnBuffAdd(ushort graphic, uint timer, const string &name)
+    virtual void OnBuffAdd(ushort graphic, uint timer, const astr_t &name)
     {
         (void)graphic;
         (void)timer;
@@ -107,8 +107,8 @@ public:
     virtual void OnMegaCliloc(
         uint serial,
         uint revision,
-        const string &name,
-        const string &properties)
+        const astr_t &name,
+        const astr_t &properties)
     {
         (void)serial;
         (void)revision;
@@ -121,12 +121,12 @@ public:
     virtual void OnSkillUpdated(int id) { (void)id; }
     virtual void OnSkillsRefreshed() {}
     // "Last" + every use-button skill name, in packet order.
-    virtual void OnSkillsList(const vector<string> &hotkeyActions) { (void)hotkeyActions; }
+    virtual void OnSkillsList(const vector<astr_t> &hotkeyActions) { (void)hotkeyActions; }
 
     // --- spells / macros from the client's 0xFC packets --------------------
     // One entry per spellbook (circles), spell names in packet order.
-    virtual void OnSpellList(const vector<vector<string>> &books) { (void)books; }
-    virtual void OnMacroList(const vector<std::pair<string, vector<string>>> &macros)
+    virtual void OnSpellList(const vector<vector<astr_t>> &books) { (void)books; }
+    virtual void OnMacroList(const vector<std::pair<astr_t, vector<astr_t>>> &macros)
     {
         (void)macros;
     }
@@ -160,7 +160,7 @@ public:
     //     HandleTarget* stubs in core/assist.cpp forward the 0x6C reply) ----
     // XA_FROM_TARGET_* identifies which tab asked; name is the object name
     // when known (AnimalVendorName requests), "" otherwise.
-    virtual void OnFromTarget(int kind, uint serial, ushort graphic, ushort color, const string &name)
+    virtual void OnFromTarget(int kind, uint serial, ushort graphic, ushort color, const astr_t &name)
     {
         (void)kind;
         (void)serial;
@@ -201,6 +201,6 @@ extern CAssistantEvents *g_AssistantEvents;
 
 // Script-visible buff display name for the 0xDF mirror (the old recv-tap
 // handler's static name table); iconIndex is the icon id minus 0x03E9.
-const string &AssistantBuffName(ushort iconIndex);
+const astr_t &AssistantBuffName(ushort iconIndex);
 
 } // namespace xuoassist

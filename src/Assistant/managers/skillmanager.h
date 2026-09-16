@@ -13,7 +13,7 @@
 
 namespace xuoassist {
 
-typedef std::map<string, int> SKILLS_MAP;
+typedef std::map<astr_t, int> SKILLS_MAP;
 
 class CSkillManager
 {
@@ -24,20 +24,20 @@ public:
     CSkillManager();
     ~CSkillManager();
 
-    void Insert(const string &name, const bool &usable, const int &index);
+    void Insert(const astr_t &name, const bool &usable, const int &index);
 
-    int GetIndex(const string &name);
+    int GetIndex(const astr_t &name);
 
-    int Find(const string &name);
+    int Find(const astr_t &name);
 
-    void Use(const string &name);
+    void Use(const astr_t &name);
 
     // the raw-index send (apiscript's numeric Cast/UseSkill form): the
     // client call site inside a recording suspension so assistant-initiated
     // uses do not record themselves
     void UseIndex(int index);
 
-    void TargetUse(const string &name, const uint &serial);
+    void TargetUse(const astr_t &name, const uint &serial);
 };
 
 extern CSkillManager g_SkillManager;

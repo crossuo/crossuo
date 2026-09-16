@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/skill.h): strings are std::string.
+// Ported from X:UO Assist (commonitems/skill.h): strings are astr_t.
 
 #pragma once
 
@@ -13,7 +13,7 @@ class CSkill
 {
 public:
     bool Button = 0;
-    string Name = "";
+    astr_t Name = "";
     float BaseValue = 0.0f;
     float Value = 0.0f;
     float OldValue = 0.0f;
@@ -21,7 +21,7 @@ public:
     uchar Status = 0;
 
     CSkill() {}
-    CSkill(const bool &haveButton, const string &name);
+    CSkill(const bool &haveButton, const astr_t &name);
     ~CSkill() {}
 };
 
@@ -30,4 +30,3 @@ extern CSkill g_Skills[MAX_SKILLS_COUNT];
 extern int g_SkillsCount;
 
 } // namespace xuoassist
-

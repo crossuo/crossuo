@@ -69,7 +69,7 @@ struct XA_MAP_DRAW_OBJECT
     CLIENT_MAP_CHARACTER_TYPE Type{ OMCT_INVALID };
     int X{ 0 };
     int Y{ 0 };
-    string Name{ "" };
+    astr_t Name{ "" };
     CGameCharacter *Ptr{ nullptr };
 };
 

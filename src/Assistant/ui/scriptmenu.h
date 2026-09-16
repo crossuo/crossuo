@@ -23,7 +23,6 @@ struct XA_MENU_ITEM
 // `inserted` receives the chosen insertion text (menu is modal-ish: the
 // caller opens it with ImGui::OpenPopupOnItemClick or explicit OpenPopup).
 // Returns true when the user picked an entry.
-bool ScriptMenu_Draw(const char *popupId, string &inserted);
+bool ScriptMenu_Draw(const char *popupId, astr_t &inserted);
 
 } // namespace xuoassist
-

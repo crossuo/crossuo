@@ -110,50 +110,50 @@ extern CGump *g_HarnessGump;
 CGump *g_HarnessGump = nullptr;
 
 
-uint CAssistant::TextToSerial(string text)
+uint CAssistant::TextToSerial(astr_t text)
 {
     // Parity with the original for the tests: plain hex text
     return (uint)strtoul(text.c_str(), nullptr, 16);
 }
-string CAssistant::SerialToText(const uint &value)
+astr_t CAssistant::SerialToText(const uint &value)
 {
     char buf[16] = { 0 };
     snprintf(buf, sizeof(buf), "0x%X", value);
     return buf;
 }
-string CAssistant::GraphicToText(const ushort &value)
+astr_t CAssistant::GraphicToText(const ushort &value)
 {
     char buf[16] = { 0 };
     snprintf(buf, sizeof(buf), "0x%X", value);
     return buf;
 }
-ushort CAssistant::TextToGraphic(string text)
+ushort CAssistant::TextToGraphic(astr_t text)
 {
     return (ushort)strtoul(text.c_str(), nullptr, 16);
 }
-void CAssistant::ClientPrint(const string &, const ushort &) {}
-void CAssistant::ClientCharPrint(const uint &, const string &, const ushort &) {}
+void CAssistant::ClientPrint(const astr_t &, const ushort &) {}
+void CAssistant::ClientCharPrint(const uint &, const astr_t &, const ushort &) {}
 void CAssistant::DoubleClick(const uint &) {}
 void CAssistant::MoveEquip(const uint &, const int &, const uint &) {}
 void CAssistant::GetFriendsStatus() {}
 void CAssistant::GetEnemiesStatus() {}
 void CAssistant::HandleSetPVPCaller(uchar *) {}
-CGameObject *CAssistant::FindFriend(const ushort &, const string &) { return nullptr; }
-CGameObject *CAssistant::FindEnemy(const ushort &, const string &) { return nullptr; }
-int CAssistant::TextToLayer(string) { return 0; }
-void CAssistant::RequestTarget(const string &) {}
-int CAssistant::CountType(const vector<string> &, const vector<string> &, const string &,
-    const string &, bool)
+CGameObject *CAssistant::FindFriend(const ushort &, const astr_t &) { return nullptr; }
+CGameObject *CAssistant::FindEnemy(const ushort &, const astr_t &) { return nullptr; }
+int CAssistant::TextToLayer(astr_t) { return 0; }
+void CAssistant::RequestTarget(const astr_t &) {}
+int CAssistant::CountType(const vector<astr_t> &, const vector<astr_t> &, const astr_t &,
+    const astr_t &, bool)
 {
     return 0;
 }
-CGameObject *CAssistant::FindType(const vector<string> &, const vector<string> &, const string &,
-    const string &, const ushort &, const string &, bool, vector<string> &)
+CGameObject *CAssistant::FindType(const vector<astr_t> &, const vector<astr_t> &, const astr_t &,
+    const astr_t &, const ushort &, const astr_t &, bool, vector<astr_t> &)
 {
     return nullptr;
 }
-CGameObject *CAssistant::FindList(const string &, const string &, const string &, const ushort &,
-    const string &, bool, vector<string> &)
+CGameObject *CAssistant::FindList(const astr_t &, const astr_t &, const astr_t &, const ushort &,
+    const astr_t &, bool, vector<astr_t> &)
 {
     return nullptr;
 }
@@ -165,7 +165,7 @@ CAssistantConfig::CAssistantConfig()
 }
 CAssistantConfig g_AssistantConfig;
 CMacroEntry::~CMacroEntry() = default;
-int CAssistantConfig::DelayFromText(string text) { return (int)text.size(); }
+int CAssistantConfig::DelayFromText(astr_t text) { return (int)text.size(); }
 bool CAssistantConfig::GetFontColor(ushort &) { return false; }
 void CAssistantConfig::SetFontColor(const bool &, ushort) {}
 bool CAssistantConfig::GetCharactersFontColor(ushort &) { return false; }
@@ -187,17 +187,17 @@ int CGumpManager::GetGumpCount()
 void CGumpManager::AddHook(CGumpHook *) {}
 void CGumpManager::ClearHooks() {}
 bool CGumpManager::SendGumpChoice(CGump *, CGumpHook &) { return false; }
-void CGumpManager::InfoGump(const string &) {}
+void CGumpManager::InfoGump(const astr_t &) {}
 
 CMenuManager::CMenuManager() {}
 CMenuManager::~CMenuManager() {}
 CMenuManager g_MenuManager;
 CMenu *CMenuManager::GetLastMenu() { return nullptr; }
-CMenu *CMenuManager::GetMenu(const string &) { return nullptr; }
+CMenu *CMenuManager::GetMenu(const astr_t &) { return nullptr; }
 int CMenuManager::GetMenuCount() { return 0; }
-void CMenuManager::SetHook(const string &, const string &) {}
+void CMenuManager::SetHook(const astr_t &, const astr_t &) {}
 void CMenuManager::ClearHooks() {}
-bool CMenuManager::SendChoiceIfMenuExists(const string &, const string &, const bool &)
+bool CMenuManager::SendChoiceIfMenuExists(const astr_t &, const astr_t &, const bool &)
 {
     return false;
 }
@@ -206,13 +206,13 @@ CPromptManager::CPromptManager() {}
 CPromptManager g_PromptManager;
 void CPromptManager::AddHook(const CPrompt &) {}
 void CPromptManager::ClearHooks() {}
-void CPromptManager::Send(string) {}
+void CPromptManager::Send(astr_t) {}
 
 CTradeManager::CTradeManager() {}
 CTradeManager::~CTradeManager() {}
 CTradeManager g_TradeManager;
 int CTradeManager::Count() { return 0; }
-CTradeWindow *CTradeManager::GetTrade(const string &) { return nullptr; }
+CTradeWindow *CTradeManager::GetTrade(const astr_t &) { return nullptr; }
 
 CContextMenuManager::CContextMenuManager() {}
 CContextMenuManager g_ContextMenuManager;
@@ -221,7 +221,7 @@ void CContextMenuManager::RemoveHook() {}
 
 CObjectPropertiesManager g_ObjectPropertiesManager;
 CObjectPropertiesManager::~CObjectPropertiesManager() = default;
-string CObjectPropertiesManager::GetData(const uint &) { return {}; }
+astr_t CObjectPropertiesManager::GetData(const uint &) { return {}; }
 
 CDressAgent g_DressAgent;
 void CDressAgent::Disarm() {}
@@ -229,38 +229,38 @@ void CDressAgent::Undress() {}
 
 CShopAgent g_ShopAgent;
 bool CShopAgent::IsActiveShopping() { return false; }
-void CShopAgent::SendShopRequest(int, const string &, const string &) {}
+void CShopAgent::SendShopRequest(int, const astr_t &, const astr_t &) {}
 
 CSkillManager::CSkillManager() {}
 CSkillManager::~CSkillManager() {}
 CSkillManager g_SkillManager;
-int CSkillManager::GetIndex(const string &) { return -1; }
-void CSkillManager::Use(const string &) {}
+int CSkillManager::GetIndex(const astr_t &) { return -1; }
+void CSkillManager::Use(const astr_t &) {}
 void CSkillManager::UseIndex(int) {}
-void CSkillManager::TargetUse(const string &, const uint &) {}
+void CSkillManager::TargetUse(const astr_t &, const uint &) {}
 
 CSpellManager::CSpellManager() {}
 CSpellManager::~CSpellManager() {}
 CSpellManager g_SpellManager;
-void CSpellManager::Cast(const string &) {}
+void CSpellManager::Cast(const astr_t &) {}
 void CSpellManager::CastIndex(int) {}
-void CSpellManager::TargetCast(const string &, const uint &) {}
+void CSpellManager::TargetCast(const astr_t &, const uint &) {}
 
 CTextCommandManager::CTextCommandManager() {}
 CTextCommandManager::~CTextCommandManager() {}
 CTextCommandManager g_TextCommandManager;
-bool CTextCommandManager::RunCommand(const string &, const vector<string> &) { return false; }
-ushort CTextCommandManager::GetFindFlags(const string &) { return 0; }
-uchar CTextCommandManager::GetJournalFlags(const string &) { return 0; }
-uchar CTextCommandManager::GetSkillsFlags(const string &) { return 0; }
+bool CTextCommandManager::RunCommand(const astr_t &, const vector<astr_t> &) { return false; }
+ushort CTextCommandManager::GetFindFlags(const astr_t &) { return 0; }
+uchar CTextCommandManager::GetJournalFlags(const astr_t &) { return 0; }
+uchar CTextCommandManager::GetSkillsFlags(const astr_t &) { return 0; }
 
 CTarget::CTarget() {}
 CTarget g_Target;
 bool CTarget::CheckHook() { return false; }
 void CTarget::ClearHooks() {}
 void CTarget::SendCancelTarget() {}
-void CTarget::SetObjectsHook(const vector<string> &) {}
-void CTarget::SetTileHook(const string &, const int &, const int &, const int &, const bool &) {}
+void CTarget::SetObjectsHook(const vector<astr_t> &) {}
+void CTarget::SetTileHook(const astr_t &, const int &, const int &, const int &, const bool &) {}
 void CTarget::SetRecvAssistData(CDataReader &) {}
 
 bool g_Connected = false;
@@ -398,8 +398,8 @@ void CPacketManager::DisplayTalkTextW(uint32_t, CGameObject *, const astr_t &, w
 wstr_t wstr_from(const astr_t &) { return wstr_t(); }
 
 namespace xuoassist {
-void ScriptManager_LoadScriptFile(const string &) {}
-void ScriptManager_Terminate(const string &, const string &) {}
-bool ScriptManager_Running(const string &) { return false; }
-void ScriptManager_Exec(const string &, bool, const vector<string> &) {}
+void ScriptManager_LoadScriptFile(const astr_t &) {}
+void ScriptManager_Terminate(const astr_t &, const astr_t &) {}
+bool ScriptManager_Running(const astr_t &) { return false; }
+void ScriptManager_Exec(const astr_t &, bool, const vector<astr_t> &) {}
 } // namespace xuoassist

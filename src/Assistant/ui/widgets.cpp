@@ -399,7 +399,7 @@ bool HexEditField(const char *id, char *value, size_t valueSize, float width)
     return changed;
 }
 
-bool HexEditField(const char *id, string *value, float width)
+bool HexEditField(const char *id, astr_t *value, float width)
 {
     char buf[24] = { 0 };
     const bool changed = hex_edit_field_impl(id, buf, sizeof(buf), value->c_str(), width);
@@ -555,7 +555,7 @@ char *ListRowLabel()
     return s_RowLabel;
 }
 
-bool ListNamesEqual(const string &a, const char *b)
+bool ListNamesEqual(const astr_t &a, const char *b)
 {
     // GetFreeName compares stored names lowercased (case-insensitive)
     const size_t len = strlen(b);
@@ -601,10 +601,10 @@ void ListGenerationBump(ImGuiID id)
 
 // The CExtendedListWidget::GetFreeName uniquifier: keep the name if no other
 // row matches (case-insensitive), else append _1, _2, ... to the base name.
-static string get_free_name(const XA_LIST_VIEW &view, int skipRow, const string &name)
+static astr_t get_free_name(const XA_LIST_VIEW &view, int skipRow, const astr_t &name)
 {
     int count = view.Count(view.Ctx);
-    string current = name;
+    astr_t current = name;
     int offset = 1;
     while (true)
     {
@@ -621,7 +621,7 @@ static string get_free_name(const XA_LIST_VIEW &view, int skipRow, const string 
         {
             return current;
         }
-        current = name + "_" + std::to_string(offset++);
+        current = name + "_" + str_from(offset++);
     }
 }
 
@@ -707,7 +707,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
                     {
                         // CExtendedListWidget::on_itemChanged: empty -> "name",
                         // collisions -> GetFreeName; then emit itemRenamed
-                        string finalName = rename->buf;
+                        astr_t finalName = rename->buf;
                         if (finalName.empty())
                         {
                             finalName = "name";

@@ -99,7 +99,7 @@ struct TOKEN_RUN
 };
 
 // The per-line tokenizer (the original regex rules, applied left to right).
-void tokenize_line(const string &line, vector<TOKEN_RUN> &runs)
+void tokenize_line(const astr_t &line, vector<TOKEN_RUN> &runs)
 {
     runs.clear();
     const size_t length = line.size();
@@ -201,9 +201,9 @@ void tokenize_line(const string &line, vector<TOKEN_RUN> &runs)
 
 struct EDITOR_STATE
 {
-    string *Buffer{ nullptr };
+    astr_t *Buffer{ nullptr };
     uint BufferGeneration{ 0 }; // the shared-buffer token (stale-resplit fix)
-    vector<string> LineBuffer;
+    vector<astr_t> LineBuffer;
     int CursorLine{ 0 };
     int CursorCol{ 0 };
     int AnchorLine{ -1 }; // selection anchor (-1 = none)
@@ -219,9 +219,9 @@ struct EDITOR_STATE
     std::unordered_map<int, CACHE_ENTRY> Cache;
     uint LastUndoTick{ 0 };
 
-    const vector<TOKEN_RUN> &runs_for(int lineIndex, const string &line)
+    const vector<TOKEN_RUN> &runs_for(int lineIndex, const astr_t &line)
     {
-        const size_t hash = std::hash<string>{}(line);
+        const size_t hash = std::hash<astr_t>{}(line);
         auto it = Cache.find(lineIndex);
         if (it != Cache.end() && it->second.hash == hash)
         {
@@ -238,15 +238,15 @@ struct EDITOR_STATE
         return entry.runs;
     }
 
-    void split_buffer(const string &text)
+    void split_buffer(const astr_t &text)
     {
-        // (re)split the owning string buffer into lines
+        // (re)split the owning astr_t buffer into lines
         LineBuffer.clear();
         size_t start = 0;
         while (true)
         {
             size_t end = text.find('\n', start);
-            if (end == string::npos)
+            if (end == astr_t::npos)
             {
                 LineBuffer.push_back(text.substr(start));
                 break;
@@ -260,9 +260,9 @@ struct EDITOR_STATE
         }
     }
 
-    string join_buffer() const
+    astr_t join_buffer() const
     {
-        string text;
+        astr_t text;
         for (size_t i = 0; i < LineBuffer.size(); i++)
         {
             text += LineBuffer[i];
@@ -277,7 +277,7 @@ struct EDITOR_STATE
     // --- undo (simple snapshots; the original undo stack was the text edit's) ---
     struct UNDO_STATE
     {
-        vector<string> lines;
+        vector<astr_t> lines;
         int line;
         int col;
         size_t bytes; // approximate memory of this snapshot
@@ -296,7 +296,7 @@ struct EDITOR_STATE
             return;
         }
         size_t bytes = 0;
-        for (const string &line : LineBuffer)
+        for (const astr_t &line : LineBuffer)
         {
             bytes += line.size() + 1;
         }
@@ -352,13 +352,13 @@ struct EDITOR_STATE
         selection(line0, col0, line1, col1);
         if (line0 == line1)
         {
-            string &line = LineBuffer.at(line0);
+            astr_t &line = LineBuffer.at(line0);
             line.erase(col0, col1 - col0);
         }
         else
         {
-            string &first = LineBuffer.at(line0);
-            string &last = LineBuffer.at(line1);
+            astr_t &first = LineBuffer.at(line0);
+            astr_t &last = LineBuffer.at(line1);
             first.erase(col0);
             first += last.substr(col1);
             Buffer->erase(Buffer->begin() + line0 + 1, Buffer->begin() + line1 + 1);
@@ -369,23 +369,23 @@ struct EDITOR_STATE
         Modified = true;
     }
 
-    void insert_text(const string &text)
+    void insert_text(const astr_t &text)
     {
         snapshot();
-        string &line = LineBuffer.at(CursorLine);
+        astr_t &line = LineBuffer.at(CursorLine);
         line.insert((size_t)CursorCol, text);
         CursorCol += (int)text.size();
         Modified = true;
     }
 };
 
-EDITOR_STATE *editor_state(ImGuiID id, string *buffer)
+EDITOR_STATE *editor_state(ImGuiID id, astr_t *buffer)
 {
     static std::unordered_map<ImGuiID, EDITOR_STATE> states;
     EDITOR_STATE &state = states[id];
-    // Re-split on the buffer POINTER changing (a different owning string) or
+    // Re-split on the buffer POINTER changing (a different owning astr_t) or
     // on the shared-buffer GENERATION moving (Open/New/Reload/LoadScript
-    // replace the contents of the same string object - the pointer never
+    // replace the contents of the same astr_t object - the pointer never
     // changes, so without the token the widget kept drawing stale lines and
     // an edit rejoined the old content over the new file).
     const uint generation = ScriptEditor_Generation();
@@ -405,12 +405,12 @@ EDITOR_STATE *s_ActiveEditor = nullptr;
 } // namespace
 
 bool TextEditor_Draw(
-    const char *id, string *buffer, float height, int gotoLine, bool *gotoPending)
+    const char *id, astr_t *buffer, float height, int gotoLine, bool *gotoPending)
 {
     ImGuiID imId = ImGui::GetID(id);
     EDITOR_STATE *state = editor_state(imId, buffer);
     s_ActiveEditor = state;
-    const vector<string> &lines = state->LineBuffer;
+    const vector<astr_t> &lines = state->LineBuffer;
 
     if (gotoPending != nullptr && *gotoPending)
     {
@@ -457,7 +457,7 @@ bool TextEditor_Draw(
 
     for (int index = firstLine; index < lastLine; index++)
     {
-        const string &line = lines[index];
+        const astr_t &line = lines[index];
         const float y = origin.y + (index - firstLine) * lineHeight;
         const ImVec2 linePos(origin.x + (gutterWidth + 4), y);
 
@@ -499,12 +499,12 @@ bool TextEditor_Draw(
         {
             if (run.start > (int)pos)
             {
-                const string plain = line.substr(pos, run.start - pos);
+                const astr_t plain = line.substr(pos, run.start - pos);
                 draw->AddText(font, ImGui::GetFontSize(), ImVec2(x, y), IM_COL32(220, 220, 220, 255),
                     plain.c_str(), plain.c_str() + plain.size());
                 x += ImGui::CalcTextSize(plain.c_str()).x;
             }
-            const string piece = line.substr(run.start, run.length);
+            const astr_t piece = line.substr(run.start, run.length);
             draw->AddText(font, ImGui::GetFontSize(), ImVec2(x, y), token_color(run.color),
                 piece.c_str(), piece.c_str() + piece.size());
             x += ImGui::CalcTextSize(piece.c_str()).x;
@@ -512,7 +512,7 @@ bool TextEditor_Draw(
         }
         if (pos < line.size())
         {
-            const string plain = line.substr(pos);
+            const astr_t plain = line.substr(pos);
             draw->AddText(font, ImGui::GetFontSize(), ImVec2(x, y), IM_COL32(220, 220, 220, 255),
                 plain.c_str(), plain.c_str() + plain.size());
         }
@@ -624,7 +624,7 @@ bool TextEditor_Draw(
                 else if (state->CursorCol > 0)
                 {
                     state->snapshot();
-                    string &line = state->LineBuffer.at(state->CursorLine);
+                    astr_t &line = state->LineBuffer.at(state->CursorLine);
                     line.erase(state->CursorCol - 1, 1);
                     state->CursorCol--;
                     state->Modified = true;
@@ -632,7 +632,7 @@ bool TextEditor_Draw(
                 else if (state->CursorLine > 0)
                 {
                     state->snapshot();
-                    const string tail = lines[state->CursorLine];
+                    const astr_t tail = lines[state->CursorLine];
                     state->CursorLine--;
                     state->CursorCol = (int)lines[state->CursorLine].size();
                     state->LineBuffer.at(state->CursorLine) += tail;
@@ -649,14 +649,14 @@ bool TextEditor_Draw(
                 else if (state->CursorCol < (int)lines[state->CursorLine].size())
                 {
                     state->snapshot();
-                    string &line = state->LineBuffer.at(state->CursorLine);
+                    astr_t &line = state->LineBuffer.at(state->CursorLine);
                     line.erase(state->CursorCol, 1);
                     state->Modified = true;
                 }
                 else if (state->CursorLine < (int)lines.size() - 1)
                 {
                     state->snapshot();
-                    string &line = state->LineBuffer.at(state->CursorLine);
+                    astr_t &line = state->LineBuffer.at(state->CursorLine);
                     line += lines[state->CursorLine + 1];
                     state->LineBuffer.erase(state->LineBuffer.begin() + state->CursorLine + 1);
                     state->Modified = true;
@@ -665,8 +665,8 @@ bool TextEditor_Draw(
             if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
             {
                 state->snapshot();
-                string &line = state->LineBuffer.at(state->CursorLine);
-                const string tail = line.substr(state->CursorCol);
+                astr_t &line = state->LineBuffer.at(state->CursorLine);
+                const astr_t tail = line.substr(state->CursorCol);
                 line.erase(state->CursorCol);
                 state->LineBuffer.insert(state->LineBuffer.begin() + state->CursorLine + 1, tail);
                 state->CursorLine++;
@@ -689,7 +689,7 @@ bool TextEditor_Draw(
                     const ImWchar c = io.InputQueueCharacters[i];
                     if (c >= 32)
                     {
-                        string text;
+                        astr_t text;
                         // encode UTF-8 (the buffer is bytes; ImGui gives codepoints)
                         if (c < 0x80)
                         {
@@ -741,14 +741,14 @@ bool TextEditor_Draw(
 
 namespace {
 
-int find_in_state(EDITOR_STATE *state, const string &needle, bool down, bool caseSensitive)
+int find_in_state(EDITOR_STATE *state, const astr_t &needle, bool down, bool caseSensitive)
 {
     // case-sensitive search like the original dialog default; down = forward
-    const vector<string> &lines = state->LineBuffer;
+    const vector<astr_t> &lines = state->LineBuffer;
     int startLine = state->CursorLine;
     int startCol = state->CursorCol + (down ? 1 : 0);
 
-    auto match = [&](const string &text, size_t pos) {
+    auto match = [&](const astr_t &text, size_t pos) {
         if (pos + needle.size() > text.size())
         {
             return false;
@@ -772,7 +772,7 @@ int find_in_state(EDITOR_STATE *state, const string &needle, bool down, bool cas
         for (int line = startLine; line < (int)lines.size(); line++)
         {
             const size_t from = line == startLine ? std::max(0, startCol) : 0;
-            const string &text = lines[line];
+            const astr_t &text = lines[line];
             for (size_t pos = from; pos + needle.size() <= text.size(); pos++)
             {
                 if (match(text, pos))
@@ -790,7 +790,7 @@ int find_in_state(EDITOR_STATE *state, const string &needle, bool down, bool cas
     {
         for (int line = startLine; line >= 0; line--)
         {
-            const string &text = lines[line];
+            const astr_t &text = lines[line];
             int from = line == startLine ? std::min((int)text.size(), startCol) : (int)text.size();
             for (int pos = from - (int)needle.size(); pos >= 0; pos--)
             {
@@ -832,8 +832,8 @@ bool TextEditor_Replace(const char *findText, const char *replaceText, bool case
     {
         int line0, col0, line1, col1;
         state->selection(line0, col0, line1, col1);
-        const string selected = state->LineBuffer.at(line0).substr(col0, col1 - col0);
-        const string needle(findText);
+        const astr_t selected = state->LineBuffer.at(line0).substr(col0, col1 - col0);
+        const astr_t needle(findText);
         bool equal = selected.size() == needle.size();
         for (size_t i = 0; equal && i < needle.size(); i++)
         {
@@ -866,7 +866,7 @@ bool TextEditor_ReplaceAll(const char *findText, const char *replaceText, bool c
     {
         int line0, col0, line1, col1;
         state->selection(line0, col0, line1, col1);
-        string &line = state->LineBuffer.at(line0);
+        astr_t &line = state->LineBuffer.at(line0);
         line.replace(col0, col1 - col0, replaceText);
         state->CursorCol = col0 + (int)strlen(replaceText);
         state->AnchorLine = -1;
@@ -880,7 +880,7 @@ bool TextEditor_ReplaceAll(const char *findText, const char *replaceText, bool c
     return count > 0;
 }
 
-void TextEditor_InsertAtCursor(const string &text)
+void TextEditor_InsertAtCursor(const astr_t &text)
 {
     if (s_ActiveEditor != nullptr && !text.empty())
     {
@@ -912,9 +912,9 @@ bool TextEditor_CommentSelection()
     state->snapshot();
     for (int line = line0; line <= line1; line++)
     {
-        string &text = state->LineBuffer.at(line);
+        astr_t &text = state->LineBuffer.at(line);
         const size_t first = text.find_first_not_of(" \t");
-        if (first != string::npos && text.compare(first, 2, "//") == 0)
+        if (first != astr_t::npos && text.compare(first, 2, "//") == 0)
         {
             text.erase(first, 2); // uncomment
         }

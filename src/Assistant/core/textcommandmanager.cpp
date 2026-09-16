@@ -6,6 +6,7 @@
 
 #include "textcommandmanager.h"
 #include "assist.h"
+#include "textconv.h"
 #include "target.h"
 #include "assistantevents.h"
 #include "../script/scriptgump.h" // the text window (the g_TextDialog port)
@@ -22,13 +23,14 @@
 #include "../managers/skillmanager.h"
 #include "../managers/menumanager.h"
 #include "../managers/gumpmanager.h"
+#include <xuocore/text_parser.h> // ::TextFileParser (the client token parser)
 
 namespace xuoassist {
 
 CTextCommandManager g_TextCommandManager;
 COMMANDS_MAP CTextCommandManager::m_Commands;
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -96,25 +98,32 @@ void CTextCommandManager::InitCommands()
     COMMAND(setpvpcaller, 0, "Usage: setpvpcaller [serial=targetRequest]");
 }
 
-void CTextCommandManager::DoCommand(const string &text)
+void CTextCommandManager::DoCommand(const astr_t &text)
 {
     if (g_World == nullptr)
     {
         return;
     }
 
-    CTextParser parser(text, " ", "#", "''\"\"()");
+    // Tokenized line by line, one command per line, like the original
+    // X:UO Assist command dispatcher; '#' comments and the quote pairs are
+    // that parser's command grammar.
+    size_t pos = 0;
 
-    while (!parser.IsEOF())
+    while (pos < text.length())
     {
-        vector<string> list = parser.ReadTokens();
+        const size_t eol = text.find('\n', pos);
+        const astr_t line = text.substr(pos, (eol == astr_t::npos ? text.length() : eol) - pos);
+        pos = (eol == astr_t::npos) ? text.length() : eol + 1;
+
+        vector<astr_t> list = ParseTextTokens(line, " ", "#", "''\"\"()");
 
         if (list.empty())
         {
             continue;
         }
 
-        string str = list.at(0);
+        astr_t str = list.at(0);
 
         if (str.length() == 0)
         {
@@ -125,7 +134,7 @@ void CTextCommandManager::DoCommand(const string &text)
 
         if (command == m_Commands.end())
         {
-            g_Assistant.ClientPrint(string("Unknown command: ") + str);
+            g_Assistant.ClientPrint(astr_t("Unknown command: ") + str);
             continue;
         }
 
@@ -144,7 +153,7 @@ void CTextCommandManager::DoCommand(const string &text)
     }
 }
 
-bool CTextCommandManager::RunCommand(const string &name, const COMMAND_ARGS &args)
+bool CTextCommandManager::RunCommand(const astr_t &name, const COMMAND_ARGS &args)
 {
     if (g_World == nullptr)
     {
@@ -155,7 +164,7 @@ bool CTextCommandManager::RunCommand(const string &name, const COMMAND_ARGS &arg
 
     if (command == m_Commands.end())
     {
-        g_Assistant.ClientPrint(string("Unknown command: ") + name);
+        g_Assistant.ClientPrint(astr_t("Unknown command: ") + name);
         return false;
     }
 
@@ -190,17 +199,17 @@ void CTextCommandManager::UpdateCommands()
     }
 }
 
-ushort CTextCommandManager::GetFindFlags(const string &text)
+ushort CTextCommandManager::GetFindFlags(const astr_t &text)
 {
     // Was CCommandManager::GetFindFlags.
     ushort flags = FTF_NORMAL;
     ushort flagsType = FTF_NORMAL;
 
-    CTextParser parser(text, "|", "", "");
+    TextFileParser parser({}, "|", "", "");
 
-    vector<string> list = parser.ReadTokens();
+    vector<astr_t> list = parser.GetTokens(text);
 
-    for (const string &str : list)
+    for (const astr_t &str : list)
     {
         if (str == "fast")
         {
@@ -251,16 +260,16 @@ ushort CTextCommandManager::GetFindFlags(const string &text)
     return flags | flagsType;
 }
 
-uchar CTextCommandManager::GetJournalFlags(const string &text)
+uchar CTextCommandManager::GetJournalFlags(const astr_t &text)
 {
     // Was CCommandManager::GetJournalFlags.
     uchar flags = 0;
 
-    CTextParser parser(text, "|", "", "");
+    TextFileParser parser({}, "|", "", "");
 
-    vector<string> list = parser.ReadTokens();
+    vector<astr_t> list = parser.GetTokens(text);
 
-    for (const string &str : list)
+    for (const astr_t &str : list)
     {
         if (str == "my" || str == "self")
         {
@@ -275,16 +284,16 @@ uchar CTextCommandManager::GetJournalFlags(const string &text)
     return flags;
 }
 
-uchar CTextCommandManager::GetSkillsFlags(const string &text)
+uchar CTextCommandManager::GetSkillsFlags(const astr_t &text)
 {
     // Was CCommandManager::GetSkillsFlags.
     uchar flags = SF_REAL;
 
-    CTextParser parser(text, "|", "", "");
+    TextFileParser parser({}, "|", "", "");
 
-    vector<string> list = parser.ReadTokens();
+    vector<astr_t> list = parser.GetTokens(text);
 
-    for (const string &str : list)
+    for (const astr_t &str : list)
     {
         if (str == "base")
         {
@@ -303,7 +312,7 @@ uchar CTextCommandManager::GetSkillsFlags(const string &text)
     return flags;
 }
 
-void CTextCommandManager::CommandTok(COMMAND_ARGS &args, const string &in)
+void CTextCommandManager::CommandTok(COMMAND_ARGS &args, const astr_t &in)
 {
     (void)args;
     (void)in;
@@ -315,7 +324,7 @@ void CTextCommandManager::CommandTok(COMMAND_ARGS &args, const string &in)
 HCOMMAND(info)
 {
     (void)command;
-    string serial = args.empty() ? "" : args[0];
+    astr_t serial = args.empty() ? "" : args[0];
 
     if (g_World == nullptr || !EnabledCommandInformation())
     {
@@ -343,7 +352,7 @@ HCOMMAND(info)
 HCOMMAND(infotile)
 {
     (void)command;
-    string lasttile = args.empty() ? "" : args[0];
+    astr_t lasttile = args.empty() ? "" : args[0];
 
     if (g_World == nullptr || !EnabledCommandInformation())
     {
@@ -377,7 +386,7 @@ HCOMMAND(saveconfig)
 HCOMMAND(setdressbag)
 {
     (void)command;
-    string serial = args.empty() ? "" : args[0];
+    astr_t serial = args.empty() ? "" : args[0];
 
     if (g_World == nullptr)
     {
@@ -411,7 +420,7 @@ HCOMMAND(unsetdressbag)
 HCOMMAND(getstatus)
 {
     (void)command;
-    string serial = "self";
+    astr_t serial = "self";
 
     if (!args.empty())
     {
@@ -429,7 +438,7 @@ HCOMMAND(getstatus)
 HCOMMAND(click)
 {
     (void)command;
-    string serial = "self";
+    astr_t serial = "self";
 
     if (!args.empty())
     {
@@ -447,7 +456,7 @@ HCOMMAND(click)
 HCOMMAND(useobject)
 {
     (void)command;
-    string serial = "self";
+    astr_t serial = "self";
 
     if (!args.empty())
     {
@@ -484,8 +493,8 @@ HCOMMAND(usetype)
         return;
     }
 
-    string color = "0xFFFF";
-    string container = "self";
+    astr_t color = "0xFFFF";
+    astr_t container = "self";
     bool recurseSearch = true;
 
     if (size > 1)
@@ -512,11 +521,11 @@ HCOMMAND(usetype)
         return;
     }
 
-    vector<string> list;
+    vector<astr_t> list;
 
     CGameObject *found = g_Assistant.FindType(
-        vector<string>{ args[0] },
-        vector<string>{ color },
+        vector<astr_t>{ args[0] },
+        vector<astr_t>{ color },
         container,
         "usedistance",
         GetFindFlags("fast"),
@@ -540,8 +549,8 @@ HCOMMAND(usefromground)
         return;
     }
 
-    string distance = "usedistance";
-    string flags = "";
+    astr_t distance = "usedistance";
+    astr_t flags = "";
 
     if (size > 2)
     {
@@ -553,11 +562,11 @@ HCOMMAND(usefromground)
         return;
     }
 
-    vector<string> list;
+    vector<astr_t> list;
 
     CGameObject *found = g_Assistant.FindType(
-        vector<string>{ args[0] },
-        vector<string>{ size > 1 ? args[1] : string("0xFFFF") },
+        vector<astr_t>{ args[0] },
+        vector<astr_t>{ size > 1 ? args[1] : astr_t("0xFFFF") },
         "ground",
         distance,
         GetFindFlags(flags),
@@ -622,10 +631,10 @@ HCOMMAND(textprint)
         return;
     }
 
-    string text = "";
+    astr_t text = "";
     bool first = true;
 
-    for (const string &str : args)
+    for (const astr_t &str : args)
     {
         if (!first)
         {
@@ -653,7 +662,7 @@ HCOMMAND(terminate)
     // keep-list for the "all" form; ScriptManager_Terminate owns both.
     if (!args.empty())
     {
-        ScriptManager_Terminate(args[0], args.size() > 1 ? args[1] : string());
+        ScriptManager_Terminate(args[0], args.size() > 1 ? args[1] : astr_t());
     }
 }
 
@@ -972,7 +981,7 @@ HCOMMAND(hide)
         return;
     }
 
-    string serial = args.empty() ? "" : args[0];
+    astr_t serial = args.empty() ? "" : args[0];
 
     if (serial.length() != 0)
     {
@@ -1022,7 +1031,7 @@ HCOMMAND(drop)
 
     g_MoveItemData.Reset();
 
-    string serial = args[0];
+    astr_t serial = args[0];
 
     int count = 0;
     ushort x = 0xFFFF;
@@ -1098,7 +1107,7 @@ HCOMMAND(drophere)
 
     int size = (int)args.size();
 
-    string serial = size != 0 ? args[0] : "";
+    astr_t serial = size != 0 ? args[0] : "";
     int count = 0;
 
     if (size != 0 && size > 1)
@@ -1140,8 +1149,8 @@ HCOMMAND(moveitem)
 
     int size = (int)args.size();
 
-    string serial = "";
-    string container = "backpack";
+    astr_t serial = "";
+    astr_t container = "backpack";
     int count = 0;
     ushort x = 0xFFFF;
     ushort y = 0xFFFF;
@@ -1456,7 +1465,7 @@ HCOMMAND(showjournal)
     {
         const CJournalMessage &item = list[i];
 
-        string line = "";
+        astr_t line = "";
         if ((item.Flags & JMT_SYSTEM) != 0)
         {
             line = "sys ";
@@ -1486,10 +1495,10 @@ HCOMMAND(clearjournal)
 {
     (void)command;
 
-    string pattern = "";
-    string serial = "0xFFFFFFFF";
+    astr_t pattern = "";
+    astr_t serial = "0xFFFFFFFF";
     ushort color = 0xFFFF;
-    string type = "";
+    astr_t type = "";
 
     int size = (int)args.size();
 
@@ -1576,7 +1585,7 @@ HCOMMAND(infogump)
 HCOMMAND(setpvpcaller)
 {
     (void)command;
-    string serial = args.empty() ? "" : args[0];
+    astr_t serial = args.empty() ? "" : args[0];
 
     if (serial.length() != 0)
     {

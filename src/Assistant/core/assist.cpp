@@ -22,19 +22,20 @@
 #include "assistantevents.h"
 #include "world.h"
 #include "worldutil.h"
-#include "textparser.h"
+#include "textconv.h"
 #include "textcommandmanager.h" // g_TextCommandManager (the command-prefix intercept)
 #include "clientversion.h" // GetClientVersion (the negotiated client version)
 #include "../config/assistantconfig.h"
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-initiated sends do not self-record)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include <common/str.h>
+#include <xuocore/text_parser.h> // ::TextFileParser (the client token parser)
 #include <common/logging/logging.h>
 #include <stdlib.h>
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -51,14 +52,14 @@ CAssistant::CAssistant() {}
 
 CAssistant::~CAssistant() {}
 
-void CAssistant::ScriptError(const string &title, const string &text)
+void CAssistant::ScriptError(const astr_t &title, const astr_t &text)
 {
     // Was CAssistant::slot_ScriptError.
     ClientPrint(title, 0x0021);
     ClientPrint(text, 0x0021);
 }
 
-uint CAssistant::RawStringToUInt(const string &value)
+uint CAssistant::RawStringToUInt(const astr_t &value)
 {
     uint result = 0;
 
@@ -145,7 +146,7 @@ uint CAssistant::RawStringToUInt(const string &value)
     return result;
 }
 
-bool CAssistant::RawStringToBool(string value)
+bool CAssistant::RawStringToBool(astr_t value)
 {
     value = to_lower_copy(value);
     bool result = false;
@@ -162,22 +163,22 @@ bool CAssistant::RawStringToBool(string value)
     return result;
 }
 
-uint CAssistant::TextToUInt(const string &text)
+uint CAssistant::TextToUInt(const astr_t &text)
 {
     return ::xuoassist::TextToUInt(text); // core/textconv (shared with the model)
 }
 
-uint CAssistant::TextToSerial(string text)
+uint CAssistant::TextToSerial(astr_t text)
 {
     return ::xuoassist::TextToSerial(to_lower_copy(text));
 }
 
-ushort CAssistant::TextToGraphic(string text)
+ushort CAssistant::TextToGraphic(astr_t text)
 {
     return ::xuoassist::TextToGraphic(to_lower_copy(text));
 }
 
-int CAssistant::TextToLayer(string text)
+int CAssistant::TextToLayer(astr_t text)
 {
     text = to_lower_copy(text);
 
@@ -192,35 +193,35 @@ int CAssistant::TextToLayer(string text)
     return atoi(text.c_str());
 }
 
-string CAssistant::ColorToText(const uint &value)
+astr_t CAssistant::ColorToText(const uint &value)
 {
     char buf[64] = { 0 };
     snprintf(buf, sizeof(buf), "#%08X", value);
     return buf;
 }
 
-string CAssistant::SerialToText(const uint &value)
+astr_t CAssistant::SerialToText(const uint &value)
 {
     return ::xuoassist::SerialToText(value);
 }
 
-string CAssistant::GraphicToText(const ushort &value)
+astr_t CAssistant::GraphicToText(const ushort &value)
 {
     return ::xuoassist::GraphicToText(value);
 }
 
-string CAssistant::BoolToText(const bool &value)
+astr_t CAssistant::BoolToText(const bool &value)
 {
     return value ? "true" : "false";
 }
 
-void CAssistant::ClientPrint(const string &text, const ushort &color)
+void CAssistant::ClientPrint(const astr_t &text, const ushort &color)
 {
     g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
 }
 
-void CAssistant::ClientCharPrint(const uint &serial, const string &text, const ushort &color)
+void CAssistant::ClientCharPrint(const uint &serial, const astr_t &text, const ushort &color)
 {
     g_PacketManager.DisplayTalkTextW(
         serial,
@@ -231,7 +232,7 @@ void CAssistant::ClientCharPrint(const uint &serial, const string &text, const u
         ST_NORMAL);
 }
 
-void CAssistant::ClientPrintDebugLevel1(const string &text, const ushort &color)
+void CAssistant::ClientPrintDebugLevel1(const astr_t &text, const ushort &color)
 {
     if (g_AssistantConfig.GetMessagesLevel() >= 1)
     {
@@ -239,7 +240,7 @@ void CAssistant::ClientPrintDebugLevel1(const string &text, const ushort &color)
     }
 }
 
-void CAssistant::ClientPrintDebugLevel2(const string &text, const ushort &color)
+void CAssistant::ClientPrintDebugLevel2(const astr_t &text, const ushort &color)
 {
     if (g_AssistantConfig.GetMessagesLevel() >= 2)
     {
@@ -247,7 +248,7 @@ void CAssistant::ClientPrintDebugLevel2(const string &text, const ushort &color)
     }
 }
 
-void CAssistant::RequestTarget(const string &text)
+void CAssistant::RequestTarget(const astr_t &text)
 {
     if (text.length() != 0)
     {
@@ -359,15 +360,15 @@ void CAssistant::Attack(const uint &serial)
     g_Game.AttackReq(serial);
 }
 
-uchar CAssistant::GetNotorietyFlags(const string &text)
+uchar CAssistant::GetNotorietyFlags(const astr_t &text)
 {
     uchar flags = NTF_ALL;
 
-    CTextParser parser(to_lower_copy(text), "| ", "", "");
+    TextFileParser parser({}, "| ", "", "");
 
-    vector<string> list = parser.ReadTokens();
+    vector<astr_t> list = parser.GetTokens(to_lower_copy(text));
 
-    for (const string &str : list)
+    for (const astr_t &str : list)
     {
         if (str == "innocent" || str == "blue")
         {
@@ -403,21 +404,21 @@ uchar CAssistant::GetNotorietyFlags(const string &text)
 }
 
 CGameObject *CAssistant::FindList(
-    const string &findListName,
-    const string &containerText,
-    const string &distanceText,
+    const astr_t &findListName,
+    const astr_t &containerText,
+    const astr_t &distanceText,
     const ushort &flags,
-    const string &notorietyText,
+    const astr_t &notorietyText,
     bool recurseSearch,
-    vector<string> &result)
+    vector<astr_t> &result)
 {
     vector<CFindItem> findListItems;
 
-    CTextParser findListNameParser(findListName, "|", "", "");
+    TextFileParser findListNameParser({}, "|", "", "");
 
-    vector<string> listNames = findListNameParser.ReadTokens();
+    vector<astr_t> listNames = findListNameParser.GetTokens(findListName);
 
-    for (const string &str : listNames)
+    for (const astr_t &str : listNames)
     {
         CFindListEntry *list = g_AssistantConfig.GetFindList(str);
 
@@ -432,11 +433,11 @@ CGameObject *CAssistant::FindList(
     }
 
     vector<CIgnoreItem> ignoreListItems;
-    CTextParser ignoreListNameParser(m_UsedIgnoreList, "|", "", "");
+    TextFileParser ignoreListNameParser({}, "|", "", "");
 
-    listNames = ignoreListNameParser.ReadTokens();
+    listNames = ignoreListNameParser.GetTokens(m_UsedIgnoreList);
 
-    for (const string &str : listNames)
+    for (const astr_t &str : listNames)
     {
         CIgnoreListEntry *list = g_AssistantConfig.GetIgnoreList(str);
 
@@ -497,14 +498,14 @@ CGameObject *CAssistant::FindList(
 }
 
 CGameObject *CAssistant::FindType(
-    const vector<string> &graphic,
-    const vector<string> &color,
-    const string &containerText,
-    const string &distanceText,
+    const vector<astr_t> &graphic,
+    const vector<astr_t> &color,
+    const astr_t &containerText,
+    const astr_t &distanceText,
     const ushort &flags,
-    const string &notorietyText,
+    const astr_t &notorietyText,
     bool recurseSearch,
-    vector<string> &result)
+    vector<astr_t> &result)
 {
     result.clear();
 
@@ -514,11 +515,11 @@ CGameObject *CAssistant::FindType(
     }
 
     vector<CIgnoreItem> ignoreListItems;
-    CTextParser ignoreListNameParser(m_UsedIgnoreList, "|", "", "");
+    TextFileParser ignoreListNameParser({}, "|", "", "");
 
-    vector<string> listNames = ignoreListNameParser.ReadTokens();
+    vector<astr_t> listNames = ignoreListNameParser.GetTokens(m_UsedIgnoreList);
 
-    for (const string &str : listNames)
+    for (const astr_t &str : listNames)
     {
         CIgnoreListEntry *list = g_AssistantConfig.GetIgnoreList(str);
 
@@ -596,7 +597,7 @@ CGameObject *CAssistant::FindType(
     ushort flags,
     const uchar &notoriety,
     bool recurseSearch,
-    vector<string> &list)
+    vector<astr_t> &list)
 {
     if (g_World == nullptr)
     {
@@ -796,10 +797,10 @@ CGameObject *CAssistant::FindType(
 }
 
 int CAssistant::CountType(
-    const vector<string> &graphic,
-    const vector<string> &color,
-    const string &containerText,
-    const string &distanceText,
+    const vector<astr_t> &graphic,
+    const vector<astr_t> &color,
+    const astr_t &containerText,
+    const astr_t &distanceText,
     bool recurseSearch)
 {
     if (g_World == nullptr)
@@ -873,7 +874,7 @@ int CAssistant::CountType(
 void CAssistant::UseType(
     const CFindItem &findListItem, const uint &container, const int &distance, const bool &recurseSearch)
 {
-    vector<string> list;
+    vector<astr_t> list;
 
     CGameObject *item =
         FindType(findListItem, vector<CIgnoreItem>(), container, distance, FTF_NORMAL, 0, recurseSearch, list);
@@ -1067,7 +1068,7 @@ void CAssistant::HandleTargetPartyObject(uchar *buf)
     // was g_TabAgentsParty->SetPartyObjectFromTarget(unpack32(buf + 7)); the
     // serial/name fields are Phase 4 tab state
     const uint serial = unpack32(buf + 7);
-    string name;
+    astr_t name;
 
     if (g_World != nullptr)
     {
@@ -1087,7 +1088,7 @@ void CAssistant::HandleTargetFriendObject(uchar *buf)
     // Was g_TabListsFriends->SetFriendObjectFromTarget(unpack32(buf + 7)).
     const uint serial = unpack32(buf + 7);
     Info(Assistant, "friend from target: 0x%08X\n", serial);
-    string name;
+    astr_t name;
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
     if (obj != nullptr)
     {
@@ -1101,7 +1102,7 @@ void CAssistant::HandleTargetEnemyObject(uchar *buf)
     // Was g_TabListsEnemies->SetEnemyObjectFromTarget(unpack32(buf + 7)).
     const uint serial = unpack32(buf + 7);
     Info(Assistant, "enemy from target: 0x%08X\n", serial);
-    string name;
+    astr_t name;
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr;
     if (obj != nullptr)
     {
@@ -1124,7 +1125,7 @@ void CAssistant::HandleTargetAnimalAndVendorControlName(uchar *buf)
     }
 }
 
-CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceText)
+CGameObject *CAssistant::FindFriend(const ushort &flags, const astr_t &distanceText)
 {
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     CGameObject *found = nullptr;
@@ -1206,7 +1207,7 @@ CGameObject *CAssistant::FindFriend(const ushort &flags, const string &distanceT
     return found;
 }
 
-CGameObject *CAssistant::FindEnemy(const ushort &flags, const string &distanceText)
+CGameObject *CAssistant::FindEnemy(const ushort &flags, const astr_t &distanceText)
 {
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     CGameObject *found = nullptr;

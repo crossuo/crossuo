@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/guildmanager.h), trimmed
-// (strings are std::string).
+// (strings are astr_t).
 
 #pragma once
 
@@ -17,7 +17,7 @@ struct GUILD_MEMBER_INFO
     int X{ 0 };
     int Y{ 0 };
     uint Map{ 0 };
-    string Name{ "guild member" };
+    astr_t Name{ "guild member" };
 };
 
 class GuildManager
@@ -25,7 +25,7 @@ class GuildManager
 public:
     GuildManager();
 
-    void SetMemberName(uint serial, string &name);
+    void SetMemberName(uint serial, astr_t &name);
 
     void SetMemberInfo(const GUILD_MEMBER_INFO &info);
 
@@ -47,4 +47,3 @@ private:
 extern GuildManager g_GuildManager;
 
 } // namespace xuoassist
-

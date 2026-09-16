@@ -10,7 +10,7 @@ namespace xuoassist {
 CSkill g_Skills[MAX_SKILLS_COUNT];
 int g_SkillsCount = MAX_SKILLS_COUNT;
 
-CSkill::CSkill(const bool &haveButton, const string &name)
+CSkill::CSkill(const bool &haveButton, const astr_t &name)
     : m_Button(haveButton)
 {
     if (name.length() != 0)

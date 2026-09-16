@@ -536,15 +536,15 @@ namespace xuoassist {
 namespace {
 
 // forward-path split: "A/B" -> ["A", "B"]
-vector<string> split_path(const char *path)
+vector<astr_t> split_path(const char *path)
 {
-    vector<string> parts;
+    vector<astr_t> parts;
     const char *start = path;
     for (const char *p = path;; p++)
     {
         if (*p == '/' || *p == 0)
         {
-            parts.push_back(string(start, p - start));
+            parts.push_back(astr_t(start, p - start));
             if (*p == 0)
             {
                 break;
@@ -557,7 +557,7 @@ vector<string> split_path(const char *path)
 
 struct MENU_NODE
 {
-    string label;
+    astr_t label;
     vector<int> items;   // indices into g_MenuItems at this node (leaf)
     vector<int> children; // indices into nodes (sub-menu)
 };
@@ -570,7 +570,7 @@ vector<MENU_NODE> build_tree()
 
     for (int i = 0; i < (int)(sizeof(g_MenuItems) / sizeof(g_MenuItems[0])); i++)
     {
-        vector<string> parts = split_path(g_MenuItems[i].Path);
+        vector<astr_t> parts = split_path(g_MenuItems[i].Path);
         int current = 0;
         for (size_t depth = 0; depth + 1 < parts.size(); depth++)
         {
@@ -592,7 +592,7 @@ vector<MENU_NODE> build_tree()
             current = next;
         }
         // leaf label + item
-        const string &leaf = parts.back();
+        const astr_t &leaf = parts.back();
         int leafIndex = -1;
         for (int child : nodes[current].children)
         {
@@ -620,7 +620,7 @@ const vector<MENU_NODE> &menu_tree()
     return tree;
 }
 
-bool draw_leaf(const MENU_NODE &node, string &inserted)
+bool draw_leaf(const MENU_NODE &node, astr_t &inserted)
 {
     for (int item : node.items)
     {
@@ -633,7 +633,7 @@ bool draw_leaf(const MENU_NODE &node, string &inserted)
     return false;
 }
 
-bool draw_node(const MENU_NODE &node, string &inserted)
+bool draw_node(const MENU_NODE &node, astr_t &inserted)
 {
     if (draw_leaf(node, inserted))
     {
@@ -660,7 +660,7 @@ bool draw_node(const MENU_NODE &node, string &inserted)
 }
 
 // The dynamic Spells menu (the original loop).
-bool draw_spells(string &inserted)
+bool draw_spells(astr_t &inserted)
 {
     bool picked = false;
     if (ImGui::BeginMenu("Spells"))
@@ -674,7 +674,7 @@ bool draw_spells(string &inserted)
         {
             if (ImGui::BeginMenu(BOOKS[i]))
             {
-                for (const string &spell : g_SpellManager.m_SpellbookSpellNames[i])
+                for (const astr_t &spell : g_SpellManager.m_SpellbookSpellNames[i])
                 {
                     if (spell.empty())
                     {
@@ -696,7 +696,7 @@ bool draw_spells(string &inserted)
 
 } // namespace
 
-bool ScriptMenu_Draw(const char *popupId, string &inserted)
+bool ScriptMenu_Draw(const char *popupId, astr_t &inserted)
 {
     bool picked = false;
     if (!ImGui::BeginPopup(popupId))

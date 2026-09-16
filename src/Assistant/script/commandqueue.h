@@ -155,20 +155,20 @@ struct XA_SCRIPT_COMMAND
     // Pointer results ride here, never in SerialA: a 32-bit slot truncates
     // 64-bit heap pointers (the journal round used to corrupt them).
     void *PointerA{ nullptr };
-    string TextA;
-    string TextB;
-    string TextC;
-    string TextD;
-    vector<string> ListA;
-    vector<string> ListB;
+    astr_t TextA;
+    astr_t TextB;
+    astr_t TextC;
+    astr_t TextD;
+    vector<astr_t> ListA;
+    vector<astr_t> ListB;
 
     // result side (written by the drain, read by the caller after Exec)
     int ResultInt{ 0 };
     uint ResultSerial{ 0 };
     bool ResultBool{ false };
     bool ResultDropped{ false }; // true = no data (timeout/drop/shutdown)
-    string ResultText;
-    vector<string> ResultList;
+    astr_t ResultText;
+    vector<astr_t> ResultList;
 };
 static_assert(sizeof(void *) <= sizeof(uintptr_t),
     "pointer results must fit an address-sized slot");
@@ -208,4 +208,3 @@ void ScriptQueue_SetCapacity(uint entries);
 bool ScriptQueue_PrintThrottled(uint &suppressedCount);
 
 } // namespace xuoassist
-

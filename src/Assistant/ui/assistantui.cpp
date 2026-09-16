@@ -103,9 +103,9 @@ uint32_t s_SessionStartTicks = 0;
 int s_ReconnectSeconds = 0;
 uint32_t s_ReconnectLastTick = 0;
 
-// the display caption (was the window title bar): the last string we applied to
+// the display caption (was the window title bar): the last astr_t we applied to
 // the OS window, so SetTitle only runs on change
-string s_LastWindowTitle;
+astr_t s_LastWindowTitle;
 uint32_t s_LastStepTick = 0;
 
 // the Autostart script run (was AssistForm::RunAutostart's
@@ -143,7 +143,7 @@ void apply_display_title()
     // apply to the OS window on change (was the GDI painter writing the
     // caption; the client's own writes - player name change etc. - are
     // overwritten here exactly like the old title bar was repainted)
-    const string &title = g_DisplayManager.GetTitleText();
+    const astr_t &title = g_DisplayManager.GetTitleText();
     if (title != s_LastWindowTitle)
     {
         s_LastWindowTitle = title;
@@ -455,8 +455,8 @@ void ScriptTextWindow_Draw()
         ImGui::End();
         return;
     }
-    const vector<string> &lines = ScriptTextWindow_Lines();
-    for (const string &line : lines)
+    const vector<astr_t> &lines = ScriptTextWindow_Lines();
+    for (const astr_t &line : lines)
     {
         ImGui::TextUnformatted(line.c_str(), line.c_str() + line.size());
     }

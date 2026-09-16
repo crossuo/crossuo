@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (commonitems/gumphook.h): lists are std::vector,
-// strings are std::string.
+// strings are astr_t.
 
 #pragma once
 
@@ -28,9 +28,9 @@ class CGumpHookEntry
 {
 public:
     int Index = 0;
-    string Text = "";
+    astr_t Text = "";
 
-    CGumpHookEntry(const int &index, const string &text)
+    CGumpHookEntry(const int &index, const astr_t &text)
         : Index(index)
         , Text(text)
     {
@@ -52,4 +52,3 @@ public:
 };
 
 } // namespace xuoassist
-

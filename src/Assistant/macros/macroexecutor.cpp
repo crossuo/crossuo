@@ -96,7 +96,7 @@ void CMacroExecutor::SetLoopOptions(bool looped, float loopSeconds)
     m_LoopDelay = (uint)(loopSeconds * 1000.0f);
 }
 
-void CMacroExecutor::Play(const string &name, bool doNotAutoIterrupt)
+void CMacroExecutor::Play(const astr_t &name, bool doNotAutoIterrupt)
 {
     // TabMacros::Play: find by name, last first
     const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
@@ -559,7 +559,7 @@ void CMacroExecutor::RecordWaitContextMenu(uint serial, ushort menuID)
     Record(new CMacroWithObject(MT_WAIT_FOR_CONTEXT_MENU, serial, menuID, 0));
 }
 
-void CMacroExecutor::RecordSay(const string &text)
+void CMacroExecutor::RecordSay(const astr_t &text)
 {
     // were the 0x03 ClientTalkS / 0xAD UnicodeClientTalk send taps
     // (packetmanager.cpp). Gate is the old handler's verbatim
@@ -649,7 +649,7 @@ uint CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE conv
              0xFFFF);
 
     vector<CIgnoreItem> ignoreList;
-    vector<string> list;
+    vector<astr_t> list;
 
     if (convertType == MCT_BY_TYPE_GROUND || convertType == MCT_BY_TYPE_COLOR_GROUND)
     {
@@ -861,7 +861,7 @@ void CMacroExecutor::ProcessMacro()
             }
             case MT_SAY:
             {
-                string text = ((CMacroWithStringValue *)macro)->Value;
+                astr_t text = ((CMacroWithStringValue *)macro)->Value;
                 if (convertType == MCT_SAY_YELL)
                 {
                     text = "! " + text;
@@ -899,7 +899,7 @@ void CMacroExecutor::ProcessMacro()
                         color = 0;
                     }
                     // the command text is ASCII speech: widen like the old toStdWString
-                    wstring wide;
+                    wstr_t wide;
                     wide.reserve(text.size());
                     for (char c : text)
                     {

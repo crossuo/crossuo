@@ -13,7 +13,7 @@
 
 namespace xuoassist {
 
-string CMacro::GetText()
+astr_t CMacro::GetText()
 {
     switch (Type)
     {
@@ -174,7 +174,7 @@ string CMacro::GetText()
             const CSkill *skill = g_SkillsManager.Get(
                 (GetClass() == MCLASS_INT_VALUE ? (CMacroWithIntValue *)this : nullptr)->Value);
 
-            return "UseSkill: " + (skill != nullptr ? skill->Name : string());
+            return "UseSkill: " + (skill != nullptr ? skill->Name : astr_t());
         }
         case MT_CAST:
         case MT_CAST_NEW:
@@ -191,7 +191,7 @@ string CMacro::GetText()
 
             if (spellbook < spellbooksCount)
             {
-                vector<string> &list = g_SpellManager.m_SpellbookSpellNames[spellbook];
+                vector<astr_t> &list = g_SpellManager.m_SpellbookSpellNames[spellbook];
                 spell %= 100;
 
                 if (spell > 0 && spell <= (int)list.size())
@@ -350,14 +350,14 @@ string CMacro::GetText()
                 return "WarMode: toggle";
             }
 
-            return string("War mode: ") +
+            return astr_t("War mode: ") +
                    (((CMacroWithIntValue *)this)->Value != 0 ? "on" : "off");
         }
         case MT_WALK:
         {
             int val = ((CMacroWithIntValue *)this)->Value;
 
-            string text;
+            astr_t text;
 
             const char *directionName[8] = { "North",    "North East", "East",  "South East",
                                              "South",    "South West", "West",  "North West" };
@@ -365,15 +365,15 @@ string CMacro::GetText()
             if (val < 0)
             {
                 val = -val;
-                text = "Turn: " + string(directionName[val & 7]);
+                text = "Turn: " + astr_t(directionName[val & 7]);
             }
             else if ((val & 0x80) != 0)
             {
-                text = "Run: " + string(directionName[val & 7]);
+                text = "Run: " + astr_t(directionName[val & 7]);
             }
             else
             {
-                text = "Walk: " + string(directionName[val & 7]);
+                text = "Walk: " + astr_t(directionName[val & 7]);
             }
 
             return text;
@@ -399,19 +399,19 @@ string CMacro::GetText()
         case MT_TOGGLE_GARGOYLE_FLYING:
             return "Toggle gargoyle flying";
         case MT_WAIT:
-            return "Wait: " + std::to_string(WaitingTime) + " ms";
+            return "Wait: " + str_from(WaitingTime) + " ms";
         case MT_SET_ARM:
             return "SetArm";
         case MT_DISARM:
-            return "Disarm, delay: " + std::to_string(WaitingTime) + " ms";
+            return "Disarm, delay: " + str_from(WaitingTime) + " ms";
         case MT_ARM:
-            return "Arm, delay: " + std::to_string(WaitingTime) + " ms";
+            return "Arm, delay: " + str_from(WaitingTime) + " ms";
         case MT_SET_DRESS:
             return "SetDress";
         case MT_UNDRESS:
-            return "Undress, delay: " + std::to_string(WaitingTime) + " ms";
+            return "Undress, delay: " + str_from(WaitingTime) + " ms";
         case MT_DRESS:
-            return "Dress, delay: " + std::to_string(WaitingTime) + " ms";
+            return "Dress, delay: " + str_from(WaitingTime) + " ms";
         default:
             break;
     }
@@ -630,16 +630,16 @@ CMacro *CMacro::Load(const XMLElement &element)
 
 void CMacro::Save(XMLElement &element)
 {
-    element.SetAttribute("type", std::to_string((int)Type));
-    element.SetAttribute("convert_type", std::to_string((int)ConvertType));
-    element.SetAttribute("waiting_time", std::to_string(WaitingTime));
+    element.SetAttribute("type", str_from((int)Type));
+    element.SetAttribute("convert_type", str_from((int)ConvertType));
+    element.SetAttribute("waiting_time", str_from(WaitingTime));
 }
 
 void CMacroWithIntValue::Save(XMLElement &element)
 {
     CMacro::Save(element);
 
-    element.SetAttribute("value", std::to_string(Value));
+    element.SetAttribute("value", str_from(Value));
 }
 
 void CMacroWithStringValue::Save(XMLElement &element)
@@ -664,7 +664,7 @@ void CMacroWithGump::Save(XMLElement &element)
 
     element.SetAttribute("serial", CAssistant::SerialToText(Serial));
     element.SetAttribute("id", CAssistant::SerialToText(ID));
-    element.SetAttribute("button", std::to_string(Button));
+    element.SetAttribute("button", str_from(Button));
 }
 
 void CMacroWithMenu::Save(XMLElement &element)
@@ -682,9 +682,9 @@ void CMacroWithTargetTile::Save(XMLElement &element)
     CMacro::Save(element);
 
     element.SetAttribute("graphic", CAssistant::GraphicToText(Graphic));
-    element.SetAttribute("x", std::to_string(X));
-    element.SetAttribute("y", std::to_string(Y));
-    element.SetAttribute("z", std::to_string(Z));
+    element.SetAttribute("x", str_from(X));
+    element.SetAttribute("y", str_from(Y));
+    element.SetAttribute("z", str_from(Z));
 }
 
 } // namespace xuoassist

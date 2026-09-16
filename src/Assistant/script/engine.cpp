@@ -91,7 +91,7 @@ CScriptEngine::~CScriptEngine()
     }
 }
 
-bool CScriptEngine::Setup(const string &scriptName)
+bool CScriptEngine::Setup(const astr_t &scriptName)
 {
     if (m_Context == nullptr)
     {
@@ -102,7 +102,7 @@ bool CScriptEngine::Setup(const string &scriptName)
     return true;
 }
 
-bool CScriptEngine::Evaluate(const string &text)
+bool CScriptEngine::Evaluate(const astr_t &text)
 {
     if (m_Context == nullptr)
     {
@@ -115,8 +115,8 @@ bool CScriptEngine::Evaluate(const string &text)
     bool ok = !JS_IsException(result);
     if (!ok)
     {
-        string line;
-        string message;
+        astr_t line;
+        astr_t message;
         Script_FormatException(m_Context, line, message); // apiscript.cpp
         g_Assistant.ScriptError("Evaluate script error!", "Line: " + line + "\n" + message);
     }
@@ -124,7 +124,7 @@ bool CScriptEngine::Evaluate(const string &text)
     return ok;
 }
 
-bool CScriptEngine::CallFunction(const string &functionName, const vector<string> &args)
+bool CScriptEngine::CallFunction(const astr_t &functionName, const vector<astr_t> &args)
 {
     if (m_Context == nullptr)
     {
@@ -162,8 +162,8 @@ bool CScriptEngine::CallFunction(const string &functionName, const vector<string
     const bool ok = !JS_IsException(result);
     if (!ok)
     {
-        string line;
-        string message;
+        astr_t line;
+        astr_t message;
         Script_FormatException(m_Context, line, message);
         g_Assistant.ScriptError("Running script error!", "Line: " + line + "\n" + message);
     }

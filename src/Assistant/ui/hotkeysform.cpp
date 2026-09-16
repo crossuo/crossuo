@@ -318,7 +318,7 @@ void HotkeysForm_Draw(bool *open)
     {
         // Heap-held names (no fixed clamp): the spell/skill lists run to
         // ~450 entries and every one must stay selectable.
-        static vector<string> s_ActionItems;
+        static vector<astr_t> s_ActionItems;
         static uint s_ActionItemsType = 0xFFFFFFFF;
         if (s_ActionItemsType != s_SelectedType)
         {
@@ -340,7 +340,7 @@ void HotkeysForm_Draw(bool *open)
         if (!s_ActionItems.empty())
         {
             auto action_getter = [](void *data, int idx) -> const char * {
-                return ((vector<string> *)data)->at((size_t)idx).c_str();
+                return ((vector<astr_t> *)data)->at((size_t)idx).c_str();
             };
             ImGui::SetNextItemWidth(-1.0f);
             if (ImGui::Combo(

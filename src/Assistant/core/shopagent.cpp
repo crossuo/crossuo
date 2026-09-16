@@ -30,7 +30,7 @@ CShopAgent g_ShopAgent;
 namespace {
 
 // the per-file to_lower_copy the original port keeps in assist/displaymanager
-string to_lower_copy(string text)
+astr_t to_lower_copy(astr_t text)
 {
     for (char &ch : text)
     {
@@ -82,10 +82,10 @@ bool CShopAgent::IsActiveShopping()
         (m_State != SLWS_NORMAL && m_WaitTimeout >= g_Ticks) || m_ProgressActive);
 }
 
-void CShopAgent::Buy(const string &listName)
+void CShopAgent::Buy(const astr_t &listName)
 {
     // was on_pb_BuySelectedList_clicked: "<vendor name> buy" speech
-    string text = m_VendorName;
+    astr_t text = m_VendorName;
 
     if (text.length() != 0)
     {
@@ -97,10 +97,10 @@ void CShopAgent::Buy(const string &listName)
     SendShopRequest(SLWS_BUY, listName, text);
 }
 
-void CShopAgent::Sell(const string &listName)
+void CShopAgent::Sell(const astr_t &listName)
 {
     // was on_pb_SellSelectedList_clicked: "<vendor name> sell" speech
-    string text = m_VendorName;
+    astr_t text = m_VendorName;
 
     if (text.length() != 0)
     {
@@ -112,7 +112,7 @@ void CShopAgent::Sell(const string &listName)
     SendShopRequest(SLWS_SELL, listName, text);
 }
 
-void CShopAgent::SendShopRequest(int state, const string &listName, const string &text)
+void CShopAgent::SendShopRequest(int state, const astr_t &listName, const astr_t &text)
 {
     // was TabAgentsShop::SendShopRequest (the buttons always passed shopDelay
     // 0: the per-stack delay comes from the config when the request is built)
@@ -176,7 +176,7 @@ bool CShopAgent::ProcessShopList()
     vector<CShopListEntry> &shopLists = g_AssistantConfig.m_ShopLists;
 
     CShopListEntry *shopList = nullptr;
-    string seekListName = to_lower_copy(m_WaitShopListName);
+    astr_t seekListName = to_lower_copy(m_WaitShopListName);
 
     for (size_t i = 0; i < shopLists.size(); i++)
     {
@@ -218,7 +218,7 @@ bool CShopAgent::ProcessShopList()
         const CShopItemEntry &shopItem = shopItems[si];
         CFindItem findItem(shopItem.Graphic, shopItem.Color);
         int checkPrice = shopItem.Price;
-        string checkName = to_lower_copy(shopItem.Name);
+        astr_t checkName = to_lower_copy(shopItem.Name);
         bool exit = false;
 
         for (size_t vi = 0; vi < vendorItems.size(); vi++)

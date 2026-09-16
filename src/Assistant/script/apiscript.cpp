@@ -189,9 +189,9 @@ uint result_serial(XA_SCRIPT_COMMAND *command, uint fallback = 0)
     return value;
 }
 
-vector<string> result_list(XA_SCRIPT_COMMAND *command)
+vector<astr_t> result_list(XA_SCRIPT_COMMAND *command)
 {
-    vector<string> value;
+    vector<astr_t> value;
     if (!command->ResultDropped)
     {
         value = command->ResultList;
@@ -202,7 +202,7 @@ vector<string> result_list(XA_SCRIPT_COMMAND *command)
 
 // JS argument helpers -------------------------------------------------------
 
-string arg_text(JSContext *ctx, JSValueConst *argv, int argc, int index, const string &def)
+astr_t arg_text(JSContext *ctx, JSValueConst *argv, int argc, int index, const astr_t &def)
 {
     if (index >= argc)
     {
@@ -215,7 +215,7 @@ string arg_text(JSContext *ctx, JSValueConst *argv, int argc, int index, const s
         JS_FreeValue(ctx, JS_GetException(ctx)); // swallow, keep the default
         return def;
     }
-    string result(text, size);
+    astr_t result(text, size);
     JS_FreeCString(ctx, text);
     return result;
 }
@@ -245,9 +245,9 @@ bool arg_bool(JSContext *ctx, JSValueConst *argv, int argc, int index, bool def)
     return value < 0 ? def : value != 0;
 }
 
-vector<string> arg_list(JSContext *ctx, JSValueConst *argv, int argc, int index)
+vector<astr_t> arg_list(JSContext *ctx, JSValueConst *argv, int argc, int index)
 {
-    vector<string> list;
+    vector<astr_t> list;
     if (index >= argc)
     {
         return list;
@@ -266,7 +266,7 @@ vector<string> arg_list(JSContext *ctx, JSValueConst *argv, int argc, int index)
             const char *text = JS_ToCStringLen(ctx, &size, item);
             if (text != nullptr)
             {
-                list.push_back(string(text, size));
+                list.push_back(astr_t(text, size));
                 JS_FreeCString(ctx, text);
             }
             else
@@ -303,7 +303,7 @@ void pause_gate(JSContext *ctx)
 // [Q] the generic marshaled mutation: command name + pre-split args executed
 // by CTextCommandManager::RunCommand on the main thread (the same handler
 // body the chat command runs, incl. config gating + sentinel resolution).
-void run_command(JSContext *ctx, const char *name, const vector<string> &args = {})
+void run_command(JSContext *ctx, const char *name, const vector<astr_t> &args = {})
 {
     auto *command = sc_make(SC_TEXT_CMD);
     command->TextA = name;
@@ -313,7 +313,7 @@ void run_command(JSContext *ctx, const char *name, const vector<string> &args = 
     pause_gate(ctx);
 }
 
-string int_to_text(int value)
+astr_t int_to_text(int value)
 {
     char buf[32] = { 0 };
     snprintf(buf, sizeof(buf), "%i", value);
@@ -380,7 +380,7 @@ void menu_finalizer(JSRuntime *rt, JSValue val)
     (void)rt;
 }
 
-typedef std::pair<int, string> XA_GUMPHOOK_ENTRY;
+typedef std::pair<int, astr_t> XA_GUMPHOOK_ENTRY;
 typedef std::pair<int, bool> XA_GUMPHOOK_CHECK;
 
 // named struct (not an anonymous typedef): the type crosses a linkage
@@ -394,8 +394,8 @@ struct XA_JS_GUMPHOOK
 
 struct XA_JS_CLIENTMACRO
 {
-    vector<string> Actions;
-    vector<string> SubActions;
+    vector<astr_t> Actions;
+    vector<astr_t> SubActions;
 };
 
 void gumphook_finalizer(JSRuntime *rt, JSValue val)
@@ -678,7 +678,7 @@ JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     // [Q] CScriptEngine::Wait: the delay comes from
     // the config text table (DelayFromText) + raw ms; the sleep loop checks
     // pause/terminate every 10 ms (the old timer granularity).
-    const string text = arg_text(ctx, argv, argc, 0, "");
+    const astr_t text = arg_text(ctx, argv, argc, 0, "");
     auto *parse = sc_make(SC_WAIT_PARSE);
     parse->TextA = text;
     ScriptQueue_Exec(parse);
@@ -752,7 +752,7 @@ const char *const SIMPLE_COMMAND_NAMES[] = {
 
 JSValue jsn_simple(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
-    vector<string> args;
+    vector<astr_t> args;
     args.reserve(argc);
     for (int i = 0; i < argc; i++)
     {
@@ -776,7 +776,7 @@ JSValue jsn_simple(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, i
 // [Q] Cast(nameOrIndex[, targetSerial]) - OnCommandCast / OnCommandCastTarget.
 JSValue jsn_cast(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    const string target = arg_text(ctx, argv, argc, 1, "");
+    const astr_t target = arg_text(ctx, argv, argc, 1, "");
     if (!target.empty())
     {
         auto *command = sc_make(SC_CAST);
@@ -812,7 +812,7 @@ JSValue jsn_cast(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 // CSkillManager::TargetUse; the numeric form sends the raw skill index.
 JSValue jsn_useskill(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    const string target = arg_text(ctx, argv, argc, 1, "");
+    const astr_t target = arg_text(ctx, argv, argc, 1, "");
     auto *command = sc_make(SC_USE_SKILL);
     if (JS_IsNumber(argv[0]))
     {
@@ -888,14 +888,14 @@ JSValue jsn_charprint(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
 // emote ": ", broadcast "? ", party "/ ", guild "\\ ", alliance "| ").
 JSValue jsn_say(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
-    string text = arg_text(ctx, argv, argc, 0, "");
+    astr_t text = arg_text(ctx, argv, argc, 0, "");
     // the prefix table indexes XA_SAY_KIND; PRINT/CHARPRINT never arrive here
     static const char *const PREFIXES[] = {
         "", "", "", "! ", "; ", ": ", "? ", "\\ ", "| ", "/ "
     };
     if (magic != SAY_NORMAL && magic != SAY_BROADCAST && !text.empty())
     {
-        text = string(PREFIXES[magic]) + text;
+        text = astr_t(PREFIXES[magic]) + text;
     }
     auto *command = sc_make(SC_SAY);
     command->SubTag = magic;
@@ -924,7 +924,7 @@ JSValue jsn_renamemount(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
 JSValue jsn_onoff(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
     static const char *const NAMES[] = { "setlight", "setweather", "setseason", "track" };
-    vector<string> args;
+    vector<astr_t> args;
     for (int i = 0; i < argc && i < 4; i++)
     {
         if (JS_IsNumber(argv[i]))
@@ -956,7 +956,7 @@ JSValue jsn_sound(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 // [Q] Morph([graphic]) - HCOMMAND(morph).
 JSValue jsn_morph(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    run_command(ctx, "morph", argc > 0 ? vector<string>{ arg_text(ctx, argv, argc, 0, "") } : vector<string>());
+    run_command(ctx, "morph", argc > 0 ? vector<astr_t>{ arg_text(ctx, argv, argc, 0, "") } : vector<astr_t>());
     return JS_UNDEFINED;
 }
 
@@ -993,7 +993,7 @@ JSValue jsn_find(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     command->TextD = arg_text(ctx, argv, argc, 5, "");        // notoriety
     command->BoolA = arg_bool(ctx, argv, argc, 6, true);      // recurse
     ScriptQueue_Exec(command);
-    vector<string> list = result_list(command);
+    vector<astr_t> list = result_list(command);
     pause_gate(ctx);
 
     JSValue array = JS_NewArray(ctx);
@@ -1237,10 +1237,10 @@ JSValue jsn_injournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
 
 JSValue jsn_waitjournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    const string pattern = arg_text(ctx, argv, argc, 0, "");
-    const string flagsText = arg_text(ctx, argv, argc, 1, "");
-    const string serialText = arg_text(ctx, argv, argc, 2, "0");
-    const string colorText = arg_text(ctx, argv, argc, 3, "0xFFFF");
+    const astr_t pattern = arg_text(ctx, argv, argc, 0, "");
+    const astr_t flagsText = arg_text(ctx, argv, argc, 1, "");
+    const astr_t serialText = arg_text(ctx, argv, argc, 2, "0");
+    const astr_t colorText = arg_text(ctx, argv, argc, 3, "0xFFFF");
     const uint startTime = (uint)arg_int(ctx, argv, argc, 4, 0);
     uint endTime = (uint)arg_int(ctx, argv, argc, 5, 0);
 
@@ -1424,7 +1424,7 @@ JSValue jsn_dress(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, in
 // container=backpack, ground coords) run unchanged on the main thread.
 JSValue jsn_moveitem(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
-    vector<string> args;
+    vector<astr_t> args;
     for (int i = 0; i < argc; i++)
     {
         if (JS_IsNumber(argv[i]))
@@ -1532,7 +1532,7 @@ JSValue jsn_random(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     return JS_NewInt32(ctx, distribution(generator));
 }
 
-// [D] AssistVersion - the build revision string.
+// [D] AssistVersion - the build revision astr_t.
 JSValue jsn_assistversion(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     return JS_NewString(ctx, PRODUCT_VERSION_STR);
@@ -1696,7 +1696,7 @@ void serialize_gumphook(XA_SCRIPT_COMMAND *command, const XA_JS_GUMPHOOK *hook)
 JSValue jsn_creategumphook(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     // the original trimmed + lowered the text form; "cancel" meant hook index 0
-    string name = arg_text(ctx, argv, argc, 0, "");
+    astr_t name = arg_text(ctx, argv, argc, 0, "");
     int index = 0;
     if (JS_IsNumber(argv[0]))
     {
@@ -1854,9 +1854,9 @@ JSValue gump_get(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *, int 
 
 // filters the item commands by control type (the ButtonList..CommandList
 // bodies of gumpengine.cpp)
-vector<string> gump_commands_of(const CGump *gump, int filter)
+vector<astr_t> gump_commands_of(const CGump *gump, int filter)
 {
-    vector<string> result;
+    vector<astr_t> result;
     for (const CGumpItem &item : gump->m_Items)
     {
         switch (filter)
@@ -1922,7 +1922,7 @@ JSValue gump_list(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *, int
         }
         return array;
     }
-    const vector<string> lines = gump_commands_of(gump, magic);
+    const vector<astr_t> lines = gump_commands_of(gump, magic);
     JSValue array = JS_NewArray(ctx);
     for (size_t i = 0; i < lines.size(); i++)
     {
@@ -1942,7 +1942,7 @@ JSValue gump_command(JSContext *ctx, JSValueConst thisVal, int argc, JSValueCons
     const int index = arg_int(ctx, argv, argc, 0, 0);
     if (index >= 0 && index < (int)gump->m_Items.size())
     {
-        const string &command = gump->m_Items[index].Command;
+        const astr_t &command = gump->m_Items[index].Command;
         return JS_NewStringLen(ctx, command.c_str(), command.size());
     }
     return JS_NewString(ctx, "");
@@ -2015,12 +2015,12 @@ JSValue menu_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *a
     {
         case 0: // Serial -> serial text
         {
-            const string text = CAssistant::SerialToText(menu->Serial);
+            const astr_t text = CAssistant::SerialToText(menu->Serial);
             return JS_NewStringLen(ctx, text.c_str(), text.size());
         }
         case 1: // ID -> graphic text
         {
-            const string text = CAssistant::GraphicToText(menu->ID);
+            const astr_t text = CAssistant::GraphicToText(menu->ID);
             return JS_NewStringLen(ctx, text.c_str(), text.size());
         }
         case 2: // Name
@@ -2044,12 +2044,12 @@ JSValue menu_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *a
                     return JS_NewInt32(ctx, item.ID);
                 case 6: // ItemGraphic
                 {
-                    const string text = CAssistant::GraphicToText(item.Graphic);
+                    const astr_t text = CAssistant::GraphicToText(item.Graphic);
                     return JS_NewStringLen(ctx, text.c_str(), text.size());
                 }
                 case 7: // ItemColor
                 {
-                    const string text = CAssistant::GraphicToText(item.Color);
+                    const astr_t text = CAssistant::GraphicToText(item.Color);
                     return JS_NewStringLen(ctx, text.c_str(), text.size());
                 }
                 default: // ItemName
@@ -2069,7 +2069,7 @@ JSValue menu_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
     {
         return JS_EXCEPTION;
     }
-    string itemName;
+    astr_t itemName;
     if (JS_IsNumber(argv[0]))
     {
         const int index = arg_int(ctx, argv, argc, 0, -1);
@@ -2118,7 +2118,7 @@ JSValue jsn_waitprompt(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     auto *command = sc_make(SC_PROMPT_HOOK);
     command->TextA = arg_text(ctx, argv, argc, 0, "");       // reply text
     command->TextB = arg_text(ctx, argv, argc, 1, "0");      // serial
-    const string type = arg_text(ctx, argv, argc, 2, "all"); // all|ascii|unicode
+    const astr_t type = arg_text(ctx, argv, argc, 2, "all"); // all|ascii|unicode
     command->IntA = type == "ascii" ? PT_ASCII : (type == "unicode" ? PT_UNICODE : PT_NONE);
     ScriptQueue_Exec(command);
     delete command;
@@ -2145,7 +2145,7 @@ JSValue jsn_promptinfo(JSContext *ctx, JSValueConst, int, JSValueConst *, int ma
     {
         return JS_NewBool(ctx, result_bool(command));
     }
-    const string text = CAssistant::SerialToText(command->ResultSerial);
+    const astr_t text = CAssistant::SerialToText(command->ResultSerial);
     return JS_NewStringLen(ctx, text.c_str(), text.size());
 }
 
@@ -2169,8 +2169,8 @@ JSValue jsn_tradeinfo(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     if (magic == 1 || magic == 4)                      // container/checkstate
     {
         // the "right" container text meant opponent 1 (the original bodies)
-        const string container = arg_text(ctx, argv, argc, 1, "0");
-        string lowered = container;
+        const astr_t container = arg_text(ctx, argv, argc, 1, "0");
+        astr_t lowered = container;
         for (char &c : lowered)
         {
             c = (char)tolower((unsigned char)c);
@@ -2209,7 +2209,7 @@ JSValue jsn_shop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     auto *command = sc_make(SC_SHOP);
     command->TextA = arg_text(ctx, argv, argc, 0, "");               // shop list
-    command->TextB = argc >= 2 ? arg_text(ctx, argv, argc, 1, "") : string(); // vendor
+    command->TextB = argc >= 2 ? arg_text(ctx, argv, argc, 1, "") : astr_t(); // vendor
     command->BoolA = magic == 0;                                     // buy
     ScriptQueue_Exec(command);
     delete command;
@@ -2253,7 +2253,7 @@ JSValue jsn_timer(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, in
 {
     auto *command = sc_make(SC_TIMER);
     command->SubTag = magic;
-    string name = arg_text(ctx, argv, argc, 0, "");
+    astr_t name = arg_text(ctx, argv, argc, 0, "");
     for (char &c : name)
     {
         c = (char)tolower((unsigned char)c);
@@ -2309,7 +2309,7 @@ JSValue jsn_createclientmacro(JSContext *ctx, JSValueConst, int argc, JSValueCon
     if (argc >= 1)
     {
         macro->Actions.push_back(arg_text(ctx, argv, argc, 0, ""));
-        macro->SubActions.push_back(argc >= 2 ? arg_text(ctx, argv, argc, 1, "") : string());
+        macro->SubActions.push_back(argc >= 2 ? arg_text(ctx, argv, argc, 1, "") : astr_t());
     }
     JSValue object = JS_NewObjectClass(ctx, s_ClientMacroClass);
     JS_SetOpaque(object, macro);
@@ -2324,7 +2324,7 @@ JSValue macro_addaction(JSContext *ctx, JSValueConst thisVal, int argc, JSValueC
         return JS_EXCEPTION;
     }
     macro->Actions.push_back(arg_text(ctx, argv, argc, 0, ""));
-    macro->SubActions.push_back(argc >= 2 ? arg_text(ctx, argv, argc, 1, "") : string());
+    macro->SubActions.push_back(argc >= 2 ? arg_text(ctx, argv, argc, 1, "") : astr_t());
     return JS_UNDEFINED;
 }
 
@@ -2366,7 +2366,7 @@ JSValue file_open(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *
     {
         return JS_EXCEPTION;
     }
-    const string path = arg_text(ctx, argv, argc, 0, "");
+    const astr_t path = arg_text(ctx, argv, argc, 0, "");
     const bool checkExists = argc >= 2 ? arg_bool(ctx, argv, argc, 1, false) : false;
     const bool ok = magic == 0 ? ScriptFile_Open(file, path, checkExists)
                                : ScriptFile_Append(file, path, checkExists);
@@ -2397,7 +2397,7 @@ JSValue file_readline(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *)
     {
         return JS_EXCEPTION;
     }
-    const string line = ScriptFile_ReadLine(file);
+    const astr_t line = ScriptFile_ReadLine(file);
     return JS_NewStringLen(ctx, line.c_str(), line.size());
 }
 
@@ -2408,7 +2408,7 @@ JSValue file_read(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *)
     {
         return JS_EXCEPTION;
     }
-    const string token = ScriptFile_Read(file);
+    const astr_t token = ScriptFile_Read(file);
     return JS_NewStringLen(ctx, token.c_str(), token.size());
 }
 
@@ -2419,7 +2419,7 @@ JSValue file_write(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
     {
         return JS_EXCEPTION;
     }
-    const string text = arg_text(ctx, argv, argc, 0, "");
+    const astr_t text = arg_text(ctx, argv, argc, 0, "");
     if (magic == 0)
     {
         ScriptFile_Write(file, text);
@@ -2519,7 +2519,7 @@ JSValue jsn_selectedtile(JSContext *ctx, JSValueConst, int, JSValueConst *, int 
             return JS_NewBool(ctx, result_bool(command));
         default: // ST_SERIAL
         {
-            const string text = CAssistant::SerialToText(command->ResultSerial);
+            const astr_t text = CAssistant::SerialToText(command->ResultSerial);
             return JS_NewStringLen(ctx, text.c_str(), text.size());
         }
     }
@@ -2533,7 +2533,7 @@ JSValue textwindow_op(JSContext *ctx, int op, JSValueConst *argv, int argc, int 
 {
     auto *command = sc_make(SC_TEXT_WINDOW);
     command->SubTag = op;
-    command->TextA = argc >= 1 ? arg_text(ctx, argv, argc, 0, "") : string();
+    command->TextA = argc >= 1 ? arg_text(ctx, argv, argc, 0, "") : astr_t();
     if (ints >= 1)
     {
         command->IntA = arg_int(ctx, argv, argc, 0, 0);
@@ -2574,7 +2574,7 @@ JSValue textwindow_noarg(JSContext *ctx, JSValueConst, int, JSValueConst *, int 
 }
 
 // [Q] GetGlobal(name) - the original OnCommandGetGlobal returned the stored value
-// or left the empty string default.
+// or left the empty astr_t default.
 JSValue jsn_globalget(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_GLOBAL_SET);
@@ -2633,7 +2633,7 @@ JSValue jsn_findfriendenemy(JSContext *ctx, JSValueConst, int argc, JSValueConst
     command->TextA = arg_text(ctx, argv, argc, 0, "fast");
     command->TextB = arg_text(ctx, argv, argc, 1, "finddistance");
     ScriptQueue_Exec(command);
-    string text = command->ResultDropped ? string() : command->ResultText;
+    astr_t text = command->ResultDropped ? astr_t() : command->ResultText;
     delete command;
     pause_gate(ctx);
     return JS_NewStringLen(ctx, text.c_str(), text.size());
@@ -2646,13 +2646,13 @@ JSValue jsn_friendinfo(JSContext *ctx, JSValueConst, int, JSValueConst *, int ma
     auto *command = sc_make(SC_FRIEND_INFO);
     command->SubTag = magic;
     ScriptQueue_Exec(command);
-    if (magic == 0 || magic == 2) // the list getters -> string arrays
+    if (magic == 0 || magic == 2) // the list getters -> astr_t arrays
     {
         JSValue array = JS_NewArray(ctx);
         int index = 0;
         if (!command->ResultDropped)
         {
-            for (const string &entry : command->ResultList)
+            for (const astr_t &entry : command->ResultList)
             {
                 JS_SetPropertyUint32(ctx, array, (uint32_t)index++,
                     JS_NewStringLen(ctx, entry.c_str(), entry.size()));
@@ -2782,7 +2782,7 @@ JSValue jsn_fontcolor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->TextA = arg_text(ctx, argv, argc, 1, "0x02B2");
     ScriptQueue_Exec(command);
     bool state = command->ResultBool;
-    string text = command->ResultDropped ? string() : command->ResultText;
+    astr_t text = command->ResultDropped ? astr_t() : command->ResultText;
     delete command;
     pause_gate(ctx);
     if (magic == 0 || magic == 3)
@@ -2825,8 +2825,8 @@ JSValue jsn_targettype(JSContext *ctx, JSValueConst, int, JSValueConst *)
 // [G] Contains(text, pattern[, ignoreCase]): pure JS-side helper: the pattern is a '|' separated alternative list.
 JSValue jsn_contains(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    string text = arg_text(ctx, argv, argc, 0, "");
-    string pattern = arg_text(ctx, argv, argc, 1, "");
+    astr_t text = arg_text(ctx, argv, argc, 0, "");
+    astr_t pattern = arg_text(ctx, argv, argc, 1, "");
     const bool ignoreCase = arg_bool(ctx, argv, argc, 2, false);
     if (text.empty() || pattern.empty())
     {
@@ -2847,12 +2847,12 @@ JSValue jsn_contains(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     while (start <= pattern.size())
     {
         size_t bar = pattern.find('|', start);
-        string part = pattern.substr(start, bar == string::npos ? string::npos : bar - start);
-        if (!part.empty() && text.find(part) != string::npos)
+        astr_t part = pattern.substr(start, bar == astr_t::npos ? astr_t::npos : bar - start);
+        if (!part.empty() && text.find(part) != astr_t::npos)
         {
             return JS_TRUE;
         }
-        if (bar == string::npos)
+        if (bar == astr_t::npos)
         {
             break;
         }
@@ -2864,21 +2864,21 @@ JSValue jsn_contains(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 // [G] Split(text[, separator]): the default separator is a space, empty parts skipped.
 JSValue jsn_split(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    string text = arg_text(ctx, argv, argc, 0, "");
-    const string separator = arg_text(ctx, argv, argc, 1, " ");
+    astr_t text = arg_text(ctx, argv, argc, 0, "");
+    const astr_t separator = arg_text(ctx, argv, argc, 1, " ");
     JSValue array = JS_NewArray(ctx);
     int index = 0;
     size_t start = 0;
     while (start <= text.size())
     {
         size_t hit = text.find(separator, start);
-        string part = text.substr(start, hit == string::npos ? string::npos : hit - start);
+        astr_t part = text.substr(start, hit == astr_t::npos ? astr_t::npos : hit - start);
         if (!part.empty()) // empty parts are skipped (both overload forms)
         {
             JS_SetPropertyUint32(
                 ctx, array, (uint32_t)index++, JS_NewStringLen(ctx, part.c_str(), part.size()));
         }
-        if (hit == string::npos)
+        if (hit == astr_t::npos)
         {
             break;
         }
@@ -3281,7 +3281,7 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
     JS_CFUNC_MAGIC_DEF("CloseStatusbar", 0, jsn_windowop, 4),
     JS_CFUNC_MAGIC_DEF("LogOut", 0, jsn_windowop, 5),
     JS_CFUNC_MAGIC_DEF("Screenshot", 0, jsn_windowop, 6),
-    // string helpers (pure script-side, the CScriptEngine helpers)
+    // astr_t helpers (pure script-side, the CScriptEngine helpers)
     JS_CFUNC_DEF("Contains", 2, jsn_contains),
     JS_CFUNC_DEF("Split", 1, jsn_split),
     JS_CFUNC_DEF("GetTargetType", 0, jsn_targettype),
@@ -3451,7 +3451,7 @@ const JSCFunctionListEntry CLIENTMACRO_PROTOTYPE[] = {
 } // namespace <appended natives>
 } // namespace <natives>
 
-void Script_FormatException(JSContext *ctx, string &line, string &message)
+void Script_FormatException(JSContext *ctx, astr_t &line, astr_t &message)
 {
     // the lineNumber/toString pair: quickjs-ng carries the line
     // inside the stack frames ("<script>:N:C"), so the line is parsed from
@@ -3464,7 +3464,7 @@ void Script_FormatException(JSContext *ctx, string &line, string &message)
     const char *text = JS_ToCStringLen(ctx, &size, exception);
     if (text != nullptr)
     {
-        message = string(text, size);
+        message = astr_t(text, size);
         JS_FreeCString(ctx, text);
     }
 
@@ -3496,7 +3496,7 @@ void Script_FormatException(JSContext *ctx, string &line, string &message)
     JS_FreeValue(ctx, exception);
 }
 
-void Script_RegisterAPI(JSContext *ctx, const string &scriptName)
+void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName)
 {
     JSRuntime *runtime = JS_GetRuntime(ctx);
 
@@ -3611,14 +3611,14 @@ void Script_RegisterAPI(JSContext *ctx, const string &scriptName)
 
 namespace {
 
-string sc_int_text(int value)
+astr_t sc_int_text(int value)
 {
     char buf[32] = { 0 };
     snprintf(buf, sizeof(buf), "%i", value);
     return buf;
 }
 
-void RunDressTextCommand(const char *name, const string &arg)
+void RunDressTextCommand(const char *name, const astr_t &arg)
 {
     COMMAND_ARGS args;
     if (!arg.empty())
@@ -3636,7 +3636,7 @@ CGameObject *world_object(uint serial)
 // The SC_OBJECT_GET/SC_PLAYER_GET selector switch: one body per
 // CScriptGameObject/CPlayerObject getter (the original handlers read the same
 // fields through the injected interface; here it is the local world model).
-bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue, string &textValue)
+bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue, astr_t &textValue)
 {
     if (object == nullptr)
     {
@@ -3940,7 +3940,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     // the wrapper speech packet sends ST_NORMAL; broadcast
                     // becomes a plain say this round (4b-2 with speech modes)
                     SendConsoleText(
-                        wstring(command->TextB.begin(), command->TextB.end()), color);
+                        wstr_t(command->TextB.begin(), command->TextB.end()), color);
                     break;
                 }
                 default: // Say + the prefix variants
@@ -3951,7 +3951,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         color = 0;
                     }
                     SendConsoleText(
-                        wstring(command->TextB.begin(), command->TextB.end()), color);
+                        wstr_t(command->TextB.begin(), command->TextB.end()), color);
                     break;
                 }
             }
@@ -3993,7 +3993,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             if (!command->TextB.empty()) // targeted
             {
-                const string name = !command->TextA.empty()
+                const astr_t name = !command->TextA.empty()
                     ? command->TextA
                     : int_to_text(command->IntA);
                 g_SkillManager.TargetUse(name, CAssistant::TextToSerial(command->TextB));
@@ -4043,7 +4043,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             {
                 break;
             }
-            vector<string> list;
+            vector<astr_t> list;
             CGameObject *found = nullptr;
             switch (command->SubTag)
             {
@@ -4401,7 +4401,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         CAssistant::TextToSerial(command->TextA));
                     command->ResultText = object != nullptr
                         ? CAssistant::SerialToText(object->Container)
-                        : string();
+                        : astr_t();
                     break;
                 }
                 case 300: // option set (the VKI id in IntB; the
@@ -4452,7 +4452,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    string name = command->TextA;
+                    astr_t name = command->TextA;
                     for (char &c : name)
                     {
                         c = (char)tolower((unsigned char)c);
@@ -4478,7 +4478,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         for (int i = 0; i < MAX_ABILITIES_COUNT; i++)
                         {
-                            string ability = CGumpCombatBook::m_AbilityName[i];
+                            astr_t ability = CGumpCombatBook::m_AbilityName[i];
                             for (char &c : ability)
                             {
                                 c = (char)tolower((unsigned char)c);
@@ -4738,7 +4738,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 command->ResultInt = g_MenuManager.GetMenuCount();
                 break;
             }
-            string name = command->TextA;
+            astr_t name = command->TextA;
             CMenu *menu = nullptr;
             if (name == "last" || name == "lastmenu")
             {
@@ -4957,8 +4957,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             {
                 break;
             }
-            const string vendor = command->TextB;
-            string text = vendor;
+            const astr_t vendor = command->TextB;
+            astr_t text = vendor;
             if (!vendor.empty())
             {
                 text += " ";

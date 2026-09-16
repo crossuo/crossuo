@@ -27,28 +27,27 @@ namespace xuoassist {
 
 // --- globals ---------------------------------------------------------------
 
-void ScriptGlobal_Set(const string &name, const string &value);
+void ScriptGlobal_Set(const astr_t &name, const astr_t &value);
 // Returns "" when the name is not set (OnCommandGetGlobal left the result
-// string untouched, the old empty-string default).
-string ScriptGlobal_Get(const string &name);
+// astr_t untouched, the old empty-astr_t default).
+astr_t ScriptGlobal_Get(const astr_t &name);
 void ScriptGlobal_Clear();
 
 // --- timers ----------------------------------------------------------------
 
-void ScriptTimer_Set(const string &name, int value);
+void ScriptTimer_Set(const astr_t &name, int value);
 // -1 when the timer does not exist (OnCommandTimer).
-int ScriptTimer_Get(const string &name);
-bool ScriptTimer_Exists(const string &name);
-void ScriptTimer_Remove(const string &name);
+int ScriptTimer_Get(const astr_t &name);
+bool ScriptTimer_Exists(const astr_t &name);
+void ScriptTimer_Remove(const astr_t &name);
 void ScriptTimer_Clear();
 
 // --- buffs -----------------------------------------------------------------
 
-void ScriptBuffs_Add(ushort graphic, uint timer, const string &name);
+void ScriptBuffs_Add(ushort graphic, uint timer, const astr_t &name);
 void ScriptBuffs_Remove(ushort graphic);
 // Case-insensitive name match (the original body trimmed + lowered the script
 // argument; the mirror stores lowered names at event time).
-bool ScriptBuffs_Exists(const string &name);
+bool ScriptBuffs_Exists(const astr_t &name);
 
 } // namespace xuoassist
-

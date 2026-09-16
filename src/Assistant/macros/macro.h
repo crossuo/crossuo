@@ -133,7 +133,7 @@ public:
     }
     virtual ~CMacro() {}
 
-    string GetText();
+    astr_t GetText();
 
     bool HaveConvertTable();
 
@@ -173,9 +173,9 @@ class CMacroWithStringValue : public CMacro
     virtual MACRO_CLASS GetClass() const { return MCLASS_STRING_VALUE; }
 
 public:
-    string Value = "";
+    astr_t Value = "";
 
-    CMacroWithStringValue(const MACRO_TYPE &type, const string &value)
+    CMacroWithStringValue(const MACRO_TYPE &type, const astr_t &value)
         : CMacro(type)
         , Value(value)
     {
@@ -257,15 +257,15 @@ class CMacroWithMenu : public CMacro
     virtual MACRO_CLASS GetClass() const { return MCLASS_MENU; }
 
 public:
-    string Name = "";
-    string ItemName = "";
+    astr_t Name = "";
+    astr_t ItemName = "";
     ushort Graphic = 0;
     ushort Color = 0;
 
     CMacroWithMenu(
         const MACRO_TYPE &type,
-        const string &name,
-        const string &itemName,
+        const astr_t &name,
+        const astr_t &itemName,
         const ushort &graphic,
         const ushort &color)
         : CMacro(type)
@@ -341,4 +341,3 @@ public:
 };
 
 } // namespace xuoassist
-

@@ -53,7 +53,7 @@ struct XA_INSPECT_ROW
     int Depth{ 0 };
     bool Group{ false };
     const char *Key{ "" };   // static text
-    string Value;            // the copied-on-click payload
+    astr_t Value;            // the copied-on-click payload
     int RowKey{ OIK_GROUP };
 };
 
@@ -86,7 +86,7 @@ void AddRow(
     int depth,
     bool group,
     const char *key,
-    const string &value,
+    const astr_t &value,
     int rowKey)
 {
     XA_INSPECT_ROW row;
@@ -145,20 +145,20 @@ void BuildRows(vector<XA_INSPECT_ROW> &rows, CGameObject *obj)
     if (!obj->NPC)
     {
         CGameItem *item = (CGameItem *)obj;
-        string title = "Game Item";
+        astr_t title = "Game Item";
         if (obj->IsCorpse())
         {
             title += " (Corpse)";
         }
         AddRow(rows, 0, true, title.c_str(), "", OIK_GROUP);
-        const string layer = g_LayerName[item->Layer % 30] + " (" +
-                             std::to_string((int)item->Layer) + ")";
+        const astr_t layer = g_LayerName[item->Layer % 30] + " (" +
+                             str_from((int)item->Layer) + ")";
         AddRow(rows, 1, false, "Layer: ", layer, OIK_LAYER);
     }
     else
     {
         CGameCharacter *character = (CGameCharacter *)obj;
-        string title = "Game Character";
+        astr_t title = "Game Character";
         if (obj->IsHuman())
         {
             title += " (Humanoid)";

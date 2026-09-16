@@ -93,8 +93,8 @@ void TabScripts_Draw()
     // The function combo honors the SortScripts option (the original
     // UpdateScriptsList tail sorted ONLY cb_ScriptNameForStart -
     // the running list stayed in start order).
-    const vector<string> functions = ScriptEditor_FunctionList();
-    vector<std::pair<string, int>> combo; // display name -> functions[] index
+    const vector<astr_t> functions = ScriptEditor_FunctionList();
+    vector<std::pair<astr_t, int>> combo; // display name -> functions[] index
     combo.reserve(functions.size());
     for (int i = 0; i < (int)functions.size(); i++)
     {
@@ -103,7 +103,7 @@ void TabScripts_Draw()
     if (g_AssistantConfig.SortScripts())
     {
         std::sort(combo.begin(), combo.end(),
-            [](const std::pair<string, int> &a, const std::pair<string, int> &b) {
+            [](const std::pair<astr_t, int> &a, const std::pair<astr_t, int> &b) {
                 return a.first < b.first;
             });
     }
@@ -111,8 +111,8 @@ void TabScripts_Draw()
     {
         s_SelectedFunction = 0;
     }
-    const string selectedName =
-        combo.empty() ? string() : combo[s_SelectedFunction].first;
+    const astr_t selectedName =
+        combo.empty() ? astr_t() : combo[s_SelectedFunction].first;
     ImGui::SetNextItemWidth(240);
     if (!combo.empty())
     {
@@ -142,7 +142,7 @@ void TabScripts_Draw()
     ImGui::SameLine();
     if (ImGui::Button("Start"))
     {
-        const string name = combo.empty() ? string(s_FunctionNameInput) : selectedName;
+        const astr_t name = combo.empty() ? astr_t(s_FunctionNameInput) : selectedName;
         if (!name.empty())
         {
             ScriptManager_Get()->Run(name, ScriptEditor_Text());
@@ -153,7 +153,7 @@ void TabScripts_Draw()
     {
         for (CScriptHandle *handle : ScriptManager_Get()->Handles())
         {
-            if (handle->Name() == (combo.empty() ? string(s_FunctionNameInput) : selectedName))
+            if (handle->Name() == (combo.empty() ? astr_t(s_FunctionNameInput) : selectedName))
             {
                 handle->SetPaused(!handle->GetPaused());
             }
@@ -163,7 +163,7 @@ void TabScripts_Draw()
     if (ImGui::Button("Stop"))
     {
         ScriptManager_Terminate(
-            combo.empty() ? string(s_FunctionNameInput) : selectedName, "");
+            combo.empty() ? astr_t(s_FunctionNameInput) : selectedName, "");
     }
 
     // --- running scripts list --------------------------------------------------

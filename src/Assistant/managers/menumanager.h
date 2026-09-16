@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/menumanager.h), trimmed
-// (lists are std::vector, strings are std::string).
+// (lists are std::vector, strings are astr_t).
 
 #pragma once
 
@@ -13,19 +13,19 @@ namespace xuoassist {
 
 class CMenuHook
 {
-    string m_Name;
-    string m_ItemName;
+    astr_t m_Name;
+    astr_t m_ItemName;
 
 public:
-    CMenuHook(const string &name, const string &itemName)
+    CMenuHook(const astr_t &name, const astr_t &itemName)
         : m_Name(name)
         , m_ItemName(itemName)
     {
     }
     ~CMenuHook() {}
 
-    string GetName() const { return m_Name; }
-    string GetItemName() const { return m_ItemName; }
+    astr_t GetName() const { return m_Name; }
+    astr_t GetItemName() const { return m_ItemName; }
 };
 
 class CMenuManager
@@ -47,31 +47,30 @@ public:
 
     CMenu *GetLastMenu();
 
-    CMenu *GetMenu(const string &name);
+    CMenu *GetMenu(const astr_t &name);
 
     void ClearMenus();
 
-    void SetHook(const string &name, const string &itemName);
+    void SetHook(const astr_t &name, const astr_t &itemName);
 
     void ClearHooks();
 
     // fed from the client's parsed 0x7C values (serial, id, name, gray-menu
     // flag, the entries); bool = pass-through, parity with the original
     bool OnMenuReceived(
-        uint serial, ushort id, const string &name, bool grayMenu, const vector<CMenuItem> &items);
+        uint serial, ushort id, const astr_t &name, bool grayMenu, const vector<CMenuItem> &items);
 
     // the client's 0x7D send sites report the user's menu choice here (was the
     // 0x7D MenuChoice send tap in the assistant's packetmanager)
     void OnMenuChoiceSent(uint serial, ushort id, ushort index);
 
-    bool SendChoiceIfMenuExists(const string &name, const string &itemName, const bool &sendPacket);
+    bool SendChoiceIfMenuExists(const astr_t &name, const astr_t &itemName, const bool &sendPacket);
 
-    bool SendMenuChoice(CMenu *menu, const string &itemName, const bool &sendPacket);
+    bool SendMenuChoice(CMenu *menu, const astr_t &itemName, const bool &sendPacket);
 
-    void InfoMenu(const string &menuIndex);
+    void InfoMenu(const astr_t &menuIndex);
 };
 
 extern CMenuManager g_MenuManager;
 
 } // namespace xuoassist
-

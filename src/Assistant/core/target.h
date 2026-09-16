@@ -41,12 +41,12 @@ class CTargetHook
 public:
     CTargetHook() {}
     explicit CTargetHook(const uint &serial);
-    CTargetHook(const string &tile, const int &x, const int &y, const int &z, const bool &relative);
+    CTargetHook(const astr_t &tile, const int &x, const int &y, const int &z, const bool &relative);
     ~CTargetHook() {}
 
     bool TargetOnObject{ true };
     uint Serial{ 0 };
-    string Tile{ "" };
+    astr_t Tile{ "" };
     int X{ 0 };
     int Y{ 0 };
     int Z{ 0 };
@@ -78,8 +78,8 @@ public:
     ~CTarget() {}
 
     bool CheckHook();
-    void SetObjectsHook(const vector<string> &objects);
-    void SetTileHook(const string &tile, const int &x, const int &y, const int &z, const bool &relative);
+    void SetObjectsHook(const vector<astr_t> &objects);
+    void SetTileHook(const astr_t &tile, const int &x, const int &y, const int &z, const bool &relative);
     void ClearHooks();
     void RestoreTarget();
     bool SetSendData(CDataReader &reader);
@@ -99,4 +99,3 @@ public:
 extern CTarget g_Target;
 
 } // namespace xuoassist
-

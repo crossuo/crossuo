@@ -12,7 +12,7 @@
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -27,15 +27,15 @@ CSkillManager::CSkillManager() {}
 
 CSkillManager::~CSkillManager() {}
 
-void CSkillManager::Insert(const string &name, const bool &usable, const int &index)
+void CSkillManager::Insert(const astr_t &name, const bool &usable, const int &index)
 {
     (void)usable;
 
     m_AllSkills.insert(std::make_pair(name, index));
-    m_AllSkills.insert(std::make_pair(std::to_string(index), index));
+    m_AllSkills.insert(std::make_pair(str_from(index), index));
 }
 
-int CSkillManager::GetIndex(const string &name)
+int CSkillManager::GetIndex(const astr_t &name)
 {
     SKILLS_MAP::iterator it = m_AllSkills.find(to_lower_copy(name));
 
@@ -47,14 +47,14 @@ int CSkillManager::GetIndex(const string &name)
     return -1;
 }
 
-int CSkillManager::Find(const string &name)
+int CSkillManager::Find(const astr_t &name)
 {
     // the client lookup handles the "last" aliases, exact names and partial
     // names (button skills only)
     return g_SkillsManager.Find(name);
 }
 
-void CSkillManager::Use(const string &name)
+void CSkillManager::Use(const astr_t &name)
 {
     int index = Find(to_lower_copy(name));
 
@@ -78,7 +78,7 @@ void CSkillManager::UseIndex(int index)
     g_Game.UseSkill(index);
 }
 
-void CSkillManager::TargetUse(const string &name, const uint &serial)
+void CSkillManager::TargetUse(const astr_t &name, const uint &serial)
 {
     int index = Find(to_lower_copy(name));
 

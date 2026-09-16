@@ -31,7 +31,7 @@ void GuildManager::SetMemberInfo(const GUILD_MEMBER_INFO &info)
     g_AssistantEvents->OnMapUpdate(info.Serial);
 }
 
-void GuildManager::SetMemberName(uint serial, string &name)
+void GuildManager::SetMemberName(uint serial, astr_t &name)
 {
     std::unordered_map<uint, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(serial);
 

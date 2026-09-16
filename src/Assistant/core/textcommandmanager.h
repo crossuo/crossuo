@@ -4,13 +4,12 @@
 #pragma once
 
 #include "global.h"
-#include "textparser.h"
 #include <map>
 #include <utility>
 
 namespace xuoassist {
 
-typedef vector<string> COMMAND_ARGS;
+typedef vector<astr_t> COMMAND_ARGS;
 
 // From the original app's managers/commandmanager.h (the flag vocabulary of the
 // skill-value command API; survives the replaced signal hub).
@@ -26,11 +25,11 @@ class CCommand
 {
 public:
     bool Enabled = false;
-    string Description = "";
+    astr_t Description = "";
     uint64_t Flags = 0;
 
     CCommand() {}
-    CCommand(const bool &enabled, const uint64_t &flags, const string &description)
+    CCommand(const bool &enabled, const uint64_t &flags, const astr_t &description)
         : Enabled(enabled)
         , Description(description)
         , Flags(flags)
@@ -41,7 +40,7 @@ public:
 
 class CTextCommandManager;
 typedef void (CTextCommandManager::*CMD_HANDLER)(const COMMAND_ARGS &, const CCommand &);
-typedef std::map<string, std::pair<CCommand, CMD_HANDLER>> COMMANDS_MAP;
+typedef std::map<astr_t, std::pair<CCommand, CMD_HANDLER>> COMMANDS_MAP;
 
 #define HANDLER_COMMAND(name) void Command##name(const COMMAND_ARGS &args, const CCommand &command)
 
@@ -50,7 +49,7 @@ class CTextCommandManager
 private:
     static COMMANDS_MAP m_Commands;
 
-    void CommandTok(COMMAND_ARGS &args, const string &in);
+    void CommandTok(COMMAND_ARGS &args, const astr_t &in);
 
 public:
     CTextCommandManager();
@@ -58,12 +57,12 @@ public:
 
     static void InitCommands();
 
-    void DoCommand(const string &text);
+    void DoCommand(const astr_t &text);
 
     // Runs one command by name with pre-split args (the script runtime's
     // marshaled [Q] calls; the DoCommand tail after CommandTok's parse).
     // Returns false for unknown commands (the script layer logs that).
-    bool RunCommand(const string &name, const COMMAND_ARGS &args);
+    bool RunCommand(const astr_t &name, const COMMAND_ARGS &args);
 
     void UpdateCommands();
 
@@ -118,12 +117,11 @@ public:
     // Command-body helpers moved out of the replaced CCommandManager
     // (GetFindFlags / GetJournalFlags /
     // GetSkillsFlags); used by the handlers above.
-    static ushort GetFindFlags(const string &text);
-    static uchar GetJournalFlags(const string &text);
-    static uchar GetSkillsFlags(const string &text);
+    static ushort GetFindFlags(const astr_t &text);
+    static uchar GetJournalFlags(const astr_t &text);
+    static uchar GetSkillsFlags(const astr_t &text);
 };
 
 extern CTextCommandManager g_TextCommandManager;
 
 } // namespace xuoassist
-

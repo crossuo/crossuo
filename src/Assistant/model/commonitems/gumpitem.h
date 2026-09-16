@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/gumpitem.h): strings are std::string,
-// string lists are std::vector<std::string>, lists are std::vector.
+// Ported from X:UO Assist (commonitems/gumpitem.h): strings are astr_t,
+// astr_t lists are std::vector<astr_t>, lists are std::vector.
 
 #pragma once
 
@@ -44,16 +44,15 @@ class CGumpItem
 {
 public:
     GUMP_ITEM_TYPE Type = GIT_INVALID_TYPE;
-    string Command = "";
+    astr_t Command = "";
 
     CGumpItem();
-    CGumpItem(const GUMP_ITEM_TYPE &type, const string &command);
+    CGumpItem(const GUMP_ITEM_TYPE &type, const astr_t &command);
     virtual ~CGumpItem();
 
-    void RestoreCommand(const vector<string> &list);
+    void RestoreCommand(const vector<astr_t> &list);
 };
 
 typedef vector<CGumpItem> GUMP_LIST;
 
 } // namespace xuoassist
-

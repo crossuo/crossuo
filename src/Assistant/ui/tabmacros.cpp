@@ -32,7 +32,7 @@ static const char *MacroNameOf(const CMacroEntry &entry) { return entry.Name.c_s
 static void MacroSetNameOf(CMacroEntry &entry, const char *name) { entry.Name = name; }
 
 // the actions-list text cache (rebuilt on selection/commit, not per frame)
-vector<string> s_ActionTexts;
+vector<astr_t> s_ActionTexts;
 int s_ActionTextsMacro = -2;
 size_t s_ActionTextsCount = 0;
 
@@ -61,10 +61,10 @@ void rebuild_action_texts()
 }
 
 // CExtendedListWidget::GetFreeName(nullptr, "macro") for the New button
-string free_macro_name()
+astr_t free_macro_name()
 {
     const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
-    string name = "macro";
+    astr_t name = "macro";
     int offset = 1;
     while (true)
     {
@@ -81,7 +81,7 @@ string free_macro_name()
         {
             return name;
         }
-        name = "macro_" + std::to_string(offset++);
+        name = "macro_" + str_from(offset++);
     }
 }
 
@@ -145,7 +145,7 @@ void TabMacros_Draw()
     }
     if (ImGui::BeginListBox("##macro_actions", ImVec2(-1.0f, 150.0f)))
     {
-        for (const string &text : s_ActionTexts)
+        for (const astr_t &text : s_ActionTexts)
         {
             ImGui::Selectable(text.c_str(), false, ImGuiSelectableFlags_Disabled);
         }

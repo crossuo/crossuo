@@ -10,7 +10,7 @@
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../config/assistantconfig.h"
-#include "../core/textparser.h"
+#include "../core/textconv.h"
 #include "../core/world.h" // g_Player / g_World
 #include "../core/worldutil.h"
 #include <common/logging/logging.h>
@@ -24,7 +24,7 @@
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -294,8 +294,8 @@ CDisplayIcon *CDisplayManager::LoadDisplayIcon(ushort graphic, uint16_t color)
 
 void CDisplayManager::GetValues(
     const CDisplayItem &item,
-    string &value,
-    string &maxValue,
+    astr_t &value,
+    astr_t &maxValue,
     uint textColor,
     uint backgroundColor,
     bool useNotoriety)
@@ -403,21 +403,21 @@ void CDisplayManager::GetValues(
         }
         case DIT_X:
         {
-            value = std::to_string(g_Player->GetX());
+            value = str_from(g_Player->GetX());
             textColor = item.Color;
             backgroundColor = item.BackgroundColor;
             return;
         }
         case DIT_Y:
         {
-            value = std::to_string(g_Player->GetY());
+            value = str_from(g_Player->GetY());
             textColor = item.Color;
             backgroundColor = item.BackgroundColor;
             return;
         }
         case DIT_Z:
         {
-            value = std::to_string(g_Player->GetZ());
+            value = str_from(g_Player->GetZ());
             textColor = item.Color;
             backgroundColor = item.BackgroundColor;
             return;
@@ -436,8 +436,8 @@ void CDisplayManager::GetValues(
             return;
     }
 
-    value = std::to_string(iVal);
-    maxValue = std::to_string(iMaxVal);
+    value = str_from(iVal);
+    maxValue = str_from(iMaxVal);
 
     if (inPercents && (iMaxVal != 0))
     {
@@ -500,7 +500,7 @@ void CDisplayManager::Redraw(
     (void)displayAppIcon;
     (void)backgroundColor;
 
-    string title;
+    astr_t title;
 
     if (mode == RDM_DISABLED || g_World == nullptr || g_Player == nullptr)
     {
@@ -524,8 +524,8 @@ void CDisplayManager::Redraw(
         {
             CDisplayItem &obj = m_Commands[i];
 
-            string value = "";
-            string maxValue = "";
+            astr_t value = "";
+            astr_t maxValue = "";
             uint textColor = 0;
             uint compiledBgColor = 0;
 
@@ -576,7 +576,7 @@ void CDisplayManager::Redraw(
     m_TitleText = title;
 }
 
-CDisplayItem CDisplayManager::GetDisplayItemByName(const string &name)
+CDisplayItem CDisplayManager::GetDisplayItemByName(const astr_t &name)
 {
     CDisplayItem item = g_AssistantConfig.GetCustomDisplayItemByName(name);
 
@@ -601,7 +601,7 @@ CDisplayItem CDisplayManager::GetDisplayItemByName(const string &name)
 }
 
 void CDisplayManager::ApplyAttributeToDisplayItem(
-    CDisplayItem &obj, const string &name, const string &value)
+    CDisplayItem &obj, const astr_t &name, const astr_t &value)
 {
     for (int i = 0; i < DKI_COUNT; i++)
     {
@@ -683,7 +683,7 @@ void CDisplayManager::ApplyAttributeToDisplayItem(
     }
 }
 
-void CDisplayManager::RecompilleData(const string &text, uint textColor)
+void CDisplayManager::RecompilleData(const astr_t &text, uint textColor)
 {
     g_UpdateDisplayOnStep = false;
     m_Commands.clear();
@@ -691,13 +691,20 @@ void CDisplayManager::RecompilleData(const string &text, uint textColor)
     CompilleData(text, textColor);
 }
 
-void CDisplayManager::CompilleData(const string &text, uint textColor)
+void CDisplayManager::CompilleData(const astr_t &text, uint textColor)
 {
-    CTextParser textParset(text, "", "", "{}", true);
+    // Tokenized line by line, one token list per line, like the original
+    // X:UO Assist text parser; the "{}" quote pair keeps the braces on tag
+    // fragments so the tag branch below can recognize them.
+    size_t pos = 0;
 
-    while (!textParset.IsEOF())
+    while (pos < text.length())
     {
-        vector<string> list = textParset.ReadTokens(false);
+        const size_t eol = text.find('\n', pos);
+        const astr_t line = text.substr(pos, (eol == astr_t::npos ? text.length() : eol) - pos);
+        pos = (eol == astr_t::npos) ? text.length() : eol + 1;
+
+        vector<astr_t> list = ParseTextTokens(line, "", "", "{}", false, true);
 
         for (size_t li = 0; li < list.size(); li++)
         {
@@ -706,17 +713,15 @@ void CDisplayManager::CompilleData(const string &text, uint textColor)
                 continue;
             }
 
-            string str = list[li];
+            astr_t str = list[li];
 
             if (str.at(0) == '{')
             {
-                CTextParser tagParset(str, " \t{}=", "", "\"\"''", false);
-
-                vector<string> tags = tagParset.ReadTokens();
+                vector<astr_t> tags = ParseTextTokens(str, " \t{}=", "", "\"\"''");
 
                 if (!tags.empty())
                 {
-                    string lowerName = to_lower_copy(*tags.begin());
+                    astr_t lowerName = to_lower_copy(*tags.begin());
 
                     if (lowerName == "group")
                     {
@@ -734,7 +739,7 @@ void CDisplayManager::CompilleData(const string &text, uint textColor)
 
                     for (size_t t = 1; t < tags.size(); t++)
                     {
-                        string tagName = tags[t];
+                        astr_t tagName = tags[t];
 
                         ++t;
 

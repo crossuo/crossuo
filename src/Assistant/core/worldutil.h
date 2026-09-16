@@ -34,7 +34,7 @@ CGameObject *FindType(
     const vector<CIgnoreItem> &ignoreList,
     uchar flags,
     bool recurseSearch,
-    vector<string> &list);
+    vector<astr_t> &list);
 
 // Clear the find/ignore engine's skip marks on every object in the world
 void IgnoreReset();

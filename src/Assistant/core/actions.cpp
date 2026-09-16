@@ -118,13 +118,13 @@ const XA_ACTION_LIST s_FixedLists[] = {
     { HT_NEW_TARGETING_SYSTEM_SET, NTS_SET_ITEMS, 11 },
 };
 
-vector<string> &dynamic_list(uint type)
+vector<astr_t> &dynamic_list(uint type)
 {
     // the spell/skill lists: every HT_CAST_*/HT_USE_SKILL_* type shares the
     // base list
-    static vector<string> s_Spells;
-    static vector<string> s_Skills;
-    static vector<string> s_Empty;
+    static vector<astr_t> s_Spells;
+    static vector<astr_t> s_Skills;
+    static vector<astr_t> s_Empty;
     if (type >= HT_CAST && type <= HT_CAST_NEW_TARGET_SYSTEM)
     {
         return s_Spells;
@@ -144,7 +144,7 @@ int Actions_ActionCount(uint type)
     {
         return (int)g_AssistantConfig.Macros().size(); // UpdateMacroList
     }
-    const vector<string> &list = dynamic_list(type);
+    const vector<astr_t> &list = dynamic_list(type);
     if (!list.empty())
     {
         return (int)list.size();
@@ -175,7 +175,7 @@ void Actions_ActionName(uint type, int action, char *out, size_t size)
         }
         return;
     }
-    const vector<string> &list = dynamic_list(type);
+    const vector<astr_t> &list = dynamic_list(type);
     if (!list.empty())
     {
         if (action >= 0 && action < (int)list.size())
@@ -230,20 +230,20 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
         case HT_EXTERNAL_CODE:
         {
             // first non-comment line becomes the label
-            const string &code = entry.ExternalCode;
+            const astr_t &code = entry.ExternalCode;
             size_t start = 0;
             bool first = true;
             while (start <= code.size())
             {
                 size_t end = code.find('\n', start);
-                if (end == string::npos)
+                if (end == astr_t::npos)
                 {
                     end = code.size();
                 }
-                string line = code.substr(start, end - start);
+                astr_t line = code.substr(start, end - start);
                 // trim
                 const size_t textStart = line.find_first_not_of(" \t\r");
-                if (textStart != string::npos)
+                if (textStart != astr_t::npos)
                 {
                     line = line.substr(textStart, line.find_last_not_of(" \t\r") + 1 - textStart);
                 }
@@ -313,7 +313,7 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
                 "Cast friend: ",
                 "Cast new target system: ",
             };
-            const vector<string> &spells = dynamic_list(HT_CAST);
+            const vector<astr_t> &spells = dynamic_list(HT_CAST);
             char spell[128] = { 0 };
             if (action < spells.size())
             {
@@ -339,7 +339,7 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
                 "Use skill friend: ",
                 "Use skill new target system: ",
             };
-            const vector<string> &skills = dynamic_list(HT_USE_SKILL);
+            const vector<astr_t> &skills = dynamic_list(HT_USE_SKILL);
             char skill[128] = { 0 };
             if (action < skills.size())
             {
@@ -414,9 +414,9 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
 
 namespace {
 
-void hook_objects(const string &a)
+void hook_objects(const astr_t &a)
 {
-    vector<string> objects;
+    vector<astr_t> objects;
     objects.push_back(a);
     g_Target.SetObjectsHook(objects);
 }
@@ -596,7 +596,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
                         // still calls SetObjectsHook with an empty list,
                         // clearing any stale wait-target hook so it cannot
                         // auto-target a later cursor.
-                        g_Target.SetObjectsHook(vector<string>());
+                        g_Target.SetObjectsHook(vector<astr_t>());
                         break;
                 }
                 g_SkillManager.Use(skillName);
@@ -691,8 +691,8 @@ void Actions_Execute(const CHotkeyEntry &entry)
             else if (action >= 5 && action <= 10)
             {
                 // client-side selection macros
-                vector<string> clientMacroActions;
-                vector<string> clientMacroSubActions;
+                vector<astr_t> clientMacroActions;
+                vector<astr_t> clientMacroSubActions;
                 if (action == 5 || action == 8)
                 {
                     clientMacroActions.push_back("SelectNext");
@@ -715,7 +715,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
     }
 }
 
-void Actions_RunExternalCode(const string &code)
+void Actions_RunExternalCode(const astr_t &code)
 {
     // The external-code text runs through the same text-command
     // pipeline as typed "_cmd" speech when it
@@ -734,15 +734,15 @@ void Actions_RunExternalCode(const string &code)
 
 // --- the 0xFC feeds -----------------------------------------------------------
 
-void Actions_SetSpellList(const vector<vector<string>> &books)
+void Actions_SetSpellList(const vector<vector<astr_t>> &books)
 {
     // "Last" + every book's names, flattened
-    vector<string> spells;
+    vector<astr_t> spells;
     spells.reserve(8);
     spells.push_back("Last");
-    for (const vector<string> &book : books)
+    for (const vector<astr_t> &book : books)
     {
-        for (const string &name : book)
+        for (const astr_t &name : book)
         {
             spells.push_back(name);
         }
@@ -750,7 +750,7 @@ void Actions_SetSpellList(const vector<vector<string>> &books)
     dynamic_list(HT_CAST) = spells;
 }
 
-void Actions_SetSkillList(const vector<string> &names)
+void Actions_SetSkillList(const vector<astr_t> &names)
 {
     // the packet handler already ships "Last" + the use-button skills
     dynamic_list(HT_USE_SKILL) = names;

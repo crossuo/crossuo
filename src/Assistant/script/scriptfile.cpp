@@ -18,11 +18,11 @@ namespace xuoassist {
 
 namespace {
 
-string s_SandboxRoot; // empty = process cwd (the client's binary dir)
+astr_t s_SandboxRoot; // empty = process cwd (the client's binary dir)
 
-string normalize_separators(const string &path)
+astr_t normalize_separators(const astr_t &path)
 {
-    string result = path;
+    astr_t result = path;
     for (size_t i = 0; i < result.size(); i++)
     {
         if (result[i] == '\\')
@@ -35,16 +35,16 @@ string normalize_separators(const string &path)
 
 // Lexical normalization: resolves "." and ".." against `base` ("" = cwd for
 // relative results). Returns the normalized absolute-ish path.
-string normalize_path(const string &path)
+astr_t normalize_path(const astr_t &path)
 {
     const bool absolute = !path.empty() && path[0] == '/';
-    string base = absolute ? string() : s_SandboxRoot;
+    astr_t base = absolute ? astr_t() : s_SandboxRoot;
     if (!base.empty() && base[0] != '/')
     {
         base = "./" + base; // relative root: keep it recognizable below
     }
 
-    string combined;
+    astr_t combined;
     if (!absolute && !base.empty())
     {
         combined = base;
@@ -60,14 +60,14 @@ string normalize_path(const string &path)
     }
 
     // split + resolve
-    std::vector<string> parts;
+    std::vector<astr_t> parts;
     size_t start = 0;
     while (start <= combined.size())
     {
         size_t slash = combined.find('/', start);
-        string part = combined.substr(
-            start, slash == string::npos ? string::npos : slash - start);
-        if (slash == string::npos)
+        astr_t part = combined.substr(
+            start, slash == astr_t::npos ? astr_t::npos : slash - start);
+        if (slash == astr_t::npos)
         {
             if (!part.empty())
             {
@@ -83,8 +83,8 @@ string normalize_path(const string &path)
     }
 
     const bool combinedResultAbsolute = !combined.empty() && combined[0] == '/';
-    std::vector<string> resolved;
-    for (const string &part : parts)
+    std::vector<astr_t> resolved;
+    for (const astr_t &part : parts)
     {
         if (part == ".")
         {
@@ -106,8 +106,8 @@ string normalize_path(const string &path)
     }
 
     // a root-joined relative input resolves against an absolute sandbox root,
-    // so the result's absoluteness follows the JOINED string, not the input
-    string result = combinedResultAbsolute ? "/" : "";
+    // so the result's absoluteness follows the JOINED astr_t, not the input
+    astr_t result = combinedResultAbsolute ? "/" : "";
     for (size_t i = 0; i < resolved.size(); i++)
     {
         if (i != 0)
@@ -119,7 +119,7 @@ string normalize_path(const string &path)
     return result;
 }
 
-bool inside_sandbox(const string &normalized)
+bool inside_sandbox(const astr_t &normalized)
 {
     if (s_SandboxRoot.empty())
     {
@@ -133,8 +133,8 @@ bool inside_sandbox(const string &normalized)
             (normalized.size() > 2 && normalized[2] != '/');
     }
 
-    const string root = normalize_separators(s_SandboxRoot);
-    const string rootNormalized = normalize_path(root);
+    const astr_t root = normalize_separators(s_SandboxRoot);
+    const astr_t rootNormalized = normalize_path(root);
     if (normalized == rootNormalized)
     {
         return true;
@@ -150,14 +150,14 @@ bool inside_sandbox(const string &normalized)
 
 } // namespace
 
-void ScriptFile_SetSandboxRoot(const string &root)
+void ScriptFile_SetSandboxRoot(const astr_t &root)
 {
     s_SandboxRoot = normalize_separators(root);
 }
 
-string ScriptFile_Sanitize(const string &path, const char *api)
+astr_t ScriptFile_Sanitize(const astr_t &path, const char *api)
 {
-    const string normalized = normalize_path(normalize_separators(path));
+    const astr_t normalized = normalize_path(normalize_separators(path));
     if (!inside_sandbox(normalized))
     {
         Warning(Assistant, "script %s: sandbox escape blocked (%s)\n", api, path.c_str());
@@ -171,7 +171,7 @@ namespace {
 // Opens a sandboxed file; fills `outClean` with the normalized path even on
 // failure so callers can report it.
 FILE *open_sandboxed(
-    const string &path, bool append, bool checkExists, bool &outOpened, string &outClean)
+    const astr_t &path, bool append, bool checkExists, bool &outOpened, astr_t &outClean)
 {
     outOpened = false;
     outClean = ScriptFile_Sanitize(path, append ? "file append" : "file open");
@@ -203,7 +203,7 @@ FILE *open_sandboxed(
 
 } // namespace
 
-bool ScriptFile_Open(XA_SCRIPT_FILE *file, const string &path, bool checkExists)
+bool ScriptFile_Open(XA_SCRIPT_FILE *file, const astr_t &path, bool checkExists)
 {
     if (file == nullptr)
     {
@@ -211,7 +211,7 @@ bool ScriptFile_Open(XA_SCRIPT_FILE *file, const string &path, bool checkExists)
     }
     ScriptFile_Close(file);
     bool opened = false;
-    string clean;
+    astr_t clean;
     file->Handle = open_sandboxed(path, false, checkExists, opened, clean);
     if (file->Handle != nullptr)
     {
@@ -221,7 +221,7 @@ bool ScriptFile_Open(XA_SCRIPT_FILE *file, const string &path, bool checkExists)
     return opened;
 }
 
-bool ScriptFile_Append(XA_SCRIPT_FILE *file, const string &path, bool checkExists)
+bool ScriptFile_Append(XA_SCRIPT_FILE *file, const astr_t &path, bool checkExists)
 {
     if (file == nullptr)
     {
@@ -229,7 +229,7 @@ bool ScriptFile_Append(XA_SCRIPT_FILE *file, const string &path, bool checkExist
     }
     ScriptFile_Close(file);
     bool opened = false;
-    string clean;
+    astr_t clean;
     file->Handle = open_sandboxed(path, true, checkExists, opened, clean);
     if (file->Handle != nullptr)
     {
@@ -253,13 +253,13 @@ void ScriptFile_Close(XA_SCRIPT_FILE *file)
     }
 }
 
-string ScriptFile_ReadLine(XA_SCRIPT_FILE *file)
+astr_t ScriptFile_ReadLine(XA_SCRIPT_FILE *file)
 {
     if (file == nullptr || file->Handle == nullptr)
     {
         return "";
     }
-    string line;
+    astr_t line;
     int c = 0;
     while ((c = fgetc((FILE *)file->Handle)) != EOF)
     {
@@ -277,14 +277,14 @@ string ScriptFile_ReadLine(XA_SCRIPT_FILE *file)
     return line;
 }
 
-string ScriptFile_Read(XA_SCRIPT_FILE *file)
+astr_t ScriptFile_Read(XA_SCRIPT_FILE *file)
 {
     if (file == nullptr || file->Handle == nullptr)
     {
         return "";
     }
     // whitespace-delimited token, like the old stream extractor
-    string token;
+    astr_t token;
     int c = 0;
     do
     {
@@ -298,7 +298,7 @@ string ScriptFile_Read(XA_SCRIPT_FILE *file)
     return token;
 }
 
-void ScriptFile_WriteLine(XA_SCRIPT_FILE *file, const string &text)
+void ScriptFile_WriteLine(XA_SCRIPT_FILE *file, const astr_t &text)
 {
     if (file == nullptr || file->Handle == nullptr)
     {
@@ -308,7 +308,7 @@ void ScriptFile_WriteLine(XA_SCRIPT_FILE *file, const string &text)
     fputs("\r\n", (FILE *)file->Handle); // the original wrote \r\n
 }
 
-void ScriptFile_Write(XA_SCRIPT_FILE *file, const string &text)
+void ScriptFile_Write(XA_SCRIPT_FILE *file, const astr_t &text)
 {
     if (file == nullptr || file->Handle == nullptr)
     {
@@ -327,9 +327,9 @@ void ScriptFile_Remove(XA_SCRIPT_FILE *file)
     ScriptFile_RemovePath(file->Path);
 }
 
-bool ScriptFile_RemovePath(const string &path)
+bool ScriptFile_RemovePath(const astr_t &path)
 {
-    const string clean = ScriptFile_Sanitize(path, "file remove");
+    const astr_t clean = ScriptFile_Sanitize(path, "file remove");
     if (clean.empty())
     {
         return false;

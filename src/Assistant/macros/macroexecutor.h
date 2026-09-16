@@ -48,7 +48,7 @@ public:
 
     // TabMacros::Play(name, doNotAutoIterrupt) - the hotkey
     // entry point; unknown names are a no-op.
-    void Play(const string &name, bool doNotAutoIterrupt);
+    void Play(const astr_t &name, bool doNotAutoIterrupt);
     // TabMacros::Play(CMacroListItem *, ...) - the Play button entry point.
     // macroIndex indexes g_AssistantConfig.Macros().
     void PlayIndex(int macroIndex, bool doNotAutoIterrupt);
@@ -162,7 +162,7 @@ public:
     // IsRecording() directly - assistant speech reaches the wire through the
     // console path (unlike the builder-bypassed actions), so the recording
     // suspension does not apply here.
-    void RecordSay(const string &text);
+    void RecordSay(const astr_t &text);
 
     // The client's gargoyle flying send sites (the CGumpRacialAbility button,
     // and MacroManager's macro action): the MT_TOGGLE_GARGOYLE_FLYING
@@ -230,4 +230,3 @@ public:
 };
 
 } // namespace xuoassist
-

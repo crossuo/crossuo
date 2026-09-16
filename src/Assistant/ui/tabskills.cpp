@@ -200,7 +200,7 @@ void TabSkills_Draw()
                     skill->Value - skill->OldValue);
             }
 
-            string text = skill->Name + buf;
+            astr_t text = skill->Name + buf;
             ImGui::SetClipboardText(text.c_str());
         }
     }
@@ -215,8 +215,8 @@ void TabSkills_Draw()
         // was on_bt_CopyAllToClipboard_clicked (format verbatim)
         char date[16] = { 0 };
         report_date(date, sizeof(date));
-        string result =
-            "===========X:UO Assist===========\n===Skills status report, " + string(date) + "===\n";
+        astr_t result =
+            "===========X:UO Assist===========\n===Skills status report, " + astr_t(date) + "===\n";
 
         float reportSkillSum = 0.0f;
 
@@ -227,7 +227,7 @@ void TabSkills_Draw()
             {
                 continue;
             }
-            string nameBuf = skill->Name;
+            astr_t nameBuf = skill->Name;
 
             if (nameBuf.length() < 8)
             {

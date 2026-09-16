@@ -10,7 +10,7 @@
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -84,7 +84,7 @@ void CTradeManager::OnTradeSent(int action, uint id, bool check)
 }
 
 void CTradeManager::OnTradeAction(
-    int action, uint serial, uint id1, uint id2, const string &name)
+    int action, uint serial, uint id1, uint id2, const astr_t &name)
 {
     switch ((TRADE_ACTIONS)action)
     {
@@ -149,11 +149,11 @@ int CTradeManager::Count()
     return (int)m_List.size();
 }
 
-CTradeWindow *CTradeManager::GetTrade(const string &serial)
+CTradeWindow *CTradeManager::GetTrade(const astr_t &serial)
 {
     uint index = 0xFFFFFFFF;
 
-    string lower = to_lower_copy(serial);
+    astr_t lower = to_lower_copy(serial);
     if (lower.compare(0, 2, "0x") == 0)
     {
         index = CAssistant::TextToSerial(serial);

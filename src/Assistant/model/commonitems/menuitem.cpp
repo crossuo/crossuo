@@ -11,7 +11,7 @@ CMenuItem::CMenuItem()
 {
 }
 
-CMenuItem::CMenuItem(const uint &id, const ushort &graphic, const ushort &color, const string &name)
+CMenuItem::CMenuItem(const uint &id, const ushort &graphic, const ushort &color, const astr_t &name)
     : ID(id)
     , Graphic(graphic)
     , Color(color)

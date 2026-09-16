@@ -15,14 +15,14 @@ namespace xuoassist {
 
 namespace {
 
-std::map<string, string> s_Globals;
-std::map<string, uint> s_Timers; // stored stamp: g_Ticks - value
+std::map<astr_t, astr_t> s_Globals;
+std::map<astr_t, uint> s_Timers; // stored stamp: g_Ticks - value
 // key -> icon graphic: the lowered buff name, plus its "0x%04X" graphic text
 // (so scripts can ask by either form and the remove event - graphic-only -
 // can erase every key of the icon)
-std::map<string, ushort> s_Buffs;
+std::map<astr_t, ushort> s_Buffs;
 
-string to_lower_copy(string text)
+astr_t to_lower_copy(astr_t text)
 {
     std::transform(text.begin(), text.end(), text.begin(), ::tolower);
     return text;
@@ -30,11 +30,11 @@ string to_lower_copy(string text)
 
 // The original BuffExists body trimmed + lowered the script argument (the port
 // lowers at store time, so only the lookup needs it here).
-string buff_key(string name)
+astr_t buff_key(astr_t name)
 {
     // leading/trailing space trim (the old trim parity)
     size_t begin = name.find_first_not_of(" \t\r\n");
-    if (begin == string::npos)
+    if (begin == astr_t::npos)
     {
         return "";
     }
@@ -46,7 +46,7 @@ string buff_key(string name)
 
 // --- globals ---------------------------------------------------------------
 
-void ScriptGlobal_Set(const string &name, const string &value)
+void ScriptGlobal_Set(const astr_t &name, const astr_t &value)
 {
     if (name.empty())
     {
@@ -55,10 +55,10 @@ void ScriptGlobal_Set(const string &name, const string &value)
     s_Globals[name] = value;
 }
 
-string ScriptGlobal_Get(const string &name)
+astr_t ScriptGlobal_Get(const astr_t &name)
 {
-    std::map<string, string>::const_iterator it = s_Globals.find(name);
-    return it != s_Globals.end() ? it->second : string();
+    std::map<astr_t, astr_t>::const_iterator it = s_Globals.find(name);
+    return it != s_Globals.end() ? it->second : astr_t();
 }
 
 void ScriptGlobal_Clear()
@@ -68,23 +68,23 @@ void ScriptGlobal_Clear()
 
 // --- timers ----------------------------------------------------------------
 
-void ScriptTimer_Set(const string &name, int value)
+void ScriptTimer_Set(const astr_t &name, int value)
 {
     s_Timers[name] = g_Ticks - (uint)value; // was m_Time.elapsed() - value
 }
 
-int ScriptTimer_Get(const string &name)
+int ScriptTimer_Get(const astr_t &name)
 {
-    std::map<string, uint>::const_iterator it = s_Timers.find(name);
+    std::map<astr_t, uint>::const_iterator it = s_Timers.find(name);
     return it != s_Timers.end() ? (int)(g_Ticks - it->second) : -1;
 }
 
-bool ScriptTimer_Exists(const string &name)
+bool ScriptTimer_Exists(const astr_t &name)
 {
     return s_Timers.find(name) != s_Timers.end();
 }
 
-void ScriptTimer_Remove(const string &name)
+void ScriptTimer_Remove(const astr_t &name)
 {
     s_Timers.erase(name);
 }
@@ -96,10 +96,10 @@ void ScriptTimer_Clear()
 
 // --- buffs -----------------------------------------------------------------
 
-void ScriptBuffs_Add(ushort graphic, uint timer, const string &name)
+void ScriptBuffs_Add(ushort graphic, uint timer, const astr_t &name)
 {
     (void)timer;
-    const string key = buff_key(name);
+    const astr_t key = buff_key(name);
     if (!key.empty())
     {
         s_Buffs[key] = graphic;
@@ -116,7 +116,7 @@ void ScriptBuffs_Remove(ushort graphic)
     char graphicText[16] = { 0 };
     snprintf(graphicText, sizeof(graphicText), "0x%04X", graphic);
     s_Buffs.erase(graphicText);
-    for (std::map<string, ushort>::iterator it = s_Buffs.begin(); it != s_Buffs.end();)
+    for (std::map<astr_t, ushort>::iterator it = s_Buffs.begin(); it != s_Buffs.end();)
     {
         if (it->second == graphic && it->first != graphicText)
         {
@@ -129,9 +129,9 @@ void ScriptBuffs_Remove(ushort graphic)
     }
 }
 
-bool ScriptBuffs_Exists(const string &name)
+bool ScriptBuffs_Exists(const astr_t &name)
 {
-    const string key = buff_key(name);
+    const astr_t key = buff_key(name);
     if (key.empty())
     {
         return false;

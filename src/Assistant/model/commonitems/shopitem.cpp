@@ -8,12 +8,12 @@
 namespace xuoassist {
 
 CShopItem::CShopItem(
-    const string &graphic,
-    const string &color,
-    const string &name,
+    const astr_t &graphic,
+    const astr_t &color,
+    const astr_t &name,
     const int &count,
     const uint &price,
-    const string &comment)
+    const astr_t &comment)
     : Graphic(graphic)
     , Color(color)
     , Name(name)

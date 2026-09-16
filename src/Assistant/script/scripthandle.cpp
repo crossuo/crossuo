@@ -21,7 +21,7 @@
 namespace xuoassist {
 
 namespace {
-string to_lower_copy(string text)
+astr_t to_lower_copy(astr_t text)
 {
     std::transform(text.begin(), text.end(), text.begin(), ::tolower);
     return text;
@@ -31,22 +31,22 @@ string to_lower_copy(string text)
 // --- the shared editor buffer (was g_ScriptEditorDialog) ---------------------
 
 namespace {
-string s_EditorText;
-string s_EditorPath;
+astr_t s_EditorText;
+astr_t s_EditorPath;
 // The buffer-generation token: bumped by every external buffer replace
 // (SetText/LoadScript); TextEditor_Draw re-splits when it moves. Without it
 // the editor only re-split on the buffer POINTER changing - which never
-// happens for the shared string - so Open/New/Reload left stale lines and an
+// happens for the shared astr_t - so Open/New/Reload left stale lines and an
 // edit rejoined the OLD content over the new file (data loss on save).
 uint s_EditorGeneration = 0;
 } // namespace
 
-string &ScriptEditor_Text()
+astr_t &ScriptEditor_Text()
 {
     return s_EditorText;
 }
 
-void ScriptEditor_SetText(const string &text)
+void ScriptEditor_SetText(const astr_t &text)
 {
     s_EditorText = text;
     s_EditorGeneration++;
@@ -57,24 +57,24 @@ uint ScriptEditor_Generation()
     return s_EditorGeneration;
 }
 
-string ScriptEditor_Path()
+astr_t ScriptEditor_Path()
 {
     return s_EditorPath;
 }
 
-void ScriptEditor_SetPath(const string &path)
+void ScriptEditor_SetPath(const astr_t &path)
 {
     s_EditorPath = path;
 }
 
 // The GetFunctionList port (scripteditordialog.cpp): scan for
 // `function NAME(` declarations, trimmed; the tab's start-combo feeds on it.
-vector<string> ScriptEditor_FunctionList()
+vector<astr_t> ScriptEditor_FunctionList()
 {
-    vector<string> list;
-    const string &text = s_EditorText;
+    vector<astr_t> list;
+    const astr_t &text = s_EditorText;
     size_t pos = 0;
-    while ((pos = text.find("function", pos)) != string::npos)
+    while ((pos = text.find("function", pos)) != astr_t::npos)
     {
         // word boundary before
         const bool boundary = pos == 0 || !isalnum((unsigned char)text[pos - 1]);
@@ -91,7 +91,7 @@ vector<string> ScriptEditor_FunctionList()
                 end++;
             }
             size_t paren = text.find('(', end);
-            if (end > start && paren != string::npos &&
+            if (end > start && paren != astr_t::npos &&
                 text.find_first_not_of(" \t", end) == paren)
             {
                 list.push_back(text.substr(start, end - start));
@@ -105,7 +105,7 @@ vector<string> ScriptEditor_FunctionList()
 // --- CScriptHandle ------------------------------------------------------------
 
 CScriptHandle::CScriptHandle(
-    const string &functionName, const vector<string> &args, const string &scriptBody)
+    const astr_t &functionName, const vector<astr_t> &args, const astr_t &scriptBody)
     : m_FunctionName(functionName)
     , m_Args(args)
     , m_Text(scriptBody)
@@ -226,12 +226,12 @@ CScriptManager *ScriptManager_Get()
 }
 
 CScriptHandle *CScriptManager::Run(
-    const string &functionName, const string &scriptBody, const vector<string> &args)
+    const astr_t &functionName, const astr_t &scriptBody, const vector<astr_t> &args)
 {
     if ((int)m_Handles.size() >= SCRIPT_MAX_CONCURRENT)
     {
         g_Assistant.ClientPrint("Too many running scripts (max " +
-                                std::to_string(SCRIPT_MAX_CONCURRENT) + ").");
+                                str_from(SCRIPT_MAX_CONCURRENT) + ").");
         return nullptr;
     }
 
@@ -270,7 +270,7 @@ void CScriptManager::StopAll(uint joinTimeoutMs)
     // finished handles are collected by Tick; zombies stay visible
 }
 
-bool CScriptManager::Running(const string &functionName) const
+bool CScriptManager::Running(const astr_t &functionName) const
 {
     for (const CScriptHandle *handle : m_Handles)
     {
@@ -285,7 +285,7 @@ bool CScriptManager::Running(const string &functionName) const
 
 // --- the API/tab entry points ---------------------------------------------------
 
-void ScriptManager_Terminate(const string &functionName, const string &functionsSave)
+void ScriptManager_Terminate(const astr_t &functionName, const astr_t &functionsSave)
 {
     // the "all"/save-list semantics of TabScripts::TerminateScript
     CScriptManager *manager = ScriptManager_Get();
@@ -295,11 +295,11 @@ void ScriptManager_Terminate(const string &functionName, const string &functions
         {
             bool canTerminate = true;
             size_t start = 0;
-            const string lower = to_lower_copy(functionsSave);
+            const astr_t lower = to_lower_copy(functionsSave);
             while (start <= lower.size())
             {
                 size_t end = lower.find('|', start);
-                if (end == string::npos)
+                if (end == astr_t::npos)
                 {
                     end = lower.size();
                 }
@@ -327,12 +327,12 @@ void ScriptManager_Terminate(const string &functionName, const string &functions
     }
 }
 
-bool ScriptManager_Running(const string &functionName)
+bool ScriptManager_Running(const astr_t &functionName)
 {
     return ScriptManager_Get()->Running(functionName);
 }
 
-void ScriptManager_Exec(const string &functionName, bool once, const vector<string> &args)
+void ScriptManager_Exec(const astr_t &functionName, bool once, const vector<astr_t> &args)
 {
     if (once && ScriptManager_Running(functionName))
     {
@@ -342,7 +342,7 @@ void ScriptManager_Exec(const string &functionName, bool once, const vector<stri
     ScriptManager_Get()->Run(functionName, ScriptEditor_Text(), args);
 }
 
-void ScriptManager_LoadScriptFile(const string &path)
+void ScriptManager_LoadScriptFile(const astr_t &path)
 {
     // was TabScripts::LoadScript -> g_ScriptEditorDialog->LoadScript
     FILE *file = fopen(path.c_str(), "rb");
@@ -350,7 +350,7 @@ void ScriptManager_LoadScriptFile(const string &path)
     {
         return;
     }
-    string text;
+    astr_t text;
     char buffer[4096];
     size_t read = 0;
     while ((read = fread(buffer, 1, sizeof(buffer), file)) > 0)

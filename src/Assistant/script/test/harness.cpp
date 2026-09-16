@@ -49,12 +49,12 @@ extern "C" {
 #include <vector>
 
 // the client normally provides g_Ticks (Globals.cpp)
-using xuoassist::string;
+using ::astr_t;
 uint g_Ticks = 0;
 
 // the stack-line parser copy of apiscript.cpp Script_FormatException (the
 // full function needs the client world; the parser is what the harness checks)
-static void harness_format_line(JSContext *ctx, string &line, string &message)
+static void harness_format_line(JSContext *ctx, astr_t &line, astr_t &message)
 {
     JSValue exception = JS_GetException(ctx);
     line = "0";
@@ -63,7 +63,7 @@ static void harness_format_line(JSContext *ctx, string &line, string &message)
     const char *text = JS_ToCStringLen(ctx, &size, exception);
     if (text != nullptr)
     {
-        message = string(text, size);
+        message = astr_t(text, size);
         JS_FreeCString(ctx, text);
     }
     JSValue stack = JS_GetPropertyStr(ctx, exception, "stack");
@@ -126,7 +126,7 @@ int main()
         CHECK(ctx != nullptr);
 
         // the original script shape: functions on the global object + a Wait-like
-        // call with string args (the sentinel globals are strings)
+        // call with astr_t args (the sentinel globals are strings)
         const char *script = "function hello(name) { return 'hi ' + name; }\n"
                              "var boom = function () { nope(); };\n";
         JSValue result = JS_Eval(ctx, script, strlen(script), "<script>", JS_EVAL_TYPE_GLOBAL);
@@ -153,8 +153,8 @@ int main()
         JSValue errorFn = JS_GetPropertyStr(ctx, global, "boom");
         JSValue errorResult = JS_Call(ctx, errorFn, JS_UNDEFINED, 0, nullptr);
         CHECK(JS_IsException(errorResult));
-        string line;
-        string message;
+        astr_t line;
+        astr_t message;
         harness_format_line(ctx, line, message);
         CHECK(line == "2");
         printf("smoke: exception line = %s (%s)\n", line.c_str(),
@@ -442,7 +442,7 @@ int main()
         char rootTemplate[] = "/tmp/xuo-harness-XXXXXX";
         char *mk = mkdtemp(rootTemplate);
         CHECK(mk != nullptr);
-        const string root(mk);
+        const astr_t root(mk);
         ScriptFile_SetSandboxRoot(root);
 
         // relative paths resolve under the root
@@ -490,7 +490,7 @@ int main()
         CHECK(ScriptTextWindow_Opened());
         ScriptTextWindow_Command(TW_PRINT, "hello", 0, 0, "");
         ScriptTextWindow_Command(TW_PRINT, "world", 0, 0, "");
-        const vector<string> &lines = ScriptTextWindow_Lines();
+        const vector<astr_t> &lines = ScriptTextWindow_Lines();
         CHECK(lines.size() == 2 && lines[0] == "hello" && lines[1] == "world");
         ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
         CHECK(ScriptTextWindow_Lines().empty());
@@ -615,7 +615,7 @@ int main()
         CHECK(mkd != nullptr);
         if (mkd != nullptr)
         {
-            const string dir(mkd);
+            const astr_t dir(mkd);
 
             // 1) create
             const fs_path path = fs_path_join(dir, "probe.xml");

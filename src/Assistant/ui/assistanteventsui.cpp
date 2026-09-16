@@ -34,7 +34,7 @@ CAssistantUIEvents *AssistantUIEvents_Get()
     return &s_UIEvents;
 }
 
-void CAssistantUIEvents::OnBuffAdd(ushort graphic, uint timer, const string &name)
+void CAssistantUIEvents::OnBuffAdd(ushort graphic, uint timer, const astr_t &name)
 {
     // the script-visible buff mirror (was g_BuffManager.Add feeding
     // OnCommandBuffExists); main-thread event context
@@ -63,13 +63,13 @@ void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)
     }
 }
 
-void CAssistantUIEvents::OnSpellList(const vector<vector<string>> &books)
+void CAssistantUIEvents::OnSpellList(const vector<vector<astr_t>> &books)
 {
     // was g_HotkeysForm->UpdateActionList(HT_CAST*, hotkeyActions)
     Actions_SetSpellList(books);
 }
 
-void CAssistantUIEvents::OnSkillsList(const vector<string> &hotkeyActions)
+void CAssistantUIEvents::OnSkillsList(const vector<astr_t> &hotkeyActions)
 {
     // was g_HotkeysForm->UpdateActionList(HT_USE_SKILL*, hotkeyActions)
     Actions_SetSkillList(hotkeyActions);
@@ -105,7 +105,7 @@ void CAssistantUIEvents::OnClientCloseRequest()
 }
 
 void CAssistantUIEvents::OnFromTarget(
-    int kind, uint serial, ushort graphic, ushort color, const string &name)
+    int kind, uint serial, ushort graphic, ushort color, const astr_t &name)
 {
     // the HandleTarget* forwards: park the latest reply for the list tabs
     XA_FROM_TARGET_RESULT &slot = FromTargetResult();

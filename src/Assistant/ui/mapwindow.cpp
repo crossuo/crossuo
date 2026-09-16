@@ -378,20 +378,20 @@ void MapWindow_Draw(bool *open)
                 continue;
             }
 
-            const string &objName = obj->GetName();
+            const astr_t &objName = obj->GetName();
             if (type == OMCT_GUILD_MEMBER)
             {
                 // the original refreshed the cached guild name and let the guild list
                 // draw the marker; SetMemberName takes a
-                // mutable string &, so the copy happens here
-                string name = objName;
+                // mutable astr_t &, so the copy happens here
+                astr_t name = objName;
                 g_GuildManager.SetMemberName(serial, name);
                 continue;
             }
 
             // copy only when the party-name substitution actually happens
-            string substituted;
-            const string *name = &objName;
+            astr_t substituted;
+            const astr_t *name = &objName;
             if (objName.empty() && g_Party.Leader != 0u)
             {
                 for (int i = 0; i < 10; i++)

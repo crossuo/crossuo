@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/finditem.h): strings are std::string,
-// string lists are std::vector<std::string>, ushort lists are std::vector<ushort>.
+// Ported from X:UO Assist (commonitems/finditem.h): strings are astr_t,
+// astr_t lists are std::vector<astr_t>, ushort lists are std::vector<ushort>.
 
 #pragma once
 
@@ -21,17 +21,17 @@ enum FIND_TOKEN_STATE
 class CFindItem
 {
 public:
-    string Graphic = "";
-    string Color = "";
-    string Comment = "";
+    astr_t Graphic = "";
+    astr_t Color = "";
+    astr_t Comment = "";
 
     // setters keep firing the OnChange* list reparsers on every mutation
-    void SetGraphic(const string &val)
+    void SetGraphic(const astr_t &val)
     {
         OnChangeGraphic(val);
         Graphic = val;
     }
-    void SetColor(const string &val)
+    void SetColor(const astr_t &val)
     {
         OnChangeColor(val);
         Color = val;
@@ -46,20 +46,19 @@ protected:
     vector<ushort> m_ListColorFlags;
     vector<ushort> m_IgnoreColors;
 
-    uint ParseToken(string str, uint &value, const bool &isGraphic) const;
+    uint ParseToken(astr_t str, uint &value, const bool &isGraphic) const;
 
     bool TestValues(const uint &original, const uint &test, const uint &flags) const;
 
 public:
     CFindItem();
-    CFindItem(const string &graphic, const string &color);
+    CFindItem(const astr_t &graphic, const astr_t &color);
     virtual ~CFindItem();
 
-    void OnChangeGraphic(const string &val);
-    void OnChangeColor(const string &val);
+    void OnChangeGraphic(const astr_t &val);
+    void OnChangeColor(const astr_t &val);
 
     bool Found(const ushort &graphic, const ushort &color) const;
 };
 
 } // namespace xuoassist
-

@@ -14,7 +14,7 @@ CObjectPropertiesManager::~CObjectPropertiesManager()
     m_Map.clear();
 }
 
-string CObjectPropertiesManager::GetData(const uint &serial)
+astr_t CObjectPropertiesManager::GetData(const uint &serial)
 {
     OBJECT_PROPERTIES_MAP::iterator it = m_Map.find(serial);
 

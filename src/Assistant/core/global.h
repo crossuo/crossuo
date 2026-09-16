@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (global.h), trimmed per assistant-plan.md §4.2:
-// strings are std::string, lists are std::vector, timers are
+// strings are astr_t, lists are std::vector, timers are
 // client g_Ticks (ms), points are the client CPoint2Di. Assistant-owned globals only:
 // the external-DLL host plumbing (g_DllPath/g_ClientPath/g_SaveAero/g_WineOS)
 // is dropped; the host bridge function pointers stay and get wired to client
@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <common/utils.h> // countof
+#include <common/str.h> // astr_t / wstr_t (the client astr_t typedefs)
 #include <xuocore/enumlist.h>
 #include <xuocore/commoninterfaces.h>
 #include "Globals.h" // client g_Ticks (ms) - supersedes the original app's tick timer
@@ -29,8 +30,6 @@ using uint = uint32_t;
 // Client tick source (plan §4.2: the old timer objects -> g_Ticks).
 using ::g_Ticks;
 
-using std::string;
-using std::wstring;
 using std::vector;
 
 // Forward-ported from the original app's assist/assist.h with the assistant core
@@ -494,9 +493,9 @@ static const bool g_LayerSafe[30] = { false, // 0
 
 const int MAX_INVOKE_VIRTURE_COUNT = 3;
 
-const string g_InvokeVirtureName[MAX_INVOKE_VIRTURE_COUNT] = { "Honor", "Sacrifice", "Valor" };
+const astr_t g_InvokeVirtureName[MAX_INVOKE_VIRTURE_COUNT] = { "Honor", "Sacrifice", "Valor" };
 
-const string g_LayerName[30] = {
+const astr_t g_LayerName[30] = {
     "None", // 0
     "RightHand", "LeftHand", "Shoes", "Pants", "Shirt",      "Helmet",   "Gloves", "Ring",
     "Talisman",  "Necklace", "Hair",  "Waist", "InnerTorso", "Bracelet", "Face",   "Beard",

@@ -8,6 +8,7 @@
 
 #include <string>
 #include "enumlist.h"
+#include <common/str.h>
 
 #if defined(_MSC_VER)
 #undef CDECL
@@ -22,8 +23,8 @@ public:
     IGameString();
     ~IGameString();
 
-    IGameString &operator()(const std::string &str);
-    IGameString &operator()(const std::wstring &str);
+    IGameString &operator()(const astr_t &str);
+    IGameString &operator()(const wstr_t &str);
 
     bool m_Unicode = false;
     char *m_DataA{ nullptr };

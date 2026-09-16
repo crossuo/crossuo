@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/finditem.cpp): string trimming/parsing
-// (trimmed/at/remove) became std::string equivalents; CAssistant::TextToSerial/
 // TextToGraphic come from core/textconv.h (temporary home).
 
 #include "finditem.h"
 #include "core/textconv.h"
-#include "core/textparser.h"
+#include <xuocore/text_parser.h> // ::TextFileParser (the client token parser)
 #include <cctype>
 
 namespace xuoassist {
 
-static string qtrimmed(const string &str)
+static astr_t qtrimmed(const astr_t &str)
 {
     size_t begin = 0;
     size_t end = str.length();
@@ -31,7 +29,7 @@ CFindItem::CFindItem()
 {
 }
 
-CFindItem::CFindItem(const string &graphic, const string &color)
+CFindItem::CFindItem(const astr_t &graphic, const astr_t &color)
     : Graphic(graphic)
     , Color(color)
 {
@@ -43,11 +41,11 @@ CFindItem::~CFindItem()
 {
 }
 
-void CFindItem::OnChangeGraphic(const string &val)
+void CFindItem::OnChangeGraphic(const astr_t &val)
 {
-    CTextParser graphicParser(val, "|", "", "");
+    TextFileParser graphicParser({}, "|", "", "");
 
-    vector<string> listGraphic = graphicParser.ReadTokens();
+    vector<astr_t> listGraphic = graphicParser.GetTokens(val);
 
     m_ListGraphic.clear();
     m_ListGraphicFlags.clear();
@@ -55,7 +53,7 @@ void CFindItem::OnChangeGraphic(const string &val)
 
     if (!listGraphic.empty())
     {
-        for (const string &strGraphic : listGraphic)
+        for (const astr_t &strGraphic : listGraphic)
         {
             uint currentGraphic = 0;
             uint flagsGraphic = ParseToken(strGraphic, currentGraphic, true);
@@ -79,10 +77,10 @@ void CFindItem::OnChangeGraphic(const string &val)
     }
 }
 
-void CFindItem::OnChangeColor(const string &val)
+void CFindItem::OnChangeColor(const astr_t &val)
 {
-    CTextParser colorParser(val, "|", "", "");
-    vector<string> listColor = colorParser.ReadTokens();
+    TextFileParser colorParser({}, "|", "", "");
+    vector<astr_t> listColor = colorParser.GetTokens(val);
 
     m_ListColor.clear();
     m_ListColorFlags.clear();
@@ -90,7 +88,7 @@ void CFindItem::OnChangeColor(const string &val)
 
     if (!listColor.empty())
     {
-        for (const string &strColor : listColor)
+        for (const astr_t &strColor : listColor)
         {
             uint currentColor = 0;
             uint flagsColor = ParseToken(strColor, currentColor, true);
@@ -114,7 +112,7 @@ void CFindItem::OnChangeColor(const string &val)
     }
 }
 
-uint CFindItem::ParseToken(string str, uint &value, const bool &isGraphic) const
+uint CFindItem::ParseToken(astr_t str, uint &value, const bool &isGraphic) const
 {
     str = qtrimmed(str);
     uint result = FTS_NORMAL;

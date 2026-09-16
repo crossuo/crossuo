@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/prompt.h): strings are std::string.
+// Ported from X:UO Assist (commonitems/prompt.h): strings are astr_t.
 
 #pragma once
 
@@ -13,12 +13,11 @@ class CPrompt
 {
 public:
     uint Serial = 0;
-    string Text = "";
+    astr_t Text = "";
     PROMPT_TYPE Type = PT_NONE;
 
     CPrompt() {}
-    CPrompt(const uint &serial, const string &text, const PROMPT_TYPE &type);
+    CPrompt(const uint &serial, const astr_t &text, const PROMPT_TYPE &type);
 };
 
 } // namespace xuoassist
-

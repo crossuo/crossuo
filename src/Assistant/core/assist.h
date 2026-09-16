@@ -47,34 +47,34 @@ extern MOVITEM_DATA g_MoveItemData;
 
 class CAssistant
 {
-    string m_UsedIgnoreList;
+    astr_t m_UsedIgnoreList;
 
 public:
-    string GetUsedIgnoreList() const { return m_UsedIgnoreList; }
-    void SetUsedIgnoreList(const string &val) { m_UsedIgnoreList = val; }
+    astr_t GetUsedIgnoreList() const { return m_UsedIgnoreList; }
+    void SetUsedIgnoreList(const astr_t &val) { m_UsedIgnoreList = val; }
 
     CAssistant();
     ~CAssistant();
 
     void Init() {}
 
-    static uint RawStringToUInt(const string &value);
-    static bool RawStringToBool(string value);
-    static uint TextToUInt(const string &text);
-    static uint TextToSerial(string text);
-    static ushort TextToGraphic(string text);
-    static int TextToLayer(string text);
-    static string ColorToText(const uint &value);
-    static string SerialToText(const uint &value);
-    static string GraphicToText(const ushort &value);
-    static string BoolToText(const bool &value);
+    static uint RawStringToUInt(const astr_t &value);
+    static bool RawStringToBool(astr_t value);
+    static uint TextToUInt(const astr_t &text);
+    static uint TextToSerial(astr_t text);
+    static ushort TextToGraphic(astr_t text);
+    static int TextToLayer(astr_t text);
+    static astr_t ColorToText(const uint &value);
+    static astr_t SerialToText(const uint &value);
+    static astr_t GraphicToText(const ushort &value);
+    static astr_t BoolToText(const bool &value);
 
-    void ClientPrint(const string &text, const ushort &color = g_MessagesColor);
-    void ClientCharPrint(const uint &serial, const string &text, const ushort &color = g_MessagesColor);
-    void ClientPrintDebugLevel1(const string &text, const ushort &color = g_MessagesColor);
-    void ClientPrintDebugLevel2(const string &text, const ushort &color = g_MessagesColor);
+    void ClientPrint(const astr_t &text, const ushort &color = g_MessagesColor);
+    void ClientCharPrint(const uint &serial, const astr_t &text, const ushort &color = g_MessagesColor);
+    void ClientPrintDebugLevel1(const astr_t &text, const ushort &color = g_MessagesColor);
+    void ClientPrintDebugLevel2(const astr_t &text, const ushort &color = g_MessagesColor);
 
-    void RequestTarget(const string &text);
+    void RequestTarget(const astr_t &text);
 
     // the client 0xD1 handler performs the logout request (CGame::LogOut,
     // dispatched via the DIR_RECV-registered HandleLogout, so the old injected
@@ -88,25 +88,25 @@ public:
     void Click(const uint &serial);
     void DoubleClick(const uint &serial);
     void Attack(const uint &serial);
-    uchar GetNotorietyFlags(const string &text);
+    uchar GetNotorietyFlags(const astr_t &text);
 
     class CGameObject *FindList(
-        const string &findListName,
-        const string &containerText,
-        const string &distanceText,
+        const astr_t &findListName,
+        const astr_t &containerText,
+        const astr_t &distanceText,
         const ushort &flags,
-        const string &notorietyText,
+        const astr_t &notorietyText,
         bool recurseSearch,
-        vector<string> &result);
+        vector<astr_t> &result);
     class CGameObject *FindType(
-        const vector<string> &graphic,
-        const vector<string> &color,
-        const string &containerText,
-        const string &distanceText,
+        const vector<astr_t> &graphic,
+        const vector<astr_t> &color,
+        const astr_t &containerText,
+        const astr_t &distanceText,
         const ushort &flags,
-        const string &notorietyText,
+        const astr_t &notorietyText,
         bool recurseSearch,
-        vector<string> &result);
+        vector<astr_t> &result);
     class CGameObject *FindType(
         const CFindItem &findListItem,
         const vector<CIgnoreItem> &ignoreList,
@@ -115,16 +115,16 @@ public:
         ushort flags,
         const uchar &notoriety,
         bool recurseSearch,
-        vector<string> &list);
-    class CGameObject *FindFriend(const ushort &flags, const string &distanceText);
-    class CGameObject *FindEnemy(const ushort &flags, const string &distanceText);
+        vector<astr_t> &list);
+    class CGameObject *FindFriend(const ushort &flags, const astr_t &distanceText);
+    class CGameObject *FindEnemy(const ushort &flags, const astr_t &distanceText);
     void GetFriendsStatus();
     void GetEnemiesStatus();
     int CountType(
-        const vector<string> &graphic,
-        const vector<string> &color,
-        const string &containerText,
-        const string &distanceText,
+        const vector<astr_t> &graphic,
+        const vector<astr_t> &color,
+        const astr_t &containerText,
+        const astr_t &distanceText,
         bool recurseSearch);
     int CountType(
         const CFindItem &findListItem,
@@ -174,7 +174,7 @@ public:
 
     static bool IsNoDrawTile(const ushort &graphic);
 
-    void ScriptError(const string &title, const string &text);
+    void ScriptError(const astr_t &title, const astr_t &text);
 };
 
 extern CAssistant g_Assistant;
@@ -186,4 +186,3 @@ extern CAssistant g_Assistant;
 bool AssistantSpeechIntercept(astr_t &text, uint16_t &color);
 
 } // namespace xuoassist
-

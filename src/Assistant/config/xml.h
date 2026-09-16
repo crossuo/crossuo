@@ -39,29 +39,29 @@ namespace xuoassist {
 class XMLElement
 {
 public:
-    std::string Name;
-    std::vector<std::pair<std::string, std::string>> Attributes;
+    astr_t Name;
+    std::vector<std::pair<astr_t, astr_t>> Attributes;
     std::vector<XMLElement> Children;
-    std::string Text;
+    astr_t Text;
 
     XMLElement() {}
-    explicit XMLElement(const std::string &name)
+    explicit XMLElement(const astr_t &name)
         : Name(name)
     {
     }
 
     // --- attributes --------------------------------------------------------
-    bool HasAttribute(const std::string &name) const;
+    bool HasAttribute(const astr_t &name) const;
     // Returns "" (or the given default) when the attribute is absent, exactly
         // like the original code's hasAttribute(...) guards.
-    std::string Attribute(const std::string &name, const std::string &defaultValue = "") const;
-    int AttributeInt(const std::string &name, int defaultValue = 0) const;
-    void SetAttribute(const std::string &name, const std::string &value);
+    astr_t Attribute(const astr_t &name, const astr_t &defaultValue = "") const;
+    int AttributeInt(const astr_t &name, int defaultValue = 0) const;
+    void SetAttribute(const astr_t &name, const astr_t &value);
 
     // --- children ----------------------------------------------------------
-    XMLElement *FindChild(const std::string &name);
-    const XMLElement *FindChild(const std::string &name) const;
-    XMLElement &AddChild(const std::string &name);
+    XMLElement *FindChild(const astr_t &name);
+    const XMLElement *FindChild(const astr_t &name) const;
+    XMLElement &AddChild(const astr_t &name);
 };
 
 class XMLDocument
@@ -69,12 +69,12 @@ class XMLDocument
 public:
     XMLElement Root;
 
-    bool Parse(const std::string &text);
+    bool Parse(const astr_t &text);
     bool Load(const fs_path &path);
 
     // autoFormat enables the indented formatting above (the
     // assistant writers always used it).
-    std::string Write(bool autoFormat = true) const;
+    astr_t Write(bool autoFormat = true) const;
     bool Save(const fs_path &path, bool autoFormat = true) const;
 };
 
@@ -95,4 +95,3 @@ bool AtomicFileWrite(const fs_path &path, const void *data, size_t size);
 bool XMLSelfTest();
 
 } // namespace xuoassist
-

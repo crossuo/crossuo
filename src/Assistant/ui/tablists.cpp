@@ -344,7 +344,7 @@ void draw_objects_tab()
     // rebuild the text only when the value changed (draw path: no per-frame
     // SerialToText allocation)
     static uint lastDressBag = 0;
-    static string dressBagText = CAssistant::SerialToText(lastDressBag);
+    static astr_t dressBagText = CAssistant::SerialToText(lastDressBag);
     if (g_DressBag != lastDressBag)
     {
         lastDressBag = g_DressBag;
@@ -360,7 +360,7 @@ void draw_objects_tab()
 
 void draw_find_tab()
 {
-    
+
     static int selectedList = -1;
     static int lastSelectedList = -1;
     static int selectedItem = -1;
@@ -560,7 +560,7 @@ void draw_find_tab()
 
 void draw_ignore_tab()
 {
-    
+
     static int selectedList = -1;
     static int lastSelectedList = -1;
     static int selectedItem = -1;

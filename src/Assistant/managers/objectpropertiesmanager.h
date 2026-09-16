@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/objectpropertiesmanager.h), trimmed
-// (maps are std::map, strings are std::string).
+// (maps are std::map, strings are astr_t).
 
 #pragma once
 
@@ -16,10 +16,10 @@ class CObjectProperty
 {
 public:
     uint Revision = 0;
-    string Data = "";
+    astr_t Data = "";
 
     CObjectProperty() {}
-    CObjectProperty(const uint &revision, const string &data)
+    CObjectProperty(const uint &revision, const astr_t &data)
         : Revision(revision)
         , Data(data)
     {
@@ -37,7 +37,7 @@ public:
     CObjectPropertiesManager() {}
     virtual ~CObjectPropertiesManager();
 
-    string GetData(const uint &serial);
+    astr_t GetData(const uint &serial);
 
     void Add(const uint &serial, const CObjectProperty &objectProperty);
 };
@@ -45,4 +45,3 @@ public:
 extern CObjectPropertiesManager g_ObjectPropertiesManager;
 
 } // namespace xuoassist
-

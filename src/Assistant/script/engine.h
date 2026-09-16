@@ -39,7 +39,7 @@ class CScriptEngine
 public:
     bool Paused = false;
     bool Terminated = false;
-    string Name = "";
+    astr_t Name = "";
 
     CScriptEngine();
     ~CScriptEngine();
@@ -52,15 +52,15 @@ public:
     // Registers the runtime API (Player/Client/TextWindow/SelectedTile
     // objects, the sentinel globals, ScriptName). Called by the ctor; kept
     // separate for clarity of the failure path.
-    bool Setup(const string &scriptName);
+    bool Setup(const astr_t &scriptName);
 
     // The CScriptHandle::RunEngine flow: evaluate the whole file (defines the
-    // functions), then call `functionName` with the string args (original behavior:
+    // functions), then call `functionName` with the astr_t args (original behavior:
     // an evaluate error aborts before the call; both paths report through
     // g_Assistant.ScriptError exactly like signal_ScriptError did).
     // Returns false when the script produced an error (already reported).
-    bool Evaluate(const string &text);
-    bool CallFunction(const string &functionName, const vector<string> &args);
+    bool Evaluate(const astr_t &text);
+    bool CallFunction(const astr_t &functionName, const vector<astr_t> &args);
 
     // Interrupt plumbing (the worker thread and the manager set/read these).
     void RequestTerminate();
@@ -89,4 +89,3 @@ private:
 };
 
 } // namespace xuoassist
-

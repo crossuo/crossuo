@@ -23,15 +23,15 @@ constexpr size_t JOURNAL_CAP = 200;
 vector<CJournalMessage> s_Messages;
 bool s_IgnoreCase = false;
 
-string to_lower_copy(string text)
+astr_t to_lower_copy(astr_t text)
 {
     std::transform(text.begin(), text.end(), text.begin(), ::tolower);
     return text;
 }
 
-bool contains(const string &text, const string &pattern)
+bool contains(const astr_t &text, const astr_t &pattern)
 {
-    return text.find(pattern) != string::npos;
+    return text.find(pattern) != astr_t::npos;
 }
 
 } // namespace
@@ -61,7 +61,7 @@ bool ScriptJournal_IgnoreCase()
 }
 
 CJournalMessage *ScriptJournal_Find(
-    const string &pattern,
+    const astr_t &pattern,
     uint serial,
     ushort color,
     uchar type,
@@ -75,9 +75,9 @@ CJournalMessage *ScriptJournal_Find(
     }
 
     // pattern split (was pattern.split("|") + the findID index per alternative)
-    vector<string> patterns;
+    vector<astr_t> patterns;
     {
-        string current;
+        astr_t current;
         for (char c : pattern)
         {
             if (c == '|')
@@ -94,13 +94,13 @@ CJournalMessage *ScriptJournal_Find(
     }
 
     const bool ignoreCase = s_IgnoreCase;
-    string lowered;
+    astr_t lowered;
     if (ignoreCase)
     {
         lowered = to_lower_copy(pattern);
         // re-split lowered
         patterns.clear();
-        string current;
+        astr_t current;
         for (char c : lowered)
         {
             if (c == '|')
@@ -141,14 +141,14 @@ CJournalMessage *ScriptJournal_Find(
             continue;
         }
 
-        string text = message.Text;
+        astr_t text = message.Text;
         if (ignoreCase)
         {
             text = to_lower_copy(text);
         }
 
         int findID = 0;
-        for (const string &p : patterns)
+        for (const astr_t &p : patterns)
         {
             if (contains(text, p))
             {

@@ -39,10 +39,10 @@ enum XA_SCRIPT_STATE
 class CScriptHandle
 {
 public:
-    CScriptHandle(const string &functionName, const vector<string> &args, const string &scriptBody);
+    CScriptHandle(const astr_t &functionName, const vector<astr_t> &args, const astr_t &scriptBody);
     ~CScriptHandle();
 
-    const string &Name() const { return m_FunctionName; }
+    const astr_t &Name() const { return m_FunctionName; }
     XA_SCRIPT_STATE State() const { return (XA_SCRIPT_STATE)m_State.load(); }
 
     bool GetPaused() const { return m_Paused; }
@@ -57,9 +57,9 @@ public:
 private:
     void RunEngine(); // the CScriptHandle::RunEngine port
 
-    string m_FunctionName;
-    vector<string> m_Args;
-    string m_Text;
+    astr_t m_FunctionName;
+    vector<astr_t> m_Args;
+    astr_t m_Text;
 
     std::atomic<CScriptEngine *> m_Engine{ nullptr }; // Terminate reads it cross-thread
     std::atomic<int> m_TerminatePending{ 0 }; // survive a pre-engine terminate
@@ -75,13 +75,13 @@ class CScriptManager
 public:
     // Runs `functionName` from `scriptBody` as its own thread. Returns the
     // handle or nullptr when the concurrent cap (16) is hit.
-    CScriptHandle *Run(const string &functionName, const string &scriptBody,
-        const vector<string> &args = vector<string>());
+    CScriptHandle *Run(const astr_t &functionName, const astr_t &scriptBody,
+        const vector<astr_t> &args = vector<astr_t>());
 
     void Tick(); // drops finished handles (the slot_RemoveRunningScriptItem flow)
     void StopAll(uint joinTimeoutMs = 2000);
 
-    bool Running(const string &functionName) const;
+    bool Running(const astr_t &functionName) const;
     const vector<CScriptHandle *> &Handles() const { return m_Handles; }
 
 private:
@@ -92,25 +92,24 @@ constexpr int SCRIPT_MAX_CONCURRENT = 16;
 
 // The manager singleton (the tab + the API terminate/exec hooks use these).
 CScriptManager *ScriptManager_Get();
-void ScriptManager_Terminate(const string &functionName, const string &functionsSave);
-bool ScriptManager_Running(const string &functionName);
-void ScriptManager_Exec(const string &functionName, bool once, const vector<string> &args);
+void ScriptManager_Terminate(const astr_t &functionName, const astr_t &functionsSave);
+bool ScriptManager_Running(const astr_t &functionName);
+void ScriptManager_Exec(const astr_t &functionName, bool once, const vector<astr_t> &args);
 // The tab's LoadScript(path) / editor reload path. MAIN THREAD ONLY: script
 // workers reach it marshaled through the queue (SC_EDITOR_LOAD) so the shared
 // buffer write never races a frame.
-void ScriptManager_LoadScriptFile(const string &path);
+void ScriptManager_LoadScriptFile(const astr_t &path);
 // The editor text bridge (the tab and the editor window share one buffer,
 // like g_ScriptEditorDialog did).
-string &ScriptEditor_Text();
-string ScriptEditor_Path();
-void ScriptEditor_SetPath(const string &path);
+astr_t &ScriptEditor_Text();
+astr_t ScriptEditor_Path();
+void ScriptEditor_SetPath(const astr_t &path);
 // Replaces the shared buffer on the caller's behalf AND bumps the buffer
 // generation (the editor re-splits on the change: the stale-buffer fix).
-void ScriptEditor_SetText(const string &text);
+void ScriptEditor_SetText(const astr_t &text);
 // The buffer-generation token: every external buffer replace bumps it; the
 // editor widget compares and forces a re-split when it moved.
 uint ScriptEditor_Generation();
-vector<string> ScriptEditor_FunctionList(); // the `function NAME(` parse
+vector<astr_t> ScriptEditor_FunctionList(); // the `function NAME(` parse
 
 } // namespace xuoassist
-

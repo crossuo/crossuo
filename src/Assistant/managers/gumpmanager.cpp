@@ -14,18 +14,17 @@
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "../macros/macroexecutor.h"
 #include "../core/world.h"
-#include "../core/textparser.h"
 #include <stdlib.h>
 #include <common/logging/logging.h>
 #include <common/str.h>
 
 namespace xuoassist {
 
-static vector<string> split_skip_empty(const string &text, char separator)
+static vector<astr_t> split_skip_empty(const astr_t &text, char separator)
 {
     // Was str.split on spaces with empty parts skipped.
-    vector<string> out;
-    string current;
+    vector<astr_t> out;
+    astr_t current;
     for (char c : text)
     {
         if (c == separator)
@@ -48,7 +47,7 @@ static vector<string> split_skip_empty(const string &text, char separator)
     return out;
 }
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -57,9 +56,9 @@ static string to_lower_copy(string text)
     return text;
 }
 
-static int to_int(const string &text) { return atoi(text.c_str()); }
+static int to_int(const astr_t &text) { return atoi(text.c_str()); }
 
-static uint to_uint(const string &text) { return (uint)strtoul(text.c_str(), nullptr, 10); }
+static uint to_uint(const astr_t &text) { return (uint)strtoul(text.c_str(), nullptr, 10); }
 
 CGumpManager g_GumpManager;
 
@@ -343,7 +342,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
         {
             if (item.Type == GIT_BUTTON || item.Type == GIT_BUTTONTILEART)
             {
-                vector<string> commands = split_skip_empty(item.Command, ' ');
+                vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 8 && (to_int(commands[5]) != 0))
                 {
@@ -375,7 +374,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
         {
             if (item.Type == GIT_PAGE)
             {
-                vector<string> commands = split_skip_empty(item.Command, ' ');
+                vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 2)
                 {
@@ -384,7 +383,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
             }
             else if (item.Type == GIT_GROUP)
             {
-                vector<string> commands = split_skip_empty(item.Command, ' ');
+                vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 2)
                 {
@@ -399,7 +398,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                 (item.Type == GIT_CHECKBOX || item.Type == GIT_RADIO) &&
                 !hook.m_Checks.empty())
             {
-                vector<string> commands = split_skip_empty(item.Command, ' ');
+                vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 7)
                 {
@@ -418,7 +417,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                                 {
                                     if (tempItem.Type == GIT_RADIO)
                                     {
-                                        vector<string> tempCommands =
+                                        vector<astr_t> tempCommands =
                                             split_skip_empty(tempItem.Command, ' ');
 
                                         if (tempCommands.size() >= 7 &&
@@ -434,7 +433,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                                     }
                                     else if (tempItem.Type == GIT_PAGE)
                                     {
-                                        vector<string> tempCommands =
+                                        vector<astr_t> tempCommands =
                                             split_skip_empty(tempItem.Command, ' ');
 
                                         if (tempCommands.size() >= 2)
@@ -444,7 +443,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                                     }
                                     else if (tempItem.Type == GIT_GROUP)
                                     {
-                                        vector<string> tempCommands =
+                                        vector<astr_t> tempCommands =
                                             split_skip_empty(tempItem.Command, ' ');
 
                                         if (tempCommands.size() >= 2)
@@ -472,7 +471,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
                 (item.Type == GIT_TEXTENTRY || item.Type == GIT_TEXTENTRYLIMITED) &&
                 !hook.m_Entries.empty())
             {
-                vector<string> commands = split_skip_empty(item.Command, ' ');
+                vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 8)
                 {
@@ -493,7 +492,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
 
                             if (textIndex < (uint)gump->m_Text.size())
                             {
-                                string text = entryHook.Text;
+                                astr_t text = entryHook.Text;
 
                                 if ((maxLength != 0) && text.length() > (size_t)maxLength)
                                 {
@@ -519,7 +518,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
     // entries (commands[7] = text line index) contribute commands[6] as the
     // entry id and the referenced line as the text.
     vector<uint32_t> switches;
-    vector<std::pair<uint16_t, string>> textLines;
+    vector<std::pair<uint16_t, astr_t>> textLines;
 
     for (CGumpItem &item : gump->m_Items)
     {
@@ -528,7 +527,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
             case GIT_CHECKBOX:
             case GIT_RADIO:
             {
-                vector<string> commands = split_skip_empty(item.Command, ' ');
+                vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 7 && (atoi(commands[5].c_str()) != 0))
                 {
@@ -540,7 +539,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
             case GIT_TEXTENTRY:
             case GIT_TEXTENTRYLIMITED:
             {
-                vector<string> commands = split_skip_empty(item.Command, ' ');
+                vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
                 if (commands.size() >= 8)
                 {
@@ -572,7 +571,7 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
     return true;
 }
 
-void CGumpManager::InfoGump(const string &gumpIndex)
+void CGumpManager::InfoGump(const astr_t &gumpIndex)
 {
     int index = -1;
 
@@ -600,7 +599,7 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow -
     // restored by the 4b-2 text window (scriptgump.cpp); the same
     // information goes through the journal-message seam as well.
-    string text = "";
+    astr_t text = "";
 
     char buf[128] = { 0 };
     snprintf(
@@ -615,7 +614,7 @@ void CGumpManager::InfoGump(const string &gumpIndex)
 
     if (gump->Replayed)
     {
-        text += "\nGump replayed with id: " + std::to_string(gump->ReplyID) + "\n";
+        text += "\nGump replayed with id: " + str_from(gump->ReplyID) + "\n";
     }
 
     text += "\nGump buttons:";
@@ -623,7 +622,7 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     {
         if (item.Type == GIT_BUTTON || item.Type == GIT_BUTTONTILEART)
         {
-            vector<string> commands = split_skip_empty(item.Command, ' ');
+            vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
             if (commands.size() >= 8)
             {
@@ -637,7 +636,7 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     {
         if (item.Type == GIT_CHECKBOX || item.Type == GIT_RADIO)
         {
-            vector<string> commands = split_skip_empty(item.Command, ' ');
+            vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
             if (commands.size() >= 7)
             {
@@ -651,7 +650,7 @@ void CGumpManager::InfoGump(const string &gumpIndex)
     {
         if (item.Type == GIT_TEXTENTRY || item.Type == GIT_TEXTENTRYLIMITED)
         {
-            vector<string> commands = split_skip_empty(item.Command, ' ');
+            vector<astr_t> commands = split_skip_empty(item.Command, ' ');
 
             if (commands.size() >= 8)
             {
@@ -665,9 +664,9 @@ void CGumpManager::InfoGump(const string &gumpIndex)
 
     index = 0;
     text += "\n\nGump text:";
-    for (const string &str : gump->m_Text)
+    for (const astr_t &str : gump->m_Text)
     {
-        text += "\n[" + std::to_string(index) + "]\t" + str;
+        text += "\n[" + str_from(index) + "]\t" + str;
         index++;
     }
 

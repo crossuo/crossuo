@@ -26,9 +26,9 @@ int s_X = 40;
 int s_Y = 40;
 int s_Width = 400;
 int s_Height = 300;
-vector<string> s_Lines;
+vector<astr_t> s_Lines;
 
-void add_line(const string &text)
+void add_line(const astr_t &text)
 {
     s_Lines.push_back(text);
     if (s_Lines.size() > TEXT_WINDOW_LINE_CAP)
@@ -40,7 +40,7 @@ void add_line(const string &text)
 } // namespace
 
 void ScriptTextWindow_Command(
-    int op, const string &text, int intA, int intB, const string &path)
+    int op, const astr_t &text, int intA, int intB, const astr_t &path)
 {
     switch (op)
     {
@@ -75,10 +75,10 @@ void ScriptTextWindow_Command(
     (void)intB;
 }
 
-void ScriptTextWindow_SaveToFile(const string &path)
+void ScriptTextWindow_SaveToFile(const astr_t &path)
 {
     // the g_TextDialog->SaveToFile port: raw lines, one per line
-    const string clean = ScriptFile_Sanitize(path, "textwindow save");
+    const astr_t clean = ScriptFile_Sanitize(path, "textwindow save");
     if (clean.empty())
     {
         return;
@@ -86,9 +86,9 @@ void ScriptTextWindow_SaveToFile(const string &path)
 
     // one buffer, one atomic temp+rename write (crash-safe like the config
     // saves; plan §8.1)
-    string out;
+    astr_t out;
     out.reserve(s_Lines.size() * 32);
-    for (const string &line : s_Lines)
+    for (const astr_t &line : s_Lines)
     {
         out += line;
         out += '\n';
@@ -100,7 +100,7 @@ void ScriptTextWindow_SaveToFile(const string &path)
     }
 }
 
-const vector<string> &ScriptTextWindow_Lines()
+const vector<astr_t> &ScriptTextWindow_Lines()
 {
     return s_Lines;
 }

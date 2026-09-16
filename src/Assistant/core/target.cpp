@@ -15,15 +15,16 @@
 #include "Target.h" // ::g_Target (the client target cursor: RestoreCursor)
 #include "../config/assistantconfig.h"
 #include "../macros/macroexecutor.h"
+#include "../core/textconv.h"
 #include "world.h"
-#include "../core/textparser.h"
+#include <xuocore/text_parser.h> // ::TextFileParser (the client token parser)
 #include <xuocore/mulstruct.h>  // MAP_BLOCK / STATICS_BLOCK
 #include <xuocore/uodata.h>    // g_Data.m_Static (the client's tiledata)
 #include "Managers/MapManager.h" // ::g_MapManager (map/statics block access)
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -61,14 +62,14 @@ struct TARGET_TILE_INFO
 
 // CFileManager::TileNameToFlags: "|"-separated tokens;
 // the category words OR into the flags, anything else parses as a graphic.
-void TargetTileNameToFlags(const string &tileName, ushort &graphic, ushort &flags)
+void TargetTileNameToFlags(const astr_t &tileName, ushort &graphic, ushort &flags)
 {
     flags = TNF_BY_GRAPHIC;
 
-    CTextParser parser(tileName, "|", "", "");
-    vector<string> list = parser.ReadTokens();
+    TextFileParser parser({}, "|", "", "");
+    vector<astr_t> list = parser.GetTokens(tileName);
 
-    for (const string &str : list)
+    for (const astr_t &str : list)
     {
         if (str == "mine")
         {
@@ -104,7 +105,7 @@ void TargetTileNameToFlags(const string &tileName, ushort &graphic, ushort &flag
 // files that were never part of the ported config); those categories resolve
 // like the original's empty-list path.
 // DEVIATION: "tree"/"water"/"mine" hooks cannot match by category.
-vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const string &tileName)
+vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileName)
 {
     vector<TARGET_TILE_INFO> result;
 
@@ -185,7 +186,7 @@ CTargetHook::CTargetHook(const uint &serial)
     Serial = serial;
 }
 
-CTargetHook::CTargetHook(const string &tile, const int &x, const int &y, const int &z, const bool &relative)
+CTargetHook::CTargetHook(const astr_t &tile, const int &x, const int &y, const int &z, const bool &relative)
     : Tile(tile)
 {
     TargetOnObject = false;
@@ -197,20 +198,20 @@ CTargetHook::CTargetHook(const string &tile, const int &x, const int &y, const i
 
 CTarget::CTarget() {}
 
-void CTarget::SetObjectsHook(const vector<string> &objects)
+void CTarget::SetObjectsHook(const vector<astr_t> &objects)
 {
     m_WaitTargets.clear();
 
     if (!objects.empty())
     {
-        for (const string &i : objects)
+        for (const astr_t &i : objects)
         {
             m_WaitTargets.push_back(CTargetHook(CAssistant::TextToSerial(i)));
         }
     }
 }
 
-void CTarget::SetTileHook(const string &tile, const int &x, const int &y, const int &z, const bool &relative)
+void CTarget::SetTileHook(const astr_t &tile, const int &x, const int &y, const int &z, const bool &relative)
 {
     m_WaitTargets.clear();
 
@@ -234,7 +235,7 @@ bool CTarget::CheckHook()
         }
         else
         {
-            string tileName = to_lower_copy(hook.Tile);
+            astr_t tileName = to_lower_copy(hook.Tile);
 
             if (tileName == "lasttile")
             {

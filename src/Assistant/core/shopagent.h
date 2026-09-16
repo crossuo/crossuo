@@ -48,7 +48,7 @@ class CShopAgent
     int m_State{ SLWS_NORMAL };
     uint m_WaitTimeout{ 0 }; // absolute g_Ticks stamp
     int m_WaitShopDelay{ 0 };
-    string m_WaitShopListName;
+    astr_t m_WaitShopListName;
 
     // vendor snapshot (was ShopListEditorForm state)
     uint m_VendorSerial{ 0 };
@@ -62,7 +62,7 @@ class CShopAgent
 
     // the "Vendor name:" field (le_VendorName; UI-set, not serialized - the
     // original app kept it in the line edit only, ShopList.xml has no attribute)
-    string m_VendorName{ "" };
+    astr_t m_VendorName{ "" };
 
     // the queued request (was ShopProgressForm): countdown then send
     bool m_ProgressActive{ false };
@@ -75,11 +75,11 @@ class CShopAgent
 
 public:
     // the le_VendorName field (not serialized, parity with the original)
-    void SetVendorName(const string &name) { m_VendorName = name; }
-    const string &GetVendorName() const { return m_VendorName; }
+    void SetVendorName(const astr_t &name) { m_VendorName = name; }
+    const astr_t &GetVendorName() const { return m_VendorName; }
 
     // was TabAgentsShop::SendShopRequest (the script shop API uses it too)
-    void SendShopRequest(int state, const string &listName, const string &text);
+    void SendShopRequest(int state, const astr_t &listName, const astr_t &text);
 
 private:
     bool ProcessShopList();
@@ -94,8 +94,8 @@ public:
     bool IsActiveShopping();
 
     // --- the Buy/Sell buttons (SendShopRequest + the speech text) -----------
-    void Buy(const string &listName);
-    void Sell(const string &listName);
+    void Buy(const astr_t &listName);
+    void Sell(const astr_t &listName);
 
     // --- agent-side UI switches (cb_AutoBuy/SellSelectedList) ----------------
     void SetAutoBuy(bool state) { m_AutoBuy = state; }
@@ -135,4 +135,3 @@ public:
 extern CShopAgent g_ShopAgent;
 
 } // namespace xuoassist
-

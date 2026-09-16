@@ -23,7 +23,7 @@ public:
 
     // trade-round bookkeeping over the client handler's parsed values
     // (the client owns the 0x6F parse; no consume)
-    void OnTradeAction(int action, uint serial, uint id1, uint id2, const string &name);
+    void OnTradeAction(int action, uint serial, uint id1, uint id2, const astr_t &name);
 
     // the client's 0x6F send sites report the user's trade answer here (was
     // the 0x6F SecureTradingS send tap in the assistant's packetmanager);
@@ -34,10 +34,9 @@ public:
 
     int Count();
 
-    CTradeWindow *GetTrade(const string &serial);
+    CTradeWindow *GetTrade(const astr_t &serial);
 };
 
 extern CTradeManager g_TradeManager;
 
 } // namespace xuoassist
-

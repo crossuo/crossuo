@@ -186,7 +186,7 @@ void option_changed(int index, bool state)
 
 // A color row: use-checkbox + hex line edit + hue preview swatch + "..."
 // (the original "..." sent a dye packet; the 0x95 response updates the config).
-void font_color_row(const char *label, bool *use, string *color, uint32_t dyeSerial)
+void font_color_row(const char *label, bool *use, astr_t *color, uint32_t dyeSerial)
 {
     // the fixed widget ids (##use/##hex/...) are scoped per row: this is drawn
     // twice ("Font color" / "Characters font color") and they would collide
@@ -285,9 +285,9 @@ void draw_main_page()
     ImGui::Separator();
 
     // Profiles: combo + Save (was the editable cb_ProfileList + pb_SaveProfile)
-    const vector<string> &profiles = g_AssistantConfig.GetProfiles();
+    const vector<astr_t> &profiles = g_AssistantConfig.GetProfiles();
     static int currentProfile = -1;
-    const string currentName = g_AssistantConfig.ProfileName;
+    const astr_t currentName = g_AssistantConfig.ProfileName;
     if (currentProfile < 0 || (currentProfile < (int)profiles.size() && profiles[currentProfile] != currentName))
     {
         currentProfile = -1;

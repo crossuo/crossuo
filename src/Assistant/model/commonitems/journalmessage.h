@@ -16,15 +16,14 @@ public:
     uint Serial = 0;
     uint Timer = 0;
     ushort Color = 0;
-    string Text = "";
+    astr_t Text = "";
     uchar Flags = 0;
     int FindTextID = 0;
 
     CJournalMessage();
     CJournalMessage(const CJournalMessage &msg);
-    CJournalMessage(const uint &serial, const ushort &color, const string &text);
+    CJournalMessage(const uint &serial, const ushort &color, const astr_t &text);
     virtual ~CJournalMessage();
 };
 
 } // namespace xuoassist
-

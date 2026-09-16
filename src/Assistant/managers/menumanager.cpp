@@ -20,7 +20,7 @@
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -45,12 +45,12 @@ CMenu *CMenuManager::GetLastMenu()
     return m_LastMenu;
 }
 
-CMenu *CMenuManager::GetMenu(const string &name)
+CMenu *CMenuManager::GetMenu(const astr_t &name)
 {
     for (size_t i = 0; i < m_Items.size(); i++)
     {
         // indexOf(name, 0, CaseInsensitive) == 0 -> starts-with, case-insensitive
-        const string itemNameLower = to_lower_copy(m_Items[i]->Name);
+        const astr_t itemNameLower = to_lower_copy(m_Items[i]->Name);
         if (itemNameLower.size() >= name.size() &&
             itemNameLower.compare(0, name.size(), to_lower_copy(name)) == 0)
         {
@@ -94,7 +94,7 @@ void CMenuManager::ClearMenus()
     m_LastMenu = nullptr;
 }
 
-void CMenuManager::SetHook(const string &name, const string &itemName)
+void CMenuManager::SetHook(const astr_t &name, const astr_t &itemName)
 {
     m_Hooks.push_back(CMenuHook(name, itemName));
 }
@@ -105,7 +105,7 @@ void CMenuManager::ClearHooks()
 }
 
 bool CMenuManager::OnMenuReceived(
-    uint serial, ushort id, const string &name, bool grayMenu, const vector<CMenuItem> &items)
+    uint serial, ushort id, const astr_t &name, bool grayMenu, const vector<CMenuItem> &items)
 {
     RemoveLastMenu();
 
@@ -190,7 +190,7 @@ void CMenuManager::OnMenuChoiceSent(uint serial, ushort id, ushort index)
 }
 
 bool CMenuManager::SendChoiceIfMenuExists(
-    const string &name, const string &itemName, const bool &sendPacket)
+    const astr_t &name, const astr_t &itemName, const bool &sendPacket)
 {
     for (size_t i = 0; i < m_Items.size(); i++)
     {
@@ -224,7 +224,7 @@ bool CMenuManager::SendChoiceIfMenuExists(
     return false;
 }
 
-bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const bool &sendPacket)
+bool CMenuManager::SendMenuChoice(CMenu *menu, const astr_t &itemName, const bool &sendPacket)
 {
     if ((itemName.length() == 0) || to_lower_copy(itemName) == "cancel")
     {
@@ -318,7 +318,7 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
     return false;
 }
 
-void CMenuManager::InfoMenu(const string &menuIndex)
+void CMenuManager::InfoMenu(const astr_t &menuIndex)
 {
     int index = -1;
 
@@ -346,12 +346,12 @@ void CMenuManager::InfoMenu(const string &menuIndex)
     // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow -
     // restored by the 4b-2 text window (scriptgump.cpp); the parse below
     // matches the original text pieces.
-    string text = menu->GrayMenu ? "Gray menu information:\nName: " : "Menu information:\nName: ";
+    astr_t text = menu->GrayMenu ? "Gray menu information:\nName: " : "Menu information:\nName: ";
     text += menu->Name;
 
     if (menu->Replayed)
     {
-        text += "\nMenu replayed with id: " + std::to_string(menu->ReplyID);
+        text += "\nMenu replayed with id: " + str_from(menu->ReplyID);
     }
 
     for (const CMenuItem &item : menu->m_Items)

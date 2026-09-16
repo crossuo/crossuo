@@ -10,7 +10,7 @@
 
 namespace xuoassist {
 
-static string to_lower_copy(string text)
+static astr_t to_lower_copy(astr_t text)
 {
     for (char &c : text)
     {
@@ -25,13 +25,13 @@ CSpellManager::CSpellManager() {}
 
 CSpellManager::~CSpellManager() {}
 
-void CSpellManager::Insert(const string &name, const int &index)
+void CSpellManager::Insert(const astr_t &name, const int &index)
 {
     m_Spells.insert(std::make_pair(name, index));
-    m_Spells.insert(std::make_pair(std::to_string(index), index));
+    m_Spells.insert(std::make_pair(str_from(index), index));
 }
 
-int CSpellManager::Find(string name)
+int CSpellManager::Find(astr_t name)
 {
     if (name == "last" || name == "lastspell")
     {
@@ -48,7 +48,7 @@ int CSpellManager::Find(string name)
     return -1;
 }
 
-void CSpellManager::Cast(const string &name)
+void CSpellManager::Cast(const astr_t &name)
 {
     int index = Find(to_lower_copy(name));
 
@@ -72,7 +72,7 @@ void CSpellManager::CastIndex(int index)
     g_Game.CastSpell(index);
 }
 
-void CSpellManager::TargetCast(const string &name, const uint &serial)
+void CSpellManager::TargetCast(const astr_t &name, const uint &serial)
 {
     int index = Find(to_lower_copy(name));
 

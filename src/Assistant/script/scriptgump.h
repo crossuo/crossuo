@@ -40,9 +40,9 @@ enum XA_TEXT_WINDOW_OP
 
 // Main-thread ops (run inside the queue drain).
 void ScriptTextWindow_Command(
-    int op, const string &text, int intA, int intB, const string &path);
+    int op, const astr_t &text, int intA, int intB, const astr_t &path);
 // The TW_SAVE body (kept public for tests).
-void ScriptTextWindow_SaveToFile(const string &path);
+void ScriptTextWindow_SaveToFile(const astr_t &path);
 
 // ImGui rendering of the window (defined in ui/assistantui.cpp next to the
 // other ImGui code; AssistantUI_Draw calls it). No-op while the assistant
@@ -50,10 +50,9 @@ void ScriptTextWindow_SaveToFile(const string &path);
 void ScriptTextWindow_Draw();
 
 // The current line snapshot for tests (main thread).
-const vector<string> &ScriptTextWindow_Lines();
+const vector<astr_t> &ScriptTextWindow_Lines();
 bool ScriptTextWindow_Opened();
 // The window geometry for the renderer (main thread; may be null).
 void ScriptTextWindow_Rect(int *x, int *y, int *width, int *height);
 
 } // namespace xuoassist
-

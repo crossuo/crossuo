@@ -127,7 +127,7 @@ int ListButtons(const char *idSeed);
 // hexadecimal filter, so it is stripped into the edit buffer on edit start and
 // re-prefixed on commit. Returns true when the value was committed.
 bool HexEditField(const char *id, char *value, size_t valueSize, float width = 0.0f);
-bool HexEditField(const char *id, string *value, float width = 0.0f);
+bool HexEditField(const char *id, astr_t *value, float width = 0.0f);
 
 // --- generic list core (implemented in widgets.cpp) -------------------------
 struct XA_LIST_RENAME
@@ -140,7 +140,7 @@ struct XA_LIST_RENAME
 
 // Frame-static scratch buffers/state shared by all list widgets.
 char *ListRowLabel();                          // reused every frame
-bool ListNamesEqual(const string &a, const char *b); // case-insensitive
+bool ListNamesEqual(const astr_t &a, const char *b); // case-insensitive
 XA_LIST_RENAME *ListRenameBegin(ImGuiID list, int row, const char *name);
 XA_LIST_RENAME *ListRenameActive();
 void ListRenameEnd();
@@ -274,4 +274,3 @@ bool IgnoreContentList(const char *id, vector<CIgnoreItem> &items, int *selected
 void StatusBar_Draw(uint32_t sessionStartTicks);
 
 } // namespace xuoassist
-

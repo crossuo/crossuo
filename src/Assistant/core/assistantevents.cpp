@@ -26,7 +26,7 @@ CAssistantEvents::~CAssistantEvents()
 
 CAssistantEvents *g_AssistantEvents = &s_DefaultAssistantEvents;
 
-void CAssistantEvents::OnClientPrint(const string &text, ushort color)
+void CAssistantEvents::OnClientPrint(const astr_t &text, ushort color)
 {
     ::g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
@@ -40,7 +40,7 @@ void CAssistantEvents::OnMapData(uint16_t x, uint16_t y)
     x += g_LastTMapX;
     y += g_LastTMapY;
 
-    string text = "";
+    astr_t text = "";
     {
         char buf[64] = { 0 };
         snprintf(buf, sizeof(buf), "g_Map opened to: %i:%i", x, y);
@@ -72,7 +72,7 @@ namespace {
 // recv-tap handler; entries the original left unnamed keep the hex
 // placeholder.
 const int nameTableCount = 126;
-static const string nameTable[nameTableCount] = { "dismount",
+static const astr_t nameTable[nameTableCount] = { "dismount",
                                                    "disarm",
                                                    "0x0000",
                                                    "0x0000",
@@ -202,9 +202,9 @@ static const string nameTable[nameTableCount] = { "dismount",
 
 } // namespace
 
-const string &AssistantBuffName(ushort iconIndex)
+const astr_t &AssistantBuffName(ushort iconIndex)
 {
-    static const string unnamed;
+    static const astr_t unnamed;
     if (iconIndex >= nameTableCount)
     {
         return unnamed;

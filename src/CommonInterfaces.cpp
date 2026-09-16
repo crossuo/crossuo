@@ -21,7 +21,7 @@ IGameString::~IGameString()
     m_DataW = nullptr;
 }
 
-IGameString &IGameString::operator()(const std::string &str)
+IGameString &IGameString::operator()(const astr_t &str)
 {
     if (m_DataA)
         delete m_DataA;
@@ -38,7 +38,7 @@ IGameString &IGameString::operator()(const std::string &str)
     return *this;
 }
 
-IGameString &IGameString::operator()(const std::wstring &str)
+IGameString &IGameString::operator()(const wstr_t &str)
 {
     if (m_DataW)
         delete m_DataW;

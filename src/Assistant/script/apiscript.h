@@ -15,10 +15,10 @@ class CScriptEngine;
 
 // Installs the global objects + sentinel globals on a fresh context
 // (the old global-object registration block).
-void Script_RegisterAPI(JSContext *ctx, const string &scriptName);
+void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName);
 
 // Exception -> "lineNumber" + message strings (the old
 // script-value lineNumber/toString pair).
-void Script_FormatException(JSContext *ctx, string &line, string &message);
+void Script_FormatException(JSContext *ctx, astr_t &line, astr_t &message);
 
 } // namespace xuoassist

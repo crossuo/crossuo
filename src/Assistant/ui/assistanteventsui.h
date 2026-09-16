@@ -21,7 +21,7 @@ struct XA_FROM_TARGET_RESULT
     uint Serial{ 0 };
     ushort Graphic{ 0 };
     ushort Color{ 0 };
-    string Name;
+    astr_t Name;
     uint Generation{ 0 }; // bumped per reply (poll for change)
 };
 
@@ -35,7 +35,7 @@ class CAssistantUIEvents : public CAssistantEvents
 public:
     struct Line
     {
-        string Text;
+        astr_t Text;
         ushort Color{ 0 };
         uchar Flags{ 0 };
     };
@@ -45,10 +45,10 @@ public:
 
     // --- Phase 3 consumers -------------------------------------------------
     // The hotkey action-list feeds (the 0xFC list handlers).
-    virtual void OnSpellList(const vector<vector<string>> &books) override;
-    virtual void OnSkillsList(const vector<string> &hotkeyActions) override;
+    virtual void OnSpellList(const vector<vector<astr_t>> &books) override;
+    virtual void OnSkillsList(const vector<astr_t> &hotkeyActions) override;
     // The script buff mirror (BuffExists reads it through the queue).
-    virtual void OnBuffAdd(ushort graphic, uint timer, const string &name) override;
+    virtual void OnBuffAdd(ushort graphic, uint timer, const astr_t &name) override;
     virtual void OnBuffRemove(ushort graphic) override;
     // The macro recording taps.
     virtual void OnRecordTargetObject(uint serial, ushort graphic, ushort color) override;
@@ -59,7 +59,7 @@ public:
     virtual void OnClientCloseRequest() override;
     // The from-target replies (HandleTarget* forwards).
     virtual void OnFromTarget(
-        int kind, uint serial, ushort graphic, ushort color, const string &name) override;
+        int kind, uint serial, ushort graphic, ushort color, const astr_t &name) override;
 
     // --- Phase 4a consumers -------------------------------------------------
     // The display caption redraw requests (fired from the client's send and
@@ -104,4 +104,3 @@ CAssistantUIEvents *AssistantUIEvents_Get();
 void JournalPane_Draw(float height);
 
 } // namespace xuoassist
-

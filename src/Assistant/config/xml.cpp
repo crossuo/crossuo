@@ -19,7 +19,6 @@
 
 namespace xuoassist {
 
-using std::string;
 
 static const int XML_AUTOFORMAT_INDENT = 4; // the original XML writer's default
 
@@ -29,9 +28,9 @@ static const int XML_MAX_PARSE_DEPTH = 64;
 
 // --- helpers ---------------------------------------------------------------
 
-static string xml_escape_attribute(const string &value)
+static astr_t xml_escape_attribute(const astr_t &value)
 {
-    string result;
+    astr_t result;
     result.reserve(value.size());
     char buf[16];
     for (char c : value)
@@ -75,9 +74,9 @@ static string xml_escape_attribute(const string &value)
     return result;
 }
 
-static string xml_escape_text(const string &value)
+static astr_t xml_escape_text(const astr_t &value)
 {
-    string result;
+    astr_t result;
     result.reserve(value.size());
     char buf[16];
     for (char c : value)
@@ -109,13 +108,13 @@ static string xml_escape_text(const string &value)
     return result;
 }
 
-static string xml_unescape(const string &value)
+static astr_t xml_unescape(const astr_t &value)
 {
-    if (value.find('&') == string::npos)
+    if (value.find('&') == astr_t::npos)
     {
         return value;
     }
-    string result;
+    astr_t result;
     result.reserve(value.size());
     for (size_t i = 0; i < value.size();)
     {
@@ -125,12 +124,12 @@ static string xml_unescape(const string &value)
             continue;
         }
         size_t semi = value.find(';', i);
-        if (semi == string::npos || (semi - i) > 10)
+        if (semi == astr_t::npos || (semi - i) > 10)
         {
             result += value[i++];
             continue;
         }
-        const string entity = value.substr(i + 1, semi - i - 1);
+        const astr_t entity = value.substr(i + 1, semi - i - 1);
         if (entity == "amp")
         {
             result += '&';
@@ -177,7 +176,7 @@ static string xml_unescape(const string &value)
 
 // --- XMLElement ------------------------------------------------------------
 
-bool XMLElement::HasAttribute(const string &name) const
+bool XMLElement::HasAttribute(const astr_t &name) const
 {
     for (const auto &attr : Attributes)
     {
@@ -189,7 +188,7 @@ bool XMLElement::HasAttribute(const string &name) const
     return false;
 }
 
-string XMLElement::Attribute(const string &name, const string &defaultValue) const
+astr_t XMLElement::Attribute(const astr_t &name, const astr_t &defaultValue) const
 {
     for (const auto &attr : Attributes)
     {
@@ -201,7 +200,7 @@ string XMLElement::Attribute(const string &name, const string &defaultValue) con
     return defaultValue;
 }
 
-int XMLElement::AttributeInt(const string &name, int defaultValue) const
+int XMLElement::AttributeInt(const astr_t &name, int defaultValue) const
 {
     for (const auto &attr : Attributes)
     {
@@ -213,7 +212,7 @@ int XMLElement::AttributeInt(const string &name, int defaultValue) const
     return defaultValue;
 }
 
-void XMLElement::SetAttribute(const string &name, const string &value)
+void XMLElement::SetAttribute(const astr_t &name, const astr_t &value)
 {
     for (auto &attr : Attributes)
     {
@@ -226,7 +225,7 @@ void XMLElement::SetAttribute(const string &name, const string &value)
     Attributes.push_back(std::make_pair(name, value));
 }
 
-XMLElement *XMLElement::FindChild(const string &name)
+XMLElement *XMLElement::FindChild(const astr_t &name)
 {
     for (auto &child : Children)
     {
@@ -238,7 +237,7 @@ XMLElement *XMLElement::FindChild(const string &name)
     return nullptr;
 }
 
-const XMLElement *XMLElement::FindChild(const string &name) const
+const XMLElement *XMLElement::FindChild(const astr_t &name) const
 {
     for (const auto &child : Children)
     {
@@ -250,7 +249,7 @@ const XMLElement *XMLElement::FindChild(const string &name) const
     return nullptr;
 }
 
-XMLElement &XMLElement::AddChild(const string &name)
+XMLElement &XMLElement::AddChild(const astr_t &name)
 {
     Children.push_back(XMLElement(name));
     return Children.back();
@@ -265,7 +264,7 @@ namespace {
 // parse->write round-trips of files written by the original app byte identical instead of
 // re-emitting it as element text (which produced blank lines). Text with any
 // non-whitespace byte is kept as-is (never trimmed).
-bool xml_text_has_content(const string &text)
+bool xml_text_has_content(const astr_t &text)
 {
     for (char c : text)
     {
@@ -279,12 +278,12 @@ bool xml_text_has_content(const string &text)
 
 struct XMLParser
 {
-    const string &Text;
+    const astr_t &Text;
     size_t Pos{ 0 };
     int Depth{ 0 };
     bool Error{ false };
 
-    explicit XMLParser(const string &text)
+    explicit XMLParser(const astr_t &text)
         : Text(text)
     {
     }
@@ -314,19 +313,19 @@ struct XMLParser
             if (Pos + 3 < Text.size() && Text.compare(Pos, 4, "<!--") == 0)
             {
                 const size_t end = Text.find("-->", Pos + 4);
-                Pos = (end == string::npos) ? Text.size() : end + 3;
+                Pos = (end == astr_t::npos) ? Text.size() : end + 3;
                 any = true;
             }
             else if (Pos + 1 < Text.size() && Text[Pos] == '<' && Text[Pos + 1] == '?')
             {
                 const size_t end = Text.find("?>", Pos + 2);
-                Pos = (end == string::npos) ? Text.size() : end + 2;
+                Pos = (end == astr_t::npos) ? Text.size() : end + 2;
                 any = true;
             }
             else if (Pos + 1 < Text.size() && Text[Pos] == '<' && Text[Pos + 1] == '!')
             {
                 const size_t end = Text.find('>', Pos + 2);
-                Pos = (end == string::npos) ? Text.size() : end + 1;
+                Pos = (end == astr_t::npos) ? Text.size() : end + 1;
                 any = true;
             }
             else
@@ -383,7 +382,7 @@ struct XMLParser
             {
                 break;
             }
-            string attrName;
+            astr_t attrName;
             while (Pos < Text.size())
             {
                 const char c = Text[Pos];
@@ -395,7 +394,7 @@ struct XMLParser
                 attrName += c;
                 Pos++;
             }
-            string attrValue;
+            astr_t attrValue;
             if (Pos < Text.size() && Text[Pos] == '=')
             {
                 Pos++;
@@ -407,7 +406,7 @@ struct XMLParser
                 }
                 const char quote = Text[Pos++];
                 const size_t end = Text.find(quote, Pos);
-                if (end == string::npos)
+                if (end == astr_t::npos)
                 {
                     Error = true;
                     return false;
@@ -435,7 +434,7 @@ struct XMLParser
         Pos++; // '>'
 
         // content
-        string text;
+        astr_t text;
         for (;;)
         {
             if (Pos >= Text.size())
@@ -448,7 +447,7 @@ struct XMLParser
                 if (Text.compare(Pos, 9, "<![CDATA[") == 0)
                 {
                     const size_t end = Text.find("]]>", Pos + 9);
-                    if (end == string::npos)
+                    if (end == astr_t::npos)
                     {
                         Error = true;
                         return false;
@@ -463,12 +462,12 @@ struct XMLParser
                     // closed (a mismatched </b> closing <a> is a parse error,
                     // not a silent accept)
                     const size_t end = Text.find('>', Pos + 2);
-                    if (end == string::npos)
+                    if (end == astr_t::npos)
                     {
                         Error = true;
                         return false;
                     }
-                    string closeName = Text.substr(Pos + 2, end - Pos - 2);
+                    astr_t closeName = Text.substr(Pos + 2, end - Pos - 2);
                     while (!closeName.empty() &&
                            (closeName.back() == ' ' || closeName.back() == '\t' ||
                             closeName.back() == '\n' || closeName.back() == '\r'))
@@ -515,7 +514,7 @@ struct XMLParser
 
 } // namespace
 
-bool XMLDocument::Parse(const string &text)
+bool XMLDocument::Parse(const astr_t &text)
 {
     Root = XMLElement();
     XMLParser parser(text);
@@ -534,7 +533,7 @@ bool XMLDocument::Load(const fs_path &path)
     {
         return false;
     }
-    string contents;
+    astr_t contents;
     char buffer[4096];
     size_t read = 0;
     while ((read = fread(buffer, 1, sizeof(buffer), file)) != 0)
@@ -547,7 +546,7 @@ bool XMLDocument::Load(const fs_path &path)
 
 // --- writing ---------------------------------------------------------------
 
-static void xml_write_element(const XMLElement &element, int depth, bool autoFormat, string &out)
+static void xml_write_element(const XMLElement &element, int depth, bool autoFormat, astr_t &out)
 {
     if (autoFormat)
     {
@@ -597,9 +596,9 @@ static void xml_write_element(const XMLElement &element, int depth, bool autoFor
     }
 }
 
-string XMLDocument::Write(bool autoFormat) const
+astr_t XMLDocument::Write(bool autoFormat) const
 {
-    string out = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    astr_t out = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     if (!Root.Name.empty())
     {
         if (autoFormat)
@@ -618,7 +617,7 @@ string XMLDocument::Write(bool autoFormat) const
 bool AtomicFileWrite(const fs_path &path, const void *data, size_t size)
 {
     // <dir>/<name>.tmp - same directory so the rename stays on one filesystem
-    const string tmpName = string(fs_path_ascii(path)) + ".tmp";
+    const astr_t tmpName = astr_t(fs_path_ascii(path)) + ".tmp";
     const fs_path tmpPath = fs_path_from(tmpName);
 
     FILE *file = fs_open(tmpPath, FS_WRITE);
@@ -682,7 +681,7 @@ bool XMLDocument::Save(const fs_path &path, bool autoFormat) const
     // every assistant config write funnels through here (17 XML files incl.
     // Options.xml, Hotkeys.xml, Macros.xml, Map.xml) - the temp+rename path
     // keeps a crash mid-save from truncating a profile
-    const string out = Write(autoFormat);
+    const astr_t out = Write(autoFormat);
     return AtomicFileWrite(path, out.data(), out.size());
 }
 

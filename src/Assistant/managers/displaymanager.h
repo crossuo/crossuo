@@ -63,18 +63,18 @@ private:
     vector<CDisplayInfo> m_InfoCommands;
     vector<CDisplayItem> m_Commands;
     std::map<uint, CDisplayIcon *> m_Icons;
-    string m_TitleText;
+    astr_t m_TitleText;
 
     static const CDisplayItem m_DefaultItems[26];
     static const DISPLAY_KEY_ITEM m_KeysList[DKI_COUNT];
 
     CDisplayIcon *LoadDisplayIcon(ushort graphic, uint16_t color);
-    void ApplyAttributeToDisplayItem(CDisplayItem &obj, const string &name, const string &value);
-    void CompilleData(const string &text, uint textColor);
+    void ApplyAttributeToDisplayItem(CDisplayItem &obj, const astr_t &name, const astr_t &value);
+    void CompilleData(const astr_t &text, uint textColor);
     void GetValues(
         const CDisplayItem &item,
-        string &value,
-        string &maxValue,
+        astr_t &value,
+        astr_t &maxValue,
         uint textColor,
         uint backgroundColor,
         bool useNotoriety);
@@ -93,7 +93,7 @@ public:
 
     const vector<CDisplayInfo> &GetCommands() const { return m_InfoCommands; }
 
-    CDisplayItem GetDisplayItemByName(const string &name);
+    CDisplayItem GetDisplayItemByName(const astr_t &name);
 
     // Title-bar rendering (was the win32 GDI body): composes the caption text
     // into m_TitleText. The original textual path (Redraw RDM_TEXTUAL) is followed
@@ -109,9 +109,9 @@ public:
         uint backgroundColor);
 
     // The last composed caption (Redraw output; the original's local title string)
-    const string &GetTitleText() const { return m_TitleText; }
+    const astr_t &GetTitleText() const { return m_TitleText; }
 
-    void RecompilleData(const string &text, uint textColor);
+    void RecompilleData(const astr_t &text, uint textColor);
 
     bool CanRedraw(const ushort &graphic, const ushort &color);
 };
@@ -119,4 +119,3 @@ public:
 extern CDisplayManager g_DisplayManager;
 
 } // namespace xuoassist
-

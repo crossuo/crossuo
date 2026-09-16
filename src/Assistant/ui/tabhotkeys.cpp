@@ -43,8 +43,8 @@ uint s_AnimalFtGeneration = 0;
 // AnimalAndVendorControlForm::Send
 void animal_send(const char *command)
 {
-    string text = string(s_AnimalName) + " " + command;
-    wstring wide;
+    astr_t text = astr_t(s_AnimalName) + " " + command;
+    wstr_t wide;
     wide.reserve(text.size());
     for (char c : text)
     {
@@ -56,7 +56,7 @@ void animal_send(const char *command)
 // ShipControlForm::Send
 void ship_send(const char *text)
 {
-    wstring wide;
+    wstr_t wide;
     wide.reserve(strlen(text));
     for (const char *c = text; *c != '\0'; ++c)
     {
@@ -260,7 +260,7 @@ void draw_ship_control()
                 }
                 else
                 {
-                    string text = string(states[moveState]) + " " + moves[row][col].Speech;
+                    astr_t text = astr_t(states[moveState]) + " " + moves[row][col].Speech;
                     ship_send(text.c_str());
                 }
             }

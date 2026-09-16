@@ -82,7 +82,7 @@ CGameObject *FindType(
     const vector<CIgnoreItem> &ignoreList,
     uchar flags,
     bool recurseSearch,
-    vector<string> &list)
+    vector<astr_t> &list)
 {
     if (root == nullptr)
     {

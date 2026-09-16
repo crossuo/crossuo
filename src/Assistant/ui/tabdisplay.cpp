@@ -131,7 +131,7 @@ static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint key)
 
 // --- page state (the original widget fields) ---------------------------------
 char s_TitleData[2048] = { 0 };   // te_DisplayTitleData
-string s_CompiledFrom;            // the data the manager last compiled (text|color)
+astr_t s_CompiledFrom;            // the data the manager last compiled (text|color)
 bool s_TitleDirty = false;        // a redraw was requested (events / edits)
 
 int s_SelectedItem = -1;          // lw_DisplayItems
@@ -334,7 +334,7 @@ void redraw_title()
 void recompile_title()
 {
     s_CompiledFrom = g_AssistantConfig.DisplayTitleData() + "|" +
-        std::to_string(g_AssistantConfig.DisplayTextColor());
+        str_from(g_AssistantConfig.DisplayTextColor());
     g_DisplayManager.RecompilleData(
         g_AssistantConfig.DisplayTitleData(), g_AssistantConfig.DisplayTextColor());
     redraw_title();
@@ -360,7 +360,7 @@ void draw_configuration_page()
                 if (ImGui::MenuItem(items[i].Name.c_str()))
                 {
                     // was InsertDisplayAction: the item name is the tag
-                    const string tag = "{" + items[i].Name + "}";
+                    const astr_t tag = "{" + items[i].Name + "}";
                     const size_t len = strlen(s_TitleData);
                     if (len + tag.length() < sizeof(s_TitleData))
                     {
@@ -379,7 +379,7 @@ void draw_configuration_page()
                 ImGui::MenuItem(commands()[i].Name.c_str()))
             {
                 // was InsertDisplayAction: the COMMAND is the tag
-                const string tag = "{" + commands()[i].Command + "}";
+                const astr_t tag = "{" + commands()[i].Command + "}";
                 const size_t len = strlen(s_TitleData);
                 if (len + tag.length() < sizeof(s_TitleData))
                 {
@@ -840,8 +840,8 @@ void draw_group_editor_page()
 void TabDisplay_Draw()
 {
     // keep the compile state in sync with the config (profile load/switch)
-    const string key = g_AssistantConfig.DisplayTitleData() + "|" +
-        std::to_string(g_AssistantConfig.DisplayTextColor());
+    const astr_t key = g_AssistantConfig.DisplayTitleData() + "|" +
+        str_from(g_AssistantConfig.DisplayTextColor());
     if (key != s_CompiledFrom)
     {
         s_CompiledFrom = key;

@@ -28,7 +28,7 @@ CAssistantConfig g_AssistantConfig;
 static const char *CONFIG_DIR = "Config";
 static const char *GLOBAL_CONFIG_DIR = "GlobalConfig";
 
-static string to_lower(string text)
+static astr_t to_lower(astr_t text)
 {
     for (char &c : text)
     {
@@ -37,11 +37,11 @@ static string to_lower(string text)
     return text;
 }
 
-static string fs_entry_name(const fs_path &path)
+static astr_t fs_entry_name(const fs_path &path)
 {
-    const string full = fs_path_str(path);
+    const astr_t full = fs_path_str(path);
     const size_t slash = full.find_last_of('/');
-    return (slash == string::npos) ? full : full.substr(slash + 1);
+    return (slash == astr_t::npos) ? full : full.substr(slash + 1);
 }
 
 CMacroEntry::~CMacroEntry()
@@ -108,7 +108,7 @@ void CAssistantConfig::ScanProfiles()
         {
             continue;
         }
-        const string name = fs_entry_name(entry);
+        const astr_t name = fs_entry_name(entry);
         if (name.empty() || name[0] == '.')
         {
             continue;
@@ -133,14 +133,14 @@ void CAssistantConfig::ScanProfiles()
     }
 }
 
-void CAssistantConfig::SetCurrentProfile(const string &name)
+void CAssistantConfig::SetCurrentProfile(const astr_t &name)
 {
-    const string nameLower = to_lower(name);
+    const astr_t nameLower = to_lower(name);
     if (to_lower(ProfileName) == nameLower)
     {
         return;
     }
-    for (const string &profile : m_Profiles)
+    for (const astr_t &profile : m_Profiles)
     {
         if (to_lower(profile) == nameLower)
         {
@@ -154,7 +154,7 @@ void CAssistantConfig::SetCurrentProfile(const string &name)
 bool CAssistantConfig::LoadProfileBySerial(uint serial)
 {
     LoadProfileMap();
-    std::map<uint, string>::iterator it = m_ProfileMap.find(serial);
+    std::map<uint, astr_t>::iterator it = m_ProfileMap.find(serial);
     if (it != m_ProfileMap.end())
     {
         SetCurrentProfile(it->second);
@@ -174,7 +174,7 @@ void CAssistantConfig::SaveProfileMap()
 
     XMLDocument doc;
     doc.Root = XMLElement("data");
-    for (std::map<uint, string>::iterator i = m_ProfileMap.begin(); i != m_ProfileMap.end(); ++i)
+    for (std::map<uint, astr_t>::iterator i = m_ProfileMap.begin(); i != m_ProfileMap.end(); ++i)
     {
         XMLElement &element = doc.Root.AddChild("profile");
         element.SetAttribute("serial", CAssistant::SerialToText(i->first));
@@ -485,30 +485,30 @@ void CAssistantConfig::SaveMainOptions()
             flags |= 1 << i;
         }
     }
-    main.SetAttribute("flags", std::to_string(flags));
-    main.SetAttribute("messageslevel", std::to_string(m_MessagesLevel));
-    main.SetAttribute("searchdistance", std::to_string(m_SearchItemsDistance));
-    main.SetAttribute("usedistance", std::to_string(m_UseItemsDistance));
-    main.SetAttribute("opencorpsedistance", std::to_string(m_OpenCorpsesDistance));
-    main.SetAttribute("corpsekeepdelay", std::to_string(m_CorpseKeepDelay));
-    main.SetAttribute("waittargetsdelay", std::to_string(m_WaitTargetsDelay));
-    main.SetAttribute("moveitemsdelay", std::to_string(m_MoveItemsDelay));
-    main.SetAttribute("useitemsdelay", std::to_string(m_UseItemsDelay));
-    main.SetAttribute("windowsopacity", std::to_string(m_WindowsOpacity));
+    main.SetAttribute("flags", str_from(flags));
+    main.SetAttribute("messageslevel", str_from(m_MessagesLevel));
+    main.SetAttribute("searchdistance", str_from(m_SearchItemsDistance));
+    main.SetAttribute("usedistance", str_from(m_UseItemsDistance));
+    main.SetAttribute("opencorpsedistance", str_from(m_OpenCorpsesDistance));
+    main.SetAttribute("corpsekeepdelay", str_from(m_CorpseKeepDelay));
+    main.SetAttribute("waittargetsdelay", str_from(m_WaitTargetsDelay));
+    main.SetAttribute("moveitemsdelay", str_from(m_MoveItemsDelay));
+    main.SetAttribute("useitemsdelay", str_from(m_UseItemsDelay));
+    main.SetAttribute("windowsopacity", str_from(m_WindowsOpacity));
     main.SetAttribute("usefontcolor", (m_UseFontColor ? "true" : "false"));
     main.SetAttribute("fontcolor", m_FontColor);
     main.SetAttribute("usecharactersfontcolor", (m_UseCharactersFontColor ? "true" : "false"));
     main.SetAttribute("charactersfontcolor", m_CharactersFontColor);
     main.SetAttribute("autoreconnect", (m_AutoReconnect ? "true" : "false"));
-    main.SetAttribute("autoreconnecttimer", std::to_string(m_AutoReconnectSeconds));
+    main.SetAttribute("autoreconnecttimer", str_from(m_AutoReconnectSeconds));
     main.SetAttribute("doubleclickforopendoors", (m_DoubleClickForOpenDoors ? "true" : "false"));
 
     // TabDisplay::SaveConfig
     XMLElement &display = doc.Root.AddChild("display");
-    display.SetAttribute("type", std::to_string(m_DisplayType));
-    display.SetAttribute("flags", std::to_string(m_DisplayFlags));
-    display.SetAttribute("textcolor", std::to_string(m_DisplayTextColor));
-    display.SetAttribute("backgroundcolor", std::to_string(m_DisplayBackgroundColor));
+    display.SetAttribute("type", str_from(m_DisplayType));
+    display.SetAttribute("flags", str_from(m_DisplayFlags));
+    display.SetAttribute("textcolor", str_from(m_DisplayTextColor));
+    display.SetAttribute("backgroundcolor", str_from(m_DisplayBackgroundColor));
     display.SetAttribute("titledata", m_DisplayTitleData);
 
     // TabHotkeys::SaveConfig
@@ -624,7 +624,7 @@ void CAssistantConfig::UpdateFeatures()
 
 // --- list queries --------------------------------------------------------------
 
-ushort CAssistantConfig::SeekType(const string &text)
+ushort CAssistantConfig::SeekType(const astr_t &text)
 {
     // Was TabListsTypes::SeekType.
     for (const CTypeEntry &entry : m_Types)
@@ -637,7 +637,7 @@ ushort CAssistantConfig::SeekType(const string &text)
     return 0;
 }
 
-uint CAssistantConfig::SeekObject(const string &text)
+uint CAssistantConfig::SeekObject(const astr_t &text)
 {
     // Was TabListsObjects::SeekObject.
     for (const CObjectEntry &entry : m_Objects)
@@ -650,7 +650,7 @@ uint CAssistantConfig::SeekObject(const string &text)
     return 0;
 }
 
-CFindListEntry *CAssistantConfig::GetFindList(const string &name)
+CFindListEntry *CAssistantConfig::GetFindList(const astr_t &name)
 {
     for (CFindListEntry &entry : m_FindLists)
     {
@@ -662,7 +662,7 @@ CFindListEntry *CAssistantConfig::GetFindList(const string &name)
     return nullptr;
 }
 
-CIgnoreListEntry *CAssistantConfig::GetIgnoreList(const string &name)
+CIgnoreListEntry *CAssistantConfig::GetIgnoreList(const astr_t &name)
 {
     for (CIgnoreListEntry &entry : m_IgnoreLists)
     {
@@ -704,11 +704,11 @@ bool CAssistantConfig::InEnemyList(uint serial)
     return false;
 }
 
-void CAssistantConfig::AddType(const string &name, const string &type)
+void CAssistantConfig::AddType(const astr_t &name, const astr_t &type)
 {
     // Was TabListsTypes::AddType (minus the target-request UI branch; the
     // empty-type "from target" flow is Phase 2 UI and stays there).
-    const string lowerName = to_lower(name);
+    const astr_t lowerName = to_lower(name);
     for (CTypeEntry &entry : m_Types)
     {
         if (to_lower(entry.Name) == lowerName)
@@ -726,10 +726,10 @@ void CAssistantConfig::AddType(const string &name, const string &type)
     SaveTypes();
 }
 
-void CAssistantConfig::RemoveType(const string &name)
+void CAssistantConfig::RemoveType(const astr_t &name)
 {
     // Was TabListsTypes::RemoveType.
-    const string lowerName = to_lower(name);
+    const astr_t lowerName = to_lower(name);
     for (vector<CTypeEntry>::iterator it = m_Types.begin(); it != m_Types.end();)
     {
         if (to_lower(it->Name) == lowerName)
@@ -743,10 +743,10 @@ void CAssistantConfig::RemoveType(const string &name)
     }
 }
 
-void CAssistantConfig::AddObject(const string &name, const string &serial)
+void CAssistantConfig::AddObject(const astr_t &name, const astr_t &serial)
 {
     // Was TabListsObjects::AddObject (minus the target-request UI branch).
-    const string lowerName = to_lower(name);
+    const astr_t lowerName = to_lower(name);
     for (CObjectEntry &entry : m_Objects)
     {
         if (to_lower(entry.Name) == lowerName)
@@ -762,10 +762,10 @@ void CAssistantConfig::AddObject(const string &name, const string &serial)
     m_Objects.push_back(entry);
 }
 
-void CAssistantConfig::RemoveObject(const string &name)
+void CAssistantConfig::RemoveObject(const astr_t &name)
 {
     // Was TabListsObjects::RemoveObject.
-    const string lowerName = to_lower(name);
+    const astr_t lowerName = to_lower(name);
     for (vector<CObjectEntry>::iterator it = m_Objects.begin(); it != m_Objects.end();)
     {
         if (to_lower(it->Name) == lowerName)
@@ -825,7 +825,7 @@ bool CAssistantConfig::PartyInviteCanBeAutoDeclined(uint serial)
 
 // --- filters ----------------------------------------------------------------------
 
-bool CAssistantConfig::CheckSpeechInFilter(const string &text, const ushort &color)
+bool CAssistantConfig::CheckSpeechInFilter(const astr_t &text, const ushort &color)
 {
     // Was TabFiltersSpeech::CheckSpeechInFilter.
     if (!SpeechFilter())
@@ -844,7 +844,7 @@ bool CAssistantConfig::CheckSpeechInFilter(const string &text, const ushort &col
             }
             else
             {
-                found = text.find(item.Text) != string::npos;
+                found = text.find(item.Text) != astr_t::npos;
             }
             if (found)
             {
@@ -856,11 +856,11 @@ bool CAssistantConfig::CheckSpeechInFilter(const string &text, const ushort &col
 }
 
 bool CAssistantConfig::CheckReplaceText(
-    const string &text,
+    const astr_t &text,
     const uint &serial,
     const ushort &color,
     const bool &unicode,
-    string &replacedText,
+    astr_t &replacedText,
     ushort &replacedColor)
 {
     // Was TabFiltersReplaces::CheckReplaceText. On a match the replacement is
@@ -894,7 +894,7 @@ bool CAssistantConfig::CheckReplaceText(
         }
         else
         {
-            found = text.find(item.OriginalText) != string::npos;
+            found = text.find(item.OriginalText) != astr_t::npos;
         }
         if (!found)
         {
@@ -949,7 +949,7 @@ bool CAssistantConfig::CheckSoundInFilter(const ushort &index)
 
 // --- distance / delay helpers ------------------------------------------------------
 
-int CAssistantConfig::DistanceFromText(string text)
+int CAssistantConfig::DistanceFromText(astr_t text)
 {
     // Was AssistForm::DistanceFromText.
     text = to_lower(text);
@@ -973,7 +973,7 @@ int CAssistantConfig::DistanceFromText(string text)
     return result;
 }
 
-int CAssistantConfig::DelayFromText(string text)
+int CAssistantConfig::DelayFromText(astr_t text)
 {
     // Was AssistForm::DelayFromText.
     text = to_lower(text);
@@ -996,14 +996,14 @@ int CAssistantConfig::DelayFromText(string text)
     return atoi(text.c_str());
 }
 
-int CAssistantConfig::IsCommandPrefix(const string &text) const
+int CAssistantConfig::IsCommandPrefix(const astr_t &text) const
 {
     // Was TabHotkeys::IsCommandPrefix.
     int result = 0;
-    const string prefix = to_lower(m_CommandPrefix);
+    const astr_t prefix = to_lower(m_CommandPrefix);
     if (!prefix.empty())
     {
-        string head = text;
+        astr_t head = text;
         if (head.size() > prefix.size())
         {
             head.resize(prefix.size());
@@ -1018,7 +1018,7 @@ int CAssistantConfig::IsCommandPrefix(const string &text) const
 
 // --- display items / groups ----------------------------------------------------------
 
-CDisplayItem CAssistantConfig::GetCustomDisplayItemByName(const string &name)
+CDisplayItem CAssistantConfig::GetCustomDisplayItemByName(const astr_t &name)
 {
     // Was TabDisplay::GetCustomDisplayItemByName.
     for (const CDisplayItemEntry &entry : m_DisplayItems)
@@ -1031,7 +1031,7 @@ CDisplayItem CAssistantConfig::GetCustomDisplayItemByName(const string &name)
     return CDisplayItem();
 }
 
-string CAssistantConfig::GetGroupContent(const string &name)
+astr_t CAssistantConfig::GetGroupContent(const astr_t &name)
 {
     // Was TabDisplay::GetGroupContent.
     for (const CDisplayGroupEntry &entry : m_DisplayGroups)
@@ -1046,7 +1046,7 @@ string CAssistantConfig::GetGroupContent(const string &name)
 
 // --- dress sets ------------------------------------------------------------------------
 
-CDressSetEntry *CAssistantConfig::GetDressSet(const string &name)
+CDressSetEntry *CAssistantConfig::GetDressSet(const astr_t &name)
 {
     for (CDressSetEntry &entry : m_DressSets)
     {
@@ -1058,7 +1058,7 @@ CDressSetEntry *CAssistantConfig::GetDressSet(const string &name)
     return nullptr;
 }
 
-CDressSetEntry *CAssistantConfig::AddDressSet(const string &name)
+CDressSetEntry *CAssistantConfig::AddDressSet(const astr_t &name)
 {
     CDressSetEntry *existing = GetDressSet(name);
     if (existing != nullptr)
@@ -1090,7 +1090,7 @@ void CAssistantConfig::SaveTypes()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", std::to_string((int)m_Types.size()));
+    doc.Root.SetAttribute("size", str_from((int)m_Types.size()));
 
     for (const CTypeEntry &entry : m_Types)
     {
@@ -1153,7 +1153,7 @@ void CAssistantConfig::SaveFindList()
     doc.Root.SetAttribute("version", "0");
     // NOTE: the original writer saved count+1 (an off-by-one); kept for
     // byte-compatible output.
-    doc.Root.SetAttribute("size", std::to_string((int)m_FindLists.size() + 1));
+    doc.Root.SetAttribute("size", str_from((int)m_FindLists.size() + 1));
 
     for (const CFindListEntry &entry : m_FindLists)
     {
@@ -1214,7 +1214,7 @@ void CAssistantConfig::SaveIgnoreList()
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
     // NOTE: original off-by-one, kept for byte-compatible output.
-    doc.Root.SetAttribute("size", std::to_string((int)m_IgnoreLists.size() + 1));
+    doc.Root.SetAttribute("size", str_from((int)m_IgnoreLists.size() + 1));
 
     for (const CIgnoreListEntry &entry : m_IgnoreLists)
     {
@@ -1330,8 +1330,8 @@ void CAssistantConfig::SaveTextReplaces()
         element.SetAttribute("originalcolor", entry.OriginalColor);
         element.SetAttribute("replacedtext", entry.ReplacedText);
         element.SetAttribute("replacedcolor", entry.ReplacedColor);
-        element.SetAttribute("type", std::to_string(entry.Type));
-        element.SetAttribute("mode", std::to_string(entry.Mode));
+        element.SetAttribute("type", str_from(entry.Type));
+        element.SetAttribute("mode", str_from(entry.Mode));
         element.SetAttribute("fullmatch", (entry.FullMatch ? "true" : "false"));
     }
 
@@ -1419,10 +1419,10 @@ void CAssistantConfig::SaveShopList()
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
     doc.Root.SetAttribute("show_shopping_progress_bar", (m_ShowShoppingProgressBar ? "true" : "false"));
-    doc.Root.SetAttribute("max_shop_items", std::to_string(m_MaxShopItems));
-    doc.Root.SetAttribute("max_sell_price", std::to_string(m_MaxSellPrice));
-    doc.Root.SetAttribute("shop_delay", std::to_string(m_ShopDelay));
-    doc.Root.SetAttribute("shop_timeout", std::to_string(m_ShopTimeout));
+    doc.Root.SetAttribute("max_shop_items", str_from(m_MaxShopItems));
+    doc.Root.SetAttribute("max_sell_price", str_from(m_MaxSellPrice));
+    doc.Root.SetAttribute("shop_delay", str_from(m_ShopDelay));
+    doc.Root.SetAttribute("shop_timeout", str_from(m_ShopTimeout));
 
     for (const CShopListEntry &entry : m_ShopLists)
     {
@@ -1434,8 +1434,8 @@ void CAssistantConfig::SaveShopList()
             itemElement.SetAttribute("graphic", item.Graphic);
             itemElement.SetAttribute("color", item.Color);
             itemElement.SetAttribute("name", item.Name);
-            itemElement.SetAttribute("count", std::to_string(item.Count));
-            itemElement.SetAttribute("price", std::to_string(item.Price));
+            itemElement.SetAttribute("count", str_from(item.Count));
+            itemElement.SetAttribute("price", str_from(item.Price));
             itemElement.SetAttribute("comment", item.Comment);
         }
     }
@@ -1511,14 +1511,14 @@ void CAssistantConfig::SaveDisplayItems()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", std::to_string((int)m_DisplayItems.size()));
+    doc.Root.SetAttribute("size", str_from((int)m_DisplayItems.size()));
 
     for (const CDisplayItemEntry &entry : m_DisplayItems)
     {
         const CDisplayItem &di = entry.m_Item;
         XMLElement &element = doc.Root.AddChild("item");
         element.SetAttribute("name", entry.Name);
-        element.SetAttribute("type", std::to_string((int)di.Type));
+        element.SetAttribute("type", str_from((int)di.Type));
         element.SetAttribute("text", di.Text);
         element.SetAttribute("id", CAssistant::GraphicToText(di.Graphic));
         element.SetAttribute("hue", CAssistant::GraphicToText(di.Hue));
@@ -1529,8 +1529,8 @@ void CAssistantConfig::SaveDisplayItems()
         element.SetAttribute("bgmincolor", CAssistant::ColorToText(di.BackgroundMinColor));
         element.SetAttribute("bgmidcolor", CAssistant::ColorToText(di.BackgroundMidColor));
         element.SetAttribute("bgcolor", CAssistant::ColorToText(di.BackgroundColor));
-        element.SetAttribute("minvalue", std::to_string(di.MinValue));
-        element.SetAttribute("midvalue", std::to_string(di.MidValue));
+        element.SetAttribute("minvalue", str_from(di.MinValue));
+        element.SetAttribute("midvalue", str_from(di.MidValue));
         element.SetAttribute("percents", (di.Percents ? "true" : "false"));
     }
 
@@ -1653,7 +1653,7 @@ void CAssistantConfig::LoadDisplayItems()
                 10,
                 20,
                 false);
-            entry.m_Item.Text = i < 9 ? string(defNames[i]) + ":" : string("b:");
+            entry.m_Item.Text = i < 9 ? astr_t(defNames[i]) + ":" : astr_t("b:");
             m_DisplayItems.push_back(entry);
         }
 
@@ -1668,7 +1668,7 @@ void CAssistantConfig::SaveDisplayGroups()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", std::to_string((int)m_DisplayGroups.size()));
+    doc.Root.SetAttribute("size", str_from((int)m_DisplayGroups.size()));
 
     for (const CDisplayGroupEntry &entry : m_DisplayGroups)
     {
@@ -1726,7 +1726,7 @@ void CAssistantConfig::SaveObjects()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", std::to_string((int)m_Objects.size()));
+    doc.Root.SetAttribute("size", str_from((int)m_Objects.size()));
     doc.Root.SetAttribute("dressbag", CAssistant::SerialToText(g_DressBag));
 
     for (const CObjectEntry &entry : m_Objects)
@@ -1773,16 +1773,16 @@ void CAssistantConfig::SaveHotkeys()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "1");
-    doc.Root.SetAttribute("size", std::to_string((int)m_Hotkeys.size() + 1));
+    doc.Root.SetAttribute("size", str_from((int)m_Hotkeys.size() + 1));
 
     for (const CHotkeyEntry &entry : m_Hotkeys)
     {
         XMLElement &element = doc.Root.AddChild("hotkey");
-        element.SetAttribute("type", std::to_string(entry.Type));
-        element.SetAttribute("action", std::to_string(entry.Action));
+        element.SetAttribute("type", str_from(entry.Type));
+        element.SetAttribute("action", str_from(entry.Action));
         element.SetAttribute("running_mode", (entry.RunningMode ? "true" : "false"));
-        element.SetAttribute("key", std::to_string(entry.Key));
-        element.SetAttribute("modifiers", std::to_string(entry.Modifiers));
+        element.SetAttribute("key", str_from(entry.Key));
+        element.SetAttribute("modifiers", str_from(entry.Modifiers));
         element.SetAttribute("name", entry.ScriptOrMacroName);
         element.SetAttribute("external_code", entry.ExternalCode);
     }
@@ -1841,7 +1841,7 @@ bool CAssistantConfig::LoadHotkeys()
                 continue;
             }
             CHotkeyEntry entry;
-            string name = element.Attribute("macro");
+            astr_t name = element.Attribute("macro");
             entry.Type = HT_SCRIPT;
             if (name == "ExternalCode")
             {
@@ -1889,7 +1889,7 @@ void CAssistantConfig::SaveParty()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", std::to_string((int)(m_PartyAccept.size() + m_PartyDecline.size())));
+    doc.Root.SetAttribute("size", str_from((int)(m_PartyAccept.size() + m_PartyDecline.size())));
     doc.Root.SetAttribute("autoacceptall", (m_PartyAutoAcceptAll ? "true" : "false"));
     doc.Root.SetAttribute("autoacceptfriends", (m_PartyAutoAcceptFriends ? "true" : "false"));
     doc.Root.SetAttribute("autodeclineall", (m_PartyAutoDeclineAll ? "true" : "false"));
@@ -1972,7 +1972,7 @@ void CAssistantConfig::SaveFriends()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", std::to_string((int)m_Friends.size()));
+    doc.Root.SetAttribute("size", str_from((int)m_Friends.size()));
     doc.Root.SetAttribute("feel_party_members_as_friends", (m_FeelPartyMembersAsFriends ? "true" : "false"));
 
     for (const CWorldObjectEntry &entry : m_Friends)
@@ -2021,7 +2021,7 @@ void CAssistantConfig::SaveEnemies()
     XMLDocument doc;
     doc.Root = XMLElement("data");
     doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", std::to_string((int)m_Enemies.size()));
+    doc.Root.SetAttribute("size", str_from((int)m_Enemies.size()));
 
     for (const CWorldObjectEntry &entry : m_Enemies)
     {
@@ -2144,7 +2144,7 @@ bool CAssistantConfig::SaveDress()
     for (const CDressSetEntry &entry : m_DressSets)
     {
         // CFileObject::WriteString byte layout (see above).
-        const string utf8 = entry.Name;
+        const astr_t utf8 = entry.Name;
         writer.WriteUInt8((uint8_t)(utf8.size() + 1));
         if (!utf8.empty())
         {
@@ -2205,14 +2205,14 @@ bool CAssistantConfig::LoadDress()
     {
         // CFileObject::ReadString (see the format comment): int32 length +
         // bounds check, empty result tolerated.
-        string name;
+        astr_t name;
         if (!reader.IsEOF())
         {
             const int len = reader.ReadInt32LE();
             const size_t remaining = size - (reader.Ptr - reader.Start);
             if (len > 0 && (size_t)len <= remaining)
             {
-                name = string((const char *)reader.Ptr, len);
+                name = astr_t((const char *)reader.Ptr, len);
             }
         }
 

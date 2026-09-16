@@ -11,7 +11,7 @@ CIgnoreItem::CIgnoreItem()
 {
 }
 
-CIgnoreItem::CIgnoreItem(const string &serial, const string &graphic, const string &color)
+CIgnoreItem::CIgnoreItem(const astr_t &serial, const astr_t &graphic, const astr_t &color)
     : CFindItem(graphic, color)
     , Serial(serial)
 {

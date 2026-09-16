@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/ignoreitem.h): strings are std::string.
+// Ported from X:UO Assist (commonitems/ignoreitem.h): strings are astr_t.
 
 #pragma once
 
@@ -13,14 +13,13 @@ namespace xuoassist {
 class CIgnoreItem : public CFindItem
 {
 public:
-    string Serial = "";
+    astr_t Serial = "";
 
     CIgnoreItem();
-    CIgnoreItem(const string &serial, const string &graphic, const string &color);
+    CIgnoreItem(const astr_t &serial, const astr_t &graphic, const astr_t &color);
     virtual ~CIgnoreItem();
 
     bool Found(const uint &serial, const ushort &graphic, const ushort &color) const;
 };
 
 } // namespace xuoassist
-

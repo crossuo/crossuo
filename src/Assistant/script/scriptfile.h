@@ -28,30 +28,29 @@ namespace xuoassist {
 struct XA_SCRIPT_FILE
 {
     void *Handle{ nullptr }; // FILE*
-    string Path;             // sanitized path of the current handle
+    astr_t Path;             // sanitized path of the current handle
 };
 
 // Sets the sandbox root (main thread, once at UI install). Empty resets to
 // the process cwd (the client's binary dir, which IS the config root).
-void ScriptFile_SetSandboxRoot(const string &root);
+void ScriptFile_SetSandboxRoot(const astr_t &root);
 
 // Normalizes `path` into the sandbox. Returns "" when the path escapes the
 // sandbox (logged with the `api` origin).
-string ScriptFile_Sanitize(const string &path, const char *api);
+astr_t ScriptFile_Sanitize(const astr_t &path, const char *api);
 
 // CScriptFileObject surface. `checkExists` fails the call when the file is
 // missing (the overload flag). ReadLine returns "" at end of file; Read
 // returns the next whitespace-delimited token.
-bool ScriptFile_Open(XA_SCRIPT_FILE *file, const string &path, bool checkExists);
-bool ScriptFile_Append(XA_SCRIPT_FILE *file, const string &path, bool checkExists);
+bool ScriptFile_Open(XA_SCRIPT_FILE *file, const astr_t &path, bool checkExists);
+bool ScriptFile_Append(XA_SCRIPT_FILE *file, const astr_t &path, bool checkExists);
 bool ScriptFile_Opened(const XA_SCRIPT_FILE *file);
 void ScriptFile_Close(XA_SCRIPT_FILE *file);
-string ScriptFile_ReadLine(XA_SCRIPT_FILE *file);
-string ScriptFile_Read(XA_SCRIPT_FILE *file);
-void ScriptFile_WriteLine(XA_SCRIPT_FILE *file, const string &text);
-void ScriptFile_Write(XA_SCRIPT_FILE *file, const string &text);
+astr_t ScriptFile_ReadLine(XA_SCRIPT_FILE *file);
+astr_t ScriptFile_Read(XA_SCRIPT_FILE *file);
+void ScriptFile_WriteLine(XA_SCRIPT_FILE *file, const astr_t &text);
+void ScriptFile_Write(XA_SCRIPT_FILE *file, const astr_t &text);
 void ScriptFile_Remove(XA_SCRIPT_FILE *file);
-bool ScriptFile_RemovePath(const string &path);
+bool ScriptFile_RemovePath(const astr_t &path);
 
 } // namespace xuoassist
-
