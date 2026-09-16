@@ -32,6 +32,12 @@ public:
     CGump *GumpExists(uintptr_t gumpID);
     void CloseGump(uint32_t serial, uint32_t ID, GUMP_TYPE Type);
     void RemoveGump(CGump *obj);
+    void CloseGenericGumps(uint32_t serial, uint32_t id, bool all);
+    void SelectMenu(uint32_t serial, uint32_t id, int code);
+    void ShowStatusbar(uint32_t serial, int x, int y, bool minimized);
+    void MovePaperdoll(uint32_t serial, int x, int y);
+    void SecureTradeCheck(uint32_t id, bool state);
+    void SecureTradeClose(uint32_t id);
     void RedrawAll();
     void OnDelete();
     void RemoveRangedGumps();

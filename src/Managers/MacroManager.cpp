@@ -416,6 +416,72 @@ void CMacroManager::ChangePointer(CMacroObject *macro)
     g_MacroPointer = macro;
 }
 
+// Runs a one-shot macro given as parallel action-name/sub-action-name string
+// lists (the names are the s_MacroActionName/s_MacroAction entries). Unknown
+// action names are skipped; a sub action string either fills a string-capable
+// action or maps through s_MacroAction onto a sub code.
+void CMacroManager::ExecuteFromLists(
+    const std::vector<astr_t> &actionList, const std::vector<astr_t> &subActionList)
+{
+    static CMacro existsMacros(0, false, false, false);
+    existsMacros.Clear();
+
+    g_MacroPointer = nullptr;
+    const int count = (int)actionList.size();
+    for (int m = 0; m < count; m++)
+    {
+        const astr_t &name = actionList[m];
+        astr_t param;
+        if (m < (int)subActionList.size())
+        {
+            param = subActionList[m];
+        }
+
+        MACRO_CODE macroCode = MC_NONE;
+        for (int i = 0; i < countof(s_MacroActionName); i++)
+        {
+            astr_t macroName = s_MacroActionName[i];
+            if (name == macroName)
+            {
+                macroCode = (MACRO_CODE)i;
+                break;
+            }
+        }
+
+        if (macroCode == MC_NONE)
+        {
+            Info(Network, "invalid macro name: %s", name.c_str());
+            continue;
+        }
+
+        CMacroObject *macro = CMacro::CreateMacro(macroCode);
+        if (param.length() != 0u)
+        {
+            if (macro->HaveString())
+            {
+                ((CMacroObjectString *)macro)->m_String = param;
+            }
+            else
+            {
+                for (int i = 0; i < countof(s_MacroAction); i++)
+                {
+                    if (param == s_MacroAction[i])
+                    {
+                        macro->SubCode = (MACRO_SUB_CODE)i;
+                        break;
+                    }
+                }
+            }
+        }
+        existsMacros.Add(macro);
+    }
+
+    g_MacroPointer = (CMacroObject *)existsMacros.m_Items;
+    WaitingBandageTarget = false;
+    WaitForTargetTimer = 0;
+    Execute();
+}
+
 void CMacroManager::Execute()
 {
     while (g_MacroPointer != nullptr)

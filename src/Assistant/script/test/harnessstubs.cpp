@@ -57,6 +57,55 @@ public:
     void SaveAssistantReceivePacket(unsigned char *, int);
 };
 
+// The client-side entry points the executor now calls directly (the calls
+// that replaced the 0xFC messages), faked like the connection globals above:
+// the member signatures match src/Managers/*.h and src/TextEngine/GameConsole.h
+// (GUMP_TYPE is the real xuocore enum: it is part of the mangled signatures).
+// The paths reached in the harness run with g_World == nullptr, so the stub
+// bodies keep those calls inert.
+#include <xuocore/enumlist.h>
+
+class CGumpManager
+{
+public:
+    CGumpManager();
+    ~CGumpManager();
+    void CloseGump(uint32_t, uint32_t, GUMP_TYPE);
+    void SelectMenu(uint32_t, uint32_t, int);
+    void ShowStatusbar(uint32_t, int, int, bool);
+    void MovePaperdoll(uint32_t, int, int);
+    void SecureTradeCheck(uint32_t, bool);
+    void SecureTradeClose(uint32_t);
+};
+class CMacroManager
+{
+public:
+    CMacroManager();
+    ~CMacroManager();
+    void ExecuteFromLists(const std::vector<astr_t> &, const std::vector<astr_t> &);
+};
+
+extern CGumpManager g_GumpManager;
+CGumpManager g_GumpManager;
+CGumpManager::CGumpManager() {}
+CGumpManager::~CGumpManager() {}
+void CGumpManager::CloseGump(uint32_t, uint32_t, GUMP_TYPE) {}
+void CGumpManager::SelectMenu(uint32_t, uint32_t, int) {}
+void CGumpManager::ShowStatusbar(uint32_t, int, int, bool) {}
+void CGumpManager::MovePaperdoll(uint32_t, int, int) {}
+void CGumpManager::SecureTradeCheck(uint32_t, bool) {}
+void CGumpManager::SecureTradeClose(uint32_t) {}
+
+extern CMacroManager g_MacroManager;
+CMacroManager g_MacroManager;
+CMacroManager::CMacroManager() {}
+CMacroManager::~CMacroManager() {}
+void CMacroManager::ExecuteFromLists(const std::vector<astr_t> &, const std::vector<astr_t> &)
+{
+}
+
+void SendConsoleText(wstr_t, uint16_t) {}
+
 namespace xuoassist {
 
 extern CGump *g_HarnessGump;

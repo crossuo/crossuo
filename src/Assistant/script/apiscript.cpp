@@ -67,6 +67,9 @@ extern "C" {
 #include "../model/commonitems/menu.h"
 #include "../core/packets.h" // the assistant packet wrappers
 #include "Network/Packets.h" // the client packets the wrappers build on
+#include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
+#include "Managers/GumpManager.h"   // ::g_GumpManager (statusbar/paperdoll/trade)
+#include "Managers/MacroManager.h"  // ::g_MacroManager (PlayClientMacro)
 #include "ScreenshotBuilder.h" // g_ScreenshotBuilder (Client.Screenshot)
 #include "Walker/PathFinder.h" // g_PathFinder (client walker)
 
@@ -2293,7 +2296,7 @@ JSValue jsn_globalclear(JSContext *ctx, JSValueConst, int, JSValueConst *)
 }
 
 // [Q] CreateClientMacro - the CClientMacroEngine object: the action lists
-// live on the script side, Play marshals them into CPacketPlayMacro.
+// live on the script side, Play hands them to CMacroManager::ExecuteFromLists.
 JSValue jsn_createclientmacro(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     pause_gate(ctx);
@@ -3935,9 +3938,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     }
                     // the wrapper speech packet sends ST_NORMAL; broadcast
                     // becomes a plain say this round (4b-2 with speech modes)
-                    CPacketUnicodeSpeechRequest(color,
-                        wstring(command->TextB.begin(), command->TextB.end()))
-                        .SendClient();
+                    SendConsoleText(
+                        wstring(command->TextB.begin(), command->TextB.end()), color);
                     break;
                 }
                 default: // Say + the prefix variants
@@ -3947,9 +3949,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         color = 0;
                     }
-                    CPacketUnicodeSpeechRequest(color,
-                        wstring(command->TextB.begin(), command->TextB.end()))
-                        .SendClient();
+                    SendConsoleText(
+                        wstring(command->TextB.begin(), command->TextB.end()), color);
                     break;
                 }
             }
@@ -4584,25 +4585,23 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    CPacketMovePaperdoll(
-                        CAssistant::TextToSerial(command->TextA), command->IntB, command->IntC)
-                        .SendClient();
+                    ::g_GumpManager.MovePaperdoll(
+                        CAssistant::TextToSerial(command->TextA), command->IntB, command->IntC);
                     break;
                 case 343: // ShowStatusbar(serial, x, y[, minimized])
                     if (g_World == nullptr || !EnabledCommandStatusbars())
                     {
                         break;
                     }
-                    CPacketDrawStatusbar(CAssistant::TextToSerial(command->TextA), command->IntB,
-                        command->IntC, command->BoolA)
-                        .SendClient();
+                    ::g_GumpManager.ShowStatusbar(CAssistant::TextToSerial(command->TextA),
+                        command->IntB, command->IntC, command->BoolA);
                     break;
                 case 344: // CloseStatusbar(serial)
                     if (g_World == nullptr || !EnabledCommandStatusbars())
                     {
                         break;
                     }
-                    CPacketCloseStatusbar(CAssistant::TextToSerial(command->TextA)).SendClient();
+                    ::g_GumpManager.CloseGump(CAssistant::TextToSerial(command->TextA), 0, GT_STATUSBAR);
                     break;
                 case 345: // LogOut() (OnCommandLogOut)
                     if (EnabledCommandLogOut())
@@ -4937,11 +4936,11 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             }
             if (command->SubTag == 0)
             {
-                CPacketSecureTradeCheck(trade->ID1, command->BoolA).SendClient();
+                ::g_GumpManager.SecureTradeCheck(trade->ID1, command->BoolA);
             }
             else
             {
-                CPacketSecureTradeClose(trade->ID1).SendClient();
+                ::g_GumpManager.SecureTradeClose(trade->ID1);
             }
             break;
         }
@@ -5169,7 +5168,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             {
                 break;
             }
-            CPacketPlayMacro(command->ListA, command->ListB).SendClient();
+            ::g_MacroManager.ExecuteFromLists(command->ListA, command->ListB);
             break;
         }
         case SC_CONTEXT_MENU: // OnCommandRequest/Wait/CancelContextMenu (4605+)

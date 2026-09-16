@@ -95,20 +95,6 @@ DEFINE_PACKET(ClosePaperdoll, uint32_t serial);
 DEFINE_PACKET(TargetCastSpell, uint16_t spell, uint32_t targetObjectSerial);
 DEFINE_PACKET(TargetUseSkill, uint16_t skill, uint32_t targetObjectSerial);
 DEFINE_PACKET(ClientViewRange, uchar range);
-DEFINE_PACKET(CloseGenericGumpWithoutResponse, CGump *gump, bool all);
-DEFINE_PACKET(SelectMenuInClient, uint32_t serial, uint32_t id, int32_t code);
-DEFINE_PACKET(CastSpellRequest, int32_t id);
-DEFINE_PACKET(UseSkillRequest, int32_t id);
-DEFINE_PACKET(DrawStatusbar, uint32_t serial, int32_t x, int32_t y, bool minimized);
-DEFINE_PACKET(CloseStatusbar, uint32_t serial);
-DEFINE_PACKET(SecureTradeCheck, uint32_t id1, bool state);
-DEFINE_PACKET(SecureTradeClose, uint32_t id1);
-DEFINE_PACKET(UnicodeSpeechRequest, uint16_t color, const wstring &text);
-DEFINE_PACKET(Reconnect);
-DEFINE_PACKET(PlayMacro, const vector<string> &actionList, const vector<string> &subActionList);
-DEFINE_PACKET(MovePaperdoll, uint32_t serial, int32_t x, int32_t y);
-DEFINE_PACKET(UseAbilityRequest, int32_t index);
-DEFINE_PACKET(OpenDoorRequest);
 
 } // namespace xuoassist
 

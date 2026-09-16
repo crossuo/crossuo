@@ -1384,7 +1384,7 @@ void CAssistant::SetDressBag(const uint &serial)
 
 void CAssistant::OpenDoor()
 {
-    CPacketOpenDoorRequest().SendClient();
+    g_Game.OpenDoor();
 }
 
 void CAssistant::WalkAutoOpenDoor(const int &direction)

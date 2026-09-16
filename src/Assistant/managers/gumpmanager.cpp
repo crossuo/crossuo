@@ -7,6 +7,7 @@
 // window (the g_TextDialog port).
 
 #include "gumpmanager.h"
+#include "Managers/GumpManager.h" // ::g_GumpManager (client gump marks/updates)
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../core/packets.h"
@@ -513,7 +514,9 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
     }
 
     CPacketGumpResponse(gump, returnCode).SendServer();
-    CPacketCloseGenericGumpWithoutResponse(gump, true).SendClient();
+    // close the client's gumps without answering the server again (the 0xB1
+    // response above is the answer)
+    ::g_GumpManager.CloseGenericGumps(gump->Serial, gump->ID, true);
 
     gump->Replayed = true;
     gump->ReplyID = returnCode;

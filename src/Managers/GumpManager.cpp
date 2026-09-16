@@ -50,6 +50,9 @@
 #include "../Gumps/GumpSpellbook.h"
 #include "../Network/Packets.h"
 #include "../Utility/PerfMarker.h"
+#if defined(XUO_ASSISTANT)
+#	include <managers/menumanager.h>
+#endif // xuoassist::g_MenuManager (the menu-replay tap)
 
 CGumpManager g_GumpManager;
 
@@ -410,6 +413,139 @@ void CGumpManager::RemoveGump(CGump *obj)
     obj->m_Next = nullptr;
     obj->m_Prev = nullptr;
     delete obj;
+}
+
+void CGumpManager::CloseGenericGumps(uint32_t serial, uint32_t id, bool all)
+{
+    // close without answering the server: the gumps are only marked for
+    // removal (RemoveMarked processes them at the next frame step)
+    for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
+    {
+        if (gump->GumpType == GT_GENERIC && gump->Serial == serial && gump->ID == id)
+        {
+            gump->RemoveMark = true;
+            if (!all)
+            {
+                break;
+            }
+        }
+    }
+}
+
+void CGumpManager::SelectMenu(uint32_t serial, uint32_t id, int code)
+{
+    if ((serial == 0u) && (id == 0u))
+    {
+        for (CGump *gump = (CGump *)m_Items; gump != nullptr;)
+        {
+            CGump *next = (CGump *)gump->m_Next;
+            if (gump->GumpType == GT_MENU || gump->GumpType == GT_GRAY_MENU)
+            {
+                CPacketMenuResponse(gump, code).Send();
+#if defined(XUO_ASSISTANT)
+                // the send tap of the (menu round): the assistant replays its
+                // menu record before the gump goes away
+                xuoassist::g_MenuManager.OnMenuChoiceSent(gump->Serial, gump->ID, code);
+#endif
+                RemoveGump(gump);
+            }
+            gump = next;
+        }
+
+        return;
+    }
+
+    CGump *gump = GetGump(serial, id, GT_MENU);
+    if (gump == nullptr)
+    {
+        gump = GetGump(serial, id, GT_GRAY_MENU);
+        if (gump != nullptr)
+        {
+            CPacketGrayMenuResponse(gump, code).Send();
+#if defined(XUO_ASSISTANT)
+            xuoassist::g_MenuManager.OnMenuChoiceSent(gump->Serial, gump->ID, code);
+#endif
+            RemoveGump(gump);
+        }
+    }
+    else
+    {
+        CPacketMenuResponse(gump, code).Send();
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_MenuManager.OnMenuChoiceSent(gump->Serial, gump->ID, code);
+#endif
+        RemoveGump(gump);
+    }
+}
+
+void CGumpManager::ShowStatusbar(uint32_t serial, int x, int y, bool minimized)
+{
+    if (serial != g_PlayerSerial)
+    {
+        minimized = true;
+    }
+
+    CGump *gump = UpdateContent(serial, 0, GT_STATUSBAR);
+    if (gump != nullptr)
+    {
+        gump->Minimized = minimized;
+
+        if (gump->Minimized)
+        {
+            gump->MinimizedX = x;
+            gump->MinimizedY = y;
+        }
+        else
+        {
+            gump->SetX(x);
+            gump->SetY(y);
+        }
+    }
+    else
+    {
+        CPacketStatusRequest(serial).Send();
+        AddGump(new CGumpStatusbar(serial, x, y, minimized));
+    }
+}
+
+void CGumpManager::MovePaperdoll(uint32_t serial, int x, int y)
+{
+    CGump *gump = UpdateContent(serial, 0, GT_PAPERDOLL);
+    if (gump != nullptr)
+    {
+        if (gump->Minimized)
+        {
+            gump->MinimizedX = x;
+            gump->MinimizedY = y;
+        }
+        else
+        {
+            gump->SetX(x);
+            gump->SetY(y);
+        }
+    }
+}
+
+void CGumpManager::SecureTradeCheck(uint32_t id, bool state)
+{
+    // the send (and the trade-record tap) lives in
+    // CGumpSecureTrading::SendTradingResponse
+    auto gump = (CGumpSecureTrading *)UpdateGump(id, 0, GT_TRADE);
+    if (gump != nullptr)
+    {
+        gump->StateMine = state;
+        gump->SendTradingResponse(2);
+    }
+}
+
+void CGumpManager::SecureTradeClose(uint32_t id)
+{
+    // SendTradingResponse also marks the gump for removal on the close code
+    auto gump = (CGumpSecureTrading *)GetGump(id, 0, GT_TRADE);
+    if (gump != nullptr)
+    {
+        gump->SendTradingResponse(1);
+    }
 }
 
 void CGumpManager::OnDelete()

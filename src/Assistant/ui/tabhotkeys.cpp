@@ -23,6 +23,7 @@
 #include "../core/global.h"
 #include "../core/hotkeys.h"
 #include "../core/packets.h"
+#include "TextEngine/GameConsole.h" // ::SendConsoleText (the control-form commands)
 
 namespace xuoassist {
 
@@ -50,7 +51,7 @@ void animal_send(const char *command)
     {
         wide.push_back((wchar_t)(uchar)c);
     }
-    CPacketUnicodeSpeechRequest(0, wide).SendClient();
+    SendConsoleText(wide, 0);
 }
 
 // ShipControlForm::Send
@@ -62,13 +63,13 @@ void ship_send(const char *text)
     {
         wide.push_back((wchar_t)(uchar)*c);
     }
-    CPacketUnicodeSpeechRequest(0, wide).SendClient();
+    SendConsoleText(wide, 0);
 }
 
 void house_send(const wchar_t *text)
 {
     // HouseControlForm ctor buttons
-    CPacketUnicodeSpeechRequest(0, text).SendClient();
+    SendConsoleText(text, 0);
 }
 
 bool speech_button(const char *label, float width = 0.0f)

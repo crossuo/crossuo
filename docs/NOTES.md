@@ -1001,6 +1001,14 @@ Recv keeps (consume-capable handler rows; the tap dispatches every packet to the
   connected-gate exemption list (0x1B/0x55/0xFC) is unaffected: every fused
   feed id arrives only with a world.
 
+E2 (0xFC CrossUO messages): the twelve injected-packet builders were replaced by
+extracted client methods (CGumpManager::CloseGenericGumps/SelectMenu/
+ShowStatusbar/SecureTradeCheck/SecureTradeClose/MovePaperdoll,
+CMacroManager::ExecuteFromLists, SendConsoleText, CGumpAbility::OnAbilityUse,
+g_Game.StartReconnect/OpenDoor, direct statusbar close). HandleCrossMessages
+keeps the six genuine-network OCT cases (features, ignore-tiles filter, version,
+cast/skill requests, rename-mount) as the documented external subcommand surface.
+
 B9 (0xBF ExtendedCommand recv half) fuses the last recv-capable non-keep
 row, subcommand by subcommand inside the client's switch:
 

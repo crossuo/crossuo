@@ -15,6 +15,8 @@
 #include "../core/world.h"
 #include <stdlib.h>
 #include <common/logging/logging.h>
+#include <algorithm>
+#include "Managers/GumpManager.h" // ::g_GumpManager (the client-side menu selection)
 
 namespace xuoassist {
 
@@ -200,12 +202,19 @@ bool CMenuManager::SendChoiceIfMenuExists(
         {
             if (SendMenuChoice(menu, itemName, sendPacket))
             {
-                if (menu != m_LastMenu)
+                // the client-side selection (sendPacket == false) runs
+                // synchronously: OnMenuChoiceSent may have already replayed
+                // and removed the record, so only clean it up when it is
+                // still listed
+                if (std::find(m_Items.begin(), m_Items.end(), menu) != m_Items.end())
                 {
-                    delete menu;
-                }
+                    if (menu != m_LastMenu)
+                    {
+                        delete menu;
+                    }
 
-                m_Items.erase(m_Items.begin() + i);
+                    m_Items.erase(m_Items.begin() + i);
+                }
 
                 return true;
             }
@@ -228,7 +237,7 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
         }
         else
         {
-            CPacketSelectMenuInClient(menu->Serial, menu->ID, 0).SendClient();
+            ::g_GumpManager.SelectMenu(menu->Serial, menu->ID, 0);
         }
 
         return true;
@@ -259,7 +268,7 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
             }
             else
             {
-                CPacketSelectMenuInClient(menu->Serial, menu->ID, item.ID).SendClient();
+                ::g_GumpManager.SelectMenu(menu->Serial, menu->ID, item.ID);
             }
 
             return true;
@@ -302,7 +311,7 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
         }
         else
         {
-            CPacketSelectMenuInClient(menu->Serial, menu->ID, item.ID).SendClient();
+            ::g_GumpManager.SelectMenu(menu->Serial, menu->ID, item.ID);
         }
 
         return true;

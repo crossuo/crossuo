@@ -34,6 +34,7 @@
 #include "../script/scriptfile.h" // the file-engine sandbox root
 #include "../script/scriptgump.h" // the script text window draw
 #include "../script/scripthandle.h"
+#include "CrossUO.h" // ::g_Game (StartReconnect)
 #include "scripteditor.h"
 #include "tabscripts.h"
 #include "mapwindow.h"
@@ -271,7 +272,7 @@ void tick_reconnect()
         s_ReconnectSeconds--;
         if (s_ReconnectSeconds == 0)
         {
-            CPacketReconnect().SendClient();
+            g_Game.StartReconnect();
             s_ReconnectSeconds = g_AssistantConfig.AutoReconnectSeconds();
         }
     }

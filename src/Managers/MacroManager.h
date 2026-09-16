@@ -34,6 +34,8 @@ public:
     void LoadFromOptions();
     void ChangePointer(CMacroObject *macro);
     void Execute();
+    void ExecuteFromLists(
+        const std::vector<astr_t> &actionList, const std::vector<astr_t> &subActionList);
     MACRO_RETURN_CODE Process();
     MACRO_RETURN_CODE Process(CMacroObject *macro);
 };

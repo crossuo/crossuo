@@ -32,6 +32,8 @@
 #include "Walker/PathFinder.h" // g_PathFinder (the client walker; was the plugin's PathFinder)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
+#include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say command)
+#include "Gumps/GumpAbility.h"      // ::CGumpAbility::OnAbilityUse (combat abilities)
 
 namespace xuoassist {
 
@@ -903,7 +905,7 @@ void CMacroExecutor::ProcessMacro()
                     {
                         wide.push_back((wchar_t)(uchar)c);
                     }
-                    CPacketUnicodeSpeechRequest(color, wide).SendClient();
+                    SendConsoleText(wide, color);
                 }
                 break;
             }
@@ -1111,7 +1113,7 @@ void CMacroExecutor::ProcessMacro()
                 CPacketWrestlingDisarm().SendServer();
                 break;
             case MT_COMBAT_ABILITY:
-                CPacketUseAbilityRequest((int)(convertType == MCT_SECONDARY)).SendClient();
+                CGumpAbility::OnAbilityUse((int)(convertType == MCT_SECONDARY) % 2);
                 break;
             case MT_TOGGLE_GARGOYLE_FLYING:
                 ::CPacketToggleGargoyleFlying().Send();

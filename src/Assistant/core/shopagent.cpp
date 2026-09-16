@@ -21,6 +21,7 @@
 #include "../config/assistantconfig.h"
 #include "../model/commonitems/finditem.h"
 #include "world.h"
+#include "TextEngine/GameConsole.h" // ::SendConsoleText (the agent speech)
 
 namespace xuoassist {
 
@@ -130,7 +131,7 @@ void CShopAgent::SendShopRequest(int state, const string &listName, const string
     m_WaitShopListName = listName;
     m_State = state;
     m_WaitTimeout = g_Ticks + (uint)(g_AssistantConfig.m_ShopTimeout * 1000);
-    CPacketUnicodeSpeechRequest(0, wstr_from(text)).SendClient();
+    SendConsoleText(wstr_from(text), 0);
 }
 
 void CShopAgent::CancelProgress()

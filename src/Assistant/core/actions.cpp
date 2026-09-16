@@ -19,6 +19,7 @@
 #include "global.h"
 #include "packets.h"
 #include "Network/Packets.h" // ::CPacketTargetSelectedObject (the client's own 0xBF/0x2C builder)
+#include "Managers/MacroManager.h" // ::g_MacroManager (client-side selection macros)
 #include "textcommandmanager.h"
 #include "../macros/macroexecutor.h"
 #include "../managers/gumpmanager.h"
@@ -705,7 +706,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
                     clientMacroActions.push_back("SelectNearest");
                 }
                 clientMacroSubActions.push_back(action <= 7 ? "Hostile" : "Mobile");
-                CPacketPlayMacro(clientMacroActions, clientMacroSubActions).SendClient();
+                ::g_MacroManager.ExecuteFromLists(clientMacroActions, clientMacroSubActions);
             }
             break;
         }
