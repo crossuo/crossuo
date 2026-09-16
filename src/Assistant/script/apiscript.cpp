@@ -66,6 +66,7 @@ extern "C" {
 #include "../model/commonitems/gumphook.h"
 #include "../model/commonitems/menu.h"
 #include "Network/Packets.h" // the client packets the wrappers build on
+#include "Gumps/GumpCombatBook.h" // ::CGumpCombatBook::m_AbilityName (UseAbility names)
 #include "Target.h"         // ::g_Target (the client target cursor: CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
 #include "Managers/GumpManager.h"   // ::g_GumpManager (statusbar/paperdoll/trade)
@@ -2703,8 +2704,8 @@ JSValue jsn_hotkeys(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
 }
 
 // [Q] UseAbility(name): the primary/secondary (+-keep) literals or a
-// g_AbilityName table entry -> CPacketUseCombatAbility (OnCommandUseAbility,
-// over the same packet family).
+// CGumpCombatBook::m_AbilityName table entry -> CPacketUseCombatAbility
+// (OnCommandUseAbility, over the same packet family).
 JSValue jsn_useability(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
@@ -4477,7 +4478,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         for (int i = 0; i < MAX_ABILITIES_COUNT; i++)
                         {
-                            string ability = g_AbilityName[i];
+                            string ability = CGumpCombatBook::m_AbilityName[i];
                             for (char &c : ability)
                             {
                                 c = (char)tolower((unsigned char)c);

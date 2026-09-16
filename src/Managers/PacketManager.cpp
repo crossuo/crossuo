@@ -3093,13 +3093,6 @@ PACKET_HANDLER(ExtendedCommand)
         {
             g_Game.ChangeMap(ReadUInt8());
 
-#if defined(XUO_ASSISTANT)
-            // the assistant map window reads its own facet copy for the
-            // "Current" display; ChangeMap applied the same >5 clamp the old
-            // assistant half did
-            xuoassist::g_CurrentMap = ::g_CurrentMap;
-#endif
-
             break;
         }
         case 0xC: //Close statusbar gump

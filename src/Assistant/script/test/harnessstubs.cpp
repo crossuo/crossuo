@@ -263,7 +263,6 @@ void CTarget::SetObjectsHook(const vector<string> &) {}
 void CTarget::SetTileHook(const string &, const int &, const int &, const int &, const bool &) {}
 void CTarget::SetRecvAssistData(CDataReader &) {}
 
-uint g_PlayerSerial = 0;
 bool g_Connected = false;
 uint64_t g_EnabledCommands = 0;
 uint64_t g_EnabledFeature = 0;
@@ -288,6 +287,8 @@ TARGET_HANDLER g_TargetHandler = nullptr;
 // world-model stand-in globals (global namespace, as declared in worldstubs.h)
 CGameWorld *g_World = nullptr;
 CPlayer *g_Player = nullptr;
+// the client global the xuoassist using-declaration (global.h) aliases
+uint32_t g_PlayerSerial = 0;
 CSkillsManager g_SkillsManager;
 
 // world stand-in out-of-line bodies (global namespace)
@@ -343,6 +344,25 @@ CPacketDoubleClickRequest::CPacketDoubleClickRequest(uint32_t) : CPacket(0) {}
 CPacketTargetSelectedObject::CPacketTargetSelectedObject(int, int) : CPacket(0) {}
 CPacketUseCombatAbility::CPacketUseCombatAbility(uint8_t) : CPacket(0) {}
 void CPacket::Send() {}
+
+// the ability-name table jsn_useability reads (the real definition lives in
+// GumpCombatBook.cpp, which is not linked here)
+#include "Gumps/GumpCombatBook.h"
+const astr_t CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
+    "Armor Ignore",       "Bleed Attack",    "Concussion Blow",
+    "Crushing Blow",      "Disarm",          "Dismount",
+    "Double Strike",      "Infecting",       "Mortal Strike",
+    "Moving Shot",        "Paralyzing Blow", "Shadow Strike",
+    "Whirlwind Attack",
+    "Riding Swipe", // CV_500a
+    "Frenzied Whirlwind", "Block",           "Defense Mastery",
+    "Nerve Strike",       "Talon Strike",    "Feint",
+    "Dual Wield",         "Double Shot",     "Armor Pierce",
+    "Bladeweave",         "Force Arrow",     "Lightning Arrow",
+    "Psychic Attack",     "Serpent Arrow",   "Force of Nature",
+    "Infused Throw", // CV_7000
+    "Mystic Arc",         "Disrobe"
+};
 
 // the client target cursor: the apiscript cancel-cursor swap stubs it; nothing
 // in the harness opens or drains a client cursor

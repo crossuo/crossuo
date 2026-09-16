@@ -21,12 +21,14 @@ private:
     const int ID_GCB_ICON_SECOND = 6;
     const int ID_GCB_ICON = 100;
 
-    static const astr_t m_AbilityName[MAX_ABILITIES_COUNT];
-
     CGUIButton *m_PrevPage{ nullptr };
     CGUIButton *m_NextPage{ nullptr };
 
 public:
+    // Public so the assistant scripting layer reuses this table instead of
+    // keeping a byte-identical copy.
+    static const astr_t m_AbilityName[MAX_ABILITIES_COUNT];
+
     CGumpCombatBook(int x, int y);
     virtual ~CGumpCombatBook();
 

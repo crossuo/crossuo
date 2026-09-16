@@ -69,10 +69,6 @@ extern FUNCDEF_GET_VALUE_INT *g_GetInt;
 extern FUNCDEF_SET_VALUE_INT *g_SetInt;
 extern FUNCDEF_GET_VALUE_STRING *g_GetString;
 extern FUNCDEF_SET_VALUE_STRING *g_SetString;
-extern uint g_LastSendTime;
-extern uint g_LastPacketTime;
-extern uint g_TotalSendSize;
-extern uint g_TotalRecvSize;
 extern uchar g_LightLevel;
 extern uchar g_PersonalLightLevel;
 
@@ -509,10 +505,13 @@ struct SelectedTile
     int LandZ;
 };
 
-extern uint g_PlayerSerial;
+// The client-owned player serial; the client PacketManager keeps it current
+// post-login.
+using ::g_PlayerSerial;
 extern uint g_Backpack;
 extern uint g_FindItem;
-extern uint g_CurrentMap;
+// The client-owned current facet; ChangeMap updates it.
+using ::g_CurrentMap;
 extern string g_ServerName;
 extern string g_CharacterName;
 extern bool g_UpdateDisplayOnStep;
@@ -530,7 +529,8 @@ extern uint g_StartTimer;
 extern bool g_Connected;
 extern uint g_LastFriendFound;
 extern uint g_LastEnemyFound;
-extern uchar g_Ability[2];
+// The client-owned combat ability table (GamePlayer/CrossUO keep it current).
+using ::g_Ability;
 extern CPoint2Di g_LastTargetPosition;
 extern CPoint2Di g_LastAttackPosition;
 extern uint g_LastStatusRequest;
@@ -540,8 +540,10 @@ extern SelectedTile g_SelectedClientWorldObject;
 extern bool g_ClientMacroPlayed;
 extern CPoint2Di g_LastPlayerCorpsePosition;
 extern uint g_LastPlayerDeadTimer;
-extern int g_LastSkillIndex;
-extern int g_LastSpellIndex;
+// The client-owned last-cast/last-used indexes (client send sites update
+// them before the macro Record taps run).
+using ::g_LastSkillIndex;
+using ::g_LastSpellIndex;
 extern bool g_TargetReceived;
 extern bool g_MenuReceived;
 extern bool g_GumpReceived;
@@ -549,8 +551,6 @@ extern bool g_PromptReceived;
 extern bool g_ContextMenuReceived;
 extern bool g_TradeReceived;
 extern bool g_ShopReceived;
-extern ushort g_SpellReagents[64][5];
-extern CPoint2Di g_RemoveRangeXY;
 extern uint g_LastTMapX;
 extern uint g_LastTMapY;
 
@@ -561,30 +561,8 @@ static const bool g_LayerSafe[30] = { false, // 0
                                       false, // 0x15
                                       true,  true, true,  false, false, false, false, false };
 
-const int MAX_ABILITIES_COUNT = 32;
-
-//! Size of the static art.mul index table, >=CV_7090: count=0x10000, >=CV_7000:
-//! count=0x8000, <CV_7000: count=0x4000
-const int MAX_STATIC_DATA_INDEX_COUNT = 0x10000;
-
-//! Size of the gump indexes table
-const int MAX_GUMP_DATA_INDEX_COUNT = 0x10000;
-
-const string g_AbilityName[MAX_ABILITIES_COUNT] = {
-    "Armor Ignore",       "Bleed Attack",    "Concussion Blow",
-    "Crushing Blow",      "Disarm",          "Dismount",
-    "Double Strike",      "Infecting",       "Mortal Strike",
-    "Moving Shot",        "Paralyzing Blow", "Shadow Strike",
-    "Whirlwind Attack",
-    "Riding Swipe", // CV_500a
-    "Frenzied Whirlwind", "Block",           "Defense Mastery",
-    "Nerve Strike",       "Talon Strike",    "Feint",
-    "Dual Wield",         "Double Shot",     "Armor Pierce",
-    "Bladeweave",         "Force Arrow",     "Lightning Arrow",
-    "Psychic Attack",     "Serpent Arrow",   "Force of Nature",
-    "Infused Throw", // CV_7000
-    "Mystic Arc",         "Disrobe"
-};
+// MAX_ABILITIES_COUNT, MAX_STATIC_DATA_INDEX_COUNT and MAX_GUMP_DATA_INDEX_COUNT
+// come from Globals.h / xuocore/enumlist.h.
 
 const int MAX_INVOKE_VIRTURE_COUNT = 3;
 

@@ -847,6 +847,10 @@ gotchas, accepted deltas and the reasoning behind them.
   single `IsRecording()` check when idle, packet flow untouched. The taps
   build the same `CMacro` subclasses the actions map to (`MT_USE` →
   `MCT_SELF`; `MT_ATTACK` → `MCT_LASTATTACK`/`MCT_LASTTARGET`/`MCT_ENEMY`
+  Note: after unifying the last-cast/skill indices with the client globals, the
+  MCT_LAST conversion at the 0x12 sites is effectively always-on when recording
+  (the client assigns the index before the record call runs). Playback is
+  unaffected - the recorded entry is the cast itself.
   in that order; cast variants → `MCT_LAST` on the previous-index "was-set"
   comparison; `MT_COMBAT_ABILITY` → primary/secondary via `g_Ability[0]`;
   `MT_WALK` records the negative turn encoding on facing change).
