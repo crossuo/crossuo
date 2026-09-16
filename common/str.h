@@ -91,8 +91,8 @@ bool str_to_bool(const astr_t &aStr);
 
 #endif // STR_HEADER
 
-#if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTATED)
-#define STR_IMPLEMENTATED
+#if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTED)
+#define STR_IMPLEMENTED
 
 static miniconv_t s_utf8_utf8;   // cleanup invalid data
 static miniconv_t s_cp1250_utf8; // Issue #221

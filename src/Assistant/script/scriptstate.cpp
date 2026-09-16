@@ -22,12 +22,6 @@ std::map<astr_t, uint> s_Timers; // stored stamp: g_Ticks - value
 // can erase every key of the icon)
 std::map<astr_t, ushort> s_Buffs;
 
-astr_t to_lower_copy(astr_t text)
-{
-    std::transform(text.begin(), text.end(), text.begin(), ::tolower);
-    return text;
-}
-
 // The original BuffExists body trimmed + lowered the script argument (the port
 // lowers at store time, so only the lookup needs it here).
 astr_t buff_key(astr_t name)
@@ -39,7 +33,7 @@ astr_t buff_key(astr_t name)
         return "";
     }
     size_t end = name.find_last_not_of(" \t\r\n");
-    return to_lower_copy(name.substr(begin, end - begin + 1));
+    return str_lower(name.substr(begin, end - begin + 1));
 }
 
 } // namespace

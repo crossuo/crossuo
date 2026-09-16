@@ -27,26 +27,6 @@ namespace xuoassist {
 
 CShopAgent g_ShopAgent;
 
-namespace {
-
-// the per-file to_lower_copy the original port keeps in assist/displaymanager
-astr_t to_lower_copy(astr_t text)
-{
-    for (char &ch : text)
-    {
-        if (ch >= 'A' && ch <= 'Z')
-        {
-            ch += 'a' - 'A';
-        }
-    }
-    return text;
-}
-
-// the old toInt semantics: the WHOLE string must parse as an integer
-
-} // namespace
-
-
 void CShopAgent::Tick()
 {
     // was ShopProgressForm::on_Timer (50 ms timer -> g_Ticks frame ticks)
@@ -176,13 +156,13 @@ bool CShopAgent::ProcessShopList()
     vector<CShopListEntry> &shopLists = g_AssistantConfig.m_ShopLists;
 
     CShopListEntry *shopList = nullptr;
-    astr_t seekListName = to_lower_copy(m_WaitShopListName);
+    astr_t seekListName = str_lower(m_WaitShopListName);
 
     for (size_t i = 0; i < shopLists.size(); i++)
     {
         shopList = &shopLists[i];
 
-        if (to_lower_copy(shopList->Name) == seekListName)
+        if (str_lower(shopList->Name) == seekListName)
         {
             break;
         }
@@ -218,7 +198,7 @@ bool CShopAgent::ProcessShopList()
         const CShopItemEntry &shopItem = shopItems[si];
         CFindItem findItem(shopItem.Graphic, shopItem.Color);
         int checkPrice = shopItem.Price;
-        astr_t checkName = to_lower_copy(shopItem.Name);
+        astr_t checkName = str_lower(shopItem.Name);
         bool exit = false;
 
         for (size_t vi = 0; vi < vendorItems.size(); vi++)
@@ -245,7 +225,7 @@ bool CShopAgent::ProcessShopList()
 
             if (findItem.Found(vendorItem.Graphic, vendorItem.Color) &&
                 ((checkName.length() == 0) ||
-                 checkName == to_lower_copy(vendorItem.Name)))
+                 checkName == str_lower(vendorItem.Name)))
             {
                 int count = shopItem.Count;
 

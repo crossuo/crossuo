@@ -47,17 +47,8 @@ static vector<astr_t> split_skip_empty(const astr_t &text, char separator)
     return out;
 }
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
 
 static int to_int(const astr_t &text) { return atoi(text.c_str()); }
-
 static uint to_uint(const astr_t &text) { return (uint)strtoul(text.c_str(), nullptr, 10); }
 
 CGumpManager g_GumpManager;
@@ -575,7 +566,7 @@ void CGumpManager::InfoGump(const astr_t &gumpIndex)
 {
     int index = -1;
 
-    if (to_lower_copy(gumpIndex) != "lastgump" && to_lower_copy(gumpIndex) != "last")
+    if (str_lower(gumpIndex) != "lastgump" && str_lower(gumpIndex) != "last")
     {
         index = to_int(gumpIndex);
     }

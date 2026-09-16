@@ -20,14 +20,6 @@
 
 namespace xuoassist {
 
-namespace {
-astr_t to_lower_copy(astr_t text)
-{
-    std::transform(text.begin(), text.end(), text.begin(), ::tolower);
-    return text;
-}
-} // namespace
-
 // --- the shared editor buffer (was g_ScriptEditorDialog) ---------------------
 
 namespace {
@@ -289,13 +281,13 @@ void ScriptManager_Terminate(const astr_t &functionName, const astr_t &functions
 {
     // the "all"/save-list semantics of TabScripts::TerminateScript
     CScriptManager *manager = ScriptManager_Get();
-    if (to_lower_copy(functionName) == "all")
+    if (str_lower(functionName) == "all")
     {
         for (CScriptHandle *handle : manager->Handles())
         {
             bool canTerminate = true;
             size_t start = 0;
-            const astr_t lower = to_lower_copy(functionsSave);
+            const astr_t lower = str_lower(functionsSave);
             while (start <= lower.size())
             {
                 size_t end = lower.find('|', start);

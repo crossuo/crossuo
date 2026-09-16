@@ -10,19 +10,8 @@
 
 namespace xuoassist {
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CSpellManager g_SpellManager;
-
 CSpellManager::CSpellManager() {}
-
 CSpellManager::~CSpellManager() {}
 
 void CSpellManager::Insert(const astr_t &name, const int &index)
@@ -50,7 +39,7 @@ int CSpellManager::Find(astr_t name)
 
 void CSpellManager::Cast(const astr_t &name)
 {
-    int index = Find(to_lower_copy(name));
+    int index = Find(str_lower(name));
 
     if (index != -1)
     {
@@ -74,7 +63,7 @@ void CSpellManager::CastIndex(int index)
 
 void CSpellManager::TargetCast(const astr_t &name, const uint &serial)
 {
-    int index = Find(to_lower_copy(name));
+    int index = Find(str_lower(name));
 
     if (index != -1)
     {

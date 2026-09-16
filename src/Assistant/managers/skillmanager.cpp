@@ -12,19 +12,8 @@
 
 namespace xuoassist {
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CSkillManager g_SkillManager;
-
 CSkillManager::CSkillManager() {}
-
 CSkillManager::~CSkillManager() {}
 
 void CSkillManager::Insert(const astr_t &name, const bool &usable, const int &index)
@@ -37,7 +26,7 @@ void CSkillManager::Insert(const astr_t &name, const bool &usable, const int &in
 
 int CSkillManager::GetIndex(const astr_t &name)
 {
-    SKILLS_MAP::iterator it = m_AllSkills.find(to_lower_copy(name));
+    SKILLS_MAP::iterator it = m_AllSkills.find(str_lower(name));
 
     if (it != m_AllSkills.end())
     {
@@ -56,7 +45,7 @@ int CSkillManager::Find(const astr_t &name)
 
 void CSkillManager::Use(const astr_t &name)
 {
-    int index = Find(to_lower_copy(name));
+    int index = Find(str_lower(name));
 
     if (index != -1)
     {
@@ -80,7 +69,7 @@ void CSkillManager::UseIndex(int index)
 
 void CSkillManager::TargetUse(const astr_t &name, const uint &serial)
 {
-    int index = Find(to_lower_copy(name));
+    int index = Find(str_lower(name));
 
     if (index != -1)
     {

@@ -34,15 +34,6 @@
 
 namespace xuoassist {
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CAssistant g_Assistant;
 TARGET_HANDLER g_TargetHandler = nullptr;
 MOVITEM_DATA g_MoveItemData;
@@ -147,7 +138,7 @@ uint CAssistant::RawStringToUInt(const astr_t &value)
 
 bool CAssistant::RawStringToBool(astr_t value)
 {
-    value = to_lower_copy(value);
+    value = str_lower(value);
     bool result = false;
 
     if (value == "true" || value == "on")
@@ -169,21 +160,21 @@ uint CAssistant::TextToUInt(const astr_t &text)
 
 uint CAssistant::TextToSerial(astr_t text)
 {
-    return ::xuoassist::TextToSerial(to_lower_copy(text));
+    return ::xuoassist::TextToSerial(str_lower(text));
 }
 
 ushort CAssistant::TextToGraphic(astr_t text)
 {
-    return ::xuoassist::TextToGraphic(to_lower_copy(text));
+    return ::xuoassist::TextToGraphic(str_lower(text));
 }
 
 int CAssistant::TextToLayer(astr_t text)
 {
-    text = to_lower_copy(text);
+    text = str_lower(text);
 
     for (int i = 0; i < 30; i++)
     {
-        if (text == to_lower_copy(g_LayerName[i]))
+        if (text == str_lower(g_LayerName[i]))
         {
             return i;
         }
@@ -365,7 +356,7 @@ uchar CAssistant::GetNotorietyFlags(const astr_t &text)
 
     TextFileParser parser({}, "| ", "", "");
 
-    vector<astr_t> list = parser.GetTokens(to_lower_copy(text));
+    vector<astr_t> list = parser.GetTokens(str_lower(text));
 
     for (const astr_t &str : list)
     {

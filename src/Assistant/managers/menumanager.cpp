@@ -20,19 +20,8 @@
 
 namespace xuoassist {
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CMenuManager g_MenuManager;
-
 CMenuManager::CMenuManager() {}
-
 CMenuManager::~CMenuManager() {}
 
 int CMenuManager::GetMenuCount()
@@ -50,9 +39,9 @@ CMenu *CMenuManager::GetMenu(const astr_t &name)
     for (size_t i = 0; i < m_Items.size(); i++)
     {
         // indexOf(name, 0, CaseInsensitive) == 0 -> starts-with, case-insensitive
-        const astr_t itemNameLower = to_lower_copy(m_Items[i]->Name);
+        const astr_t itemNameLower = str_lower(m_Items[i]->Name);
         if (itemNameLower.size() >= name.size() &&
-            itemNameLower.compare(0, name.size(), to_lower_copy(name)) == 0)
+            itemNameLower.compare(0, name.size(), str_lower(name)) == 0)
         {
             return m_Items[i];
         }
@@ -197,8 +186,8 @@ bool CMenuManager::SendChoiceIfMenuExists(
         CMenu *menu = m_Items[i];
 
         if (!menu->Replayed &&
-            to_lower_copy(menu->Name).size() >= name.size() &&
-            to_lower_copy(menu->Name).compare(0, name.size(), to_lower_copy(name)) == 0)
+            str_lower(menu->Name).size() >= name.size() &&
+            str_lower(menu->Name).compare(0, name.size(), str_lower(name)) == 0)
         {
             if (SendMenuChoice(menu, itemName, sendPacket))
             {
@@ -226,7 +215,7 @@ bool CMenuManager::SendChoiceIfMenuExists(
 
 bool CMenuManager::SendMenuChoice(CMenu *menu, const astr_t &itemName, const bool &sendPacket)
 {
-    if ((itemName.length() == 0) || to_lower_copy(itemName) == "cancel")
+    if ((itemName.length() == 0) || str_lower(itemName) == "cancel")
     {
         if (sendPacket)
         {
@@ -277,7 +266,7 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const astr_t &itemName, const boo
     bool ok = false;
     uint index = 0;
 
-    if (to_lower_copy(itemName) == "random" && !menu->m_Items.empty())
+    if (str_lower(itemName) == "random" && !menu->m_Items.empty())
     {
         ok = true;
         index = rand() % menu->m_Items.size();
@@ -322,7 +311,7 @@ void CMenuManager::InfoMenu(const astr_t &menuIndex)
 {
     int index = -1;
 
-    if (to_lower_copy(menuIndex) != "lastmenu" || to_lower_copy(menuIndex) != "last")
+    if (str_lower(menuIndex) != "lastmenu" || str_lower(menuIndex) != "last")
     {
         index = atoi(menuIndex.c_str());
     }

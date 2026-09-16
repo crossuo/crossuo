@@ -14,17 +14,7 @@
 
 namespace xuoassist {
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CPromptManager g_PromptManager;
-
 CPromptManager::CPromptManager() {}
 
 void CPromptManager::AddHook(const CPrompt &prompt)
@@ -110,7 +100,7 @@ void CPromptManager::Send(astr_t text)
 {
     if (Exists)
     {
-        bool cancel = ((text.length() == 0) || to_lower_copy(text) == "cancel");
+        bool cancel = ((text.length() == 0) || str_lower(text) == "cancel");
 
         if (cancel)
         {

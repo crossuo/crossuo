@@ -29,18 +29,7 @@ namespace xuoassist {
 
 CTextCommandManager g_TextCommandManager;
 COMMANDS_MAP CTextCommandManager::m_Commands;
-
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CTextCommandManager::CTextCommandManager() {}
-
 CTextCommandManager::~CTextCommandManager() {}
 
 #define COMMAND(name, flags, description)                                                          \
@@ -130,7 +119,7 @@ void CTextCommandManager::DoCommand(const astr_t &text)
             continue;
         }
 
-        COMMANDS_MAP::iterator command = m_Commands.find(to_lower_copy(str));
+        COMMANDS_MAP::iterator command = m_Commands.find(str_lower(str));
 
         if (command == m_Commands.end())
         {
@@ -160,7 +149,7 @@ bool CTextCommandManager::RunCommand(const astr_t &name, const COMMAND_ARGS &arg
         return false;
     }
 
-    COMMANDS_MAP::iterator command = m_Commands.find(to_lower_copy(name));
+    COMMANDS_MAP::iterator command = m_Commands.find(str_lower(name));
 
     if (command == m_Commands.end())
     {
@@ -359,7 +348,7 @@ HCOMMAND(infotile)
         return;
     }
 
-    if (to_lower_copy(lasttile) == "lasttile")
+    if (str_lower(lasttile) == "lasttile")
     {
         g_Assistant.DumpTileInfo(
             g_Target.LastTileGraphic, g_Target.LastTileX, g_Target.LastTileY, g_Target.LastTileZ);
@@ -1230,7 +1219,7 @@ HCOMMAND(setarm)
         return;
     }
 
-    CDressSetEntry *list = g_AssistantConfig.GetDressSet(to_lower_copy(args[0]));
+    CDressSetEntry *list = g_AssistantConfig.GetDressSet(str_lower(args[0]));
 
     if (list == nullptr)
     {
@@ -1268,7 +1257,7 @@ HCOMMAND(unsetarm)
         return;
     }
 
-    CDressSetEntry *list = g_AssistantConfig.GetDressSet(to_lower_copy(args[0]));
+    CDressSetEntry *list = g_AssistantConfig.GetDressSet(str_lower(args[0]));
 
     if (list != nullptr)
     {
@@ -1291,7 +1280,7 @@ HCOMMAND(setdress)
         return;
     }
 
-    CDressSetEntry *list = g_AssistantConfig.GetDressSet(to_lower_copy(args[0]));
+    CDressSetEntry *list = g_AssistantConfig.GetDressSet(str_lower(args[0]));
 
     if (list == nullptr)
     {
@@ -1329,7 +1318,7 @@ HCOMMAND(unsetdress)
         return;
     }
 
-    CDressSetEntry *list = g_AssistantConfig.GetDressSet(to_lower_copy(args[0]));
+    CDressSetEntry *list = g_AssistantConfig.GetDressSet(str_lower(args[0]));
 
     if (list != nullptr)
     {
@@ -1533,7 +1522,7 @@ HCOMMAND(clearjournal)
     // full wipe when the pattern is empty and nothing matched.
     CJournalMessage *hit =
         ScriptJournal_Find(pattern, CAssistant::TextToSerial(serial), color,
-                           GetJournalFlags(to_lower_copy(type)), 0, 0, true);
+                           GetJournalFlags(str_lower(type)), 0, 0, true);
     delete hit;
 
     if (hit == nullptr && pattern.length() == 0)

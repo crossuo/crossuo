@@ -652,15 +652,6 @@ CTargetHook::CTargetHook(const astr_t &tile, const int &x, const int &y, const i
 
 namespace {
 
-astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 // The tile flags/name filter of the original CFileManager::GetTile path.
 // TNF_BY_GRAPHIC is 0: a bare numeric graphic means
 // "match exactly this graphic".
@@ -842,7 +833,7 @@ bool CTarget::CheckHook()
         }
         else
         {
-            astr_t tileName = to_lower_copy(hook.Tile);
+            astr_t tileName = str_lower(hook.Tile);
 
             if (tileName == "lasttile")
             {

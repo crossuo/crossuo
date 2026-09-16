@@ -10,19 +10,8 @@
 
 namespace xuoassist {
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CTradeManager g_TradeManager;
-
 CTradeManager::CTradeManager() {}
-
 CTradeManager::~CTradeManager()
 {
     m_List.clear();
@@ -153,7 +142,7 @@ CTradeWindow *CTradeManager::GetTrade(const astr_t &serial)
 {
     uint index = 0xFFFFFFFF;
 
-    astr_t lower = to_lower_copy(serial);
+    astr_t lower = str_lower(serial);
     if (lower.compare(0, 2, "0x") == 0)
     {
         index = CAssistant::TextToSerial(serial);

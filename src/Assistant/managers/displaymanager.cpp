@@ -24,15 +24,6 @@
 
 namespace xuoassist {
 
-static astr_t to_lower_copy(astr_t text)
-{
-    for (char &c : text)
-    {
-        c = (char)tolower(c);
-    }
-    return text;
-}
-
 CDisplayManager g_DisplayManager;
 
 // clang-format off
@@ -616,62 +607,62 @@ void CDisplayManager::ApplyAttributeToDisplayItem(
                 }
                 case DKI_ID:
                 {
-                    obj.Graphic = (ushort)CAssistant::TextToGraphic(to_lower_copy(value));
+                    obj.Graphic = (ushort)CAssistant::TextToGraphic(str_lower(value));
                     break;
                 }
                 case DKI_HUE:
                 {
-                    obj.Hue = (ushort)CAssistant::TextToGraphic(to_lower_copy(value));
+                    obj.Hue = (ushort)CAssistant::TextToGraphic(str_lower(value));
                     break;
                 }
                 case DKI_COLOR_MIN:
                 {
-                    obj.MinColor = CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.MinColor = CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_COLOR_MID:
                 {
-                    obj.MidColor = CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.MidColor = CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_COLOR:
                 {
-                    obj.Color = CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.Color = CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_BACKGROUND:
                 {
-                    obj.Background = CAssistant::RawStringToBool(to_lower_copy(value));
+                    obj.Background = CAssistant::RawStringToBool(str_lower(value));
                     break;
                 }
                 case DKI_BG_COLOR_MIN:
                 {
-                    obj.BackgroundMinColor = CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.BackgroundMinColor = CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_BG_COLOR_MID:
                 {
-                    obj.BackgroundMidColor = CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.BackgroundMidColor = CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_BG_COLOR:
                 {
-                    obj.BackgroundColor = CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.BackgroundColor = CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_MIN_VAULE:
                 {
-                    obj.MinValue = (int)CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.MinValue = (int)CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_MID_VALUE:
                 {
-                    obj.MidValue = (int)CAssistant::RawStringToUInt(to_lower_copy(value));
+                    obj.MidValue = (int)CAssistant::RawStringToUInt(str_lower(value));
                     break;
                 }
                 case DKI_PERCENTS:
                 {
-                    obj.Percents = CAssistant::RawStringToBool(to_lower_copy(value));
+                    obj.Percents = CAssistant::RawStringToBool(str_lower(value));
                     break;
                 }
                 default:
@@ -721,14 +712,14 @@ void CDisplayManager::CompilleData(const astr_t &text, uint textColor)
 
                 if (!tags.empty())
                 {
-                    astr_t lowerName = to_lower_copy(*tags.begin());
+                    astr_t lowerName = str_lower(*tags.begin());
 
                     if (lowerName == "group")
                     {
                         if (tags.size() > 1)
                         {
                             CompilleData(
-                                g_AssistantConfig.GetGroupContent(to_lower_copy(*(tags.begin() + 1))),
+                                g_AssistantConfig.GetGroupContent(str_lower(*(tags.begin() + 1))),
                                 textColor);
                         }
 
@@ -745,7 +736,7 @@ void CDisplayManager::CompilleData(const astr_t &text, uint textColor)
 
                         if (t != tags.size())
                         {
-                            ApplyAttributeToDisplayItem(tagData, to_lower_copy(tagName), tags[t]);
+                            ApplyAttributeToDisplayItem(tagData, str_lower(tagName), tags[t]);
                         }
                         else
                         {

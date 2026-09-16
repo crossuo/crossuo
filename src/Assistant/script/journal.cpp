@@ -23,12 +23,6 @@ constexpr size_t JOURNAL_CAP = 200;
 vector<CJournalMessage> s_Messages;
 bool s_IgnoreCase = false;
 
-astr_t to_lower_copy(astr_t text)
-{
-    std::transform(text.begin(), text.end(), text.begin(), ::tolower);
-    return text;
-}
-
 bool contains(const astr_t &text, const astr_t &pattern)
 {
     return text.find(pattern) != astr_t::npos;
@@ -97,7 +91,7 @@ CJournalMessage *ScriptJournal_Find(
     astr_t lowered;
     if (ignoreCase)
     {
-        lowered = to_lower_copy(pattern);
+        lowered = str_lower(pattern);
         // re-split lowered
         patterns.clear();
         astr_t current;
@@ -144,7 +138,7 @@ CJournalMessage *ScriptJournal_Find(
         astr_t text = message.Text;
         if (ignoreCase)
         {
-            text = to_lower_copy(text);
+            text = str_lower(text);
         }
 
         int findID = 0;
