@@ -22,7 +22,7 @@ namespace xuoassist {
 
 
 class CAssistant;
-typedef void (CAssistant::*TARGET_HANDLER)(uint8_t *buf);
+typedef void (CAssistant::*TARGET_HANDLER)(uint8_t *buf) const;
 extern TARGET_HANDLER g_TargetHandler;
 
 struct MOVITEM_DATA
@@ -53,8 +53,11 @@ public:
     astr_t GetUsedIgnoreList() const { return m_UsedIgnoreList; }
     void SetUsedIgnoreList(const astr_t &val) { m_UsedIgnoreList = val; }
 
-    CAssistant();
-    ~CAssistant();
+    CAssistant() = default;
+    ~CAssistant() = default;
+
+    CAssistant(const CAssistant &) = delete;
+    CAssistant &operator=(const CAssistant &) = delete;
 
     void Init() {}
 
@@ -69,26 +72,26 @@ public:
     static astr_t GraphicToText(const uint16_t &value);
     static astr_t BoolToText(const bool &value);
 
-    void ClientPrint(const astr_t &text, const uint16_t &color = g_MessagesColor);
-    void ClientCharPrint(const uint32_t &serial, const astr_t &text, const uint16_t &color = g_MessagesColor);
-    void ClientPrintDebugLevel1(const astr_t &text, const uint16_t &color = g_MessagesColor);
-    void ClientPrintDebugLevel2(const astr_t &text, const uint16_t &color = g_MessagesColor);
+    void ClientPrint(const astr_t &text, const uint16_t &color = g_MessagesColor) const;
+    void ClientCharPrint(const uint32_t &serial, const astr_t &text, const uint16_t &color = g_MessagesColor) const;
+    void ClientPrintDebugLevel1(const astr_t &text, const uint16_t &color = g_MessagesColor) const;
+    void ClientPrintDebugLevel2(const astr_t &text, const uint16_t &color = g_MessagesColor) const;
 
-    void RequestTarget(const astr_t &text);
+    void RequestTarget(const astr_t &text) const;
 
     // the client 0xD1 handler performs the logout request (CGame::LogOut,
     // dispatched via the DIR_RECV-registered HandleLogout, so the old injected
     // 0xD1 was not a no-op); the assistant now calls it directly
-    void LogOut();
+    void LogOut() const;
 
-    void DumpObjectInfo(class CGameObject *obj);
-    void DumpTileInfo(const uint16_t &graphic, const short &x, const short &y, const char &z);
+    void DumpObjectInfo(class CGameObject *obj) const;
+    void DumpTileInfo(const uint16_t &graphic, const short &x, const short &y, const char &z) const;
 
-    void GetStatus(const uint32_t &serial);
-    void Click(const uint32_t &serial);
-    void DoubleClick(const uint32_t &serial);
-    void Attack(const uint32_t &serial);
-    uint8_t GetNotorietyFlags(const astr_t &text);
+    void GetStatus(const uint32_t &serial) const;
+    void Click(const uint32_t &serial) const;
+    void DoubleClick(const uint32_t &serial) const;
+    void Attack(const uint32_t &serial) const;
+    uint8_t GetNotorietyFlags(const astr_t &text) const;
 
     class CGameObject *FindList(
         const astr_t &findListName,
@@ -97,7 +100,7 @@ public:
         const uint16_t &flags,
         const astr_t &notorietyText,
         bool recurseSearch,
-        vector<astr_t> &result);
+        vector<astr_t> &result) const;
     class CGameObject *FindType(
         const vector<astr_t> &graphic,
         const vector<astr_t> &color,
@@ -106,7 +109,7 @@ public:
         const uint16_t &flags,
         const astr_t &notorietyText,
         bool recurseSearch,
-        vector<astr_t> &result);
+        vector<astr_t> &result) const;
     class CGameObject *FindType(
         const CFindItem &findListItem,
         const vector<CIgnoreItem> &ignoreList,
@@ -115,66 +118,66 @@ public:
         uint16_t flags,
         const uint8_t &notoriety,
         bool recurseSearch,
-        vector<astr_t> &list);
-    class CGameObject *FindFriend(const uint16_t &flags, const astr_t &distanceText);
-    class CGameObject *FindEnemy(const uint16_t &flags, const astr_t &distanceText);
-    void GetFriendsStatus();
-    void GetEnemiesStatus();
+        vector<astr_t> &list) const;
+    class CGameObject *FindFriend(const uint16_t &flags, const astr_t &distanceText) const;
+    class CGameObject *FindEnemy(const uint16_t &flags, const astr_t &distanceText) const;
+    void GetFriendsStatus() const;
+    void GetEnemiesStatus() const;
     int CountType(
         const vector<astr_t> &graphic,
         const vector<astr_t> &color,
         const astr_t &containerText,
         const astr_t &distanceText,
-        bool recurseSearch);
+        bool recurseSearch) const;
     int CountType(
         const CFindItem &findListItem,
         const uint32_t &container,
         const int &distance,
-        bool recurseSearch);
+        bool recurseSearch) const;
     void UseType(
         const CFindItem &findListItem,
         const uint32_t &container,
         const int &distance,
-        const bool &recurseSearch);
-    void MoveItem(class CGameItem *item);
-    void MoveEquip(const uint32_t &serial, const int &layer, const uint32_t &container);
-    void Track(const bool &state, short x, short y);
+        const bool &recurseSearch) const;
+    void MoveItem(const CGameItem *item) const;
+    void MoveEquip(const uint32_t &serial, const int &layer, const uint32_t &container) const;
+    void Track(const bool &state, short x, short y) const;
 
     // Moved from the original TabListsObjects::SetDressBag (the dress bag is config
     // data; the container check + assistant messages were its logic).
-    void SetDressBag(const uint32_t &serial);
+    void SetDressBag(const uint32_t &serial) const;
 
     // Moved from the original AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (the
     // single-shot 20 ms timer collapsed - the scan and the open are one step
     // now, exactly like the timer's immediate-fire path).
-    void AutoOpenDoor(const int &x, const int &y, const int &z);
+    void AutoOpenDoor(const int &x, const int &y, const int &z) const;
 
     // The auto-open-door half of the walk send (was the front half of the 0x02
     // WalkRequest send tap, packetmanager.cpp): called from the client's
     // CPathFinder::Walk with the packet's direction byte.
-    void WalkAutoOpenDoor(const int &direction);
+    void WalkAutoOpenDoor(const int &direction) const;
 
-    void HandleTargetType(uint8_t *buf);
-    void HandleTargetObject(uint8_t *buf);
-    void HandleTargetDisplayItem(uint8_t *buf);
-    void HandleTargetInfo(uint8_t *buf);
-    void HandleTargetInfoTile(uint8_t *buf);
-    void HandleTargetDressBag(uint8_t *buf);
-    void HandleTargetDressItem(uint8_t *buf);
-    void HandleTargetHide(uint8_t *buf);
-    void HandleTargetDrop(uint8_t *buf);
-    void HandleTargetFindList(uint8_t *buf);
-    void HandleTargetIgnoreList(uint8_t *buf);
-    void HandleTargetPartyObject(uint8_t *buf);
-    void HandleTargetFriendObject(uint8_t *buf);
-    void HandleTargetEnemyObject(uint8_t *buf);
-    void HandleTargetAnimalAndVendorControlName(uint8_t *buf);
-    void HandleSetPVPCaller(uint8_t *buf);
-    void OpenDoor();
+    void HandleTargetType(uint8_t *buf) const;
+    void HandleTargetObject(uint8_t *buf) const;
+    void HandleTargetDisplayItem(uint8_t *buf) const;
+    void HandleTargetInfo(uint8_t *buf) const;
+    void HandleTargetInfoTile(uint8_t *buf) const;
+    void HandleTargetDressBag(uint8_t *buf) const;
+    void HandleTargetDressItem(uint8_t *buf) const;
+    void HandleTargetHide(uint8_t *buf) const;
+    void HandleTargetDrop(uint8_t *buf) const;
+    void HandleTargetFindList(uint8_t *buf) const;
+    void HandleTargetIgnoreList(uint8_t *buf) const;
+    void HandleTargetPartyObject(uint8_t *buf) const;
+    void HandleTargetFriendObject(uint8_t *buf) const;
+    void HandleTargetEnemyObject(uint8_t *buf) const;
+    void HandleTargetAnimalAndVendorControlName(uint8_t *buf) const;
+    void HandleSetPVPCaller(uint8_t *buf) const;
+    void OpenDoor() const;
 
     static bool IsNoDrawTile(const uint16_t &graphic);
 
-    void ScriptError(const astr_t &title, const astr_t &text);
+    void ScriptError(const astr_t &title, const astr_t &text) const;
 };
 
 extern CAssistant g_Assistant;

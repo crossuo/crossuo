@@ -21,6 +21,9 @@ public:
     CTradeManager();
     virtual ~CTradeManager();
 
+    CTradeManager(const CTradeManager &) = delete;
+    CTradeManager &operator=(const CTradeManager &) = delete;
+
     // trade-round bookkeeping over the client handler's parsed values
     // (the client owns the 0x6F parse; no consume)
     void OnTradeAction(int action, uint32_t serial, uint32_t id1, uint32_t id2, const astr_t &name);

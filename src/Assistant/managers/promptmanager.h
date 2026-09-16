@@ -27,6 +27,9 @@ private:
 public:
     CPromptManager();
 
+    CPromptManager(const CPromptManager &) = delete;
+    CPromptManager &operator=(const CPromptManager &) = delete;
+
     void AddHook(const CPrompt &prompt);
 
     void ClearHooks();

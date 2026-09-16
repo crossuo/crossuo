@@ -79,11 +79,11 @@ CGump *CGumpManager::GetGump(const uint32_t &index)
 
 CGump *CGumpManager::GetGump(const uint32_t &serial, const uint32_t &id)
 {
-    for (size_t i = 0; i < m_Items.size(); i++)
+    for (CGump *gump : m_Items)
     {
-        if (m_Items[i]->Serial == serial && m_Items[i]->ID == id)
+        if (gump->Serial == serial && gump->ID == id)
         {
-            return m_Items[i];
+            return gump;
         }
     }
 
@@ -98,9 +98,9 @@ void CGumpManager::AddGump(uint32_t serial, int x, int y, uint32_t id)
 
 void CGumpManager::RemoveLastGump()
 {
-    for (size_t i = 0; i < m_Items.size(); i++)
+    for (CGump *gump : m_Items)
     {
-        if (m_Items[i] == m_LastGump)
+        if (gump == m_LastGump)
         {
             m_LastGump = nullptr;
             break;
@@ -113,9 +113,9 @@ void CGumpManager::RemoveLastGump()
 
 void CGumpManager::ClearGumps()
 {
-    for (size_t i = 0; i < m_Items.size(); i++)
+    for (CGump *gump : m_Items)
     {
-        delete m_Items[i];
+        delete gump;
     }
 
     m_Items.clear();

@@ -109,7 +109,7 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
     return true;
 }
 
-bool CContextMenuManager::OnPacketSend(CDataReader &reader)
+bool CContextMenuManager::OnPacketSend(CDataReader &reader) const
 {
     (void)reader;
     return true;

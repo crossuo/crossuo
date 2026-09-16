@@ -22,7 +22,7 @@ public:
         , m_ItemName(itemName)
     {
     }
-    ~CMenuHook() {}
+    ~CMenuHook() = default;
 
     astr_t GetName() const { return m_Name; }
     astr_t GetItemName() const { return m_ItemName; }
@@ -42,6 +42,9 @@ private:
 public:
     CMenuManager();
     virtual ~CMenuManager();
+
+    CMenuManager(const CMenuManager &) = delete;
+    CMenuManager &operator=(const CMenuManager &) = delete;
 
     int GetMenuCount();
 

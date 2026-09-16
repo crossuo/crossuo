@@ -379,7 +379,7 @@ bool CHotkeys::ProcessKeyDown(const SDL_Event &ev)
     return MatchAndUse(key, modifiers);
 }
 
-bool CHotkeys::ProcessKeyUp(const SDL_Event &)
+bool CHotkeys::ProcessKeyUp(const SDL_Event &) const
 {
     // key-up bindings never fire (parity with the original app's filter)
     return false;

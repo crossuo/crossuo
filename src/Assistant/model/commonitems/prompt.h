@@ -16,7 +16,7 @@ public:
     astr_t Text = "";
     PROMPT_TYPE Type = PT_NONE;
 
-    CPrompt() {}
+    CPrompt() = default;
     CPrompt(const uint32_t &serial, const astr_t &text, const PROMPT_TYPE &type);
 };
 

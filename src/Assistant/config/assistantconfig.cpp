@@ -76,7 +76,7 @@ fs_path CAssistantConfig::GetConfigPath()
     return fs_path_join(GetRootPath(), CONFIG_DIR);
 }
 
-fs_path CAssistantConfig::GetProfilePath()
+fs_path CAssistantConfig::GetProfilePath() const
 {
     return fs_path_join(GetConfigPath(), ProfileName);
 }
@@ -272,7 +272,7 @@ bool CAssistantConfig::SaveProfile()
 
 // --- Options.xml -------------------------------------------------------------
 
-bool CAssistantConfig::GetFontColor(uint16_t &value)
+bool CAssistantConfig::GetFontColor(uint16_t &value) const
 {
     bool result = m_UseFontColor;
     if (!m_FontColor.empty())
@@ -296,7 +296,7 @@ void CAssistantConfig::SetFontColor(const bool &state, uint16_t value)
     m_FontColor = CAssistant::GraphicToText(value);
 }
 
-bool CAssistantConfig::GetCharactersFontColor(uint16_t &value)
+bool CAssistantConfig::GetCharactersFontColor(uint16_t &value) const
 {
     bool result = m_UseCharactersFontColor;
     if (!m_CharactersFontColor.empty())
@@ -528,7 +528,7 @@ void CAssistantConfig::SaveMainOptions()
 // --- main option gates (TabMain getters, feature-flag gated) ------------------
 
 #define XA_CONFIG_OPTION_GETTER(name, featureEnabled, index)                                       \
-    bool CAssistantConfig::name()                                                                  \
+    bool CAssistantConfig::name() const                                                                  \
     {                                                                                              \
         if (!(featureEnabled))                                                                     \
         {                                                                                          \
@@ -560,17 +560,17 @@ XA_CONFIG_OPTION_GETTER(EffectEcho, EnabledFeatureEffectEcho(), CLBI_EFFECT_ECHO
 XA_CONFIG_OPTION_GETTER(SpeechFilter, EnabledFeatureSpeechFilter(), CLBI_FILTER_SPEECH)
 XA_CONFIG_OPTION_GETTER(TextReplace, EnabledFeatureTextReplace(), CLBI_TEXT_REPLACE)
 // Not feature-gated in the original:
-bool CAssistantConfig::ObjectInspector()
+bool CAssistantConfig::ObjectInspector() const
 {
     return m_Options[CLBI_OBJECT_INSPECTOR];
 }
 XA_CONFIG_OPTION_GETTER(NoGrayScreen, EnabledFeatureNoDeathScreen(), CLBI_NO_GRAY_SCREEN)
 // Not feature-gated in the original:
-bool CAssistantConfig::SaveFarObjects()
+bool CAssistantConfig::SaveFarObjects() const
 {
     return m_Options[CLBI_SAVE_FAR_OBJECTS];
 }
-bool CAssistantConfig::StayOnTop()
+bool CAssistantConfig::StayOnTop() const
 {
     return m_Options[CLBI_STAY_ON_TOP];
 }
@@ -625,7 +625,7 @@ void CAssistantConfig::UpdateFeatures()
 
 // --- list queries --------------------------------------------------------------
 
-uint16_t CAssistantConfig::SeekType(const astr_t &text)
+uint16_t CAssistantConfig::SeekType(const astr_t &text) const
 {
     // Was TabListsTypes::SeekType.
     for (const CTypeEntry &entry : m_Types)
@@ -638,7 +638,7 @@ uint16_t CAssistantConfig::SeekType(const astr_t &text)
     return 0;
 }
 
-uint32_t CAssistantConfig::SeekObject(const astr_t &text)
+uint32_t CAssistantConfig::SeekObject(const astr_t &text) const
 {
     // Was TabListsObjects::SeekObject.
     for (const CObjectEntry &entry : m_Objects)
@@ -675,7 +675,7 @@ CIgnoreListEntry *CAssistantConfig::GetIgnoreList(const astr_t &name)
     return nullptr;
 }
 
-bool CAssistantConfig::InFriendList(uint32_t serial)
+bool CAssistantConfig::InFriendList(uint32_t serial) const
 {
     // Was TabListsFriends::InFriendList.
     if (m_FeelPartyMembersAsFriends && g_Party.Contains((int)serial))
@@ -692,7 +692,7 @@ bool CAssistantConfig::InFriendList(uint32_t serial)
     return false;
 }
 
-bool CAssistantConfig::InEnemyList(uint32_t serial)
+bool CAssistantConfig::InEnemyList(uint32_t serial) const
 {
     // Was TabListsEnemies::InEnemyList.
     for (const CWorldObjectEntry &entry : m_Enemies)
@@ -782,7 +782,7 @@ void CAssistantConfig::RemoveObject(const astr_t &name)
 
 // --- party agent -----------------------------------------------------------------
 
-bool CAssistantConfig::PartyInviteCanBeAutoAccepted(uint32_t serial)
+bool CAssistantConfig::PartyInviteCanBeAutoAccepted(uint32_t serial) const
 {
     // Was TabAgentsParty::PartyInviteCanBeAutoAccepted.
     if (m_PartyAutoAcceptAll)
@@ -803,7 +803,7 @@ bool CAssistantConfig::PartyInviteCanBeAutoAccepted(uint32_t serial)
     return false;
 }
 
-bool CAssistantConfig::PartyInviteCanBeAutoDeclined(uint32_t serial)
+bool CAssistantConfig::PartyInviteCanBeAutoDeclined(uint32_t serial) const
 {
     // Was TabAgentsParty::PartyInviteCanBeAutoDeclined.
     if (m_PartyAutoDeclineAll)
@@ -826,7 +826,7 @@ bool CAssistantConfig::PartyInviteCanBeAutoDeclined(uint32_t serial)
 
 // --- filters ----------------------------------------------------------------------
 
-bool CAssistantConfig::CheckSpeechInFilter(const astr_t &text, const uint16_t &color)
+bool CAssistantConfig::CheckSpeechInFilter(const astr_t &text, const uint16_t &color) const
 {
     // Was TabFiltersSpeech::CheckSpeechInFilter.
     if (!SpeechFilter())
@@ -862,7 +862,7 @@ bool CAssistantConfig::CheckReplaceText(
     const uint16_t &color,
     const bool &unicode,
     astr_t &replacedText,
-    uint16_t &replacedColor)
+    uint16_t &replacedColor) const
 {
     // Was TabFiltersReplaces::CheckReplaceText. On a match the replacement is
     // returned instead of queuing a reprint packet: the caller displays it
@@ -931,7 +931,7 @@ bool CAssistantConfig::CheckReplaceText(
     return false;
 }
 
-bool CAssistantConfig::CheckSoundInFilter(const uint16_t &index)
+bool CAssistantConfig::CheckSoundInFilter(const uint16_t &index) const
 {
     // Was TabFiltersSound::CheckSoundInFilter.
     if (!SoundFilter())
@@ -1019,7 +1019,7 @@ int CAssistantConfig::IsCommandPrefix(const astr_t &text) const
 
 // --- display items / groups ----------------------------------------------------------
 
-CDisplayItem CAssistantConfig::GetCustomDisplayItemByName(const astr_t &name)
+CDisplayItem CAssistantConfig::GetCustomDisplayItemByName(const astr_t &name) const
 {
     // Was TabDisplay::GetCustomDisplayItemByName.
     for (const CDisplayItemEntry &entry : m_DisplayItems)
@@ -1032,7 +1032,7 @@ CDisplayItem CAssistantConfig::GetCustomDisplayItemByName(const astr_t &name)
     return CDisplayItem();
 }
 
-astr_t CAssistantConfig::GetGroupContent(const astr_t &name)
+astr_t CAssistantConfig::GetGroupContent(const astr_t &name) const
 {
     // Was TabDisplay::GetGroupContent.
     for (const CDisplayGroupEntry &entry : m_DisplayGroups)

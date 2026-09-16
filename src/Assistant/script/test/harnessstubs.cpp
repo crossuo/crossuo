@@ -145,29 +145,29 @@ uint16_t CAssistant::TextToGraphic(astr_t text)
 {
     return (uint16_t)strtoul(text.c_str(), nullptr, 16);
 }
-void CAssistant::ClientPrint(const astr_t &, const uint16_t &) {}
-void CAssistant::ClientCharPrint(const uint32_t &, const astr_t &, const uint16_t &) {}
-void CAssistant::DoubleClick(const uint32_t &) {}
-void CAssistant::MoveEquip(const uint32_t &, const int &, const uint32_t &) {}
-void CAssistant::GetFriendsStatus() {}
-void CAssistant::GetEnemiesStatus() {}
-void CAssistant::HandleSetPVPCaller(uint8_t *) {}
-CGameObject *CAssistant::FindFriend(const uint16_t &, const astr_t &) { return nullptr; }
-CGameObject *CAssistant::FindEnemy(const uint16_t &, const astr_t &) { return nullptr; }
+void CAssistant::ClientPrint(const astr_t &, const uint16_t &) const {}
+void CAssistant::ClientCharPrint(const uint32_t &, const astr_t &, const uint16_t &) const {}
+void CAssistant::DoubleClick(const uint32_t &) const {}
+void CAssistant::MoveEquip(const uint32_t &, const int &, const uint32_t &) const {}
+void CAssistant::GetFriendsStatus() const {}
+void CAssistant::GetEnemiesStatus() const {}
+void CAssistant::HandleSetPVPCaller(uint8_t *) const {}
+CGameObject *CAssistant::FindFriend(const uint16_t &, const astr_t &) const { return nullptr; }
+CGameObject *CAssistant::FindEnemy(const uint16_t &, const astr_t &) const { return nullptr; }
 int CAssistant::TextToLayer(astr_t) { return 0; }
-void CAssistant::RequestTarget(const astr_t &) {}
+void CAssistant::RequestTarget(const astr_t &) const {}
 int CAssistant::CountType(const vector<astr_t> &, const vector<astr_t> &, const astr_t &,
-    const astr_t &, bool)
+    const astr_t &, bool) const
 {
     return 0;
 }
 CGameObject *CAssistant::FindType(const vector<astr_t> &, const vector<astr_t> &, const astr_t &,
-    const astr_t &, const uint16_t &, const astr_t &, bool, vector<astr_t> &)
+    const astr_t &, const uint16_t &, const astr_t &, bool, vector<astr_t> &) const
 {
     return nullptr;
 }
 CGameObject *CAssistant::FindList(const astr_t &, const astr_t &, const astr_t &, const uint16_t &,
-    const astr_t &, bool, vector<astr_t> &)
+    const astr_t &, bool, vector<astr_t> &) const
 {
     return nullptr;
 }
@@ -180,9 +180,9 @@ CAssistantConfig::CAssistantConfig()
 CAssistantConfig g_AssistantConfig;
 CMacroEntry::~CMacroEntry() = default;
 int CAssistantConfig::DelayFromText(astr_t text) { return (int)text.size(); }
-bool CAssistantConfig::GetFontColor(uint16_t &) { return false; }
+bool CAssistantConfig::GetFontColor(uint16_t &) const { return false; }
 void CAssistantConfig::SetFontColor(const bool &, uint16_t) {}
-bool CAssistantConfig::GetCharactersFontColor(uint16_t &) { return false; }
+bool CAssistantConfig::GetCharactersFontColor(uint16_t &) const { return false; }
 void CAssistantConfig::SetCharactersFontColor(const bool &, uint16_t) {}
 void CAssistantConfig::SaveHotkeys() {}
 bool CAssistantConfig::LoadHotkeys() { return true; }
@@ -247,7 +247,7 @@ void CDressAgent::Disarm() {}
 void CDressAgent::Undress() {}
 
 CShopAgent g_ShopAgent;
-bool CShopAgent::IsActiveShopping() { return false; }
+bool CShopAgent::IsActiveShopping() const { return false; }
 void CShopAgent::SendShopRequest(int, const astr_t &, const astr_t &) {}
 
 // The recording suspension the executor's send calls wrap (the RAII guard
@@ -262,8 +262,6 @@ void CSpellManager::Cast(const astr_t &) {}
 void CSpellManager::CastIndex(int) {}
 void CSpellManager::TargetCast(const astr_t &, const uint32_t &) {}
 
-CTextCommandManager::CTextCommandManager() {}
-CTextCommandManager::~CTextCommandManager() {}
 CTextCommandManager g_TextCommandManager;
 bool CTextCommandManager::RunCommand(const astr_t &, const vector<astr_t> &) { return false; }
 uint16_t CTextCommandManager::GetFindFlags(const astr_t &) { return 0; }
@@ -314,10 +312,8 @@ int xuoassist::Distance(int x1, int y1, int x2, int y2)
 
 namespace xuoassist {
 
-CAssistant::CAssistant() {}
-CAssistant::~CAssistant() {}
 CAssistant g_Assistant;
-void CAssistant::LogOut() {}
+void CAssistant::LogOut() const {}
 
 // --- client-side pieces the executor references ------------------------------
 int Actions_NewTargetSystemSerial() { return 0; }

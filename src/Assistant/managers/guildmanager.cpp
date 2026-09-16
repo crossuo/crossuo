@@ -10,8 +10,6 @@ namespace xuoassist {
 
 GuildManager g_GuildManager;
 
-GuildManager::GuildManager() {}
-
 void GuildManager::SetMemberInfo(const GUILD_MEMBER_INFO &info)
 {
     std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(info.Serial);
@@ -31,7 +29,7 @@ void GuildManager::SetMemberInfo(const GUILD_MEMBER_INFO &info)
     g_AssistantEvents->OnMapUpdate(info.Serial);
 }
 
-void GuildManager::SetMemberName(uint32_t serial, astr_t &name)
+void GuildManager::SetMemberName(uint32_t serial, const astr_t &name)
 {
     std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(serial);
 
@@ -47,23 +45,21 @@ void GuildManager::SetMemberName(uint32_t serial, astr_t &name)
     }
 }
 
-vector<GUILD_MEMBER_INFO> GuildManager::GetMembers()
+vector<GUILD_MEMBER_INFO> GuildManager::GetMembers() const
 {
     vector<GUILD_MEMBER_INFO> members;
 
-    for (std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator i = m_GuildMembers.begin();
-         i != m_GuildMembers.end();
-         ++i)
+    for (const auto &entry : m_GuildMembers)
     {
-        members.push_back(i->second);
+        members.push_back(entry.second);
     }
 
     return members;
 }
 
-bool GuildManager::Contains(const uint32_t &serial)
+bool GuildManager::Contains(const uint32_t &serial) const
 {
-    std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::iterator found = m_GuildMembers.find(serial);
+    std::unordered_map<uint32_t, GUILD_MEMBER_INFO>::const_iterator found = m_GuildMembers.find(serial);
     return found != m_GuildMembers.end();
 }
 

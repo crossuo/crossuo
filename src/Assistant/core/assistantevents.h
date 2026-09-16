@@ -72,7 +72,11 @@ struct XA_GUILD_MEMBER_INFO
 class CAssistantEvents
 {
 public:
-    virtual ~CAssistantEvents();
+    CAssistantEvents() = default;
+    virtual ~CAssistantEvents() = default;
+
+    CAssistantEvents(const CAssistantEvents &) = delete;
+    CAssistantEvents &operator=(const CAssistantEvents &) = delete;
 
     // --- speech / journal (was g_JournalManager.Add) -----------------------
     // The assistant's own journal cache is fed elsewhere; the UI subscribes

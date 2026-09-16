@@ -107,8 +107,6 @@ CDisplayManager::CDisplayManager()
     m_InfoCommands.push_back(CDisplayInfo("Any item counter", "item", DIT_OBJECT));
 }
 
-CDisplayManager::~CDisplayManager() {}
-
 void CDisplayManager::ClearIcons()
 {
     for (auto &icon : m_Icons)
@@ -457,12 +455,10 @@ void CDisplayManager::GetValues(
     (void)backgroundColor;
 }
 
-bool CDisplayManager::CanRedraw(const uint16_t &graphic, const uint16_t &color)
+bool CDisplayManager::CanRedraw(const uint16_t &graphic, const uint16_t &color) const
 {
-    for (size_t i = 0; i < m_Commands.size(); i++)
+    for (const CDisplayItem &obj : m_Commands)
     {
-        CDisplayItem &obj = m_Commands[i];
-
         if (obj.Type == DIT_OBJECT && obj.Graphic == graphic &&
             (obj.Hue == 0xFFFF || obj.Hue == color))
         {
@@ -511,10 +507,8 @@ void CDisplayManager::Redraw(
     }
     else
     {
-        for (size_t i = 0; i < m_Commands.size(); i++)
+        for (const CDisplayItem &obj : m_Commands)
         {
-            CDisplayItem &obj = m_Commands[i];
-
             astr_t value = "";
             astr_t maxValue = "";
             uint32_t textColor = 0;
@@ -567,19 +561,19 @@ void CDisplayManager::Redraw(
     m_TitleText = title;
 }
 
-CDisplayItem CDisplayManager::GetDisplayItemByName(const astr_t &name)
+CDisplayItem CDisplayManager::GetDisplayItemByName(const astr_t &name) const
 {
     CDisplayItem item = g_AssistantConfig.GetCustomDisplayItemByName(name);
 
     if (item.Type == DIT_NONE)
     {
-        for (size_t i = 0; i < m_InfoCommands.size(); i++)
+        for (const CDisplayInfo &info : m_InfoCommands)
         {
-            if (name == m_InfoCommands[i].Command)
+            if (name == info.Command)
             {
-                if (m_InfoCommands[i].Type != DIT_OBJECT)
+                if (info.Type != DIT_OBJECT)
                 {
-                    return m_DefaultItems[m_InfoCommands[i].Type];
+                    return m_DefaultItems[info.Type];
                 }
                 //return CDisplayItem(m_DefaultItems[m_InfoCommands[i].Type]);
 
@@ -594,11 +588,11 @@ CDisplayItem CDisplayManager::GetDisplayItemByName(const astr_t &name)
 void CDisplayManager::ApplyAttributeToDisplayItem(
     CDisplayItem &obj, const astr_t &name, const astr_t &value)
 {
-    for (int i = 0; i < DKI_COUNT; i++)
+    for (const DISPLAY_KEY_ITEM &key : m_KeysList)
     {
-        if (name == m_KeysList[i].Name)
+        if (name == key.Name)
         {
-            switch (m_KeysList[i].Identifier)
+            switch (key.Identifier)
             {
                 case DKI_TEXT:
                 {
@@ -697,14 +691,14 @@ void CDisplayManager::CompilleData(const astr_t &text, uint32_t textColor)
 
         vector<astr_t> list = ParseTextTokens(line, "", "", "{}", false, true);
 
-        for (size_t li = 0; li < list.size(); li++)
+        for (const astr_t &token : list)
         {
-            if (list[li].length() == 0)
+            if (token.length() == 0)
             {
                 continue;
             }
 
-            astr_t str = list[li];
+            astr_t str = token;
 
             if (str.at(0) == '{')
             {

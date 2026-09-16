@@ -36,14 +36,14 @@ CMenu *CMenuManager::GetLastMenu()
 
 CMenu *CMenuManager::GetMenu(const astr_t &name)
 {
-    for (size_t i = 0; i < m_Items.size(); i++)
+    for (CMenu *menu : m_Items)
     {
         // indexOf(name, 0, CaseInsensitive) == 0 -> starts-with, case-insensitive
-        const astr_t itemNameLower = str_lower(m_Items[i]->Name);
+        const astr_t itemNameLower = str_lower(menu->Name);
         if (itemNameLower.size() >= name.size() &&
             itemNameLower.compare(0, name.size(), str_lower(name)) == 0)
         {
-            return m_Items[i];
+            return menu;
         }
     }
 
@@ -59,9 +59,9 @@ CMenu *CMenuManager::GetMenu(const astr_t &name)
 
 void CMenuManager::RemoveLastMenu()
 {
-    for (size_t i = 0; i < m_Items.size(); i++)
+    for (CMenu *menu : m_Items)
     {
-        if (m_Items[i] == m_LastMenu)
+        if (menu == m_LastMenu)
         {
             m_LastMenu = nullptr;
             break;
@@ -74,9 +74,9 @@ void CMenuManager::RemoveLastMenu()
 
 void CMenuManager::ClearMenus()
 {
-    for (size_t i = 0; i < m_Items.size(); i++)
+    for (CMenu *menu : m_Items)
     {
-        delete m_Items[i];
+        delete menu;
     }
 
     m_Items.clear();

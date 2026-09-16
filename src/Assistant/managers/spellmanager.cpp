@@ -20,14 +20,14 @@ void CSpellManager::Insert(const astr_t &name, const int &index)
     m_Spells.insert(std::make_pair(str_from(index), index));
 }
 
-int CSpellManager::Find(astr_t name)
+int CSpellManager::Find(astr_t name) const
 {
     if (name == "last" || name == "lastspell")
     {
         return g_LastSpellIndex;
     }
 
-    SPELLS_MAP::iterator it = m_Spells.find(name);
+    SPELLS_MAP::const_iterator it = m_Spells.find(name);
 
     if (it != m_Spells.end())
     {

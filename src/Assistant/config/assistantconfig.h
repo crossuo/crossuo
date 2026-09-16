@@ -260,7 +260,7 @@ public:
     static fs_path GetRootPath();
     static fs_path GetGlobalConfigPath();
     static fs_path GetConfigPath();
-    fs_path GetProfilePath();
+    fs_path GetProfilePath() const;
     void EnsureDirectories(); // mkdir Config/, GlobalConfig/, profile/
 
     // --- profiles ----------------------------------------------------------
@@ -317,29 +317,29 @@ public:
     bool LoadDress();         // was TabAgentsDress::LoadDress
 
     // --- main options (TabMain getters, incl. the g_EnabledFeature gates) ---
-    bool CorpsesAutoopen();
-    bool StealthStepCounter();
-    bool SoundFilter();
-    bool LightFilter();
-    bool WeatherFilter();
-    bool SeasonFilter();
-    bool NoDeathScreen();
-    bool AutoOpenDoors();
-    bool Tracker();
-    bool FastRotation();
-    bool RecurseContainersSearch();
-    bool Autostart();
-    bool IgnoreStaminaCheck();
-    bool MinimizeToTray();
-    bool StayOnTop();
-    bool SoundEcho();
-    bool AnimationEcho();
-    bool EffectEcho();
-    bool SpeechFilter();
-    bool TextReplace();
-    bool ObjectInspector();
-    bool NoGrayScreen();
-    bool SaveFarObjects();
+    bool CorpsesAutoopen() const;
+    bool StealthStepCounter() const;
+    bool SoundFilter() const;
+    bool LightFilter() const;
+    bool WeatherFilter() const;
+    bool SeasonFilter() const;
+    bool NoDeathScreen() const;
+    bool AutoOpenDoors() const;
+    bool Tracker() const;
+    bool FastRotation() const;
+    bool RecurseContainersSearch() const;
+    bool Autostart() const;
+    bool IgnoreStaminaCheck() const;
+    bool MinimizeToTray() const;
+    bool StayOnTop() const;
+    bool SoundEcho() const;
+    bool AnimationEcho() const;
+    bool EffectEcho() const;
+    bool SpeechFilter() const;
+    bool TextReplace() const;
+    bool ObjectInspector() const;
+    bool NoGrayScreen() const;
+    bool SaveFarObjects() const;
     bool GetOption(int index) const { return m_Options[index]; }
     void SetOption(int index, bool state) { m_Options[index] = state; }
     bool *Options() { return m_Options; }
@@ -358,9 +358,9 @@ public:
     bool DoubleClickForOpenDoors() const { return m_DoubleClickForOpenDoors; }
 
     // Text-window font colors (TabMain::GetFontColor / SetFontColor).
-    bool GetFontColor(uint16_t &value);
+    bool GetFontColor(uint16_t &value) const;
     void SetFontColor(const bool &state, uint16_t value);
-    bool GetCharactersFontColor(uint16_t &value);
+    bool GetCharactersFontColor(uint16_t &value) const;
     void SetCharactersFontColor(const bool &state, uint16_t value);
 
     // --- display options (TabDisplay LoadConfig/SaveConfig + checkboxes) ----
@@ -393,12 +393,12 @@ public:
     void UpdateFeatures();
 
     // --- list queries (were TabListsTypes/Objects/Friends/Enemies) ----------
-    uint16_t SeekType(const astr_t &text);
-    uint32_t SeekObject(const astr_t &text);
+    uint16_t SeekType(const astr_t &text) const;
+    uint32_t SeekObject(const astr_t &text) const;
     CFindListEntry *GetFindList(const astr_t &name);
     CIgnoreListEntry *GetIgnoreList(const astr_t &name);
-    bool InFriendList(uint32_t serial);
-    bool InEnemyList(uint32_t serial);
+    bool InFriendList(uint32_t serial) const;
+    bool InEnemyList(uint32_t serial) const;
     bool FeelPartyMembersAsFriends() const { return m_FeelPartyMembersAsFriends; }
     void AddType(const astr_t &name, const astr_t &type);     // was TabListsTypes::AddType
     void RemoveType(const astr_t &name);
@@ -406,12 +406,12 @@ public:
     void RemoveObject(const astr_t &name);
 
     // --- party agent (TabAgentsParty) ----------------------------------------
-    bool PartyInviteCanBeAutoAccepted(uint32_t serial);
-    bool PartyInviteCanBeAutoDeclined(uint32_t serial);
+    bool PartyInviteCanBeAutoAccepted(uint32_t serial) const;
+    bool PartyInviteCanBeAutoDeclined(uint32_t serial) const;
 
     // --- filters (were TabFiltersSpeech/Replaces/Sound; consulted by the
     //     packet handlers exactly like the original code did) -----------------------
-    bool CheckSpeechInFilter(const astr_t &text, const uint16_t &color);
+    bool CheckSpeechInFilter(const astr_t &text, const uint16_t &color) const;
     // Returns true when the text matched a replace rule; the caller (the talk
     // handlers, which hold the display context) renders the replacement carried
     // by the out-params — the reprint is no longer an injected packet.
@@ -421,16 +421,16 @@ public:
         const uint16_t &color,
         const bool &unicode,
         astr_t &replacedText,
-        uint16_t &replacedColor);
-    bool CheckSoundInFilter(const uint16_t &index);
+        uint16_t &replacedColor) const;
+    bool CheckSoundInFilter(const uint16_t &index) const;
 
     // --- distance / delay text helpers (were AssistForm methods) -------------
     int DistanceFromText(astr_t text);
     int DelayFromText(astr_t text);
 
     // --- display items / groups (were TabDisplay helpers) --------------------
-    CDisplayItem GetCustomDisplayItemByName(const astr_t &name);
-    astr_t GetGroupContent(const astr_t &name);
+    CDisplayItem GetCustomDisplayItemByName(const astr_t &name) const;
+    astr_t GetGroupContent(const astr_t &name) const;
 
     // --- dress sets (data helpers from TabAgentsDress/commandmanager) --------
     CDressSetEntry *GetDressSet(const astr_t &name);

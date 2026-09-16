@@ -81,7 +81,10 @@ private:
 
 public:
     CDisplayManager();
-    ~CDisplayManager();
+    ~CDisplayManager() = default;
+
+    CDisplayManager(const CDisplayManager &) = delete;
+    CDisplayManager &operator=(const CDisplayManager &) = delete;
 
     // The static-art icon cache (was the win32 HBITMAP cache of the original
     // displaymanager): keyed by (graphic << 16) | hue, decoded through the
@@ -93,7 +96,7 @@ public:
 
     const vector<CDisplayInfo> &GetCommands() const { return m_InfoCommands; }
 
-    CDisplayItem GetDisplayItemByName(const astr_t &name);
+    CDisplayItem GetDisplayItemByName(const astr_t &name) const;
 
     // Title-bar rendering (was the win32 GDI body): composes the caption text
     // into m_TitleText. The original textual path (Redraw RDM_TEXTUAL) is followed
@@ -113,7 +116,7 @@ public:
 
     void RecompilleData(const astr_t &text, uint32_t textColor);
 
-    bool CanRedraw(const uint16_t &graphic, const uint16_t &color);
+    bool CanRedraw(const uint16_t &graphic, const uint16_t &color) const;
 };
 
 extern CDisplayManager g_DisplayManager;

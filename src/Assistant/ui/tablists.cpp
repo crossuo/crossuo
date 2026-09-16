@@ -65,7 +65,7 @@ bool name_in_use(const vector<CTypeEntry> &items, const char *name, int skip)
 static void from_target_request(
     bool &pending,
     uint32_t &generation,
-    void (CAssistant::*handler)(uint8_t *),
+    void (CAssistant::*handler)(uint8_t *) const,
     const char *prompt)
 {
     pending = true;

@@ -121,21 +121,21 @@ public:
 
     virtual MACRO_CLASS GetClass() const { return MCLASS_BASE; }
 
-    CMacro(const MACRO_TYPE &type)
+    explicit CMacro(const MACRO_TYPE &type)
         : Type(type)
     {
     }
-    CMacro(CMacro *macro)
+    explicit CMacro(CMacro *macro)
         : Type(macro->Type)
         , ConvertType(macro->ConvertType)
         , WaitingTime(macro->WaitingTime)
     {
     }
-    virtual ~CMacro() {}
+    virtual ~CMacro() = default;
 
-    astr_t GetText();
+    astr_t GetText() const;
 
-    bool HaveConvertTable();
+    bool HaveConvertTable() const;
 
     virtual CMacro *Copy();
 
@@ -146,7 +146,7 @@ public:
 
 class CMacroWithIntValue : public CMacro
 {
-    virtual MACRO_CLASS GetClass() const { return MCLASS_INT_VALUE; }
+    MACRO_CLASS GetClass() const override { return MCLASS_INT_VALUE; }
 
 public:
     int Value = 0;
@@ -156,21 +156,21 @@ public:
         , Value(value)
     {
     }
-    CMacroWithIntValue(CMacroWithIntValue *macro)
+    explicit CMacroWithIntValue(CMacroWithIntValue *macro)
         : CMacro(macro)
         , Value(macro->Value)
     {
     }
-    virtual ~CMacroWithIntValue() {}
+    ~CMacroWithIntValue() override = default;
 
-    virtual CMacro *Copy();
+    CMacro *Copy() override;
 
-    virtual void Save(XMLElement &element);
+    void Save(XMLElement &element) override;
 };
 
 class CMacroWithStringValue : public CMacro
 {
-    virtual MACRO_CLASS GetClass() const { return MCLASS_STRING_VALUE; }
+    MACRO_CLASS GetClass() const override { return MCLASS_STRING_VALUE; }
 
 public:
     astr_t Value = "";
@@ -180,21 +180,21 @@ public:
         , Value(value)
     {
     }
-    CMacroWithStringValue(CMacroWithStringValue *macro)
+    explicit CMacroWithStringValue(CMacroWithStringValue *macro)
         : CMacro(macro)
         , Value(macro->Value)
     {
     }
-    virtual ~CMacroWithStringValue() {}
+    ~CMacroWithStringValue() override = default;
 
-    virtual CMacro *Copy();
+    CMacro *Copy() override;
 
-    virtual void Save(XMLElement &element);
+    void Save(XMLElement &element) override;
 };
 
 class CMacroWithObject : public CMacro
 {
-    virtual MACRO_CLASS GetClass() const { return MCLASS_OBJECT; }
+    MACRO_CLASS GetClass() const override { return MCLASS_OBJECT; }
 
 public:
     uint32_t Serial = 0;
@@ -208,23 +208,23 @@ public:
         , Color(color)
     {
     }
-    CMacroWithObject(CMacroWithObject *macro)
+    explicit CMacroWithObject(CMacroWithObject *macro)
         : CMacro(macro)
         , Serial(macro->Serial)
         , Graphic(macro->Graphic)
         , Color(macro->Color)
     {
     }
-    virtual ~CMacroWithObject() {}
+    ~CMacroWithObject() override = default;
 
-    virtual CMacro *Copy();
+    CMacro *Copy() override;
 
-    virtual void Save(XMLElement &element);
+    void Save(XMLElement &element) override;
 };
 
 class CMacroWithGump : public CMacro
 {
-    virtual MACRO_CLASS GetClass() const { return MCLASS_GUMP; }
+    MACRO_CLASS GetClass() const override { return MCLASS_GUMP; }
 
 public:
     uint32_t Serial = 0;
@@ -238,23 +238,23 @@ public:
         , Button(button)
     {
     }
-    CMacroWithGump(CMacroWithGump *macro)
+    explicit CMacroWithGump(CMacroWithGump *macro)
         : CMacro(macro)
         , Serial(macro->Serial)
         , ID(macro->ID)
         , Button(macro->Button)
     {
     }
-    virtual ~CMacroWithGump() {}
+    ~CMacroWithGump() override = default;
 
-    virtual CMacro *Copy();
+    CMacro *Copy() override;
 
-    virtual void Save(XMLElement &element);
+    void Save(XMLElement &element) override;
 };
 
 class CMacroWithMenu : public CMacro
 {
-    virtual MACRO_CLASS GetClass() const { return MCLASS_MENU; }
+    MACRO_CLASS GetClass() const override { return MCLASS_MENU; }
 
 public:
     astr_t Name = "";
@@ -275,7 +275,7 @@ public:
         , Color(color)
     {
     }
-    CMacroWithMenu(CMacroWithMenu *macro)
+    explicit CMacroWithMenu(CMacroWithMenu *macro)
         : CMacro(macro)
         , Name(macro->Name)
         , ItemName(macro->ItemName)
@@ -283,16 +283,16 @@ public:
         , Color(macro->Color)
     {
     }
-    virtual ~CMacroWithMenu() {}
+    ~CMacroWithMenu() override = default;
 
-    virtual CMacro *Copy();
+    CMacro *Copy() override;
 
-    virtual void Save(XMLElement &element);
+    void Save(XMLElement &element) override;
 };
 
 class CMacroWithTargetTile : public CMacro
 {
-    virtual MACRO_CLASS GetClass() const { return MCLASS_TARGET_TILE; }
+    MACRO_CLASS GetClass() const override { return MCLASS_TARGET_TILE; }
 
 public:
     uint16_t Graphic = 0;
@@ -322,7 +322,7 @@ public:
         , RelativeZ(relativeZ)
     {
     }
-    CMacroWithTargetTile(CMacroWithTargetTile *macro)
+    explicit CMacroWithTargetTile(CMacroWithTargetTile *macro)
         : CMacro(macro)
         , Graphic(macro->Graphic)
         , X(macro->X)
@@ -333,11 +333,11 @@ public:
         , RelativeZ(macro->RelativeZ)
     {
     }
-    virtual ~CMacroWithTargetTile() {}
+    ~CMacroWithTargetTile() override = default;
 
-    virtual CMacro *Copy();
+    CMacro *Copy() override;
 
-    virtual void Save(XMLElement &element);
+    void Save(XMLElement &element) override;
 };
 
 } // namespace xuoassist

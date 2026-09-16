@@ -43,6 +43,11 @@ namespace xuoassist {
 class CMacroExecutor
 {
 public:
+    CMacroExecutor() = default;
+
+    CMacroExecutor(const CMacroExecutor &) = delete;
+    CMacroExecutor &operator=(const CMacroExecutor &) = delete;
+
     // The frame tick (was a 10 ms timer -> ProcessMacro).
     void Tick();
 
@@ -198,7 +203,7 @@ public:
 
 private:
     void ProcessMacro(); // was TabMacros::ProcessMacro
-    uint32_t FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType);
+    uint32_t FindObject(const CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType);
 
     bool m_Playing{ false };
     bool m_Recording{ false };

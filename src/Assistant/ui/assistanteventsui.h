@@ -33,6 +33,10 @@ bool UI_PollFromTarget(
 class CAssistantUIEvents : public CAssistantEvents
 {
 public:
+    CAssistantUIEvents() = default;
+    CAssistantUIEvents(const CAssistantUIEvents &) = delete;
+    CAssistantUIEvents &operator=(const CAssistantUIEvents &) = delete;
+
     struct Line
     {
         astr_t Text;

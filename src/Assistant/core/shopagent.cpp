@@ -54,7 +54,7 @@ void CShopAgent::Tick()
     }
 }
 
-bool CShopAgent::IsActiveShopping()
+bool CShopAgent::IsActiveShopping() const
 {
     // was TabAgentsShop::IsActiveShopping: waiting for a vendor reply or the
     // queued request countdown still running

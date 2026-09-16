@@ -381,11 +381,8 @@ void MapWindow_Draw(bool *open)
             const astr_t &objName = obj->GetName();
             if (type == OMCT_GUILD_MEMBER)
             {
-                // the original refreshed the cached guild name and let the guild list
-                // draw the marker; SetMemberName takes a
-                // mutable astr_t &, so the copy happens here
-                astr_t name = objName;
-                g_GuildManager.SetMemberName(serial, name);
+                // refresh the cached guild name; the guild list draws the marker
+                g_GuildManager.SetMemberName(serial, objName);
                 continue;
             }
 

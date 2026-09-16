@@ -20,13 +20,16 @@ public:
 
     CContextMenuManager();
 
+    CContextMenuManager(const CContextMenuManager &) = delete;
+    CContextMenuManager &operator=(const CContextMenuManager &) = delete;
+
     void SetHook(const uint32_t &id, const uint32_t &index);
 
     void RemoveHook();
 
     bool OnPacketReceived(CDataReader &reader);
 
-    bool OnPacketSend(CDataReader &reader);
+    bool OnPacketSend(CDataReader &reader) const;
 };
 
 extern CContextMenuManager g_ContextMenuManager;

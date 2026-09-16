@@ -13,7 +13,7 @@
 
 namespace xuoassist {
 
-astr_t CMacro::GetText()
+astr_t CMacro::GetText() const
 {
     switch (Type)
     {
@@ -419,7 +419,7 @@ astr_t CMacro::GetText()
     return "unknown action";
 }
 
-bool CMacro::HaveConvertTable()
+bool CMacro::HaveConvertTable() const
 {
     switch (Type)
     {

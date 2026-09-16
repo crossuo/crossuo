@@ -19,7 +19,7 @@ public:
     uint32_t Price = 0;
     astr_t Comment = "";
 
-    CShopItem() {}
+    CShopItem() = default;
     CShopItem(
         const astr_t &graphic,
         const astr_t &color,

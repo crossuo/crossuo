@@ -28,8 +28,6 @@ namespace xuoassist {
 
 CTextCommandManager g_TextCommandManager;
 COMMANDS_MAP CTextCommandManager::m_Commands;
-CTextCommandManager::CTextCommandManager() {}
-CTextCommandManager::~CTextCommandManager() {}
 
 #define COMMAND(name, flags, description)                                                          \
     m_Commands[#name] =                                                                            \
@@ -171,9 +169,9 @@ bool CTextCommandManager::RunCommand(const astr_t &name, const COMMAND_ARGS &arg
 
 void CTextCommandManager::UpdateCommands()
 {
-    for (COMMANDS_MAP::iterator i = m_Commands.begin(); i != m_Commands.end(); ++i)
+    for (auto &i : m_Commands)
     {
-        CCommand &command = i->second.first;
+        CCommand &command = i.second.first;
         uint64_t flags = command.Flags;
 
         if ((flags == 0u) || ((g_EnabledCommands & flags) == flags))

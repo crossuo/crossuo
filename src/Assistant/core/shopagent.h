@@ -85,13 +85,16 @@ private:
     bool ProcessShopList();
 
 public:
-    CShopAgent() {}
+    CShopAgent() = default;
+
+    CShopAgent(const CShopAgent &) = delete;
+    CShopAgent &operator=(const CShopAgent &) = delete;
 
     // frame tick: expires the progress countdown (sends the queued request)
     void Tick();
 
     // was TabAgentsShop::IsActiveShopping (request wait OR queued progress)
-    bool IsActiveShopping();
+    bool IsActiveShopping() const;
 
     // --- the Buy/Sell buttons (SendShopRequest + the speech text) -----------
     void Buy(const astr_t &listName);

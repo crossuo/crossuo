@@ -137,7 +137,7 @@ public:
     bool OtherShowHits = true;
     bool OtherShowName = true;
 
-    CMapSettings() {}
+    CMapSettings() = default;
 
     void Copy(const CMapSettings &settings);
     void Load();  // GlobalConfig/Map.xml (format unchanged, plan §4.3)

@@ -43,14 +43,14 @@ enum DISPLAY_ITEM_TYPE
 class CDisplayInfo
 {
 public:
-    CDisplayInfo() {}
+    CDisplayInfo() = default;
     CDisplayInfo(const astr_t &name, const astr_t &command, const DISPLAY_ITEM_TYPE &type)
         : Name(name)
         , Command(command)
         , Type(type)
     {
     }
-    ~CDisplayInfo() {}
+    ~CDisplayInfo() = default;
     astr_t Name{ "" };
     astr_t Command{ "" };
     DISPLAY_ITEM_TYPE Type{ DIT_NONE };
@@ -74,7 +74,7 @@ public:
     int MidValue = 0;
     bool Percents = false;
 
-    CDisplayItem() {}
+    CDisplayItem() = default;
     CDisplayItem(
         const DISPLAY_ITEM_TYPE &type,
         astr_t text,
@@ -94,7 +94,7 @@ public:
     // rule of three: the copy ctor is user-declared, so the implicit copy
     // assignment is deprecated (gcc -Wdeprecated-copy at every m_Item = ...)
     CDisplayItem &operator=(const CDisplayItem &obj);
-    ~CDisplayItem() {}
+    ~CDisplayItem() = default;
 };
 
 } // namespace xuoassist

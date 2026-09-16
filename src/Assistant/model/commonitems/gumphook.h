@@ -21,7 +21,7 @@ public:
         , State(state)
     {
     }
-    ~CGumpHookCheck() {}
+    ~CGumpHookCheck() = default;
 };
 
 class CGumpHookEntry
@@ -35,7 +35,7 @@ public:
         , Text(text)
     {
     }
-    ~CGumpHookEntry() {}
+    ~CGumpHookEntry() = default;
 };
 
 class CGumpHook
@@ -43,9 +43,9 @@ class CGumpHook
 public:
     int Index = 0;
 
-    CGumpHook() {}
-    CGumpHook(CGumpHook *original);
-    ~CGumpHook() {}
+    CGumpHook() = default;
+    explicit CGumpHook(CGumpHook *original);
+    ~CGumpHook() = default;
 
     vector<CGumpHookEntry> m_Entries;
     vector<CGumpHookCheck> m_Checks;

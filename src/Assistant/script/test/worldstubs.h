@@ -35,24 +35,24 @@ public:
     int m_Y = 0;
     char m_Z = 0;
 
-    astr_t GetName() { return m_Name; }
+    astr_t GetName() const { return m_Name; }
     void SetName(const astr_t &name) { m_Name = name; }
-    int GetX() { return m_X; }
-    int GetY() { return m_Y; }
-    char GetZ() { return m_Z; }
+    int GetX() const { return m_X; }
+    int GetY() const { return m_Y; }
+    char GetZ() const { return m_Z; }
     uint8_t GetFlags() const { return m_Flags; }
 
     bool IsCorpse() const { return Graphic == 0x2006; }
     bool IsHuman() const { return false; }
-    bool IsPlayer() { return false; }
+    bool IsPlayer() const { return false; }
     bool IsParalyzed() const { return false; }
     bool IsPoisoned() const { return false; }
     bool IsFlying() const { return false; }
-    bool YellowHits() { return false; }
-    bool IgnoreCharacters() { return false; }
-    bool Locked() { return false; }
-    bool InWarMode() { return false; }
-    bool Hidden() { return false; }
+    bool YellowHits() const { return false; }
+    bool IgnoreCharacters() const { return false; }
+    bool Locked() const { return false; }
+    bool InWarMode() const { return false; }
+    bool Hidden() const { return false; }
 
     virtual CGameItem *FindLayer(int) const { return nullptr; }
 };
@@ -108,7 +108,7 @@ public:
     uint32_t TithingPoints = 0;
     int StealthSteps = 0;
 
-    bool IsPlayer() { return true; }
+    bool IsPlayer() const { return true; }
     virtual CGameItem *FindBandage() { return nullptr; }
 };
 

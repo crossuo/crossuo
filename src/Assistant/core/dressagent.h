@@ -52,7 +52,10 @@ class CDressAgent
     void Start(vector<XA_DRESS_STEP> &steps);
 
 public:
-    CDressAgent() {}
+    CDressAgent() = default;
+
+    CDressAgent(const CDressAgent &) = delete;
+    CDressAgent &operator=(const CDressAgent &) = delete;
 
     // frame tick: executes the next step when its delay expired
     void Tick();

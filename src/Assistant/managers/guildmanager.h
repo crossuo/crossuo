@@ -23,13 +23,16 @@ struct GUILD_MEMBER_INFO
 class GuildManager
 {
 public:
-    GuildManager();
+    GuildManager() = default;
 
-    void SetMemberName(uint32_t serial, astr_t &name);
+    GuildManager(const GuildManager &) = delete;
+    GuildManager &operator=(const GuildManager &) = delete;
+
+    void SetMemberName(uint32_t serial, const astr_t &name);
 
     void SetMemberInfo(const GUILD_MEMBER_INFO &info);
 
-    vector<GUILD_MEMBER_INFO> GetMembers();
+    vector<GUILD_MEMBER_INFO> GetMembers() const;
 
     // the live store for the map window overlay pass (GetMembers() copies;
     // the draw path must not allocate per frame)
@@ -38,7 +41,7 @@ public:
         return m_GuildMembers;
     }
 
-    bool Contains(const uint32_t &serial);
+    bool Contains(const uint32_t &serial) const;
 
 private:
     std::unordered_map<uint32_t, GUILD_MEMBER_INFO> m_GuildMembers;

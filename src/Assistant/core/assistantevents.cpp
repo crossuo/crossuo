@@ -20,10 +20,6 @@ CDefaultAssistantEvents s_DefaultAssistantEvents;
 
 } // namespace
 
-CAssistantEvents::~CAssistantEvents()
-{
-}
-
 CAssistantEvents *g_AssistantEvents = &s_DefaultAssistantEvents;
 
 void CAssistantEvents::OnClientPrint(const astr_t &text, uint16_t color)

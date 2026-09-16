@@ -23,6 +23,9 @@ public:
     CGumpManager();
     virtual ~CGumpManager();
 
+    CGumpManager(const CGumpManager &) = delete;
+    CGumpManager &operator=(const CGumpManager &) = delete;
+
     int GetGumpCount();
     CGump *GetLastGump();
     CGump *GetGump(const uint32_t &index);

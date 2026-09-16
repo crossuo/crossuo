@@ -23,11 +23,14 @@ public:
     CSpellManager();
     ~CSpellManager();
 
+    CSpellManager(const CSpellManager &) = delete;
+    CSpellManager &operator=(const CSpellManager &) = delete;
+
     vector<vector<astr_t>> m_SpellbookSpellNames;
 
     void Insert(const astr_t &name, const int &index);
 
-    int Find(astr_t name);
+    int Find(astr_t name) const;
 
     void Cast(const astr_t &name);
 

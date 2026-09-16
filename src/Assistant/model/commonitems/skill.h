@@ -20,9 +20,9 @@ public:
     float Cap = 0.0f;
     uint8_t Status = 0;
 
-    CSkill() {}
+    CSkill() = default;
     CSkill(const bool &haveButton, const astr_t &name);
-    ~CSkill() {}
+    ~CSkill() = default;
 };
 
 static const int MAX_SKILLS_COUNT = 60;

@@ -392,12 +392,20 @@ struct XA_JS_GUMPHOOK
     int Index{ 0 };
     vector<XA_GUMPHOOK_ENTRY> Entries;
     vector<XA_GUMPHOOK_CHECK> Checks;
+
+    XA_JS_GUMPHOOK() = default;
+    XA_JS_GUMPHOOK(const XA_JS_GUMPHOOK &) = delete;
+    XA_JS_GUMPHOOK &operator=(const XA_JS_GUMPHOOK &) = delete;
 };
 
 struct XA_JS_CLIENTMACRO
 {
     vector<astr_t> Actions;
     vector<astr_t> SubActions;
+
+    XA_JS_CLIENTMACRO() = default;
+    XA_JS_CLIENTMACRO(const XA_JS_CLIENTMACRO &) = delete;
+    XA_JS_CLIENTMACRO &operator=(const XA_JS_CLIENTMACRO &) = delete;
 };
 
 void gumphook_finalizer(JSRuntime *rt, JSValue val)

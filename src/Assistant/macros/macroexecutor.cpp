@@ -67,7 +67,7 @@ void warmode_send(uint32_t state)
     g_Game.ChangeWarmode(warmode);
 }
 
-uint32_t serial_for_convert(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
+uint32_t serial_for_convert(const CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
 {
     switch (convertType)
     {
@@ -631,7 +631,7 @@ void CMacroExecutor::Reset()
     m_PlayPosition = 0;
 }
 
-uint32_t CMacroExecutor::FindObject(CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
+uint32_t CMacroExecutor::FindObject(const CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType)
 {
     // TabMacros::FindObject
     uint16_t graphic = macro->Graphic;

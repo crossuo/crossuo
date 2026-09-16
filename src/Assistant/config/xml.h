@@ -44,7 +44,7 @@ public:
     std::vector<XMLElement> Children;
     astr_t Text;
 
-    XMLElement() {}
+    XMLElement() = default;
     explicit XMLElement(const astr_t &name)
         : Name(name)
     {

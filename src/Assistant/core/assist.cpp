@@ -37,11 +37,7 @@ CAssistant g_Assistant;
 TARGET_HANDLER g_TargetHandler = nullptr;
 MOVITEM_DATA g_MoveItemData;
 
-CAssistant::CAssistant() {}
-
-CAssistant::~CAssistant() {}
-
-void CAssistant::ScriptError(const astr_t &title, const astr_t &text)
+void CAssistant::ScriptError(const astr_t &title, const astr_t &text) const
 {
     // Was CAssistant::slot_ScriptError.
     ClientPrint(title, 0x0021);
@@ -204,13 +200,13 @@ astr_t CAssistant::BoolToText(const bool &value)
     return value ? "true" : "false";
 }
 
-void CAssistant::ClientPrint(const astr_t &text, const uint16_t &color)
+void CAssistant::ClientPrint(const astr_t &text, const uint16_t &color) const
 {
     g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
 }
 
-void CAssistant::ClientCharPrint(const uint32_t &serial, const astr_t &text, const uint16_t &color)
+void CAssistant::ClientCharPrint(const uint32_t &serial, const astr_t &text, const uint16_t &color) const
 {
     g_PacketManager.DisplayTalkTextW(
         serial,
@@ -221,7 +217,7 @@ void CAssistant::ClientCharPrint(const uint32_t &serial, const astr_t &text, con
         ST_NORMAL);
 }
 
-void CAssistant::ClientPrintDebugLevel1(const astr_t &text, const uint16_t &color)
+void CAssistant::ClientPrintDebugLevel1(const astr_t &text, const uint16_t &color) const
 {
     if (g_AssistantConfig.GetMessagesLevel() >= 1)
     {
@@ -229,7 +225,7 @@ void CAssistant::ClientPrintDebugLevel1(const astr_t &text, const uint16_t &colo
     }
 }
 
-void CAssistant::ClientPrintDebugLevel2(const astr_t &text, const uint16_t &color)
+void CAssistant::ClientPrintDebugLevel2(const astr_t &text, const uint16_t &color) const
 {
     if (g_AssistantConfig.GetMessagesLevel() >= 2)
     {
@@ -237,7 +233,7 @@ void CAssistant::ClientPrintDebugLevel2(const astr_t &text, const uint16_t &colo
     }
 }
 
-void CAssistant::RequestTarget(const astr_t &text)
+void CAssistant::RequestTarget(const astr_t &text) const
 {
     if (text.length() != 0)
     {
@@ -248,12 +244,12 @@ void CAssistant::RequestTarget(const astr_t &text)
     ::g_Target.RequestCursor();
 }
 
-void CAssistant::LogOut()
+void CAssistant::LogOut() const
 {
     ::g_Game.LogOut();
 }
 
-void CAssistant::DumpObjectInfo(CGameObject *obj)
+void CAssistant::DumpObjectInfo(CGameObject *obj) const
 {
     if (obj == nullptr)
     {
@@ -303,7 +299,7 @@ void CAssistant::DumpObjectInfo(CGameObject *obj)
     ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
-void CAssistant::DumpTileInfo(const uint16_t &graphic, const short &x, const short &y, const char &z)
+void CAssistant::DumpTileInfo(const uint16_t &graphic, const short &x, const short &y, const char &z) const
 {
     char text[64] = { 0 };
     snprintf(text, sizeof(text), "0x%04X %i %i %i\n", graphic, x, y, z);
@@ -318,18 +314,18 @@ void CAssistant::DumpTileInfo(const uint16_t &graphic, const short &x, const sho
     ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
 }
 
-void CAssistant::GetStatus(const uint32_t &serial)
+void CAssistant::GetStatus(const uint32_t &serial) const
 {
     g_LastStatusRequest = serial;
     ::CPacketStatusRequest(serial).Send();
 }
 
-void CAssistant::Click(const uint32_t &serial)
+void CAssistant::Click(const uint32_t &serial) const
 {
     ::CPacketClickRequest(serial).Send();
 }
 
-void CAssistant::DoubleClick(const uint32_t &serial)
+void CAssistant::DoubleClick(const uint32_t &serial) const
 {
     g_LastUseObject = serial;
     g_LastUseObjectTimer = g_Ticks;
@@ -340,7 +336,7 @@ void CAssistant::DoubleClick(const uint32_t &serial)
     g_Game.DoubleClick(serial);
 }
 
-void CAssistant::Attack(const uint32_t &serial)
+void CAssistant::Attack(const uint32_t &serial) const
 {
     // assistant-initiated attacks must not record themselves; the client's
     // CGame::AttackReq is the recording tap
@@ -349,7 +345,7 @@ void CAssistant::Attack(const uint32_t &serial)
     g_Game.AttackReq(serial);
 }
 
-uint8_t CAssistant::GetNotorietyFlags(const astr_t &text)
+uint8_t CAssistant::GetNotorietyFlags(const astr_t &text) const
 {
     uint8_t flags = NTF_ALL;
 
@@ -399,7 +395,7 @@ CGameObject *CAssistant::FindList(
     const uint16_t &flags,
     const astr_t &notorietyText,
     bool recurseSearch,
-    vector<astr_t> &result)
+    vector<astr_t> &result) const
 {
     vector<CFindItem> findListItems;
 
@@ -494,7 +490,7 @@ CGameObject *CAssistant::FindType(
     const uint16_t &flags,
     const astr_t &notorietyText,
     bool recurseSearch,
-    vector<astr_t> &result)
+    vector<astr_t> &result) const
 {
     result.clear();
 
@@ -586,7 +582,7 @@ CGameObject *CAssistant::FindType(
     uint16_t flags,
     const uint8_t &notoriety,
     bool recurseSearch,
-    vector<astr_t> &list)
+    vector<astr_t> &list) const
 {
     if (g_World == nullptr)
     {
@@ -790,7 +786,7 @@ int CAssistant::CountType(
     const vector<astr_t> &color,
     const astr_t &containerText,
     const astr_t &distanceText,
-    bool recurseSearch)
+    bool recurseSearch) const
 {
     if (g_World == nullptr)
     {
@@ -815,7 +811,7 @@ int CAssistant::CountType(
 }
 
 int CAssistant::CountType(
-    const CFindItem &findListItem, const uint32_t &container, const int &distance, bool recurseSearch)
+    const CFindItem &findListItem, const uint32_t &container, const int &distance, bool recurseSearch) const
 {
     if (g_World == nullptr)
     {
@@ -861,7 +857,7 @@ int CAssistant::CountType(
 }
 
 void CAssistant::UseType(
-    const CFindItem &findListItem, const uint32_t &container, const int &distance, const bool &recurseSearch)
+    const CFindItem &findListItem, const uint32_t &container, const int &distance, const bool &recurseSearch) const
 {
     vector<astr_t> list;
 
@@ -874,7 +870,7 @@ void CAssistant::UseType(
     }
 }
 
-void CAssistant::MoveItem(CGameItem *item)
+void CAssistant::MoveItem(const CGameItem *item) const
 {
     // The original app sent the pickup/drop pair directly (no client-side
     // use-action queue); the client's ObjectOnCursor flow is untouched.
@@ -906,13 +902,13 @@ void CAssistant::MoveItem(CGameItem *item)
     }
 }
 
-void CAssistant::MoveEquip(const uint32_t &serial, const int &layer, const uint32_t &container)
+void CAssistant::MoveEquip(const uint32_t &serial, const int &layer, const uint32_t &container) const
 {
     ::CPacketPickupRequest(serial, 1).Send();
     ::CPacketEquipRequest(serial, layer, container).Send();
 }
 
-void CAssistant::Track(const bool &state, short x, short y)
+void CAssistant::Track(const bool &state, short x, short y) const
 {
     if (x < 0)
     {
@@ -931,7 +927,7 @@ void CAssistant::Track(const bool &state, short x, short y)
     g_AssistantEvents->OnTrack(state, x, y);
 }
 
-void CAssistant::HandleTargetType(uint8_t *buf)
+void CAssistant::HandleTargetType(uint8_t *buf) const
 {
     // Was g_TabListsTypes->SetTypeFromTarget(unpack16(buf + 17)); the field
     // update is the Phase 3 from-target flow (UI consumes via OnFromTarget).
@@ -939,7 +935,7 @@ void CAssistant::HandleTargetType(uint8_t *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_TYPE, 0, graphic, 0, "");
 }
 
-void CAssistant::HandleTargetObject(uint8_t *buf)
+void CAssistant::HandleTargetObject(uint8_t *buf) const
 {
     // Was g_TabListsObjects->SetObjectFromTarget(unpack32(buf + 7)).
     const uint32_t serial = unpack32(buf + 7);
@@ -950,7 +946,7 @@ void CAssistant::HandleTargetObject(uint8_t *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_OBJECT, serial, 0, 0, "");
 }
 
-void CAssistant::HandleTargetDisplayItem(uint8_t *buf)
+void CAssistant::HandleTargetDisplayItem(uint8_t *buf) const
 {
     uint16_t color = 0;
 
@@ -970,7 +966,7 @@ void CAssistant::HandleTargetDisplayItem(uint8_t *buf)
         XA_FROM_TARGET_DISPLAY_ITEM, 0, unpack16(buf + 17), color, "");
 }
 
-void CAssistant::HandleTargetInfo(uint8_t *buf)
+void CAssistant::HandleTargetInfo(uint8_t *buf) const
 {
     if (g_World != nullptr)
     {
@@ -978,7 +974,7 @@ void CAssistant::HandleTargetInfo(uint8_t *buf)
     }
 }
 
-void CAssistant::HandleTargetInfoTile(uint8_t *buf)
+void CAssistant::HandleTargetInfoTile(uint8_t *buf) const
 {
     if (g_World != nullptr)
     {
@@ -986,12 +982,12 @@ void CAssistant::HandleTargetInfoTile(uint8_t *buf)
     }
 }
 
-void CAssistant::HandleTargetDressBag(uint8_t *buf)
+void CAssistant::HandleTargetDressBag(uint8_t *buf) const
 {
     SetDressBag(unpack32(buf + 7));
 }
 
-void CAssistant::HandleTargetDressItem(uint8_t *buf)
+void CAssistant::HandleTargetDressItem(uint8_t *buf) const
 {
     if (g_World == nullptr)
     {
@@ -1016,17 +1012,17 @@ void CAssistant::HandleTargetDressItem(uint8_t *buf)
     }
 }
 
-void CAssistant::HandleTargetHide(uint8_t *buf)
+void CAssistant::HandleTargetHide(uint8_t *buf) const
 {
     ::g_PacketManager.DeleteObject(unpack32(buf + 7));
 }
 
-void CAssistant::HandleTargetDrop(uint8_t *buf)
+void CAssistant::HandleTargetDrop(uint8_t *buf) const
 {
     MoveItem(g_World->FindWorldItem(unpack32(buf + 7)));
 }
 
-void CAssistant::HandleTargetFindList(uint8_t *buf)
+void CAssistant::HandleTargetFindList(uint8_t *buf) const
 {
     // Was g_TabListsFind->AddFindListItemInList(g_World->FindWorldObject(...)).
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
@@ -1040,7 +1036,7 @@ void CAssistant::HandleTargetFindList(uint8_t *buf)
     // (CObjectNameReceiver); the comment field just stays empty then.
 }
 
-void CAssistant::HandleTargetIgnoreList(uint8_t *buf)
+void CAssistant::HandleTargetIgnoreList(uint8_t *buf) const
 {
     // Was g_TabListsIgnore->AddIgnoreListItemInList(...).
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
@@ -1052,7 +1048,7 @@ void CAssistant::HandleTargetIgnoreList(uint8_t *buf)
     }
 }
 
-void CAssistant::HandleTargetPartyObject(uint8_t *buf)
+void CAssistant::HandleTargetPartyObject(uint8_t *buf) const
 {
     // was g_TabAgentsParty->SetPartyObjectFromTarget(unpack32(buf + 7)); the
     // serial/name fields are Phase 4 tab state
@@ -1072,7 +1068,7 @@ void CAssistant::HandleTargetPartyObject(uint8_t *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_PARTY, serial, 0, 0, name);
 }
 
-void CAssistant::HandleTargetFriendObject(uint8_t *buf)
+void CAssistant::HandleTargetFriendObject(uint8_t *buf) const
 {
     // Was g_TabListsFriends->SetFriendObjectFromTarget(unpack32(buf + 7)).
     const uint32_t serial = unpack32(buf + 7);
@@ -1086,7 +1082,7 @@ void CAssistant::HandleTargetFriendObject(uint8_t *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_FRIEND, serial, 0, 0, name);
 }
 
-void CAssistant::HandleTargetEnemyObject(uint8_t *buf)
+void CAssistant::HandleTargetEnemyObject(uint8_t *buf) const
 {
     // Was g_TabListsEnemies->SetEnemyObjectFromTarget(unpack32(buf + 7)).
     const uint32_t serial = unpack32(buf + 7);
@@ -1100,7 +1096,7 @@ void CAssistant::HandleTargetEnemyObject(uint8_t *buf)
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_ENEMY, serial, 0, 0, name);
 }
 
-void CAssistant::HandleTargetAnimalAndVendorControlName(uint8_t *buf)
+void CAssistant::HandleTargetAnimalAndVendorControlName(uint8_t *buf) const
 {
     // Was g_AnimalAndVendorControlForm->SetName(obj->GetName()) + window
     // activate; the control form is the Phase 3 speech popup.
@@ -1114,7 +1110,7 @@ void CAssistant::HandleTargetAnimalAndVendorControlName(uint8_t *buf)
     }
 }
 
-CGameObject *CAssistant::FindFriend(const uint16_t &flags, const astr_t &distanceText)
+CGameObject *CAssistant::FindFriend(const uint16_t &flags, const astr_t &distanceText) const
 {
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     CGameObject *found = nullptr;
@@ -1196,7 +1192,7 @@ CGameObject *CAssistant::FindFriend(const uint16_t &flags, const astr_t &distanc
     return found;
 }
 
-CGameObject *CAssistant::FindEnemy(const uint16_t &flags, const astr_t &distanceText)
+CGameObject *CAssistant::FindEnemy(const uint16_t &flags, const astr_t &distanceText) const
 {
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
     CGameObject *found = nullptr;
@@ -1278,7 +1274,7 @@ CGameObject *CAssistant::FindEnemy(const uint16_t &flags, const astr_t &distance
     return found;
 }
 
-void CAssistant::GetFriendsStatus()
+void CAssistant::GetFriendsStatus() const
 {
     for (CGameObject *item = (CGameObject *)g_World->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
     {
@@ -1289,7 +1285,7 @@ void CAssistant::GetFriendsStatus()
     }
 }
 
-void CAssistant::GetEnemiesStatus()
+void CAssistant::GetEnemiesStatus() const
 {
     for (CGameObject *item = (CGameObject *)g_World->m_Items; item != nullptr; item = (CGameObject *)item->m_Next)
     {
@@ -1334,12 +1330,12 @@ bool CAssistant::IsNoDrawTile(const uint16_t &graphic)
     return true;
 }
 
-void CAssistant::HandleSetPVPCaller(uint8_t *buf)
+void CAssistant::HandleSetPVPCaller(uint8_t *buf) const
 {
     g_Game.ValueInt(VKI_SET_PVPCALLER, unpack32(buf + 7));
 }
 
-void CAssistant::SetDressBag(const uint32_t &serial)
+void CAssistant::SetDressBag(const uint32_t &serial) const
 {
     // Was TabListsObjects::SetDressBag (minus the label color updates; the
     // red/green dress-bag label is Phase 2 UI).
@@ -1369,12 +1365,12 @@ void CAssistant::SetDressBag(const uint32_t &serial)
     }
 }
 
-void CAssistant::OpenDoor()
+void CAssistant::OpenDoor() const
 {
     g_Game.OpenDoor();
 }
 
-void CAssistant::WalkAutoOpenDoor(const int &direction)
+void CAssistant::WalkAutoOpenDoor(const int &direction) const
 {
     // Was the front half of the 0x02 WalkRequest send tap (packetmanager.cpp):
     // probe the tile the walk steps onto (two tiles out when continuing
@@ -1437,7 +1433,7 @@ void CAssistant::WalkAutoOpenDoor(const int &direction)
     AutoOpenDoor(x, y, g_Player->GetZ());
 }
 
-void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
+void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z) const
 {
     // Was AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (assistform.cpp:
     // 780-822): find a door item at the target tile within +-10 z, then open

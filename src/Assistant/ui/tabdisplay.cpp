@@ -355,12 +355,12 @@ void draw_configuration_page()
         if (ImGui::BeginMenu("Custom items"))
         {
             const vector<CDisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
-            for (int i = 0; i < (int)items.size(); i++)
+            for (const CDisplayItemEntry &item : items)
             {
-                if (ImGui::MenuItem(items[i].Name.c_str()))
+                if (ImGui::MenuItem(item.Name.c_str()))
                 {
                     // was InsertDisplayAction: the item name is the tag
-                    const astr_t tag = "{" + items[i].Name + "}";
+                    const astr_t tag = "{" + item.Name + "}";
                     const size_t len = strlen(s_TitleData);
                     if (len + tag.length() < sizeof(s_TitleData))
                     {
@@ -483,12 +483,12 @@ void draw_configuration_page()
     if (ImGui::BeginPopup("##set_title_group"))
     {
         const vector<CDisplayGroupEntry> &groups = g_AssistantConfig.m_DisplayGroups;
-        for (int i = 0; i < (int)groups.size(); i++)
+        for (const CDisplayGroupEntry &group : groups)
         {
-            if (ImGui::MenuItem(groups[i].Name.c_str()))
+            if (ImGui::MenuItem(group.Name.c_str()))
             {
                 // was InsertDisplayGroupAction -> SetTitleData(text)
-                snprintf(s_TitleData, sizeof(s_TitleData), "%s", groups[i].TitleData.c_str());
+                snprintf(s_TitleData, sizeof(s_TitleData), "%s", group.TitleData.c_str());
                 g_AssistantConfig.m_DisplayTitleData = s_TitleData;
                 AssistantUI_MarkOptionsDirty();
                 recompile_title();

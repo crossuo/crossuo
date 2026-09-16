@@ -193,6 +193,11 @@ void HotkeyFormatText(uint32_t key, uint8_t modifiers, char *out, size_t size);
 class CHotkeys
 {
 public:
+    CHotkeys() = default;
+
+    CHotkeys(const CHotkeys &) = delete;
+    CHotkeys &operator=(const CHotkeys &) = delete;
+
     // The single event funnel (called from AssistantWindow_ProcessEvent while
     // the assistant is initialized and the client is in game). Returns true
     // when the event is consumed and must not reach the game. Never fires
@@ -229,7 +234,7 @@ public:
 
 private:
     bool ProcessKeyDown(const SDL_Event &ev);
-    bool ProcessKeyUp(const SDL_Event &ev);
+    bool ProcessKeyUp(const SDL_Event &ev) const;
     bool ProcessMouseButtonDown(const SDL_Event &ev);
     bool ProcessWheel(const SDL_Event &ev);
     // The matcher: walks the config table, fires the action. Returns

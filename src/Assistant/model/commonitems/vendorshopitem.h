@@ -20,7 +20,7 @@ public:
     uint32_t Price = 0;
     bool NameFromCliloc = false;
 
-    CVendorShopItem() {}
+    CVendorShopItem() = default;
 };
 
 } // namespace xuoassist

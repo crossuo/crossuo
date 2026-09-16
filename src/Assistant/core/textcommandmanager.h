@@ -28,14 +28,14 @@ public:
     astr_t Description = "";
     uint64_t Flags = 0;
 
-    CCommand() {}
+    CCommand() = default;
     CCommand(const bool &enabled, const uint64_t &flags, const astr_t &description)
         : Enabled(enabled)
         , Description(description)
         , Flags(flags)
     {
     }
-    ~CCommand() {}
+    ~CCommand() = default;
 };
 
 class CTextCommandManager;
@@ -52,8 +52,11 @@ private:
     void CommandTok(COMMAND_ARGS &args, const astr_t &in);
 
 public:
-    CTextCommandManager();
-    ~CTextCommandManager();
+    CTextCommandManager() = default;
+    ~CTextCommandManager() = default;
+
+    CTextCommandManager(const CTextCommandManager &) = delete;
+    CTextCommandManager &operator=(const CTextCommandManager &) = delete;
 
     static void InitCommands();
 

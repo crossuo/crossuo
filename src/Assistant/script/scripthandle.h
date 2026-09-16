@@ -42,6 +42,9 @@ public:
     CScriptHandle(const astr_t &functionName, const vector<astr_t> &args, const astr_t &scriptBody);
     ~CScriptHandle();
 
+    CScriptHandle(const CScriptHandle &) = delete;
+    CScriptHandle &operator=(const CScriptHandle &) = delete;
+
     const astr_t &Name() const { return m_FunctionName; }
     XA_SCRIPT_STATE State() const { return (XA_SCRIPT_STATE)m_State.load(); }
 
@@ -73,6 +76,9 @@ private:
 class CScriptManager
 {
 public:
+    CScriptManager() = default;
+    CScriptManager(const CScriptManager &) = delete;
+    CScriptManager &operator=(const CScriptManager &) = delete;
     // Runs `functionName` from `scriptBody` as its own thread. Returns the
     // handle or nullptr when the concurrent cap (16) is hit.
     CScriptHandle *Run(const astr_t &functionName, const astr_t &scriptBody,

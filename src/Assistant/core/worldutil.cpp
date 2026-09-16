@@ -158,9 +158,9 @@ void IgnoreReset()
         return;
     }
 
-    for (WORLD_MAP::iterator i = g_World->m_Map.begin(); i != g_World->m_Map.end(); ++i)
+    for (auto &i : g_World->m_Map)
     {
-        i->second->Ignored = false;
+        i.second->Ignored = false;
     }
 }
 
