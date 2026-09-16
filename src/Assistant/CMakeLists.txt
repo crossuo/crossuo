@@ -159,11 +159,11 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
   target_link_libraries(xuoassist-script-test PRIVATE ${COMMON_PROJECT} m pthread)
 endif()
 
-# Phase 2: icon-atlas assets (§6). Copied next to the binary so the runtime
-# lookup (assets/xuoassist, then next to the exe) finds them in dev builds.
-add_custom_command(
-  TARGET xuoassist POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-          "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-          "${CMAKE_BINARY_DIR}/assets/xuoassist"
-  COMMENT "Copying xuoassist icon assets")
+# Phase 2: icon-atlas assets (§6). The copy lives on the crossuo POST_BUILD
+# (not on this static lib: a $<TARGET_FILE_DIR:crossuo> here would create a
+# dependency cycle xuoassist -> crossuo -> xuoassist). Destination is the
+# runtime lookup path - <exe dir>/assets/xuoassist, i.e. <build>/src/assets/
+# xuoassist since the single-executable change; a copy into CMAKE_BINARY_DIR
+# landed a level away from the ExeFilePath lookup ("about logo not found:
+# .../src/assets/xuoassist/tray.png"). Covers every png of the dir: the ~14
+# atlas icons (the same IconAssetPath lookup) and the About logo.

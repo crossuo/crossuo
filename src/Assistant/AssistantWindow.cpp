@@ -144,6 +144,10 @@ static bool init()
         Error(Assistant, "initialization failed: no ImGui context");
         return false;
     }
+    // the launcher color scheme is the final style: applied after ui_init (its
+    // StyleColorsDark and the viewport WindowBg tweak run first) so the
+    // assistant renders with the same theme as the launcher
+    ui_style_launcher();
     s_initialized = true;
     s_sessionStartTicks = g_Ticks;
     xuoassist::AssistantUI_Init(); // journal pane events consumer
@@ -287,8 +291,6 @@ void AssistantWindow_DrawOverlay()
         return; // never draws outside the game stage (FrameTick owns shutdown)
     if (!s_initialized && !init())
         return;
-    if (!s_visible)
-        return;
 
     // the game render pass owns the context: ImGui renders the main viewport
     // into it, and ui_draw saves/restores the game context around the popped
@@ -296,6 +298,12 @@ void AssistantWindow_DrawOverlay()
     // NOTE: when the game window is minimized CGameScreen::Render is not called
     // at all, so this pass (and any popped-out window) freezes until restore;
     // acceptable for now
+    // The pipeline keeps running while hidden: the shell X (and the OS close
+    // button of a popped-out window) only REPORTS the click through p_open -
+    // AssistantUI_Draw stops submitting the window when the flag is false, but
+    // the frames must keep flowing so ImGui processes the close and destroys
+    // the popped-out platform windows. Bailing out here left them frozen on
+    // screen: the assistant could not be closed via its X button.
     ui_newframe(s_ctx);
     xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
     ui_draw(s_ctx);
