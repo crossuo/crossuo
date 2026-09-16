@@ -18,7 +18,6 @@
 #include "../core/assist.h"
 #include "../core/assistantevents.h" // g_AssistantEvents->OnTitleRedraw (the old send taps fired it)
 #include "../core/global.h"
-#include "../core/packets.h"
 #include "../core/target.h"
 #include "../managers/contextmenumanager.h"
 #include "../managers/gumpmanager.h"
@@ -1108,10 +1107,10 @@ void CMacroExecutor::ProcessMacro()
                 break;
             }
             case MT_WRESTLING_STUN:
-                CPacketWrestlingStun().SendServer();
+                ::CPacketWrestlingStun().Send();
                 break;
             case MT_WRESTLING_DISARM:
-                CPacketWrestlingDisarm().SendServer();
+                ::CPacketWrestlingDisarm().Send();
                 break;
             case MT_COMBAT_ABILITY:
                 CGumpAbility::OnAbilityUse((int)(convertType == MCT_SECONDARY) % 2);

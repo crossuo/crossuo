@@ -7,7 +7,7 @@
 
 #include "promptmanager.h"
 #include "../core/assist.h"
-#include "../core/packets.h"
+#include "Network/Packets.h" // the raw prompt-reply builders
 #include "../macros/macroexecutor.h"
 #include "../core/world.h"
 #include <common/str.h>
@@ -119,11 +119,11 @@ void CPromptManager::Send(string text)
 
         if (IsUnicode)
         {
-            CPacketUnicodePromptResponse(Serial, ID, wstr_from(text), "ENU", cancel).SendServer();
+            ::CPacketUnicodePromptResponse(Serial, ID, wstr_from(text), "ENU", cancel).Send();
         }
         else
         {
-            CPacketASCIIPromptResponse(Serial, ID, text, cancel).SendServer();
+            ::CPacketASCIIPromptResponse(Serial, ID, text, cancel).Send();
         }
 
         Exists = false;

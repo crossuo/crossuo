@@ -4500,10 +4500,10 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     break;
                 }
                 case 311: // UseWrestlingDisarm (sends the stun packet)
-                    CPacketWrestlingStun().SendServer();
+                    ::CPacketWrestlingStun().Send();
                     break;
                 case 312: // UseWrestlingStun (sends the disarm packet)
-                    CPacketWrestlingDisarm().SendServer();
+                    ::CPacketWrestlingDisarm().Send();
                     break;
                 case 313: // InvokeVirtue(name) (OnCommandInvokeVirture)
                 {

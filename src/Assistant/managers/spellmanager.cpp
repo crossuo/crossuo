@@ -6,7 +6,7 @@
 #include "../core/assist.h"
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-originated casts do not record)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
-#include "../core/packets.h"
+#include "Network/Packets.h" // CPacketTargetCastSpell (the targeted 0xBF builder)
 
 namespace xuoassist {
 
@@ -79,11 +79,9 @@ void CSpellManager::TargetCast(const string &name, const uint &serial)
     if (index != -1)
     {
         // the targeted 0xBF 0x002D send has no client call site (the client's
-        // builders target spellbooks, not objects) - the builder stays, and
-        // the direct wire send is wrapped like the client-call paths above
-        RecordingSuspension suspension;
-
-        CPacketTargetCastSpell(index, serial).SendServer();
+        // builders target spellbooks, not objects); the wire send runs no
+        // recording taps, so no suspension is needed
+        ::CPacketTargetCastSpell(index, serial).Send();
     }
     else
     {

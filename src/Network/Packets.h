@@ -186,6 +186,17 @@ class CPacketGumpResponse : public CPacket
 {
 public:
     CPacketGumpResponse(class CGumpGeneric *gump, int code);
+
+    // Raw 0xB1 reply form: the gump content arrives pre-marshaled (the macro
+    // replay path replays over its own gump model, not CGumpGeneric).
+    // switches are the checked checkbox/radio serials; textLines are the
+    // (entryId, text) pairs.
+    CPacketGumpResponse(
+        uint32_t serial,
+        uint32_t id,
+        uint32_t button,
+        const std::vector<uint32_t> &switches,
+        const std::vector<std::pair<uint16_t, astr_t>> &textLines);
 };
 
 class CPacketVirtueGumpResponse : public CPacket
@@ -198,12 +209,22 @@ class CPacketMenuResponse : public CPacket
 {
 public:
     CPacketMenuResponse(class CGump *gump, int code);
+
+    // Raw 0x7D reply form (code/graphic/color written unconditionally, unlike
+    // the gump lookup above).
+    CPacketMenuResponse(
+        uint32_t serial,
+        uint32_t id,
+        int32_t code,
+        uint16_t graphic,
+        uint16_t color);
 };
 
 class CPacketGrayMenuResponse : public CPacket
 {
 public:
     CPacketGrayMenuResponse(class CGump *gump, int code);
+    CPacketGrayMenuResponse(uint32_t serial, uint32_t id, int32_t code);
 };
 
 class CPacketTradeResponse : public CPacket
@@ -241,12 +262,15 @@ class CPacketASCIIPromptResponse : public CPacket
 {
 public:
     CPacketASCIIPromptResponse(const astr_t &text, bool cancel);
+    CPacketASCIIPromptResponse(uint32_t serial, uint32_t id, const astr_t &text, bool cancel);
 };
 
 class CPacketUnicodePromptResponse : public CPacket
 {
 public:
     CPacketUnicodePromptResponse(const wstr_t &text, const astr_t &lang, bool cancel);
+    CPacketUnicodePromptResponse(
+        uint32_t serial, uint32_t id, const wstr_t &text, const astr_t &lang, bool cancel);
 };
 
 class CPacketDyeDataResponse : public CPacket
@@ -471,12 +495,14 @@ class CPacketBuyRequest : public CPacket
 {
 public:
     CPacketBuyRequest(class CGumpShop *gump);
+    CPacketBuyRequest(uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list);
 };
 
 class CPacketSellRequest : public CPacket
 {
 public:
     CPacketSellRequest(class CGumpShop *gump);
+    CPacketSellRequest(uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list);
 };
 
 class CPacketUseCombatAbility : public CPacket
@@ -489,6 +515,33 @@ class CPacketTargetSelectedObject : public CPacket
 {
 public:
     CPacketTargetSelectedObject(int useObjectSerial, int targetObjectSerial);
+};
+
+// The targeted 0xBF extended commands (the client's own cast/skill builders
+// address spellbooks, these address the cast target directly).
+class CPacketTargetCastSpell : public CPacket
+{
+public:
+    CPacketTargetCastSpell(uint16_t spell, uint32_t targetObjectSerial);
+};
+
+class CPacketTargetUseSkill : public CPacket
+{
+public:
+    CPacketTargetUseSkill(uint16_t skill, uint32_t targetObjectSerial);
+};
+
+// The 0xBF wrestling extended commands
+class CPacketWrestlingStun : public CPacket
+{
+public:
+    CPacketWrestlingStun();
+};
+
+class CPacketWrestlingDisarm : public CPacket
+{
+public:
+    CPacketWrestlingDisarm();
 };
 
 // The 0x6C target replies (the assistant's target sends); moved from the

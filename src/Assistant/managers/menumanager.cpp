@@ -9,7 +9,7 @@
 #include "menumanager.h"
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
-#include "../core/packets.h"
+#include "Network/Packets.h" // the raw 0x7D menu-reply builders
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "../macros/macroexecutor.h"
 #include "../core/world.h"
@@ -230,7 +230,7 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
     {
         if (sendPacket)
         {
-            CPacketMenuResponse(menu->Serial, menu->ID, 0, 0, 0).SendServer();
+            ::CPacketMenuResponse(menu->Serial, menu->ID, 0, 0, 0).Send();
 
             menu->Replayed = true;
             menu->ReplyID = 0;
@@ -253,14 +253,13 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
             {
                 if (menu->GrayMenu)
                 {
-                    CPacketGrayMenuResponse(menu->Serial, menu->ID, item.ID)
-                        .SendServer();
+                    ::CPacketGrayMenuResponse(menu->Serial, menu->ID, item.ID).Send();
                 }
                 else
                 {
-                    CPacketMenuResponse(
+                    ::CPacketMenuResponse(
                         menu->Serial, menu->ID, item.ID, item.Graphic, item.Color)
-                        .SendServer();
+                        .Send();
                 }
 
                 menu->Replayed = true;
@@ -297,13 +296,12 @@ bool CMenuManager::SendMenuChoice(CMenu *menu, const string &itemName, const boo
         {
             if (menu->GrayMenu)
             {
-                CPacketGrayMenuResponse(menu->Serial, menu->ID, item.ID).SendServer();
+                ::CPacketGrayMenuResponse(menu->Serial, menu->ID, item.ID).Send();
             }
             else
             {
-                CPacketMenuResponse(
-                    menu->Serial, menu->ID, item.ID, item.Graphic, item.Color)
-                    .SendServer();
+                ::CPacketMenuResponse(menu->Serial, menu->ID, item.ID, item.Graphic, item.Color)
+                    .Send();
             }
 
             menu->Replayed = true;

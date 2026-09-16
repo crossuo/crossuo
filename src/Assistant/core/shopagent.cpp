@@ -17,7 +17,7 @@
 
 #include "assistantevents.h"
 #include "assist.h"
-#include "packets.h"
+#include "Network/Packets.h" // the raw vendor-reply builders
 #include "../config/assistantconfig.h"
 #include "../model/commonitems/finditem.h"
 #include "world.h"
@@ -67,11 +67,11 @@ void CShopAgent::Tick()
     // was: m_Packet->SendServer()
     if (m_ProgressIsBuy)
     {
-        CPacketBuyRequest(m_ProgressVendorSerial, m_ProgressList).SendServer();
+        ::CPacketBuyRequest(m_ProgressVendorSerial, m_ProgressList).Send();
     }
     else
     {
-        CPacketSellRequest(m_ProgressVendorSerial, m_ProgressList).SendServer();
+        ::CPacketSellRequest(m_ProgressVendorSerial, m_ProgressList).Send();
     }
 }
 

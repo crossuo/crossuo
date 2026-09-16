@@ -8,6 +8,10 @@
 // straight to the client (SendClient injects into the client's receive path,
 // SendServer goes to g_ConnectionManager.Send).
 // Lists are std::vector, ../managers/gumpmanager.h -> the ported CGump.
+//
+// The pure wire-send builders live in the client's src/Network/Packets.{h,cpp}
+// (raw overloads on the client's own classes); what remains here are the
+// client-bound injections (0x95 dye prompt, 0xD1 logout, 0xBF paperdoll close).
 
 #pragma once
 
@@ -33,28 +37,9 @@ public:
     void SendServer();
 };
 
-DEFINE_PACKET(
-    MenuResponse, uint32_t serial, uint32_t id, int32_t code, uint16_t graphic, uint16_t color);
-DEFINE_PACKET(GrayMenuResponse, uint32_t serial, uint32_t id, int32_t code);
 DEFINE_PACKET(DyeData, uint32_t serial);
-DEFINE_PACKET(WrestlingStun);
-DEFINE_PACKET(WrestlingDisarm);
-DEFINE_PACKET(GumpResponse, CGump *gump, int32_t code);
-DEFINE_PACKET(ASCIIPromptResponse, uint32_t serial, uint32_t id, const string &text, bool cancel);
-DEFINE_PACKET(
-    UnicodePromptResponse,
-    uint32_t serial,
-    uint32_t id,
-    const wstring &text,
-    const string &lang,
-    bool cancel);
-DEFINE_PACKET(BuyRequest, uint32_t serial, const vector<std::pair<uint, int>> &list);
-DEFINE_PACKET(SellRequest, uint32_t serial, const vector<std::pair<uint, int>> &list);
 DEFINE_PACKET(LogOut);
 DEFINE_PACKET(ClosePaperdoll, uint32_t serial);
-DEFINE_PACKET(TargetCastSpell, uint16_t spell, uint32_t targetObjectSerial);
-DEFINE_PACKET(TargetUseSkill, uint16_t skill, uint32_t targetObjectSerial);
-DEFINE_PACKET(ClientViewRange, uchar range);
 
 } // namespace xuoassist
 

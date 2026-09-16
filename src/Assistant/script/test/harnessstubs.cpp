@@ -341,6 +341,8 @@ void CScreenshotBuilder::SaveScreen(int, int, int, int) {}
 
 CPacket::CPacket(size_t, bool) {}
 CPacketClientViewRange::CPacketClientViewRange(uint8_t) : CPacket(0) {}
+CPacketWrestlingStun::CPacketWrestlingStun() : CPacket(0) {}
+CPacketWrestlingDisarm::CPacketWrestlingDisarm() : CPacket(0) {}
 CPacketInvokeVirtueRequest::CPacketInvokeVirtueRequest(uint8_t) : CPacket(0) {}
 // client send builders now used directly by apiscript (E1 swap); never
 // exercised in the harness, only linked

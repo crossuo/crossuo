@@ -10,7 +10,7 @@
 #include "Managers/GumpManager.h" // ::g_GumpManager (client gump marks/updates)
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
-#include "../core/packets.h"
+#include "Network/Packets.h" // the raw 0xB1 reply builder
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "../macros/macroexecutor.h"
 #include "../core/world.h"
@@ -513,7 +513,55 @@ bool CGumpManager::SendGumpChoice(CGump *gump, CGumpHook &hook)
         }
     }
 
-    CPacketGumpResponse(gump, returnCode).SendServer();
+    // Marshal the assistant gump model into the raw 0xB1 reply (the write
+    // sequence of the old CPacketGumpResponse builder): checked checkboxes and
+    // radios (commands[5] != 0) contribute their commands[6] serial, text
+    // entries (commands[7] = text line index) contribute commands[6] as the
+    // entry id and the referenced line as the text.
+    vector<uint32_t> switches;
+    vector<std::pair<uint16_t, string>> textLines;
+
+    for (CGumpItem &item : gump->m_Items)
+    {
+        switch (item.Type)
+        {
+            case GIT_CHECKBOX:
+            case GIT_RADIO:
+            {
+                vector<string> commands = split_skip_empty(item.Command, ' ');
+
+                if (commands.size() >= 7 && (atoi(commands[5].c_str()) != 0))
+                {
+                    switches.push_back((uint32_t)atoi(commands[6].c_str()));
+                }
+
+                break;
+            }
+            case GIT_TEXTENTRY:
+            case GIT_TEXTENTRYLIMITED:
+            {
+                vector<string> commands = split_skip_empty(item.Command, ' ');
+
+                if (commands.size() >= 8)
+                {
+                    uint textIndex = (uint)strtoul(commands[7].c_str(), nullptr, 10);
+
+                    if (textIndex < (uint)gump->m_Text.size())
+                    {
+                        textLines.push_back(
+                            std::make_pair((uint16_t)atoi(commands[6].c_str()), gump->m_Text[textIndex]));
+                    }
+                }
+
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    ::CPacketGumpResponse(gump->Serial, gump->ID, (uint32_t)returnCode, switches, textLines)
+        .Send();
     // close the client's gumps without answering the server again (the 0xB1
     // response above is the answer)
     ::g_GumpManager.CloseGenericGumps(gump->Serial, gump->ID, true);

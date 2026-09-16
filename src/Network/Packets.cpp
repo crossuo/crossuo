@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <common/utils.h> // checked_cast
 #include "Packets.h"
 #include "../Config.h"
 #include "../CrossUO.h"
@@ -641,6 +642,52 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     }
 }
 
+// Raw 0xB1 reply (the macro-replay form); the write sequence is the ported
+// assistant builder, verbatim.
+CPacketGumpResponse::CPacketGumpResponse(
+    uint32_t serial,
+    uint32_t id,
+    uint32_t button,
+    const std::vector<uint32_t> &switches,
+    const std::vector<std::pair<uint16_t, astr_t>> &textLines)
+    : CPacket(1)
+{
+    int switchesCount = (int)switches.size();
+    int textLinesCount = (int)textLines.size();
+    int textLinesLength = 0;
+
+    for (const std::pair<uint16_t, astr_t> &line : textLines)
+    {
+        textLinesLength += (int)line.second.length() * 2;
+    }
+
+    int size = 19 + (switchesCount * 4) + 4 + ((textLinesCount * 4) + textLinesLength);
+    Resize(size, true);
+
+    WriteUInt8(0xB1);
+    WriteUInt16BE(checked_cast<uint16_t>(size));
+    WriteUInt32BE(serial);
+    WriteUInt32BE(id);
+    WriteUInt32BE(button);
+    WriteUInt32BE(switchesCount);
+
+    for (uint32_t sw : switches)
+    {
+        WriteUInt32BE((int)sw);
+    }
+
+    WriteUInt32BE(textLinesCount);
+
+    for (const std::pair<uint16_t, astr_t> &line : textLines)
+    {
+        wstr_t wline = wstr_from(line.second);
+
+        WriteUInt16BE(line.first);
+        WriteUInt16BE((uint16_t)wline.length());
+        WriteWString(wline, wline.length(), true, false);
+    }
+}
+
 CPacketVirtueGumpResponse::CPacketVirtueGumpResponse(CGump *gump, int code)
     : CPacket(15)
 {
@@ -683,6 +730,29 @@ CPacketGrayMenuResponse::CPacketGrayMenuResponse(CGump *gump, int code)
     WriteUInt8(0x7D);
     WriteUInt32BE(gump->Serial);
     WriteUInt16BE(gump->ID);
+    WriteUInt16BE(code);
+}
+
+// Raw 0x7D menu replies (the macro-replay form); the write sequences are the
+// ported assistant builders, verbatim.
+CPacketMenuResponse::CPacketMenuResponse(
+    uint32_t serial, uint32_t id, int32_t code, uint16_t graphic, uint16_t color)
+    : CPacket(13)
+{
+    WriteUInt8(0x7D);
+    WriteUInt32BE(serial);
+    WriteUInt16BE(id);
+    WriteUInt16BE(code);
+    WriteUInt16BE(graphic);
+    WriteUInt16BE(color);
+}
+
+CPacketGrayMenuResponse::CPacketGrayMenuResponse(uint32_t serial, uint32_t id, int32_t code)
+    : CPacket(13)
+{
+    WriteUInt8(0x7D);
+    WriteUInt32BE(serial);
+    WriteUInt16BE(id);
     WriteUInt16BE(code);
 }
 
@@ -776,6 +846,40 @@ CPacketUnicodePromptResponse::CPacketUnicodePromptResponse(
     WriteString(lang, 4, false);
 
     WriteWString(text, len, false, false);
+}
+
+// Raw prompt replies (the macro-replay form carries the prompt serial/id); the
+// write sequences are the ported assistant builders, verbatim.
+CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(
+    uint32_t serial, uint32_t id, const astr_t &text, bool cancel)
+    : CPacket(1)
+{
+    int size = 15 + text.length() + 1;
+    Resize(size, true);
+
+    WriteUInt8(0x9A);
+    WriteUInt16BE(size);
+    WriteUInt32BE(serial);
+    WriteUInt32BE(id);
+    WriteUInt32BE((int)(!cancel));
+    WriteString(text);
+}
+
+CPacketUnicodePromptResponse::CPacketUnicodePromptResponse(
+    uint32_t serial, uint32_t id, const wstr_t &text, const astr_t &lang, bool cancel)
+    : CPacket(1)
+{
+    int size = 19 + (text.length() * 2);
+    Resize(size, true);
+
+    WriteUInt8(0xC2);
+    WriteUInt16BE(size);
+    WriteUInt32BE(serial);
+    WriteUInt32BE(id);
+    WriteUInt32BE(uint32_t(!cancel));
+    WriteString(lang, 4, false);
+
+    WriteWString(text, text.length(), false, false);
 }
 
 CPacketDyeDataResponse::CPacketDyeDataResponse(uint32_t serial, uint16_t graphic, uint16_t color)
@@ -1427,6 +1531,56 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
     }
 }
 
+// Raw vendor-reply requests (the shop-agent form carries the item list); the
+// write sequences are the ported assistant builders, verbatim.
+CPacketBuyRequest::CPacketBuyRequest(uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list)
+    : CPacket(1)
+{
+    auto size = 8 + (list.size() * 7);
+    Resize(size, true);
+
+    WriteUInt8(0x3B);
+    WriteUInt16BE(size);
+    WriteUInt32BE(serial);
+
+    if (!list.empty())
+    {
+        WriteUInt8(0x02);
+        for (const auto &item : list)
+        {
+            WriteUInt8(0x1A);
+            WriteUInt32BE(item.first);
+            WriteUInt16BE(item.second);
+        }
+    }
+    else
+    {
+        WriteUInt8(0x00);
+    }
+}
+
+CPacketSellRequest::CPacketSellRequest(uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list)
+    : CPacket(1)
+{
+    auto count = list.size();
+    auto size = 9 + (count * 6);
+    Resize(size, true);
+
+    WriteUInt8(0x9F);
+    WriteUInt16BE(checked_cast<uint16_t>(size));
+    WriteUInt32BE(serial);
+    WriteUInt16BE(checked_cast<uint16_t>(count));
+
+    if (count != 0)
+    {
+        for (const auto &item : list)
+        {
+            WriteUInt32BE(item.first);
+            WriteUInt16BE(item.second);
+        }
+    }
+}
+
 CPacketUseCombatAbility::CPacketUseCombatAbility(uint8_t index)
     : CPacket(15)
 {
@@ -1448,6 +1602,44 @@ CPacketTargetSelectedObject::CPacketTargetSelectedObject(
     WriteUInt16BE(0x002C);
     WriteUInt32BE(useObjectSerial);
     WriteUInt32BE(targetObjectSerial);
+}
+
+// The targeted 0xBF extended commands and the wrestling pair; the bodies are
+// the ported assistant builders, verbatim.
+CPacketTargetCastSpell::CPacketTargetCastSpell(uint16_t spell, uint32_t targetObjectSerial)
+    : CPacket(11)
+{
+    WriteUInt8(0xBF);
+    WriteUInt16BE(0x000B);
+    WriteUInt16BE(0x002D);
+    WriteUInt16BE(spell);
+    WriteUInt32BE(targetObjectSerial);
+}
+
+CPacketTargetUseSkill::CPacketTargetUseSkill(uint16_t skill, uint32_t targetObjectSerial)
+    : CPacket(11)
+{
+    WriteUInt8(0xBF);
+    WriteUInt16BE(0x000B);
+    WriteUInt16BE(0x002E);
+    WriteUInt16BE(skill);
+    WriteUInt32BE(targetObjectSerial);
+}
+
+CPacketWrestlingStun::CPacketWrestlingStun()
+    : CPacket(5)
+{
+    WriteUInt8(0xBF);
+    WriteUInt16BE(0x05);
+    WriteUInt16BE(0x09);
+}
+
+CPacketWrestlingDisarm::CPacketWrestlingDisarm()
+    : CPacket(5)
+{
+    WriteUInt8(0xBF);
+    WriteUInt16BE(0x05);
+    WriteUInt16BE(0x0A);
 }
 
 CPacketTargetObject::CPacketTargetObject(

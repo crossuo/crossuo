@@ -5,8 +5,8 @@
 
 #include "skillmanager.h"
 #include "../core/assist.h"
-#include "../core/packets.h" // CPacketTargetUseSkill (the targeted 0xBF builder)
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-originated uses do not record)
+#include "Network/Packets.h" // CPacketTargetUseSkill (the targeted 0xBF builder)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Managers/SkillsManager.h" // ::g_SkillsManager
 
@@ -85,11 +85,9 @@ void CSkillManager::TargetUse(const string &name, const uint &serial)
     if (index != -1)
     {
         // the targeted 0xBF 0x002E send has no client call site (the client's
-        // builders target spellbooks, not objects) - the builder stays, and
-        // the direct wire send is wrapped like the client-call paths above
-        RecordingSuspension suspension;
-
-        CPacketTargetUseSkill(index + 1, serial).SendServer();
+        // builders target spellbooks, not objects); the wire send runs no
+        // recording taps, so no suspension is needed
+        ::CPacketTargetUseSkill(index + 1, serial).Send();
     }
     else
     {
