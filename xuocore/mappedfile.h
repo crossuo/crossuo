@@ -274,11 +274,6 @@ struct CDataReader
     astr_t ReadString(size_t size = 0, const intptr_t &offset = 0);
     wstr_t ReadWStringBE(size_t size = 0, const intptr_t &offset = 0);
     wstr_t ReadWStringLE(size_t size = 0, const intptr_t &offset = 0);
-
-    // bounds-checked ReadString: returns an empty string and leaves the read
-    // position untouched when the requested range is out of bounds
-    astr_t ReadStringChecked(size_t size = 0, const intptr_t &offset = 0);
-
     wstr_t ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
 };
 

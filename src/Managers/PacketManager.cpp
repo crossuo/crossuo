@@ -3130,7 +3130,7 @@ PACKET_HANDLER(ExtendedCommand)
                 {
                     // bounds-checked read, truncated at the first NUL like the
                     // ReadString/c_str() text the two halves used before
-                    crafterName = astr_t(ReadStringChecked(crafterNameLen).c_str());
+                    crafterName = astr_t(ReadString(crafterNameLen).c_str());
                 }
             }
             if (crafterNameLen != 0)
@@ -5684,7 +5684,7 @@ PACKET_HANDLER(OpenGump)
 #endif
 
     uint16_t commandsLength = ReadUInt16BE();
-    auto commands = ReadStringChecked(commandsLength);
+    auto commands = ReadString(commandsLength);
 
     TextFileParser parser({}, " ", "", "{}");
     TextFileParser cmdParser({}, " ", "", "");
