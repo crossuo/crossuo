@@ -3,7 +3,7 @@
 
 // Ported from X:UO Assist (global.h), trimmed per assistant-plan.md §4.2:
 // strings are std::string, lists are std::vector, timers are
-// client g_Ticks (ms), points are the local CPoint2Di. Assistant-owned globals only:
+// client g_Ticks (ms), points are the client CPoint2Di. Assistant-owned globals only:
 // the external-DLL host plumbing (g_DllPath/g_ClientPath/g_SaveAero/g_WineOS)
 // is dropped; the host bridge function pointers stay and get wired to client
 // internals by the packet-manager round.
@@ -67,17 +67,11 @@ enum NOTORIETY_TYPE_FLAGS
 extern FUNCDEF_GET_STATIC_FLAGS *g_GetStaticFlags;
 extern FUNCDEF_GET_VALUE_INT *g_GetInt;
 extern FUNCDEF_SET_VALUE_INT *g_SetInt;
-extern FUNCDEF_GET_VALUE_STRING *g_GetString;
-extern FUNCDEF_SET_VALUE_STRING *g_SetString;
 extern uchar g_LightLevel;
 extern uchar g_PersonalLightLevel;
 
 // Host bridge accessors; null-safe until Bridge_Init (the first frame tick)
 // attaches the in-client implementations. Returning the default keeps
-// pre-wiring behavior inert.
-int GetInt(VALUE_KEY_INT key, int value = -1);
-string GetString(VALUE_KEY_STRING key, const string &value = "");
-
 // One-time wiring of the bridge pointers to the client implementations
 // (g_Game accessors). Called from AssistantWindow_FrameTick before any
 // script, hotkey or manager can consume them.
@@ -405,56 +399,11 @@ inline bool EnabledCommandContextMenu()
     return (g_EnabledCommands & XAEC_CONTEXT_MENU);
 }
 
-enum XA_PACKET_MESSAGE_TYPE
-{
-    XAPMT_SET_FLAGS = 0x0001
-};
-
 enum TRADE_ACTIONS
 {
     TA_OPEN = 0,
     TA_CLOSE,
     TA_CHECK
-};
-
-enum THIRD_PARTY_FEATURES
-{
-    TPF_FILTER_WEATHER = 1 << 0,
-    TPF_FILTER_LIGHT = 1 << 1,
-
-    TPF_SMART_TARGET = 1 << 2,
-    TPF_RANGED_TARGET = 1 << 3,
-
-    TPF_AUTOOPEN_DOORS = 1 << 4,
-
-    TPF_UNEQUIP_ON_CAST = 1 << 5,
-    TPF_AUTO_POTION_EQUIP = 1 << 6,
-
-    TPF_PROTECT_HEALS = 1 << 7,
-
-    TPF_LOOPED_MACROS = 1 << 8,
-
-    TPF_USE_ONCE_AGENT = 1 << 9,
-    TPF_RESTOCK_AGENT = 1 << 10,
-    TPF_SELL_AGENT = 1 << 11,
-    TPF_BUY_AGENT = 1 << 12,
-
-    TPF_POTION_HOTKEYS = 1 << 13,
-
-    TPF_RANDOM_TARGETS = 1 << 14,
-    TPF_CLOSEST_TARGETS = 1 << 15, // All closest target hotkeys
-    TPF_OVERHEAD_HEALTH = 1 << 16, // Health and Mana/Stam messages shown over player's heads
-
-    TPF_AUTOLOOT_AGENT = 1 << 17,
-    TPF_BONE_CUTTER_AGENT = 1 << 18,
-    TPF_ADVANCED_MACROS = 1 << 19,
-    TPF_AUTO_REMOUNT = 1 << 20,
-    TPF_AUTO_BANDAGE = 1 << 21,
-    TPF_ENEMY_TARGET_SHARE = 1 << 22,
-    TPF_FILTER_SEASON = 1 << 23,
-    TPF_SPELL_TARGET_SHARE = 1 << 24,
-
-    TPF_ALL = 0xFFFFFFFF
 };
 
 struct SEASON_DATA
@@ -474,22 +423,8 @@ struct WEATHER_DATA
 extern SEASON_DATA g_Season;
 extern WEATHER_DATA g_Weather;
 
-//! Replacement for the original app's point globals (plan §4.2); x()/y() keep the
-//! original call sites verbatim.
-struct CPoint2Di
-{
-    int X{ 0 };
-    int Y{ 0 };
-
-    CPoint2Di() = default;
-    CPoint2Di(int x, int y)
-        : X(x)
-        , Y(y)
-    {
-    }
-    int x() const { return X; }
-    int y() const { return Y; }
-};
+// Points are the client type (Point.h); the assistant only reads/writes X/Y.
+using ::CPoint2Di;
 
 struct SelectedTile
 {
@@ -509,23 +444,17 @@ struct SelectedTile
 // post-login.
 using ::g_PlayerSerial;
 extern uint g_Backpack;
-extern uint g_FindItem;
 // The client-owned current facet; ChangeMap updates it.
 using ::g_CurrentMap;
-extern string g_ServerName;
-extern string g_CharacterName;
 extern bool g_UpdateDisplayOnStep;
 extern uint g_DressBag;
 extern ushort g_MessagesColor;
-extern uint g_LastTargetObject;
-extern uint g_LastAttackObject;
 extern ushort g_MorphGraphic;
 extern ushort g_OriginalGraphic;
 extern uint g_LastCorpseObject;
 extern uint g_LastContainerObject;
 //! Tick stamps (g_Ticks) replacing the original app's timer objects.
 extern uint g_LastUseObjectTimer;
-extern uint g_StartTimer;
 extern bool g_Connected;
 extern uint g_LastFriendFound;
 extern uint g_LastEnemyFound;
@@ -537,7 +466,6 @@ extern uint g_LastStatusRequest;
 extern uint g_LastStatusObject;
 extern uint g_LastUseObject;
 extern SelectedTile g_SelectedClientWorldObject;
-extern bool g_ClientMacroPlayed;
 extern CPoint2Di g_LastPlayerCorpsePosition;
 extern uint g_LastPlayerDeadTimer;
 // The client-owned last-cast/last-used indexes (client send sites update
@@ -568,154 +496,6 @@ const int MAX_INVOKE_VIRTURE_COUNT = 3;
 
 const string g_InvokeVirtureName[MAX_INVOKE_VIRTURE_COUNT] = { "Honor", "Sacrifice", "Valor" };
 
-#ifndef IN_RANGE
-#define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
-#endif
-#ifndef OUT_RANGE
-#define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))
-#endif
-
-#ifndef RELEASE_POINTER
-#define RELEASE_POINTER(ptr)                                                                       \
-    if (ptr != nullptr)                                                                            \
-    {                                                                                              \
-        delete ptr;                                                                                \
-        ptr = nullptr;                                                                             \
-    }
-#endif
-
-
-inline bool IsBackground(const uint64_t &flags)
-{
-    return (flags & 0x00000001);
-}
-inline bool IsWeapon(const uint64_t &flags)
-{
-    return (flags & 0x00000002);
-}
-inline bool IsTransparent(const uint64_t &flags)
-{
-    return (flags & 0x00000004);
-}
-inline bool IsTranslucent(const uint64_t &flags)
-{
-    return (flags & 0x00000008);
-}
-inline bool IsWall(const uint64_t &flags)
-{
-    return (flags & 0x00000010);
-}
-inline bool IsDamaging(const uint64_t &flags)
-{
-    return (flags & 0x00000020);
-}
-inline bool IsImpassable(const uint64_t &flags)
-{
-    return (flags & 0x00000040);
-}
-inline bool IsWet(const uint64_t &flags)
-{
-    return (flags & 0x00000080);
-}
-inline bool IsUnknown(const uint64_t &flags)
-{
-    return (flags & 0x00000100);
-}
-inline bool IsSurface(const uint64_t &flags)
-{
-    return (flags & 0x00000200);
-}
-inline bool IsBridge(const uint64_t &flags)
-{
-    return (flags & 0x00000400);
-}
-inline bool IsStackable(const uint64_t &flags)
-{
-    return (flags & 0x00000800);
-}
-inline bool IsWindow(const uint64_t &flags)
-{
-    return (flags & 0x00001000);
-}
-inline bool IsNoShoot(const uint64_t &flags)
-{
-    return (flags & 0x00002000);
-}
-inline bool IsPrefixA(const uint64_t &flags)
-{
-    return (flags & 0x00004000);
-}
-inline bool IsPrefixAn(const uint64_t &flags)
-{
-    return (flags & 0x00008000);
-}
-inline bool IsInternal(const uint64_t &flags)
-{
-    return (flags & 0x00010000);
-}
-inline bool IsFoliage(const uint64_t &flags)
-{
-    return (flags & 0x00020000);
-}
-inline bool IsPartialHue(const uint64_t &flags)
-{
-    return (flags & 0x00040000);
-}
-inline bool IsUnknown1(const uint64_t &flags)
-{
-    return (flags & 0x00080000);
-}
-inline bool IsMap(const uint64_t &flags)
-{
-    return (flags & 0x00100000);
-}
-inline bool IsContainer(const uint64_t &flags)
-{
-    return (flags & 0x00200000);
-}
-inline bool IsWearable(const uint64_t &flags)
-{
-    return (flags & 0x00400000);
-}
-inline bool IsLightSource(const uint64_t &flags)
-{
-    return (flags & 0x00800000);
-}
-inline bool IsAnimated(const uint64_t &flags)
-{
-    return (flags & 0x01000000);
-}
-inline bool IsNoDiagonal(const uint64_t &flags)
-{
-    return (flags & 0x02000000);
-}
-inline bool IsUnknown2(const uint64_t &flags)
-{
-    return (flags & 0x04000000);
-}
-inline bool IsArmor(const uint64_t &flags)
-{
-    return (flags & 0x08000000);
-}
-inline bool IsRoof(const uint64_t &flags)
-{
-    return (flags & 0x10000000);
-}
-inline bool IsDoor(const uint64_t &flags)
-{
-    return (flags & 0x20000000);
-}
-inline bool IsStairBack(const uint64_t &flags)
-{
-    return (flags & 0x40000000);
-}
-inline bool IsStairRight(const uint64_t &flags)
-{
-    return (flags & 0x80000000);
-}
-
-const string g_EquipScriptName = "equip_script";
-
 const string g_LayerName[30] = {
     "None", // 0
     "RightHand", "LeftHand", "Shoes", "Pants", "Shirt",      "Helmet",   "Gloves", "Ring",
@@ -724,43 +504,5 @@ const string g_LayerName[30] = {
     "Backpack", // 0x15
     "Robe",      "Eggs",     "Legs",  "Mount", "Buy",        "Resale",   "Sell",   "Bank"
 };
-
-inline uint unpack32(uchar *buf)
-{
-    return static_cast<uint>((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3]);
-}
-
-inline ushort unpack16(uchar *buf)
-{
-    return static_cast<ushort>((buf[0] << 8) | buf[1]);
-}
-
-inline void pack32(uchar *buf, uint x)
-{
-    buf[0] = uchar(x >> 24);
-    buf[1] = uchar((x >> 16) & 0xff);
-    buf[2] = uchar((x >> 8) & 0xff);
-    buf[3] = uchar(x & 0xff);
-}
-
-inline void pack16(uchar *buf, ushort x)
-{
-    buf[0] = x >> 8;
-    buf[1] = x & 0xff;
-}
-
-template <typename T, typename U> static inline T checked_cast(U value)
-{
-    auto result = static_cast<T>(value);
-    assert(static_cast<U>(result) == value && "Type conversion loses information");
-    return result;
-}
-
-template <typename T, typename U> static inline T checked_cast(U *value)
-{
-    auto result = checked_cast<T>((intptr_t)value);
-    assert(static_cast<intptr_t>(result) == (intptr_t)value && "Type conversion loses information");
-    return result;
-}
 
 } // namespace xuoassist

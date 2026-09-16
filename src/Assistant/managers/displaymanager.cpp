@@ -6,6 +6,7 @@
 // Phase 2/4 (see displaymanager.h).
 
 #include "displaymanager.h"
+#include "ServerList.h" // g_ServerList.LastServerName (the fused server name)
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../config/assistantconfig.h"
@@ -307,7 +308,7 @@ void CDisplayManager::GetValues(
     {
         case DIT_NAME:
         {
-            value = g_CharacterName;
+            value = astr_t(g_SelectedCharName);
             backgroundColor = 0;
 
             if (useNotoriety)
@@ -334,7 +335,7 @@ void CDisplayManager::GetValues(
         }
         case DIT_SERVER:
         {
-            value = g_ServerName;
+            value = g_ServerList.LastServerName;
             textColor = item.Color;
             backgroundColor = item.BackgroundColor;
             return;
@@ -507,14 +508,14 @@ void CDisplayManager::Redraw(
 
         if (g_World == nullptr)
         {
-            if (g_ServerName.length() != 0)
+            if (g_ServerList.LastServerName.length() != 0)
             {
-                title += " - " + g_ServerName;
+                title += " - " + g_ServerList.LastServerName;
             }
         }
         else
         {
-            title += " - " + g_CharacterName + " (" + g_ServerName + ")";
+            title += " - " + astr_t(g_SelectedCharName) + " (" + g_ServerList.LastServerName + ")";
         }
     }
     else
@@ -568,7 +569,7 @@ void CDisplayManager::Redraw(
 
         if (title.length() == 0)
         {
-            title = "Ultima Online - " + g_CharacterName + " (" + g_ServerName + ")";
+            title = "Ultima Online - " + astr_t(g_SelectedCharName) + " (" + g_ServerList.LastServerName + ")";
         }
     }
 

@@ -952,8 +952,10 @@ PACKET_HANDLER(EnterWorld)
     xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(-1, -1);
     xuoassist::g_LastPlayerDeadTimer = 0;
 
-    xuoassist::g_LastTargetObject = 0;
-    xuoassist::g_LastAttackObject = 0;
+    // the fused assistant/script session reset: scripts observe LastTarget=0
+    // per session, matching the old assistant-copy behavior
+    g_LastTargetObject = 0;
+    g_LastAttackObject = 0;
     xuoassist::g_MorphGraphic = 0;
     xuoassist::g_OriginalGraphic = 0;
     xuoassist::g_LastCorpseObject = 0;
@@ -2179,11 +2181,11 @@ void CPacketManager::DeleteObject(uint32_t serial)
         }
         else if (xuoassist::EnabledCommandRemovedPtrPosition())
         {
-            if (serial == xuoassist::g_LastTargetObject)
+            if (serial == g_LastTargetObject)
             {
                 xuoassist::g_LastTargetPosition = xuoassist::CPoint2Di(obj->GetX(), obj->GetY());
             }
-            else if (serial == xuoassist::g_LastAttackObject)
+            else if (serial == g_LastAttackObject)
             {
                 xuoassist::g_LastAttackPosition = xuoassist::CPoint2Di(obj->GetX(), obj->GetY());
             }
@@ -4693,15 +4695,6 @@ PACKET_HANDLER(ErrorCode)
 PACKET_HANDLER(AttackCharacter)
 {
     g_LastAttackObject = ReadUInt32BE();
-
-#if defined(XUO_ASSISTANT)
-    // the assistant keeps its own last-attack mirror for the script API; the
-    // mirror only takes real serials (the client global also records zeroes)
-    if (g_LastAttackObject != 0u)
-    {
-        xuoassist::g_LastAttackObject = g_LastAttackObject;
-    }
-#endif
 
     if (g_LastAttackObject != 0 && g_World != nullptr)
     {

@@ -267,8 +267,6 @@ bool g_Connected = false;
 uint64_t g_EnabledCommands = 0;
 uint64_t g_EnabledFeature = 0;
 ushort g_MessagesColor = 0x02B2;
-uint g_LastTargetObject = 0;
-uint g_LastAttackObject = 0;
 CPoint2Di g_LastTargetPosition;
 CPoint2Di g_LastAttackPosition;
 bool g_TargetReceived = false;
@@ -287,6 +285,9 @@ TARGET_HANDLER g_TargetHandler = nullptr;
 // world-model stand-in globals (global namespace, as declared in worldstubs.h)
 CGameWorld *g_World = nullptr;
 CPlayer *g_Player = nullptr;
+// the client globals the fused assistant LastTarget/LastAttack reads consume
+uint32_t g_LastTargetObject = 0;
+uint32_t g_LastAttackObject = 0;
 // the client global the xuoassist using-declaration (global.h) aliases
 uint32_t g_PlayerSerial = 0;
 CSkillsManager g_SkillsManager;

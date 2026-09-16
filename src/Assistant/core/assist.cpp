@@ -12,6 +12,7 @@
 //    half and route the UI half through the events seam (Phase 2).
 
 #include "assist.h"
+#include "../Misc.h" // unpack16/unpack32 (the client byte-order helpers)
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
 #include "Network/Packets.h" // ::CPacketStatusRequest and the other client send builders
 #include "Managers/PacketManager.h"      // ::g_PacketManager (DisplayTalkTextW, DeleteObject)

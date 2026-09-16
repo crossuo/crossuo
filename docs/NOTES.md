@@ -1259,9 +1259,26 @@ B7 (death/prompt/profile) completes the BMSGH recv halves:
   the client object headers, and the script harness swaps in stand-in
   declarations (`script/test/worldstubs.h`) for the same names.
 - The assistant's skill-cast path (`CSkillManager::Use/TargetUse`) resolves
-  names through `g_SkillsManager::Find` (exact name wins, partial fallback,
-  button skills only); its own name/number→index map only backs
-  `GetIndex`-style lookups.
+   names through `g_SkillsManager::Find` (exact name wins, partial fallback,
+   button skills only); its own name/number→index map only backs
+   `GetIndex`-style lookups.
+
+## Fused globals with non-obvious semantics (keep-with-doc)
+
+- `g_LastUseObject` (assistant copy): keeps the original any-serial
+  semantics. The client global of the same name only records items with
+  serial >= 0x40000000, which would break scripts tracking non-item uses;
+  hence the assistant copy stays assistant-owned.
+- Light / personal-light / season / weather mirrors (`g_LightLevel`,
+  `g_PersonalLightLevel`, `g_Season`, `g_Weather`): hold the RAW
+  pre-filter wire values from packets 0x4E/0x4F/0x65/0xBC. The filter
+  toggles restore from these mirrors; they are not the effective
+  post-filter values the renderer sees.
+- Morph mirrors (`g_MorphGraphic`, `g_OriginalGraphic`): hold the
+  pre-morph graphic. Once the morph patch has been applied, the original
+  body graphic is not derivable from world state anymore (the client only
+  sees patched values), so the assistant must remember it to reset on
+  logout.
 
 ## Remaining deviations (grep `DEVIATION`, all commented in place)
 

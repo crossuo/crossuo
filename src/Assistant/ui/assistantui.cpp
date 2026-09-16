@@ -538,7 +538,7 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
 
     // the original title carried "X:UO Assist v<version> <playerName>"
     ImGui::SameLine();
-    ImGui::TextDisabled("v" PRODUCT_VERSION_STR "%s", g_CharacterName.c_str());
+    ImGui::TextDisabled("v" PRODUCT_VERSION_STR "%s", astr_t(g_SelectedCharName).c_str());
     ImGui::SameLine();
     static bool journalOpen = true;
     ImGui::Checkbox("Journal", &journalOpen);
