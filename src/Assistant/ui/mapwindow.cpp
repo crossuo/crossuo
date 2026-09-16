@@ -78,7 +78,7 @@ void MapWindow_Open()
     g_AssistantMapOpen = true;
 }
 
-// The window geometry attributes (Map.xml window_x/y/width/height) stay in
+// The window geometry attributes (Map.ini window_x/y/width/height) stay in
 // the format and are honored for the first placement below; ongoing geometry
 // lives in the ImGui window ini like every other assistant window (the
 // original ~Map wrote them back on close - documented delta).

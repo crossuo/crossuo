@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The assistant map module, logic half (see assmap.h for the dedup map):
-// settings record + GlobalConfig/Map.xml persistence (the original format, exact
-// attribute set), the zoom->scale rule, the character classification and the
+// settings record + GlobalConfig/Map.ini persistence (single [Map] section), the
 // client-API radar sampler with its single-texture cache.
 
 #define LOGGER_MODULE Assistant
@@ -26,11 +25,8 @@
 #include "CrossUO.h"              // ::g_Game (season graphics)
 #include "GameObjects/RenderStaticObject.h" // CRenderStaticObject::IsNoDrawTile
 
-#include "../config/xml.h"
-#include "../config/assistantconfig.h" // GetGlobalConfigPath
-#include "../core/assist.h"            // RawStringToBool/BoolToText
-#include "../core/textconv.h"          // TextToSerial/SerialToText
 #include "../core/world.h"
+#include "../config/assistantconfig.h" // g_AssistantConfig (friends/enemies classification)
 #include "../managers/guildmanager.h"
 
 namespace xuoassist {
@@ -136,180 +132,6 @@ void CMapSettings::Copy(const CMapSettings &settings)
     OtherColor = settings.OtherColor;
     OtherShowHits = settings.OtherShowHits;
     OtherShowName = settings.OtherShowName;
-}
-
-// attribute helpers over the shared xml module (the original code inlined
-// hasAttribute guards per attribute; Attribute/AttributeInt already default)
-static void load_bool(const XMLElement &e, const char *name, bool *value)
-{
-    if (e.HasAttribute(name))
-    {
-        *value = CAssistant::RawStringToBool(e.Attribute(name));
-    }
-}
-
-static void load_int(const XMLElement &e, const char *name, int *value)
-{
-    if (e.HasAttribute(name))
-    {
-        *value = e.AttributeInt(name);
-    }
-}
-
-// Packed RGBA text form (the original code round-tripped the ARGB uint32_t through
-// CAssistant::SerialToText/TextToSerial - same helpers here)
-static void load_color(const XMLElement &e, const char *name, uint32_t *value)
-{
-    if (e.HasAttribute(name))
-    {
-        *value = TextToSerial(e.Attribute(name));
-    }
-}
-
-static void set_bool(XMLElement &e, const char *name, bool value)
-{
-    e.SetAttribute(name, CAssistant::BoolToText(value));
-}
-
-static void set_int(XMLElement &e, const char *name, int value)
-{
-    char buf[32] = { 0 };
-    snprintf(buf, sizeof(buf), "%d", value);
-    e.SetAttribute(name, buf);
-}
-
-static void set_color(XMLElement &e, const char *name, uint32_t value)
-{
-    e.SetAttribute(name, CAssistant::SerialToText(value));
-}
-
-void CMapSettings::Load()
-{
-    const fs_path path = fs_path_join(CAssistantConfig::GetGlobalConfigPath(), "Map.xml");
-    XMLDocument doc;
-    if (!doc.Load(path))
-    {
-        return; // absent file = defaults (the original code silently kept defaults too)
-    }
-
-    const XMLElement &e = doc.Root;
-
-    load_int(e, "window_x", &WindowX);
-    load_int(e, "window_y", &WindowY);
-    load_int(e, "window_width", &WindowWidth);
-    load_int(e, "window_height", &WindowHeight);
-
-    load_bool(e, "show_statics", &ShowStatics);
-    load_bool(e, "apply_altitude", &ApplyAltitude);
-    load_bool(e, "altitude_only", &AltitudeOnly);
-    load_bool(e, "smooth_image", &SmoothImage);
-    load_bool(e, "display_coordinates", &DisplayCoordinates);
-    load_bool(e, "show_on_login", &ShowOnLogin);
-    load_bool(e, "show_last_corpse", &ShowLastCorpse);
-    load_bool(e, "mark_dead_mobiles", &MarkDeadMobiles);
-    load_int(e, "opacity", &Opacity);
-    load_bool(e, "rotate_map", &RotateMap);
-
-    load_int(e, "player_font_style", &PlayerFontStyle);
-    load_color(e, "player_color", &PlayerColor);
-    load_bool(e, "player_show_hits", &PlayerShowHits);
-    load_bool(e, "player_show_mana", &PlayerShowMana);
-    load_bool(e, "player_show_stam", &PlayerShowStam);
-    load_bool(e, "player_show_name", &PlayerShowName);
-
-    load_bool(e, "party_enabled", &PartyEnabled);
-    load_int(e, "party_font_style", &PartyFontStyle);
-    load_color(e, "party_color", &PartyColor);
-    load_bool(e, "party_show_hits", &PartyShowHits);
-    load_bool(e, "party_show_name", &PartyShowName);
-
-    load_bool(e, "guild_enabled", &GuildEnabled);
-    load_int(e, "guild_font_style", &GuildFontStyle);
-    load_color(e, "guild_color", &GuildColor);
-    load_bool(e, "guild_show_hits", &GuildShowHits);
-    load_bool(e, "guild_show_name", &GuildShowName);
-
-    load_bool(e, "friends_enabled", &FriendsEnabled);
-    load_int(e, "friends_font_style", &FriendsFontStyle);
-    load_color(e, "friends_color", &FriendsColor);
-    load_bool(e, "friends_show_hits", &FriendsShowHits);
-    load_bool(e, "friends_show_name", &FriendsShowName);
-
-    load_bool(e, "enemies_enabled", &EnemiesEnabled);
-    load_int(e, "enemies_font_style", &EnemiesFontStyle);
-    load_color(e, "enemies_color", &EnemiesColor);
-    load_bool(e, "enemies_show_hits", &EnemiesShowHits);
-    load_bool(e, "enemies_show_name", &EnemiesShowName);
-
-    load_bool(e, "other_enabled", &OtherEnabled);
-    load_int(e, "other_font_style", &OtherFontStyle);
-    load_color(e, "other_color", &OtherColor);
-    load_bool(e, "other_show_hits", &OtherShowHits);
-    // Format quirk: this attribute is spelled
-    // "other_sho_name" in BOTH write/read directions - kept for byte compatibility.
-    load_bool(e, "other_sho_name", &OtherShowName);
-}
-
-void CMapSettings::Save()
-{
-    XMLDocument doc;
-    XMLElement &e = doc.Root;
-    e.Name = "data";
-
-    set_int(e, "window_x", WindowX);
-    set_int(e, "window_y", WindowY);
-    set_int(e, "window_width", WindowWidth);
-    set_int(e, "window_height", WindowHeight);
-
-    set_bool(e, "show_statics", ShowStatics);
-    set_bool(e, "apply_altitude", ApplyAltitude);
-    set_bool(e, "altitude_only", AltitudeOnly);
-    set_bool(e, "smooth_image", SmoothImage);
-    set_bool(e, "display_coordinates", DisplayCoordinates);
-    set_bool(e, "show_on_login", ShowOnLogin);
-    set_bool(e, "show_last_corpse", ShowLastCorpse);
-    set_bool(e, "mark_dead_mobiles", MarkDeadMobiles);
-    set_int(e, "opacity", Opacity);
-    set_bool(e, "rotate_map", RotateMap);
-
-    set_int(e, "player_font_style", PlayerFontStyle);
-    set_color(e, "player_color", PlayerColor);
-    set_bool(e, "player_show_hits", PlayerShowHits);
-    set_bool(e, "player_show_mana", PlayerShowMana);
-    set_bool(e, "player_show_stam", PlayerShowStam);
-    set_bool(e, "player_show_name", PlayerShowName);
-
-    set_bool(e, "party_enabled", PartyEnabled);
-    set_int(e, "party_font_style", PartyFontStyle);
-    set_color(e, "party_color", PartyColor);
-    set_bool(e, "party_show_hits", PartyShowHits);
-    set_bool(e, "party_show_name", PartyShowName);
-
-    set_bool(e, "guild_enabled", GuildEnabled);
-    set_int(e, "guild_font_style", GuildFontStyle);
-    set_color(e, "guild_color", GuildColor);
-    set_bool(e, "guild_show_hits", GuildShowHits);
-    set_bool(e, "guild_show_name", GuildShowName);
-
-    set_bool(e, "friends_enabled", FriendsEnabled);
-    set_int(e, "friends_font_style", FriendsFontStyle);
-    set_color(e, "friends_color", FriendsColor);
-    set_bool(e, "friends_show_hits", FriendsShowHits);
-    set_bool(e, "friends_show_name", FriendsShowName);
-
-    set_bool(e, "enemies_enabled", EnemiesEnabled);
-    set_int(e, "enemies_font_style", EnemiesFontStyle);
-    set_color(e, "enemies_color", EnemiesColor);
-    set_bool(e, "enemies_show_hits", EnemiesShowHits);
-    set_bool(e, "enemies_show_name", EnemiesShowName);
-
-    set_bool(e, "other_enabled", OtherEnabled);
-    set_int(e, "other_font_style", OtherFontStyle);
-    set_color(e, "other_color", OtherColor);
-    set_bool(e, "other_show_hits", OtherShowHits);
-    set_bool(e, "other_sho_name", OtherShowName); // format quirk, see Load
-
-    doc.Save(fs_path_join(CAssistantConfig::GetGlobalConfigPath(), "Map.xml"));
 }
 
 // --- radar sampling ----------------------------------------------------------

@@ -26,7 +26,9 @@
 #include "../scriptgump.h"
 #include "../scriptstate.h"
 
-#include "../../config/xml.h" // AtomicFileWrite (the crash-safe save path)
+#include "../../config/configio.h" // AtomicFileWrite + CIniFile (the config/save primitives)
+#include "../../config/assistantconfig.h" // the Options/Hotkeys INI round trips
+#include "../../managers/mapsettings.h" // the Map.ini round trip
 #include "../../core/global.h"
 #include "../../core/assistantevents.h" // JMT_* (the journal type flags)
 #include "../../core/world.h" // g_World stand-in (section 6 executor gate)
@@ -40,11 +42,11 @@ extern "C" {
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
+#include <cstring> // memcmp
 #include <stdlib.h> // mkdtemp
 #include <sys/stat.h> // chmod
-#include <unistd.h> // rmdir
+#include <unistd.h> // rmdir, chdir
 #include <cstdlib> // mkdtemp
-#include <unistd.h> // rmdir
 #include <thread>
 #include <vector>
 
@@ -202,7 +204,8 @@ int main()
         }, &draining);
         ScriptQueue_SetCapacity(8);
         // ordered exec: the real SC_WAIT_PARSE body reads the config delay
-        // helper (stub: text length); SC_NOW falls through the real
+        // helper (the real assistantconfig.cpp is linked: atoi of the text);
+        // SC_NOW falls through the real
         // executor's switch (handled tags only) and copies back the defaults
         auto *first = new XA_SCRIPT_COMMAND();
         first->Tag = SC_WAIT_PARSE;
@@ -213,7 +216,7 @@ int main()
         ScriptQueue_Exec(second);
         ScriptQueue_Drain();
         ScriptQueue_Drain();
-        CHECK(!first->ResultDropped && first->ResultInt == 3);
+        CHECK(!first->ResultDropped && first->ResultInt == 100);
         CHECK(!second->ResultDropped && second->ResultInt == 0);
         delete first;
         delete second;
@@ -611,6 +614,194 @@ int main()
         printf("api: engine-class prototypes + finalizers ok\n");
     }
 
+    // --- O. INI config round trips (Options / Hotkeys / Map schemas) ----
+    {
+        // the config paths resolve against the process CWD
+        // (CAssistantConfig::GetRootPath); the tests run inside a temp dir so
+        // they stay side-effect free
+        char dirTemplate[] = "/tmp/xuoassist_config_XXXXXX";
+        const char *mkd = mkdtemp(dirTemplate);
+        CHECK(mkd != nullptr);
+        if (mkd != nullptr)
+        {
+            char prevDir[2048] = { 0 };
+            CHECK(getcwd(prevDir, sizeof(prevDir)) != nullptr);
+            CHECK(chdir(mkd) == 0);
+
+            // --- Options.ini: every main/display/hotkeys/scripts field ---
+            {
+                CAssistantConfig saved;
+                for (int i = 0; i < CLBI_COUNT; i++)
+                {
+                    saved.SetOption(i, (i % 3) != 0);
+                }
+                saved.m_MessagesLevel = 2;
+                saved.m_SearchItemsDistance = 5;
+                saved.m_UseItemsDistance = 4;
+                saved.m_OpenCorpsesDistance = 1;
+                saved.m_CorpseKeepDelay = 12345;
+                saved.m_WaitTargetsDelay = 777;
+                saved.m_MoveItemsDelay = 333;
+                saved.m_UseItemsDelay = 222;
+                saved.m_WindowsOpacity = 80;
+                saved.m_UseFontColor = true;
+                saved.m_FontColor = "0x02B2";
+                saved.m_UseCharactersFontColor = true;
+                saved.m_CharactersFontColor = "0x0044";
+                saved.m_AutoReconnect = true;
+                saved.m_AutoReconnectSeconds = 45;
+                saved.m_DoubleClickForOpenDoors = true;
+                saved.m_DisplayType = 3;
+                saved.m_DisplayFlags = 0x0F;
+                saved.m_DisplayTextColor = 0x00FFFFFF;
+                saved.m_DisplayBackgroundColor = 0xFF000000;
+                saved.m_DisplayTitleData = "UO - {name} (& more) <test> 'q'";
+                saved.m_PassHotkeys = true;
+                saved.m_CommandPrefix = "-";
+                saved.m_SortScripts = true;
+                saved.m_ScriptFilePath = ""; // explicit empty round trip
+
+                saved.SaveMainOptions();
+
+                CAssistantConfig loaded;
+                loaded.LoadMainOptions();
+                bool ok = true;
+                for (int i = 0; i < CLBI_COUNT; i++)
+                {
+                    ok = ok && loaded.GetOption(i) == ((i % 3) != 0);
+                }
+                ok = ok && loaded.m_MessagesLevel == 2;
+                ok = ok && loaded.m_SearchItemsDistance == 5;
+                ok = ok && loaded.m_UseItemsDistance == 4;
+                ok = ok && loaded.m_OpenCorpsesDistance == 1;
+                ok = ok && loaded.m_CorpseKeepDelay == 12345;
+                ok = ok && loaded.m_WaitTargetsDelay == 777;
+                ok = ok && loaded.m_MoveItemsDelay == 333;
+                ok = ok && loaded.m_UseItemsDelay == 222;
+                ok = ok && loaded.m_WindowsOpacity == 80;
+                ok = ok && loaded.m_UseFontColor && loaded.m_FontColor == "0x02B2";
+                ok = ok && loaded.m_UseCharactersFontColor;
+                ok = ok && loaded.m_CharactersFontColor == "0x0044";
+                ok = ok && loaded.m_AutoReconnect && loaded.m_AutoReconnectSeconds == 45;
+                ok = ok && loaded.m_DoubleClickForOpenDoors;
+                ok = ok && loaded.m_DisplayType == 3 && loaded.m_DisplayFlags == 0x0F;
+                ok = ok && loaded.m_DisplayTextColor == 0x00FFFFFF;
+                ok = ok && loaded.m_DisplayBackgroundColor == 0xFF000000;
+                ok = ok && loaded.m_DisplayTitleData == "UO - {name} (& more) <test> 'q'";
+                ok = ok && loaded.m_PassHotkeys && loaded.m_CommandPrefix == "-";
+                ok = ok && loaded.m_SortScripts && loaded.m_ScriptFilePath.empty();
+                CHECK(ok);
+            }
+
+            // --- Hotkeys.ini: three records, all fields, order preserved ---
+            {
+                CAssistantConfig saved;
+                CHotkeyEntry a;
+                a.Key = 65;
+                a.Modifiers = 2;
+                a.Type = HT_SCRIPT;
+                a.Action = 0;
+                a.ScriptOrMacroName = "mine.ini";
+                a.ExternalCode = "";
+                a.RunningMode = true;
+                CHotkeyEntry b;
+                b.Key = 67;
+                b.Modifiers = 1;
+                b.Type = HT_USE_OBJECT;
+                b.Action = 7;
+                b.ScriptOrMacroName = "";
+                b.ExternalCode = "printf('x; y')"; // ';' survives (no inline comments)
+                CHotkeyEntry c;
+                c.Key = 27;
+                c.Modifiers = 0;
+                c.Type = HT_TOGGLE_HOTKEYS;
+                c.Action = 0;
+                saved.m_Hotkeys = { a, b, c };
+                saved.SaveHotkeys();
+
+                CAssistantConfig loaded;
+                CHECK(loaded.LoadHotkeys());
+                CHECK(loaded.m_Hotkeys.size() == 3);
+                bool ok = loaded.m_Hotkeys.size() == 3;
+                if (ok)
+                {
+                    const CHotkeyEntry &la = loaded.m_Hotkeys[0];
+                    const CHotkeyEntry &lb = loaded.m_Hotkeys[1];
+                    const CHotkeyEntry &lc = loaded.m_Hotkeys[2];
+                    ok = la.Key == 65 && la.Modifiers == 2 && la.Type == HT_SCRIPT &&
+                         la.ScriptOrMacroName == "mine.ini" && la.ExternalCode.empty() &&
+                         la.RunningMode;
+                    ok = ok && lb.Key == 67 && lb.Modifiers == 1 && lb.Type == HT_USE_OBJECT &&
+                         lb.Action == 7 && lb.ScriptOrMacroName.empty() && !lb.RunningMode &&
+                         lb.ExternalCode == "printf('x; y')";
+                    ok = ok && lc.Key == 27 && lc.Modifiers == 0 && lc.Type == HT_TOGGLE_HOTKEYS &&
+                         lc.Action == 0;
+                }
+                CHECK(ok);
+            }
+
+            // --- Map.ini: every CMapSettings field, byte-identical ---
+            {
+                CAssistantConfig().EnsureDirectories();
+                CMapSettings saved = CMapSettings();
+                saved.WindowX = 12;
+                saved.WindowY = 34;
+                saved.WindowWidth = 567;
+                saved.WindowHeight = 890;
+                saved.ShowStatics = true;
+                saved.ApplyAltitude = true;
+                saved.AltitudeOnly = false;
+                saved.SmoothImage = true;
+                saved.DisplayCoordinates = true;
+                saved.ShowOnLogin = true;
+                saved.ShowLastCorpse = true;
+                saved.MarkDeadMobiles = true;
+                saved.Opacity = 75;
+                saved.RotateMap = true;
+                saved.PlayerFontStyle = 1;
+                saved.PlayerColor = 0x41A2B3C4;
+                saved.PlayerShowHits = true;
+                saved.PlayerShowMana = true;
+                saved.PlayerShowStam = true;
+                saved.PlayerShowName = true;
+                saved.PartyEnabled = true;
+                saved.PartyFontStyle = 2;
+                saved.PartyColor = 0x50607080;
+                saved.PartyShowHits = true;
+                saved.PartyShowName = true;
+                saved.GuildEnabled = true;
+                saved.GuildFontStyle = 3;
+                saved.GuildColor = 0x90A0B0C0;
+                saved.GuildShowHits = true;
+                saved.GuildShowName = true;
+                saved.FriendsEnabled = true;
+                saved.FriendsFontStyle = 4;
+                saved.FriendsColor = 0xD0E0F000;
+                saved.FriendsShowHits = true;
+                saved.FriendsShowName = true;
+                saved.EnemiesEnabled = true;
+                saved.EnemiesFontStyle = 5;
+                saved.EnemiesColor = 0x11223344;
+                saved.EnemiesShowHits = true;
+                saved.EnemiesShowName = true;
+                saved.OtherEnabled = true;
+                saved.OtherFontStyle = 6;
+                saved.OtherColor = 0x55667788;
+                saved.OtherShowHits = true;
+                saved.OtherShowName = true;
+                saved.Save();
+
+                CMapSettings loaded = CMapSettings();
+                loaded.Load();
+                // value-initialised on both sides, so the padding bytes match
+                CHECK(memcmp(&saved, &loaded, sizeof(CMapSettings)) == 0);
+            }
+
+            CHECK(chdir(prevDir) == 0);
+            printf("config: INI round trips ok (Options, Hotkeys, Map)\n");
+        }
+    }
+
     // --- N. AtomicFileWrite (the crash-safe save path) -------------------
     {
         // a temp dir keeps the test side-effect free
@@ -622,7 +813,7 @@ int main()
             const astr_t dir(mkd);
 
             // 1) create
-            const fs_path path = fs_path_join(dir, "probe.xml");
+            const fs_path path = fs_path_join(dir, "probe.bin");
             CHECK(AtomicFileWrite(path, "<a/>", 4));
             CHECK(fs_path_type(path) == FS_FILE);
 
@@ -634,18 +825,18 @@ int main()
                 CHECK(data != nullptr && size == 7 && memcmp(data, "<bbbb/>", 7) == 0);
                 fs_unmap(data, size);
             }
-            CHECK(!fs_path_exists(fs_path_join(dir, "probe.xml.tmp")));
+            CHECK(!fs_path_exists(fs_path_join(dir, "probe.bin.tmp")));
 
             // 3) failure keeps the original untouched (the directory is not
             // writable for the temp file)
             const fs_path roDir = fs_path_join(dir, "ro");
             fs_path_create(roDir);
             chmod(fs_path_ascii(roDir), 0555);
-            CHECK(!AtomicFileWrite(fs_path_join(roDir, "x.xml"), "<a/>", 4));
+            CHECK(!AtomicFileWrite(fs_path_join(roDir, "x.bin"), "<a/>", 4));
             chmod(fs_path_ascii(roDir), 0755);
-            CHECK(!fs_path_exists(fs_path_join(roDir, "x.xml")));
+            CHECK(!fs_path_exists(fs_path_join(roDir, "x.bin")));
 
-            fs_del(fs_path_join(roDir, "x.xml"));
+            fs_del(fs_path_join(roDir, "x.bin"));
             rmdir(fs_path_ascii(roDir));
             fs_del(path);
             rmdir(mkd);

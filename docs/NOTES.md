@@ -824,19 +824,42 @@ gotchas, accepted deltas and the reasoning behind them.
   key events to the engine.
 
 ## Persistence
-
-- All saves are crash-safe (`AtomicFileWrite`, `config/xml.{h,cpp}`): temp
-  file in the target directory → write → `fflush` → `fsync`/`_commit` →
-  preserve the original file mode → atomic `rename`/`MoveFileEx`. All
-  `XMLDocument::Save` sites (incl. `Map.xml`), `SaveDress` (Dress.coa), the
-  script text window save and the script editor's Save funnel through it.
-  Any failure keeps the original file; stale `*.tmp` files are ignored on
-  load and truncated on the next save.
-- Format quirks kept for byte compatibility with existing profile files:
-  `FindList.xml`/`IgnoreList.xml`/`Hotkeys.xml` store `size = count+1`;
-  Map.xml spells one attribute `other_sho_name`; Dress.coa strings carry
-  the length+1/0x00 layout and the reader tolerates a full int32 length
-  (names failing the bounds check come back empty, the set is skipped).
+- Hand-edited INI caveat: any line longer than 4096 chars or malformed fails the whole file load (stop-on-first-error) and the config falls back to defaults; saves are always complete rewrites.
+- All assistant config/save files are INI, read through the vendored
+  `<external/inih.h>` single-header parser and written by `CIniFile`
+  (`config/configio.{h,cpp}`); all saves are crash-safe (`AtomicFileWrite`,
+  same file): temp file in the target directory → write → `fflush` →
+  `fsync`/`_commit` → preserve the original file mode → atomic
+  `rename`/`MoveFileEx`. All `CIniFile::Save` sites (incl. `Map.ini`),
+  `SaveDress` (Dress.coa), the script text window save and the script
+  editor's Save funnel through it. Any failure keeps the original file;
+  stale `*.tmp` files are ignored on load and truncated on the next save.
+- Schema (per file, same directory layout as before with `.ini` stems):
+  repeated records live in indexed sections (`[Hotkey0]`…, `[Friend3]`,
+  `[Macro2Action1]`, `[ShopList0Item4]`) plus a `[Meta]` section holding
+  `count = N`; single-record files (`Options.ini` `[main]`/`[display]`/
+  `[hotkeys]`/`[scripts]`, `Map.ini` `[Map]`) are plain named sections;
+  keys reuse the former attribute names (lowercase, underscores kept).
+  Numbers are decimal text, bools are `true`/`false`, serials/graphics/
+  colors keep the `CAssistant` text forms (`0x…`, `#RRGGBBAA`).
+  Value limitations: inih strips surrounding whitespace, so leading/
+  trailing spaces/tabs in values do not round-trip; newlines are escaped
+  (`\n`, `\r`, `\\`); empty values are explicit (`key=` reads back "").
+  A malformed or truncated file fails the whole load (inih stops on the
+  first error) and the caller keeps the defaults; a missing file is just
+  defaults.
+- There is no compatibility with the old per-file XML documents: a first
+  run over an old profile starts from the in-memory defaults (the
+  `Types.ini` reagent list, `DisplayItems.ini` info commands and
+  `DisplayGroups.ini` allreag/default sets regenerate on their usual
+  empty-file branches). Dress.coa stays the binary format it was.
+- Format quirks that survive as INI keys: Map.ini spells one key
+  `other_sho_name`; Dress.coa strings carry the length+1/0x00 layout and
+  the reader tolerates a full int32 length (names failing the bounds
+  check come back empty, the set is skipped). The old XML `size = count+1`
+  quirks were byte-compat artifacts and are gone: `[Meta] count` is exact.
+  (The Options.ini `[display]` color keys are written as plain decimals
+  and read numerically; the XML loader's text parse used to drop them.)
 - Multi-instance: two clients sharing one game directory share `Config/`;
   files are not locked, so simultaneous writes to the same profile can lose
   updates — use separate profiles per client.
@@ -859,7 +882,7 @@ gotchas, accepted deltas and the reasoning behind them.
   (the macro replay answers the server).
 - The shop agent taps the OpenContainer/BuyList/SellList replies in
   `packetmanager.cpp`; the progress countdown runs on frame ticks.
-- Map window geometry: the legacy `Map.xml` window attributes are honored
+- Map window geometry: the `Map.ini` window keys are honored
   for first placement only; ongoing geometry lives in the ImGui window ini.
 
 ## Packet handler fusion — COMPLETE
@@ -1290,7 +1313,7 @@ B7 (death/prompt/profile) completes the BMSGH recv halves:
 - `LoadProfile` restrictions (script-side profile switching is limited).
 - The external UOAM/UOA notify pipes have no in-process equivalent.
 - The CLOGGER-only assistant world dump is a no-op (no logger channel).
-- `savehotkeys`/`loadhotkeys` target the profile's `Hotkeys.xml`; the
+- `savehotkeys`/`loadhotkeys` target the profile's `Hotkeys.ini`; the
   explicit path argument is not honored.
 - Tile-hook categories: numeric graphic, `land`, `any` resolve from the
   client's tiledata; `tree`/`water`/`mine` category lists are not

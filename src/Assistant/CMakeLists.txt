@@ -42,6 +42,7 @@ set(XUOASSIST_SRCS
   "ui/scripteditor.cpp"
   "ui/tabscripts.cpp"
   "managers/assmap.cpp"
+  "managers/mapsettings.cpp"
   "ui/mapwindow.cpp"
   "ui/mapsettings.cpp"
   "ui/inspector.cpp"
@@ -62,7 +63,7 @@ set(XUOASSIST_SRCS
   "managers/spellmanager.cpp"
   "managers/trademanager.cpp"
   "macros/macro.cpp"
-  "config/xml.cpp"
+  "config/configio.cpp"
   "config/assistantconfig.cpp"
   "model/commonitems/finditem.cpp"
   "model/commonitems/ignoreitem.cpp"
@@ -127,8 +128,18 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     script/scriptfile.cpp
     script/scriptgump.cpp
     script/scriptstate.cpp
-    # the crash-safe save helper (ScriptTextWindow_SaveToFile calls it)
-    config/xml.cpp
+    # the config module (the INI reader/writer + the crash-safe save helper;
+    # ScriptTextWindow_SaveToFile calls AtomicFileWrite and the round-trip
+    # tests exercise CAssistantConfig + CMapSettings)
+    config/configio.cpp
+    config/assistantconfig.cpp
+    managers/mapsettings.cpp
+    model/commonitems/finditem.cpp
+    model/commonitems/ignoreitem.cpp
+    model/commonitems/displayitem.cpp
+    # the client token parser (finditem.cpp; the real implementation; the
+    # harness links xuocore's sources directly instead of the library)
+    ../../xuocore/text_parser.cpp
     # the stb-style common/fs.h implementation for this standalone link (the
     # main build gets it from xuocore/common.cpp, which is not linked here)
     script/test/fsimpl.cpp

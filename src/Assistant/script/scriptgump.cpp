@@ -7,7 +7,7 @@
 
 #include "scriptgump.h"
 #include "scriptfile.h"
-#include "../config/xml.h" // AtomicFileWrite (the crash-safe save path)
+#include "../config/configio.h" // AtomicFileWrite (the crash-safe save path)
 
 #define LOGGER_MODULE Assistant
 

@@ -51,7 +51,7 @@ uint32_t ColToRgba(ImU32 col)
 
 bool StyleCombo(const char *id, int *value)
 {
-    // clamp: a hand-edited Map.xml may hold anything
+    // clamp: a hand-edited Map.ini may hold anything
     int index = (*value >= 0 && *value < MAP_FONT_STYLES_COUNT) ? *value : 0;
     bool changed = ComboGroup(id, &index, FONT_STYLES, MAP_FONT_STYLES_COUNT);
     if (changed)

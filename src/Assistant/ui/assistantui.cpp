@@ -386,7 +386,7 @@ void AssistantUI_Shutdown()
     // legit 0x6C after a re-init
     CancelPendingFromTargets();
     // the phase 5 windows: persist the map settings + geometry (delta: the
-    // original app only wrote Map.xml on the settings form Apply) and clear the
+    // original app only wrote Map.ini on the settings form Apply) and clear the
     // inspector/text-dialog state
     MapWindow_Shutdown();
     Inspector_Shutdown();

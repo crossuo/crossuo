@@ -6,7 +6,7 @@
 // checkboxes. The DECISION logic itself is packet-driven and lives in the
 // client's party parse (src/Party.cpp case 7 -> config
 // PartyInviteCanBeAutoAccepted/AutoDeclined) - this tab edits the very
-// structures it consults (Party.xml, saved on every mutation).
+// structures it consults (Party.ini, saved on every mutation).
 
 #include "assistantui.h"
 
@@ -167,7 +167,7 @@ void party_pane(
     }
     if (changed)
     {
-        g_AssistantConfig.SaveParty(); // Party.xml (the original tab saved per mutation)
+        g_AssistantConfig.SaveParty(); // Party.ini (the original tab saved per mutation)
     }
 }
 

@@ -8,7 +8,7 @@
 // assist/hotkeysform.{ui,cpp}; the engine and tables live in core/hotkeys
 // and core/actions.
 //
-// Persistence: every mutation saves Hotkeys.xml immediately (the original app
+// Persistence: every mutation saves Hotkeys.ini immediately (the original app
 // flagged m_WantToSave and saved from a 300 ms timer).
 
 #pragma once

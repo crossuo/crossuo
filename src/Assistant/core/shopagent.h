@@ -15,7 +15,7 @@
 //    tapped from the client's packet manager (src/Managers/PacketManager.cpp)
 //    exactly where the original handlers called g_TabAgentsShop;
 //  - the per-list "Auto" buy/sell checkboxes were UI-only in the original app
-//    (never serialized into ShopList.xml) - they stay runtime state here;
+//    (never serialized into ShopList.ini) - they stay runtime state here;
 //  - the progress countdown sends the queued Buy/Sell request when it
 //    expires; Cancel drops the queued request (was ShopProgressForm).
 //
@@ -61,7 +61,7 @@ class CShopAgent
     bool m_AutoSell{ false };
 
     // the "Vendor name:" field (le_VendorName; UI-set, not serialized - the
-    // original app kept it in the line edit only, ShopList.xml has no attribute)
+    // original app kept it in the line edit only, ShopList.ini has no attribute)
     astr_t m_VendorName{ "" };
 
     // the queued request (was ShopProgressForm): countdown then send

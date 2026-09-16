@@ -3264,7 +3264,7 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
     JS_CFUNC_MAGIC_DEF("AddEnemy", 0, jsn_friendcmd, 3),
     JS_CFUNC_MAGIC_DEF("RemoveEnemy", 0, jsn_friendcmd, 4),
     JS_CFUNC_MAGIC_DEF("ClearEnemyList", 0, jsn_friendcmd, 5),
-    // hotkeys (config Hotkeys.xml persistence + the engine on/off flag)
+    // hotkeys (config Hotkeys.ini persistence + the engine on/off flag)
     JS_CFUNC_MAGIC_DEF("SaveHotkeys", 0, jsn_hotkeys, 0),
     JS_CFUNC_MAGIC_DEF("LoadHotkeys", 0, jsn_hotkeys, 1),
     JS_CFUNC_MAGIC_DEF("OnOffHotkeys", 0, jsn_hotkeys, 2),

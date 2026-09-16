@@ -5,7 +5,7 @@
 // Configuration (display mode radios, flags, colors, title data + the insert
 // command / set title from group popups), Items editor (the custom display
 // items with their color/value tables) and Group editor. The data lives in
-// g_AssistantConfig (DisplayItems.xml/DisplayGroups.xml/Options.xml display
+// g_AssistantConfig (DisplayItems.ini/DisplayGroups.ini/Options.ini display
 // section); the compiled title output goes to the OS window caption through
 // the manager's Redraw + AssistantUI_Tick (was the win32 GDI title bar).
 //
@@ -13,7 +13,7 @@
 // picker popup; the value/color tables render as plain text next to the
 // pickers instead of label grids; there is no drag-reorder list here
 // (the original lw_DisplayItems was a plain list - no itemDropped connect beyond
-// the Options.xml save, which the mutations do directly); the Insert command
+// the Options.ini save, which the mutations do directly); the Insert command
 // / Set title from group actions APPEND the tag at the end of s_TitleData,
 // while the original inserted at the text cursor - inserting at the InputText cursor
 // is possible through the ImGui input-state accessors (documented only,
@@ -403,7 +403,7 @@ void draw_configuration_page()
     if (typeChanged)
     {
         g_AssistantConfig.m_DisplayType = type;
-        g_AssistantConfig.SaveMainOptions(); // the display section of Options.xml
+        g_AssistantConfig.SaveMainOptions(); // the display section of Options.ini
         redraw_title();
     }
 
@@ -469,7 +469,7 @@ void draw_configuration_page()
             "##title_data", s_TitleData, sizeof(s_TitleData), ImVec2(-1.0f, 120.0f)))
     {
         // was on_te_DisplayTitleData_textChanged: recompile + redraw; the
-        // text persists with the profile (the original saved Options.xml on close)
+        // text persists with the profile (the original saved Options.ini on close)
         g_AssistantConfig.m_DisplayTitleData = s_TitleData;
         AssistantUI_MarkOptionsDirty();
         recompile_title();
@@ -730,7 +730,7 @@ void draw_items_editor_page()
         // the checkbox edits write through immediately; the color swatches
         // stay live-preview during a drag and land here only on the release
         // frame (color_field commits on IsItemDeactivatedAfterEdit), so a
-        // swatch drag writes DisplayItems.xml once instead of every frame
+        // swatch drag writes DisplayItems.ini once instead of every frame
         g_AssistantConfig.SaveDisplayItems();
         s_TitleDirty = true;
     }

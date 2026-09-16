@@ -10,7 +10,7 @@
 //       -> the game, unless consumed
 //
 // Key storage is the Phase-1c CHotkeyEntry table in g_AssistantConfig
-// (Hotkeys.xml, version 1, SDL key codes + the HM_* modifier bitmask) - byte
+// (Hotkeys.ini, version 1, SDL key codes + the HM_* modifier bitmask) - byte
 // compatible with the original writer/reader. The display-name tables, the keypad
 // bit semantics and the duplicate policy are ported from gui/hotkeybox.cpp.
 //
@@ -46,7 +46,7 @@ enum HOTKEY_MODIFIERS
 };
 
 // The pseudo-keycodes the original app assigned to mouse events (they are stored in
-// Hotkeys.xml "key" for wheel/X bindings).
+// Hotkeys.ini "key" for wheel/X bindings).
 enum
 {
     MOUSE_WHEEL_SCROLL_UP = 0x00000001,

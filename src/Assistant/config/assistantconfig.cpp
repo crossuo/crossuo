@@ -3,8 +3,9 @@
 
 // AssistantConfig implementation. Every Load*/Save* pair below is an
 // extraction of the identically named logic from the tab classes listed in
-// the header comments; the XML element/attribute names and the value
-// formatting match the original XML writer output byte for byte.
+// the header comments; the file format is INI (config/configio.h) - one
+// .ini per former file, indexed record sections + a [Meta] count, keys
+// named like the former attributes (docs/NOTES.md "Persistence").
 
 #include "assistantconfig.h"
 #include <algorithm>
@@ -18,7 +19,9 @@
 #include "../macros/macro.h"
 #include "../managers/displaymanager.h"
 #include "Party.h" // ::g_Party (party membership for the friends option)
+#if !defined(XUO_ASSISTANT_HARNESS)
 #include "CrossUO.h" // ::g_Game (the client config accessors)
+#endif
 #include "../core/world.h"
 #include <xuocore/mappedfile.h> // ::CDataReader / ::CDataWriter
 
@@ -28,6 +31,14 @@ CAssistantConfig g_AssistantConfig;
 
 static const char *CONFIG_DIR = "Config";
 static const char *GLOBAL_CONFIG_DIR = "GlobalConfig";
+
+// The shared count section of the repeated-record schema ([Meta] count = N).
+static const char *INI_META = "Meta";
+
+static astr_t ini_section(const char *base, int index)
+{
+    return IniSectionName(base, index);
+}
 
 static astr_t to_lower(astr_t text)
 {
@@ -166,42 +177,41 @@ bool CAssistantConfig::LoadProfileBySerial(uint32_t serial)
 
 void CAssistantConfig::SaveProfileMap()
 {
-    // Was AssistForm::SaveProfileMap -> GlobalConfig/Profiles.xml.
+    // Was AssistForm::SaveProfileMap -> GlobalConfig/Profiles.ini.
     EnsureDirectories();
     if (g_Connected && g_Player != nullptr)
     {
         m_ProfileMap[g_PlayerSerial] = ProfileName;
     }
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
+    CIniFile ini;
+    int index = 0;
     for (std::map<uint32_t, astr_t>::iterator i = m_ProfileMap.begin(); i != m_ProfileMap.end(); ++i)
     {
-        XMLElement &element = doc.Root.AddChild("profile");
-        element.SetAttribute("serial", CAssistant::SerialToText(i->first));
-        element.SetAttribute("file", i->second);
+        const astr_t section = ini_section("Profile", index++);
+        ini.Set(section, "serial", CAssistant::SerialToText(i->first));
+        ini.Set(section, "file", i->second);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "Profiles.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "Profiles.ini"));
 }
 
 void CAssistantConfig::LoadProfileMap()
 {
     // Was AssistForm::LoadProfileMap.
     m_ProfileMap.clear();
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetGlobalConfigPath(), "Profiles.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetGlobalConfigPath(), "Profiles.ini")))
     {
         return;
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "profile" && element.HasAttribute("serial") &&
-            element.HasAttribute("file"))
-        {
-            const uint32_t serial = CAssistant::TextToSerial(element.Attribute("serial"));
-            m_ProfileMap[serial] = element.Attribute("file");
-        }
+        const astr_t section = ini_section("Profile", i);
+        const uint32_t serial = CAssistant::TextToSerial(ini.Get(section, "serial"));
+        m_ProfileMap[serial] = ini.Get(section, "file");
     }
 }
 
@@ -250,7 +260,7 @@ bool CAssistantConfig::LoadProfile()
 bool CAssistantConfig::SaveProfile()
 {
     // Was AssistForm::SaveCurrentProfile. Note the
-    // original did NOT save Macros.xml here (macros save on list change) and
+    // original did NOT save Macros.ini here (macros save on list change) and
     // did not save the profile map; keep both behaviors.
     if (ProfileName.empty())
     {
@@ -270,7 +280,7 @@ bool CAssistantConfig::SaveProfile()
     return true;
 }
 
-// --- Options.xml -------------------------------------------------------------
+// --- Options.ini -------------------------------------------------------------
 
 bool CAssistantConfig::GetFontColor(uint16_t &value) const
 {
@@ -322,162 +332,145 @@ void CAssistantConfig::SetCharactersFontColor(const bool &state, uint16_t value)
 
 void CAssistantConfig::LoadMainOptions()
 {
-    // Was AssistForm::LoadCurrentProfile's Options.xml block dispatching into
+    // Was AssistForm::LoadCurrentProfile's Options.ini block dispatching into
     // TabMain/TabDisplay/TabHotkeys/TabScripts::LoadConfig.
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetProfilePath(), "Options.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetProfilePath(), "Options.ini")))
     {
         return;
     }
 
-    for (const XMLElement &element : doc.Root.Children)
+    if (ini.Has("main", "flags"))
     {
-        if (element.Name == "main")
+        const uint32_t flags = (uint32_t)ini.GetInt("main", "flags", 0);
+        for (int i = 0; i < CLBI_COUNT; i++)
         {
-            if (element.HasAttribute("flags"))
-            {
-                const uint32_t flags = (uint32_t)element.AttributeInt("flags");
-                for (int i = 0; i < CLBI_COUNT; i++)
-                {
-                    m_Options[i] = (flags & (1 << i)) != 0u;
-                }
-            }
-            if (element.HasAttribute("messageslevel"))
-            {
-                m_MessagesLevel = element.AttributeInt("messageslevel");
-            }
-            if (element.HasAttribute("searchdistance"))
-            {
-                m_SearchItemsDistance = element.AttributeInt("searchdistance");
-            }
-            if (element.HasAttribute("usedistance"))
-            {
-                m_UseItemsDistance = element.AttributeInt("usedistance");
-            }
-            if (element.HasAttribute("opencorpsedistance"))
-            {
-                m_OpenCorpsesDistance = element.AttributeInt("opencorpsedistance");
-            }
-            if (element.HasAttribute("corpsekeepdelay"))
-            {
-                m_CorpseKeepDelay = element.AttributeInt("corpsekeepdelay");
-            }
-            if (element.HasAttribute("waittargetsdelay"))
-            {
-                m_WaitTargetsDelay = element.AttributeInt("waittargetsdelay");
-            }
-            if (element.HasAttribute("moveitemsdelay"))
-            {
-                m_MoveItemsDelay = element.AttributeInt("moveitemsdelay");
-            }
-            if (element.HasAttribute("useitemsdelay"))
-            {
-                m_UseItemsDelay = element.AttributeInt("useitemsdelay");
-            }
-            if (element.HasAttribute("windowsopacity"))
-            {
-                m_WindowsOpacity = element.AttributeInt("windowsopacity");
-            }
-            if (element.HasAttribute("usefontcolor"))
-            {
-                m_UseFontColor = CAssistant::RawStringToBool(element.Attribute("usefontcolor"));
-            }
-            if (element.HasAttribute("fontcolor"))
-            {
-                m_FontColor = element.Attribute("fontcolor");
-            }
-            if (element.HasAttribute("usecharactersfontcolor"))
-            {
-                m_UseCharactersFontColor =
-                    CAssistant::RawStringToBool(element.Attribute("usecharactersfontcolor"));
-            }
-            if (element.HasAttribute("charactersfontcolor"))
-            {
-                m_CharactersFontColor = element.Attribute("charactersfontcolor");
-            }
-            if (element.HasAttribute("autoreconnect"))
-            {
-                m_AutoReconnect = CAssistant::RawStringToBool(element.Attribute("autoreconnect"));
-            }
-            if (element.HasAttribute("autoreconnecttimer"))
-            {
-                m_AutoReconnectSeconds = element.AttributeInt("autoreconnecttimer");
-            }
-            if (element.HasAttribute("doubleclickforopendoors"))
-            {
-                m_DoubleClickForOpenDoors =
-                    CAssistant::RawStringToBool(element.Attribute("doubleclickforopendoors"));
-            }
+            m_Options[i] = (flags & (1 << i)) != 0u;
         }
-        else if (element.Name == "display")
-        {
-            if (element.HasAttribute("type"))
-            {
-                m_DisplayType = element.AttributeInt("type");
-            }
-            if (element.HasAttribute("flags"))
-            {
-                m_DisplayFlags = (uint32_t)element.AttributeInt("flags");
-            }
-            if (element.HasAttribute("textcolor"))
-            {
-                m_DisplayTextColor = CAssistant::RawStringToUInt(element.Attribute("textcolor"));
-            }
-            if (element.HasAttribute("backgroundcolor"))
-            {
-                m_DisplayBackgroundColor =
-                    CAssistant::RawStringToUInt(element.Attribute("backgroundcolor"));
-            }
-            if (element.HasAttribute("titledata"))
-            {
-                m_DisplayTitleData = element.Attribute("titledata");
-            }
-        }
-        else if (element.Name == "hotkeys")
-        {
-            // TabHotkeys::LoadConfig (the original also had a bug where the
-            // guard checked "passhotkeys" but the attribute written was
-            // "commandprefix" - reproduce both sides verbatim).
-            if (element.HasAttribute("passhotkeys"))
-            {
-                m_PassHotkeys = CAssistant::RawStringToBool(element.Attribute("passhotkeys"));
-            }
-            if (element.HasAttribute("hotkeyprefix"))
-            {
-                m_CommandPrefix = element.Attribute("commandprefix");
-            }
-            else if (element.HasAttribute("commandprefix"))
-            {
-                m_CommandPrefix = element.Attribute("commandprefix");
-            }
-        }
-        else if (element.Name == "scripts")
-        {
-            if (element.HasAttribute("sortscripts"))
-            {
-                m_SortScripts = CAssistant::RawStringToBool(element.Attribute("sortscripts"));
-            }
-            if (element.HasAttribute("scriptfile"))
-            {
-                // Was TabScripts::LoadScript(...): the script engine round
-                // re-adds the auto-run; the path itself is config data.
-                m_ScriptFilePath = element.Attribute("scriptfile");
-            }
-        }
+    }
+    if (ini.Has("main", "messageslevel"))
+    {
+        m_MessagesLevel = ini.GetInt("main", "messageslevel", 0);
+    }
+    if (ini.Has("main", "searchdistance"))
+    {
+        m_SearchItemsDistance = ini.GetInt("main", "searchdistance", 0);
+    }
+    if (ini.Has("main", "usedistance"))
+    {
+        m_UseItemsDistance = ini.GetInt("main", "usedistance", 0);
+    }
+    if (ini.Has("main", "opencorpsedistance"))
+    {
+        m_OpenCorpsesDistance = ini.GetInt("main", "opencorpsedistance", 0);
+    }
+    if (ini.Has("main", "corpsekeepdelay"))
+    {
+        m_CorpseKeepDelay = ini.GetInt("main", "corpsekeepdelay", 0);
+    }
+    if (ini.Has("main", "waittargetsdelay"))
+    {
+        m_WaitTargetsDelay = ini.GetInt("main", "waittargetsdelay", 0);
+    }
+    if (ini.Has("main", "moveitemsdelay"))
+    {
+        m_MoveItemsDelay = ini.GetInt("main", "moveitemsdelay", 0);
+    }
+    if (ini.Has("main", "useitemsdelay"))
+    {
+        m_UseItemsDelay = ini.GetInt("main", "useitemsdelay", 0);
+    }
+    if (ini.Has("main", "windowsopacity"))
+    {
+        m_WindowsOpacity = ini.GetInt("main", "windowsopacity", 0);
+    }
+    if (ini.Has("main", "usefontcolor"))
+    {
+        m_UseFontColor = ini.GetBool("main", "usefontcolor", false);
+    }
+    if (ini.Has("main", "fontcolor"))
+    {
+        m_FontColor = ini.Get("main", "fontcolor");
+    }
+    if (ini.Has("main", "usecharactersfontcolor"))
+    {
+        m_UseCharactersFontColor = ini.GetBool("main", "usecharactersfontcolor", false);
+    }
+    if (ini.Has("main", "charactersfontcolor"))
+    {
+        m_CharactersFontColor = ini.Get("main", "charactersfontcolor");
+    }
+    if (ini.Has("main", "autoreconnect"))
+    {
+        m_AutoReconnect = ini.GetBool("main", "autoreconnect", false);
+    }
+    if (ini.Has("main", "autoreconnecttimer"))
+    {
+        m_AutoReconnectSeconds = ini.GetInt("main", "autoreconnecttimer", 0);
+    }
+    if (ini.Has("main", "doubleclickforopendoors"))
+    {
+        m_DoubleClickForOpenDoors = ini.GetBool("main", "doubleclickforopendoors", false);
+    }
+
+    // TabDisplay::LoadConfig
+    if (ini.Has("display", "type"))
+    {
+        m_DisplayType = ini.GetInt("display", "type", 0);
+    }
+    if (ini.Has("display", "flags"))
+    {
+        m_DisplayFlags = (uint32_t)ini.GetInt("display", "flags", 0);
+    }
+    if (ini.Has("display", "textcolor"))
+    {
+        // plain decimal (str_from on save); the XML loader's RawStringToUInt
+        // parse silently dropped these two, the numeric read round-trips them
+        m_DisplayTextColor = (uint32_t)strtoul(ini.Get("display", "textcolor").c_str(), nullptr, 10);
+    }
+    if (ini.Has("display", "backgroundcolor"))
+    {
+        m_DisplayBackgroundColor =
+            (uint32_t)strtoul(ini.Get("display", "backgroundcolor").c_str(), nullptr, 10);
+    }
+    if (ini.Has("display", "titledata"))
+    {
+        m_DisplayTitleData = ini.Get("display", "titledata");
+    }
+
+    // TabHotkeys::LoadConfig (the XML loader reproduced the original's
+    // hotkeyprefix/commandprefix guard mismatch; the INI writer/reader pair
+    // only ever uses commandprefix)
+    if (ini.Has("hotkeys", "passhotkeys"))
+    {
+        m_PassHotkeys = ini.GetBool("hotkeys", "passhotkeys", false);
+    }
+    if (ini.Has("hotkeys", "commandprefix"))
+    {
+        m_CommandPrefix = ini.Get("hotkeys", "commandprefix");
+    }
+
+    // TabScripts::LoadConfig
+    if (ini.Has("scripts", "sortscripts"))
+    {
+        m_SortScripts = ini.GetBool("scripts", "sortscripts", false);
+    }
+    if (ini.Has("scripts", "scriptfile"))
+    {
+        // Was TabScripts::LoadScript(...): the script engine round
+        // re-adds the auto-run; the path itself is config data.
+        m_ScriptFilePath = ini.Get("scripts", "scriptfile");
     }
 }
 
 void CAssistantConfig::SaveMainOptions()
 {
-    // Was AssistForm::SaveMainOptions: <data version="0"> + main/display/
-    // hotkeys/scripts records.
+    // Was AssistForm::SaveMainOptions: the main/display/hotkeys/scripts
+    // records.
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
+    CIniFile ini;
 
-    XMLElement &main = doc.Root.AddChild("main");
     uint32_t flags = 0;
     for (int i = 0; i < CLBI_COUNT; i++)
     {
@@ -486,43 +479,40 @@ void CAssistantConfig::SaveMainOptions()
             flags |= 1 << i;
         }
     }
-    main.SetAttribute("flags", str_from(flags));
-    main.SetAttribute("messageslevel", str_from(m_MessagesLevel));
-    main.SetAttribute("searchdistance", str_from(m_SearchItemsDistance));
-    main.SetAttribute("usedistance", str_from(m_UseItemsDistance));
-    main.SetAttribute("opencorpsedistance", str_from(m_OpenCorpsesDistance));
-    main.SetAttribute("corpsekeepdelay", str_from(m_CorpseKeepDelay));
-    main.SetAttribute("waittargetsdelay", str_from(m_WaitTargetsDelay));
-    main.SetAttribute("moveitemsdelay", str_from(m_MoveItemsDelay));
-    main.SetAttribute("useitemsdelay", str_from(m_UseItemsDelay));
-    main.SetAttribute("windowsopacity", str_from(m_WindowsOpacity));
-    main.SetAttribute("usefontcolor", (m_UseFontColor ? "true" : "false"));
-    main.SetAttribute("fontcolor", m_FontColor);
-    main.SetAttribute("usecharactersfontcolor", (m_UseCharactersFontColor ? "true" : "false"));
-    main.SetAttribute("charactersfontcolor", m_CharactersFontColor);
-    main.SetAttribute("autoreconnect", (m_AutoReconnect ? "true" : "false"));
-    main.SetAttribute("autoreconnecttimer", str_from(m_AutoReconnectSeconds));
-    main.SetAttribute("doubleclickforopendoors", (m_DoubleClickForOpenDoors ? "true" : "false"));
+    ini.SetInt("main", "flags", (int)flags);
+    ini.SetInt("main", "messageslevel", m_MessagesLevel);
+    ini.SetInt("main", "searchdistance", m_SearchItemsDistance);
+    ini.SetInt("main", "usedistance", m_UseItemsDistance);
+    ini.SetInt("main", "opencorpsedistance", m_OpenCorpsesDistance);
+    ini.SetInt("main", "corpsekeepdelay", m_CorpseKeepDelay);
+    ini.SetInt("main", "waittargetsdelay", m_WaitTargetsDelay);
+    ini.SetInt("main", "moveitemsdelay", m_MoveItemsDelay);
+    ini.SetInt("main", "useitemsdelay", m_UseItemsDelay);
+    ini.SetInt("main", "windowsopacity", m_WindowsOpacity);
+    ini.SetBool("main", "usefontcolor", m_UseFontColor);
+    ini.Set("main", "fontcolor", m_FontColor);
+    ini.SetBool("main", "usecharactersfontcolor", m_UseCharactersFontColor);
+    ini.Set("main", "charactersfontcolor", m_CharactersFontColor);
+    ini.SetBool("main", "autoreconnect", m_AutoReconnect);
+    ini.SetInt("main", "autoreconnecttimer", m_AutoReconnectSeconds);
+    ini.SetBool("main", "doubleclickforopendoors", m_DoubleClickForOpenDoors);
 
     // TabDisplay::SaveConfig
-    XMLElement &display = doc.Root.AddChild("display");
-    display.SetAttribute("type", str_from(m_DisplayType));
-    display.SetAttribute("flags", str_from(m_DisplayFlags));
-    display.SetAttribute("textcolor", str_from(m_DisplayTextColor));
-    display.SetAttribute("backgroundcolor", str_from(m_DisplayBackgroundColor));
-    display.SetAttribute("titledata", m_DisplayTitleData);
+    ini.SetInt("display", "type", m_DisplayType);
+    ini.SetInt("display", "flags", (int)m_DisplayFlags);
+    ini.Set("display", "textcolor", str_from(m_DisplayTextColor));
+    ini.Set("display", "backgroundcolor", str_from(m_DisplayBackgroundColor));
+    ini.Set("display", "titledata", m_DisplayTitleData);
 
     // TabHotkeys::SaveConfig
-    XMLElement &hotkeys = doc.Root.AddChild("hotkeys");
-    hotkeys.SetAttribute("passhotkeys", (m_PassHotkeys ? "true" : "false"));
-    hotkeys.SetAttribute("commandprefix", m_CommandPrefix);
+    ini.SetBool("hotkeys", "passhotkeys", m_PassHotkeys);
+    ini.Set("hotkeys", "commandprefix", m_CommandPrefix);
 
     // TabScripts::SaveConfig
-    XMLElement &scripts = doc.Root.AddChild("scripts");
-    scripts.SetAttribute("sortscripts", (m_SortScripts ? "true" : "false"));
-    scripts.SetAttribute("scriptfile", m_ScriptFilePath);
+    ini.SetBool("scripts", "sortscripts", m_SortScripts);
+    ini.Set("scripts", "scriptfile", m_ScriptFilePath);
 
-    doc.Save(fs_path_join(GetProfilePath(), "Options.xml"));
+    ini.Save(fs_path_join(GetProfilePath(), "Options.ini"));
 }
 
 // --- main option gates (TabMain getters, feature-flag gated) ------------------
@@ -1082,44 +1072,40 @@ void CAssistantConfig::ClearDressSet(CDressSetEntry *set)
 
 // --- helpers -------------------------------------------------------------------
 
-// --- Types.xml (was TabListsTypes::LoadTypes/SaveTypes) -------------------------
+// --- Types.ini (was TabListsTypes::LoadTypes/SaveTypes) -------------------------
 
 void CAssistantConfig::SaveTypes()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", str_from((int)m_Types.size()));
-
+    CIniFile ini;
+    int index = 0;
     for (const CTypeEntry &entry : m_Types)
     {
-        XMLElement &element = doc.Root.AddChild("type");
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("id", CAssistant::GraphicToText(entry.Type));
+        const astr_t section = ini_section("Type", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.Set(section, "id", CAssistant::GraphicToText(entry.Type));
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "Types.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "Types.ini"));
 }
 
 void CAssistantConfig::LoadTypes()
 {
     m_Types.clear();
 
-    XMLDocument doc;
-    if (doc.Load(fs_path_join(GetGlobalConfigPath(), "Types.xml")))
+    CIniFile ini;
+    if (ini.Load(fs_path_join(GetGlobalConfigPath(), "Types.ini")))
     {
-        for (const XMLElement &element : doc.Root.Children)
+        const int count = ini.GetInt(INI_META, "count", 0);
+        for (int i = 0; i < count; i++)
         {
-            if (element.Name == "type" && element.HasAttribute("name") &&
-                element.HasAttribute("id"))
-            {
-                CTypeEntry entry;
-                entry.Name = element.Attribute("name");
-                entry.Type = CAssistant::TextToGraphic(element.Attribute("id"));
-                m_Types.push_back(entry);
-            }
+            const astr_t section = ini_section("Type", i);
+            CTypeEntry entry;
+            entry.Name = ini.Get(section, "name");
+            entry.Type = CAssistant::TextToGraphic(ini.Get(section, "id"));
+            m_Types.push_back(entry);
         }
     }
 
@@ -1143,471 +1129,442 @@ void CAssistantConfig::LoadTypes()
     }
 }
 
-// --- FindList.xml (was TabListsFind::LoadFindList/SaveFindList) ------------------
+// --- FindList.ini (was TabListsFind::LoadFindList/SaveFindList) ------------------
 
 void CAssistantConfig::SaveFindList()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    // NOTE: the original writer saved count+1 (an off-by-one); kept for
-    // byte-compatible output.
-    doc.Root.SetAttribute("size", str_from((int)m_FindLists.size() + 1));
-
+    CIniFile ini;
+    int index = 0;
     for (const CFindListEntry &entry : m_FindLists)
     {
-        XMLElement &element = doc.Root.AddChild("findlist");
-        element.SetAttribute("name", entry.Name);
+        const astr_t section = ini_section("FindList", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.SetInt(section, "items", (int)entry.m_Items.size());
+        int itemIndex = 0;
         for (const CFindItem &item : entry.m_Items)
         {
-            XMLElement &itemElement = element.AddChild("item");
-            itemElement.SetAttribute("graphic", item.Graphic);
-            itemElement.SetAttribute("color", item.Color);
-            itemElement.SetAttribute("comment", item.Comment);
+            const astr_t itemSection = section + "Item" + str_from(itemIndex++);
+            ini.Set(itemSection, "graphic", item.Graphic);
+            ini.Set(itemSection, "color", item.Color);
+            ini.Set(itemSection, "comment", item.Comment);
         }
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "FindList.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "FindList.ini"));
 }
 
 void CAssistantConfig::LoadFindList()
 {
     m_FindLists.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetGlobalConfigPath(), "FindList.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetGlobalConfigPath(), "FindList.ini")))
     {
         return;
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "findlist" && element.HasAttribute("name"))
+        const astr_t section = ini_section("FindList", i);
+        CFindListEntry entry;
+        entry.Name = ini.Get(section, "name");
+        const int itemCount = ini.GetInt(section, "items", 0);
+        for (int j = 0; j < itemCount; j++)
         {
-            CFindListEntry entry;
-            entry.Name = element.Attribute("name");
-            for (const XMLElement &item : element.Children)
-            {
-                if (item.Name == "item" && item.HasAttribute("graphic") &&
-                    item.HasAttribute("color"))
-                {
-                    CFindItem fi(item.Attribute("graphic"), item.Attribute("color"));
-                    if (item.HasAttribute("comment"))
-                    {
-                        fi.Comment = item.Attribute("comment");
-                    }
-                    entry.m_Items.push_back(fi);
-                }
-            }
-            m_FindLists.push_back(entry);
+            const astr_t itemSection = section + "Item" + str_from(j);
+            CFindItem fi(ini.Get(itemSection, "graphic"), ini.Get(itemSection, "color"));
+            fi.Comment = ini.Get(itemSection, "comment");
+            entry.m_Items.push_back(fi);
         }
+        m_FindLists.push_back(entry);
     }
 }
 
-// --- IgnoreList.xml (was TabListsIgnore::LoadIgnoreList/SaveIgnoreList) ----------
+// --- IgnoreList.ini (was TabListsIgnore::LoadIgnoreList/SaveIgnoreList) ----------
 
 void CAssistantConfig::SaveIgnoreList()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    // NOTE: original off-by-one, kept for byte-compatible output.
-    doc.Root.SetAttribute("size", str_from((int)m_IgnoreLists.size() + 1));
-
+    CIniFile ini;
+    int index = 0;
     for (const CIgnoreListEntry &entry : m_IgnoreLists)
     {
-        XMLElement &element = doc.Root.AddChild("ignorelist");
-        element.SetAttribute("name", entry.Name);
+        const astr_t section = ini_section("IgnoreList", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.SetInt(section, "items", (int)entry.m_Items.size());
+        int itemIndex = 0;
         for (const CIgnoreItem &item : entry.m_Items)
         {
-            XMLElement &itemElement = element.AddChild("item");
-            itemElement.SetAttribute("serial", item.Serial);
-            itemElement.SetAttribute("graphic", item.Graphic);
-            itemElement.SetAttribute("color", item.Color);
-            itemElement.SetAttribute("comment", item.Comment);
+            const astr_t itemSection = section + "Item" + str_from(itemIndex++);
+            ini.Set(itemSection, "serial", item.Serial);
+            ini.Set(itemSection, "graphic", item.Graphic);
+            ini.Set(itemSection, "color", item.Color);
+            ini.Set(itemSection, "comment", item.Comment);
         }
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "IgnoreList.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "IgnoreList.ini"));
 }
 
 void CAssistantConfig::LoadIgnoreList()
 {
     m_IgnoreLists.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetGlobalConfigPath(), "IgnoreList.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetGlobalConfigPath(), "IgnoreList.ini")))
     {
         return;
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "ignorelist" && element.HasAttribute("name"))
+        const astr_t section = ini_section("IgnoreList", i);
+        CIgnoreListEntry entry;
+        entry.Name = ini.Get(section, "name");
+        const int itemCount = ini.GetInt(section, "items", 0);
+        for (int j = 0; j < itemCount; j++)
         {
-            CIgnoreListEntry entry;
-            entry.Name = element.Attribute("name");
-            for (const XMLElement &item : element.Children)
-            {
-                if (item.Name == "item" && item.HasAttribute("serial") &&
-                    item.HasAttribute("graphic") && item.HasAttribute("color"))
-                {
-                    CIgnoreItem ii(
-                        item.Attribute("serial"),
-                        item.Attribute("graphic"),
-                        item.Attribute("color"));
-                    if (item.HasAttribute("comment"))
-                    {
-                        ii.Comment = item.Attribute("comment");
-                    }
-                    entry.m_Items.push_back(ii);
-                }
-            }
-            m_IgnoreLists.push_back(entry);
+            const astr_t itemSection = section + "Item" + str_from(j);
+            CIgnoreItem ii(
+                ini.Get(itemSection, "serial"),
+                ini.Get(itemSection, "graphic"),
+                ini.Get(itemSection, "color"));
+            ii.Comment = ini.Get(itemSection, "comment");
+            entry.m_Items.push_back(ii);
         }
+        m_IgnoreLists.push_back(entry);
     }
 }
 
-// --- SpeechFilter.xml (was TabFiltersSpeech::LoadSpeechFilter/SaveSpeechFilter) ---
+// --- SpeechFilter.ini (was TabFiltersSpeech::LoadSpeechFilter/SaveSpeechFilter) ---
 
 void CAssistantConfig::SaveSpeechFilter()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-
+    CIniFile ini;
+    int index = 0;
     for (const CFilterSpeechEntry &entry : m_SpeechFilters)
     {
-        XMLElement &element = doc.Root.AddChild("speech");
-        element.SetAttribute("text", entry.Text);
-        element.SetAttribute("color", entry.Color);
-        element.SetAttribute("fullmatch", (entry.FullMatch ? "true" : "false"));
+        const astr_t section = ini_section("Speech", index++);
+        ini.Set(section, "text", entry.Text);
+        ini.Set(section, "color", entry.Color);
+        ini.SetBool(section, "fullmatch", entry.FullMatch);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "SpeechFilter.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "SpeechFilter.ini"));
 }
 
 void CAssistantConfig::LoadSpeechFilter()
 {
     m_SpeechFilters.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetGlobalConfigPath(), "SpeechFilter.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetGlobalConfigPath(), "SpeechFilter.ini")))
     {
         return;
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "speech" && element.HasAttribute("text") &&
-            element.HasAttribute("color") && element.HasAttribute("fullmatch"))
-        {
-            CFilterSpeechEntry entry;
-            entry.Text = element.Attribute("text");
-            entry.Color = element.Attribute("color");
-            entry.FullMatch = CAssistant::RawStringToBool(element.Attribute("fullmatch"));
-            m_SpeechFilters.push_back(entry);
-        }
+        const astr_t section = ini_section("Speech", i);
+        CFilterSpeechEntry entry;
+        entry.Text = ini.Get(section, "text");
+        entry.Color = ini.Get(section, "color");
+        entry.FullMatch = ini.GetBool(section, "fullmatch", false);
+        m_SpeechFilters.push_back(entry);
     }
 }
 
-// --- TextReplaces.xml (was TabFiltersReplaces::LoadTextReplaces/SaveTextReplaces) --
+// --- TextReplaces.ini (was TabFiltersReplaces::LoadTextReplaces/SaveTextReplaces) --
 
 void CAssistantConfig::SaveTextReplaces()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-
+    CIniFile ini;
+    int index = 0;
     for (const CFilterReplaceEntry &entry : m_Replaces)
     {
-        XMLElement &element = doc.Root.AddChild("replace");
-        element.SetAttribute("originaltext", entry.OriginalText);
-        element.SetAttribute("originalcolor", entry.OriginalColor);
-        element.SetAttribute("replacedtext", entry.ReplacedText);
-        element.SetAttribute("replacedcolor", entry.ReplacedColor);
-        element.SetAttribute("type", str_from(entry.Type));
-        element.SetAttribute("mode", str_from(entry.Mode));
-        element.SetAttribute("fullmatch", (entry.FullMatch ? "true" : "false"));
+        const astr_t section = ini_section("Replace", index++);
+        ini.Set(section, "originaltext", entry.OriginalText);
+        ini.Set(section, "originalcolor", entry.OriginalColor);
+        ini.Set(section, "replacedtext", entry.ReplacedText);
+        ini.Set(section, "replacedcolor", entry.ReplacedColor);
+        ini.SetInt(section, "type", entry.Type);
+        ini.SetInt(section, "mode", entry.Mode);
+        ini.SetBool(section, "fullmatch", entry.FullMatch);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "TextReplaces.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "TextReplaces.ini"));
 }
 
 void CAssistantConfig::LoadTextReplaces()
 {
     m_Replaces.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetGlobalConfigPath(), "TextReplaces.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetGlobalConfigPath(), "TextReplaces.ini")))
     {
         return;
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "replace" && element.HasAttribute("originaltext") &&
-            element.HasAttribute("originalcolor") && element.HasAttribute("replacedtext") &&
-            element.HasAttribute("replacedcolor") && element.HasAttribute("type") &&
-            element.HasAttribute("mode") && element.HasAttribute("fullmatch"))
-        {
-            CFilterReplaceEntry entry;
-            entry.OriginalText = element.Attribute("originaltext");
-            entry.OriginalColor = element.Attribute("originalcolor");
-            entry.ReplacedText = element.Attribute("replacedtext");
-            entry.ReplacedColor = element.Attribute("replacedcolor");
-            entry.Type = element.AttributeInt("type");
-            entry.Mode = element.AttributeInt("mode");
-            entry.FullMatch = CAssistant::RawStringToBool(element.Attribute("fullmatch"));
-            m_Replaces.push_back(entry);
-        }
+        const astr_t section = ini_section("Replace", i);
+        CFilterReplaceEntry entry;
+        entry.OriginalText = ini.Get(section, "originaltext");
+        entry.OriginalColor = ini.Get(section, "originalcolor");
+        entry.ReplacedText = ini.Get(section, "replacedtext");
+        entry.ReplacedColor = ini.Get(section, "replacedcolor");
+        entry.Type = ini.GetInt(section, "type", 0);
+        entry.Mode = ini.GetInt(section, "mode", 0);
+        entry.FullMatch = ini.GetBool(section, "fullmatch", false);
+        m_Replaces.push_back(entry);
     }
 }
 
-// --- SoundFilter.xml (was TabFiltersSound::LoadSoundFilter/SaveSoundFilter) --------
+// --- SoundFilter.ini (was TabFiltersSound::LoadSoundFilter/SaveSoundFilter) --------
 
 void CAssistantConfig::SaveSoundFilter()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-
+    CIniFile ini;
+    int index = 0;
     for (const CFilterSoundEntry &entry : m_SoundFilters)
     {
-        XMLElement &element = doc.Root.AddChild("sound");
-        element.SetAttribute("index", entry.Index);
-        element.SetAttribute("name", entry.Name);
+        const astr_t section = ini_section("Sound", index++);
+        ini.Set(section, "index", entry.Index);
+        ini.Set(section, "name", entry.Name);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "SoundFilter.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "SoundFilter.ini"));
 }
 
 void CAssistantConfig::LoadSoundFilter()
 {
     m_SoundFilters.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetGlobalConfigPath(), "SoundFilter.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetGlobalConfigPath(), "SoundFilter.ini")))
     {
         return;
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "sound" && element.HasAttribute("index") &&
-            element.HasAttribute("name"))
-        {
-            CFilterSoundEntry entry;
-            entry.Index = element.Attribute("index");
-            entry.Name = element.Attribute("name");
-            m_SoundFilters.push_back(entry);
-        }
+        const astr_t section = ini_section("Sound", i);
+        CFilterSoundEntry entry;
+        entry.Index = ini.Get(section, "index");
+        entry.Name = ini.Get(section, "name");
+        m_SoundFilters.push_back(entry);
     }
 }
 
-// --- ShopList.xml (was TabAgentsShop::LoadShopList/SaveShopList) --------------------
+// --- ShopList.ini (was TabAgentsShop::LoadShopList/SaveShopList) --------------------
 
 void CAssistantConfig::SaveShopList()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("show_shopping_progress_bar", (m_ShowShoppingProgressBar ? "true" : "false"));
-    doc.Root.SetAttribute("max_shop_items", str_from(m_MaxShopItems));
-    doc.Root.SetAttribute("max_sell_price", str_from(m_MaxSellPrice));
-    doc.Root.SetAttribute("shop_delay", str_from(m_ShopDelay));
-    doc.Root.SetAttribute("shop_timeout", str_from(m_ShopTimeout));
+    CIniFile ini;
+    ini.SetBool(INI_META, "show_shopping_progress_bar", m_ShowShoppingProgressBar);
+    ini.SetInt(INI_META, "max_shop_items", m_MaxShopItems);
+    ini.SetInt(INI_META, "max_sell_price", m_MaxSellPrice);
+    ini.SetInt(INI_META, "shop_delay", m_ShopDelay);
+    ini.SetInt(INI_META, "shop_timeout", m_ShopTimeout);
 
+    int index = 0;
     for (const CShopListEntry &entry : m_ShopLists)
     {
-        XMLElement &element = doc.Root.AddChild("shoplist");
-        element.SetAttribute("name", entry.Name);
+        const astr_t section = ini_section("ShopList", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.SetInt(section, "items", (int)entry.m_Items.size());
+        int itemIndex = 0;
         for (const CShopItemEntry &item : entry.m_Items)
         {
-            XMLElement &itemElement = element.AddChild("shopitem");
-            itemElement.SetAttribute("graphic", item.Graphic);
-            itemElement.SetAttribute("color", item.Color);
-            itemElement.SetAttribute("name", item.Name);
-            itemElement.SetAttribute("count", str_from(item.Count));
-            itemElement.SetAttribute("price", str_from(item.Price));
-            itemElement.SetAttribute("comment", item.Comment);
+            const astr_t itemSection = section + "Item" + str_from(itemIndex++);
+            ini.Set(itemSection, "graphic", item.Graphic);
+            ini.Set(itemSection, "color", item.Color);
+            ini.Set(itemSection, "name", item.Name);
+            ini.SetInt(itemSection, "count", item.Count);
+            ini.SetInt(itemSection, "price", item.Price);
+            ini.Set(itemSection, "comment", item.Comment);
         }
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "ShopList.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "ShopList.ini"));
 }
 
 void CAssistantConfig::LoadShopList()
 {
     m_ShopLists.clear();
 
-    XMLDocument doc;
-    if (doc.Load(fs_path_join(GetGlobalConfigPath(), "ShopList.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetGlobalConfigPath(), "ShopList.ini")))
     {
-        if (doc.Root.HasAttribute("show_shopping_progress_bar"))
-        {
-            m_ShowShoppingProgressBar =
-                CAssistant::RawStringToBool(doc.Root.Attribute("show_shopping_progress_bar"));
-        }
-        if (doc.Root.HasAttribute("max_shop_items"))
-        {
-            m_MaxShopItems = doc.Root.AttributeInt("max_shop_items");
-        }
-        if (doc.Root.HasAttribute("max_sell_price"))
-        {
-            m_MaxSellPrice = doc.Root.AttributeInt("max_sell_price");
-        }
-        if (doc.Root.HasAttribute("shop_delay"))
-        {
-            m_ShopDelay = doc.Root.AttributeInt("shop_delay");
-        }
-        if (doc.Root.HasAttribute("shop_timeout"))
-        {
-            m_ShopTimeout = doc.Root.AttributeInt("shop_timeout");
-        }
+        return;
+    }
 
-        CShopListEntry *listEntry = nullptr;
-        for (const XMLElement &element : doc.Root.Children)
+    if (ini.Has(INI_META, "show_shopping_progress_bar"))
+    {
+        m_ShowShoppingProgressBar = ini.GetBool(INI_META, "show_shopping_progress_bar", true);
+    }
+    if (ini.Has(INI_META, "max_shop_items"))
+    {
+        m_MaxShopItems = ini.GetInt(INI_META, "max_shop_items", 0);
+    }
+    if (ini.Has(INI_META, "max_sell_price"))
+    {
+        m_MaxSellPrice = ini.GetInt(INI_META, "max_sell_price", 0);
+    }
+    if (ini.Has(INI_META, "shop_delay"))
+    {
+        m_ShopDelay = ini.GetInt(INI_META, "shop_delay", 0);
+    }
+    if (ini.Has(INI_META, "shop_timeout"))
+    {
+        m_ShopTimeout = ini.GetInt(INI_META, "shop_timeout", 0);
+    }
+
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
+    {
+        const astr_t section = ini_section("ShopList", i);
+        CShopListEntry entry;
+        entry.Name = ini.Get(section, "name");
+        const int itemCount = ini.GetInt(section, "items", 0);
+        for (int j = 0; j < itemCount; j++)
         {
-            if (element.Name == "shoplist" && element.HasAttribute("name"))
-            {
-                CShopListEntry entry;
-                entry.Name = element.Attribute("name");
-                m_ShopLists.push_back(entry);
-                listEntry = &m_ShopLists.back();
-            }
-            else if (element.Name == "shopitem" && listEntry != nullptr)
-            {
-                if (element.HasAttribute("graphic") && element.HasAttribute("color") &&
-                    element.HasAttribute("name") && element.HasAttribute("count") &&
-                    element.HasAttribute("price") && element.HasAttribute("comment"))
-                {
-                    CShopItemEntry item;
-                    item.Graphic = element.Attribute("graphic");
-                    item.Color = element.Attribute("color");
-                    item.Name = element.Attribute("name");
-                    item.Count = element.AttributeInt("count");
-                    item.Price = element.AttributeInt("price");
-                    item.Comment = element.Attribute("comment");
-                    listEntry->m_Items.push_back(item);
-                }
-            }
+            const astr_t itemSection = section + "Item" + str_from(j);
+            CShopItemEntry item;
+            item.Graphic = ini.Get(itemSection, "graphic");
+            item.Color = ini.Get(itemSection, "color");
+            item.Name = ini.Get(itemSection, "name");
+            item.Count = ini.GetInt(itemSection, "count", 0);
+            item.Price = ini.GetInt(itemSection, "price", 0);
+            item.Comment = ini.Get(itemSection, "comment");
+            entry.m_Items.push_back(item);
         }
+        m_ShopLists.push_back(entry);
     }
 }
 
-// --- DisplayItems.xml / DisplayGroups.xml (was TabDisplay) ---------------------------
+// --- DisplayItems.ini / DisplayGroups.ini (was TabDisplay) ---------------------------
 
 void CAssistantConfig::SaveDisplayItems()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", str_from((int)m_DisplayItems.size()));
-
+    CIniFile ini;
+    int index = 0;
     for (const CDisplayItemEntry &entry : m_DisplayItems)
     {
         const CDisplayItem &di = entry.m_Item;
-        XMLElement &element = doc.Root.AddChild("item");
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("type", str_from((int)di.Type));
-        element.SetAttribute("text", di.Text);
-        element.SetAttribute("id", CAssistant::GraphicToText(di.Graphic));
-        element.SetAttribute("hue", CAssistant::GraphicToText(di.Hue));
-        element.SetAttribute("mincolor", CAssistant::ColorToText(di.MinColor));
-        element.SetAttribute("midcolor", CAssistant::ColorToText(di.MidColor));
-        element.SetAttribute("color", CAssistant::ColorToText(di.Color));
-        element.SetAttribute("background", (di.Background ? "true" : "false"));
-        element.SetAttribute("bgmincolor", CAssistant::ColorToText(di.BackgroundMinColor));
-        element.SetAttribute("bgmidcolor", CAssistant::ColorToText(di.BackgroundMidColor));
-        element.SetAttribute("bgcolor", CAssistant::ColorToText(di.BackgroundColor));
-        element.SetAttribute("minvalue", str_from(di.MinValue));
-        element.SetAttribute("midvalue", str_from(di.MidValue));
-        element.SetAttribute("percents", (di.Percents ? "true" : "false"));
+        const astr_t section = ini_section("Item", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.SetInt(section, "type", (int)di.Type);
+        ini.Set(section, "text", di.Text);
+        ini.Set(section, "id", CAssistant::GraphicToText(di.Graphic));
+        ini.Set(section, "hue", CAssistant::GraphicToText(di.Hue));
+        ini.Set(section, "mincolor", CAssistant::ColorToText(di.MinColor));
+        ini.Set(section, "midcolor", CAssistant::ColorToText(di.MidColor));
+        ini.Set(section, "color", CAssistant::ColorToText(di.Color));
+        ini.SetBool(section, "background", di.Background);
+        ini.Set(section, "bgmincolor", CAssistant::ColorToText(di.BackgroundMinColor));
+        ini.Set(section, "bgmidcolor", CAssistant::ColorToText(di.BackgroundMidColor));
+        ini.Set(section, "bgcolor", CAssistant::ColorToText(di.BackgroundColor));
+        ini.SetInt(section, "minvalue", di.MinValue);
+        ini.SetInt(section, "midvalue", di.MidValue);
+        ini.SetBool(section, "percents", di.Percents);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "DisplayItems.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "DisplayItems.ini"));
 }
 
 void CAssistantConfig::LoadDisplayItems()
 {
     m_DisplayItems.clear();
 
-    XMLDocument doc;
-    if (doc.Load(fs_path_join(GetGlobalConfigPath(), "DisplayItems.xml")))
+    CIniFile ini;
+    if (ini.Load(fs_path_join(GetGlobalConfigPath(), "DisplayItems.ini")))
     {
-        for (const XMLElement &element : doc.Root.Children)
+        const int count = ini.GetInt(INI_META, "count", 0);
+        for (int i = 0; i < count; i++)
         {
-            if (element.Name != "item" || !element.HasAttribute("name"))
+            const astr_t section = ini_section("Item", i);
+            if (!ini.Has(section, "name"))
             {
                 continue;
             }
             CDisplayItemEntry entry;
-            entry.Name = element.Attribute("name");
-            if (element.HasAttribute("type"))
+            entry.Name = ini.Get(section, "name");
+            if (ini.Has(section, "type"))
             {
-                entry.m_Item.Type = (DISPLAY_ITEM_TYPE)element.AttributeInt("type");
+                entry.m_Item.Type = (DISPLAY_ITEM_TYPE)ini.GetInt(section, "type", 0);
             }
-            if (element.HasAttribute("text"))
+            if (ini.Has(section, "text"))
             {
-                entry.m_Item.Text = element.Attribute("text");
+                entry.m_Item.Text = ini.Get(section, "text");
             }
-            if (element.HasAttribute("id"))
+            if (ini.Has(section, "id"))
             {
-                entry.m_Item.Graphic = (uint16_t)strtoul(element.Attribute("id").c_str(), nullptr, 16);
+                entry.m_Item.Graphic = (uint16_t)strtoul(ini.Get(section, "id").c_str(), nullptr, 16);
             }
-            if (element.HasAttribute("hue"))
+            if (ini.Has(section, "hue"))
             {
-                entry.m_Item.Hue = (uint16_t)strtoul(element.Attribute("hue").c_str(), nullptr, 16);
+                entry.m_Item.Hue = (uint16_t)strtoul(ini.Get(section, "hue").c_str(), nullptr, 16);
             }
-            if (element.HasAttribute("mincolor"))
+            if (ini.Has(section, "mincolor"))
             {
-                entry.m_Item.MinColor = CAssistant::RawStringToUInt(element.Attribute("mincolor"));
+                entry.m_Item.MinColor = CAssistant::RawStringToUInt(ini.Get(section, "mincolor"));
             }
-            if (element.HasAttribute("midcolor"))
+            if (ini.Has(section, "midcolor"))
             {
-                entry.m_Item.MidColor = CAssistant::RawStringToUInt(element.Attribute("midcolor"));
+                entry.m_Item.MidColor = CAssistant::RawStringToUInt(ini.Get(section, "midcolor"));
             }
-            if (element.HasAttribute("color"))
+            if (ini.Has(section, "color"))
             {
-                entry.m_Item.Color = CAssistant::RawStringToUInt(element.Attribute("color"));
+                entry.m_Item.Color = CAssistant::RawStringToUInt(ini.Get(section, "color"));
             }
-            if (element.HasAttribute("background"))
+            if (ini.Has(section, "background"))
             {
-                entry.m_Item.Background = CAssistant::RawStringToBool(element.Attribute("background"));
+                entry.m_Item.Background = ini.GetBool(section, "background", false);
             }
-            if (element.HasAttribute("bgmincolor"))
+            if (ini.Has(section, "bgmincolor"))
             {
-                entry.m_Item.BackgroundMinColor = CAssistant::RawStringToUInt(element.Attribute("bgmincolor"));
+                entry.m_Item.BackgroundMinColor = CAssistant::RawStringToUInt(ini.Get(section, "bgmincolor"));
             }
-            if (element.HasAttribute("bgmidcolor"))
+            if (ini.Has(section, "bgmidcolor"))
             {
-                entry.m_Item.BackgroundMidColor = CAssistant::RawStringToUInt(element.Attribute("bgmidcolor"));
+                entry.m_Item.BackgroundMidColor = CAssistant::RawStringToUInt(ini.Get(section, "bgmidcolor"));
             }
-            if (element.HasAttribute("bgcolor"))
+            if (ini.Has(section, "bgcolor"))
             {
-                entry.m_Item.BackgroundColor = CAssistant::RawStringToUInt(element.Attribute("bgcolor"));
+                entry.m_Item.BackgroundColor = CAssistant::RawStringToUInt(ini.Get(section, "bgcolor"));
             }
-            if (element.HasAttribute("minvalue"))
+            if (ini.Has(section, "minvalue"))
             {
-                entry.m_Item.MinValue = element.AttributeInt("minvalue");
+                entry.m_Item.MinValue = ini.GetInt(section, "minvalue", 0);
             }
-            if (element.HasAttribute("midvalue"))
+            if (ini.Has(section, "midvalue"))
             {
-                entry.m_Item.MidValue = element.AttributeInt("midvalue");
+                entry.m_Item.MidValue = ini.GetInt(section, "midvalue", 0);
             }
-            if (element.HasAttribute("percents"))
+            if (ini.Has(section, "percents"))
             {
-                entry.m_Item.Percents = CAssistant::RawStringToBool(element.Attribute("percents"));
+                entry.m_Item.Percents = ini.GetBool(section, "percents", false);
             }
             m_DisplayItems.push_back(entry);
         }
@@ -1666,38 +1623,34 @@ void CAssistantConfig::SaveDisplayGroups()
 {
     EnsureDirectories();
 
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", str_from((int)m_DisplayGroups.size()));
-
+    CIniFile ini;
+    int index = 0;
     for (const CDisplayGroupEntry &entry : m_DisplayGroups)
     {
-        XMLElement &element = doc.Root.AddChild("group");
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("text", entry.TitleData);
+        const astr_t section = ini_section("Group", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.Set(section, "text", entry.TitleData);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetGlobalConfigPath(), "DisplayGroups.xml"));
+    ini.Save(fs_path_join(GetGlobalConfigPath(), "DisplayGroups.ini"));
 }
 
 void CAssistantConfig::LoadDisplayGroups()
 {
     m_DisplayGroups.clear();
 
-    XMLDocument doc;
-    if (doc.Load(fs_path_join(GetGlobalConfigPath(), "DisplayGroups.xml")))
+    CIniFile ini;
+    if (ini.Load(fs_path_join(GetGlobalConfigPath(), "DisplayGroups.ini")))
     {
-        for (const XMLElement &element : doc.Root.Children)
+        const int count = ini.GetInt(INI_META, "count", 0);
+        for (int i = 0; i < count; i++)
         {
-            if (element.Name == "group" && element.HasAttribute("name") &&
-                element.HasAttribute("text"))
-            {
-                CDisplayGroupEntry entry;
-                entry.Name = element.Attribute("name");
-                entry.TitleData = element.Attribute("text");
-                m_DisplayGroups.push_back(entry);
-            }
+            const astr_t section = ini_section("Group", i);
+            CDisplayGroupEntry entry;
+            entry.Name = ini.Get(section, "name");
+            entry.TitleData = ini.Get(section, "text");
+            m_DisplayGroups.push_back(entry);
         }
     }
 
@@ -1720,199 +1673,131 @@ void CAssistantConfig::LoadDisplayGroups()
     }
 }
 
-// --- Objects.xml (was TabListsObjects::LoadObjects/SaveObjects) -----------------------
+// --- Objects.ini (was TabListsObjects::LoadObjects/SaveObjects) -----------------------
 
 void CAssistantConfig::SaveObjects()
 {
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", str_from((int)m_Objects.size()));
-    doc.Root.SetAttribute("dressbag", CAssistant::SerialToText(g_DressBag));
+    CIniFile ini;
+    ini.Set(INI_META, "dressbag", CAssistant::SerialToText(g_DressBag));
 
+    int index = 0;
     for (const CObjectEntry &entry : m_Objects)
     {
-        XMLElement &element = doc.Root.AddChild("object");
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("id", CAssistant::SerialToText(entry.Serial));
+        const astr_t section = ini_section("Object", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.Set(section, "id", CAssistant::SerialToText(entry.Serial));
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetProfilePath(), "Objects.xml"));
+    ini.Save(fs_path_join(GetProfilePath(), "Objects.ini"));
 }
 
 void CAssistantConfig::LoadObjects()
 {
     m_Objects.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetProfilePath(), "Objects.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetProfilePath(), "Objects.ini")))
     {
         return;
     }
-    if (doc.Root.HasAttribute("dressbag"))
+    if (ini.Has(INI_META, "dressbag"))
     {
-        g_Assistant.SetDressBag(CAssistant::TextToSerial(doc.Root.Attribute("dressbag")));
+        g_Assistant.SetDressBag(CAssistant::TextToSerial(ini.Get(INI_META, "dressbag")));
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "object" && element.HasAttribute("name") && element.HasAttribute("id"))
-        {
-            CObjectEntry entry;
-            entry.Name = element.Attribute("name");
-            entry.Serial = CAssistant::TextToSerial(element.Attribute("id"));
-            m_Objects.push_back(entry);
-        }
+        const astr_t section = ini_section("Object", i);
+        CObjectEntry entry;
+        entry.Name = ini.Get(section, "name");
+        entry.Serial = CAssistant::TextToSerial(ini.Get(section, "id"));
+        m_Objects.push_back(entry);
     }
 }
 
-// --- Hotkeys.xml (was HotkeysForm::Load/Save) ------------------------------------------
+// --- Hotkeys.ini (was HotkeysForm::Load/Save) ------------------------------------------
 
 void CAssistantConfig::SaveHotkeys()
 {
-    // Was HotkeysForm::Save: version "1" records with SDL key codes; the
-    // original also wrote size = count + 1 (kept).
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "1");
-    doc.Root.SetAttribute("size", str_from((int)m_Hotkeys.size() + 1));
-
+    // Was HotkeysForm::Save: records with SDL key codes.
+    CIniFile ini;
+    int index = 0;
     for (const CHotkeyEntry &entry : m_Hotkeys)
     {
-        XMLElement &element = doc.Root.AddChild("hotkey");
-        element.SetAttribute("type", str_from(entry.Type));
-        element.SetAttribute("action", str_from(entry.Action));
-        element.SetAttribute("running_mode", (entry.RunningMode ? "true" : "false"));
-        element.SetAttribute("key", str_from(entry.Key));
-        element.SetAttribute("modifiers", str_from(entry.Modifiers));
-        element.SetAttribute("name", entry.ScriptOrMacroName);
-        element.SetAttribute("external_code", entry.ExternalCode);
+        const astr_t section = ini_section("Hotkey", index++);
+        ini.SetInt(section, "type", (int)entry.Type);
+        ini.SetInt(section, "action", (int)entry.Action);
+        ini.SetBool(section, "running_mode", entry.RunningMode);
+        ini.SetInt(section, "key", (int)entry.Key);
+        ini.SetInt(section, "modifiers", (int)entry.Modifiers);
+        ini.Set(section, "name", entry.ScriptOrMacroName);
+        ini.Set(section, "external_code", entry.ExternalCode);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetProfilePath(), "Hotkeys.xml"));
+    ini.Save(fs_path_join(GetProfilePath(), "Hotkeys.ini"));
 }
 
 bool CAssistantConfig::LoadHotkeys()
 {
-    // Was HotkeysForm::Load: tolerates the legacy version 0 (VK codes +
-    // per-record macro name / toggle_hotkeys) and the current version 1.
+    // Was HotkeysForm::Load (which also tolerated the legacy version 0
+    // VK-code records; the INI schema has no legacy form).
     m_Hotkeys.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetProfilePath(), "Hotkeys.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetProfilePath(), "Hotkeys.ini")))
     {
         return false;
     }
 
-    const int version = doc.Root.HasAttribute("version") ? doc.Root.AttributeInt("version") : 0;
-
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        // v0 also stored bare `<toggle_hotkeys key= modifiers=>` records
-        if (element.Name != "hotkey" &&
-            !(version == 0 && element.Name == "toggle_hotkeys"))
-        {
-            continue;
-        }
-
-        if (version == 0)
-        {
-            if (element.Name == "toggle_hotkeys")
-            {
-                // Legacy toggle row (hotkeysform.cpp:375-398): a plain
-                // key/modifiers binding of HT_TOGGLE_HOTKEYS, action 0, no
-                // macro/script (the Data column renders the derived action
-                // name, "Hotkeys: toggle", like the original UpdateHotkeyData).
-                if (!element.HasAttribute("key") || !element.HasAttribute("modifiers"))
-                {
-                    continue;
-                }
-                CHotkeyEntry entry;
-                entry.Type = HT_TOGGLE_HOTKEYS;
-                entry.Action = 0;
-                entry.Key = (uint32_t)strtoul(element.Attribute("key").c_str(), nullptr, 10);
-                entry.Modifiers = (uint8_t)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
-                m_Hotkeys.push_back(entry);
-                continue;
-            }
-            // Legacy: converted on load to the v1 record shape (a script
-            // hotkey, or the special "ExternalCode" entry).
-            if (!element.HasAttribute("onescriptrunning") || !element.HasAttribute("key") ||
-                !element.HasAttribute("modifiers") || !element.HasAttribute("macro"))
-            {
-                continue;
-            }
-            CHotkeyEntry entry;
-            astr_t name = element.Attribute("macro");
-            entry.Type = HT_SCRIPT;
-            if (name == "ExternalCode")
-            {
-                entry.Type = HT_EXTERNAL_CODE;
-                name = "";
-            }
-            entry.Action = 0;
-            entry.ScriptOrMacroName = name;
-            entry.ExternalCode = element.Attribute("externalcode");
-            entry.RunningMode = CAssistant::RawStringToBool(element.Attribute("onescriptrunning"));
-            entry.Key = (uint32_t)strtoul(element.Attribute("key").c_str(), nullptr, 10);
-            entry.Modifiers = (uint8_t)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
-            m_Hotkeys.push_back(entry);
-        }
-        else if (version == 1)
-        {
-            if (!element.HasAttribute("key") || !element.HasAttribute("modifiers") ||
-                !element.HasAttribute("type") || !element.HasAttribute("action"))
-            {
-                continue;
-            }
-            CHotkeyEntry entry;
-            entry.RunningMode =
-                element.HasAttribute("running_mode") ?
-                    CAssistant::RawStringToBool(element.Attribute("running_mode")) :
-                    false;
-            entry.ScriptOrMacroName = element.Attribute("name");
-            entry.ExternalCode = element.Attribute("external_code");
-            // SDLK codes (see GetKeycodeFromVK in the original comment)
-            entry.Key = (uint32_t)strtoul(element.Attribute("key").c_str(), nullptr, 10);
-            entry.Modifiers = (uint8_t)strtoul(element.Attribute("modifiers").c_str(), nullptr, 10);
-            entry.Type = (uint32_t)strtoul(element.Attribute("type").c_str(), nullptr, 10);
-            entry.Action = (uint32_t)strtoul(element.Attribute("action").c_str(), nullptr, 10);
-            m_Hotkeys.push_back(entry);
-        }
+        const astr_t section = ini_section("Hotkey", i);
+        CHotkeyEntry entry;
+        entry.Key = (uint32_t)strtoul(ini.Get(section, "key").c_str(), nullptr, 10);
+        entry.Modifiers = (uint8_t)strtoul(ini.Get(section, "modifiers").c_str(), nullptr, 10);
+        entry.Type = (uint32_t)strtoul(ini.Get(section, "type").c_str(), nullptr, 10);
+        entry.Action = (uint32_t)strtoul(ini.Get(section, "action").c_str(), nullptr, 10);
+        entry.RunningMode = ini.GetBool(section, "running_mode", false);
+        entry.ScriptOrMacroName = ini.Get(section, "name");
+        entry.ExternalCode = ini.Get(section, "external_code");
+        m_Hotkeys.push_back(entry);
     }
 
     return true;
 }
 
-// --- Party.xml (was TabAgentsParty::LoadParty/SaveParty) ---------------------------------
+// --- Party.ini (was TabAgentsParty::LoadParty/SaveParty) ---------------------------------
 
 void CAssistantConfig::SaveParty()
 {
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", str_from((int)(m_PartyAccept.size() + m_PartyDecline.size())));
-    doc.Root.SetAttribute("autoacceptall", (m_PartyAutoAcceptAll ? "true" : "false"));
-    doc.Root.SetAttribute("autoacceptfriends", (m_PartyAutoAcceptFriends ? "true" : "false"));
-    doc.Root.SetAttribute("autodeclineall", (m_PartyAutoDeclineAll ? "true" : "false"));
-    doc.Root.SetAttribute("autodeclineenemies", (m_PartyAutoDeclineEnemies ? "true" : "false"));
+    CIniFile ini;
+    ini.SetBool(INI_META, "autoacceptall", m_PartyAutoAcceptAll);
+    ini.SetBool(INI_META, "autoacceptfriends", m_PartyAutoAcceptFriends);
+    ini.SetBool(INI_META, "autodeclineall", m_PartyAutoDeclineAll);
+    ini.SetBool(INI_META, "autodeclineenemies", m_PartyAutoDeclineEnemies);
 
+    int index = 0;
     for (const CWorldObjectEntry &entry : m_PartyAccept)
     {
-        XMLElement &element = doc.Root.AddChild("acceptobject");
-        element.SetAttribute("id", CAssistant::SerialToText(entry.Serial));
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("enabled", (entry.Enabled ? "true" : "false"));
+        const astr_t section = ini_section("Accept", index++);
+        ini.Set(section, "id", CAssistant::SerialToText(entry.Serial));
+        ini.Set(section, "name", entry.Name);
+        ini.SetBool(section, "enabled", entry.Enabled);
     }
-
+    index = 0;
     for (const CWorldObjectEntry &entry : m_PartyDecline)
     {
-        XMLElement &element = doc.Root.AddChild("declineobject");
-        element.SetAttribute("id", CAssistant::SerialToText(entry.Serial));
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("enabled", (entry.Enabled ? "true" : "false"));
+        const astr_t section = ini_section("Decline", index++);
+        ini.Set(section, "id", CAssistant::SerialToText(entry.Serial));
+        ini.Set(section, "name", entry.Name);
+        ini.SetBool(section, "enabled", entry.Enabled);
     }
+    ini.SetInt(INI_META, "count", (int)(m_PartyAccept.size() + m_PartyDecline.size()));
 
-    doc.Save(fs_path_join(GetProfilePath(), "Party.xml"));
+    ini.Save(fs_path_join(GetProfilePath(), "Party.ini"));
 }
 
 void CAssistantConfig::LoadParty()
@@ -1920,163 +1805,159 @@ void CAssistantConfig::LoadParty()
     m_PartyAccept.clear();
     m_PartyDecline.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetProfilePath(), "Party.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetProfilePath(), "Party.ini")))
     {
         return;
     }
-    if (doc.Root.HasAttribute("autoacceptall"))
+    if (ini.Has(INI_META, "autoacceptall"))
     {
-        m_PartyAutoAcceptAll = CAssistant::RawStringToBool(doc.Root.Attribute("autoacceptall"));
+        m_PartyAutoAcceptAll = ini.GetBool(INI_META, "autoacceptall", false);
     }
-    if (doc.Root.HasAttribute("autoacceptfriends"))
+    if (ini.Has(INI_META, "autoacceptfriends"))
     {
-        m_PartyAutoAcceptFriends =
-            CAssistant::RawStringToBool(doc.Root.Attribute("autoacceptfriends"));
+        m_PartyAutoAcceptFriends = ini.GetBool(INI_META, "autoacceptfriends", false);
     }
-    if (doc.Root.HasAttribute("autodeclineall"))
+    if (ini.Has(INI_META, "autodeclineall"))
     {
-        m_PartyAutoDeclineAll = CAssistant::RawStringToBool(doc.Root.Attribute("autodeclineall"));
+        m_PartyAutoDeclineAll = ini.GetBool(INI_META, "autodeclineall", false);
     }
-    if (doc.Root.HasAttribute("autodeclineenemies"))
+    if (ini.Has(INI_META, "autodeclineenemies"))
     {
-        m_PartyAutoDeclineEnemies =
-            CAssistant::RawStringToBool(doc.Root.Attribute("autodeclineenemies"));
+        m_PartyAutoDeclineEnemies = ini.GetBool(INI_META, "autodeclineenemies", false);
     }
 
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (!element.HasAttribute("id") || !element.HasAttribute("name") ||
-            !element.HasAttribute("enabled"))
-        {
-            continue;
-        }
         CWorldObjectEntry entry;
-        entry.Serial = CAssistant::TextToSerial(element.Attribute("id"));
-        entry.Name = element.Attribute("name");
-        entry.Enabled = CAssistant::RawStringToBool(element.Attribute("enabled"));
-        if (element.Name == "acceptobject")
+        for (int pass = 0; pass < 2; pass++)
         {
-            m_PartyAccept.push_back(entry);
-        }
-        else if (element.Name == "declineobject")
-        {
-            m_PartyDecline.push_back(entry);
+            const astr_t section =
+                pass == 0 ? ini_section("Accept", i) : ini_section("Decline", i);
+            if (!ini.Has(section, "id"))
+            {
+                continue;
+            }
+            entry.Serial = CAssistant::TextToSerial(ini.Get(section, "id"));
+            entry.Name = ini.Get(section, "name");
+            entry.Enabled = ini.GetBool(section, "enabled", false);
+            if (pass == 0)
+            {
+                m_PartyAccept.push_back(entry);
+            }
+            else
+            {
+                m_PartyDecline.push_back(entry);
+            }
         }
     }
 }
 
-// --- Friends.xml (was TabListsFriends::LoadFriends/SaveFriends) ---------------------------
+// --- Friends.ini (was TabListsFriends::LoadFriends/SaveFriends) ---------------------------
 
 void CAssistantConfig::SaveFriends()
 {
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", str_from((int)m_Friends.size()));
-    doc.Root.SetAttribute("feel_party_members_as_friends", (m_FeelPartyMembersAsFriends ? "true" : "false"));
+    CIniFile ini;
+    ini.SetBool(INI_META, "feel_party_members_as_friends", m_FeelPartyMembersAsFriends);
 
+    int index = 0;
     for (const CWorldObjectEntry &entry : m_Friends)
     {
-        XMLElement &element = doc.Root.AddChild("friend");
-        element.SetAttribute("id", CAssistant::SerialToText(entry.Serial));
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("enabled", (entry.Enabled ? "true" : "false"));
+        const astr_t section = ini_section("Friend", index++);
+        ini.Set(section, "id", CAssistant::SerialToText(entry.Serial));
+        ini.Set(section, "name", entry.Name);
+        ini.SetBool(section, "enabled", entry.Enabled);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetProfilePath(), "Friends.xml"));
+    ini.Save(fs_path_join(GetProfilePath(), "Friends.ini"));
 }
 
 void CAssistantConfig::LoadFriends()
 {
     m_Friends.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetProfilePath(), "Friends.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetProfilePath(), "Friends.ini")))
     {
         return;
     }
-    if (doc.Root.HasAttribute("feel_party_members_as_friends"))
+    if (ini.Has(INI_META, "feel_party_members_as_friends"))
     {
-        m_FeelPartyMembersAsFriends =
-            CAssistant::RawStringToBool(doc.Root.Attribute("feel_party_members_as_friends"));
+        m_FeelPartyMembersAsFriends = ini.GetBool(INI_META, "feel_party_members_as_friends", false);
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "friend" && element.HasAttribute("id") &&
-            element.HasAttribute("name") && element.HasAttribute("enabled"))
-        {
-            CWorldObjectEntry entry;
-            entry.Serial = CAssistant::TextToSerial(element.Attribute("id"));
-            entry.Name = element.Attribute("name");
-            entry.Enabled = CAssistant::RawStringToBool(element.Attribute("enabled"));
-            m_Friends.push_back(entry);
-        }
+        const astr_t section = ini_section("Friend", i);
+        CWorldObjectEntry entry;
+        entry.Serial = CAssistant::TextToSerial(ini.Get(section, "id"));
+        entry.Name = ini.Get(section, "name");
+        entry.Enabled = ini.GetBool(section, "enabled", false);
+        m_Friends.push_back(entry);
     }
 }
 
-// --- Enemies.xml (was TabListsEnemies::LoadEnemies/SaveEnemies) ----------------------------
+// --- Enemies.ini (was TabListsEnemies::LoadEnemies/SaveEnemies) ----------------------------
 
 void CAssistantConfig::SaveEnemies()
 {
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-    doc.Root.SetAttribute("version", "0");
-    doc.Root.SetAttribute("size", str_from((int)m_Enemies.size()));
-
+    CIniFile ini;
+    int index = 0;
     for (const CWorldObjectEntry &entry : m_Enemies)
     {
-        XMLElement &element = doc.Root.AddChild("enemy");
-        element.SetAttribute("id", CAssistant::SerialToText(entry.Serial));
-        element.SetAttribute("name", entry.Name);
-        element.SetAttribute("enabled", (entry.Enabled ? "true" : "false"));
+        const astr_t section = ini_section("Enemy", index++);
+        ini.Set(section, "id", CAssistant::SerialToText(entry.Serial));
+        ini.Set(section, "name", entry.Name);
+        ini.SetBool(section, "enabled", entry.Enabled);
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetProfilePath(), "Enemies.xml"));
+    ini.Save(fs_path_join(GetProfilePath(), "Enemies.ini"));
 }
 
 void CAssistantConfig::LoadEnemies()
 {
     m_Enemies.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetProfilePath(), "Enemies.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetProfilePath(), "Enemies.ini")))
     {
         return;
     }
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "enemy" && element.HasAttribute("id") && element.HasAttribute("name") &&
-            element.HasAttribute("enabled"))
-        {
-            CWorldObjectEntry entry;
-            entry.Serial = CAssistant::TextToSerial(element.Attribute("id"));
-            entry.Name = element.Attribute("name");
-            entry.Enabled = CAssistant::RawStringToBool(element.Attribute("enabled"));
-            m_Enemies.push_back(entry);
-        }
+        const astr_t section = ini_section("Enemy", i);
+        CWorldObjectEntry entry;
+        entry.Serial = CAssistant::TextToSerial(ini.Get(section, "id"));
+        entry.Name = ini.Get(section, "name");
+        entry.Enabled = ini.GetBool(section, "enabled", false);
+        m_Enemies.push_back(entry);
     }
 }
 
-// --- Macros.xml (was TabMacros::Load/Save) ---------------------------------------------------
+// --- Macros.ini (was TabMacros::Load/Save) ---------------------------------------------------
 
 void CAssistantConfig::SaveMacros()
 {
-    XMLDocument doc;
-    doc.Root = XMLElement("data");
-
+    CIniFile ini;
+    int index = 0;
     for (const CMacroEntry &entry : m_Macros)
     {
-        XMLElement &element = doc.Root.AddChild("macro");
-        element.SetAttribute("name", entry.Name);
+        const astr_t section = ini_section("Macro", index++);
+        ini.Set(section, "name", entry.Name);
+        ini.SetInt(section, "actions", (int)entry.m_Items.size());
+        int actionIndex = 0;
         for (CMacro *macro : entry.m_Items)
         {
-            XMLElement &action = element.AddChild("action");
-            macro->Save(action);
+            macro->Save(ini, section + "Action" + str_from(actionIndex++));
         }
     }
+    ini.SetInt(INI_META, "count", index);
 
-    doc.Save(fs_path_join(GetProfilePath(), "Macros.xml"));
+    ini.Save(fs_path_join(GetProfilePath(), "Macros.ini"));
 }
 
 bool CAssistantConfig::LoadMacros()
@@ -2088,30 +1969,28 @@ bool CAssistantConfig::LoadMacros()
     }
     m_Macros.clear();
 
-    XMLDocument doc;
-    if (!doc.Load(fs_path_join(GetProfilePath(), "Macros.xml")))
+    CIniFile ini;
+    if (!ini.Load(fs_path_join(GetProfilePath(), "Macros.ini")))
     {
         return false;
     }
 
-    CMacroEntry *macro = nullptr;
-    for (const XMLElement &element : doc.Root.Children)
+    const int count = ini.GetInt(INI_META, "count", 0);
+    for (int i = 0; i < count; i++)
     {
-        if (element.Name == "macro" && element.HasAttribute("name"))
+        const astr_t section = ini_section("Macro", i);
+        CMacroEntry entry;
+        entry.Name = ini.Get(section, "name");
+        const int actionCount = ini.GetInt(section, "actions", 0);
+        for (int j = 0; j < actionCount; j++)
         {
-            CMacroEntry entry;
-            entry.Name = element.Attribute("name");
-            m_Macros.push_back(entry);
-            macro = &m_Macros.back();
-        }
-        else if (element.Name == "action" && macro != nullptr)
-        {
-            CMacro *action = CMacro::Load(element);
+            CMacro *action = CMacro::Load(ini, section + "Action" + str_from(j));
             if (action != nullptr)
             {
-                macro->m_Items.push_back(action);
+                entry.m_Items.push_back(action);
             }
         }
+        m_Macros.push_back(entry);
     }
 
     return true;
@@ -2178,8 +2057,8 @@ bool CAssistantConfig::SaveDress()
     writer.WriteUInt8(m_DressDoubleClickForEquipment ? 1 : 0);
 
     const vector<uint8_t> bytes = writer.Data();
-    // Dress.coa goes through the same crash-safe temp+rename path as the XML
-    // writers (plan §8.1)
+    // Dress.coa goes through the same crash-safe temp+rename path as the INI
+    // writers
     return AtomicFileWrite(fs_path_join(GetProfilePath(), "Dress.coa"), &bytes[0], bytes.size());
 }
 
@@ -2253,7 +2132,6 @@ bool CAssistantConfig::LoadDress()
 void CAssistantConfig::LoadGlobals()
 {
     // Was the AssistForm::Init global-load sequence.
-    XMLSelfTest(); // config round-trip self-test (all builds, logs on failure)
     LoadTypes();
     LoadFindList();
     LoadIgnoreList();

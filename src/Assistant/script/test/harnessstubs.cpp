@@ -22,9 +22,20 @@
 #include "../../core/shopagent.h"
 #include "Target.h" // the fused target cursor (the harness stubs it below)
 #include "../../core/textcommandmanager.h"
+#include "../../config/configio.h"
 #include "../../config/assistantconfig.h"
+#include "../../core/assist.h"
+#include "../../core/dressagent.h"
+#include "../../core/global.h"
+#include "../../core/shopagent.h"
+#include "../../core/textcommandmanager.h"
+#include "../../core/world.h"
+#include "../../core/textconv.h" // TextToSerial/SerialToText (stubbed below)
+#include "../../macros/macroexecutor.h"
 #include "../../managers/contextmenumanager.h"
+#include "../../managers/displaymanager.h"
 #include "../../managers/gumpmanager.h"
+#include "Party.h" // the client party record (Contains is stubbed below)
 #include "../../managers/menumanager.h"
 #include "Managers/ObjectPropertiesManager.h"
 #include "../../managers/promptmanager.h"
@@ -171,20 +182,38 @@ CGameObject *CAssistant::FindList(const astr_t &, const astr_t &, const astr_t &
     return nullptr;
 }
 
-// --- config (DelayFromText keeps the old stub contract: len) -----------------
-CAssistantConfig::CAssistantConfig()
+// --- config ------------------------------------------------------------------
+// The REAL config/assistantconfig.cpp is linked (the INI round-trip tests run
+// its Save/Load); only the pieces that would drag client code in are stubbed
+// here: the CAssistant text-conversion helpers and the manager globals.
+CMacro *CMacro::Load(const CIniFile &, const astr_t &) { return nullptr; }
+void CAssistant::SetDressBag(const uint32_t &) const {}
+
+// the CAssistant static text conversions (parity with core/assist.cpp; the
+// harness writes/reads the same text forms the client build does)
+bool CAssistant::RawStringToBool(astr_t value)
 {
-    memset(&m_Options[0], 0, sizeof(m_Options));
+    value = str_lower(value);
+    return value == "true" || value == "on" || atoi(value.c_str()) != 0;
 }
-CAssistantConfig g_AssistantConfig;
-CMacroEntry::~CMacroEntry() = default;
-int CAssistantConfig::DelayFromText(astr_t text) { return (int)text.size(); }
-bool CAssistantConfig::GetFontColor(uint16_t &) const { return false; }
-void CAssistantConfig::SetFontColor(const bool &, uint16_t) {}
-bool CAssistantConfig::GetCharactersFontColor(uint16_t &) const { return false; }
-void CAssistantConfig::SetCharactersFontColor(const bool &, uint16_t) {}
-void CAssistantConfig::SaveHotkeys() {}
-bool CAssistantConfig::LoadHotkeys() { return true; }
+astr_t CAssistant::ColorToText(const uint32_t &value)
+{
+    char buf[64] = { 0 };
+    snprintf(buf, sizeof(buf), "#%08X", value);
+    return buf;
+}
+astr_t CAssistant::BoolToText(const bool &value)
+{
+    return value ? "true" : "false";
+}
+uint32_t CAssistant::RawStringToUInt(const astr_t &value)
+{
+    if (value.length() > 1 && value.at(0) == '#')
+    {
+        return (uint32_t)strtoul(("0x" + value.substr(1)).c_str(), nullptr, 16);
+    }
+    return (uint32_t)strtoul(value.c_str(), nullptr, 0);
+}
 
 // --- managers (inert; the gump manager serves the GetGump deep copy) ---------
 CGumpManager::CGumpManager() {}
@@ -271,6 +300,16 @@ bool g_Connected = false;
 uint64_t g_EnabledCommands = 0;
 uint64_t g_EnabledFeature = 0;
 uint16_t g_MessagesColor = 0x02B2;
+// the dress-bag serial (core/global.cpp in the client build)
+uint32_t g_DressBag = 0;
+// the display manager: inert (GetCommands empty, lookups miss) so
+// LoadDisplayItems' default-set branch builds an empty list here
+CDisplayManager g_DisplayManager;
+CDisplayManager::CDisplayManager() {}
+CDisplayItem CDisplayManager::GetDisplayItemByName(const astr_t &) const
+{
+    return CDisplayItem();
+}
 CPoint2Di g_LastTargetPosition;
 CPoint2Di g_LastAttackPosition;
 bool g_TargetReceived = false;
@@ -287,6 +326,10 @@ TARGET_HANDLER g_TargetHandler = nullptr;
 // world-model stand-in globals (global namespace, as declared in worldstubs.h)
 CGameWorld *g_World = nullptr;
 CPlayer *g_Player = nullptr;
+// the client party (src/Party.cpp in the client build): inert here, the
+// Contains lookup always misses
+CParty g_Party;
+bool CParty::Contains(int) { return false; }
 // the client globals the fused assistant LastTarget/LastAttack reads consume
 uint32_t g_LastTargetObject = 0;
 uint32_t g_LastAttackObject = 0;
@@ -423,6 +466,38 @@ astr_t str_lower(astr_t value)
         c = (char)tolower((unsigned char)c);
     }
     return value;
+}
+// same (Misc.cpp's STR_IMPLEMENTATION): the INI section index names
+astr_t str_from(int val)
+{
+    return std::to_string(val);
+}
+// core/textconv (core/textconv.cpp, not linked here): the packed RGBA text
+// form CMapSettings round-trips its colors through, plus the graphic text
+// helpers finditem.cpp shares
+uint32_t xuoassist::TextToSerial(astr_t text)
+{
+    return (uint32_t)strtoul(text.c_str(), nullptr, 16);
+}
+uint32_t xuoassist::TextToUInt(const astr_t &text)
+{
+    return (uint32_t)strtoul(text.c_str(), nullptr, 0);
+}
+uint16_t xuoassist::TextToGraphic(astr_t text)
+{
+    return (uint16_t)strtoul(text.c_str(), nullptr, 16);
+}
+astr_t xuoassist::SerialToText(const uint32_t &value)
+{
+    char buf[16] = { 0 };
+    snprintf(buf, sizeof(buf), "0x%X", value);
+    return buf;
+}
+astr_t xuoassist::GraphicToText(const uint16_t &value)
+{
+    char buf[16] = { 0 };
+    snprintf(buf, sizeof(buf), "0x%X", value);
+    return buf;
 }
 
 namespace xuoassist {

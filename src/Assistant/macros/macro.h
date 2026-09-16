@@ -2,15 +2,15 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (macros/macro.h), trimmed: the CMacro object
-// hierarchy is unchanged; the XML-writer Save / XML-attribute
-// Load signatures became the config/xml DOM equivalents (identical attribute
-// names and value formatting). The executor stays with the Phase 3 UI
+// hierarchy is unchanged; the XML-writer Save / XML-attribute Load
+// signatures became the config INI equivalents (identical key names and
+// value formatting). The executor stays with the Phase 3 UI
 // (master plan: port the MODEL this round).
 
 #pragma once
 
 #include "core/global.h"
-#include "config/xml.h"
+#include "config/configio.h"
 
 namespace xuoassist {
 
@@ -139,9 +139,9 @@ public:
 
     virtual CMacro *Copy();
 
-    virtual void Save(XMLElement &element);
+    virtual void Save(CIniFile &ini, const astr_t &section);
 
-    static CMacro *Load(const XMLElement &element);
+    static CMacro *Load(const CIniFile &ini, const astr_t &section);
 };
 
 class CMacroWithIntValue : public CMacro
@@ -165,7 +165,7 @@ public:
 
     CMacro *Copy() override;
 
-    void Save(XMLElement &element) override;
+    void Save(CIniFile &ini, const astr_t &section) override;
 };
 
 class CMacroWithStringValue : public CMacro
@@ -189,7 +189,7 @@ public:
 
     CMacro *Copy() override;
 
-    void Save(XMLElement &element) override;
+    void Save(CIniFile &ini, const astr_t &section) override;
 };
 
 class CMacroWithObject : public CMacro
@@ -219,7 +219,7 @@ public:
 
     CMacro *Copy() override;
 
-    void Save(XMLElement &element) override;
+    void Save(CIniFile &ini, const astr_t &section) override;
 };
 
 class CMacroWithGump : public CMacro
@@ -249,7 +249,7 @@ public:
 
     CMacro *Copy() override;
 
-    void Save(XMLElement &element) override;
+    void Save(CIniFile &ini, const astr_t &section) override;
 };
 
 class CMacroWithMenu : public CMacro
@@ -287,7 +287,7 @@ public:
 
     CMacro *Copy() override;
 
-    void Save(XMLElement &element) override;
+    void Save(CIniFile &ini, const astr_t &section) override;
 };
 
 class CMacroWithTargetTile : public CMacro
@@ -337,7 +337,7 @@ public:
 
     CMacro *Copy() override;
 
-    void Save(XMLElement &element) override;
+    void Save(CIniFile &ini, const astr_t &section) override;
 };
 
 } // namespace xuoassist

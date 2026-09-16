@@ -4,21 +4,23 @@
 // AssistantConfig: the persistence module (master plan §4.3, §7 Phase 1 item
 // 6). The original app kept every reader/writer inside its widget classes
 // (assist/tab*.cpp LoadConfig/SaveConfig, assistform.cpp profile handling,
-// hotkeysform.cpp Hotkeys.xml, tabagentsdress.cpp Dress.coa); they are
+// Hotkeys.ini, tabagentsdress.cpp
+// Dress.coa); they are
 // extracted here verbatim so Phase 2 can build UI straight on top.
 //
-// File formats are byte-compatible with the original writers (same elements,
-// attribute names, value formatting - including the original `size = count+1`
-// quirks of FindList.xml/IgnoreList.xml/Hotkeys.xml, kept for round-trip
-// fidelity).
+// File formats: INI via the vendored <external/inih.h> reader and the
+// CIniFile writer (config/configio.h). Schema rules and the per-file
+// sections/keys are documented in docs/NOTES.md ("Persistence"). There is
+// no compatibility with the pre-INI files: a first run simply starts from
+// the defaults below.
 //
 // Layout (matches the original app, relative to the binary dir):
-//   Config/<profile>/ : Options.xml Objects.xml Hotkeys.xml Party.xml
-//                       Friends.xml Enemies.xml Macros.xml Dress.coa
-//   GlobalConfig/     : Types.xml Objects? no - Types.xml, FindList.xml,
-//                       IgnoreList.xml, SpeechFilter.xml, TextReplaces.xml,
-//                       SoundFilter.xml, ShopList.xml, DisplayItems.xml,
-//                       DisplayGroups.xml, Profiles.xml
+//   Config/<profile>/ : Options.ini Objects.ini Hotkeys.ini Party.ini
+//                       Friends.ini Enemies.ini Macros.ini Dress.coa
+//   GlobalConfig/     : Types.ini, FindList.ini, IgnoreList.ini,
+//                       SpeechFilter.ini, TextReplaces.ini,
+//                       SoundFilter.ini, ShopList.ini, DisplayItems.ini,
+//                       DisplayGroups.ini, Profiles.ini, Map.ini
 //
 // Data that used to live in the old list-widget items is kept here as plain structs
 // with the original item-class field names; the UI round binds its list
@@ -31,7 +33,7 @@
 #include <vector>
 
 #include "core/global.h"
-#include "config/xml.h"
+#include "config/configio.h"
 #include "model/commonitems/finditem.h"
 #include "model/commonitems/ignoreitem.h"
 #include "model/commonitems/displayitem.h"
@@ -112,7 +114,7 @@ enum HOTKEY_TYPES
     HT_USE_SKILL_ENEMY,
     HT_USE_SKILL_FRIEND,
     // the enum tail - the Phase-1c model stopped at
-    // the skill entries; the stored uint32_t values and the Hotkeys.xml schema
+    // the skill entries; the stored uint32_t values and the Hotkeys.ini schema
     // are unchanged (values 0..21 above already match the original writer)
     HT_USE_SKILL_NEW_TARGET_SYSTEM,
     HT_TARGETING,
@@ -270,11 +272,11 @@ public:
     void SetCurrentProfile(const astr_t &name); // case-insensitive, like TabMain
     bool LoadProfile();                         // was AssistForm::LoadCurrentProfile
     bool SaveProfile();                         // was AssistForm::SaveCurrentProfile
-    void SaveProfileMap();                      // GlobalConfig/Profiles.xml
+    void SaveProfileMap();                      // GlobalConfig/Profiles.ini
     void LoadProfileMap();
     const std::map<uint32_t, astr_t> &GetProfileMap() const { return m_ProfileMap; }
 
-    // --- Options.xml (assistform.cpp SaveMainOptions + 4 tab SaveConfigs) ---
+    // --- Options.ini (assistform.cpp SaveMainOptions + 4 tab SaveConfigs) ---
     void SaveMainOptions();
     void LoadMainOptions();
 
@@ -301,17 +303,17 @@ public:
     void LoadDisplayGroups(); // (with allreag/default on empty)
 
     // --- per-profile files ---------------------------------------------------
-    void SaveObjects();       // was TabListsObjects::SaveObjects (Objects.xml)
+    void SaveObjects();       // was TabListsObjects::SaveObjects (Objects.ini)
     void LoadObjects();
-    void SaveHotkeys();       // was HotkeysForm::Save (Hotkeys.xml, version 1)
-    bool LoadHotkeys();       // was HotkeysForm::Load (tolerates version 0)
-    void SaveParty();         // was TabAgentsParty::SaveParty (Party.xml)
+    void SaveHotkeys();       // was HotkeysForm::Save (Hotkeys.ini)
+    bool LoadHotkeys();
+    void SaveParty();         // was TabAgentsParty::SaveParty (Party.ini)
     void LoadParty();
-    void SaveFriends();       // was TabListsFriends::SaveFriends (Friends.xml)
+    void SaveFriends();       // was TabListsFriends::SaveFriends (Friends.ini)
     void LoadFriends();
-    void SaveEnemies();       // was TabListsEnemies::SaveEnemies (Enemies.xml)
+    void SaveEnemies();       // was TabListsEnemies::SaveEnemies (Enemies.ini)
     void LoadEnemies();
-    void SaveMacros();        // was TabMacros::Save (Macros.xml)
+    void SaveMacros();        // was TabMacros::Save (Macros.ini)
     bool LoadMacros();        // was TabMacros::Load
     bool SaveDress();         // was TabAgentsDress::SaveDress (Dress.coa)
     bool LoadDress();         // was TabAgentsDress::LoadDress

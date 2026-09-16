@@ -490,14 +490,14 @@ CMacro *CMacroWithTargetTile::Copy()
     return new CMacroWithTargetTile(this);
 }
 
-CMacro *CMacro::Load(const XMLElement &element)
+CMacro *CMacro::Load(const CIniFile &ini, const astr_t &section)
 {
-    // Was CMacro::Load from the XML stream attributes - same attributes.
+    // Was CMacro::Load from the XML stream attributes - same keys.
     CMacro *result = nullptr;
 
-    if (element.HasAttribute("type") && element.HasAttribute("convert_type"))
+    if (ini.Has(section, "type") && ini.Has(section, "convert_type"))
     {
-        MACRO_TYPE type = (MACRO_TYPE)element.AttributeInt("type");
+        MACRO_TYPE type = (MACRO_TYPE)ini.GetInt(section, "type", 0);
 
         switch (type)
         {
@@ -507,14 +507,14 @@ CMacro *CMacro::Load(const XMLElement &element)
             case MT_REQUEST_CONTEXT_MENU:
             case MT_WAIT_FOR_CONTEXT_MENU:
             {
-                if (element.HasAttribute("serial") && element.HasAttribute("graphic") &&
-                    element.HasAttribute("color"))
+                if (ini.Has(section, "serial") && ini.Has(section, "graphic") &&
+                    ini.Has(section, "color"))
                 {
                     result = new CMacroWithObject(
                         type,
-                        CAssistant::TextToSerial(element.Attribute("serial")),
-                        CAssistant::TextToGraphic(element.Attribute("graphic")),
-                        CAssistant::TextToGraphic(element.Attribute("color")));
+                        CAssistant::TextToSerial(ini.Get(section, "serial")),
+                        CAssistant::TextToGraphic(ini.Get(section, "graphic")),
+                        CAssistant::TextToGraphic(ini.Get(section, "color")));
                 }
 
                 break;
@@ -526,9 +526,9 @@ CMacro *CMacro::Load(const XMLElement &element)
             case MT_WAR_MODE:
             case MT_WALK:
             {
-                if (element.HasAttribute("value"))
+                if (ini.Has(section, "value"))
                 {
-                    result = new CMacroWithIntValue(type, element.AttributeInt("value"));
+                    result = new CMacroWithIntValue(type, ini.GetInt(section, "value", 0));
                 }
 
                 break;
@@ -536,58 +536,58 @@ CMacro *CMacro::Load(const XMLElement &element)
             case MT_SAY:
             case MT_WAIT_FOR_PROMPT:
             {
-                if (element.HasAttribute("value"))
+                if (ini.Has(section, "value"))
                 {
-                    result = new CMacroWithStringValue(type, element.Attribute("value"));
+                    result = new CMacroWithStringValue(type, ini.Get(section, "value"));
                 }
 
                 break;
             }
             case MT_WAIT_FOR_GUMP:
             {
-                if (element.HasAttribute("serial") && element.HasAttribute("id") &&
-                    element.HasAttribute("button"))
+                if (ini.Has(section, "serial") && ini.Has(section, "id") &&
+                    ini.Has(section, "button"))
                 {
                     result = new CMacroWithGump(
                         type,
-                        CAssistant::TextToSerial(element.Attribute("serial")),
-                        CAssistant::TextToSerial(element.Attribute("id")),
-                        element.AttributeInt("button"));
+                        CAssistant::TextToSerial(ini.Get(section, "serial")),
+                        CAssistant::TextToSerial(ini.Get(section, "id")),
+                        ini.GetInt(section, "button", 0));
                 }
 
                 break;
             }
             case MT_WAIT_FOR_MENU:
             {
-                if (element.HasAttribute("name") && element.HasAttribute("item_name") &&
-                    element.HasAttribute("graphic") && element.HasAttribute("color"))
+                if (ini.Has(section, "name") && ini.Has(section, "item_name") &&
+                    ini.Has(section, "graphic") && ini.Has(section, "color"))
                 {
                     result = new CMacroWithMenu(
                         type,
-                        element.Attribute("name"),
-                        element.Attribute("item_name"),
-                        CAssistant::TextToGraphic(element.Attribute("graphic")),
-                        CAssistant::TextToGraphic(element.Attribute("color")));
+                        ini.Get(section, "name"),
+                        ini.Get(section, "item_name"),
+                        CAssistant::TextToGraphic(ini.Get(section, "graphic")),
+                        CAssistant::TextToGraphic(ini.Get(section, "color")));
                 }
 
                 break;
             }
             case MT_WAIT_FOR_TARGET_TILE:
             {
-                if (element.HasAttribute("graphic") && element.HasAttribute("x") &&
-                    element.HasAttribute("y") && element.HasAttribute("z") &&
-                    element.HasAttribute("relative_x") && element.HasAttribute("relative_y") &&
-                    element.HasAttribute("relative_z"))
+                if (ini.Has(section, "graphic") && ini.Has(section, "x") &&
+                    ini.Has(section, "y") && ini.Has(section, "z") &&
+                    ini.Has(section, "relative_x") && ini.Has(section, "relative_y") &&
+                    ini.Has(section, "relative_z"))
                 {
                     result = new CMacroWithTargetTile(
                         type,
-                        CAssistant::TextToGraphic(element.Attribute("graphic")),
-                        element.AttributeInt("x"),
-                        element.AttributeInt("y"),
-                        element.AttributeInt("z"),
-                        element.AttributeInt("relative_x"),
-                        element.AttributeInt("relative_y"),
-                        element.AttributeInt("relative_z"));
+                        CAssistant::TextToGraphic(ini.Get(section, "graphic")),
+                        ini.GetInt(section, "x", 0),
+                        ini.GetInt(section, "y", 0),
+                        ini.GetInt(section, "z", 0),
+                        ini.GetInt(section, "relative_x", 0),
+                        ini.GetInt(section, "relative_y", 0),
+                        ini.GetInt(section, "relative_z", 0));
                 }
 
                 break;
@@ -616,11 +616,11 @@ CMacro *CMacro::Load(const XMLElement &element)
 
         if (result != nullptr)
         {
-            result->ConvertType = (MACRO_CONVERT_TYPE)element.AttributeInt("convert_type");
+            result->ConvertType = (MACRO_CONVERT_TYPE)ini.GetInt(section, "convert_type", 0);
 
-            if (element.HasAttribute("waiting_time"))
+            if (ini.Has(section, "waiting_time"))
             {
-                result->WaitingTime = element.AttributeInt("waiting_time");
+                result->WaitingTime = ini.GetInt(section, "waiting_time", 0);
             }
         }
     }
@@ -628,63 +628,65 @@ CMacro *CMacro::Load(const XMLElement &element)
     return result;
 }
 
-void CMacro::Save(XMLElement &element)
+void CMacro::Save(CIniFile &ini, const astr_t &section)
 {
-    element.SetAttribute("type", str_from((int)Type));
-    element.SetAttribute("convert_type", str_from((int)ConvertType));
-    element.SetAttribute("waiting_time", str_from(WaitingTime));
+    ini.SetInt(section, "type", (int)Type);
+    ini.SetInt(section, "convert_type", (int)ConvertType);
+    ini.SetInt(section, "waiting_time", WaitingTime);
 }
 
-void CMacroWithIntValue::Save(XMLElement &element)
+void CMacroWithIntValue::Save(CIniFile &ini, const astr_t &section)
 {
-    CMacro::Save(element);
+    CMacro::Save(ini, section);
 
-    element.SetAttribute("value", str_from(Value));
+    ini.SetInt(section, "value", Value);
 }
 
-void CMacroWithStringValue::Save(XMLElement &element)
+void CMacroWithStringValue::Save(CIniFile &ini, const astr_t &section)
 {
-    CMacro::Save(element);
+    CMacro::Save(ini, section);
 
-    element.SetAttribute("value", Value);
+    ini.Set(section, "value", Value);
 }
 
-void CMacroWithObject::Save(XMLElement &element)
+void CMacroWithObject::Save(CIniFile &ini, const astr_t &section)
 {
-    CMacro::Save(element);
+    CMacro::Save(ini, section);
 
-    element.SetAttribute("serial", CAssistant::SerialToText(Serial));
-    element.SetAttribute("graphic", CAssistant::GraphicToText(Graphic));
-    element.SetAttribute("color", CAssistant::GraphicToText(Color));
+    ini.Set(section, "serial", CAssistant::SerialToText(Serial));
+    ini.Set(section, "graphic", CAssistant::GraphicToText(Graphic));
+    ini.Set(section, "color", CAssistant::GraphicToText(Color));
 }
 
-void CMacroWithGump::Save(XMLElement &element)
+void CMacroWithGump::Save(CIniFile &ini, const astr_t &section)
 {
-    CMacro::Save(element);
+    CMacro::Save(ini, section);
 
-    element.SetAttribute("serial", CAssistant::SerialToText(Serial));
-    element.SetAttribute("id", CAssistant::SerialToText(ID));
-    element.SetAttribute("button", str_from(Button));
+    ini.Set(section, "serial", CAssistant::SerialToText(Serial));
+    ini.Set(section, "id", CAssistant::SerialToText(ID));
+    ini.SetInt(section, "button", (int)Button);
 }
 
-void CMacroWithMenu::Save(XMLElement &element)
+void CMacroWithMenu::Save(CIniFile &ini, const astr_t &section)
 {
-    CMacro::Save(element);
+    CMacro::Save(ini, section);
 
-    element.SetAttribute("name", Name);
-    element.SetAttribute("item_name", ItemName);
-    element.SetAttribute("graphic", CAssistant::GraphicToText(Graphic));
-    element.SetAttribute("color", CAssistant::GraphicToText(Color));
+    ini.Set(section, "name", Name);
+    ini.Set(section, "item_name", ItemName);
+    ini.Set(section, "graphic", CAssistant::GraphicToText(Graphic));
+    ini.Set(section, "color", CAssistant::GraphicToText(Color));
 }
 
-void CMacroWithTargetTile::Save(XMLElement &element)
+void CMacroWithTargetTile::Save(CIniFile &ini, const astr_t &section)
 {
-    CMacro::Save(element);
+    CMacro::Save(ini, section);
 
-    element.SetAttribute("graphic", CAssistant::GraphicToText(Graphic));
-    element.SetAttribute("x", str_from(X));
-    element.SetAttribute("y", str_from(Y));
-    element.SetAttribute("z", str_from(Z));
+    ini.Set(section, "graphic", CAssistant::GraphicToText(Graphic));
+    ini.SetInt(section, "x", X);
+    ini.SetInt(section, "y", Y);
+    ini.SetInt(section, "z", Z);
+    // relative_x/relative_y/relative_z are read (see CMacro::Load) but were
+    // never written by the original XML writer either; kept as-is.
 }
 
 } // namespace xuoassist

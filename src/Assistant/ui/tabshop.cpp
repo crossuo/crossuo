@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // TabAgentsShop (was assist/tabagentsshop.ui/.cpp + shoplisteditorform +
-// shopprogressform, §2.8/§3.1): the shop lists (ShopList.xml), the vendor
+// shopprogressform, §2.8/§3.1): the shop lists (ShopList.ini), the vendor
 // name / Buy / Sell / Auto switches, the delay/price/stack/timeout spinboxes,
 // the Shop List Editor window (my list <=> vendor list) and the shopping
 // progress popup. The ENGINE behind the buttons lives in core/shopagent
@@ -664,7 +664,7 @@ void TabShop_Draw()
     }
     if (dirty)
     {
-        g_AssistantConfig.SaveShopList(); // ShopList.xml data attributes
+        g_AssistantConfig.SaveShopList(); // ShopList.ini data attributes
     }
 
     if (ImGui::Button("Edit shop list items"))

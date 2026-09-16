@@ -313,7 +313,7 @@ void TabHotkeys_Draw()
     ImGui::Separator();
 
     // Load/Save (tabhotkeys.cpp:53/77): the original app opened a file dialog under
-    // SavedHotkeys; the in-client port round-trips the profile Hotkeys.xml
+    // SavedHotkeys; the in-client port round-trips the profile Hotkeys.ini
     // (the format is identical - see core/hotkeys.cpp)
     if (ImGui::Button("Load hotkeys"))
     {

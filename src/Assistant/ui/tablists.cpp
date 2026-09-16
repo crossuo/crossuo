@@ -896,7 +896,7 @@ void draw_friends_tab()
     }
     if (ImGui::Checkbox("Party members as friends", &g_AssistantConfig.m_FeelPartyMembersAsFriends))
     {
-        g_AssistantConfig.SaveFriends(); // the attribute rides Friends.xml
+        g_AssistantConfig.SaveFriends(); // the attribute rides Friends.ini
     }
 }
 
