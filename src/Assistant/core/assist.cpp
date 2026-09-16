@@ -23,7 +23,6 @@
 #include "worldutil.h"
 #include "textconv.h"
 #include "textcommandmanager.h" // g_TextCommandManager (the command-prefix intercept)
-#include "clientversion.h" // GetClientVersion (the negotiated client version)
 #include "../config/assistantconfig.h"
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-initiated sends do not self-record)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
@@ -893,7 +892,7 @@ void CAssistant::MoveItem(CGameItem *item)
 
     ::CPacketPickupRequest(serial, g_MoveItemData.Count).Send();
 
-    if (GetClientVersion() >= CV_6017)
+    if (g_Config.ClientVersion >= CV_6017)
     {
         ::CPacketDropRequestNew(
             serial, g_MoveItemData.X, g_MoveItemData.Y, g_MoveItemData.Z, 0, g_MoveItemData.Container)

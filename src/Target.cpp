@@ -18,7 +18,6 @@
 #include <core/assist.h> // xuoassist::g_TargetHandler, CAssistant text converters, the armed from-target interception
 #include <core/assistantevents.h> // xuoassist::g_AssistantEvents (the macro-recording notifications)
 #include <config/assistantconfig.h> // xuoassist::EnabledCommandExtendedTargetTile (the tile-hook world gate)
-#include <core/clientversion.h> // xuoassist::GetClientVersion (the CV_7090 surface-height gate)
 #include <core/world.h> // ::g_World / ::g_Player (the client world singletons)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (the PlayWaiting tap)
 #include <ctype.h> // tolower (the hook tile-name lowercase)
@@ -873,7 +872,7 @@ bool CTarget::CheckHook()
                     tileGraphic = tileInfo.Graphic;
                     tileZ = tileInfo.Z;
 
-                    if (!tileInfo.Land && xuoassist::GetClientVersion() >= CV_7090 &&
+                    if (!tileInfo.Land && g_Config.ClientVersion >= CV_7090 &&
                         ((size_t)tileGraphic < g_Data.m_Static.size()))
                     {
                         const MulStaticTile2 &st = g_Data.m_Static[tileGraphic];
