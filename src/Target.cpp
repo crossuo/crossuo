@@ -105,6 +105,69 @@ void CTarget::SetMultiData(CDataReader &reader)
     MultiY = reader.ReadUInt16BE();
 }
 
+// The cursor the assistant requested (CAssistant::RequestTarget), as the
+// bytes of its former injected 0x6C (assistant packets.cpp
+// CPacketToClientTargetRequest): an object-target cursor, CursorID 0x601A,
+// CursorType 0. The injected pass ran the full Target handler, so the client
+// state and the party-helper auto-target replay below both ran too; the
+// packet's serial constant at offset 7 (00 01 00 00 from offset 6) is dead
+// state, every reply overwrites it.
+void CTarget::RequestCursor()
+{
+#if defined(XUO_ASSISTANT)
+    memset(m_Data, 0, sizeof(m_Data));
+    m_Data[0] = 0x6C;
+    pack32(m_Data + 2, 0x0000601A);
+    m_Data[7] = 0x01;
+    Type = 0;
+    CursorID = 0x0000601A;
+    CursorType = 0;
+    Targeting = true;
+    MultiGraphic = 0;
+
+    // the eager assistant cursor state the old builder fed alongside the
+    // injection: the assistant's own replies (the wait-target hooks and the
+    // SendTargetObject/SendCancelTarget sends) gate on this Targeting
+    CDataReader reader(m_Data, sizeof(m_Data));
+    reader.Move(1);
+    xuoassist::g_Target.SetRecvAssistData(reader);
+
+    if (g_PartyHelperTimer > g_Ticks && (g_PartyHelperTarget != 0u))
+    {
+        SendTargetObject(g_PartyHelperTarget);
+        g_PartyHelperTimer = 0;
+        g_PartyHelperTarget = 0;
+    }
+#endif
+}
+
+// The cursor close (the apiscript/actions/macroexecutor cancels), as the
+// bytes of the former injected 0x6C type=3 (assistant packets.cpp
+// CPacketCancelTarget) through the Target handler: CursorType 3 leaves
+// Targeting false. The injected pass ran the full handler, so a pending
+// party-helper replay was dropped with the cursor it would have answered
+// (its SendTargetObject was already inert at Targeting=false; only the
+// pending state cleared).
+void CTarget::CancelCursor()
+{
+#if defined(XUO_ASSISTANT)
+    memset(m_Data, 0, sizeof(m_Data));
+    m_Data[0] = 0x6C;
+    m_Data[6] = 3;
+    Type = 0;
+    CursorID = 0;
+    CursorType = 3;
+    Targeting = false;
+    MultiGraphic = 0;
+
+    if (g_PartyHelperTimer > g_Ticks && (g_PartyHelperTarget != 0u))
+    {
+        g_PartyHelperTimer = 0;
+        g_PartyHelperTarget = 0;
+    }
+#endif
+}
+
 void CTarget::SendTargetObject(int serial)
 {
     if (!Targeting)

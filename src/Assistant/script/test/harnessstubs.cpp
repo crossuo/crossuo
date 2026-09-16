@@ -34,6 +34,7 @@
 #include "../../model/commonitems/journalmessage.h"
 #include "../../model/commonitems/menu.h"
 #include "Network/Packets.h"
+#include "Target.h" // the real client target-cursor class (stubbed below)
 #include "ScreenshotBuilder.h"
 #include "Walker/PathFinder.h"
 #include <stdlib.h> // abs (the Distance stub)
@@ -348,6 +349,13 @@ CPacketDoubleClickRequest::CPacketDoubleClickRequest(uint32_t) : CPacket(0) {}
 CPacketTargetSelectedObject::CPacketTargetSelectedObject(int, int) : CPacket(0) {}
 CPacketUseCombatAbility::CPacketUseCombatAbility(uint8_t) : CPacket(0) {}
 void CPacket::Send() {}
+
+// the client target cursor: the apiscript cancel-cursor swap stubs it; nothing
+// in the harness opens or drains a client cursor
+CTarget g_Target;
+CTarget::CTarget() {}
+void CTarget::RequestCursor() {}
+void CTarget::CancelCursor() {}
 
 // pulled in by the PathFinder/point includes (client-side, never exercised)
 CPathNode::CPathNode() {}

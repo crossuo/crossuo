@@ -34,6 +34,11 @@ public:
     void SetLastTargetObject(int serial);
     void SetData(CDataReader &reader);
     void SetMultiData(CDataReader &reader);
+    // The assistant-requested cursor (CAssistant::RequestTarget) and the
+    // cursor close (the script/macro/hotkey cancels): the former injected
+    // 0x6C packets, now set on the client target directly.
+    void RequestCursor();
+    void CancelCursor();
     bool IsTargeting() const { return Targeting; }
     void Reset();
     void RequestFromCustomHouse();

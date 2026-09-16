@@ -67,6 +67,7 @@ extern "C" {
 #include "../model/commonitems/menu.h"
 #include "../core/packets.h" // the assistant packet wrappers
 #include "Network/Packets.h" // the client packets the wrappers build on
+#include "Target.h"         // ::g_Target (the client target cursor: CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
 #include "Managers/GumpManager.h"   // ::g_GumpManager (statusbar/paperdoll/trade)
 #include "Managers/MacroManager.h"  // ::g_MacroManager (PlayClientMacro)
@@ -4237,7 +4238,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         g_Target.SetObjectsHook(command->ListA);
                         g_Target.CheckHook();
                         g_Target.ClearHooks();
-                        CPacketCancelTarget().SendClient();
+                        ::g_Target.CancelCursor();
                     }
                     break;
                 }
@@ -4259,7 +4260,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                             command->IntA, command->IntB, command->IntC, relative);
                         g_Target.CheckHook();
                         g_Target.ClearHooks();
-                        CPacketCancelTarget().SendClient();
+                        ::g_Target.CancelCursor();
                     }
                     break;
                 }
@@ -4382,7 +4383,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     if (g_Target.IsTargeting())
                     {
                         g_Target.SendCancelTarget();
-                        CPacketCancelTarget().SendClient();
+                        ::g_Target.CancelCursor();
                     }
                     break;
                 }

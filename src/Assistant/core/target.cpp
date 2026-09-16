@@ -11,7 +11,7 @@
 #include "assist.h"
 #include "assistantevents.h"
 #include "clientversion.h" // GetClientVersion (the CV_7090 surface-height gate)
-#include "packets.h"
+#include "Network/Packets.h" // ::CPacketTargetObject/TargetTile/TargetCancel (the client 0x6C replies)
 #include "../config/assistantconfig.h"
 #include "../macros/macroexecutor.h"
 #include "world.h"
@@ -462,7 +462,7 @@ void CTarget::SendTargetObject(const uint &serial)
         return;
     }
 
-    CPacketTargetObject(0, m_CursorID, CursorType, serial).SendServer();
+    ::CPacketTargetObject(0, m_CursorID, CursorType, serial).Send();
     m_Targeting = false;
     MultiGraphic = 0;
     ClientWantTarget = false;
@@ -475,7 +475,7 @@ void CTarget::SendTargetTile(const ushort &tileID, const short &x, const short &
         return;
     }
 
-    CPacketTargetTile(1, m_CursorID, CursorType, tileID, x, y, z).SendServer();
+    ::CPacketTargetTile(1, m_CursorID, CursorType, tileID, x, y, z).Send();
     m_Targeting = false;
     MultiGraphic = 0;
     ClientWantTarget = false;
@@ -493,7 +493,7 @@ void CTarget::SendCancelTarget()
         return;
     }
 
-    CPacketTargetCancel(Type, m_CursorID, CursorType).SendServer();
+    ::CPacketTargetCancel(Type, m_CursorID, CursorType).Send();
     m_Targeting = false;
     MultiGraphic = 0;
     ClientWantTarget = false;

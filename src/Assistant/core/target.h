@@ -17,7 +17,8 @@
 //     SetTileHook / ClearHooks) - pure assistant feature;
 //   - SetSendData (assistant-side interception of outgoing 0x6C: macro
 //     recording + LastTarget tracking) and SetRecvAssistData (the target
-//     cursor the assistant itself requested via CPacketToClientTargetRequest);
+//     cursor the assistant itself requested, fed by the client's
+//     CTarget::RequestCursor);
 //   - SetRecvData/SetMultiData bookkeeping for assistant-triggered replies
 //     (FromAssist/ClientWantTarget + the saved client packet for
 //     RestoreTarget) and LastTile tracking for the `infotile lasttile`

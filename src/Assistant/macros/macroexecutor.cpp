@@ -32,6 +32,7 @@
 #include "Walker/PathFinder.h" // g_PathFinder (the client walker; was the plugin's PathFinder)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
+#include "Target.h"         // ::g_Target (the client target cursor: CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say command)
 #include "Gumps/GumpAbility.h"      // ::CGumpAbility::OnAbilityUse (combat abilities)
 
@@ -788,7 +789,7 @@ void CMacroExecutor::ProcessMacro()
                 if (serial != 0u)
                 {
                     g_Target.SendTargetObject(serial);
-                    CPacketCancelTarget().SendClient();
+                    ::g_Target.CancelCursor();
                 }
                 else
                 {
@@ -806,7 +807,7 @@ void CMacroExecutor::ProcessMacro()
                 if (convertType == MCT_LAST)
                 {
                     g_Target.SendTargetLastTile();
-                    CPacketCancelTarget().SendClient();
+                    ::g_Target.CancelCursor();
                 }
                 else
                 {
@@ -825,7 +826,7 @@ void CMacroExecutor::ProcessMacro()
                         // empty-tile-list path (see core/target.cpp CheckHook)
                     }
                     g_Target.SendTargetTile(graphic, x, y, z);
-                    CPacketCancelTarget().SendClient();
+                    ::g_Target.CancelCursor();
                 }
                 break;
             }

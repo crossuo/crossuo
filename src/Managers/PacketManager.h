@@ -221,6 +221,18 @@ public:
     void DisplayTalkTextW(
         uint32_t serial, CGameObject *obj, const astr_t &name, wstr_t text, uint16_t color,
         uint8_t type);
+
+    // The apply-cores of the state handlers below, verbatim: the client
+    // mutation each wire handler performs after its assistant gate. The
+    // assistant's own state calls come here directly, which is what its
+    // former injected packets did (the recv tap ran ahead of the gates).
+    // The wire-only pieces (assistant mirrors, filters) stay in the handlers.
+    void SetLightLevel(uint8_t level);                       // 0x4F
+    void SetWeather(uint8_t type, uint8_t count, uint8_t temperature); // 0x65
+    void SetSeason(uint8_t season, uint8_t music);           // 0xBC
+    void DeleteObject(uint32_t serial);                      // 0x1D
+    void PlaySoundEffect(uint16_t index, uint16_t volume, uint16_t xCoord, uint16_t yCoord); // 0x54
+    void DisplayQuestArrow(bool enabled, uint16_t x, uint16_t y); // 0xBA (both layouts)
 };
 
 extern CPacketManager g_PacketManager;

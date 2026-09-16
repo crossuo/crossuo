@@ -16,6 +16,7 @@
 #include "../macros/macroexecutor.h" // RecordingSuspension (assistant-initiated sends do not self-record)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
+#include "Managers/PacketManager.h" // ::g_PacketManager (the light/weather/season/sound/hide apply-cores)
 #include "world.h"
 #include "worldutil.h"
 #include "../managers/spellmanager.h"
@@ -688,7 +689,8 @@ HCOMMAND(setlight)
         }
     }
 
-    CPacketLight(value).SendClient();
+    g_LightLevel = value;
+    ::g_PacketManager.SetLightLevel(value);
 }
 
 HCOMMAND(setweather)
@@ -729,7 +731,10 @@ HCOMMAND(setweather)
         }
     }
 
-    CPacketWeather(weather).SendClient();
+    g_Weather.Type = weather.Type;
+    g_Weather.Count = weather.Count;
+    g_Weather.Temperature = weather.Temperature;
+    ::g_PacketManager.SetWeather(weather.Type, weather.Count, weather.Temperature);
 }
 
 HCOMMAND(setseason)
@@ -765,7 +770,9 @@ HCOMMAND(setseason)
         }
     }
 
-    CPacketSeason(season).SendClient();
+    g_Season.Index = season.Index;
+    g_Season.Music = season.Music;
+    ::g_PacketManager.SetSeason(season.Index, season.Music);
 }
 
 HCOMMAND(cast)
@@ -934,8 +941,9 @@ HCOMMAND(sound)
         return;
     }
 
-    CPacketPlaySound((ushort)CAssistant::TextToGraphic(args[0]), g_Player->GetX(), g_Player->GetY(), g_Player->GetZ())
-        .SendClient();
+    ::g_PacketManager.PlaySoundEffect(
+        (ushort)CAssistant::TextToGraphic(args[0]), 0, (ushort)g_Player->GetX(),
+        (ushort)g_Player->GetY());
 }
 
 HCOMMAND(emoteaction)
@@ -969,7 +977,7 @@ HCOMMAND(hide)
 
     if (serial.length() != 0)
     {
-        CPacketHideObject(CAssistant::TextToSerial(serial)).SendClient();
+        ::g_PacketManager.DeleteObject(CAssistant::TextToSerial(serial));
     }
     else
     {

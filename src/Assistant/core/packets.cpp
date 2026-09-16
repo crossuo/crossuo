@@ -14,13 +14,11 @@
 // makes the client's PacketManager.h (Wisp/Platform) coexist with it here.
 #include <SDL_wrapper.h>
 #include "packets.h"
-#include "target.h" // g_Target.SetRecvAssistData (target cursor the assistant requested)
 #include <string.h>
 #include <stdlib.h>
 #include <common/str.h> // wstr_from
 #include "Managers/PacketManager.h"      // ::g_PacketManager (client, inject)
 #include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
-#include "../core/world.h"
 #include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
 
 namespace xuoassist {
@@ -73,87 +71,6 @@ static vector<string> split_skip_empty(const string &text)
     return result;
 }
 
-CPacketLight::CPacketLight(uint8_t light)
-    : CPacket(2)
-{
-    WriteUInt8(0x4F);
-    WriteUInt8(light);
-}
-
-CPacketToClientTargetRequest::CPacketToClientTargetRequest()
-    : CPacket(19)
-{
-    WriteUInt8(0x6C);
-    Move(1);
-    WriteUInt32BE(0x0000601A);
-    WriteUInt32BE(0x00010000);
-
-    // The original build handed the fresh packet to
-    // g_Target.SetRecvAssistData(CDataReader(...)) here (assist/packets.cpp,
-    // Phase 1c): the packet bytes above are the target cursor the assistant
-    // itself requested, so the assistant target state is set eagerly (the
-    // cursor fields are read back from the packet, offset 1 skipped).
-    vector<uint8_t> packet = Data();
-    CDataReader reader(&packet[0], packet.size());
-    reader.Move(1);
-    g_Target.SetRecvAssistData(reader);
-}
-
-CPacketWeather::CPacketWeather(const WEATHER_DATA &data)
-    : CPacket(4)
-{
-    WriteUInt8(0x65);
-    WriteUInt8(data.Type);
-    WriteUInt8(data.Count);
-    WriteUInt8(data.Temperature);
-}
-
-CPacketSeason::CPacketSeason(const SEASON_DATA &data)
-    : CPacket(3)
-{
-    WriteUInt8(0xBC);
-    WriteUInt8(data.Index);
-    WriteUInt8(data.Music);
-}
-
-CPacketHideObject::CPacketHideObject(uint32_t serial)
-    : CPacket(5)
-{
-    WriteUInt8(0x1D);
-    WriteUInt32BE(serial);
-}
-
-CPacketPlaySound::CPacketPlaySound(uint16_t index, int16_t x, int16_t y, int8_t z)
-    : CPacket(12)
-{
-    WriteUInt8(0x54);
-    WriteUInt8(0x01);
-    WriteUInt16BE(index);
-    WriteUInt16BE(0x00);
-    WriteInt16BE(x);
-    WriteInt16BE(y);
-    WriteInt8(z);
-}
-
-CPacketQuestArrowOld::CPacketQuestArrowOld(bool enabled, int16_t x, int16_t y)
-    : CPacket(6)
-{
-    WriteUInt8(0xBA);
-    WriteUInt8(enabled);
-    WriteInt16BE(x);
-    WriteInt16BE(y);
-}
-
-CPacketQuestArrowNew::CPacketQuestArrowNew(bool enabled, int16_t x, int16_t y)
-    : CPacket(10)
-{
-    WriteUInt8(0xBA);
-    WriteUInt8(enabled);
-    WriteInt16BE(x);
-    WriteInt16BE(y);
-    WriteUInt32BE(0);
-}
-
 CPacketMenuResponse::CPacketMenuResponse(
     uint32_t serial, uint32_t id, int32_t code, uint16_t graphic, uint16_t color)
     : CPacket(13)
@@ -198,15 +115,6 @@ CPacketWrestlingDisarm::CPacketWrestlingDisarm()
     WriteUInt8(0xBF);
     WriteUInt16BE(0x05);
     WriteUInt16BE(0x0A);
-}
-
-CPacketCancelTarget::CPacketCancelTarget()
-    : CPacket(19)
-{
-    WriteUInt8(0x6C);
-    WriteUInt8(0x00);
-    WriteUInt32BE(0x00000000);
-    WriteUInt8(0x03);
 }
 
 CPacketGumpResponse::CPacketGumpResponse(CGump *gump, int32_t code)
@@ -302,62 +210,6 @@ CPacketGumpResponse::CPacketGumpResponse(CGump *gump, int32_t code)
             }
         }
     }
-}
-
-CPacketTargetCancel::CPacketTargetCancel(uint8_t type, uint32_t targetSerial, uint8_t targetType)
-    : CPacket(19)
-{
-    WriteUInt8(0x6C);
-    WriteUInt8(type);
-    WriteUInt32BE(targetSerial);
-    WriteUInt8(targetType);
-    WriteUInt32BE(0);
-    WriteUInt16BE(0xFFFF);
-    WriteUInt16BE(0xFFFF);
-    WriteUInt16BE(0);
-    WriteUInt16BE(0);
-}
-
-CPacketTargetObject::CPacketTargetObject(
-    uint8_t type, uint32_t targetSerial, uint8_t targetType, uint32_t serial)
-    : CPacket(19)
-{
-    WriteUInt8(0x6C);
-    WriteUInt8(type);
-    WriteUInt32BE(targetSerial);
-    WriteUInt8(targetType);
-    WriteUInt32BE(serial);
-
-    CGameObject *obj = (g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr);
-
-    if (obj != nullptr)
-    {
-        WriteUInt16BE(obj->GetX());
-        WriteUInt16BE(obj->GetY());
-        WriteUInt16BE(obj->GetZ());
-        WriteUInt16BE(obj->Graphic);
-    }
-}
-
-CPacketTargetTile::CPacketTargetTile(
-    uint8_t type,
-    uint32_t targetSerial,
-    uint8_t targetType,
-    uint16_t graphic,
-    uint16_t x,
-    uint16_t y,
-    uint8_t z)
-    : CPacket(19)
-{
-    WriteUInt8(0x6C);
-    WriteUInt8(type);
-    WriteUInt32BE(targetSerial);
-    WriteUInt8(targetType);
-    WriteUInt32BE(0);
-    WriteUInt16BE(x);
-    WriteUInt16BE(y);
-    WriteUInt16BE(z);
-    WriteUInt16BE(graphic);
 }
 
 CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(

@@ -491,6 +491,33 @@ public:
     CPacketTargetSelectedObject(int useObjectSerial, int targetObjectSerial);
 };
 
+// The 0x6C target replies (the assistant's target sends); moved from the
+// assistant port, which sent them byte-identically over the wire.
+class CPacketTargetObject : public CPacket
+{
+public:
+    CPacketTargetObject(uint8_t type, uint32_t targetSerial, uint8_t targetType, uint32_t serial);
+};
+
+class CPacketTargetTile : public CPacket
+{
+public:
+    CPacketTargetTile(
+        uint8_t type,
+        uint32_t targetSerial,
+        uint8_t targetType,
+        uint16_t graphic,
+        uint16_t x,
+        uint16_t y,
+        uint8_t z);
+};
+
+class CPacketTargetCancel : public CPacket
+{
+public:
+    CPacketTargetCancel(uint8_t type, uint32_t targetSerial, uint8_t targetType);
+};
+
 class CPacketToggleGargoyleFlying : public CPacket
 {
 public:

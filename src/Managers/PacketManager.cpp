@@ -2225,14 +2225,11 @@ PACKET_HANDLER(DropItemAccepted)
     g_ObjectInHand.Dropped = false;
 }
 
-PACKET_HANDLER(DeleteObject)
+// The apply-core of the delete-object handler (0x1D): the removal is
+// immediate here (party members and corpses are kept on purpose), there is
+// no deferred-removal stage.
+void CPacketManager::DeleteObject(uint32_t serial)
 {
-    if (g_World == nullptr)
-    {
-        return;
-    }
-
-    const uint32_t serial = ReadUInt32BE();
     if (serial == g_PlayerSerial)
     {
         return;
@@ -2355,6 +2352,16 @@ PACKET_HANDLER(DeleteObject)
             }
         }
     }
+}
+
+PACKET_HANDLER(DeleteObject)
+{
+    if (g_World == nullptr)
+    {
+        return;
+    }
+
+    DeleteObject(ReadUInt32BE());
 }
 
 PACKET_HANDLER(UpdateCharacter)
@@ -2515,25 +2522,11 @@ PACKET_HANDLER(Ping)
     g_Ping = 0;
 }
 
-PACKET_HANDLER(SetWeather)
+// The apply-core of the weather handler (0x65), verbatim from the client
+// mutation down. The assistant weather mirror and the weather filter stay in
+// the wire handler.
+void CPacketManager::SetWeather(uint8_t type, uint8_t count, uint8_t temperature)
 {
-    const uint8_t type = ReadUInt8();
-    const uint8_t count = ReadUInt8();
-    const uint8_t temperature = ReadUInt8();
-
-#if defined(XUO_ASSISTANT)
-    // the assistant mirrors the weather report for its weather controls;
-    // while the weather filter is on, server updates do not reach the
-    // client (the assistant's own weather packets bypass this gate)
-    xuoassist::g_Weather.Type = type;
-    xuoassist::g_Weather.Count = count;
-    xuoassist::g_Weather.Temperature = temperature;
-    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.WeatherFilter())
-    {
-        return;
-    }
-#endif
-
     g_Weather.Reset();
 
     g_Weather.Type = type;
@@ -2604,6 +2597,28 @@ PACKET_HANDLER(SetWeather)
     }
 }
 
+PACKET_HANDLER(SetWeather)
+{
+    const uint8_t type = ReadUInt8();
+    const uint8_t count = ReadUInt8();
+    const uint8_t temperature = ReadUInt8();
+
+#if defined(XUO_ASSISTANT)
+    // the assistant mirrors the weather report for its weather controls;
+    // while the weather filter is on, server updates do not reach the
+    // client (the assistant's own weather calls bypass this gate)
+    xuoassist::g_Weather.Type = type;
+    xuoassist::g_Weather.Count = count;
+    xuoassist::g_Weather.Temperature = temperature;
+    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.WeatherFilter())
+    {
+        return;
+    }
+#endif
+
+    SetWeather(type, count, temperature);
+}
+
 PACKET_HANDLER(PersonalLightLevel)
 {
     uint32_t serial = ReadUInt32BE();
@@ -2632,6 +2647,18 @@ PACKET_HANDLER(PersonalLightLevel)
     }
 }
 
+// The apply-core of the ambient-light handler (0x4F). The assistant light
+// mirror and the light filter stay in the wire handler.
+void CPacketManager::SetLightLevel(uint8_t level)
+{
+    if (level > 0x1F)
+    {
+        level = 0x1F;
+    }
+
+    g_LightLevel = level;
+}
+
 PACKET_HANDLER(LightLevel)
 {
     uint8_t level = ReadUInt8();
@@ -2644,7 +2671,7 @@ PACKET_HANDLER(LightLevel)
 #if defined(XUO_ASSISTANT)
     // the assistant tracks the ambient light for its light controls; while
     // "always light" is on, server updates leave the held light untouched
-    // (the assistant's own light packets bypass this gate)
+    // (the assistant's own light calls bypass this gate)
     xuoassist::g_LightLevel = level;
     if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.LightFilter())
     {
@@ -2652,7 +2679,7 @@ PACKET_HANDLER(LightLevel)
     }
 #endif
 
-    g_LightLevel = level;
+    SetLightLevel(level);
 }
 
 PACKET_HANDLER(EnableLockedFeatures)
@@ -4351,14 +4378,12 @@ PACKET_HANDLER(DeathScreen)
     }
 }
 
-PACKET_HANDLER(PlaySoundEffect)
+// The apply-core of the play-sound handler (0x54), verbatim: the sound-echo
+// journal line and the sound filter ran for every play (the filter has no
+// injected-pass exemption), so the assistant's own sound calls run them too.
+void CPacketManager::PlaySoundEffect(
+    uint16_t index, uint16_t volume, uint16_t xCoord, uint16_t yCoord)
 {
-    Move(1);
-    uint16_t index = ReadUInt16BE();
-    const uint16_t _volume = ReadUInt16BE();
-    (void)_volume;
-    uint16_t xCoord = ReadUInt16BE(); // CHECK: unsigned for position?
-    uint16_t yCoord = ReadUInt16BE();
 #if defined(XUO_ASSISTANT)
     if (g_World != nullptr)
     {
@@ -4370,7 +4395,7 @@ PACKET_HANDLER(PlaySoundEffect)
                 sizeof(text),
                 "soundecho: id=0x%04X volume=%i x=%i y=%i",
                 index,
-                _volume,
+                volume,
                 xCoord,
                 yCoord);
 
@@ -4387,6 +4412,17 @@ PACKET_HANDLER(PlaySoundEffect)
     }
 #endif
     g_Game.PlaySoundEffectAtPosition(index, xCoord, yCoord);
+}
+
+PACKET_HANDLER(PlaySoundEffect)
+{
+    Move(1);
+    uint16_t index = ReadUInt16BE();
+    const uint16_t _volume = ReadUInt16BE();
+    (void)_volume;
+    uint16_t xCoord = ReadUInt16BE(); // CHECK: unsigned for position?
+    uint16_t yCoord = ReadUInt16BE();
+    PlaySoundEffect(index, _volume, xCoord, yCoord);
 }
 
 PACKET_HANDLER(PlayMusic)
@@ -4660,12 +4696,22 @@ PACKET_HANDLER(NewCharacterAnimation)
     obj->AnimationFromServer = true;
 }
 
-PACKET_HANDLER(DisplayQuestArrow)
+// The apply-core of the quest-arrow handler (0xBA): both the old 6-byte and
+// the new 10-byte layouts read these same three fields.
+void CPacketManager::DisplayQuestArrow(bool enabled, uint16_t x, uint16_t y)
 {
     g_QuestArrow.Timer = g_Ticks + 1000;
-    g_QuestArrow.Enabled = (ReadUInt8() != 0);
-    g_QuestArrow.X = ReadUInt16BE();
-    g_QuestArrow.Y = ReadUInt16BE();
+    g_QuestArrow.Enabled = enabled;
+    g_QuestArrow.X = x;
+    g_QuestArrow.Y = y;
+}
+
+PACKET_HANDLER(DisplayQuestArrow)
+{
+    const bool enabled = (ReadUInt8() != 0);
+    const uint16_t x = ReadUInt16BE();
+    const uint16_t y = ReadUInt16BE();
+    DisplayQuestArrow(enabled, x, y);
 }
 
 PACKET_HANDLER(ClientViewRange)
@@ -4767,28 +4813,10 @@ PACKET_HANDLER(AttackCharacter)
     }
 }
 
-PACKET_HANDLER(Season)
+// The apply-core of the season handler (0xBC), verbatim from the clamp down.
+// The assistant season mirror and the season filter stay in the wire handler.
+void CPacketManager::SetSeason(uint8_t season, uint8_t music)
 {
-    if (g_World == nullptr)
-    {
-        return;
-    }
-
-    uint8_t season = ReadUInt8();
-    const uint8_t music = ReadUInt8();
-
-#if defined(XUO_ASSISTANT)
-    // the assistant mirrors the season report for its season controls;
-    // while the season filter is on, server updates do not reach the
-    // client (the assistant's own season packets bypass this gate)
-    xuoassist::g_Season.Index = season;
-    xuoassist::g_Season.Music = music;
-    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.SeasonFilter())
-    {
-        return;
-    }
-#endif
-
     if (season > ST_DESOLATION)
     {
         season = 0;
@@ -4809,6 +4837,31 @@ PACKET_HANDLER(Season)
     }
 
     g_Game.ChangeSeason((SEASON_TYPE)season, g_OldSeasonMusic);
+}
+
+PACKET_HANDLER(Season)
+{
+    if (g_World == nullptr)
+    {
+        return;
+    }
+
+    uint8_t season = ReadUInt8();
+    const uint8_t music = ReadUInt8();
+
+#if defined(XUO_ASSISTANT)
+    // the assistant mirrors the season report for its season controls;
+    // while the season filter is on, server updates do not reach the
+    // client (the assistant's own season calls bypass this gate)
+    xuoassist::g_Season.Index = season;
+    xuoassist::g_Season.Music = music;
+    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.SeasonFilter())
+    {
+        return;
+    }
+#endif
+
+    SetSeason(season, music);
 }
 
 PACKET_HANDLER(DisplayDeath)

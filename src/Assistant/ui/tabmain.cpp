@@ -20,6 +20,7 @@
 #include "../core/assist.h"
 #include "../core/global.h"
 #include "../core/packets.h"
+#include "Managers/PacketManager.h" // ::g_PacketManager (the light/weather/season apply-cores)
 
 namespace xuoassist {
 
@@ -74,7 +75,7 @@ void option_changed(int index, bool state)
                 g_AssistantConfig.SetOption(index, false);
                 state = false;
             }
-            CPacketLight((uchar)(state ? 0 : g_LightLevel)).SendClient();
+            ::g_PacketManager.SetLightLevel((uchar)(state ? 0 : g_LightLevel));
             break;
         }
         case CLBI_FILTER_WEATHER:
@@ -84,7 +85,7 @@ void option_changed(int index, bool state)
                 g_AssistantConfig.SetOption(index, false);
                 state = false;
             }
-            CPacketWeather(g_Weather).SendClient();
+            ::g_PacketManager.SetWeather(g_Weather.Type, g_Weather.Count, g_Weather.Temperature);
             break;
         }
         case CLBI_FILTER_SEASON:
@@ -94,7 +95,7 @@ void option_changed(int index, bool state)
                 g_AssistantConfig.SetOption(index, false);
                 state = false;
             }
-            CPacketSeason(g_Season).SendClient();
+            ::g_PacketManager.SetSeason(g_Season.Index, g_Season.Music);
             break;
         }
         case CLBI_TRACKER:

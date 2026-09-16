@@ -33,34 +33,13 @@ public:
     void SendServer();
 };
 
-DEFINE_PACKET(Light, uint8_t light);
-DEFINE_PACKET(ToClientTargetRequest);
-DEFINE_PACKET(Weather, const WEATHER_DATA &data);
-DEFINE_PACKET(Season, const SEASON_DATA &data);
-DEFINE_PACKET(HideObject, uint32_t serial);
-DEFINE_PACKET(PlaySound, uint16_t index, int16_t x, int16_t y, int8_t z);
-DEFINE_PACKET(QuestArrowOld, bool enabled, int16_t x, int16_t y);
-DEFINE_PACKET(QuestArrowNew, bool enabled, int16_t x, int16_t y);
 DEFINE_PACKET(
     MenuResponse, uint32_t serial, uint32_t id, int32_t code, uint16_t graphic, uint16_t color);
 DEFINE_PACKET(GrayMenuResponse, uint32_t serial, uint32_t id, int32_t code);
 DEFINE_PACKET(DyeData, uint32_t serial);
 DEFINE_PACKET(WrestlingStun);
 DEFINE_PACKET(WrestlingDisarm);
-DEFINE_PACKET(CancelTarget);
 DEFINE_PACKET(GumpResponse, CGump *gump, int32_t code);
-DEFINE_PACKET(TargetCancel, uint8_t type, uint32_t targetSerial, uint8_t targetType);
-DEFINE_PACKET(
-    TargetObject, uint8_t type, uint32_t targetSerial, uint8_t targetType, uint32_t serial);
-DEFINE_PACKET(
-    TargetTile,
-    uint8_t type,
-    uint32_t targetSerial,
-    uint8_t targetType,
-    uint16_t graphic,
-    uint16_t x,
-    uint16_t y,
-    uint8_t z);
 DEFINE_PACKET(ASCIIPromptResponse, uint32_t serial, uint32_t id, const string &text, bool cancel);
 DEFINE_PACKET(
     UnicodePromptResponse,

@@ -19,6 +19,7 @@
 #include "global.h"
 #include "packets.h"
 #include "Network/Packets.h" // ::CPacketTargetSelectedObject (the client's own 0xBF/0x2C builder)
+#include "Target.h" // ::g_Target (the client target cursor: CancelCursor)
 #include "Managers/MacroManager.h" // ::g_MacroManager (client-side selection macros)
 #include "textcommandmanager.h"
 #include "../macros/macroexecutor.h"
@@ -634,7 +635,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
             {
                 g_Target.SendTargetObject(serial);
             }
-            CPacketCancelTarget().SendClient();
+            ::g_Target.CancelCursor();
             break;
         }
         case HT_BANDAGE_HEALING:

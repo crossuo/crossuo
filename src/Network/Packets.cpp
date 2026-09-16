@@ -6,6 +6,7 @@
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../CityList.h"
+#include "../GameObjects/GameWorld.h" // g_World (the 0x6C object-reply coordinates)
 #include "../ServerList.h"
 #include "../Profession.h"
 #include "../CharacterList.h"
@@ -1447,6 +1448,62 @@ CPacketTargetSelectedObject::CPacketTargetSelectedObject(
     WriteUInt16BE(0x002C);
     WriteUInt32BE(useObjectSerial);
     WriteUInt32BE(targetObjectSerial);
+}
+
+CPacketTargetObject::CPacketTargetObject(
+    uint8_t type, uint32_t targetSerial, uint8_t targetType, uint32_t serial)
+    : CPacket(19)
+{
+    WriteUInt8(0x6C);
+    WriteUInt8(type);
+    WriteUInt32BE(targetSerial);
+    WriteUInt8(targetType);
+    WriteUInt32BE(serial);
+
+    CGameObject *obj = (g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr);
+
+    if (obj != nullptr)
+    {
+        WriteUInt16BE(obj->GetX());
+        WriteUInt16BE(obj->GetY());
+        WriteUInt16BE(obj->GetZ());
+        WriteUInt16BE(obj->Graphic);
+    }
+}
+
+CPacketTargetTile::CPacketTargetTile(
+    uint8_t type,
+    uint32_t targetSerial,
+    uint8_t targetType,
+    uint16_t graphic,
+    uint16_t x,
+    uint16_t y,
+    uint8_t z)
+    : CPacket(19)
+{
+    WriteUInt8(0x6C);
+    WriteUInt8(type);
+    WriteUInt32BE(targetSerial);
+    WriteUInt8(targetType);
+    WriteUInt32BE(0);
+    WriteUInt16BE(x);
+    WriteUInt16BE(y);
+    WriteUInt16BE(z);
+    WriteUInt16BE(graphic);
+}
+
+CPacketTargetCancel::CPacketTargetCancel(uint8_t type, uint32_t targetSerial, uint8_t targetType)
+    : CPacket(19)
+{
+    WriteUInt8(0x6C);
+    WriteUInt8(type);
+    WriteUInt32BE(targetSerial);
+    WriteUInt8(targetType);
+    WriteUInt32BE(0);
+    WriteUInt16BE(0xFFFF);
+    WriteUInt16BE(0xFFFF);
+    WriteUInt16BE(0);
+    WriteUInt16BE(0);
 }
 
 CPacketToggleGargoyleFlying::CPacketToggleGargoyleFlying()

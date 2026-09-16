@@ -19,6 +19,7 @@
 #include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
 #include "textconv.h"
 #include "target.h"
+#include "Target.h" // ::g_Target (the client target cursor: RequestCursor)
 #include "assistantevents.h"
 #include "world.h"
 #include "worldutil.h"
@@ -269,7 +270,7 @@ void CAssistant::RequestTarget(const string &text)
     }
 
     g_Target.FromAssist = true;
-    CPacketToClientTargetRequest().SendClient();
+    ::g_Target.RequestCursor();
 }
 
 void CAssistant::DumpObjectInfo(CGameObject *obj)
@@ -943,14 +944,9 @@ void CAssistant::Track(const bool &state, short x, short y)
         y = g_Player->GetY();
     }
 
-    if (GetClientVersion() >= CV_7090)
-    {
-        CPacketQuestArrowNew(state, x, y).SendClient();
-    }
-    else
-    {
-        CPacketQuestArrowOld(state, x, y).SendClient();
-    }
+    // the old and new 0xBA layouts differ only in the trailing serial field
+    // the client ignores, so the CV_7090 split collapses
+    ::g_PacketManager.DisplayQuestArrow(state, (uint16_t)x, (uint16_t)y);
 
     g_AssistantEvents->OnTrack(state, x, y);
 }
@@ -1042,7 +1038,7 @@ void CAssistant::HandleTargetDressItem(uchar *buf)
 
 void CAssistant::HandleTargetHide(uchar *buf)
 {
-    CPacketHideObject(unpack32(buf + 7)).SendClient();
+    ::g_PacketManager.DeleteObject(unpack32(buf + 7));
 }
 
 void CAssistant::HandleTargetDrop(uchar *buf)
