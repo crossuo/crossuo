@@ -34,25 +34,6 @@ public:
 };
 
 DEFINE_PACKET(Light, uint8_t light);
-DEFINE_PACKET(ToClientSystemPrint, const wstring &text, uint16_t color);
-DEFINE_PACKET(ToClientCharacterPrint, uint32_t serial, const wstring &text, uint16_t color);
-DEFINE_PACKET(
-    ToClientTextReplacePrintA,
-    const string &text,
-    uint32_t serial,
-    uint16_t graphic,
-    uint8_t messageType,
-    uint16_t color,
-    uint16_t font);
-DEFINE_PACKET(
-    ToClientTextReplacePrintW,
-    const wstring &text,
-    uint32_t serial,
-    uint16_t graphic,
-    uint8_t messageType,
-    uint16_t color,
-    uint16_t font,
-    uint32_t lang);
 DEFINE_PACKET(ToClientTargetRequest);
 DEFINE_PACKET(Weather, const WEATHER_DATA &data);
 DEFINE_PACKET(Season, const SEASON_DATA &data);

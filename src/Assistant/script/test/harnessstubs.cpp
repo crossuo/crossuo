@@ -55,6 +55,8 @@ public:
     CPacketManager();
     virtual ~CPacketManager();
     void SaveAssistantReceivePacket(unsigned char *, int);
+    void DisplayTalkTextA(uint32_t, CGameObject *, const astr_t &, astr_t, uint16_t, uint16_t, uint8_t);
+    void DisplayTalkTextW(uint32_t, CGameObject *, const astr_t &, wstr_t, uint16_t, uint8_t);
 };
 
 // The client-side entry points the executor now calls directly (the calls
@@ -368,6 +370,13 @@ CPacketManager g_PacketManager;
 CPacketManager::CPacketManager() {}
 CPacketManager::~CPacketManager() = default;
 void CPacketManager::SaveAssistantReceivePacket(unsigned char *, int) {}
+// the talk display core the assistant prints now call directly (inert here)
+void CPacketManager::DisplayTalkTextA(uint32_t, CGameObject *, const astr_t &, astr_t, uint16_t, uint16_t, uint8_t)
+{
+}
+void CPacketManager::DisplayTalkTextW(uint32_t, CGameObject *, const astr_t &, wstr_t, uint16_t, uint8_t)
+{
+}
 
 // --- remaining client/common pieces the real executor references -------------
 wstr_t wstr_from(const astr_t &) { return wstr_t(); }

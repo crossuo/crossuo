@@ -1009,6 +1009,13 @@ g_Game.StartReconnect/OpenDoor, direct statusbar close). HandleCrossMessages
 keeps the six genuine-network OCT cases (features, ignore-tiles filter, version,
 cast/skill requests, rename-mount) as the documented external subcommand surface.
 
+E3 (client-bound prints): assistant system/character prints and text-replace
+reprints call extracted client render cores (DisplayTalkTextA/W) directly.
+Two builder-era artifacts are gone: reprints no longer rename unnamed objects
+to the assistant name, and assistant prints can no longer hit the connection
+screen during connect (the injected packets were processed by the wire
+handlers' connect branch).
+
 B9 (0xBF ExtendedCommand recv half) fuses the last recv-capable non-keep
 row, subcommand by subcommand inside the client's switch:
 

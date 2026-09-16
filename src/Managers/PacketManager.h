@@ -9,6 +9,7 @@
 #include "../Wisp.h" // REMOVE
 
 class CPacketManager;
+class CGameObject;
 typedef void (CPacketManager::*PACKET_FUNCTION)();
 
 #define XUO_SAVE_ALL_PACKETS 1
@@ -206,6 +207,20 @@ public:
     void ProcessAssistantPackets();
     void AssistantReceiveHandler(uint8_t *buf, int size);
     void SetCachedGumpCoords(uint32_t id, int x, int y);
+
+    // The display core of the talk handlers (0x1C ascii, 0xAE unicode), verbatim:
+    // broadcast/system lines become system messages, everything else is overhead
+    // text attached to the speaker (journal prefix, emote hue). The ascii variant
+    // renders with the packet font, the unicode variant with the configured
+    // speech font, like the handlers do. Rendering only: no journal tap, no
+    // assistant filters, no packet re-entry — used by the handlers themselves
+    // and by the assistant to display its own prints and replace reprints.
+    void DisplayTalkTextA(
+        uint32_t serial, CGameObject *obj, const astr_t &name, astr_t text, uint16_t color,
+        uint16_t font, uint8_t type);
+    void DisplayTalkTextW(
+        uint32_t serial, CGameObject *obj, const astr_t &name, wstr_t text, uint16_t color,
+        uint8_t type);
 };
 
 extern CPacketManager g_PacketManager;

@@ -2,7 +2,8 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "assistantevents.h"
-#include "packets.h"
+#include "Managers/PacketManager.h" // ::g_PacketManager (client, talk display core)
+#include <xuocore/enumlist.h> // ST_NORMAL (the talk handler's system-line routing)
 #include <common/str.h> // wstr_from
 #include <config/assistantconfig.h>
 
@@ -25,10 +26,13 @@ CAssistantEvents::~CAssistantEvents()
 
 CAssistantEvents *g_AssistantEvents = &s_DefaultAssistantEvents;
 
-// Original: CAssistant::ClientPrint -> CPacketToClientSystemPrint(text).SendClient()
+// Original: CAssistant::ClientPrint -> CPacketToClientSystemPrint(text).SendClient();
+// the injected 0xAE was rendered by the client's unicode talk handler as a
+// system line; this is that rendering core, called directly
 void CAssistantEvents::OnClientPrint(const string &text, ushort color)
 {
-    CPacketToClientSystemPrint(wstr_from(text), color).SendClient();
+    ::g_PacketManager.DisplayTalkTextW(
+        0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
 }
 
 void CAssistantEvents::OnMapData(uint16_t x, uint16_t y)

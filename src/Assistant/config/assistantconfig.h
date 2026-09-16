@@ -412,15 +412,16 @@ public:
     // --- filters (were TabFiltersSpeech/Replaces/Sound; consulted by the
     //     packet handlers exactly like the original code did) -----------------------
     bool CheckSpeechInFilter(const string &text, const ushort &color);
+    // Returns true when the text matched a replace rule; the caller (the talk
+    // handlers, which hold the display context) renders the replacement carried
+    // by the out-params — the reprint is no longer an injected packet.
     bool CheckReplaceText(
         const string &text,
         const uint &serial,
-        const ushort &graphic,
-        const uchar &messageType,
         const ushort &color,
-        const ushort &font,
-        const uint &lang,
-        const bool &unicode);
+        const bool &unicode,
+        string &replacedText,
+        ushort &replacedColor);
     bool CheckSoundInFilter(const ushort &index);
 
     // --- distance / delay text helpers (were AssistForm methods) -------------

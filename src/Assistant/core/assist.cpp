@@ -226,12 +226,23 @@ string CAssistant::BoolToText(const bool &value)
 
 void CAssistant::ClientPrint(const string &text, const ushort &color)
 {
-    CPacketToClientSystemPrint(wstr_from(text), color).SendClient();
+    // was CPacketToClientSystemPrint(...).SendClient(): the injected 0xAE was
+    // rendered by the client's unicode talk handler as a system line; this is
+    // that rendering core, called directly (and it still reaches the client
+    // journal through the system-message path)
+    g_PacketManager.DisplayTalkTextW(
+        0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
 }
 
 void CAssistant::ClientCharPrint(const uint &serial, const string &text, const ushort &color)
 {
-    CPacketToClientCharacterPrint(serial, wstr_from(text), color).SendClient();
+    g_PacketManager.DisplayTalkTextW(
+        serial,
+        (g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr),
+        "X:UO Assist",
+        wstr_from(text),
+        color,
+        ST_NORMAL);
 }
 
 void CAssistant::ClientPrintDebugLevel1(const string &text, const ushort &color)

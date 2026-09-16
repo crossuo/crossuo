@@ -3719,6 +3719,123 @@ PACKET_HANDLER(Target)
     }
 }
 
+// The display core of the talk handlers (0x1C / 0xAE), extracted verbatim so
+// the handlers and the assistant's direct prints/replace reprints render a
+// line through the exact same code. Rendering only: the journal tap and the
+// assistant filters stay in the wire handlers, nothing here re-enters packet
+// processing.
+void CPacketManager::DisplayTalkTextA(
+    uint32_t serial, CGameObject *obj, const astr_t &name, astr_t text, uint16_t color,
+    uint16_t font, uint8_t type)
+{
+    if (font >= g_FontManager.FontCount)
+    {
+        return;
+    }
+
+    Info(Network, "%s: %s", name.c_str(), text.c_str());
+
+    if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || serial == 0u ||
+        (str_lower(name) == "system" && obj == nullptr))
+    {
+        g_Game.CreateTextMessage(TT_SYSTEM, serial, (uint8_t)font, color, text);
+    }
+    else
+    {
+        if ((SPEECH_TYPE)type == ST_EMOTE)
+        {
+            color = g_ConfigManager.EmoteColor;
+            text = "*" + text + "*";
+        }
+
+        if (obj != nullptr)
+        {
+            //reset
+            obj->JournalPrefix = "";
+            if (obj->GetName().empty())
+            {
+                obj->SetName(name.empty() ? text : name);
+                if (obj->NPC)
+                {
+                    g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
+                }
+            }
+
+            if ((SPEECH_TYPE)type == ST_SYSTEM)
+            {
+                obj->JournalPrefix = "You see: ";
+            }
+            else if (!obj->GetName().empty())
+            {
+                obj->JournalPrefix = obj->GetName() + ": ";
+            }
+        }
+
+        g_Game.CreateTextMessage(TT_OBJECT, serial, (uint8_t)font, color, text);
+    }
+}
+
+void CPacketManager::DisplayTalkTextW(
+    uint32_t serial, CGameObject *obj, const astr_t &name, wstr_t text, uint16_t color,
+    uint8_t type)
+{
+    Info(Network, "%s: %s", name.c_str(), str_from(text).c_str());
+
+    if ((SPEECH_TYPE)type == ST_GUILD_CHAT)
+    {
+        type = ST_BROADCAST;
+        color = g_ConfigManager.GuildMessageColor;
+        text = L"[Guild][" + wstr_from(name) + L"]: " + text;
+    }
+    else if ((SPEECH_TYPE)type == ST_ALLIANCE_CHAT)
+    {
+        type = ST_BROADCAST;
+        color = g_ConfigManager.AllianceMessageColor;
+        text = L"[Alliance][" + wstr_from(name) + L"]: " + text;
+    }
+
+    if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || (serial == 0u) ||
+        (str_lower(name) == "system" && obj == nullptr))
+    {
+        const uint8_t speechFont = uint8_t(g_ConfigManager.SpeechFont);
+        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, speechFont, color, text);
+    }
+    else
+    {
+        if ((SPEECH_TYPE)type == ST_EMOTE && (color == 0u))
+        {
+            color = g_ConfigManager.EmoteColor;
+        }
+
+        if (obj != nullptr)
+        {
+            //reset
+            obj->JournalPrefix = "";
+
+            if (obj->GetName().empty())
+            {
+                obj->SetName(name.empty() ? str_from(text) : name);
+                if (obj->NPC)
+                {
+                    g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
+                }
+            }
+
+            if ((SPEECH_TYPE)type == ST_SYSTEM)
+            {
+                obj->JournalPrefix = "You see: ";
+            }
+            else if (!obj->GetName().empty())
+            {
+                obj->JournalPrefix = obj->GetName() + ": ";
+            }
+        }
+
+        const uint8_t speechFont = uint8_t(g_ConfigManager.SpeechFont);
+        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, speechFont, color, text);
+    }
+}
+
 PACKET_HANDLER(Talk)
 {
     uint32_t serial = ReadUInt32BE();
@@ -3789,59 +3906,23 @@ PACKET_HANDLER(Talk)
         }
 
         xuoassist::g_AssistantEvents->OnJournalMessage(message);
+        astr_t replacedText;
+        uint16_t replacedColor = wireColor;
         if (xuoassist::g_AssistantConfig.CheckReplaceText(
-                str, serial, graphic, type, wireColor, font, 0, false) ||
-            xuoassist::g_AssistantConfig.CheckSpeechInFilter(str, wireColor))
+                str, serial, wireColor, false, replacedText, replacedColor))
+        {
+            // the replacement takes the original line's place: rendered right
+            // here with the reprint font the injected 0x1C used (no packet)
+            DisplayTalkTextA(serial, obj, name, replacedText, replacedColor, 3, (uint8_t)type);
+            return;
+        }
+        if (xuoassist::g_AssistantConfig.CheckSpeechInFilter(str, wireColor))
         {
             return;
         }
     }
 #endif
-    if (font >= g_FontManager.FontCount)
-    {
-        return;
-    }
-
-    Info(Network, "%s: %s", name.c_str(), str.c_str());
-
-    if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || serial == 0u ||
-        (str_lower(name) == "system" && obj == nullptr))
-    {
-        g_Game.CreateTextMessage(TT_SYSTEM, serial, (uint8_t)font, textColor, str);
-    }
-    else
-    {
-        if (type == ST_EMOTE)
-        {
-            textColor = g_ConfigManager.EmoteColor;
-            str = "*" + str + "*";
-        }
-
-        if (obj != nullptr)
-        {
-            //reset
-            obj->JournalPrefix = "";
-            if (obj->GetName().empty())
-            {
-                obj->SetName(name.empty() ? str : name);
-                if (obj->NPC)
-                {
-                    g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
-                }
-            }
-
-            if (type == ST_SYSTEM)
-            {
-                obj->JournalPrefix = "You see: ";
-            }
-            else if (!obj->GetName().empty())
-            {
-                obj->JournalPrefix = obj->GetName() + ": ";
-            }
-        }
-
-        g_Game.CreateTextMessage(TT_OBJECT, serial, (uint8_t)font, textColor, str);
-    }
+    DisplayTalkTextA(serial, obj, name, str, textColor, font, (uint8_t)type);
 }
 
 PACKET_HANDLER(UnicodeTalk)
@@ -3881,10 +3962,7 @@ PACKET_HANDLER(UnicodeTalk)
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
-    const uint32_t _language = ReadUInt32BE();
-#if !defined(XUO_ASSISTANT)
-    (void)_language;
-#endif
+    ReadUInt32BE(); // language code (not used for display)
     auto name = ReadString();
 
     if (serial == 0u && graphic == 0u && type == ST_NORMAL && font == 0xFFFF &&
@@ -3940,69 +4018,23 @@ PACKET_HANDLER(UnicodeTalk)
         }
 
         xuoassist::g_AssistantEvents->OnJournalMessage(message);
+        astr_t replacedText;
+        uint16_t replacedColor = wireColor;
         if (xuoassist::g_AssistantConfig.CheckReplaceText(
-                textA, serial, graphic, type, wireColor, font, _language, true) ||
-            xuoassist::g_AssistantConfig.CheckSpeechInFilter(textA, wireColor))
+                textA, serial, wireColor, true, replacedText, replacedColor))
+        {
+            // the replacement takes the original line's place, rendered here
+            // with the reprint's speech-font look (was an injected 0xAE)
+            DisplayTalkTextW(serial, obj, name, wstr_from(replacedText), replacedColor, (uint8_t)type);
+            return;
+        }
+        if (xuoassist::g_AssistantConfig.CheckSpeechInFilter(textA, wireColor))
         {
             return;
         }
     }
 #endif
-    Info(Network, "%s: %s", name.c_str(), str_from(str).c_str());
-
-    if (type == ST_GUILD_CHAT)
-    {
-        type = ST_BROADCAST;
-        textColor = g_ConfigManager.GuildMessageColor;
-        str = L"[Guild][" + wstr_from(name) + L"]: " + str;
-    }
-    else if (type == ST_ALLIANCE_CHAT)
-    {
-        type = ST_BROADCAST;
-        textColor = g_ConfigManager.AllianceMessageColor;
-        str = L"[Alliance][" + wstr_from(name) + L"]: " + str;
-    }
-
-    if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || (serial == 0u) ||
-        (str_lower(name) == "system" && obj == nullptr))
-    {
-        const uint8_t speechFont = uint8_t(g_ConfigManager.SpeechFont);
-        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, speechFont, textColor, str);
-    }
-    else
-    {
-        if (type == ST_EMOTE && (textColor == 0u))
-        {
-            textColor = g_ConfigManager.EmoteColor;
-        }
-
-        if (obj != nullptr)
-        {
-            //reset
-            obj->JournalPrefix = "";
-
-            if (obj->GetName().empty())
-            {
-                obj->SetName(name.empty() ? str_from(str) : name);
-                if (obj->NPC)
-                {
-                    g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
-                }
-            }
-
-            if (type == ST_SYSTEM)
-            {
-                obj->JournalPrefix = "You see: ";
-            }
-            else if (!obj->GetName().empty())
-            {
-                obj->JournalPrefix = obj->GetName() + ": ";
-            }
-        }
-
-        const uint8_t speechFont = uint8_t(g_ConfigManager.SpeechFont);
-        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, speechFont, textColor, str);
-    }
+    DisplayTalkTextW(serial, obj, name, str, textColor, (uint8_t)type);
 }
 
 PACKET_HANDLER(ClientTalk)
@@ -4836,8 +4868,8 @@ PACKET_HANDLER(DisplayClilocString)
     uint16_t color = ReadUInt16BE();
     uint8_t font = (uint8_t)ReadUInt16BE();
     uint32_t cliloc = ReadUInt32BE();
-#if !defined(XUO_ASSISTANT)
     (void)graphic;
+#if !defined(XUO_ASSISTANT)
     (void)type;
 #endif
     if (!g_FontManager.UnicodeFontExists(font))
@@ -4889,9 +4921,17 @@ PACKET_HANDLER(DisplayClilocString)
         }
     }
     xuoassist::g_AssistantEvents->OnJournalMessage(journal);
+    astr_t replacedText;
+    uint16_t replacedColor = wireColor;
     if (xuoassist::g_AssistantConfig.CheckReplaceText(
-            textA, serial, graphic, type, wireColor, font, 0, true) ||
-        xuoassist::g_AssistantConfig.CheckSpeechInFilter(textA, wireColor))
+            textA, serial, wireColor, true, replacedText, replacedColor))
+    {
+        // the replacement takes the original line's place; the reprint used to
+        // be an injected 0xAE, so it rendered with unicode talk semantics
+        DisplayTalkTextW(serial, obj, name, wstr_from(replacedText), replacedColor, type);
+        return;
+    }
+    if (xuoassist::g_AssistantConfig.CheckSpeechInFilter(textA, wireColor))
     {
         return;
     }

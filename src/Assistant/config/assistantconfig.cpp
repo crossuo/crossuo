@@ -859,15 +859,15 @@ bool CAssistantConfig::CheckSpeechInFilter(const string &text, const ushort &col
 bool CAssistantConfig::CheckReplaceText(
     const string &text,
     const uint &serial,
-    const ushort &graphic,
-    const uchar &messageType,
     const ushort &color,
-    const ushort &font,
-    const uint &lang,
-    const bool &unicode)
+    const bool &unicode,
+    string &replacedText,
+    ushort &replacedColor)
 {
-    // Was TabFiltersReplaces::CheckReplaceText.
-    (void)font;
+    // Was TabFiltersReplaces::CheckReplaceText. On a match the replacement is
+    // returned instead of queuing a reprint packet: the caller displays it
+    // directly (synchronously inside the talk handler it already runs in, so
+    // no packet re-processing round-trip).
     if (!TextReplace())
     {
         return false;
@@ -919,29 +919,12 @@ bool CAssistantConfig::CheckReplaceText(
 
         if (canBeReplaced)
         {
-            ushort replacedColor = CAssistant::TextToGraphic(item.ReplacedColor);
+            replacedColor = CAssistant::TextToGraphic(item.ReplacedColor);
             if (replacedColor == 0xFFFF)
             {
                 replacedColor = color;
             }
-            if (unicode)
-            {
-                CPacketToClientTextReplacePrintW(
-                    wstr_from(item.ReplacedText),
-                    serial,
-                    graphic,
-                    messageType,
-                    replacedColor,
-                    0,
-                    lang)
-                    .SendClient();
-            }
-            else
-            {
-                CPacketToClientTextReplacePrintA(
-                    item.ReplacedText, serial, graphic, messageType, replacedColor, 3)
-                    .SendClient();
-            }
+            replacedText = item.ReplacedText;
             return true;
         }
     }
