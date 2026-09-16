@@ -26,7 +26,6 @@
 #include "../core/assist.h"
 #include "../core/dressagent.h"
 #include "../core/shopagent.h"
-#include "../core/packets.h"
 #include "../core/global.h"
 #include "../managers/displaymanager.h"
 #include "../macros/macroexecutor.h"

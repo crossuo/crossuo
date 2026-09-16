@@ -26,9 +26,6 @@ CAssistantEvents::~CAssistantEvents()
 
 CAssistantEvents *g_AssistantEvents = &s_DefaultAssistantEvents;
 
-// Original: CAssistant::ClientPrint -> CPacketToClientSystemPrint(text).SendClient();
-// the injected 0xAE was rendered by the client's unicode talk handler as a
-// system line; this is that rendering core, called directly
 void CAssistantEvents::OnClientPrint(const string &text, ushort color)
 {
     ::g_PacketManager.DisplayTalkTextW(

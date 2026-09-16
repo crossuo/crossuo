@@ -6,7 +6,6 @@
 
 #include "textcommandmanager.h"
 #include "assist.h"
-#include "packets.h"
 #include "target.h"
 #include "assistantevents.h"
 #include "../script/scriptgump.h" // the text window (the g_TextDialog port)

@@ -52,7 +52,6 @@ set(XUOASSIST_SRCS
   "core/textconv.cpp"
   "core/textparser.cpp"
   "core/assistantevents.cpp"
-  "core/packets.cpp"
   "core/assist.cpp"
   "core/target.cpp"
   "core/textcommandmanager.cpp"
@@ -118,8 +117,8 @@ target_include_directories(xuoassist PUBLIC
   ${CMAKE_SOURCE_DIR}/src
 )
 
-# Phase 4b: the script-runtime harness (no client deps; the queue drain and
-# the engine flow are stubbed in the harness main)
+# Phase 4b: the script-runtime harness (no client deps; the client-facing
+# symbols and the engine flow are stubbed in the harness main)
 option(XUO_ASSISTANT_SCRIPT_TESTS "Build the xuoassist script harness" OFF)
 if(XUO_ASSISTANT_SCRIPT_TESTS)
   add_executable(xuoassist-script-test
@@ -141,7 +140,6 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     # the client data reader/writer (the real implementation; the harness
     # links xuocore's sources directly instead of the library)
     ../../xuocore/mappedfile.cpp
-    core/packets.cpp
     model/commonitems/gump.cpp
     model/commonitems/gumpitem.cpp
     model/commonitems/menu.cpp

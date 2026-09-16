@@ -65,7 +65,6 @@ extern "C" {
 #include "../model/commonitems/gump.h"
 #include "../model/commonitems/gumphook.h"
 #include "../model/commonitems/menu.h"
-#include "../core/packets.h" // the assistant packet wrappers
 #include "Network/Packets.h" // the client packets the wrappers build on
 #include "Target.h"         // ::g_Target (the client target cursor: CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
@@ -4422,7 +4421,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         g_GetInt != nullptr ? g_GetInt(VKI_VIEW_RANGE, 0) : 0;
                     break;
                 }
-                case 302: // ClientViewRange(range) (SendServer)
+                case 302: // ClientViewRange(range)
                     if (g_World == nullptr)
                     {
                         break;
@@ -4492,9 +4491,6 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     }
                     if (index != 0xFF)
                     {
-                        // 0xD7 has no receive handler in the client table, so the
-                        // old SendClient() injection was silently dropped; go via
-                        // CGame::Send (which does not record) instead.
                         ::CPacketUseCombatAbility(index).Send();
                     }
                     break;
@@ -4566,7 +4562,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     command->ResultText = CAssistant::GraphicToText(color);
                     break;
                 }
-                case 340: // OpenPaperdoll(serial) (SendServer)
+                case 340: // OpenPaperdoll(serial)
                     if (g_World == nullptr || command->TextA.empty())
                     {
                         break;
@@ -4579,7 +4575,9 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    CPacketClosePaperdoll(CAssistant::TextToSerial(command->TextA)).SendClient();
+                    // the client 0xBF/0x16 ExtendedCommand paperdoll close,
+                    // called directly (the injected 0xBF/0x16 ran exactly this)
+                    ::g_GumpManager.CloseGump(CAssistant::TextToSerial(command->TextA), 0, GT_PAPERDOLL);
                     break;
                 case 342: // MovePaperdoll(serial, x, y)
                     if (g_World == nullptr || command->TextA.empty())
@@ -4607,7 +4605,10 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 case 345: // LogOut() (OnCommandLogOut)
                     if (EnabledCommandLogOut())
                     {
-                        CPacketLogOut().SendClient();
+                        // the client's own logout (CGame::LogOut, the body of
+                        // the client's 0xD1 handler); the injected 0xD1 was a
+                        // silent no-op: 0xD1 is recv-only in the client table
+                        g_Assistant.LogOut();
                     }
                     break;
                 case 346: // Screenshot() (the client's CScreenshotBuilder,

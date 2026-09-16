@@ -39,6 +39,10 @@ public:
     // 0x6C packets, now set on the client target directly.
     void RequestCursor();
     void CancelCursor();
+    // The saved-server-cursor replay (xuoassist::CTarget::RestoreTarget): the
+    // assistant consumed a real 0x6C/0x99 reply on the WaitTarget path; this
+    // runs the client Target/MultiPlacement handler bodies on the raw bytes.
+    void RestoreCursor(uint8_t *data, int size);
     bool IsTargeting() const { return Targeting; }
     void Reset();
     void RequestFromCustomHouse();

@@ -168,6 +168,36 @@ void CTarget::CancelCursor()
 #endif
 }
 
+void CTarget::RestoreCursor(uint8_t *data, int size)
+{
+    if (data[0] == 0x99)
+    {
+        // the MultiPlacement handler body (0x99)
+        if (g_World == nullptr)
+        {
+            return;
+        }
+
+        CDataReader reader(data, size);
+        reader.Move(1); // the tap dispatcher skipped the fixed-size id byte
+        SetMultiData(reader);
+        return;
+    }
+
+    // the Target handler body (0x6C): parse the cursor, then the
+    // party-helper auto-target replay
+    CDataReader reader(data, size);
+    reader.Move(1); // the tap dispatcher skipped the fixed-size id byte
+    SetData(reader);
+
+    if (g_PartyHelperTimer > g_Ticks && (g_PartyHelperTarget != 0u))
+    {
+        SendTargetObject(g_PartyHelperTarget);
+        g_PartyHelperTimer = 0;
+        g_PartyHelperTarget = 0;
+    }
+}
+
 void CTarget::SendTargetObject(int serial)
 {
     if (!Targeting)

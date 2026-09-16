@@ -69,18 +69,17 @@ public:
     static string GraphicToText(const ushort &value);
     static string BoolToText(const bool &value);
 
-    void SendClient(uint8_t *buf, size_t size);
-    void SendServer(uint8_t *buf, size_t size);
-
-    void SendClient(vector<uint8_t> buf) { SendClient(&buf[0], buf.size()); }
-    void SendServer(vector<uint8_t> buf) { SendServer(&buf[0], buf.size()); }
-
     void ClientPrint(const string &text, const ushort &color = g_MessagesColor);
     void ClientCharPrint(const uint &serial, const string &text, const ushort &color = g_MessagesColor);
     void ClientPrintDebugLevel1(const string &text, const ushort &color = g_MessagesColor);
     void ClientPrintDebugLevel2(const string &text, const ushort &color = g_MessagesColor);
 
     void RequestTarget(const string &text);
+
+    // the client 0xD1 handler performs the logout request (CGame::LogOut,
+    // dispatched via the DIR_RECV-registered HandleLogout, so the old injected
+    // 0xD1 was not a no-op); the assistant now calls it directly
+    void LogOut();
 
     void DumpObjectInfo(class CGameObject *obj);
     void DumpTileInfo(const ushort &graphic, const short &x, const short &y, const char &z);

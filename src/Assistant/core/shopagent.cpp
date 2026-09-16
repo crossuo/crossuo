@@ -64,7 +64,6 @@ void CShopAgent::Tick()
 
     m_ProgressActive = false;
 
-    // was: m_Packet->SendServer()
     if (m_ProgressIsBuy)
     {
         ::CPacketBuyRequest(m_ProgressVendorSerial, m_ProgressList).Send();

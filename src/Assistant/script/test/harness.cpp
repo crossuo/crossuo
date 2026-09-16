@@ -17,7 +17,8 @@
 //      every class alias the GameObject class, so .Select/.Open/.AddEntry
 //      were missing and the finalizers freed the wrong opaque types. The
 //      client-facing symbols are stubbed in harnessstubs.cpp (disconnected
-//      client); the queue drain here runs the REAL drain executor.
+//      client); no live queue drain here - the scripts run through the real
+//      executors directly.
 
 #include "../commandqueue.h"
 #include "../journal.h"

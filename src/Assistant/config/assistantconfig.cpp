@@ -15,7 +15,6 @@
 #include <common/str.h> // wstr_from
 
 #include "../core/assist.h"
-#include "../core/packets.h"
 #include "../macros/macro.h"
 #include "../managers/displaymanager.h"
 #include "Party.h" // ::g_Party (party membership for the friends option)

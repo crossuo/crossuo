@@ -13,10 +13,8 @@
 
 #include "assist.h"
 #include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
-#include "packets.h"
 #include "Network/Packets.h" // ::CPacketStatusRequest and the other client send builders
-#include "Managers/PacketManager.h"      // ::g_PacketManager (client, inject)
-#include "Managers/ConnectionManager.h" // ::g_ConnectionManager (client, send)
+#include "Managers/PacketManager.h"      // ::g_PacketManager (DisplayTalkTextW, DeleteObject)
 #include "textconv.h"
 #include "target.h"
 #include "Target.h" // ::g_Target (the client target cursor: RequestCursor)
@@ -57,16 +55,6 @@ void CAssistant::ScriptError(const string &title, const string &text)
     // Was CAssistant::slot_ScriptError.
     ClientPrint(title, 0x0021);
     ClientPrint(text, 0x0021);
-}
-
-void CAssistant::SendClient(uint8_t *buf, size_t size)
-{
-    ::g_PacketManager.SaveAssistantReceivePacket(buf, (int)size);
-}
-
-void CAssistant::SendServer(uint8_t *buf, size_t size)
-{
-    ::g_ConnectionManager.Send(buf, size);
 }
 
 uint CAssistant::RawStringToUInt(const string &value)
@@ -227,10 +215,6 @@ string CAssistant::BoolToText(const bool &value)
 
 void CAssistant::ClientPrint(const string &text, const ushort &color)
 {
-    // was CPacketToClientSystemPrint(...).SendClient(): the injected 0xAE was
-    // rendered by the client's unicode talk handler as a system line; this is
-    // that rendering core, called directly (and it still reaches the client
-    // journal through the system-message path)
     g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
 }
@@ -271,6 +255,11 @@ void CAssistant::RequestTarget(const string &text)
 
     g_Target.FromAssist = true;
     ::g_Target.RequestCursor();
+}
+
+void CAssistant::LogOut()
+{
+    ::g_Game.LogOut();
 }
 
 void CAssistant::DumpObjectInfo(CGameObject *obj)

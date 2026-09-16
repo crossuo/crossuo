@@ -22,7 +22,6 @@
 #include "../core/assistantevents.h"
 #include "../core/global.h"
 #include "../core/hotkeys.h"
-#include "../core/packets.h"
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the control-form commands)
 
 namespace xuoassist {

@@ -543,7 +543,6 @@ static int Run()
         // 2] Run main loop, packets, rendering etc..
         g_Ticks = SDL_GetTicks();
         g_ConnectionManager.Recv();
-        g_PacketManager.ProcessAssistantPackets();
         g_PacketManager.SendMegaClilocRequests();
         g_Game.Process(true);
 
@@ -681,9 +680,6 @@ int main(int argc, char **argv)
     }
 
     g_Game.ProcessCommandLine();
-    // was CGame::SendAssistantLists: the plugin-era 0xFC skill/spell/macro
-    // list sends are gone (the assistant reads the client managers directly);
-    // only the game-window raise survived
     g_GameWindow.Raise();
     auto ret = Run();
     SDL_Quit();

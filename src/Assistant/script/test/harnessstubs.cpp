@@ -17,7 +17,6 @@
 #include "../../core/world.h" // the worldstubs.h stand-ins (disconnected)
 #include "../../core/assist.h"
 #include "../../core/dressagent.h"
-#include "../../core/packets.h"
 #include "../../core/shopagent.h"
 #include "../../core/target.h"
 #include "../../core/textcommandmanager.h"
@@ -39,23 +38,15 @@
 #include "Walker/PathFinder.h"
 #include <stdlib.h> // abs (the Distance stub)
 
-// Minimal stand-ins for the two client connection globals the real assistant
-// packet sends land in (core/packets.cpp is linked). The real client headers
-// drag the whole SDL/Platform stack in, which the harness does not use; the
-// member signatures match src/Managers/*.h.
-class CConnectionManager
-{
-public:
-    CConnectionManager();
-    ~CConnectionManager();
-    void Send(unsigned char *, int);
-};
+// Minimal stand-in for the client-side talk-display core the executor's
+// prints call (the real client headers drag the whole SDL/Platform stack in,
+// which the harness does not use); the member signatures match
+// src/Managers/PacketManager.h.
 class CPacketManager
 {
 public:
     CPacketManager();
     virtual ~CPacketManager();
-    void SaveAssistantReceivePacket(unsigned char *, int);
     void DisplayTalkTextA(uint32_t, CGameObject *, const astr_t &, astr_t, uint16_t, uint16_t, uint8_t);
     void DisplayTalkTextW(uint32_t, CGameObject *, const astr_t &, wstr_t, uint16_t, uint8_t);
 };
@@ -319,6 +310,7 @@ namespace xuoassist {
 CAssistant::CAssistant() {}
 CAssistant::~CAssistant() {}
 CAssistant g_Assistant;
+void CAssistant::LogOut() {}
 
 // --- client-side pieces the executor references ------------------------------
 int Actions_NewTargetSystemSerial() { return 0; }
@@ -368,18 +360,11 @@ CPoint2Di::CPoint2Di(float, float) {}
 CPoint2Di::CPoint2Di(const CPoint2Di &) {}
 CPoint2Di::CPoint2Di(const CPoint2Df &) {}
 
-// the packet send path of the assistant wrappers (real packets.cpp is linked;
-// these two globals are the client connection it hands bytes to)
-extern CConnectionManager g_ConnectionManager;
-CConnectionManager g_ConnectionManager;
-CConnectionManager::CConnectionManager() {}
-CConnectionManager::~CConnectionManager() = default;
-void CConnectionManager::Send(unsigned char *, int) {}
+// the talk display core the assistant prints now call directly (inert here)
 extern CPacketManager g_PacketManager;
 CPacketManager g_PacketManager;
 CPacketManager::CPacketManager() {}
 CPacketManager::~CPacketManager() = default;
-void CPacketManager::SaveAssistantReceivePacket(unsigned char *, int) {}
 // the talk display core the assistant prints now call directly (inert here)
 void CPacketManager::DisplayTalkTextA(uint32_t, CGameObject *, const astr_t &, astr_t, uint16_t, uint16_t, uint8_t)
 {

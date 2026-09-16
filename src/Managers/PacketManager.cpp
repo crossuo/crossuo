@@ -734,31 +734,6 @@ void CPacketManager::OnPacket()
     }
 }
 
-void CPacketManager::SaveAssistantReceivePacket(uint8_t *buf, int size)
-{
-    std::vector<uint8_t> packet(size);
-    memcpy(&packet[0], &buf[0], size);
-
-    LOCK(m_Mutex);
-    m_AssistantData.push_front(packet);
-    UNLOCK(m_Mutex);
-}
-
-void CPacketManager::ProcessAssistantPackets()
-{
-    LOCK(m_Mutex);
-    while (!m_AssistantData.empty())
-    {
-        std::vector<uint8_t> &packet = m_AssistantData.back();
-
-        AssistantReceiveHandler(&packet[0], (int)packet.size());
-        packet.clear();
-
-        m_AssistantData.pop_back();
-    }
-    UNLOCK(m_Mutex);
-}
-
 namespace
 {
 #if defined(XUO_ASSISTANT)
@@ -773,50 +748,7 @@ bool dead_body_graphic(uint16_t graphic)
 }
 #endif
 
-// RAII guard: guarantees m_AssistantInjecting is reset even if a handler
-// early-returns, so the injection marker can never get stuck on.
-struct AssistantInjectGuard
-{
-    bool &Flag;
-    explicit AssistantInjectGuard(bool &flag) : Flag(flag) { Flag = true; }
-    ~AssistantInjectGuard() { Flag = false; }
-    AssistantInjectGuard(const AssistantInjectGuard &) = delete;
-    AssistantInjectGuard &operator=(const AssistantInjectGuard &) = delete;
-};
 } // namespace
-
-void CPacketManager::AssistantReceiveHandler(uint8_t *buf, int size)
-{
-    SetData(buf, size);
-
-    uint32_t ticks = g_Ticks;
-    g_TotalRecvSize += (uint32_t)Size;
-    CPacketInfo &info = m_Packets[*Start];
-    DEBUG(
-        Network,
-        "--- ^(%d) r(+%zd => %d) Assistant->Client:: %s",
-        ticks - g_LastPacketTime,
-        Size,
-        g_TotalRecvSize,
-        info.Name);
-    DEBUG_DUMP(Network, "RECV:", Start, (int)Size);
-
-    g_LastPacketTime = ticks;
-    if (info.Direction != DIR_RECV && info.Direction != DIR_BOTH)
-    {
-        Info(Network, "message direction invalid: 0x%02X", *buf);
-    }
-    else if (info.Handler != 0)
-    {
-        Ptr = Start + 1;
-        if (info.Size == 0)
-        {
-            Ptr += 2;
-        }
-        const AssistantInjectGuard injecting(m_AssistantInjecting);
-        (this->*(info.Handler))();
-    }
-}
 
 #define PACKET_HANDLER(name) void CPacketManager::Handle##name()
 
@@ -1369,7 +1301,7 @@ PACKET_HANDLER(UpdatePlayer)
     // tracks the alive -> dead transition for its corpse marker
     if (serial == g_PlayerSerial && dead_body_graphic(graphic))
     {
-        if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.NoGrayScreen())
+        if (xuoassist::g_AssistantConfig.NoGrayScreen())
         {
             graphic = 0x03DB;
             graphicIncrement = 0;
@@ -1384,7 +1316,7 @@ PACKET_HANDLER(UpdatePlayer)
         }
     }
 
-    if (!m_AssistantInjecting && xuoassist::g_MorphGraphic != 0u)
+    if (xuoassist::g_MorphGraphic != 0u)
     {
         graphic = xuoassist::g_MorphGraphic;
     }
@@ -1761,21 +1693,18 @@ PACKET_HANDLER(UpdateObject)
         // in-place edit and the graphic mirror keeps the real packet value.
         xuoassist::g_OriginalGraphic = graphic;
 
-        if (!m_AssistantInjecting && xuoassist::g_MorphGraphic != 0u)
+        if (xuoassist::g_MorphGraphic != 0u)
         {
             pack16(Start + 7, xuoassist::g_MorphGraphic);
         }
 
         if (g_Player != nullptr && dead_body_graphic(graphic))
         {
-            if (!m_AssistantInjecting)
+            if (xuoassist::g_AssistantConfig.NoGrayScreen())
             {
-                if (xuoassist::g_AssistantConfig.NoGrayScreen())
-                {
-                    xuoassist::g_OriginalGraphic = 0x03DB;
-                }
-                pack16(Start + 7, 0x03DB);
+                xuoassist::g_OriginalGraphic = 0x03DB;
             }
+            pack16(Start + 7, 0x03DB);
 
             // only the corpse stamp is transition-gated; the patch above fires
             // on every packet carrying a dead-body graphic (pre-image behavior)
@@ -2610,7 +2539,7 @@ PACKET_HANDLER(SetWeather)
     xuoassist::g_Weather.Type = type;
     xuoassist::g_Weather.Count = count;
     xuoassist::g_Weather.Temperature = temperature;
-    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.WeatherFilter())
+    if (xuoassist::g_AssistantConfig.WeatherFilter())
     {
         return;
     }
@@ -2635,7 +2564,7 @@ PACKET_HANDLER(PersonalLightLevel)
     // untouched (the assistant's own light packets bypass this gate)
     xuoassist::g_PersonalLightLevel = level;
     // the veto scope is deliberately packet-wide: it applies to every 0x4E
-    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.LightFilter())
+    if (xuoassist::g_AssistantConfig.LightFilter())
     {
         return;
     }
@@ -2673,7 +2602,7 @@ PACKET_HANDLER(LightLevel)
     // "always light" is on, server updates leave the held light untouched
     // (the assistant's own light calls bypass this gate)
     xuoassist::g_LightLevel = level;
-    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.LightFilter())
+    if (xuoassist::g_AssistantConfig.LightFilter())
     {
         return;
     }
@@ -2746,9 +2675,8 @@ PACKET_HANDLER(OpenContainer)
 #if defined(XUO_ASSISTANT)
         // the shop agent snapshots the vendor stock and can consume the open
         // (an auto-buy replays the list itself); the client then keeps its
-        // shop gump closed (the old recv-tap veto; assistant-published
-        // packets bypass it)
-        if (!m_AssistantInjecting && !xuoassist::g_ShopAgent.OnOpenContainer(serial))
+        // shop gump closed
+        if (!xuoassist::g_ShopAgent.OnOpenContainer(serial))
         {
             return;
         }
@@ -3323,12 +3251,9 @@ PACKET_HANDLER(ExtendedCommand)
             // the context-menu round: the wait flag for scripts/macros, then
             // the agent parse. A playing macro waiting on this menu
             // (PlayWaiting) or the auto-select entry hook consumes the packet
-            // - the client keeps no popup gump. No m_AssistantInjecting gate:
-            // no SendClient builder produces 0xBF with the fused subcommands
-            // (8/0x10/0x14); the only injected subcommand is 0x16 (close
-            // paperdoll), which carries no
-            // assistant logic. The feed-only path restores the reader:
-            // the popup parse re-reads the fields from the payload start.
+            // - the client keeps no popup gump. The feed-only path restores
+            // the reader: the popup parse re-reads the fields from the
+            // payload start.
             xuoassist::g_ContextMenuReceived = true;
             {
                 uint8_t *savedPtr = Ptr;
@@ -3719,21 +3644,17 @@ PACKET_HANDLER(Target)
 #if defined(XUO_ASSISTANT)
     // the WaitTarget hook path (CTarget::CheckHook) or a playing macro
     // waiting on the target cursor consumes the cursor reply: the client
-    // keeps no open cursor and skips its own processing (the old recv-tap
-    // veto; assistant-published replays bypass it)
-    if (!m_AssistantInjecting)
+    // keeps no open cursor and skips its own processing
+    xuoassist::g_TargetReceived = true;
+    if (!xuoassist::g_Target.SetRecvData(*this))
     {
-        xuoassist::g_TargetReceived = true;
-        if (!xuoassist::g_Target.SetRecvData(*this))
-        {
-            return;
-        }
-        // SetRecvData advanced the shared reader (Start+1 -> Start+7):
-        // restore the position so the client body below parses the cursor
-        // from the 0x6C payload offset (Type=buf[1], CursorID=buf[2..5],
-        // CursorType=buf[6]) on the pass-through path
-        Ptr = Start + 1;
+        return;
     }
+    // SetRecvData advanced the shared reader (Start+1 -> Start+7):
+    // restore the position so the client body below parses the cursor
+    // from the 0x6C payload offset (Type=buf[1], CursorID=buf[2..5],
+    // CursorType=buf[6]) on the pass-through path
+    Ptr = Start + 1;
 #endif
 
     g_Target.SetData(*this);
@@ -3905,9 +3826,8 @@ PACKET_HANDLER(Talk)
 #if defined(XUO_ASSISTANT)
     // journal record for every spoken line, taken before any filter can drop
     // it; the filters see the packet's wire color, the font-color setting
-    // below re-hues the displayed message only; speech published by the
-    // assistant itself (SendClient queue) skips the tap entirely
-    if (!m_AssistantInjecting && font < 10)
+    // below re-hues the displayed message only
+    if (font < 10)
     {
         const uint16_t wireColor = textColor;
         xuoassist::CJournalMessage message(serial, wireColor, str);
@@ -4010,10 +3930,8 @@ PACKET_HANDLER(UnicodeTalk)
 #if defined(XUO_ASSISTANT)
     // same journal/filter/font-color tap as the ASCII talk; the filters see
     // the packet's wire color, the font-color setting below re-hues the
-    // displayed message only; speech published by the assistant itself
-    // (SendClient queue) skips the tap entirely
-    if (!m_AssistantInjecting &&
-        !(serial == 0u && font == 0xFFFF && textColor == 0xFFFF))
+    // displayed message only
+    if (!(serial == 0u && font == 0xFFFF && textColor == 0xFFFF))
     {
         const astr_t textA = str_from(str);
         const uint16_t wireColor = textColor;
@@ -4109,15 +4027,11 @@ PACKET_HANDLER(MultiPlacement)
 #if defined(XUO_ASSISTANT)
     // the WaitTarget hook path (CTarget::CheckHook) or a playing macro
     // waiting on the target cursor consumes the placement reply: the client
-    // keeps no open cursor and skips its own processing (the old recv-tap
-    // veto; assistant-published replays bypass it)
-    if (!m_AssistantInjecting)
+    // keeps no open cursor and skips its own processing
+    xuoassist::g_TargetReceived = true;
+    if (!xuoassist::g_Target.SetMultiData(*this))
     {
-        xuoassist::g_TargetReceived = true;
-        if (!xuoassist::g_Target.SetMultiData(*this))
-        {
-            return;
-        }
+        return;
     }
 #endif
 
@@ -4333,7 +4247,7 @@ PACKET_HANDLER(DeathScreen)
     uint8_t action = ReadUInt8();
 
 #if defined(XUO_ASSISTANT)
-    if (g_World != nullptr && !m_AssistantInjecting)
+    if (g_World != nullptr)
     {
         // last-corpse bookkeeping: tracker point, last known position and
         // the 5-minute dead timer (assistant state, no client parallel)
@@ -4350,7 +4264,7 @@ PACKET_HANDLER(DeathScreen)
     // NoDeathScreen: the veto skips the whole client handler (screen effect,
     // weather/target reset, drag-gump close, death music, warmode exit,
     // death-screen timer); the dead print still fires
-    if (g_World != nullptr && !m_AssistantInjecting && xuoassist::g_AssistantConfig.NoDeathScreen())
+    if (g_World != nullptr && xuoassist::g_AssistantConfig.NoDeathScreen())
     {
         xuoassist::g_Assistant.ClientPrint("You are DEAD!");
         return;
@@ -4582,13 +4496,10 @@ PACKET_HANDLER(ASCIIPrompt)
     // sits on the serial field and *Start is still the packet id, the entry
     // state the PromptManager expects; a playing macro waiting on the prompt
     // consumes the packet and the client keeps no prompt input state
-    if (!m_AssistantInjecting)
+    xuoassist::g_PromptReceived = true;
+    if (!xuoassist::g_PromptManager.OnPacketReceived(*this))
     {
-        xuoassist::g_PromptReceived = true;
-        if (!xuoassist::g_PromptManager.OnPacketReceived(*this))
-        {
-            return;
-        }
+        return;
     }
 #endif
     if (g_World == nullptr)
@@ -4603,13 +4514,10 @@ PACKET_HANDLER(ASCIIPrompt)
 PACKET_HANDLER(UnicodePrompt)
 {
 #if defined(XUO_ASSISTANT)
-    if (!m_AssistantInjecting)
+    xuoassist::g_PromptReceived = true;
+    if (!xuoassist::g_PromptManager.OnPacketReceived(*this))
     {
-        xuoassist::g_PromptReceived = true;
-        if (!xuoassist::g_PromptManager.OnPacketReceived(*this))
-        {
-            return;
-        }
+        return;
     }
 #endif
     if (g_World == nullptr)
@@ -4855,7 +4763,7 @@ PACKET_HANDLER(Season)
     // client (the assistant's own season calls bypass this gate)
     xuoassist::g_Season.Index = season;
     xuoassist::g_Season.Music = music;
-    if (!m_AssistantInjecting && xuoassist::g_AssistantConfig.SeasonFilter())
+    if (xuoassist::g_AssistantConfig.SeasonFilter())
     {
         return;
     }
@@ -6408,6 +6316,13 @@ PACKET_HANDLER(DyeData)
     Move(2);
     uint16_t graphic = ReadUInt16BE();
 
+    OpenDyeGump(serial, graphic);
+}
+
+// The dye-gump open core of the 0x95 DyeData handler; also the direct entry
+// point for the assistant's font-color picker (the former injected 0x95 copy).
+void CPacketManager::OpenDyeGump(uint32_t serial, uint16_t graphic)
+{
     CSize gumpSize = g_Game.GetGumpDimension(0x0906);
 
     auto x = int16_t((g_GameWindow.GetSize().Width / 2) - (gumpSize.Width / 2));
@@ -6501,7 +6416,6 @@ PACKET_HANDLER(MapData)
                 gump->m_DataBox->Add(new CGUIGumppic(0x139B, x, y));
                 gump->WantRedraw = true;
 #if defined(XUO_ASSISTANT)
-                // no injection path for 0x56 (no SendClient builder produces it), so no m_AssistantInjecting gate
                 // the echo/tracker hooks run whenever the data arrives, with no gump-open check of their own (pre-image parity)
                 if (xuoassist::EnabledFeatureMapEcho() && pin_or_mode == 0)
                 {
@@ -6585,19 +6499,16 @@ PACKET_HANDLER(CharacterProfile)
 #if defined(XUO_ASSISTANT)
     // profile store + the one-shot BlockProfile consume: the flag resets on
     // the first profile arrival and that profile's gump is kept from the
-    // client (the old recv-tap veto); skipped for client-injected copies
-    if (!m_AssistantInjecting)
+    // client
+    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
+    if (obj != nullptr)
     {
-        CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-        if (obj != nullptr)
+        obj->ProfileReceived = true;
+        obj->Profile = str_from(topText) + "\n" + str_from(dataText) + "\n" + str_from(bottomText);
+        if (obj->BlockProfile)
         {
-            obj->ProfileReceived = true;
-            obj->Profile = str_from(topText) + "\n" + str_from(dataText) + "\n" + str_from(bottomText);
-            if (obj->BlockProfile)
-            {
-                obj->BlockProfile = false;
-                return;
-            }
+            obj->BlockProfile = false;
+            return;
         }
     }
 #endif

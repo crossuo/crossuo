@@ -17,7 +17,6 @@
 #include "assist.h"
 #include "assistantevents.h"
 #include "global.h"
-#include "packets.h"
 #include "Network/Packets.h" // ::CPacketTargetSelectedObject (the client's own 0xBF/0x2C builder)
 #include "Target.h" // ::g_Target (the client target cursor: CancelCursor)
 #include "Managers/MacroManager.h" // ::g_MacroManager (client-side selection macros)

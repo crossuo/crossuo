@@ -12,6 +12,7 @@
 #include "assistantevents.h"
 #include "clientversion.h" // GetClientVersion (the CV_7090 surface-height gate)
 #include "Network/Packets.h" // ::CPacketTargetObject/TargetTile/TargetCancel (the client 0x6C replies)
+#include "Target.h" // ::g_Target (the client target cursor: RestoreCursor)
 #include "../config/assistantconfig.h"
 #include "../macros/macroexecutor.h"
 #include "world.h"
@@ -332,7 +333,10 @@ void CTarget::RestoreTarget()
                 SetMultiData(reader);
             }
 
-            g_Assistant.SendClient(m_CurrentClientTarget);
+            // the assistant-side mirror first, then the client replay of the
+            // saved packet (was the injected copy; the direct call runs the
+            // client Target/MultiPlacement handler bodies on the raw bytes)
+            ::g_Target.RestoreCursor(&m_CurrentClientTarget[0], (int)m_CurrentClientTarget.size());
         }
     }
 }

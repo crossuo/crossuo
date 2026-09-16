@@ -72,10 +72,6 @@ private:
     static CPacketInfo m_Packets[0x100];
     std::unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
     std::vector<uint32_t> m_MegaClilocRequests;
-    std::deque<std::vector<uint8_t>> m_AssistantData;
-    // true while a packet from the assistant's own injection queue is being
-    // dispatched; per-packet assistant gates in the handlers let these through
-    bool m_AssistantInjecting = false;
 
     bool AutoLoginNameExists(const astr_t &name);
     void AddHTMLGumps(class CGump *gump, std::vector<HTMLGumpDataInfo> &list);
@@ -203,9 +199,9 @@ public:
     CPacketInfo &GetInfo(uint8_t buf) const { return m_Packets[buf]; }
     void SendMegaClilocRequests();
     void AddMegaClilocRequest(int serial);
-    void SaveAssistantReceivePacket(uint8_t *buf, int size);
-    void ProcessAssistantPackets();
-    void AssistantReceiveHandler(uint8_t *buf, int size);
+    // The dye-gump open core of the 0x95 DyeData handler; the assistant's
+    // font-color picker opens it directly.
+    void OpenDyeGump(uint32_t serial, uint16_t graphic);
     void SetCachedGumpCoords(uint32_t id, int x, int y);
 
     // The display core of the talk handlers (0x1C ascii, 0xAE unicode), verbatim:

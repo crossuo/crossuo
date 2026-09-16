@@ -19,7 +19,6 @@
 #include "../core/world.h" // g_Player
 #include "../core/assist.h"
 #include "../core/global.h"
-#include "../core/packets.h"
 #include "Managers/PacketManager.h" // ::g_PacketManager (the light/weather/season apply-cores)
 
 namespace xuoassist {
@@ -210,14 +209,16 @@ void font_color_row(const char *label, bool *use, string *color, uint32_t dyeSer
     ImGui::SameLine();
     HueSwatch((ushort)CAssistant::TextToGraphic(*color));
     ImGui::SameLine();
-    // was on_tb_SelectFontColor_clicked: CPacketDyeData(serial) opens the
-    // client's dye gump; the 0x95 response writes the color into the config
+    // was on_tb_SelectFontColor_clicked: opens the client's dye gump; the 0x95
+    // response writes the color into the config
     ImGui::BeginDisabled(!g_Connected);
     const bool pick = ImGui::Button("...");
     ImGui::EndDisabled();
     if (pick && g_Connected)
     {
-        CPacketDyeData(dyeSerial).SendClient();
+        // the 0x95 DyeData handler's gump open, called directly (the former
+        // injected 0x95 carried the same fixed 0x0FAB dye-tub graphic)
+        ::g_PacketManager.OpenDyeGump(dyeSerial, 0x0FAB);
     }
     if (ImGui::IsItemHovered())
     {
