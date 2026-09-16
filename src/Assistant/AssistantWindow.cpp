@@ -18,7 +18,7 @@
 #include <xuocore/uodata.h> // ExeFilePath
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
 #include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
-#include "core/global.h"    // Bridge_Init, g_Connected (xuoassist)
+#include "core/global.h"    // g_Connected (xuoassist)
 #include "core/hotkeys.h"   // the hotkey engine (Phase 3 routing)
 #include "macros/macroexecutor.h" // g_MacroExecutor.Reset (disconnect reset)
 #include "Globals.h"        // g_GameState, g_Ticks
@@ -182,17 +182,6 @@ bool AssistantWindow_Toggle()
 
 void AssistantWindow_FrameTick()
 {
-    // one-time host-bridge wiring: was lazily done by the (now deleted) packet
-    // taps; the frame tick is the first point where
-    // scripts, hotkeys or managers can run, so the bridge is always ready
-    // before first use
-    static bool s_bridged = false;
-    if (!s_bridged)
-    {
-        s_bridged = true;
-        xuoassist::Bridge_Init();
-    }
-
     // per-frame assistant logic that must run while visible or not
     if (s_initialized)
         xuoassist::AssistantUI_Tick(); // auto-reconnect countdown (was TabMain::m_ReconnectTimer)

@@ -897,7 +897,7 @@ HCOMMAND(morph)
         g_MorphGraphic = graphic;
     }
 
-    g_SetInt(VKI_SET_PLAYER_GRAPHIC, graphic);
+    g_Game.ValueInt(VKI_SET_PLAYER_GRAPHIC, graphic);
 }
 
 HCOMMAND(resend)
@@ -998,7 +998,7 @@ HCOMMAND(blockmoving)
         return;
     }
 
-    g_SetInt(VKI_BLOCK_MOVING, (int)CAssistant::RawStringToBool(args[0]));
+    g_Game.ValueInt(VKI_BLOCK_MOVING, (int)CAssistant::RawStringToBool(args[0]));
 }
 
 HCOMMAND(drop)
@@ -1578,7 +1578,7 @@ HCOMMAND(setpvpcaller)
 
     if (serial.length() != 0)
     {
-        g_SetInt(VKI_SET_PVPCALLER, (int)CAssistant::TextToSerial(serial));
+        g_Game.ValueInt(VKI_SET_PVPCALLER, (int)CAssistant::TextToSerial(serial));
     }
     else
     {

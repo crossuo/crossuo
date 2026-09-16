@@ -26,7 +26,7 @@
 #include "../../managers/contextmenumanager.h"
 #include "../../managers/gumpmanager.h"
 #include "../../managers/menumanager.h"
-#include "../../managers/objectpropertiesmanager.h"
+#include "Managers/ObjectPropertiesManager.h"
 #include "../../managers/promptmanager.h"
 #include "../../managers/spellmanager.h"
 #include "../../managers/trademanager.h"
@@ -67,6 +67,11 @@ public:
 // inert here (the harness runs disconnected).
 CGame g_Game;
 void CGame::UseSkill(int) {}
+int CGame::ValueInt(const VALUE_KEY_INT &, int value)
+{
+    // the bridge pointers were null here (get returned 0, set was skipped)
+    return value;
+}
 
 class CGumpManager
 {
@@ -228,9 +233,14 @@ CContextMenuManager g_ContextMenuManager;
 void CContextMenuManager::SetHook(const uint &, const uint &) {}
 void CContextMenuManager::RemoveHook() {}
 
+} // namespace xuoassist
+
+// the fused client manager (global namespace, per Managers/ObjectPropertiesManager.h)
 CObjectPropertiesManager g_ObjectPropertiesManager;
 CObjectPropertiesManager::~CObjectPropertiesManager() = default;
 astr_t CObjectPropertiesManager::GetData(const uint &) { return {}; }
+
+namespace xuoassist {
 
 CDressAgent g_DressAgent;
 void CDressAgent::Disarm() {}
@@ -274,8 +284,6 @@ bool g_ShopReceived = false;
 bool g_TradeReceived = false;
 bool g_ContextMenuReceived = false;
 SelectedTile g_SelectedClientWorldObject;
-FUNCDEF_GET_VALUE_INT *g_GetInt = nullptr;
-FUNCDEF_SET_VALUE_INT *g_SetInt = nullptr;
 TARGET_HANDLER g_TargetHandler = nullptr;
 } // namespace xuoassist
 

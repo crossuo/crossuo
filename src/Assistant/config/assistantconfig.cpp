@@ -18,6 +18,7 @@
 #include "../macros/macro.h"
 #include "../managers/displaymanager.h"
 #include "Party.h" // ::g_Party (party membership for the friends option)
+#include "CrossUO.h" // ::g_Game (the client config accessors)
 #include "../core/world.h"
 #include <xuocore/mappedfile.h> // ::CDataReader / ::CDataWriter
 
@@ -226,20 +227,20 @@ bool CAssistantConfig::LoadProfile()
     // after the load; keep them in the same place.
     if (!FastRotation() || !EnabledFeatureFastRotation())
     {
-        g_SetInt(VKI_FAST_ROTATION, 0);
+        g_Game.ValueInt(VKI_FAST_ROTATION, 0);
     }
     else
     {
-        g_SetInt(VKI_FAST_ROTATION, 1);
+        g_Game.ValueInt(VKI_FAST_ROTATION, 1);
     }
 
     if (!IgnoreStaminaCheck() || !EnabledFeatureIgnoreStaminaCheck())
     {
-        g_SetInt(VKI_IGNORE_STAMINA_CHECK, 0);
+        g_Game.ValueInt(VKI_IGNORE_STAMINA_CHECK, 0);
     }
     else
     {
-        g_SetInt(VKI_IGNORE_STAMINA_CHECK, 1);
+        g_Game.ValueInt(VKI_IGNORE_STAMINA_CHECK, 1);
     }
 
     g_Assistant.ClientPrint("Profile '" + ProfileName + "' loaded!");

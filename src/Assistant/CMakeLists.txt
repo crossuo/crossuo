@@ -58,7 +58,6 @@ set(XUOASSIST_SRCS
   "managers/gumpmanager.cpp"
   "managers/guildmanager.cpp"
   "managers/menumanager.cpp"
-  "managers/objectpropertiesmanager.cpp"
   "managers/promptmanager.cpp"
   "managers/spellmanager.cpp"
   "managers/trademanager.cpp"

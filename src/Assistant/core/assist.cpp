@@ -1322,7 +1322,7 @@ bool CAssistant::IsNoDrawTile(const ushort &graphic)
             return true;
         }
 
-        long long flags = g_GetStaticFlags(graphic);
+        long long flags = g_Game.GetStaticFlags(graphic);
 
         if (!IsNoDiagonal(flags) ||
             (IsAnimated(flags) && g_Player != nullptr && g_Player->Race == RT_GARGOYLE))
@@ -1336,7 +1336,7 @@ bool CAssistant::IsNoDrawTile(const ushort &graphic)
 
 void CAssistant::HandleSetPVPCaller(uchar *buf)
 {
-    g_SetInt(VKI_SET_PVPCALLER, unpack32(buf + 7));
+    g_Game.ValueInt(VKI_SET_PVPCALLER, unpack32(buf + 7));
 }
 
 void CAssistant::SetDressBag(const uint &serial)
@@ -1349,7 +1349,7 @@ void CAssistant::SetDressBag(const uint &serial)
 
         if (obj != nullptr && !obj->NPC && (obj->Graphic != 0u))
         {
-            if (!IsContainer(g_GetStaticFlags(obj->Graphic)))
+            if (!IsContainer(g_Game.GetStaticFlags(obj->Graphic)))
             {
                 ClientPrintDebugLevel1("This item is not a container!", 0x0021);
                 return;
@@ -1452,7 +1452,7 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z)
         int maxZ = z + 10;
         for (CGameObject *obj = (CGameObject *)g_World->m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next)
         {
-            if (obj->NPC || !IsDoor(g_GetStaticFlags(obj->Graphic)) ||
+            if (obj->NPC || !IsDoor(g_Game.GetStaticFlags(obj->Graphic)) ||
                 obj->GetX() != x || obj->GetY() != y)
             {
                 continue;

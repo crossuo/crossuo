@@ -5,8 +5,7 @@
 // strings are astr_t, lists are std::vector, timers are
 // client g_Ticks (ms), points are the client CPoint2Di. Assistant-owned globals only:
 // the external-DLL host plumbing (g_DllPath/g_ClientPath/g_SaveAero/g_WineOS)
-// is dropped; the host bridge function pointers stay and get wired to client
-// internals by the packet-manager round.
+// is dropped.
 
 #pragma once
 
@@ -18,7 +17,6 @@
 #include <common/utils.h> // countof
 #include <common/str.h> // astr_t / wstr_t (the client astr_t typedefs)
 #include <xuocore/enumlist.h>
-#include <xuocore/commoninterfaces.h>
 #include "Globals.h" // client g_Ticks (ms) - supersedes the original app's tick timer
 
 namespace xuoassist {
@@ -63,18 +61,8 @@ enum NOTORIETY_TYPE_FLAGS
     NTF_INVULNERABLE = 0x40
 };
 
-extern FUNCDEF_GET_STATIC_FLAGS *g_GetStaticFlags;
-extern FUNCDEF_GET_VALUE_INT *g_GetInt;
-extern FUNCDEF_SET_VALUE_INT *g_SetInt;
 extern uchar g_LightLevel;
 extern uchar g_PersonalLightLevel;
-
-// Host bridge accessors; null-safe until Bridge_Init (the first frame tick)
-// attaches the in-client implementations. Returning the default keeps
-// One-time wiring of the bridge pointers to the client implementations
-// (g_Game accessors). Called from AssistantWindow_FrameTick before any
-// script, hotkey or manager can consume them.
-void Bridge_Init();
 
 enum XA_ENABLED_FEATURES
 {

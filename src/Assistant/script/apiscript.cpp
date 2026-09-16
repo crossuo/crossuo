@@ -50,7 +50,6 @@ extern "C" {
 #include "../core/assist.h"
 #include "../core/dressagent.h"
 #include "../core/textcommandmanager.h"
-#include "../managers/objectpropertiesmanager.h"
 #include "../managers/spellmanager.h"
 #include "../managers/gumpmanager.h"
 #include "../managers/menumanager.h"
@@ -73,6 +72,7 @@ extern "C" {
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
 #include "Managers/GumpManager.h"   // ::g_GumpManager (statusbar/paperdoll/trade)
 #include "Managers/MacroManager.h"  // ::g_MacroManager (PlayClientMacro)
+#include "Managers/ObjectPropertiesManager.h" // ::g_ObjectPropertiesManager
 #include "ScreenshotBuilder.h" // g_ScreenshotBuilder (Client.Screenshot)
 #include "Walker/PathFinder.h" // g_PathFinder (client walker)
 
@@ -2602,7 +2602,7 @@ JSValue jsn_bandage(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 }
 
 // [G] the client Option* getters (OnCommandOption* reading the client config
-// through g_GetInt with the EnabledCommandOptionsAccess gate).
+// through g_Game.ValueInt with the EnabledCommandOptionsAccess gate).
 JSValue jsn_optionget(JSContext *ctx, JSValueConst, int, JSValueConst *, int magic)
 {
     auto *command = sc_make(SC_OPTIONS_GET);
@@ -2611,7 +2611,7 @@ JSValue jsn_optionget(JSContext *ctx, JSValueConst, int, JSValueConst *, int mag
     return JS_NewInt32(ctx, result_int(command));
 }
 
-// [Q] the Option*(value) setters (the same VKI ids through g_SetInt).
+// [Q] the Option*(value) setters (the same VKI ids through g_Game.ValueInt).
 JSValue jsn_optionset(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
@@ -2745,7 +2745,7 @@ JSValue jsn_invokevirtue(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     return JS_UNDEFINED;
 }
 
-// [G/Q] ClientViewRange() reads the VKI_VIEW_RANGE value (g_GetInt, no
+// [G/Q] ClientViewRange() reads the VKI_VIEW_RANGE value (g_Game.ValueInt, no
 // options-access gate - commandmanager.cpp:4036), ClientViewRange(range)
 // sends CPacketClientViewRange (:4044).
 JSValue jsn_viewrange(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
@@ -3197,7 +3197,7 @@ const JSCFunctionListEntry CLIENT_FUNCS[] = {
         VKI_TRANSPARENT_SPELL_ICONS),
     JS_CFUNC_MAGIC_DEF("OptionSpellIconsAlpha", 0, jsn_optionget, VKI_SPELL_ICONS_ALPHA),
     JS_CFUNC_MAGIC_DEF("OptionFastRotation", 0, jsn_optionget, VKI_FAST_ROTATION),
-    // client option setters (the same VKI ids through the gated g_SetInt)
+    // client option setters (the same VKI ids through the gated g_Game.ValueInt)
     JS_CFUNC_MAGIC_DEF("SetOptionSound", 0, jsn_optionset, VKI_SOUND),
     JS_CFUNC_MAGIC_DEF("SetOptionSoundVolume", 0, jsn_optionset, VKI_SOUND_VALUE),
     JS_CFUNC_MAGIC_DEF("SetOptionMusic", 0, jsn_optionset, VKI_MUSIC),
@@ -3773,7 +3773,7 @@ bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue
             boolValue = true;
             break;
         case OF_TEXT_PROPERTIES:
-            textValue = g_ObjectPropertiesManager.GetData(object->Serial);
+            textValue = ::g_ObjectPropertiesManager.GetData(object->Serial);
             break;
         case OF_BOOL_PROFILERECV:
             boolValue = ((CGameCharacter *)object)->ProfileReceived;
@@ -4332,8 +4332,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         case SC_OPTIONS_GET: // OnCommandOption*:
         {                    // g_World + the EnabledCommandOptionsAccess gate
             command->ResultInt =
-                g_World != nullptr && EnabledCommandOptionsAccess() && g_GetInt != nullptr
-                    ? g_GetInt((VALUE_KEY_INT)command->SubTag, 0)
+                g_World != nullptr && EnabledCommandOptionsAccess()
+                    ? g_Game.ValueInt((VALUE_KEY_INT)command->SubTag, 0)
                     : 0;
             break;
         }
@@ -4427,9 +4427,9 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 }
                 case 300: // option set (the VKI id in IntB; the
                 {         // OnCommandOptionX(const bool&) g_World + options gate)
-                    if (g_World != nullptr && EnabledCommandOptionsAccess() && g_SetInt != nullptr)
+                    if (g_World != nullptr && EnabledCommandOptionsAccess())
                     {
-                        g_SetInt((VALUE_KEY_INT)command->IntB, command->IntC);
+                        g_Game.ValueInt((VALUE_KEY_INT)command->IntB, command->IntC);
                     }
                     break;
                 }
@@ -4439,8 +4439,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    command->ResultInt =
-                        g_GetInt != nullptr ? g_GetInt(VKI_VIEW_RANGE, 0) : 0;
+                    command->ResultInt = g_Game.ValueInt(VKI_VIEW_RANGE, 0);
                     break;
                 }
                 case 302: // ClientViewRange(range)
@@ -4456,9 +4455,9 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     {
                         break;
                     }
-                    if (!command->TextA.empty() && g_SetInt != nullptr)
+                    if (!command->TextA.empty())
                     {
-                        g_SetInt(VKI_SET_PVPCALLER, CAssistant::TextToSerial(command->TextA));
+                        g_Game.ValueInt(VKI_SET_PVPCALLER, CAssistant::TextToSerial(command->TextA));
                     }
                     else if (command->TextA.empty())
                     {

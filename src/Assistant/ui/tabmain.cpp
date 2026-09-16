@@ -20,6 +20,7 @@
 #include "../core/assist.h"
 #include "../core/global.h"
 #include "Managers/PacketManager.h" // ::g_PacketManager (the light/weather/season apply-cores)
+#include "CrossUO.h" // ::g_Game (the client config accessors)
 
 namespace xuoassist {
 
@@ -123,7 +124,7 @@ void option_changed(int index, bool state)
                 g_AssistantConfig.SetOption(index, false);
                 state = false;
             }
-            g_SetInt(VKI_FAST_ROTATION, static_cast<int>(state));
+            g_Game.ValueInt(VKI_FAST_ROTATION, static_cast<int>(state));
             break;
         }
         case CLBI_IGNORE_STAMINA_CHECK:
@@ -133,7 +134,7 @@ void option_changed(int index, bool state)
                 g_AssistantConfig.SetOption(index, false);
                 state = false;
             }
-            g_SetInt(VKI_IGNORE_STAMINA_CHECK, static_cast<int>(state));
+            g_Game.ValueInt(VKI_IGNORE_STAMINA_CHECK, static_cast<int>(state));
             break;
         }
         case CLBI_NO_GRAY_SCREEN:
@@ -174,7 +175,7 @@ void option_changed(int index, bool state)
                 }
                 if (graphic != 0u)
                 {
-                    g_SetInt(VKI_SET_PLAYER_GRAPHIC, graphic);
+                    g_Game.ValueInt(VKI_SET_PLAYER_GRAPHIC, graphic);
                 }
             }
             break;

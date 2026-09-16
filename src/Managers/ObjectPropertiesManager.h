@@ -41,6 +41,7 @@ public:
     bool RevisionCheck(int serial, int revision) const;
     void OnItemClicked(int serial);
     void Display(int serial);
+    astr_t GetData(const uint &serial);
     void Add(int serial, const CObjectProperty &objectProperty);
 };
 

@@ -153,6 +153,8 @@ class CGame
 {
 public:
     void UseSkill(int);
+    // the config accessors the executor calls; inert while disconnected
+    int ValueInt(const VALUE_KEY_INT &, int);
 };
 
 extern CGame g_Game;

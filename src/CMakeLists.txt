@@ -243,7 +243,6 @@ set(crossuo_src
   CharacterList.cpp
   CityList.cpp
   ClickObject.cpp
-  CommonInterfaces.cpp
   Container.cpp
   ContainerStack.cpp
   DateTimeStamp.cpp

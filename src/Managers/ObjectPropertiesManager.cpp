@@ -209,3 +209,13 @@ void CObjectPropertiesManager::Add(int serial, const CObjectProperty &objectProp
 {
     m_Map[serial] = objectProperty;
 }
+
+astr_t CObjectPropertiesManager::GetData(const uint &serial)
+{
+    auto it = m_Map.find(serial);
+    if (it == m_Map.end())
+    {
+        return {};
+    }
+    return str_from(it->second.Data);
+}
