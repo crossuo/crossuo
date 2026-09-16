@@ -60,7 +60,6 @@ set(XUOASSIST_SRCS
   "managers/menumanager.cpp"
   "managers/objectpropertiesmanager.cpp"
   "managers/promptmanager.cpp"
-  "managers/skillmanager.cpp"
   "managers/spellmanager.cpp"
   "managers/trademanager.cpp"
   "macros/macro.cpp"

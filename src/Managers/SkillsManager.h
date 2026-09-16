@@ -47,6 +47,11 @@ public:
     // Case-insensitive partial name match; "last"/"lastskill" resolves to the
     // last used skill. Returns the skill index or -1.
     int Find(const astr_t &name);
+    // Name-based use: resolves via Find, prints the assistant not-found
+    // error on a failed lookup, then sends through CGame::UseSkill (the
+    // macro recording tap). Assistant builds suspend recording around the
+    // send so assistant-initiated uses do not record themselves.
+    void Use(const astr_t &name);
     void Sort();
     int GetSortedIndex(uint32_t index);
     void UpdateSkillsSum();

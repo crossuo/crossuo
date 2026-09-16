@@ -13,6 +13,8 @@
 #define XUO_ASSISTANT 1
 #define XUO_ASSISTANT_HARNESS 1
 
+#include <cctype> // tolower (the str_lower stub below)
+
 #include "../../core/global.h"
 #include "../../core/world.h" // the worldstubs.h stand-ins (disconnected)
 #include "../../core/assist.h"
@@ -26,7 +28,6 @@
 #include "../../managers/menumanager.h"
 #include "../../managers/objectpropertiesmanager.h"
 #include "../../managers/promptmanager.h"
-#include "../../managers/skillmanager.h"
 #include "../../managers/spellmanager.h"
 #include "../../managers/trademanager.h"
 #include "../../model/commonitems/gump.h"
@@ -36,6 +37,7 @@
 #include "Target.h" // the real client target-cursor class (stubbed below)
 #include "ScreenshotBuilder.h"
 #include "Walker/PathFinder.h"
+#include "../../macros/macroexecutor.h" // RecordingSuspension (stubbed below)
 #include <stdlib.h> // abs (the Distance stub)
 
 // Minimal stand-in for the client-side talk-display core the executor's
@@ -58,6 +60,13 @@ public:
 // The paths reached in the harness run with g_World == nullptr, so the stub
 // bodies keep those calls inert.
 #include <xuocore/enumlist.h>
+
+// The client skill-send bridge the executor calls directly (CGame::UseSkill
+// is the real client recording tap; the executor suspends recording around
+// it). The class is the worldstubs.h stand-in for CrossUO.h; the body is
+// inert here (the harness runs disconnected).
+CGame g_Game;
+void CGame::UseSkill(int) {}
 
 class CGumpManager
 {
@@ -231,13 +240,10 @@ CShopAgent g_ShopAgent;
 bool CShopAgent::IsActiveShopping() { return false; }
 void CShopAgent::SendShopRequest(int, const astr_t &, const astr_t &) {}
 
-CSkillManager::CSkillManager() {}
-CSkillManager::~CSkillManager() {}
-CSkillManager g_SkillManager;
-int CSkillManager::GetIndex(const astr_t &) { return -1; }
-void CSkillManager::Use(const astr_t &) {}
-void CSkillManager::UseIndex(int) {}
-void CSkillManager::TargetUse(const astr_t &, const uint &) {}
+// The recording suspension the executor's send calls wrap (the RAII guard
+// is header-inline and drives g_MacroExecutor below; the harness runs
+// disconnected, so the depth counter is inert).
+CMacroExecutor g_MacroExecutor;
 
 CSpellManager::CSpellManager() {}
 CSpellManager::~CSpellManager() {}
@@ -335,6 +341,7 @@ CPacketRequestPopupMenu::CPacketRequestPopupMenu(uint32_t) : CPacket(0) {}
 CPacketDoubleClickRequest::CPacketDoubleClickRequest(uint32_t) : CPacket(0) {}
 CPacketTargetSelectedObject::CPacketTargetSelectedObject(int, int) : CPacket(0) {}
 CPacketUseCombatAbility::CPacketUseCombatAbility(uint8_t) : CPacket(0) {}
+CPacketTargetUseSkill::CPacketTargetUseSkill(uint16_t, uint32_t) : CPacket(0) {}
 void CPacket::Send() {}
 
 // the ability-name table jsn_useability reads (the real definition lives in
@@ -403,6 +410,17 @@ void CPacketManager::DisplayTalkTextW(uint32_t, CGameObject *, const astr_t &, w
 
 // --- remaining client/common pieces the real executor references -------------
 wstr_t wstr_from(const astr_t &) { return wstr_t(); }
+// the client implementation lives in Misc.cpp's STR_IMPLEMENTATION (not
+// linked here); the executor's case-insensitive matches only need the
+// lowering itself
+astr_t str_lower(astr_t value)
+{
+    for (char &c : value)
+    {
+        c = (char)tolower((unsigned char)c);
+    }
+    return value;
+}
 
 namespace xuoassist {
 void ScriptManager_LoadScriptFile(const astr_t &) {}

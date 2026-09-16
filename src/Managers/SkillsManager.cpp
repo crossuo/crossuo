@@ -4,6 +4,11 @@
 #include <algorithm>
 #include "SkillsManager.h"
 #include "../Globals.h"
+#include "../CrossUO.h" // ::g_Game (the client send bridge)
+#if defined(XUO_ASSISTANT)
+#include <core/assist.h>          // xuoassist::g_Assistant (the not-found error print path)
+#include <macros/macroexecutor.h> // xuoassist::RecordingSuspension (assistant-originated uses do not record)
+#endif
 #include <common/logging/logging.h>
 #include <common/str.h>
 #include <xuocore/uodata.h>
@@ -103,6 +108,31 @@ int CSkillsManager::Find(const astr_t &name)
     }
 
     return -1;
+}
+
+// The shared name-based use entry (the former xuoassist CSkillManager::Use):
+// the lookup, the not-found error print, then the send through
+// CGame::UseSkill, which is the macro recording tap. The recording
+// suspension keeps assistant-initiated uses from recording themselves;
+// client-path uses (hotkeys, gump buttons) reach UseSkill directly and
+// still record.
+void CSkillsManager::Use(const astr_t &name)
+{
+    const int index = Find(name);
+    if (index == -1)
+    {
+#if defined(XUO_ASSISTANT)
+        xuoassist::g_Assistant.ClientPrint("Skill '" + name + "' is not found.");
+#endif
+        return;
+    }
+
+#if defined(XUO_ASSISTANT)
+    // assistant-initiated skill uses must not record themselves; the
+    // client's CGame::UseSkill is the recording tap
+    xuoassist::RecordingSuspension suspension;
+#endif
+    g_Game.UseSkill(index);
 }
 
 bool CSkillsManager::CompareName(const astr_t &str1, const astr_t &str2)

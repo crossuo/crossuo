@@ -140,11 +140,34 @@ public:
     uint32_t Count = 0;
     CSkill *Get(uint32_t) { return nullptr; }
     int Find(const astr_t &) { return -1; }
+    // mirrors the real CSkillsManager::Use (Managers/SkillsManager.cpp)
+    void Use(const astr_t &name);
 };
 
 extern CGameWorld *g_World;
 extern CPlayer *g_Player;
 extern CSkillsManager g_SkillsManager;
+
+// the client send bridge (CrossUO.h in the real client)
+class CGame
+{
+public:
+    void UseSkill(int);
+};
+
+extern CGame g_Game;
+
+// the stub Find always misses, so the found path (the CGame::UseSkill send,
+// inert here) is unreachable and the not-found print (inside the real Use)
+// never fires through this stand-in either
+inline void CSkillsManager::Use(const astr_t &name)
+{
+    const int index = Find(name);
+    if (index != -1)
+    {
+        g_Game.UseSkill(index);
+    }
+}
 
 namespace xuoassist {
 

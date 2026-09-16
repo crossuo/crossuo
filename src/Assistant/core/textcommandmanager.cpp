@@ -20,7 +20,6 @@
 #include "world.h"
 #include "worldutil.h"
 #include "../managers/spellmanager.h"
-#include "../managers/skillmanager.h"
 #include "../managers/menumanager.h"
 #include "../managers/gumpmanager.h"
 #include <xuocore/text_parser.h> // ::TextFileParser (the client token parser)
@@ -806,7 +805,7 @@ HCOMMAND(useskill)
         return;
     }
 
-    g_SkillManager.Use(args[0]);
+    g_SkillsManager.Use(args[0]);
 }
 
 HCOMMAND(helpgump)

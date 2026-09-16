@@ -21,9 +21,7 @@
 #include "Target.h" // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
 #include "Managers/MacroManager.h" // ::g_MacroManager (client-side selection macros)
 #include "textcommandmanager.h"
-#include "../macros/macroexecutor.h"
 #include "../managers/gumpmanager.h"
-#include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
 #include "world.h"
 
@@ -569,7 +567,17 @@ void Actions_Execute(const CHotkeyEntry &entry)
             }
             if (type == HT_USE_SKILL_NEW_TARGET_SYSTEM)
             {
-                g_SkillManager.TargetUse(skillName, Actions_NewTargetSystemSerial());
+                const int index = g_SkillsManager.Find(skillName);
+                if (index == -1)
+                {
+                    g_Assistant.ClientPrint("Skill '" + astr_t(skillName) + "' is not found.");
+                }
+                else
+                {
+                    // the wire skill ids are 1-based; a raw packet send runs
+                    // no recording taps, so no suspension is needed
+                    CPacketTargetUseSkill(index + 1, Actions_NewTargetSystemSerial()).Send();
+                }
             }
             else
             {
@@ -598,7 +606,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
                         g_Target.SetObjectsHook(vector<astr_t>());
                         break;
                 }
-                g_SkillManager.Use(skillName);
+                g_SkillsManager.Use(skillName);
             }
             break;
         }

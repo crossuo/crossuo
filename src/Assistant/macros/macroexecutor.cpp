@@ -22,7 +22,6 @@
 #include "../managers/gumpmanager.h"
 #include "../managers/menumanager.h"
 #include "../managers/promptmanager.h"
-#include "../managers/skillmanager.h"
 #include "../managers/spellmanager.h"
 #include "../model/commonitems/gumphook.h"
 #include "../core/world.h"
@@ -830,16 +829,14 @@ void CMacroExecutor::ProcessMacro()
             }
             case MT_USE_SKILL:
             {
-                if (convertType == MCT_LAST)
+                const char *name = "last";
+                char value[16] = { 0 };
+                if (convertType != MCT_LAST)
                 {
-                    g_SkillManager.Use("last");
-                }
-                else
-                {
-                    char value[16] = { 0 };
                     snprintf(value, sizeof(value), "%i", ((CMacroWithIntValue *)macro)->Value);
-                    g_SkillManager.Use(value);
+                    name = value;
                 }
+                g_SkillsManager.Use(name);
                 break;
             }
             case MT_CAST:

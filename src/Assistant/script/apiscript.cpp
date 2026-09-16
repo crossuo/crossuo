@@ -50,7 +50,6 @@ extern "C" {
 #include "../core/assist.h"
 #include "../core/dressagent.h"
 #include "../core/textcommandmanager.h"
-#include "../managers/skillmanager.h"
 #include "../managers/objectpropertiesmanager.h"
 #include "../managers/spellmanager.h"
 #include "../managers/gumpmanager.h"
@@ -61,10 +60,14 @@ extern "C" {
 #include "../core/shopagent.h"
 #include "../core/world.h"
 #include "../core/worldutil.h"
+#include "../macros/macroexecutor.h" // RecordingSuspension (assistant-originated uses do not record)
 #include "../model/commonitems/gump.h"
 #include "../model/commonitems/gumphook.h"
 #include "../model/commonitems/menu.h"
 #include "Network/Packets.h" // the client packets the wrappers build on
+#if !defined(XUO_ASSISTANT_HARNESS)
+#include "CrossUO.h" // ::g_Game (the client send bridge; worldstubs.h stands in)
+#endif
 #include "Gumps/GumpCombatBook.h" // ::CGumpCombatBook::m_AbilityName (UseAbility names)
 #include "Target.h"         // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
@@ -807,8 +810,9 @@ JSValue jsn_cast(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     return JS_UNDEFINED;
 }
 
-// [Q] UseSkill(nameOrIndex[, targetSerial]) - HCOMMAND(useskill) /
-// CSkillManager::TargetUse; the numeric form sends the raw skill index.
+// [Q] UseSkill(nameOrIndex[, targetSerial]) - HCOMMAND(useskill); the named
+// form resolves through the client skill table, the numeric form sends the
+// raw skill index and the targeted form sends the 0xBF/0x2E packet.
 JSValue jsn_useskill(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     const astr_t target = arg_text(ctx, argv, argc, 1, "");
@@ -3995,20 +3999,29 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 const astr_t name = !command->TextA.empty()
                     ? command->TextA
                     : int_to_text(command->IntA);
-                g_SkillManager.TargetUse(name, CAssistant::TextToSerial(command->TextB));
+                const int index = g_SkillsManager.Find(name);
+                if (index == -1)
+                {
+                    g_Assistant.ClientPrint("Skill '" + name + "' is not found.");
+                }
+                else
+                {
+                    // the wire skill ids are 1-based; a raw packet send runs
+                    // no recording taps, so no suspension is needed
+                    CPacketTargetUseSkill(index + 1, CAssistant::TextToSerial(command->TextB))
+                        .Send();
+                }
             }
             else if (!command->TextA.empty())
-
             {
-
-
-                g_SkillManager.Use(command->TextA);
-
-
+                g_SkillsManager.Use(command->TextA);
             }
             else
             {
-                g_SkillManager.UseIndex(command->IntA);
+                // the raw-index form: the client send is the recording tap,
+                // so assistant-initiated uses suspend it as above
+                RecordingSuspension suspension;
+                g_Game.UseSkill(command->IntA);
             }
             break;
         }
@@ -4017,7 +4030,9 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             int index = command->IntA;
             if (!command->TextA.empty())
             {
-                index = g_SkillManager.GetIndex(command->TextA);
+                // no name->index lookup exists, so the named form leaves the
+                // result unset (the numeric form is the only value source)
+                index = -1;
             }
             const int type = CTextCommandManager::GetSkillsFlags(command->TextB);
             if (index >= 0 && index < (int)g_SkillsManager.Count)
