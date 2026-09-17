@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See tabscripts.h. Config persistence keeps the original element (tabscripts.cpp
-// LoadConfig/SaveConfig: <scripts sortscripts=".." scriptfile="..">), which
-// the Phase 1c config port already reads/writes into
+// See tabscripts.h. Config persistence: the scripts element (sortscripts /
+// scriptfile attributes) is read/written through
 // g_AssistantConfig.SortScripts()/ScriptFilePath().
 
 #include "tabscripts.h"
@@ -43,7 +42,7 @@ void sync_path_from_config()
     s_PathLoaded = true;
     if (s_ScriptPath[0] != 0)
     {
-        // the original Init() auto-loaded the saved script file
+        // auto-loads the saved script file
         ScriptManager_LoadScriptFile(s_ScriptPath);
     }
 }
@@ -57,7 +56,7 @@ void load_script_path(const char *path)
     snprintf(pathCopy, sizeof(pathCopy), "%s", path);
     snprintf(s_ScriptPath, sizeof(s_ScriptPath), "%s", pathCopy);
     g_AssistantConfig.SetScriptFilePath(pathCopy);
-    // the path persists with the profile (the original tab saved on close)
+    // the path persists with the profile
     AssistantUI_MarkOptionsDirty();
     ScriptManager_LoadScriptFile(pathCopy);
 }
@@ -79,7 +78,7 @@ void TabScripts_Draw()
     // faithful path is to hand the path to the editor and let it load
     if (ImGui::Button("...##browse"))
     {
-        // handled in the editor window this round (shared picker); open it
+        // handled in the editor window (shared picker); open it
         g_Assistant.ClientPrint("Browse: use the editor window's Open dialog (shared file picker).");
     }
     ImGui::SameLine();
@@ -90,9 +89,7 @@ void TabScripts_Draw()
     ImGui::SetItemTooltip("Reload current script file");
 
     // --- running actions row --------------------------------------------------
-    // The function combo honors the SortScripts option (the original
-    // UpdateScriptsList tail sorted ONLY cb_ScriptNameForStart -
-    // the running list stayed in start order).
+    // The function combo honors the SortScripts option (
     const vector<astr_t> functions = ScriptEditor_FunctionList();
     vector<std::pair<astr_t, int>> combo; // display name -> functions[] index
     combo.reserve(functions.size());
@@ -196,13 +193,12 @@ void TabScripts_Draw()
     ImGui::SameLine();
     if (ImGui::Button("Open editor"))
     {
-        // was pb_ScriptOpenEditor -> g_ScriptEditorDialog->show()
+        // open the editor window
         g_AssistantScriptEditorOpen = true;
     }
     ImGui::SetItemTooltip("Opens the script editor window with the loaded file");
 
-    // clb_ScriptExamples: the original command link opened the ScriptLibrary URL;
-    // now the docs page (hosts the examples), same launcher as the About tab
+    // clb_ScriptExamples: opens the ScriptLibrary URL;
     if (ImGui::SmallButton("Script examples"))
     {
         OpenURL(DOCS_URL);

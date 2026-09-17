@@ -3,16 +3,15 @@
 
 #pragma once
 
-// The main-thread marshaling queue for the script runtime (was the
-// managers/commandmanager signal hub: the engine's 434
-// `emit g_CommandManager.CommandX(...)` calls crossed threads through queued
-// signal connections; the result pointer arguments were the blocking part).
+// The main-thread marshaling queue for the script runtime: script worker
+// threads push commands; the main thread drains and executes them.
+// Every command carries a promise side so the pushing script can block on
+// the result.
 //
-// Contract (plan, Phase 4b):
+// Contract:
 //  - ONLY script worker threads push; ONLY the main thread drains
 //    (ScriptQueue_Drain, called from AssistantUI_Tick BEFORE the agent ticks
-//    and before the frame draw - the same position the queued signal slots
-//    ran at originally, inside the event loop).
+//    and before the frame draw - inside the event loop).
 //  - Every command carries a promise side (mutex+cv+flag): the pushing script
 //    thread blocks on it with a timeout; the drain marks the result and
 //    notifies. Getters and mutating calls are all queued by default.
@@ -69,6 +68,10 @@ enum XA_SCRIPT_COMMAND_TAG
     SC_JOURNAL_FIND,      // InJournal/WaitJournal -> journal entry or none
     SC_JOURNAL_INFO,      // JournalCount/JournalLine/LastJournalMessage
     SC_HAVE_TARGET,       // HaveTarget
+// The main-thread marshaling queue for the script runtime: script worker
+// threads push commands; the main thread drains and executes them.
+// Every command carries a promise side so the pushing script can block on
+// the result.
     SC_CAN_WALK,          // CanWalk(direction,x,y,z)
     SC_IS_WALKING,        // IsWalking
     SC_CONNECTED,         // Connected()
@@ -109,7 +112,7 @@ enum XA_SCRIPT_COMMAND_TAG
     SC_WAIT_PARSE,        // Wait(text) -> delay ms (config lookup, main thread)
     SC_EDITOR_LOAD,       // LoadScript(path): read the file on the MAIN thread
 
-    // batch 2 (Phase 4b-2): the engine-class families
+    // the engine-class families
     SC_MENU_INFO,         // MenuCount / GetMenu (copy via PointerA)
     SC_MENU_SELECT,       // SelectMenu / CloseMenu
     SC_GUMP_HOOK_ARM,     // WaitGump(hook) / CancelWaitGump
@@ -129,7 +132,7 @@ enum XA_SCRIPT_COMMAND_TAG
     SC_TEXT_WINDOW,       // TextWindow ops (SubTag = op)
     SC_SELECTED_TILE,     // SelectedTile getters (SubTag = field)
 
-    // fix round (Phase 4b-2 wire-now): the remaining scriptengine families
+    // the remaining scriptengine families
     SC_FRIEND_INFO,       // Find Friend/Enemy + Get*List/Status (SubTag = op)
     SC_FRIEND_CMD,        // Add/Remove/Clear Friend/Enemy (SubTag = op)
     SC_HOTKEYS,           // SaveHotkeys/LoadHotkeys/OnOffHotkeys (SubTag = op)
@@ -153,7 +156,7 @@ struct XA_SCRIPT_COMMAND
     uint16_t UshortA{ 0 };
     bool BoolA{ false };
     // Pointer results ride here, never in SerialA: a 32-bit slot truncates
-    // 64-bit heap pointers (the journal round used to corrupt them).
+    // 64-bit heap pointers.
     void *PointerA{ nullptr };
     astr_t TextA;
     astr_t TextB;
@@ -174,7 +177,7 @@ static_assert(sizeof(void *) <= sizeof(uintptr_t),
     "pointer results must fit an address-sized slot");
 
 // The drain-side executor for every tag - implemented in apiscript.cpp,
-// runs on the main thread (were the original OnCommand* slot bodies).
+// runs on the main thread.
 void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command);
 
 // Pushes a command and blocks the calling (script) thread until the main

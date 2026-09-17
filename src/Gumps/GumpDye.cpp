@@ -64,8 +64,7 @@ void CGumpDye::OnSelectColor(uint16_t color)
 {
     CPacketDyeDataResponse(Serial, Graphic, color + 1).Send();
 #if defined(XUO_ASSISTANT)
-    // the assistant's font color capture (was the 0x95 DyeDataS send tap in
-    // xuoassist's packetmanager); the wire hue is the gump color + 1
+    // the assistant's font color capture; the wire hue is the gump color + 1
     if (Serial == 0xFFFFFFFF)
     {
         xuoassist::g_AssistantConfig.SetFontColor(true, (uint16_t)(color + 1));

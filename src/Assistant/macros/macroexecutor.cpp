@@ -2,9 +2,8 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The macro executor implementation (see macroexecutor.h). Every action body
-// is the TabMacros::ProcessMacro case ported 1:1 (tabmacros.cpp:1105-1828);
-// the original code's widget reads became config reads (g_TabMain distances ->
-// g_AssistantConfig, g_TabAgentsDress flags -> g_AssistantConfig).
+// is a direct transcription of the ProcessMacro state machine; config reads
+// replace any widget reads (g_AssistantConfig owns distances/flags).
 
 #define LOGGER_MODULE Assistant
 
@@ -16,7 +15,7 @@
 
 #include "../config/assistantconfig.h"
 #include "../core/assist.h"
-#include "../core/assistantevents.h" // g_AssistantEvents->OnTitleRedraw (the old send taps fired it)
+#include "../core/assistantevents.h" // g_AssistantEvents->OnTitleRedraw (the display caption redraw check)
 #include "../core/global.h"
 #include "../managers/contextmenumanager.h"
 #include "../managers/gumpmanager.h"
@@ -26,10 +25,10 @@
 #include "../model/commonitems/gumphook.h"
 #include "../core/world.h"
 #include "../core/worldutil.h"
-#include "Walker/PathFinder.h" // g_PathFinder (the client walker; was the plugin's PathFinder)
+#include "Walker/PathFinder.h" // g_PathFinder (the client walker)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
-#include "Target.h"         // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
+#include "Target.h"         // ::g_Target (the shared target cursor: hooks, senders, CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say command)
 #include "Gumps/GumpAbility.h"      // ::CGumpAbility::OnAbilityUse (combat abilities)
 
@@ -50,7 +49,6 @@ void free_macro_list(vector<CMacro *> &list)
 
 void warmode_send(uint32_t state)
 {
-    // was CCommandManager::OnCommandWarmode
     if (g_World == nullptr || g_Player == nullptr)
     {
         return;
@@ -161,8 +159,8 @@ void CMacroExecutor::Stop()
 
 void CMacroExecutor::Tick()
 {
-    // was the 10 ms timer driving ProcessMacro; a headless frame tick keeps
-    // playback alive while the assistant window is hidden (parity with the original)
+    // a headless frame tick keeps playback alive while the assistant window
+    // is hidden.
     if (m_Playing)
     {
         ProcessMacro();
@@ -266,8 +264,8 @@ void CMacroExecutor::Record(CMacro *macro)
 
 void CMacroExecutor::RecordAttack(uint32_t serial)
 {
-    // was the 0x05 AttackRequest send tap (packetmanager.cpp): the original's
-    // MCT_LASTATTACK / MCT_LASTTARGET / MCT_ENEMY conversions, in that order.
+    // the MCT_LASTATTACK / MCT_LASTTARGET / MCT_ENEMY conversions, in that
+    // order.
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -304,9 +302,9 @@ void CMacroExecutor::RecordAttack(uint32_t serial)
 
 void CMacroExecutor::RecordUse(uint32_t serial)
 {
-    // was the 0x06 DoubleClick send tap (packetmanager.cpp): the graphic/color
-    // come from the world object when known; the player records as MCT_SELF.
-    // The g_LastUseObject mirror was fed outside the recording gate.
+    // the graphic/color come from the world object when known; the player
+    // records as MCT_SELF. The g_LastUseObject mirror is fed outside the
+    // recording gate.
     g_LastUseObject = serial;
 
     if (!CanRecord() || g_World == nullptr)
@@ -337,10 +335,10 @@ void CMacroExecutor::RecordUse(uint32_t serial)
 
 void CMacroExecutor::RecordWalk(int direction)
 {
-    // was the 0x02 WalkRequest send tap (packetmanager.cpp): a turn (the run
-    // bit set on a direction that differs from the current facing) records as
-    // a negative value - the MT_WALK turn encoding. Not suspension-gated: the
-    // old tap saw walker packets regardless of what started the walk.
+    // a turn (the run bit set on a direction that differs from the current
+    // facing) records as a negative value - the MT_WALK turn encoding. Not
+    // suspension-gated: every walk packet the client sends is observed
+    // regardless of what started the walk.
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -356,7 +354,7 @@ void CMacroExecutor::RecordWalk(int direction)
 
 void CMacroExecutor::RecordWarMode(uint8_t status)
 {
-    // was the 0x72 WarmodeS send tap (packetmanager.cpp): observe-only - the
+    // observe-only - the
     // macro action is noted from the outgoing packet, which still flows to
     // the server.
     if (!CanRecord() || g_World == nullptr)
@@ -369,7 +367,6 @@ void CMacroExecutor::RecordWarMode(uint8_t status)
 
 void CMacroExecutor::RecordHelpRequest()
 {
-    // was the 0x9B HelpRequest send tap (packetmanager.cpp).
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -380,7 +377,6 @@ void CMacroExecutor::RecordHelpRequest()
 
 void CMacroExecutor::RecordUseSkill(int index)
 {
-    // was the 0x12 Perform Action send tap (packetmanager.cpp), type 0x24:
     // the MCT_LAST conversion compares against the previous index (the
     // assignment below), and the skill branch shares the spell redraw check.
     bool lastSpell = g_LastSpellIndex != 0;
@@ -407,7 +403,6 @@ void CMacroExecutor::RecordUseSkill(int index)
 
 void CMacroExecutor::RecordCast(int index)
 {
-    // was the 0x12 Perform Action send tap (packetmanager.cpp), type 0x56:
     // the MCT_LAST conversion compares against the previous index (the
     // assignment below).
     bool lastSpell = g_LastSpellIndex != 0;
@@ -434,7 +429,6 @@ void CMacroExecutor::RecordCast(int index)
 
 void CMacroExecutor::RecordCastFromBook(int index)
 {
-    // was the 0x12 Perform Action send tap (packetmanager.cpp), type 0x27:
     // the MCT_LAST conversion compares against the previous index (the
     // assignment below).
     bool lastSpell = g_LastSpellIndex != 0;
@@ -461,9 +455,8 @@ void CMacroExecutor::RecordCastFromBook(int index)
 
 void CMacroExecutor::RecordCastNew(int index)
 {
-    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
-    // 0x001C: the index is stored BEFORE the MCT_LAST comparison, which
-    // compares the new index against the previous index's "was set" flag.
+    // subcommand 0x001C: the index is stored BEFORE the MCT_LAST comparison,
+    // which compares the new index against the previous index's set flag.
     bool lastSpell = g_LastSpellIndex != 0;
 
     g_LastSpellIndex = index;
@@ -488,8 +481,7 @@ void CMacroExecutor::RecordCastNew(int index)
 
 void CMacroExecutor::RecordCombatAbility(uint8_t ability)
 {
-    // was the 0xD7 AOSCommandsS send tap (packetmanager.cpp), subcommand
-    // 0x0019: the ability byte is compared against g_Ability[0] for the
+    // subcommand 0x0019: the ability byte is compared against g_Ability[0] for the
     // primary/secondary conversion.
     if (!CanRecord() || g_World == nullptr)
     {
@@ -512,7 +504,6 @@ void CMacroExecutor::RecordCombatAbility(uint8_t ability)
 
 void CMacroExecutor::RecordGuildMenuRequest()
 {
-    // was the 0xD7 AOSCommandsS send tap (packetmanager.cpp), subcommand 0x0028.
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -523,7 +514,6 @@ void CMacroExecutor::RecordGuildMenuRequest()
 
 void CMacroExecutor::RecordQuestMenuRequest()
 {
-    // was the 0xD7 AOSCommandsS send tap (packetmanager.cpp), subcommand 0x0032.
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -534,8 +524,6 @@ void CMacroExecutor::RecordQuestMenuRequest()
 
 void CMacroExecutor::RecordContextMenuRequest(uint32_t serial)
 {
-    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
-    // 0x0013.
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -546,9 +534,7 @@ void CMacroExecutor::RecordContextMenuRequest(uint32_t serial)
 
 void CMacroExecutor::RecordWaitContextMenu(uint32_t serial, uint16_t menuID)
 {
-    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
-    // 0x0015: the menu id rides the graphic field, like the original
-    // CMacroWithObject.
+    // subcommand 0x0015: the menu id rides the graphic field.
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -559,8 +545,7 @@ void CMacroExecutor::RecordWaitContextMenu(uint32_t serial, uint16_t menuID)
 
 void CMacroExecutor::RecordSay(const astr_t &text)
 {
-    // were the 0x03 ClientTalkS / 0xAD UnicodeClientTalk send taps
-    // (packetmanager.cpp). Gate is the old handler's verbatim
+    // records the MT_SAY action from the outgoing speech; the gate is
     // (g_World != nullptr && IsRecording()) - see the header note.
     if (g_World == nullptr || !IsRecording())
     {
@@ -572,8 +557,6 @@ void CMacroExecutor::RecordSay(const astr_t &text)
 
 void CMacroExecutor::RecordToggleGargoyleFlying()
 {
-    // was the 0xBF ExtendedCommandS send tap (packetmanager.cpp), subcommand
-    // 0x0032.
     if (!CanRecord() || g_World == nullptr)
     {
         return;
@@ -818,9 +801,8 @@ void CMacroExecutor::ProcessMacro()
                         x = g_Player->GetX() + withTarget->RelativeX;
                         y = g_Player->GetY() + withTarget->RelativeY;
                         z = g_Player->GetZ() + withTarget->RelativeZ;
-                        // Was g_FileManager.GetTile(...) graphic resolution;
-                        // the numeric-graphic fallback matches the original's
-                        // empty-tile-list path (see Target.cpp CheckHook)
+                        // the graphic resolution falls back to the empty-tile-list path when the
+                        // tile list has no entry (see Target.cpp CheckHook)
                     }
                     g_Target.SendHookTargetTile(graphic, x, y, z);
                     ::g_Target.CancelCursor();
@@ -886,7 +868,6 @@ void CMacroExecutor::ProcessMacro()
                 {
                     text = "| " + text;
                 }
-                // was g_CommandManager.OnCommandSay
                 if (g_World != nullptr && !text.empty())
                 {
                     uint16_t color = 0;
@@ -894,7 +875,7 @@ void CMacroExecutor::ProcessMacro()
                     {
                         color = 0;
                     }
-                    // the command text is ASCII speech: widen like the old toStdWString
+                    // the command text is ASCII speech: widen per-character
                     wstr_t wide;
                     wide.reserve(text.size());
                     for (char c : text)
@@ -1094,8 +1075,7 @@ void CMacroExecutor::ProcessMacro()
 
                 if (walkDelay != 0)
                 {
-                    // was g_Timer.elapsed() + walkDelay + 15 (the executor
-                    // ticks on g_Ticks here)
+                    // the executor ticks on g_Ticks here
                     m_NextMacroTick = g_Ticks + walkDelay + 15;
                     return;
                 }

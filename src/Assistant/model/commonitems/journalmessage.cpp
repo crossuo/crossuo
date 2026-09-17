@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (commonitems/journalmessage.cpp): g_Timer.elapsed()
-// became g_Ticks (plan §4.2).
+// is a g_Ticks stamp.
 
 #include "journalmessage.h"
 

@@ -1054,8 +1054,7 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
         {
             CPacketVirtueRequest(1).Send();
 #if defined(XUO_ASSISTANT)
-            // (gump round) the virtue request rides the 0xB1 packet id, so the
-            // old ChoiceGump send tap saw it with these wire values
+            // the virtue request rides the 0xB1 packet id with these wire values
             xuoassist::g_GumpManager.OnGumpChoiceSent(g_PlayerSerial, 0x000001CD, 1);
 #endif
 

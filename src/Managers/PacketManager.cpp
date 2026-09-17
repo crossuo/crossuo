@@ -27,14 +27,14 @@
 #include "../Misc.h" // pack16 (the morph/corpse-graphic in-place 0x78 patches)
 #include <core/assist.h> // xuoassist::g_Assistant (status requests)
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
-#include <managers/menumanager.h> // xuoassist::g_MenuManager (0x7C menu round)
-#include <managers/trademanager.h> // xuoassist::g_TradeManager (trade-round record)
+#include <managers/menumanager.h> // xuoassist::g_MenuManager
+#include <managers/trademanager.h> // xuoassist::g_TradeManager
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (login reset)
 #include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
 #include <managers/guildmanager.h> // xuoassist::g_GuildManager (guild chat speaker names)
-#include <managers/promptmanager.h> // xuoassist::g_PromptManager (prompt round, macro wait)
-#include <managers/gumpmanager.h> // xuoassist::g_GumpManager (0xB0 gump round)
-#include <managers/contextmenumanager.h> // xuoassist::g_ContextMenuManager (0x14 context-menu round)
+#include <managers/promptmanager.h> // xuoassist::g_PromptManager (macro wait)
+#include <managers/gumpmanager.h> // xuoassist::g_GumpManager
+#include <managers/contextmenumanager.h> // xuoassist::g_ContextMenuManager
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
@@ -941,7 +941,7 @@ PACKET_HANDLER(EnterWorld)
     bool loadConfig = false;
 
 #if defined(XUO_ASSISTANT)
-    // the assistant session init runs before the client tears down the old
+    // the assistant session init runs before the client tears down the previous
     // world: the helper's autostart gate reads the pre-enter world state
     xuoassist::AssistantOnEnterWorld(serial);
 #endif
@@ -971,7 +971,7 @@ PACKET_HANDLER(EnterWorld)
     xuoassist::g_OriginalGraphic = g_Player->Graphic;
     if (dead_body_graphic(g_Player->Graphic) && xuoassist::g_AssistantConfig.NoGrayScreen())
     {
-        // the value the old pre-parse buffer patch fed the client parse
+        // the value substituted into the client parse
         g_Player->Graphic = 0x03DB;
         xuoassist::g_OriginalGraphic = 0x03DB;
     }
@@ -1256,8 +1256,8 @@ PACKET_HANDLER(UpdatePlayer)
 
 #if defined(XUO_ASSISTANT)
     // the assistant edits the values the client applies (morph /
-    // no-gray-screen; the old flow patched the packet at Start + 5, the body
-    // field, and zeroed the increment byte at Start + 7 pre-parse) and
+    // the assistant edits the values the client applies (morph /
+    // no-gray-screen) and
     // tracks the alive -> dead transition for its corpse marker
     if (serial == g_PlayerSerial && dead_body_graphic(graphic))
     {
@@ -1268,7 +1268,7 @@ PACKET_HANDLER(UpdatePlayer)
         }
 
         // only the corpse stamp is transition-gated; the patch above fires on
-        // every packet carrying a dead-body graphic (pre-image behavior)
+        // every packet carrying a dead-body graphic
         if (!g_Player->IsDead())
         {
             xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
@@ -1643,14 +1643,13 @@ PACKET_HANDLER(UpdateObject)
     if (serial == g_PlayerSerial)
     {
 #if defined(XUO_ASSISTANT)
-        // the assistant mirrors the body and edits the packet (morph /
+        // the assistant tracks the body and edits the packet (morph /
         // no-gray-screen) and tracks the alive -> dead transition for its
         // corpse marker. NOTE: the patch offset Start + 7 lands on the X
-        // field of the 0x78 layout (id 1, serial 4, graphic 2, x) — this is
-        // the long-standing upstream assistant behavior, not the graphic
-        // field (Start + 5); the client never reads those bytes back (the
-        // parsed x/y are unused on the player path), so the write stays an
-        // in-place edit and the graphic mirror keeps the real packet value.
+        // field of the 0x78 layout (id 1, serial 4, graphic 2, x) - the
+        // client never reads those bytes back (the parsed x/y are unused on
+        // the player path), so the write stays an in-place edit and the
+        // graphic mirror keeps the real packet value.
         xuoassist::g_OriginalGraphic = graphic;
 
         if (xuoassist::g_MorphGraphic != 0u)
@@ -1667,7 +1666,7 @@ PACKET_HANDLER(UpdateObject)
             pack16(Start + 7, 0x03DB);
 
             // only the corpse stamp is transition-gated; the patch above fires
-            // on every packet carrying a dead-body graphic (pre-image behavior)
+            // on every packet carrying a dead-body graphic
             if (!g_Player->IsDead())
             {
                 xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
@@ -2493,9 +2492,7 @@ PACKET_HANDLER(SetWeather)
     const uint8_t temperature = ReadUInt8();
 
 #if defined(XUO_ASSISTANT)
-    // the assistant mirrors the weather report for its weather controls;
-    // while the weather filter is on, server updates do not reach the
-    // client (the assistant's own weather calls bypass this gate)
+    // the assistant keeps the weather report mirrored for its weather controls;
     xuoassist::g_Weather.Type = type;
     xuoassist::g_Weather.Count = count;
     xuoassist::g_Weather.Temperature = temperature;
@@ -2944,7 +2941,7 @@ PACKET_HANDLER(UpdateSkills)
 
 #if defined(XUO_ASSISTANT)
             // the assistant seeds its skill-delta baseline (the real value)
-            // on the first update and mirrors the refresh for its skills tab
+            // on the first update and feeds the skills-tab refresh
             if (skill->OldValue == 0.0f)
             {
                 skill->OldValue = (float)(realVal / 10.0f);
@@ -2980,8 +2977,7 @@ PACKET_HANDLER(UpdateSkills)
 
 #if defined(XUO_ASSISTANT)
     // the assistant skills-tab refresh (fired once per 0x3A packet, after the
-    // per-skill walk; the 0xFE skill-list build returns above, as the old tap
-    // did)
+    // per-skill walk; the 0xFE skill-list build returns above this.
     xuoassist::g_AssistantEvents->OnSkillsRefreshed();
 #endif
 
@@ -3201,12 +3197,7 @@ PACKET_HANDLER(ExtendedCommand)
         case 0x14: //Display Popup/context menu (2D and KR)
         {
 #if defined(XUO_ASSISTANT)
-            // the context-menu round: the wait flag for scripts/macros, then
-            // the agent parse. A playing macro waiting on this menu
-            // (PlayWaiting) or the auto-select entry hook consumes the packet
-            // - the client keeps no popup gump. The feed-only path restores
-            // the reader: the popup parse re-reads the fields from the
-            // payload start.
+            // the context-menu wait flag for scripts/macros, then
             xuoassist::g_ContextMenuReceived = true;
             {
                 uint8_t *savedPtr = Ptr;
@@ -3807,8 +3798,8 @@ PACKET_HANDLER(Talk)
         if (xuoassist::g_AssistantConfig.CheckReplaceText(
                 str, serial, wireColor, false, replacedText, replacedColor))
         {
-            // the replacement takes the original line's place: rendered right
-            // here with the reprint font the injected 0x1C used (no packet)
+            // the replacement takes the replaced line's place: rendered right
+            // here with the reprint speech font (no packet)
             DisplayTalkTextA(serial, obj, name, replacedText, replacedColor, 3, (uint8_t)type);
             return;
         }
@@ -3917,8 +3908,8 @@ PACKET_HANDLER(UnicodeTalk)
         if (xuoassist::g_AssistantConfig.CheckReplaceText(
                 textA, serial, wireColor, true, replacedText, replacedColor))
         {
-            // the replacement takes the original line's place, rendered here
-            // with the reprint's speech-font look (was an injected 0xAE)
+            // the replacement takes the replaced line's place, rendered here
+            // with the reprint's speech-font look
             DisplayTalkTextW(serial, obj, name, wstr_from(replacedText), replacedColor, (uint8_t)type);
             return;
         }
@@ -3977,9 +3968,9 @@ PACKET_HANDLER(MultiPlacement)
     // the WaitTarget hook path (CTarget::CheckHook) or a playing macro
     // waiting on the target cursor consumes the placement reply: the client
     // keeps no open cursor and skips its own processing. The consume parse
-    // runs before the client world gate (the pre-image tap had no world
-    // gate): the reply still reaches the cursor mirror/hook state when the
-    // world is not up. A consumed reply skips the client processing.
+    // runs before the client world gate: the reply still reaches the cursor
+    // mirror/hook state when the world is not up. A consumed reply skips the
+    // client processing.
     xuoassist::g_TargetReceived = true;
     const bool pass = g_Target.SetMultiData(*this);
 #else
@@ -4490,7 +4481,7 @@ PACKET_HANDLER(CharacterAnimation)
     const bool repeat = (ReadUInt8() != 0);
     const uint8_t delay = ReadUInt8();
 #if defined(XUO_ASSISTANT)
-    // DEVIATION: echo prints the parsed frame count; the legacy build echoed 0.
+    // DEVIATION: echo prints the parsed frame count rather than 0.
     if (xuoassist::g_AssistantConfig.AnimationEcho())
     {
         char text[256] = { 0 };
@@ -4550,8 +4541,8 @@ PACKET_HANDLER(NewCharacterAnimation)
     obj->AnimationFromServer = true;
 }
 
-// The apply-core of the quest-arrow handler (0xBA): both the old 6-byte and
-// the new 10-byte layouts read these same three fields.
+// The apply-core of the quest-arrow handler (0xBA): both the 6-byte and
+// the 10-byte layouts read these same three fields.
 void CPacketManager::DisplayQuestArrow(bool enabled, uint16_t x, uint16_t y)
 {
     g_QuestArrow.Timer = g_Ticks + 1000;
@@ -4695,9 +4686,7 @@ PACKET_HANDLER(Season)
     const uint8_t music = ReadUInt8();
 
 #if defined(XUO_ASSISTANT)
-    // the assistant mirrors the season report for its season controls;
-    // while the season filter is on, server updates do not reach the
-    // client (the assistant's own season calls bypass this gate)
+    // the assistant keeps the season report mirrored for its season controls;
     xuoassist::g_Season.Index = season;
     xuoassist::g_Season.Music = music;
     if (xuoassist::g_AssistantConfig.SeasonFilter())
@@ -4719,8 +4708,8 @@ PACKET_HANDLER(DisplayDeath)
     auto serial = ReadUInt32BE();
     const auto corpseSerial = ReadUInt32BE();
 #if defined(XUO_ASSISTANT)
-    // the assistant tracks the last corpse for the auto-open feature; the old
-    // recv-tap hook ran for every 0xAF, not only for characters still found
+    // the assistant tracks the last corpse for the auto-open feature; it runs
+    // for every 0xAF, not only for characters still found
     xuoassist::g_LastCorpseObject = corpseSerial;
     if (xuoassist::g_AssistantConfig.CorpsesAutoopen())
     {
@@ -4824,8 +4813,8 @@ PACKET_HANDLER(DisplayClilocString)
     if (xuoassist::g_AssistantConfig.CheckReplaceText(
             textA, serial, wireColor, true, replacedText, replacedColor))
     {
-        // the replacement takes the original line's place; the reprint used to
-        // be an injected 0xAE, so it rendered with unicode talk semantics
+        // the replacement takes the replaced line's place; it renders with unicode
+        // talk semantics
         DisplayTalkTextW(serial, obj, name, wstr_from(replacedText), replacedColor, type);
         return;
     }
@@ -5209,7 +5198,7 @@ PACKET_HANDLER(BuffDebuff)
 #if defined(XUO_ASSISTANT)
         if (_serial == g_PlayerSerial)
         {
-            // the script-visible buff mirror (the old recv-tap hook)
+            // the script-visible buff mirror
             if (mode != 0u)
             {
                 xuoassist::g_AssistantEvents->OnBuffAdd(
@@ -5389,8 +5378,8 @@ PACKET_HANDLER(OpenMenu)
     }
 
 #if defined(XUO_ASSISTANT)
-    // wait-flag for scripts/macros waiting on the menu gump (the old tap set
-    // it before the agent's own world gate)
+    // wait-flag for scripts/macros waiting on the menu gump; set before the
+    // agent's own world gate
     xuoassist::g_MenuReceived = true;
 #endif
 
@@ -6128,7 +6117,7 @@ PACKET_HANDLER(OpenGump)
 #if defined(XUO_ASSISTANT)
     if (xuoassist::g_GumpManager.Consume())
     {
-        // the client gump was only built to feed the assistant record while
+        // the client gump exists only to feed the assistant record while
         // parsing; a consumed gump is answered without being shown, so drop it
         delete gump;
         return;
@@ -6286,7 +6275,7 @@ PACKET_HANDLER(DisplayMap)
 #if defined(XUO_ASSISTANT)
     // the mapecho feature keys its 0x56 "map opened to" coordinates off the
     // last opened map's start corner (the 0xF5 facet variant is excluded);
-    // the old recv-tap hook assigned the same parsed fields
+    // the hook assigns the same parsed fields
     if (xuoassist::EnabledFeatureMapEcho() && *Start != 0xF5)
     {
         xuoassist::g_LastTMapX = startX;
@@ -6353,7 +6342,7 @@ PACKET_HANDLER(MapData)
                 gump->m_DataBox->Add(new CGUIGumppic(0x139B, x, y));
                 gump->WantRedraw = true;
 #if defined(XUO_ASSISTANT)
-                // the echo/tracker hooks run whenever the data arrives, with no gump-open check of their own (pre-image parity)
+                // the echo/tracker hooks run whenever the data arrives, with no gump-open check of their own
                 if (xuoassist::EnabledFeatureMapEcho() && pin_or_mode == 0)
                 {
                     xuoassist::g_AssistantEvents->OnMapData(x, y);
@@ -6712,8 +6701,8 @@ PACKET_HANDLER(BookData)
 PACKET_HANDLER(BuyList)
 {
 #if defined(XUO_ASSISTANT)
-    // wait-flag for scripts/macros waiting on the shop gump; the old recv-tap
-    // row set it before any parse (the price/name bookkeeping itself already
+    // wait-flag for scripts/macros waiting on the shop gump; set before any
+    // parse (the price/name bookkeeping itself already
     // lives in this handler)
     xuoassist::g_ShopReceived = true;
 #endif

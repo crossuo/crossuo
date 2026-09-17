@@ -2,9 +2,8 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // See commandqueue.h (the ownership invariant lives there). The drain-side
-// executor for every tag lives in apiscript.cpp (ScriptCommand_Execute) - the
-// same split the original app had between managers/commandmanager.cpp (the hub) and
-// its OnCommand* slots (the game-touching bodies).
+// executor for every tag lives in apiscript.cpp (ScriptCommand_Execute) -
+// the game-touching bodies.
 
 #include "commandqueue.h"
 
@@ -192,7 +191,7 @@ void ScriptQueue_Drain()
 {
     // Bounded per frame: a print loop can enqueue far faster than the frame
     // runs; the remainder wait for the next frame (the getters simply see a
-    // slightly older world - exactly the original event-loop behavior).
+    // slightly older world - the event-loop behavior).
     uint32_t budget = 64;
     for (;;)
     {

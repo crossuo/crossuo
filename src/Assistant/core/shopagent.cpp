@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The shop buy/sell engine - the port of assist/tabagentsshop.cpp (hook bodies
-// and ProcessShopList are line-faithful; the original widget globals became agent
-// state) and assist/shopprogressform.cpp (the countdown becomes frame ticks).
+// The shop buy/sell engine: the hook bodies, ProcessShopList and the progress
+// countdown as frame-tick state machine steps.
 
 #define LOGGER_MODULE Assistant
 
@@ -29,7 +28,6 @@ CShopAgent g_ShopAgent;
 
 void CShopAgent::Tick()
 {
-    // was ShopProgressForm::on_Timer (50 ms timer -> g_Ticks frame ticks)
     if (!m_ProgressActive)
     {
         return;
@@ -56,7 +54,7 @@ void CShopAgent::Tick()
 
 bool CShopAgent::IsActiveShopping() const
 {
-    // was TabAgentsShop::IsActiveShopping: waiting for a vendor reply or the
+    // waiting for a vendor reply or the
     // queued request countdown still running
     return (
         (m_State != SLWS_NORMAL && m_WaitTimeout >= g_Ticks) || m_ProgressActive);
@@ -64,7 +62,7 @@ bool CShopAgent::IsActiveShopping() const
 
 void CShopAgent::Buy(const astr_t &listName)
 {
-    // was on_pb_BuySelectedList_clicked: "<vendor name> buy" speech
+    // "<vendor name> buy" speech
     astr_t text = m_VendorName;
 
     if (text.length() != 0)
@@ -79,7 +77,7 @@ void CShopAgent::Buy(const astr_t &listName)
 
 void CShopAgent::Sell(const astr_t &listName)
 {
-    // was on_pb_SellSelectedList_clicked: "<vendor name> sell" speech
+    // "<vendor name> sell" speech
     astr_t text = m_VendorName;
 
     if (text.length() != 0)
@@ -94,7 +92,7 @@ void CShopAgent::Sell(const astr_t &listName)
 
 void CShopAgent::SendShopRequest(int state, const astr_t &listName, const astr_t &text)
 {
-    // was TabAgentsShop::SendShopRequest (the buttons always passed shopDelay
+    // (the buttons always passed shopDelay
     // 0: the per-stack delay comes from the config when the request is built)
     if (g_World == nullptr || !EnabledFeatureShopAgent())
     {
@@ -115,7 +113,6 @@ void CShopAgent::SendShopRequest(int state, const astr_t &listName, const astr_t
 
 void CShopAgent::CancelProgress()
 {
-    // was ShopProgressForm::on_pb_Cancel_clicked
     g_Assistant.ClientPrintDebugLevel1("Shopping cancelled by user");
     m_ProgressActive = false;
     m_ProgressList.clear();
@@ -128,7 +125,7 @@ int CShopAgent::ProgressValue() const
         return 0;
     }
 
-    // was ui->pb_Progress->setValue(m_Delay - elapsed): ms remaining
+    // ms remaining
     const int elapsed = (int)(g_Ticks - m_ProgressStart);
     return (elapsed >= m_ProgressDelay) ? 0 : (m_ProgressDelay - elapsed);
 }
@@ -145,7 +142,6 @@ void CShopAgent::Reset()
 
 bool CShopAgent::ProcessShopList()
 {
-    // was TabAgentsShop::ProcessShopList (line-faithful port)
     vector<CVendorShopItem> &vendorItems = m_VendorItems;
 
     if (vendorItems.empty())
@@ -286,8 +282,7 @@ bool CShopAgent::ProcessShopList()
         return true;
     }
 
-    // was: new CPacketBuyRequest/SellRequest + ShopProgressForm::Start; the
-    // packet is built from the stored pair when the countdown expires
+    // the packet is built from the stored pair when the countdown expires
     m_ProgressIsBuy = isBuyList;
     m_ProgressVendorSerial = m_VendorSerial;
     m_ProgressList = result;
@@ -309,7 +304,6 @@ bool CShopAgent::ProcessShopList()
 
 bool CShopAgent::OnOpenContainer(uint32_t serial)
 {
-    // was TabAgentsShop::OnPacketReceivedOpenContaier (line-faithful)
     if (g_World == nullptr || !EnabledFeatureShopAgent())
     {
         return true;
@@ -376,7 +370,7 @@ bool CShopAgent::OnOpenContainer(uint32_t serial)
 
 bool CShopAgent::OnSellList(uint32_t serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items)
 {
-    // was TabAgentsShop::OnPacketReceivedSellList (line-faithful); the 0x9E
+    // the 0x9E
     // fields arrive mapped from the client parse (vendor serial, lookup
     // result, the sell entries with the client's cliloc names)
     if (g_World == nullptr)
@@ -417,7 +411,6 @@ bool CShopAgent::OnSellList(uint32_t serial, CGameCharacter *vendor, const vecto
 
 void CShopAgent::OnBuyReplySent()
 {
-    // was TabAgentsShop::OnPacketSendBuyReply
     if (EnabledFeatureShopAgent())
     {
         m_ShopListReplayed = true;
@@ -426,7 +419,6 @@ void CShopAgent::OnBuyReplySent()
 
 void CShopAgent::OnSellReplySent()
 {
-    // was TabAgentsShop::OnPacketSendSellReply
     if (EnabledFeatureShopAgent())
     {
         m_ShopListReplayed = true;

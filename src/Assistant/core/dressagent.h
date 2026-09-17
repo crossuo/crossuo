@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The dress agent (Phase 4a): the dress/undress/disarm sequences the original app
-// generated as a throwaway script (assist/tabagentsdress.cpp DressSet/
-// UndressSet/DisarmSet feeding the script engine) become a frame-tick state
-// machine here - same steps, same ordering, same per-step delays:
+// The dress agent: the dress/undress/disarm sequences as a frame-tick state
+// machine - same steps, same ordering, same per-step delays as the script
+// form:
 //   - a step is Unequip(layer) [MoveItem into the backpack] or
 //     Equip(serial)/UseObject(serial) [MoveEquip / double click];
-//   - whenever the generated script emitted "Client.Wait(MoveItemsDelay)" after an
-//     action the state machine waits MoveItemsDelay ticks before the next
-//     step (delay 0 = no wait, exactly like the script without the Wait);
+//   - the state machine waits MoveItemsDelay ticks after an action before
+//     the next step (delay 0 = no wait);
 //   - "Undress before dressing" layers 1-2 pass (ignoreLayer1_2) is kept;
-//   - a new request replaces the running one (the original app terminated the
-//     g_EquipScriptName script before starting a new one).
+//   - a new request replaces the running one.
 //
-// Equipping reads the CURRENT world (a vanished item is skipped at build
-// time like the original builder, which only emitted steps for items still in the
-// world); missing items mid-run skip silently - the server rejects an equip
-// for an object it no longer considers ours, exactly as with the script.
+// Equipping reads the CURRENT world: a vanished item is skipped at build
+// time (only items still in the world emit steps); missing items mid-run
+// skip silently - the server rejects an equip for an object it no longer
+// considers ours.
 
 #pragma once
 
@@ -61,11 +58,11 @@ public:
     void Tick();
     bool Active() const { return m_Active; }
 
-    // "Dress selected set" (was TabAgentsDress::DressSet)
+    // "Dress selected set"
     void DressSet(const CDressSetEntry *set);
-    // "Undress" (layers 3..24, was UndressSet)
+    // "Undress" (layers 3..24)
     void Undress();
-    // "Apply weapon and shield" inverse - undress layers 1-2 (was DisarmSet)
+    // "Apply weapon and shield" inverse - undress layers 1-2
     void Disarm();
     // stops a running sequence (assistant shutdown / a replacing request)
     void Abort();

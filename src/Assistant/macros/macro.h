@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (macros/macro.h), trimmed: the CMacro object
-// hierarchy is unchanged; the XML-writer Save / XML-attribute Load
-// signatures became the config INI equivalents (identical key names and
-// value formatting). The executor stays with the Phase 3 UI
-// (master plan: port the MODEL this round).
+// The macro model: the CMacro object hierarchy, the XML-writer Save /
+// XML-attribute Load signatures as config INI equivalents (identical key
+// names and value formatting); the executor lives in macroexecutor.h.
 
 #pragma once
 
@@ -104,10 +102,9 @@ public:
     MACRO_CONVERT_TYPE ConvertType = MCT_NONE;
     int WaitingTime = 1000;
 
-    // Class-kind tag replacing the original code's dynamic_cast (the client builds
-    // with -fno-rtti); each subclass reports its kind and the GetText()/copy
-    // paths static_cast after checking it, exactly where the original
-    // dynamic_cast checks would have failed.
+    // Class-kind tag (the client builds with -fno-rtti, so there is no dynamic_cast);
+    // each subclass reports its kind and the GetText()/copy paths static_cast after
+    // checking it.
     enum MACRO_CLASS
     {
         MCLASS_BASE,

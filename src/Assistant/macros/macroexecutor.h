@@ -1,36 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The macro executor (Phase 3, master plan §2.6/§7 item 3): the playback half
-// of the original app's assist/tabmacros.cpp (the tick-driven ProcessMacro state
-// machine) extracted from the widget. Semantics kept verbatim:
-//   - a 10 ms frame tick drove TabMacros::ProcessMacro; here Tick() runs from
-//     AssistantUI_Tick every game frame.
-//     The while (m_Playing && m_NextMacroTick < g_Ticks) loop and the
-//     m_PlayPosition / m_NextMacroTick semantics are unchanged: a waiting
-//     action sets m_NextMacroTick = now + delay and returns, so the macro
-//     simply pauses until the tick passes (no threads, no blocking).
-//   - m_PlayList holds copies of the macro's actions (Play:931), looped
-//     macros restart with m_NextMacroTick = now + loopDelay (ProcessMacro
-//     1123-1135), loop delay 0 (checkbox off) stops.
-//   - the recording buffer (on_pb_Record_clicked:337) is fed by the client's
-//     send sites (CGame::AttackReq -> RecordAttack, CGame::DoubleClick /
-//     PaperdollReq -> RecordUse, CPathFinder::Walk -> RecordWalk,
-//     CGame::ChangeWarmode -> RecordWarMode, the help gumps ->
-//     RecordHelpRequest, CGame::UseSkill / CastSpell / CastSpellFromBook ->
-//     RecordUseSkill / RecordCast / RecordCastFromBook / RecordCastNew,
-//     CGumpAbility::OnAbilityUse -> RecordCombatAbility, the guild/quest
-//     buttons and gump-menu macro actions -> RecordGuildMenuRequest /
-//     RecordQuestMenuRequest, CGame::ProcessDelayedClicks /
-//     CGumpPopupMenu -> RecordContextMenuRequest / RecordWaitContextMenu,
-//     the gargoyle flying button and macro action ->
-//     RecordToggleGargoyleFlying) and
-//     the target system taps (assist/target.cpp:190/:210 -> CAssistantEvents)
-//     while the game sends its target cursors; RecordStop replaces the
-//     selected macro's action list (an empty capture is discarded).
+// The macro executor: the playback half of the assistant macro feature - a
+// tick-driven ProcessMacro state machine decoupled from any UI widget.
+// Semantics:
+//   - Tick() runs from AssistantUI_Tick every game frame; the
+//     while (m_Playing && m_NextMacroTick < g_Ticks) loop and the
+//     m_PlayPosition / m_NextMacroTick semantics mean a waiting action sets
+//     m_NextMacroTick = now + delay and returns, so the macro simply pauses
+//     until the tick passes (no threads, no blocking).
+//   - m_PlayList holds copies of the macro's actions; looped macros restart
+//     with m_NextMacroTick = now + loopDelay; loop delay 0 (checkbox off)
+//     stops.
+//   - the recording buffer is fed by the client's send sites and the target
+//     system call sites while the game sends its target cursors; RecordStop
+//     replaces the selected macro's action list (an empty capture is
+//     discarded).
 // Agent-dependent bodies (dress/arm lists use the config dressbag and move
-// item delays exactly like the original code) are included; script bodies are not
-// part of the executor.
+// item delays) are included; script bodies are not part of the executor.
 
 #pragma once
 
@@ -48,20 +35,16 @@ public:
     CMacroExecutor(const CMacroExecutor &) = delete;
     CMacroExecutor &operator=(const CMacroExecutor &) = delete;
 
-    // The frame tick (was a 10 ms timer -> ProcessMacro).
+    // The frame tick; runs ProcessMacro.
     void Tick();
 
-    // TabMacros::Play(name, doNotAutoIterrupt) - the hotkey
-    // entry point; unknown names are a no-op.
+    // The hotkey entry point (a macro name); unknown names are a no-op.
     void Play(const astr_t &name, bool doNotAutoIterrupt);
-    // TabMacros::Play(CMacroListItem *, ...) - the Play button entry point.
-    // macroIndex indexes g_AssistantConfig.Macros().
+    // The Play button entry point; macroIndex indexes g_AssistantConfig.Macros().
     void PlayIndex(int macroIndex, bool doNotAutoIterrupt);
-    // TabMacros::Stop.
     void Stop();
 
-    // Loop options (the original Play read cb_Looped/dsb_LoopTime directly; the UI
-    // pushes them here before Play).
+    // Loop options; the UI pushes them here before Play.
     void SetLoopOptions(bool looped, float loopSeconds);
 
     // The selected macro name (the UI shows Play/Stop for it).
@@ -70,127 +53,107 @@ public:
     bool IsRecording() const { return m_Recording; }
     int RecordingIndex() const { return m_RecordingIndex; }
 
-    // TabMacros::on_pb_Record_clicked halves: the UI
-    // calls RecordStart on the selected macro, target taps append, and
+    // The record halves: the UI calls RecordStart on the selected macro,
+    // the observation taps append, and
     // RecordStop commits (or discards when nothing was captured).
     void RecordStart(int macroIndex);
     // Returns the captured action count that was committed (0 = discarded).
     int RecordStop();
 
-    // The target-system taps (was g_TabMacros->AddAction).
+    // The target-system observation taps.
     void RecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color);
     void RecordTargetTile(uint16_t graphic, int x, int y, int z);
 
-    // The client's attack send site (CGame::AttackReq): the MT_ATTACK
-    // observation tap (was the 0x05 AttackRequest send tap in
-    // packetmanager.cpp, same conversions in the same order).
+    // The client's attack send site (CGame::AttackReq): records the MT_ATTACK
+    // action with the MCT_LASTATTACK / MCT_LASTTARGET / MCT_ENEMY conversions in
+    // that order.
     void RecordAttack(uint32_t serial);
 
     // The client's use send sites (CGame::DoubleClick, and
-    // CGame::PaperdollReq with the 0x80000000 bit set): the MT_USE
-    // observation tap (was the 0x06 DoubleClick send tap in
-    // packetmanager.cpp, same conversions) plus the g_LastUseObject mirror
-    // feed (the tap fed it outside the recording gate).
+    // CGame::PaperdollReq with the 0x80000000 bit set): records the MT_USE
+    // action (graphic/color from the world object, the player as MCT_SELF) and
+    // feeds the g_LastUseObject mirror outside the recording gate.
     void RecordUse(uint32_t serial);
 
-    // The client's walk send site (CPathFinder::Walk): the MT_WALK
-    // observation tap (was the 0x02 WalkRequest send tap in
-    // packetmanager.cpp) - a direction differing from the current facing
-    // records as the negative -(direction | 0x80) turn encoding. Not
-    // suspension-gated: the old tap saw every walk packet the client sent,
-    // however the walk was started (walker autowalk included).
+    // The client's walk send site (CPathFinder::Walk): records the MT_WALK
+    // action - a direction differing from the current facing records as the
+    // negative -(direction | 0x80) turn encoding. Not suspension-gated: every
+    // walk packet the client sends is observed, however the walk was started
+    // (walker autowalk included).
     void RecordWalk(int direction);
 
-    // The client's warmode send site (CGame::ChangeWarmode): the MT_WAR_MODE
-    // observation tap (was the 0x72 WarmodeS send tap in packetmanager.cpp).
+    // The client's warmode send site (CGame::ChangeWarmode): observes the
+    // MT_WAR_MODE action.
     void RecordWarMode(uint8_t status);
 
-    // The client's help gump send sites (CGumpMenubar / CGumpPaperdoll): the
-    // MT_HELP_MENU_REQUEST observation tap (was the 0x9B HelpRequest send tap
-    // in packetmanager.cpp).
+    // The client's help gump send sites (CGumpMenubar / CGumpPaperdoll): records
+    // the MT_HELP_MENU_REQUEST action.
     void RecordHelpRequest();
 
     // The client's skill send sites (CGame::UseSkill, and the client
-    // PacketManager's UseSkillRequest message): the MT_USE_SKILL observation
-    // tap (was the 0x12 Perform Action send tap, type 0x24, in
-    // packetmanager.cpp, same conversions in the same order). MCT_LAST
-    // compares against the previous g_LastSkillIndex BEFORE the update below
-    // it; the update and the title-redraw check ran outside the recording
-    // gate in the old tap and still do.
+    // PacketManager's UseSkillRequest message): records the MT_USE_SKILL action.
+    // MCT_LAST compares against the previous g_LastSkillIndex BEFORE the update
+    // below it; the update and the title-redraw check run outside the recording
+    // gate.
     void RecordUseSkill(int index);
 
-    // The client's spell send sites (CGame::CastSpell / CastSpellFromBook,
-    // and the client PacketManager's CastSpellRequest message) below client
-    // 6.0.14.2: the MT_CAST / MT_CAST_FROM_BOOK observation taps (were the
-    // 0x12 Perform Action send taps, types 0x56 / 0x27, in packetmanager.cpp,
-    // same conversions in the same order). MCT_LAST compares against the
-    // previous g_LastSpellIndex BEFORE the update below it; the update and
-    // the title-redraw check ran outside the recording gate in the old tap
-    // and still do.
+    // The client's spell send sites (CGame::CastSpell / CastSpellFromBook, and
+    // the client PacketManager's CastSpellRequest message) below client 6.0.14.2:
+    // records the MT_CAST / MT_CAST_FROM_BOOK actions. MCT_LAST compares against
+    // the previous g_LastSpellIndex BEFORE the update below it; the update and
+    // the title-redraw check run outside the recording gate.
     void RecordCast(int index);
     void RecordCastFromBook(int index);
 
     // The client's spell send sites from client 6.0.14.2 (the same
-    // CGame::CastSpell / PacketManager CastSpellRequest call sites sending
-    // the 0xBF extended cast instead of 0x12): the MT_CAST_NEW observation
-    // tap (was the 0xBF ExtendedCommandS send tap, subcommand 0x001C, in
-    // packetmanager.cpp, same conversions in the same order - the update of
-    // g_LastSpellIndex happens BEFORE the MCT_LAST comparison here, so the
-    // comparison semantics differ from RecordCast).
+    // CGame::CastSpell / PacketManager CastSpellRequest call sites sending the
+    // 0xBF extended cast instead of 0x12): records the MT_CAST_NEW action. The
+    // update of g_LastSpellIndex happens BEFORE the MCT_LAST comparison here, so
+    // the comparison semantics differ from RecordCast.
     void RecordCastNew(int index);
 
-    // The client's combat ability send site (CGumpAbility::OnAbilityUse): the
-    // MT_COMBAT_ABILITY observation tap (was the 0xD7 AOSCommandsS send tap,
-    // subcommand 0x0019, in packetmanager.cpp, same conversion - the byte is
-    // compared against g_Ability[0] for the MCT_PRIMARY / MCT_SECONDARY pick).
+    // The client's combat ability send site (CGumpAbility::OnAbilityUse): records
+    // the MT_COMBAT_ABILITY action - the byte is compared against g_Ability[0]
+    // for the MCT_PRIMARY / MCT_SECONDARY pick.
     void RecordCombatAbility(uint8_t ability);
 
-    // The client's guild/quest menu send sites (the CGumpPaperdoll buttons,
-    // and MacroManager's gump-menu macro actions): the MT_GUILD_MENU_REQUEST
-    // / MT_QUEST_MENU_REQUEST observation taps (were the 0xD7 AOSCommandsS
-    // send tap, subcommands 0x0028 / 0x0032, in packetmanager.cpp).
+    // The client's guild/quest menu send sites (the CGumpPaperdoll buttons, and
+    // MacroManager's gump-menu macro actions): records the
+    // MT_GUILD_MENU_REQUEST / MT_QUEST_MENU_REQUEST actions.
     void RecordGuildMenuRequest();
     void RecordQuestMenuRequest();
 
-    // The client's context menu send sites (CGame::ProcessDelayedClicks, and
-    // the CGumpPopupMenu selection): the MT_REQUEST_CONTEXT_MENU /
-    // MT_WAIT_FOR_CONTEXT_MENU observation taps (were the 0xBF
-    // ExtendedCommandS send tap, subcommands 0x0013 / 0x0015, in
-    // packetmanager.cpp; the menu id rides the graphic field).
+    // The client's context menu send sites (CGame::ProcessDelayedClicks, and the
+    // CGumpPopupMenu selection): records the MT_REQUEST_CONTEXT_MENU /
+    // MT_WAIT_FOR_CONTEXT_MENU actions (the menu id rides the graphic field).
     void RecordContextMenuRequest(uint32_t serial);
     void RecordWaitContextMenu(uint32_t serial, uint16_t menuID);
 
     // The client's speech send sites (the game console tail, MacroManager's
-    // MC_SAY/EMOTE/WHISPER/YELL actions, CGame::SendASCIIText): the MT_SAY
-    // observation tap (were the 0x03 ClientTalkS / 0xAD UnicodeClientTalk
-    // send taps, in packetmanager.cpp). The old wire taps gated on
-    // IsRecording() directly - assistant speech reaches the wire through the
-    // console path (unlike the builder-bypassed actions), so the recording
-    // suspension does not apply here.
+    // MC_SAY/EMOTE/WHISPER/YELL actions, CGame::SendASCIIText): records the
+    // MT_SAY action. Gated on IsRecording() directly: assistant speech reaches
+    // the wire through the console path (unlike the builder-bypassed actions),
+    // so the recording suspension does not apply here.
     void RecordSay(const astr_t &text);
 
-    // The client's gargoyle flying send sites (the CGumpRacialAbility button,
-    // and MacroManager's macro action): the MT_TOGGLE_GARGOYLE_FLYING
-    // observation tap (was the 0xBF ExtendedCommandS send tap, subcommand
-    // 0x0032, in packetmanager.cpp).
+    // The client's gargoyle flying send sites (the CGumpRacialAbility button, and
+    // MacroManager's macro action): records the MT_TOGGLE_GARGOYLE_FLYING action.
     void RecordToggleGargoyleFlying();
 
-    // TabMacros::AddAction(macro, false) recording half:
-    // appends an observed action to the open recording; ownership passes to
-    // the executor (a stray call while not recording is freed). The packet
-    // taps gate on IsRecording() BEFORE building the macro, so the
-    // not-recording cost is a single bool check per packet.
+    // Appends an observed action to the open recording; ownership passes to the
+    // executor (a stray call while not recording is freed). The call sites gate
+    // on IsRecording() BEFORE building the macro, so the not-recording cost is a
+    // single bool check per packet.
     void Record(CMacro *macro);
 
-    // TabMacros::PlayWaiting: when a playing macro sits
-    // on a waiting action that one of `types` satisfies, rewind to it and
-    // re-run immediately (the awaited event just arrived). true = the wait
-    // was consumed and the CALLER consumed the packet (the macro replay
-    // answered the server itself, exactly like the original app).
+    // When a playing macro sits on a waiting action that one of `types`
+    // satisfies, rewind to it and re-run immediately (the awaited event just
+    // arrived). true = the wait was consumed and the CALLER consumed the packet
+    // (the macro replay answered the server itself).
     bool PlayWaiting(std::initializer_list<MACRO_TYPE> types);
 
-    // TabMacros::Reset: the client-side world teardown
-    // (EnterWorld re-entry / disconnect) stops any playback and recording.
+    // The client-side world teardown (EnterWorld re-entry / disconnect) stops any
+    // playback and recording.
     void Reset();
 
     // Recording suspension: assistant-initiated game actions wrap their client
@@ -202,7 +165,7 @@ public:
     bool CanRecord() const { return m_Recording && m_SuspendDepth == 0; }
 
 private:
-    void ProcessMacro(); // was TabMacros::ProcessMacro
+    void ProcessMacro();
     uint32_t FindObject(const CMacroWithObject *macro, MACRO_CONVERT_TYPE convertType);
 
     bool m_Playing{ false };

@@ -54,8 +54,7 @@ void CAssistantEvents::OnMapData(uint16_t x, uint16_t y)
 
     g_AssistantEvents->OnJournalMessage(message);
 
-    // was: if (g_AssistantConfig.Tracker()) g_Assistant.Track(true, x, y)
-    // (the assistant map draws the point now - see CAssistant::Track)
+    // the assistant map draws the point (see CAssistant::Track)
     if (g_AssistantConfig.Tracker())
     {
         g_AssistantEvents->OnTrack(true, x, y);
@@ -64,9 +63,8 @@ void CAssistantEvents::OnMapData(uint16_t x, uint16_t y)
 
 namespace {
 
-// The 0xDF buff icon-index -> script-visible name table from the old
-// recv-tap handler; entries the original left unnamed keep the hex
-// placeholder.
+// The 0xDF buff icon-index -> script-visible name table; entries without a
+// name keep the hex placeholder.
 const int nameTableCount = 126;
 static const astr_t nameTable[nameTableCount] = { "dismount",
                                                    "disarm",

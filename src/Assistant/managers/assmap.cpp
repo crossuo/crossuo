@@ -82,7 +82,7 @@ CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint32_t &serial)
     return OMCT_OTHER;
 }
 
-// --- settings (the original CMapSettings) ------------------------------------
+// --- settings --------------------------------------------------------------
 
 void CMapSettings::Copy(const CMapSettings &settings)
 {
@@ -140,7 +140,7 @@ void CMapSettings::Copy(const CMapSettings &settings)
 // (src/Managers/MapManager.cpp:272-318) parameterized by map - the client's
 // own entry point is pinned to GetActualMap(), which cannot serve the map
 // window's explicit facet selection. withStatics=false keeps the block
-// land-only (the original ShowStatics toggle).
+// land-only (the ShowStatics toggle).
 static void GetRadarMapBlockForMap(
     int map, int blockX, int blockY, bool withStatics, RADAR_MAP_BLOCK &mb)
 {
@@ -228,8 +228,8 @@ static uint32_t Color16ToRGBA32(uint16_t color)
 namespace {
 
 // One RGBA texture the size of the map window content. Rebuilds are gated by
-// a content hash + a 150 ms floor (the original redraw timer ran at 100 ms; the
-// throttle keeps a drag-pan at zoom 0.25 from resampling every frame).
+// a content hash + a 150 ms floor; the throttle keeps a drag-pan at zoom
+// 0.25 from resampling every frame.
 constexpr uint32_t REBUILD_INTERVAL = 150;
 
 ImTextureData *s_Tex = nullptr;
@@ -296,10 +296,9 @@ uint32_t SampleTile(int map, int x, int y)
     uint16_t color = RadarCellColor(cell);
     if (g_MapSettings.ApplyAltitude && cell.IsLand != 0 && cell.Graphic < 0x4000)
     {
-        // map.cpp:411-416 blended with a per-channel saturating add here,
-        // while the original masked the sum with & 0x1F, letting bright land colors
-        // wrap over (visual delta: this clamps to white where the original wrapped to
-        // dark). The ramp itself is quantized to ((Z+127)/8)*32/256, so it
+        // the altitude blend uses a per-channel saturating add, so bright land
+        // colors clamp to white instead of wrapping to dark. The ramp itself is
+        // quantized to ((Z+127)/8)*32/256, so it
         // only spans 0..3 of the 5-bit channel (unlike the AltitudeOnly ramp
         // above, which maps the full Z range with Z=-128 -> 0 exactly); both
         // forms truncate toward zero, so negative Z never wraps under the
@@ -399,9 +398,8 @@ ImTextureRef AssMap_RadarTexture(int width, int height, const XA_MAP_VIEW &view)
 
     if (s_Tex != nullptr && (s_TexWidth != width || s_TexHeight != height))
     {
-        // size change (window resize): the canonical sequence of the atlas
-        // itself (imgui_draw.cpp ImFontAtlasTextureAdd) - queue the old one
-        // for destroy and register a replacement
+        // size change (window resize): queue the texture for destroy and register
+        // a replacement (the atlas's own lifecycle sequence)
         s_Tex->WantDestroyNextFrame = true;
         s_Retired.push_back(s_Tex);
         s_Tex = nullptr;

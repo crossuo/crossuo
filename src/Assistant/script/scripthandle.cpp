@@ -20,7 +20,7 @@
 
 namespace xuoassist {
 
-// --- the shared editor buffer (was g_ScriptEditorDialog) ---------------------
+// --- the shared editor buffer --------------------------------------------------
 
 namespace {
 astr_t s_EditorText;
@@ -235,7 +235,7 @@ CScriptHandle *CScriptManager::Run(
 
 void CScriptManager::Tick()
 {
-    // remove finished rows (the original signal_RemoveRunningScriptItem flow)
+    // remove finished rows
     m_Handles.erase(std::remove_if(m_Handles.begin(), m_Handles.end(),
                         [](CScriptHandle *handle) {
                             const XA_SCRIPT_STATE state = handle->State();
@@ -330,13 +330,13 @@ void ScriptManager_Exec(const astr_t &functionName, bool once, const vector<astr
     {
         return;
     }
-    // was OnCommandExec: run the named function of the current editor text
+    // run the named function of the current editor text
     ScriptManager_Get()->Run(functionName, ScriptEditor_Text(), args);
 }
 
 void ScriptManager_LoadScriptFile(const astr_t &path)
 {
-    // was TabScripts::LoadScript -> g_ScriptEditorDialog->LoadScript
+    // load the script file into the editor buffer
     FILE *file = fopen(path.c_str(), "rb");
     if (file == nullptr)
     {

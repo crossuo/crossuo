@@ -55,7 +55,7 @@ void refresh_hotkey_text()
 void select_row(int row)
 {
     // on_tw_Hotkeys_clicked: load the row into the
-    // info panel (m_Loading guarded in the original)
+    // info panel (m_Loading-guarded)
     s_SelectedRow = row;
     if (row < 0 || row >= (int)g_AssistantConfig.m_Hotkeys.size())
     {
@@ -300,7 +300,7 @@ void HotkeysForm_Draw(bool *open)
         {
             // false = a duplicate popup opened (the pending assignment rides
             // the engine's popup state); either way the capture buffer resets
-            // and keeps listening, like the original capture box
+            // and keeps listening, like the capture box
             g_Hotkeys.AssignCaptureToRow(s_SelectedRow);
             g_Hotkeys.BeginCapture();
             refresh_hotkey_text();
@@ -373,7 +373,7 @@ void HotkeysForm_Draw(bool *open)
     ImGui::Separator();
 
     // External code (the CScriptPlainTextEdit stub: plain text this phase;
-    // the script engine + highlighter arrive in Phase 4)
+    // the script engine + highlighter are wired to it)
     ImGui::TextUnformatted("External code:");
     if (s_SelectedRow >= 0 && s_SelectedRow < (int)g_AssistantConfig.m_Hotkeys.size() &&
         g_AssistantConfig.m_Hotkeys[s_SelectedRow].Type == HT_EXTERNAL_CODE &&

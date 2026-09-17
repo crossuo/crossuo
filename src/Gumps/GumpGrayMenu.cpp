@@ -62,7 +62,7 @@ void CGumpGrayMenu::SendMenuResponse(int index)
     //Ответ на меню
     CPacketGrayMenuResponse(this, index).Send();
 #if defined(XUO_ASSISTANT)
-    // (menu round) the gray answer rides the same 0x7D send tap
+    // the gray-menu answer reports to the same assistant menu manager
     xuoassist::g_MenuManager.OnMenuChoiceSent(Serial, ID, index);
 #endif
 

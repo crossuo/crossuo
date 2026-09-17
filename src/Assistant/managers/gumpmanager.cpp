@@ -92,8 +92,6 @@ GumpData *CGumpManager::GetGump(const uint32_t &serial, const uint32_t &id)
 
 void CGumpManager::AddGump(uint32_t serial, int x, int y, uint32_t id)
 {
-    // was the CGump(serial, id, x, y) constructor (the record is a plain
-    // struct now; the remaining fields keep their default initializers)
     auto *gump = new GumpData();
     gump->Serial = serial;
     gump->ID = id;
@@ -510,8 +508,7 @@ bool CGumpManager::SendGumpChoice(GumpData *gump, CGumpHook &hook)
         }
     }
 
-    // Marshal the assistant gump model into the raw 0xB1 reply (the write
-    // sequence of the old CPacketGumpResponse builder): checked checkboxes and
+    // Marshal the assistant gump model into the raw 0xB1 reply: checked checkboxes and
     // radios (commands[5] != 0) contribute their commands[6] serial, text
     // entries (commands[7] = text line index) contribute commands[6] as the
     // entry id and the referenced line as the text.

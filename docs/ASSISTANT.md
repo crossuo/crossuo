@@ -70,8 +70,8 @@ scripts; the API classification ([Q]/[G]/[D] coverage notes) and the
 registration table live in `src/Assistant/script/apiscript.cpp`
 (`apiscript.h` only declares the two entry points). Earlier assistant
 scripts run unmodified except for the documented deviations
-("Remaining deviations" in `docs/NOTES.md`: no audio playback, no
-speech-mode variants, `LoadProfile` restrictions).
+(no audio playback, no speech-mode variants, `LoadProfile`
+restrictions).
 
 ## Differences from earlier assistant releases
 

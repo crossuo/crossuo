@@ -1,28 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Assistant hotkey engine (Phase 3, master plan §2.5/§3.2/§5.3/§6/§7 item 1).
-// Replaces the original app's key-event filter + HotkeysForm::HotkeyExistsAndUse
-// with an SDL-event funnel living in the client's input path:
+// Assistant hotkey engine: an SDL-event funnel living in the client's input
+// path:
 //
 //   AssistantWindow_ProcessEvent (Alt+U, pop-out windows, ImGui gating)
 //     -> CHotkeys::ProcessEvent  (capture field, then binding matching)
 //       -> the game, unless consumed
 //
-// Key storage is the Phase-1c CHotkeyEntry table in g_AssistantConfig
-// (Hotkeys.ini, version 1, SDL key codes + the HM_* modifier bitmask) - byte
-// compatible with the original writer/reader. The display-name tables, the keypad
-// bit semantics and the duplicate policy are ported from gui/hotkeybox.cpp.
+// Key storage is the CHotkeyEntry table in g_AssistantConfig (Hotkeys.ini,
+// version 1, SDL key codes + the HM_* modifier bitmask).
 //
-// Original semantics kept verbatim (HotkeyExistsAndUse):
+// Semantics:
 //   - HT_TOGGLE_HOTKEYS fires even when the engine is off (it IS the switch);
 //   - every other binding fires only when OnOffHotkeys() is set;
 //   - a matched binding is consumed unless PassHotkeys() (then the key ALSO
 //     reaches the game), with the Alt+F4 exception (never consumed);
 //   - wheel/X-button/middle-click bindings behave like any other binding.
-// Deltas (in-client port): key auto-repeat never fires a binding (the original
-// capture filter skipped repeats); non-repeat key events reach the engine
-// from AssistantWindow.cpp (the game window sends only those).
+// Deltas: key auto-repeat never fires a binding; non-repeat key events reach
+// the engine from AssistantWindow.cpp (the game window sends only those).
 
 #pragma once
 
@@ -32,7 +28,7 @@ union SDL_Event;
 
 namespace xuoassist {
 
-// --- common/keys.h (the original app's modifier vocabulary, storage compatible) --
+// --- common/keys.h modifier vocabulary, storage compatible -----------------------
 enum HOTKEY_MODIFIERS
 {
     HM_NONE = 0,
@@ -45,7 +41,7 @@ enum HOTKEY_MODIFIERS
     HM_MOUSE_X = 0x40
 };
 
-// The pseudo-keycodes the original app assigned to mouse events (they are stored in
+// The pseudo-keycodes assigned to mouse events (they are stored in
 // Hotkeys.ini "key" for wheel/X bindings).
 enum
 {
@@ -211,7 +207,7 @@ public:
     void CancelCapture() { m_Capturing = false; }
     uint32_t CaptureKey() const { return m_CaptureKey; }
     uint8_t CaptureModifiers() const { return m_CaptureModifiers; }
-    // Commits the captured (key, modifiers) into config row `row` with the original
+    // Commits the captured (key, modifiers) into config row `row` with the
     // duplicate policy (CheckExists): false when a duplicate popup is open
     // (the UI then drives ResolveDuplicate below).
     bool AssignCaptureToRow(int row);

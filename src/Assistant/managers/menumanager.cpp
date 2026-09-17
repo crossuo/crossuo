@@ -111,9 +111,8 @@ bool CMenuManager::OnMenuReceived(
         m_LastMenu->m_Items.push_back(item);
     }
 
-    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
-    // MT_WAIT_FOR_MENU })` -> return false: a playing macro waiting on this
-    // menu consumes the packet (the PlayWaiting semantics).
+    // a playing macro waiting on this menu consumes the packet (the macro
+    // replay answers the server itself).
     if (g_World != nullptr && g_MacroExecutor.IsPlaying() &&
         g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_MENU }))
     {
@@ -332,9 +331,6 @@ void CMenuManager::InfoMenu(const astr_t &menuIndex)
         return;
     }
 
-    // Was g_TextDialog->ClearText()/AddText(...) + show/activateWindow -
-    // restored by the 4b-2 text window (scriptgump.cpp); the parse below
-    // matches the original text pieces.
     astr_t text = menu->GrayMenu ? "Gray menu information:\nName: " : "Menu information:\nName: ";
     text += menu->Name;
 

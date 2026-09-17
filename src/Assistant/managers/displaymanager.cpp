@@ -3,10 +3,10 @@
 
 // the info-command table, the 26 default items, the display-key parser and
 // the title-data compiler are here; the win32 GDI Redraw/icon bodies are
-// Phase 2/4 (see displaymanager.h).
+// (see displaymanager.h).
 
 #include "displaymanager.h"
-#include "ServerList.h" // g_ServerList.LastServerName (the fused server name)
+#include "ServerList.h" // g_ServerList.LastServerName (the shared server name)
 #include "../core/assist.h"
 #include "../core/assistantevents.h"
 #include "../config/assistantconfig.h"
@@ -449,8 +449,7 @@ void CDisplayManager::GetValues(
         backgroundColor = item.BackgroundColor;
     }
 
-    // The colors land in the drawn text/bg (Phase 2/4); the value logic above
-    // is the part this round keeps.
+    // The colors land in the drawn text/bg; the value logic above
     (void)textColor;
     (void)backgroundColor;
 }
@@ -477,11 +476,9 @@ void CDisplayManager::Redraw(
     bool displayAppIcon,
     uint32_t backgroundColor)
 {
-    // Was the win32 GDI title-bar painter (displaymanager.cpp:500-...). The
-    // caption text is composed here (the original RDM_TEXTUAL branch, verbatim);
-    // the colored/graphical painter has no OS-caption equivalent - the two
-    // colored modes produce the same plain string. The caller (the assistant
-    // UI tick) applies the text to the client window on change.
+    // The caption text is composed here; the colored/graphical modes have no
+    // OS-caption equivalent and produce the same plain string. The caller
+    // (the assistant UI tick) applies the text to the client window on change.
     (void)hightFont;
     (void)highlightReagents;
     (void)displayAppIcon;
@@ -678,8 +675,7 @@ void CDisplayManager::RecompilleData(const astr_t &text, uint32_t textColor)
 
 void CDisplayManager::CompilleData(const astr_t &text, uint32_t textColor)
 {
-    // Tokenized line by line, one token list per line, like the original
-    // X:UO Assist text parser; the "{}" quote pair keeps the braces on tag
+    // Tokenized line by line, one token list per line; the "{}" quote pair keeps the braces on tag
     // fragments so the tag branch below can recognize them.
     size_t pos = 0;
 

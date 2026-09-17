@@ -215,7 +215,7 @@ void TabMacros_Draw()
         loopSeconds = 1000.0f;
     }
 
-    // pb_ToScript stays disabled (the script engine is Phase 4)
+    // pb_ToScript stays disabled (the script engine is script-module only)
     ImGui::BeginDisabled(true);
     ImGui::Button("To script");
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
@@ -224,7 +224,7 @@ void TabMacros_Draw()
     }
     ImGui::EndDisabled();
 
-    // push the loop options (the original Play read the checkboxes directly)
+    // push the loop options
     g_MacroExecutor.SetLoopOptions(looped && EnabledFeatureLoopedMacro(), loopSeconds);
 }
 

@@ -3,10 +3,9 @@
 
 #pragma once
 
-// The script file engine (was script/fileengine.*, CScriptFileObject):
-// stdio-based, script-thread owned.
+// The script file engine: stdio-based, script-thread owned.
 //
-// SANDBOX (the plan's security rule; the original engine accepted any path):
+// SANDBOX (security rule; any path is confined to the sandbox root):
 // every path a script passes is normalized and resolved under the sandbox
 // root - the client directory (the config root, CAssistantConfig::GetRootPath:
 // the client cwd). Relative paths join the root; absolute paths are accepted
@@ -17,9 +16,9 @@
 // lexical normalization only.
 //
 // Threading: file objects live entirely on the calling script worker thread
-// (parity with the original: CScriptFileObject opened files directly, no command round trip).
-// The sandbox root is a process constant set once on the main thread at UI
-// install; the harness sets its own.
+// (files open directly, no command round trip). The sandbox root is a
+// process constant set once on the main thread at UI install; the harness
+// sets its own.
 
 #include "../core/global.h"
 
@@ -35,6 +34,7 @@ struct XA_SCRIPT_FILE
 // the process cwd (the client's binary dir, which IS the config root).
 void ScriptFile_SetSandboxRoot(const astr_t &root);
 
+// Normalizes `path` into the sandbox.
 // Normalizes `path` into the sandbox. Returns "" when the path escapes the
 // sandbox (logged with the `api` origin).
 astr_t ScriptFile_Sanitize(const astr_t &path, const char *api);

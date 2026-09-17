@@ -12,6 +12,11 @@
 
 namespace xuoassist {
 
+// The harness (xuoassist-script-test) links this TU for ParseTextTokens only;
+// the converters below consult the live client world (g_PlayerSerial, the
+// g_Last*Object slots), and the harness provides stubs in harnessstubs.cpp.
+#ifndef XUO_ASSISTANT_HARNESS
+
 uint32_t TextToUInt(const astr_t &text)
 {
     uint32_t result = (uint32_t)strtoul(text.c_str(), nullptr, 10);
@@ -129,6 +134,8 @@ astr_t GraphicToText(const uint16_t &value)
     return buf;
 }
 
+#endif // !XUO_ASSISTANT_HARNESS
+
 vector<astr_t> ParseTextTokens(
     const astr_t &line, const char *delimiters, const char *comentaries, const char *quotes,
     bool trim, bool saveQuotes)
@@ -137,8 +144,15 @@ vector<astr_t> ParseTextTokens(
 
     const size_t comentsSize = strlen(comentaries);
     const size_t quotesSize = strlen(quotes);
-    const char *const end = line.data() + line.size();
-    const char *ptr = line.data();
+    const char *const data = line.data();
+    // The old CTextParser bounded every line at the first embedded NUL
+    // (GetEOL), so a NUL terminated the scan instead of stalling on it.
+    // This matters for the display-tag flow: CompilleData re-parses the
+    // stage-one tokens, and quoted tokens carry a trailing NUL (the
+    // CTextParser quirk), so "{name\0}" reaches this tokenizer verbatim.
+    const char *const nul = (const char *)memchr(data, '\0', line.size());
+    const char *const end = (nul != nullptr) ? nul : data + line.size();
+    const char *ptr = data;
 
     const auto isDelimiter = [&](char c)
     {
@@ -243,10 +257,9 @@ vector<astr_t> ParseTextTokens(
 
                 if (size > 0)
                 {
-                    // The X:UO Assist tokenizer allocates one extra byte and
-                    // stores the terminator inside the token, so quoted tokens
-                    // keep a trailing NUL (the '\r' strip nulls in place too);
-                    // kept for token-for-token parity with the original.
+                    // The tokenizer allocates one extra byte and stores the
+                    // terminator inside the token, so quoted tokens keep a
+                    // trailing NUL (the '\r' strip nulls in place too).
                     out.resize(size + 1);
                     memcpy(&out[0], ptr, size);
                     out[size] = '\0';
@@ -284,6 +297,8 @@ vector<astr_t> ParseTextTokens(
 
     while (ptr < end)
     {
+        const char *const scanStart = ptr;
+
         while (ptr < end && *ptr != '\0' && isDelimiter(*ptr))
         {
             ptr++;
@@ -301,6 +316,14 @@ vector<astr_t> ParseTextTokens(
             result.push_back(buf);
         }
         else if (isSecondQuote(ptr))
+        {
+            ptr++;
+        }
+
+        // Progress guarantee: no input may leave the scan position unchanged
+        // (the only char every scan helper skips without consuming is a NUL,
+        // which cannot appear before `end` anymore, but keep the backstop).
+        if (ptr == scanStart)
         {
             ptr++;
         }

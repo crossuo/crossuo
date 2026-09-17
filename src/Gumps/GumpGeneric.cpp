@@ -142,7 +142,7 @@ void CGumpGeneric::SendGumpResponse(int index)
     //Ответ на гамп
     CPacketGumpResponse(this, index).Send();
 #if defined(XUO_ASSISTANT)
-    // (gump round) was the 0xB1 ChoiceGump send tap; the recorded id is the
+    // the recorded id is the
     // one written to the wire (the master gump id when one is set)
     xuoassist::g_GumpManager.OnGumpChoiceSent(
         Serial, (MasterGump != 0u) ? MasterGump : ID, index);
@@ -175,7 +175,7 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
         //Ответ на гамп
         CPacketVirtueGumpResponse(this, g_PressedObject.LeftSerial).Send();
 #if defined(XUO_ASSISTANT)
-        // (gump round) the virtue answer rides the same 0xB1 send tap
+        // the virtue answer reports to the assistant gump manager
         xuoassist::g_GumpManager.OnGumpChoiceSent(
             Serial, 0x000001CD, g_PressedObject.LeftSerial);
 #endif

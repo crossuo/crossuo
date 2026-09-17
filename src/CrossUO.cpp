@@ -5444,8 +5444,7 @@ void CGame::PaperdollReq(uint32_t serial)
 
     CPacketDoubleClickRequest(serial | 0x80000000).Send();
 #if defined(XUO_ASSISTANT)
-    // the old send tap saw the already-ORed wire serial, and fed the
-    // assistant's g_LastUseObject mirror with it
+    // the already-ORed wire serial feeds the assistant's g_LastUseObject mirror
     xuoassist::g_MacroExecutor.RecordUse(serial | 0x80000000);
 #endif
 }
@@ -5491,7 +5490,7 @@ void CGame::AttackReq(uint32_t serial)
 void CGame::SendASCIIText(const char *str, SPEECH_TYPE type)
 {
 #if defined(XUO_ASSISTANT)
-    // was the 0x03 ClientTalkS send tap: a prefixed line runs the assistant
+    // a prefixed line runs the assistant
     // command instead of going out as speech
     astr_t speechText = str;
     uint16_t speechColor = g_ConfigManager.SpeechColor;
@@ -5717,8 +5716,7 @@ void CGame::ConsolePromptSend()
     {
         CPacketASCIIPromptResponse(g_GameConsole.GetTextA(), cancel).Send();
 #if defined(XUO_ASSISTANT)
-        // (prompt round) was the 0x9A send tap parsing the answer out of the
-        // packet buffer; the value recorded is the console text itself
+        // the recorded prompt answer is the console text itself
         xuoassist::g_PromptManager.OnPromptSent(g_GameConsole.GetTextA(), cancel);
 #endif
     }
@@ -5726,8 +5724,7 @@ void CGame::ConsolePromptSend()
     {
         CPacketUnicodePromptResponse(g_GameConsole.GetTextW(), g_Language, cancel).Send();
 #if defined(XUO_ASSISTANT)
-        // (prompt round) the 0xC2 twin of the 0x9A tap; the recorded value is
-        // the console text in the macro string encoding
+        // the recorded value is
         xuoassist::g_PromptManager.OnPromptSent(str_from(g_GameConsole.GetTextW()), cancel);
 #endif
     }
@@ -5740,8 +5737,7 @@ void CGame::ConsolePromptCancel()
     {
         CPacketASCIIPromptResponse({}, true).Send();
 #if defined(XUO_ASSISTANT)
-        // (prompt round) a cancel records an empty answer, like the old
-        // zero response-field check did
+        // a cancel records an empty answer
         xuoassist::g_PromptManager.OnPromptSent("", true);
 #endif
     }
@@ -5749,8 +5745,7 @@ void CGame::ConsolePromptCancel()
     {
         CPacketUnicodePromptResponse({}, g_Language, true).Send();
 #if defined(XUO_ASSISTANT)
-        // (prompt round) a cancel records an empty answer, like the old
-        // zero response-field check did
+        // a cancel records an empty answer
         xuoassist::g_PromptManager.OnPromptSent("", true);
 #endif
     }

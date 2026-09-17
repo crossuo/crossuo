@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabAgentsParty (was assist/tabagentsparty.ui/.cpp, §2.8): the accept /
-// decline lists (Name/Serial/from-target) and the four auto-response
-// checkboxes. The DECISION logic itself is packet-driven and lives in the
-// client's party parse (src/Party.cpp case 7 -> config
-// PartyInviteCanBeAutoAccepted/AutoDeclined) - this tab edits the very
-// structures it consults (Party.ini, saved on every mutation).
+// TabAgentsParty: the accept / decline lists (Name/Serial/from-target) and
+// the four auto-response checkboxes. The decision logic itself is
+// packet-driven and lives in the client's party parse (src/Party.cpp case 7
+// -> config PartyInviteCanBeAutoAccepted/AutoDeclined) - this tab edits the
+// very structures it consults (Party.ini, saved on every mutation).
 
 #include "assistantui.h"
 
@@ -23,8 +22,7 @@ namespace xuoassist {
 
 namespace {
 
-// shared serial/name fields (the original le_PartySerial/le_PartyName pair served
-// both lists)
+// shared serial/name fields (the
 char s_Name[64] = { 0 };
 char s_Serial[16] = { 0 };
 char s_Hint[128] = { 0 };
@@ -41,7 +39,7 @@ void PartySetNameOf(CWorldObjectEntry &entry, const char *name)
     entry.Name = name;
 }
 
-// the original tabs compared CAssistant::TextToSerial(serial) != 0
+// compares CAssistant::TextToSerial(serial) != 0
 uint32_t serial_from_field()
 {
     return CAssistant::TextToSerial(s_Serial);
@@ -60,7 +58,7 @@ bool serial_in_use(const vector<CWorldObjectEntry> &items, uint32_t serial, int 
 }
 
 // the add/save/remove flows of the two lists are identical except for the
-// target container (was on_pb_PartyAutoAccept*/PartyAutoDecline*_clicked)
+// target container
 void list_add(vector<CWorldObjectEntry> &items, bool &changed)
 {
     const uint32_t serial = serial_from_field();
@@ -77,7 +75,7 @@ void list_add(vector<CWorldObjectEntry> &items, bool &changed)
     CWorldObjectEntry entry;
     entry.Serial = serial;
     entry.Name = s_Name;
-    entry.Enabled = true; // was CWorldObjectListItem(..., true, ...)
+    entry.Enabled = true;
     items.push_back(entry);
     changed = true;
     s_Hint[0] = '\0';

@@ -3,23 +3,17 @@
 
 #pragma once
 
-// The script UI engine of the 4b-2 round: the script TEXT WINDOW (was
-// script/textwindowengine.* + the g_TextDialog window it drove through
-// OnCommandTextWindow*), the one UI-visible part of the script API.
-//
-// Original shape: one singleton text dialog per app; the engine emitted
-// CommandTextWindow* into the main thread and the dialog drew itself. The
-// port keeps the singleton (a script that calls Open twice re-opens the same
-// window - the bound is 1 window, trivially under the plan's per-script cap)
-// and renders it as a small ImGui window from AssistantUI_Draw. Documented
-// caveat: AssistantUI_Draw only runs while the assistant shell is visible,
-// so the window vanishes with the assistant hidden (the data stays alive -
-// reopening shows the same lines; the original kept a native window alive instead).
+// The script UI engine: the script TEXT WINDOW, the one UI-visible part of
+// the script API.
+// One singleton text window per process; a script that calls Open twice
+// re-opens the same window. Rendered as a small ImGui window from
+// AssistantUI_Draw. Caveat: AssistantUI_Draw only runs while the assistant
+// shell is visible, so the window vanishes with the assistant hidden (the
+// data stays alive - reopening shows the same lines).
 // TextWindow* ops reach this module marshaled through the queue
 // (SC_TEXT_WINDOW), so all state here is main-thread owned.
-//
 // SaveToFile writes the current lines (the sandbox rules of scriptfile.h
-// apply; the dialog wrote the raw text the same way).
+// apply).
 
 #include "../core/global.h"
 

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabAgentsDress (was assist/tabagentsdress.ui/.cpp, §2.8): the dress sets
-// list plus the working items list, the apply/dress/undress buttons and the
-// two option checkboxes. The set data lives in g_AssistantConfig.m_DressSets
-// (Dress.coa, saved on every mutation); the sequences run through
-// core/dressagent (the original app generated a throwaway script instead).
+// TabAgentsDress: the dress sets list plus the working items list, the
+// apply/dress/undress buttons and the two option checkboxes. The set data
+// lives in g_AssistantConfig.m_DressSets (Dress.coa, saved on every mutation);
+// the sequences run through core/dressagent.
 
 #include "assistantui.h"
 
@@ -26,9 +25,9 @@ namespace xuoassist {
 
 namespace {
 
-// the original tab kept a WORKING COPY of the selected set's items in the
-// lw_DressItems widget (from-target / apply / clear mutated the copy; Create
-// and Save committed the copy into a set) - s_WorkRows mirrors that
+// the tab keeps a WORKING COPY of the selected set's items in the
+// working rows (from-target / apply / clear mutate the copy; Create and
+// Save commit it into a set) - s_WorkRows mirrors that
 int s_SelectedSet = -1;
 int s_SelectedItem = -1;
 char s_Name[64] = { 0 };
@@ -88,7 +87,7 @@ void work_into_set(CDressSetEntry &set)
     }
 }
 
-// was AddDressItemInList(list, layer, serial): replace the same-layer entry
+// replace the same-layer entry
 void work_add_item(int layer, uint32_t serial)
 {
     if (layer <= 0 || layer >= 25)
@@ -126,10 +125,9 @@ bool name_in_use(const char *name, int skipIndex)
     return false;
 }
 
-// the per-set layer scan buttons (was on_pb_DressSetCurrent/ApplyHands/
-// ApplyArmor_clicked): read the player's equipped items from the mirror
-// checkSafe matches the original guards: SetCurrent and ApplyArmor required
-// g_LayerSafe[layer], ApplyHands did not (tabagentsdress.cpp:187-236)
+// the per-set layer scan buttons (SetCurrent / ApplyHands / ApplyArmor):
+// read the player's equipped items from the mirror. checkSafe guards:
+// SetCurrent and ApplyArmor require g_LayerSafe[layer], ApplyHands did not.
 void apply_from_equipment(int minLayer, int maxLayer, bool checkSafe)
 {
     if (g_Player == nullptr || s_SelectedSet < 0 ||
@@ -191,7 +189,7 @@ void TabDress_Draw()
     XA_FROM_TARGET_RESULT ftResult;
 
     // the "Undress before dressing" / "Use double click for equip items"
-    // checkboxes (the original bound them straight to the config accessors)
+    // checkboxes (bound straight to the config accessors)
     bool undressFirst = g_AssistantConfig.UndressBeforeDressing();
     if (ImGui::Checkbox("Undress before dressing", &undressFirst))
     {
@@ -214,15 +212,14 @@ void TabDress_Draw()
     const int buttons = ListButtons("dress");
     if ((buttons & XALB_TARGET) != 0)
     {
-        // was on_pb_DressFromTarget_clicked
         s_FtPending = true;
         g_TargetHandler = &CAssistant::HandleTargetDressItem;
         g_Assistant.RequestTarget("Select a dress item");
     }
     if (UI_PollFromTarget(s_FtPending, s_FtGeneration, XA_FROM_TARGET_DRESS_ITEM, ftResult))
     {
-        // was AddDressItemInList(item): resolve the equip layer through the
-        // mirror and replace the working-copy slot
+        // resolve the equip layer through the mirror and replace the
+        // working-copy slot
         if (g_World != nullptr)
         {
             CGameItem *item = g_World->FindWorldItem(ftResult.Serial);
@@ -329,7 +326,7 @@ void TabDress_Draw()
         ImGui::TextDisabled("%s", s_Hint);
     }
 
-    // the sequence buttons (the original column of pb_Dress* buttons)
+    // the sequence buttons
     if (ImGui::Button("Apply current equipment to set"))
     {
         apply_from_equipment(1, OL_MOUNT - 1, true);
@@ -346,8 +343,7 @@ void TabDress_Draw()
     ImGui::BeginDisabled(g_DressAgent.Active());
     if (ImGui::Button("Dress selected set"))
     {
-        // was on_pb_DressUse_clicked -> DressSet(currentItem); the original app
-        // dressed the LIVE set data (not the working copy)
+        // -> DressSet(currentItem);
         if (s_SelectedSet >= 0 && s_SelectedSet < (int)sets.size())
         {
             g_DressAgent.DressSet(&sets[s_SelectedSet]);
@@ -360,11 +356,11 @@ void TabDress_Draw()
     }
     if (ImGui::Button("Undress"))
     {
-        g_DressAgent.Undress(); // was on_pb_DressUndress_clicked -> UndressSet
+        g_DressAgent.Undress();
     }
     if (ImGui::Button("Clear set items"))
     {
-        s_WorkRowCount = 0; // was on_pb_DressClearSet_clicked: lw_DressItems->clear()
+        s_WorkRowCount = 0;
     }
     ImGui::EndChild();
 
@@ -391,7 +387,7 @@ void TabDress_Draw()
         }
         ImGui::PopID();
     }
-    // Delete-key removal (was OnDeleteKeyClick on lw_DressItems)
+    // Delete-key removal
     if (s_SelectedItem >= 0 && s_SelectedItem < s_WorkRowCount &&
         !ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantTextInput &&
         ImGui::IsKeyChordPressed(ImGuiKey_Delete))

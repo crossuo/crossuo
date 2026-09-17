@@ -68,7 +68,7 @@ void CGumpMenu::SendMenuResponse(int index)
     //Ответ на меню
     CPacketMenuResponse(this, index).Send();
 #if defined(XUO_ASSISTANT)
-    // (menu round) was the 0x7D MenuChoice send tap
+    // the menu-choice report to the assistant menu manager
     xuoassist::g_MenuManager.OnMenuChoiceSent(Serial, ID, index);
 #endif
 

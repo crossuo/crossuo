@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// AssistantConfig implementation. Every Load*/Save* pair below is an
-// extraction of the identically named logic from the tab classes listed in
-// the header comments; the file format is INI (config/configio.h) - one
-// .ini per former file, indexed record sections + a [Meta] count, keys
-// named like the former attributes (docs/NOTES.md "Persistence").
+// AssistantConfig implementation. Every Load*/Save* pair persists one config
+// file; the file format is INI (config/configio.h) - one .ini per file,
+// indexed record sections + a [Meta] count.
 
 #include "assistantconfig.h"
 #include <algorithm>
@@ -438,9 +436,7 @@ void CAssistantConfig::LoadMainOptions()
         m_DisplayTitleData = ini.Get("display", "titledata");
     }
 
-    // TabHotkeys::LoadConfig (the XML loader reproduced the original's
-    // hotkeyprefix/commandprefix guard mismatch; the INI writer/reader pair
-    // only ever uses commandprefix)
+    // // the INI schema stores only commandprefix
     if (ini.Has("hotkeys", "passhotkeys"))
     {
         m_PassHotkeys = ini.GetBool("hotkeys", "passhotkeys", false);
@@ -457,8 +453,7 @@ void CAssistantConfig::LoadMainOptions()
     }
     if (ini.Has("scripts", "scriptfile"))
     {
-        // Was TabScripts::LoadScript(...): the script engine round
-        // re-adds the auto-run; the path itself is config data.
+        // The script path element
         m_ScriptFilePath = ini.Get("scripts", "scriptfile");
     }
 }
@@ -549,13 +544,13 @@ XA_CONFIG_OPTION_GETTER(AnimationEcho, EnabledFeatureAnimationEcho(), CLBI_ANIMA
 XA_CONFIG_OPTION_GETTER(EffectEcho, EnabledFeatureEffectEcho(), CLBI_EFFECT_ECHO)
 XA_CONFIG_OPTION_GETTER(SpeechFilter, EnabledFeatureSpeechFilter(), CLBI_FILTER_SPEECH)
 XA_CONFIG_OPTION_GETTER(TextReplace, EnabledFeatureTextReplace(), CLBI_TEXT_REPLACE)
-// Not feature-gated in the original:
+// Not feature-gated:
 bool CAssistantConfig::ObjectInspector() const
 {
     return m_Options[CLBI_OBJECT_INSPECTOR];
 }
 XA_CONFIG_OPTION_GETTER(NoGrayScreen, EnabledFeatureNoDeathScreen(), CLBI_NO_GRAY_SCREEN)
-// Not feature-gated in the original:
+// Not feature-gated:
 bool CAssistantConfig::SaveFarObjects() const
 {
     return m_Options[CLBI_SAVE_FAR_OBJECTS];
@@ -608,7 +603,7 @@ void CAssistantConfig::UpdateFeatures()
 
         if (m_Options[i])
         {
-            m_Options[i] = false; // was OptionChanged(i, item) on the widget
+            m_Options[i] = false; // the toggle applies immediately
         }
     }
 }
@@ -698,7 +693,7 @@ bool CAssistantConfig::InEnemyList(uint32_t serial) const
 void CAssistantConfig::AddType(const astr_t &name, const astr_t &type)
 {
     // Was TabListsTypes::AddType (minus the target-request UI branch; the
-    // empty-type "from target" flow is Phase 2 UI and stays there).
+    // empty-type "from target" flow is UI and stays there).
     const astr_t lowerName = to_lower(name);
     for (CTypeEntry &entry : m_Types)
     {
@@ -1072,7 +1067,7 @@ void CAssistantConfig::ClearDressSet(CDressSetEntry *set)
 
 // --- helpers -------------------------------------------------------------------
 
-// --- Types.ini (was TabListsTypes::LoadTypes/SaveTypes) -------------------------
+// --- Types.ini ------------------------------------------------------------------
 
 void CAssistantConfig::SaveTypes()
 {
@@ -1129,7 +1124,7 @@ void CAssistantConfig::LoadTypes()
     }
 }
 
-// --- FindList.ini (was TabListsFind::LoadFindList/SaveFindList) ------------------
+// --- FindList.ini ----------------------------------------------------------------
 
 void CAssistantConfig::SaveFindList()
 {
@@ -1183,7 +1178,7 @@ void CAssistantConfig::LoadFindList()
     }
 }
 
-// --- IgnoreList.ini (was TabListsIgnore::LoadIgnoreList/SaveIgnoreList) ----------
+// --- IgnoreList.ini ---------------------------------------------------------------
 
 void CAssistantConfig::SaveIgnoreList()
 {
@@ -1241,7 +1236,7 @@ void CAssistantConfig::LoadIgnoreList()
     }
 }
 
-// --- SpeechFilter.ini (was TabFiltersSpeech::LoadSpeechFilter/SaveSpeechFilter) ---
+// --- SpeechFilter.ini ----------------------------------------------------------
 
 void CAssistantConfig::SaveSpeechFilter()
 {
@@ -1282,7 +1277,7 @@ void CAssistantConfig::LoadSpeechFilter()
     }
 }
 
-// --- TextReplaces.ini (was TabFiltersReplaces::LoadTextReplaces/SaveTextReplaces) --
+// --- TextReplaces.ini ---------------------------------------------------------
 
 void CAssistantConfig::SaveTextReplaces()
 {
@@ -1331,7 +1326,7 @@ void CAssistantConfig::LoadTextReplaces()
     }
 }
 
-// --- SoundFilter.ini (was TabFiltersSound::LoadSoundFilter/SaveSoundFilter) --------
+// --- SoundFilter.ini ------------------------------------------------------------
 
 void CAssistantConfig::SaveSoundFilter()
 {
@@ -1370,7 +1365,7 @@ void CAssistantConfig::LoadSoundFilter()
     }
 }
 
-// --- ShopList.ini (was TabAgentsShop::LoadShopList/SaveShopList) --------------------
+// --- ShopList.ini ------------------------------------------------------------------
 
 void CAssistantConfig::SaveShopList()
 {
@@ -1460,7 +1455,7 @@ void CAssistantConfig::LoadShopList()
     }
 }
 
-// --- DisplayItems.ini / DisplayGroups.ini (was TabDisplay) ---------------------------
+// --- DisplayItems.ini / DisplayGroups.ini -------------------------------------------
 
 void CAssistantConfig::SaveDisplayItems()
 {
@@ -1673,7 +1668,7 @@ void CAssistantConfig::LoadDisplayGroups()
     }
 }
 
-// --- Objects.ini (was TabListsObjects::LoadObjects/SaveObjects) -----------------------
+// --- Objects.ini -----------------------------------------------------------------------
 
 void CAssistantConfig::SaveObjects()
 {
@@ -1716,7 +1711,7 @@ void CAssistantConfig::LoadObjects()
     }
 }
 
-// --- Hotkeys.ini (was HotkeysForm::Load/Save) ------------------------------------------
+// --- Hotkeys.ini ------------------------------------------------------------------------
 
 void CAssistantConfig::SaveHotkeys()
 {
@@ -1741,8 +1736,7 @@ void CAssistantConfig::SaveHotkeys()
 
 bool CAssistantConfig::LoadHotkeys()
 {
-    // Was HotkeysForm::Load (which also tolerated the legacy version 0
-    // VK-code records; the INI schema has no legacy form).
+    // reads the INI schema only
     m_Hotkeys.clear();
 
     CIniFile ini;
@@ -1769,7 +1763,7 @@ bool CAssistantConfig::LoadHotkeys()
     return true;
 }
 
-// --- Party.ini (was TabAgentsParty::LoadParty/SaveParty) ---------------------------------
+// --- Party.ini ----------------------------------------------------------------------------
 
 void CAssistantConfig::SaveParty()
 {
@@ -1854,7 +1848,7 @@ void CAssistantConfig::LoadParty()
     }
 }
 
-// --- Friends.ini (was TabListsFriends::LoadFriends/SaveFriends) ---------------------------
+// --- Friends.ini ---------------------------------------------------------------------------
 
 void CAssistantConfig::SaveFriends()
 {
@@ -1899,7 +1893,7 @@ void CAssistantConfig::LoadFriends()
     }
 }
 
-// --- Enemies.ini (was TabListsEnemies::LoadEnemies/SaveEnemies) ----------------------------
+// --- Enemies.ini ----------------------------------------------------------------------------
 
 void CAssistantConfig::SaveEnemies()
 {
@@ -1938,7 +1932,7 @@ void CAssistantConfig::LoadEnemies()
     }
 }
 
-// --- Macros.ini (was TabMacros::Load/Save) ---------------------------------------------------
+// --- Macros.ini -----------------------------------------------------------------------------
 
 void CAssistantConfig::SaveMacros()
 {
@@ -1996,19 +1990,17 @@ bool CAssistantConfig::LoadMacros()
     return true;
 }
 
-// --- Dress.coa (was TabAgentsDress::LoadDress/SaveDress) --------------------------------------
+// --- Dress.coa -----------------------------------------------------------------------------
 //
 // Custom little-endian binary format written through ::CDataWriter
 // (xuocore/mappedfile.h). Layout:
 //   uint32 version (=0), int32 setsCount, uint8 undressBefore,
 //   per set: string name, uint8 layerCount, per layer { uint8 layer, uint32 serial },
 //   uint8 doubleClickForEquipment.
-// CFileObject::WriteString wrote: int8 length (= utf8 length + 1), the utf8
-// bytes, one 0x00 byte. The original reader's ReadString read a full int32
-// length (asymmetric with the writer - an original bug); the reader below
-// reproduces that exact tolerance so both legacy files and our files behave
-// identically (names that fail the bounds check come back empty and the set
-// is skipped, like the original `continue`).
+// Dress.coa stores: int8 length (= utf8 length + 1), the utf8 bytes, one
+// 0x00 byte; the reader accepts a full int32 length (tolerating writer
+// asymmetry) so old and new files load identically (names that fail the
+// bounds check come back empty and the set is skipped).
 
 static const int XA_DRESS_MAX_LAYERS = 25;
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The three Filters sub-tabs (was assist/tabfilters*.ui/.cpp, §2.10):
-// Speech, Replaces (with the Mode/Type combos), Sound. Entries bind to the
-// g_AssistantConfig filter containers; the packet handlers read exactly these
-// through CheckSpeechInFilter / CheckReplaceText / CheckSoundInFilter.
+// The three Filters sub-tabs: Speech, Replaces (with the Mode/Type combos),
+// Sound. Entries bind to the g_AssistantConfig filter containers; the packet
+// handlers read exactly these through CheckSpeechInFilter / CheckReplaceText /
+// CheckSoundInFilter.
 
 #include "assistantui.h"
 

@@ -2,11 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // The assistant Map window (see mapwindow.h for the transform derivation and
-// the input contract). Overlay model: the original CMapDrawObject; the
-// populated types are exactly the ones the original draw loops built (grep: party
-// out-of-mirror members, mirror NPCs classified by AssMap_GetCharacterType,
-// the guild list, the last-corpse marker) plus the tracker point the original app
-// forwarded to external UOAM (deviation, now drawn here).
+// the input contract). Overlay model: the XA_MAP_DRAW_OBJECT markers; the
 
 #define LOGGER_MODULE Assistant
 
@@ -38,18 +34,18 @@ namespace {
 constexpr float MAP_WINDOW_DEFAULT_WIDTH = 415.0f;  // map.ui
 constexpr float MAP_WINDOW_DEFAULT_HEIGHT = 415.0f;
 
-// the original m_CurrentWorldCoordinates initial value
+// m_CurrentWorldCoordinates initial value
 int s_CenterX = 507;
 int s_CenterY = 840;
 bool s_CenterValid = false; // becomes true on the first pan/follow update
 
-// the drag-pan state (the original m_MousePressed/m_MousePressPoint/m_PressedWorld..)
+// the drag-pan state
 bool s_Panning = false;
 ImVec2 s_PanStartMouse = ImVec2(0.0f, 0.0f);
 int s_PanStartCenterX = 0;
 int s_PanStartCenterY = 0;
 
-// the tracker point (was the external-UOAM notify)
+// the tracker point
 bool s_TrackActive = false;
 int s_TrackX = 0;
 int s_TrackY = 0;
@@ -93,7 +89,7 @@ void MapWindow_Shutdown()
     MapSettings_Shutdown();
 }
 
-// --- overlay collection (the original DrawMode0) -----------------------------
+// --- overlay collection -------------------------------------------------------
 
 namespace {
 
@@ -159,9 +155,7 @@ void MapWindow_Draw(bool *open)
         return;
     }
 
-    // per-window opacity (the original setWindowOpacity): alpha =
-    // (100 - opacity*25)/100 with the opacity steps 0/25/50 - pushed around
-    // this window only, never the global style
+    // per-window opacity: alpha =
     const float alpha = 1.0f - (g_MapSettings.Opacity * 0.25f);
     ImGui::PushStyleVar(
         ImGuiStyleVar_Alpha, alpha < 0.25f ? 0.25f : (alpha > 1.0f ? 1.0f : alpha));
@@ -223,8 +217,7 @@ void MapWindow_Draw(bool *open)
 
     // --- canvas input -----------------------------------------------------
     // the invisible button is the canvas: left drag pans (unless following),
-    // wheel zooms, right click opens the menu (the original forwarded all of these
-    // through CMapImageWidget; WantCaptureMouse keeps the game out of it)
+    // wheel zooms, right click opens the menu (
     ImGui::InvisibleButton("##map_canvas", canvasSize, ImGuiButtonFlags_MouseButtonLeft);
     const bool canvasHovered = ImGui::IsItemHovered();
     const bool canvasActive = ImGui::IsItemActive();
@@ -288,10 +281,7 @@ void MapWindow_Draw(bool *open)
         s_Panning = false;
     }
 
-    // wheel zoom (the original mapWheelEvent: index 1..8 with
-    // the x2.0 <-> x4.0 jump, up = out, down = in); the two direction
-    // comparisons below already cover the whole non-zero wheel range, so no
-    // (!= 0.0f) equality test is needed here
+    // wheel zoom: index 1..8 with
     if (canvasHovered)
     {
         const int zoom = g_MapSettings.Zoom;
@@ -357,8 +347,7 @@ void MapWindow_Draw(bool *open)
             }
         }
 
-        // the mirror NPCs. MapIndex guard added: the original
-        // bounds check could not reject a foreign-facet character.
+        // the mirror NPCs. MapIndex guard:
         for (CGameObject *obj = (CGameObject *)g_World->m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next)
         {
             if (!obj->NPC || obj->MapIndex != map)
@@ -408,10 +397,7 @@ void MapWindow_Draw(bool *open)
             s_Overlays.push_back(item);
         }
 
-        // the guild list markers (the original pushed them with the
-        // party type - kept, that is the style they rendered with; iterated
-        // over the manager's own store - GetMembers() returns by value and
-        // the draw path must not allocate per frame)
+        // the guild list markers (
         if (table[OMCT_GUILD_MEMBER].Enabled)
         {
             for (const auto &it : g_GuildManager.GetMembersMap())
@@ -441,7 +427,7 @@ void MapWindow_Draw(bool *open)
             s_Overlays.push_back(item);
         }
 
-        // the tracker point (was the UOAM notify; drawn here for 10 s)
+        // the tracker point (drawn here for 10 s)
         if (s_TrackActive && g_AssistantConfig.Tracker() && g_Ticks - s_TrackTick < 10000u &&
             s_TrackX >= minX && s_TrackX < maxX && s_TrackY >= minY && s_TrackY < maxY)
         {
@@ -514,7 +500,7 @@ void MapWindow_Draw(bool *open)
 
             if (dead)
             {
-                // the original dead X
+                // the dead X marker
                 dl->AddLine(ImVec2(x - offX, y - offY), ImVec2(x + offX, y + offY), color, 1.0f);
                 dl->AddLine(ImVec2(x - offX, y + offY), ImVec2(x + offX, y - offY), color, 1.0f);
                 continue;
@@ -524,8 +510,7 @@ void MapWindow_Draw(bool *open)
 
             if (item.Ptr != nullptr && style.DrawHits)
             {
-                // the status bars (the original DrawLine): a 20x2 dark
-                // strip at the dot bottom, the colored fill scaled by the %
+                // the status bars: a 20x2 dark
                 const ImU32 bg = IM_COL32(0, 0, 0, 127);
                 dl->AddRectFilled(ImVec2(x - 10.0f, y), ImVec2(x + 10.0f, y + 2.0f), bg);
 
@@ -567,8 +552,7 @@ void MapWindow_Draw(bool *open)
         dl->AddText(ImVec2(canvasTopLeft.x + 2.0f, canvasTopLeft.y + 2.0f), IM_COL32_WHITE, text);
     }
 
-    // --- context menu (the original on_miw_Image_customContextMenuRequested,
-    //     mirrored here) ------------------------------------------------------
+    // --- context menu ---
     if (ImGui::BeginPopupContextItem("##map_context"))
     {
         if (ImGui::BeginMenu("Facet"))
@@ -580,9 +564,7 @@ void MapWindow_Draw(bool *open)
             for (int i = 0; i < MAX_MAPS_COUNT; i++)
             {
                 // every facet is always offered: g_MapSize is a compile-time
-                // client table (the original availability check stayed commented
-                // out), so selecting an uninstalled one just
-                // renders black
+                // client table (the availability check stays commented
                 if (g_MapSize[i].Width == 0)
                 {
                     continue;
@@ -683,7 +665,7 @@ void MapWindow_Draw(bool *open)
 }
 
 // The original Map::OnActionSelect: the context-menu -> settings
-// transitions. Kept as a free function so the menu reads like the original.
+// transitions. Kept as a free function.
 void MapWindow_OnAction(uint32_t type, uint32_t extra)
 {
     bool wantRedraw = true;

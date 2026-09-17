@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The hotkey engine (see hotkeys.h). Name/modifier tables ported from the
-// original app's gui/hotkeybox.cpp (g_Keymap, GetHotkeyText, eventFilter) and the
-// matching semantics from assist/hotkeysform.cpp (HotkeyExistsAndUse).
+// The hotkey engine (see hotkeys.h): the keymap/display-name tables and the
+// binding-matching semantics (HotkeyExistsAndUse).
 
 #define LOGGER_MODULE Assistant
 
@@ -25,7 +24,7 @@
 
 namespace xuoassist {
 
-// --- keymap (the old g_Keymap, same order as XA_KEY_ID) ---------------------
+// --- keymap (same order as XA_KEY_ID) -----------------------------
 // { SDL keycode, default modifiers for the on-screen cap, display name }.
 static const XA_KEY_INFO s_Keymap[XKI_COUNT] = {
     { 0, 0, "No Key" },
@@ -164,7 +163,7 @@ const char *HotkeyKeycodeName(uint32_t keycode)
 
 void HotkeyFormatText(uint32_t key, uint8_t modifiers, char *out, size_t size)
 {
-    // the old GetHotkeyText formatting
+    // the display formatting
     if (size == 0)
     {
         return;
@@ -238,7 +237,7 @@ void HotkeyFormatText(uint32_t key, uint8_t modifiers, char *out, size_t size)
 namespace {
 
 // Platform::IsKeypad (the SDL path): the keypad identity of
-// a key event - reproduces the Windows native-modifier bit 24 of the original app.
+// a key event (the Windows native-modifier bit 24).
 bool is_keypad_keycode(uint32_t key)
 {
     switch (key)
@@ -381,7 +380,7 @@ bool CHotkeys::ProcessKeyDown(const SDL_Event &ev)
 
 bool CHotkeys::ProcessKeyUp(const SDL_Event &) const
 {
-    // key-up bindings never fire (parity with the original app's filter)
+    // key-up bindings never fire
     return false;
 }
 
@@ -449,7 +448,7 @@ bool CHotkeys::ProcessWheel(const SDL_Event &ev)
 
 bool CHotkeys::MatchAndUse(uint32_t key, uint8_t modifiers)
 {
-    // HotkeyExistsAndUse: the original loop bailed out when
+    // MatchAndUse: no matching when
     // not logged in (g_World == nullptr)
     if (g_World == nullptr)
     {
@@ -546,8 +545,8 @@ void CHotkeys::CommitKeyToRow(int row, uint32_t key, uint8_t modifiers)
     }
 
     // CheckExists: the edited row must already exist
-    // (a fresh "Blank hotkey" row assigns to itself; the original required a current
-    // row and returned early otherwise)
+    // (a fresh "Blank hotkey" row assigns to itself; an existing row is
+    // required and the call returns early otherwise)
     const int dup = FindDuplicate(key, modifiers, row);
     if (dup != -1)
     {

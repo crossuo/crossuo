@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The About tab (was assist/tababout.ui/.cpp): the tray.png logo, the four
-// link buttons (Website/GitHub/Discord/Docs - opened through SDL_OpenURL,
-// which the ImGui SDL2 platform backend also uses) and the static text block.
+// The About tab: the tray.png logo, the four
 
 #define LOGGER_MODULE Assistant
 
@@ -105,7 +103,7 @@ bool LinkButton(const char *label)
 void TabAbout_AfterImGuiShutdown()
 {
     // the context is gone: free the CPU pixels (the GL name was reclaimed by
-    // the backend teardown - the Phase 2 atlas ordering rule)
+    // the backend teardown - the atlas ordering rule)
     delete s_Logo;
     s_Logo = nullptr;
 }

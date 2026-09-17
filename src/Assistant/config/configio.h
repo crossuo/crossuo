@@ -5,7 +5,7 @@
 // reader/writer used by every assistant config/save file
 // (Config/<profile>/*.ini, GlobalConfig/*.ini).
 //
-// Schema rules (see docs/NOTES.md "Persistence"):
+// Schema rules:
 //   - one .ini file per former config file, same stems (Options.ini,
 //     Hotkeys.ini, Macros.ini, Map.ini, ...);
 //   - repeated records use indexed sections ([Hotkey0]..[HotkeyN],
@@ -13,12 +13,12 @@
 //     count = N, so readers iterate 0..N-1 deterministically;
 //   - single-record files (Options, Map) use plain named sections;
 //   - keys reuse the former attribute names verbatim (lowercase, no
-//     spaces; underscores where the old name had them);
+// spaces; underscores where the name has them);
 //   - values are written plain: numbers as decimal text, bools as
 //     true/false, serials/graphics/colors through the CAssistant text
 //     helpers, strings raw.
 //
-// Value limitations (by design, all documented in docs/NOTES.md):
+// Value limitations (by design):
 //   - inih strips surrounding whitespace, so leading/trailing spaces and
 //     tabs in values do not survive a round trip;
 //   - a literal newline cannot appear raw; the writer escapes backslash,

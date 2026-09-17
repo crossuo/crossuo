@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See scriptmenu.h. The static rows cover every entry of the original menu; the
-// dynamic leaves the original app built at runtime (the Spells submenu from
-// g_SpellManager.m_SpellbookSpellNames and the per-macro Client-macro rows)
-// are rendered from the live managers in the same path scheme. The client
-// options Get/Set leaves map onto the API functions of the same names.
+// See scriptmenu.h. The static rows cover every menu entry; the
+// dynamic rows (the Spells submenu from the spell manager's spellbook list
+// and the per-macro Client-macro rows) are rendered from the live managers
+// in the same path scheme.
 
 #include "scriptmenu.h"
 
@@ -17,8 +16,7 @@
 
 #include "../managers/spellmanager.h"
 
-// Generated from the original command context menu;
-// regenerate with the extractor when the upstream menu changes.
+// The command context menu rows;
 static const xuoassist::XA_MENU_ITEM g_MenuItems[] = {
     { "Objects", "Info", "Client.Info(['serial']);" },
     { "Objects", "GetSerial", "Client.GetSerial(['serial']);" },
@@ -659,7 +657,7 @@ bool draw_node(const MENU_NODE &node, astr_t &inserted)
     return false;
 }
 
-// The dynamic Spells menu (the original loop).
+// The dynamic Spells menu.
 bool draw_spells(astr_t &inserted)
 {
     bool picked = false;

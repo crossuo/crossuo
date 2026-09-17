@@ -11,8 +11,7 @@ namespace xuoassist {
 
 typedef vector<astr_t> COMMAND_ARGS;
 
-// From the original app's managers/commandmanager.h (the flag vocabulary of the
-// skill-value command API; survives the replaced signal hub).
+// The flag vocabulary of the skill-value command API.
 enum SKILLS_FLAGS
 {
     SF_REAL = 0x00,

@@ -1,40 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The assistant Map window (was assist/map.cpp Map + gui/mapimagewidget.cpp,
-// which only forwarded events): one dockable/poppable ImGui window drawing
-// the radar texture from managers/assmap.cpp with the draw-object overlays,
-// the context menu and the zoom/rotate/follow/pan input.
-//
-// Coordinate transforms (derived once from the original code, both directions):
-//
-//   scale  s = zoom * 0.25 in [0.25 .. 4.0]      (Map::UpdateScale)
-//   half   = (width/2, height/2)                 window content center
-//   d      = world - center                      (wx-cx, wy-cy)
-//
-//   unrotated:
-//       screen = half + d / s                    world->screen
-//       world  = center + (screen - half) * s    screen->world
-//
-//   rotated 45deg isometric basis u=d.x-d.y, v=d.x+d.y:
-//       screen = half + (u, v) / s
-//       inverse: d = (screen-half) * s;
-//                wx = cx + (dx+dy)/2, wy = cy + (dy-dx)/2
-//   the drag pan subtracts the same inverse displacement from the center,
-//   c' = c - (s(dx+dy)/2, s(dy-dx)/2), so the world point under the cursor
-//   follows it exactly (the original 0.707107 pair approximated this step)
-//
-// The window is viewport-safe: every position comes from ImGui screen-space
-// queries (GetCursorScreenPos), never from the main window geometry, so it
-// behaves identically docked and popped out (ADR D11). Mouse input is
-// consumed through the canvas item (io.WantCaptureMouse covers it before the
-// game sees anything), so panning cannot walk the player.
+// The assistant Map window: one dockable/poppable ImGui window drawing the
+// radar texture from managers/assmap.cpp with the draw-object overlays, the
+// context menu and the zoom/rotate/follow/pan input.
+// Coordinate transforms (both directions):
 
-#pragma once
+#if defined(XUO_ASSISTANT)
 
 #include "../core/global.h"
 
-#if defined(XUO_ASSISTANT)
 
 namespace xuoassist {
 
@@ -61,8 +36,7 @@ void MapWindow_Shutdown();
 // from the mirror, so the window only records dirtiness.
 void MapWindow_OnMapUpdate();
 void MapWindow_OnMapRedraw();
-// OnTrack(state, x, y) - was the UOAM external tracker notify; the assistant
-// map draws the point itself now (documented deviation).
+// OnTrack(state, x, y) - the external tracker point; the assistant
 void MapWindow_OnTrack(bool state, int x, int y);
 
 // The map settings window (ui/mapsettings.cpp; the "Open display settings"

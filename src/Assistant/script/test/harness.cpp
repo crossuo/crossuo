@@ -34,6 +34,7 @@
 #include "../../core/world.h" // g_World stand-in (section 6 executor gate)
 #include "../apiscript.h"
 #include "../../managers/gumpmanager.h"
+#include "../../core/textconv.h" // ParseTextTokens (the tokenizer parity suite)
 
 extern "C" {
 #include "../quickjs/quickjs.h"
@@ -127,8 +128,7 @@ int main()
         JSContext *ctx = JS_NewContext(rt);
         CHECK(ctx != nullptr);
 
-        // the original script shape: functions on the global object + a Wait-like
-        // call with astr_t args (the sentinel globals are strings)
+        // the script shape: functions on the global object + a Wait-like
         const char *script = "function hello(name) { return 'hi ' + name; }\n"
                              "var boom = function () { nope(); };\n";
         JSValue result = JS_Eval(ctx, script, strlen(script), "<script>", JS_EVAL_TYPE_GLOBAL);
@@ -328,8 +328,7 @@ int main()
 
         // --- the WaitFor* handshake (SC_EVENT_WAIT clear+poll semantics) ---
         // the REAL drain executor against the real g_GumpReceived flag: the
-        // first execution clears a pre-set flag (the original g_GumpReceived =
-        // false) and reads false, later ones only read
+        // first execution clears a pre-set flag (g_GumpReceived =
         {
             auto *wait = new XA_SCRIPT_COMMAND();
             wait->Tag = SC_EVENT_WAIT;
@@ -817,7 +816,7 @@ int main()
             CHECK(AtomicFileWrite(path, "<a/>", 4));
             CHECK(fs_path_type(path) == FS_FILE);
 
-            // 2) replace (the old content is fully overwritten, no .tmp left)
+            // 2) replace (the content is fully overwritten, no .tmp left)
             CHECK(AtomicFileWrite(path, "<bbbb/>", 7));
             {
                 size_t size = 0;
@@ -827,8 +826,7 @@ int main()
             }
             CHECK(!fs_path_exists(fs_path_join(dir, "probe.bin.tmp")));
 
-            // 3) failure keeps the original untouched (the directory is not
-            // writable for the temp file)
+            // 3) failure leaves the target untouched (the directory is not
             const fs_path roDir = fs_path_join(dir, "ro");
             fs_path_create(roDir);
             chmod(fs_path_ascii(roDir), 0555);
@@ -842,6 +840,52 @@ int main()
             rmdir(mkd);
             printf("config: atomic save ok\n");
         }
+    }
+
+    // --- 9. core/textconv: ParseTextTokens parity + termination -----------
+    // Byte parity with the old CTextParser (GetTokens/ReadTokens): the old
+    // parser bounded each line at the first embedded NUL (GetEOL), quoted
+    // tokens carry a trailing NUL inside the string (resize(size+1)), and
+    // every input must terminate - the 2026-09 display-title freeze was
+    // "{name\0}" (a stage-one quoted token) stalling the scan on the NUL.
+    {
+        // the display-tag stage two call: "name" out of "{name}"
+        vector<astr_t> tags = ParseTextTokens("{name}", " \t{}=", "", "\"\"''");
+        CHECK(tags.size() == 1 && tags[0] == "name");
+
+        // the reported freeze input: the stage-one token "{name\0}" fed back
+        // through CompilleData; the old parser returned {"name"} (truncated
+        // at the NUL) and terminated - so must the new one
+        const astr_t stageOne("{name}", 6);
+        vector<astr_t> quoted = ParseTextTokens(stageOne, "", "", "{}", false, true);
+        CHECK(quoted.size() == 1);
+        CHECK(quoted[0].size() == 7); // '{' + "name" + NUL quirk + '}'
+        CHECK(quoted[0][5] == '\0' && quoted[0][6] == '}');
+        vector<astr_t> stageTwo = ParseTextTokens(quoted[0], " \t{}=", "", "\"\"''");
+        CHECK(stageTwo.size() == 1 && stageTwo[0] == "name");
+
+        // quoted round trips (saveQuotes on/off), old parser parity
+        vector<astr_t> say = ParseTextTokens("say \"a b\"", " ", "#", "\"\"''", true, true);
+        CHECK(say.size() == 2 && say[0] == "say");
+        CHECK(say[1].size() == 6 && say[1][0] == '"' && say[1][4] == '\0' && say[1][5] == '"');
+        vector<astr_t> bare = ParseTextTokens("say \"a b\"", " ", "#", "\"\"''");
+        CHECK(bare.size() == 2 && bare[0] == "say" && bare[1] == astr_t("a b", 4));
+
+        // the old GetTokens took a const char*, so content after an embedded
+        // NUL never made it into the tokens - truncation parity
+        const astr_t mid("ab\0cd", 5);
+        vector<astr_t> trunc = ParseTextTokens(mid, " ", "", "\"\"''");
+        CHECK(trunc.size() == 1 && trunc[0] == "ab");
+
+        // degenerate inputs terminate with the old parser's (empty) result
+        const astr_t nuls(3, '\0');
+        CHECK(ParseTextTokens(nuls, " ", "", "\"\"''").empty());
+        CHECK(ParseTextTokens("", " ", "", "\"\"''").empty());
+        // lone close quote / unmatched open quote must consume and finish
+        CHECK(ParseTextTokens("'", " ", "", "\"\"''").empty());
+        CHECK(ParseTextTokens("\"abc", " ", "", "\"\"''").size() == 1);
+
+        printf("textconv: tokenizer parity ok\n");
     }
 
     if (failures == 0)

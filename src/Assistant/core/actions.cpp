@@ -18,7 +18,7 @@
 #include "assistantevents.h"
 #include "global.h"
 #include "Network/Packets.h" // ::CPacketTargetSelectedObject (the client's own 0xBF/0x2C builder)
-#include "Target.h" // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
+#include "Target.h" // ::g_Target (the shared target cursor: hooks, senders, CancelCursor)
 #include "Managers/MacroManager.h" // ::g_MacroManager (client-side selection macros)
 #include "textcommandmanager.h"
 #include "../managers/gumpmanager.h"
@@ -69,6 +69,7 @@ const char *Actions_TypeName(uint32_t type)
 uint32_t Actions_TypeCount()
 {
     return (uint32_t)HT_LAST; // the original HT_COUNT_OF_ITEMS (26 entries)
+    return (uint32_t)HT_LAST; // the HT_* count (26 entries)
 }
 
 namespace {
@@ -428,8 +429,8 @@ void Actions_Execute(const CHotkeyEntry &entry)
     switch (type)
     {
         case HT_TOGGLE_MAP:
-            // the map window is Phase 5: the binding is recognized (and
-            // consumed by the engine) but there is nothing to toggle yet
+            // the binding is recognized (and consumed by the engine) but the map window
+            // is not wired to the hotkey
             break;
         case HT_ATTACK:
         {
@@ -459,8 +460,8 @@ void Actions_Execute(const CHotkeyEntry &entry)
             {
                 serial = CAssistant::TextToSerial("lastobject");
             }
-            // Parity with the original: only action 1 resolves a hand;
-            // the "Use: right hand" slot is a no-op in the original (the
+            // only action 1 resolves a hand;
+            // the "Use: right hand" slot is a no-op (the
             // label advertises it, the executor never handled it) - kept.
             else if (action == 1)
             {
@@ -599,7 +600,7 @@ void Actions_Execute(const CHotkeyEntry &entry)
                         hook_objects("friend");
                         break;
                     default:
-                        // Parity with the original: plain use-skill
+                        // plain use-skill
                         // still calls SetObjectsHook with an empty list,
                         // clearing any stale wait-target hook so it cannot
                         // auto-target a later cursor.
@@ -635,8 +636,8 @@ void Actions_Execute(const CHotkeyEntry &entry)
             }
             if (action == 5)
             {
-                // the last tile a tile-target answered with (was the
-                // assistant sender; the fused client sender records)
+                // the last tile a tile-target answered with (recorded by the client
+                // target sender)
                 g_Target.SendTargetTile(
                     g_Target.LastTileGraphic,
                     g_Target.LastTileX,
@@ -732,8 +733,8 @@ void Actions_RunExternalCode(const astr_t &code)
 {
     // The external-code text runs through the same text-command
     // pipeline as typed "_cmd" speech when it
-    // starts with the configured command prefix; otherwise it is inert (the
-    // script engine arrives in Phase 4).
+    // starts with the configured command prefix; otherwise it is inert with a
+    // UI tooltip.
     int prefixLen = g_AssistantConfig.IsCommandPrefix(code);
     if (prefixLen > 0)
     {

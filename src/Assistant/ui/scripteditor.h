@@ -3,15 +3,10 @@
 
 #pragma once
 
-// The script editor window (was ScriptEditorDialog, assist/
-// scripteditordialog.ui/.cpp 800x600): toolbar New/Open/Save/SaveAs/Find/
-// GoToLine/Replace/Comment-selection, the TextEditor widget, the statusbar,
-// and the Find / Replace / Go to line popups of assist/textoperationdialog.
-// A simple floating ImGui window; the map window shows the shared
-// dockable/pop-out pattern.
-//
-// The editor buffer is shared with the script runtime (scripthandle.cpp
-// ScriptEditor_Text) exactly like g_ScriptEditorDialog.GetText did.
+// The script editor window: toolbar New/Open/Save/SaveAs/Find/GoToLine/
+// Replace/Comment-selection, the TextEditor widget, the statusbar, and the
+// Find / Replace / Go to line popups. A simple floating ImGui window; the
+// map window shows the shared dockable/pop-out pattern.
 
 #include "../core/global.h"
 

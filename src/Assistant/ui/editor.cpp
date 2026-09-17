@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The editor implementation. Palette mapping (the original CSyntaxHighlighter rules):
-//   darkMagenta 0xAA00AA  - the `.Method` names
-//   darkBlue   0x000080B  - keywords (Client/Player/if/for/...)
-//   darkYellow 0x808000   - the sentinel globals (self/lasttarget/...)
-//   blue       0x0000FF   - decimal + 0x hex numbers
-//   darkGreen  0x008000   - "strings" / 'strings'
-//   gray       0xA0A0A4   - // comments
+// The editor implementation. Palette mapping:
 
 #include "editor.h"
 #include "../script/scripthandle.h" // ScriptEditor_Generation (buffer token)
@@ -98,7 +92,7 @@ struct TOKEN_RUN
     int color;
 };
 
-// The per-line tokenizer (the original regex rules, applied left to right).
+// The per-line tokenizer (regex rules, applied left to right).
 void tokenize_line(const astr_t &line, vector<TOKEN_RUN> &runs)
 {
     runs.clear();
@@ -115,8 +109,7 @@ void tokenize_line(const astr_t &line, vector<TOKEN_RUN> &runs)
             break;
         }
 
-        // strings (minimal match: no spanning quotes - the original patterns were
-        // non-greedy ".*")
+        // strings (minimal match: no spanning quotes -
         if (c == '"' || c == '\'')
         {
             size_t end = i + 1;
@@ -274,7 +267,7 @@ struct EDITOR_STATE
         return text;
     }
 
-    // --- undo (simple snapshots; the original undo stack was the text edit's) ---
+    // --- undo (simple snapshots) ---
     struct UNDO_STATE
     {
         vector<astr_t> lines;
@@ -387,7 +380,7 @@ EDITOR_STATE *editor_state(ImGuiID id, astr_t *buffer)
     // on the shared-buffer GENERATION moving (Open/New/Reload/LoadScript
     // replace the contents of the same astr_t object - the pointer never
     // changes, so without the token the widget kept drawing stale lines and
-    // an edit rejoined the old content over the new file).
+    // an edit cannot rejoin the saved content over a changed file).
     const uint32_t generation = ScriptEditor_Generation();
     if (state.Buffer != buffer || state.BufferGeneration != generation)
     {
@@ -428,8 +421,7 @@ bool TextEditor_Draw(
     const ImVec2 region = ImGui::GetContentRegionAvail();
     const ImVec2 size(height > 0 ? ImVec2(0, height) : region);
 
-    // the editor is a bordered child region; scrolling is ours (the original
-    // NoWrap + vertical scrollbar behavior)
+    // the editor is a bordered child region; scrolling is ours (
     ImGui::BeginChild(id, size, ImGuiChildFlags_FrameStyle, ImGuiWindowFlags_NoScrollbar);
     const float contentHeight = (float)lines.size() * lineHeight;
     ImGui::SetCursorPosY(-(float)state->TopLine * lineHeight); // no-op safety
@@ -737,13 +729,13 @@ bool TextEditor_Draw(
     return false;
 }
 
-// --- text operations (textoperationdialog round-trips) -----------------------
+// --- text operations ----------------------------------------------------------
 
 namespace {
 
 int find_in_state(EDITOR_STATE *state, const astr_t &needle, bool down, bool caseSensitive)
 {
-    // case-sensitive search like the original dialog default; down = forward
+    // case-sensitive search (the dialog default); down = forward
     const vector<astr_t> &lines = state->LineBuffer;
     int startLine = state->CursorLine;
     int startCol = state->CursorCol + (down ? 1 : 0);

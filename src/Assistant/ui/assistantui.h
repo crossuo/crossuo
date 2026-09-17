@@ -6,11 +6,11 @@
 // Internal helper shared by AssistantWindow.cpp (lifecycle) and the ui/ tab
 // implementations; not part of the client-facing API.
 //
-// AssistantUI_Draw keeps its Phase 0 signature/role: AssistantWindow calls it
-// between ui_newframe and ui_draw while the assistant is visible. The shell
-// owns the window frame, the top-level tab bar (§2.1 order), the journal pane
-// and the status bar; the tab pages live in ui/tabmain.cpp, ui/tablists.cpp
-// and ui/tabfilters.cpp and read/write xuoassist::g_AssistantConfig directly.
+// AssistantUI_Draw: AssistantWindow calls it between ui_newframe and ui_draw
+// while the assistant is visible. The shell owns the window frame, the
+// top-level tab bar, the journal pane and the status bar; the tab pages live
+// in ui/tabmain.cpp, ui/tablists.cpp and ui/tabfilters.cpp and read/write
+// xuoassist::g_AssistantConfig directly.
 
 #include <stdint.h>
 
@@ -32,19 +32,14 @@ void AssistantUI_Init();
 void AssistantUI_Tick();
 void AssistantUI_Shutdown();
 
-// The deferred Autostart run (was a one-second single-shot timer in
-// AssistForm::RunAutostart): arms the 1s delay, then AssistantUI_Tick runs
-// the "Autostart" function from the editor buffer exactly once.
+// The deferred Autostart run: the assistant shell ticks it while visible.
 void AssistantUI_QueueAutostart();
 
-// The closeuo request (was SendMessage(hwnd, WM_CLOSE)): pushes the client's
-// own quit event (CWindow::Destroy -> SDL_QUIT); no-op without a window.
+// The closeuo request: pushes the client's own quit event through the
+// windowing layer.
 void AssistantUI_RequestClientClose();
 
-// The UI-layer from-target disarm (was implicit in the original widget teardown):
-// clears the armed g_TargetHandler plus every tab arm state so a cursor
-// request armed before shutdown cannot consume a 0x6C after re-init. Hide
-// keeps the state on purpose; only shutdown disarms.
+// The UI-layer from-target disarm: re-arms when the assistant UI re-inits.
 void CancelPendingFromTargets();
 
 // Seconds left in the auto-reconnect countdown (TabMain::l_SecondsToReconnect);
@@ -77,13 +72,12 @@ extern bool g_AssistantScriptEditorOpen;
 // ImGui windows drawn by the shell while the assistant is visible, gated by
 // their own open flags (MapWindow_Open / Inspector_Open / TextDialog_Open).
 void TabAbout_Draw();
-// The About logo CPU-pixels release (the Phase 2 atlas ordering rule): runs
-// from AssistantUI_AfterImGuiShutdown right after the context is gone.
+// The About logo CPU-pixels release (the atlas ordering rule): runs
 void TabAbout_AfterImGuiShutdown();
 
 // --- tab pages (ui/tabmain.cpp, ui/tablists.cpp, ui/tabfilters.cpp) ---------
 void TabMain_Draw();
-// sub-tab indexes inside the Lists nested tab bar (§2.1)
+// sub-tab indexes inside the Lists nested tab bar
 enum TAB_LISTS
 {
     TAB_LISTS_TYPES = 0,
@@ -99,7 +93,7 @@ void TabLists_Draw(int subTab);
 // shutdown: a request armed before shutdown must not swallow a 0x6C after
 // re-init).
 void TabLists_CancelPendingFromTargets();
-// sub-tab indexes inside the Filters nested tab bar (§2.10)
+// sub-tab indexes inside the Filters nested tab bar
 enum TAB_FILTERS
 {
     TAB_FILTERS_SPEECH = 0,
@@ -109,9 +103,7 @@ enum TAB_FILTERS
 void TabFilters_Draw(int subTab);
 
 // --- phase 4a tab pages ------------------------------------------------------
-// Agents -> the Dress/Party/Shop nested bar (§2.1/§2.8); the shop tab owns
-// the Shop List Editor window (drawn from TabShop_Draw); the progress popup
-// is agent-owned and drawn from AssistantUI_Draw (TabShop_DrawProgress).
+// Agents -> the Dress/Party/Shop nested bar; the shop tab owns
 void TabDress_Draw();
 void TabParty_Draw();
 void TabShop_Draw();

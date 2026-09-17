@@ -648,8 +648,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
                 skill->LockStatus = status;
 
 #if defined(XUO_ASSISTANT)
-                // lock-change echo: the assistant skills tab mirrors the
-                // optimistic lock update (was the 0x3A send-side tap)
+                // lock-change echo: the assistant skills tab reflects the
                 xuoassist::g_AssistantEvents->OnSkillUpdated(index);
 #endif
 

@@ -159,7 +159,7 @@ void CGumpShop::SendList()
     {
         CPacketBuyRequest(this).Send();
 #if defined(XUO_ASSISTANT)
-        // (shop round) was the 0x3B Vendor Buy Reply send tap
+        // report the buy reply to the shop agent
         xuoassist::g_ShopAgent.OnBuyReplySent();
 #endif
     }
@@ -167,7 +167,7 @@ void CGumpShop::SendList()
     {
         CPacketSellRequest(this).Send();
 #if defined(XUO_ASSISTANT)
-        // (shop round) was the 0x9F Vendor Sell Reply send tap
+        // report the sell reply to the shop agent
         xuoassist::g_ShopAgent.OnSellReplySent();
 #endif
     }

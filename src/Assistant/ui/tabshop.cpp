@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabAgentsShop (was assist/tabagentsshop.ui/.cpp + shoplisteditorform +
-// shopprogressform, §2.8/§3.1): the shop lists (ShopList.ini), the vendor
-// name / Buy / Sell / Auto switches, the delay/price/stack/timeout spinboxes,
-// the Shop List Editor window (my list <=> vendor list) and the shopping
-// progress popup. The ENGINE behind the buttons lives in core/shopagent
-// (frame-tick driven); this file is the thin UI over its state.
+// TabAgentsShop: the shop lists (ShopList.ini), the vendor name / Buy / Sell /
+// Auto switches, the delay/price/stack/timeout spinboxes, the Shop List Editor
+// window (my list <=> vendor list) and the shopping progress popup. The engine
+// behind the buttons lives in core/shopagent (frame-tick driven); this file is
+// the thin UI over its state.
 
 #include "assistantui.h"
 
@@ -30,7 +29,7 @@ char s_VendorName[64] = { 0 };
 char s_Hint[128] = { 0 };
 int s_VendorSelected = -1; // the editor's vendor-list selection
 
-// --- the Shop List Editor window state (was ShopListEditorForm) -------------
+// --- the Shop List Editor window state ---------------------------------------
 bool s_EditorOpen = false;
 int s_EditedList = -1; // index into m_ShopLists (was m_UsedList)
 bool s_EditChanged = false;
@@ -68,7 +67,7 @@ bool name_in_use(const char *name, int skip)
     return false;
 }
 
-// was ShopListEditorForm::AddNewItem (+ the duplicate check)
+// adds a new item (+ the duplicate check)
 void editor_add_item(const CShopItemEntry &item)
 {
     if (item.Graphic.length() == 0)
@@ -101,7 +100,7 @@ void editor_add_item(const CShopItemEntry &item)
 
 void editor_selection_changed()
 {
-    // was on_lw_ShopList_clicked: load the row into the editor fields
+    // load the row into the editor fields
     if (s_EditSelected >= 0 && s_EditSelected < (int)s_EditItems.size())
     {
         const CShopItemEntry &item = s_EditItems[s_EditSelected];
@@ -114,7 +113,7 @@ void editor_selection_changed()
     }
 }
 
-// was slot_ShopItemSave: field edits update the selected row live
+// field edits update the selected row live
 void editor_fields_to_row()
 {
     if (s_EditSelected < 0 || s_EditSelected >= (int)s_EditItems.size())
@@ -131,8 +130,7 @@ void editor_fields_to_row()
     s_EditChanged = true;
 }
 
-// was ShopListEditorForm::InitList (simplified: no unsaved-changes prompt on
-// switching - the fields commit live, the Exit path asks)
+// init (simplified: no unsaved-changes prompt on
 void editor_init(int listIndex)
 {
     s_EditedList = listIndex;
@@ -154,7 +152,6 @@ void editor_init(int listIndex)
     }
 }
 
-// was on_pb_SaveChanges_clicked
 void editor_save_changes()
 {
     if (!s_EditChanged || s_EditedList < 0 ||
@@ -182,7 +179,7 @@ void draw_shop_list_editor()
     const bool visible = ImGui::Begin("Shop List Editor", &s_EditorOpen);
     if (!visible)
     {
-        // window X pressed (was closeEvent -> on_pb_Exit_clicked)
+        // window X pressed
         if (s_EditChanged)
         {
             s_EditorOpen = true; // keep open until the question is answered
@@ -235,7 +232,7 @@ void draw_shop_list_editor()
                     s_EditSelected = i;
                     editor_selection_changed();
                 }
-                // Delete key removal (was keyPressEvent on lw_ShopList)
+                // Delete key removal
                 if (s_EditSelected == i && ImGui::IsItemHovered() &&
                     !ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantTextInput &&
                     ImGui::IsKeyChordPressed(ImGuiKey_Delete))
@@ -258,8 +255,7 @@ void draw_shop_list_editor()
         ImGui::BeginChild("##editor_copy", ImVec2(60.0f, -ImGui::GetFrameHeightWithSpacing() * 5));
         if (ImGui::Button("<<", ImVec2(-1.0f, 0.0f)))
         {
-            // was on_pb_CopyShopItem_clicked: vendor item -> my list with
-            // count/price reset to 0
+            // vendor item -> my list with
             if (s_VendorSelected >= 0 && s_VendorSelected < (int)vendorItems.size())
             {
                 const CVendorShopItem &v = vendorItems[s_VendorSelected];
@@ -311,7 +307,7 @@ void draw_shop_list_editor()
                 if (s_VendorSelected == i && ImGui::IsMouseDoubleClicked(0) &&
                     ImGui::IsItemHovered())
                 {
-                    // was on_lw_VendorList_doubleClicked -> copy
+                    // double click -> copy
                     CShopItemEntry item;
                     item.Graphic = CAssistant::GraphicToText(v.Graphic);
                     item.Color = CAssistant::GraphicToText(v.Color);
@@ -374,7 +370,6 @@ void draw_shop_list_editor()
         // add/remove + Save changes + Exit
         if (ImGui::Button("Add"))
         {
-            // was on_pb_ShopItemAdd_clicked
             CShopItemEntry item;
             item.Graphic = s_EdGraphic;
             item.Color = s_EdColor;
@@ -388,7 +383,6 @@ void draw_shop_list_editor()
         if (ImGui::Button("Remove") && s_EditSelected >= 0 &&
             s_EditSelected < (int)s_EditItems.size())
         {
-            // was on_pb_ShopItemRemove_clicked
             s_EditItems.erase(s_EditItems.begin() + s_EditSelected);
             s_EditSelected = -1;
             s_EditChanged = true;
@@ -446,7 +440,7 @@ void draw_shop_list_editor()
     ImGui::End();
 }
 
-// --- the progress popup (was ShopProgressForm) -------------------------------
+// --- the progress popup -------------------------------------------------------
 
 void draw_shop_progress()
 {
@@ -505,10 +499,7 @@ void TabShop_Draw()
         s_SelectedList = -1;
     }
 
-    // selection -> "List name:" (on_lw_ShopLists_clicked). Delta: the original
-    // app also opened the editor on a list double click; the Edit shop list
-    // items button is the route here (the list widget is a child window and
-    // double clicks cannot be attributed to rows through it)
+    // selection -> "List name:". Delta:
     if (s_SelectedList != s_LastSelectedList)
     {
         s_LastSelectedList = s_SelectedList;
@@ -521,7 +512,6 @@ void TabShop_Draw()
 
     if ((buttons & XALB_ADD) != 0)
     {
-        // was on_pb_ShopListCreate_clicked
         if (s_ListName[0] == '\0')
         {
             snprintf(s_Hint, sizeof(s_Hint), "Enter the shop list name!");
@@ -542,7 +532,6 @@ void TabShop_Draw()
     }
     if ((buttons & XALB_SAVE) != 0)
     {
-        // was on_pb_ShopListSave_clicked
         if (s_ListName[0] == '\0')
         {
             snprintf(s_Hint, sizeof(s_Hint), "Enter the shop list name!");
@@ -564,7 +553,7 @@ void TabShop_Draw()
     }
     if ((buttons & XALB_REMOVE) != 0 && s_SelectedList >= 0 && s_SelectedList < (int)lists.size())
     {
-        // was on_pb_ShopListRemove_clicked (a bound editor view is dropped)
+        // (a bound editor view is dropped)
         if (s_EditedList == s_SelectedList)
         {
             editor_init(-1);
@@ -613,7 +602,6 @@ void TabShop_Draw()
     ImGui::BeginDisabled(!haveList);
     if (ImGui::Button("Buy"))
     {
-        // was on_pb_BuySelectedList_clicked
         g_ShopAgent.Buy(lists[s_SelectedList].Name);
     }
     if (ImGui::IsItemHovered())
@@ -623,7 +611,6 @@ void TabShop_Draw()
     ImGui::SameLine();
     if (ImGui::Button("Sell"))
     {
-        // was on_pb_SellSelectedList_clicked
         g_ShopAgent.Sell(lists[s_SelectedList].Name);
     }
     ImGui::EndDisabled();
@@ -669,7 +656,6 @@ void TabShop_Draw()
 
     if (ImGui::Button("Edit shop list items"))
     {
-        // was on_pb_EditShopListItems_clicked
         editor_init(haveList ? s_SelectedList : -1);
     }
     if (s_Hint[0] != '\0')

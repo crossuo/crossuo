@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The Map Settings window (was assist/mapsettingsform.ui/.cpp, 590x630):
-// the character-display groups (Player/Party/Guild/Friends/Other mobiles/
-// Enemies with font-style combo + color + show flags) and the main settings
-// toggles, editing a working CMapSettings copy and committing through
-// Map::ChangeSettings semantics = g_MapSettings.Copy + Save
-// (mapsettingsform.cpp on_pb_ApplyChanges_clicked / on_pb_Close_clicked).
-//
-// Deltas (documented): the 10-entry font-style combo keeps the original g_MapFontStyle
-// names/indices (the persisted value stays meaningful) but renders with the
-// single assistant UI font; the "Map example" pane is not reproduced (it was
-// a static screenshot of the original renderer).
-
-#define LOGGER_MODULE Assistant
+// The Map Settings window: the character-display groups (Player/Party/Guild/
+// Friends/Other mobiles/Enemies with font-style combo + color + show flags)
+// and the main settings toggles, editing a working CMapSettings copy and
+// committing through Map::ChangeSettings semantics = g_MapSettings.Copy +
+// Save.
+// Deltas: the 10-entry font-style combo keeps the g_MapFontStyle names/
+// indices (the persisted value stays meaningful) but renders with the single
+// assistant UI font; the "Map example" pane is not reproduced.
 
 #include "mapwindow.h"
 
@@ -74,7 +69,7 @@ bool ColorField(const char *id, uint32_t *rgba)
 
 // one character-display group. The original gb_* boxes were checkable groupboxes:
 // the checkbox gates the fields (children render disabled while unchecked,
-// like the original groupbox disabled its children).
+// like a disabled groupbox).
 void CharacterGroup(
     const char *label,
     bool *enabled,
@@ -134,13 +129,13 @@ void CharacterGroup(
 
 void MapSettings_Open()
 {
-    s_Settings = g_MapSettings; // was MapSettingsForm::Init(g_MapSettings)
+    s_Settings = g_MapSettings; // the working copy the dialog edits
     s_Open = true;
 }
 
 void MapSettings_Shutdown()
 {
-    // was the form teardown with a pending edit: the original app discarded it
+    // form teardown with a pending edit: it is discarded
     s_Open = false;
 }
 
@@ -226,8 +221,7 @@ void MapSettings_Draw()
         ImGui::Indent();
         ImGui::Checkbox("Show on log in", s_Settings.ShowOnLoginPtr());
         ImGui::Checkbox("Show coordinates", s_Settings.DisplayCoordinatesPtr());
-        // the original dialog shipped this checkbox disabled (mapsettingsform.ui:
-        // cb_SmoothImage disabled; the flag stays a stored format field)
+        // the checkbox ships disabled (
         ImGui::BeginDisabled();
         ImGui::Checkbox("Smooth image", s_Settings.SmoothImagePtr());
         ImGui::EndDisabled();
@@ -250,7 +244,7 @@ void MapSettings_Draw()
     ImGui::SameLine();
     if (ImGui::Button("Apply changes"))
     {
-        // was Map::ChangeSettings: copy + save + redraw
+        // copy + save + redraw
         g_MapSettings.Copy(s_Settings);
         g_MapSettings.Save();
         AssMap_Invalidate();

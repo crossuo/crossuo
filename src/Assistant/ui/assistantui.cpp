@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The assistant shell (was assist/assistform.ui/.cpp): window frame, the
-// top-level tab bar (§2.1 order Main/Display/Lists/Hotkeys/Macros/Scripts/
-// Agents/Skills/Filters/About), the journal pane, the status bar line and the
-// pop out/dock title row from Phase 0. Later-phase tabs render placeholders.
+// The assistant shell: window frame, the
 
 #define LOGGER_MODULE Assistant
 
@@ -55,8 +52,7 @@ bool g_AssistantScriptEditorOpen = false;
 
 namespace {
 
-// the original default: 650x400, non-resizable; ImGui keeps
-// resizable windows, the size applies on first use only
+// the default: 650x400, non-resizable; ImGui keeps
 constexpr int SHELL_DEFAULT_WIDTH = 650;
 constexpr int SHELL_DEFAULT_HEIGHT = 400;
 
@@ -80,7 +76,7 @@ enum MAIN_TAB
 
 const char *const LIST_TABS[] = { "Types", "Objects", "Find", "Ignore", "Friends", "Enemies" };
 const char *const FILTER_TABS[] = { "Speech", "Replaces", "Sound" };
-// which phase delivers the remaining tabs (§7)
+// which module delivers the remaining tabs
 const char *const PLACEHOLDER_PHASE[] = {
     "",  // Main
     "",  // Display
@@ -99,21 +95,18 @@ CAssistantEvents *s_PreviousEvents = nullptr; // sink to restore on shutdown
 bool s_OptionsDirty = false; // Main/Options pages save on close (original semantics)
 uint32_t s_SessionStartTicks = 0;
 
-// auto-reconnect countdown (was TabMain::m_ReconnectTimer)
+// auto-reconnect countdown
 int s_ReconnectSeconds = 0;
 uint32_t s_ReconnectLastTick = 0;
 
-// the display caption (was the window title bar): the last astr_t we applied to
-// the OS window, so SetTitle only runs on change
+// the display caption: the last astr_t we applied to
 astr_t s_LastWindowTitle;
 uint32_t s_LastStepTick = 0;
 
-// the Autostart script run (was AssistForm::RunAutostart's
-// one-second single-shot timer): pending tick stamp, 0 = none. Fired
-// from AssistantUI_Tick.
+// the Autostart script run (
 uint32_t s_AutostartAt = 0;
 
-// was TabDisplay::RedrawTitle: the config radio -> the display manager mode
+// the config radio -> the display manager mode
 void apply_display_title()
 {
     REDRAW_DISPLAY_MODE mode = RDM_DISABLED;
@@ -140,9 +133,7 @@ void apply_display_title()
         true,
         g_AssistantConfig.DisplayBackgroundColor());
 
-    // apply to the OS window on change (was the GDI painter writing the
-    // caption; the client's own writes - player name change etc. - are
-    // overwritten here exactly like the old title bar was repainted)
+    // apply to the OS window on change (
     const astr_t &title = g_DisplayManager.GetTitleText();
     if (title != s_LastWindowTitle)
     {
@@ -227,7 +218,7 @@ void draw_filters_tabs()
 
 void draw_agents_tabs()
 {
-    // the nested bar (Dress/Party/Shop) per §2.1, pages from phase 4a
+    // the nested bar (Dress/Party/Shop), agent pages
     if (ImGui::BeginTabBar("##agents_tabs", ImGuiTabBarFlags_None))
     {
         if (ImGui::BeginTabItem("Dress"))
@@ -298,8 +289,7 @@ void AssistantUI_Init()
     // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData)
     // and paint the initial caption
     AssistantUI_RecompileDisplayTitle();
-    // the map settings (was the app init order: CMapSettings::Load ran
-    // once at startup)
+    // the map settings (loaded before the window opens, so the
     g_MapSettings.Load();
     Info(Assistant, "assistant UI installed");
 }
@@ -322,20 +312,18 @@ void AssistantUI_RequestClientClose()
 
 void AssistantUI_QueueAutostart()
 {
-    // the checkbox check stayed in the EnterWorld path (the original checked
-    // g_TabMain->Autostart() inside RunAutostart before arming the timer);
-    // here the sink has already gated on the config value.
+    // the checkbox check stays in the EnterWorld path (
     s_AutostartAt = g_Ticks + 1000;
 }
 
 void AssistantUI_Tick()
 {
     // runs from AssistantWindow_FrameTick (every game frame, visible or not)
-    // the deferred Autostart script run (was a single-shot timer)
+    // the deferred Autostart script run
     if (s_AutostartAt != 0u && g_Ticks >= s_AutostartAt)
     {
         s_AutostartAt = 0;
-        // was onAutostartTimer -> g_TabScripts->RunScript("Autostart", text)
+        // runs the editor buffer as the "Autostart" script
         ScriptManager_Get()->Run("Autostart", ScriptEditor_Text());
     }
     // the script runtime first: the marshaled commands must run on the main
@@ -344,11 +332,9 @@ void AssistantUI_Tick()
     ScriptQueue_Drain();
     ScriptManager_Get()->Tick();
     tick_reconnect();
-    // macro playback (was the TabMacros 10 ms timer -> ProcessMacro): a
-    // headless frame tick keeps running while the assistant window is hidden
+    // macro playback (frame-tick driven): a
     g_MacroExecutor.Tick();
-    // corpse auto-open (was the 10 ms corpse timer): the client manager holds
-    // the queue, the assistant owns the config and the shared use-delay stamp
+    // corpse auto-open: the client manager holds
     if (g_AssistantConfig.CorpsesAutoopen())
     {
         if (::g_CorpseManager.CheckCorpses(
@@ -359,21 +345,20 @@ void AssistantUI_Tick()
             g_LastUseObjectTimer = g_Ticks;
         }
     }
-    // the dress sequence state machine (was the g_EquipScriptName script)
+    // the dress sequence state machine
     g_DressAgent.Tick();
-    // the shop engine progress countdown (was the ShopProgressForm timer)
+    // the shop engine progress countdown
     g_ShopAgent.Tick();
-    // the display caption (was the win32 GDI title-bar painter)
+    // the display caption painter
     tick_display_title();
 }
 
 void AssistantUI_Shutdown()
 {
-    // disarm a pending Autostart run (the original timer died with the form)
+    // disarm a pending Autostart run
     s_AutostartAt = 0;
     // the scripts stop first (bounded join; never hang the client), then the
-    // queue is shut down so late pushes fail fast (the old app tore the tab
-    // widgets down with the window and the queued signals died with it)
+    // queue is shut down so late pushes fail fast (
     ScriptManager_Get()->StopAll(2000);
     ScriptQueue_Shutdown();
     // one more brief join pass: with pushes failing fast the stragglers fall
@@ -392,13 +377,13 @@ void AssistantUI_Shutdown()
     Inspector_Shutdown();
     TextDialog_Shutdown();
     g_MapSettings.Save();
-    // stop the agents (was the app tearing down the tab widgets + dialogs)
+    // stop the agents
     g_DressAgent.Abort();
     g_ShopAgent.Reset();
     TabShop_CloseEditor();
     if (s_Initialized)
     {
-        // flush pending Main/Options page edits (the original app saved on close)
+        // flush pending Main/Options page edits (saved on close)
         if (s_OptionsDirty)
         {
             g_AssistantConfig.SaveProfile();
@@ -436,7 +421,7 @@ int AssistantUI_ReconnectSecondsLeft()
 // ImGui window fed by the main-thread scriptgump.cpp state (the ops arrive
 // marshaled through SC_TEXT_WINDOW). Position/size come from the engine's
 // SetPos/SetSize ops; the window only closes through TextWindow.Close (the
-// script owns it, like the original dialog's script-driven lifecycle).
+// script owns it).
 void ScriptTextWindow_Draw()
 {
     if (!ScriptTextWindow_Opened())
@@ -497,10 +482,7 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     ImGui::SetNextWindowSize(
         ImVec2((float)SHELL_DEFAULT_WIDTH, (float)SHELL_DEFAULT_HEIGHT), ImGuiCond_FirstUseEver);
 
-    // assistant windows opacity (the original setWindowOpacity; plan §6): clamped to the
-    // slider range (a hand-edited ini may hold anything) and pushed only
-    // around the assistant shell window, so it never leaks into anything else
-    // drawn in the game frame
+    // assistant windows opacity: clamped to the
     const float opacity = g_AssistantConfig.WindowsOpacity() / 100.0f;
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, opacity < 0.3f ? 0.3f : (opacity > 1.0f ? 1.0f : opacity));
 
@@ -536,7 +518,7 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
         }
     }
 
-    // the original title carried "X:UO Assist v<version> <playerName>"
+    // the title carries "X:UO Assist v<version> <playerName>"
     ImGui::SameLine();
     ImGui::TextDisabled("v" PRODUCT_VERSION_STR "%s", astr_t(g_SelectedCharName).c_str());
     ImGui::SameLine();

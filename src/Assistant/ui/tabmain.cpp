@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabMain (was assist/tabmain.ui/.cpp): the 23-option checklist bound to
-// g_AssistantConfig.m_Options (the same fields the packet handlers consult)
-// and the nested Main/Options pages. Toggles apply immediately like the original
-// app's on_lw_Options_clicked -> OptionChanged and persist right away
-// (SaveMainOptions); the other page widgets save with the profile on close.
+// TabMain: the 23-option checklist bound to g_AssistantConfig.m_Options (the
+// same fields the packet handlers consult) and the nested Main/Options pages.
+// Toggles apply immediately and persist right away (SaveMainOptions); the
+// other page widgets save with the profile on close.
 
 #include "assistantui.h"
 
@@ -26,7 +25,7 @@ namespace xuoassist {
 
 namespace {
 
-// §2.2 checklist order (CHECKLISTBOX_IDENTIFICATOR)
+// checklist order (CHECKLISTBOX_IDENTIFICATOR)
 struct XA_OPTION_ROW
 {
     const char *Label;
@@ -113,8 +112,7 @@ void option_changed(int index, bool state)
         }
         case CLBI_STAY_ON_TOP:
         {
-            // was AssistForm::UpdateStayOnTop: a host-window flag; the
-            // assistant renders in-game and has no window to keep on top
+            // a host-window flag; the
             break;
         }
         case CLBI_FAST_ROTATION:
@@ -186,7 +184,7 @@ void option_changed(int index, bool state)
 }
 
 // A color row: use-checkbox + hex line edit + hue preview swatch + "..."
-// (the original "..." sent a dye packet; the 0x95 response updates the config).
+// (opens the dye gump; the 0x95 response updates the config).
 void font_color_row(const char *label, bool *use, astr_t *color, uint32_t dyeSerial)
 {
     // the fixed widget ids (##use/##hex/...) are scoped per row: this is drawn
@@ -210,8 +208,7 @@ void font_color_row(const char *label, bool *use, astr_t *color, uint32_t dyeSer
     ImGui::SameLine();
     HueSwatch((uint16_t)CAssistant::TextToGraphic(*color));
     ImGui::SameLine();
-    // was on_tb_SelectFontColor_clicked: opens the client's dye gump; the 0x95
-    // response writes the color into the config
+    // opens the client's dye gump; the 0x95
     ImGui::BeginDisabled(!g_Connected);
     const bool pick = ImGui::Button("...");
     ImGui::EndDisabled();
@@ -243,8 +240,7 @@ void draw_main_page()
 
     ImGui::Separator();
 
-    // Font color / Characters font color rows (the checkbox is the original
-    // cb_FontColor "use color" state; the hex edit is the le_FontColor field)
+    // Font color / Characters font color rows (the checkbox is the
     font_color_row(
         "Font color:",
         &g_AssistantConfig.m_UseFontColor,
@@ -285,7 +281,7 @@ void draw_main_page()
 
     ImGui::Separator();
 
-    // Profiles: combo + Save (was the editable cb_ProfileList + pb_SaveProfile)
+    // Profiles: combo + Save
     const vector<astr_t> &profiles = g_AssistantConfig.GetProfiles();
     static int currentProfile = -1;
     const astr_t currentName = g_AssistantConfig.ProfileName;
@@ -310,14 +306,14 @@ void draw_main_page()
         {
             if (ImGui::Selectable(profiles[i].c_str(), i == currentProfile))
             {
-                // was on_cb_ProfileList_currentIndexChanged: load + remember
+                // load + remember
                 g_AssistantConfig.SetCurrentProfile(profiles[i]);
                 g_AssistantConfig.LoadProfile();
                 if (g_Connected && g_Player != nullptr)
                 {
                     g_AssistantConfig.SaveProfileMap();
                 }
-                // was LoadCurrentProfile's tail: recompile the display title
+                // recompile the display title
                 AssistantUI_RecompileDisplayTitle();
             }
         }
@@ -328,7 +324,7 @@ void draw_main_page()
     ImGui::SameLine();
     if (ImGui::Button("Save"))
     {
-        // was on_pb_SaveProfile_clicked: save under the (possibly new) name
+        // save under the (possibly new) name
         if (newProfile[0] != '\0')
         {
             g_AssistantConfig.SetCurrentProfile(newProfile);
@@ -343,7 +339,7 @@ void draw_main_page()
 
     ImGui::Separator();
 
-    // Assistant windows opacity: 30-100 (was hs_WindowsOpacity)
+    // Assistant windows opacity: 30-100
     int opacity = g_AssistantConfig.WindowsOpacity();
     ImGui::SetNextItemWidth(160.0f);
     if (ImGui::SliderInt("Assistant windows opacity:", &opacity, 30, 100))
@@ -363,7 +359,7 @@ void draw_main_page()
 
 void draw_options_page()
 {
-    // spinbox ranges/defaults from tabmain.ui (§2.2)
+    // spinbox ranges/defaults
     struct XA_SPIN_ROW
     {
         const char *Label;

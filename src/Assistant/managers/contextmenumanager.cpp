@@ -34,10 +34,8 @@ bool CContextMenuManager::OnPacketReceived(CDataReader &reader)
     bool isNewClilocs = (mode >= 2);
     Serial = reader.ReadUInt32BE();
 
-    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
-    // MT_WAIT_FOR_CONTEXT_MENU })` -> return false: a playing macro waiting
-    // on this context menu consumes the packet (the PlayWaiting
-    // semantics; the original had no g_World gate here - kept that way).
+    // a playing macro waiting on this context menu consumes the packet (the
+    // macro replay answers the server itself); deliberately no g_World gate.
     if (g_MacroExecutor.IsPlaying() && g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_CONTEXT_MENU }))
     {
         return false;

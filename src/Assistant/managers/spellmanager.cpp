@@ -54,8 +54,7 @@ void CSpellManager::Cast(const astr_t &name)
 void CSpellManager::CastIndex(int index)
 {
     // assistant-initiated casts must not record themselves; the client's
-    // CGame::CastSpell is the recording tap (was: the 0xFC CastSpellRequest
-    // injection, whose client handler performed the same send)
+    // CGame::CastSpell is the recording site
     RecordingSuspension suspension;
 
     g_Game.CastSpell(index);

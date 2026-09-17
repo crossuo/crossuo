@@ -20,7 +20,7 @@
 #include "../../core/assist.h"
 #include "../../core/dressagent.h"
 #include "../../core/shopagent.h"
-#include "Target.h" // the fused target cursor (the harness stubs it below)
+#include "Target.h" // the shared target cursor (the harness stubs it below)
 #include "../../core/textcommandmanager.h"
 #include "../../config/configio.h"
 #include "../../config/assistantconfig.h"
@@ -136,7 +136,7 @@ GumpData *g_HarnessGump = nullptr;
 
 uint32_t CAssistant::TextToSerial(astr_t text)
 {
-    // Parity with the original for the tests: plain hex text
+    // For the tests: plain hex text
     return (uint32_t)strtoul(text.c_str(), nullptr, 16);
 }
 astr_t CAssistant::SerialToText(const uint32_t &value)
@@ -263,7 +263,7 @@ void CContextMenuManager::RemoveHook() {}
 
 } // namespace xuoassist
 
-// the fused client manager (global namespace, per Managers/ObjectPropertiesManager.h)
+// the client manager (global namespace, per Managers/ObjectPropertiesManager.h)
 CObjectPropertiesManager g_ObjectPropertiesManager;
 CObjectPropertiesManager::~CObjectPropertiesManager() = default;
 astr_t CObjectPropertiesManager::GetData(const uint32_t &) { return {}; }
@@ -330,7 +330,7 @@ CPlayer *g_Player = nullptr;
 // Contains lookup always misses
 CParty g_Party;
 bool CParty::Contains(int) { return false; }
-// the client globals the fused assistant LastTarget/LastAttack reads consume
+// the client globals the assistant LastTarget/LastAttack reads consume
 uint32_t g_LastTargetObject = 0;
 uint32_t g_LastAttackObject = 0;
 // the client global the xuoassist using-declaration (global.h) aliases
@@ -409,8 +409,7 @@ const astr_t CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
     "Mystic Arc",         "Disrobe"
 };
 
-// the fused target cursor (Target.h): the apiscript hook/cancel calls stub
-// against it; nothing in the harness opens, drains or consumes a cursor
+// the target cursor (Target.h): the apiscript hook/cancel calls stub
 CTarget g_Target;
 CTarget::CTarget() {}
 void CTarget::RequestCursor() {}

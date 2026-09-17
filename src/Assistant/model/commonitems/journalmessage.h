@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (commonitems/journalmessage.h): Timer is a g_Ticks
-// stamp (the original app used an elapsed-time stamp).
+// The journal message record; Timer is a g_Ticks stamp.
 
 #pragma once
 

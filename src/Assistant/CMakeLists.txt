@@ -96,8 +96,8 @@ set_source_files_properties(
   script/quickjs/quickjs.c
   PROPERTIES COMPILE_OPTIONS "-w"
 )
-# the define lives on this target for its own sources (mirrors the launcher's
-# target-scoped define on crossuo) and on crossuo for the hook call sites
+# the define lives on this target for its own sources and on crossuo for the
+# hook call sites
 target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)
 # linked into the client binary (the shared libcrossuo.so of the
 # XUO_ASSISTANT=OFF layout, or the single-executable assistant build),
@@ -113,7 +113,7 @@ target_include_directories(xuoassist PUBLIC
   ${CMAKE_SOURCE_DIR}/src
 )
 
-# Phase 4b: the script-runtime harness (no client deps; the client-facing
+# # the script-runtime harness (no client deps; the client-facing
 # symbols and the engine flow are stubbed in the harness main)
 option(XUO_ASSISTANT_SCRIPT_TESTS "Build the xuoassist script harness" OFF)
 if(XUO_ASSISTANT_SCRIPT_TESTS)
@@ -140,6 +140,9 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     # the client token parser (finditem.cpp; the real implementation; the
     # harness links xuocore's sources directly instead of the library)
     ../../xuocore/text_parser.cpp
+    # the assistant tokenizer (core/textconv.cpp; the tokenizer parity suite
+    # exercises ParseTextTokens - the old CTextParser's line-scoped replacement)
+    core/textconv.cpp
     # the stb-style common/fs.h implementation for this standalone link (the
     # main build gets it from xuocore/common.cpp, which is not linked here)
     script/test/fsimpl.cpp
@@ -170,7 +173,7 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
   target_link_libraries(xuoassist-script-test PRIVATE ${COMMON_PROJECT} m pthread)
 endif()
 
-# Phase 2: icon-atlas assets (§6). The copy lives on the crossuo POST_BUILD
+# # icon-atlas assets. The copy lives on the crossuo POST_BUILD
 # (not on this static lib: a $<TARGET_FILE_DIR:crossuo> here would create a
 # dependency cycle xuoassist -> crossuo -> xuoassist). Destination is the
 # runtime lookup path - <exe dir>/assets/xuoassist, i.e. <build>/src/assets/

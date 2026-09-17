@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (macros/macro.cpp); GetText display strings and the
-// XML attribute set are identical. The spell-name lookup uses the ported
-// CSpellManager.
+// The macro model: GetText display strings and the XML attribute set; the
+// spell-name lookup uses the spell manager.
 
 #include "macro.h"
 #include "../core/assist.h"
@@ -685,8 +684,8 @@ void CMacroWithTargetTile::Save(CIniFile &ini, const astr_t &section)
     ini.SetInt(section, "x", X);
     ini.SetInt(section, "y", Y);
     ini.SetInt(section, "z", Z);
-    // relative_x/relative_y/relative_z are read (see CMacro::Load) but were
-    // never written by the original XML writer either; kept as-is.
+    // relative_x/relative_y/relative_z are read (see CMacro::Load) but never
+    // written; kept as-is.
 }
 
 } // namespace xuoassist

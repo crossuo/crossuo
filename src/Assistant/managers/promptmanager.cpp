@@ -39,9 +39,8 @@ bool CPromptManager::OnPacketReceived(CDataReader &reader)
     ID = reader.ReadUInt32BE();
     Exists = true;
 
-    // was `g_TabMacros->GetPlaying() && g_TabMacros->PlayWaiting({
-    // MT_WAIT_FOR_PROMPT })` -> return false: a playing macro waiting on the
-    // prompt consumes the packet (the PlayWaiting semantics).
+    // a playing macro waiting on the prompt consumes the packet (the macro
+    // replay answers the server itself).
     if (g_MacroExecutor.IsPlaying() && g_MacroExecutor.PlayWaiting({ MT_WAIT_FOR_PROMPT }))
     {
         return false;
@@ -84,10 +83,8 @@ void CPromptManager::OnPromptSent(const astr_t &text, bool cancel)
     {
         Exists = false;
 
-        // tabmacros recording (promptmanager handler): the answer text is
-        // recorded as the MT_WAIT_FOR_PROMPT action value; the value is the
-        // console text itself (the old buffer parse read the wide string as
-        // big-endian and kept the ascii string's trailing NUL)
+        // recording: the answer text is recorded as the MT_WAIT_FOR_PROMPT
+        // action value; the value is the console text itself
         if (g_World != nullptr && g_MacroExecutor.IsRecording())
         {
             g_MacroExecutor.Record(

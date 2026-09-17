@@ -3,16 +3,11 @@
 
 #pragma once
 
-// The script text editor widget (was CScriptPlainTextEdit + the
-// CSyntaxHighlighter + CExtendedPlainTextEdit gutter, plan §3.2): line
-// buffer, tokenizer highlighting with the original palette (.Method dark-magenta,
-// keywords dark-blue, globals dark-yellow, numbers/0x-hex blue, strings
-// dark-green, // comments gray), line-number gutter, current-line highlight,
-// a snapshot undo stack and the Find/Replace/GoToLine popups.
-//
-// Frame rules (plan): no whole-buffer rehighlight - only visible lines are
-// tokenized per frame, results cached per line hash; no per-frame heap churn
-// beyond the visible-line runs vector.
+// The script text editor widget: line buffer, tokenizer highlighting
+// (.Method dark-magenta, keywords dark-blue, globals dark-yellow, numbers/
+// 0x-hex blue, strings dark-green, // comments gray), line-number gutter,
+// current-line highlight, a snapshot undo stack and the Find/Replace/GoToLine
+// popups.
 
 #include "../core/global.h"
 

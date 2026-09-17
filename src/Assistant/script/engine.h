@@ -3,25 +3,17 @@
 
 #pragma once
 
-// The QuickJS-ng runtime wrapper (replaces the old script engine usage
-// inside CScriptHandle::RunEngine): one JSRuntime + one
-// JSContext per running script, the assistant API surface registered as
-// plain C natives (apiscript.cpp), the sentinel globals from the original engine
+// The QuickJS-ng runtime wrapper inside CScriptHandle::RunEngine: one
+// JSRuntime + one JSContext per running script, the assistant API surface
+// registered as plain C natives (apiscript.cpp), the sentinel globals
 // (self/ground/lasttarget/... ) registered on the global object, and the
 // evaluate/function-call flow with error reporting through the journal.
-//
-// The original globals were *strings* ("self", "lasttarget", ... - see
-// scripthandle.cpp:154-165): the command layer pattern-matched those
-// sentinels to the live serials. The same strings are registered here, so
-// existing scripts keep working; helpers that receive them resolve them the
-// same way (CAssistant::TextToSerial handles "self"/"backpack"/"lasttarget"
-// etc. - core/assist.cpp, ported in Phase 1c).
 //
 // Interruption: JS_SetInterruptHandler polls the terminate flag (the
 // handle-level atomic wired in through SetExternalTerminateFlag, plus the
 // engine's own flag); Terminate flips it so even a `while(1){}` script
-// returns to the worker, which then exits and the handle joins (plan rule:
-// terminate must always work). Memory: 64 MB runtime malloc limit per script.
+// returns to the worker, which then exits and the handle joins.
+// Memory: 64 MB runtime malloc limit per script.
 
 #include "../core/global.h"
 
@@ -57,8 +49,7 @@ public:
     // The CScriptHandle::RunEngine flow: evaluate the whole file (defines the
     // functions), then call `functionName` with the astr_t args (original behavior:
     // an evaluate error aborts before the call; both paths report through
-    // g_Assistant.ScriptError exactly like signal_ScriptError did).
-    // Returns false when the script produced an error (already reported).
+    // g_Assistant.ScriptError).
     bool Evaluate(const astr_t &text);
     bool CallFunction(const astr_t &functionName, const vector<astr_t> &args);
 

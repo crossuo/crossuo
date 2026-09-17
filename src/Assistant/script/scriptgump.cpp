@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See scriptgump.h. The original flow was textwindowengine.cpp (emit + PauseWaiting
-// per op) into commandmanager.cpp OnCommandTextWindow*
-// over the g_TextDialog window (script text list + position/size + save).
+// See scriptgump.h. Ops marshal through the command queue and the window
+// renders with the script text list + position/size + save.
 
 #include "scriptgump.h"
 #include "scriptfile.h"
@@ -85,7 +84,7 @@ void ScriptTextWindow_SaveToFile(const astr_t &path)
     }
 
     // one buffer, one atomic temp+rename write (crash-safe like the config
-    // saves; plan §8.1)
+    // saves)
     astr_t out;
     out.reserve(s_Lines.size() * 32);
     for (const astr_t &line : s_Lines)

@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabSkills (was assist/tabskills.ui/.cpp, §2.9): the live stats row, the
-// skills table (Name/Base/Real/Delta/Cap), the clipboard copies and the delta
-// reset. The data lives in the client's skill table (g_SkillsManager, fed by
-// the client's 0x3A/0xDF pipeline) - the table reads it live every frame,
-// like the original table was updated from UpdateSkill/UpdateStatsAndSkillsInfo.
+// TabSkills: the live stats row, the skills table (Name/Base/Real/Delta/Cap),
+// the clipboard copies and the delta reset. The data lives in the client's
+// skill table (g_SkillsManager, fed by the client's 0x3A/0xDF pipeline) -
+// the table reads it live every frame.
 //
-// Delta note: the original delta column showed Value - OldValue, suppressed while
-// (int)(delta * 10) == 0; "Reset skills delta" set OldValue = Value for every
-// skill (only the deltas are zeroed, no packet is sent). Lock-state icons
-// (skill_*.bmp) render as text glyphs with tooltips here; the original table's
-// icons were display-only (tabskills.cpp has no cell click handler), so there
-// is no click-to-cycle behavior to port.
-
-#include "assistantui.h"
+// Delta column: Value - OldValue, suppressed while (int)(delta * 10) == 0;
+// "Reset skills delta" sets OldValue = Value for every skill (only the
+// deltas are zeroed, no packet is sent). Lock-state icons render as text
+// glyphs with tooltips; they are display-only (no click-to-cycle behavior).
 
 #if defined(XUO_ASSISTANT)
 
@@ -34,7 +29,7 @@ namespace xuoassist {
 namespace {
 
 // the lock-state glyphs for skill_up/down/lock/wtf.bmp (display-only,
-// parity with the original: no click behavior) + the tooltip text
+// no click behavior) + the tooltip text
 struct XA_SKILL_LOCK_STYLE
 {
     const char *Glyph;
@@ -53,9 +48,7 @@ const char *skill_lock_style(uint8_t status)
     return s_LockStyles[status > 2 ? 3 : status].Glyph;
 }
 
-// the original code compared the packet-derived floats directly (the same uint16_t
-// /10.0f conversion on both sides makes exact equality meaningful); memcmp
-// keeps the exact-value semantics without tripping -Wfloat-equal
+// compares the packet-derived floats directly (the same uint16_t
 bool skill_value_equal(float a, float b)
 {
     return memcmp(&a, &b, sizeof(a)) == 0;
@@ -163,8 +156,7 @@ void TabSkills_Draw()
                 ImGui::TableNextColumn();
                 ImGui::Text("%.1f", skill->Value);
                 ImGui::TableNextColumn();
-                // was UpdateSkill: the delta cell stayed empty while
-                // (int)(valueDelta * 10) == 0
+                // the delta cell stays empty while
                 if ((int)(delta * 10) != 0)
                 {
                     ImGui::Text("%3.1f", delta);
@@ -180,7 +172,6 @@ void TabSkills_Draw()
     // --- the buttons ---------------------------------------------------------
     if (ImGui::Button("Copy selected to clipboard"))
     {
-        // was on_bt_CopySelectedToClipboard_clicked
         const CSkill *skill = skill_at(selected);
         if (skill != nullptr)
         {
@@ -212,7 +203,7 @@ void TabSkills_Draw()
 
     if (ImGui::Button("Copy all to clipboard"))
     {
-        // was on_bt_CopyAllToClipboard_clicked (format verbatim)
+        // (format verbatim)
         char date[16] = { 0 };
         report_date(date, sizeof(date));
         astr_t result =
@@ -290,8 +281,7 @@ void TabSkills_Draw()
 
     if (ImGui::Button("Reset skills delta"))
     {
-        // was on_bt_Reset_SkillsDelta_clicked: OldValue = Value for all
-        // skills (deltas only - no packet, no server interaction)
+        // OldValue = Value for all
         for (uint32_t i = 0; i < g_SkillsManager.Count; i++)
         {
             CSkill *skill = g_SkillsManager.Get(i);

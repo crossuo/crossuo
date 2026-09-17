@@ -140,7 +140,7 @@ public:
     uint32_t Count = 0;
     CSkill *Get(uint32_t) { return nullptr; }
     int Find(const astr_t &) { return -1; }
-    // mirrors the real CSkillsManager::Use (Managers/SkillsManager.cpp)
+    // same Use path as Managers/SkillsManager.cpp
     void Use(const astr_t &name);
 };
 

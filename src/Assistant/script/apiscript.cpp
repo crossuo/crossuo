@@ -1,32 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The assistant JS API (Phase 4b, batches 1+2). Natives run on the SCRIPT
-// thread and marshal through ScriptQueue_Exec; the drain-side bodies of every
-// tag live in the ScriptCommand_Execute switch at the bottom and run on the
-// MAIN thread (they port the original OnCommand* handler bodies of
-// managers/commandmanager.cpp and the direct reads of scriptengine.cpp + the
-// engine classes gumpengine/textwindowengine/menuengine/fileengine/
-// clientmacroengine/clientselectedtile.cpp).
-//
-// API classification (plan rule: everything queued unless obviously safe):
-//   [Q] mutating calls   -> queued; main thread executes the ported handler
-//   [G] state getters    -> queued; main thread reads and fills the result
-//   [D] direct reads     -> only Now() (g_Ticks), Time/Date/Random/
-//                           AssistVersion (pure libc), engine pause/terminate
-//                           flags - and the engine-class objects' OWN copies
-//                           (GetGump/GetMenu deep-copy the manager records
-//                           into the command result; the JS wrapper owns the
-//                           copy, like the original CScriptGumpObject ctor copy).
+// The assistant JS API. Natives run on the SCRIPT thread and marshal through
+// ScriptQueue_Exec; the drain-side bodies of every tag live in the
+// ScriptCommand_Execute switch at the bottom and run on the MAIN thread (the
+// game-touching bodies; the engine classes gumpengine/textwindowengine/
+// menuengine/fileengine are read directly there).
+// API classification: everything queued unless obviously safe:
+//    [Q] mutating calls   -> queued; main thread executes the handler
+//    [G] state getters    -> queued; main thread reads and fills the result
+//    [D] direct reads     -> only Now() (g_Ticks), Time/Date/Random/...
+//                            (GetGump/GetMenu deep-copy the manager records
+//                            into the command result; the JS wrapper owns the
+//                            copy).
 // The journal mirror (journal.cpp) is main-thread fed/read; script threads
 // receive copies made inside the drain.
-//
-// Batch-2 surface (this file): gump hook/count/get/select, menu wait/count/
-// get/select/close, prompt wait/state/send, trade, shop (Buy/Sell), the
-// WaitFor* flag family, timers, context menu, client macros, the text window
-// (scriptgump.cpp), the sandboxed file engine (scriptfile.cpp), buffs
-// (scriptstate.cpp) and the globals store. Player. covers the CPlayerObject
-// list.
 
 #include "apiscript.h"
 #include "commandqueue.h"
@@ -67,7 +55,7 @@ extern "C" {
 #include "CrossUO.h" // ::g_Game (the client send bridge; worldstubs.h stands in)
 #endif
 #include "Gumps/GumpCombatBook.h" // ::CGumpCombatBook::m_AbilityName (UseAbility names)
-#include "Target.h"         // ::g_Target (the fused target cursor: hooks, senders, CancelCursor)
+#include "Target.h"         // ::g_Target (the shared target cursor: hooks, senders, CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say commands)
 #include "Managers/GumpManager.h"   // ::g_GumpManager (statusbar/paperdoll/trade)
 #include "Managers/MacroManager.h"  // ::g_MacroManager (PlayClientMacro)
@@ -354,10 +342,9 @@ void journal_finalizer(JSRuntime *rt, JSValue val)
     (void)rt;
 }
 
-// --- the 4b-2 engine classes --------------------------------------------------
-// Gump/Menu hold DEEP COPIES made inside the drain (the original CScriptGumpObject /
-// CScriptMenuObject ctors copied the manager records the same way); GumpHook /
-// ClientMacro / File are pure script-side records. All script-thread owned.
+// --- the engine classes ---------------------------------------------------------
+// Gump/Menu hold DEEP COPIES made inside the drain; GumpHook / ClientMacro /
+// File are pure script-side records. All script-thread owned.
 
 JSClassID s_GumpClass = 0;
 JSClassID s_MenuClass = 0;
@@ -457,8 +444,8 @@ JSValue new_menu_object(JSContext *ctx, CMenu *copy)
 }
 
 // Object-getter selector (SubTag of SC_OBJECT_GET / SC_PLAYER_GET; the drain
-// switch reads the same logical field of the world object - one ported body
-// per CScriptGameObject/CPlayerObject getter).
+// switch reads the same logical field of the world object - one body per
+// CScriptGameObject/CPlayerObject getter).
 enum XA_OBJ_FIELD
 {
     OF_TEXT_SERIAL = 1,
@@ -686,7 +673,7 @@ JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     // [Q] CScriptEngine::Wait: the delay comes from
     // the config text table (DelayFromText) + raw ms; the sleep loop checks
-    // pause/terminate every 10 ms (the old timer granularity).
+    // pause/terminate every 10 ms.
     const astr_t text = arg_text(ctx, argv, argc, 0, "");
     auto *parse = sc_make(SC_WAIT_PARSE);
     parse->TextA = text;
@@ -711,7 +698,7 @@ JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 }
 
 // [Q] a whole family of single-purpose commands share this native; magic
-// indexes the text-command table (RunCommand executes the exact ported body).
+// indexes the text-command table (RunCommand executes the body).
 enum XA_SIMPLE_CMD
 {
     XC_INFO = 0,
@@ -971,7 +958,7 @@ JSValue jsn_morph(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 }
 
 // [Q] UseType/UseFromGround/UseTypeList/UseFromGroundList - [G] the found
-// serial comes back (the original passed a bool* result); the find+doubleclick
+// serial comes back; the find+doubleclick
 // body is the OnCommandUseType family.
 JSValue jsn_usetype(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int magic)
 {
@@ -1087,7 +1074,7 @@ JSValue jsn_now(JSContext *ctx, JSValueConst, int, JSValueConst *)
 // [G] HaveTarget() - OnCommandHaveTarget: 0 = none, cursorType + 1.
 JSValue jsn_havetarget(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
-    // the original HaveTarget was a bool; GetTargetType (jsn_targettype) is the
+    // HaveTarget is a bool; GetTargetType (jsn_targettype) is the
     // raw CommandHaveTarget value behind the same drain read
     return JS_NewBool(ctx, result_int(sc_exec(SC_HAVE_TARGET)) != 0);
 }
@@ -1126,10 +1113,9 @@ JSValue jsn_cancelwaittarget(JSContext *ctx, JSValueConst, int, JSValueConst *)
 
 namespace {
 
-// [Q] WaitMenu(prompt, choice) - the original body armed the menu manager's
+// [Q] WaitMenu(prompt, choice) - arms the menu manager's
 // wait hook (SetHook); the manager auto-sends the choice
 // when the named menu arrives. Fire-and-forget
-// + the pause gate (the WaitForMenu flag loop is the polling half).
 JSValue jsn_waitmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_WAIT_MENU);
@@ -1187,8 +1173,8 @@ JSValue jsn_getmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     pause_gate(ctx);
     if (menu == nullptr)
     {
-        // the original handed the wrapper a null menu: the object read as empty
-        // (Serial "0x00000000", empty name) instead of null
+        // a null menu reads as an empty
+        // object (Serial "0x00000000", empty name) instead of null
         menu = new CMenu();
     }
     JSValue object = new_menu_object(ctx, menu);
@@ -1280,7 +1266,7 @@ JSValue jsn_waitjournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
             return entry;
         }
 
-        // 10 ms poll, then the pause gate (the original loop's msleep + PauseWaiting)
+        // 10 ms poll, then the pause gate
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         pause_gate(ctx);
     }
@@ -1371,8 +1357,8 @@ JSValue journal_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
     }
 }
 
-// [D] Text()/local SetText(newText) - CScriptJournalObject::SetText kept the
-// text on the local copy only (the original object mutated its own m_Message).
+// [D] Text()/local SetText(newText) - CScriptJournalObject::SetText keeps the
+// text on the local copy only.
 JSValue journal_settext(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
 {
     auto *data = (XA_JS_JOURNALENTRY *)JS_GetOpaque2(ctx, thisVal, s_JournalClass);
@@ -1623,7 +1609,7 @@ JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     const uint32_t deadline = g_Ticks + maxDelay;
 
     // the immediate pre-check: WaitForTarget
-    // returned true at once when a target cursor was already up. Queued:
+    // returns true at once when a target cursor is already up. Queued:
     // g_Target is main-thread state (SC_HAVE_TARGET reads IsTargeting()).
     if (magic == WF_TARGET)
     {
@@ -1661,10 +1647,8 @@ JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
             pause_gate(ctx);
             return JS_TRUE;
         }
-        // the original timeout shape: the loop ran
-        // `while (!received && timer > elapsed())` - exit false once the
-        // maxDelay budget is spent (the missing deadline made a lost event
-        // hang the script forever)
+        // timeout shape: exit false once the
+        // maxDelay budget is spent (a lost event must not hang the script).
         if (g_Ticks >= deadline)
         {
             break;
@@ -1705,7 +1689,7 @@ void serialize_gumphook(XA_SCRIPT_COMMAND *command, const XA_JS_GUMPHOOK *hook)
 
 JSValue jsn_creategumphook(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    // the original trimmed + lowered the text form; "cancel" meant hook index 0
+    // the text form is trimmed + lowered; "cancel" means hook index 0
     astr_t name = arg_text(ctx, argv, argc, 0, "");
     int index = 0;
     if (JS_IsNumber(argv[0]))
@@ -1976,7 +1960,7 @@ JSValue gump_text(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *
 
 // Gump.Select(hook) / Gump.Close - OnCommandSelectGump through
 // g_GumpManager.SendGumpChoice. The queue contract forbids passing the live
-// manager pointer across threads (the original body passed m_Parent raw), so the
+// manager pointer across threads, so the
 // copy's serial+id re-resolve the live gump inside the drain - same reply
 // packet, no dangling window.
 JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
@@ -2006,7 +1990,7 @@ JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
 
 JSValue gump_close(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *)
 {
-    // the original Close built an empty hook with index 0 (the "cancel" reply)
+    // Close builds an empty hook with index 0 (the "cancel" reply)
     return gump_select(ctx, thisVal, 0, nullptr);
 }
 
@@ -2044,7 +2028,7 @@ JSValue menu_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *a
             const int index = arg_int(ctx, argv, argc, 0, 0);
             if (index < 0 || index >= (int)menu->m_Items.size())
             {
-                // the original accessors returned 0 / "" out of range
+                // out-of-range accessors return 0 / ""
                 return magic == 5 ? JS_NewInt32(ctx, 0) : JS_NewString(ctx, "");
             }
             const CMenuItem &item = menu->m_Items[index];
@@ -2178,7 +2162,7 @@ JSValue jsn_tradeinfo(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->TextA = arg_text(ctx, argv, argc, 0, ""); // trade index
     if (magic == 1 || magic == 4)                      // container/checkstate
     {
-        // the "right" container text meant opponent 1 (the original bodies)
+        // the "right" container text means opponent 1
         const astr_t container = arg_text(ctx, argv, argc, 1, "0");
         astr_t lowered = container;
         for (char &c : lowered)
@@ -2224,8 +2208,8 @@ JSValue jsn_shop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     ScriptQueue_Exec(command);
     delete command;
 
-    // the original loop polled IsShopping every 10 ms; the terminate check is the
-    // Phase-3 addition (it had none and outlived Terminate)
+    // the loop polls IsShopping every 10 ms; the terminate check ends the
+    // wait for a terminated script.
     while (engine == nullptr || !engine->Terminated)
     {
         auto *state = sc_make(SC_SHOP_STATE);
@@ -2346,8 +2330,7 @@ JSValue macro_play(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
         return JS_UNDEFINED;
     }
     const bool wait = argc >= 1 ? arg_bool(ctx, argv, argc, 0, false) : false;
-    // the original default delay was 100500; nothing ever
-    // flipped g_ClientMacroPlayed there, so wait=true meant "sleep the delay"
+    // default delay 100500; wait=true means "sleep the delay".
     const uint32_t delay = (uint32_t)(argc >= 2 ? arg_int(ctx, argv, argc, 1, 100500) : 100500);
 
     auto *command = sc_make(SC_CLIENT_MACRO);
@@ -2536,8 +2519,8 @@ JSValue jsn_selectedtile(JSContext *ctx, JSValueConst, int, JSValueConst *, int 
 }
 
 // --- the text window (scriptgump.cpp; the g_TextDialog ops) -------------------
-// Each op marshals SC_TEXT_WINDOW, then the pause gate (the original bodies emitted
-// the command and called PauseWaiting - fire-and-forget + pause).
+// --- the text window (scriptgump.cpp) ------------------------------------------
+// Each op marshals SC_TEXT_WINDOW, then the pause gate (fire-and-forget + pause).
 
 JSValue textwindow_op(JSContext *ctx, int op, JSValueConst *argv, int argc, int ints)
 {
@@ -2583,8 +2566,8 @@ JSValue textwindow_noarg(JSContext *ctx, JSValueConst, int, JSValueConst *, int 
     return textwindow_op(ctx, magic, nullptr, 0, 0);
 }
 
-// [Q] GetGlobal(name) - the original OnCommandGetGlobal returned the stored value
-// or left the empty astr_t default.
+// [Q] GetGlobal(name) - returns the stored value
+// or the empty string default.
 JSValue jsn_globalget(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_GLOBAL_SET);
@@ -2631,7 +2614,7 @@ JSValue jsn_optionset(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     return JS_UNDEFINED;
 }
 
-// --- fix round (Phase 4b-2 wire-now): the remaining scriptengine families ---
+// --- the remaining scriptengine families ---------------------------------------
 
 // [G] FindFriend/FindEnemy(flags, distance) -> serial text (the CScriptEngine
 // overloads -> CommandFindFriend/Enemy -> CAssistant::FindFriend/FindEnemy;
@@ -3582,9 +3565,7 @@ void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName)
     JS_SetPropertyFunctionList(ctx, player, PLAYER_FUNCS, count_of(PLAYER_FUNCS));
     JS_SetPropertyStr(ctx, global, "Player", player);
 
-    // TextWindow./SelectedTile. - the live engine objects of the original globals
-    // (scripthandle.cpp:116-125); the text window state is the process
-    // singleton (scriptgump.cpp), the selected tile reads are marshaled
+    // TextWindow./SelectedTile. - the live engine objects of the sentinel globals;
     JSValue textWindow = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(
         ctx, textWindow, TEXTWINDOW_FUNCS, count_of(TEXTWINDOW_FUNCS));
@@ -3595,9 +3576,9 @@ void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName)
         ctx, selectedTile, SELECTEDTILE_FUNCS, count_of(SELECTEDTILE_FUNCS));
     JS_SetPropertyStr(ctx, global, "SelectedTile", selectedTile);
 
-    // The sentinel globals (scripthandle.cpp:154-165): they were STRINGS in
-    // the original engine and the serial resolution pattern-matched them; they
-    // stay strings so existing scripts keep working.
+    // The sentinel globals: STRINGS on the global object ("self", ...);
+    // the serial resolution pattern-matches them;
+    // they stay strings so existing scripts keep working.
     static const char *const SENTINELS[] = { "self",    "ground",       "lastcorpse",
         "lasttarget", "lasttile",     "backpack", "lastcontainer", "lastattack",
         "laststatus", "lastobject" };
@@ -3614,10 +3595,8 @@ void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName)
 
 // ---------------------------------------------------------------------------
 // The drain-side executor (commandqueue.h): runs on the MAIN thread inside
-// ScriptQueue_Drain - the port of the original OnCommand* handler bodies + the direct
-// engine reads. World access is unrestricted here (g_World/g_Player), config
-// and the journal mirror are main-thread state.
-// ---------------------------------------------------------------------------
+// ScriptQueue_Drain. World access is unrestricted here (g_World/g_Player),
+// config and the journal mirror are main-thread state.
 
 namespace {
 
@@ -3644,8 +3623,8 @@ CGameObject *world_object(uint32_t serial)
 }
 
 // The SC_OBJECT_GET/SC_PLAYER_GET selector switch: one body per
-// CScriptGameObject/CPlayerObject getter (the original handlers read the same
-// fields through the injected interface; here it is the local world model).
+// CScriptGameObject/CPlayerObject getter (reads the same
+// logical fields of the local world model).
 bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue, astr_t &textValue)
 {
     if (object == nullptr)
@@ -3735,7 +3714,6 @@ bool object_field(CGameObject *object, int field, int &intValue, bool &boolValue
             break;
         case OF_BOOL_ISMULTI:
             boolValue = false; // the model has no multi flag; 4b-2 with the
-                               // multi round (the original engine read the same 0)
             break;
         case OF_INT_EQUIPLAYER:
             intValue = EquipLayer((CGameItem *)object);
@@ -3948,7 +3926,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         color = 0;
                     }
                     // the wrapper speech packet sends ST_NORMAL; broadcast
-                    // becomes a plain say this round (4b-2 with speech modes)
+                    // becomes a plain say
                     SendConsoleText(
                         wstr_t(command->TextB.begin(), command->TextB.end()), color);
                     break;
@@ -4195,9 +4173,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 CAssistant::TextToSerial(command->TextC), color,
                 CTextCommandManager::GetJournalFlags(command->TextB), (uint32_t)command->IntA,
                 (uint32_t)command->IntB, command->BoolA);
-            // hand the copy across the queue in the pointer slot (the old
-            // uint32_t slot truncated 64-bit heap pointers); the script thread
-            // deletes it
+            // hand the copy across the queue in the pointer slot (a 32-bit slot would
+            // truncate 64-bit heap pointers); the script thread
             command->PointerA = message;
             break;
         }
@@ -4225,9 +4202,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     command->PointerA = new CJournalMessage(messages[index]);
                     if (command->BoolA)
                     {
-                        // Port extension: the original JournalLine(index) had no
-                        // consume and never removed. The extra argument is
-                        // honored as remove-after-read.
+                        // extension: JournalLine(index) takes an extra
+                        // argument honored as remove-after-read.
                         ScriptJournal_RemoveAt(index);
                     }
                 }
@@ -4238,7 +4214,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         {
             // the effective target state: a WaitTarget that consumed a cursor
             // leaves the client Targeting false while the hook mirror
-            // (HookTargeting) stays true — the union is the old mirror read
+            // (HookTargeting) stays true - the effective read is the union
             command->ResultInt =
                 (g_Target.IsTargeting() || g_Target.HookTargeting()) ? g_Target.CursorType + 1 : 0;
             break;
@@ -4290,8 +4266,8 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     break;
                 }
                 default: // the type/ground hook families arm the same tile/object
-                         // hooks after a find (the original bodies passed the found
-                         // list through g_Target.SetObjectsHook / SetTileHook)
+                         // hooks after a find (the found list goes through
+                         // g_Target.SetObjectsHook / SetTileHook)
                 {
                     g_Target.SetObjectsHook(command->ListA);
                     break;
@@ -4317,7 +4293,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                 case 1:
                     command->ResultSerial = g_LastAttackObject;
                     break;
-                default: // was VKI_NEW_TARGET_SYSTEM_SERIAL (actions.cpp)
+                default: // the NTS serial source (actions.cpp)
                     command->ResultSerial = Actions_NewTargetSystemSerial();
                     break;
             }
@@ -4634,13 +4610,12 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     if (EnabledCommandLogOut())
                     {
                         // the client's own logout (CGame::LogOut, the body of
-                        // the client's 0xD1 handler); the injected 0xD1 was a
-                        // silent no-op: 0xD1 is recv-only in the client table
+                        // the client's 0xD1 handler; 0xD1 is recv-only in the client
+                        // packet table, so injecting it is a silent no-op)
                         g_Assistant.LogOut();
                     }
                     break;
                 case 346: // Screenshot() (the client's CScreenshotBuilder,
-                          // like the original Platform::GameScreenshot)
                     g_ScreenshotBuilder.SaveScreen();
                     break;
                 default:
@@ -4736,8 +4711,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             break;
         }
         // ---------------------------------------------------------------
-        // batch 2 (Phase 4b-2): the engine-class families
-        // ---------------------------------------------------------------
+        // the engine-class families
         case SC_WAIT_MENU: // OnCommandWaitMenu/CancelWaitMenu (1702/1717)
         {
             if (g_World == nullptr)
@@ -4834,7 +4808,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             GumpData *gump = nullptr;
             if (command->SubTag == 1)
             {
-                // -1 was the GetLastGump path (GetGump(-1) -> GetLastGump)
+                // -1 is the GetLastGump path (GetGump(-1) -> GetLastGump)
                 gump = command->IntA == -1 ? g_GumpManager.GetLastGump()
                                            : g_GumpManager.GetGump((uint32_t)command->IntA);
             }
@@ -5038,7 +5012,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         case SC_FRIEND_INFO: // the CommandFindFriend/Enemy + Get*List/
         {                    // Get*Status set
             // list reads/status target the friend gate, the enemy forms the
-            // enemy gate (the same split the original slots had)
+            // enemy gate
             const bool enemyForm =
                 command->SubTag == 2 || command->SubTag == 3 || command->SubTag == 5;
             if (g_World == nullptr ||

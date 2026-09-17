@@ -32,9 +32,8 @@ namespace {
 
 // JS interrupt handler: runs on the script thread inside every JS loop. Two
 // jobs: flip to "terminate" when the manager asked, and periodically pause
-// the script (the original PauseWaiting while-loop ran between API calls; a tight
-// JS loop never reached one, QuickJS' handler gives us a hard preemption
-// point the original engine never had).
+// the script (a tight JS loop never reaches an API call, so the QuickJS
+// handler gives a hard preemption point).
 int ScriptInterruptHandler(JSRuntime *rt, void *opaque)
 {
     auto *engine = (CScriptEngine *)opaque;
@@ -108,8 +107,8 @@ bool CScriptEngine::Evaluate(const astr_t &text)
     {
         return false;
     }
-    // JS_EVAL_TYPE_GLOBAL matches the old script engine's evaluate semantics (the
-    // file's `function ...` declarations land on the global object).
+    // JS_EVAL_TYPE_GLOBAL: the
+    // file's `function ...` declarations land on the global object.
     JSValue result = JS_Eval(
         m_Context, text.c_str(), text.length(), "<script>", JS_EVAL_TYPE_GLOBAL);
     bool ok = !JS_IsException(result);

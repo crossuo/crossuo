@@ -68,7 +68,7 @@ CJournalMessage *ScriptJournal_Find(
         return nullptr;
     }
 
-    // pattern split (was pattern.split("|") + the findID index per alternative)
+    // pattern split on "|" (the findID index per alternative)
     vector<astr_t> patterns;
     {
         astr_t current;

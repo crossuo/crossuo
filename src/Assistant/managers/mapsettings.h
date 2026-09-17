@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The map settings record (the original CMapSettings): every field, default
-// and the exact GlobalConfig/Map.ini key set are kept
-// (CMapSettings::Load/Save), including the original writer's
-// "other_sho_name" key spelling for the Other group's show-name flag (a
-// format quirk both write/read directions shared). Split out of assmap.h so
+// The map settings record: every field, default and the exact
+// GlobalConfig/Map.ini key set, including the "other_sho_name" key spelling
+// for the Other group's show-name flag (a format quirk both write/read
+// directions share). In its own header so
 // the config layer (and the script harness) can include the record without
 // the radar window machinery.
 
@@ -15,7 +14,7 @@
 
 namespace xuoassist {
 
-// The map settings record (the original CMapSettings).
+// The map settings record.
 class CMapSettings
 {
 public:

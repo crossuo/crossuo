@@ -1,23 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// ImGui widget kit for the assistant UI (master plan §6). Replaces the
-// custom widgets the tab screens were built from:
-//   Icons_*      - the images/* atlas (stb_image -> one registered texture)
-//   IconButton   - flat icon button (hover/pressed colors)
-//   ColorSwatch  - color swatch button (+'...' picker for true RGB fields)
-//   HueSwatch    - 15-bit UO color preview swatch (the 0x02B2-style fields)
-//   ComboGroup   - grouped combo rows ('#' rows = group separators)
-//   ListButtons  - the add/save/remove/from-target icon row shared by all
-//                  list tabs
-//   NameList     - CExtendedListWidget (drag reorder, double-click rename with
-//                  GetFreeName, Delete-key removal, optional check column)
-//   ContentList  - the Find/Ignore "content" rows (graphic/color/comment)
-//   StatusBar    - the 1 s information line (le_Information)
-//
-// Draw-path rules (plan §7 Phase 2): no per-frame allocations - row labels go
-// through a frame-static buffer, the inline rename buffer is a fixed 128
-// bytes shared by all lists (one row edits at a time).
+// ImGui widget kit for the assistant UI. The custom widgets the tab screens
+// are built from:
 
 #pragma once
 
@@ -35,8 +20,7 @@ namespace xuoassist {
 // --- shared links -------------------------------------------------------------
 // the assistant scripting docs page: the About tab "Docs" button and the
 // Scripts tab "Script examples" link both open this URL through
-// ::Platform::OpenBrowser (the original command link opened the ScriptLibrary
-// collection - the docs page hosts the examples now)
+// ::Platform::OpenBrowser (opens the ScriptLibrary
 extern const char *const DOCS_URL;
 
 // opens a URL in the system browser (::Platform::OpenBrowser) - the shared
@@ -94,8 +78,7 @@ ImU32 UOColorToRGBA(uint16_t color);
 // Renders an atlas icon at an explicit draw-list rectangle (map corpse
 // marker); atlas lazy-init like IconButton.
 void IconImage(XA_ICON icon, const ImVec2 &topLeft, const ImVec2 &size);
-// Preview-only swatch for the 0x02B2-style hue fields (the original app had no RGB
-// picker for those: its '...' button sends a dye packet instead).
+// Preview-only swatch for the 0x02B2-style hue fields (no RGB picker for
 void HueSwatch(uint16_t uoColor, float size = 18.0f);
 // Swatch + picker popup for true RGB fields (Display tab).
 // commit (optional): set inside the picker popup scope when the edit session
@@ -122,10 +105,7 @@ enum
 // per row instance (a tab can host several list panes).
 int ListButtons(const char *idSeed);
 
-// --- hex line edits (the original le_* "0x..." fields) -----------------------------
-// The stored value keeps the "0x" prefix; the 'x' is rejected by ImGui's
-// hexadecimal filter, so it is stripped into the edit buffer on edit start and
-// re-prefixed on commit. Returns true when the value was committed.
+// --- hex line edits -----------------------------------------------------------
 bool HexEditField(const char *id, char *value, size_t valueSize, float width = 0.0f);
 bool HexEditField(const char *id, astr_t *value, float width = 0.0f);
 
@@ -178,12 +158,11 @@ bool ListCore(
 // (e.g. &CTypeEntry::Name for the config lists, &CFilterSpeechEntry::Text for
 // the speech filters).
 // - double click: inline rename; empty or colliding names are uniquified with
-//   the original GetFreeName algorithm
+//   the GetFreeName algorithm
 // - Delete key: removes the selected row while a row is hovered and the
 //   assistant is not capturing text (does not steal keys the game wants)
-// - drag & drop: reorders rows (the original emitted itemDropped; the caller saved)
+// - drag & drop: reorders rows (the caller saves)
 // - checkColumn: renders the row's Enabled state as a leading checkbox
-//   (friends/enemies rows carried a checked state in the original app)
 namespace detail {
 
 // friends/enemies rows carry the checked state as an Enabled member; other
@@ -194,7 +173,6 @@ template <class U> bool *RowEnabled(U &, long) { return nullptr; }
 } // namespace detail
 
 // context handed to the XA_LIST_VIEW callbacks (captureless lambdas only:
-// plain function pointers keep the draw path free of allocations)
 template <class T> struct XA_NAMED_LIST_CTX
 {
     vector<T> *Items;
@@ -266,11 +244,11 @@ void HotkeysForm_KeyboardAssign(int keyId);
 
 // --- Find/Ignore content rows (CFindListItemListItem / CIgnoreListItem) -----
 // Displays "graphic color comment" / "serial graphic color comment" rows
-// (was CFindItem::UpdateText). Selection fills the editor fields below.
+// Selection fills the editor fields below.
 bool FindContentList(const char *id, vector<CFindItem> &items, int *selected, float height = -1.0f);
 bool IgnoreContentList(const char *id, vector<CIgnoreItem> &items, int *selected, float height = -1.0f);
 
-// --- StatusBar (was the le_Information 1 s timer) ---------------------------
+// --- StatusBar ------------------------------------------------------------
 void StatusBar_Draw(uint32_t sessionStartTicks);
 
 } // namespace xuoassist

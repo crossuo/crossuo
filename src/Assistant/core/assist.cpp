@@ -1,23 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (assist/assist.cpp), trimmed per assistant-plan.md
-// §4.1. Method behavior is identical; the deltas are:
-//  - the signal/slot marshaling is gone (single-threaded, §8.1);
-//  - the data-list lookups (types/objects/find/ignore/friends/enemies) go to
-//    the AssistantConfig module, which owns the data the original lists displayed;
-//  - numeric-option lookups (distance/delay/messages level) go to
-//    AssistantConfig too (was g_TabMain / g_AssistantForm);
-//  - the from-target handlers that filled UI widgets keep the world/state
-//    half and route the UI half through the events seam (Phase 2).
+// The assistant core: config lookups (data lists, distances, delays, message
+// levels) go to the AssistantConfig module; from-target handlers keep the
+// world/state half and route the UI half through the events seam. Everything
+// is single-threaded - no signal/slot marshaling.
 
 #include "assist.h"
 #include "../Misc.h" // unpack16/unpack32 (the client byte-order helpers)
-#include "../script/scriptgump.h" // the text window dump (the g_TextDialog port)
+#include "../script/scriptgump.h" // the text window dump
 #include "Network/Packets.h" // ::CPacketStatusRequest and the other client send builders
 #include "Managers/PacketManager.h"      // ::g_PacketManager (DisplayTalkTextW, DeleteObject)
 #include "textconv.h"
-#include "Target.h" // ::g_Target (the fused target cursor: RequestCursor, FromAssist)
+#include "Target.h" // ::g_Target (the shared target cursor: RequestCursor, FromAssist)
 #include "assistantevents.h"
 #include "world.h"
 #include "worldutil.h"
@@ -263,9 +258,8 @@ void CAssistant::DumpObjectInfo(CGameObject *obj) const
         return;
     }
 
-    // the g_TextDialog->AddText + show/activateWindow body is restored by the
-    // 4b-2 text window below; the same text goes through the OnJournalMessage
-    // seam (the original app did both)
+    // the same text goes through the OnJournalMessage seam (the text window dump
+    // is handled below)
     int layer = 0;
     if (!obj->NPC)
     {
@@ -293,8 +287,7 @@ void CAssistant::DumpObjectInfo(CGameObject *obj) const
     message.Flags = JMT_SYSTEM;
     g_AssistantEvents->OnJournalMessage(message);
 
-    // the g_TextDialog->ClearText/AddText(text) + show port (scriptgump.cpp,
-    // the 4b-2 text window) - the same dump the original dialog showed
+    // the text window dump (scriptgump.cpp): clear, print, show
     ScriptTextWindow_Command(TW_CLEAR, "", 0, 0, "");
     ScriptTextWindow_Command(TW_PRINT, text, 0, 0, "");
     ScriptTextWindow_Command(TW_OPEN, "", 0, 0, "");
@@ -921,8 +914,8 @@ void CAssistant::Track(const bool &state, short x, short y) const
         y = g_Player->GetY();
     }
 
-    // the old and new 0xBA layouts differ only in the trailing serial field
-    // the client ignores, so the CV_7090 split collapses
+    // the 0xBA client versions differ only in the trailing serial field the
+    // client ignores, so the CV_7090 split collapses
     ::g_PacketManager.DisplayQuestArrow(state, (uint16_t)x, (uint16_t)y);
 
     g_AssistantEvents->OnTrack(state, x, y);
@@ -930,8 +923,8 @@ void CAssistant::Track(const bool &state, short x, short y) const
 
 void CAssistant::HandleTargetType(uint8_t *buf) const
 {
-    // Was g_TabListsTypes->SetTypeFromTarget(unpack16(buf + 17)); the field
-    // update is the Phase 3 from-target flow (UI consumes via OnFromTarget).
+    // the graphic goes to the config list modules via OnFromTarget (the UI
+    // consumes the from-target event)
     const uint16_t graphic = unpack16(buf + 17);
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_TYPE, 0, graphic, 0, "");
 }
@@ -961,8 +954,7 @@ void CAssistant::HandleTargetDisplayItem(uint8_t *buf) const
         }
     }
 
-    // was g_TabDisplay->SetDisplayItemFromTarget(unpack16(buf + 17), color);
-    // the items-editor graphic/hue fields are Phase 4 tab state
+    // the items-editor graphic/hue fields are assistant tab state
     g_AssistantEvents->OnFromTarget(
         XA_FROM_TARGET_DISPLAY_ITEM, 0, unpack16(buf + 17), color, "");
 }
@@ -1003,8 +995,7 @@ void CAssistant::HandleTargetDressItem(uint8_t *buf) const
 
         if ((layer != 0) && layer < OL_MOUNT && layer != OL_BACKPACK)
         {
-            // was g_TabAgentsDress->AddDressItemInList(item); the working-set
-            // edit is the Phase 4 tab (the tab re-resolves the item/layer
+            // the dress-set working-set edit (the tab re-resolves the item/layer
             // through the serial)
             g_AssistantEvents->OnFromTarget(
                 XA_FROM_TARGET_DRESS_ITEM, item->Serial, item->Graphic,
@@ -1051,8 +1042,7 @@ void CAssistant::HandleTargetIgnoreList(uint8_t *buf) const
 
 void CAssistant::HandleTargetPartyObject(uint8_t *buf) const
 {
-    // was g_TabAgentsParty->SetPartyObjectFromTarget(unpack32(buf + 7)); the
-    // serial/name fields are Phase 4 tab state
+    // the serial/name fields are assistant tab state
     const uint32_t serial = unpack32(buf + 7);
     astr_t name;
 
@@ -1099,8 +1089,7 @@ void CAssistant::HandleTargetEnemyObject(uint8_t *buf) const
 
 void CAssistant::HandleTargetAnimalAndVendorControlName(uint8_t *buf) const
 {
-    // Was g_AnimalAndVendorControlForm->SetName(obj->GetName()) + window
-    // activate; the control form is the Phase 3 speech popup.
+    // the animal/vendor control name field; the control form is the speech popup.
     CGameObject *obj = g_World != nullptr ? g_World->FindWorldObject(unpack32(buf + 7)) : nullptr;
     if (obj != nullptr)
     {
@@ -1338,8 +1327,7 @@ void CAssistant::HandleSetPVPCaller(uint8_t *buf) const
 
 void CAssistant::SetDressBag(const uint32_t &serial) const
 {
-    // Was TabListsObjects::SetDressBag (minus the label color updates; the
-    // red/green dress-bag label is Phase 2 UI).
+    // the dress-bag serial is config data (no label color updates here)
     if (g_World != nullptr && (serial != 0u))
     {
         CGameObject *obj = g_World->FindWorldObject(serial);
@@ -1373,7 +1361,6 @@ void CAssistant::OpenDoor() const
 
 void CAssistant::WalkAutoOpenDoor(const int &direction) const
 {
-    // Was the front half of the 0x02 WalkRequest send tap (packetmanager.cpp):
     // probe the tile the walk steps onto (two tiles out when continuing
     // straight ahead) and open a door found there. The config gates the whole
     // step.
@@ -1436,11 +1423,9 @@ void CAssistant::WalkAutoOpenDoor(const int &direction) const
 
 void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z) const
 {
-    // Was AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (assistform.cpp:
-    // 780-822): find a door item at the target tile within +-10 z, then open
-    // it (double click or the OpenDoor packet, per the config option). The
-    // original timer was single-shot with an immediate-fire path; the immediate
-    // path is the behavior here.
+    // Find a door item at the target tile within +-10 z, then open it (double
+    // click or the OpenDoor packet, per the config option). The door opens
+    // immediately (no deferred timer).
     uint32_t doorToOpen = 0;
 
     if (g_World != nullptr)
@@ -1479,15 +1464,11 @@ void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z) const
 }
 
 // The client's speech send sites (game console tail, MacroManager's say
-// actions, CGame::SendASCIIText): were the 0x03 ClientTalkS / 0xAD
-// UnicodeClientTalk send taps (the two rows differed only in text extraction
-// from the wire - the 0xAD row decoded the encoded-command form to recover
-// the typed text, which the send sites already hold). Runs the command-prefix
-// intercept (returns false - the caller suppresses the send; the old taps
-// returned "consumed" into a void entry point, so prefixed lines both ran
-// the command and went out as raw speech, and the client-site early return
-// restores the interception's purpose), records the say line and applies the
-// font-color override to `color` by reference.
+// actions, CGame::SendASCIIText): runs the command-prefix intercept (returns
+// false - the caller suppresses the send; without it a prefixed line would
+// both run the command and go out as raw speech, so the client-site early
+// return keeps prefixed lines assistant-internal), records the say line and
+// applies the font-color override to `color` by reference.
 bool AssistantSpeechIntercept(astr_t &text, uint16_t &color)
 {
     // Command prefix: run the assistant command and suppress the send.
@@ -1521,15 +1502,15 @@ bool AssistantSpeechIntercept(astr_t &text, uint16_t &color)
 
 void AssistantOnEnterWorld(const uint32_t serial)
 {
-    // the autostart gate reads the world state as of EnterWorld: the client
-    // has not yet torn down the old world when this runs
+    // the dress-set working-set edit (the tab re-resolves the item/layer
+    // through the serial)
     const bool runAutostart = g_World == nullptr;
 
     g_LastPlayerCorpsePosition = CPoint2Di(-1, -1);
     g_LastPlayerDeadTimer = 0;
 
-    // the fused assistant/script session reset: scripts observe LastTarget=0
-    // per session, matching the old assistant-copy behavior
+    // the assistant/script session reset: scripts observe LastTarget=0 per
+    // session
     g_LastTargetObject = 0;
     g_LastAttackObject = 0;
     g_MorphGraphic = 0;

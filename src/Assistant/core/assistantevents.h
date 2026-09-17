@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// AssistantEvents: the notification seam introduced at Phase 1 (master plan
-// §7 Phase 1 item 2 / §8.1 "Packet-manager UI coupling"). The original app's packet
-// handlers poked widget globals directly (g_TabMain, g_TabSkills, g_Map,
-// g_ObjectInspectorForm, g_HotkeysForm, ...); in the client build those call
-// sites become g_AssistantEvents->OnXxx(...) notifications. Anything that is
-// pure world state stays in the model/managers; anything a UI (or a later
-// round's default sink) consumes flows through here.
+// AssistantEvents: the notification seam between packet handling and the
+// assistant UI. Anything that is pure world state stays in the
+// model/managers; anything a UI consumes flows through here as
+// g_AssistantEvents->OnXxx(...) notifications.
 //
-// Design choice (one of the two allowed by the plan round): a class with
-// virtual methods and ONE replaceable global instance pointer. The default
-// instance's methods are inert (except OnClientPrint, whose original behavior
-// is pure client-side packet injection and is reproduced verbatim). A later UI
-// round installs a subclass instance into g_AssistantEvents; handlers never
-// change. No UI-framework coupling, no std::function registry, C++14.
+// Design: a class with virtual methods and ONE replaceable global instance
+// pointer. The default instance's methods are inert (except OnClientPrint,
+// which performs pure client-side packet injection). The UI layer installs a
+// subclass instance into g_AssistantEvents; handlers never change. No
+// UI-framework coupling, no std::function registry, C++14.
 
 #pragma once
 
@@ -38,8 +34,7 @@ enum
     XA_FROM_TARGET_DISPLAY_ITEM    // TabDisplay items editor (graphic + hue)
 };
 
-// Forward-ported from the original app's managers/journalmanager.h (the manager
-// itself lands with the journal round; the flags travel with the messages).
+// Journal message flags; the flags travel with the messages.
 enum XA_JOURNAL_MESSAGE_FLAGS
 {
     JMT_NORMAL = 0x00,
@@ -47,10 +42,8 @@ enum XA_JOURNAL_MESSAGE_FLAGS
     JMT_SYSTEM = 0x02
 };
 
-// Forward-ported from the original app's managers/partymanager.h and
-// managers/guildmanager.h (the managers land with the agents round; the packet
-// handler parses these today and hands them over as-is). Name is
-// astr_t per §4.2.
+// Party/guild member positions as parsed from the Krrios special packet;
+// the packet handler hands them over as-is.
 struct XA_PARTY_MEMBER_INFO
 {
     uint32_t Serial{ 0 };
@@ -78,16 +71,16 @@ public:
     CAssistantEvents(const CAssistantEvents &) = delete;
     CAssistantEvents &operator=(const CAssistantEvents &) = delete;
 
-    // --- speech / journal (was g_JournalManager.Add) -----------------------
+    // --- speech / journal --------------------------------------------------------
     // The assistant's own journal cache is fed elsewhere; the UI subscribes
     // for its journal tab. Default: nothing (client adds its own entries).
     virtual void OnJournalMessage(const CJournalMessage &message) { (void)message; }
 
-    // Was CAssistant::ClientPrint: inject a system print into the client.
-    // Default reproduces the original packet injection exactly.
+    // Inject a system print into the client; the default performs the
+    // client-side packet injection.
     virtual void OnClientPrint(const astr_t &text, uint16_t color = g_MessagesColor);
 
-    // --- buffs (was g_BuffManager.Add/Remove) ------------------------------
+    // --- buffs --------------------------------------------------------------------
     virtual void OnBuffAdd(uint16_t graphic, uint32_t timer, const astr_t &name)
     {
         (void)graphic;
@@ -95,7 +88,7 @@ public:
         (void)name;
     }
     virtual void OnBuffRemove(uint16_t graphic) { (void)graphic; }
-    // --- corpses (was g_CorpseManager.Add; auto-open bookkeeping) ----------
+    // --- corpses (auto-open bookkeeping) ------------------------------------------
     // expireTicks is an absolute g_Ticks stamp.
     virtual void OnCorpseAdd(uint32_t serial, uint32_t expireTicks)
     {
@@ -107,7 +100,7 @@ public:
     virtual void OnPartyMemberInfo(const XA_PARTY_MEMBER_INFO &info) { (void)info; }
     virtual void OnGuildMemberInfo(const XA_GUILD_MEMBER_INFO &info) { (void)info; }
 
-    // --- object properties (was g_ObjectPropertiesManager.Add) -------------
+    // --- object properties ---------------------------------------------------------
     virtual void OnMegaCliloc(
         uint32_t serial,
         uint32_t revision,
@@ -120,8 +113,7 @@ public:
         (void)properties;
     }
 
-    // --- skills (was g_TabSkills->UpdateSkill/UpdateStatsAndSkillsInfo and
-    //     the 0xFC OIPMT_SKILL_LIST hotkey-action feed) ----------------------
+    // --- skills (the skills-tab refresh and the hotkey-action feed) ---------
     virtual void OnSkillUpdated(int id) { (void)id; }
     virtual void OnSkillsRefreshed() {}
     // "Last" + every use-button skill name, in packet order.
@@ -135,7 +127,7 @@ public:
         (void)macros;
     }
 
-    // --- macros (was g_TabMacros->AddAction while a recording was open) ----------
+    // --- macros (recording capture) ------------------------------------------
     // graphic/color are 0 when the targeted object is unknown to the world.
     virtual void OnRecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color)
     {
@@ -156,7 +148,7 @@ public:
     // the "Autostart" script from the editor buffer after 1 second.
     virtual void OnAutostartRequest() {}
 
-    // The closeuo command (was SendMessage(hwnd, WM_CLOSE)): the sink asks
+    // The closeuo command: the sink asks
     // the client window to close (CWindow::Destroy -> the SDL_QUIT path).
     virtual void OnClientCloseRequest() {}
 
@@ -173,22 +165,21 @@ public:
         (void)name;
     }
 
-    // --- object inspector (was g_ObjectInspectorForm->CheckUpdate(obj)) -----
+    // --- object inspector ------------------------------------------------------
     virtual void OnInspectorUpdate(uint32_t serial) { (void)serial; }
 
-    // --- display tab title bar (was g_TabDisplay->RedrawTitle /
-    //     CheckRedrawTitle(obj)) ---------------------------------------------
+    // --- display tab title bar -----------------------------------------------
     virtual void OnTitleRedraw() {}
     virtual void OnTitleRedraw(uint32_t serial) { (void)serial; }
 
-    // --- map window (was g_Map->CheckForUpdate / SetWantRedraw) -------------
+    // --- map window -----------------------------------------------------------
     virtual void OnMapUpdate(uint32_t serial) { (void)serial; }
     virtual void OnMapRedraw() {}
-    // Was g_TabMain->OpenMap: the OIPMT_OPEN_MAP app packet, the MapSettings
+    // The map-open request: the OIPMT_OPEN_MAP app packet, the MapSettings
     // "Show on log in" flag and the hotkey launchers.
     virtual void OnMapOpenRequest() {}
 
-    // --- tracker (was CAssistant::Track; map-window round consumes) ---------
+    // --- tracker ---------------------------------------------------------------
     virtual void OnTrack(bool state, int x, int y)
     {
         (void)state;
@@ -200,11 +191,11 @@ public:
 };
 
 // The installed sink. Never null: assistantevents.cpp installs the default
-// instance at static-init; a UI round replaces (and later restores) it.
+// instance at static-init; the UI layer replaces (and later restores) it.
 extern CAssistantEvents *g_AssistantEvents;
 
-// Script-visible buff display name for the 0xDF mirror (the old recv-tap
-// handler's static name table); iconIndex is the icon id minus 0x03E9.
+// Script-visible buff display name for the 0xDF mirror (the static name
+// table); iconIndex is the icon id minus 0x03E9.
 const astr_t &AssistantBuffName(uint16_t iconIndex);
 
 } // namespace xuoassist

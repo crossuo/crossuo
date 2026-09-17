@@ -1,27 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The shop buy/sell agent (Phase 4a). Ports the engine that lived in the
-// original tab classes (assist/tabagentsshop.cpp: ProcessShopList + the packet hooks,
-// assist/shopprogressform.cpp: the delay-then-send countdown) into a
-// frame-tick state machine, per the master plan §7 Phase 4 item 3: the original app
-// ran it from frame ticks and a modal progress dialog; here AssistantUI_Tick drives
-// CShopAgent::Tick and the progress popup is an ImGui window fed from the
-// same state.
+// The shop buy/sell agent: the ProcessShopList engine + the packet hooks and
+// the delay-then-send countdown as a frame-tick state machine; AssistantUI_Tick
+// drives CShopAgent::Tick and the progress popup is an ImGui window fed from
+// the same state.
 //
-// Behavior parity notes:
+// Behavior notes:
 //  - the flow is speech-driven ("<vendor name> buy" / "sell"); the reply
 //    packets (OpenContainer gump 0x0030, BuyList 0x74, SellList 0x9E) are
-//    tapped from the client's packet manager (src/Managers/PacketManager.cpp)
-//    exactly where the original handlers called g_TabAgentsShop;
-//  - the per-list "Auto" buy/sell checkboxes were UI-only in the original app
-//    (never serialized into ShopList.ini) - they stay runtime state here;
+//    reported from the client's packet manager (src/Managers/PacketManager.cpp)
+//    call sites;
+//  - the per-list "Auto" buy/sell checkboxes are runtime state (never
+//    serialized into ShopList.ini);
 //  - the progress countdown sends the queued Buy/Sell request when it
-//    expires; Cancel drops the queued request (was ShopProgressForm).
-//
-// The vendor-side snapshot (m_VendorItems/m_VendorSerial/m_IsBuyList/
-// m_ShopListReplayed) used to live in ShopListEditorForm because that window
-// showed it; it is agent state here and the editor window reads it.
+//    expires; Cancel drops the queued request.
 
 #pragma once
 
@@ -34,7 +27,7 @@ namespace xuoassist {
 
 struct CDressSetEntry; // (dressagent.h keeps its own forward decl)
 
-// was SHOP_LIST_WAIT_STATE in tabagentsshop.h (the SLWS_NORNAL typo is fixed)
+// The shop wait state machine states.
 enum SHOP_LIST_WAIT_STATE
 {
     SLWS_NORMAL = 0,
@@ -50,7 +43,7 @@ class CShopAgent
     int m_WaitShopDelay{ 0 };
     astr_t m_WaitShopListName;
 
-    // vendor snapshot (was ShopListEditorForm state)
+    // vendor snapshot
     uint32_t m_VendorSerial{ 0 };
     vector<CVendorShopItem> m_VendorItems;
     bool m_IsBuyList{ true };
@@ -64,7 +57,7 @@ class CShopAgent
     // original app kept it in the line edit only, ShopList.ini has no attribute)
     astr_t m_VendorName{ "" };
 
-    // the queued request (was ShopProgressForm): countdown then send
+    // the queued request: countdown then send
     bool m_ProgressActive{ false };
     bool m_ProgressShow{ false };
     int m_ProgressDelay{ 0 };
@@ -74,11 +67,11 @@ class CShopAgent
     vector<std::pair<uint32_t, int>> m_ProgressList;
 
 public:
-    // the le_VendorName field (not serialized, parity with the original)
+    // the vendor name field (not serialized)
     void SetVendorName(const astr_t &name) { m_VendorName = name; }
     const astr_t &GetVendorName() const { return m_VendorName; }
 
-    // was TabAgentsShop::SendShopRequest (the script shop API uses it too)
+    // SendShopRequest (the script shop API uses it too)
     void SendShopRequest(int state, const astr_t &listName, const astr_t &text);
 
 private:
@@ -93,7 +86,7 @@ public:
     // frame tick: expires the progress countdown (sends the queued request)
     void Tick();
 
-    // was TabAgentsShop::IsActiveShopping (request wait OR queued progress)
+    // IsActiveShopping (request wait OR queued progress)
     bool IsActiveShopping() const;
 
     // --- the Buy/Sell buttons (SendShopRequest + the speech text) -----------
@@ -106,7 +99,7 @@ public:
     bool AutoBuy() const { return m_AutoBuy; }
     bool AutoSell() const { return m_AutoSell; }
 
-    // --- the progress popup state (was ShopProgressForm) ---------------------
+    // --- the progress popup state -------------------------------------------
     bool ProgressActive() const { return m_ProgressActive; }
     bool ProgressShow() const { return m_ProgressShow; }
     int ProgressValue() const; // ms remaining (was pb_Progress value/max)
@@ -114,10 +107,10 @@ public:
     // Cancel shopping! (drops the queued request)
     void CancelProgress();
 
-    // --- client call-ins (were the packetmanager.cpp taps; bool = pass-through, parity with the original) -----
+    // --- client call-ins (bool = pass-through) -----
     bool OnOpenContainer(uint32_t serial);
     // fed from the client's parsed 0x9E values (vendor serial, lookup result,
-    // the sell entries); bool = pass-through, parity with the original
+    // the sell entries); bool = pass-through
     bool OnSellList(uint32_t serial, CGameCharacter *vendor, const vector<CVendorShopItem> &items);
     void OnBuyReplySent();
     void OnSellReplySent();

@@ -2,9 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 // Ported from X:UO Assist (managers/displaymanager.h), data-only port
-// (master plan §4.1: the win32 HBITMAP icon cache and the GDI title-bar
-// rendering are Phase 2/4 - this round keeps the bytes/parsing/state and the
-// title-data compiler).
+// (the icon cache and the title-bar
 
 #pragma once
 
@@ -47,9 +45,8 @@ struct DISPLAY_KEY_ITEM
     DISPLAY_KEY_IDENTIFIER Identifier;
 };
 
-// Raw icon payload (was a win32 HBITMAP / Pixmap wrapper in the original app).
-// Rendering is Phase 2/4; the pixels are kept in the struct so the drawing
-// round can take the bytes as-is.
+// Raw icon payload: the decoded pixels are kept in the struct so the
+// renderer can take the bytes as-is.
 struct CDisplayIcon
 {
     vector<uint32_t> Pixels;
@@ -86,8 +83,7 @@ public:
     CDisplayManager(const CDisplayManager &) = delete;
     CDisplayManager &operator=(const CDisplayManager &) = delete;
 
-    // The static-art icon cache (was the win32 HBITMAP cache of the original
-    // displaymanager): keyed by (graphic << 16) | hue, decoded through the
+    // The static-art icon cache: keyed by (graphic << 16) | hue, decoded through the
     // client's art reader. nullptr when the item has no graphic. The
     // Display items editor previews these as ImGui user textures.
     CDisplayIcon *GetIcon(const CDisplayItem &item);
@@ -98,10 +94,9 @@ public:
 
     CDisplayItem GetDisplayItemByName(const astr_t &name) const;
 
-    // Title-bar rendering (was the win32 GDI body): composes the caption text
-    // into m_TitleText. The original textual path (Redraw RDM_TEXTUAL) is followed
-    // exactly; the two colored modes fall back to the same plain string (an
-    // OS caption carries no colors/icons). Apply it with CWindow::SetTitle -
+    // Title-bar rendering: composes the caption text into m_TitleText (the
+    // textual mode; the two colored modes fall back to the same plain string -
+    // an OS caption carries no colors/icons). Apply it with CWindow::SetTitle -
     // ui/assistantui.cpp does that on change (throttled).
     void Redraw(
         REDRAW_DISPLAY_MODE mode,
@@ -111,7 +106,7 @@ public:
         bool displayAppIcon,
         uint32_t backgroundColor);
 
-    // The last composed caption (Redraw output; the original's local title string)
+    // The last composed caption (Redraw output)
     const astr_t &GetTitleText() const { return m_TitleText; }
 
     void RecompilleData(const astr_t &text, uint32_t textColor);

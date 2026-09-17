@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (global.h), trimmed per assistant-plan.md §4.2:
-// strings are astr_t, lists are std::vector, timers are
-// client g_Ticks (ms), points are the client CPoint2Di. Assistant-owned globals only:
-// the external-DLL host plumbing (g_DllPath/g_ClientPath/g_SaveAero/g_WineOS)
-// is dropped.
+// Assistant-owned globals only: strings are astr_t, lists are std::vector,
+// timers are the client g_Ticks (ms), points are the client CPoint2Di; the
+// external-DLL host plumbing (g_DllPath/g_ClientPath/g_SaveAero/g_WineOS) is
+// dropped.
 
 #pragma once
 
@@ -17,19 +16,15 @@
 #include <common/utils.h> // countof
 #include <common/str.h> // astr_t / wstr_t (the client astr_t typedefs)
 #include <xuocore/enumlist.h>
-#include "Globals.h" // client g_Ticks (ms) - supersedes the original app's tick timer
+#include "Globals.h" // client g_Ticks (ms)
 
 namespace xuoassist {
 
-
-// Client tick source (plan §4.2: the old timer objects -> g_Ticks).
+// Client tick source.
 using ::g_Ticks;
 
 using std::vector;
 
-// Forward-ported from the original app's assist/assist.h with the assistant core
-// round (Phase 1c); core/textconv.h previously carried the partial copy and
-// now re-uses these.
 enum FIND_TYPE_FLAGS
 {
     FTF_NORMAL = 0x0000,
@@ -437,7 +432,7 @@ extern uint16_t g_MorphGraphic;
 extern uint16_t g_OriginalGraphic;
 extern uint32_t g_LastCorpseObject;
 extern uint32_t g_LastContainerObject;
-//! Tick stamps (g_Ticks) replacing the original app's timer objects.
+// //! Tick stamps (g_Ticks).
 extern uint32_t g_LastUseObjectTimer;
 extern bool g_Connected;
 extern uint32_t g_LastFriendFound;

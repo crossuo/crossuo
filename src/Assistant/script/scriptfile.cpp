@@ -265,7 +265,7 @@ astr_t ScriptFile_ReadLine(XA_SCRIPT_FILE *file)
     {
         if (c == '\n')
         {
-            break; // the trailing \n is dropped, like the old readLine
+            break; // the trailing \n is dropped, like readLine
         }
         line += (char)c;
     }
@@ -283,7 +283,7 @@ astr_t ScriptFile_Read(XA_SCRIPT_FILE *file)
     {
         return "";
     }
-    // whitespace-delimited token, like the old stream extractor
+    // whitespace-delimited token
     astr_t token;
     int c = 0;
     do
@@ -305,7 +305,7 @@ void ScriptFile_WriteLine(XA_SCRIPT_FILE *file, const astr_t &text)
         return;
     }
     fputs(text.c_str(), (FILE *)file->Handle);
-    fputs("\r\n", (FILE *)file->Handle); // the original wrote \r\n
+    fputs("\r\n", (FILE *)file->Handle);
 }
 
 void ScriptFile_Write(XA_SCRIPT_FILE *file, const astr_t &text)

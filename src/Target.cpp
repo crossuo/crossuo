@@ -100,7 +100,7 @@ bool CTarget::SetData(CDataReader &reader)
         bool result = (CheckHook() && !FromAssist);
 
         // a playing macro waiting on a target cursor consumes the reply and
-        // answers it itself (the original PlayWaiting tap)
+        // answers it itself (the macro replay answers the server).
         if (result && xuoassist::g_MacroExecutor.IsPlaying() &&
             xuoassist::g_MacroExecutor.PlayWaiting(
                 { xuoassist::MT_WAIT_FOR_TARGET_OBJECT, xuoassist::MT_WAIT_FOR_TARGET_TILE }))
@@ -145,7 +145,7 @@ bool CTarget::SetMultiData(CDataReader &reader)
         m_CurrentClientTarget.assign(reader.Start, reader.Start + reader.Size);
 
         // the placement graphic (the same offset the client body reads
-        // below) before the consume decision (pre-image parity)
+        // below) is captured before the consume decision
         hook.Move(11);
         MultiGraphic = hook.ReadUInt16BE() + 1;
 
@@ -220,9 +220,9 @@ void CTarget::RequestCursor()
 // bytes of the former injected 0x6C type=3 (assistant packets.cpp
 // CPacketCancelTarget) through the Target handler: CursorType 3 leaves
 // Targeting false. The injected pass ran the full handler, so a pending
-// party-helper replay was dropped with the cursor it would have answered
-// (its SendTargetObject was already inert at Targeting=false; only the
-// pending state cleared).
+// The cursor close (the apiscript/actions/macroexecutor cancels):
+// CursorType 3 leaves Targeting false. A pending
+// party-helper replay is dropped with the cursor it would have answered
 void CTarget::CancelCursor()
 {
 #if defined(XUO_ASSISTANT)
@@ -387,12 +387,10 @@ void CTarget::SendTarget()
     if (Type != 2)
     {
 #if defined(XUO_ASSISTANT)
-        // was the 0x6C TargetS send tap (assistant packetmanager): with a
-        // from-target hook armed, the raw cursor packet feeds the armed
+        // with a from-target hook armed, the raw cursor packet feeds the armed
         // handler first, then the cursor state resets and any
         // assistant-requested cursor re-dispatches through RestoreTarget;
-        // the reply was never dropped (the tap's "consumed" result had no
-        // send-side effect), so it still goes out here. Without an armed
+        // the reply always still goes out. Without an armed
         // hook the reply records - the SetSendData body runs inlined in the
         // else branch, covering every SendTargetObject/SendTargetTile/
         // SendCancelTarget/SendLastTarget producer at this single choke point.
@@ -400,7 +398,7 @@ void CTarget::SendTarget()
         {
             (xuoassist::g_Assistant.*(xuoassist::g_TargetHandler))(m_Data);
             xuoassist::g_TargetHandler = nullptr;
-            // was the assistant CTarget::Reset: the target-state mirror fields
+            // assistant-side reset of the target-state mirror fields
             // only. The client Reset() would memset m_Data/m_LastData and the
             // send below would go out as 19 zero bytes, losing the from-target
             // answer and the click snapshot.
@@ -414,8 +412,7 @@ void CTarget::SendTarget()
         }
         else
         {
-            // was the 0x6C TargetS send tap recording (xuoassist
-            // CTarget::SetSendData): every producer that reaches SendTarget
+            // every producer that reaches SendTarget
             // without an armed hook is recorded (the macro target round +
             // the LastTarget mirror)
             m_HookTargeting = false;
@@ -431,8 +428,7 @@ void CTarget::SendTarget()
                 LastTileZ = reader.ReadUInt16BE();
                 LastTileGraphic = reader.ReadUInt16BE();
 
-                // was g_TabMacros->AddAction(new CMacroWithTargetTile(...)) while a
-                // recording was open
+                // records a CMacroWithTargetTile action while a
                 if (g_World != nullptr)
                 {
                     xuoassist::g_AssistantEvents->OnRecordTargetTile(
@@ -453,9 +449,7 @@ void CTarget::SendTarget()
                     color = obj->Color;
                 }
 
-                // was g_TabMacros->AddAction(new CMacroWithObject(...)) while a
-                // recording was open; the convert-type
-                // tagging happens in the executor
+                // records a CMacroWithObject action while a
                 xuoassist::g_AssistantEvents->OnRecordTargetObject(serial, graphic, color);
 
                 if (serial != 0u && serial != g_PlayerSerial)
@@ -651,9 +645,7 @@ CTargetHook::CTargetHook(const astr_t &tile, const int &x, const int &y, const i
 
 namespace {
 
-// The tile flags/name filter of the original CFileManager::GetTile path.
-// TNF_BY_GRAPHIC is 0: a bare numeric graphic means
-// "match exactly this graphic".
+// The tile flags/name filter of the tile-info path.
 enum
 {
     TNF_BY_GRAPHIC = 0x00,
@@ -664,7 +656,7 @@ enum
     TNF_ANY = 0x10
 };
 
-// One resolved tile (the original CTileInfo record).
+// One resolved tile.
 struct TARGET_TILE_INFO
 {
     uint16_t Graphic;
@@ -716,9 +708,8 @@ void TargetTileNameToFlags(const astr_t &tileName, uint16_t &graphic, uint16_t &
 // map/statics blocks (::g_MapManager - the same access the radar window
 // uses). The mine/tree/water category lists lived in the assistant's own
 // tile caches (m_MineTiles/m_TreeTiles/m_WaterTiles, fed from Config text
-// files that were never part of the ported config); those categories resolve
-// like the original's empty-list path.
-// DEVIATION: "tree"/"water"/"mine" hooks cannot match by category.
+// files that have no assistant equivalent); those categories resolve
+// as an empty list.
 std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileName)
 {
     std::vector<TARGET_TILE_INFO> result;
@@ -858,9 +849,7 @@ bool CTarget::CheckHook()
                 }
 
                 // The GetTile port + the tiledata
-                // surface-height fixup of the original CheckHook: the client's own
-                // tiledata (g_Data.m_Static, version-normalized) provides the
-                // surface flags/heights.
+                // surface-height fixup: the client's own
                 int tileZ = z;
                 uint16_t tileGraphic = 0;
 

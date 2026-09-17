@@ -52,9 +52,8 @@ void CTradeManager::OnTradeSent(int action, uint32_t id, bool check)
             {
                 if (trade.ID1 == id)
                 {
-                    // the old tap read the high byte of the big-endian check
-                    // field (0 for either check state); the site passes the
-                    // state the client actually wrote
+                    // the site passes the state the client actually wrote (the wire
+                    // field's high byte reads 0 for either check state)
                     trade.Check1 = check;
                     return;
                 }

@@ -40,8 +40,8 @@ void load_int(const CIniFile &ini, const char *name, int *value)
     }
 }
 
-// Packed RGBA text form (the original code round-tripped the ARGB uint32_t
-// through CAssistant::SerialToText/TextToSerial - same helpers here)
+// Packed RGBA text form (the ARGB uint32_t round-trips through
+// CAssistant::SerialToText/TextToSerial)
 void load_color(const CIniFile &ini, const char *name, uint32_t *value)
 {
     if (ini.Has(XA_MAP_INI_SECTION, name))

@@ -15,7 +15,7 @@ class CMultiObject;
 struct CDataReader;
 
 #if defined(XUO_ASSISTANT)
-// The WaitTarget hook queue entry (was xuoassist::CTargetHook).
+// The WaitTarget hook queue entry.
 class CTargetHook
 {
 public:

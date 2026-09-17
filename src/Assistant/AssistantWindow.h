@@ -4,8 +4,7 @@
 #pragma once
 
 // In-client X:UO Assist host: an ImGui overlay living in the game's own GL
-// context, in-game only (see the master plan ADR D9/D10/D11). Built only for
-// GL3/GLES2 renderers; see CMake XUO_ASSISTANT / XUO_ASSISTANT_ENABLED.
+// context, in-game only (ADR D9/D10/D11). Built only for
 
 #if defined(XUO_ASSISTANT)
 
@@ -31,8 +30,7 @@ void AssistantWindow_DrawOverlay();
 // Destroys the ImGui context and every popped-out platform window; must not
 // SDL_Quit as the client keeps running. Idempotent.
 void AssistantWindow_Shutdown();
-// Reports whether the assistant window is currently shown (Phase 0 consumers:
-// none; kept for later phases).
+// Reports whether the assistant window is currently shown (consumers:
 bool AssistantWindow_IsVisible();
 
 #endif // XUO_ASSISTANT

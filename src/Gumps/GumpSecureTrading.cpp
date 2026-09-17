@@ -17,7 +17,7 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 #if defined(XUO_ASSISTANT)
-#include <managers/trademanager.h> // xuoassist::g_TradeManager (trade-send tap)
+#include <managers/trademanager.h> // xuoassist::g_TradeManager
 #endif
 
 static const int ID_GST_CHECKBOX = 1;
@@ -395,7 +395,7 @@ void CGumpSecureTrading::SendTradingResponse(int code)
     // Reply the trade window
     CPacketTradeResponse(this, code).Send();
 #if defined(XUO_ASSISTANT)
-    // (trade round) was the 0x6F SecureTradingS send tap; the check state is
+    // the check state is
     // the field the builder writes for SECURE_TRADE_CHANGE
     xuoassist::g_TradeManager.OnTradeSent(code, ID, StateMine != 0);
 #endif

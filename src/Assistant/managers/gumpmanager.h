@@ -12,8 +12,7 @@
 
 namespace xuoassist {
 
-// the assistant gump record (was class CGump in model/commonitems/gump.h,
-// ported from X:UO Assist): the parsed 0xB1 gump layout (item command lines
+// the assistant gump record: the parsed 0xB1 gump layout (item command lines
 // and text lines) plus the replay state; the script Gump wrappers hold deep
 // copies of it
 struct GumpData
@@ -59,8 +58,8 @@ public:
     void RemoveLastGump();
     bool Consume();
 
-    // the client's 0xB1 send sites report the user's gump choice here (was the
-    // 0xB1 ChoiceGump send tap in the assistant's packetmanager); the id is
+    // the client's 0xB1 send sites report the user's gump choice here; the id
+    // is the value written to the wire (the master gump id when one is set)
     // the value written to the wire (the master gump id when one is set)
     void OnGumpChoiceSent(uint32_t serial, uint32_t id, uint32_t button);
     bool SendGumpChoice(GumpData *gump, CGumpHook &hook);

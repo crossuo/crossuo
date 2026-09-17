@@ -24,7 +24,7 @@ namespace xuoassist {
 
 namespace {
 
-// the tree row keys (the original OIK_*; identity is all the port needs)
+// the tree row keys (OIK_*; identity is all that matters)
 enum OIK
 {
     OIK_GROUP = 0,
@@ -247,7 +247,7 @@ void RebuildSection(XA_INSPECTOR_SECTION &section)
     if (g_World != nullptr)
     {
         // The original: CheckUpdate found the tab by serial, then read the object - a
-        // serial no longer in the mirror just kept the previous snapshot
+        // serial no longer in the mirror just keeps the previous snapshot
         CGameObject *obj = g_World->FindWorldObject(section.Serial);
         if (obj != nullptr)
         {
@@ -316,8 +316,7 @@ void InspectorWindow_Draw()
     ImGui::TextDisabled("Object Information (click on field for copy value)");
     ImGui::Separator();
 
-    // 2 Hz refresh of the visible sections (was the frequent CheckUpdate
-    // event stream; the snapshot semantics stay the same)
+    // 2 Hz refresh of the visible sections (
     static uint32_t s_LastRefresh = 0;
     if (g_Ticks - s_LastRefresh >= 500u)
     {
@@ -358,7 +357,7 @@ void InspectorWindow_Draw()
         {
             if (row.Group)
             {
-                // group rows fold like the original tree nodes
+                // group rows fold like tree nodes
                 char groupId[128];
                 snprintf(groupId, sizeof(groupId), "%s##%u_%d_%d", row.Key, section.Serial,
                          row.Depth, (int)section.Rows.size());

@@ -4,8 +4,7 @@
 // Core assistant object: journal, speech filters, find/count/ignore
 // engine and the client/server send helpers. FIND_TYPE_FLAGS /
 // NOTORIETY_TYPE_FLAGS live in core/global.h.
-// The data-list lookups that used to poke g_TabLists* widget globals consult
-// the AssistantConfig module instead (same module that loads/saves them).
+// The data-list lookups consult
 
 #pragma once
 
@@ -80,8 +79,8 @@ public:
     void RequestTarget(const astr_t &text) const;
 
     // the client 0xD1 handler performs the logout request (CGame::LogOut,
-    // dispatched via the DIR_RECV-registered HandleLogout, so the old injected
-    // 0xD1 was not a no-op); the assistant now calls it directly
+    // dispatched via the DIR_RECV-registered HandleLogout); the assistant
+    // calls it directly
     void LogOut() const;
 
     void DumpObjectInfo(class CGameObject *obj) const;
@@ -143,17 +142,15 @@ public:
     void MoveEquip(const uint32_t &serial, const int &layer, const uint32_t &container) const;
     void Track(const bool &state, short x, short y) const;
 
-    // Moved from the original TabListsObjects::SetDressBag (the dress bag is config
-    // data; the container check + assistant messages were its logic).
+    // The dress-bag setter (the dress bag is config data; the container check +
+    // assistant messages are its logic).
     void SetDressBag(const uint32_t &serial) const;
 
-    // Moved from the original AssistForm::AutoOpenDoor + onAutoOpenDoorTimer (the
-    // single-shot 20 ms timer collapsed - the scan and the open are one step
-    // now, exactly like the timer's immediate-fire path).
+    // Open a door near the target tile (the scan and the open are one step,
+    // firing immediately).
     void AutoOpenDoor(const int &x, const int &y, const int &z) const;
 
-    // The auto-open-door half of the walk send (was the front half of the 0x02
-    // WalkRequest send tap, packetmanager.cpp): called from the client's
+    // The auto-open-door half of the walk send: called from the client's
     // CPathFinder::Walk with the packet's direction byte.
     void WalkAutoOpenDoor(const int &direction) const;
 

@@ -3,23 +3,13 @@
 
 #pragma once
 
-// Main-thread script-state stores of the 4b-2 round (was the tail of
-// managers/commandmanager.* in the original app):
-//   - globals: the SetGlobal/GetGlobal/ClearGlobals map. The original map lived in
-//     the CCommandManager singleton, so it was ASSISTANT-GLOBAL (shared by
-//     every running script, session lifetime, survives script exit) - the
-//     port matches that scope; the main-tab globals list UI it fed was never
-//     ported.
+// Main-thread script-state stores:
+//   - globals: the SetGlobal/GetGlobal/ClearGlobals map. ASSISTANT-GLOBAL
+//     (shared by every running script, session lifetime, survives script exit);
 //   - timers: the TimerExists/SetTimer/Timer/RemoveTimer/ClearTimers family
-//     (m_Timers + m_Time.elapsed() there; here g_Ticks plays m_Time).
-//   - buffs: the BuffExists name mirror (was g_BuffManager). The ported
-//     packet layer surfaces buffs as events (OnBuffAdd/OnBuffRemove), so the
-//     ring lives next to the other script mirrors and the events consumer
-//     (assistanteventsui.cpp) feeds it on the main thread.
-//
-// Threading: every entry point is MAIN THREAD ONLY - the script workers
-// reach all of this marshaled through the command queue (SC_GLOBAL_SET /
-// SC_TIMER / SC_BUFF_EXISTS in apiscript.cpp).
+//     (g_Ticks-based);
+//   - buffs: the BuffExists name mirror (the packet layer surfaces buffs as
+//     events OnBuffAdd/OnBuffRemove).
 
 #include "../core/global.h"
 
@@ -28,8 +18,7 @@ namespace xuoassist {
 // --- globals ---------------------------------------------------------------
 
 void ScriptGlobal_Set(const astr_t &name, const astr_t &value);
-// Returns "" when the name is not set (OnCommandGetGlobal left the result
-// astr_t untouched, the old empty-astr_t default).
+// Returns "" when the name is not set.
 astr_t ScriptGlobal_Get(const astr_t &name);
 void ScriptGlobal_Clear();
 
@@ -46,8 +35,7 @@ void ScriptTimer_Clear();
 
 void ScriptBuffs_Add(uint16_t graphic, uint32_t timer, const astr_t &name);
 void ScriptBuffs_Remove(uint16_t graphic);
-// Case-insensitive name match (the original body trimmed + lowered the script
-// argument; the mirror stores lowered names at event time).
+// Case-insensitive name match (trims + lowercases the script
 bool ScriptBuffs_Exists(const astr_t &name);
 
 } // namespace xuoassist

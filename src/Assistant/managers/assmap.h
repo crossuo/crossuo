@@ -1,25 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The assistant map module (was assist/mapsettingsform.h CMapSettings +
-// assist/map.h CMapDrawObject, ported per the Phase 5 round; the radar
-// rendering itself lives in ui/mapwindow.cpp).
+// The assistant map module: map settings (CMapSettings), overlay markers and
+// the client-API-backed radar texture feeding ui/mapwindow.cpp.
 //
-// Dedup decisions (plan §4.4): the original app loaded map/static/multimap files
-// through its own FileManager + mmap and kept a whole-facet 16-bit pixel
-// buffer (map.cpp:220-440). The client already has the files mapped, patched
+// Data access: the client already has the map/static files mapped, patched
 // and indexed (g_MapManager + g_MapSize/g_MapBlockSize), so this module reads
-// RADAR cells through the client API instead:
+// RADAR cells through the client API instead of a second file mapping:
 //   - g_MapManager.GetIndex(facet, bx, by) + the RADAR_MAP_BLOCK merge loop
-//     (port of src/Managers/MapManager.cpp:272-318, parameterized by facet:
-//     the client's own GetRadarMapBlock is pinned to GetActualMap());
-//   - the radar color pipeline of src/Gumps/GumpMinimap.cpp:186-193
-//     (season graphic -> radarcol -> hue), which supersedes the old
-//     FileManager::GetRadarcolData;
+//     (parameterized by facet: the client's own GetRadarMapBlock is pinned to
+//     GetActualMap());
+//   - the radar color pipeline of src/Gumps/GumpMinimap.cpp
+//     (season graphic -> radarcol -> hue);
 //   - g_MapSize / g_MapBlockSize for the per-facet dimensions.
-// No .mul/.uop is read twice and the multimap (.rle) path is not ported (the
-// client draws multis from live world data; the original app used multimap.rle only as a
-// fallback for external UOAM hosting).
+// No .mul/.uop is read twice; multis are drawn from live world data (no
+// multimap.rle use).
 
 #pragma once
 
@@ -63,7 +58,7 @@ enum CLIENT_MAP_ACTION
     OMA_ROTATE_MAP
 };
 
-// One map overlay marker (the original CMapDrawObject): the character pointer
+// One map overlay marker: the character pointer
 // stays valid for the frame it was collected on.
 struct XA_MAP_DRAW_OBJECT
 {
@@ -77,13 +72,12 @@ struct XA_MAP_DRAW_OBJECT
 
 extern const char *g_FacetName[6];
 
-// The draw scale from the stored zoom index (the original UpdateScale):
-// scale = zoom * 0.25, clamped to [0.25 .. 4.0] (the original
-// clamp mapped >2.0 onto 4.0 - preserved).
+// The draw scale from the stored zoom index:
+// scale = zoom * 0.25, clamped to [0.25 .. 4.0].
 float MapSettings_Scale();
 
-// The original GetCharacterType with the friends/enemies lists
-// read from the config module (was g_TabListsFriends/Enemies).
+// The character-type classification with the friends/enemies lists read
+// from the config module.
 CLIENT_MAP_CHARACTER_TYPE AssMap_GetCharacterType(const uint32_t &serial);
 
 // The view the radar texture is built for. CX/CY = world coordinates at the
@@ -97,15 +91,15 @@ struct XA_MAP_VIEW
     bool Rotated{ false };
 };
 
-// --- radar texture (client-API backed; plan §5.6) ---------------------------
+// --- radar texture (client-API backed) ---------------------------------------
 //
 // AssMap_RadarTexture returns the shared ImTextureRef for the given view,
 // rebuilding the CPU pixels when the (view, settings) content hash changed
-// and the throttle (>= 150 ms, the original 100 ms redraw timer rhythm) allows.
+// and the throttle (>= 150 ms) allows.
 // Draw it with ImGui::Image / draw list AddImage; it is invalid until the
 // client map data is loaded (return value may be a null ref).
 //
-// Texture lifecycle (Phase 2 atlas lesson):
+// Texture lifecycle notes:
 //   - create/upload run on the main thread from the map window draw;
 //   - the texture stays registered with RefCount == 1 so ui_shutdown's
 //     backend teardown reclaims the GL name;

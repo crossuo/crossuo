@@ -1,23 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabDisplay (was assist/tabdisplay.ui/.cpp, §2.3): the three nested pages -
-// Configuration (display mode radios, flags, colors, title data + the insert
-// command / set title from group popups), Items editor (the custom display
-// items with their color/value tables) and Group editor. The data lives in
-// g_AssistantConfig (DisplayItems.ini/DisplayGroups.ini/Options.ini display
-// section); the compiled title output goes to the OS window caption through
-// the manager's Redraw + AssistantUI_Tick (was the win32 GDI title bar).
-//
-// Port deltas (documented): the color swatches pick opaque RGB through a
-// picker popup; the value/color tables render as plain text next to the
-// pickers instead of label grids; there is no drag-reorder list here
-// (the original lw_DisplayItems was a plain list - no itemDropped connect beyond
-// the Options.ini save, which the mutations do directly); the Insert command
-// / Set title from group actions APPEND the tag at the end of s_TitleData,
-// while the original inserted at the text cursor - inserting at the InputText cursor
-// is possible through the ImGui input-state accessors (documented only,
-// deliberately not implemented).
+// TabDisplay: the three nested pages - Configuration (display mode radios,
+// flags, colors, title data + the insert command / set title from group
+// popups), Items editor (the custom display items with their color/value
+// tables) and Group editor. The data lives in g_AssistantConfig
+// (DisplayItems.ini/DisplayGroups.ini/Options.ini display section); the
+// compiled title output goes to the OS window caption through the manager's
+// Redraw + AssistantUI_Tick.
+// Deltas: the color swatches pick opaque RGB through a picker popup; the
+// value/color tables render as plain text next to the pickers instead of
+// label grids; there is no drag-reorder list here; the Insert command / set
+// title from group actions append the tag at the end of the title data.
 
 #include "assistantui.h"
 
@@ -39,9 +33,7 @@ namespace xuoassist {
 
 namespace {
 
-// --- icon previews (the original items editor showed the decoded static art in
-// --- the list rows; the ImGui list core is text-only, so the preview lives
-// --- next to the selected item's properties) -------------------------------
+// --- icon previews (the decoded static art shown in
 
 // the ImGui upload of a decoded CDisplayIcon, cached per (graphic<<16)|hue,
 // LRU-capped (a long session can preview many graphic+hue combos; without
@@ -129,7 +121,7 @@ static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint32_t key)
     return tex;
 }
 
-// --- page state (the original widget fields) ---------------------------------
+// --- page state ---------------------------------------------------------------
 char s_TitleData[2048] = { 0 };   // te_DisplayTitleData
 astr_t s_CompiledFrom;            // the data the manager last compiled (text|color)
 bool s_TitleDirty = false;        // a redraw was requested (events / edits)
@@ -152,7 +144,7 @@ char s_GroupData[2048] = { 0 };   // te_DisplayGroupTitleData
 bool s_FtPending = false;         // the items editor from-target
 uint32_t s_FtGeneration = 0;
 
-// 0xFFRRGGBB (what the original writers stored) <-> ImGui IM_COL32 RGBA
+// 0xFFRRGGBB <-> ImGui IM_COL32 RGBA
 ImU32 argb_to_rgba(uint32_t argb)
 {
     return IM_COL32((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, 0xFF);
@@ -217,7 +209,7 @@ const CDisplayInfo &command_at(int index)
     return empty;
 }
 
-// was ChangeDisplayItemContent: the selected item -> the editor fields
+// the selected item -> the editor fields
 void item_to_fields(const CDisplayItem &item, bool fullUpdate)
 {
     if (fullUpdate)
@@ -248,9 +240,7 @@ void item_to_fields(const CDisplayItem &item, bool fullUpdate)
     s_ItemMinValue = item.MinValue;
 }
 
-// was SaveDisplayItemData: the editor fields -> the entry (+ save + recompile).
-// The colors/background/percents are NOT copied here: the pickers and checks
-// write the entry directly (see draw_items_editor_page).
+// the editor fields -> the entry (+ save + recompile).
 void fields_to_item(CDisplayItemEntry &entry)
 {
     CDisplayItem &di = entry.m_Item;
@@ -321,16 +311,13 @@ void DisplayGroupSetNameOf(CDisplayGroupEntry &entry, const char *name)
     entry.Name = name;
 }
 
-// was RedrawTitle: map the config radio to the mode and ask for a redraw
+// map the config radio to the mode and ask for a redraw
 void redraw_title()
 {
     s_TitleDirty = true;
 }
 
-// was RecompilleData. Tracks s_CompiledFrom here as
-// well: the Title-data keystroke path recompiles through this, and the
-// TabDisplay_Draw sync pass must not recompile + reseed s_TitleData (the
-// in-flight InputText state) again on the next frame.
+// Tracks s_CompiledFrom here as
 void recompile_title()
 {
     s_CompiledFrom = g_AssistantConfig.DisplayTitleData() + "|" +
@@ -351,7 +338,7 @@ void draw_configuration_page()
     }
     if (ImGui::BeginPopup("##insert_command"))
     {
-        // the original menu: "Custom items" submenu + the built-in commands
+        // "Custom items" submenu + the built-in commands
         if (ImGui::BeginMenu("Custom items"))
         {
             const vector<CDisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
@@ -359,7 +346,7 @@ void draw_configuration_page()
             {
                 if (ImGui::MenuItem(item.Name.c_str()))
                 {
-                    // was InsertDisplayAction: the item name is the tag
+                    // the item name is the tag
                     const astr_t tag = "{" + item.Name + "}";
                     const size_t len = strlen(s_TitleData);
                     if (len + tag.length() < sizeof(s_TitleData))
@@ -378,7 +365,7 @@ void draw_configuration_page()
             if (commands()[i].Name.length() != 0 &&
                 ImGui::MenuItem(commands()[i].Name.c_str()))
             {
-                // was InsertDisplayAction: the COMMAND is the tag
+                // the COMMAND is the tag
                 const astr_t tag = "{" + commands()[i].Command + "}";
                 const size_t len = strlen(s_TitleData);
                 if (len + tag.length() < sizeof(s_TitleData))
@@ -468,8 +455,7 @@ void draw_configuration_page()
     if (ImGui::InputTextMultiline(
             "##title_data", s_TitleData, sizeof(s_TitleData), ImVec2(-1.0f, 120.0f)))
     {
-        // was on_te_DisplayTitleData_textChanged: recompile + redraw; the
-        // text persists with the profile (the original saved Options.ini on close)
+        // recompile + redraw; the
         g_AssistantConfig.m_DisplayTitleData = s_TitleData;
         AssistantUI_MarkOptionsDirty();
         recompile_title();
@@ -487,7 +473,7 @@ void draw_configuration_page()
         {
             if (ImGui::MenuItem(group.Name.c_str()))
             {
-                // was InsertDisplayGroupAction -> SetTitleData(text)
+                // -> SetTitleData(text)
                 snprintf(s_TitleData, sizeof(s_TitleData), "%s", group.TitleData.c_str());
                 g_AssistantConfig.m_DisplayTitleData = s_TitleData;
                 AssistantUI_MarkOptionsDirty();
@@ -507,7 +493,6 @@ void draw_items_editor_page()
     const int buttons = ListButtons("display_items");
     if ((buttons & XALB_TARGET) != 0)
     {
-        // was on_pb_DisplayItemFromTarget_clicked
         s_FtPending = true;
         g_TargetHandler = &CAssistant::HandleTargetDisplayItem;
         g_Assistant.RequestTarget("Select a object for obtain graphic and color");
@@ -515,7 +500,7 @@ void draw_items_editor_page()
     XA_FROM_TARGET_RESULT ftResult;
     if (UI_PollFromTarget(s_FtPending, s_FtGeneration, XA_FROM_TARGET_DISPLAY_ITEM, ftResult))
     {
-        // was SetDisplayItemFromTarget: fill the graphic + hue fields
+        // fill the graphic + hue fields
         if (ftResult.Graphic != 0u)
         {
             snprintf(s_ItemGraphic, sizeof(s_ItemGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
@@ -545,9 +530,7 @@ void draw_items_editor_page()
     ImGui::TextUnformatted("Properties");
     ImGui::Separator();
 
-    // the static-art preview of the selected item (the original list rows carried
-    // the decoded icon; the ImGui list core is text-only, so the preview
-    // sits with the properties of the selected entry)
+    // the static-art preview of the selected item (
     if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
     {
         const CDisplayItem &selItem = items[s_SelectedItem].m_Item;
@@ -576,8 +559,7 @@ void draw_items_editor_page()
             if (ImGui::Selectable(command_at(i).Name.c_str(), i == s_ItemTypeIndex))
             {
                 s_ItemTypeIndex = i;
-                // was on_cb_DisplayItemType_currentIndexChanged: load the
-                // DEFAULT item of that type into the fields
+                // load the
                 item_to_fields(g_DisplayManager.GetDisplayItemByName(command_at(i).Command), false);
             }
         }
@@ -618,8 +600,7 @@ void draw_items_editor_page()
     if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
     {
         // the "With background" / "Calculate colors in percents" checks and
-        // the two 3-swatch groups read/write the entry directly (the original page
-        // saved only through the Save icon; the checks were bound to the item)
+        // the two 3-swatch groups read/write the entry directly (
         CDisplayItem &di = items[s_SelectedItem].m_Item;
         bool background = di.Background;
         if (ImGui::Checkbox("With background", &background))
@@ -719,7 +700,7 @@ void draw_items_editor_page()
     }
     if ((buttons & XALB_REMOVE) != 0 && s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
     {
-        // was on_pb_DisplayItemRemove_clicked: save + recompile
+        // save + recompile
         items.erase(items.begin() + s_SelectedItem);
         s_SelectedItem = s_LastSelectedItem = -1;
         g_AssistantConfig.SaveDisplayItems();
@@ -776,7 +757,6 @@ void draw_group_editor_page()
 
     if ((buttons & XALB_ADD) != 0)
     {
-        // was on_pb_DisplayGroupCreate_clicked
         if (s_GroupName[0] == '\0')
         {
             snprintf(s_Hint, sizeof(s_Hint), "Enter the title group name!");
@@ -799,7 +779,6 @@ void draw_group_editor_page()
     }
     if ((buttons & XALB_SAVE) != 0)
     {
-        // was on_pb_DisplayGroupSave_clicked
         if (s_GroupName[0] == '\0')
         {
             snprintf(s_Hint, sizeof(s_Hint), "Enter the title group name!");
@@ -823,7 +802,6 @@ void draw_group_editor_page()
     }
     if ((buttons & XALB_REMOVE) != 0 && s_SelectedGroup >= 0 && s_SelectedGroup < (int)groups.size())
     {
-        // was on_pb_DisplayGroupRemove_clicked
         groups.erase(groups.begin() + s_SelectedGroup);
         s_SelectedGroup = -1;
         g_AssistantConfig.SaveDisplayGroups();
@@ -880,10 +858,7 @@ bool TabDisplay_ConsumeTitleDirty()
 }
 
 // Shutdown: frees every cached item-preview icon texture (CPU delete AFTER the
-// ImGui context is gone - the same Phase 2 ordering as the atlas / AssMap /
-// logo: the backend reclaimed the GL names inside ui_shutdown by walking the
-// registered textures with RefCount == 1). Entries evicted at runtime but not
-// yet reaped are plain CPU memory by now as well.
+// ImGui context is gone - the same ordering as the atlas / AssMap /
 void TabDisplay_AfterImGuiShutdown()
 {
     for (auto &kv : s_IconTextures)

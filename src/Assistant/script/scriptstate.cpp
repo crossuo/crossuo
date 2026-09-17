@@ -26,7 +26,7 @@ std::map<astr_t, uint16_t> s_Buffs;
 // lowers at store time, so only the lookup needs it here).
 astr_t buff_key(astr_t name)
 {
-    // leading/trailing space trim (the old trim parity)
+    // leading/trailing space trim
     size_t begin = name.find_first_not_of(" \t\r\n");
     if (begin == astr_t::npos)
     {
@@ -64,7 +64,7 @@ void ScriptGlobal_Clear()
 
 void ScriptTimer_Set(const astr_t &name, int value)
 {
-    s_Timers[name] = g_Ticks - (uint32_t)value; // was m_Time.elapsed() - value
+    s_Timers[name] = g_Ticks - (uint32_t)value;
 }
 
 int ScriptTimer_Get(const astr_t &name)

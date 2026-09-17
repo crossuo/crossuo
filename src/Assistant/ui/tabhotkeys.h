@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabHotkeys (Phase 3, master plan §2.5/§7 item 4): the On/Off + "Pass keys
-// to client" switches, the command prefix field, the Load/Save buttons, the
-// hotkeys-dialog launcher and the three speech-only control launchers
-// (Animal/Vendor, House, Ship - assist/animalandvendorcontrolform.cpp,
-// housecontrolform.cpp, shipcontrolform.cpp).
+// TabHotkeys: the On/Off + "Pass keys to client" switches, the command prefix
+// field, the Load/Save buttons, the hotkeys-dialog launcher and the three
+// speech-only control launchers (Animal/Vendor, House, Ship).
 //
-// "Pass keys to client" semantics (the original consult order): a matched hotkey is
-// consumed by the assistant unless the checkbox is set - then the key ALSO
-// reaches the game (core/hotkeys.cpp MatchAndUse). While any assistant text
-// field has keyboard focus (io.WantTextInput) the game never sees keys -
-// AssistantWindow.cpp gates that ahead of the engine.
+// "Pass keys to client" semantics: a matched hotkey is consumed by the
+// assistant unless the checkbox is set - then the key ALSO reaches the game
+// (core/hotkeys.cpp MatchAndUse). While any assistant text field has keyboard
+// focus (io.WantTextInput) the game never sees keys - AssistantWindow.cpp
+// gates that ahead of the engine.
 
 #pragma once
 

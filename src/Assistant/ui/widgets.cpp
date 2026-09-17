@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Assistant ImGui widget kit implementation (master plan §6). See widgets.h
-// for the per-widget mapping and behaviors.
+// Assistant ImGui widget kit implementation. See widgets.h
 
 #define LOGGER_MODULE Assistant
 
@@ -26,9 +25,9 @@
 #include <common/logging/logging.h>
 #include <xuocore/uodata.h> // ExeFilePath
 
-#include "GameObjects/GameWorld.h" // client g_World (status bar census, like Phase 0)
+#include "GameObjects/GameWorld.h" // client g_World (status bar census)
 
-#include "../core/hotkeys.h" // HotkeyKeyboard engine state (Phase 3)
+#include "../core/hotkeys.h" // hotkey engine state
 
 #include <ctype.h>
 #include <stdio.h>
@@ -349,15 +348,10 @@ bool ColorSwatch(const char *id, ImU32 *rgba, float size, bool *commit)
     return changed;
 }
 
-// --- hex edit fields (the original le_* "0x..." line edits) ------------------------
+// --- hex edit fields -----------------------------------------------------------
 
 // ImGuiInputTextFlags_CharsHexadecimal rejects the 'x' of the stored "0x..."
-// prefix (typing would drop it and the saved text would diverge from the original
-// format), so the stored value keeps its prefix and the edit buffer carries
-// the bare digits only: they are seeded while the field is idle and the value
-// is re-prefixed on commit. While the field is active ImGui gives its own
-// in-widget state priority over the user buffer, so the re-seed never
-// clobbers an ongoing edit.
+// prefix (typing would drop it and the saved text would lose it,
 static bool hex_edit_field_impl(const char *id, char buf[], size_t bufSize, const char *value, float width)
 {
     const char *src = value != nullptr ? value : "";
@@ -699,7 +693,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
                 {
                     if (ImGui::IsKeyPressed(ImGuiKey_Escape))
                     {
-                        // Escape reverts (the original closed the editor without applying)
+                        // Escape reverts (closes the editor without applying)
                         ListRenameEnd();
                         rename = nullptr;
                     }
@@ -748,8 +742,7 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
                     ImGui::TextUnformatted(name);
                     ImGui::EndDragDropSource();
                 }
-                // drop target on every row: dropping replaces the original move action
-                // reorder (insert at the hovered row)
+                // drop target on every row: dropping replaces the move action
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload(ROW_PAYLOAD_TYPE))
@@ -794,11 +787,11 @@ bool ListCore(const char *id, const XA_LIST_VIEW &view, int *selected, bool chec
 // --- HotkeyKeyboard (hotkeysform.ui) ------------------------------------------
 //
 // The on-screen keyboard, table-driven from the .ui geometry (rows, wide keys
-// and the numpad block). Delta: the original grid had three tall keys (Enter, +,
+// and the numpad block). Delta: three tall keys (Enter, +,
 // numpad Enter span two rows) - here every cap is one row high, which only
-// affects cosmetics, not the assign semantics. "Prt" stays a dead button like
-// in the original (pb_Prt was not in m_ButtonsMap). The wheel/X caps from the
-// two "Mouse ..." groups sit in their own labeled rows.
+// affects cosmetics, not the assign semantics. "Prt" stays a dead button.
+// The wheel/X caps from the two "Mouse ..." groups sit in their own labeled
+// rows.
 //
 // Draw path: no allocations (static table + ImGui style colors).
 

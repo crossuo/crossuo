@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The six Lists sub-tabs (was assist/tablists*.ui/.cpp, §2.4): Types,
-// Objects, Find, Ignore, Friends, Enemies. All bind straight to the
-// g_AssistantConfig containers; every structural change persists immediately
-// (the original tabs saved on each create/save/remove/drop and on itemDropped),
-// and the save icon re-saves like the original save buttons did.
+// The six Lists sub-tabs: Types, Objects, Find, Ignore, Friends, Enemies.
+// All bind straight to the g_AssistantConfig containers; every structural
+// change persists immediately, and the save icon re-saves.
 
 #include "assistantui.h"
 
@@ -41,7 +39,7 @@ const ImVec4 HINT_COLOR = ImVec4(0.9f, 0.3f, 0.3f, 1.0f);
 const ImVec4 DRESS_BAG_SET = ImVec4(0.0f, 170.0f / 255.0f, 0.0f, 1.0f);     // rgb(0,170,0)
 const ImVec4 DRESS_BAG_UNSET = ImVec4(170.0f / 255.0f, 0.0f, 0.0f, 1.0f);   // rgb(170,0,0)
 
-// case-insensitive name collision check (the original tabs compared toLowered texts)
+// case-insensitive name collision check
 bool name_in_use(const vector<CTypeEntry> &items, const char *name, int skip)
 {
     for (int i = (int)items.size() - 1; i >= 0; i--)
@@ -109,7 +107,6 @@ void draw_types_tab()
     const int buttons = ListButtons("types");
     if ((buttons & XALB_TARGET) != 0)
     {
-        // was on_pb_TypeFromTarget_clicked
         from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetType,
                             "Select a object for obtain graphic");
     }
@@ -134,7 +131,6 @@ void draw_types_tab()
     // the static edit buffers are read directly (draw path: no scratch copies)
     if ((buttons & XALB_ADD) != 0)
     {
-        // was on_pb_TypeCreate_clicked
         if (typeName[0] == '\0')
         {
             snprintf(hint, sizeof(hint), "Enter the type name!");
@@ -160,7 +156,6 @@ void draw_types_tab()
     }
     if ((buttons & XALB_SAVE) != 0)
     {
-        // was on_pb_TypeSave_clicked
         if (typeName[0] == '\0')
         {
             snprintf(hint, sizeof(hint), "Enter the type name!");
@@ -187,7 +182,6 @@ void draw_types_tab()
     }
     if ((buttons & XALB_REMOVE) != 0 && selected >= 0 && selected < (int)items.size())
     {
-        // was on_pb_TypeRemove_clicked
         items.erase(items.begin() + selected);
         selected = lastSelected = -1;
         changed = true;
@@ -229,7 +223,6 @@ void draw_objects_tab()
     const int buttons = ListButtons("objects");
     if ((buttons & XALB_TARGET) != 0)
     {
-        // was on_pb_ObjectFromTarget_clicked
         from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetObject,
                             "Select a object for obtain serial");
     }
@@ -383,7 +376,7 @@ void draw_find_tab()
         hint[0] = '\0';
         // the content pane swaps to another container with the same row id:
         // kill any pending rename on it (same-count lists would otherwise let
-        // a stale rename resume) - the Phase 3 pre-fix from the re-review
+        // a stale rename resume)
         ListGenerationBump(ImGui::GetID("##find_content"));
         if (selectedList >= 0 && selectedList < (int)lists.size())
         {
@@ -480,7 +473,6 @@ void draw_find_tab()
         static uint32_t ftGeneration = 0;
         if ((itemButtons & XALB_TARGET) != 0)
         {
-            // was on_pb_FindContentFromTarget_clicked
             from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetFindList,
                                 "Select a object for obtain graphic and color");
         }
@@ -677,7 +669,6 @@ void draw_ignore_tab()
         static uint32_t ftGeneration = 0;
         if ((itemButtons & XALB_TARGET) != 0)
         {
-            // was on_pb_IgnoreContentFromTarget_clicked
             from_target_request(ftPending, ftGeneration, &CAssistant::HandleTargetIgnoreList,
                                 "Select a object for obtain graphic and color");
         }
@@ -779,7 +770,6 @@ void draw_world_object_tab(
     const int buttons = ListButtons(listId);
     if ((buttons & XALB_TARGET) != 0)
     {
-        // was on_pb_Friend/EnemyFromTarget_clicked
         from_target_request(
             ftPending,
             ftGeneration,

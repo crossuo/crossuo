@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The Phase 2 UI events consumer: journal ring buffer + the journal pane.
-// Phase 3 additions: the spell/skill hotkey action lists (core/actions), the
-// macro recording taps (macros/macroexecutor) and the from-target replies
-// (ui/tablists.cpp polls the latest result slot).
-
-#include "assistanteventsui.h"
+// The UI events consumer: journal ring buffer + the journal pane.
 
 #if defined(XUO_ASSISTANT)
 
 #include <external/gfx/imgui/imgui.h>
 
+#include "assistanteventsui.h"
 #include "assistantui.h" // TabDisplay_RequestTitleRedraw / AssistantUI_RequestClientClose
 #include "widgets.h"
 #include "../config/assistantconfig.h" // g_AssistantConfig (Autostart gate)
@@ -36,8 +32,7 @@ CAssistantUIEvents *AssistantUIEvents_Get()
 
 void CAssistantUIEvents::OnBuffAdd(uint16_t graphic, uint32_t timer, const astr_t &name)
 {
-    // the script-visible buff mirror (was g_BuffManager.Add feeding
-    // OnCommandBuffExists); main-thread event context
+    // the script-visible buff mirror;
     ScriptBuffs_Add(graphic, timer, name);
 }
 
@@ -49,9 +44,9 @@ void CAssistantUIEvents::OnBuffRemove(uint16_t graphic)
 void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)
 {
     // the script-visible mirror (script/journal.cpp) shares the same ring
-    // semantics the original g_JournalManager had
+    // ring semantics
     ScriptJournal_Add(message);
-    // was g_JournalManager.Add: copy the payload, cap the ring
+    // copy the payload, cap the ring
     Line line;
     line.Text = message.Text;
     line.Color = message.Color;
@@ -65,32 +60,31 @@ void CAssistantUIEvents::OnJournalMessage(const CJournalMessage &message)
 
 void CAssistantUIEvents::OnSpellList(const vector<vector<astr_t>> &books)
 {
-    // was g_HotkeysForm->UpdateActionList(HT_CAST*, hotkeyActions)
+    // feed the spell hotkey action list
     Actions_SetSpellList(books);
 }
 
 void CAssistantUIEvents::OnSkillsList(const vector<astr_t> &hotkeyActions)
 {
-    // was g_HotkeysForm->UpdateActionList(HT_USE_SKILL*, hotkeyActions)
+    // feed the skill hotkey action list
     Actions_SetSkillList(hotkeyActions);
 }
 
 void CAssistantUIEvents::OnRecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color)
 {
-    // was g_TabMacros->AddAction(new CMacroWithObject(...))
+    // record a CMacroWithObject action
     g_MacroExecutor.RecordTargetObject(serial, graphic, color);
 }
 
 void CAssistantUIEvents::OnRecordTargetTile(uint16_t graphic, int x, int y, int z)
 {
-    // was g_TabMacros->AddAction(new CMacroWithTargetTile(...))
+    // record a CMacroWithTargetTile action
     g_MacroExecutor.RecordTargetTile(graphic, x, y, z);
 }
 
 void CAssistantUIEvents::OnAutostartRequest()
 {
-    // was g_AssistantForm->RunAutostart: the checkbox
-    // gated the 1s timer; the timer ran the editor buffer as "Autostart"
+    // the checkbox
     if (g_AssistantConfig.Autostart())
     {
         AssistantUI_QueueAutostart();
@@ -142,14 +136,13 @@ bool UI_PollFromTarget(
 
 void CAssistantUIEvents::OnTitleRedraw()
 {
-    // was g_TabDisplay->RedrawTitle: recompose + apply the caption on change
+    // recompose + apply the caption on change
     TabDisplay_RequestTitleRedraw();
 }
 
 void CAssistantUIEvents::OnTitleRedraw(uint32_t serial)
 {
-    // was g_TabDisplay->CheckRedrawTitle(obj): the manager gated on
-    // CanRedraw(graphic, color) before redrawing
+    // the manager gates on
     (void)serial;
     TabDisplay_RequestTitleRedraw();
 }
@@ -158,36 +151,32 @@ void CAssistantUIEvents::OnTitleRedraw(uint32_t serial)
 
 void CAssistantUIEvents::OnMapUpdate(uint32_t serial)
 {
-    // was g_Map->CheckForUpdate(serial): the overlays are recomputed from the
-    // mirror per frame; the window records the dirtiness
+    // the overlays are recomputed from the
     (void)serial;
     MapWindow_OnMapUpdate();
 }
 
 void CAssistantUIEvents::OnMapRedraw()
 {
-    // was g_Map->SetWantRedraw(true)
+    // request a map redraw
     MapWindow_OnMapRedraw();
 }
 
 void CAssistantUIEvents::OnMapOpenRequest()
 {
-    // was g_TabMain->OpenMap (OIPMT_OPEN_MAP / ShowOnLogin / the hotkey
-    // launcher)
+    // open the map window (ShowOnLogin / the hotkey
     MapWindow_Open();
 }
 
 void CAssistantUIEvents::OnTrack(bool state, int x, int y)
 {
-    // was g_UOMapManager.UOAMnotifyTrack -> the external UOAM app; the
-    // assistant map draws the point itself now (documented deviation)
+    // the tracker point; the
     MapWindow_OnTrack(state, x, y);
 }
 
 void CAssistantUIEvents::OnInspectorUpdate(uint32_t serial)
 {
-    // was g_ObjectInspectorForm->CheckUpdate/Update (DumpObjectInfo, the
-    // mirror pokes and the status-item updates)
+    // refresh the inspector sections (the
     Inspector_OnInspectorUpdate(serial);
 }
 

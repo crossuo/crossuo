@@ -1,31 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The Object Inspector window (was assist/objectinspectorform.ui +
-// assist/tabobjectinspector.cpp, 426x549 "Object Inspector").
-//
-// Layout delta (documented): the original hosted one tab widget with a tab per
-// inspected serial; here each inspected serial owns one collapsible section
-// (the ImGui-native equivalent) - same per-serial snapshots, same tree.
-//
-// Tree content ports TabObjectInspector::Update (tabobjectinspector.cpp:
-// 361-590): the "Game Object" group (Serial/Container/Top Object/Name/
+// The Object Inspector window: one collapsible section per inspected serial
+// (same per-serial snapshots, same tree).
+// Tree content: the "Game Object" group (Serial/Container/Top Object/Name/
 // Graphic/Color/Count/X/Y/Z/Map), the "Flags" subgroup (Frozen/Poisoned/
 // Yellow Hits/Locked/In War Mode/Hidden/Flying), "Ignored", the "Game Item"
 // group (Layer; corpse suffix) or the "Game Character" group (Hits/Max Hits/
 // Mana/Max Mana/Stam/Max Stam/Sex/Race/Direction/Running/Notoriety/Can
 // Change Name) with the nested "Game Player" group (stats/locks/resists/...).
-// A leaf click copies its value (on_tw_Info_itemClicked, :751-769 ->
-// SetClipboardText).
-//
-// Stale serials: the original froze the last snapshot when the object left the mirror
-// (CheckUpdate bailed on FindWorldCharacter == nullptr); the section header
-// here additionally carries an "(out of range)" marker.
-//
-// Delta: the item-art preview (TabObjectInspector::UpdateImage) is not
-// reproduced - it decoded art directly from the file mapping; the client
-// caches that art in its own render tree and there is no cheap in-process
-// pixel handoff (plan §5.6 leaves art-to-ImGui a separate round).
+// A leaf click copies its value to the clipboard.
+// Stale serials: the last snapshot freezes when the object leaves the mirror;
+// the section header additionally carries an "(out of range)" marker.
 
 #pragma once
 
@@ -43,8 +29,7 @@ void InspectorWindow_Draw();
 // serials are ignored.
 void Inspector_Open(uint32_t serial);
 
-// OnInspectorUpdate (was ObjectInspectorForm::CheckUpdate): refreshes the
-// serial's snapshot from the mirror when the section exists.
+// OnInspectorUpdate: refreshes the
 void Inspector_OnInspectorUpdate(uint32_t serial);
 
 // Shutdown (context alive): drops the sections.

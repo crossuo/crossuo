@@ -261,7 +261,7 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
     {
         CPacketPopupMenuSelection(Serial, serial - 1).Send();
 #if defined(XUO_ASSISTANT)
-        // the menu id rides the graphic field, like the original CMacroWithObject
+        // the menu id rides the graphic field
         xuoassist::g_MacroExecutor.RecordWaitContextMenu(Serial, serial - 1);
 #endif
 

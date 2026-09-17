@@ -1,20 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// AssistantConfig: the persistence module (master plan §4.3, §7 Phase 1 item
-// 6). The original app kept every reader/writer inside its widget classes
-// (assist/tab*.cpp LoadConfig/SaveConfig, assistform.cpp profile handling,
-// Hotkeys.ini, tabagentsdress.cpp
-// Dress.coa); they are
-// extracted here verbatim so Phase 2 can build UI straight on top.
+// AssistantConfig: the persistence module. Every reader/writer lives here as
+// a Load*/Save* pair over the INI files (config/configio.h); schema rules and
+// the per-file sections/keys follow config/configio.h. There is no
+// compatibility with the pre-INI files: a first run simply starts from the
+// defaults below.
 //
-// File formats: INI via the vendored <external/inih.h> reader and the
-// CIniFile writer (config/configio.h). Schema rules and the per-file
-// sections/keys are documented in docs/NOTES.md ("Persistence"). There is
-// no compatibility with the pre-INI files: a first run simply starts from
-// the defaults below.
-//
-// Layout (matches the original app, relative to the binary dir):
+// Layout (relative to the binary dir):
 //   Config/<profile>/ : Options.ini Objects.ini Hotkeys.ini Party.ini
 //                       Friends.ini Enemies.ini Macros.ini Dress.coa
 //   GlobalConfig/     : Types.ini, FindList.ini, IgnoreList.ini,
@@ -22,9 +15,8 @@
 //                       SoundFilter.ini, ShopList.ini, DisplayItems.ini,
 //                       DisplayGroups.ini, Profiles.ini, Map.ini
 //
-// Data that used to live in the old list-widget items is kept here as plain structs
-// with the original item-class field names; the UI round binds its list
-// widgets directly to these containers.
+// Data that the UI lists show is kept here as plain structs; the UI binds
+// its list widgets directly to these containers.
 
 #pragma once
 
@@ -42,7 +34,7 @@ namespace xuoassist {
 
 class CMacro;
 
-// From the original app's assist/tabmain.h - the 23-option checklist order (§2.2).
+// The 23-option checklist order.
 enum CHECKLISTBOX_IDENTIFICATOR
 {
     CLBI_CORPSES_AUTOOPEN = 0,
@@ -87,8 +79,7 @@ enum REPLACE_TEXT_MODE
     RTM_OTHERS
 };
 
-// From the original app's assist/hotkeysform.h (HOTKEY_TYPES; kept here so the
-// hotkey data model survives ahead of the Phase 3 hotkey engine).
+// The hotkey type vocabulary (HOTKEY_TYPES).
 enum HOTKEY_TYPES
 {
     HT_PLAY_MACRO = 0,
@@ -113,9 +104,8 @@ enum HOTKEY_TYPES
     HT_USE_SKILL_LAST_ATTACK,
     HT_USE_SKILL_ENEMY,
     HT_USE_SKILL_FRIEND,
-    // the enum tail - the Phase-1c model stopped at
-    // the skill entries; the stored uint32_t values and the Hotkeys.ini schema
-    // are unchanged (values 0..21 above already match the original writer)
+    // the enum tail; the stored uint32_t values and the Hotkeys.ini schema
+    // are unchanged
     HT_USE_SKILL_NEW_TARGET_SYSTEM,
     HT_TARGETING,
     HT_BANDAGE_HEALING,
@@ -128,7 +118,7 @@ struct CWorldObjectEntry
 {
     uint32_t Serial{ 0 };
     astr_t Name{ "" };
-    bool Enabled{ false }; // was the item's checked state
+    bool Enabled{ false }; // the row's checked state
 };
 
 // gui/typelistitem.h
@@ -254,11 +244,9 @@ public:
 
     CAssistantConfig();
 
-    // --- paths (plan §4.3: <binary dir>/Config/<profile>/) -----------------
+    // --- paths (<binary dir>/Config/<profile>/) -----------------
     // The client resolves writable data relative to the working directory at
-    // startup (src/Main.cpp:414 g_ExePath = fs_path_current()), which equals
-    // "next to the exe" for a normal install - the same place the original app
-    // (g_DllPath) used.
+    // startup (src/Main.cpp:414 g_ExePath = fs_path_current()) - "next to the exe"
     static fs_path GetRootPath();
     static fs_path GetGlobalConfigPath();
     static fs_path GetConfigPath();
@@ -270,8 +258,8 @@ public:
     void ScanProfiles();
     bool LoadProfileBySerial(uint32_t serial);
     void SetCurrentProfile(const astr_t &name); // case-insensitive, like TabMain
-    bool LoadProfile();                         // was AssistForm::LoadCurrentProfile
-    bool SaveProfile();                         // was AssistForm::SaveCurrentProfile
+    bool LoadProfile();                         // persisted to/from its INI file
+    bool SaveProfile();                         // persisted to/from its INI file
     void SaveProfileMap();                      // GlobalConfig/Profiles.ini
     void LoadProfileMap();
     const std::map<uint32_t, astr_t> &GetProfileMap() const { return m_ProfileMap; }
@@ -283,40 +271,40 @@ public:
     // --- global files (GlobalConfig/) ---------------------------------------
     void LoadGlobals(); // Types/Find/Ignore/Speech/Replaces/Sound/Shop/Display/Profiles
     void SaveGlobals();
-    void SaveTypes();         // was TabListsTypes::SaveTypes
+    void SaveTypes();         // persisted to/from its INI file
     void LoadTypes();         // (with the original app's default rec list on empty)
-    void SaveFindList();      // was TabListsFind::SaveFindList (size=count+1)
+    void SaveFindList();      // persisted to/from its INI file (size=count+1)
     void LoadFindList();
-    void SaveIgnoreList();    // was TabListsIgnore::SaveIgnoreList (size=count+1)
+    void SaveIgnoreList();    // persisted to/from its INI file (size=count+1)
     void LoadIgnoreList();
-    void SaveSpeechFilter();  // was TabFiltersSpeech::SaveSpeechFilter
+    void SaveSpeechFilter();  // persisted to/from its INI file
     void LoadSpeechFilter();
-    void SaveTextReplaces();  // was TabFiltersReplaces::SaveTextReplaces
+    void SaveTextReplaces();  // persisted to/from its INI file
     void LoadTextReplaces();
-    void SaveSoundFilter();   // was TabFiltersSound::SaveSoundFilter
+    void SaveSoundFilter();   // persisted to/from its INI file
     void LoadSoundFilter();
-    void SaveShopList();      // was TabAgentsShop::SaveShopList
+    void SaveShopList();      // persisted to/from its INI file
     void LoadShopList();      // (with the original app's defaults on empty)
-    void SaveDisplayItems();  // was TabDisplay::SaveDisplayItems
+    void SaveDisplayItems();  // persisted to/from its INI file
     void LoadDisplayItems();  // (with the original app's default set on empty)
-    void SaveDisplayGroups(); // was TabDisplay::SaveDisplayGroups
+    void SaveDisplayGroups(); // persisted to/from its INI file
     void LoadDisplayGroups(); // (with allreag/default on empty)
 
     // --- per-profile files ---------------------------------------------------
-    void SaveObjects();       // was TabListsObjects::SaveObjects (Objects.ini)
+    void SaveObjects();       // persisted to/from its INI file (Objects.ini)
     void LoadObjects();
-    void SaveHotkeys();       // was HotkeysForm::Save (Hotkeys.ini)
+    void SaveHotkeys();       // persisted to/from its INI file (Hotkeys.ini)
     bool LoadHotkeys();
-    void SaveParty();         // was TabAgentsParty::SaveParty (Party.ini)
+    void SaveParty();         // persisted to/from its INI file (Party.ini)
     void LoadParty();
-    void SaveFriends();       // was TabListsFriends::SaveFriends (Friends.ini)
+    void SaveFriends();       // persisted to/from its INI file (Friends.ini)
     void LoadFriends();
-    void SaveEnemies();       // was TabListsEnemies::SaveEnemies (Enemies.ini)
+    void SaveEnemies();       // persisted to/from its INI file (Enemies.ini)
     void LoadEnemies();
-    void SaveMacros();        // was TabMacros::Save (Macros.ini)
-    bool LoadMacros();        // was TabMacros::Load
-    bool SaveDress();         // was TabAgentsDress::SaveDress (Dress.coa)
-    bool LoadDress();         // was TabAgentsDress::LoadDress
+    void SaveMacros();        // persisted to/from its INI file (Macros.ini)
+    bool LoadMacros();        // persisted to/from its INI file
+    bool SaveDress();         // persisted to/from its INI file (Dress.coa)
+    bool LoadDress();         // persisted to/from its INI file
 
     // --- main options (TabMain getters, incl. the g_EnabledFeature gates) ---
     bool CorpsesAutoopen() const;
@@ -402,17 +390,16 @@ public:
     bool InFriendList(uint32_t serial) const;
     bool InEnemyList(uint32_t serial) const;
     bool FeelPartyMembersAsFriends() const { return m_FeelPartyMembersAsFriends; }
-    void AddType(const astr_t &name, const astr_t &type);     // was TabListsTypes::AddType
+    void AddType(const astr_t &name, const astr_t &type);
     void RemoveType(const astr_t &name);
-    void AddObject(const astr_t &name, const astr_t &serial); // was TabListsObjects::AddObject
+    void AddObject(const astr_t &name, const astr_t &serial);
     void RemoveObject(const astr_t &name);
 
-    // --- party agent (TabAgentsParty) ----------------------------------------
+    // --- party agent -----------------------------------------------------------
     bool PartyInviteCanBeAutoAccepted(uint32_t serial) const;
     bool PartyInviteCanBeAutoDeclined(uint32_t serial) const;
 
-    // --- filters (were TabFiltersSpeech/Replaces/Sound; consulted by the
-    //     packet handlers exactly like the original code did) -----------------------
+    // --- filters (consulted by the packet handlers) ---------------------------
     bool CheckSpeechInFilter(const astr_t &text, const uint16_t &color) const;
     // Returns true when the text matched a replace rule; the caller (the talk
     // handlers, which hold the display context) renders the replacement carried
@@ -426,15 +413,15 @@ public:
         uint16_t &replacedColor) const;
     bool CheckSoundInFilter(const uint16_t &index) const;
 
-    // --- distance / delay text helpers (were AssistForm methods) -------------
+    // --- distance / delay text helpers -----------------------------------------
     int DistanceFromText(astr_t text);
     int DelayFromText(astr_t text);
 
-    // --- display items / groups (were TabDisplay helpers) --------------------
+    // --- display items / groups -------------------------------------------------
     CDisplayItem GetCustomDisplayItemByName(const astr_t &name) const;
     astr_t GetGroupContent(const astr_t &name) const;
 
-    // --- dress sets (data helpers from TabAgentsDress/commandmanager) --------
+    // --- dress sets (data helpers) -----------------------------------------------
     CDressSetEntry *GetDressSet(const astr_t &name);
     CDressSetEntry *AddDressSet(const astr_t &name);
     void ClearDressSet(CDressSetEntry *set);
@@ -444,7 +431,7 @@ public:
     // --- macros ---------------------------------------------------------------
     vector<CMacroEntry> &Macros() { return m_Macros; }
 
-    // --- data (was the widget state of the original tabs) ---------------------------
+    // --- data -----------------------------------------------------------------------------
     bool m_Options[CLBI_COUNT];
     int m_MessagesLevel{ 0 };
     int m_SearchItemsDistance{ 3 };

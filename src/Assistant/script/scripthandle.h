@@ -3,18 +3,8 @@
 
 #pragma once
 
-// The per-script worker thread + the script manager (was CScriptHandle +
-// the running-scripts list bookkeeping of TabScripts: one worker thread
-// per script joined through the finished signal).
-//
-// Lifecycle: Start() spawns the thread (capped at 16 concurrent), the thread
-// builds a CScriptEngine, evaluates the file, calls the function, and exits.
-// Terminate() flips the HANDLE's atomic flag first - a worker killed before it
-// assigns m_Engine still sees it as its first action, and the engine sees it
-// through the wired-in external flag (the engine-level interrupt stays the
-// fast path for QuickJS preemption); Join with a timeout - a thread stuck in
-// native code is detached and marked zombie (never block the main thread,
-// plan rule). Pause mirrors CScriptEngineBase::PauseWaiting.
+// The per-script worker thread + the script manager: one worker thread per
+// script joined through the finished signal.
 
 #include "../core/global.h"
 
@@ -71,8 +61,7 @@ private:
     std::atomic<int> m_State{ SS_RUNNING };
 };
 
-// The manager (was the running list of TabScripts): owns the handles, feeds
-// the Scripts tab rows. All calls main-thread.
+// The manager: owns the handles, feeds
 class CScriptManager
 {
 public:

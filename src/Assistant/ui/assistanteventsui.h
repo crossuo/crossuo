@@ -3,11 +3,10 @@
 
 #pragma once
 
-// The Phase 2 UI events consumer (plan §7 Phase 2, item 6): a
-// CAssistantEvents subclass installed into g_AssistantEvents that feeds the
-// journal pane. Everything else keeps the default-inert behavior; the
-// consumed notifications for later rounds arrived with their rounds; the
-// consumer now covers the full notification set through Phase 6.
+// The UI events consumer: a CAssistantEvents subclass installed into
+// g_AssistantEvents that feeds the journal pane and the assistant windows.
+// The default-inert methods stay default; the consumer covers the full
+// notification set.
 
 #include "../core/assistantevents.h"
 
@@ -44,11 +43,11 @@ public:
         uint8_t Flags{ 0 };
     };
 
-    // Was g_JournalManager.Add feeding the journal window.
+    // Feed the journal pane ring.
     virtual void OnJournalMessage(const CJournalMessage &message) override;
 
-    // --- Phase 3 consumers -------------------------------------------------
-    // The hotkey action-list feeds (the 0xFC list handlers).
+    // --- hotkey/macro consumers ----------------------------------------------
+    // The hotkey action-list feeds (the skill/spell list events).
     virtual void OnSpellList(const vector<vector<astr_t>> &books) override;
     virtual void OnSkillsList(const vector<astr_t> &hotkeyActions) override;
     // The script buff mirror (BuffExists reads it through the queue).
@@ -57,38 +56,37 @@ public:
     // The macro recording taps.
     virtual void OnRecordTargetObject(uint32_t serial, uint16_t graphic, uint16_t color) override;
     virtual void OnRecordTargetTile(uint16_t graphic, int x, int y, int z) override;
-    // The Autostart script run (was AssistForm::RunAutostart from EnterWorld).
+    // The Autostart script run (from EnterWorld).
     virtual void OnAutostartRequest() override;
-    // The closeuo request (was the WM_CLOSE to the host window).
+    // The closeuo request (the host window quit path).
     virtual void OnClientCloseRequest() override;
     // The from-target replies (HandleTarget* forwards).
     virtual void OnFromTarget(
         int kind, uint32_t serial, uint16_t graphic, uint16_t color, const astr_t &name) override;
 
-    // --- Phase 4a consumers -------------------------------------------------
-    // The display caption redraw requests (fired from the client's send and
-    // recv sites; was g_TabDisplay->RedrawTitle/CheckRedrawTitle).
+    // --- display caption ------------------------------------------------------
+    // Fired from the client's send and recv sites; recompose + apply the
+    // display caption.
     virtual void OnTitleRedraw() override;
     virtual void OnTitleRedraw(uint32_t serial) override;
 
-    // --- Phase 5 consumers --------------------------------------------------
-    // The map window (was g_Map->CheckForUpdate/SetWantRedraw and the
-    // OpenMap pokes: OIPMT_OPEN_MAP, ShowOnLogin, the hotkey launcher).
+    // --- map/inspector consumers -----------------------------------------------
+    // The map window (overlay recomputation and the open-map request:
+    // the ShowOnLogin option and the hotkey launcher).
     virtual void OnMapUpdate(uint32_t serial) override;
     virtual void OnMapRedraw() override;
     virtual void OnMapOpenRequest() override;
-    // The tracker point (was the external-UOAM notify; the map draws it).
+    // The tracker point (the map window draws it).
     virtual void OnTrack(bool state, int x, int y) override;
-    // The object inspector sections (was g_ObjectInspectorForm->CheckUpdate
-    // / Update from the mirror pokes and DumpObjectInfo).
+    // The object inspector sections (snapshot refresh from the mirror pokes
+    // and DumpObjectInfo).
     virtual void OnInspectorUpdate(uint32_t serial) override;
     // The Krrios party/guild position packets (the map window markers).
     virtual void OnPartyMemberInfo(const XA_PARTY_MEMBER_INFO &info) override;
     virtual void OnGuildMemberInfo(const XA_GUILD_MEMBER_INFO &info) override;
 
-    // The script BuffExists mirror feed (script/scriptstate.cpp; was
-    // g_BuffManager.Add/Remove). OnMegaCliloc stays default-inert (the
-    // object-properties cache needs no UI round).
+    // The script BuffExists mirror feed (script/scriptstate.cpp). OnMegaCliloc
+    // stays default-inert (the object-properties cache needs no UI).
 
     // Ring of the last N lines (oldest first); capped, event-time copies.
     const vector<Line> &Lines() const { return m_Lines; }
@@ -98,6 +96,7 @@ public:
 private:
     enum { LINE_CAP = 256 };
     vector<Line> m_Lines;
+
 };
 
 // The installed subclass instance (assistantui.cpp owns the install/restore).

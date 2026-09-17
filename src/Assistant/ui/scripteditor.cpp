@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See scripteditor.h. File dialogs: the plan §8.2 rule (no native dialog
-// dependency) - a small in-ImGui file picker over std::filesystem rooted at
-// the current directory replaces the native open/save file dialogs.
+// See scripteditor.h. File dialogs (no native dialog
 
 #include "scripteditor.h"
 #include "editor.h"
@@ -43,8 +41,7 @@ astr_t s_FilePickerDir = ".";
 astr_t s_Status = "Ready";
 astr_t s_PendingOpenPath;
 
-// tiny in-ImGui file picker over std::filesystem-like readdir (plan §8.2):
-// lists the directory, `..` to go up, double-click a .oajs/.js file to pick.
+// tiny in-ImGui file picker over readdir:
 bool draw_file_picker()
 {
     bool picked = false;
@@ -96,7 +93,7 @@ bool draw_file_picker()
                 directories.push_back(name);
             }
             // size guards BEFORE the compare: size()-5 underflows for 4-char
-            // names (".oajs" check used to throw std::out_of_range)
+            // names (the ".oajs" check throws std::out_of_range)
             else if ((name.size() >= 5 && name.compare(name.size() - 5, 5, ".oajs") == 0) ||
                 (name.size() >= 3 && name.compare(name.size() - 3, 3, ".js") == 0))
             {
@@ -160,7 +157,7 @@ bool read_file(const astr_t &path, astr_t &out)
 bool write_file(const astr_t &path, const astr_t &text)
 {
     // the script editor's Save button: the crash-safe temp+rename path so a
-    // crash mid-save cannot truncate a user script (plan §8.1)
+    // crash mid-save cannot truncate a user script
     return AtomicFileWrite(fs_path_from(path), text.data(), text.size());
 }
 
@@ -200,7 +197,7 @@ void ScriptEditorWindow_Draw(bool *open)
     // does not hide anything): the window stays closed until the Scripts tab
     // "Open editor" button sets the flag again. The buffer is
     // shared with the script runtime, so content survives close/reopen
-    // (the original dialog had no closeEvent override either: plain hide).
+    // (plain hide on close).
     if (open == nullptr || !*open)
     {
         return;
@@ -271,7 +268,7 @@ void ScriptEditorWindow_Draw(bool *open)
         TextEditor_CommentSelection();
     }
     ImGui::SameLine();
-    // the command insert menu (the original giant context menu, now data-driven)
+    // the command insert menu (data-driven)
     if (ImGui::Button("Commands"))
     {
         ImGui::OpenPopup("ScriptCommandMenu");

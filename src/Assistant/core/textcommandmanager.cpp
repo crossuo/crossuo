@@ -16,7 +16,7 @@
 #include "CrossUO.h" // ::g_Game (the client send bridge)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
 #include "Managers/PacketManager.h" // ::g_PacketManager (the light/weather/season/sound/hide apply-cores)
-#include "Target.h" // ::g_Target (the fused target cursor: LastTile info, RequestCursor)
+#include "Target.h" // ::g_Target (LastTile info, RequestCursor)
 #include "world.h"
 #include "worldutil.h"
 #include "../managers/spellmanager.h"
@@ -91,9 +91,8 @@ void CTextCommandManager::DoCommand(const astr_t &text)
         return;
     }
 
-    // Tokenized line by line, one command per line, like the original
-    // X:UO Assist command dispatcher; '#' comments and the quote pairs are
-    // that parser's command grammar.
+    // Tokenized line by line, one command per line; '#' comments and the
+    // quote pairs are the command grammar.
     size_t pos = 0;
 
     while (pos < text.length())
@@ -644,7 +643,6 @@ HCOMMAND(terminate)
         g_Assistant.ClientPrintDebugLevel1(command.Description);
     }
 
-    // was g_TabScripts->TerminateScript(args[0], functionsSave):
     // the second argument is the "|"-separated
     // keep-list for the "all" form; ScriptManager_Terminate owns both.
     if (!args.empty())
@@ -833,9 +831,8 @@ HCOMMAND(closeuo)
         return;
     }
 
-    // was SendMessage(hwnd, WM_CLOSE) - the assistant plugin asked the host
-    // window to close; in-process the request goes through the events seam
-    // and the UI sink pushes the client's own quit event (CWindow::Destroy).
+    // the closeuo request goes through the events seam and the UI sink pushes
+    // the client's own quit event (CWindow::Destroy).
     g_AssistantEvents->OnClientCloseRequest();
 }
 
@@ -1425,8 +1422,7 @@ HCOMMAND(showjournal)
         return;
     }
 
-    // was g_JournalManager.ShowLines(lines): dump
-    // the ring into the text window (the g_TextDialog port) and show it
+    // dump the ring into the text window and show it
     const vector<CJournalMessage> &list = ScriptJournal_Messages();
     const int size = (int)list.size();
 
@@ -1514,7 +1510,6 @@ HCOMMAND(clearjournal)
         return;
     }
 
-    // was g_JournalManager.Clear(pattern, serial, color, type):
     // one consume-pass over the filters, plus the
     // full wipe when the pattern is empty and nothing matched.
     CJournalMessage *hit =
@@ -1539,7 +1534,6 @@ HCOMMAND(journalignorecase)
 
     bool ignoreCase = args.empty() ? false : CAssistant::RawStringToBool(args[0]);
 
-    // was g_JournalManager.SetIgnoreCase(on)
     ScriptJournal_SetIgnoreCase(ignoreCase);
 }
 

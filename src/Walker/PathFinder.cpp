@@ -706,8 +706,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
         CWalkData(x, y, z, direction, g_Player->Graphic, g_Player->GetFlags()));
 
 #if defined(XUO_ASSISTANT)
-    // the assistant's walk-send tap home (was the 0x02 WalkRequest handler in
-    // xuoassist's packetmanager): the auto-open-door probe and the macro walk
+    // the assistant's walk-send hooks: the auto-open-door probe and the macro walk
     // recording ride every outgoing walk packet, before the send
     xuoassist::g_Assistant.WalkAutoOpenDoor(direction);
     xuoassist::g_MacroExecutor.RecordWalk(direction);

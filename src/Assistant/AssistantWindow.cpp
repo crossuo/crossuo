@@ -19,7 +19,7 @@
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
 #include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
 #include "core/global.h"    // g_Connected (xuoassist)
-#include "core/hotkeys.h"   // the hotkey engine (Phase 3 routing)
+#include "core/hotkeys.h"   // the hotkey engine
 #include "macros/macroexecutor.h" // g_MacroExecutor.Reset (disconnect reset)
 #include "Globals.h"        // g_GameState, g_Ticks
 #include "Wisp/WispWindow.h" // Wisp::g_WispWindow
@@ -48,8 +48,7 @@ static bool event_belongs_to_game(const SDL_Event &ev)
 {
     // mirrors WispWindow.cpp OnWindowProc: per-event window ids decide who owns
     // the event; anything not addressed to the game window belongs to an
-    // assistant pop-out platform window (the launcher was offered the event
-    // first in Main.cpp and did not take it)
+    // assistant pop-out platform window.
     const uint32_t gameId = s_assistantWin.window != nullptr
                                 ? SDL_GetWindowID(s_assistantWin.window)
                                 : 0;
@@ -190,7 +189,7 @@ void AssistantWindow_FrameTick()
     if (s_initialized)
         xuoassist::AssistantUI_Tick(); // auto-reconnect countdown (was TabMain::m_ReconnectTimer)
 
-    // disconnect stage-gate (was run from the packet taps): when the client leaves the in-game stage the assistant
+    // disconnect stage-gate: when the client leaves the in-game stage the assistant
     // drops its connected flag and resets its own state; running here instead
     // of per packet means a stage change is noticed within one frame
     if (xuoassist::g_Connected && !at_game_stage())
@@ -241,8 +240,7 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
 
     // The capture field of the hotkeys form ("listening"): it must see the
     // next raw key/wheel/mouse event even when the game would. Gated on
-    // !WantTextInput so a busy text field always wins (the original filter ran
-    // before everything, but there was no competing text input then).
+    // !WantTextInput so a busy text field always wins.
     if (xuoassist::Hotkeys_IsCapturing() && !io.WantTextInput &&
         xuoassist::Hotkeys_ProcessCapture(ev))
     {
@@ -250,9 +248,8 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
     }
 
     // Hidden: keep ImGui fed but let the game play normally - EXCEPT the
-    // hotkey engine, which keeps working like the original plugin's filter did
-    // (the assistant could be minimized to tray and its hotkeys kept firing;
-    // Pass-keys and the On/Off switch govern it, see core/hotkeys.cpp).
+    // hotkey engine, which keeps working while the assistant is hidden
+    // (Pass-keys and the On/Off switch govern it, see core/hotkeys.cpp).
     if (!s_visible)
         return xuoassist::Hotkeys_ProcessGameEvent(ev);
 

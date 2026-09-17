@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The dress agent engine - see dressagent.h for the port notes. The step
-// order below is lifted 1:1 from the script builder TabAgentsDress::DressSet /
-// UndressSet / DisarmSet; "Client.Unequip(layer)" resolves to the assistant
-// MoveItem into the backpack and "Client.Equip(serial)" to
+// The dress agent engine - see dressagent.h. Unequip steps resolve to the
+// assistant MoveItem into the backpack and equip steps to
 // g_Assistant.MoveEquip (OnCommandEquip).
 //
-// Port delta (documented): Tick() paces ONE step per frame - with
+// Pacing: Tick() paces ONE step per frame - with
 // MoveItemsDelay == 0 the whole sequence still spreads over one step per
-// frame (m_NextTick lands on the current tick), while the original engine ran the
-// entire script in a single pass when the delay was 0.
+// frame (m_NextTick lands on the current tick).
 
 #define LOGGER_MODULE Assistant
 
@@ -30,8 +27,7 @@ CDressAgent g_DressAgent;
 
 void CDressAgent::Start(vector<XA_DRESS_STEP> &steps)
 {
-    // was TerminateScript(g_EquipScriptName) + RunScript(...): a new request
-    // replaces whatever sequence was running
+    // a new request replaces whatever sequence was running
     m_Steps.swap(steps);
     m_Next = 0;
     m_NextTick = 0;
@@ -210,7 +206,7 @@ void CDressAgent::Tick()
     {
         case XA_DRESS_OP_UNEQUIP:
         {
-            // was Client.Unequip(layer): MoveItem into the backpack
+            // Client.Unequip(layer): MoveItem into the backpack
             CGameItem *item = g_Player->FindLayer(step.Layer);
 
             if (item != nullptr && g_LayerSafe[step.Layer])
@@ -226,13 +222,13 @@ void CDressAgent::Tick()
         }
         case XA_DRESS_OP_EQUIP:
         {
-            // was Client.Equip(serial)
+            // Client.Equip(serial)
             g_Assistant.MoveEquip(step.Serial, step.Layer, g_PlayerSerial);
             break;
         }
         case XA_DRESS_OP_USEOBJECT:
         {
-            // was Client.UseObject(serial) (cb_DoubleClickForEquipment)
+            // Client.UseObject(serial) (cb_DoubleClickForEquipment)
             g_Assistant.DoubleClick(step.Serial);
             break;
         }
@@ -240,7 +236,7 @@ void CDressAgent::Tick()
             break;
     }
 
-    // was the "Client.Wait(MoveItemsDelay)" after each scripted action
+    // the "Client.Wait(MoveItemsDelay)" after each scripted action
     m_NextTick = g_Ticks + (uint32_t)(m_Delay > 0 ? m_Delay : 0);
 
     if (m_Next >= m_Steps.size())
