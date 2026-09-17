@@ -52,7 +52,7 @@ void AssistantUI_MarkOptionsDirty();
 void AssistantUI_ClearOptionsDirty();
 
 // Recompiles the display title data (g_DisplayManager) from the config - was
-// AssistForm::LoadCurrentProfile's g_TabDisplay->RecompilleData() tail;
+// AssistForm::LoadCurrentProfile's g_TabDisplay->RecompileData() tail;
 // called at init and after a profile switch.
 void AssistantUI_RecompileDisplayTitle();
 

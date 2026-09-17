@@ -20,6 +20,10 @@
 #include "../Weather.h"
 #include "../TargetGump.h"
 #include "../CrossUO.h"
+#if defined(XUO_ASSISTANT)
+#include "../Assistant/AssistantWindow.h" // AssistantWindow_IsVisible (click gating)
+#include <external/gfx/imgui/imgui.h>     // ImGui::GetIO (WantCaptureMouse)
+#endif
 #include "../QuestArrow.h"
 #include "../PressedObject.h"
 #include "../SelectedObject.h"
@@ -2309,8 +2313,25 @@ void CGameScreen::SelectObject()
     g_LastSelectedObject.Init(g_SelectedObject);
 }
 
+#if defined(XUO_ASSISTANT)
+// A visible assistant overlay that ImGui wants the mouse for must keep game
+// clicks to itself; the client processes clicks in its own pipeline otherwise.
+// Press and release are gated together (same flag on both) so no press/drag
+// state is left stuck behind the overlay.
+static bool AssistantOverlay_WantsMouse()
+{
+    return AssistantWindow_IsVisible() && ImGui::GetIO().WantCaptureMouse;
+}
+#endif
+
 void CGameScreen::OnLeftMouseButtonDown()
 {
+#if defined(XUO_ASSISTANT)
+    if (AssistantOverlay_WantsMouse())
+    {
+        return;
+    }
+#endif
     CGumpSkills *skillGump = (CGumpSkills *)g_GumpManager.GetGump(0, 0, GT_SKILLS);
     if (skillGump != nullptr)
     {
@@ -2336,6 +2357,12 @@ void CGameScreen::OnLeftMouseButtonDown()
 
 void CGameScreen::OnLeftMouseButtonUp()
 {
+#if defined(XUO_ASSISTANT)
+    if (AssistantOverlay_WantsMouse())
+    {
+        return;
+    }
+#endif
     if (g_PressedObject.LeftGump == &m_GameScreenGump)
     {
         m_GameScreenGump.OnLeftMouseButtonUp();
@@ -2559,6 +2586,12 @@ void CGameScreen::OnLeftMouseButtonUp()
 
 bool CGameScreen::OnLeftMouseButtonDoubleClick()
 {
+#if defined(XUO_ASSISTANT)
+    if (AssistantOverlay_WantsMouse())
+    {
+        return false;
+    }
+#endif
     bool result = false;
     uint32_t charUnderMouse = 0;
     if ((g_SelectedObject.Gump != nullptr) && g_GumpManager.OnLeftMouseButtonDoubleClick(false))
@@ -2632,6 +2665,12 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 
 void CGameScreen::OnRightMouseButtonDown()
 {
+#if defined(XUO_ASSISTANT)
+    if (AssistantOverlay_WantsMouse())
+    {
+        return;
+    }
+#endif
     if (g_PressedObject.RightGump != nullptr)
     {
         g_GumpManager.OnRightMouseButtonDown(false);
@@ -2645,6 +2684,12 @@ void CGameScreen::OnRightMouseButtonDown()
 
 void CGameScreen::OnRightMouseButtonUp()
 {
+#if defined(XUO_ASSISTANT)
+    if (AssistantOverlay_WantsMouse())
+    {
+        return;
+    }
+#endif
     if (g_PressedObject.RightGump != nullptr)
     {
         g_GumpManager.OnRightMouseButtonUp(false);
@@ -2674,6 +2719,12 @@ void CGameScreen::OnRightMouseButtonUp()
 
 bool CGameScreen::OnRightMouseButtonDoubleClick()
 {
+#if defined(XUO_ASSISTANT)
+    if (AssistantOverlay_WantsMouse())
+    {
+        return false;
+    }
+#endif
     if (g_ConfigManager.EnablePathfind && g_SelectedObject.Object != nullptr &&
         g_SelectedObject.Object->IsWorldObject() && !g_PathFinder.AutoWalking)
     {

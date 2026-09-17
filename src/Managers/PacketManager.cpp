@@ -3200,6 +3200,11 @@ PACKET_HANDLER(ExtendedCommand)
             CPacketMegaClilocRequestOld(serial).Send();
             break;
         }
+        case 0x11:
+        {
+            // TODO: new, identify version introduction
+            break;
+        }
         case 0x14: //Display Popup/context menu (2D and KR)
         {
 #if defined(XUO_ASSISTANT)
@@ -3216,16 +3221,6 @@ PACKET_HANDLER(ExtendedCommand)
 #endif
             CGumpPopupMenu::Parse(*this);
 
-            break;
-        }
-        case 0x11:
-        {
-            // TODO: new, identify version introduction
-            break;
-        }
-        case 0x14:
-        {
-            // TODO: new, identify version introduction
             break;
         }
         case 0x16: //Close User Interface Windows

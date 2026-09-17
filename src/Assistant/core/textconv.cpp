@@ -147,7 +147,7 @@ vector<astr_t> ParseTextTokens(
     const char *const data = line.data();
     // The old CTextParser bounded every line at the first embedded NUL
     // (GetEOL), so a NUL terminated the scan instead of stalling on it.
-    // This matters for the display-tag flow: CompilleData re-parses the
+    // This matters for the display-tag flow: CompileData re-parses the
     // stage-one tokens, and quoted tokens carry a trailing NUL (the
     // CTextParser quirk), so "{name\0}" reaches this tokenizer verbatim.
     const char *const nul = (const char *)memchr(data, '\0', line.size());

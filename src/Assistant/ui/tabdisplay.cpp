@@ -125,6 +125,10 @@ static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint32_t key)
 char s_TitleData[2048] = { 0 };   // te_DisplayTitleData
 astr_t s_CompiledFrom;            // the data the manager last compiled (text|color)
 bool s_TitleDirty = false;        // a redraw was requested (events / edits)
+// the title data field is being edited: an external config change must not
+// yank the buffer out from under an active InputText (ImGui's active field
+// owns its text until deactivation and would resurrect the pre-edit content)
+bool s_TitleDataEditing = false;
 
 int s_SelectedItem = -1;          // lw_DisplayItems
 int s_LastSelectedItem = -2;
@@ -262,7 +266,7 @@ void fields_to_item(CDisplayItemEntry &entry)
     di.MinValue = s_ItemMinValue;
 
     g_AssistantConfig.SaveDisplayItems();
-    s_TitleDirty = true; // RecompilleData + RedrawTitle
+    s_TitleDirty = true; // RecompileData + RedrawTitle
 }
 
 bool item_name_in_use(const char *name, int skip)
@@ -322,7 +326,7 @@ void recompile_title()
 {
     s_CompiledFrom = g_AssistantConfig.DisplayTitleData() + "|" +
         str_from(g_AssistantConfig.DisplayTextColor());
-    g_DisplayManager.RecompilleData(
+    g_DisplayManager.RecompileData(
         g_AssistantConfig.DisplayTitleData(), g_AssistantConfig.DisplayTextColor());
     redraw_title();
 }
@@ -460,6 +464,7 @@ void draw_configuration_page()
         AssistantUI_MarkOptionsDirty();
         recompile_title();
     }
+    s_TitleDataEditing = ImGui::IsItemActive();
 
     // "Set title from group" (pb_SetTitleGroup + its context menu)
     if (ImGui::Button("Set title from group"))
@@ -823,7 +828,10 @@ void TabDisplay_Draw()
     if (key != s_CompiledFrom)
     {
         s_CompiledFrom = key;
-        snprintf(s_TitleData, sizeof(s_TitleData), "%s", g_AssistantConfig.DisplayTitleData().c_str());
+        if (!s_TitleDataEditing)
+        {
+            snprintf(s_TitleData, sizeof(s_TitleData), "%s", g_AssistantConfig.DisplayTitleData().c_str());
+        }
         recompile_title();
     }
     if (ImGui::BeginTabBar("##tw_display", ImGuiTabBarFlags_None))

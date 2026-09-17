@@ -665,15 +665,15 @@ void CDisplayManager::ApplyAttributeToDisplayItem(
     }
 }
 
-void CDisplayManager::RecompilleData(const astr_t &text, uint32_t textColor)
+void CDisplayManager::RecompileData(const astr_t &text, uint32_t textColor)
 {
     g_UpdateDisplayOnStep = false;
     m_Commands.clear();
 
-    CompilleData(text, textColor);
+    CompileData(text, textColor);
 }
 
-void CDisplayManager::CompilleData(const astr_t &text, uint32_t textColor)
+void CDisplayManager::CompileData(const astr_t &text, uint32_t textColor)
 {
     // Tokenized line by line, one token list per line; the "{}" quote pair keeps the braces on tag
     // fragments so the tag branch below can recognize them.
@@ -708,7 +708,7 @@ void CDisplayManager::CompilleData(const astr_t &text, uint32_t textColor)
                     {
                         if (tags.size() > 1)
                         {
-                            CompilleData(
+                            CompileData(
                                 g_AssistantConfig.GetGroupContent(str_lower(*(tags.begin() + 1))),
                                 textColor);
                         }

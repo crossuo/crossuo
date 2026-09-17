@@ -67,7 +67,7 @@ private:
 
     CDisplayIcon *LoadDisplayIcon(uint16_t graphic, uint16_t color);
     void ApplyAttributeToDisplayItem(CDisplayItem &obj, const astr_t &name, const astr_t &value);
-    void CompilleData(const astr_t &text, uint32_t textColor);
+    void CompileData(const astr_t &text, uint32_t textColor);
     void GetValues(
         const CDisplayItem &item,
         astr_t &value,
@@ -109,7 +109,7 @@ public:
     // The last composed caption (Redraw output)
     const astr_t &GetTitleText() const { return m_TitleText; }
 
-    void RecompilleData(const astr_t &text, uint32_t textColor);
+    void RecompileData(const astr_t &text, uint32_t textColor);
 
     bool CanRedraw(const uint16_t &graphic, const uint16_t &color) const;
 };

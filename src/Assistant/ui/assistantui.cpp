@@ -286,7 +286,7 @@ void AssistantUI_Init()
     ScriptFile_SetSandboxRoot(fs_path_str(g_AssistantConfig.GetRootPath()));
     s_Initialized = true;
     // compile the display title data from the just-loaded profile (was
-    // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompilleData)
+    // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompileData)
     // and paint the initial caption
     AssistantUI_RecompileDisplayTitle();
     // the map settings (loaded before the window opens, so the
@@ -296,7 +296,7 @@ void AssistantUI_Init()
 
 void AssistantUI_RecompileDisplayTitle()
 {
-    g_DisplayManager.RecompilleData(
+    g_DisplayManager.RecompileData(
         g_AssistantConfig.DisplayTitleData(), g_AssistantConfig.DisplayTextColor());
     TabDisplay_RequestTitleRedraw();
 }
@@ -477,6 +477,17 @@ void AssistantUI_ClearOptionsDirty()
 void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
 {
     s_SessionStartTicks = sessionStartTicks;
+
+    // closed: submit nothing. Begin() does not skip the window when *open is
+    // false, so without this early-out the shell (and everything drawn in this
+    // pass) would keep rendering while hidden. The frame pipeline in
+    // AssistantWindow_DrawOverlay keeps running so ImGui still processes the
+    // close and tears down popped-out platform windows.
+    if (open != nullptr && !*open)
+    {
+        return;
+    }
+
     Icons_Init(); // idempotent; needs the live ImGui context
 
     ImGui::SetNextWindowSize(
@@ -528,7 +539,8 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     ImGui::TextDisabled("Alt+U shows/hides the assistant.");
     ImGui::Separator();
 
-    // content: tabs on the left/top, journal pane below, status bar pinned last
+    // content: tabs on the left/top, journal pane below, status bar pinned last.
+    // The tab bar stays fixed; only each tab's content scrolls (its child).
     const float footerHeight = ImGui::GetFrameHeightWithSpacing();
     float tabsHeight = ImGui::GetContentRegionAvail().y - footerHeight;
     const float journalHeight = 150.0f;
@@ -541,7 +553,6 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
         journalOpen = false;
     }
 
-    ImGui::BeginChild("##tabs", ImVec2(0.0f, tabsHeight), ImGuiChildFlags_None);
     if (ImGui::BeginTabBar("##main_tabs", ImGuiTabBarFlags_None))
     {
         for (int i = 0; i < int(sizeof(MAIN_TABS) / sizeof(MAIN_TABS[0])); i++)
@@ -550,6 +561,14 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
             {
                 continue;
             }
+            // the child takes the height left over by the tab bar and holds
+            // the scroll region for this tab's content
+            float contentHeight = tabsHeight - ImGui::GetFrameHeightWithSpacing();
+            if (contentHeight < 1.0f)
+            {
+                contentHeight = 1.0f;
+            }
+            ImGui::BeginChild(MAIN_TABS[i], ImVec2(0.0f, contentHeight), ImGuiChildFlags_None);
             switch (i)
             {
                 case MT_MAIN:
@@ -586,11 +605,11 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
                     draw_placeholder(MAIN_TABS[i], PLACEHOLDER_PHASE[i]);
                     break;
             }
+            ImGui::EndChild();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
     }
-    ImGui::EndChild();
 
     if (journalOpen)
     {

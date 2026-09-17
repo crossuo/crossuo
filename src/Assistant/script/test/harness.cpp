@@ -854,7 +854,7 @@ int main()
         CHECK(tags.size() == 1 && tags[0] == "name");
 
         // the reported freeze input: the stage-one token "{name\0}" fed back
-        // through CompilleData; the old parser returned {"name"} (truncated
+        // through CompileData; the old parser returned {"name"} (truncated
         // at the NUL) and terminated - so must the new one
         const astr_t stageOne("{name}", 6);
         vector<astr_t> quoted = ParseTextTokens(stageOne, "", "", "{}", false, true);
