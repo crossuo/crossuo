@@ -118,7 +118,7 @@ void draw_types_tab()
     }
 
     // the list pane left, the editor fields right
-    ImGui::BeginChild("##types_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##types_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##types", items, &selected, &TypeNameOf, &TypeSetNameOf, false, -1.0f);
     ImGui::EndChild();
     ImGui::SameLine();
@@ -242,7 +242,7 @@ void draw_objects_tab()
     }
 
     // the list pane left, the editor fields right
-    ImGui::BeginChild("##objects_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##objects_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##objects", items, &selected, &ObjectNameOf, &ObjectSetNameOf, false, -1.0f);
     ImGui::EndChild();
     ImGui::SameLine();
@@ -386,7 +386,7 @@ void draw_find_tab()
     // content (Graphic/Color/Comment rows)
     const int listButtons = ListButtons("find_list");
 
-    ImGui::BeginChild("##find_lists_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##find_lists_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##find", lists, &selectedList, &FindNameOf, &FindSetNameOf, false, -1.0f);
     if (selectedList != lastSelectedList)
     {
@@ -591,7 +591,7 @@ void draw_ignore_tab()
 
     const int listButtons = ListButtons("ignore_list");
 
-    ImGui::BeginChild("##ignore_lists_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##ignore_lists_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##ignore", lists, &selectedList, &IgnoreNameOf, &IgnoreSetNameOf, false, -1.0f);
     if (selectedList != lastSelectedList)
     {
@@ -826,7 +826,7 @@ void draw_world_object_tab(
     snprintf(paneId, sizeof(paneId), "%s_pane", listId);
     char formId[48];
     snprintf(formId, sizeof(formId), "%s_form", listId);
-    ImGui::BeginChild(paneId, ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild(paneId, ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     changed = NameList(listId, items, selected, &WorldObjectNameOf, &WorldObjectSetNameOf, checkColumn, -1.0f);
     ImGui::EndChild();
     ImGui::SameLine();

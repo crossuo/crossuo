@@ -51,7 +51,7 @@ void draw_speech_tab()
     const int buttons = ListButtons(PANE_SEED);
 
     // the list pane left, the editor fields right
-    ImGui::BeginChild("##speech_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##speech_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##speech_filters", items, &selected, &SpeechTextOf, &SpeechSetTextOf);
     ImGui::EndChild();
     ImGui::SameLine();
@@ -163,7 +163,7 @@ void draw_replaces_tab()
     const int buttons = ListButtons(PANE_SEED);
 
     // the list pane left, the editor fields right
-    ImGui::BeginChild("##replace_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##replace_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##replace_filters", items, &selected, &ReplaceTextOf, &ReplaceSetTextOf);
     ImGui::EndChild();
     ImGui::SameLine();
@@ -311,7 +311,7 @@ void draw_sound_tab()
     const int buttons = ListButtons(PANE_SEED);
 
     // the list pane left, the editor fields right
-    ImGui::BeginChild("##sound_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##sound_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##sound_filters", items, &selected, &SoundNameOf, &SoundSetNameOf);
     ImGui::EndChild();
     ImGui::SameLine();
