@@ -3014,6 +3014,11 @@ PACKET_HANDLER(ExtendedCommand)
 
             break;
         }
+        case 3:
+        {
+            // TODO: new, identify version introduction
+            break;
+        }
         case 4: //Close generic gump
         {
             uint32_t id = ReadUInt32BE();
@@ -3053,6 +3058,7 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0xC: //Close statusbar gump
         {
+            // Unused, identify drop version
             uint32_t serial = ReadUInt32BE();
             g_GumpManager.CloseGump(serial, 0, GT_STATUSBAR);
 
@@ -3212,6 +3218,16 @@ PACKET_HANDLER(ExtendedCommand)
 
             break;
         }
+        case 0x11:
+        {
+            // TODO: new, identify version introduction
+            break;
+        }
+        case 0x14:
+        {
+            // TODO: new, identify version introduction
+            break;
+        }
         case 0x16: //Close User Interface Windows
         {
             //ID:
@@ -3248,6 +3264,11 @@ PACKET_HANDLER(ExtendedCommand)
                     break;
             }
 
+            break;
+        }
+        case 0x17:
+        {
+            // TODO: new, identify version introduction
             break;
         }
         case 0x18: //Enable map (diff) patches
@@ -3511,6 +3532,26 @@ PACKET_HANDLER(ExtendedCommand)
 
             g_SpeedMode = (CHARACTER_SPEED_TYPE)val;
 
+            break;
+        }
+        case 0x27:
+        {
+            // TODO: new, identify version introduction
+            break;
+        }
+        case 0x29:
+        {
+            // TODO: new, identify version introduction
+            break;
+        }
+        case 0x2A:
+        {
+            // TODO: new, identify version introduction
+            break;
+        }
+        case 0x2B:
+        {
+            // TODO: new, identify version introduction
             break;
         }
         default:
