@@ -3587,10 +3587,6 @@ PACKET_HANDLER(ConfirmWalk)
 
     //player->SetDirection(newdir);
 
-#if defined(XUO_ASSISTANT)
-    const uint8_t oldnoto = g_Player->Notoriety;
-#endif
-
     uint8_t newnoto = ReadUInt8() & (~0x40);
 
     if ((newnoto == 0u) || newnoto >= 8)
@@ -3599,15 +3595,6 @@ PACKET_HANDLER(ConfirmWalk)
     }
 
     g_Player->Notoriety = newnoto;
-
-#if defined(XUO_ASSISTANT)
-    // notoriety-watcher: redraw the assistant title row when the notoriety
-    // the client stored changed
-    if (xuoassist::g_AssistantConfig.ApplyNotorietyColorOnName() && newnoto != oldnoto)
-    {
-        xuoassist::g_AssistantEvents->OnTitleRedraw();
-    }
-#endif
 
     g_Walker.ConfirmWalk(sequence);
 
