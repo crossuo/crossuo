@@ -474,7 +474,7 @@ void EndSubTab()
 
 // --- ListButtons -------------------------------------------------------------
 
-int ListButtons(const char *idSeed)
+int ListButtons(const char *idSeed, int excludeFlags)
 {
     int result = XALB_NONE;
     if (IconButton(XA_ICON_ADD, "Create", true, 0.0f, idSeed))
@@ -494,7 +494,7 @@ int ListButtons(const char *idSeed)
     ImGui::SameLine();
     // the from-target pipeline is live (g_TargetHandler +
     // RequestTarget; the reply arrives as AssistantUIEvents::OnFromTarget)
-    if (IconButton(XA_ICON_TARGET, "Select from target", true, 0.0f, idSeed))
+    if (!(excludeFlags & XALB_TARGET) && IconButton(XA_ICON_TARGET, "Select from target", true, 0.0f, idSeed))
     {
         result |= XALB_TARGET;
     }

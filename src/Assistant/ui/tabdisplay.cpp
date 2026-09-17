@@ -302,10 +302,10 @@ void draw_items_editor_page()
 {
     vector<DisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
 
-    const int buttons = ListButtons("display_items");
+    const int buttons = ListButtons("display_items", XALB_TARGET);
 
     // the list pane left, the editor fields right
-    ImGui::BeginChild("##display_items_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##display_items_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     NameList("##display_items", items, &s_SelectedItem, &DisplayItemNameOf,
              &DisplayItemSetNameOf, false, -1.0f);
     ImGui::EndChild();
@@ -448,10 +448,10 @@ void draw_group_editor_page()
 {
     vector<CDisplayGroupEntry> &groups = g_AssistantConfig.m_DisplayGroups;
 
-    const int buttons = ListButtons("display_groups");
+    const int buttons = ListButtons("display_groups", XALB_TARGET);
 
     // the list pane left, the editor fields right
-    ImGui::BeginChild("##display_groups_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    ImGui::BeginChild("##display_groups_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     NameList("##display_groups", groups, &s_SelectedGroup, &DisplayGroupNameOf,
              &DisplayGroupSetNameOf, false, -1.0f);
     ImGui::EndChild();

@@ -103,7 +103,7 @@ enum
 // Draws the add/save/remove/from-target row; returns the pressed buttons as a
 // XALB_* bitmask. idSeed must be unique
 // per row instance (a tab can host several list panes).
-int ListButtons(const char *idSeed);
+int ListButtons(const char *idSeed, int excludeFlags = 0);
 
 // --- nested sub-tab pages ----------------------------------------------------
 // The nested tab bars (Display/Lists/Filters/Agents) sit inside the main tab's
