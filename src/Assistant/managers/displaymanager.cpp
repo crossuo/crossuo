@@ -27,9 +27,6 @@ CDisplayManager::CDisplayManager()
     m_InfoCommands.push_back({ "", "", DIT_NONE, "", 0, 0, 0, 0 });
     m_InfoCommands.push_back({ "Player name", "name", DIT_NAME, "", 0, 0, 0, 0 });
     m_InfoCommands.push_back({ "Server name", "server", DIT_SERVER, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Statusbar small", "barsmall", DIT_STATUSBAR_SMALL, "", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Statusbar middle", "barmiddle", DIT_STATUSBAR_MIDDLE, "", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Statusbar large", "barlarge", DIT_STATUSBAR_LARGE, "", 0, 0, 33, 66 });
     m_InfoCommands.push_back({ "Hitpoints", "hp", DIT_HITS, "hp:", 0, 0, 33, 66 });
     m_InfoCommands.push_back({ "Max hitpoints", "maxhp", DIT_MAX_HITS, "", 0, 0, 0, 0 });
     m_InfoCommands.push_back({ "Hitpoints / [Max hitpoints]", "hp_maxhp", DIT_HITS_MAX_HITS, "hp:", 0, 0, 33, 66 });
