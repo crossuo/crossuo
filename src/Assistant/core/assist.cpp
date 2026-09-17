@@ -940,25 +940,6 @@ void CAssistant::HandleTargetObject(uint8_t *buf) const
     g_AssistantEvents->OnFromTarget(XA_FROM_TARGET_OBJECT, serial, 0, 0, "");
 }
 
-void CAssistant::HandleTargetDisplayItem(uint8_t *buf) const
-{
-    uint16_t color = 0;
-
-    if (g_World != nullptr)
-    {
-        CGameObject *obj = g_World->FindWorldObject(unpack32(buf + 7));
-
-        if (obj != nullptr)
-        {
-            color = obj->Color;
-        }
-    }
-
-    // the items-editor graphic/hue fields are assistant tab state
-    g_AssistantEvents->OnFromTarget(
-        XA_FROM_TARGET_DISPLAY_ITEM, 0, unpack16(buf + 17), color, "");
-}
-
 void CAssistant::HandleTargetInfo(uint8_t *buf) const
 {
     if (g_World != nullptr)

@@ -1452,8 +1452,6 @@ void CAssistantConfig::SaveDisplayItems()
         ini.Set(section, "name", entry.Name);
         ini.SetInt(section, "type", (int)di.Type);
         ini.Set(section, "text", di.Text);
-        ini.Set(section, "id", CAssistant::GraphicToText(di.Graphic));
-        ini.Set(section, "hue", CAssistant::GraphicToText(di.Hue));
         ini.SetInt(section, "minvalue", di.MinValue);
         ini.SetInt(section, "midvalue", di.MidValue);
     }
@@ -1487,14 +1485,6 @@ void CAssistantConfig::LoadDisplayItems()
             {
                 entry.m_Item.Text = ini.Get(section, "text");
             }
-            if (ini.Has(section, "id"))
-            {
-                entry.m_Item.Graphic = (uint16_t)strtoul(ini.Get(section, "id").c_str(), nullptr, 16);
-            }
-            if (ini.Has(section, "hue"))
-            {
-                entry.m_Item.Hue = (uint16_t)strtoul(ini.Get(section, "hue").c_str(), nullptr, 16);
-            }
             if (ini.Has(section, "minvalue"))
             {
                 entry.m_Item.MinValue = ini.GetInt(section, "minvalue", 0);
@@ -1510,7 +1500,7 @@ void CAssistantConfig::LoadDisplayItems()
     if (m_DisplayItems.empty())
     {
         // The original app's defaults (TabDisplay::LoadDisplayItems): one entry per
-        // info command plus the reagent counters.
+        // info command.
         for (const DisplayInfo &info : g_DisplayManager.GetCommands())
         {
             if (info.Name.empty() || info.Command.empty())
@@ -1518,29 +1508,13 @@ void CAssistantConfig::LoadDisplayItems()
                 continue;
             }
             DisplayInfo di = g_DisplayManager.GetDisplayItemByName(info.Command);
-            if (di.Type != DIT_NONE && di.Type != DIT_OBJECT)
+            if (di.Type != DIT_NONE)
             {
                 DisplayItemEntry entry;
                 entry.Name = info.Command;
                 entry.m_Item = di;
                 m_DisplayItems.push_back(entry);
             }
-        }
-
-        static const char *defNames[10] = { "bm", "bp", "ga", "gs", "mr",
-                                            "ns", "sa", "ss", "en", "bandage" };
-        for (int i = 0; i < 10; i++)
-        {
-            DisplayItemEntry entry;
-            entry.Name = defNames[i];
-            DisplayInfo di;
-            di.Type = DIT_OBJECT;
-            di.Graphic = CAssistant::TextToGraphic(defNames[i]);
-            di.Text = i < 9 ? astr_t(defNames[i]) + ":" : astr_t("b:");
-            di.MinValue = 10;
-            di.MidValue = 20;
-            entry.m_Item = di;
-            m_DisplayItems.push_back(entry);
         }
 
         SaveDisplayItems();

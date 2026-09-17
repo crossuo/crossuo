@@ -449,6 +449,29 @@ bool ComboGroup(const char *id, int *current, const char *const items[], int cou
     return changed;
 }
 
+// --- nested sub-tab pages ----------------------------------------------------
+
+bool BeginSubTab(const char *label, const char *childId)
+{
+    if (!ImGui::BeginTabItem(label))
+    {
+        return false;
+    }
+    float height = ImGui::GetContentRegionAvail().y;
+    if (height < 1.0f)
+    {
+        height = 1.0f;
+    }
+    ImGui::BeginChild(childId, ImVec2(0.0f, height), ImGuiChildFlags_None);
+    return true;
+}
+
+void EndSubTab()
+{
+    ImGui::EndChild();
+    ImGui::EndTabItem();
+}
+
 // --- ListButtons -------------------------------------------------------------
 
 int ListButtons(const char *idSeed)

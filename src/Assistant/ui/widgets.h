@@ -105,6 +105,16 @@ enum
 // per row instance (a tab can host several list panes).
 int ListButtons(const char *idSeed);
 
+// --- nested sub-tab pages ----------------------------------------------------
+// The nested tab bars (Display/Lists/Filters/Agents) sit inside the main tab's
+// child: drawn directly under its top edge the bar stays pinned, and each
+// sub-tab's content lives in a scrolling child that fills the height left
+// under the bar - the same bar-outside-the-scroll structure as the main
+// window tabs. Use instead of BeginTabItem/EndTabItem; childId must be unique
+// per sub-tab (the child carries its scroll state).
+bool BeginSubTab(const char *label, const char *childId);
+void EndSubTab();
+
 // --- hex line edits -----------------------------------------------------------
 bool HexEditField(const char *id, char *value, size_t valueSize, float width = 0.0f);
 bool HexEditField(const char *id, astr_t *value, float width = 0.0f);

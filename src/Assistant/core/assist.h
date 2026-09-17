@@ -156,7 +156,6 @@ public:
 
     void HandleTargetType(uint8_t *buf) const;
     void HandleTargetObject(uint8_t *buf) const;
-    void HandleTargetDisplayItem(uint8_t *buf) const;
     void HandleTargetInfo(uint8_t *buf) const;
     void HandleTargetInfoTile(uint8_t *buf) const;
     void HandleTargetDressBag(uint8_t *buf) const;

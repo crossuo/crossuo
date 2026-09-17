@@ -36,8 +36,7 @@ enum DISPLAY_ITEM_TYPE
     DIT_GOLD,
     DIT_X,
     DIT_Y,
-    DIT_Z,
-    DIT_OBJECT = 1000
+    DIT_Z
 };
 
 // The display item model (DISPLAY_ITEM_TYPE + DisplayInfo) lives here rather
@@ -45,18 +44,16 @@ enum DISPLAY_ITEM_TYPE
 // share the type.
 //
 // One title-data tag: its catalog identity (Name/Command/Type) plus the
-// values it renders with (Text/Graphic/Hue/MinValue/MidValue). The manager's
-// catalog rows double as the per-type defaults; custom items carry their own
-// Text and the {item} counter's Graphic/Hue. Default-initialized:
-// DisplayInfo info; is fully usable (a DIT_NONE tag renders plain Text).
+// values it renders with (Text/MinValue/MidValue). The manager's catalog rows
+// double as the per-type defaults; custom items carry their own Text.
+// Default-initialized: DisplayInfo info; is fully usable (a DIT_NONE tag
+// renders plain Text).
 struct DisplayInfo
 {
     astr_t Name{ "" };
     astr_t Command{ "" };
     DISPLAY_ITEM_TYPE Type = DIT_NONE;
     astr_t Text{ "" };
-    uint16_t Graphic = 0; // the {item} counter's object graphic (0 = any)
-    uint16_t Hue = 0;     // the {item} counter's object hue (0xFFFF = any)
     int MinValue = 0;
     int MidValue = 0;
 };
@@ -65,8 +62,6 @@ enum DISPLAY_KEY_IDENTIFIER
 {
     DKI_NONE = 0,
     DKI_TEXT,
-    DKI_ID,
-    DKI_HUE,
     DKI_MIN_VAULE,
     DKI_MID_VALUE,
     DKI_COUNT
@@ -111,8 +106,6 @@ public:
     const astr_t &GetTitleText() const { return m_TitleText; }
 
     void RecompileData(const astr_t &text);
-
-    bool CanRedraw(const uint16_t &graphic, const uint16_t &color) const;
 };
 
 extern CDisplayManager g_DisplayManager;

@@ -126,7 +126,6 @@ bool TabDisplay_ConsumeTitleDirty();
 // re-init).
 void TabDress_CancelPendingFromTargets();
 void TabParty_CancelPendingFromTargets();
-void TabDisplay_CancelPendingFromTargets();
 
 } // namespace xuoassist
 

@@ -116,7 +116,14 @@ void draw_types_tab()
         snprintf(
             typeGraphic, sizeof(typeGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
     }
-    bool changed = NameList("##types", items, &selected, &TypeNameOf, &TypeSetNameOf, false, 180.0f);
+
+    // the list pane left, the editor fields right
+    ImGui::BeginChild("##types_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    bool changed = NameList("##types", items, &selected, &TypeNameOf, &TypeSetNameOf, false, -1.0f);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##types_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (selected != lastSelected)
     {
         lastSelected = selected;
@@ -204,6 +211,7 @@ void draw_types_tab()
     {
         ImGui::TextColored(HINT_COLOR, "%s", hint);
     }
+    ImGui::EndChild();
 }
 
 // --- Objects (tablistsobjects.cpp) ----------------------------------------------
@@ -232,7 +240,14 @@ void draw_objects_tab()
         snprintf(
             objectSerial, sizeof(objectSerial), "%s", CAssistant::SerialToText(ftResult.Serial).c_str());
     }
-    bool changed = NameList("##objects", items, &selected, &ObjectNameOf, &ObjectSetNameOf, false, 180.0f);
+
+    // the list pane left, the editor fields right
+    ImGui::BeginChild("##objects_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    bool changed = NameList("##objects", items, &selected, &ObjectNameOf, &ObjectSetNameOf, false, -1.0f);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##objects_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (selected != lastSelected)
     {
         lastSelected = selected;
@@ -347,6 +362,7 @@ void draw_objects_tab()
         g_DressBag != 0u ? DRESS_BAG_SET : DRESS_BAG_UNSET,
         "%s",
         dressBagText.c_str());
+    ImGui::EndChild();
 }
 
 // --- Find (tablistsfind.cpp, dual list) ------------------------------------------
@@ -366,18 +382,17 @@ void draw_find_tab()
 
     vector<CFindListEntry> &lists = g_AssistantConfig.m_FindLists;
 
-    // left: the named find lists + their fields
+    // left: the named find lists + their fields; right: the selected list's
+    // content (Graphic/Color/Comment rows)
     const int listButtons = ListButtons("find_list");
-    bool changed = NameList("##find", lists, &selectedList, &FindNameOf, &FindSetNameOf, false, 170.0f);
+
+    ImGui::BeginChild("##find_lists_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    bool changed = NameList("##find", lists, &selectedList, &FindNameOf, &FindSetNameOf, false, -1.0f);
     if (selectedList != lastSelectedList)
     {
         lastSelectedList = selectedList;
         selectedItem = lastSelectedItem = -1;
         hint[0] = '\0';
-        // the content pane swaps to another container with the same row id:
-        // kill any pending rename on it (same-count lists would otherwise let
-        // a stale rename resume)
-        ListGenerationBump(ImGui::GetID("##find_content"));
         if (selectedList >= 0 && selectedList < (int)lists.size())
         {
             snprintf(findName, sizeof(findName), "%s", lists[selectedList].Name.c_str());
@@ -455,11 +470,10 @@ void draw_find_tab()
     {
         ImGui::TextColored(HINT_COLOR, "%s", hint);
     }
-
+    ImGui::EndChild();
     ImGui::SameLine();
 
-    // right: the selected list's content (Graphic/Color/Comment rows)
-    ImGui::BeginGroup();
+    ImGui::BeginChild("##find_content_pane", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     ImGui::TextUnformatted("Selected find list content:");
     if (selectedList < 0 || selectedList >= (int)lists.size())
     {
@@ -484,7 +498,16 @@ void draw_find_tab()
             snprintf(itemColor, sizeof(itemColor), "%s", CAssistant::GraphicToText(ftResult.Color).c_str());
             snprintf(itemComment, sizeof(itemComment), "%s", ftResult.Name.c_str());
         }
-        bool contentChanged = FindContentList("##find_content", content, &selectedItem, 170.0f);
+        // the content pane swaps to another container with the same row id
+        // when the selected list changes: kill any pending rename on it
+        // (same-count lists would otherwise let a stale rename resume)
+        static int lastContentList = -2;
+        if (selectedList != lastContentList)
+        {
+            lastContentList = selectedList;
+            ListGenerationBump(ImGui::GetID("##find_content"));
+        }
+        bool contentChanged = FindContentList("##find_content", content, &selectedItem, -1.0f);
         if (selectedItem != lastSelectedItem)
         {
             lastSelectedItem = selectedItem;
@@ -545,7 +568,7 @@ void draw_find_tab()
         ImGui::SetNextItemWidth(140.0f);
         ImGui::InputText("##find_comment", itemComment, sizeof(itemComment));
     }
-    ImGui::EndGroup();
+    ImGui::EndChild();
 }
 
 // --- Ignore (tablistsignore.cpp, dual list) ----------------------------------------
@@ -567,14 +590,14 @@ void draw_ignore_tab()
     vector<CIgnoreListEntry> &lists = g_AssistantConfig.m_IgnoreLists;
 
     const int listButtons = ListButtons("ignore_list");
-    bool changed = NameList("##ignore", lists, &selectedList, &IgnoreNameOf, &IgnoreSetNameOf, false, 170.0f);
+
+    ImGui::BeginChild("##ignore_lists_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    bool changed = NameList("##ignore", lists, &selectedList, &IgnoreNameOf, &IgnoreSetNameOf, false, -1.0f);
     if (selectedList != lastSelectedList)
     {
         lastSelectedList = selectedList;
         selectedItem = lastSelectedItem = -1;
         hint[0] = '\0';
-        // kill any pending rename on the content pane (same as ##find_content)
-        ListGenerationBump(ImGui::GetID("##ignore_content"));
         if (selectedList >= 0 && selectedList < (int)lists.size())
         {
             snprintf(ignoreName, sizeof(ignoreName), "%s", lists[selectedList].Name.c_str());
@@ -652,10 +675,10 @@ void draw_ignore_tab()
     {
         ImGui::TextColored(HINT_COLOR, "%s", hint);
     }
-
+    ImGui::EndChild();
     ImGui::SameLine();
 
-    ImGui::BeginGroup();
+    ImGui::BeginChild("##ignore_content_pane", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     ImGui::TextUnformatted("Selected ignore list content:");
     if (selectedList < 0 || selectedList >= (int)lists.size())
     {
@@ -679,7 +702,14 @@ void draw_ignore_tab()
             snprintf(itemColor, sizeof(itemColor), "%s", CAssistant::GraphicToText(ftResult.Color).c_str());
             snprintf(itemComment, sizeof(itemComment), "%s", ftResult.Name.c_str());
         }
-        bool contentChanged = IgnoreContentList("##ignore_content", content, &selectedItem, 170.0f);
+        // kill any pending rename on the content pane (same as ##find_content)
+        static int lastContentList = -2;
+        if (selectedList != lastContentList)
+        {
+            lastContentList = selectedList;
+            ListGenerationBump(ImGui::GetID("##ignore_content"));
+        }
+        bool contentChanged = IgnoreContentList("##ignore_content", content, &selectedItem, -1.0f);
         if (selectedItem != lastSelectedItem)
         {
             lastSelectedItem = selectedItem;
@@ -746,7 +776,7 @@ void draw_ignore_tab()
         ImGui::SetNextItemWidth(140.0f);
         ImGui::InputText("##ignore_comment", itemComment, sizeof(itemComment));
     }
-    ImGui::EndGroup();
+    ImGui::EndChild();
 }
 
 // --- Friends / Enemies (tablistsfriends.cpp / tablistsenemies.cpp) ------------------
@@ -791,7 +821,17 @@ void draw_world_object_tab(
             snprintf(name, nameSize, "%s", ftResult.Name.c_str());
         }
     }
-    changed = NameList(listId, items, selected, &WorldObjectNameOf, &WorldObjectSetNameOf, checkColumn, 180.0f);
+    // the list pane left, the editor fields right
+    char paneId[48];
+    snprintf(paneId, sizeof(paneId), "%s_pane", listId);
+    char formId[48];
+    snprintf(formId, sizeof(formId), "%s_form", listId);
+    ImGui::BeginChild(paneId, ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
+    changed = NameList(listId, items, selected, &WorldObjectNameOf, &WorldObjectSetNameOf, checkColumn, -1.0f);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild(formId, ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (*selected != *lastSelected)
     {
         *lastSelected = *selected;
@@ -863,6 +903,7 @@ void draw_world_object_tab(
     {
         ImGui::TextColored(HINT_COLOR, "%s", hint);
     }
+    ImGui::EndChild();
 }
 
 void draw_friends_tab()

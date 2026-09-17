@@ -19,7 +19,6 @@
 #include <external/gfx/imgui/imgui.h>
 
 #include "widgets.h"
-#include "assistanteventsui.h"
 #include "../config/assistantconfig.h"
 #include "../core/assist.h"
 #include "../core/global.h"
@@ -41,8 +40,6 @@ bool s_TitleDataEditing = false;
 int s_SelectedItem = -1;          // lw_DisplayItems
 int s_LastSelectedItem = -2;
 char s_ItemName[64] = { 0 };      // le_DisplayItemName
-char s_ItemGraphic[16] = { 0 };   // le_DisplayItemGraphic
-char s_ItemHue[16] = { 0 };       // le_DisplayItemHue
 char s_ItemText[128] = { 0 };     // le_DisplayItemText
 int s_ItemMinValue = 0;           // sb_DisplayItemMinValue
 int s_ItemMidValue = 0;           // sb_DisplayItemMidValue
@@ -52,9 +49,6 @@ char s_Hint[128] = { 0 };
 int s_SelectedGroup = -1;         // lw_DisplayGroups
 char s_GroupName[64] = { 0 };     // le_DisplayGroupName
 char s_GroupData[2048] = { 0 };   // te_DisplayGroupTitleData
-
-bool s_FtPending = false;         // the items editor from-target
-uint32_t s_FtGeneration = 0;
 
 const vector<DisplayInfo> &commands()
 {
@@ -118,8 +112,6 @@ void item_to_fields(const DisplayInfo &item, bool fullUpdate)
     }
 
     snprintf(s_ItemText, sizeof(s_ItemText), "%s", item.Text.c_str());
-    snprintf(s_ItemGraphic, sizeof(s_ItemGraphic), "%s", CAssistant::GraphicToText(item.Graphic).c_str());
-    snprintf(s_ItemHue, sizeof(s_ItemHue), "%s", CAssistant::GraphicToText(item.Hue).c_str());
     s_ItemMidValue = item.MidValue;
     s_ItemMinValue = item.MinValue;
 }
@@ -140,8 +132,6 @@ void fields_to_item(DisplayItemEntry &entry)
     }
 
     di.Text = s_ItemText;
-    di.Graphic = (uint16_t)CAssistant::TextToGraphic(s_ItemGraphic);
-    di.Hue = (uint16_t)CAssistant::TextToGraphic(s_ItemHue);
     di.MidValue = s_ItemMidValue;
     di.MinValue = s_ItemMinValue;
 
@@ -261,9 +251,9 @@ void draw_configuration_page()
         ImGui::EndPopup();
     }
 
-    // cb_DisplayEnabled: the plain-textual on/off switch
-    ImGui::TextUnformatted("Display data on title");
     bool enabled = g_AssistantConfig.DisplayEnabled();
+    ImGui::TextUnformatted("Display data on title");
+    ImGui::SameLine();
     if (ImGui::Checkbox("Enabled##display", &enabled))
     {
         g_AssistantConfig.m_DisplayEnabled = enabled;
@@ -313,25 +303,15 @@ void draw_items_editor_page()
     vector<DisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
 
     const int buttons = ListButtons("display_items");
-    if ((buttons & XALB_TARGET) != 0)
-    {
-        s_FtPending = true;
-        g_TargetHandler = &CAssistant::HandleTargetDisplayItem;
-        g_Assistant.RequestTarget("Select a object for obtain graphic and color");
-    }
-    XA_FROM_TARGET_RESULT ftResult;
-    if (UI_PollFromTarget(s_FtPending, s_FtGeneration, XA_FROM_TARGET_DISPLAY_ITEM, ftResult))
-    {
-        // fill the graphic + hue fields
-        if (ftResult.Graphic != 0u)
-        {
-            snprintf(s_ItemGraphic, sizeof(s_ItemGraphic), "%s", CAssistant::GraphicToText(ftResult.Graphic).c_str());
-            snprintf(s_ItemHue, sizeof(s_ItemHue), "%s", CAssistant::GraphicToText(ftResult.Color).c_str());
-        }
-    }
 
+    // the list pane left, the editor fields right
+    ImGui::BeginChild("##display_items_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
     NameList("##display_items", items, &s_SelectedItem, &DisplayItemNameOf,
-             &DisplayItemSetNameOf, false, 180.0f);
+             &DisplayItemSetNameOf, false, -1.0f);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##display_item_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (s_SelectedItem >= (int)items.size())
     {
         s_SelectedItem = -1;
@@ -368,14 +348,6 @@ void draw_items_editor_page()
     }
 
     bool changed = false;
-    ImGui::TextUnformatted("ID:");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(80.0f);
-    changed |= HexEditField("##item_graphic", s_ItemGraphic, sizeof(s_ItemGraphic));
-    ImGui::TextUnformatted("Hue:");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(80.0f);
-    changed |= HexEditField("##item_hue", s_ItemHue, sizeof(s_ItemHue));
     ImGui::TextUnformatted("Text:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(160.0f);
@@ -397,8 +369,6 @@ void draw_items_editor_page()
         s_ItemMidValue = s_ItemMidValue < 0 ? 0 : (s_ItemMidValue > 99999 ? 99999 : s_ItemMidValue);
         changed = true;
     }
-
-    // Name: field (le_DisplayItemName)
 
     // Name: field (le_DisplayItemName)
     ImGui::TextUnformatted("Name:");
@@ -469,6 +439,7 @@ void draw_items_editor_page()
     {
         ImGui::TextDisabled("%s", s_Hint);
     }
+    ImGui::EndChild();
 }
 
 // --- Group editor page ---------------------------------------------------------
@@ -478,8 +449,15 @@ void draw_group_editor_page()
     vector<CDisplayGroupEntry> &groups = g_AssistantConfig.m_DisplayGroups;
 
     const int buttons = ListButtons("display_groups");
+
+    // the list pane left, the editor fields right
+    ImGui::BeginChild("##display_groups_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
     NameList("##display_groups", groups, &s_SelectedGroup, &DisplayGroupNameOf,
-             &DisplayGroupSetNameOf, false, 180.0f);
+             &DisplayGroupSetNameOf, false, -1.0f);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##display_group_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (s_SelectedGroup >= (int)groups.size())
     {
         s_SelectedGroup = -1;
@@ -561,6 +539,7 @@ void draw_group_editor_page()
     {
         ImGui::TextDisabled("%s", s_Hint);
     }
+    ImGui::EndChild();
 }
 
 } // namespace
@@ -580,20 +559,20 @@ void TabDisplay_Draw()
     }
     if (ImGui::BeginTabBar("##tw_display", ImGuiTabBarFlags_None))
     {
-        if (ImGui::BeginTabItem("Configuration"))
+        if (BeginSubTab("Configuration", "##display_config"))
         {
             draw_configuration_page();
-            ImGui::EndTabItem();
+            EndSubTab();
         }
-        if (ImGui::BeginTabItem("Items editor"))
+        if (BeginSubTab("Items editor", "##display_items_page"))
         {
             draw_items_editor_page();
-            ImGui::EndTabItem();
+            EndSubTab();
         }
-        if (ImGui::BeginTabItem("Group editor"))
+        if (BeginSubTab("Group editor", "##display_groups_page"))
         {
             draw_group_editor_page();
-            ImGui::EndTabItem();
+            EndSubTab();
         }
         ImGui::EndTabBar();
     }
@@ -612,11 +591,6 @@ bool TabDisplay_ConsumeTitleDirty()
 void TabDisplay_RequestTitleRedraw()
 {
     s_TitleDirty = true;
-}
-
-void TabDisplay_CancelPendingFromTargets()
-{
-    s_FtPending = false;
 }
 
 } // namespace xuoassist

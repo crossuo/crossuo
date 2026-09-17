@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// The info-command table, the 26 default items, the display-key parser and
+// The info-command table, the default items, the display-key parser and
 // the plain-text title-data compiler (the caption of the client window).
 
 #include "displaymanager.h"
@@ -11,7 +11,6 @@
 #include "../config/assistantconfig.h"
 #include "../core/textconv.h"
 #include "../core/world.h" // g_Player / g_World
-#include "../core/worldutil.h"
 #include <common/logging/logging.h>
 
 namespace xuoassist {
@@ -20,42 +19,39 @@ CDisplayManager g_DisplayManager;
 
 // The info-command catalog: the rows of the type combobox, the title-data tag
 // lookup and the per-type defaults a tag renders with before the per-tag
-// text/id/hue/min/mid overrides apply.
+// text/min/mid overrides apply.
 // clang-format off
 CDisplayManager::CDisplayManager()
 {
-    m_InfoCommands.push_back({ "", "", DIT_NONE, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Player name", "name", DIT_NAME, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Server name", "server", DIT_SERVER, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Hitpoints", "hp", DIT_HITS, "hp:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Max hitpoints", "maxhp", DIT_MAX_HITS, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Hitpoints / [Max hitpoints]", "hp_maxhp", DIT_HITS_MAX_HITS, "hp:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Mana", "mp", DIT_MANA, "mp:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Max mana", "maxmp", DIT_MAX_MANA, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Mana / [Max mana]", "mp_maxmp", DIT_MANA_MAX_MANA, "mp:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Stamina", "sp", DIT_STAM, "sp:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Max stamina", "maxsp", DIT_MAX_STAM, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Stamina / [Max stamina]", "sp_maxsp", DIT_STAM_MAX_STAM, "sp:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Strength", "str", DIT_STR, "str:", 0, 0, 10, 30 });
-    m_InfoCommands.push_back({ "Intelligence", "int", DIT_INT, "int:", 0, 0, 10, 30 });
-    m_InfoCommands.push_back({ "Dexterity", "dex", DIT_DEX, "dex:", 0, 0, 10, 30 });
-    m_InfoCommands.push_back({ "Weight", "weight", DIT_WEIGHT, "w:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Max weight", "maxweight", DIT_MAX_WEIGHT, "", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Weight / [Max weight]", "weight_maxweight", DIT_WEIGHT_MAX_WEIGHT, "w:", 0, 0, 33, 66 });
-    m_InfoCommands.push_back({ "Armor rating", "armor", DIT_ARMOR, "ar:", 0, 0, 20, 40 });
-    m_InfoCommands.push_back({ "Gold", "gold", DIT_GOLD, "g:", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "X", "x", DIT_X, "x:", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Y", "y", DIT_Y, "y:", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Z", "z", DIT_Z, "z:", 0, 0, 0, 0 });
-    m_InfoCommands.push_back({ "Any item counter", "item", DIT_OBJECT, "", 0, 0, 0, 0 });
+    m_InfoCommands.push_back({ "", "", DIT_NONE, "", 0, 0 });
+    m_InfoCommands.push_back({ "Player name", "name", DIT_NAME, "", 0, 0 });
+    m_InfoCommands.push_back({ "Server name", "server", DIT_SERVER, "", 0, 0 });
+    m_InfoCommands.push_back({ "Hitpoints", "hp", DIT_HITS, "hp:", 33, 66 });
+    m_InfoCommands.push_back({ "Max hitpoints", "maxhp", DIT_MAX_HITS, "", 0, 0 });
+    m_InfoCommands.push_back({ "Hitpoints / [Max hitpoints]", "hp_maxhp", DIT_HITS_MAX_HITS, "hp:", 33, 66 });
+    m_InfoCommands.push_back({ "Mana", "mp", DIT_MANA, "mp:", 33, 66 });
+    m_InfoCommands.push_back({ "Max mana", "maxmp", DIT_MAX_MANA, "", 0, 0 });
+    m_InfoCommands.push_back({ "Mana / [Max mana]", "mp_maxmp", DIT_MANA_MAX_MANA, "mp:", 33, 66 });
+    m_InfoCommands.push_back({ "Stamina", "sp", DIT_STAM, "sp:", 33, 66 });
+    m_InfoCommands.push_back({ "Max stamina", "maxsp", DIT_MAX_STAM, "", 0, 0 });
+    m_InfoCommands.push_back({ "Stamina / [Max stamina]", "sp_maxsp", DIT_STAM_MAX_STAM, "sp:", 33, 66 });
+    m_InfoCommands.push_back({ "Strength", "str", DIT_STR, "str:", 10, 30 });
+    m_InfoCommands.push_back({ "Intelligence", "int", DIT_INT, "int:", 10, 30 });
+    m_InfoCommands.push_back({ "Dexterity", "dex", DIT_DEX, "dex:", 10, 30 });
+    m_InfoCommands.push_back({ "Weight", "weight", DIT_WEIGHT, "w:", 33, 66 });
+    m_InfoCommands.push_back({ "Max weight", "maxweight", DIT_MAX_WEIGHT, "", 0, 0 });
+    m_InfoCommands.push_back({ "Weight / [Max weight]", "weight_maxweight", DIT_WEIGHT_MAX_WEIGHT, "w:", 33, 66 });
+    m_InfoCommands.push_back({ "Armor rating", "armor", DIT_ARMOR, "ar:", 20, 40 });
+    m_InfoCommands.push_back({ "Gold", "gold", DIT_GOLD, "g:", 0, 0 });
+    m_InfoCommands.push_back({ "X", "x", DIT_X, "x:", 0, 0 });
+    m_InfoCommands.push_back({ "Y", "y", DIT_Y, "y:", 0, 0 });
+    m_InfoCommands.push_back({ "Z", "z", DIT_Z, "z:", 0, 0 });
 }
 // clang-format on
 
 const DISPLAY_KEY_ITEM CDisplayManager::m_KeysList[DKI_COUNT] = {
     { "", DKI_NONE },
     { "text", DKI_TEXT },
-    { "id", DKI_ID },
-    { "hue", DKI_HUE },
     { "minval", DKI_MIN_VAULE },
     { "midval", DKI_MID_VALUE },
 };
@@ -149,11 +145,6 @@ void CDisplayManager::GetValues(const DisplayInfo &item, astr_t &value, astr_t &
             value = str_from(g_Player->GetZ());
             return;
         }
-        case DIT_OBJECT:
-        {
-            iVal = CountItems(g_Player, item.Graphic, item.Hue, true);
-            break;
-        }
         case DIT_NONE:
         {
             break; // plain text token: obj.Text already carries the content
@@ -164,20 +155,6 @@ void CDisplayManager::GetValues(const DisplayInfo &item, astr_t &value, astr_t &
 
     value = str_from(iVal);
     maxValue = str_from(iMaxVal);
-}
-
-bool CDisplayManager::CanRedraw(const uint16_t &graphic, const uint16_t &color) const
-{
-    for (const DisplayInfo &obj : m_Commands)
-    {
-        if (obj.Type == DIT_OBJECT && obj.Graphic == graphic &&
-            (obj.Hue == 0xFFFF || obj.Hue == color))
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 void CDisplayManager::Redraw(bool enabled)
@@ -266,12 +243,7 @@ DisplayInfo CDisplayManager::GetDisplayItemByName(const astr_t &name) const
         {
             if (name == info.Command)
             {
-                if (info.Type != DIT_OBJECT)
-                {
-                    return info;
-                }
-
-                break;
+                return info;
             }
         }
     }
@@ -291,16 +263,6 @@ void CDisplayManager::ApplyAttributeToDisplayItem(
                 case DKI_TEXT:
                 {
                     obj.Text = value;
-                    break;
-                }
-                case DKI_ID:
-                {
-                    obj.Graphic = (uint16_t)CAssistant::TextToGraphic(str_lower(value));
-                    break;
-                }
-                case DKI_HUE:
-                {
-                    obj.Hue = (uint16_t)CAssistant::TextToGraphic(str_lower(value));
                     break;
                 }
                 case DKI_MIN_VAULE:

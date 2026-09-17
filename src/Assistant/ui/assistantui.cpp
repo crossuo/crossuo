@@ -169,10 +169,12 @@ void draw_lists_tabs()
     {
         for (int i = 0; i < int(sizeof(LIST_TABS) / sizeof(LIST_TABS[0])); i++)
         {
-            if (ImGui::BeginTabItem(LIST_TABS[i]))
+            char childId[32];
+            snprintf(childId, sizeof(childId), "##lists_sub%d", i);
+            if (BeginSubTab(LIST_TABS[i], childId))
             {
                 TabLists_Draw(i);
-                ImGui::EndTabItem();
+                EndSubTab();
             }
         }
         ImGui::EndTabBar();
@@ -185,10 +187,12 @@ void draw_filters_tabs()
     {
         for (int i = 0; i < int(sizeof(FILTER_TABS) / sizeof(FILTER_TABS[0])); i++)
         {
-            if (ImGui::BeginTabItem(FILTER_TABS[i]))
+            char childId[32];
+            snprintf(childId, sizeof(childId), "##filters_sub%d", i);
+            if (BeginSubTab(FILTER_TABS[i], childId))
             {
                 TabFilters_Draw(i);
-                ImGui::EndTabItem();
+                EndSubTab();
             }
         }
         ImGui::EndTabBar();
@@ -200,20 +204,20 @@ void draw_agents_tabs()
     // the nested bar (Dress/Party/Shop), agent pages
     if (ImGui::BeginTabBar("##agents_tabs", ImGuiTabBarFlags_None))
     {
-        if (ImGui::BeginTabItem("Dress"))
+        if (BeginSubTab("Dress", "##agents_dress"))
         {
             TabDress_Draw();
-            ImGui::EndTabItem();
+            EndSubTab();
         }
-        if (ImGui::BeginTabItem("Party"))
+        if (BeginSubTab("Party", "##agents_party"))
         {
             TabParty_Draw();
-            ImGui::EndTabItem();
+            EndSubTab();
         }
-        if (ImGui::BeginTabItem("Shop"))
+        if (BeginSubTab("Shop", "##agents_shop"))
         {
             TabShop_Draw();
-            ImGui::EndTabItem();
+            EndSubTab();
         }
         ImGui::EndTabBar();
     }
@@ -436,7 +440,6 @@ void CancelPendingFromTargets()
     TabLists_CancelPendingFromTargets();
     TabDress_CancelPendingFromTargets();
     TabParty_CancelPendingFromTargets();
-    TabDisplay_CancelPendingFromTargets();
 }
 
 void AssistantUI_MarkOptionsDirty()

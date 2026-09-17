@@ -49,7 +49,14 @@ void draw_speech_tab()
 
     vector<CFilterSpeechEntry> &items = g_AssistantConfig.m_SpeechFilters;
     const int buttons = ListButtons(PANE_SEED);
+
+    // the list pane left, the editor fields right
+    ImGui::BeginChild("##speech_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##speech_filters", items, &selected, &SpeechTextOf, &SpeechSetTextOf);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##speech_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (selected != lastSelected)
     {
         lastSelected = selected;
@@ -133,6 +140,7 @@ void draw_speech_tab()
     {
         ImGui::TextColored(HINT_COLOR, "%s", hint);
     }
+    ImGui::EndChild();
 }
 
 // --- Replaces (tabfiltersreplaces.cpp) ---------------------------------------------
@@ -153,7 +161,14 @@ void draw_replaces_tab()
 
     vector<CFilterReplaceEntry> &items = g_AssistantConfig.m_Replaces;
     const int buttons = ListButtons(PANE_SEED);
+
+    // the list pane left, the editor fields right
+    ImGui::BeginChild("##replace_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##replace_filters", items, &selected, &ReplaceTextOf, &ReplaceSetTextOf);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##replace_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (selected != lastSelected)
     {
         lastSelected = selected;
@@ -278,6 +293,7 @@ void draw_replaces_tab()
     {
         ImGui::TextColored(HINT_COLOR, "%s", hint);
     }
+    ImGui::EndChild();
 }
 
 // --- Sound (tabfilterssound.cpp) -----------------------------------------------------
@@ -293,7 +309,14 @@ void draw_sound_tab()
 
     vector<CFilterSoundEntry> &items = g_AssistantConfig.m_SoundFilters;
     const int buttons = ListButtons(PANE_SEED);
+
+    // the list pane left, the editor fields right
+    ImGui::BeginChild("##sound_pane", ImVec2(240.0f, 0.0f), ImGuiChildFlags_None);
     bool changed = NameList("##sound_filters", items, &selected, &SoundNameOf, &SoundSetNameOf);
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##sound_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
     if (selected != lastSelected)
     {
         lastSelected = selected;
@@ -365,6 +388,7 @@ void draw_sound_tab()
     {
         ImGui::TextColored(HINT_COLOR, "%s", hint);
     }
+    ImGui::EndChild();
 }
 
 } // namespace

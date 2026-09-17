@@ -30,8 +30,7 @@ enum
     XA_FROM_TARGET_ENEMY,          // TabListsEnemies (serial)
     XA_FROM_TARGET_ANIMAL_NAME,    // AnimalAndVendorControlForm "Name" field
     XA_FROM_TARGET_PARTY,          // TabAgentsParty
-    XA_FROM_TARGET_DRESS_ITEM,     // TabAgentsDress "Add item to set from target"
-    XA_FROM_TARGET_DISPLAY_ITEM    // TabDisplay items editor (graphic + hue)
+    XA_FROM_TARGET_DRESS_ITEM     // TabAgentsDress "Add item to set from target"
 };
 
 // Journal message flags; the flags travel with the messages.
