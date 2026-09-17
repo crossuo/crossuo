@@ -147,6 +147,12 @@ static bool init()
     // StyleColorsDark and the viewport WindowBg tweak run first) so the
     // assistant renders with the same theme as the launcher
     ui_style_launcher();
+    // the ImGui SDL2 backend toggles the OS cursor from NewFrame via
+    // ImGui_ImplSDL2_UpdateMouseCursor unless ImGuiConfigFlags_NoMouseCursorChange
+    // is set; the game draws its own UO software cursor, so the backend must
+    // never touch the process cursor - AssistantWindow_DrawOverlay enforces the
+    // cursor policy instead
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     s_initialized = true;
     s_sessionStartTicks = g_Ticks;
     xuoassist::AssistantUI_Init(); // journal pane events consumer
@@ -179,6 +185,10 @@ bool AssistantWindow_Toggle()
         // disarm a pending capture field: with the shell hidden nothing would
         // commit it, and the engine would keep eating keys into the buffer
         xuoassist::g_Hotkeys.CancelCapture();
+        // hand the cursor back to the client policy (the game window baseline is
+        // a hidden OS cursor); the backend no longer re-hides it for us since
+        // init() set ImGuiConfigFlags_NoMouseCursorChange
+        SDL_ShowCursor(SDL_DISABLE);
     }
     return true;
 }
@@ -302,6 +312,32 @@ void AssistantWindow_DrawOverlay()
     // the popped-out platform windows. Bailing out here left them frozen on
     // screen: the assistant could not be closed via its X button.
     ui_newframe(s_ctx);
+    // Cursor policy while the overlay is visible: the OS cursor stays hidden
+    // inside the game window - the game's UO software cursor is the cursor,
+    // including over assistant windows docked in the game viewport - and the
+    // desktop cursor shows only over the assistant's own popped-out platform
+    // windows. Enforced per frame after NewFrame, where io.MousePos and the
+    // viewport list are valid; init() set ImGuiConfigFlags_NoMouseCursorChange
+    // so the SDL2 backend never fights this. When the overlay is not visible
+    // the assistant leaves the cursor alone entirely: the client owns it.
+    if (s_visible)
+    {
+        const ImGuiIO &io = ImGui::GetIO();
+        const ImGuiViewport *mainViewport = ImGui::GetMainViewport();
+        bool overAssistantPopOut = false;
+        const ImVector<ImGuiViewport *> &viewports = ImGui::GetPlatformIO().Viewports;
+        for (int i = 0; i < viewports.Size && !overAssistantPopOut; i++)
+        {
+            const ImGuiViewport *vp = viewports[i];
+            if (vp == mainViewport)
+                continue; // the game window: the UO cursor rules there
+            overAssistantPopOut = io.MousePos.x >= vp->Pos.x &&
+                                  io.MousePos.y >= vp->Pos.y &&
+                                  io.MousePos.x < vp->Pos.x + vp->Size.x &&
+                                  io.MousePos.y < vp->Pos.y + vp->Size.y;
+        }
+        SDL_ShowCursor(overAssistantPopOut ? SDL_ENABLE : SDL_DISABLE);
+    }
     xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
     ui_draw(s_ctx);
 
