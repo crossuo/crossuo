@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// TabDisplay: the three nested pages - Configuration (display mode radios,
-// flags, colors, title data + the insert command / set title from group
-// popups), Items editor (the custom display items with their color/value
-// tables) and Group editor. The data lives in g_AssistantConfig
-// (DisplayItems.ini/DisplayGroups.ini/Options.ini display section); the
-// compiled title output goes to the OS window caption through the manager's
-// Redraw + AssistantUI_Tick.
-// Deltas: the color swatches pick opaque RGB through a picker popup; the
-// value/color tables render as plain text next to the pickers instead of
-// label grids; there is no drag-reorder list here; the Insert command / set
-// title from group actions append the tag at the end of the title data.
+// TabDisplay: the three nested pages - Configuration (the Enabled switch,
+// title data + the insert command / set title from group popups), Items
+// editor (the custom display items) and Group editor. The data lives in
+// g_AssistantConfig (DisplayItems.ini/DisplayGroups.ini/Options.ini display
+// section); the compiled title output goes to the OS window caption through
+// the manager's Redraw + AssistantUI_Tick. The colored/graphical modes and
+// their color/font/icon fields are gone: an OS caption carries no colors,
+// images or fonts, so the feature is plain text only.
+// Deltas: no drag-reorder list here; the Insert command / set title from
+// group actions append the tag at the end of the title data.
 
 #include "assistantui.h"
 
 #if defined(XUO_ASSISTANT)
 
 #include <external/gfx/imgui/imgui.h>
-#include <external/gfx/imgui/imgui_internal.h> // RegisterUserTexture (icon previews)
 
 #include "widgets.h"
 #include "assistanteventsui.h"
@@ -26,104 +24,14 @@
 #include "../core/assist.h"
 #include "../core/global.h"
 #include "../managers/displaymanager.h"
-#include "../model/commonitems/displayitem.h"
-#include <map>
 
 namespace xuoassist {
 
 namespace {
 
-// --- icon previews (the decoded static art shown in
-
-// the ImGui upload of a decoded CDisplayIcon, cached per (graphic<<16)|hue,
-// LRU-capped (a long session can preview many graphic+hue combos; without
-// the cap the CPU-side pixel buffers accumulate for the process lifetime)
-static constexpr int MAX_ICON_TEXTURES = 64;
-struct CachedIconTexture
-{
-    ImTextureData *tex;
-    int lastUseFrame; // ImGui::GetFrameCount() at the last cache hit / insert
-};
-static std::map<uint32_t, CachedIconTexture> s_IconTextures;
-// evicted entries: queued for the backend destroy, unregistered + freed once
-// it reports Destroyed (they cannot be deleted early: they still sit in the
-// context's UserTextures list)
-vector<ImTextureData *> s_IconRetired;
-
-// the project headers above pull in mappedfile.h -> common/logging ->
-// SDL_wrapper -> SDL_syswm.h -> X11/Xlib.h, whose `Status` macro collides
-// with the ImTextureStatus members below; Xlib is fully processed by now
-#ifdef Status
-#undef Status
-#endif
-
-static void IconReapRetired()
-{
-    for (size_t i = 0; i < s_IconRetired.size();)
-    {
-        ImTextureData *tex = s_IconRetired[i];
-        if (tex->Status == ImTextureStatus_Destroyed)
-        {
-            ImGui::UnregisterUserTexture(tex);
-            delete tex;
-            s_IconRetired.erase(s_IconRetired.begin() + i);
-        }
-        else
-        {
-            i++;
-        }
-    }
-}
-
-static ImTextureData *IconTextureFor(CDisplayIcon *icon, uint32_t key)
-{
-    if (icon == nullptr || icon->Width <= 0 || icon->Height <= 0 ||
-        icon->Pixels.empty() || ImGui::GetCurrentContext() == nullptr)
-    {
-        return nullptr;
-    }
-
-    IconReapRetired();
-
-    const int frame = ImGui::GetFrameCount();
-    auto i = s_IconTextures.find(key);
-    if (i != s_IconTextures.end())
-    {
-        i->second.lastUseFrame = frame;
-        return i->second.tex;
-    }
-
-    if ((int)s_IconTextures.size() >= MAX_ICON_TEXTURES)
-    {
-        // evict the least recently used entry: queue the backend destroy and
-        // move it to the retire list (the canonical sequence of the map resize
-        // retirements in AssMap_RadarTexture)
-        auto oldest = s_IconTextures.begin();
-        for (auto it = s_IconTextures.begin(); it != s_IconTextures.end(); ++it)
-        {
-            if (it->second.lastUseFrame < oldest->second.lastUseFrame)
-            {
-                oldest = it;
-            }
-        }
-        oldest->second.tex->WantDestroyNextFrame = true;
-        s_IconRetired.push_back(oldest->second.tex);
-        s_IconTextures.erase(oldest);
-    }
-
-    ImTextureData *tex = new ImTextureData();
-    tex->Create(ImTextureFormat_RGBA32, icon->Width, icon->Height);
-    tex->SetStatus(ImTextureStatus_WantCreate);
-    tex->UseColors = true;
-    memcpy(tex->GetPixels(), icon->Pixels.data(), (size_t)tex->GetSizeInBytes());
-    ImGui::RegisterUserTexture(tex);
-    s_IconTextures[key] = { tex, frame };
-    return tex;
-}
-
 // --- page state ---------------------------------------------------------------
 char s_TitleData[2048] = { 0 };   // te_DisplayTitleData
-astr_t s_CompiledFrom;            // the data the manager last compiled (text|color)
+astr_t s_CompiledFrom;            // the data the manager last compiled
 bool s_TitleDirty = false;        // a redraw was requested (events / edits)
 // the title data field is being edited: an external config change must not
 // yank the buffer out from under an active InputText (ImGui's active field
@@ -148,35 +56,7 @@ char s_GroupData[2048] = { 0 };   // te_DisplayGroupTitleData
 bool s_FtPending = false;         // the items editor from-target
 uint32_t s_FtGeneration = 0;
 
-// 0xFFRRGGBB <-> ImGui IM_COL32 RGBA
-ImU32 argb_to_rgba(uint32_t argb)
-{
-    return IM_COL32((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, 0xFF);
-}
-
-uint32_t rgba_to_argb(ImU32 rgba)
-{
-    const ImVec4 f = ImGui::ColorConvertU32ToFloat4(rgba);
-    const uint32_t r = (uint32_t)(f.x * 255.0f + 0.5f);
-    const uint32_t g = (uint32_t)(f.y * 255.0f + 0.5f);
-    const uint32_t b = (uint32_t)(f.z * 255.0f + 0.5f);
-    return 0xFF000000u | (r << 16) | (g << 8) | b;
-}
-
-// ColorSwatch: swatch + picker bound to a stored RGBA value. The value is
-// written through on every frame of a drag (the live preview); true is
-// returned only on the commit frame (picker deactivated after an edit) so
-// the callers throttle their disk saves to the end of the session.
-bool color_field(const char *id, uint32_t *argb)
-{
-    ImU32 rgba = argb_to_rgba(*argb);
-    bool commit = false;
-    ColorSwatch(id, &rgba, 0.0f, &commit);
-    *argb = rgba_to_argb(rgba);
-    return commit;
-}
-
-const vector<CDisplayInfo> &commands()
+const vector<DisplayInfo> &commands()
 {
     return g_DisplayManager.GetCommands();
 }
@@ -195,9 +75,9 @@ int command_count()
     return count;
 }
 
-const CDisplayInfo &command_at(int index)
+const DisplayInfo &command_at(int index)
 {
-    static CDisplayInfo empty;
+    static DisplayInfo empty;
     int count = 0;
     for (size_t i = 0; i < commands().size(); i++)
     {
@@ -214,7 +94,7 @@ const CDisplayInfo &command_at(int index)
 }
 
 // the selected item -> the editor fields
-void item_to_fields(const CDisplayItem &item, bool fullUpdate)
+void item_to_fields(const DisplayInfo &item, bool fullUpdate)
 {
     if (fullUpdate)
     {
@@ -245,11 +125,11 @@ void item_to_fields(const CDisplayItem &item, bool fullUpdate)
 }
 
 // the editor fields -> the entry (+ save + recompile).
-void fields_to_item(CDisplayItemEntry &entry)
+void fields_to_item(DisplayItemEntry &entry)
 {
-    CDisplayItem &di = entry.m_Item;
+    DisplayInfo &di = entry.m_Item;
 
-    const CDisplayInfo &info = command_at(s_ItemTypeIndex);
+    const DisplayInfo &info = command_at(s_ItemTypeIndex);
     for (size_t i = 0; i < commands().size(); i++)
     {
         if (commands()[i].Name == info.Name)
@@ -271,7 +151,7 @@ void fields_to_item(CDisplayItemEntry &entry)
 
 bool item_name_in_use(const char *name, int skip)
 {
-    const vector<CDisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
+    const vector<DisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
     for (int i = 0; i < (int)items.size(); i++)
     {
         if (i != skip && ListNamesEqual(items[i].Name, name))
@@ -295,12 +175,12 @@ bool group_name_in_use(const char *name, int skip)
     return false;
 }
 
-const char *DisplayItemNameOf(const CDisplayItemEntry &entry)
+const char *DisplayItemNameOf(const DisplayItemEntry &entry)
 {
     return entry.Name.c_str();
 }
 
-void DisplayItemSetNameOf(CDisplayItemEntry &entry, const char *name)
+void DisplayItemSetNameOf(DisplayItemEntry &entry, const char *name)
 {
     entry.Name = name;
 }
@@ -315,7 +195,7 @@ void DisplayGroupSetNameOf(CDisplayGroupEntry &entry, const char *name)
     entry.Name = name;
 }
 
-// map the config radio to the mode and ask for a redraw
+// ask for a caption recomposition
 void redraw_title()
 {
     s_TitleDirty = true;
@@ -324,10 +204,8 @@ void redraw_title()
 // Tracks s_CompiledFrom here as
 void recompile_title()
 {
-    s_CompiledFrom = g_AssistantConfig.DisplayTitleData() + "|" +
-        str_from(g_AssistantConfig.DisplayTextColor());
-    g_DisplayManager.RecompileData(
-        g_AssistantConfig.DisplayTitleData(), g_AssistantConfig.DisplayTextColor());
+    s_CompiledFrom = g_AssistantConfig.DisplayTitleData();
+    g_DisplayManager.RecompileData(g_AssistantConfig.DisplayTitleData());
     redraw_title();
 }
 
@@ -345,8 +223,8 @@ void draw_configuration_page()
         // "Custom items" submenu + the built-in commands
         if (ImGui::BeginMenu("Custom items"))
         {
-            const vector<CDisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
-            for (const CDisplayItemEntry &item : items)
+            const vector<DisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
+            for (const DisplayItemEntry &item : items)
             {
                 if (ImGui::MenuItem(item.Name.c_str()))
                 {
@@ -383,75 +261,14 @@ void draw_configuration_page()
         ImGui::EndPopup();
     }
 
-    // the radio group "Display data on title" (rb_Display* -> m_DisplayType)
+    // cb_DisplayEnabled: the plain-textual on/off switch
     ImGui::TextUnformatted("Display data on title");
-    int type = g_AssistantConfig.DisplayType();
-    bool typeChanged = false;
-    typeChanged |= ImGui::RadioButton("Disabled##display", &type, 0);
-    typeChanged |= ImGui::RadioButton("Textual##display", &type, 1);
-    typeChanged |= ImGui::RadioButton("Colored textual##display", &type, 2);
-    typeChanged |= ImGui::RadioButton("Colored graphical##display", &type, 3);
-    if (typeChanged)
+    bool enabled = g_AssistantConfig.DisplayEnabled();
+    if (ImGui::Checkbox("Enabled##display", &enabled))
     {
-        g_AssistantConfig.m_DisplayType = type;
+        g_AssistantConfig.m_DisplayEnabled = enabled;
         g_AssistantConfig.SaveMainOptions(); // the display section of Options.ini
         redraw_title();
-    }
-
-    // the flag checkboxes (cb_DisplayDoubleImage 0x01 / ...OnName 0x02 /
-    // cb_DisplayHightFont 0x04 / cb_HighlightReagents 0x08)
-    uint32_t flags = g_AssistantConfig.DisplayFlags();
-    bool flagsChanged = false;
-    bool flagValue;
-    flagValue = (flags & 0x01) != 0;
-    if (ImGui::Checkbox("Double image if item stacked", &flagValue))
-    {
-        flags = flagValue ? (flags | 0x01) : (flags & ~0x01u);
-        flagsChanged = true;
-    }
-    flagValue = (flags & 0x02) != 0;
-    if (ImGui::Checkbox("Notoriety color on player name", &flagValue))
-    {
-        flags = flagValue ? (flags | 0x02) : (flags & ~0x02u);
-        flagsChanged = true;
-    }
-    flagValue = (flags & 0x04) != 0;
-    if (ImGui::Checkbox("Hight font", &flagValue))
-    {
-        flags = flagValue ? (flags | 0x04) : (flags & ~0x04u);
-        flagsChanged = true;
-    }
-    flagValue = (flags & 0x08) != 0;
-    if (ImGui::Checkbox("Highlight reagents", &flagValue))
-    {
-        flags = flagValue ? (flags | 0x08) : (flags & ~0x08u);
-        flagsChanged = true;
-    }
-    if (flagsChanged)
-    {
-        g_AssistantConfig.m_DisplayFlags = flags;
-        g_AssistantConfig.SaveMainOptions();
-        redraw_title();
-    }
-
-    // the color swatches (pb_DisplayBackgroundColor / pb_DisplayTextColor)
-    uint32_t bgcolor = g_AssistantConfig.DisplayBackgroundColor();
-    ImGui::TextUnformatted("Background color:");
-    ImGui::SameLine();
-    if (color_field("##display_bg", &bgcolor))
-    {
-        g_AssistantConfig.m_DisplayBackgroundColor = bgcolor;
-        g_AssistantConfig.SaveMainOptions();
-        redraw_title();
-    }
-    uint32_t textcolor = g_AssistantConfig.DisplayTextColor();
-    ImGui::TextUnformatted("Text color:");
-    ImGui::SameLine();
-    if (color_field("##display_text", &textcolor))
-    {
-        g_AssistantConfig.m_DisplayTextColor = textcolor;
-        g_AssistantConfig.SaveMainOptions();
-        recompile_title(); // the text color rides on the compiled commands
     }
 
     // te_DisplayTitleData ("Title data:")
@@ -493,7 +310,7 @@ void draw_configuration_page()
 
 void draw_items_editor_page()
 {
-    vector<CDisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
+    vector<DisplayItemEntry> &items = g_AssistantConfig.m_DisplayItems;
 
     const int buttons = ListButtons("display_items");
     if ((buttons & XALB_TARGET) != 0)
@@ -534,27 +351,6 @@ void draw_items_editor_page()
 
     ImGui::TextUnformatted("Properties");
     ImGui::Separator();
-
-    // the static-art preview of the selected item (
-    if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
-    {
-        const CDisplayItem &selItem = items[s_SelectedItem].m_Item;
-        const uint32_t key = (uint32_t)((selItem.Graphic << 16) | selItem.Hue);
-        ImTextureData *tex = IconTextureFor(g_DisplayManager.GetIcon(selItem), key);
-        if (tex != nullptr)
-        {
-            const float box = 44.0f;
-            const float scale =
-                ImMin(box / tex->Width, box / tex->Height);
-            const float w = tex->Width * scale;
-            const float h = tex->Height * scale;
-            const ImVec2 pos = ImGui::GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddImage(
-                tex->GetTexRef(), pos, ImVec2(pos.x + w, pos.y + h));
-            ImGui::Dummy(ImVec2(box, box));
-            ImGui::SameLine();
-        }
-    }
 
     if (ImGui::BeginCombo("Type##display_item", command_at(s_ItemTypeIndex).Name.c_str()))
     {
@@ -602,54 +398,7 @@ void draw_items_editor_page()
         changed = true;
     }
 
-    if (s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
-    {
-        // the "With background" / "Calculate colors in percents" checks and
-        // the two 3-swatch groups read/write the entry directly (
-        CDisplayItem &di = items[s_SelectedItem].m_Item;
-        bool background = di.Background;
-        if (ImGui::Checkbox("With background", &background))
-        {
-            di.Background = background;
-            changed = true;
-        }
-        ImGui::SameLine();
-        bool percents = di.Percents;
-        if (ImGui::Checkbox("Calculate colors in percents", &percents))
-        {
-            di.Percents = percents;
-            changed = true;
-        }
-
-        // Colors: "Text:" normal/mid/min + "Bg:" normal/mid/min (the label
-        // grid of 6 color swatch buttons)
-        ImGui::TextUnformatted("Colors - Text:");
-        ImGui::SameLine();
-        uint32_t c = di.Color;
-        changed |= color_field("##item_text_c", &c);
-        di.Color = c;
-        ImGui::SameLine();
-        c = di.MidColor;
-        changed |= color_field("##item_text_mc", &c);
-        di.MidColor = c;
-        ImGui::SameLine();
-        c = di.MinColor;
-        changed |= color_field("##item_text_min", &c);
-        di.MinColor = c;
-        ImGui::TextUnformatted("Colors - Bg:");
-        ImGui::SameLine();
-        c = di.BackgroundColor;
-        changed |= color_field("##item_bg_c", &c);
-        di.BackgroundColor = c;
-        ImGui::SameLine();
-        c = di.BackgroundMidColor;
-        changed |= color_field("##item_bg_mc", &c);
-        di.BackgroundMidColor = c;
-        ImGui::SameLine();
-        c = di.BackgroundMinColor;
-        changed |= color_field("##item_bg_min", &c);
-        di.BackgroundMinColor = c;
-    }
+    // Name: field (le_DisplayItemName)
 
     // Name: field (le_DisplayItemName)
     ImGui::TextUnformatted("Name:");
@@ -670,7 +419,7 @@ void draw_items_editor_page()
         }
         else
         {
-            CDisplayItemEntry entry;
+            DisplayItemEntry entry;
             entry.Name = s_ItemName;
             // push BEFORE the save: the new entry must already sit in the
             // vector when SaveDisplayItems writes the file (fields_to_item's
@@ -713,10 +462,6 @@ void draw_items_editor_page()
     }
     if (changed && s_SelectedItem >= 0 && s_SelectedItem < (int)items.size())
     {
-        // the checkbox edits write through immediately; the color swatches
-        // stay live-preview during a drag and land here only on the release
-        // frame (color_field commits on IsItemDeactivatedAfterEdit), so a
-        // swatch drag writes DisplayItems.ini once instead of every frame
         g_AssistantConfig.SaveDisplayItems();
         s_TitleDirty = true;
     }
@@ -823,8 +568,7 @@ void draw_group_editor_page()
 void TabDisplay_Draw()
 {
     // keep the compile state in sync with the config (profile load/switch)
-    const astr_t key = g_AssistantConfig.DisplayTitleData() + "|" +
-        str_from(g_AssistantConfig.DisplayTextColor());
+    const astr_t key = g_AssistantConfig.DisplayTitleData();
     if (key != s_CompiledFrom)
     {
         s_CompiledFrom = key;
@@ -863,22 +607,6 @@ bool TabDisplay_ConsumeTitleDirty()
     }
     s_TitleDirty = false;
     return true;
-}
-
-// Shutdown: frees every cached item-preview icon texture (CPU delete AFTER the
-// ImGui context is gone - the same ordering as the atlas / AssMap /
-void TabDisplay_AfterImGuiShutdown()
-{
-    for (auto &kv : s_IconTextures)
-    {
-        delete kv.second.tex;
-    }
-    s_IconTextures.clear();
-    for (ImTextureData *tex : s_IconRetired)
-    {
-        delete tex;
-    }
-    s_IconRetired.clear();
 }
 
 void TabDisplay_RequestTitleRedraw()

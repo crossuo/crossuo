@@ -306,9 +306,9 @@ uint32_t g_DressBag = 0;
 // LoadDisplayItems' default-set branch builds an empty list here
 CDisplayManager g_DisplayManager;
 CDisplayManager::CDisplayManager() {}
-CDisplayItem CDisplayManager::GetDisplayItemByName(const astr_t &) const
+DisplayInfo CDisplayManager::GetDisplayItemByName(const astr_t &) const
 {
-    return CDisplayItem();
+    return DisplayInfo();
 }
 CPoint2Di g_LastTargetPosition;
 CPoint2Di g_LastAttackPosition;

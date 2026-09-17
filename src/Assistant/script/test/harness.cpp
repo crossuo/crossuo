@@ -650,10 +650,7 @@ int main()
                 saved.m_AutoReconnect = true;
                 saved.m_AutoReconnectSeconds = 45;
                 saved.m_DoubleClickForOpenDoors = true;
-                saved.m_DisplayType = 3;
-                saved.m_DisplayFlags = 0x0F;
-                saved.m_DisplayTextColor = 0x00FFFFFF;
-                saved.m_DisplayBackgroundColor = 0xFF000000;
+                saved.m_DisplayEnabled = true;
                 saved.m_DisplayTitleData = "UO - {name} (& more) <test> 'q'";
                 saved.m_PassHotkeys = true;
                 saved.m_CommandPrefix = "-";
@@ -683,9 +680,7 @@ int main()
                 ok = ok && loaded.m_CharactersFontColor == "0x0044";
                 ok = ok && loaded.m_AutoReconnect && loaded.m_AutoReconnectSeconds == 45;
                 ok = ok && loaded.m_DoubleClickForOpenDoors;
-                ok = ok && loaded.m_DisplayType == 3 && loaded.m_DisplayFlags == 0x0F;
-                ok = ok && loaded.m_DisplayTextColor == 0x00FFFFFF;
-                ok = ok && loaded.m_DisplayBackgroundColor == 0xFF000000;
+                ok = ok && loaded.m_DisplayEnabled;
                 ok = ok && loaded.m_DisplayTitleData == "UO - {name} (& more) <test> 'q'";
                 ok = ok && loaded.m_PassHotkeys && loaded.m_CommandPrefix == "-";
                 ok = ok && loaded.m_SortScripts && loaded.m_ScriptFilePath.empty();

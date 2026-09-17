@@ -26,9 +26,9 @@
 
 #include "core/global.h"
 #include "config/configio.h"
+#include "../managers/displaymanager.h"
 #include "model/commonitems/finditem.h"
 #include "model/commonitems/ignoreitem.h"
-#include "model/commonitems/displayitem.h"
 
 namespace xuoassist {
 
@@ -201,10 +201,10 @@ struct CDisplayGroupEntry
 };
 
 // gui/displayitemlistitem.h
-struct CDisplayItemEntry
+struct DisplayItemEntry
 {
     astr_t Name{ "" };
-    CDisplayItem m_Item;
+    DisplayInfo m_Item;
 };
 
 // gui/dresslistitem.h - 25 layer slots (equip layers up to OL_24)
@@ -354,14 +354,9 @@ public:
     void SetCharactersFontColor(const bool &state, uint16_t value);
 
     // --- display options (TabDisplay LoadConfig/SaveConfig + checkboxes) ----
-    int DisplayType() const { return m_DisplayType; } // 0=off 1=text 2=colored text 3=colored gfx
-    uint32_t DisplayFlags() const { return m_DisplayFlags; }
-    bool DoubleImage() const { return (m_DisplayFlags & 0x01) != 0; }
-    bool ApplyNotorietyColorOnName() const { return (m_DisplayFlags & 0x02) != 0; }
-    bool HightFont() const { return (m_DisplayFlags & 0x04) != 0; }
-    bool HighlightReagents() const { return (m_DisplayFlags & 0x08) != 0; }
-    uint32_t DisplayTextColor() const { return m_DisplayTextColor; }
-    uint32_t DisplayBackgroundColor() const { return m_DisplayBackgroundColor; }
+    // Textual-only now: the colored/graphical title modes cannot render into
+    // an OS window caption, so there is just the on/off switch.
+    bool DisplayEnabled() const { return m_DisplayEnabled; }
     const astr_t &DisplayTitleData() const { return m_DisplayTitleData; }
 
     // --- hotkeys options (TabHotkeys LoadConfig/SaveConfig) -----------------
@@ -418,7 +413,7 @@ public:
     int DelayFromText(astr_t text);
 
     // --- display items / groups -------------------------------------------------
-    CDisplayItem GetCustomDisplayItemByName(const astr_t &name) const;
+    DisplayInfo GetCustomDisplayItemByName(const astr_t &name) const;
     astr_t GetGroupContent(const astr_t &name) const;
 
     // --- dress sets (data helpers) -----------------------------------------------
@@ -450,10 +445,7 @@ public:
     bool m_UseCharactersFontColor{ false };
     astr_t m_CharactersFontColor{ "0x02B2" };
 
-    int m_DisplayType{ 0 };
-    uint32_t m_DisplayFlags{ 0 };
-    uint32_t m_DisplayTextColor{ 0 };
-    uint32_t m_DisplayBackgroundColor{ 0 };
+    bool m_DisplayEnabled{ false }; // off by default
     astr_t m_DisplayTitleData{ "" };
 
     bool m_OnOffHotkeys{ true }; // cb_OnOffHotkeys is checked by default
@@ -476,7 +468,7 @@ public:
     int m_MaxSellPrice{ 0 };
     int m_ShopDelay{ 450 };
     int m_ShopTimeout{ 30 };
-    vector<CDisplayItemEntry> m_DisplayItems;
+    vector<DisplayItemEntry> m_DisplayItems;
     vector<CDisplayGroupEntry> m_DisplayGroups;
 
     vector<CWorldObjectEntry> m_Friends;

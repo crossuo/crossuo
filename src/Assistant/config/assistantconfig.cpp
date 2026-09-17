@@ -412,24 +412,9 @@ void CAssistantConfig::LoadMainOptions()
     }
 
     // TabDisplay::LoadConfig
-    if (ini.Has("display", "type"))
+    if (ini.Has("display", "enabled"))
     {
-        m_DisplayType = ini.GetInt("display", "type", 0);
-    }
-    if (ini.Has("display", "flags"))
-    {
-        m_DisplayFlags = (uint32_t)ini.GetInt("display", "flags", 0);
-    }
-    if (ini.Has("display", "textcolor"))
-    {
-        // plain decimal (str_from on save); the XML loader's RawStringToUInt
-        // parse silently dropped these two, the numeric read round-trips them
-        m_DisplayTextColor = (uint32_t)strtoul(ini.Get("display", "textcolor").c_str(), nullptr, 10);
-    }
-    if (ini.Has("display", "backgroundcolor"))
-    {
-        m_DisplayBackgroundColor =
-            (uint32_t)strtoul(ini.Get("display", "backgroundcolor").c_str(), nullptr, 10);
+        m_DisplayEnabled = ini.GetBool("display", "enabled", false);
     }
     if (ini.Has("display", "titledata"))
     {
@@ -493,10 +478,7 @@ void CAssistantConfig::SaveMainOptions()
     ini.SetBool("main", "doubleclickforopendoors", m_DoubleClickForOpenDoors);
 
     // TabDisplay::SaveConfig
-    ini.SetInt("display", "type", m_DisplayType);
-    ini.SetInt("display", "flags", (int)m_DisplayFlags);
-    ini.Set("display", "textcolor", str_from(m_DisplayTextColor));
-    ini.Set("display", "backgroundcolor", str_from(m_DisplayBackgroundColor));
+    ini.SetBool("display", "enabled", m_DisplayEnabled);
     ini.Set("display", "titledata", m_DisplayTitleData);
 
     // TabHotkeys::SaveConfig
@@ -1004,17 +986,17 @@ int CAssistantConfig::IsCommandPrefix(const astr_t &text) const
 
 // --- display items / groups ----------------------------------------------------------
 
-CDisplayItem CAssistantConfig::GetCustomDisplayItemByName(const astr_t &name) const
+DisplayInfo CAssistantConfig::GetCustomDisplayItemByName(const astr_t &name) const
 {
     // Was TabDisplay::GetCustomDisplayItemByName.
-    for (const CDisplayItemEntry &entry : m_DisplayItems)
+    for (const DisplayItemEntry &entry : m_DisplayItems)
     {
         if (to_lower(entry.Name) == to_lower(name))
         {
             return entry.m_Item;
         }
     }
-    return CDisplayItem();
+    return DisplayInfo();
 }
 
 astr_t CAssistantConfig::GetGroupContent(const astr_t &name) const
@@ -1463,25 +1445,17 @@ void CAssistantConfig::SaveDisplayItems()
 
     CIniFile ini;
     int index = 0;
-    for (const CDisplayItemEntry &entry : m_DisplayItems)
+    for (const DisplayItemEntry &entry : m_DisplayItems)
     {
-        const CDisplayItem &di = entry.m_Item;
+        const DisplayInfo &di = entry.m_Item;
         const astr_t section = ini_section("Item", index++);
         ini.Set(section, "name", entry.Name);
         ini.SetInt(section, "type", (int)di.Type);
         ini.Set(section, "text", di.Text);
         ini.Set(section, "id", CAssistant::GraphicToText(di.Graphic));
         ini.Set(section, "hue", CAssistant::GraphicToText(di.Hue));
-        ini.Set(section, "mincolor", CAssistant::ColorToText(di.MinColor));
-        ini.Set(section, "midcolor", CAssistant::ColorToText(di.MidColor));
-        ini.Set(section, "color", CAssistant::ColorToText(di.Color));
-        ini.SetBool(section, "background", di.Background);
-        ini.Set(section, "bgmincolor", CAssistant::ColorToText(di.BackgroundMinColor));
-        ini.Set(section, "bgmidcolor", CAssistant::ColorToText(di.BackgroundMidColor));
-        ini.Set(section, "bgcolor", CAssistant::ColorToText(di.BackgroundColor));
         ini.SetInt(section, "minvalue", di.MinValue);
         ini.SetInt(section, "midvalue", di.MidValue);
-        ini.SetBool(section, "percents", di.Percents);
     }
     ini.SetInt(INI_META, "count", index);
 
@@ -1503,7 +1477,7 @@ void CAssistantConfig::LoadDisplayItems()
             {
                 continue;
             }
-            CDisplayItemEntry entry;
+            DisplayItemEntry entry;
             entry.Name = ini.Get(section, "name");
             if (ini.Has(section, "type"))
             {
@@ -1521,34 +1495,6 @@ void CAssistantConfig::LoadDisplayItems()
             {
                 entry.m_Item.Hue = (uint16_t)strtoul(ini.Get(section, "hue").c_str(), nullptr, 16);
             }
-            if (ini.Has(section, "mincolor"))
-            {
-                entry.m_Item.MinColor = CAssistant::RawStringToUInt(ini.Get(section, "mincolor"));
-            }
-            if (ini.Has(section, "midcolor"))
-            {
-                entry.m_Item.MidColor = CAssistant::RawStringToUInt(ini.Get(section, "midcolor"));
-            }
-            if (ini.Has(section, "color"))
-            {
-                entry.m_Item.Color = CAssistant::RawStringToUInt(ini.Get(section, "color"));
-            }
-            if (ini.Has(section, "background"))
-            {
-                entry.m_Item.Background = ini.GetBool(section, "background", false);
-            }
-            if (ini.Has(section, "bgmincolor"))
-            {
-                entry.m_Item.BackgroundMinColor = CAssistant::RawStringToUInt(ini.Get(section, "bgmincolor"));
-            }
-            if (ini.Has(section, "bgmidcolor"))
-            {
-                entry.m_Item.BackgroundMidColor = CAssistant::RawStringToUInt(ini.Get(section, "bgmidcolor"));
-            }
-            if (ini.Has(section, "bgcolor"))
-            {
-                entry.m_Item.BackgroundColor = CAssistant::RawStringToUInt(ini.Get(section, "bgcolor"));
-            }
             if (ini.Has(section, "minvalue"))
             {
                 entry.m_Item.MinValue = ini.GetInt(section, "minvalue", 0);
@@ -1556,10 +1502,6 @@ void CAssistantConfig::LoadDisplayItems()
             if (ini.Has(section, "midvalue"))
             {
                 entry.m_Item.MidValue = ini.GetInt(section, "midvalue", 0);
-            }
-            if (ini.Has(section, "percents"))
-            {
-                entry.m_Item.Percents = ini.GetBool(section, "percents", false);
             }
             m_DisplayItems.push_back(entry);
         }
@@ -1569,16 +1511,16 @@ void CAssistantConfig::LoadDisplayItems()
     {
         // The original app's defaults (TabDisplay::LoadDisplayItems): one entry per
         // info command plus the reagent counters.
-        for (const CDisplayInfo &info : g_DisplayManager.GetCommands())
+        for (const DisplayInfo &info : g_DisplayManager.GetCommands())
         {
             if (info.Name.empty() || info.Command.empty())
             {
                 continue;
             }
-            CDisplayItem di = g_DisplayManager.GetDisplayItemByName(info.Command);
+            DisplayInfo di = g_DisplayManager.GetDisplayItemByName(info.Command);
             if (di.Type != DIT_NONE && di.Type != DIT_OBJECT)
             {
-                CDisplayItemEntry entry;
+                DisplayItemEntry entry;
                 entry.Name = info.Command;
                 entry.m_Item = di;
                 m_DisplayItems.push_back(entry);
@@ -1589,24 +1531,15 @@ void CAssistantConfig::LoadDisplayItems()
                                             "ns", "sa", "ss", "en", "bandage" };
         for (int i = 0; i < 10; i++)
         {
-            CDisplayItemEntry entry;
+            DisplayItemEntry entry;
             entry.Name = defNames[i];
-            entry.m_Item = CDisplayItem(
-                DIT_OBJECT,
-                "",
-                CAssistant::TextToGraphic(defNames[i]),
-                0,
-                0x00FFFFFF,
-                0x00000001,
-                0x00000001,
-                true,
-                0x0000007F,
-                0x0000FFFF,
-                0x00000000,
-                10,
-                20,
-                false);
-            entry.m_Item.Text = i < 9 ? astr_t(defNames[i]) + ":" : astr_t("b:");
+            DisplayInfo di;
+            di.Type = DIT_OBJECT;
+            di.Graphic = CAssistant::TextToGraphic(defNames[i]);
+            di.Text = i < 9 ? astr_t(defNames[i]) + ":" : astr_t("b:");
+            di.MinValue = 10;
+            di.MidValue = 20;
+            entry.m_Item = di;
             m_DisplayItems.push_back(entry);
         }
 

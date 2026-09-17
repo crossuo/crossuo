@@ -106,32 +106,11 @@ uint32_t s_LastStepTick = 0;
 // the Autostart script run (
 uint32_t s_AutostartAt = 0;
 
-// the config radio -> the display manager mode
+// the display caption: compose the plain textual title and apply it to the
+// client window when it changed
 void apply_display_title()
 {
-    REDRAW_DISPLAY_MODE mode = RDM_DISABLED;
-    switch (g_AssistantConfig.DisplayType())
-    {
-        case 1:
-            mode = RDM_TEXTUAL;
-            break;
-        case 2:
-            mode = RDM_COLORED_TEXTUAL;
-            break;
-        case 3:
-            mode = RDM_COLORED_GRAPHICAL;
-            break;
-        default:
-            break;
-    }
-
-    g_DisplayManager.Redraw(
-        mode,
-        g_AssistantConfig.ApplyNotorietyColorOnName(),
-        g_AssistantConfig.HightFont(),
-        g_AssistantConfig.HighlightReagents(),
-        true,
-        g_AssistantConfig.DisplayBackgroundColor());
+    g_DisplayManager.Redraw(g_AssistantConfig.DisplayEnabled());
 
     // apply to the OS window on change (
     const astr_t &title = g_DisplayManager.GetTitleText();
@@ -296,8 +275,7 @@ void AssistantUI_Init()
 
 void AssistantUI_RecompileDisplayTitle()
 {
-    g_DisplayManager.RecompileData(
-        g_AssistantConfig.DisplayTitleData(), g_AssistantConfig.DisplayTextColor());
+    g_DisplayManager.RecompileData(g_AssistantConfig.DisplayTitleData());
     TabDisplay_RequestTitleRedraw();
 }
 
@@ -409,7 +387,6 @@ void AssistantUI_AfterImGuiShutdown()
     Icons_Shutdown();
     AssMap_AfterImGuiShutdown();
     TabAbout_AfterImGuiShutdown();
-    TabDisplay_AfterImGuiShutdown();
 }
 
 int AssistantUI_ReconnectSecondsLeft()

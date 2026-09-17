@@ -67,7 +67,6 @@ set(XUOASSIST_SRCS
   "config/assistantconfig.cpp"
   "model/commonitems/finditem.cpp"
   "model/commonitems/ignoreitem.cpp"
-  "model/commonitems/displayitem.cpp"
   "model/commonitems/gumphook.cpp"
   "model/commonitems/gumpitem.cpp"
   "model/commonitems/journalmessage.cpp"
@@ -136,7 +135,6 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     managers/mapsettings.cpp
     model/commonitems/finditem.cpp
     model/commonitems/ignoreitem.cpp
-    model/commonitems/displayitem.cpp
     # the client token parser (finditem.cpp; the real implementation; the
     # harness links xuocore's sources directly instead of the library)
     ../../xuocore/text_parser.cpp

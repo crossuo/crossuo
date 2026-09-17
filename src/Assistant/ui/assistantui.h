@@ -118,9 +118,6 @@ void TabShop_DrawProgress();
 // Marks the display caption for recompose+apply (the OnTitleRedraw events
 // and the Display tab edits land here).
 void TabDisplay_RequestTitleRedraw();
-// Frees the cached item-preview icon textures (shutdown: AFTER ui_shutdown
-// destroyed the context - the CPU delete ordering shared with the atlas).
-void TabDisplay_AfterImGuiShutdown();
 // Returns and clears the title-redraw flag (AssistantUI_Tick).
 bool TabDisplay_ConsumeTitleDirty();
 

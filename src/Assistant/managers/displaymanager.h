@@ -1,23 +1,67 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// Ported from X:UO Assist (managers/displaymanager.h), data-only port
-// (the icon cache and the title-bar
+// Ported from X:UO Assist (managers/displaymanager.h). Textual-only port:
+// the colored/graphical title modes and the icon cache are gone (an OS
+// window caption carries no colors/icons/fonts).
 
 #pragma once
 
 #include "core/global.h"
-#include "model/commonitems/displayitem.h"
-#include <map>
+#include <vector>
 
 namespace xuoassist {
 
-enum REDRAW_DISPLAY_MODE
+enum DISPLAY_ITEM_TYPE
 {
-    RDM_DISABLED = 0,
-    RDM_TEXTUAL,
-    RDM_COLORED_TEXTUAL,
-    RDM_COLORED_GRAPHICAL
+    DIT_NONE = 0,
+    DIT_NAME,
+    DIT_SERVER,
+    DIT_STATUSBAR_SMALL,
+    DIT_STATUSBAR_MIDDLE,
+    DIT_STATUSBAR_LARGE,
+    DIT_HITS,
+    DIT_MAX_HITS,
+    DIT_HITS_MAX_HITS,
+    DIT_MANA,
+    DIT_MAX_MANA,
+    DIT_MANA_MAX_MANA,
+    DIT_STAM,
+    DIT_MAX_STAM,
+    DIT_STAM_MAX_STAM,
+    DIT_STR,
+    DIT_INT,
+    DIT_DEX,
+    DIT_WEIGHT,
+    DIT_MAX_WEIGHT,
+    DIT_WEIGHT_MAX_WEIGHT,
+    DIT_ARMOR,
+    DIT_GOLD,
+    DIT_X,
+    DIT_Y,
+    DIT_Z,
+    DIT_OBJECT = 1000
+};
+
+// The display item model (DISPLAY_ITEM_TYPE + DisplayInfo) lives here rather
+// than in a model/ header: the manager, the config storage and the tab UI all
+// share the type.
+//
+// One title-data tag: its catalog identity (Name/Command/Type) plus the
+// values it renders with (Text/Graphic/Hue/MinValue/MidValue). The manager's
+// catalog rows double as the per-type defaults; custom items carry their own
+// Text and the {item} counter's Graphic/Hue. Default-initialized:
+// DisplayInfo info; is fully usable (a DIT_NONE tag renders plain Text).
+struct DisplayInfo
+{
+    astr_t Name{ "" };
+    astr_t Command{ "" };
+    DISPLAY_ITEM_TYPE Type = DIT_NONE;
+    astr_t Text{ "" };
+    uint16_t Graphic = 0; // the {item} counter's object graphic (0 = any)
+    uint16_t Hue = 0;     // the {item} counter's object hue (0xFFFF = any)
+    int MinValue = 0;
+    int MidValue = 0;
 };
 
 enum DISPLAY_KEY_IDENTIFIER
@@ -26,16 +70,8 @@ enum DISPLAY_KEY_IDENTIFIER
     DKI_TEXT,
     DKI_ID,
     DKI_HUE,
-    DKI_COLOR_MIN,
-    DKI_COLOR_MID,
-    DKI_COLOR,
-    DKI_BACKGROUND,
-    DKI_BG_COLOR_MIN,
-    DKI_BG_COLOR_MID,
-    DKI_BG_COLOR,
     DKI_MIN_VAULE,
     DKI_MID_VALUE,
-    DKI_PERCENTS,
     DKI_COUNT
 };
 
@@ -45,36 +81,18 @@ struct DISPLAY_KEY_ITEM
     DISPLAY_KEY_IDENTIFIER Identifier;
 };
 
-// Raw icon payload: the decoded pixels are kept in the struct so the
-// renderer can take the bytes as-is.
-struct CDisplayIcon
-{
-    vector<uint32_t> Pixels;
-    int Width{ 0 };
-    int Height{ 0 };
-};
-
 class CDisplayManager
 {
 private:
-    vector<CDisplayInfo> m_InfoCommands;
-    vector<CDisplayItem> m_Commands;
-    std::map<uint32_t, CDisplayIcon *> m_Icons;
+    vector<DisplayInfo> m_InfoCommands;
+    vector<DisplayInfo> m_Commands;
     astr_t m_TitleText;
 
-    static const CDisplayItem m_DefaultItems[26];
     static const DISPLAY_KEY_ITEM m_KeysList[DKI_COUNT];
 
-    CDisplayIcon *LoadDisplayIcon(uint16_t graphic, uint16_t color);
-    void ApplyAttributeToDisplayItem(CDisplayItem &obj, const astr_t &name, const astr_t &value);
-    void CompileData(const astr_t &text, uint32_t textColor);
-    void GetValues(
-        const CDisplayItem &item,
-        astr_t &value,
-        astr_t &maxValue,
-        uint32_t textColor,
-        uint32_t backgroundColor,
-        bool useNotoriety);
+    void ApplyAttributeToDisplayItem(DisplayInfo &obj, const astr_t &name, const astr_t &value);
+    void CompileData(const astr_t &text);
+    void GetValues(const DisplayInfo &item, astr_t &value, astr_t &maxValue);
 
 public:
     CDisplayManager();
@@ -83,33 +101,19 @@ public:
     CDisplayManager(const CDisplayManager &) = delete;
     CDisplayManager &operator=(const CDisplayManager &) = delete;
 
-    // The static-art icon cache: keyed by (graphic << 16) | hue, decoded through the
-    // client's art reader. nullptr when the item has no graphic. The
-    // Display items editor previews these as ImGui user textures.
-    CDisplayIcon *GetIcon(const CDisplayItem &item);
+    const vector<DisplayInfo> &GetCommands() const { return m_InfoCommands; }
 
-    void ClearIcons();
+    DisplayInfo GetDisplayItemByName(const astr_t &name) const;
 
-    const vector<CDisplayInfo> &GetCommands() const { return m_InfoCommands; }
-
-    CDisplayItem GetDisplayItemByName(const astr_t &name) const;
-
-    // Title-bar rendering: composes the caption text into m_TitleText (the
-    // textual mode; the two colored modes fall back to the same plain string -
-    // an OS caption carries no colors/icons). Apply it with CWindow::SetTitle -
-    // ui/assistantui.cpp does that on change (throttled).
-    void Redraw(
-        REDRAW_DISPLAY_MODE mode,
-        bool useNotoriety,
-        bool hightFont,
-        bool highlightReagents,
-        bool displayAppIcon,
-        uint32_t backgroundColor);
+    // Title-bar caption: composes the plain text of the enabled tags into
+    // m_TitleText. Apply it with CWindow::SetTitle - ui/assistantui.cpp does
+    // that on change (throttled).
+    void Redraw(bool enabled);
 
     // The last composed caption (Redraw output)
     const astr_t &GetTitleText() const { return m_TitleText; }
 
-    void RecompileData(const astr_t &text, uint32_t textColor);
+    void RecompileData(const astr_t &text);
 
     bool CanRedraw(const uint16_t &graphic, const uint16_t &color) const;
 };
