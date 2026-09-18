@@ -192,14 +192,24 @@ static void assistant_cursor_upload(ImTextureData *tex, GLuint glName)
 // resolves, and CMouseManager::Draw skips ids without sprite/texture
 static void assistant_cursor_draw()
 {
-    if (!s_visible || g_GameState != GS_GAME || mouse_over_assistant_popout())
+    // draw ONLY while the mouse is over assistant UI inside the game viewport:
+    // with only assistant windows in the context WantCaptureMouse is exactly
+    // "over an assistant window", and pop-outs are excluded by the viewport
+    // check below (they are separate OS windows in desktop space). Over the
+    // bare game world the client's own cursor render is the visible cursor -
+    // mirroring there produced a second cursor.
+    if (!s_visible || g_GameState != GS_GAME || !ImGui::GetIO().WantCaptureMouse ||
+        mouse_over_assistant_popout())
     {
+        g_MouseManager.Hide(false);
         return;
     }
 
+    g_MouseManager.Hide();
+
     int x = 0, y = 0, w = 0, h = 0;
     CGLTexture *texture = nullptr;
-    const uint16_t id = g_MouseManager.GetGameCursor();
+    const uint16_t id = 0x206A + 7;//g_MouseManager.GetGameCursor();
     if (!g_MouseManager.GetCursorDrawRect(id, &x, &y, &w, &h, &texture))
     {
         return;

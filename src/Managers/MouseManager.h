@@ -13,6 +13,7 @@ class CMouseManager : public Wisp::CMouse
 {
 private:
     int m_CursorOffset[2][16];
+    bool m_Hidden = false;
 
 public:
     CMouseManager()
@@ -22,6 +23,7 @@ public:
     }
     ~CMouseManager() {}
 
+    void Hide(bool hide = true) { m_Hidden = hide; };
     bool LoadCursorTextures();
     int Sgn(int val);
     int GetFacing(int x1, int y1, int to_x, int to_y, int current_facing);

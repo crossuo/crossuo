@@ -203,7 +203,7 @@ bool CMouseManager::GetCursorDrawRect(
     }
     if (y != nullptr)
     {
-        *y = Position.Y + m_CursorOffset[1][index];
+        *y = Position.Y + m_CursorOffset[1][index] + spr->Width - 6;
     }
     if (w != nullptr)
     {
@@ -409,6 +409,8 @@ bool CMouseManager::LoadCursorTextures()
 //
 void CMouseManager::Draw(uint16_t id)
 {
+    if (m_Hidden)
+        return;
     ScopedPerfMarker(__FUNCTION__);
     SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw");
     if (g_GameState >= GS_GAME)
