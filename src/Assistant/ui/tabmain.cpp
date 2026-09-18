@@ -320,6 +320,10 @@ void draw_main_page()
         ImGui::EndCombo();
     }
     ImGui::SameLine();
+    const float saveWidth =
+        ImGui::CalcTextSize("Save").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+    ImGui::SetNextItemWidth(
+        ImGui::GetContentRegionAvail().x - saveWidth - ImGui::GetStyle().ItemSpacing.x);
     ImGui::InputTextWithHint("##new_profile", "(new profile name)", newProfile, sizeof(newProfile));
     ImGui::SameLine();
     if (ImGui::Button("Save"))
