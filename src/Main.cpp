@@ -531,8 +531,9 @@ static int Run()
                 continue;
 #endif
 #if defined(XUO_ASSISTANT)
-            // events for assistant pop-out windows (and the Alt+U hotkey) are
-            // consumed before the game window procedure sees them; while the
+            // events for assistant pop-out windows (and assistant key
+            // bindings) are consumed before the game window procedure sees
+            // them; while the
             // assistant is up it also keeps the events ImGui captured
             if (AssistantWindow_ProcessEvent(event))
                 continue;

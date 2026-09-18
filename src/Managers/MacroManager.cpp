@@ -31,6 +31,7 @@
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.Record* (macro taps)
 #include <core/assist.h> // xuoassist::AssistantSpeechIntercept (speech taps)
+#include "../Assistant/AssistantWindow.h" // AssistantWindow_Toggle (MC_ASSISTANT)
 #endif
 #include <algorithm>
 
@@ -1523,6 +1524,13 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 xuoassist::g_MacroExecutor.RecordToggleGargoyleFlying();
 #endif
             }
+            break;
+        }
+        case MC_ASSISTANT:
+        {
+#if defined(XUO_ASSISTANT)
+            AssistantWindow_Toggle();
+#endif
             break;
         }
         case MC_EQUIP_LAST_WEAPON:

@@ -10,9 +10,15 @@ directory entry and no separate app.
 - The assistant exists only in-game (it initializes on entering the game
   stage and shuts down automatically on logout, character select or
   disconnect).
-- **Alt+U** toggles the assistant window. When hidden, its hotkeys, macro
-  playback and script runtime keep running; a second Alt+U brings the window
-  back.
+- The window is toggled with the **ToggleAssistant** game macro: in the
+  client open **Options → Macros**, add a macro with the
+  "ToggleAssistant" action and bind any key combination to it (the
+  Keystroke key + Shift/Alt/Ctrl checkboxes on the macro page). Pressing
+  that combination in game toggles the assistant window. When hidden, its
+  hotkeys, macro playback and script runtime keep running; a second
+  press of the bound key brings the window back.
+  - Note: the assistant's own **Macros** tab (see below) is the assistant
+    macro system and is unrelated to this client macro action.
 - The window can be dragged outside the game window (pop-out; it becomes a
   real OS window) and docked back, like any ImGui multi-viewport window.
 
@@ -75,8 +81,9 @@ restrictions).
 
 ## Differences from earlier assistant releases
 
-- No system tray icon and no minimize-to-tray: **Alt+U** hides/shows the
-  window instead.
+- No system tray icon and no minimize-to-tray: the **ToggleAssistant**
+  game macro (Options → Macros, bind a key to it) hides/shows the window
+  instead.
 - No native file dialogs: script and hotkey files are picked in-app (the
   script editor has its own picker; `Config/` sandbox rules apply to the
   script file API).

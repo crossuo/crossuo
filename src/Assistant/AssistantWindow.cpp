@@ -312,9 +312,9 @@ static bool init()
         return true;
 
     // the game owns the GL context on the main thread: initialization may run
-    // from AssistantWindow_DrawOverlay (in-game render pass) or from the Alt+U
-    // toggle in AssistantWindow_ProcessEvent; both run on the main thread with
-    // the game GL context current at the in-game stage
+    // from AssistantWindow_DrawOverlay (in-game render pass) or from the
+    // ToggleAssistant game macro (AssistantWindow_Toggle); both run on the
+    // main thread with the game GL context current at the in-game stage
     SDL_Window *window =
         Wisp::g_WispWindow != nullptr ? Wisp::g_WispWindow->m_window : nullptr;
     SDL_GLContext context = SDL_GL_GetCurrentContext();
@@ -378,8 +378,8 @@ bool AssistantWindow_Toggle()
         return false;
     if (!s_initialized && !init())
     {
-        // log once: the key falls through to the game instead, and retrying
-        // every Alt+U must not spam the log
+        // log once: the macro falls through to the game instead, and retrying
+        // every toggle attempt must not spam the log
         static bool warned = false;
         if (!warned)
         {
@@ -426,31 +426,15 @@ void AssistantWindow_FrameTick()
 
 bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
 {
-    const bool isToggleKey = ev.type == SDL_KEYDOWN && !ev.key.repeat &&
-                             ev.key.keysym.sym == SDLK_u &&
-                             (ev.key.keysym.mod & KMOD_ALT) != 0;
-
+    // Note: the window toggle is no longer a hardcoded key here - it is the
+    // ToggleAssistant game macro (Options -> Macros), run by the macro
+    // executor through AssistantWindow_Toggle.
     if (!s_initialized)
-    {
-        // the hotkey exists only in game; anywhere else - and whenever the
-        // toggle fails (init error) - it falls through to the client untouched
-        if (!isToggleKey || !at_game_stage())
-            return false;
-        return AssistantWindow_Toggle(); // true: consumed, false: fall through
-    }
+        return false; // pop-out windows exist only while initialized
 
     // ImGui's SDL2 backend must see every event, including the ones belonging
     // to its own platform windows
     ui_process_event(s_ctx, &ev);
-
-    if (isToggleKey)
-    {
-        if (at_game_stage() && !ImGui::GetIO().WantTextInput)
-        {
-            AssistantWindow_Toggle();
-        }
-        return true;
-    }
 
     if (!event_belongs_to_game(ev))
         return true; // assistant pop-out platform window

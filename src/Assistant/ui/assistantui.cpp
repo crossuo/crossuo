@@ -516,7 +516,8 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     static bool journalOpen = true;
     ImGui::Checkbox("Journal", &journalOpen);
     ImGui::SameLine();
-    ImGui::TextDisabled("Alt+U shows/hides the assistant.");
+    ImGui::TextDisabled(
+        "The ToggleAssistant game macro (Options -> Macros) shows/hides the assistant.");
     ImGui::Separator();
 
     // content: tabs on the left/top, journal pane below, status bar pinned last.

@@ -397,7 +397,11 @@ const char *s_MacroActionName[] = {
     "ToggleBuficonWindow",
     "BandageSelf",
     "BandageTarget",
-    "ToggleGargoyleFlying"
+    "ToggleGargoyleFlying",
+    // The ToggleAssistant entry is hidden from the macro editor combo when the
+    // assistant is compiled out (see CGumpOptions::RedrawMacroData); the entry
+    // itself stays so every s_MacroActionName loop keeps MC_COUNT items.
+    "ToggleAssistant"
 };
 static_assert(countof(s_MacroActionName) == MC_COUNT, "missing macro action name string");
 

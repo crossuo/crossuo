@@ -4,7 +4,7 @@
 // Assistant hotkey engine: an SDL-event funnel living in the client's input
 // path:
 //
-//   AssistantWindow_ProcessEvent (Alt+U, pop-out windows, ImGui gating)
+//   AssistantWindow_ProcessEvent (pop-out windows, ImGui gating)
 //     -> CHotkeys::ProcessEvent  (capture field, then binding matching)
 //       -> the game, unless consumed
 //
@@ -258,7 +258,7 @@ private:
 extern CHotkeys g_Hotkeys;
 
 // The AssistantWindow event hooks (see AssistantWindow_ProcessEvent for the
-// routing order: Alt+U -> pop-out windows -> ImGui capture -> capture field
+// routing order: pop-out windows -> ImGui capture -> capture field
 // (Hotkeys_ProcessCapture) -> bindings (Hotkeys_ProcessGameEvent) -> game).
 bool Hotkeys_IsCapturing();
 // The armed capture field: consumes the next key/wheel/mouse event.

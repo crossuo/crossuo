@@ -10,11 +10,12 @@
 
 union SDL_Event;
 
-// Init-or-show/hide entry point (the Alt+U handler); returns true when the
-// hotkey was consumed. Only works while the client is in the game stage.
+// Init-or-show/hide entry point (the ToggleAssistant game macro handler);
+// returns true when the toggle ran. Only works while the client is in the
+// game stage.
 bool AssistantWindow_Toggle();
-// Consumes events targeted at assistant pop-out platform windows and the
-// Alt+U toggle hotkey; while initialized, every event is forwarded to ImGui
+// Consumes events targeted at assistant pop-out platform windows; while
+// initialized, every event is forwarded to ImGui
 // first and events it wants to capture are kept away from the game.
 // Returns true when the event must not reach the game.
 bool AssistantWindow_ProcessEvent(const SDL_Event &ev);
@@ -24,8 +25,8 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev);
 void AssistantWindow_FrameTick();
 // Renders the assistant overlay at the end of the in-game render pass; the
 // first call lazily initializes the assistant. Initialization may run from
-// here or from the Alt+U toggle: both run on the main thread with the game GL
-// context current at the in-game stage.
+// here or from the ToggleAssistant game macro: both run on the main thread
+// with the game GL context current at the in-game stage.
 void AssistantWindow_DrawOverlay();
 // Destroys the ImGui context and every popped-out platform window; must not
 // SDL_Quit as the client keeps running. Idempotent.
