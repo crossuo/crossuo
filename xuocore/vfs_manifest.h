@@ -124,6 +124,9 @@ inline bool vfs_asset_is_loose(const VfsAsset &asset)
 struct vfs_manifest_params
 {
     fs_path product_file; // product manifest ("prod" XML), read from disk
+    // the product's remote url when known: the aops source derives its
+    // patchcfg url (config beside the patchlist) from it
+    astr_t product_url;
     fs_path blobs_dir;    // local blob store root, mirroring the remote URL tree
     // optional acquisition override (the HTTP fetch engine); when null,
     // every manifest must already exist in the blob store (offline path)

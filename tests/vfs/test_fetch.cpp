@@ -39,6 +39,7 @@
 #include <xuocore/uop.h>
 #include <xuocore/vfs.h>
 #include <xuocore/vfs_fetch.h>
+#include <xuocore/vfs_source_aops.h>
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -784,6 +785,183 @@ VFS_TEST(fetch_shutdown_mid_sweep_returns_promptly)
     vfs_set_params(params);
     TEST_CHECK_MSG(vfs_boot(nullptr), "reboot after a mid-sweep shutdown failed");
     vfs_boot_wait();
+    vfs_shutdown();
+    test_server_stop(srv);
+}
+
+// ---------------------------------------------------------------------------
+// the aops patch format: patchcfg + UTF-16 patchlist -> the same vfs plan
+// ---------------------------------------------------------------------------
+
+// writes the patchlist as UTF-16LE with BOM and CRLF (the wire format)
+static void test_aops_write_patchlist(const fs_path &path, const std::vector<astr_t> &lines)
+{
+    astr_t utf16;
+    utf16.push_back(char(0xFF));
+    utf16.push_back(char(0xFE));
+    for (const auto &line : lines)
+    {
+        for (const char c : line)
+        {
+            utf16.push_back(c);
+            utf16.push_back(char(0));
+        }
+        utf16.push_back('\r');
+        utf16.push_back(char(0));
+        utf16.push_back('\n');
+        utf16.push_back(char(0));
+    }
+    std::vector<uint8_t> payload(utf16.begin(), utf16.end());
+    fs_file_write(path, payload);
+}
+
+// the offline plan build: the patchlist filters down to UO data files,
+// lowercased, deduped; launcher/web files stay out
+VFS_TEST(aops_plan_filters_and_normalizes)
+{
+    test_vfs_shutdown guard;
+    const auto root = test_dir("aops_plan");
+    const auto patchlist = fs_path_join(root, "patchlist");
+    const auto blobs = fs_path_join(root, "blobs");
+    TEST_CHECK(fs_path_create(fs_path_join(blobs, "aops")));
+    vfs_aops_config cfg;
+    TEST_CHECK(vfs_aops_parse_patchcfg(
+        reinterpret_cast<const uint8_t *>("[project]\ncustom_extension=aops\n"
+                                         "[patch_system_configuration]\n"
+                                         "online_patch_directory=/data/\n"),
+        strlen("[project]\ncustom_extension=aops\n"
+               "[patch_system_configuration]\n"
+               "online_patch_directory=/data/\n"),
+        "https://shard.test/fc", &cfg));
+    TEST_CHECK_MSG(
+        cfg.patch_directory == "https://shard.test/fc/data/",
+        "the data url must resolve against the root");
+    TEST_CHECK_MSG(cfg.custom_extension == "aops", "the extension must carry");
+
+    test_aops_write_patchlist(patchlist, {
+        "Faerham Citadel\\tiledata.mul|01012024|12|0|0|0|3072|No|No|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "Faerham Citadel\\Cliloc.enu|02022024|1|2|3|0|654|No|No|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "data\\FCLauncher.exe|03032025|1|2|3|0|123|Yes|No|cccccccccccccccccccccccccccccccc",
+        "Faerham Citadel\\shard art.png|04042025|1|2|3|0|999|No|No|dddddddddddddddddddddddddddddddd",
+        "Faerham Citadel\\TILEDATA.MUL|05052025|1|2|3|0|111|No|No|eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    });
+
+    vfs_params params;
+    params.enabled = true;
+    params.install_dir = fs_path_join(root, "install");
+    params.blobs_dir = blobs;
+    params.product_file = patchlist;
+    vfs_set_params(params);
+
+    VfsPlan plan;
+    TEST_CHECK_MSG(vfs_plan_rebuild(plan), "the aops plan build failed");
+    TEST_CHECK_MSG(plan.files.size() == 2, "only the UO data files may plan");
+    bool have_tile = false, have_cliloc = false;
+    for (const auto &file : plan.files)
+    {
+        if (file.name == "tiledata.mul")
+        {
+            have_tile = true;
+            TEST_CHECK_MSG(file.size == 3072, "the first entry wins the dedup");
+        }
+        else if (file.name == "cliloc.enu")
+        {
+            have_cliloc = true;
+        }
+        TEST_CHECK_MSG(file.name == str_lower(file.name), "names install lowercase");
+    }
+    TEST_CHECK_MSG(have_tile && have_cliloc, "the UO data entries must plan");
+    TEST_CHECK_MSG(
+        plan.files[0].assets.front().blob == "Faerham%20Citadel/tiledata.mulaops",
+        "the tail carries the url-encoded path and the aops extension");
+}
+
+// the full pipeline over http: patchcfg + patchlist fetch, T0 blocking
+// install of the core file, fetch_all converging the rest - and the
+// update flow (serial drift re-fetches exactly the changed file)
+VFS_TEST(aops_boot_installs_and_drifts)
+{
+    test_vfs_shutdown guard;
+    const auto root = test_dir("aops_boot");
+    const auto blobs = fs_path_join(root, "data");
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, root, false));
+
+    const astr_t repo = test_server_url(srv, "/data/");
+    const auto patchlist = fs_path_join(root, "patchlist");
+    const auto patchcfg = fs_path_join(root, "patchcfg");
+    const auto tile_blob = fs_path_join(blobs, "Faerham%20Citadel", "tiledata.mulaops");
+    const auto cliloc_blob = fs_path_join(blobs, "Faerham%20Citadel", "cliloc.enuaops");
+
+    const std::vector<uint8_t> tile_payload(3072, 0xAB);
+    std::vector<uint8_t> cliloc_payload(654, 0xCD);
+    const std::vector<uint8_t> cliloc_payload_v2(700, 0xEF);
+
+    const auto write_product = [&](uint64_t cliloc_size) {
+        test_aops_write_patchlist(patchlist, {
+            "Faerham Citadel\\tiledata.mul|01012024|12|0|0|0|3072|No|No|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "Faerham Citadel\\Cliloc.enu|02022024|1|2|3|0|" + std::to_string(cliloc_size) +
+                "|No|No|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        });
+    };
+    TEST_CHECK(fs_path_create(fs_path_join(blobs, "Faerham%20Citadel")));
+    TEST_CHECK(fs_file_write(fs_path_ascii(tile_blob), tile_payload));
+    TEST_CHECK(fs_file_write(fs_path_ascii(cliloc_blob), cliloc_payload));
+    write_product(654);
+    const astr_t ini = "[project]\nname=t\n\n[patch_system_configuration]\n"
+                       "online_patch_directory=" + repo + "\n";
+    std::vector<uint8_t> ini_bytes(ini.begin(), ini.end());
+    TEST_CHECK(fs_file_write(fs_path_ascii(patchcfg), ini_bytes));
+
+    vfs_params params;
+    params.enabled = true;
+    params.install_dir = fs_path_join(root, "install");
+    params.blobs_dir = fs_path_join(root, "install", "cache", "blobs");
+    params.product_url = test_server_url(srv, "/patchlist");
+    vfs_set_params(params);
+
+    // boot: product + patchcfg fetch, aops plan, T0 blocking install
+    TEST_CHECK_MSG(vfs_boot(nullptr), "the aops boot failed");
+    std::vector<uint8_t> bytes;
+    TEST_CHECK_MSG(
+        test_read_file(fs_path_join(params.install_dir, "tiledata.mul"), bytes),
+        "the core file must install before the first frame");
+    TEST_CHECK_MSG(bytes == tile_payload, "the installed bytes must match the aops blob");
+    vfs_shutdown();
+
+    // converge the rest
+    vfs_set_params(params);
+    TEST_CHECK(vfs_boot(nullptr));
+    TEST_CHECK(vfs_fetch_all(nullptr));
+    vfs_boot_wait();
+    TEST_CHECK_MSG(
+        test_read_file(fs_path_join(params.install_dir, "cliloc.enu"), bytes),
+        "cliloc must materialize");
+    TEST_CHECK_MSG(bytes == cliloc_payload, "cliloc bytes must match");
+    vfs_shutdown();
+
+    // update check: same patchlist is up to date
+    vfs_set_params(params);
+    vfs_update_info info;
+    TEST_CHECK_MSG(vfs_update_check(&info), "the aops update check failed");
+    TEST_CHECK_MSG(!info.update_available, "the same patchlist is up to date");
+    TEST_CHECK_MSG(
+        info.remote_serial == info.local_serial, "both sides fingerprint the patchlist");
+
+    // upstream change: the cliloc entry bumps - exactly that file re-fetches
+    TEST_CHECK(fs_file_write(fs_path_ascii(cliloc_blob), cliloc_payload_v2));
+    write_product(700);
+    const uint64_t tile_hits =
+        test_server_hits(srv, ("/data/Faerham%20Citadel/tiledata.mulaops"));
+    TEST_CHECK(vfs_boot(nullptr));
+    vfs_boot_wait();
+    TEST_CHECK_MSG(
+        test_server_hits(srv, ("/data/Faerham%20Citadel/tiledata.mulaops")) == tile_hits,
+        "an unchanged file must not re-download on drift");
+    TEST_CHECK_MSG(
+        test_read_file(fs_path_join(params.install_dir, "cliloc.enu"), bytes) &&
+            bytes == cliloc_payload_v2,
+        "the changed file must update");
     vfs_shutdown();
     test_server_stop(srv);
 }

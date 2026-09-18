@@ -11,6 +11,7 @@
 
 #include "mft.h"
 #include "vfs_manifest.h"
+#include "vfs_source_aops.h"
 #include "vfs_transport.h"
 #include "uop.h"
 
@@ -246,6 +247,13 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
     {
         LOG_ERROR("could not read product manifest: %s", fs_path_ascii(params.product_file));
         return false;
+    }
+
+    // format dispatch: the official MythicMFT product walks the manifest
+    // tree below; an aops patchlist builds through the aops source
+    if (vfs_aops_sniff_patchlist(data.data(), data.size()))
+    {
+        return vfs_aops_build_plan(p, data, p.product_url, out_plan);
     }
 
     mft_product prod;

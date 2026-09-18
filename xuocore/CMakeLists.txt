@@ -28,6 +28,8 @@ set(XUOCORE_SRCS
   vfs_manifest_embedded.cpp
   vfs_record.cpp
   vfs_record.h
+  vfs_source_aops.cpp
+  vfs_source_aops.h
   vfs_state.cpp
   vfs_state.h
   vfs_store.cpp

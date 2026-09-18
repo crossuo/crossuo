@@ -19,6 +19,7 @@
 #include <xuocore/client_info.h>
 #include <xuocore/uodata.h>
 #include <xuocore/vfs.h>
+#include <xuocore/vfs_source_aops.h>
 #include <common/logging/logging.h>
 #include "Managers/ConfigManager.h"
 #include "Managers/ConnectionManager.h"
@@ -97,6 +98,10 @@ static bool InitCli(int argc, char *argv[])
         "streaming: disable the continuous background download of the"
         " on-demand tiers (T2/T3) - assets fetch only when the game uses"
         " them (on demand) or an update wave touched them");
+    g_cli["streaming-product"].type(po::string).description(
+        "streaming: product manifest url or file (the official patch"
+        " server by default) - an aops patch server root like"
+        " https://uniteuo.com/fc works too");
     g_cli["streaming-trap"].type(po::string).description(
         "streaming: set to 'off' to disable hole traps - reads of undownloaded"
         " data return zeros (escape hatch)");
@@ -179,6 +184,13 @@ bool load_config()
         params.offline = g_cli["streaming-offline"].was_set();
         params.update_check = !g_cli["streaming-no-update"].was_set();
         params.background_sweep = !g_cli["streaming-no-sweep"].was_set();
+        if (g_cli["streaming-product"].was_set())
+        {
+            // aops roots normalize to their patchlist; official urls pass
+            // through unchanged (the plan build dispatches on content)
+            params.product_url =
+                vfs_aops_product_url(g_cli["streaming-product"].get().string);
+        }
         if (g_cli["streaming-trap"].was_set())
         {
             // --streaming-trap=off: holes stay readable (zeros) - the escape

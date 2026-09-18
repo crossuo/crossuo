@@ -693,3 +693,48 @@ Known open edges:
   state mutex and the second write is idempotent (identical bytes). Known
   minor inefficiency, no correctness impact - in-flight range dedup is
   future work if it ever shows in the bandwidth profile.
+
+# NOTES — the aops patch format (M9)
+
+## What aops is and what the plan build does with it
+
+- Third-party patch-manifest format ("AOS-patcher" family, uniteuo-hosted
+  shards). A patchcfg INI ([project] custom_extension/patch_salt_url +
+  [patch_system_configuration] online_patch_directory/online_patchlist_file/
+  update_local_file) beside a UTF-16LE pipe table of EVERY file the shard
+  ships: <relpath>|<DDMMYYYY>|<hh>|<mm>|<ss>|0|<size>|<flag>|<flag>|<hash>.
+- The hash does NOT verify the served bytes (stale patcher-side value;
+  verified against live files) - the file SIZE is the check; the salt
+  belongs to the launcher's own archives. Both are carried informationally.
+- vfs_source_aops.cpp: sniffers (patchlist/patchcfg over product bytes),
+  the ini parser (relative urls resolve against the pointed root), the
+  UTF-16 decoder, the UO data filter and the plan builder. The filter is a
+  compiled allowlist derived from a stock client tree: whole classes
+  (.mul/.idx/.uop/.def/.bin/.iff), the client's language families
+  (cliloc/skilname/skill16/skill30/chat/gesture/intloc/intro/options/
+  opt*/professn/tilehelp/tooltips/gt_ + the 8 languages) and an exact-name
+  table (doors.txt, tile256.txt, obscene.lst, ...). Client config
+  (uo.cfg, login.cfg, ...) and launcher/web files stay out: the live fc
+  server plans 338 data files out of 2072 entries.
+- Names install LOWERCASE (the managed registry already normalizes both
+  sides). Blob tails are the url-encoded relpath + the custom extension
+  ("Faerham%20Citadel/tiledata.mulaops") - the server concatenates name and
+  extension with no separator. Wire stamp folds into YYYYMMDDhhmmss so
+  plan diffs see date bumps.
+- The aops product IS the patchlist: product_url points at (or derives
+  from) the root's patchlist; the serial is a lookup3 fingerprint of the
+  patchlist bytes (vfs_product_serial sniffs: MythicMFT XML -> serial
+  attribute, otherwise content hash). vfs_update_check, drift, diff,
+  journal and the whole tier/sweep machinery work unchanged.
+- The uniteuo servers serve HTTP Range, so after the build the whole-file
+  .uop entries refine into per-block range assets exactly like the official
+  product (94k range blocks on the live fc server) - page-fault streaming
+  applies to packs too, and nothing ships "unpacked".
+- Pointing at a bare server root works: a product fetch that returns
+  neither format retries once at <root>/patchlist. The game grew
+  --streaming-product (url or file; aops roots normalize via
+  vfs_aops_product_url, dotted manifest leaves pass through untouched).
+- Tested: offline filter/normalize/dedup plan build; full http pipeline
+  (patchcfg + patchlist fetch, T0 blocking install, fetch_all converge);
+  update check; serial-drift re-fetching exactly the changed file. Also
+  validated against the live uniteuo fc server end to end.

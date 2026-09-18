@@ -6,6 +6,7 @@
 // include-order workaround: mft.h pulls tinyxml2.h, which must come before
 // any header that pulls common/logging.h (vfs.h does)
 #include "mft.h"
+#include "vfs_source_aops.h"
 
 #include "vfs.h"
 
@@ -655,6 +656,14 @@ static bool vfs_params_ready()
 // when the product manifest still carries the same serial
 static bool vfs_product_serial_data(const uint8_t *data, size_t size, uint64_t *out_serial)
 {
+    // format dispatch: official XML carries the serial attribute; an aops
+    // patchlist fingerprints itself (any stable content hash works - the
+    // serial is only ever compared against itself)
+    if (size < 9 || memcmp(data, "<MythicMFT", 9) != 0)
+    {
+        *out_serial = vfs_aops_serial(data, size);
+        return size != 0;
+    }
     tinyxml2::XMLDocument doc;
     doc.Parse(reinterpret_cast<const char *>(data), size);
     auto root = doc.FirstChildElement("MythicMFT");
@@ -725,6 +734,7 @@ bool vfs_plan_rebuild(VfsPlan &out_plan)
         return false;
     vfs_manifest_params params;
     params.product_file = s_params.product_file;
+    params.product_url = s_params.product_url;
     params.blobs_dir = s_params.blobs_dir;
     if (!vfs_manifest_build(params, out_plan))
         return false;
@@ -1303,7 +1313,38 @@ static bool vfs_boot_product_fetch()
     }
     LOG_INFO("fetching product manifest: %s", s_params.product_url.c_str());
     std::vector<uint8_t> data;
-    if (http_get_binary(s_params.product_url.c_str(), data) && !fs_path_empty(s_params.blobs_dir))
+    if (http_get_binary(s_params.product_url.c_str(), data))
+    {
+        // aops roots are accepted bare ("https://host/fc"): when the fetch
+        // came back as neither manifest format it is likely a site landing
+        // page - retry once at the root's patchlist
+        const size_t len = s_params.product_url.size();
+        const bool looks_patchlist =
+            len >= 9 && s_params.product_url.compare(len - 9, 9, "/patchlist") == 0;
+        if (!vfs_aops_sniff_patchlist(data.data(), data.size()) &&
+            (data.size() < 9 || memcmp(data.data(), "<MythicMFT", 9) != 0) && !looks_patchlist)
+        {
+            astr_t retry = s_params.product_url;
+            while (!retry.empty() && retry.back() == '/')
+                retry.pop_back();
+            retry += "/patchlist";
+            LOG_INFO("product manifest unrecognized: retrying at %s", retry.c_str());
+            std::vector<uint8_t> retry_data;
+            if (http_get_binary(retry.c_str(), retry_data) &&
+                (vfs_aops_sniff_patchlist(retry_data.data(), retry_data.size()) ||
+                    (retry_data.size() >= 9 &&
+                        memcmp(retry_data.data(), "<MythicMFT", 9) == 0)))
+            {
+                s_params.product_url = retry;
+                data = std::move(retry_data);
+            }
+            else
+            {
+                LOG_WARN("vfs: %s is not a product manifest either", retry.c_str());
+            }
+        }
+    }
+    if (!data.empty() && !fs_path_empty(s_params.blobs_dir))
     {
         fs_path_create(s_params.blobs_dir);
         if (vfs_file_write_atomic(fs_path_ascii(s_params.product_file), data))
@@ -1408,6 +1449,7 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
 
     vfs_manifest_params params;
     params.product_file = s_params.product_file;
+    params.product_url = s_params.product_url;
     params.blobs_dir = s_params.blobs_dir;
     if (!s_params.offline && vfs_fetch_started())
     {
