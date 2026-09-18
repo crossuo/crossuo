@@ -423,10 +423,30 @@ void vfs_fetch_stats_get(vfs_fetch_stats *out)
 static std::shared_ptr<vfs_fetch_job> vfs_fetch_enqueue(
     const astr_t &tail, uint64_t expected, bool manifest, int priority)
 {
-    // assumes s_mutex held; dedup: an equal in-flight request is reused
+    // assumes s_mutex held; dedup: an equal in-flight request is reused.
+    // A STILL-QUEUED duplicate is PROMOTED when the new request is higher
+    // precedence - demand landing on a sweep-queued tail must jump the
+    // queue, not wait behind the lane. A running transfer cannot be
+    // preempted (the wait is bounded by the blob itself plus the caller's
+    // timeout). Both copies move together: the queue node is what pop
+    // reads, the shared job what the completing worker reads; the shared
+    // state only flips at completion, so the queue node's state is the
+    // authoritative still-queued signal.
     const auto found = s_active.find(tail);
     if (found != s_active.end())
+    {
+        for (auto &q : s_queue)
+        {
+            if (q.tail != tail || q.state != vfs_fetch_queued)
+                continue;
+            if (priority < q.priority)
+                q.priority = priority;
+            if (priority < found->second->priority)
+                found->second->priority = priority;
+            break;
+        }
         return found->second;
+    }
     auto job = std::make_shared<vfs_fetch_job>();
     job->tail = tail;
     job->manifest = manifest;

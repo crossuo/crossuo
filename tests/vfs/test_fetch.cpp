@@ -660,3 +660,59 @@ VFS_TEST(fetch_demand_beats_sweep)
         "demand must complete before not-yet-started sweep jobs");
     test_server_stop(srv);
 }
+
+// dedup promotion: the game demanding a tail that the sweep already has
+// QUEUED (lane full, not started) must jump the queue - the demand call
+// promotes the queued job and completes while the sweep still holds the
+// lane on the stalled first blob. Without promotion this demand waits
+// behind the lane and lands after the stalled sweep finishes
+VFS_TEST(fetch_demand_promotes_queued_sweep)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "fetch_promote"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    vfs_fetch_params fparams;
+    fparams.workers = 2;
+    http_init();
+    TEST_CHECK(vfs_fetch_start(fparams));
+    vfs_fetch_set_store(fs_path_join(prod.root, "promote-blobs"));
+    const astr_t repo = test_server_url(srv, "/blobs/");
+    vfs_fetch_set_repos(repo.c_str(), repo.c_str());
+
+    // S1 stalls in flight holding the lane; S2/S3 sit queued behind it
+    const astr_t slow_rel = astr_t("slow/") + prod.parts[0].blob_rel;
+    std::atomic<uint64_t> done_at[3] = {{0}, {0}, {0}};
+    std::atomic<bool> ok[3] = {{false}, {false}, {false}};
+    const auto sweep_job = [&prod, &done_at, &ok](const astr_t &rel, size_t slot) {
+        ok[slot] = vfs_fetch_blob_to_store(
+            rel.c_str(), prod.parts[slot].blob.size(), false, 0, VFS_FETCH_PRIO_SWEEP);
+        done_at[slot] = test_now_ms();
+    };
+    std::thread s0(sweep_job, slow_rel, 0), s1(sweep_job, prod.parts[1].blob_rel, 1),
+        s2(sweep_job, prod.parts[2].blob_rel, 2);
+    for (int i = 0; i < 5000 && vfs_fetch_sweep_running() == 0; ++i)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    TEST_CHECK_MSG(vfs_fetch_sweep_running() == 1, "the lane must cap sweeps below the pool");
+
+    // demand the QUEUED S2's tail: the dedup must promote it to the demand
+    // lane so it fetches now, on the idle second worker, while S1 stalls
+    TEST_CHECK(vfs_fetch_blob_to_store(
+        prod.parts[1].blob_rel.c_str(), prod.parts[1].blob.size(), false, 0,
+        VFS_FETCH_PRIO_DEMAND));
+
+    s0.join();
+    s1.join();
+    s2.join();
+    vfs_fetch_stop();
+    for (int i = 0; i < 3; ++i)
+        TEST_CHECK_MSG(ok[i], "every promotion test fetch must succeed");
+    TEST_CHECK_MSG(
+        done_at[1] < done_at[0],
+        "the promoted tail must complete while the stalled sweep holds the lane");
+    test_server_stop(srv);
+}

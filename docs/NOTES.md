@@ -657,3 +657,25 @@ Known open edges:
   everyone as before. Headless callers never demote.
 - Test server gained a `/slow/` path segment (stalls 0.3 s, then serves
   the remainder) for deterministic in-flight ordering (the sweep-lane test).
+
+## Concurrent demand on an object the sweep is already fetching
+
+- QUEUED (lane full / workers busy, not started): the dedup in
+  `vfs_fetch_enqueue` PROMOTES the queued job to the new request's
+  priority - a demand landing on a sweep-queued tail jumps the queue
+  (`fetch_demand_promotes_queued_sweep` proves it across the stalled-lane
+  window; promotion updates BOTH job copies, the queue node pop reads and
+  the shared job the completing worker reads, and only while still queued).
+- IN FLIGHT (worker mid-transfer): the demand dedups onto the running job
+  and waits - no second GET. A wire transfer is not preempted; the wait is
+  bounded by the blob itself, and the native trap's 30 s timeout degrades
+  the fault to the stub path if it overruns (the sweep's chunk materialize
+  heals that stub right after the blob lands).
+- RANGE assets (native pipeline): both the sweep chunk and the trap fault
+  issue direct transport range GETs on their own threads - the engine
+  queue is not involved, so there is no dedup and no preemption; the game
+  thread downloads its block in parallel. Two GETs of the same block can
+  therefore overlap in a one-block window; both materialize under the
+  state mutex and the second write is idempotent (identical bytes). Known
+  minor inefficiency, no correctness impact - in-flight range dedup is
+  future work if it ever shows in the bandwidth profile.
