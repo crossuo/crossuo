@@ -331,12 +331,14 @@ bool CMappedFile::Load(const fs_path &path)
     Info(Filesystem, "mmaping %s", fs_path_ascii(path));
     bool result = false;
 
-    if (fs_path_exists(path))
+    // managed artifacts (streaming install) map with hole pages through the
+    // trap - the managed lookup is case-normalized, so a lowercase install
+    // answers the game's mixed-case requests even when the literal path is
+    // absent; everything else - and everything, when streaming is disabled -
+    // maps exactly as before
+    if (fs_path_exists(path) || vfs_enabled())
     {
         Unload();
-        // managed artifacts (streaming install) map with hole pages through
-        // the trap; everything else - and everything, when streaming is
-        // disabled - maps exactly as before
         result = vfs_map_file(path, Start, Size);
         SetData(Start, Size);
     }

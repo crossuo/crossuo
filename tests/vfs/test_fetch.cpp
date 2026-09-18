@@ -938,6 +938,16 @@ VFS_TEST(aops_boot_installs_and_drifts)
         test_read_file(fs_path_join(params.install_dir, "cliloc.enu"), bytes),
         "cliloc must materialize");
     TEST_CHECK_MSG(bytes == cliloc_payload, "cliloc bytes must match");
+
+    // the game requests mixed-case names ("Skills.idx"): the managed
+    // mapping resolves them against the lowercase install
+    uint8_t *mapped = nullptr;
+    size_t mapped_size = 0;
+    TEST_CHECK_MSG(
+        vfs_map_file(fs_path_join(params.install_dir, "TileData.MUL"), mapped, mapped_size),
+        "a case-variant request must map the lowercase install");
+    TEST_CHECK_MSG(mapped_size == 3072, "the mapped size must match the plan");
+    vfs_unmap_file(mapped, mapped_size);
     vfs_shutdown();
 
     // update check: same patchlist is up to date

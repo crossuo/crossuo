@@ -350,7 +350,7 @@ bool vfs_map_file(const fs_path &path, uint8_t *&out_start, size_t &out_size)
                 }
             }
             out_start = vfs_trap_map(
-                path,
+                fs_path_join(s_params.install_dir, s_plan.files[size_t(index)].name),
                 s_plan,
                 size_t(index),
                 states.size() == assets ? states.data() : nullptr,
