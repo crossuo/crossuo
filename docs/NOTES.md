@@ -609,3 +609,51 @@ Known open edges:
   on-demand (render-critical) requests over the sweep. The update wave is
   the interim step (changed assets only, riding the T1 thread); the full
   background sweep is later work.
+
+# NOTES — the continuous background sweep and the in-game demotion (M8)
+
+## What replaced the on-demand-only contract
+
+- After the T1 tier (and the update wave) drain and the store->install
+  convergence finishes, the background thread now keeps going: the
+  continuous sweep downloads every remaining on-demand asset (T2 first,
+  then T3, plan order within a tier) until the install is complete.
+  `vfs_boot_wait` includes it (headless verbs like `vuoi --streaming-fetch`
+  now converge the WHOLE product - that is what "fetch what is missing"
+  always promised); the game never waits for it (the sweep starts only
+  behind the first-frame gate and runs for the rest of the session).
+- The sweep list is collected at boot (states still exclusive to the boot
+  thread) and re-checked per chunk at run time: anything the game
+  demand-healed (or stubbed) while it sat queued is skipped. Stubbed assets
+  keep their on-demand heal path entirely - the sweep never touches them.
+  Holes stay holes until access. Range assets stream their own blocks on
+  the background thread exactly like T1 chunks do.
+- `vfs_params::background_sweep` (default on; `--streaming-no-sweep` on the
+  client and vuoi) restores the old on-demand-only contract - the escape
+  hatch for constrained setups and for tests that exercise demand paths.
+
+## Priorities and the in-game demotion
+
+- Priority ladder, ascending precedence: sweep 3 (`VFS_FETCH_PRIO_SWEEP`)
+  < arena demand granules 2 (unchanged) < background tier 1 (T1, update
+  wave, `vfs_fetch_all`) < demand 0 (traps, T0, `vfs_fetch_blob_to_store`).
+  One latent inversion was fixed on the way: background whole-blob
+  prefetches used to ride the DEMAND lane (0) because the priority was not
+  plumbable - `vfs_fetch_and_materialize_asset` and
+  `vfs_fetch_blob_to_store` now take a priority, and the background thread
+  passes its own.
+- The sweep lane: at most `active_workers - 1` sweep-priority jobs run
+  concurrently (clamped at 1 on one-worker pools), so a worker always
+  stays free to pop demand instantly. `vfs_fetch_pop` skips sweep jobs
+  while the lane is full; the worker wait predicate understands runnability
+  (parked/budget/lane) so nothing spins.
+- In-game demotion (`vfs_fetch_set_ingame`, called from
+  `vfs_notify_first_frame`, one-way): the pool parks one worker
+  (`s_active_target` N -> N-1, clamped at 1). The default pool is already
+  cores-1 (cap 8), so with defaults the download pool runs cores-2 in-game
+  - one more core kept clear than at boot - and the sweep lane drops to
+  active-1 on top. Parked workers sleep between jobs (the wait predicate
+  owns the decision), in-flight jobs complete, and `vfs_fetch_stop` wakes
+  everyone as before. Headless callers never demote.
+- Test server gained a `/slow/` path segment (stalls 0.3 s, then serves
+  the remainder) for deterministic in-flight ordering (the sweep-lane test).

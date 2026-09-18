@@ -93,6 +93,10 @@ static bool InitCli(int argc, char *argv[])
         "streaming: skip the update check at boot - the cached product"
         " manifest and the persisted plan are kept as-is (missing assets"
         " still stream from the network; this is not --streaming-offline)");
+    g_cli["streaming-no-sweep"].description(
+        "streaming: disable the continuous background download of the"
+        " on-demand tiers (T2/T3) - assets fetch only when the game uses"
+        " them (on demand) or an update wave touched them");
     g_cli["streaming-trap"].type(po::string).description(
         "streaming: set to 'off' to disable hole traps - reads of undownloaded"
         " data return zeros (escape hatch)");
@@ -174,6 +178,7 @@ bool load_config()
         params.enabled = true;
         params.offline = g_cli["streaming-offline"].was_set();
         params.update_check = !g_cli["streaming-no-update"].was_set();
+        params.background_sweep = !g_cli["streaming-no-sweep"].was_set();
         if (g_cli["streaming-trap"].was_set())
         {
             // --streaming-trap=off: holes stay readable (zeros) - the escape

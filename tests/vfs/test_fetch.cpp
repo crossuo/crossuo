@@ -120,7 +120,8 @@ VFS_TEST(fetch_http_end_to_end)
     TEST_CHECK_MSG(vfs_boot(nullptr), "boot over http failed"); // plan + T0 + start T1
     vfs_boot_wait();                                            // headless: also finish T1
 
-    // T0 loose file byte-correct; T1 fetched by the background tier; T3 untouched
+    // T0 loose file byte-correct; T1 fetched by the background tier; T2/T3
+    // converged by the continuous sweep (boot_wait waits for it)
     const auto tiledata = fs_path_join(params.install_dir, "tiledata.mul");
     const auto unifont = fs_path_join(params.install_dir, "unifont1.mul");
     const auto music = fs_path_join(params.install_dir, "Music", "Digital", "Britainpos.mp3");
@@ -130,13 +131,13 @@ VFS_TEST(fetch_http_end_to_end)
     TEST_CHECK_MSG(bytes == prod.loose[0].payload, "tiledata.mul bytes differ");
     TEST_CHECK_MSG(test_read_file(unifont, bytes), "unifont1.mul not materialized");
     TEST_CHECK_MSG(bytes == prod.loose[2].payload, "unifont1.mul bytes differ");
-    // T3 (music) is deferred: the file exists only as its boot skeleton
-    // (sized sparse), never fetched at boot
+    // T3 (music) was deferred at boot, then the continuous sweep fetched it
+    // behind the game: by boot_wait the file materializes with real bytes
     std::vector<uint8_t> music_bytes;
-    TEST_CHECK_MSG(test_read_file(music, music_bytes), "music skeleton missing");
+    TEST_CHECK_MSG(test_read_file(music, music_bytes), "music file missing");
     TEST_CHECK_MSG(
-        music_bytes.size() == prod.loose[1].payload.size() && music_bytes != prod.loose[1].payload,
-        "T3 (music) must not be fetched at boot");
+        music_bytes == prod.loose[1].payload,
+        "the sweep must have fetched + materialized T3 by boot_wait");
 
     // the pack was skeleton-prepared, parses through the production path and
     // its T0 (Strings) block decodes to the exact payload
@@ -497,5 +498,165 @@ VFS_TEST(fetch_recorder_writes_csv)
     TEST_CHECK(test_read_file(csv2, bytes));
     const astr_t text2(bytes.begin(), bytes.end());
     TEST_CHECK_MSG(text2.find("default\n") != astr_t::npos, "default scenario missing");
+    test_server_stop(srv);
+}
+
+// ---------------------------------------------------------------------------
+// the continuous background sweep (T2/T3) and the in-game pool demotion
+// ---------------------------------------------------------------------------
+
+static uint64_t test_now_ms()
+{
+    return uint64_t(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+}
+
+// the sweep: a plain online boot converges the whole plan behind the game -
+// on-demand tiers included, no game-side demand and no fetch_all involved
+VFS_TEST(fetch_sweep_converges_ondemand_tiers)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "fetch_sweep"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    const auto params = test_fetch_params(prod, srv); // background_sweep defaults on
+    vfs_set_params(params);
+    TEST_CHECK_MSG(vfs_boot(nullptr), "boot failed");
+    vfs_boot_wait(); // T1 + convergence + the sweep
+    vfs_shutdown();
+
+    // every pack asset with content (T2 by default; the fixture's zero-byte
+    // part is the planned hole and stays one) materialized with real bytes
+    CUopMappedFile pack;
+    TEST_CHECK_MSG(test_load_pack(params, prod.pack_name.c_str(), pack), "pack load failed");
+    for (const auto &part : prod.parts)
+    {
+        if (part.payload.empty())
+            continue; // the planned hole
+        const auto *entry = pack.GetAsset(part.uop_hash());
+        TEST_CHECK_MSG(entry != nullptr, "a pack block is missing after the sweep");
+        if (entry != nullptr)
+            TEST_CHECK(pack.GetData(entry) == part.payload);
+    }
+    // the T3 music file (deferred at boot) converged too
+    const auto music = fs_path_join(params.install_dir, "Music", "Digital", "Britainpos.mp3");
+    std::vector<uint8_t> bytes;
+    TEST_CHECK_MSG(test_read_file(music, bytes), "T3 music not materialized");
+    TEST_CHECK_MSG(bytes == prod.loose[1].payload, "T3 music bytes differ");
+    test_server_stop(srv);
+}
+
+// --streaming-no-sweep (params.background_sweep = false) restores the old
+// on-demand-only contract: the on-demand tiers stay untouched after boot
+VFS_TEST(fetch_no_sweep_keeps_ondemand_untouched)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "fetch_nosweep"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    auto params = test_fetch_params(prod, srv);
+    params.background_sweep = false;
+    vfs_set_params(params);
+    TEST_CHECK_MSG(vfs_boot(nullptr), "boot failed");
+    vfs_boot_wait();
+    vfs_shutdown();
+
+    // the T2 pack blob and the T3 music blob were never requested
+    TEST_CHECK_MSG(
+        !fs_path_exists(fs_path_join(params.blobs_dir, prod.parts[1].blob_rel)),
+        "the sweep-off boot must not fetch T2 pack blobs");
+    TEST_CHECK_MSG(
+        !fs_path_exists(fs_path_join(params.blobs_dir, prod.loose[1].blob_rel)),
+        "the sweep-off boot must not fetch T3 blobs");
+    test_server_stop(srv);
+}
+
+// the in-game demotion parks one worker (N -> N-1 active, clamped at 1)
+VFS_TEST(fetch_ingame_parks_one_worker)
+{
+    test_vfs_shutdown guard;
+    vfs_fetch_params params;
+    params.workers = 4;
+    TEST_CHECK(vfs_fetch_start(params));
+    TEST_CHECK_MSG(vfs_fetch_active_workers() == 4, "the pool starts at full size");
+    vfs_fetch_set_ingame();
+    TEST_CHECK_MSG(vfs_fetch_active_workers() == 3, "in-game parks exactly one worker");
+    vfs_fetch_stop();
+
+    // single-worker pools clamp: the last worker never parks
+    params.workers = 1;
+    TEST_CHECK(vfs_fetch_start(params));
+    vfs_fetch_set_ingame();
+    TEST_CHECK_MSG(vfs_fetch_active_workers() == 1, "the last worker must stay active");
+    vfs_fetch_stop();
+}
+
+// the sweep lane: with 2 workers the sweep runs one job at a time (cap =
+// active-1), so a demand request enqueued mid-sweep always jumps the queue -
+// it completes before any not-yet-started sweep job (the lane blocks the
+// second worker from taking sweep work, and the stalled S1 holds the lane)
+VFS_TEST(fetch_demand_beats_sweep)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "fetch_lane"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    vfs_fetch_params fparams;
+    fparams.workers = 2;
+    http_init();
+    TEST_CHECK(vfs_fetch_start(fparams));
+    vfs_fetch_set_store(fs_path_join(prod.root, "lane-blobs"));
+    const astr_t repo = test_server_url(srv, "/blobs/");
+    vfs_fetch_set_repos(repo.c_str(), repo.c_str());
+
+    // three sweep blobs saturate the lane; the demand blob races them. S1
+    // rides the server's /slow/ stall so the first sweep stays in flight
+    // while demand is enqueued (deterministic ordering). Threads only
+    // record outcomes - the test framework is not thread-safe
+    const astr_t slow_rel = astr_t("slow/") + prod.parts[0].blob_rel;
+    std::atomic<uint64_t> done_at[4] = {{0}, {0}, {0}, {0}};
+    std::atomic<bool> ok[4] = {{false}, {false}, {false}, {false}};
+    const auto sweep_job = [&prod, &done_at, &ok](const astr_t &rel, size_t slot) {
+        ok[slot] = vfs_fetch_blob_to_store(
+            rel.c_str(), prod.parts[slot].blob.size(), false, 0, VFS_FETCH_PRIO_SWEEP);
+        done_at[slot] = test_now_ms();
+    };
+    const auto demand_job = [&prod, &done_at, &ok]() {
+        const auto &tile = prod.loose[0];
+        ok[3] = vfs_fetch_blob_to_store(
+            tile.blob_rel.c_str(), tile.blob.size(), false, 0, VFS_FETCH_PRIO_DEMAND);
+        done_at[3] = test_now_ms();
+    };
+    std::thread s0(sweep_job, slow_rel, 0), s1(sweep_job, prod.parts[1].blob_rel, 1),
+        s2(sweep_job, prod.parts[2].blob_rel, 2);
+    for (int i = 0; i < 5000 && vfs_fetch_sweep_running() == 0; ++i)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    TEST_CHECK_MSG(vfs_fetch_sweep_running() == 1, "the lane must cap sweeps below the pool");
+
+    std::thread d(demand_job);
+    d.join();
+    s0.join();
+    s1.join();
+    s2.join();
+    vfs_fetch_stop();
+    for (int i = 0; i < 4; ++i)
+        TEST_CHECK_MSG(ok[i], "every lane test fetch must succeed");
+    TEST_CHECK_MSG(
+        done_at[3] <= done_at[1] && done_at[3] <= done_at[2],
+        "demand must complete before not-yet-started sweep jobs");
     test_server_stop(srv);
 }

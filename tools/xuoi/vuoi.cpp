@@ -44,6 +44,9 @@ static bool init_cli(int argc, char *argv[])
         "materialize (needs --path; --product accepts a url or a file)");
     s_cli["streaming-offline"].description(
         "streaming: never hit the network, blob store only");
+    s_cli["streaming-no-sweep"].description(
+        "streaming: disable the continuous background download of the "
+        "on-demand tiers (T2/T3)");
     s_cli["check"].description(
         "check for game data updates: the remote product serial against "
         "the installed plan (read-only; exit 0 up-to-date, 1 update "
@@ -332,6 +335,7 @@ static vfs_params vuoi_params_build()
     }
     params.enabled = true;
     params.offline = s_cli["streaming-offline"].was_set();
+    params.background_sweep = !s_cli["streaming-no-sweep"].was_set();
     // the client's layout: the blob store lives under the install dir when
     // not given explicitly (boot requires both)
     if (fs_path_empty(params.blobs_dir) && !fs_path_empty(params.install_dir))

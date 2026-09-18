@@ -37,6 +37,12 @@ struct vfs_params
     // persisted plan - the install streams on unchanged (still over the
     // network where assets are missing; this is not the offline mode)
     bool update_check = true;
+    // continuous background sweep: after the T1 tier (and the update wave)
+    // converge, the background thread keeps downloading every remaining
+    // on-demand asset (T2 then T3), strictly below demand priority, until
+    // the install is complete. false (--streaming-no-sweep) keeps the
+    // on-demand-only behavior for the on-demand tiers
+    bool background_sweep = true;
     // escape hatch (--streaming-trap=off): managed files map
     // without hole protection - pointer reads of holes return the sparse
     // file's zeros; ensure/pre-resolve paths still fetch on demand

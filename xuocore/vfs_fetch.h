@@ -42,6 +42,15 @@ struct vfs_fetch_params
     uint64_t max_buffered = 64;  // global in-flight cap, megabytes
 };
 
+// request priorities (ascending = higher precedence). Demand (traps, T0,
+// the blocking single-blob path) preempts everything; the background tier
+// (T1, the update wave, fetch_all) preempts the sweep; the sweep - the
+// continuous T2/T3 download - runs strictly below anything user-driven.
+// The arena demand granule path rides one above the background tier
+#define VFS_FETCH_PRIO_DEMAND 0
+#define VFS_FETCH_PRIO_BG 1
+#define VFS_FETCH_PRIO_SWEEP 3
+
 struct vfs_fetch_stats
 {
     uint64_t requests = 0; // GETs performed
@@ -57,6 +66,17 @@ bool vfs_fetch_start(const vfs_fetch_params &params);
 bool vfs_fetch_started();
 // signals the workers and joins them; queued work is abandoned
 void vfs_fetch_stop();
+
+// in-game demotion (the game calls it from its first-frame notification):
+// parks one worker (the pool drops from N to N-1 active; N is already
+// cores-1 by default, so the game keeps at least two cores clear of the
+// download pool with the defaults) and caps the sweep lane at active-1 so
+// a worker always stays free for demand. One-way until the next start.
+void vfs_fetch_set_ingame();
+// introspection (tests): the current active-worker target and how many
+// sweep-lane jobs are running right now
+uint32_t vfs_fetch_active_workers();
+int vfs_fetch_sweep_running();
 
 // repo base URLs (trailing slash included), from the product manifest
 void vfs_fetch_set_repos(const char *manifest_repo, const char *file_repo);
@@ -76,7 +96,8 @@ bool vfs_fetch_blob_to_store(
     const char *tail,
     uint64_t expected_size,
     bool manifest,
-    uint32_t timeout_ms = 0);
+    uint32_t timeout_ms = 0,
+    int priority = VFS_FETCH_PRIO_DEMAND);
 
 // batch driver used by boot: fetches every tail (at `priority`, ascending =
 // higher precedence) reporting progress(0..1, tail) on the calling thread as

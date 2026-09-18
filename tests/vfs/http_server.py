@@ -29,6 +29,7 @@ import os
 import re
 import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)$")
@@ -101,6 +102,13 @@ class Handler(BaseHTTPRequestHandler):
                 count = HITS.get(wanted, 0)
             self._send(200, ("%d\n" % count).encode("utf-8"), "text/plain")
             return
+
+        # a "/slow/" path segment serves the remainder after a fixed stall -
+        # lets tests hold requests in flight deterministically (sweep-lane
+        # ordering etc.); works at any repo depth
+        if "/slow/" in path:
+            time.sleep(0.3)
+            path = path.replace("/slow/", "/", 1)
 
         self._hits(path)
 

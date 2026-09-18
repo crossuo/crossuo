@@ -77,6 +77,12 @@ static uint64_t s_seq = 0;
 static uint64_t s_buffered = 0; // bytes admitted to workers (backpressure)
 static bool s_running = false;
 static bool s_stop = false;
+// in-game demotion: workers with index >= s_active_target park between jobs
+// (the pool shrinks without joining); the sweep lane caps concurrent
+// sweep-priority jobs so one worker always stays free for demand
+static uint32_t s_active_target = 0;
+static int s_sweep_cap = 0;
+static int s_sweep_running = 0;
 
 static const char *vfs_fetch_repo_of(const vfs_fetch_job &job)
 {
@@ -184,13 +190,20 @@ static void vfs_fetch_store_purge(const char *tail)
 
 static bool vfs_fetch_pop(std::shared_ptr<vfs_fetch_job> *out)
 {
-    // assumes s_mutex held; picks the highest-precedence queued job
+    // assumes s_mutex held; picks the highest-precedence runnable job. A
+    // sweep job only runs inside the sweep lane (s_sweep_cap): when the
+    // lane is full the sweep is skipped for demand and background work,
+    // which is exactly the render-critical precedence the lane exists for
+    const bool sweep_slot = s_sweep_running < s_sweep_cap;
     auto best = s_queue.end();
     for (auto it = s_queue.begin(); it != s_queue.end(); ++it)
     {
         if (it->state != vfs_fetch_queued)
             continue;
-        if (best == s_queue.end() ||
+        if (it->priority >= VFS_FETCH_PRIO_SWEEP && !sweep_slot)
+            continue;
+        if (
+            best == s_queue.end() ||
             std::make_pair(it->priority, it->seq) < std::make_pair(best->priority, best->seq))
         {
             best = it;
@@ -198,6 +211,8 @@ static bool vfs_fetch_pop(std::shared_ptr<vfs_fetch_job> *out)
     }
     if (best == s_queue.end())
         return false;
+    if (best->priority >= VFS_FETCH_PRIO_SWEEP)
+        ++s_sweep_running;
     *out = s_active[best->tail];
     best->state = vfs_fetch_running;
     return true;
@@ -212,13 +227,23 @@ static void vfs_fetch_worker_run(size_t index)
         std::shared_ptr<vfs_fetch_job> job;
         {
             std::unique_lock<std::mutex> lock(s_mutex);
-            s_cv_jobs.wait(lock, [] {
+            // parked workers (index >= s_active_target, the in-game
+            // demotion) sleep here until stop; the rest wait for a runnable
+            // job: queued, inside the backpressure budget, and - for the
+            // sweep lane - with a lane slot free
+            s_cv_jobs.wait(lock, [&] {
                 return s_stop ||
-                       (s_buffered < uint64_t(s_fetch_params.max_buffered) * 1024 * 1024 &&
+                       (index < s_active_target &&
+                        s_buffered < uint64_t(s_fetch_params.max_buffered) * 1024 * 1024 &&
                         std::any_of(
                             s_queue.begin(),
                             s_queue.end(),
-                            [](const vfs_fetch_job &q) { return q.state == vfs_fetch_queued; }));
+                            [](const vfs_fetch_job &q)
+                            {
+                                return q.state == vfs_fetch_queued &&
+                                       (q.priority < VFS_FETCH_PRIO_SWEEP ||
+                                        s_sweep_running < s_sweep_cap);
+                            }));
             });
             if (s_stop)
                 break;
@@ -260,6 +285,8 @@ static void vfs_fetch_worker_run(size_t index)
             s_stats.requests++;
             s_stats.bytes += body.size();
             s_buffered -= job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
+            if (job->priority >= VFS_FETCH_PRIO_SWEEP)
+                --s_sweep_running; // the lane slot frees for the next sweep
             job->state = ok ? vfs_fetch_done : vfs_fetch_failed;
             if (!ok)
                 s_stats.failures++;
@@ -295,6 +322,9 @@ bool vfs_fetch_start(const vfs_fetch_params &params)
         s_fetch_params.max_buffered = VFS_FETCH_BUFFERED_MB_DEFAULT;
     s_stop = false;
     s_running = true;
+    s_active_target = s_fetch_params.workers;
+    s_sweep_cap = s_active_target > 1 ? int(s_active_target - 1) : 1;
+    s_sweep_running = 0;
     s_workers.resize(s_fetch_params.workers);
     for (size_t i = 0; i < s_workers.size(); ++i)
     {
@@ -306,6 +336,35 @@ bool vfs_fetch_start(const vfs_fetch_params &params)
         s_fetch_params.retries,
         s_fetch_params.max_buffered);
     return true;
+}
+
+void vfs_fetch_set_ingame()
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    if (!s_running || s_active_target <= 1)
+        return;
+    // the pool drops by one worker (parked between jobs); the sweep lane
+    // keeps one slot of headroom below the target so a worker always
+    // remains free for render-critical demand
+    s_active_target = s_fetch_params.workers > 1 ? s_fetch_params.workers - 1 : 1;
+    s_sweep_cap = int(s_active_target) - 1 > 0 ? int(s_active_target) - 1 : 1;
+    LOG_INFO(
+        "fetch: in-game demotion: %u active workers, sweep lane %d",
+        s_active_target,
+        s_sweep_cap);
+    s_cv_jobs.notify_all();
+}
+
+uint32_t vfs_fetch_active_workers()
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    return s_active_target;
+}
+
+int vfs_fetch_sweep_running()
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    return s_sweep_running;
 }
 
 bool vfs_fetch_started()
@@ -381,7 +440,11 @@ static std::shared_ptr<vfs_fetch_job> vfs_fetch_enqueue(
 }
 
 bool vfs_fetch_blob_to_store(
-    const char *tail, uint64_t expected_size, bool manifest, uint32_t timeout_ms)
+    const char *tail,
+    uint64_t expected_size,
+    bool manifest,
+    uint32_t timeout_ms,
+    int priority)
 {
     if (!tail || !*tail)
         return false;
@@ -397,7 +460,7 @@ bool vfs_fetch_blob_to_store(
         LOG_ERROR("fetch: pool not running (vfs_fetch_start)");
         return false;
     }
-    const auto job = vfs_fetch_enqueue(tail, expected_size, manifest, 0);
+    const auto job = vfs_fetch_enqueue(tail, expected_size, manifest, priority);
     lock.unlock();
     s_cv_jobs.notify_all();
 

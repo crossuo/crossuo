@@ -182,7 +182,8 @@ static bool vfs_fetch_and_materialize_asset(
     uint32_t file_index,
     uint32_t asset_index,
     uint64_t fault_offset,
-    bool record = true)
+    bool record = true,
+    int fetch_priority = VFS_FETCH_PRIO_DEMAND)
 {
     if (!vfs_plan_ready() || file_index >= s_plan.files.size())
         return false;
@@ -271,7 +272,8 @@ static bool vfs_fetch_and_materialize_asset(
         if (!vfs_fetch_started())
             return false; // no engine: nothing can appear in the store
         const uint64_t wire = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
-        fetched = vfs_fetch_blob_to_store(asset.blob.c_str(), wire, false, VFS_TRAP_FETCH_TIMEOUT_MS);
+        fetched =
+            vfs_fetch_blob_to_store(asset.blob.c_str(), wire, false, VFS_TRAP_FETCH_TIMEOUT_MS, fetch_priority);
     }
     log_resolve(fetched);
     if (!fetched)
@@ -1617,48 +1619,72 @@ static void vfs_converge_from_store(const VfsPlan &plan)
         (unsigned long long)total.bytes_written);
 }
 
-// the background tier: T1 fetch (ordered, byte-budgeted chunks) + materialize;
-// then, once the game rendered its first frame, post-frame convergence of the
-// store. Runs until convergence completes or shutdown is requested. Failed
-// blobs are logged and stay missing (retried on the next boot).
-static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
+// processes one byte-budgeted chunk of `items` from `pos`: range assets
+// stream their own block on this thread (at `priority`), whole blobs go
+// through one batched fetch, then the chunk materializes (arena: residency).
+// The sweep re-checks the state db per chunk: the game may have demand-
+// fetched (or stubbed) an item while it sat queued behind T1
+static void vfs_boot_run_chunk(
+    const VfsPlan &plan,
+    const vfs_boot_item *items,
+    size_t count,
+    int priority,
+    bool recheck)
+{
+    std::vector<vfs_boot_item> batch_items; // whole-blob fetch + materialize
+    batch_items.reserve(count);
+    for (size_t i = 0; i < count; ++i)
+    {
+        const vfs_boot_item &item = items[i];
+        if (recheck)
+        {
+            std::unique_lock<std::mutex> lock(s_state_mutex);
+            if (
+                item.global_index < s_states.size() &&
+                (s_states[item.global_index] == vfs_fetched ||
+                 s_states[item.global_index] == vfs_stubbed))
+                continue; // the game healed it first: nothing to do here
+        }
+        const auto &asset = plan.files[item.file_index].assets[item.asset_index];
+        if (s_arena == nullptr && asset.blob_offset != 0 && !s_params.offline)
+        {
+            // range assets stream their own block; routing them through
+            // the whole-blob batch would pull the entire source file
+            // (up to 264MB) for a 10KB block
+            vfs_fetch_and_materialize_asset(
+                uint32_t(item.file_index), uint32_t(item.asset_index), 0, false, priority);
+            continue;
+        }
+        batch_items.push_back(item);
+    }
+    if (!s_params.offline && !batch_items.empty())
+    {
+        std::vector<astr_t> tails;
+        std::vector<uint64_t> sizes;
+        vfs_boot_items_to_tails(batch_items, &tails, &sizes);
+        vfs_fetch_batch(tails, sizes, priority, false, nullptr);
+    }
+    if (s_boot_shutdown)
+        return;
+    if (s_arena != nullptr)
+        vfs_boot_arena_ensure(plan, &batch_items, s_arena);
+    else
+        vfs_boot_materialize(plan, &batch_items, nullptr);
+}
+
+// the background thread: T1 fetch (ordered, byte-budgeted chunks) and the
+// update wave, then - once the game rendered its first frame - the
+// store -> install convergence, and finally the continuous sweep: every
+// remaining on-demand asset (T2 then T3) downloads strictly below demand
+// priority until the install is complete. Runs until done or shutdown;
+// failed blobs are logged and stay missing (retried on the next boot)
+static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, std::vector<vfs_boot_item> sweep)
 {
     LOG_INFO("background tier: %zu assets", items.size());
     for (size_t pos = 0; pos < items.size() && !s_boot_shutdown;)
     {
         const size_t count = vfs_boot_chunk_span(items, pos);
-        const auto first = items.begin() + ptrdiff_t(pos);
-        const auto last = first + ptrdiff_t(count);
-        const std::vector<vfs_boot_item> chunk(first, last);
-        std::vector<vfs_boot_item> batch_items; // whole-blob fetch + materialize
-        batch_items.reserve(chunk.size());
-        for (const auto &item : chunk)
-        {
-            const auto &asset = plan.files[item.file_index].assets[item.asset_index];
-            if (s_arena == nullptr && asset.blob_offset != 0 && !s_params.offline)
-            {
-                // range assets stream their own block; routing them through
-                // the whole-blob batch would pull the entire source file
-                // (up to 264MB) for a 10KB block
-                vfs_fetch_and_materialize_asset(
-                    uint32_t(item.file_index), uint32_t(item.asset_index), 0, false);
-                continue;
-            }
-            batch_items.push_back(item);
-        }
-        if (!s_params.offline && !batch_items.empty())
-        {
-            std::vector<astr_t> tails;
-            std::vector<uint64_t> sizes;
-            vfs_boot_items_to_tails(batch_items, &tails, &sizes);
-            vfs_fetch_batch(tails, sizes, 1, false, nullptr);
-        }
-        if (s_boot_shutdown)
-            break;
-        if (s_arena != nullptr)
-            vfs_boot_arena_ensure(plan, &chunk, s_arena);
-        else
-            vfs_boot_materialize(plan, &batch_items, nullptr);
+        vfs_boot_run_chunk(plan, items.data() + pos, count, VFS_FETCH_PRIO_BG, false);
         pos += count;
     }
     LOG_INFO("background tier complete");
@@ -1675,6 +1701,21 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items)
             vfs_boot_arena_ensure(plan, nullptr, s_arena); // store -> residency
         else
             vfs_converge_from_store(plan);
+    }
+
+    // the continuous sweep: the rest of the plan converges in the background
+    // for as long as the session lasts (state re-checked per chunk; the lane
+    // cap keeps every demand request ahead of it)
+    if (!sweep.empty() && !s_boot_shutdown)
+    {
+        LOG_INFO("background sweep: %zu assets", sweep.size());
+        for (size_t pos = 0; pos < sweep.size() && !s_boot_shutdown;)
+        {
+            const size_t count = vfs_boot_chunk_span(sweep, pos);
+            vfs_boot_run_chunk(plan, sweep.data() + pos, count, VFS_FETCH_PRIO_SWEEP, true);
+            pos += count;
+        }
+        LOG_INFO("background sweep complete");
     }
     // final fold: everything the tier (and traps) did lands in state.bin
     vfs_state_fold(plan);
@@ -1866,6 +1907,29 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     for (const auto &item : diff.added)
         vfs_boot_wave_append(plan, item, &t1);
 
+    // the continuous sweep list: every remaining on-demand asset, T2 before
+    // T3 (plan order within a tier). Collected here (boot thread, states
+    // still exclusive) and re-checked per chunk at run time - the game may
+    // demand-heal items while the sweep sits queued behind T1. Stubbed
+    // assets keep their on-demand heal path; the sweep never touches them
+    std::vector<vfs_boot_item> sweep;
+    if (s_params.background_sweep)
+    {
+        vfs_boot_collect(plan, vfs_tier_t2, &sweep, nullptr, nullptr);
+        vfs_boot_collect(plan, vfs_tier_t3, &sweep, nullptr, nullptr);
+        sweep.erase(
+            std::remove_if(
+                sweep.begin(),
+                sweep.end(),
+                [](const vfs_boot_item &item)
+                {
+                    return item.global_index >= s_states.size() ||
+                           s_states[item.global_index] == vfs_fetched ||
+                           s_states[item.global_index] == vfs_stubbed;
+                }),
+            sweep.end());
+    }
+
     // T0: blocking fetch + materialize with progress on this thread
     if (!t0_fetch.empty() && online)
     {
@@ -1923,7 +1987,7 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     // T1: background worker loop (never blocks the game render loop)
     s_boot_shutdown = false;
     s_boot_started = true;
-    s_background = std::thread(vfs_boot_background, plan, std::move(t1));
+    s_background = std::thread(vfs_boot_background, plan, std::move(t1), std::move(sweep));
     return true;
 }
 
@@ -1958,10 +2022,15 @@ void vfs_boot_wait()
 }
 
 // the game calls this once the first frame is out: post-frame convergence
-// (store -> install) may start spending disk behind the render loop
+// (store -> install) may start spending disk behind the render loop, and
+// the download pool demotes to in-game mode - one worker parks (the pool
+// runs N-1 of its N threads; the default pool is cores-1, so the game
+// keeps two cores clear) and the sweep lane caps at active-1 so every
+// on-demand request stays ahead of the continuous sweep
 void vfs_notify_first_frame()
 {
     s_frame_seen = true;
+    vfs_fetch_set_ingame();
 }
 
 // full install: queue the blob of every planned
