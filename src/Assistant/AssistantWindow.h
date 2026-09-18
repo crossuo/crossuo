@@ -14,6 +14,11 @@ union SDL_Event;
 // returns true when the toggle ran. Only works while the client is in the
 // game stage.
 bool AssistantWindow_Toggle();
+// Shows or hides the assistant overlay (the Open/Close/Minimize/Maximize
+// Assistant game macro sub-actions); returns true when the request ran.
+// Minimize hides the shell: the assistant has no minimized rendering.
+// Only works while the client is in the game stage.
+bool AssistantWindow_Show(bool show);
 // Consumes events targeted at assistant pop-out platform windows; while
 // initialized, every event is forwarded to ImGui
 // first and events it wants to capture are kept away from the game.

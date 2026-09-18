@@ -372,7 +372,7 @@ static bool init()
     return true;
 }
 
-bool AssistantWindow_Toggle()
+bool AssistantWindow_Show(bool show)
 {
     if (!at_game_stage())
         return false;
@@ -388,7 +388,7 @@ bool AssistantWindow_Toggle()
         }
         return false;
     }
-    s_visible = !s_visible;
+    s_visible = show;
     if (!s_visible)
     {
         // disarm a pending capture field: with the shell hidden nothing would
@@ -400,6 +400,11 @@ bool AssistantWindow_Toggle()
         SDL_ShowCursor(SDL_DISABLE);
     }
     return true;
+}
+
+bool AssistantWindow_Toggle()
+{
+    return AssistantWindow_Show(!AssistantWindow_IsVisible());
 }
 
 void AssistantWindow_FrameTick()

@@ -547,6 +547,13 @@ void CMacroManager::ProcessSubMenu()
                     g_Game.OpenResourceTracker();
                     break;
                 }
+                case MSC_ASSISTANT:
+                {
+#if defined(XUO_ASSISTANT)
+                    AssistantWindow_Show(true);
+#endif
+                    break;
+                }
                 case MSC_G2_MAGE_SPELLBOOK:
                 case MSC_G2_NECRO_SPELLBOOK:
                 case MSC_G2_PALADIN_SPELLBOOK:
@@ -694,6 +701,15 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_RESOURCE_TRACKER:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_RESOURCETRACKER);
+                    break;
+                }
+                case MSC_ASSISTANT:
+                {
+#if defined(XUO_ASSISTANT)
+                    // Close/Minimize both hide the overlay (the assistant has
+                    // no minimized rendering); Maximize shows it
+                    AssistantWindow_Show(g_MacroPointer->Code == MC_MAXIMIZE);
+#endif
                     break;
                 }
                 case MSC_G2_MAGE_SPELLBOOK:

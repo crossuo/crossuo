@@ -441,6 +441,7 @@ const char *s_MacroAction[] = {
     "Racial Abilities Book",
     "Bard Spellbook",
     "Resource Tracker",
+    "Assistant",
     "Anatomy", //Skills group
     "Animal Lore",
     "Animal Taming",
