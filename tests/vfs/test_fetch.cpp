@@ -716,3 +716,74 @@ VFS_TEST(fetch_demand_promotes_queued_sweep)
         "the promoted tail must complete while the stalled sweep holds the lane");
     test_server_stop(srv);
 }
+
+// shutdown mid-streaming: vfs_shutdown must SIGNAL the background tier.
+// Pre-fix the flag was never set: quitting before the first frame hung
+// forever on the tier's frame gate, and quitting mid-sweep walked every
+// remaining chunk against the dead pool inside the join (the materialize
+// + "pool not running" spam)
+VFS_TEST(fetch_shutdown_stops_the_background_tier)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "fetch_shutdown"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    const auto params = test_fetch_params(prod, srv);
+    vfs_set_params(params);
+    TEST_CHECK_MSG(vfs_boot(nullptr), "boot failed");
+    // deliberately NO first-frame notification: the background tier drains
+    // its (empty) T1 list and parks on the frame gate
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    const auto start = test_now_ms();
+    vfs_shutdown();
+    const auto elapsed = test_now_ms() - start;
+    TEST_CHECK_MSG(
+        elapsed < 10000,
+        "shutdown must signal the background tier (took %" PRIu64 "ms)",
+        elapsed);
+    test_server_stop(srv);
+}
+
+// quitting mid-sweep (the live case): shutdown aborts the sweep promptly
+// and the interrupted install stays bootable - the journal replays the
+// marks that landed, the next boot re-sweeps the rest
+VFS_TEST(fetch_shutdown_mid_sweep_returns_promptly)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "fetch_shutdown_sweep"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    const auto params = test_fetch_params(prod, srv);
+    vfs_set_params(params);
+    TEST_CHECK_MSG(vfs_boot(nullptr), "boot failed");
+    vfs_notify_first_frame(); // the sweep starts behind the game
+    // wait until the sweep made progress: a T2 blob landed in the store
+    const auto t2_blob = fs_path_join(params.blobs_dir, prod.parts[1].blob_rel);
+    for (int i = 0; i < 5000 && !fs_path_exists(t2_blob); ++i)
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    TEST_CHECK_MSG(fs_path_exists(t2_blob), "the sweep never started");
+
+    const auto start = test_now_ms();
+    vfs_shutdown();
+    const auto elapsed = test_now_ms() - start;
+    TEST_CHECK_MSG(
+        elapsed < 10000,
+        "shutdown must abort the sweep promptly (took %" PRIu64 "ms)",
+        elapsed);
+
+    // the interrupted install must remain bootable
+    vfs_set_params(params);
+    TEST_CHECK_MSG(vfs_boot(nullptr), "reboot after a mid-sweep shutdown failed");
+    vfs_boot_wait();
+    vfs_shutdown();
+    test_server_stop(srv);
+}

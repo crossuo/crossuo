@@ -658,6 +658,20 @@ Known open edges:
 - Test server gained a `/slow/` path segment (stalls 0.3 s, then serves
   the remainder) for deterministic in-flight ordering (the sweep-lane test).
 
+## Shutdown mid-streaming (vfs_shutdown must signal the tier)
+
+- `vfs_shutdown` never set `s_boot_shutdown` - only `vfs_boot` reset it.
+  Quitting mid-stream therefore killed the fetch pool and then joined a
+  background thread that kept walking its chunk loops against the dead
+  pool: every chunk logged a materialize pass plus "fetch: pool not
+  running" until the whole sweep drained (minutes on a real install) -
+  and quitting before the first frame hung FOREVER on the tier's frame
+  gate. Both fixed by setting the flag (already atomic) before
+  `vfs_fetch_stop`; loops exit at chunk boundaries and the frame gate
+  polls the flag. Regression tests: shutdown before the first frame
+  (mutation-checked: hangs without the fix) and shutdown mid-sweep with
+  a reboot-after check (the journal replays what landed).
+
 ## Concurrent demand on an object the sweep is already fetching
 
 - QUEUED (lane full / workers busy, not started): the dedup in

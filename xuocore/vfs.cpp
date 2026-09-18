@@ -1998,6 +1998,11 @@ void vfs_shutdown()
     vfs_trap_shutdown();
     if (s_boot_started)
     {
+        // signal the background tier BEFORE stopping the pool: the flag
+        // ends the tier's gates and chunk loops (the first-frame wait and
+        // the sweep would otherwise walk every remaining chunk against a
+        // dead pool, hanging the join below for the whole install)
+        s_boot_shutdown = true;
         vfs_fetch_stop(); // unblocks any in-flight batch in the background tier
         if (s_background.joinable())
             s_background.join();
