@@ -613,6 +613,10 @@ struct vfs_refine_reader
     }
 };
 
+// C++14: the in-class initializer is not a definition; debug builds odr-use
+// CHUNK through std::max's reference parameter, so the symbol must exist
+const size_t vfs_refine_reader::CHUNK;
+
 bool vfs_refine_walk_table(vfs_refine_reader &reader, std::vector<UopFileEntry> &entries)
 {
     // header: [0, sizeof(UopHeader))

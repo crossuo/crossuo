@@ -561,6 +561,16 @@ FS_PRIVATE bool fs_path_equal(const fs_path &a, const fs_path &b)
 
 FS_PRIVATE void fs_append(fs_path &target, const fs_path &other)
 {
+    // either side may be empty (an unset product_path composes relative
+    // cache paths through here): back()/front() on an empty string is UB
+    // that hardened debug builds assert on
+    if (other.real_path.empty())
+        return;
+    if (target.real_path.empty())
+    {
+        target.real_path = other.real_path;
+        return;
+    }
     if (target.real_path.back() == '/' || other.real_path.front() == '/')
     {
         target.real_path += other.real_path;

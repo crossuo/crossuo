@@ -8,6 +8,8 @@
 
 #include "vfs_store_arena.h"
 
+#include <inttypes.h>
+
 #include <algorithm>
 #include <string.h>
 
