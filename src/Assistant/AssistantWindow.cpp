@@ -285,14 +285,27 @@ static bool event_belongs_to_game(const SDL_Event &ev)
     }
 }
 
-// The client never enables SDL text input (the game console and gumps are fed
-// from raw key events via CGameScreen::OnTextInput), so SDL_TEXTINPUT never
-// reaches ImGui either; the vendored SDL2 backend only starts it on Android.
-// Leaving it enabled for good would make the game receive text events as well
-// and every character would be typed twice. Enable it only while ImGui actually
-// wants text input and restore the previous state otherwise.
-static void sync_text_input(bool wantText)
+// Sole owner of the SDL text-input state while the assistant is initialized,
+// called once per frame from AssistantWindow_DrawOverlay right after ui_newframe
+// (the assistant ImGui backend runs first; its SDL2 backend only touches
+// SDL_Start/StopTextInput on Android, so this has the final say everywhere).
+// Precedence: assistant text field > game console > stop.
+// - io.WantTextInput (an assistant InputText is active): keep text input
+//   started. The game console receives nothing meanwhile: the event pump in
+//   Main.cpp hands SDL_TEXTINPUT to ImGui (AssistantWindow_ProcessEvent
+//   consumes it) whenever the assistant wants text, so nothing is typed twice.
+// - game stage (GS_GAME/GS_GAME_BLOCKED): the game console (CGameScreen::
+//   OnTextInput -> g_EntryPointer->Insert) and text-entry gumps (including
+//   CGumpTextEntryDialog on the blocked screen, via CGumpManager::OnTextInput)
+//   are fed EXCLUSIVELY from SDL_TEXTINPUT events (WispWindow OnWindowProc),
+//   so keep text input started even when the assistant does not want text.
+//   The client never toggles the state itself: SDL leaves it enabled from
+//   video init, and stopping it here whenever an assistant field lost focus is
+//   exactly what muted the game console (no SDL_TEXTINPUT -> cannot talk).
+// - otherwise: stopped.
+static void sync_text_input(bool assistantWantsText, bool gameStage)
 {
+    const bool wantText = assistantWantsText || gameStage;
     if (wantText == s_textInputActive)
         return;
     s_textInputActive = wantText;
@@ -536,7 +549,7 @@ void AssistantWindow_DrawOverlay()
     if (SDL_GL_GetCurrentWindow() != s_assistantWin.window)
         SDL_GL_MakeCurrent(s_assistantWin.window, s_assistantWin.context);
 
-    sync_text_input(ImGui::GetIO().WantTextInput);
+    sync_text_input(ImGui::GetIO().WantTextInput, at_game_stage());
 }
 
 void AssistantWindow_Shutdown()
@@ -544,7 +557,11 @@ void AssistantWindow_Shutdown()
     if (!s_initialized)
         return;
 
-    sync_text_input(false);
+    // leaving the game stage: restore the state the client shipped with (text
+    // input enabled from SDL video init) instead of stopping it - the main-menu
+    // stage still types through SDL_TEXTINPUT (login/account fields and, on
+    // embedded-launcher builds, the launcher's ImGui text fields)
+    sync_text_input(true, false);
     // flush pending edits + uninstall the UI events consumer while the ImGui
     // context (and the registered icon texture) still exist. The atlas stays
     // registered with RefCount == 1 so that ui_shutdown below is the one to
