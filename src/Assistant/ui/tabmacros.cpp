@@ -100,7 +100,8 @@ void TabMacros_Draw()
     const bool playingThis =
         g_MacroExecutor.IsPlaying() && g_MacroExecutor.PlayingIndex() == s_SelectedMacro;
 
-    // --- left: the macro list (lw_MacroList, editable names) ----------------
+    // the macro list pane left, the actions pane right
+    ImGui::BeginChild("##macros_pane", ImVec2(100.0f, 0.0f), ImGuiChildFlags_None);
     ImGui::TextUnformatted("Macro list:");
     const bool listChanged = NameList(
         "##macro_list", macros, &s_SelectedMacro, &MacroNameOf, &MacroSetNameOf, false, 150.0f);
@@ -110,6 +111,10 @@ void TabMacros_Draw()
         // re-point their hotkeys by name at the next save (UpdateMacroList)
         save_macros();
     }
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##macros_form", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
 
     // New / Delete (on_pb_Create_clicked / on_pb_Remove_clicked)
     ImGui::BeginDisabled(recording || playingThis);
@@ -134,23 +139,7 @@ void TabMacros_Draw()
         }
     }
     ImGui::EndDisabled();
-
-    // --- the actions list (lw_MacroActions) ---------------------------------
-    ImGui::TextUnformatted("Macro actions list:");
-    if (s_SelectedMacro != s_ActionTextsMacro ||
-        (s_SelectedMacro >= 0 && s_SelectedMacro < (int)macros.size() &&
-         macros[s_SelectedMacro].m_Items.size() != s_ActionTextsCount))
-    {
-        rebuild_action_texts();
-    }
-    if (ImGui::BeginListBox("##macro_actions", ImVec2(-1.0f, 150.0f)))
-    {
-        for (const astr_t &text : s_ActionTexts)
-        {
-            ImGui::Selectable(text.c_str(), false, ImGuiSelectableFlags_Disabled);
-        }
-        ImGui::EndListBox();
-    }
+    ImGui::SameLine();
 
     // --- Record / Play -------------------------------------------------------
     if (recording)
@@ -198,6 +187,17 @@ void TabMacros_Draw()
         }
         ImGui::EndDisabled();
     }
+    ImGui::SameLine();
+
+    // pb_ToScript stays disabled (the script engine is script-module only)
+    ImGui::BeginDisabled(true);
+    ImGui::Button("To script");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+    {
+        ImGui::SetTooltip("Not available.");
+    }
+    ImGui::EndDisabled();
+    ImGui::SameLine();
 
     // --- loop controls (cb_Looped + dsb_LoopTime, 0.1-1000) -----------------
     static bool looped = false;
@@ -215,14 +215,24 @@ void TabMacros_Draw()
         loopSeconds = 1000.0f;
     }
 
-    // pb_ToScript stays disabled (the script engine is script-module only)
-    ImGui::BeginDisabled(true);
-    ImGui::Button("To script");
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+    // --- the actions list (lw_MacroActions) ---------------------------------
+    ImGui::TextUnformatted("Macro actions list:");
+    if (s_SelectedMacro != s_ActionTextsMacro ||
+        (s_SelectedMacro >= 0 && s_SelectedMacro < (int)macros.size() &&
+         macros[s_SelectedMacro].m_Items.size() != s_ActionTextsCount))
     {
-        ImGui::SetTooltip("Not available.");
+        rebuild_action_texts();
     }
-    ImGui::EndDisabled();
+    if (ImGui::BeginListBox("##macro_actions", ImVec2(-1.0f, 150.0f)))
+    {
+        for (const astr_t &text : s_ActionTexts)
+        {
+            ImGui::Selectable(text.c_str(), false, ImGuiSelectableFlags_Disabled);
+        }
+        ImGui::EndListBox();
+    }
+
+    ImGui::EndChild();
 
     // push the loop options
     g_MacroExecutor.SetLoopOptions(looped && EnabledFeatureLoopedMacro(), loopSeconds);
