@@ -23,7 +23,7 @@
 
 #define VUOI_AGENT_NAME "EAMythic Patch Client"
 
-std::atomic<vfs_transport *> s_override{ nullptr }; // injected transport, if any
+static std::atomic<vfs_transport *> s_override{ nullptr }; // injected transport, if any
 
 namespace
 {

@@ -14,7 +14,7 @@ struct CSkill
     float BaseValue = 0.0f;
     float Value = 0.0f;
     float Cap = 0.0f;
-    uint8_t Status = 0;
+    uint8_t LockStatus = 0; // skill lock: 0 = up, 1 = down, 2 = locked
 
     CSkill() = default;
     CSkill(bool haveButton, astr_t name);

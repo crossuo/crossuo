@@ -839,7 +839,6 @@ VFS_TEST(arena_inflight_ensure_survives_eviction)
     const bool entered = gated.entered;
     // the granule is in flight: the budget must skip it entirely
     arena.evict(0);
-    const size_t resident_during = arena.stats().resident;
     const uint64_t evictions_during = arena.stats().evictions;
 
     gated.release = true;

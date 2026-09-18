@@ -28,7 +28,7 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
             m_ButtonUse = nullptr;
         }
 
-        m_Status = skill->Status;
+        m_Status = skill->LockStatus;
 
         uint16_t graphic = GetStatusButtonGraphic();
         m_ButtonStatus = new CGUIButton(statusSerial, graphic, graphic, graphic, 251, 0);

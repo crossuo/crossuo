@@ -279,7 +279,7 @@ void CGumpSkills::UpdateSkillValue(int index)
 
                     if (skill != nullptr)
                     {
-                        ((CGUISkillItem *)item)->SetStatus(skill->Status);
+                        ((CGUISkillItem *)item)->SetStatus(skill->LockStatus);
                     }
 
                     return;
@@ -630,7 +630,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
 
             if (skill != nullptr)
             {
-                uint8_t status = skill->Status;
+                uint8_t status = skill->LockStatus;
 
                 if (status < 2)
                 {
@@ -642,7 +642,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
                 }
 
                 CPacketSkillsStatusChangeRequest(index, status).Send();
-                skill->Status = status;
+                skill->LockStatus = status;
 
                 CGUISkillItem *skillItem = GetSkill(index);
 

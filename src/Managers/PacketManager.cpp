@@ -2689,7 +2689,7 @@ PACKET_HANDLER(UpdateSkills)
             skill->BaseValue = (float)(baseVal / 10.0f);
             skill->Value = (float)(realVal / 10.0f);
             skill->Cap = (float)(cap / 10.0f);
-            skill->Status = lock;
+            skill->LockStatus = lock;
 
             if (gump != nullptr)
             {
