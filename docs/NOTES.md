@@ -555,3 +555,57 @@ Known open edges:
   readable, silently disabling demand fetch for that block).
 - cliloc files and the string dictionary carry an 0x8E byte at offset 3 when
   bwt coded; both decode up front now.
+
+# NOTES — streaming update verbs and the update wave (M7)
+
+## What the update surface is now
+
+- The update *engine* was already M5's drift flow (prod refresh every online
+  boot, serial drift, manifest purge, plan rebuild, per-asset diff, reset).
+  M7 adds the surfaces around it; no engine semantics changed.
+- `vfs_params::update_check` (default true). false =
+  `--streaming-no-update`: `vfs_boot_product_fetch` keeps the cached product
+  manifest (a MISSING one still downloads - a first boot must plan). The
+  persisted plan then loads undrifted and streams on unchanged; missing
+  assets still fetch over the network (this is NOT the offline mode).
+- `vfs_update_check(vfs_update_info*)`: the read-only "is an update
+  available" verb. Downloads the product manifest into MEMORY (the cached
+  copy and the plan stay untouched - the next boot applies what this only
+  reports), compares serials, and treats a subset change as drift too (a
+  subset change rebuilds+diffs at boot even on the same serial). A missing
+  plan reports `update_available` (nothing installed is actionable). It
+  calls `http_init` itself (idempotent) - it runs without a boot; call it on
+  the boot thread only (the http layer's handle is a process global).
+- Update wave: assets the plan diff changed in the ON-DEMAND tiers (T2/T3)
+  are appended to the END of the T1 background list (`vfs_boot_wave_append`,
+  after the recorded-order sort). An update therefore converges T0 blocking
+  before the first frame, T1 behind the game, T2/T3 in the same background
+  thread - no holes left for the first access to trip over, no demand and
+  no `vfs_fetch_all` needed. The exact-once refetch in
+  `update_serial_bump_refetches_only_changed` now proves the diff deleted
+  the blob (a present blob is never re-requested); that test's old
+  "changed asset stays a hole after boot" expectation became false BY
+  DESIGN with the wave and was rewritten.
+- Update still ACTIVATES at boot (index pointers are baked absolute; a
+  mid-session activation would need remap + index rebuild). What the wave
+  buys is that the download is already done when that boot happens.
+
+## CLI verbs (xuoi + vuoi, same shape)
+
+- `--check`: read-only serial compare; exit 0 up-to-date, 1 update
+  available (or nothing installed), <0 the check failed.
+- `--update`: boot (applies the diff) + `vfs_fetch_all` (the delta is
+  exactly "every missing blob" after the reset) + materialize + summary;
+  no verify (`xuoi --full` remains the sealing pass).
+- `vuoi` params builder now defaults `blobs_dir` to `<install>/cache/blobs`
+  (the client's layout) so the verbs work without `--blobs`.
+- Launcher integration is deliberately OUT: the launcher's update
+  functionality is being removed; game-data updates live in the CLIs and
+  the client's launch-time flow.
+
+## Deferred (explicit product direction)
+
+- T2/T3 must become a CONTINUOUS background download that always prioritizes
+  on-demand (render-critical) requests over the sweep. The update wave is
+  the interim step (changed assets only, riding the T1 thread); the full
+  background sweep is later work.

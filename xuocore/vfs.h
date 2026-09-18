@@ -31,6 +31,12 @@ struct vfs_params
 {
     bool enabled = false; // streaming install mode; false: no-op module
     bool offline = false; // never hit the network; cache/stubs only
+    // update check at boot: an online boot refreshes the product manifest
+    // every start so serial drift (upstream content changes) is applied;
+    // false (--streaming-no-update) keeps the cached manifest and the
+    // persisted plan - the install streams on unchanged (still over the
+    // network where assets are missing; this is not the offline mode)
+    bool update_check = true;
     // escape hatch (--streaming-trap=off): managed files map
     // without hole protection - pointer reads of holes return the sparse
     // file's zeros; ensure/pre-resolve paths still fetch on demand
@@ -70,6 +76,22 @@ bool vfs_enabled();
 // manifest serial, (re)build and persist it otherwise
 bool vfs_plan_ensure(VfsPlan &out_plan);
 bool vfs_plan_rebuild(VfsPlan &out_plan);
+
+// update check (no boot): downloads the product manifest into memory and
+// compares its serial against the persisted plan (a subset change counts
+// as drift too). Read-only: the cached manifest and the plan stay
+// untouched - the next boot applies what this only reports. Returns false
+// when the check could not run (unusable params, download failure,
+// malformed manifest); `out` still carries what was learned (plan_found,
+// serials)
+struct vfs_update_info
+{
+    bool plan_found = false;       // a persisted plan.bin exists
+    bool update_available = false; // remote serial/subset differ from the plan
+    uint64_t local_serial = 0;     // the persisted plan's product serial
+    uint64_t remote_serial = 0;    // the freshly downloaded product serial
+};
+bool vfs_update_check(vfs_update_info *out);
 
 // materialize everything reachable from the blob store (idempotent, offline);
 // returns false only on io failures or unusable blobs, missing blobs are not

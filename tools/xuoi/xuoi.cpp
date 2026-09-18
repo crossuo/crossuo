@@ -199,7 +199,8 @@ static void xuoi_full_progress(float done01, const char *label)
     fflush(stdout);
 }
 
-static int xuoi_full_run(const fs_path &outpath)
+// shared vfs params for the streamed-install verbs (--full/--update/--check)
+static vfs_params xuoi_stream_params(const fs_path &outpath)
 {
     vfs_params params;
     params.enabled = true;
@@ -213,6 +214,12 @@ static int xuoi_full_run(const fs_path &outpath)
         else
             params.product_file = fs_path_from(product.c_str());
     }
+    return params;
+}
+
+static int xuoi_full_run(const fs_path &outpath)
+{
+    vfs_params params = xuoi_stream_params(outpath);
     vfs_set_params(params);
 
     if (!vfs_boot(xuoi_full_progress))
@@ -268,6 +275,53 @@ static int xuoi_full_run(const fs_path &outpath)
     return 0;
 }
 
+// --check: read-only product-serial comparison against the installed plan
+// (no boot, nothing is written). exit 0 up-to-date, 1 update available (or
+// nothing installed yet), <0 the check itself failed
+static int xuoi_check_run(const fs_path &outpath)
+{
+    vfs_set_params(xuoi_stream_params(outpath));
+    vfs_update_info info;
+    if (!vfs_update_check(&info))
+        return -int(mft_could_not_download_file);
+    if (!info.plan_found)
+    {
+        LOG_INFO("no streamed install found at %s", fs_path_ascii(outpath));
+        return 1;
+    }
+    return info.update_available ? 1 : 0;
+}
+
+// --update: converge the streamed install at --path to the latest product.
+// The boot applies the plan diff (blocking T0 first), fetch_all pulls the
+// remaining delta (background tiers + the update wave), materialize writes
+// it out. No verify - --full is the sealing pass
+static int xuoi_update_run(const fs_path &outpath)
+{
+    vfs_set_params(xuoi_stream_params(outpath));
+    if (!vfs_boot(xuoi_full_progress))
+    {
+        vfs_shutdown();
+        LOG_ERROR("streamed update: boot failed (missing product manifest?)");
+        return -int(mft_could_not_download_file);
+    }
+    if (!vfs_fetch_all(xuoi_full_progress))
+        LOG_ERROR("streamed update: some downloads failed");
+    vfs_boot_wait(); // finish the background tier + update wave
+
+    vfs_materialize_stats stats;
+    const bool materialized = vfs_materialize(&stats);
+    LOG_INFO(
+        "update: %zu written, %zu present, %zu missing, %zu failed (%" PRIu64 " bytes)",
+        stats.assets_fetched,
+        stats.assets_present,
+        stats.assets_missing,
+        stats.assets_failed,
+        stats.bytes_written);
+    vfs_shutdown();
+    return materialized ? 0 : -int(mft_write_error);
+}
+
 static bool init_cli(int argc, char *argv[])
 {
     s_cli["help"].abbreviation('h').description("print this help screen");
@@ -311,6 +365,14 @@ static bool init_cli(int argc, char *argv[])
     s_cli["full"].description(
         "full streamed install over vfs (plan, fetch all tiers, materialize,"
         " verify); --path is the install dir");
+    s_cli["update"].description(
+        "update the streamed install at --path to the latest product: apply"
+        " the plan diff, fetch the delta, materialize (no verify - use"
+        " --full for the sealing pass)");
+    s_cli["check"].description(
+        "check for game data updates: the remote product serial against the"
+        " installed plan at --path (read-only); exit 0 up-to-date, 1 update"
+        " available, <0 failure");
     s_cli(argc, argv);
 
     return s_cli["help"].size() == 0;
@@ -403,6 +465,20 @@ int main(int argc, char **argv)
     if (s_cli["full"].was_set())
     {
         const int code = xuoi_full_run(outpath);
+        http_shutdown();
+        return code;
+    }
+
+    if (s_cli["update"].was_set())
+    {
+        const int code = xuoi_update_run(outpath);
+        http_shutdown();
+        return code;
+    }
+
+    if (s_cli["check"].was_set())
+    {
+        const int code = xuoi_check_run(outpath);
         http_shutdown();
         return code;
     }

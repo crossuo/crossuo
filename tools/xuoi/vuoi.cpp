@@ -44,6 +44,13 @@ static bool init_cli(int argc, char *argv[])
         "materialize (needs --path; --product accepts a url or a file)");
     s_cli["streaming-offline"].description(
         "streaming: never hit the network, blob store only");
+    s_cli["check"].description(
+        "check for game data updates: the remote product serial against "
+        "the installed plan (read-only; exit 0 up-to-date, 1 update "
+        "available, nonzero failure)");
+    s_cli["update"].description(
+        "update the streamed install: apply the plan diff, fetch the "
+        "missing assets and materialize (needs --path)");
     s_cli["streaming-workers"].type(po::u32).description(
         "streaming: download workers (default cpu-1, max 8)");
     s_cli["streaming-record"].type(po::string).description(
@@ -307,7 +314,8 @@ static int vuoi_embed_record()
     return 0;
 }
 
-static int vuoi_streaming_fetch()
+// shared vfs params for the streaming verbs (--streaming-fetch/--update/--check)
+static vfs_params vuoi_params_build()
 {
     vfs_params params;
     if (s_cli["blobs"].was_set())
@@ -324,6 +332,10 @@ static int vuoi_streaming_fetch()
     }
     params.enabled = true;
     params.offline = s_cli["streaming-offline"].was_set();
+    // the client's layout: the blob store lives under the install dir when
+    // not given explicitly (boot requires both)
+    if (fs_path_empty(params.blobs_dir) && !fs_path_empty(params.install_dir))
+        params.blobs_dir = fs_path_join(params.install_dir, "cache", "blobs");
     if (s_cli["streaming-workers"].was_set())
         params.workers = s_cli["streaming-workers"].get().u32;
     if (s_cli["streaming-record"].was_set())
@@ -332,6 +344,12 @@ static int vuoi_streaming_fetch()
         if (s_cli["streaming-record-scenario"].was_set())
             params.record_scenario = s_cli["streaming-record-scenario"].get().string;
     }
+    return params;
+}
+
+static int vuoi_streaming_fetch()
+{
+    const vfs_params params = vuoi_params_build();
     vfs_set_params(params);
 
     http_init();
@@ -357,6 +375,65 @@ static int vuoi_streaming_fetch()
     return corrupt;
 }
 
+// --update: converge the streamed install to the latest product. The boot
+// applies the plan diff, fetch_all pulls the remaining delta (all tiers,
+// the update wave included), materialize writes it out
+static int vuoi_update()
+{
+    vfs_set_params(vuoi_params_build());
+
+    http_init();
+    if (!vfs_boot(nullptr))
+    {
+        vfs_shutdown();
+        fprintf(stderr, "update: boot failed (see log)\n");
+        return -int(mft_could_not_download_file);
+    }
+    if (!vfs_fetch_all(nullptr))
+        fprintf(stderr, "update: some downloads failed (see log)\n");
+    vfs_boot_wait(); // finish the background tier + update wave
+
+    vfs_materialize_stats stats;
+    const bool materialized = vfs_materialize(&stats);
+    printf(
+        "update: %zu written, %zu present, %zu missing, %zu failed\n",
+        stats.assets_fetched,
+        stats.assets_present,
+        stats.assets_missing,
+        stats.assets_failed);
+    vfs_shutdown();
+    return materialized ? 0 : -int(mft_write_error);
+}
+
+// --check: read-only product-serial comparison against the installed plan
+static int vuoi_check()
+{
+    vfs_set_params(vuoi_params_build());
+
+    http_init();
+    vfs_update_info info;
+    const bool ok = vfs_update_check(&info);
+    http_shutdown();
+    if (!ok)
+    {
+        fprintf(stderr, "check: failed (see log)\n");
+        return -int(mft_could_not_download_file);
+    }
+    if (!info.plan_found)
+    {
+        printf("check: no streamed install found\n");
+        return 1;
+    }
+    if (info.update_available)
+        printf(
+            "check: update available (plan %" PRIu64 ", product %" PRIu64 ")\n",
+            info.local_serial,
+            info.remote_serial);
+    else
+        printf("check: up to date (serial %" PRIu64 ")\n", info.remote_serial);
+    return info.update_available ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     if (!init_cli(argc, argv))
@@ -369,8 +446,10 @@ int main(int argc, char **argv)
         s_cli["plan"].was_set() || s_cli["materialize"].was_set() || s_cli["verify"].was_set();
     if (s_cli["embed-record"].was_set())
         return vuoi_embed_record();
-    if (s_cli["streaming-fetch"].was_set())
-        return vuoi_streaming_fetch();
+    if (s_cli["check"].was_set())
+        return vuoi_check();
+    if (s_cli["update"].was_set() || s_cli["streaming-fetch"].was_set())
+        return s_cli["update"].was_set() ? vuoi_update() : vuoi_streaming_fetch();
     if (!vfs_mode)
     {
         http_init();

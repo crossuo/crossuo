@@ -193,34 +193,16 @@ VFS_TEST(update_serial_bump_refetches_only_changed)
         prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
 
     // the drift boot: prod + manifests refresh, the changed asset resets
+    // (state pending, blob dropped, pack block invalidated) - the update
+    // wave then re-fetches it in the background tier; boot_wait waits for
+    // that convergence. The exact-once refetch below PROVES the reset
+    // deleted the cached blob (a present blob would never be re-requested)
     TEST_CHECK_MSG(vfs_boot(nullptr), "update boot failed");
     vfs_boot_wait();
     vfs_shutdown();
 
-    // the changed asset is now a hole again: blob dropped, state pending -
-    // verify reports it missing (NOT corrupt) and the file lost its seal
-    vfs_verify_result result;
-    TEST_CHECK(vfs_verify(&result) >= 0);
-    const auto *part0 = test_find_asset(result, prod.parts[0].uop_hash());
-    TEST_CHECK_MSG(part0 != nullptr, "changed asset missing from verify");
-    TEST_CHECK_MSG(
-        part0->status == vfs_verify_missing_blob,
-        "changed asset must report missing-blob (got %u)",
-        part0->status);
-    const auto *pack = test_find_file(result, prod.pack_name.c_str());
-    TEST_CHECK_MSG(pack != nullptr && !pack->sealed, "the changed file must be unsealed");
-    TEST_CHECK_MSG(result.corrupted == false, "a diff reset must never read as corrupt");
-
-    // heal through the public full-install path (boot -> fetch all tiers ->
-    // materialize): exactly the changed asset re-downloads, the file re-seals
-    vfs_set_params(test_fetch_params(prod, srv));
-    TEST_CHECK(vfs_boot(nullptr));
-    TEST_CHECK(vfs_fetch_all(nullptr));
-    vfs_boot_wait();
-    vfs_materialize_stats stats;
-    TEST_CHECK(vfs_materialize(&stats));
-    vfs_shutdown();
-
+    // the wave healed the changed asset: exactly the changed part
+    // re-downloaded (once), the file re-sealed, verify clean
     const uint64_t part0_after = test_hits(srv, ("/blobs/" + prod.parts[0].blob_rel).c_str());
     const uint64_t part1_after = test_hits(srv, ("/blobs/" + prod.parts[1].blob_rel).c_str());
     const uint64_t tile_after = test_hits(srv, ("/blobs/" + prod.loose[0].blob_rel).c_str());
@@ -231,10 +213,13 @@ VFS_TEST(update_serial_bump_refetches_only_changed)
     TEST_CHECK_MSG(part1_after == part1_tail_hits, "an unchanged part must not re-fetch");
     TEST_CHECK_MSG(tile_after == tile_hits, "an unchanged loose file must not re-fetch");
 
-    result = vfs_verify_result();
+    vfs_verify_result result;
     TEST_CHECK(vfs_verify(&result) >= 0);
-    pack = test_find_file(result, prod.pack_name.c_str());
-    TEST_CHECK_MSG(pack != nullptr && pack->sealed, "the file must re-seal after the heal");
+    const auto *part0 = test_find_asset(result, prod.parts[0].uop_hash());
+    TEST_CHECK_MSG(part0 != nullptr, "changed asset missing from verify");
+    TEST_CHECK_MSG(part0->status == vfs_verify_ok, "the wave must heal the changed asset");
+    const auto *pack = test_find_file(result, prod.pack_name.c_str());
+    TEST_CHECK_MSG(pack != nullptr && pack->sealed, "the file must re-seal after the wave");
     TEST_CHECK_MSG(result.corrupted == false, "verify must be clean after the update");
     test_server_stop(srv);
 }
@@ -742,5 +727,138 @@ VFS_TEST(update_embed_record_converts_csv)
     }
     TEST_CHECK_MSG(promoted, "the recorded pack entry must land in T1");
     vfs_manifest_embedded_set({}); // restore: no override
+    test_server_stop(srv);
+}
+
+// ---------------------------------------------------------------------------
+// update verbs: the read-only check, the boot skip flag and the background
+// wave for changed on-demand assets
+// ---------------------------------------------------------------------------
+
+// --check: the remote product serial against the persisted plan, no boot,
+// nothing written
+VFS_TEST(update_check_reports_drift_and_clean)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "update_check"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    const auto params = test_fetch_params(prod, srv);
+    vfs_set_params(params);
+
+    // nothing installed yet: the check runs and reports an install is needed
+    vfs_update_info info;
+    TEST_CHECK_MSG(vfs_update_check(&info), "check on a bare dir failed");
+    TEST_CHECK_MSG(!info.plan_found, "no plan.bin exists yet");
+    TEST_CHECK_MSG(info.update_available, "a missing install is actionable");
+    TEST_CHECK_MSG(info.remote_serial == prod.serial, "the remote serial must parse");
+
+    // install: same serial, the check goes quiet
+    TEST_CHECK_MSG(test_full_install(params), "first install failed");
+    vfs_shutdown();
+    vfs_set_params(params);
+    TEST_CHECK_MSG(vfs_update_check(&info), "check after install failed");
+    TEST_CHECK_MSG(info.plan_found, "the plan persisted");
+    TEST_CHECK_MSG(!info.update_available, "same serial is up to date");
+    TEST_CHECK_MSG(info.local_serial == prod.serial, "the local serial must match");
+    TEST_CHECK_MSG(info.remote_serial == prod.serial, "the remote serial must match");
+
+    // upstream bump: available, with both serials reported
+    TEST_CHECK(test_bump_product(prod, 0));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+    TEST_CHECK_MSG(vfs_update_check(&info), "check after the bump failed");
+    TEST_CHECK_MSG(info.update_available, "the bumped serial must show");
+    TEST_CHECK_MSG(info.remote_serial == prod.serial, "remote must carry the new serial");
+    TEST_CHECK_MSG(info.local_serial == prod.serial - 1, "local stays on the old serial");
+    test_server_stop(srv);
+}
+
+// params.update_check = false (--streaming-no-update): a warm boot keeps
+// the cached product manifest - zero requests at all, not even the prod
+// refresh (a MISSING manifest still downloads: a first boot must plan)
+VFS_TEST(update_no_update_flag_skips_the_product_refresh)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "update_noflag"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    TEST_CHECK_MSG(test_full_install(test_fetch_params(prod, srv)), "first install failed");
+    vfs_shutdown();
+    const uint64_t baseline = test_hits_total(srv);
+
+    // a normal online boot pays exactly the prod refresh (established contract)
+    vfs_set_params(test_fetch_params(prod, srv));
+    TEST_CHECK(vfs_boot(nullptr));
+    vfs_boot_wait();
+    vfs_shutdown();
+    const uint64_t after_refresh = test_hits_total(srv);
+    TEST_CHECK_MSG(
+        after_refresh == baseline + 1,
+        "the check boot must only refresh the product (got %" PRIu64 ")",
+        after_refresh - baseline);
+
+    // the no-update boot: the cached manifest is the truth, zero requests
+    auto quiet = test_fetch_params(prod, srv);
+    quiet.update_check = false;
+    vfs_set_params(quiet);
+    TEST_CHECK(vfs_boot(nullptr));
+    vfs_boot_wait();
+    vfs_shutdown();
+    TEST_CHECK_MSG(
+        test_hits_total(srv) == after_refresh,
+        "the no-update boot must make zero requests (got %" PRIu64 ")",
+        test_hits_total(srv) - after_refresh);
+    test_server_stop(srv);
+}
+
+// the update wave: a serial bump that changes an ON-DEMAND (T2) pack asset
+// re-fetches it through the background tier alone - no demand access, no
+// fetch_all - and the file re-seals behind the game
+VFS_TEST(update_wave_prefetches_changed_ondemand_assets)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "update_wave"));
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    TEST_CHECK_MSG(test_full_install(test_fetch_params(prod, srv)), "first install failed");
+    const uint64_t part0_hits = test_hits(srv, ("/blobs/" + prod.parts[0].blob_rel).c_str());
+    vfs_shutdown();
+
+    // the changed part is on-demand (T2): nothing else would fetch it here
+    TEST_CHECK(test_bump_product(prod, 0));
+    TEST_CHECK(test_product_patch_repos(
+        prod, test_server_url(srv, "/blobs/"), test_server_url(srv, "/blobs/")));
+
+    // drift boot: the diff resets the changed asset, the background tier
+    // (recorded T1 first, then the wave) converges it before boot_wait
+    vfs_set_params(test_fetch_params(prod, srv));
+    TEST_CHECK_MSG(vfs_boot(nullptr), "update boot failed");
+    vfs_boot_wait();
+    vfs_shutdown();
+
+    const uint64_t part0_after = test_hits(srv, ("/blobs/" + prod.parts[0].blob_rel).c_str());
+    TEST_CHECK_MSG(
+        part0_after - part0_hits == 1,
+        "the wave must re-fetch the changed T2 asset exactly once (got %" PRIu64 ")",
+        part0_after - part0_hits);
+
+    vfs_verify_result result;
+    TEST_CHECK(vfs_verify(&result) >= 0);
+    const auto *pack = test_find_file(result, prod.pack_name.c_str());
+    TEST_CHECK_MSG(pack != nullptr && pack->sealed, "the file must re-seal after the wave");
+    TEST_CHECK_MSG(result.corrupted == false, "verify must be clean after the wave");
     test_server_stop(srv);
 }

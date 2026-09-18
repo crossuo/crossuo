@@ -89,6 +89,10 @@ static bool InitCli(int argc, char *argv[])
         "streamed install mode, optional value = install dir");
     g_cli["streaming-offline"].description(
         "streaming: never hit the network, cache only");
+    g_cli["streaming-no-update"].description(
+        "streaming: skip the update check at boot - the cached product"
+        " manifest and the persisted plan are kept as-is (missing assets"
+        " still stream from the network; this is not --streaming-offline)");
     g_cli["streaming-trap"].type(po::string).description(
         "streaming: set to 'off' to disable hole traps - reads of undownloaded"
         " data return zeros (escape hatch)");
@@ -169,6 +173,7 @@ bool load_config()
         vfs_params params;
         params.enabled = true;
         params.offline = g_cli["streaming-offline"].was_set();
+        params.update_check = !g_cli["streaming-no-update"].was_set();
         if (g_cli["streaming-trap"].was_set())
         {
             // --streaming-trap=off: holes stay readable (zeros) - the escape

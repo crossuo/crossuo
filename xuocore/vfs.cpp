@@ -651,13 +651,10 @@ static bool vfs_params_ready()
 
 // the product serial is the plan's fingerprint: a persisted plan is only used
 // when the product manifest still carries the same serial
-static bool vfs_product_serial(const fs_path &product_file, uint64_t *out_serial)
+static bool vfs_product_serial_data(const uint8_t *data, size_t size, uint64_t *out_serial)
 {
-    std::vector<uint8_t> data;
-    if (!fs_file_read(fs_path_ascii(product_file), data))
-        return false;
     tinyxml2::XMLDocument doc;
-    doc.Parse(reinterpret_cast<char *>(data.data()), data.size());
+    doc.Parse(reinterpret_cast<const char *>(data), size);
     auto root = doc.FirstChildElement("MythicMFT");
     if (!root)
         return false;
@@ -665,6 +662,58 @@ static bool vfs_product_serial(const fs_path &product_file, uint64_t *out_serial
     if (!product)
         return false;
     *out_serial = product->Unsigned64Attribute("serial", 0);
+    return true;
+}
+
+static bool vfs_product_serial(const fs_path &product_file, uint64_t *out_serial)
+{
+    std::vector<uint8_t> data;
+    if (!fs_file_read(fs_path_ascii(product_file), data))
+        return false;
+    return vfs_product_serial_data(data.data(), data.size(), out_serial);
+}
+
+// update check: how far behind the persisted plan is, in one product
+// download. Memory only - the cached manifest and the plan stay untouched
+// (the next boot applies what this only reports)
+bool vfs_update_check(vfs_update_info *out)
+{
+    if (out == nullptr)
+        return false;
+    *out = vfs_update_info();
+    if (!vfs_params_dirs_ready())
+        return false;
+    http_init(); // no boot ran: this owns the layer's lazy setup (idempotent)
+
+    VfsPlan plan;
+    out->plan_found = vfs_plan_load(fs_path_join(s_params.state_dir, "plan.bin"), plan);
+    if (out->plan_found)
+    {
+        out->local_serial = plan.product_serial;
+        // a subset change rebuilds the plan at boot even on the same serial
+        out->update_available = plan.subset != uint8_t(s_params.subset);
+    }
+
+    std::vector<uint8_t> data;
+    if (!http_get_binary(s_params.product_url.c_str(), data))
+    {
+        LOG_WARN("vfs: update check: could not download the product manifest");
+        return false;
+    }
+    if (!vfs_product_serial_data(data.data(), data.size(), &out->remote_serial))
+    {
+        LOG_WARN("vfs: update check: malformed product manifest");
+        return false;
+    }
+    out->update_available = out->update_available || !out->plan_found ||
+                            out->remote_serial != out->local_serial;
+    if (out->update_available)
+        LOG_INFO(
+            "update: available (plan %" PRIu64 ", product %" PRIu64 ")",
+            out->local_serial,
+            out->remote_serial);
+    else
+        LOG_INFO("update: the install is up to date (serial %" PRIu64 ")", out->remote_serial);
     return true;
 }
 
@@ -1046,6 +1095,34 @@ static void vfs_boot_order_t1(const VfsPlan &plan, std::vector<vfs_boot_item> *i
         });
 }
 
+// update wave: appends one diff-changed on-demand asset (T2/T3) to the
+// background tier so an update converges behind the game instead of
+// leaving holes for the first access to trip over. T0 re-fetched blocking
+// in the boot thread and T1 is already in the list - this carries the rest
+static void vfs_boot_wave_append(
+    const VfsPlan &plan,
+    const vfs_plan_index &pos,
+    std::vector<vfs_boot_item> *wave)
+{
+    if (pos.file_index >= plan.files.size())
+        return;
+    const auto &file = plan.files[pos.file_index];
+    if (pos.asset_index >= file.assets.size())
+        return;
+    const auto &asset = file.assets[pos.asset_index];
+    if (vfs_asset_is_hole(asset) || asset.tier < vfs_tier_t2)
+        return; // holes stream on access; T0/T1 are handled by their tiers
+    vfs_boot_item item;
+    item.file_index = pos.file_index;
+    item.asset_index = pos.asset_index;
+    item.global_index = vfs_state_base_index(plan, pos.file_index) + pos.asset_index;
+    item.tail = asset.blob;
+    item.expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+    item.tier = asset.tier;
+    item.name = vfs_asset_is_loose(asset) ? asset.name : file.name;
+    wave->push_back(item);
+}
+
 // materializes the given items through the shared write path (subset run); a
 // null `items` materializes everything reachable from the store
 static bool vfs_boot_materialize(
@@ -1209,6 +1286,10 @@ static bool vfs_file_write_atomic(const char *path, const std::vector<uint8_t> &
 // always wins, and offline runs only download when the file is missing.
 static bool vfs_boot_product_fetch()
 {
+    // --streaming-no-update: the cached manifest is the truth (a missing
+    // one still downloads - a first boot cannot plan without it)
+    if (!s_params.update_check && fs_path_exists(s_params.product_file))
+        return true;
     if (!vfs_product_file_defaulted && fs_path_exists(s_params.product_file))
         return true; // explicit local product: the user owns staleness
     if (fs_path_exists(s_params.product_file) && s_params.offline)
@@ -1778,6 +1859,12 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         holes);
     vfs_boot_order_t1(plan, &t1);
     vfs_boot_order_t1(plan, &t1_fetch);
+    // the update wave rides at the END of the background tier: real T1
+    // traffic first, then what the plan diff changed in the on-demand tiers
+    for (const auto &item : diff.changed)
+        vfs_boot_wave_append(plan, item, &t1);
+    for (const auto &item : diff.added)
+        vfs_boot_wave_append(plan, item, &t1);
 
     // T0: blocking fetch + materialize with progress on this thread
     if (!t0_fetch.empty() && online)
