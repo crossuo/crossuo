@@ -163,6 +163,63 @@ uint16_t CMouseManager::GetGameCursor()
                        [GetFacing(gameWindowCenterX, gameWindowCenterY, Position.X, Position.Y, 1)];
 }
 
+bool CMouseManager::GetCursorDrawRect(
+    uint16_t id, int *x, int *y, int *w, int *h, CGLTexture **texture)
+{
+    // mirrors the tail of Draw(): the same index math decides both what the
+    // game renders and where it places it
+    uint16_t index = id;
+    if (index < 0x206A)
+    {
+        index -= 0x2053;
+    }
+    else
+    {
+        index -= 0x206A;
+    }
+
+    if (index >= 16)
+    {
+        return false;
+    }
+
+    auto spr = g_Game.ExecuteStaticArt(id);
+    if (spr == nullptr || spr->Texture == nullptr)
+    {
+        return false;
+    }
+#ifndef NEW_RENDERER_ENABLED
+    if (spr->Texture->Texture == 0)
+#else
+    if (spr->Texture->Texture == RENDER_TEXTUREHANDLE_INVALID)
+#endif
+    {
+        return false;
+    }
+
+    if (x != nullptr)
+    {
+        *x = Position.X + m_CursorOffset[0][index];
+    }
+    if (y != nullptr)
+    {
+        *y = Position.Y + m_CursorOffset[1][index];
+    }
+    if (w != nullptr)
+    {
+        *w = spr->Width;
+    }
+    if (h != nullptr)
+    {
+        *h = spr->Height;
+    }
+    if (texture != nullptr)
+    {
+        *texture = spr->Texture;
+    }
+    return true;
+}
+
 void CMouseManager::ProcessWalking()
 {
     bool mouseInWindow = true;
