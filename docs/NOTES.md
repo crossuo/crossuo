@@ -718,7 +718,7 @@ Known open edges:
   server plans 338 data files out of 2072 entries.
 - Names install LOWERCASE (the managed registry already normalizes both
   sides). Blob tails are the url-encoded relpath + the custom extension
-  ("Faerham%20Citadel/tiledata.mulaops") - the server concatenates name and
+  (test1/tiledata.mulaops") - the server concatenates name and
   extension with no separator. Wire stamp folds into YYYYMMDDhhmmss so
   plan diffs see date bumps.
 - The aops product IS the patchlist: product_url points at (or derives

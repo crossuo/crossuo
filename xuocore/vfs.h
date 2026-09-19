@@ -194,6 +194,14 @@ struct CIndexObject;
 // Execute*/cache entry point.
 bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj));
 
+// gump dims resolution for streamed hole-baked entries: the index bakes the
+// block's planned address with unknown dimensions (they ride in the block's
+// first words) and the readers short-circuit on zero dims before touching
+// the data - call this once per entry before the dims are read; the first
+// call dereferences through the trap (fetching the block on demand) and
+// caches the dims. Returns true when the dims are (now) valid.
+bool vfs_gump_dims_resolve(CIndexObject *io);
+
 // index-build markers: true when the pack asset with `uop_hash` (or
 // the managed loose file mapped at `base`) was served a stub payload. The
 // index build marks the CIndexObject so healed bytes hot-swap later. Always

@@ -1140,7 +1140,22 @@ uint8_t *vfs_trap_map(
     m.plan = &plan;
     m.file_index = file_index;
     const auto &file = plan.files[file_index];
+    // a REFINED range pack is a pack even though refine keeps the file
+    // loose-shaped (is_uop false): its assets are per-block ranges with
+    // planned offsets, exactly the coverage model the trap resolves with.
+    // A plain loose file is one whole-file asset with no source offset
     m.is_pack = file.is_uop;
+    if (!m.is_pack)
+    {
+        for (const auto &asset : file.assets)
+        {
+            if (asset.blob_offset != 0)
+            {
+                m.is_pack = true;
+                break;
+            }
+        }
+    }
     m.stub_kind = vfs_stub_kind_for(file.name.c_str());
 
     // per-asset coverage model: packs cover [offset, offset + ml + payload)

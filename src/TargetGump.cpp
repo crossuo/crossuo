@@ -4,6 +4,7 @@
 #include "TargetGump.h"
 #include "CrossUO.h"
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h>
 #include "Managers/ConfigManager.h"
 #include "Utility/PerfMarker.h"
 
@@ -49,6 +50,7 @@ void CNewTargetSystem::Draw()
     if (!g_ConfigManager.DisableNewTargetSystem && ColorGump != 0)
     {
         CIndexObject &top = g_Index.m_Gump[GumpTop];
+        vfs_gump_dims_resolve(&top); // streamed hole-baked gumps resolve dims on first use
 
         int x = X - (top.Width / 2);
 

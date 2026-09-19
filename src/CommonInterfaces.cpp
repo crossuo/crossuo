@@ -5,6 +5,7 @@
 
 #include <SDL_timer.h>
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h>
 #include <xuocore/commoninterfaces.h>
 
 #include "CrossUO.h"
@@ -728,6 +729,7 @@ void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, XUO_RAW_GUMP_INFO &info
     if (int(index) < MAX_GUMP_DATA_INDEX_COUNT)
     {
         CIndexGump &gumpData = g_Index.m_Gump[index];
+        vfs_gump_dims_resolve(&gumpData); // streamed hole-baked gumps resolve dims on first use
 
         if (gumpData.Address != 0)
         {

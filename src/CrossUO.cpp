@@ -4123,6 +4123,7 @@ CSprite *CGame::ExecuteGump(uint16_t id)
     }
     CIndexObject &io = g_Index.m_Gump[id];
     vfs_refresh_index(&io, DestroySprite); // hot-swap a placeholder gump
+    vfs_gump_dims_resolve(&io); // streamed hole-baked gumps resolve dims on first use
     if (io.UserData == nullptr)
     {
         if (io.Address == 0u)

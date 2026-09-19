@@ -3,6 +3,7 @@
 
 #include "GumpMinimap.h"
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h>
 #include "../CrossUO.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ColorManager.h"
@@ -102,6 +103,7 @@ void CGumpMinimap::GenerateMap()
     m_Sprite.Clear();
     uint16_t gumpID = 0x1393 - (int)Minimized;
     CIndexObject &io = g_Index.m_Gump[gumpID];
+    vfs_gump_dims_resolve(&io); // streamed hole-baked gumps resolve dims on first use
     int gumpWidth = io.Width;
     int gumpHeight = io.Height;
     std::vector<uint16_t> data = g_UOFileReader.GetGumpPixels(io);

@@ -5,6 +5,7 @@
 #include <SDL_rect.h>
 #include <common/utils.h> // countof
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Target.h"
@@ -553,6 +554,7 @@ void CGumpStatusbar::UpdateContent()
             }
             Add(new CGUIGumppic(gumpId, 0, 0));
             auto &io = g_Index.m_Gump[gumpId];
+            vfs_gump_dims_resolve(&io); // streamed hole-baked gumps resolve dims on first use
             int xOffset = 0;
 
             if (io.DataSize == 169884 && io.Height == 171 && io.Width == 409)

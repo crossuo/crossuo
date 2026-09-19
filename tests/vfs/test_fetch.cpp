@@ -40,6 +40,8 @@
 #include <xuocore/vfs.h>
 #include <xuocore/vfs_fetch.h>
 #include <xuocore/vfs_source_aops.h>
+#include <common/checksum.h>
+#include <xuocore/uop.h>
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -839,11 +841,11 @@ VFS_TEST(aops_plan_filters_and_normalizes)
     TEST_CHECK_MSG(cfg.custom_extension == "aops", "the extension must carry");
 
     test_aops_write_patchlist(patchlist, {
-        "Faerham Citadel\\tiledata.mul|01012024|12|0|0|0|3072|No|No|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "Faerham Citadel\\Cliloc.enu|02022024|1|2|3|0|654|No|No|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-        "data\\FCLauncher.exe|03032025|1|2|3|0|123|Yes|No|cccccccccccccccccccccccccccccccc",
-        "Faerham Citadel\\shard art.png|04042025|1|2|3|0|999|No|No|dddddddddddddddddddddddddddddddd",
-        "Faerham Citadel\\TILEDATA.MUL|05052025|1|2|3|0|111|No|No|eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "test1\\tiledata.mul|01012024|12|0|0|0|3072|No|No|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "test1\\Cliloc.enu|02022024|1|2|3|0|654|No|No|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "data\\Launcher.exe|03032025|1|2|3|0|123|Yes|No|cccccccccccccccccccccccccccccccc",
+        "test1\\shard art.png|04042025|1|2|3|0|999|No|No|dddddddddddddddddddddddddddddddd",
+        "test1\\TILEDATA.MUL|05052025|1|2|3|0|111|No|No|eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     });
 
     vfs_params params;
@@ -872,7 +874,7 @@ VFS_TEST(aops_plan_filters_and_normalizes)
     }
     TEST_CHECK_MSG(have_tile && have_cliloc, "the UO data entries must plan");
     TEST_CHECK_MSG(
-        plan.files[0].assets.front().blob == "Faerham%20Citadel/tiledata.mulaops",
+        plan.files[0].assets.front().blob == "test1/tiledata.mulaops",
         "the tail carries the url-encoded path and the aops extension");
 }
 
@@ -890,23 +892,85 @@ VFS_TEST(aops_boot_installs_and_drifts)
     const astr_t repo = test_server_url(srv, "/data/");
     const auto patchlist = fs_path_join(root, "patchlist");
     const auto patchcfg = fs_path_join(root, "patchcfg");
-    const auto tile_blob = fs_path_join(blobs, "Faerham%20Citadel", "tiledata.mulaops");
-    const auto cliloc_blob = fs_path_join(blobs, "Faerham%20Citadel", "cliloc.enuaops");
+    const auto tile_blob = fs_path_join(blobs, "test1", "tiledata.mulaops");
+    const auto cliloc_blob = fs_path_join(blobs, "test1", "cliloc.enuaops");
 
     const std::vector<uint8_t> tile_payload(3072, 0xAB);
     std::vector<uint8_t> cliloc_payload(654, 0xCD);
     const std::vector<uint8_t> cliloc_payload_v2(700, 0xEF);
 
+    // a minimal gumpartlegacymul.uop: header + one section + one stored
+    // block (a 10x20 gump) so the plan refines it into a hashed range asset
+    uint32_t gump_hash_ph = 0, gump_hash_sh = 0;
+    const astr_t gump_virtual = "build/gumpartlegacymul/000000.tga";
+    {
+        // the entry hash is the virtual name's jenkins hash (UOP word order)
+        uint64_t h = uo_jenkins_hash(gump_virtual.c_str());
+        gump_hash_ph = UOP_HASH_SH(h);
+        gump_hash_sh = UOP_HASH_PH(h);
+    }
+    astr_t gump_uop;
+    const auto push_u16 = [&gump_uop](uint16_t v) {
+        gump_uop.push_back(char(v & 0xFF));
+        gump_uop.push_back(char((v >> 8) & 0xFF));
+    };
+    const auto push_u32 = [&gump_uop](uint32_t v) {
+        for (int i = 0; i < 4; ++i)
+            gump_uop.push_back(char((v >> (8 * i)) & 0xFF));
+    };
+    const auto push_u64 = [&gump_uop](uint64_t v) {
+        for (int i = 0; i < 8; ++i)
+            gump_uop.push_back(char((v >> (8 * i)) & 0xFF));
+    };
+    push_u32(0x0050594D); // MYP\0
+    push_u32(4);          // version
+    push_u32(0x12345678); // signature
+    push_u64(40);         // section offset
+    push_u32(1);          // capacity
+    push_u32(1);          // count
+    push_u32(1);          // section count
+    push_u32(1);          // unk1
+    push_u32(0);          // unk2
+    push_u32(1);          // section: file count
+    push_u64(0);          // section: next section
+    // the block sits right after the 34-byte entry: 40 + 12 + 34 = 86
+    push_u64(86);         // entry: offset (after the 6-byte metadata)
+    push_u32(6);          // entry: metadata size
+    push_u32(16);         // entry: compressed size (stored)
+    push_u32(16);         // entry: decompressed size
+    push_u64((uint64_t(gump_hash_sh) << 32) | gump_hash_ph); // entry: hash
+    push_u32(0);          // entry: checksum
+    push_u16(0);          // entry: flags (stored)
+    // block @64: [6-byte metadata][16-byte payload: 10x20 dims + filler]
+    gump_uop.push_back(char(3));
+    gump_uop.push_back(char(0));
+    gump_uop.push_back(char(2));
+    gump_uop.push_back(char(0));
+    gump_uop.push_back(char(0));
+    gump_uop.push_back(char(0));
+    push_u32(10);
+    push_u32(20);
+    for (int i = 0; i < 8; ++i)
+        gump_uop.push_back(char(0x5A));
+    // pad to the declared patchlist size (>= the refine minimum) so the
+    // declared size, the blob and the ranged block all agree
+    while (gump_uop.size() < 600000)
+        gump_uop.push_back(char(0));
+
     const auto write_product = [&](uint64_t cliloc_size) {
         test_aops_write_patchlist(patchlist, {
-            "Faerham Citadel\\tiledata.mul|01012024|12|0|0|0|3072|No|No|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "Faerham Citadel\\Cliloc.enu|02022024|1|2|3|0|" + std::to_string(cliloc_size) +
+            "test1\\tiledata.mul|01012024|12|0|0|0|3072|No|No|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "test1\\Cliloc.enu|02022024|1|2|3|0|" + std::to_string(cliloc_size) +
                 "|No|No|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "test1\\gumpartlegacymul.uop|03032025|1|2|3|0|600000|No|No|cccccccccccccccccccccccccccccccc",
         });
     };
-    TEST_CHECK(fs_path_create(fs_path_join(blobs, "Faerham%20Citadel")));
+    TEST_CHECK(fs_path_create(fs_path_join(blobs, "test1")));
+    const auto gump_blob = fs_path_join(blobs, "test1", "gumpartlegacymul.uopaops");
     TEST_CHECK(fs_file_write(fs_path_ascii(tile_blob), tile_payload));
     TEST_CHECK(fs_file_write(fs_path_ascii(cliloc_blob), cliloc_payload));
+    std::vector<uint8_t> gump_bytes(gump_uop.begin(), gump_uop.end());
+    TEST_CHECK(fs_file_write(fs_path_ascii(gump_blob), gump_bytes));
     write_product(654);
     const astr_t ini = "[project]\nname=t\n\n[patch_system_configuration]\n"
                        "online_patch_directory=" + repo + "\n";
@@ -948,8 +1012,45 @@ VFS_TEST(aops_boot_installs_and_drifts)
         "a case-variant request must map the lowercase install");
     TEST_CHECK_MSG(mapped_size == 3072, "the mapped size must match the plan");
     vfs_unmap_file(mapped, mapped_size);
-    vfs_shutdown();
 
+    // hole-baked gump entries resolve their dimensions through the trap on
+    // first use (the GetGumpPixels "bad size:0,0" fix): bake one exactly
+    // like UopReadIndexFile does, then resolve through vfs_gump_dims_resolve
+    VfsPlan bound_plan;
+    TEST_CHECK(vfs_plan_ensure(bound_plan));
+    const VfsAsset *gump_asset = nullptr;
+    for (const auto &file : bound_plan.files)
+    {
+        if (file.name == "gumpartlegacymul.uop")
+        {
+            for (const auto &asset : file.assets)
+            {
+                if (asset.uop_hash == UOP_HASH(gump_hash_sh, gump_hash_ph))
+                    gump_asset = &asset;
+            }
+        }
+    }
+    TEST_CHECK_MSG(gump_asset != nullptr, "the refined gump block must be in the plan");
+    uint8_t *gump_base = nullptr;
+    size_t gump_size = 0;
+    TEST_CHECK(vfs_map_file(
+        fs_path_join(params.install_dir, "gumpartlegacymul.uop"), gump_base, gump_size));
+    uint64_t gump_offset = 0;
+    uint32_t gump_data_size = 0;
+    TEST_CHECK_MSG(
+        vfs_asset_by_hash(gump_base, UOP_HASH(gump_hash_sh, gump_hash_ph), &gump_offset, &gump_data_size),
+        "the planned gump block must resolve by hash");
+    CIndexObject baked;
+    baked.Address = uintptr_t(gump_base) + gump_offset;
+    baked.DataSize = gump_data_size;
+    TEST_CHECK_MSG(
+        vfs_gump_dims_resolve(&baked), "the hole-baked gump must resolve dims on first use");
+    TEST_CHECK_MSG(
+        baked.Width == 10 && baked.Height == 20,
+        "the resolved dims must come from the block (got %dx%d)",
+        baked.Width,
+        baked.Height);
+    vfs_unmap_file(gump_base, gump_size);
     // update check: same patchlist is up to date
     vfs_set_params(params);
     vfs_update_info info;
@@ -959,14 +1060,15 @@ VFS_TEST(aops_boot_installs_and_drifts)
         info.remote_serial == info.local_serial, "both sides fingerprint the patchlist");
 
     // upstream change: the cliloc entry bumps - exactly that file re-fetches
+    vfs_shutdown(); // the drift boot is a fresh boot cycle
     TEST_CHECK(fs_file_write(fs_path_ascii(cliloc_blob), cliloc_payload_v2));
     write_product(700);
     const uint64_t tile_hits =
-        test_server_hits(srv, ("/data/Faerham%20Citadel/tiledata.mulaops"));
+        test_server_hits(srv, ("/data/test1/tiledata.mulaops"));
     TEST_CHECK(vfs_boot(nullptr));
     vfs_boot_wait();
     TEST_CHECK_MSG(
-        test_server_hits(srv, ("/data/Faerham%20Citadel/tiledata.mulaops")) == tile_hits,
+        test_server_hits(srv, ("/data/test1/tiledata.mulaops")) == tile_hits,
         "an unchanged file must not re-download on drift");
     TEST_CHECK_MSG(
         test_read_file(fs_path_join(params.install_dir, "cliloc.enu"), bytes) &&

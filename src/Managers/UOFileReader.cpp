@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include "UOFileReader.h"
+#include <xuocore/vfs.h>
 #include "ColorManager.h"
 #include <common/logging/logging.h>
 #include <xuocore/uodata.h>
@@ -14,6 +15,7 @@ UOFileReader g_UOFileReader;
 
 std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 {
+    vfs_gump_dims_resolve(&io); // streamed hole-baked entries fetch + cache dims on first use
     std::vector<uint8_t> decoded;
     const uint32_t *lookupList = nullptr;
     int halfLen = 0;

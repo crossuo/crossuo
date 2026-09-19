@@ -434,6 +434,36 @@ bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj))
     return true; // caller must reload
 }
 
+// gump dims resolution for streamed hole-baked entries: the index bakes the
+// block's planned address with unknown dimensions (they ride in the block's
+// first words), and the readers short-circuit on zero dims BEFORE touching
+// the data - so nothing ever triggered the fetch. Dereferencing through the
+// trap here fetches the block on first use; the dims then cache on the
+// entry exactly like the materialized path bakes them. Returns true when
+// the dims are (now) valid.
+bool vfs_gump_dims_resolve(CIndexObject *io)
+{
+    if (io == nullptr || !vfs_enabled() || !vfs_plan_ready())
+        return false;
+    if (io->Address == 0u)
+        return false; // nodraw hole: genuinely no asset
+    if (io->Width != 0 && io->Height != 0)
+        return true; // materialized at index build or already resolved
+    volatile const uint8_t *probe = reinterpret_cast<const volatile uint8_t *>(io->Address);
+    (void)probe[0]; // the fault fetches the covering block synchronously
+    (void)probe[4];
+    const uint32_t width = *reinterpret_cast<const uint32_t *>(io->Address);
+    const uint32_t height = *reinterpret_cast<const uint32_t *>(io->Address + 4);
+    constexpr uint32_t maxGumpDimension = 2048;
+    if (width == 0 || height == 0 || width > maxGumpDimension || height > maxGumpDimension)
+        return false; // fetch failed: the stub zeros stay, retried on next use
+    io->Width = int32_t(width);
+    io->Height = int32_t(height);
+    io->Address += 8; // the readers start past the dims, as materialized entries do
+    io->DataSize = io->DataSize > 8 ? io->DataSize - 8 : 0;
+    return true;
+}
+
 // state byte of one plan asset (a snapshot read; the byte is only advisory
 // for the game's index markers)
 static bool vfs_asset_state_is(uint32_t file_index, uint32_t asset_index, uint8_t state)
@@ -2085,6 +2115,9 @@ void vfs_notify_first_frame()
 // thin xuoi --full driver runs this after a boot, then materializes.
 // Nothing to fetch is success regardless of the network: a complete store
 // works offline (zero requests), while offline + a missing blob fails.
+// REFINED range assets are skipped here: their blocks stream per-block
+// through the background sweep and the trap (fetching their whole source
+// blob here would pull entire packs for a handful of blocks)
 bool vfs_fetch_all(void (*progress)(float done01, const char *label))
 {
     if (!vfs_enabled() || !vfs_plan_ready())
@@ -2101,6 +2134,8 @@ bool vfs_fetch_all(void (*progress)(float done01, const char *label))
                 ++total;
                 if (vfs_asset_is_hole(asset))
                     continue;
+                if (asset.blob_offset != 0)
+                    continue; // refined range asset: the sweep streams its blocks
                 if (fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
                     continue; // cached: the materialize pass converges it
                 tails.push_back(asset.blob);
