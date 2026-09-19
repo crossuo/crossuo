@@ -36,11 +36,46 @@ void CCharacterListScreen::Init()
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
 
-    if (TestAutoLogin())
+    m_AutoLoginFired = false;
+}
+
+void CCharacterListScreen::PrepareContent()
+{
+    CBaseScreen::PrepareContent();
+
+    // test harness (XUO_TEST_LOGIN): the screen is entered before the character
+    // list packet arrives, so wait for the data here instead of in Init()
+    if (TestAutoLogin() && !m_AutoLoginFired && SmoothScreenAction == 0 &&
+        g_CharacterList.Count > 0)
     {
-        // pick the second character in the list ("Test") and enter the world
-        g_CharacterList.Selected = 1;
-        CreateSmoothAction(CCharacterListScreen::SelectCharacter);
+        // pick the second available character (falls back to the first when
+        // only one slot is in use) and enter the world
+        int pick = -1;
+        int validSeen = 0;
+        for (int i = 0; i < g_CharacterList.Count; i++)
+        {
+            if (!g_CharacterList.GetName(i).empty())
+            {
+                validSeen++;
+                pick = i;
+                if (validSeen == 2)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (pick != -1)
+        {
+            printf(
+                "[auto-login] selecting character '%s' (slot %d)\n",
+                g_CharacterList.GetName(pick).c_str(),
+                pick);
+            fflush(stdout);
+            m_AutoLoginFired = true;
+            g_CharacterList.Selected = pick;
+            CreateSmoothAction(CCharacterListScreen::SelectCharacter);
+        }
     }
 }
 
