@@ -8,6 +8,7 @@
 #include "../SelectedObject.h"
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/MainScreen.h"
+#include "../GUI/GUIColoredPolygone.h"
 
 enum
 {
@@ -89,6 +90,11 @@ void CGumpScreenMain::UpdateContent()
 
     if (DebugRenderScreen())
     {
+        // draw-order regression aids: a colored polygone (like the minimap
+        // notoriety dots) followed by a textured item, everything drawn after
+        // the polygone must not inherit its draw state
+        Add(new CGUIColoredPolygone(0, 0, 0, 0, 40, 40, 0xFF0000FF));
+        Add(new CGUIGumppic(0x157C, 320, 0));
         return;
     }
 

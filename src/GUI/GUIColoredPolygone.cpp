@@ -63,7 +63,13 @@ void CGUIColoredPolygone::Draw(bool checktrans)
         g_GL.DrawPolygone(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2);
     }
 #else
-    RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
+    // NOTE: the color is fully carried by the vertex color, SDM_COLORED would
+    // multiply it by the stale colors[] shader palette (black on fresh state)
+    // and leak drawMode 1 into every drawcall that follows until something
+    // else resets it (this is what made minimap dots black and tinted the
+    // gumps drawn after them)
+    // we could force it off here:
+    //RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ SDM_NO_COLOR });
 
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList,

@@ -402,7 +402,10 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int pageAmount)
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
+    // sanitize the shared draw state so a leaked drawMode/color from any item
+    // cannot tint the draws that follow this batch
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+    //RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ SDM_NO_COLOR });
 #endif
 }
 
@@ -1425,6 +1428,7 @@ void CGump::Draw()
         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+    //RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ SDM_NO_COLOR });
 #endif
 
     m_FrameBuffer.Draw(0, 0);
