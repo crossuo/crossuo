@@ -443,15 +443,16 @@ void RenderDebug_StartFrame()
     static const char *delayStr = getenv("XUO_DUMP_FRAME_DELAY");
     static const uint32_t dumpDelayMs = delayStr ? (uint32_t)atoi(delayStr) * 1000u : 0;
     static uint32_t firstFrameTick = 0;
-    if (dumpDelayMs != 0)
+    static bool delayDumpFired = false;
+    if (dumpDelayMs != 0 && !delayDumpFired)
     {
         if (firstFrameTick == 0)
         {
             firstFrameTick = SDL_GetTicks();
         }
-        if (!s_dumpEnabled && !s_dumpInProgress &&
-            (SDL_GetTicks() - firstFrameTick) >= dumpDelayMs)
+        if ((SDL_GetTicks() - firstFrameTick) >= dumpDelayMs)
         {
+            delayDumpFired = true;
             s_dumpEnabled = true;
         }
     }
