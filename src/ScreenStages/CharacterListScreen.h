@@ -24,8 +24,12 @@ public:
     CCharacterListScreen();
     virtual ~CCharacterListScreen() = default;
     virtual void Init() override;
+    virtual void PrepareContent() override;
     virtual void ProcessSmoothAction(uint8_t action = 0xff) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
+
+private:
+    bool m_AutoLoginFired = false;
 };
 
 extern CCharacterListScreen g_CharacterListScreen;
