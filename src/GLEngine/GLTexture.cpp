@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <external/gfx/gfx.h>
+#include <xuocore/enumlist.h>
 #include "GLTexture.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
@@ -46,27 +47,19 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     if (checktrans)
     {
         SCOPED_GL_DEBUG_MARKER_LABEL("Object with Transparency");
+        // single draw: blending is enabled and the shader forces alpha to
+        // 1.0 outside the circle of transparency (previously a blended pass
+        // plus a stencil-tested opaque pass)
+        const int baseMode = Render_GetCurrentDrawMode();
+        RenderAdd_SetDrawMode(
+            g_renderCmdList, SetDrawModeCmd{ baseMode + SDM_CHECKTRANS_BASE });
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                            BlendFactor::BlendFactor_OneMinusSrcAlpha });
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ baseMode });
         RenderAdd_DisableBlend(g_renderCmdList);
-
-        // Use NOTEQUAL stencil test with ref=1 to match GL1 behavior
-        // Objects INSIDE circle (stencil=1): NOTEQUAL(1,1) = false, don't draw (stay blended)
-        // Objects OUTSIDE circle (stencil=0): NOTEQUAL(0,1) = true, draw full opacity
-        RenderAdd_SetStencil(
-            g_renderCmdList,
-            StencilStateCmd{ StencilFunc::StencilFunc_Different,
-                             StencilOp::StencilOp_Keep,
-                             StencilOp::StencilOp_Keep,
-                             StencilOp::StencilOp_Keep,
-                             1,
-                             1 });
-        RenderAdd_EnableStencil(g_renderCmdList);
-        RenderAdd_DrawQuad(g_renderCmdList, cmd);
-        RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
     {
@@ -124,27 +117,19 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
     if (checktrans)
     {
         SCOPED_GL_DEBUG_MARKER_LABEL("Object With Transparency 2");
+        // single draw: blending is enabled and the shader forces alpha to
+        // 1.0 outside the circle of transparency (previously a blended pass
+        // plus a stencil-tested opaque pass)
+        const int baseMode = Render_GetCurrentDrawMode();
+        RenderAdd_SetDrawMode(
+            g_renderCmdList, SetDrawModeCmd{ baseMode + SDM_CHECKTRANS_BASE });
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                            BlendFactor::BlendFactor_OneMinusSrcAlpha });
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ baseMode });
         RenderAdd_DisableBlend(g_renderCmdList);
-
-        // Use NOTEQUAL stencil test with ref=1 to match GL1 behavior
-        // Objects INSIDE circle (stencil=1): NOTEQUAL(1,1) = false, don't draw (stay blended)
-        // Objects OUTSIDE circle (stencil=0): NOTEQUAL(0,1) = true, draw full opacity
-        RenderAdd_SetStencil(
-            g_renderCmdList,
-            StencilStateCmd{ StencilFunc::StencilFunc_Different,
-                             StencilOp::StencilOp_Keep,
-                             StencilOp::StencilOp_Keep,
-                             StencilOp::StencilOp_Keep,
-                             1,
-                             1 });
-        RenderAdd_EnableStencil(g_renderCmdList);
-        RenderAdd_DrawQuad(g_renderCmdList, cmd);
-        RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
     {
@@ -230,26 +215,24 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
         g_renderCmdList,
         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
-    RenderAdd_DrawQuad(g_renderCmdList, cmd);
-    RenderAdd_DisableBlend(g_renderCmdList);
 
     if (stencil)
     {
-        // Use NOTEQUAL stencil test with ref=1 to match GL1 behavior
-        // Objects INSIDE circle (stencil=1): NOTEQUAL(1,1) = false, don't draw (stay at 0.25 alpha)
-        // Objects OUTSIDE circle (stencil=0): NOTEQUAL(0,1) = true, draw full opacity
-        RenderAdd_SetStencil(
-            g_renderCmdList,
-            StencilStateCmd{ StencilFunc::StencilFunc_Different,
-                             StencilOp::StencilOp_Keep,
-                             StencilOp::StencilOp_Keep,
-                             StencilOp::StencilOp_Keep,
-                             1,
-                             1 });
-       RenderAdd_EnableStencil(g_renderCmdList);
-       RenderAdd_DrawQuad(g_renderCmdList, cmd);
-       RenderAdd_DisableStencil(g_renderCmdList);
+        // single draw: blending stays enabled and the shader forces alpha to
+        // 1.0 outside the circle of transparency (previously a blended pass at
+        // 0.25 alpha plus a stencil-tested pass at full opacity)
+        const int baseMode = Render_GetCurrentDrawMode();
+        RenderAdd_SetDrawMode(
+            g_renderCmdList, SetDrawModeCmd{ baseMode + SDM_CHECKTRANS_BASE });
+        RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ baseMode });
     }
+    else
+    {
+        RenderAdd_DrawQuad(g_renderCmdList, cmd);
+    }
+
+    RenderAdd_DisableBlend(g_renderCmdList);
 #endif
 }
 

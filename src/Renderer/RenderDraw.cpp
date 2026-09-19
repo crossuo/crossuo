@@ -661,6 +661,11 @@ bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *state)
     return RenderState_SetClearColor(state, cmd.color);
 }
 
+bool RenderDraw_SetCircleTrans(const SetCircleTransCmd &cmd, RenderState *state)
+{
+    return RenderState_SetCircleTrans(state, cmd.x, cmd.y, cmd.radius);
+}
+
 bool RenderDraw_SetColorPalette(const SetColorPaletteCmd &cmd, RenderState *state)
 {
     return RenderState_SetColorPalette(state, cmd.palette);
@@ -800,6 +805,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(SetColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetClearColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColorPalette, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetCircleTrans, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetViewParams, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetModelViewTranslation, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetScissor, cmd, &cmdList->state)

@@ -29,6 +29,8 @@ extern int _uAlphaTestEnabled;
 extern int _uAlphaRef;
 extern int _uDrawMode;
 extern int _uColors;
+extern int _uCircleTrans;
+extern int _uFragToGame;
 extern uint32_t _vao;
 extern uint32_t _defaultTex;
 extern uint32_t _whiteTex;
@@ -66,7 +68,12 @@ size_t Render_UploadVertices(const void *data, size_t size);
 // points the VAO attribute pointers at a ring offset (call before glDraw*)
 void Render_BindVertexRange(size_t byteOffset);
 
+bool RenderDraw_SetCircleTrans(const SetCircleTransCmd &cmd, RenderState *state);
 bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatrix);
+bool RenderState_SetCircleTrans(
+    RenderState *state, float x, float y, float radius, bool forced = false);
+void RenderState_SetFragToGame(
+    RenderState *state, float offX, float offY, float scaleX, float scaleY, bool forced = false);
 void RenderState_ResetAllStates(RenderState *state);
 bool RenderState_FlushState(RenderState *state);
 bool RenderState_SetAlphaTest(

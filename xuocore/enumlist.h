@@ -820,7 +820,12 @@ enum SHADER_DRAW_MODE
     SDM_LAND_COLORED = 7,
     SDM_SPECTRAL = 10,
     SDM_SPECIAL_SPECTRAL = 11,
-    SDM_SHADOW = 12
+    SDM_SHADOW = 12,
+
+    // drawMode values >= SDM_CHECKTRANS_BASE enable the circle-of-transparency
+    // alpha modulation in the shader; the actual draw mode is the value minus
+    // this base (see ShaderData.h)
+    SDM_CHECKTRANS_BASE = 100
 };
 
 enum STATIC_TILES_FILTER_FLAGS

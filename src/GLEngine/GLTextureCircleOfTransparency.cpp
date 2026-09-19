@@ -86,31 +86,9 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
 #else
     SCOPED_GL_DEBUG_MARKER_LABEL("CircleOfTransparency");
 
-    // Match GL1 behavior exactly - only modify stencil and color mask
-    // Step 1: Enable stencil and draw circle with REPLACE operation
-    auto stencilWriteCmd = StencilStateCmd{ StencilFunc::StencilFunc_AlwaysPass,
-                                              StencilOp::StencilOp_Keep,
-                                              StencilOp::StencilOp_Keep,
-                                              StencilOp::StencilOp_Replace,
-                                              1,
-                                              1 };
-    RenderAdd_SetStencil(g_renderCmdList, stencilWriteCmd);
-    RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_Alpha });
-    RenderAdd_EnableStencil(g_renderCmdList);
-    RenderAdd_DrawQuad(
-        g_renderCmdList,
-        DrawQuadCmd{
-            m_Sprite.Texture->Texture, X, Y, m_Sprite.Texture->Width, m_Sprite.Texture->Height });
-    RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_All });
-
-    // Step 2: Change to NOTEQUAL for subsequent draws, then disable
-    auto stencilTestCmd = StencilStateCmd{ StencilFunc::StencilFunc_Different,
-                                            StencilOp::StencilOp_Keep,
-                                            StencilOp::StencilOp_Keep,
-                                            StencilOp::StencilOp_Keep,
-                                            1,
-                                            1 };
-    RenderAdd_SetStencil(g_renderCmdList, stencilTestCmd);
-    RenderAdd_DisableStencil(g_renderCmdList);
+    // the checktrans shader evaluates the circle analytically
+    // (uCircleTrans + uFragToGame), no stencil mask is needed
+    RenderAdd_SetCircleTrans(
+        g_renderCmdList, SetCircleTransCmd{ float(x), float(y), float(Radius) });
 #endif
 }

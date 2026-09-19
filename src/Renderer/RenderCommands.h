@@ -36,6 +36,7 @@ enum RenderCommandType : uint8_t
     Cmd_SetColor,
     Cmd_SetClearColor,
     Cmd_SetColorPalette,
+    Cmd_SetCircleTrans,
     Cmd_SetViewParams,
     Cmd_SetModelViewTranslation,
     Cmd_SetScissor,
@@ -65,6 +66,14 @@ struct SetFrameBufferCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetFrameBuffer;
     frame_buffer_t frameBuffer{};
+};
+
+struct SetCircleTransCmd
+{
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetCircleTrans;
+    float x = 0.f;      // circle center in game window coordinates
+    float y = 0.f;
+    float radius = 0.f; // <= 0 disables the circle of transparency
 };
 
 struct SetViewParamsCmd

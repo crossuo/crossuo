@@ -107,6 +107,8 @@ bool RenderAdd_SetColorMask(RenderCmdList *cmdList, const SetColorMaskCmd &cmd);
 bool RenderAdd_SetColor(RenderCmdList *cmdList, const SetColorCmd &cmd);
 bool RenderAdd_SetClearColor(RenderCmdList *cmdList, const SetClearColorCmd &cmd);
 bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd &cmd);
+bool RenderAdd_SetCircleTrans(RenderCmdList *cmdList, const SetCircleTransCmd &cmd);
+int Render_GetCurrentDrawMode();
 bool RenderAdd_ClearRT(RenderCmdList *cmdList, const ClearRTCmd &cmd);
 
 bool RenderAdd_SetShaderUniform(RenderCmdList *cmdList, const ShaderUniformCmd &cmd);

@@ -71,6 +71,8 @@ int _uAlphaTestEnabled = 0;
 int _uAlphaRef = 0;
 int _uDrawMode = 0;
 int _uColors = 0;
+int _uCircleTrans = 0;
+int _uFragToGame = 0;
 
 bool g_rendererDebugForceStateReset = false;
 
@@ -237,6 +239,10 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK_ATTRIB(_uDrawMode);
     _uColors = glGetUniformLocation(_pProg, "colors");
     GL_CHECK_ATTRIB(_uColors);
+    _uCircleTrans = glGetUniformLocation(_pProg, "uCircleTrans");
+    GL_CHECK_ATTRIB(_uCircleTrans);
+    _uFragToGame = glGetUniformLocation(_pProg, "uFragToGame");
+    GL_CHECK_ATTRIB(_uFragToGame);
     GL_CHECK(glUseProgram(_pProg));
 
     // clang-format off

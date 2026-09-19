@@ -21,6 +21,7 @@ struct alignas(4) RenderBatchKey
     texture_handle_t texture;
     int drawMode;
     uint32_t paletteVersion;
+    float circleTrans[3];
     frame_buffer_t framebuffer;
     decltype(RenderState::alphaTest) alphaTest;
     decltype(RenderState::blend) blend;
@@ -46,6 +47,9 @@ RenderBatchKey MakeKey(RenderState *state, texture_handle_t texture)
     key.texture = texture;
     key.drawMode = state->currentDrawMode;
     key.paletteVersion = state->paletteVersion;
+    key.circleTrans[0] = state->circleTrans[0];
+    key.circleTrans[1] = state->circleTrans[1];
+    key.circleTrans[2] = state->circleTrans[2];
     key.framebuffer = state->framebuffer;
     key.alphaTest = state->alphaTest;
     key.blend = state->blend;
@@ -250,6 +254,16 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         case RenderCommandType::Cmd_DisableAlphaTest:
         {
             if (s_key.alphaTest.enabled)
+            {
+                RenderBatch_Flush(state);
+            }
+            break;
+        }
+        case RenderCommandType::Cmd_SetCircleTrans:
+        {
+            auto circle = ((const SetCircleTransCmd *)cmd);
+            if (circle->x != s_key.circleTrans[0] || circle->y != s_key.circleTrans[1] ||
+                circle->radius != s_key.circleTrans[2])
             {
                 RenderBatch_Flush(state);
             }

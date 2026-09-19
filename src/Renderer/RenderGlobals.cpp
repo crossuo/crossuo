@@ -29,4 +29,15 @@ void Render_ResetFrameStats()
     g_frameStats = RenderFrameStats{};
 }
 
+int Render_GetCurrentDrawMode()
+{
+#if defined(USE_GL3) || defined(USE_GLES)
+    if (g_renderCmdList != nullptr)
+    {
+        return g_renderCmdList->state.currentDrawMode;
+    }
+#endif
+    return 0;
+}
+
 #endif // #if defined(NEW_RENDERER_ENABLED)

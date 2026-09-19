@@ -500,6 +500,35 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
     return false;
 }
 
+bool RenderState_SetCircleTrans(
+    RenderState *state, float x, float y, float radius, bool forced)
+{
+    if (forced || state->circleTrans[0] != x || state->circleTrans[1] != y ||
+        state->circleTrans[2] != radius)
+    {
+        state->circleTrans[0] = x;
+        state->circleTrans[1] = y;
+        state->circleTrans[2] = radius;
+        GL_CHECK(glUniform3f(_uCircleTrans, x, y, radius));
+        return true;
+    }
+    return false;
+}
+
+void RenderState_SetFragToGame(
+    RenderState *state, float offX, float offY, float scaleX, float scaleY, bool forced)
+{
+    if (forced || state->fragTransform[0] != offX || state->fragTransform[1] != offY ||
+        state->fragTransform[2] != scaleX || state->fragTransform[3] != scaleY)
+    {
+        state->fragTransform[0] = offX;
+        state->fragTransform[1] = offY;
+        state->fragTransform[2] = scaleX;
+        state->fragTransform[3] = scaleY;
+        GL_CHECK(glUniform4f(_uFragToGame, offX, offY, scaleX, scaleY));
+    }
+}
+
 bool RenderState_SetColorPalette(RenderState *state, const float *colors, bool forced)
 {
     constexpr int paletteSize = 96;
@@ -750,6 +779,17 @@ bool RenderState_SetViewParams(
             float(camera_farZ));
         GL_CHECK(glUseProgram(_pProg));
         GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
+
+        // gl_FragCoord -> game window coordinates transform for the shader
+        // (used by the circle-of-transparency checktrans draws)
+        {
+            const float scale = (scene_scale != 0.0f) ? scene_scale : 1.0f;
+            const float offX = scene_x - scene_x * scale;
+            const float offY = proj_flipped_y ? (scene_y + scene_height) + bottom * scale
+                                              : scene_y - bottom * scale;
+            const float scaleY = proj_flipped_y ? -scale : scale;
+            RenderState_SetFragToGame(state, offX, offY, scale, scaleY, true);
+        }
         return true;
     }
     return false;

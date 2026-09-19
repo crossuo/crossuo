@@ -301,6 +301,18 @@ bool RenderAdd_SetClearColor(RenderCmdList *cmdList, const SetClearColorCmd &cmd
     return true;
 }
 
+bool RenderAdd_SetCircleTrans(RenderCmdList *cmdList, const SetCircleTransCmd &cmd)
+{
+    auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetCircleTrans(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd &cmd)
 {
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));

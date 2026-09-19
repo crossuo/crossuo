@@ -824,6 +824,12 @@ void RenderDraw_SetColorPaletteDebug(SetColorPaletteCmd *cmd, RenderState *)
         cmd->palette[5]);
 }
 
+void RenderDraw_SetCircleTransDebug(SetCircleTransCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "SetCircleTransCmd: x: %f - y: %f - radius: %f", cmd->x, cmd->y, cmd->radius);
+}
+
 void RenderDraw_SetViewParamsDebug(SetViewParamsCmd *cmd, RenderState *)
 {
     DumpInfo(
@@ -939,6 +945,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(SetColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetClearColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetColorPalette, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetCircleTrans, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetViewParams, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetModelViewTranslation, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetScissor, cmd, &cmdList->state)

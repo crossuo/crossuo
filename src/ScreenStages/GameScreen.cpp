@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <SDL_rect.h>
 #include <climits> // INT_MAX
+#include <cstdlib> // getenv
 #include <common/str.h>
 #include "GameScreen.h"
 #include "GameBlockedScreen.h"
@@ -1342,7 +1343,19 @@ void CGameScreen::DrawGameWindow(bool render)
                             (g_RenderBounds.PlayerZ * 4 + g_Player->OffsetZ);
                 g_CircleOfTransparency.Draw(drawX, drawY);
             }
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+            else
+            {
+                RenderAdd_SetCircleTrans(g_renderCmdList, SetCircleTransCmd{});
+            }
+#endif
         }
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+        else
+        {
+            RenderAdd_SetCircleTrans(g_renderCmdList, SetCircleTransCmd{});
+        }
+#endif
         SCOPED_GL_DEBUG_MARKER_LABEL("GameScreen");
         m_HitsStack.clear();
         for (int i = 0; i < m_RenderListCount; i++)
@@ -1708,6 +1721,14 @@ void CGameScreen::DrawGameWindowText(bool render)
 
 void CGameScreen::PrepareContent()
 {
+    // test harness (XUO_CIRCLE_TRANS): exercise the circle-of-transparency
+    // rendering path during automated benchmark runs
+    static const bool circleTrans = getenv("XUO_CIRCLE_TRANS") != nullptr;
+    if (circleTrans)
+    {
+        g_ConfigManager.UseCircleTrans = true;
+    }
+
     g_WorldTextRenderer.CalculateWorldPositions(false);
 
     m_GameScreenGump.PrepareContent();
