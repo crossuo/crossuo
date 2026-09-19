@@ -99,19 +99,19 @@
 // ~10k calls/frame. It is ON for debug builds (XUO_DEBUG) and OFF for
 // release. XUO_GL_VALIDATE=1 forces it on (validating a release build),
 // XUO_GL_VALIDATE=0 forces it off (benchmarking a debug build).
-static inline bool gfx_gl_validation_enabled()
+static inline int gfx_gl_validation_enabled()
 {
     static int cached = -1;
     if (cached == -1)
     {
         const char *v = getenv("XUO_GL_VALIDATE");
 #if defined(XUO_DEBUG)
-        cached = (v == nullptr || v[0] != '0') ? 1 : 0;
+        cached = (v == NULL || v[0] != '0') ? 1 : 0;
 #else
-        cached = (v != nullptr && v[0] != '0') ? 1 : 0;
+        cached = (v != NULL && v[0] != '0') ? 1 : 0;
 #endif
     }
-    return cached == 1;
+    return cached;
 }
 
 #define GL_CHECK_ATTRIB(x) \
