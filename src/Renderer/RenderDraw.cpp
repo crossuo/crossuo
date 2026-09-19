@@ -18,6 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <assert.h>
+#include <stdlib.h> // getenv
 #include <string.h> // memcmp, memcpy
 #include <deque> // deque
 
@@ -726,7 +727,14 @@ bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *stat
 {
     (void)state;
 #if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
+    // markers are recorded for the frame dumps but the GL debug group calls
+    // (3.3k/frame) only run when explicitly requested - they are pure overhead
+    // otherwise
+    static const bool markers = getenv("XUO_RENDER_MARKERS") != nullptr;
+    if (markers)
+    {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
+    }
 #else
     (void)cmd;
 #endif
@@ -737,7 +745,11 @@ bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
 {
     (void)state;
 #if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
-    glPopDebugGroup();
+    static const bool markers = getenv("XUO_RENDER_MARKERS") != nullptr;
+    if (markers)
+    {
+        glPopDebugGroup();
+    }
 #else
     (void)cmd;
 #endif
