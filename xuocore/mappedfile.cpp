@@ -341,11 +341,6 @@ bool CMappedFile::Load(const fs_path &path)
         Warning(Filesystem, "file not found %s", fs_path_ascii(path));
     }
 
-    if (!result)
-    {
-        Error(Filesystem, "failed to mmap.");
-    }
-
     return result;
 }
 
