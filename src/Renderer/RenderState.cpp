@@ -785,9 +785,12 @@ bool RenderState_SetViewParams(
         {
             const float scale = (scene_scale != 0.0f) ? scene_scale : 1.0f;
             const float offX = scene_x - scene_x * scale;
-            const float offY = proj_flipped_y ? (scene_y + scene_height) + bottom * scale
-                                              : scene_y - bottom * scale;
-            const float scaleY = proj_flipped_y ? -scale : scale;
+            const float offY =
+                proj_flipped_y ? scene_y - bottom * scale
+                               : (scene_y + scene_height) + bottom * scale;
+            // the world pass (flipped=false) maps gl_FragCoord.y downward:
+            // gameY = (scene_y + scene_height) + bottom * scale - fragY * scale
+            const float scaleY = proj_flipped_y ? scale : -scale;
             RenderState_SetFragToGame(state, offX, offY, scale, scaleY, true);
         }
         return true;

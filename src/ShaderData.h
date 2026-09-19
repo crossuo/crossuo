@@ -109,8 +109,6 @@ static const char *g_pShader =
     "    }\n"
     "    if (checkTrans > 0.0)\n"
     "    {\n"
-    "        // circle of transparency: outside the circle the draw is opaque\n"
-    "        // (alpha forced to 1.0), inside it stays alpha blended\n"
     "        vec2 fc = vec2(gl_FragCoord.x, gl_FragCoord.y) * uFragToGame.xy + uFragToGame.zw;\n"
     "        if (distance(fc, uCircleTrans.xy) > uCircleTrans.z)\n"
     "        {\n"
