@@ -387,7 +387,16 @@ static int Run()
             int32_t iDynamicFPS = SDL_GetTicks() - g_Ticks;
             int32_t iDelay = g_GameWindow.GetRenderDelay();
 
-            SDL_Delay(std::max(iDelay - iDynamicFPS, CPU_USAGE_DELAY));
+            // a frame delay of 0 means uncapped; otherwise only sleep to hit
+            // the configured cap (the old 2ms floor forced ~140fps ceilings)
+            if (iDelay > 0)
+            {
+                const int32_t delay = iDelay - (SDL_GetTicks() - g_Ticks);
+                if (delay > 0)
+                {
+                    SDL_Delay(delay);
+                }
+            }
         }
     }
     return EXIT_SUCCESS;

@@ -7,7 +7,7 @@
 
 const int MIN_FPS_LIMIT = 12;
 
-const int MAX_FPS_LIMIT = 300;
+const int MAX_FPS_LIMIT = 1000; // capped at the limit value = uncapped
 
 const int DEFAULT_FPS = MAX_FPS_LIMIT;
 

@@ -578,7 +578,7 @@ void CConfigManager::SetClientFPS(int val)
         {
             m_ClientFPS = MIN_FPS_LIMIT;
         }
-        else if (m_ClientFPS > MAX_FPS_LIMIT)
+        else if (m_ClientFPS >= MAX_FPS_LIMIT)
         {
             m_ClientFPS = MAX_FPS_LIMIT;
         }
@@ -586,6 +586,11 @@ void CConfigManager::SetClientFPS(int val)
         if (m_ClientFPS == MIN_FPS_LIMIT)
         {
             g_FrameDelay[WINDOW_ACTIVE] = 80;
+        }
+        else if (m_ClientFPS >= MAX_FPS_LIMIT)
+        {
+            // max cap value = uncapped: never sleep between frames
+            g_FrameDelay[WINDOW_ACTIVE] = 0;
         }
         else
         {
