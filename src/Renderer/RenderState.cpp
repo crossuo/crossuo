@@ -37,11 +37,22 @@ bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatr
 
     g_frameStats.drawCalls++;
 
-    GL_CHECK(glBindVertexArray(g_drawVAO));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    // the draw VAO/VBO pair is the only one bound on these targets at draw
+    // time; guard with a cached value instead of re-issuing binds per draw
+    static GLuint cachedVAO = 0;
+    static GLuint cachedVBO = 0;
+    if (cachedVAO != g_drawVAO)
+    {
+        GL_CHECK(glBindVertexArray(g_drawVAO));
+        cachedVAO = g_drawVAO;
+    }
+    if (cachedVBO != g_drawVBO)
+    {
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+        cachedVBO = g_drawVBO;
+    }
 
-    GL_CHECK(glUseProgram(_pProg));
-    // Bind shader program (always bind to ensure it's active)
+    // bind shader program (always ensure it is active, but only when changed)
     if (state->currentProgram != _pProg)
     {
         GL_CHECK(glUseProgram(_pProg));
@@ -50,9 +61,19 @@ bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatr
         stateChanged = true;
     }
 
-    // Upload alpha test uniforms if needed
-    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+    // upload alpha test uniforms only when their tracked value changes
+    static int cachedAlphaTestEnabled = -1;
+    if (cachedAlphaTestEnabled != (int)state->alphaTest.enabled)
+    {
+        GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+        cachedAlphaTestEnabled = state->alphaTest.enabled ? 1 : 0;
+    }
+    static float cachedAlphaRef = -1.0f;
+    if (cachedAlphaRef != state->alphaTest.alphaRef)
+    {
+        GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+        cachedAlphaRef = state->alphaTest.alphaRef;
+    }
 
     // Upload model matrix if changed
     if (!state->modelMatrixCached ||
