@@ -60,6 +60,12 @@ void Render_CleanupVertexBuffers();
 // Persistent vertex ring (Phase 1): rolling upload offset within g_drawVBO
 extern size_t g_vboOffset;
 
+// uploads vertices into the ring at a rolling offset, returns the byte offset
+// for Render_BindVertexRange
+size_t Render_UploadVertices(const void *data, size_t size);
+// points the VAO attribute pointers at a ring offset (call before glDraw*)
+void Render_BindVertexRange(size_t byteOffset);
+
 bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatrix);
 void RenderState_ResetAllStates(RenderState *state);
 bool RenderState_FlushState(RenderState *state);

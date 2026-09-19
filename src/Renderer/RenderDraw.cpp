@@ -116,8 +116,8 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
+    const size_t vtxOffset = Render_UploadVertices(data, 4 * sizeof(GenericVertex));
+    Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawQuad");
@@ -176,8 +176,8 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
+    const size_t vtxOffset = Render_UploadVertices(data, 4 * sizeof(GenericVertex));
+    Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawRotatedQuad");
@@ -281,8 +281,8 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
         RenderState_SetupCachedState(state, model);
         RENDER_STATE_DUMP_BEFORE(state);
-        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-        GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, vertexCount * sizeof(GenericVertex), vertices));
+        const size_t vtxOffset = Render_UploadVertices(vertices, vertexCount * sizeof(GenericVertex));
+        Render_BindVertexRange(vtxOffset);
         GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount));
         RENDER_STATE_DUMP_AFTER(state);
         RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawCharacterSitting");
@@ -363,8 +363,8 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), vertices));
+    const size_t vtxOffset = Render_UploadVertices(vertices, 4 * sizeof(GenericVertex));
+    Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawLandTile");
@@ -415,8 +415,8 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
         BlendFactor::BlendFactor_DstColor,
         BlendFactor::BlendFactor_Zero,
         BlendEquation::BlendEquation_Add);
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
+    const size_t vtxOffset = Render_UploadVertices(data, 4 * sizeof(GenericVertex));
+    Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     if (cmd.keepBlend)
@@ -472,8 +472,8 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _whiteTex);
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, (segments + 1) * sizeof(GenericVertex), vertices));
+    const size_t vtxOffset = Render_UploadVertices(vertices, (segments + 1) * sizeof(GenericVertex));
+    Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 1));
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawCircle");
@@ -505,8 +505,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _whiteTex);
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
+    const size_t vtxOffset = Render_UploadVertices(data, 4 * sizeof(GenericVertex));
+    Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawUntexturedQuad");
@@ -544,8 +544,8 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _whiteTex);
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
-    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(GenericVertex), data));
+    const size_t vtxOffset = Render_UploadVertices(data, 2 * sizeof(GenericVertex));
+    Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
     RenderState_SetBlendEnabled(state, false);
     RENDER_STATE_DUMP_AFTER(state);

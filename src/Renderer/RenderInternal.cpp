@@ -77,6 +77,7 @@ bool g_rendererDebugForceStateReset = false;
 uint32_t g_drawVAO = 0;
 uint32_t g_drawVBO = 0;
 size_t g_vboSize = 0;
+size_t g_vboOffset = 0;
 const size_t MAX_VERTICES = 65536; // Support up to 64k vertices
 
 
@@ -343,7 +344,58 @@ bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb)
 
 void Render_SwapBuffers()
 {
+    // start the next frame on a fresh buffer region: orphaning the storage
+    // here lets the driver rename it while the GPU may still be reading the
+    // previous frame's data, avoiding per-draw implicit syncs on overwrite
+    if (g_vboOffset != 0)
+    {
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+        GL_CHECK(glBufferData(GL_ARRAY_BUFFER, g_vboSize, nullptr, GL_DYNAMIC_DRAW));
+        g_vboOffset = 0;
+    }
     SDL_GL_SwapWindow(g_render.window);
+}
+
+size_t Render_UploadVertices(const void *data, size_t size)
+{
+    if (g_vboOffset + size > g_vboSize)
+    {
+        // frame data exceeded the ring capacity, orphan and wrap
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+        GL_CHECK(glBufferData(GL_ARRAY_BUFFER, g_vboSize, nullptr, GL_DYNAMIC_DRAW));
+        g_vboOffset = 0;
+    }
+
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, g_vboOffset, size, data));
+
+    const size_t offset = g_vboOffset;
+    g_vboOffset += size;
+    g_frameStats.vertexUploads++;
+    g_frameStats.bytesUploaded += size;
+    return offset;
+}
+
+void Render_BindVertexRange(size_t byteOffset)
+{
+    GL_CHECK(glVertexAttribPointer(
+        _inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, pos))));
+    GL_CHECK(glVertexAttribPointer(
+        _inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, uv))));
+    GL_CHECK(glVertexAttribPointer(
+        _inColor,
+        4,
+        GL_UNSIGNED_BYTE,
+        GL_TRUE,
+        sizeof(GenericVertex),
+        (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, col))));
+    GL_CHECK(glVertexAttribPointer(
+        _inNormal,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(GenericVertex),
+        (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, normal))));
 }
 
 bool Render_InitVertexBuffers()
