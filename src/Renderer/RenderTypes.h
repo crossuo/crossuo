@@ -262,9 +262,10 @@ struct RenderState
         int top;
         int nearZ;
         int farZ;
+        int sceneHeight;
         float scale;
         bool proj_flipped_y;
-    } viewport = { 0, 0, 0, 0, 0, 0, 1.f, false };
+    } viewport = { 0, 0, 0, 0, 0, 0, 0, 1.f, false };
 
     struct
     {
@@ -331,7 +332,7 @@ struct RenderState
     int currentDrawMode = 0;
     uint32_t paletteVersion = 0;
     float circleTrans[3] = {0.0f, 0.0f, 0.0f};
-    float fragTransform[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+    float viewportUniform[2] = {0.0f, 0.0f};
     float currentColors[96] = {0.0f};
     uint32_t currentProgram = -1;
     float cachedModelMatrix[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};

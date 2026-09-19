@@ -503,30 +503,34 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
 bool RenderState_SetCircleTrans(
     RenderState *state, float x, float y, float radius, bool forced)
 {
-    if (forced || state->circleTrans[0] != x || state->circleTrans[1] != y ||
+    const float scale = (state->viewport.scale != 0.0f) ? state->viewport.scale : 1.0f;
+    // convert the game-coordinate center to viewport space (y-up from the
+    // viewport origin): the same space the old stencil mask was written in,
+    // so the circle lands exactly where the stencil sprite used to
+    const float vx = (x - state->viewport.left) * scale;
+    const float vy = (state->viewport.sceneHeight - (y - state->viewport.top)) * scale;
+    if (forced || state->circleTrans[0] != vx || state->circleTrans[1] != vy ||
         state->circleTrans[2] != radius)
     {
-        state->circleTrans[0] = x;
-        state->circleTrans[1] = y;
+        state->circleTrans[0] = vx;
+        state->circleTrans[1] = vy;
         state->circleTrans[2] = radius;
-        GL_CHECK(glUniform3f(_uCircleTrans, x, y, radius));
+        GL_CHECK(glUniform3f(_uCircleTrans, vx, vy, radius));
         return true;
     }
     return false;
 }
 
-void RenderState_SetFragToGame(
-    RenderState *state, float offX, float offY, float scaleX, float scaleY, bool forced)
+bool RenderState_SetViewport(RenderState *state, float x, float y, bool forced)
 {
-    if (forced || state->fragTransform[0] != offX || state->fragTransform[1] != offY ||
-        state->fragTransform[2] != scaleX || state->fragTransform[3] != scaleY)
+    if (forced || state->viewportUniform[0] != x || state->viewportUniform[1] != y)
     {
-        state->fragTransform[0] = offX;
-        state->fragTransform[1] = offY;
-        state->fragTransform[2] = scaleX;
-        state->fragTransform[3] = scaleY;
-        GL_CHECK(glUniform4f(_uFragToGame, offX, offY, scaleX, scaleY));
+        state->viewportUniform[0] = x;
+        state->viewportUniform[1] = y;
+        GL_CHECK(glUniform2f(_uViewport, x, y));
+        return true;
     }
+    return false;
 }
 
 bool RenderState_SetColorPalette(RenderState *state, const float *colors, bool forced)
@@ -780,19 +784,10 @@ bool RenderState_SetViewParams(
         GL_CHECK(glUseProgram(_pProg));
         GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
 
-        // gl_FragCoord -> game window coordinates transform for the shader
-        // (used by the circle-of-transparency checktrans draws)
-        {
-            const float scale = (scene_scale != 0.0f) ? scene_scale : 1.0f;
-            const float offX = scene_x - scene_x * scale;
-            const float offY =
-                proj_flipped_y ? scene_y - bottom * scale
-                               : (scene_y + scene_height) + bottom * scale;
-            // the world pass (flipped=false) maps gl_FragCoord.y downward:
-            // gameY = (scene_y + scene_height) + bottom * scale - fragY * scale
-            const float scaleY = proj_flipped_y ? scale : -scale;
-            RenderState_SetFragToGame(state, offX, offY, scale, scaleY, true);
-        }
+        // the checktrans shader needs the viewport origin to turn
+        // gl_FragCoord into game window coordinates
+        state->viewport.sceneHeight = scene_height;
+        RenderState_SetViewport(state, float(scene_x), float(bottom), true);
         return true;
     }
     return false;
