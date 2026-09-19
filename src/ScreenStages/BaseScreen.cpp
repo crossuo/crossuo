@@ -48,6 +48,9 @@ void CBaseScreen::Render()
     // FlushState command above already sets color to white with alpha 100%
 #endif
     m_Gump.Draw();
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    DebugScreen();
+#endif
     InitToolTip();
     DrawSmoothMonitorEffect();
     g_MouseManager.Draw(CursorGraphic);

@@ -87,6 +87,11 @@ void CGumpScreenMain::UpdateContent()
 
     Add(new CGUIGumppic(0x157C, 0, 0));
 
+    if (DebugRenderScreen())
+    {
+        return;
+    }
+
     if (g_Config.ClientVersion >= CV_500A && g_Config.ClientVersion < CV_70611)
     {
         Add(new CGUIGumppic(0x2329, 0, 0));

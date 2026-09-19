@@ -273,6 +273,10 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glGenTextures(1, &_whiteTex));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, _whiteTex));
     GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, _whiteTexture));
+    // no mipmaps are allocated, the default GL_NEAREST_MIPMAP_LINEAR filter
+    // would make this texture incomplete and sample as black (GL3 core)
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
     // Set texture unit to 0 once during initialization (never needs to change)
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0

@@ -11,6 +11,7 @@
 #include <common/utils.h> // countof
 #include <common/logging/logging.h>
 #include <stdio.h> // snprintf, fprintf, fopen, fclose
+#include <stdlib.h> // getenv
 #include <string.h>
 
 #define MATCH_CASE_DRAW_DEBUG(type, cmd, state)                                                    \
@@ -415,6 +416,9 @@ static bool s_dumpEnabled = false;
 static bool s_dumpInProgress = false;
 static FILE *s_dumpFile = nullptr;
 
+// one-shot frame dump, can also be enabled with the XUO_DUMP_FRAME env var
+// (dumps the first rendered frame after startup, written to frame<counter>.log
+// in the current working directory)
 void RenderDebug_EnableDump()
 {
     if (!s_dumpEnabled)
@@ -427,6 +431,12 @@ void RenderDebug_EnableDump()
 
 void RenderDebug_StartFrame()
 {
+    static const bool envDump = getenv("XUO_DUMP_FRAME") != nullptr;
+    if (envDump && s_frameCount == 0)
+    {
+        s_dumpEnabled = true;
+    }
+
     s_frameCount++;
 
     if (s_dumpEnabled && !s_dumpInProgress)

@@ -6,6 +6,7 @@
 #include "MainScreen.h"
 #include "BaseScreen.h"
 #include <common/utils.h>
+#include <cstdlib>
 #include "revision.h"
 #include "../Config.h"
 #include "../Point.h"
@@ -20,6 +21,30 @@
 #include "../TextEngine/EntryText.h"
 
 CMainScreen g_MainScreen;
+
+bool DebugRenderScreen()
+{
+    static const bool debug = getenv("XUO_DEBUG") != nullptr;
+    return debug;
+}
+
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+static void DebugRenderScreenInternal()
+{
+    // big red untextured quad
+    RenderAdd_DrawUntexturedQuad(
+        g_renderCmdList, DrawUntexturedQuadCmd{ 40, 200, 150, 150, { 1.f, 0.f, 0.f, 1.f } });
+
+    // big green circle (uses the current color state)
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 0.f, 1.f, 0.f, 1.f } });
+    RenderAdd_DrawCircle(g_renderCmdList, DrawCircleCmd{ 320, 275, 80.f, 0 });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+
+    // big blue line
+    RenderAdd_DrawLine(
+        g_renderCmdList, DrawLineCmd{ 450, 350, 600, 200, { 0.f, 0.f, 1.f, 1.f } });
+}
+#endif
 
 CMainScreen::CMainScreen()
     : CBaseScreen(m_MainGump)
@@ -56,7 +81,10 @@ void CMainScreen::Init()
     g_TotalRecvSize = 0;
     g_LightLevel = 0;
     g_PersonalLightLevel = 0;
-    g_ScreenEffectManager.UseSunrise();
+    if (!DebugRenderScreen())
+    {
+        g_ScreenEffectManager.UseSunrise();
+    }
     SmoothScreenAction = 0;
     m_Gump.PrepareTextures();
 }
@@ -87,6 +115,11 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
 
 void CMainScreen::SetAccounting(const astr_t &account, const astr_t &password)
 {
+    if (DebugRenderScreen())
+    {
+        return;
+    }
+
     m_Account->SetTextA(account);
     m_Password->SetTextA(password);
 
@@ -101,6 +134,11 @@ void CMainScreen::SetAccounting(const astr_t &account, const astr_t &password)
 
 void CMainScreen::Paste()
 {
+    if (DebugRenderScreen())
+    {
+        return;
+    }
+
     if (g_EntryPointer == m_MainGump.m_PasswordFake)
     {
         m_Password->Paste();
@@ -121,6 +159,11 @@ void CMainScreen::Paste()
 
 void CMainScreen::OnTextInput(const TextEvent &ev)
 {
+    if (DebugRenderScreen())
+    {
+        return;
+    }
+
     const auto ch = EvChar(ev);
     if (!IsPrintable(ch) || !g_FontManager.IsPrintASCII((uint8_t)ch))
     {
@@ -151,6 +194,11 @@ void CMainScreen::OnTextInput(const TextEvent &ev)
 
 void CMainScreen::OnKeyDown(const KeyEvent &ev)
 {
+    if (DebugRenderScreen())
+    {
+        return;
+    }
+
     if (g_EntryPointer == nullptr)
     {
         g_EntryPointer = m_MainGump.m_PasswordFake;
@@ -191,8 +239,25 @@ void CMainScreen::OnKeyDown(const KeyEvent &ev)
     m_Gump.WantRedraw = true;
 }
 
+void CMainScreen::DebugScreen()
+{
+    if (!DebugRenderScreen())
+    {
+        return;
+    }
+
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    DebugRenderScreenInternal();
+#endif
+}
+
 void CMainScreen::Load()
 {
+    if (DebugRenderScreen())
+    {
+        return;
+    }
+
     m_AutoLogin->Checked = g_Config.AutoLogin;
 
     m_Account->SetTextA(g_Config.Login);
@@ -227,6 +292,11 @@ void CMainScreen::Load()
 
 void CMainScreen::Save()
 {
+    if (DebugRenderScreen())
+    {
+        return;
+    }
+
     g_Config.AutoLogin = m_AutoLogin->Checked;
     g_Config.SavePassword = m_SavePassword->Checked;
     g_Config.Password = m_Password->GetTextA();

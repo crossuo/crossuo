@@ -633,7 +633,7 @@ bool RenderState_SetTexture(
         if (texture == RENDER_TEXTUREHANDLE_INVALID)
         {
 #if defined(USE_GLES) || defined(USE_GL3)
-            // Bind default white texture for GL3/GLES to support vertex colors
+            // Bind the missing-texture checkerboard
             GL_CHECK(glBindTexture(textureTypeToOGLType(type), _defaultTex));
 #endif
         }

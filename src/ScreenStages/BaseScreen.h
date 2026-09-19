@@ -27,6 +27,7 @@ public:
     virtual void Init();
     virtual void InitToolTip() { m_Gump.InitToolTip(); }
     virtual void Render();
+    virtual void DebugScreen() {}
     virtual void SelectObject();
     virtual void CreateSmoothAction(uint8_t action);
     virtual void ProcessSmoothAction(uint8_t action = 0xFF) {}

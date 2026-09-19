@@ -12,6 +12,11 @@
 class CEntryText;
 class CGUICheckbox;
 
+// debug helper: enabled via the XUO_DEBUG environment variable, strips the
+// login screen down to its background image and draws colored test
+// primitives (untextured quad, circle, line) over it
+bool DebugRenderScreen();
+
 class CMainScreen : public CBaseScreen
 {
 private:
@@ -42,6 +47,7 @@ public:
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
+    virtual void DebugScreen() override;
 
     void Save();
     void Reset() const;
