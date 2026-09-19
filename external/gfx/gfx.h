@@ -4,6 +4,8 @@
 #ifndef EXTERNAL_GFX_H
 #define EXTERNAL_GFX_H
 
+#include <stdlib.h> // getenv (gfx_gl_validation_enabled)
+
 #if defined(USE_GL3)
     #define USE_GL
     #define USE_GL3W
@@ -92,6 +94,26 @@
 #endif // #elif defined(USE_GLES) // #if defined(USE_GL)
 
 #if defined(USE_GL) || defined(USE_GLES)
+
+// GL error validation: glGetError after every call is a large CPU tax at
+// ~10k calls/frame. It is ON for debug builds (XUO_DEBUG) and OFF for
+// release. XUO_GL_VALIDATE=1 forces it on (validating a release build),
+// XUO_GL_VALIDATE=0 forces it off (benchmarking a debug build).
+static inline bool gfx_gl_validation_enabled()
+{
+    static int cached = -1;
+    if (cached == -1)
+    {
+        const char *v = getenv("XUO_GL_VALIDATE");
+#if defined(XUO_DEBUG)
+        cached = (v == nullptr || v[0] != '0') ? 1 : 0;
+#else
+        cached = (v != nullptr && v[0] != '0') ? 1 : 0;
+#endif
+    }
+    return cached == 1;
+}
+
 #define GL_CHECK_ATTRIB(x) \
     do { \
         if (x == -1) { \
@@ -102,18 +124,22 @@
 #define GL_CHECK(statement) \
     do { \
         statement; \
-        const auto e = glGetError(); \
-        if (e != GL_NO_ERROR) { \
-            Error(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
-            exit(-69); \
+        if (gfx_gl_validation_enabled()) { \
+            const auto e = glGetError(); \
+            if (e != GL_NO_ERROR) { \
+                Error(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
+                exit(-69); \
+            } \
         } \
     } while(0)
 #define GL_CALL(statement) \
     do { \
         statement; \
-        const auto e = glGetError(); \
-        if (e != GL_NO_ERROR) { \
-            Warning(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
+        if (gfx_gl_validation_enabled()) { \
+            const auto e = glGetError(); \
+            if (e != GL_NO_ERROR) { \
+                Warning(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
+            } \
         } \
     } while(0)
 
