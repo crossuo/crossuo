@@ -103,6 +103,10 @@ static const char *g_pShader =
     "            gl_FragColor = textureColor * vColor;\n"
     "        }\n"
     "    }\n"
+    "    else\n"
+    "    {\n"
+    "        gl_FragColor = textureColor * vColor;\n"
+    "    }\n"
     "    if (checkTrans > 0.0)\n"
     "    {\n"
     "        // circle of transparency: outside the circle the draw is opaque\n"
@@ -112,10 +116,6 @@ static const char *g_pShader =
     "        {\n"
     "            gl_FragColor.a = 1.0;\n"
     "        }\n"
-    "    }\n"
-    "    else\n"
-    "    {\n"
-    "        gl_FragColor = textureColor * vColor;\n"
     "    }\n"
     "}";
 
