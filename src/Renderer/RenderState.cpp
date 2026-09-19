@@ -35,6 +35,8 @@ bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatr
 {
     bool stateChanged = false;
 
+    g_frameStats.drawCalls++;
+
     GL_CHECK(glBindVertexArray(g_drawVAO));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
 

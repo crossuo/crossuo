@@ -8,6 +8,8 @@
 #include "GameObjects/GameWorld.h"
 #include "GameObjects/GameCharacter.h"
 
+#include <cstdlib>
+
 #if USE_PING
 #include "Utility/PingThread.h"
 PING_INFO_DATA g_GameServerPingInfo = {};
@@ -18,6 +20,16 @@ uint32_t g_Ping = 0; // From packet 0x73
 astr_t g_PingString; // Debug Info
 
 DebugContext g_DebugContext;
+
+// test harness: when XUO_TEST_LOGIN=1 the login flow auto-advances without
+// user input (connect with the saved credentials -> pick the second server
+// -> pick the second character) so the in-game rendering can be benchmarked
+// and validated automatically
+bool TestAutoLogin()
+{
+    static const bool autoLogin = getenv("XUO_TEST_LOGIN") != nullptr;
+    return autoLogin;
+}
 
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;

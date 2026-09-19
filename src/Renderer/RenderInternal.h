@@ -57,6 +57,9 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
 bool Render_InitVertexBuffers();
 void Render_CleanupVertexBuffers();
 
+// Persistent vertex ring (Phase 1): rolling upload offset within g_drawVBO
+extern size_t g_vboOffset;
+
 bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatrix);
 void RenderState_ResetAllStates(RenderState *state);
 bool RenderState_FlushState(RenderState *state);

@@ -34,6 +34,9 @@ struct DebugContext
 };
 extern DebugContext g_DebugContext;
 
+// test harness, see Globals.cpp (XUO_TEST_LOGIN=1)
+bool TestAutoLogin();
+
 enum
 {
     WINDOW_INACTIVE = 0,

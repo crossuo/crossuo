@@ -282,11 +282,84 @@ bool load_config()
     return true;
 }
 
+// Optional frame statistics, enabled with the XUO_FPS_LOG environment variable.
+// Prints aggregated frame timings and renderer counters every 5 seconds to stdout.
+static void FrameStatsTick()
+{
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    static const bool enabled = getenv("XUO_FPS_LOG") != nullptr;
+    if (!enabled)
+    {
+        return;
+    }
+
+    static uint32_t lastFrameTick = 0;
+    static uint32_t windowTick = 0;
+    static uint32_t frames = 0;
+    static uint32_t minMs = 0xFFFFFFFF;
+    static uint32_t maxMs = 0;
+    static uint64_t sumMs = 0;
+
+    const uint32_t now = SDL_GetTicks();
+    if (lastFrameTick != 0)
+    {
+        const uint32_t ms = now - lastFrameTick;
+        frames++;
+        sumMs += ms;
+        if (ms < minMs)
+        {
+            minMs = ms;
+        }
+        if (ms > maxMs)
+        {
+            maxMs = ms;
+        }
+    }
+    lastFrameTick = now;
+
+    if (windowTick == 0)
+    {
+        windowTick = now;
+        return;
+    }
+
+    if (now - windowTick >= 5000)
+    {
+        const uint32_t elapsed = now - windowTick;
+        RenderFrameStats stats;
+        Render_GetFrameStats(&stats);
+        printf(
+            "[fps] %ums: frames=%u fps=%.1f frame avg=%.2fms min=%ums max=%ums | "
+            "draws=%llu uploads=%llu bytes=%llukB batches=%llu batchedQuads=%llu\n",
+            elapsed,
+            frames,
+            frames * 1000.0 / elapsed,
+            frames ? double(sumMs) / frames : 0.0,
+            minMs == 0xFFFFFFFF ? 0 : minMs,
+            maxMs,
+            (unsigned long long)stats.drawCalls,
+            (unsigned long long)stats.vertexUploads,
+            (unsigned long long)(stats.bytesUploaded / 1024),
+            (unsigned long long)stats.batchFlushes,
+            (unsigned long long)stats.batchedQuads);
+        fflush(stdout);
+        Render_ResetFrameStats();
+        frames = 0;
+        sumMs = 0;
+        minMs = 0xFFFFFFFF;
+        maxMs = 0;
+        windowTick = now;
+    }
+#endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES)
+}
+
 static int Run()
 {
     bool quit = false;
     while (!quit)
     {
+        FrameStatsTick();
+
         // 1] Handle all SDL events. Mouse, keyboard, windows etc..
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0)

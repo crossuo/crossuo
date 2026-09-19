@@ -23,6 +23,22 @@
 #include "Debug/OGLDebugMarker.h"
 extern RenderCmdList *g_renderCmdList;
 
+// per-frame renderer statistics (instrumentation)
+struct RenderFrameStats
+{
+    uint64_t drawCalls = 0;      // glDraw* issued
+    uint64_t vertexUploads = 0;  // vertex data uploads to the GPU
+    uint64_t bytesUploaded = 0;  // vertex bytes uploaded
+    uint64_t textureBinds = 0;   // tracked texture binds that reached GL
+    uint64_t stateChanges = 0;   // tracked state changes that reached GL
+    uint64_t batchFlushes = 0;   // merged quad batches submitted
+    uint64_t batchedQuads = 0;   // quads merged into batches
+};
+
+extern RenderFrameStats g_frameStats;
+void Render_GetFrameStats(RenderFrameStats *stats);
+void Render_ResetFrameStats();
+
 // Frame debug dumping
 void RenderDebug_EnableDump();
 void RenderDebug_StartFrame();

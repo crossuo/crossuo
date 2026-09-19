@@ -17,4 +17,16 @@ float4 g_ColorBlue = { 0.f, 0.f, 1.f, 1.f };
 // bits of +0.0f, i.e. plain black).
 float4 g_ColorInvalid = { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX };
 
+RenderFrameStats g_frameStats;
+
+void Render_GetFrameStats(RenderFrameStats *stats)
+{
+    *stats = g_frameStats;
+}
+
+void Render_ResetFrameStats()
+{
+    g_frameStats = RenderFrameStats{};
+}
+
 #endif // #if defined(NEW_RENDERER_ENABLED)

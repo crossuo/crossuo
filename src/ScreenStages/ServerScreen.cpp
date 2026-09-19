@@ -4,6 +4,7 @@
 #include "ServerScreen.h"
 #include "MainScreen.h"
 #include "../CrossUO.h"
+#include "../Globals.h"
 #include "../ServerList.h"
 #include "../GameWindow.h"
 #include "../Managers/ScreenEffectManager.h"
@@ -29,6 +30,13 @@ void CServerScreen::Init()
 
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
+
+    if (TestAutoLogin())
+    {
+        // pick the second server in the list (Demise > Test Center)
+        SelectionServerTempValue = 1;
+        CreateSmoothAction(ID_SMOOTH_SS_SELECT_SERVER);
+    }
 }
 
 void CServerScreen::OnKeyDown(const KeyEvent &ev)

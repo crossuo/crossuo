@@ -437,6 +437,25 @@ void RenderDebug_StartFrame()
         s_dumpEnabled = true;
     }
 
+    // XUO_DUMP_FRAME_DELAY=<seconds>: one-shot dump at the first frame rendered
+    // after <seconds> elapsed since startup (useful to capture the in-game
+    // screen in automated login flows)
+    static const char *delayStr = getenv("XUO_DUMP_FRAME_DELAY");
+    static const uint32_t dumpDelayMs = delayStr ? (uint32_t)atoi(delayStr) * 1000u : 0;
+    static uint32_t firstFrameTick = 0;
+    if (dumpDelayMs != 0)
+    {
+        if (firstFrameTick == 0)
+        {
+            firstFrameTick = SDL_GetTicks();
+        }
+        if (!s_dumpEnabled && !s_dumpInProgress &&
+            (SDL_GetTicks() - firstFrameTick) >= dumpDelayMs)
+        {
+            s_dumpEnabled = true;
+        }
+    }
+
     s_frameCount++;
 
     if (s_dumpEnabled && !s_dumpInProgress)

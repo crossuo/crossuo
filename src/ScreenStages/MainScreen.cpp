@@ -24,7 +24,7 @@ CMainScreen g_MainScreen;
 
 bool DebugRenderScreen()
 {
-    static const bool debug = getenv("XUO_DEBUG") != nullptr;
+    static const bool debug = getenv("XUO_DEBUG_SCREEN") != nullptr;
     return debug;
 }
 
@@ -87,6 +87,11 @@ void CMainScreen::Init()
     }
     SmoothScreenAction = 0;
     m_Gump.PrepareTextures();
+
+    if (TestAutoLogin())
+    {
+        CreateSmoothAction(ID_SMOOTH_MS_CONNECT);
+    }
 }
 
 void CMainScreen::Reset() const

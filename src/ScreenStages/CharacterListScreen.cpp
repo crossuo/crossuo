@@ -5,6 +5,7 @@
 #include "ConnectionScreen.h"
 #include "MainScreen.h"
 #include "../CrossUO.h"
+#include "../Globals.h"
 #include "../ServerList.h"
 #include "../GameWindow.h"
 #include "../CharacterList.h"
@@ -34,6 +35,13 @@ void CCharacterListScreen::Init()
 
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
+
+    if (TestAutoLogin())
+    {
+        // pick the second character in the list ("Test") and enter the world
+        g_CharacterList.Selected = 1;
+        CreateSmoothAction(CCharacterListScreen::SelectCharacter);
+    }
 }
 
 void CCharacterListScreen::ProcessSmoothAction(uint8_t action)

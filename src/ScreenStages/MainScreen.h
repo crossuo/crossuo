@@ -12,7 +12,7 @@
 class CEntryText;
 class CGUICheckbox;
 
-// debug helper: enabled via the XUO_DEBUG environment variable, strips the
+// debug helper: enabled via the XUO_DEBUG_SCREEN environment variable, strips the
 // login screen down to its background image and draws colored test
 // primitives (untextured quad, circle, line) over it
 bool DebugRenderScreen();
