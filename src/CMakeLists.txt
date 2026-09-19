@@ -41,6 +41,7 @@ set(glengine_src
 
 set(renderer_src
   Renderer/RenderAdd.cpp
+  Renderer/RenderBatch.cpp
   Renderer/RenderDraw.cpp
   Renderer/RenderDraw_GL1.cpp
   Renderer/RenderDebug.cpp

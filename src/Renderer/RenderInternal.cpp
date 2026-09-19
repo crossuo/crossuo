@@ -5,6 +5,7 @@
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "../Renderer/RenderBatch.h"
 #include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <common/logging/logging.h>
@@ -344,6 +345,14 @@ bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb)
 
 void Render_SwapBuffers()
 {
+    // submit any pending batched quads: the last draws of a frame (e.g. the
+    // mouse cursor on the login screens) would otherwise be deferred past
+    // the swap and never reach the screen
+    if (g_renderCmdList != nullptr && g_renderCmdList->immediateMode)
+    {
+        RenderBatch_Flush(&g_renderCmdList->state);
+    }
+
     // start the next frame on a fresh buffer region: orphaning the storage
     // here lets the driver rename it while the GPU may still be reading the
     // previous frame's data, avoiding per-draw implicit syncs on overwrite
@@ -780,6 +789,13 @@ bool Render_AppendCmd(RenderCmdList *cmdList, const void *cmd, uint32_t cmdSize)
 bool Render_AppendCmdType(
     RenderCmdList *cmdList, RenderCommandType type, const void *cmd, uint32_t cmdSize)
 {
+#if defined(USE_GL3) || defined(USE_GLES)
+    // give the quad batcher a chance to flush before a state change is applied
+    if (cmdList->immediateMode)
+    {
+        RenderBatch_OnCommand(&cmdList->state, type, cmd);
+    }
+#endif
     static_assert(sizeof(type) == sizeof(uint8_t), "command type id is assumed to be byte sized");
     if (cmdList->remainingSize >= sizeof(type) + cmdSize)
     {

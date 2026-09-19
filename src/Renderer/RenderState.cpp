@@ -508,6 +508,7 @@ bool RenderState_SetColorPalette(RenderState *state, const float *colors, bool f
     {
         memcpy(state->currentColors, colors, paletteSize * sizeof(float));
         GL_CHECK(glUniform1fv(_uColors, paletteSize, colors));
+        state->paletteVersion++;
         return true;
     }
 

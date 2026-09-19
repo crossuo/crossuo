@@ -329,6 +329,7 @@ struct RenderState
     // Cached GL3/GLES state to avoid redundant uploads
 #if defined(USE_GLES) || defined(USE_GL3)
     int currentDrawMode = 0;
+    uint32_t paletteVersion = 0;
     float currentColors[96] = {0.0f};
     uint32_t currentProgram = -1;
     float cachedModelMatrix[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};

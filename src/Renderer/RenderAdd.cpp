@@ -5,6 +5,7 @@
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
+#include "Renderer/RenderBatch.h"
 
 bool RenderAdd_SetTexture(RenderCmdList *cmdList, const SetTextureCmd &cmd)
 {
@@ -38,7 +39,7 @@ bool RenderAdd_DrawQuad(RenderCmdList *cmdList, const DrawQuadCmd &cmd)
         return ret;
     }
 
-    RenderDraw_DrawQuad(cmd, &cmdList->state);
+    RenderBatch_AddQuad(&cmdList->state, cmd);
     return true;
 }
 
@@ -110,7 +111,7 @@ bool RenderAdd_DrawUntexturedQuad(RenderCmdList *cmdList, const DrawUntexturedQu
         return ret;
     }
 
-    RenderDraw_DrawUntexturedQuad(cmd, &cmdList->state);
+    RenderBatch_AddUntexturedQuad(&cmdList->state, cmd);
     return true;
 }
 
