@@ -379,10 +379,16 @@ static int Run()
         g_Game.Process(true);
 
         // 3] Calculate proper delay based on settings and frame time.
-        int32_t iDynamicFPS = SDL_GetTicks() - g_Ticks;
-        int32_t iDelay = g_GameWindow.GetRenderDelay();
+        // the test harness (XUO_TEST_LOGIN) runs uncapped: the window is not
+        // focused during automated runs, which would apply the inactive-window
+        // delay and mask the real frame cost being benchmarked
+        if (!TestAutoLogin())
+        {
+            int32_t iDynamicFPS = SDL_GetTicks() - g_Ticks;
+            int32_t iDelay = g_GameWindow.GetRenderDelay();
 
-        SDL_Delay(std::max(iDelay - iDynamicFPS, CPU_USAGE_DELAY));
+            SDL_Delay(std::max(iDelay - iDynamicFPS, CPU_USAGE_DELAY));
+        }
     }
     return EXIT_SUCCESS;
 }
