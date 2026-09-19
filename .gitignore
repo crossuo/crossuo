@@ -40,6 +40,7 @@ crossuo.log
 *.uop
 *.pdb
 *.sf2
+*.sh
 /.vs
 /.vscode
 /Makefile*
