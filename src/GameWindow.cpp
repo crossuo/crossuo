@@ -24,6 +24,7 @@
 #include "ScreenStages/ServerScreen.h"
 #include "Gumps/Gump.h"
 #include "Walker/PathFinder.h"
+#include "Splash.h"
 
 #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
 #include "GLEngine/GLEngine.h"
@@ -66,6 +67,16 @@ bool CGameWindow::OnCreate()
     HACKRender_SetViewParams(SetViewParamsCmd{
         0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
 #endif
+
+    // Present the embedded splash image as soon as there is a GL context: it
+    // covers the window while the data files are loaded and the first screen is
+    // built, and the presented frame stays on screen for as long as the loading
+    // code below does not swap.
+    if (Splash_Init())
+    {
+        Splash_Render();
+        Info(Client, "splash screen displayed");
+    }
 
     if (!g_Game.Install())
     {

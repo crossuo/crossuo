@@ -30,6 +30,7 @@
 #include "CharacterList.h"
 #include "DateTimeStamp.h"
 #include "RenderWorldObject.h"
+#include "Splash.h"
 
 #if USE_PING
 #include "Utility/PingThread.h"
@@ -345,6 +346,7 @@ bool CGame::Install()
         Error(Client, "%s", errMsg.c_str());
         return false;
     }
+    Splash_RenderAndPumpEvents();
 
     g_SkillsManager.Init();
     g_ColorManager.Init();
@@ -359,6 +361,7 @@ bool CGame::Install()
         g_GameWindow.ShowMessage("Error loading fonts", "Error");
         return false;
     }
+    Splash_RenderAndPumpEvents();
 
     CheckStaticTileFilterFiles();
     CSize statusbarDims = GetGumpDimension(0x0804);
@@ -373,6 +376,7 @@ bool CGame::Install()
         g_GameWindow.ShowMessage("Error loading cursors", "Error");
         return false;
     }
+    Splash_RenderAndPumpEvents();
 
     if (!g_SoundManager.Init())
     {
@@ -497,6 +501,7 @@ bool CGame::Install()
 
     Info(Client, "creating object handles");
     CreateObjectHandlesBackground();
+    Splash_RenderAndPumpEvents();
 
     Info(Client, "creating aura");
     CreateAuraTexture();
@@ -508,9 +513,13 @@ bool CGame::Install()
 
     Info(Client, "updating main screen content");
     g_MainScreen.UpdateContent();
+    Splash_RenderAndPumpEvents();
 
     Info(Client, "initializing screen");
     InitScreen(GS_MAIN);
+
+    // the first screen is ready: the splash is no longer needed
+    Splash_Shutdown();
 
     Info(Client, "initialization completed");
     return true;

@@ -272,6 +272,7 @@ set(crossuo_src
   UseItemsList.cpp
   Weather.cpp
   WeatherEffect.cpp
+  Splash.cpp
   Utility/PingThread.cpp
   Utility/PerfMarker.cpp
   Sockets.cpp

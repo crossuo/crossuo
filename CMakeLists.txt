@@ -42,6 +42,7 @@ include(Compiler)
 include(CCache)
 include(Revision)
 include(Dependencies)
+include(Embedding)
 
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -135,6 +136,8 @@ endif()
 #
 # Project Files
 #
+
+create_resource(${PROJECT_SOURCE_DIR}/resources/cover.png ${PROJECT_BINARY_DIR}/cover.h)
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/resources/revision.h.in"
