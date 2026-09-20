@@ -69,7 +69,7 @@ bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatr
         cachedAlphaTestEnabled = state->alphaTest.enabled ? 1 : 0;
     }
     static float cachedAlphaRef = -1.0f;
-    if (cachedAlphaRef != state->alphaTest.alphaRef)
+    if (!f32eq(cachedAlphaRef, state->alphaTest.alphaRef))
     {
         GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
         cachedAlphaRef = state->alphaTest.alphaRef;
@@ -509,8 +509,8 @@ bool RenderState_SetCircleTrans(
     // so the circle lands exactly where the stencil sprite used to
     const float vx = (x - state->viewport.left) * scale;
     const float vy = (state->viewport.sceneHeight - (y - state->viewport.top)) * scale;
-    if (forced || state->circleTrans[0] != vx || state->circleTrans[1] != vy ||
-        state->circleTrans[2] != radius)
+    if (forced || !f32eq(state->circleTrans[0], vx) || !f32eq(state->circleTrans[1], vy) ||
+        !f32eq(state->circleTrans[2], radius))
     {
         state->circleTrans[0] = vx;
         state->circleTrans[1] = vy;
@@ -523,7 +523,7 @@ bool RenderState_SetCircleTrans(
 
 bool RenderState_SetViewport(RenderState *state, float x, float y, bool forced)
 {
-    if (forced || state->viewportUniform[0] != x || state->viewportUniform[1] != y)
+    if (forced || !f32eq(state->viewportUniform[0], x) || !f32eq(state->viewportUniform[1], y))
     {
         state->viewportUniform[0] = x;
         state->viewportUniform[1] = y;
