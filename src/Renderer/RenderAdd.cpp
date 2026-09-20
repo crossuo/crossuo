@@ -39,7 +39,11 @@ bool RenderAdd_DrawQuad(RenderCmdList *cmdList, const DrawQuadCmd &cmd)
         return ret;
     }
 
+#if defined(USE_GL3) || defined(USE_GLES)
     RenderBatch_AddQuad(&cmdList->state, cmd);
+#else
+    RenderDraw_DrawQuad(cmd, &cmdList->state);
+#endif
     return true;
 }
 
@@ -75,7 +79,11 @@ bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, const DrawLandTileCmd &cmd)
         return ret;
     }
 
+#if defined(USE_GL3) || defined(USE_GLES)
     RenderBatch_AddLandTile(&cmdList->state, cmd);
+#else
+    RenderDraw_DrawLandTile(cmd, &cmdList->state);
+#endif
     return true;
 }
 
@@ -111,7 +119,11 @@ bool RenderAdd_DrawUntexturedQuad(RenderCmdList *cmdList, const DrawUntexturedQu
         return ret;
     }
 
+#if defined(USE_GL3) || defined(USE_GLES)
     RenderBatch_AddUntexturedQuad(&cmdList->state, cmd);
+#else
+    RenderDraw_DrawUntexturedQuad(cmd, &cmdList->state);
+#endif
     return true;
 }
 
@@ -303,6 +315,9 @@ bool RenderAdd_SetClearColor(RenderCmdList *cmdList, const SetClearColorCmd &cmd
 
 bool RenderAdd_SetCircleTrans(RenderCmdList *cmdList, const SetCircleTransCmd &cmd)
 {
+#if !defined(USE_GL3) && !defined(USE_GLES)
+    return true; // GL1: the stencil-based path does not use this uniform
+#else
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
     if (!cmdList->immediateMode)
     {
@@ -311,6 +326,7 @@ bool RenderAdd_SetCircleTrans(RenderCmdList *cmdList, const SetCircleTransCmd &c
 
     RenderDraw_SetCircleTrans(cmd, &cmdList->state);
     return true;
+#endif
 }
 
 bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd &cmd)

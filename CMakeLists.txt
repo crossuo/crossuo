@@ -73,19 +73,14 @@ endif()
 
 if (OPENGL_FOUND)
   if (RENDERER_GL1 OR RENDER_GL1) # RENDERER_GL1 for compatibility, RENDER_GL1 is original
-    # Use GL1 for legacy renderer
-    if (RENDERER_LEGACY)
-      compile_definitions(USE_GL1=1)
-      compile_definitions(NEW_RENDERER_ENABLED=1)
-      compile_definitions(RENDERER_LEGACY=1)
-      set(USE_GL1 1)
-      message(STATUS "Building with NEW_RENDERER_ENABLED + RENDERER_LEGACY (GL1)")
-    else()
-      # Original legacy mode: GL2 without new renderer
-      compile_definitions(USE_GL2=1)
-      set(USE_GL2 1)
-      message(STATUS "Building with original legacy renderer (GL2)")
-    endif()
+    # RENDER_GL1 selects the NEW_RENDERER GL1 legacy backend (the old GL2
+    # mode is no longer reachable; it was only ever picked through the
+    # broken check below, which tested RENDERER_LEGACY before setting it)
+    compile_definitions(USE_GL1=1)
+    compile_definitions(NEW_RENDERER_ENABLED=1)
+    compile_definitions(RENDERER_LEGACY=1)
+    set(USE_GL1 1)
+    message(STATUS "Building with NEW_RENDERER_ENABLED + RENDERER_LEGACY (GL1)")
   else()
     # Modern mode: GL3 with new renderer
     compile_definitions(USE_GL3=1)

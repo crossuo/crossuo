@@ -22,7 +22,7 @@
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
 
-#ifdef NEW_RENDERER_ENABLED
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 // Direct-draw experiment: paint gumps straight into the scene under a scissor
 // instead of routing them through a per-gump framebuffer. Opt in with
 // XUO_GUMP_DIRECT=1. Read once; the coordinate-space consequences for child
@@ -32,7 +32,7 @@ static const bool s_gumpDirectDraw = getenv("XUO_GUMP_DIRECT") != nullptr;
 
 bool CGump::DirectDrawActive()
 {
-#ifdef NEW_RENDERER_ENABLED
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     return s_gumpDirectDraw;
 #else
     return false;
@@ -1365,7 +1365,7 @@ void CGump::Draw()
         FrameCreated = false;
     }
 
-#ifdef NEW_RENDERER_ENABLED
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     // The framebuffer path bakes the gump into a texture once and blits that
     // texture on every later frame. There is no such cached artifact here, so
     // the item commands are re-emitted every frame while the (more expensive)

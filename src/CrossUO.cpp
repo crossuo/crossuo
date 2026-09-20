@@ -4515,6 +4515,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         {
             g_ColorManager.SendColorsToShader(color);
         }
+#if defined(USE_GL3) || defined(USE_GLES)
         if (spr->Texture->ArrayLayer < 0)
         {
             const auto place =
@@ -4523,8 +4524,9 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             spr->Texture->ArtU = place.u;
             spr->Texture->ArtV = place.v;
         }
+#endif
         DrawLandTileCmd cmd{
-            (spr->Texture->ArrayLayer >= 0) ? Render_ArtArrayTexture() : spr->Texture->Texture,
+            spr->Texture->Texture,
             x,
             y + (land->GetZ() * 4),
             { land->m_Rect.x, land->m_Rect.y, land->m_Rect.w, land->m_Rect.h },
@@ -4542,10 +4544,13 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
                   float(land->m_Normals[3].Y),
                   float(land->m_Normals[3].Z) },
             },
-            drawMode,
+            drawMode
+#if defined(USE_GL3) || defined(USE_GLES)
+            ,
             spr->Texture->ArrayLayer,
             spr->Texture->ArtU,
             spr->Texture->ArtV
+#endif
         };
         RenderAdd_DrawLandTile(g_renderCmdList, cmd);
 #endif
