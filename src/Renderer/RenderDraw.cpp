@@ -24,6 +24,7 @@
 
 #define XUO_M_PI 3.14159265358979323846264338327950288
 #define NORMAL_IDENTITY { 0.0f, 0.0f, 1.0f }
+#define NO_LAYER -1.0f
 #define MATCH_CASE_DRAW(type, cmd, state)                                                          \
     case RenderCommandType::Cmd_##type:                                                            \
     {                                                                                              \
@@ -103,10 +104,10 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff; // BUG with light - g_LightBuffer.Draw
 
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY },
+        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY, NO_LAYER },
     };
 
     glm::mat4 model(1.0f);
@@ -162,10 +163,10 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY },
+        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY, NO_LAYER },
     };
 
     glm::mat4 model(1.0f);
@@ -211,64 +212,64 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { width, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { 0.0f, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { width, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { 0.0f, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { widthOffset, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { widthOffset, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { widthOffset, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { widthOffset, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
         }
     }
     else
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { widthOffset, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { widthOffset, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { 0.0f, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { width, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { 0.0f, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { width, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-                vertices[vertexCount++] = { { width, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { width, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { 0.0f, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
-            vertices[vertexCount++] = { { width, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { 0.0f, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { width, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
         }
     }
 
@@ -316,40 +317,44 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
                 (float)cmd.normals[0][0],
                 (float)cmd.normals[0][1],
                 (float)cmd.normals[0][2]
-            }                                 // normal
+            },                                // normal
+            NO_LAYER
         },
         // Vertex 1: Top-left
         {
             {0.0f, (float)(22 - rc.y)},      // pos
-            {0.0f, 1.0f},                    // uv
+            {0.0f, cmd.v},                   // uv
             col,
             {
                 (float)cmd.normals[3][0],
                 (float)cmd.normals[3][1],
                 (float)cmd.normals[3][2]
-            }
+            },
+            NO_LAYER
         },
         // Vertex 2: Bottom-right
         {
             {44.0f, (float)(22 - rc.h)},      // pos
-            {1.0f, 0.0f},                    // uv
+            {cmd.u, 0.0f},                   // uv
             col,
             {
                 (float)cmd.normals[1][0],
                 (float)cmd.normals[1][1],
                 (float)cmd.normals[1][2]
-            }
+            },
+            NO_LAYER
         },
         // Vertex 3: Top-right
         {
             {22.0f, (float)(44 - rc.w)},      // pos
-            {1.0f, 1.0f},                    // uv
+            {cmd.u, cmd.v},                  // uv
             col,
             {
                 (float)cmd.normals[2][0],
                 (float)cmd.normals[2][1],
                 (float)cmd.normals[2][2]
-            }
+            },
+            NO_LAYER
         }
     };
 
@@ -360,9 +365,18 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
                                            state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(translateX, translateY, 0.0f));
 
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    if (cmd.layer < 0)
+    {
+        RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    }
+    // layer >= 0: cmd.texture is the land texture array, already bound to
+    // texture unit 1 for the sampler2DArray path
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
+    for (auto &v : vertices)
+    {
+        v.layer = float(cmd.layer);
+    }
     const size_t vtxOffset = Render_UploadVertices(vertices, 4 * sizeof(GenericVertex));
     Render_BindVertexRange(vtxOffset);
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
@@ -390,17 +404,17 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 
     if (cmd.mirror)
     {
-        data[0] = { { width, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
-        data[1] = { { 0.0f, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
-        data[2] = { { width * (ratio + 1.0f), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-        data[3] = { { width * ratio, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+        data[0] = { { width, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[1] = { { 0.0f, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[2] = { { width * (ratio + 1.0f), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[3] = { { width * ratio, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
     }
     else
     {
-        data[0] = { { 0.0f, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
-        data[1] = { { width, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
-        data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
-        data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+        data[0] = { { 0.0f, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[1] = { { width, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
     }
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
@@ -456,13 +470,13 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     const uint32_t edgeColor = cmd.gradientMode != 0 ? 0x00000000 : centerColor;
 
     // Center vertex
-    vertices[0] = { { 0.0f, 0.0f }, { 0.5f, 0.5f }, centerColor, NORMAL_IDENTITY };
+    vertices[0] = { { 0.0f, 0.0f }, { 0.5f, 0.5f }, centerColor, NORMAL_IDENTITY, NO_LAYER };
 
     // Perimeter vertices
     for (int i = 0; i <= 360; i++)
     {
         float a = (i / 180.0f) * pi;
-        vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, { 0.5f, 0.5f }, edgeColor, NORMAL_IDENTITY };
+        vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, { 0.5f, 0.5f }, edgeColor, NORMAL_IDENTITY, NO_LAYER };
     }
 
     glm::mat4 model(1.0f);
@@ -492,10 +506,10 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
          (uint32_t(cmd.color[3] * 255.f) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { 0.0f, float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
-        { { float(cmd.width), float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
-        { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
-        { { float(cmd.width), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
+        { { 0.0f, float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { float(cmd.width), float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { float(cmd.width), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
     };
 
     glm::mat4 model(1.0f);
@@ -534,8 +548,8 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { float(cmd.x0), float(cmd.y0) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
-        { { float(cmd.x1), float(cmd.y1) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.x0), float(cmd.y0) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { float(cmd.x1), float(cmd.y1) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER },
     };
 
     glm::mat4 model(1.0f);

@@ -75,7 +75,7 @@ bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, const DrawLandTileCmd &cmd)
         return ret;
     }
 
-    RenderDraw_DrawLandTile(cmd, &cmdList->state);
+    RenderBatch_AddLandTile(&cmdList->state, cmd);
     return true;
 }
 

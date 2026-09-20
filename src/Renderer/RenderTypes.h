@@ -176,9 +176,20 @@ enum TextureType : uint8_t
 {
     TextureType_Texture2D = 0,
     TextureType_Texture2D_Mipmapped,
+    TextureType_Texture2DArray,
 
     TextureType_Count,
     TextureType_Invalid = 0xff
+};
+
+// placement of a sprite inside the shared art texture array
+// (see Render_ArtArrayPlace)
+struct RenderArrayPlacement
+{
+    int layer = -1;                // array layer; < 0 = not placed
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID; // texture to sample
+    float u = 1.0f;                // uv scale to use (size / layer size)
+    float v = 1.0f;
 };
 
 enum TextureGPUFormat : uint8_t

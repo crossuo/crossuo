@@ -10,6 +10,8 @@
 #include "RenderCommands.h"
 #include <external/gfx/gfx.h>
 #include <glm/glm.hpp>
+#include <stdio.h> // fprintf (XUO_BATCH_LOG)
+#include <stdlib.h> // getenv
 #include <string.h> // memcmp
 
 namespace {
@@ -35,11 +37,21 @@ struct alignas(4) RenderBatchKey
 
 // pending batch state (4 vertices per quad in strip order, expanded to
 // 6 triangle-list vertices at flush time only when the batch actually merges)
+enum class BatchKind : uint8_t
+{
+    None,
+    Quads,
+    LandTiles,
+};
 RenderBatchKey s_key = {};
 GenericVertex s_vertices[MAX_BATCH_QUADS * 4];
 GenericVertex s_scratch[MAX_BATCH_QUADS * 6];
 int s_quadCount = 0;
 bool s_pending = false;
+static bool g_batchLog = getenv("XUO_BATCH_LOG") != nullptr;
+static float s_layerMin = 1e9f;
+static float s_layerMax = -1e9f;
+static BatchKind s_kind = BatchKind::None;
 
 RenderBatchKey MakeKey(RenderState *state, texture_handle_t texture)
 {
@@ -98,6 +110,7 @@ void AppendStripQuad(
         out[i].normal[0] = 0.0f;
         out[i].normal[1] = 0.0f;
         out[i].normal[2] = 1.0f;
+        out[i].layer = -1.0f;
     }
     s_quadCount++;
 }
@@ -106,13 +119,22 @@ void AppendStripQuad(
 
 void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd)
 {
-    RenderBatchKey key = MakeKey(state, cmd.texture);
+    if (s_kind == BatchKind::LandTiles)
+    {
+        RenderBatch_Flush(state);
+    }
+    // array-placed sprites key on the shared array texture so they merge
+    // with each other; the per-sprite handle is irrelevant
+    const texture_handle_t batchTexture =
+        (cmd.layer >= 0.0f) ? Render_ArtArrayTexture() : cmd.texture;
+    RenderBatchKey key = MakeKey(state, batchTexture);
     if (s_pending && (memcmp(&key, &s_key, sizeof(key)) != 0 || s_quadCount >= MAX_BATCH_QUADS))
     {
         RenderBatch_Flush(state);
     }
     s_key = key;
     s_pending = true;
+    s_kind = BatchKind::Quads;
 
     const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
@@ -192,6 +214,71 @@ void RenderBatch_AddUntexturedQuad(RenderState *state, const DrawUntexturedQuadC
         col,
         v,
         zeroUVs);
+}
+
+void RenderBatch_AddLandTile(RenderState *state, const DrawLandTileCmd &cmd)
+{
+    const texture_handle_t batchTexture =
+        (cmd.layer >= 0) ? Render_ArtArrayTexture() : cmd.texture;
+    RenderBatchKey key = MakeKey(state, batchTexture);
+    if (s_kind == BatchKind::Quads)
+    {
+        RenderBatch_Flush(state);
+    }
+    if (s_pending && (memcmp(&key, &s_key, sizeof(key)) != 0 || s_quadCount >= MAX_BATCH_QUADS))
+    {
+        RenderBatch_Flush(state);
+    }
+    s_key = key;
+    s_pending = true;
+    s_kind = BatchKind::LandTiles;
+
+    if (s_quadCount >= MAX_BATCH_QUADS)
+    {
+        return;
+    }
+
+    const uint32_t col =
+        (((uint32_t)(state->color[0] * 255) << 0) |
+        ((uint32_t)(state->color[1] * 255) << 8) |
+        ((uint32_t)(state->color[2] * 255) << 16) |
+        ((uint32_t)(state->color[3] * 255) << 24));
+
+    const float tx = state->modelTranslation[0] + cmd.x - 22.0f;
+    const float ty = state->modelTranslation[1] + cmd.y - 22.0f;
+
+    GenericVertex *out = &s_vertices[s_quadCount * 4];
+    // clang-format off
+    const float uv[4][2] = { { 0.0f, 0.0f }, { 0.0f, cmd.v }, { cmd.u, 0.0f }, { cmd.u, cmd.v } };
+    const float v[4][2] = {
+        { 22.0f, float(-cmd.rect.x) },
+        { 0.0f,  float(22 - cmd.rect.y) },
+        { 44.0f, float(22 - cmd.rect.h) },
+        { 22.0f, float(44 - cmd.rect.w) },
+    };
+    const int n[4] = { 0, 3, 1, 2 };
+    // clang-format on
+    for (int i = 0; i < 4; i++)
+    {
+        out[i].pos[0] = tx + v[i][0];
+        out[i].pos[1] = ty + v[i][1];
+        out[i].uv[0] = uv[i][0];
+        out[i].uv[1] = uv[i][1];
+        out[i].col = col;
+        out[i].normal[0] = cmd.normals[n[i]][0];
+        out[i].normal[1] = cmd.normals[n[i]][1];
+        out[i].normal[2] = cmd.normals[n[i]][2];
+        out[i].layer = float(cmd.layer);
+        if (cmd.layer < s_layerMin)
+        {
+            s_layerMin = cmd.layer;
+        }
+        if (cmd.layer > s_layerMax)
+        {
+            s_layerMax = cmd.layer;
+        }
+    }
+    s_quadCount++;
 }
 
 void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const void *cmd)
@@ -335,6 +422,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         case RenderCommandType::Cmd_PopDebugMarker:
         case RenderCommandType::Cmd_DrawQuad:
         case RenderCommandType::Cmd_DrawUntexturedQuad:
+        case RenderCommandType::Cmd_DrawLandTile:
         {
             break;
         }
@@ -349,13 +437,29 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
 
 void RenderBatch_Flush(RenderState *state)
 {
+    if (s_pending && g_batchLog)
+    {
+        fprintf(
+            stderr,
+            "[batch] n=%d tex=%u layer=[%g..%g] kind=%d\n",
+            s_quadCount,
+            s_key.texture,
+            (s_layerMin < 1e8f) ? s_layerMin : -1.0f,
+            (s_layerMax > -1e8f) ? s_layerMax : -1.0f,
+            (int)s_kind);
+    }
     if (s_quadCount == 0)
     {
         s_pending = false;
         return;
     }
 
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, s_key.texture);
+    // the land array lives persistently on texture unit 1; skip the sampler2D
+    // bind for it (binding it to the GL_TEXTURE_2D target would be invalid)
+    if (s_key.texture != Render_ArtArrayTexture())
+    {
+        RenderState_SetTexture(state, TextureType::TextureType_Texture2D, s_key.texture);
+    }
 
     // vertex positions are baked with the model translation at add time
     const glm::mat4 model(1.0f);
@@ -393,6 +497,7 @@ void RenderBatch_Flush(RenderState *state)
 
     s_quadCount = 0;
     s_pending = false;
+    s_kind = BatchKind::None;
 }
 
 #endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES)

@@ -29,6 +29,8 @@ extern int _uAlphaTestEnabled;
 extern int _uAlphaRef;
 extern int _uDrawMode;
 extern int _uColors;
+extern int _uTexArray;
+extern int _inLayer;
 extern int _uCircleTrans;
 extern int _uViewport;
 extern uint32_t _vao;
@@ -61,6 +63,12 @@ void Render_CleanupVertexBuffers();
 
 // Persistent vertex ring (Phase 1): rolling upload offset within g_drawVBO
 extern size_t g_vboOffset;
+
+// art texture array (Phase C): world art sprites in one GL_TEXTURE_2D_ARRAY
+// so same-state world draws merge into a handful of calls
+// (RenderArrayPlacement is declared in RenderTypes.h)
+texture_handle_t Render_ArtArrayTexture();
+RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t width, uint32_t height);
 
 // uploads vertices into the ring at a rolling offset, returns the byte offset
 // for Render_BindVertexRange

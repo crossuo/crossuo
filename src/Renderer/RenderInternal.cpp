@@ -58,9 +58,11 @@ uint32_t _vibuffers[2] = { 0, 0 };
 uint32_t _defaultTex = 0;
 uint32_t _whiteTex = 0;
 int _inPos = 0;
+int _inLayer = 0;
 int _inColor = 0;
 int _inUV = 0;
 int _inNormal = 0;
+int _uTexArray = 0;
 int _uProjectionView = 0;
 int _uModel = 0;
 int _uTex = 0;
@@ -243,14 +245,18 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK_ATTRIB(_uCircleTrans);
     _uViewport = glGetUniformLocation(_pProg, "uViewport");
     GL_CHECK_ATTRIB(_uViewport);
+    _uTexArray = glGetUniformLocation(_pProg, "uTexArray");
+    GL_CHECK_ATTRIB(_uTexArray);
+    _inLayer = glGetAttribLocation(_pProg, "inLayer");
+    GL_CHECK_ATTRIB(_inLayer);
     GL_CHECK(glUseProgram(_pProg));
 
     // clang-format off
     const GenericVertex data[] = {
-        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
-        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
-        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
-        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
+        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
+        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
+        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
+        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
     };
     const unsigned int idx[] = { 0, 1, 2, 3 };
 #if !defined(USE_GLES2)
@@ -288,6 +294,8 @@ bool Render_Init(SDL_Window *window)
 
     // Set texture unit to 0 once during initialization (never needs to change)
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
+    // texture array lives on texture unit 1 (unit 0 is the sampler2D path);
+    GL_CHECK(glUniform1i(_uTexArray, 1));
     GL_CHECK(glUniform1i(_uDrawMode, SDM_NO_COLOR)); // default draw mode
     static const float initialColors[96] = { 0.0f };
     GL_CHECK(glUniform1fv(_uColors, 96, initialColors)); // Initial color palette
@@ -411,6 +419,13 @@ void Render_BindVertexRange(size_t byteOffset)
         GL_FALSE,
         sizeof(GenericVertex),
         (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, normal))));
+    GL_CHECK(glVertexAttribPointer(
+        _inLayer,
+        1,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(GenericVertex),
+        (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, layer))));
 }
 
 bool Render_InitVertexBuffers()
@@ -438,6 +453,8 @@ bool Render_InitVertexBuffers()
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
     GL_CHECK(glEnableVertexAttribArray(_inNormal));
     GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, normal)));
+    GL_CHECK(glEnableVertexAttribArray(_inLayer));
+    GL_CHECK(glVertexAttribPointer(_inLayer, 1, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, layer)));
 
 #if !defined(USE_GLES2)
     GL_CHECK(glBindVertexArray(0));
@@ -537,13 +554,8 @@ bool Render_CreateShaderPipeline(
             Error(Renderer, "shader link failed");
             return false;
         }
-
-        GL_CHECK(glValidateProgram(program));
-        if (!validate_program(program, GL_VALIDATE_STATUS))
-        {
-            Error(Renderer, "shader validate failed");
-            return false;
-        }
+        // note: sampler-unit assignment (uTex=0, uTexArray=1) happens after
+        // this point; validating before that would report a unit conflict
         return true;
     };
 
@@ -593,6 +605,41 @@ bool Render_CreateShaderPipeline(
         pip.program = 0;
         return false;
     }
+
+    // the shared fragment source has a sampler2D (unit 0) and a
+    // sampler2DArray (unit 1); assign the units right after the link and
+    // BEFORE the validate, which checks for unit conflicts
+    GL_CHECK(glUseProgram(pip.program));
+    GLint texLoc = glGetUniformLocation(pip.program, "uTex");
+    GLint arrayLoc = glGetUniformLocation(pip.program, "uTexArray");
+    GLint viewportLoc = glGetUniformLocation(pip.program, "uViewport");
+    GLint circleLoc = glGetUniformLocation(pip.program, "uCircleTrans");
+    if (texLoc >= 0)
+    {
+        GL_CHECK(glUniform1i(texLoc, 0));
+    }
+    if (arrayLoc >= 0)
+    {
+        GL_CHECK(glUniform1i(arrayLoc, 1));
+    }
+    if (viewportLoc >= 0)
+    {
+        GL_CHECK(glUniform2f(viewportLoc, 0.0f, 0.0f));
+    }
+    if (circleLoc >= 0)
+    {
+        GL_CHECK(glUniform3f(circleLoc, 0.0f, 0.0f, -1.0f)); // disabled
+    }
+    GL_CHECK(glValidateProgram(pip.program));
+    if (!validate_program(pip.program, GL_VALIDATE_STATUS))
+    {
+        GL_CHECK(glDeleteProgram(pip.program));
+        pip.program = 0;
+        return false;
+    }
+
+    // restore the main pipeline as the active program
+    GL_CHECK(glUseProgram(_pProg));
 
     return true;
 }
@@ -823,6 +870,123 @@ RenderState Render_DefaultState()
 {
     return RenderState();
 }
+
+
+// ---------------------------------------------------------------------------
+// Land texture array (Phase B of the world batching work)
+//
+// Land texmaps are uniform 44x44 RGB5_A1 sprites with NEAREST filtering and
+// no mipmaps, which makes them ideal for a GL_TEXTURE_2D_ARRAY: one layer per
+// land tile, copied GPU->GPU from the per-tile textures on first use, so all
+// land tiles can be drawn merged into a handful of calls.
+// ---------------------------------------------------------------------------
+
+static const int ART_ARRAY_LAYER_SIZE = 256; // sprites up to 256x256 fit
+static const int ART_ARRAY_INITIAL_LAYERS = 1024;
+static const int ART_ARRAY_MAX_LAYERS = 4096;
+
+static uint32_t s_artArrayTexture = 0;
+static int s_artArrayCap = 0;
+static int s_artArrayUsed = 0;
+static bool s_artArrayDisabled = false; // set when the GL limits are hit
+
+texture_handle_t Render_ArtArrayTexture()
+{
+    return s_artArrayTexture;
+}
+
+// copies srcTexture (w x h) into a fresh layer of the shared art array and
+// returns the uv scale to use for it (uv = size / ART_ARRAY_LAYER_SIZE);
+// returns layer < 0 when the sprite cannot be placed (too big / limits hit)
+RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t width, uint32_t height)
+{
+    RenderArrayPlacement place = {};
+    place.layer = -1;
+    place.texture = srcTexture;
+    place.u = 1.0f;
+    place.v = 1.0f;
+
+    if (s_artArrayDisabled || g_render.shutdown || width == 0 || height == 0)
+    {
+        return place;
+    }
+
+    if (width > ART_ARRAY_LAYER_SIZE || height > ART_ARRAY_LAYER_SIZE)
+    {
+        return place; // oversized sprite: keep the individual texture
+    }
+
+    if (s_artArrayTexture == 0)
+    {
+        GLint maxLayers = 1024;
+        GL_CHECK(glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxLayers));
+        s_artArrayCap =
+            (ART_ARRAY_INITIAL_LAYERS < maxLayers) ? ART_ARRAY_INITIAL_LAYERS : maxLayers;
+        if (s_artArrayCap < 1)
+        {
+            s_artArrayDisabled = true;
+            return place;
+        }
+
+        GL_CHECK(glGenTextures(1, &s_artArrayTexture));
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, s_artArrayTexture));
+        GL_CHECK(glTexImage3D(
+            GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
+            s_artArrayCap, 0, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, nullptr));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+
+        // keep the array persistently bound on texture unit 1 (unit 0 is used
+        // by the regular sampler2D path)
+        GL_CHECK(glActiveTexture(GL_TEXTURE1));
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, s_artArrayTexture));
+        GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    }
+
+    if (s_artArrayUsed >= s_artArrayCap)
+    {
+        // grow the array (up to the GL limit) by recreating and copying
+        if (s_artArrayCap >= ART_ARRAY_MAX_LAYERS)
+        {
+            s_artArrayDisabled = true;
+            Warning(Renderer, "art texture array is full, falling back to per-sprite textures");
+            return place;
+        }
+
+        const int newCap = s_artArrayCap * 2;
+        uint32_t newArray = 0;
+        GL_CHECK(glGenTextures(1, &newArray));
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, newArray));
+        GL_CHECK(glTexImage3D(
+            GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
+            newCap, 0, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, nullptr));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        GL_CHECK(glCopyImageSubData(
+            s_artArrayTexture, GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0,
+            newArray, GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, ART_ARRAY_LAYER_SIZE,
+            ART_ARRAY_LAYER_SIZE, s_artArrayUsed));
+
+        GL_CHECK(glDeleteTextures(1, &s_artArrayTexture));
+        s_artArrayTexture = newArray;
+        s_artArrayCap = newCap;
+
+        GL_CHECK(glActiveTexture(GL_TEXTURE1));
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, s_artArrayTexture));
+        GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    }
+
+    const int layer = s_artArrayUsed++;
+    GL_CHECK(glCopyImageSubData(
+        srcTexture, GL_TEXTURE_2D, 0, 0, 0, 0,
+        s_artArrayTexture, GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, width, height, 1));
+    place.layer = layer;
+    place.texture = s_artArrayTexture;
+    place.u = float(width) / float(ART_ARRAY_LAYER_SIZE);
+    place.v = float(height) / float(ART_ARRAY_LAYER_SIZE);
+    return place;
+}
+
 
 void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state)
 {

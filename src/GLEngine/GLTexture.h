@@ -17,6 +17,12 @@ struct CGLTexture
     GLuint Texture = 0;
 #else
     texture_handle_t Texture = RENDER_TEXTUREHANDLE_INVALID;
+    // layer inside the shared art texture array once this texture has been
+    // copied into it (-1 = not in the array, Texture stays the sampler2D)
+    // ArtU/ArtV are the uv scale to use against the array (size / layer size)
+    int ArrayLayer = -1;
+    float ArtU = 1.0f;
+    float ArtV = 1.0f;
 #endif
 
     void Draw_Tooltip(int x, int y, int width, int height);

@@ -108,6 +108,8 @@ bool RenderAdd_SetColor(RenderCmdList *cmdList, const SetColorCmd &cmd);
 bool RenderAdd_SetClearColor(RenderCmdList *cmdList, const SetClearColorCmd &cmd);
 bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd &cmd);
 bool RenderAdd_SetCircleTrans(RenderCmdList *cmdList, const SetCircleTransCmd &cmd);
+texture_handle_t Render_ArtArrayTexture();
+RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t width, uint32_t height);
 int Render_GetCurrentDrawMode();
 bool RenderAdd_ClearRT(RenderCmdList *cmdList, const ClearRTCmd &cmd);
 

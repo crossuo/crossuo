@@ -1358,12 +1358,22 @@ void CGameScreen::DrawGameWindow(bool render)
 #endif
         SCOPED_GL_DEBUG_MARKER_LABEL("GameScreen");
         m_HitsStack.clear();
+        // two passes: all ground tiles first (they never occlude anything and
+        // become contiguous in the command stream, which lets the renderer
+        // merge them into a few draw calls), then statics/characters in the
+        // original isometric order
+        for (int pass = 0; pass < 2; pass++)
         for (int i = 0; i < m_RenderListCount; i++)
         {
             RENDER_OBJECT_DATA &rod = m_RenderList[i];
             CRenderWorldObject *obj = rod.Object;
             if (obj != nullptr)
             {
+                const bool isLand = (obj->LandObjectPtr() != nullptr);
+                if ((pass == 0) != isLand)
+                {
+                    continue;
+                }
                 g_OutOfRangeColor = rod.GrayColor;
                 g_UseCircleTrans =
                     (g_ConfigManager.UseCircleTrans && obj->TranparentTest(playerZPlus5));
@@ -1371,6 +1381,10 @@ void CGameScreen::DrawGameWindow(bool render)
                 int x = obj->DrawX;
                 int y = obj->DrawY;
                 obj->Draw(x, y);
+                if (pass == 0)
+                {
+                    continue; // overlays (health bars) belong to the object pass
+                }
                 if ((g_ConfigManager.GetDrawStatusState() != 0u) && obj->IsGameObject() &&
                     ((CGameObject *)obj)->NPC && !((CGameCharacter *)obj)->IsDead())
                 {

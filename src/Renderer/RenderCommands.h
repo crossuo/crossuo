@@ -123,6 +123,7 @@ struct DrawQuadCmd
     float v = 1.f;
     float4 color = g_ColorInvalid;
     bool mirrored = false;
+    float layer = -1.f; // >= 0: texture is a texture array, index into it
 };
 
 struct DrawCharacterSittingCmd
@@ -154,6 +155,9 @@ struct DrawLandTileCmd
     } rect;
     float3 normals[4];
     int drawMode = 0;
+    int layer = -1;      // >= 0: texture is the art texture array, index into it
+    float u = 1.0f;      // uv scale of the tile inside the array layer
+    float v = 1.0f;
 };
 
 struct DrawShadowCmd

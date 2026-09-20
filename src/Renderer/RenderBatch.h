@@ -11,6 +11,7 @@
 struct RenderState;
 struct DrawQuadCmd;
 struct DrawUntexturedQuadCmd;
+struct DrawLandTileCmd;
 struct RenderCmdList;
 
 // Deferred quad batching for the immediate execution path: consecutive quads
@@ -24,11 +25,16 @@ void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd);
 // record + defer an untextured quad (DrawUntexturedQuadCmd semantics)
 void RenderBatch_AddUntexturedQuad(RenderState *state, const DrawUntexturedQuadCmd &cmd);
 
+// record + defer a land tile (DrawLandTileCmd semantics); tiles sharing the
+// land texture array merge into the same draw call
+void RenderBatch_AddLandTile(RenderState *state, const DrawLandTileCmd &cmd);
+
 // called before a recorded command is applied; flushes the pending batch when
 // the command would change state the batch depends on (no-ops keep it alive)
 void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const void *cmd);
 
 // submits the pending merged quad batch (no-op when empty)
 void RenderBatch_Flush(RenderState *state);
+void RenderBatch_FlushAll(RenderState *state);
 
 #endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES)

@@ -400,7 +400,8 @@ static const char *TextureTypeAsString(TextureType type)
 {
     static const char *s_textureTypeAsStr[] = {
         "Texture2D",          // Texture2D
-        "Texture2D_Mipmapped" // Texture2D_Mipmapped
+        "Texture2D_Mipmapped",// Texture2D_Mipmapped
+        "Texture2DArray"      // Texture2DArray
     };
 
     static_assert(
@@ -516,7 +517,7 @@ static void DumpInfo(const char *format, ...)
 void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *state)
 {
     DumpInfo(
-        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - mirrored: %s | alphaTest: %s, alphaRef: %f",
+        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - mirrored: %s - layer: %g (bound0: %d) | alphaTest: %s, alphaRef: %f",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -525,6 +526,8 @@ void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *state)
         cmd->u,
         cmd->v,
         cmd->mirrored ? "true" : "false",
+        cmd->layer,
+        state->texture.texture,
         state->alphaTest.enabled ? "true" : "false",
         state->alphaTest.alphaRef);
 }
@@ -688,18 +691,22 @@ void RenderDraw_DrawCharacterSittingDebug(DrawCharacterSittingCmd *cmd, RenderSt
         cmd->mirror ? "true" : "false");
 }
 
-void RenderDraw_DrawLandTileDebug(DrawLandTileCmd *cmd, RenderState *)
+void RenderDraw_DrawLandTileDebug(DrawLandTileCmd *cmd, RenderState *state)
 {
     DumpInfo(
-        "DrawLandTileCmd: texture: %d - x: %d - y: %d - rect: {x:%d y:%d w:%d h:%d} - drawMode: %d",
+        "DrawLandTileCmd: texture: %d - layer: %d - u: %f - v: %f - x: %d - y: %d - rect: {x:%d y:%d w:%d h:%d} - drawMode: %d (bound0: %d)",
         cmd->texture,
+        cmd->layer,
+        cmd->u,
+        cmd->v,
         cmd->x,
         cmd->y,
         cmd->rect.x,
         cmd->rect.y,
         cmd->rect.w,
         cmd->rect.h,
-        cmd->drawMode);
+        cmd->drawMode,
+        state->texture.texture);
 }
 
 void RenderDraw_DrawShadowDebug(DrawShadowCmd *cmd, RenderState *)

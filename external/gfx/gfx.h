@@ -163,7 +163,8 @@ struct GenericVertex
     float pos[2];
     float uv[2];
     unsigned int col;
-    float normal[3]; // Normal vector for 3D rendering (default [0,0,1] for 2D)
+    float normal[3];  // Normal vector for 3D rendering (default [0,0,1] for 2D)
+    float layer;
 };
 
 #if defined(XUO_LOCAL_HEADERS)
