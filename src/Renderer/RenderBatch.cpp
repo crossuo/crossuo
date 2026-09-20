@@ -86,12 +86,6 @@ RenderBatchKey MakeKey(RenderState *state, texture_handle_t texture)
     return key;
 }
 
-bool KeyMatches(RenderState *state, const RenderBatchKey &key)
-{
-    RenderBatchKey current = MakeKey(state, key.texture);
-    return memcmp(&current, &key, sizeof(RenderBatchKey)) == 0;
-}
-
 void AppendStripQuad(
     float mtX,
     float mtY,
@@ -344,7 +338,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         {
             auto alpha = ((const AlphaTestCmd *)cmd);
             if (!s_key.alphaTest.enabled || alpha->func != s_key.alphaTest.func ||
-                alpha->ref != s_key.alphaTest.alphaRef)
+                !f32eq(alpha->ref, s_key.alphaTest.alphaRef))
             {
                 RenderBatch_Flush(state);
             }
@@ -361,8 +355,8 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         case RenderCommandType::Cmd_SetCircleTrans:
         {
             auto circle = ((const SetCircleTransCmd *)cmd);
-            if (circle->x != s_key.circleTrans[0] || circle->y != s_key.circleTrans[1] ||
-                circle->radius != s_key.circleTrans[2])
+            if (!f32eq(circle->x, s_key.circleTrans[0]) || !f32eq(circle->y, s_key.circleTrans[1]) ||
+                !f32eq(circle->radius, s_key.circleTrans[2]))
             {
                 RenderBatch_Flush(state);
             }

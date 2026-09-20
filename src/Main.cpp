@@ -384,7 +384,6 @@ static int Run()
         // delay and mask the real frame cost being benchmarked
         if (!TestAutoLogin())
         {
-            int32_t iDynamicFPS = SDL_GetTicks() - g_Ticks;
             int32_t iDelay = g_GameWindow.GetRenderDelay();
 
             // a frame delay of 0 means uncapped; otherwise only sleep to hit
