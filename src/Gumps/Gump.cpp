@@ -23,11 +23,11 @@ CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
 
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
-// Direct-draw experiment: paint gumps straight into the scene under a scissor
-// instead of routing them through a per-gump framebuffer. Opt in with
-// XUO_GUMP_DIRECT=1. Read once; the coordinate-space consequences for child
+// Gumps paint straight into the scene under a scissor (no per-gump
+// framebuffer pass/blit). XUO_GUMP_LEGACY=1 opts back into the per-gump
+// framebuffer path. Read once; the coordinate-space consequences for child
 // items are visible through CGump::DirectDrawActive().
-static const bool s_gumpDirectDraw = getenv("XUO_GUMP_DIRECT") != nullptr;
+static const bool s_gumpDirectDraw = getenv("XUO_GUMP_LEGACY") == nullptr;
 #endif
 
 bool CGump::DirectDrawActive()
