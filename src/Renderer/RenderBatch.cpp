@@ -125,10 +125,9 @@ void AppendStripQuad(
 
 void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd)
 {
-    if (s_kind == BatchKind::LandTiles)
-    {
-        RenderBatch_Flush(state);
-    }
+    // land tiles and quads never overlap (ground vs objects), so the two
+    // pending slots accumulate independently and flush on real state changes
+    // only - no cross-kind flush here or in AddLandTile
     // array-placed sprites key on the shared array texture so they merge
     // with each other; the per-sprite handle is irrelevant
     const texture_handle_t batchTexture =
@@ -227,10 +226,6 @@ void RenderBatch_AddLandTile(RenderState *state, const DrawLandTileCmd &cmd)
     const texture_handle_t batchTexture =
         (cmd.layer >= 0) ? Render_ArtArrayTexture() : cmd.texture;
     RenderBatchKey key = MakeKey(state, batchTexture);
-    if (s_kind == BatchKind::Quads)
-    {
-        RenderBatch_Flush(state);
-    }
     if (s_pending && (memcmp(&key, &s_key, sizeof(key)) != 0 || s_quadCount >= MAX_BATCH_QUADS))
     {
         RenderBatch_Flush(state);
