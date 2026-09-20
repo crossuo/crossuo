@@ -3,6 +3,7 @@
 
 #include "Gump.h"
 #include <algorithm> // std::max
+#include <cstdlib>   // getenv (XUO_GUMP_DIRECT)
 #include "../CrossUO.h"
 #include "../Point.h"
 #include "../PressedObject.h"
@@ -20,6 +21,70 @@
 
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
+
+#ifdef NEW_RENDERER_ENABLED
+// Direct-draw experiment: paint gumps straight into the scene under a scissor
+// instead of routing them through a per-gump framebuffer. Opt in with
+// XUO_GUMP_DIRECT=1. Read once; the coordinate-space consequences for child
+// items are visible through CGump::DirectDrawActive().
+static const bool s_gumpDirectDraw = getenv("XUO_GUMP_DIRECT") != nullptr;
+#endif
+
+bool CGump::DirectDrawActive()
+{
+#ifdef NEW_RENDERER_ENABLED
+    return s_gumpDirectDraw;
+#else
+    return false;
+#endif
+}
+
+CPoint2Di CGump::GetDrawOriginOffset() const
+{
+    // Scissor boxes are authored in gump-local coordinates. How to map them to
+    // the space the items were actually drawn in depends on the gump pass:
+    //  - framebuffer pass: items are drawn gump-local but the pass bakes in a
+    //    translation of -GumpRect.Position, so the box must be shifted by the
+    //    same amount (this is the original behaviour, preserved verbatim);
+    //  - direct pass: items are drawn in window space from the gump's window
+    //    origin, so the box is shifted by that origin instead.
+    if (DirectDrawActive())
+    {
+        return CPoint2Di(
+            (int)(g_GumpTranslate.X + GumpRect.Position.X),
+            (int)(g_GumpTranslate.Y + GumpRect.Position.Y));
+    }
+
+    return CPoint2Di(-GumpRect.Position.X, -GumpRect.Position.Y);
+}
+
+// The gump currently being drawn. CGUIScissor boxes are authored gump-local and
+// need that gump's origin to land on the right pixels, but a scissor's
+// GumpParent is only assigned as a side effect of GetItemsSize, which walks the
+// visible page alone - pages rebuilt on the fly (eg.
+// CGumpOptions::RedrawMacroData) never get adopted. Fall back to this so the
+// origin is always available while drawing.
+static CGump *s_currentDrawGump = nullptr;
+
+CGump *CGump::CurrentDrawGump()
+{
+    return s_currentDrawGump;
+}
+
+// Applies the active gump's draw origin to any scissor pushed while that gump is
+// being drawn, so gump item code can keep authoring boxes in gump-local
+// coordinates without knowing which pass is active.
+static void GumpScissorOriginProvider(int *x, int *y)
+{
+    if (s_currentDrawGump == nullptr)
+    {
+        return;
+    }
+
+    const CPoint2Di origin = s_currentDrawGump->GetDrawOriginOffset();
+    *x += origin.X;
+    *y += origin.Y;
+}
 
 CGump::CGump()
     : CGump(GT_NONE, 0, 0, 0)
@@ -1267,7 +1332,23 @@ void CGump::GenerateFrame()
 #endif
     CalculateGumpState();
     PrepareTextures();
+
+    // scissor components resolve their coordinate space against the gump being
+    // drawn; some of them are never adopted by GetItemsSize (see
+    // CurrentDrawGump), so publish this gump for the duration of the draw.
+    // The renderer reads the same state through the origin provider, so every
+    // scissor pushed from inside here is shifted without the caller knowing.
+    static const bool providerInstalled = []() {
+        Render_SetScissorOriginProvider(GumpScissorOriginProvider);
+        return true;
+    }();
+    (void)providerInstalled;
+
+    CGump *prevDrawGump = s_currentDrawGump;
+    s_currentDrawGump = this;
     DrawItems((CBaseGUI *)m_Items, Page, PageAmount);
+    s_currentDrawGump = prevDrawGump;
+
     WantRedraw = true;
     FrameCreated = true;
 }
@@ -1283,6 +1364,44 @@ void CGump::Draw()
         WantUpdateContent = false;
         FrameCreated = false;
     }
+
+#ifdef NEW_RENDERER_ENABLED
+    // The framebuffer path bakes the gump into a texture once and blits that
+    // texture on every later frame. There is no such cached artifact here, so
+    // the item commands are re-emitted every frame while the (more expensive)
+    // content preparation is still gated on the invalidate flags.
+    if (s_gumpDirectDraw)
+    {
+        // the gump translates into window space, so the gump-local origin
+        // shift the framebuffer pass needed is folded into the translation
+        const float gx = g_GumpTranslate.X + (float)GumpRect.Position.X;
+        const float gy = g_GumpTranslate.Y + (float)GumpRect.Position.Y;
+
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList, SetModelViewTranslationCmd{ { gx, gy, 0.0f } });
+
+        Render_PushScissor(
+            (int)gx, (int)gy, (uint32_t)GumpRect.Size.Width, (uint32_t)GumpRect.Size.Height);
+
+        GenerateFrame();
+
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+
+        DrawLocker();
+
+        Render_PopScissor();
+
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList, SetModelViewTranslationCmd{ { -gx, -gy, 0.0f } });
+
+        FrameCreated = true;
+        return;
+    }
+#endif
 
     if (!FrameCreated)
     {

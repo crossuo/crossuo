@@ -30,4 +30,11 @@ public:
     virtual ~CGUIScissor();
 
     virtual void Draw(bool checktrans = false);
+
+    //!Push a scissor box authored in the current gump's local coordinates,
+    //!translating it into whatever space the gump pass draws items in (the
+    //!framebuffer pass draws gump-local, the direct pass draws in window
+    //!space). Use this instead of Render_PushScissor from gump item code, or
+    //!the box lands in the wrong space whenever the direct pass is active.
+    static void PushGumpLocal(int x, int y, int width, int height);
 };

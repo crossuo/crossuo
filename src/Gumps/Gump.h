@@ -110,6 +110,22 @@ public:
     bool SelectLocker();
     bool TestLockerClick();
 
+    //!Offset to add to a gump-local coordinate so the result lands in the space
+    //!the items were actually drawn in. The framebuffer pass draws items
+    //!gump-local with a baking translation of -GumpRect.Position; the direct
+    //!pass draws them in window space from the gump's window origin. Scissor
+    //!boxes are authored gump-local and must be shifted by this to match.
+    CPoint2Di GetDrawOriginOffset() const;
+
+    //!The gump currently being drawn, or null. Scissor components resolve their
+    //!coordinate space through this when they have no GumpParent.
+    static CGump *CurrentDrawGump();
+
+    //!True when this gump renders straight into the scene (no per-gump
+    //!framebuffer), which changes the coordinate space child items and their
+    //!scissor boxes live in. Always false on the legacy/GL1 renderer.
+    static bool DirectDrawActive();
+
     virtual bool EntryPointerHere();
     virtual void Draw();
     virtual class CRenderObject *Select();

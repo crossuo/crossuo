@@ -18,6 +18,18 @@ namespace {
 
 constexpr int MAX_BATCH_QUADS = 4096;
 
+// Bit-exact float compare matching RenderState.cpp's f32eq: the render-state
+// view-params cache compares this way, so the batch has to agree with it on
+// what counts as "unchanged" or the two would disagree about flushing.
+bool f32eq(float a, float b)
+{
+    static_assert(sizeof(float) == sizeof(uint32_t), "requires 32-bit float");
+    uint32_t ba, bb;
+    memcpy(&ba, &a, sizeof(ba));
+    memcpy(&bb, &b, sizeof(bb));
+    return ba == bb;
+}
+
 struct alignas(4) RenderBatchKey
 {
     texture_handle_t texture;
@@ -393,9 +405,41 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
             break;
         }
 
-        // state commands that always invalidate the batch
+        // a framebuffer rebind only invalidates the batch when the target
+        // actually changes; binding the framebuffer the pending batch was
+        // already recorded against (the common "restore the previous FBO" at
+        // the end of a pass) keeps the batch alive so its quads can still
+        // merge with what follows
         case RenderCommandType::Cmd_SetFrameBuffer:
+        {
+            auto fb = ((const SetFrameBufferCmd *)cmd)->frameBuffer;
+            if (fb.handle != s_key.framebuffer.handle || fb.texture != s_key.framebuffer.texture)
+            {
+                RenderBatch_Flush(state);
+            }
+            break;
+        }
+
+        // same idea for the projection/viewport: only a real change breaks the
+        // batch, so a no-op re-issue (very common - every framebuffer release
+        // restores the full-window view) keeps it alive
         case RenderCommandType::Cmd_SetViewParams:
+        {
+            auto vp = (const SetViewParamsCmd *)cmd;
+            const int right = vp->scene_x + vp->scene_width;
+            const int bottom = vp->window_height - (vp->scene_y + vp->scene_height);
+            const auto &k = s_key.viewport;
+            if (k.left != vp->scene_x || k.right != right || k.bottom != bottom ||
+                k.top != vp->scene_y || k.nearZ != vp->camera_nearZ ||
+                k.farZ != vp->camera_farZ || !f32eq(k.scale, vp->scene_scale) ||
+                k.proj_flipped_y != vp->proj_flipped_y)
+            {
+                RenderBatch_Flush(state);
+            }
+            break;
+        }
+
+        // state commands that always invalidate the batch
         case RenderCommandType::Cmd_ClearRT:
         case RenderCommandType::Cmd_FlushState:
         case RenderCommandType::Cmd_GetFrameBufferPixels:

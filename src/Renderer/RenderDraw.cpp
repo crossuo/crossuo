@@ -18,6 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <assert.h>
+#include <stdio.h>  // fprintf (XUO_SCISSOR_CHECK)
 #include <stdlib.h> // getenv
 #include <string.h> // memcmp, memcpy
 #include <deque> // deque
@@ -35,9 +36,52 @@
 
 static std::deque<SetScissorCmd> s_ScissorList;
 
+// Scissor boxes are authored in the coordinate space the caller draws in. Gump
+// item code draws gump-local, so while a gump pass is active every push has to
+// be shifted by that gump's draw origin. Rather than trusting every call site
+// to remember (which drifted repeatedly - GUIComboBox, CGUIScissor - and clipped
+// content into the wrong place), the gump layer installs a provider here and the
+// renderer applies it automatically. Single choke point, cannot be forgotten.
+static void (*s_scissorOriginProvider)(int *, int *) = nullptr;
+
+void Render_SetScissorOriginProvider(void (*provider)(int *x, int *y))
+{
+    s_scissorOriginProvider = provider;
+}
+
 void Render_PushScissor(int x, int y, uint32_t w, uint32_t h)
 {
     ScopedPerfMarker(__FUNCTION__);
+    if (s_scissorOriginProvider != nullptr)
+    {
+        s_scissorOriginProvider(&x, &y);
+    }
+
+    // Debug guard for the coordinate-space trap this code has repeatedly fallen
+    // into: while a gump pass is active, boxes are expected to be gump-local, so
+    // a caller passing window-space coordinates (tight around the window origin
+    // after the provider ran, or negative before it) is almost certainly in the
+    // wrong space. Opt in with XUO_SCISSOR_CHECK=1; it only reports, it never
+    // changes what is drawn.
+    static const bool check = getenv("XUO_SCISSOR_CHECK") != nullptr;
+    if (check && (x < 0 || y < 0 || w == 0 || h == 0))
+    {
+        static bool warned = false;
+        if (!warned)
+        {
+            warned = true;
+            fprintf(
+                stderr,
+                "[scissor] suspicious box (%d,%d %ux%u) - pushed while a gump pass "
+                "was %s; check the coordinate space at this call site\n",
+                x,
+                y,
+                w,
+                h,
+                s_scissorOriginProvider != nullptr ? "active" : "inactive");
+        }
+    }
+
     auto cmd = SetScissorCmd{ x, y, w, h };
     s_ScissorList.push_back(cmd);
     RenderAdd_SetScissor(g_renderCmdList, cmd);

@@ -3,6 +3,7 @@
 
 #include "GUIComboBox.h"
 #include "GUIText.h"
+#include "GUIScissor.h"
 #include "../Point.h"
 #include "../CrossUO.h"
 #include "../PressedObject.h"
@@ -204,7 +205,7 @@ void CGUIComboBox::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
         g_GL.PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
 #else
-        Render_PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
+        CGUIScissor::PushGumpLocal(currentX, currentY, m_WorkWidth, m_WorkHeight);
 #endif
 
         CBaseGUI *start = SkipToStart();
@@ -288,7 +289,7 @@ void CGUIComboBox::Draw(bool checktrans)
                 selected->m_Texture.Draw(m_X + 6, m_Y + 6 + TextOffsetY);
                 g_GL.PopScissor();
 #else
-                Render_PushScissor(m_X + 6, m_Y, m_MinimizedArrowX, 20);
+                CGUIScissor::PushGumpLocal(m_X + 6, m_Y, m_MinimizedArrowX, 20);
                 selected->m_Texture.Draw(m_X + 6, m_Y + 6 + TextOffsetY);
                 Render_PopScissor();
 #endif
@@ -307,7 +308,7 @@ void CGUIComboBox::Draw(bool checktrans)
                 selected->m_Texture.Draw(m_X + 3, m_Y + 4 + TextOffsetY);
                 g_GL.PopScissor();
 #else
-                Render_PushScissor(m_X + 3, m_Y, Width - 6, 20);
+                CGUIScissor::PushGumpLocal(m_X + 3, m_Y, Width - 6, 20);
                 selected->m_Texture.Draw(m_X + 3, m_Y + 4 + TextOffsetY);
                 Render_PopScissor();
 #endif

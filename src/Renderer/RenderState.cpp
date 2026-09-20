@@ -828,7 +828,19 @@ bool RenderState_SetScissor(
         state->scissor.y = y;
         state->scissor.width = width;
         state->scissor.height = height;
-        GL_CHECK(glScissor(x, y, width, height));
+
+        // Callers pass game-window coordinates (origin top-left, Y down, the
+        // same space the item draw commands use) but glScissor wants window
+        // space (origin bottom-left, Y up), so flip against the active
+        // viewport. Mirrors RenderDraw_SetScissor / s_viewFlippedY in GL1: a
+        // straight ortho pass (framebuffer passes, proj_flipped_y) maps game Y
+        // 1:1, otherwise the top edge is measured from the viewport's top.
+        GLint viewport[4] = { 0, 0, 0, 0 };
+        GL_CHECK(glGetIntegerv(GL_VIEWPORT, viewport));
+        const int gl_scissor_y = state->viewport.proj_flipped_y
+                                     ? viewport[1] + y
+                                     : viewport[1] + viewport[3] - y - (int)height;
+        GL_CHECK(glScissor(x, gl_scissor_y, width, height));
     }
     return changed;
 }

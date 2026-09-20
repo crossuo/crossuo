@@ -75,6 +75,13 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb);
 void Render_PushScissor(int x, int y, uint32_t w, uint32_t h);
 void Render_PopScissor();
 
+//!Install the provider that offsets scissor boxes authored while a gump pass is
+//!active. The gump layer owns the coordinate-space knowledge (see
+//!CGump::GetDrawOriginOffset) and the renderer applies it to every push, so a
+//!gump draw call site cannot clip into the wrong space by forgetting it.
+//!The provider adds to *x / *y in place; pass nullptr to disable.
+void Render_SetScissorOriginProvider(void (*provider)(int *x, int *y));
+
 //#if defined(USE_GL3) || defined(USE_GLES)
 // GL3/GLES helpers for draw mode (replaces shader pipeline system in GL2)
 //void Render_SetDrawMode(int drawMode);
