@@ -59,8 +59,36 @@ static unsigned long long s_bad_binds = 0;
 
 static constexpr size_t HISTORY_MAX = 4096;
 
-static std::vector<NameRecord> s_records;
-static std::vector<Event> s_history; // ring, chronological
+// Deliberately LEAKED containers: the game's global/static textures tear down
+// through __cxa_finalize in unspecified cross-TU order, and delete/bind events
+// still arrive while (or after) this translation unit's statics are destroyed.
+// A file-scope std::vector would be dead memory by then (SIGSEGV in the
+// wrappers at exit); heap-allocating and never freeing keeps them valid for
+// the whole process lifetime, which is exactly the lifetime being tracked.
+static std::vector<NameRecord> *s_records = nullptr;
+static std::vector<Event> *s_history = nullptr;
+
+static std::vector<NameRecord> &records()
+{
+    static std::vector<NameRecord> *leaked = new std::vector<NameRecord>();
+    if (s_records == nullptr)
+    {
+        s_records = leaked;
+        s_records->reserve(8192);
+    }
+    return *s_records;
+}
+
+static std::vector<Event> &history()
+{
+    static std::vector<Event> *leaked = new std::vector<Event>();
+    if (s_history == nullptr)
+    {
+        s_history = leaked;
+        s_history->reserve(HISTORY_MAX);
+    }
+    return *s_history;
+}
 
 static bool logging_enabled()
 {
@@ -92,7 +120,7 @@ static void capture_stack(char *out, size_t size)
 
 static NameRecord *record_for(unsigned int name)
 {
-    for (auto &r : s_records)
+    for (auto &r : records())
     {
         if (r.name == name)
         {
@@ -110,21 +138,22 @@ static NameRecord &record_slot(unsigned int name)
     }
     NameRecord rec;
     rec.name = name;
-    s_records.push_back(rec);
-    return s_records.back();
+    records().push_back(rec);
+    return records().back();
 }
 
 static void push_event(EventKind kind, unsigned int name)
 {
-    if (s_history.size() >= HISTORY_MAX)
+    auto &hist = history();
+    if (hist.size() >= HISTORY_MAX)
     {
-        s_history.erase(s_history.begin(), s_history.begin() + HISTORY_MAX / 2);
+        hist.erase(hist.begin(), hist.begin() + HISTORY_MAX / 2);
     }
     Event ev;
     ev.kind = kind;
     ev.name = name;
     ev.frame = s_frame;
-    s_history.push_back(ev);
+    hist.push_back(ev);
 }
 
 // ---------------------------------------------------------------------------
@@ -236,15 +265,15 @@ static void dump_provenance_and_history(const NameRecord *rec)
 
     // names are recycled by the driver, so only the sequence shows how the
     // dead/stale name the failure used came to be
-    const size_t shown = s_history.size() < 1200 ? s_history.size() : (size_t)1200;
+    const size_t shown = history().size() < 1200 ? history().size() : (size_t)1200;
     LOG_ERROR(
         "----------------------------------------\nHISTORY (%zu events, showing last %zu)",
-        s_history.size(),
+        history().size(),
         shown);
-    const size_t first = s_history.size() - shown;
-    for (size_t i = first; i < s_history.size(); ++i)
+    const size_t first = history().size() - shown;
+    for (size_t i = first; i < history().size(); ++i)
     {
-        const auto &ev = s_history[i];
+        const auto &ev = history()[i];
         LOG_ERROR("  [f%u] %s %u", ev.frame, event_kind_as_string(ev.kind), ev.name);
     }
     LOG_ERROR("================ END TEXTURE NAME TRACKER ================");
@@ -269,8 +298,8 @@ void GLTextureTracker_Install()
     }
     s_installed = true;
     s_enabled = logging_enabled();
-    s_records.reserve(8192);
-    s_history.reserve(HISTORY_MAX);
+    records();
+    history();
 
 #if defined(USE_GL3W)
     s_real_gen = gl3wGenTextures;
@@ -427,7 +456,7 @@ void GLTextureTracker_Dump()
         return;
     }
     size_t live = 0;
-    for (const auto &r : s_records)
+    for (const auto &r : records())
     {
         if (r.live)
         {
@@ -437,7 +466,7 @@ void GLTextureTracker_Dump()
     LOG_INFO(
         "textrack: frame %u: %zu names tracked, %zu live, %llu binds (%llu bad)",
         s_frame,
-        s_records.size(),
+        records().size(),
         live,
         s_binds,
         s_bad_binds);
