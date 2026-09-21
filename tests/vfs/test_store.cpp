@@ -542,6 +542,68 @@ VFS_TEST(store_loose_content_check)
     TEST_CHECK(!vfs_store_loose_asset_content_ok(packed_path, *packed, prod.blobs));
 }
 
+// the ambiguous zero head: a real payload may legitimately start with a long
+// zero run (unifont*.mul), which is byte-identical to the sparse skeleton at
+// the head window. The check must keep sampling the deeper windows in that
+// case - and only in that case (the head decides for every nonzero payload)
+VFS_TEST(store_loose_content_zero_head_ambiguity)
+{
+    test_product_data prod;
+    test_add_part(prod, 0x00000001, 0x11111111, 1, 12, 4096); // the pack needs a part
+    // 64KB payload: first 16KB zero, the rest the usual pattern - the head and
+    // quarter windows read as zeros, the middle/tail windows do not
+    const size_t size = 0x10000;
+    std::vector<uint8_t> zero_head(size, 0);
+    const auto tail_pattern = test_pattern(size);
+    for (size_t i = 0x4000; i < size; ++i)
+    {
+        zero_head[i] = tail_pattern[i];
+    }
+    for (uint32_t ct = 0; ct <= 1; ++ct)
+    {
+        char name[64];
+        snprintf(name, sizeof(name), "zerohop%d.mul", ct);
+        test_add_loose(prod, name, ct, 0);
+        auto &loose = prod.loose.back();
+        loose.payload = zero_head;
+        loose.blob = ct == 1 ? test_zlib(zero_head) : zero_head;
+    }
+    TEST_CHECK(test_build_product(prod, "store_loose_zero_head"));
+
+    vfs_manifest_params manifest_params;
+    manifest_params.product_file = fs_path_join(prod.root, "prod.xml");
+    manifest_params.blobs_dir = prod.blobs;
+    VfsPlan plan;
+    TEST_CHECK(vfs_manifest_build(manifest_params, plan));
+
+    for (uint32_t ct = 0; ct <= 1; ++ct)
+    {
+        char name[64];
+        snprintf(name, sizeof(name), "zerohop%d.mul", ct);
+        const auto *asset = find_loose_asset(plan, name);
+        TEST_CHECK_MSG(asset != nullptr, "%s must be planned", name);
+        const auto path = fs_path_join(prod.install, name);
+
+        // the real payload: ambiguous at the head, proven by the deep windows
+        TEST_CHECK(test_write_file(path, zero_head));
+        TEST_CHECK(vfs_store_loose_asset_content_ok(path, *asset, prod.blobs));
+
+        // the sparse skeleton (all zeros, right size): identical at the head,
+        // rejected by the deep windows - this is the case the multi-window
+        // compare exists for, and it must NOT early-exit on the head
+        std::vector<uint8_t> skeleton(size, 0);
+        TEST_CHECK(test_write_file(path, skeleton));
+        TEST_CHECK(!vfs_store_loose_asset_content_ok(path, *asset, prod.blobs));
+
+        // a real payload with one flipped deep byte is caught too (the deep
+        // windows genuinely ran): flip inside the middle window
+        std::vector<uint8_t> corrupted = zero_head;
+        corrupted[0x8000] ^= 0xff;
+        TEST_CHECK(test_write_file(path, corrupted));
+        TEST_CHECK(!vfs_store_loose_asset_content_ok(path, *asset, prod.blobs));
+    }
+}
+
 // ---------------------------------------------------------------------------
 // range assets: block windows ([ml metadata][payload]) of a larger source
 // blob - what plan refinement produces for whole-file UOP parts

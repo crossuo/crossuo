@@ -4,6 +4,7 @@
 #define LOGGER_MODULE Vfs
 
 #include <inttypes.h>
+#include <chrono>
 #include <stdio.h>
 #include <string.h>
 
@@ -450,6 +451,7 @@ bool vfs_state_reconcile(
     const fs_path &blobs_dir)
 {
     vfs_reconcile_stats run;
+    const auto started = std::chrono::steady_clock::now();
     size_t asset_index = 0;
     for (size_t fi = 0; fi < plan.files.size(); ++fi)
     {
@@ -487,8 +489,17 @@ bool vfs_state_reconcile(
                 // skeleton (right-sized sparse file). When the store root is
                 // known, the blob content decides - the skeleton must not
                 // promote, and a blob that arrived later must not be shadowed
-                // by it forever
-                if (on_disk && !fs_path_empty(blobs_dir))
+                // by it forever. Already-fetched assets skip the content
+                // check: 'fetched' is only journaled after the atomic
+                // materialize write completed, so a matching size is the
+                // real payload (the skeleton never overwrites content -
+                // prepare truncates, which is a no-op at full size). Without
+                // this skip reconcile re-read every loose file at every
+                // boot; after a full install that is minutes of cold-cache
+                // I/O on the boot thread for a case the write discipline
+                // already covers. Pending assets keep the full check:
+                // promotion is exactly where a skeleton must not pass.
+                if (on_disk && states[asset_index] != vfs_fetched && !fs_path_empty(blobs_dir))
                 {
                     on_disk = vfs_store_loose_asset_content_ok(path, asset, blobs_dir);
                 }
@@ -528,5 +539,18 @@ bool vfs_state_reconcile(
 
     if (stats)
         *stats = run;
+    const auto elapsed_ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - started)
+            .count();
+    // reconcile runs on the boot thread before the first frame: when it ever
+    // takes long enough to look like a hang, this line says so (and which
+    // side of the size/content split the time went to)
+    LOG_INFO(
+        "reconcile: %zu assets in %lld ms (%zu repaired, %zu upgraded)",
+        run.assets_checked,
+        (long long)elapsed_ms,
+        run.assets_repaired,
+        run.assets_upgraded);
     return true;
 }

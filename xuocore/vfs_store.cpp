@@ -1098,7 +1098,14 @@ bool vfs_store_pack_asset_present(
 // head bytes compared between the on-disk payload and the (decompressed)
 // blob; full content verification is verify's job, this is the cheap
 // reconcile-grade check (shared constant with the pack path)
-
+//
+// The check decides on the HEAD window first and only walks the deeper
+// windows when the head is genuinely ambiguous (both sides all zero - e.g.
+// a unifont payload vs the sparse skeleton). Reconcile runs over EVERY asset
+// at EVERY boot on the boot thread, so this is also what keeps the common
+// cases from decoding a whole zlib blob just to say "not the skeleton":
+// head differs -> not proven (false), head equal and nonzero -> proven
+// (true), head equal and all-zero -> keep sampling.
 bool vfs_store_loose_asset_content_ok(
     const fs_path &path, const VfsAsset &asset, const fs_path &blobs_dir)
 {
@@ -1123,6 +1130,19 @@ bool vfs_store_loose_asset_content_ok(
     const uint64_t size = asset.ul;
     vfs_content_sample samples[4];
     size_t sample_count = 0;
+    // decides from the head window alone when it can: 0 = keep sampling,
+    // 1 = proven present, -1 = proven absent
+    const auto head_verdict = [&samples]() {
+        const auto &head = samples[0];
+        if (memcmp(head.disk, head.want, head.length) != 0)
+            return -1;
+        for (uint32_t i = 0; i < head.length; ++i)
+        {
+            if (head.disk[i] != 0)
+                return 1; // real nonzero payload in place: not the skeleton
+        }
+        return 0; // both heads all zero: ambiguous (zero-head payload vs skeleton)
+    };
     const auto add_sample = [&](uint64_t offset)
     {
         if (offset == UINT64_MAX || offset >= size || sample_count == 4)
@@ -1165,7 +1185,8 @@ bool vfs_store_loose_asset_content_ok(
     bool ok = true;
     if (asset.ct == 0)
     {
-        // stored: the wire IS the payload - windows compare directly
+        // stored: the wire IS the payload - windows compare directly, but the
+        // head window decides when it can (see head_verdict)
         for (size_t si = 0; si < sample_count; ++si)
         {
             auto &sample = samples[si];
@@ -1180,12 +1201,25 @@ bool vfs_store_loose_asset_content_ok(
                 ok = false;
                 break;
             }
+            if (si == 0)
+            {
+                const int verdict = head_verdict();
+                if (verdict != 0)
+                {
+                    ok = verdict == 1;
+                    break;
+                }
+            }
         }
     }
     else
     {
         // zlib: one progressive pass, capturing the sample windows as the
-        // stream produces them (bounded by the wire size; no full decode)
+        // stream produces them. The head window decides as soon as it is
+        // captured (head differs -> not the payload; head equal and nonzero
+        // -> proven) so the common cases stop after ~64KB of inflate instead
+        // of decoding the whole blob; only the all-zero ambiguous head keeps
+        // inflating toward the deeper windows
         std::vector<uint8_t> wire_data;
         {
             uint8_t buf[0x10000];
@@ -1202,11 +1236,12 @@ bool vfs_store_loose_asset_content_ok(
         {
             uint64_t produced = 0;
             size_t windows_left = sample_count;
+            bool decided = false;
             zs.next_in = reinterpret_cast<Bytef *>(wire_data.data());
             zs.avail_in = uint32_t(wire_data.size());
             uint8_t out[0x10000];
             int res = Z_OK;
-            while (windows_left != 0 && res != Z_STREAM_END)
+            while (windows_left != 0 && res != Z_STREAM_END && !decided)
             {
                 zs.next_out = out;
                 zs.avail_out = sizeof(out);
@@ -1227,26 +1262,44 @@ bool vfs_store_loose_asset_content_ok(
                             memcpy(sample.want, out + size_t(s - chunk_start), sample.length);
                             sample.captured = true;
                             --windows_left;
+                            if (si == 0)
+                            {
+                                const int verdict = head_verdict();
+                                if (verdict == 1)
+                                {
+                                    ok = true;
+                                    decided = true;
+                                }
+                                else if (verdict == -1)
+                                {
+                                    ok = false;
+                                    decided = true;
+                                }
+                                // 0: ambiguous zero head - keep sampling
+                            }
                         }
                     }
                     produced = chunk_start + produced_now;
                 }
-                if (zs.avail_in == 0 && windows_left != 0)
+                if (zs.avail_in == 0 && windows_left != 0 && !decided)
                     break; // input exhausted before all windows were captured
             }
             inflateEnd(&zs);
-            for (size_t si = 0; si < sample_count; ++si)
+            if (!decided)
             {
-                auto &sample = samples[si];
-                if (!sample.captured)
+                for (size_t si = 0; si < sample_count; ++si)
                 {
-                    ok = false; // the source cannot supply the sample: unproven
-                    break;
-                }
-                if (memcmp(sample.disk, sample.want, sample.length) != 0)
-                {
-                    ok = false;
-                    break;
+                    auto &sample = samples[si];
+                    if (!sample.captured)
+                    {
+                        ok = false; // the source cannot supply the sample: unproven
+                        break;
+                    }
+                    if (memcmp(sample.disk, sample.want, sample.length) != 0)
+                    {
+                        ok = false;
+                        break;
+                    }
                 }
             }
         }
