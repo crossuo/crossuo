@@ -5,6 +5,7 @@
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
 #include <assert.h>
@@ -140,7 +141,12 @@ static void APIENTRY OGLDebugMsgCallback(
     if (shouldLog == OGL_DBGMSG_ENABLED)
     {
         Info(Renderer, "OpenGL debug message (id %d): %s", id, message);
+        // NOTE: the driver's async debug messages are noise for the texture
+        // name hunt - the authoritative report comes from the tracker itself
+        // via GL_CHECK (see GLTextureTracker_OnGLError), which prints once and
+        // then aborts
     }
+    assert(shouldAssert == OGL_DBGMSG_DISABLED);
     assert(shouldAssert == OGL_DBGMSG_DISABLED);
 }
 #endif // OGL_DEBUGCONTEXT_ENABLED

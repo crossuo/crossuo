@@ -59,8 +59,10 @@ void CBaseScreen::Render()
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
-    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
+    // swap (which submits the leftover batched text/cursor quads) must run
+    // BEFORE the sprite pool is cleared, or the flush binds deleted textures
     Render_SwapBuffers();
+    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
     g_ScreenshotBuilder.GPUDataReady();
 #else
     g_GL.EndDraw();

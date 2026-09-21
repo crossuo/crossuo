@@ -31,6 +31,9 @@ public:
     HGLRC RC = 0;
     bool Drawing = false;
     texture_handle_t OldTexture = 0;
+    // false while unit 0's GL_TEXTURE_2D binding is not `OldTexture` (e.g. a
+    // texture array left bound there by the art array placement path)
+    bool m_unit0IsBoundTexture = false;
     float SittingCharacterOffset = 8.0f;
     SDL_GLContext m_context;
 

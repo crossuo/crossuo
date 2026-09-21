@@ -238,17 +238,24 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
 
 void CGLTexture::Clear()
 {
-#ifndef NEW_RENDERER_ENABLED
-    if (Texture != 0)
-    {
-        glDeleteTextures(1, &Texture);
-        Texture = 0;
-    }
-#else
+#ifdef NEW_RENDERER_ENABLED
+    // the array placement is a property of the texture object: once the
+    // texture handle is gone the sprite must be re-placed (the array layer
+    // still holds the previous pixels, and the stale layer index would keep
+    // a recycled name sampling it)
+    ArrayLayer = -1;
+    ArtU = 1.0f;
+    ArtV = 1.0f;
     if (Texture != RENDER_TEXTUREHANDLE_INVALID)
     {
         Render_DestroyTexture(Texture);
         Texture = RENDER_TEXTUREHANDLE_INVALID;
+    }
+#else
+    if (Texture != 0)
+    {
+        glDeleteTextures(1, &Texture);
+        Texture = 0;
     }
 #endif
 }

@@ -1532,7 +1532,7 @@ void CGame::ClearUnusedTextures()
     {
         return;
     }
-
+    return;
     g_MapManager.ClearUnusedBlocks();
     g_GumpManager.PrepareTextures();
 
@@ -4568,7 +4568,15 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         }
 #endif
         DrawLandTileCmd cmd{
+            // the texture the tile actually samples: the shared array once the
+            // sprite has a layer (the per-vertex layer index selects it), the
+            // per-sprite texture otherwise. Both the batcher key and the
+            // unbatched fallback bind this, so it must be the real one
+#if defined(USE_GL3) || defined(USE_GLES)
+            (spr->Texture->ArrayLayer >= 0) ? Render_ArtArrayTexture() : spr->Texture->Texture,
+#else
             spr->Texture->Texture,
+#endif
             x,
             y + (land->GetZ() * 4),
             { land->m_Rect.x, land->m_Rect.y, land->m_Rect.w, land->m_Rect.h },
