@@ -95,6 +95,20 @@
 
 #if defined(USE_GL) || defined(USE_GLES)
 
+// optional hook: the renderer's texture-name tracker defines this to print the
+// full creation/deletion story before a failed GL_CHECK aborts. Declared weak
+// so this external header stays standalone (the tracker may not be linked).
+// XUO_GL_NO_ABORT=1 turns the abort into a log-only error for a non-fatal run.
+// C-compatible declaration: this header is also consumed by gfx.c
+#if !defined(GLTEXTURE_TRACKER_ON_GL_ERROR_DECLARED)
+#define GLTEXTURE_TRACKER_ON_GL_ERROR_DECLARED
+#if defined(__cplusplus)
+extern "C"
+#endif
+__attribute__((weak)) void GLTextureTracker_OnGLError(
+    const char *statement, unsigned int error);
+#endif
+
 // GL error validation: glGetError after every call is a large CPU tax at
 // ~10k calls/frame. It is ON for debug builds (XUO_DEBUG) and OFF for
 // release. XUO_GL_VALIDATE=1 forces it on (validating a release build),
@@ -128,7 +142,12 @@ static inline int gfx_gl_validation_enabled()
             const auto e = glGetError(); \
             if (e != GL_NO_ERROR) { \
                 Error(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
-                exit(-69); \
+                if (GLTextureTracker_OnGLError) { \
+                    GLTextureTracker_OnGLError(TOSTRING(statement), (unsigned int)e); \
+                } \
+                if (getenv("XUO_GL_NO_ABORT") == NULL) { \
+                    abort(); \
+                } \
             } \
         } \
     } while(0)

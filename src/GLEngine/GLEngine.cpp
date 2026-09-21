@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/Debug/GLTextureTracker.h"
 #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
 
 #include <cmath> // cos, sin
@@ -467,6 +468,7 @@ inline void CGLEngine::BindTexture(GLuint texture)
 {
     ScopedPerfMarker(__FUNCTION__);
     assert(texture != 0);
+    GLTextureTracker_OnBind("CGLEngine::BindTexture", texture);
     // the cache tracks what is bound to GL_TEXTURE_2D, so it may only be
     // trusted while unit 0 really holds that binding: a texture array created
     // by Render_ArtArrayPlace is bound to the 2D target on the same unit and

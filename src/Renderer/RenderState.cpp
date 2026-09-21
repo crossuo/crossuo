@@ -6,6 +6,7 @@
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "Debug/RenderDebug.h"
+#include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
 #include <glm/glm.hpp>
@@ -691,11 +692,13 @@ bool RenderState_SetTexture(
         {
 #if defined(USE_GLES) || defined(USE_GL3)
             // Bind the missing-texture checkerboard
+            GLTextureTracker_OnBind("SetTexture(default)", _defaultTex);
             GL_CHECK(glBindTexture(textureTypeToOGLType(type), _defaultTex));
 #endif
         }
         else
         {
+            GLTextureTracker_OnBind("SetTexture", texture);
             GL_CHECK(glBindTexture(textureTypeToOGLType(type), texture));
             if (type == TextureType::TextureType_Texture2D_Mipmapped)
             {
