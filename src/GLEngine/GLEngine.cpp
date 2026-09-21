@@ -467,9 +467,15 @@ inline void CGLEngine::BindTexture(GLuint texture)
 {
     ScopedPerfMarker(__FUNCTION__);
     assert(texture != 0);
-    if (OldTexture != texture)
+    // the cache tracks what is bound to GL_TEXTURE_2D, so it may only be
+    // trusted while unit 0 really holds that binding: a texture array created
+    // by Render_ArtArrayPlace is bound to the 2D target on the same unit and
+    // would otherwise make the whole frame skip its rebinds (GL_INVALID_
+    // OPERATION on the first name that happens to match)
+    if (OldTexture != texture || !m_unit0IsBoundTexture)
     {
         OldTexture = texture;
+        m_unit0IsBoundTexture = true;
         glBindTexture(GL_TEXTURE_2D, texture);
     }
 }

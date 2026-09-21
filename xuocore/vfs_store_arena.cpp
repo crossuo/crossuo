@@ -9,6 +9,7 @@
 #include "vfs_store_arena.h"
 
 #include <algorithm>
+#include <inttypes.h> // PRIu64
 #include <string.h>
 
 #include "common.h"
