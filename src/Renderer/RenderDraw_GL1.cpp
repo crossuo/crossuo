@@ -7,6 +7,7 @@
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "Debug/RenderDebug.h"
+#include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
 #include "../GameWindow.h"
 #include <external/gfx/gfx.h>
@@ -1381,6 +1382,7 @@ void Render_Shutdown()
 void Render_SwapBuffers()
 {
     ScopedPerfMarker(__FUNCTION__);
+    GLTextureTracker_OnFrame();
     GL_CALL(glDisable(GL_ALPHA_TEST));
     GL_CALL(SDL_GL_SwapWindow(g_render.window));
 }

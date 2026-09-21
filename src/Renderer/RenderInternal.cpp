@@ -7,6 +7,7 @@
 #include "../Renderer/RenderInternal.h"
 #include "../Renderer/RenderBatch.h"
 #include "Debug/RenderDebug.h"
+#include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
 #include <common/logging/logging.h>
 #include <xuocore/enumlist.h> // SDM_NO_COLOR
@@ -133,6 +134,10 @@ bool Render_Init(SDL_Window *window)
         return false;
     }
 #endif
+
+    // wrap glGenTextures/glDeleteTextures before any texture exists so every
+    // name is tracked from birth (XUO_TRACK_TEXTURES=1 to enable reporting)
+    GLTextureTracker_Install();
 
     Info(Renderer, "Graphics Successfully Initialized");
     Info(Renderer, "Renderer:");
@@ -359,6 +364,7 @@ bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb)
 
 void Render_SwapBuffers()
 {
+    GLTextureTracker_OnFrame();
     // submit any pending batched quads: the last draws of a frame (e.g. the
     // mouse cursor on the login screens) would otherwise be deferred past
     // the swap and never reach the screen
@@ -723,6 +729,7 @@ texture_handle_t Render_CreateTexture2D(
     GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     //GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
     GL_CHECK(glGenTextures(1, &tex));
+    GLTextureTracker_OnBind("CreateTexture2D", tex);
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, tex));
     //GL_CHECK(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE));
 
@@ -756,6 +763,7 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
     GL_CHECK(glGenTextures(1, &texture));
+    GLTextureTracker_OnBind("CreateFrameBuffer", texture);
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
 #if defined(USE_GL)
     glTexImage2D(
