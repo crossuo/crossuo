@@ -2206,8 +2206,13 @@ void CGameScreen::Render()
     // the assistant draws inside the game context, before the frame is shown
     AssistantWindow_DrawOverlay();
 #endif
-    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
+    // Render_SwapBuffers submits whatever is still batched (the assistant
+    // overlay, the HUD text, the mouse cursor) and uses their textures, so it
+    // MUST run before the text sprite pool is torn down - clearing it first
+    // deletes texture names the flush is about to bind (GL_INVALID_OPERATION,
+    // "non-gen name")
     Render_SwapBuffers();
+    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
     g_ScreenshotBuilder.GPUDataReady();
 #else
 #if defined(XUO_ASSISTANT)

@@ -911,6 +911,16 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         return place;
     }
 
+    // the source name must still be a live texture object: the streaming layer
+    // hot-swaps sprites (DestroySprite -> CGLTexture::Clear -> delete) while
+    // the game runs, and a recycled/zero name here makes glCopyImageSubData
+    // read an incomplete or foreign source. A non-texture name is
+    // GL_INVALID_OPERATION, so leave the sprite on its own texture path
+    if (srcTexture == RENDER_TEXTUREHANDLE_INVALID || !glIsTexture(srcTexture))
+    {
+        return place;
+    }
+
     if (width > ART_ARRAY_LAYER_SIZE || height > ART_ARRAY_LAYER_SIZE)
     {
         return place; // oversized sprite: keep the individual texture
@@ -928,18 +938,18 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
             return place;
         }
 
+        // build the array on unit 1 and leave it bound there (unit 0 is the
+        // sampler2D path); creating it on unit 0 would leave the array name
+        // bound to GL_TEXTURE_2D, and glBindTexture(GL_TEXTURE_2D, name) with
+        // an array name is GL_INVALID_OPERATION (non-gen name)
         GL_CHECK(glGenTextures(1, &s_artArrayTexture));
+        GL_CHECK(glActiveTexture(GL_TEXTURE1));
         GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, s_artArrayTexture));
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
             s_artArrayCap, 0, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, nullptr));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-
-        // keep the array persistently bound on texture unit 1 (unit 0 is used
-        // by the regular sampler2D path)
-        GL_CHECK(glActiveTexture(GL_TEXTURE1));
-        GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, s_artArrayTexture));
         GL_CHECK(glActiveTexture(GL_TEXTURE0));
     }
 
@@ -955,7 +965,9 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
 
         const int newCap = s_artArrayCap * 2;
         uint32_t newArray = 0;
+        // same rule as creation: build (and keep) the array on unit 1 only
         GL_CHECK(glGenTextures(1, &newArray));
+        GL_CHECK(glActiveTexture(GL_TEXTURE1));
         GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, newArray));
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
@@ -971,8 +983,6 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         s_artArrayTexture = newArray;
         s_artArrayCap = newCap;
 
-        GL_CHECK(glActiveTexture(GL_TEXTURE1));
-        GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, s_artArrayTexture));
         GL_CHECK(glActiveTexture(GL_TEXTURE0));
     }
 

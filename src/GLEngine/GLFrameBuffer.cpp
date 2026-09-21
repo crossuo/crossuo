@@ -206,7 +206,11 @@ void CGLFrameBuffer::Draw(int x, int y)
     if (m_Ready)
     {
 #ifndef NEW_RENDERER_ENABLED
+        // the framebuffer's own texture is about to be bound directly: drop the
+        // cached name AND the "unit 0 holds it" claim so the next cached draw
+        // rebinds instead of trusting a stale name
         g_GL.OldTexture = 0;
+        g_GL.m_unit0IsBoundTexture = false;
         g_GL.Draw(Texture, x, y);
 #else
         auto cmd =
