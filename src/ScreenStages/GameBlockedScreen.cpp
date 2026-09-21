@@ -30,8 +30,14 @@ void CGameBlockedScreen::Init()
 void CGameBlockedScreen::Render()
 {
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    // this screen renders MID-frame (inside CGameScreen::Render), so the pool
+    // clear must come first: it submits the still-pending batch (console/gump
+    // text from earlier in this frame) under the state it was recorded with,
+    // and only then is the command list reset - the other order flushed the
+    // batch after the reset (wrong state) or, worse, freed textures the batch
+    // still referenced (bind of deleted name)
+    g_FontManager.ClearTextSpritePool();
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
-    g_FontManager.ClearTextSpritePool(); // Clear previous frame's text sprites
     RenderAdd_FlushState(g_renderCmdList);
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     g_GumpManager.Draw(true);

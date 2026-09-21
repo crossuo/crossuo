@@ -10,6 +10,7 @@
 #include <xuocore/text_parser.h>
 #include "../CrossUO.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderBatch.h"
 #include "../Wisp.h" // REMOVE
 
 CFontsManager g_FontManager;
@@ -24,6 +25,18 @@ CFontsManager::~CFontsManager()
 
 void CFontsManager::ClearTextSpritePool()
 {
+    // quads still pending in the batcher may reference pool textures: submit
+    // them BEFORE the textures die. Pool clears happen at frame boundaries but
+    // also mid-frame (CGameBlockedScreen::Render runs inside the game screen's
+    // frame), and a mid-frame clear with a non-empty batch made the next flush
+    // bind deleted names (GL_INVALID_OPERATION, "non-gen name"). Same ordering
+    // rule as Render_SwapBuffers, enforced where it cannot be bypassed.
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    if (g_renderCmdList != nullptr && g_renderCmdList->immediateMode)
+    {
+        RenderBatch_Flush(&g_renderCmdList->state);
+    }
+#endif
     // Delete all sprites in the pool (including their textures)
     for (auto *sprite : m_TextSpritePool)
     {
