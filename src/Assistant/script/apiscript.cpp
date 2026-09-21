@@ -4030,7 +4030,7 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                         : skill->Value);
                     if (type == SF_LOCK)
                     {
-                        command->ResultInt = skill->Status;
+                        command->ResultInt = skill->LockStatus;
                     }
                 }
             }

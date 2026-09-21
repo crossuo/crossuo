@@ -227,10 +227,12 @@ bool load_config()
                 params.record_scenario =
                     g_cli["streaming-record-scenario"].get().string;
         }
-    return params;
-};
+        return params;
+        };
 
-// a config whose data path carries a streamed (vfs-managed) install -
+        const bool config_exists = LoadGlobalConfig();
+
+    // a config whose data path carries a streamed (vfs-managed) install -
     // its cache/state marks it - keeps streaming into that directory: the
     // install may be partial (holes stream on demand), so plain mapping
     // would leave it broken

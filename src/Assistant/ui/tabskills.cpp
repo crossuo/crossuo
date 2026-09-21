@@ -141,7 +141,7 @@ void TabSkills_Draw()
                     nameCell,
                     sizeof(nameCell),
                     "%s  %s",
-                    skill_lock_style(skill->Status),
+                    skill_lock_style(skill->LockStatus),
                     skill->Name.c_str());
                 if (ImGui::Selectable(nameCell, selected == i, ImGuiSelectableFlags_SpanAllColumns))
                 {
@@ -149,7 +149,8 @@ void TabSkills_Draw()
                 }
                 if (ImGui::IsItemHovered())
                 {
-                    ImGui::SetTooltip("%s", s_LockStyles[skill->Status > 2 ? 3 : skill->Status].Tip);
+                    ImGui::SetTooltip(
+                    "%s", s_LockStyles[skill->LockStatus > 2 ? 3 : skill->LockStatus].Tip);
                 }
                 ImGui::TableNextColumn();
                 ImGui::Text("%.1f", skill->BaseValue);
