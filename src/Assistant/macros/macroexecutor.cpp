@@ -27,7 +27,10 @@
 #include "../core/worldutil.h"
 #include "Walker/PathFinder.h" // g_PathFinder (the client walker)
 #include "CrossUO.h" // ::g_Game (the client send bridge)
+#include "Managers/MapManager.h" // ::g_MapManager (the tile lookup at a position)
 #include "Network/Packets.h" // ::CPacketHelpRequest (the client's own 0x9B builder)
+#include <xuocore/mulstruct.h> // MAP_BLOCK/STATICS_BLOCK (the tile lookup)
+#include <xuocore/uodata.h> // CIndexMap (the map/static block index)
 #include "Target.h"         // ::g_Target (the shared target cursor: hooks, senders, CancelCursor)
 #include "TextEngine/GameConsole.h" // ::SendConsoleText (the Say command)
 #include "Gumps/GumpAbility.h"      // ::CGumpAbility::OnAbilityUse (combat abilities)
@@ -84,6 +87,47 @@ uint32_t serial_for_convert(const CMacroWithObject *macro, MACRO_CONVERT_TYPE co
     }
 }
 
+// The MT_WAIT_FOR_TARGET_TILE replay graphic re-resolve (the original GetTile
+// "any" lookup, first entry - the same map/static access the Target.cpp
+// CheckHook makes with GetTileAt): statics at the cell first, then the land
+// tile; 0 when nothing resolves (the caller keeps the recorded graphic).
+uint16_t tile_graphic_at(int x, int y)
+{
+    if (g_World == nullptr)
+    {
+        return 0;
+    }
+
+    uint16_t graphic = 0;
+    CIndexMap *index = ::g_MapManager.GetIndex(::g_CurrentMap, x >> 3, y >> 3);
+    if (index != nullptr)
+    {
+        STATICS_BLOCK *sb = (STATICS_BLOCK *)index->StaticAddress;
+        if (sb != nullptr)
+        {
+            const int count = (int)index->StaticCount;
+            const int tileX = x & 7;
+            const int tileY = y & 7;
+            for (int c = 0; c < count; c++, sb++)
+            {
+                if ((sb->Color != 0u) && sb->Color != 0xFFFF && tileX == sb->X && tileY == sb->Y)
+                {
+                    graphic = sb->Color;
+                    break;
+                }
+            }
+        }
+
+        if (graphic == 0u && index->MapAddress != 0)
+        {
+            MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
+            graphic = (uint16_t)(pmb->Cells[((y & 7) * 8) + (x & 7)].TileID & 0x3FFF);
+        }
+    }
+
+    return graphic;
+}
+
 } // namespace
 
 void CMacroExecutor::SetLoopOptions(bool looped, float loopSeconds)
@@ -100,6 +144,12 @@ void CMacroExecutor::Play(const astr_t &name, bool doNotAutoIterrupt)
     {
         return;
     }
+    // never play into the open recording: the playback actions would
+    // re-record into it (the original ran capture and playback apart)
+    if (m_Recording)
+    {
+        return;
+    }
     for (int i = (int)macros.size() - 1; i >= 0; i--)
     {
         if (macros[i].Name == name)
@@ -113,6 +163,11 @@ void CMacroExecutor::Play(const astr_t &name, bool doNotAutoIterrupt)
 void CMacroExecutor::PlayIndex(int macroIndex, bool doNotAutoIterrupt)
 {
     // TabMacros::Play(CMacroListItem *)
+    // never play into the open recording (see Play)
+    if (m_Recording)
+    {
+        return;
+    }
     const vector<CMacroEntry> &macros = g_AssistantConfig.Macros();
     if (macroIndex < 0 || macroIndex >= (int)macros.size())
     {
@@ -344,7 +399,16 @@ void CMacroExecutor::RecordWalk(int direction)
         return;
     }
 
-    if ((direction & 7) != (g_Player->Direction & 7))
+    // the pending steps: g_Player->Direction only updates when a step
+    // completes, so a straight step queued behind a turn would record as a
+    // turn (the CPathFinder::Walk facing rule)
+    uint8_t facing = g_Player->Direction;
+    if (!g_Player->m_Steps.empty())
+    {
+        facing = g_Player->m_Steps.back().Direction;
+    }
+
+    if ((direction & 7) != (facing & 7))
     {
         direction = -(direction | 0x80);
     }
@@ -801,8 +865,15 @@ void CMacroExecutor::ProcessMacro()
                         x = g_Player->GetX() + withTarget->RelativeX;
                         y = g_Player->GetY() + withTarget->RelativeY;
                         z = g_Player->GetZ() + withTarget->RelativeZ;
-                        // the graphic resolution falls back to the empty-tile-list path when the
-                        // tile list has no entry (see Target.cpp CheckHook)
+
+                        // the recorded graphic is stale on replay: re-resolve
+                        // it at the position (see tile_graphic_at); nothing
+                        // found keeps the recorded graphic
+                        const uint16_t resolved = tile_graphic_at(x, y);
+                        if (resolved != 0u)
+                        {
+                            graphic = resolved;
+                        }
                     }
                     g_Target.SendHookTargetTile(graphic, x, y, z);
                     ::g_Target.CancelCursor();

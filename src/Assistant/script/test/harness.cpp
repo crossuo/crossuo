@@ -615,17 +615,15 @@ int main()
 
     // --- O. INI config round trips (Options / Hotkeys / Map schemas) ----
     {
-        // the config paths resolve against the process CWD
-        // (CAssistantConfig::GetRootPath); the tests run inside a temp dir so
-        // they stay side-effect free
+        // the config root is pinned explicitly to a temp dir
+        // (CAssistantConfig::SetRootPathOverride) so the tests stay
+        // side-effect free (the default root is the client appdata)
         char dirTemplate[] = "/tmp/xuoassist_config_XXXXXX";
         const char *mkd = mkdtemp(dirTemplate);
         CHECK(mkd != nullptr);
         if (mkd != nullptr)
         {
-            char prevDir[2048] = { 0 };
-            CHECK(getcwd(prevDir, sizeof(prevDir)) != nullptr);
-            CHECK(chdir(mkd) == 0);
+            CAssistantConfig::SetRootPathOverride(mkd);
 
             // --- Options.ini: every main/display/hotkeys/scripts field ---
             {
@@ -791,7 +789,7 @@ int main()
                 CHECK(memcmp(&saved, &loaded, sizeof(CMapSettings)) == 0);
             }
 
-            CHECK(chdir(prevDir) == 0);
+            CAssistantConfig::SetRootPathOverride(fs_path());
             printf("config: INI round trips ok (Options, Hotkeys, Map)\n");
         }
     }

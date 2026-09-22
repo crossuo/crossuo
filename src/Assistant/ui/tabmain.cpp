@@ -42,7 +42,7 @@ const XA_OPTION_ROW s_Options[] = {
     { "No death screen", CLBI_NO_DEATH_SCREEN },
     { "Open doors", CLBI_OPEN_DOORS },
     { "Tracker", CLBI_TRACKER },
-    { "Stay on top", CLBI_STAY_ON_TOP },
+    // "Stay on top" (CLBI_STAY_ON_TOP) hidden: a confirmed no-op (SDL2 has no always-on-top API); the enum bit stays - it is persisted in saved INIs.
     { "Fast turn", CLBI_FAST_ROTATION },
     { "Recurse containers search", CLBI_RECURSE_CONTAINERS_SEARCH },
     { "Autostart", CLBI_AUTOSTART },
@@ -94,7 +94,12 @@ void option_changed(int index, bool state)
                 g_AssistantConfig.SetOption(index, false);
                 state = false;
             }
-            ::g_PacketManager.SetSeason(g_Season.Index, g_Season.Music);
+            // SetSeason derefs g_Player (the death check) - same guard as the
+            // NO_GRAY_SCREEN case below
+            if (g_Player != nullptr)
+            {
+                ::g_PacketManager.SetSeason(g_Season.Index, g_Season.Music);
+            }
             break;
         }
         case CLBI_TRACKER:
@@ -306,6 +311,15 @@ void draw_main_page()
         {
             if (ImGui::Selectable(profiles[i].c_str(), i == currentProfile))
             {
+                // persist pending edits under the OLD name before the switch:
+                // LoadProfile overwrites the config RAM, and the shutdown
+                // flush would then write the NEW profile's values over the
+                // discarded edits. There is no public dirty query, so this
+                // saves unconditionally (a no-op rewrite when nothing changed)
+                // and clears the flag so the shutdown flush cannot re-save the
+                // old edits onto the new profile.
+                g_AssistantConfig.SaveProfile();
+                AssistantUI_ClearOptionsDirty();
                 // load + remember
                 g_AssistantConfig.SetCurrentProfile(profiles[i]);
                 g_AssistantConfig.LoadProfile();

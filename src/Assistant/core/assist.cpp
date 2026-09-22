@@ -200,6 +200,12 @@ void CAssistant::ClientPrint(const astr_t &text, const uint16_t &color) const
 {
     g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
+
+    // the journal mirror (was the 0xAE system print looping back through the
+    // journal handler): the scripts/UI journal sees the assistant's own lines
+    CJournalMessage message(0xFFFFFFFF, color, text);
+    message.Flags = JMT_SYSTEM;
+    g_AssistantEvents->OnJournalMessage(message);
 }
 
 void CAssistant::ClientCharPrint(const uint32_t &serial, const astr_t &text, const uint16_t &color) const
@@ -1081,6 +1087,16 @@ void CAssistant::HandleTargetAnimalAndVendorControlName(uint8_t *buf) const
     }
 }
 
+// The FindFriend/FindEnemy registration tail (the original OnCommandFind*
+// bodies, commandmanager.cpp): every successful find refreshes the
+// "friend"/"enemy" object sentinels so later TextToSerial/SeekObject
+// lookups on those names resolve.
+static void register_found_object(const char *name, uint32_t &lastFound, CGameObject *obj)
+{
+    lastFound = obj->Serial;
+    g_AssistantConfig.AddObject(name, SerialToText(obj->Serial));
+}
+
 CGameObject *CAssistant::FindFriend(const uint16_t &flags, const astr_t &distanceText) const
 {
     int distance = g_AssistantConfig.DistanceFromText(distanceText);
@@ -1133,6 +1149,7 @@ CGameObject *CAssistant::FindFriend(const uint16_t &flags, const astr_t &distanc
 
         if ((flags & FTF_FAST) != 0)
         {
+            register_found_object("friend", g_LastFriendFound, item);
             return item;
         }
         if ((flags & FTF_NEAREST) != 0)
@@ -1158,6 +1175,11 @@ CGameObject *CAssistant::FindFriend(const uint16_t &flags, const astr_t &distanc
     if (((flags & FTF_NEXT) != 0) && (g_LastFriendFound != 0u) && found == nullptr)
     {
         found = FindFriend(flags & (~FTF_NEXT), distanceText);
+    }
+
+    if (found != nullptr)
+    {
+        register_found_object("friend", g_LastFriendFound, found);
     }
 
     return found;
@@ -1215,6 +1237,7 @@ CGameObject *CAssistant::FindEnemy(const uint16_t &flags, const astr_t &distance
 
         if ((flags & FTF_FAST) != 0)
         {
+            register_found_object("enemy", g_LastEnemyFound, item);
             return item;
         }
         if ((flags & FTF_NEAREST) != 0)
@@ -1240,6 +1263,11 @@ CGameObject *CAssistant::FindEnemy(const uint16_t &flags, const astr_t &distance
     if (((flags & FTF_NEXT) != 0) && (g_LastEnemyFound != 0u) && found == nullptr)
     {
         found = FindEnemy(flags & (~FTF_NEXT), distanceText);
+    }
+
+    if (found != nullptr)
+    {
+        register_found_object("enemy", g_LastEnemyFound, found);
     }
 
     return found;
@@ -1342,11 +1370,14 @@ void CAssistant::OpenDoor() const
 
 void CAssistant::WalkAutoOpenDoor(const int &direction) const
 {
-    // probe the tile the walk steps onto (two tiles out when continuing
-    // straight ahead) and open a door found there. The config gates the whole
-    // step.
-    if (g_Player == nullptr || !g_AssistantConfig.AutoOpenDoors() || g_Player->IsDead() ||
-        g_Player->IsGM() || ((direction % 2) != 0))
+    // Probe the tile the queued walk step heads to and open a door found
+    // there. Runs after the new step is already pushed onto m_Steps, so the
+    // probe origin is that step's tile: one ahead of the confirmed position
+    // while a step is in flight (the confirmed position lags one tile behind
+    // during continuous walking, which made the old two-tile probe land on
+    // the tile CanWalk had just verified passable and never find the door).
+    // The option/dead/GM gates live in AutoOpenDoor.
+    if (g_Player == nullptr || ((direction % 2) != 0))
     {
         return;
     }
@@ -1391,22 +1422,33 @@ void CAssistant::WalkAutoOpenDoor(const int &direction) const
 
     int x = g_Player->GetX();
     int y = g_Player->GetY();
+    int z = g_Player->GetZ();
 
-    getNewXY(direction, x, y);
-
-    if ((direction & 7) == (g_Player->Direction & 7))
+    if (!g_Player->m_Steps.empty())
     {
-        getNewXY(direction, x, y);
+        const CWalkData &step = g_Player->m_Steps.back();
+        x = step.X;
+        y = step.Y;
+        z = step.Z;
     }
 
-    AutoOpenDoor(x, y, g_Player->GetZ());
+    getNewXY(direction, x, y);
+    AutoOpenDoor(x, y, z);
 }
 
 void CAssistant::AutoOpenDoor(const int &x, const int &y, const int &z) const
 {
     // Find a door item at the target tile within +-10 z, then open it (double
     // click or the OpenDoor packet, per the config option). The door opens
-    // immediately (no deferred timer).
+    // immediately (no deferred timer). The option/dead/GM gates live here so
+    // both callers (the walk-send hook and the blocked-step probe in
+    // CPathFinder::Walk) share one gate.
+    if (g_Player == nullptr || !g_AssistantConfig.AutoOpenDoors() || g_Player->IsDead() ||
+        g_Player->IsGM())
+    {
+        return;
+    }
+
     uint32_t doorToOpen = 0;
 
     if (g_World != nullptr)
@@ -1506,6 +1548,13 @@ void AssistantOnEnterWorld(const uint32_t serial)
     g_GumpReceived = false;
     g_PromptReceived = false;
     g_Target.ClearHooks();
+    // disarm a from-target request armed before the logout (the
+    // CancelPendingFromTargets state clears): the stale g_TargetHandler +
+    // g_Target.FromAssist/ClientWantTarget would swallow the first real
+    // cursor of the new session
+    g_TargetHandler = nullptr;
+    g_Target.FromAssist = false;
+    g_Target.ClientWantTarget = false;
     // discard any open recording and stop playback - macro state never
     // leaks across login sessions
     g_MacroExecutor.Reset();

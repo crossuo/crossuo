@@ -142,8 +142,11 @@ void CScriptHandle::Join(uint32_t timeoutMs)
         return;
     }
     const uint32_t start = g_Ticks;
-    // bounded wait: poll the flag (std::thread has no timed join)
-    while (m_State != SS_ZOMBIE)
+    // bounded wait: poll the state (std::thread has no timed join). The
+    // worker ends in SS_FINISHED/SS_FAILED (RunEngine); SS_ZOMBIE is only
+    // set by the timeout path below - all three mean the thread is done
+    // (or refusing to die), so join it instead of burning the timeout.
+    while (m_State != SS_FINISHED && m_State != SS_FAILED && m_State != SS_ZOMBIE)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
         if ((uint32_t)(g_Ticks - start) > timeoutMs)

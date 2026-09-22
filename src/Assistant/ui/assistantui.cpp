@@ -268,6 +268,9 @@ void AssistantUI_Init()
     // client cwd == binary dir) once, on the main thread
     ScriptFile_SetSandboxRoot(fs_path_str(g_AssistantConfig.GetRootPath()));
     s_Initialized = true;
+    // the profile list for the combo (was AssistForm::Init's scan); the
+    // serial-mapped profile is selected + loaded at login (LoadProfileBySerial)
+    g_AssistantConfig.ScanProfiles();
     // compile the display title data from the just-loaded profile (was
     // AssistForm::LoadCurrentProfile -> g_TabDisplay->RecompileData)
     // and paint the initial caption

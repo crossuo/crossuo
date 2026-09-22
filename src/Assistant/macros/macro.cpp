@@ -684,8 +684,9 @@ void CMacroWithTargetTile::Save(CIniFile &ini, const astr_t &section)
     ini.SetInt(section, "x", X);
     ini.SetInt(section, "y", Y);
     ini.SetInt(section, "z", Z);
-    // relative_x/relative_y/relative_z are read (see CMacro::Load) but never
-    // written; kept as-is.
+    ini.SetInt(section, "relative_x", RelativeX);
+    ini.SetInt(section, "relative_y", RelativeY);
+    ini.SetInt(section, "relative_z", RelativeZ);
 }
 
 } // namespace xuoassist

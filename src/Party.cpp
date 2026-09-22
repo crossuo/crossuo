@@ -251,12 +251,12 @@ void CParty::ParsePacketData(CDataReader &reader)
 
 #if defined(XUO_ASSISTANT)
             // the party chat record keeps the speaker serial and the message
-            // text (the speaker name resolves from the member list)
-            if (xuoassist::EnabledFeaturePartyAgent())
-            {
-                xuoassist::CJournalMessage message(serial, 0x0044, str_from(name));
-                xuoassist::g_AssistantEvents->OnJournalMessage(message);
-            }
+            // text (the speaker name resolves from the member list);
+            // xuoassist journaled every party message unconditionally
+            // (partymanager.cpp) - the feature gate covers only the
+            // invitation agent below
+            xuoassist::CJournalMessage message(serial, 0x0044, str_from(name));
+            xuoassist::g_AssistantEvents->OnJournalMessage(message);
 #endif
 
             for (int i = 0; i < 10; i++)

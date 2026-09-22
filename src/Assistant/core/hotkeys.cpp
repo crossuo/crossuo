@@ -20,6 +20,7 @@
 #include "actions.h"
 #include "assistantevents.h"
 #include "../macros/macroexecutor.h"
+#include "../script/scripthandle.h" // ScriptManager_Get/ScriptEditor_Text (the Scripts-tab Run path)
 #include "world.h"
 
 namespace xuoassist {
@@ -491,9 +492,35 @@ bool CHotkeys::MatchAndUse(uint32_t key, uint8_t modifiers)
                     g_MacroExecutor.Stop();
                     break;
                 case HT_SCRIPT:
-                    // No script engine attached (external code stays inert);
-                    // the binding is still recognized + consumed.
+                {
+                    // the Scripts-tab Start path: the binding names a function
+                    // of the shared editor buffer (the hotkeys form picks the
+                    // name from the same function list)
+                    const vector<astr_t> functions = ScriptEditor_FunctionList();
+                    const astr_t &name = entry.ScriptOrMacroName;
+                    bool known = false;
+                    for (const astr_t &function : functions)
+                    {
+                        if (function == name)
+                        {
+                            known = true;
+                            break;
+                        }
+                    }
+                    if (!known)
+                    {
+                        g_AssistantEvents->OnClientPrint("Script not found: " + name);
+                        break;
+                    }
+                    // "Run one script": skip when the function is already
+                    // running (the original canRun check)
+                    if (entry.RunningMode && ScriptManager_Running(name))
+                    {
+                        break;
+                    }
+                    ScriptManager_Get()->Run(name, ScriptEditor_Text());
                     break;
+                }
                 case HT_EXTERNAL_CODE:
                     Actions_RunExternalCode(entry.ExternalCode);
                     break;

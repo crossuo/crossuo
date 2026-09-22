@@ -11,6 +11,24 @@ struct JSContext;
 
 namespace xuoassist {
 
+// The SC_SAY SubTag (apiscript.cpp): the Say prefix kinds index the prefix
+// table; SAY_ERROR is the marshaled ScriptError print (engine.cpp) and is
+// never a Say prefix.
+enum XA_SAY_KIND
+{
+    SAY_NORMAL = 0,
+    SAY_PRINT,
+    SAY_CHARPRINT,
+    SAY_YELL,
+    SAY_WHISPER,
+    SAY_EMOTE,
+    SAY_BROADCAST,
+    SAY_GUILD,
+    SAY_ALLIANCE,
+    SAY_PARTY,
+    SAY_ERROR
+};
+
 class CScriptEngine;
 
 // Installs the global objects + sentinel globals on a fresh context

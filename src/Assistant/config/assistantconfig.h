@@ -244,10 +244,12 @@ public:
 
     CAssistantConfig();
 
-    // --- paths (<binary dir>/Config/<profile>/) -----------------
-    // The client resolves writable data relative to the working directory at
-    // startup (src/Main.cpp:414 g_ExePath = fs_path_current()) - "next to the exe"
+    // --- paths (assistant config lives in the client appdata, beside
+    // crossuo.cfg: <appdata>/<CLIENT_APPNAME>/Config/<profile>/) ---------
     static fs_path GetRootPath();
+    // test hook: pin the root to a temp dir (the script harness); an empty
+    // path restores the default appdata root
+    static void SetRootPathOverride(const fs_path &path);
     static fs_path GetGlobalConfigPath();
     static fs_path GetConfigPath();
     fs_path GetProfilePath() const;

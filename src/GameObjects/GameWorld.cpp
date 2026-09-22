@@ -21,6 +21,10 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../Gumps/GumpContainer.h"
 #include "../Walker/Walker.h"
+#if defined(XUO_ASSISTANT)
+#include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (corpse auto-open)
+#include <core/global.h> // xuoassist::g_LastCorpseObject (the last-corpse tracking)
+#endif
 
 CGameWorld *g_World = nullptr;
 
@@ -858,6 +862,22 @@ void CGameWorld::UpdateGameObject(
                 return;
             }
             obj = item;
+
+#if defined(XUO_ASSISTANT)
+            // xuoassist CGameWorld::UpdateGameObject: a corpse scrolling into
+            // view counts as the last corpse and auto-opens like a fresh 0xAF
+            // death does (the PacketManager 0xAF handler seam)
+            if (graphic == 0x2006)
+            {
+                xuoassist::g_LastCorpseObject = serial;
+
+                if (xuoassist::g_AssistantConfig.CorpsesAutoopen())
+                {
+                    g_CorpseManager.AddAutoOpen(
+                        serial, (int)(g_Ticks + xuoassist::g_AssistantConfig.CorpseKeepDelay()));
+                }
+            }
+#endif
         }
     }
     else
@@ -1073,6 +1093,14 @@ void CGameWorld::UpdatePlayer(
 
         //UpdatePlayerCoordinates(x, y, z, serverID);
 
+#if defined(XUO_ASSISTANT)
+        // xuoassist CGameObject::OnChangeFlags: the stealth step counter
+        // resets when the player's hidden flag flips
+        if ((g_Player->GetFlags() & 0x80) != (flags & 0x80))
+        {
+            g_Player->StealthSteps = 0;
+        }
+#endif
         g_Player->SetFlags(flags);
 
         g_Walker.DenyWalk(-1, -1, -1, -1);

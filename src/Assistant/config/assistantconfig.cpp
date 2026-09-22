@@ -22,6 +22,7 @@
 #endif
 #include "../core/world.h"
 #include <xuocore/mappedfile.h> // ::CDataReader / ::CDataWriter
+#include <revision.h> // CLIENT_APPNAME (the appdata base dir, beside crossuo.cfg)
 
 namespace xuoassist {
 
@@ -70,9 +71,25 @@ CAssistantConfig::CAssistantConfig()
 
 // --- paths -----------------------------------------------------------------
 
+// the test harness pins the root to a temp dir; empty = the default appdata
+static fs_path g_RootPathOverride;
+
 fs_path CAssistantConfig::GetRootPath()
 {
-    return fs_path_current(); // client cwd == binary dir (src/Main.cpp:414)
+    // the assistant config lives in the client's appdata base - the same
+    // directory crossuo.cfg is written to (fs_path_appdata() + CLIENT_APPNAME,
+    // cf. FilePath() in xuocore/uodata.cpp), so a .desktop/PATH launch cannot
+    // misplace Config/
+    if (!fs_path_empty(g_RootPathOverride))
+    {
+        return g_RootPathOverride;
+    }
+    return fs_path_join(fs_path_appdata(), CLIENT_APPNAME);
+}
+
+void CAssistantConfig::SetRootPathOverride(const fs_path &path)
+{
+    g_RootPathOverride = path;
 }
 
 fs_path CAssistantConfig::GetGlobalConfigPath()
@@ -148,6 +165,17 @@ void CAssistantConfig::SetCurrentProfile(const astr_t &name)
     const astr_t nameLower = to_lower(name);
     if (to_lower(ProfileName) == nameLower)
     {
+        // Canonicalize to the m_Profiles spelling, so the Config/<name>
+        // paths and the exact-match profile combo stay in sync even when
+        // the caller passes a different case (e.g. "default" vs "Default").
+        for (const astr_t &profile : m_Profiles)
+        {
+            if (to_lower(profile) == nameLower)
+            {
+                ProfileName = profile;
+                break;
+            }
+        }
         return;
     }
     for (const astr_t &profile : m_Profiles)
@@ -163,14 +191,28 @@ void CAssistantConfig::SetCurrentProfile(const astr_t &name)
 
 bool CAssistantConfig::LoadProfileBySerial(uint32_t serial)
 {
+    // Was AssistForm::LoadCurrentProfile-by-serial: on login the profile
+    // mapped to the player serial is selected AND loaded (the embedded port
+    // only set the name, so nothing was ever restored from disk on login).
+    // A serial without a mapping binds to the current profile and persists
+    // the map, so the character restores it on its next login.
     LoadProfileMap();
     std::map<uint32_t, astr_t>::iterator it = m_ProfileMap.find(serial);
     if (it != m_ProfileMap.end())
     {
         SetCurrentProfile(it->second);
-        return true;
+        Info(Assistant, "login serial 0x%08X -> profile '%s'\n", serial, it->second.c_str());
     }
-    return false;
+    else
+    {
+        m_ProfileMap[serial] = ProfileName;
+        SaveProfileMap();
+        Info(Assistant,
+             "login serial 0x%08X unmapped, bound to profile '%s'\n",
+             serial,
+             ProfileName.c_str());
+    }
+    return LoadProfile();
 }
 
 void CAssistantConfig::SaveProfileMap()
@@ -218,8 +260,11 @@ bool CAssistantConfig::LoadProfile()
     // Was AssistForm::LoadCurrentProfile.
     if (ProfileName.empty())
     {
+        Warning(Assistant, "profile load skipped: no profile selected\n");
         return false;
     }
+
+    Info(Assistant, "loading profile '%s'\n", ProfileName.c_str());
 
     EnsureDirectories();
     LoadMainOptions();
@@ -230,6 +275,10 @@ bool CAssistantConfig::LoadProfile()
     LoadFriends();
     LoadEnemies();
     LoadMacros();
+
+    // was AssistForm::LoadCurrentProfile -> RecompileData: the display title
+    // data may have changed with the profile
+    g_DisplayManager.RecompileData(DisplayTitleData());
 
     // The original form applied the fast-rotation / stamina-check host values right
     // after the load; keep them in the same place.
@@ -262,6 +311,7 @@ bool CAssistantConfig::SaveProfile()
     // did not save the profile map; keep both behaviors.
     if (ProfileName.empty())
     {
+        Warning(Assistant, "profile save skipped: no profile selected\n");
         return false;
     }
 
@@ -274,6 +324,7 @@ bool CAssistantConfig::SaveProfile()
     SaveFriends();
     SaveEnemies();
 
+    Info(Assistant, "profile '%s' saved\n", ProfileName.c_str());
     g_Assistant.ClientPrint("Configuration saved.");
     return true;
 }
@@ -335,6 +386,10 @@ void CAssistantConfig::LoadMainOptions()
     CIniFile ini;
     if (!ini.Load(fs_path_join(GetProfilePath(), "Options.ini")))
     {
+        Warning(
+            Assistant,
+            "Options.ini missing in profile '%s', keeping defaults\n",
+            ProfileName.c_str());
         return;
     }
 
@@ -460,6 +515,7 @@ void CAssistantConfig::SaveMainOptions()
         }
     }
     ini.SetInt("main", "flags", (int)flags);
+    Info(Assistant, "Options.ini saved: flags=0x%X (profile '%s')\n", flags, ProfileName.c_str());
     ini.SetInt("main", "messageslevel", m_MessagesLevel);
     ini.SetInt("main", "searchdistance", m_SearchItemsDistance);
     ini.SetInt("main", "usedistance", m_UseItemsDistance);
@@ -1904,10 +1960,8 @@ bool CAssistantConfig::LoadMacros()
 //   uint32 version (=0), int32 setsCount, uint8 undressBefore,
 //   per set: string name, uint8 layerCount, per layer { uint8 layer, uint32 serial },
 //   uint8 doubleClickForEquipment.
-// Dress.coa stores: int8 length (= utf8 length + 1), the utf8 bytes, one
-// 0x00 byte; the reader accepts a full int32 length (tolerating writer
-// asymmetry) so old and new files load identically (names that fail the
-// bounds check come back empty and the set is skipped).
+// Per-set names share one exact layout between SaveDress and LoadDress:
+// int32 utf8 byte length, the utf8 bytes, one 0x00 terminator byte.
 
 static const int XA_DRESS_MAX_LAYERS = 25;
 
@@ -1922,9 +1976,10 @@ bool CAssistantConfig::SaveDress()
 
     for (const CDressSetEntry &entry : m_DressSets)
     {
-        // CFileObject::WriteString byte layout (see above).
+        // String name layout shared with LoadDress (see the format
+        // comment above): int32 utf8 byte length + utf8 bytes + 0x00.
         const astr_t utf8 = entry.Name;
-        writer.WriteUInt8((uint8_t)(utf8.size() + 1));
+        writer.WriteInt32LE((int32_t)utf8.size());
         if (!utf8.empty())
         {
             writer.WriteDataLE((const uint8_t *)utf8.data(), utf8.size());
@@ -1982,22 +2037,30 @@ bool CAssistantConfig::LoadDress()
 
     for (int i = 0; i < count && !reader.IsEOF(); i++)
     {
-        // CFileObject::ReadString (see the format comment): int32 length +
-        // bounds check, empty result tolerated.
+        // String name layout shared with SaveDress: int32 utf8 byte
+        // length + utf8 bytes + one 0x00 terminator.
         astr_t name;
         if (!reader.IsEOF())
         {
             const int len = reader.ReadInt32LE();
             const size_t remaining = size - (reader.Ptr - reader.Start);
-            if (len > 0 && (size_t)len <= remaining)
+            if (len < 0 || (size_t)len > remaining)
+            {
+                break; // corrupt length: the stream is unusable, stop
+            }
+
+            if (len > 0)
             {
                 name = astr_t((const char *)reader.Ptr, len);
+                reader.Move(len);
             }
-        }
 
-        if (name.empty())
-        {
-            continue;
+            // expect and consume the 0x00 terminator (a failed read at
+            // EOF returns 0 without advancing, hence the IsEOF guard)
+            if (reader.IsEOF() || reader.ReadUInt8() != 0u)
+            {
+                break; // missing terminator: the stream is unusable, stop
+            }
         }
 
         CDressSetEntry entry;
@@ -2012,6 +2075,11 @@ bool CAssistantConfig::LoadDress()
             {
                 entry.m_Items[layer] = serial;
             }
+        }
+
+        if (entry.Name.empty())
+        {
+            continue; // tolerated; the whole set body was consumed
         }
 
         m_DressSets.push_back(entry);

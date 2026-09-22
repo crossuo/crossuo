@@ -30,6 +30,23 @@ namespace xuoassist {
 
 namespace {
 
+// The ScriptError surface, marshaled: g_Assistant.ScriptError lands in
+// ClientPrint -> CreateUnicodeTextMessage - main-thread client state - so the
+// lines ride SC_SAY (SAY_ERROR, no flood throttle) through the queue instead
+// of running here on the script worker. The log line stays local: logging is
+// cross-thread safe (and survives a dropped/shut-down queue).
+void script_error(const astr_t &title, const astr_t &text)
+{
+    Warning(Assistant, "script error: %s %s\n", title.c_str(), text.c_str());
+    auto *command = new XA_SCRIPT_COMMAND();
+    command->Tag = SC_SAY;
+    command->SubTag = SAY_ERROR;
+    command->TextB = title;
+    command->TextC = text;
+    ScriptQueue_Exec(command);
+    delete command;
+}
+
 // JS interrupt handler: runs on the script thread inside every JS loop. Two
 // jobs: flip to "terminate" when the manager asked, and periodically pause
 // the script (a tight JS loop never reaches an API call, so the QuickJS
@@ -117,7 +134,7 @@ bool CScriptEngine::Evaluate(const astr_t &text)
         astr_t line;
         astr_t message;
         Script_FormatException(m_Context, line, message); // apiscript.cpp
-        g_Assistant.ScriptError("Evaluate script error!", "Line: " + line + "\n" + message);
+        script_error("Evaluate script error!", "Line: " + line + "\n" + message);
     }
     JS_FreeValue(m_Context, result);
     return ok;
@@ -139,7 +156,7 @@ bool CScriptEngine::CallFunction(const astr_t &functionName, const vector<astr_t
         JS_FreeValue(m_Context, func);
         // Original behavior: calling a missing function produced a TypeError from
         // the engine call; here the manager reports the same condition.
-        g_Assistant.ScriptError(
+        script_error(
             "Running script error!", "Line: 0\nfunction '" + functionName + "' not found");
         return false;
     }
@@ -164,7 +181,7 @@ bool CScriptEngine::CallFunction(const astr_t &functionName, const vector<astr_t
         astr_t line;
         astr_t message;
         Script_FormatException(m_Context, line, message);
-        g_Assistant.ScriptError("Running script error!", "Line: " + line + "\n" + message);
+        script_error("Running script error!", "Line: " + line + "\n" + message);
     }
     JS_FreeValue(m_Context, result);
     return ok;

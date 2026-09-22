@@ -1677,6 +1677,14 @@ PACKET_HANDLER(UpdateObject)
 
         if (g_Player != nullptr)
         {
+#if defined(XUO_ASSISTANT)
+            // xuoassist CGameObject::OnChangeFlags: the stealth step counter
+            // resets when the player's hidden flag flips
+            if ((g_Player->GetFlags() & 0x80) != (flags & 0x80))
+            {
+                g_Player->StealthSteps = 0;
+            }
+#endif
             bool updateStatusbar = (g_Player->GetFlags() != flags);
 
             oldDead = g_Player->IsDead();
@@ -3599,6 +3607,16 @@ PACKET_HANDLER(ConfirmWalk)
     g_Walker.ConfirmWalk(sequence);
 
     g_World->MoveToTop(g_Player);
+
+#if defined(XUO_ASSISTANT)
+    // xuoassist counted and printed every confirmed step made while hidden
+    // with the stealth-step counter option on (mainscript.cpp AssistMove)
+    if (g_Player->Hidden() && xuoassist::g_AssistantConfig.StealthStepCounter())
+    {
+        g_Player->StealthSteps++;
+        xuoassist::g_Assistant.ClientPrint("Stealth steps: " + str_from(g_Player->StealthSteps));
+    }
+#endif
 }
 
 PACKET_HANDLER(OpenUrl)
@@ -6745,6 +6763,12 @@ PACKET_HANDLER(BuyList)
     }
 
     uint32_t vendorSerial = container->Container;
+
+#if defined(XUO_ASSISTANT)
+    // the shop agent matches its pending actions by vendor serial; 0x74 is
+    // parsed before the 0x24 open-container event fires OnOpenContainer
+    xuoassist::g_ShopAgent.SetVendorSerial(vendorSerial);
+#endif
 
     CGameCharacter *vendor = g_World->FindWorldCharacter(vendorSerial);
 

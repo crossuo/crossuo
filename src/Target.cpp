@@ -387,13 +387,19 @@ void CTarget::SendTarget()
     if (Type != 2)
     {
 #if defined(XUO_ASSISTANT)
-        // with a from-target hook armed, the raw cursor packet feeds the armed
-        // handler first, then the cursor state resets and any
-        // assistant-requested cursor re-dispatches through RestoreTarget;
-        // the reply always still goes out. Without an armed
-        // hook the reply records - the SetSendData body runs inlined in the
-        // else branch, covering every SendTargetObject/SendTargetTile/
-        // SendCancelTarget/SendLastTarget producer at this single choke point.
+        // without an armed hook the reply records - the SetSendData body runs
+        // inlined in the else branch, covering every
+        // SendTargetObject/SendTargetTile/SendCancelTarget/SendLastTarget
+        // producer at this single choke point. With a from-target hook armed,
+        // the raw cursor packet feeds the armed handler first, then the
+        // cursor state resets and any assistant-requested cursor
+        // re-dispatches through RestoreTarget; the proxy DROPPED such replies
+        // (PACKET_HANDLER(TargetS): dispatch -> Reset -> RestoreTarget ->
+        // return false; SetSendData returned CheckHook() && !FromAssist, a
+        // PlayWaiting consume also dropped) - the handler, hook and macro
+        // answers go out on their own send paths.
+        const bool fromAssist = FromAssist; // RestoreTarget() below clears it
+        bool consumed = false;
         if (xuoassist::g_TargetHandler != nullptr)
         {
             (xuoassist::g_Assistant.*(xuoassist::g_TargetHandler))(m_Data);
@@ -409,6 +415,7 @@ void CTarget::SendTarget()
             MultiGraphic = 0;
             m_HookTargeting = false;
             RestoreTarget();
+            consumed = true;
         }
         else
         {
@@ -458,8 +465,13 @@ void CTarget::SendTarget()
                 }
             }
         }
-#endif
+        if (!consumed && !fromAssist)
+        {
+            g_Game.Send(m_Data, sizeof(m_Data));
+        }
+#else
         g_Game.Send(m_Data, sizeof(m_Data));
+#endif
     }
 
     memset(m_Data, 0, sizeof(m_Data));

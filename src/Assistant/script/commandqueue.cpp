@@ -60,6 +60,10 @@ void complete_node(QUEUE_NODE *node)
             owner.ResultText = node->Command.ResultText;
             owner.ResultList = node->Command.ResultList;
             owner.PointerA = node->Command.PointerA;
+            // the position getters report Y through IntA (the request slot);
+            // no other executor mutates IntA, so copying it back carries the
+            // result and leaves the request value intact for every other tag
+            owner.IntA = node->Command.IntA;
         }
         else if (node->Owner != nullptr)
         {

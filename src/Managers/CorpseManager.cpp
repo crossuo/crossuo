@@ -7,6 +7,9 @@
 #include "../GameObjects/GameItem.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../GameObjects/GameWorld.h"
+#if defined(XUO_ASSISTANT)
+#include <core/assist.h> // xuoassist::g_Assistant (DoubleClick wraps the recording suspension)
+#endif
 
 CCorpseManager g_CorpseManager;
 
@@ -118,7 +121,13 @@ bool CCorpseManager::CheckCorpses(int useDistance, int useDelay, uint32_t lastUs
 
         if (GetDistance(g_Player, item) <= useDistance)
         {
+#if defined(XUO_ASSISTANT)
+            // the assistant's own DoubleClick wraps the recording suspension:
+            // auto-opened corpses do not record into user macros
+            xuoassist::g_Assistant.DoubleClick(item->Serial);
+#else
             g_Game.DoubleClick(item->Serial);
+#endif
             m_AutoOpenList.erase(i);
             return true;
         }

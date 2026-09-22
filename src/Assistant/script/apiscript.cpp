@@ -79,20 +79,6 @@ namespace xuoassist {
 
 namespace {
 
-enum XA_SAY_KIND
-{
-    SAY_NORMAL = 0,
-    SAY_PRINT,
-    SAY_CHARPRINT,
-    SAY_YELL,
-    SAY_WHISPER,
-    SAY_EMOTE,
-    SAY_BROADCAST,
-    SAY_GUILD,
-    SAY_ALLIANCE,
-    SAY_PARTY
-};
-
 enum XA_DRESS_KIND
 {
     DK_SET_DRESS_BAG = 0,
@@ -283,7 +269,9 @@ void pause_gate(JSContext *ctx)
     {
         return;
     }
-    while (engine->Paused && !engine->Terminated)
+    // the live pause flag (the same one the JS interrupt handler polls);
+    // the public Paused member is never written - SetPaused wires the flag
+    while (engine->PauseFlag() && !engine->Terminated)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -685,7 +673,7 @@ JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     const int step = 10;
     while (delay > 0 && engine != nullptr && !engine->Terminated)
     {
-        if (engine->Paused)
+        if (engine->PauseFlag())
         {
             pause_gate(ctx);
             continue;
@@ -968,7 +956,8 @@ JSValue jsn_usetype(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     command->ListB = arg_list(ctx, argv, argc, 1);  // color (use) | flags (lists)
     command->TextA = arg_text(ctx, argv, argc, 2, ""); // container | distance
     command->TextB = arg_text(ctx, argv, argc, 3, ""); // flags (use) | extra
-    command->BoolA = arg_bool(ctx, argv, argc, 4, true); // recurse
+    command->BoolA =
+        arg_bool(ctx, argv, argc, 4, g_AssistantConfig.RecurseContainersSearch()); // recurse
     ScriptQueue_Exec(command);
     const bool found = result_bool(command);
     pause_gate(ctx);
@@ -988,7 +977,8 @@ JSValue jsn_find(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     command->TextB = arg_text(ctx, argv, argc, 3, "");        // flags
     command->TextC = arg_text(ctx, argv, argc, 4, "");        // distance
     command->TextD = arg_text(ctx, argv, argc, 5, "");        // notoriety
-    command->BoolA = arg_bool(ctx, argv, argc, 6, true);      // recurse
+    command->BoolA =
+        arg_bool(ctx, argv, argc, 6, g_AssistantConfig.RecurseContainersSearch()); // recurse
     ScriptQueue_Exec(command);
     vector<astr_t> list = result_list(command);
     pause_gate(ctx);
@@ -1015,7 +1005,7 @@ JSValue jsn_count(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     command->ListB = arg_list(ctx, argv, argc, 1);
     command->TextA = arg_text(ctx, argv, argc, 2, "self");
     command->TextC = arg_text(ctx, argv, argc, 3, "finddistance");
-    command->BoolA = arg_bool(ctx, argv, argc, 4, true);
+    command->BoolA = arg_bool(ctx, argv, argc, 4, g_AssistantConfig.RecurseContainersSearch());
     ScriptQueue_Exec(command);
     const int value = result_int(command);
     pause_gate(ctx);
@@ -3885,6 +3875,15 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_SAY:
         {
+            if (command->SubTag == SAY_ERROR)
+            {
+                // the marshaled ScriptError (engine.cpp): title + text in the
+                // error color. Not flood-throttled (an error must not drop)
+                // and not world-gated (the journal survives a torn world).
+                g_Assistant.ClientPrint(command->TextB, 0x0021);
+                g_Assistant.ClientPrint(command->TextC, 0x0021);
+                break;
+            }
             if (g_World == nullptr)
             {
                 break;
@@ -4015,9 +4014,10 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
             int index = command->IntA;
             if (!command->TextA.empty())
             {
-                // no name->index lookup exists, so the named form leaves the
-                // result unset (the numeric form is the only value source)
-                index = -1;
+                // the named form resolves through the client skill table
+                // (the same lookup the targeted UseSkill form uses); a miss
+                // leaves the result unset like the out-of-range numeric form
+                index = g_SkillsManager.Find(command->TextA);
             }
             const int type = CTextCommandManager::GetSkillsFlags(command->TextB);
             if (index >= 0 && index < (int)g_SkillsManager.Count)
@@ -4693,15 +4693,38 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
                     break;
                 }
                 case DK_EQUIP: // Equip(serial) = unequip the layer + dress step
-                case DK_EQUIP_T:
                 {
                     // the direct MoveEquip path of OnCommandEquip
-                    const uint32_t serial = CAssistant::TextToSerial(
-                        command->SubTag == DK_EQUIP ? command->TextA : command->TextA);
+                    const uint32_t serial = CAssistant::TextToSerial(command->TextA);
                     CGameObject *object = world_object(serial);
-                    if (object != nullptr && g_Player != nullptr)
+                    // the Layer read needs the CGameItem downcast, so check
+                    // the item side (NPC marks characters) before the cast
+                    if (object != nullptr && !object->NPC && g_Player != nullptr)
                     {
                         g_Assistant.MoveEquip(serial, ((CGameItem *)object)->Layer, g_PlayerSerial);
+                    }
+                    break;
+                }
+                case DK_EQUIP_T: // EquipT(graphic[, color]): the OnCommandEquipT
+                {                // backpack resolve, then the serial path above
+                    vector<astr_t> list;
+                    CGameObject *item = g_Assistant.FindType(
+                        vector<astr_t>{ command->TextA },
+                        vector<astr_t>{ command->TextB.empty() ? astr_t("0xFFFF") : command->TextB },
+                        "backpack",
+                        "",
+                        CTextCommandManager::GetFindFlags("fast"),
+                        "",
+                        true,
+                        list);
+                    if (item != nullptr && g_Player != nullptr)
+                    {
+                        g_Assistant.MoveEquip(
+                            item->Serial, ((CGameItem *)item)->Layer, g_PlayerSerial);
+                    }
+                    else
+                    {
+                        g_Assistant.ClientPrint("Item '" + command->TextA + "' is not found.");
                     }
                     break;
                 }

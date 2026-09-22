@@ -26,6 +26,13 @@ void CAssistantEvents::OnClientPrint(const astr_t &text, uint16_t color)
 {
     ::g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
+
+    // the journal mirror (was the 0xAE system print looping back through the
+    // journal handler): the UI sink only caches the entry, it never calls
+    // back into OnClientPrint - no recursion
+    CJournalMessage message(0xFFFFFFFF, color, text);
+    message.Flags = JMT_SYSTEM;
+    g_AssistantEvents->OnJournalMessage(message);
 }
 
 void CAssistantEvents::OnMapData(uint16_t x, uint16_t y)

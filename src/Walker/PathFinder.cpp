@@ -627,6 +627,16 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
 
         if (!CanWalk(newDir, newX, newY, newZ))
         {
+#if defined(XUO_ASSISTANT)
+            // a rejected step never reaches the walk-send hook below: probe
+            // the blocked tile (newX/newY hold it for a straight direction)
+            // so a closed door in the way still auto-opens, and keeps being
+            // re-probed while the walk key is held
+            if (((direction & 7) % 2) == 0)
+            {
+                xuoassist::g_Assistant.AutoOpenDoor(newX, newY, z);
+            }
+#endif
             return false;
         }
 
@@ -705,15 +715,20 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     g_Player->m_Steps.push_back(
         CWalkData(x, y, z, direction, g_Player->Graphic, g_Player->GetFlags()));
 
-#if defined(XUO_ASSISTANT)
-    // the assistant's walk-send hooks: the auto-open-door probe and the macro walk
-    // recording ride every outgoing walk packet, before the send
-    xuoassist::g_Assistant.WalkAutoOpenDoor(direction);
-    xuoassist::g_MacroExecutor.RecordWalk(direction);
-#endif
-
     CPacketWalkRequest(direction, g_Walker.WalkSequence, g_Player->m_FastWalkStack.GetValue())
         .Send();
+
+#if defined(XUO_ASSISTANT)
+    // the assistant's walk-send hooks: the macro walk recording and the
+    // auto-open-door probe ride every outgoing walk packet. The probe runs
+    // AFTER the send: the server opens the door on the tile FACING the
+    // player's current server-side position (ServUO BaseDoor
+    // EventSink_OpenDoorMacroUsed), so the walk request for this step must be
+    // on the wire first for the probe tile (step target + direction) to be
+    // the faced tile.
+    xuoassist::g_MacroExecutor.RecordWalk(direction);
+    xuoassist::g_Assistant.WalkAutoOpenDoor(direction);
+#endif
 
     if (g_Walker.WalkSequence == 0xFF)
     {
