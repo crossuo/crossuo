@@ -18,6 +18,14 @@ namespace {
 
 constexpr int MAX_BATCH_QUADS = 4096;
 
+// A/B kill switch for deferred batching (XUO_BATCH_OFF=1): every quad/tile
+// submits immediately, so any visual difference is batch-related.
+static bool BatchDisabled()
+{
+    static const bool off = getenv("XUO_BATCH_OFF") != nullptr;
+    return off;
+}
+
 // Bit-exact float compare matching RenderState.cpp's f32eq: the render-state
 // view-params cache compares this way, so the batch has to agree with it on
 // what counts as "unchanged" or the two would disagree about flushing.
@@ -149,6 +157,11 @@ void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd)
     s_key = key;
     s_pending = true;
     s_kind = BatchKind::Quads;
+
+    if (BatchDisabled())
+    {
+        RenderBatch_Flush(state);
+    }
 
     const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
@@ -291,6 +304,11 @@ void RenderBatch_AddLandTile(RenderState *state, const DrawLandTileCmd &cmd)
         }
     }
     s_quadCount++;
+
+    if (BatchDisabled())
+    {
+        RenderBatch_Flush(state);
+    }
 }
 
 void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const void *cmd)

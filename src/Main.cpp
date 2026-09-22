@@ -32,6 +32,8 @@
 #include "Managers/ConfigManager.h"
 #include "Managers/ConnectionManager.h"
 #include "Managers/PacketManager.h"
+#include "Network/Packets.h" // CPacketHelpRequest (XUO_AUTO_HELP)
+#include "ScreenshotBuilder.h" // g_ScreenshotBuilder (XUO_AUTO_HELP capture)
 
 extern bool g_var_DisableRenderGame;
 bool g_var_DisableRenderGame = false;
@@ -511,6 +513,52 @@ static void FrameStatsTick()
 #endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES)
 }
 
+// test harness (XUO_AUTO_HELP): fires the client's help request once, 15s
+// after the world was entered, then captures the framebuffer ~6s later, so the
+// server-sent Help gump (network gump path: server-authored scissors, scrolling
+// content) can be validated automatically and compared between render paths.
+// Combine with XUO_DUMP_FRAME_DELAY for a command-stream dump and
+// XUO_GUMP_LEGACY to A/B against the framebuffer path.
+static void AutoHelpTick()
+{
+    static const bool enabled = getenv("XUO_AUTO_HELP") != nullptr;
+    if (!enabled)
+    {
+        return;
+    }
+
+    static bool sent = false;
+    static uint32_t requestAt = 0;
+    static uint32_t captureAt = 0;
+
+    if (!sent)
+    {
+        if (g_GameState < GS_GAME)
+        {
+            return;
+        }
+
+        if (requestAt == 0)
+        {
+            requestAt = g_Ticks + 15000;
+            Info(Client, "XUO_AUTO_HELP: requesting the help gump in 15s");
+        }
+        else if (g_Ticks >= requestAt)
+        {
+            sent = true;
+            Info(Client, "XUO_AUTO_HELP: sending the help request");
+            CPacketHelpRequest().Send();
+            captureAt = g_Ticks + 6000;
+        }
+    }
+    else if (captureAt != 0 && g_Ticks >= captureAt)
+    {
+        captureAt = 0;
+        Info(Client, "XUO_AUTO_HELP: capturing the help gump");
+        g_ScreenshotBuilder.SaveScreen();
+    }
+}
+
 static int Run()
 {
     bool quit = false;
@@ -552,6 +600,7 @@ static int Run()
         g_ConnectionManager.Recv();
         g_PacketManager.SendMegaClilocRequests();
         g_Game.Process(true);
+        AutoHelpTick();
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
         LauncherWindow_Render();
