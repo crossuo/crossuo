@@ -117,6 +117,9 @@ bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd 
 bool RenderAdd_SetCircleTrans(RenderCmdList *cmdList, const SetCircleTransCmd &cmd);
 texture_handle_t Render_ArtArrayTexture();
 RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t width, uint32_t height);
+// releases a layer whose sprite was destroyed (CGLTexture::Clear); the layer
+// is reused by the next placement so revisited areas don't grow the array
+void Render_ArtArrayRelease(int layer);
 int Render_GetCurrentDrawMode();
 bool RenderAdd_ClearRT(RenderCmdList *cmdList, const ClearRTCmd &cmd);
 

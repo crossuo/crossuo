@@ -243,6 +243,14 @@ void CGLTexture::Clear()
     // texture handle is gone the sprite must be re-placed (the array layer
     // still holds the previous pixels, and the stale layer index would keep
     // a recycled name sampling it)
+#if defined(USE_GL3) || defined(USE_GLES)
+    if (ArrayLayer >= 0)
+    {
+        // hand the layer back so the next placement reuses it instead of
+        // growing the array (release before resetting the cache)
+        Render_ArtArrayRelease(ArrayLayer);
+    }
+#endif
     ArrayLayer = -1;
     ArtU = 1.0f;
     ArtV = 1.0f;
@@ -257,5 +265,21 @@ void CGLTexture::Clear()
         glDeleteTextures(1, &Texture);
         Texture = 0;
     }
+#endif
+}
+
+int CGLTexture::ArtArrayPlace()
+{
+#if defined(USE_GL3) || defined(USE_GLES)
+    if (ArrayLayer < 0)
+    {
+        const auto place = Render_ArtArrayPlace(Texture, Width, Height);
+        ArrayLayer = place.layer;
+        ArtU = place.u;
+        ArtV = place.v;
+    }
+    return ArrayLayer;
+#else
+    return -1;
 #endif
 }

@@ -1338,11 +1338,14 @@ void CGump::GenerateFrame()
     // CurrentDrawGump), so publish this gump for the duration of the draw.
     // The renderer reads the same state through the origin provider, so every
     // scissor pushed from inside here is shifted without the caller knowing.
+    // (the provider lives in the new GL3/GLES renderer only)
+#if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
     static const bool providerInstalled = []() {
         Render_SetScissorOriginProvider(GumpScissorOriginProvider);
         return true;
     }();
     (void)providerInstalled;
+#endif
 
     CGump *prevDrawGump = s_currentDrawGump;
     s_currentDrawGump = this;

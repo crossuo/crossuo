@@ -898,6 +898,32 @@ static int s_artArrayCap = 0;
 static int s_artArrayUsed = 0;
 static bool s_artArrayDisabled = false; // set when the GL limits are hit
 
+// layers of destroyed sprites: the texture GC (3s unused -> DestroySprite ->
+// CGLTexture::Clear) releases them here so re-visited areas re-place into dead
+// layers instead of growing forever; only the owning sprite can reference a
+// layer, and it releases before any other sprite can be handed it, so a
+// reused layer can never be sampled through a stale reference
+static int s_artArrayFree[ART_ARRAY_MAX_LAYERS];
+static int s_artArrayFreeCount = 0;
+
+static const bool g_artArrayLog = getenv("XUO_ART_ARRAY_LOG") != nullptr;
+
+void Render_ArtArrayRelease(int layer)
+{
+    if (layer < 0 || layer >= s_artArrayUsed)
+    {
+        return;
+    }
+    if (s_artArrayFreeCount < (int)countof(s_artArrayFree))
+    {
+        s_artArrayFree[s_artArrayFreeCount++] = layer;
+        if (g_artArrayLog)
+        {
+            fprintf(stderr, "[artarray] release layer=%d free=%d used=%d\n", layer, s_artArrayFreeCount, s_artArrayUsed);
+        }
+    }
+}
+
 texture_handle_t Render_ArtArrayTexture()
 {
     return s_artArrayTexture;
@@ -961,13 +987,21 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glActiveTexture(GL_TEXTURE0));
     }
 
-    if (s_artArrayUsed >= s_artArrayCap)
+    if (s_artArrayFreeCount == 0 && s_artArrayUsed >= s_artArrayCap)
     {
         // grow the array (up to the GL limit) by recreating and copying
         if (s_artArrayCap >= ART_ARRAY_MAX_LAYERS)
         {
-            s_artArrayDisabled = true;
-            Warning(Renderer, "art texture array is full, falling back to per-sprite textures");
+            // array full: this sprite keeps its individual texture (and the
+            // batcher keys it separately); already-placed sprites stay merged
+            static bool warnedFull = false;
+            if (!warnedFull)
+            {
+                warnedFull = true;
+                Warning(
+                    Renderer,
+                    "art texture array is full, new sprites fall back to individual textures");
+            }
             return place;
         }
 
@@ -994,7 +1028,33 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glActiveTexture(GL_TEXTURE0));
     }
 
-    const int layer = s_artArrayUsed++;
+    // prefer a layer freed by a destroyed sprite: steady state stays at the
+    // working-set size instead of growing with the session
+    int layer;
+    bool reused;
+    if (s_artArrayFreeCount > 0)
+    {
+        layer = s_artArrayFree[--s_artArrayFreeCount];
+        reused = true;
+    }
+    else
+    {
+        layer = s_artArrayUsed++;
+        reused = false;
+    }
+    if (g_artArrayLog)
+    {
+        fprintf(
+            stderr,
+            "[artarray] place layer=%d (%s) tex=%u %ux%u free=%d used=%d\n",
+            layer,
+            reused ? "reused" : "new",
+            srcTexture,
+            width,
+            height,
+            s_artArrayFreeCount,
+            s_artArrayUsed);
+    }
     GL_CHECK(glCopyImageSubData(
         srcTexture, GL_TEXTURE_2D, 0, 0, 0, 0,
         s_artArrayTexture, GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, width, height, 1));

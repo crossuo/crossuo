@@ -148,17 +148,22 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff; // BUG with light - g_LightBuffer.Draw
 
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, cmd.layer },
+        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY, cmd.layer },
+        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY, cmd.layer },
+        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY, cmd.layer },
     };
 
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    if (cmd.layer < 0)
+    {
+        RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
+    }
+    // layer >= 0: cmd.texture is the art texture array, already bound to
+    // texture unit 1 for the sampler2DArray path
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
     const size_t vtxOffset = Render_UploadVertices(data, 4 * sizeof(GenericVertex));

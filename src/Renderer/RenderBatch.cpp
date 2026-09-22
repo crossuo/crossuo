@@ -86,7 +86,7 @@ RenderBatchKey MakeKey(RenderState *state, texture_handle_t texture)
     return key;
 }
 
-void AppendStripQuad(
+static void AppendStripQuad(
     float mtX,
     float mtY,
     float x,
@@ -97,7 +97,8 @@ void AppendStripQuad(
     float v,
     uint32_t col,
     const float *verts4,
-    const float *uv4)
+    const float *uv4,
+    float layer)
 {
     if (s_quadCount >= MAX_BATCH_QUADS)
     {
@@ -116,7 +117,15 @@ void AppendStripQuad(
         out[i].normal[0] = 0.0f;
         out[i].normal[1] = 0.0f;
         out[i].normal[2] = 1.0f;
-        out[i].layer = -1.0f;
+        out[i].layer = layer;
+    }
+    if (layer < s_layerMin)
+    {
+        s_layerMin = layer;
+    }
+    if (layer > s_layerMax)
+    {
+        s_layerMax = layer;
     }
     s_quadCount++;
 }
@@ -179,7 +188,8 @@ void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd)
         cmd.v,
         col,
         cmd.mirrored ? vMirrored : v,
-        uvs);
+        uvs,
+        cmd.layer);
 }
 
 void RenderBatch_AddUntexturedQuad(RenderState *state, const DrawUntexturedQuadCmd &cmd)
@@ -218,7 +228,8 @@ void RenderBatch_AddUntexturedQuad(RenderState *state, const DrawUntexturedQuadC
         0.0f,
         col,
         v,
-        zeroUVs);
+        zeroUVs,
+        -1.0f);
 }
 
 void RenderBatch_AddLandTile(RenderState *state, const DrawLandTileCmd &cmd)

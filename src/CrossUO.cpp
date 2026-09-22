@@ -547,9 +547,18 @@ void ValidateSpriteIsDeleted(T (&arr)[SIZE])
 
 void DestroySprite(CIndexObject *obj)
 {
+    static const bool artArrayLog = getenv("XUO_ART_ARRAY_LOG") != nullptr;
     auto spr = (CSprite *)obj->UserData;
     if (spr != nullptr)
     {
+        if (spr->Texture && artArrayLog)
+        {
+            fprintf(
+                stderr,
+                "[artarray] destroy tex=%u layer=%d\n",
+                spr->Texture->Texture,
+                spr->Texture->ArrayLayer);
+        }
         spr->Clear();
         delete spr;
         obj->UserData = nullptr;
@@ -1416,6 +1425,9 @@ void CGame::ClearUnusedTextures()
                      MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
                      100 };
 
+    static const bool artArrayLog = getenv("XUO_ART_ARRAY_LOG") != nullptr;
+    static const char *listNames[] = { "land", "static", "gump", "texture", "light" };
+
     for (int i = 0; i < countof(lists); i++)
     {
         int count = 0;
@@ -1426,6 +1438,14 @@ void CGame::ClearUnusedTextures()
             CIndexObject *obj = *it;
             if (obj->LastAccessTime < g_Ticks)
             {
+                if (artArrayLog)
+                {
+                    fprintf(
+                        stderr,
+                        "[gc] evict list=%s age=%ums\n",
+                        listNames[i],
+                        (unsigned)(SDL_GetTicks() - obj->LastAccessTime));
+                }
                 DestroySprite(obj);
                 it = list->erase(it);
                 if (++count >= maxCount)
@@ -4420,14 +4440,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             g_ColorManager.SendColorsToShader(color);
         }
 #if defined(USE_GL3) || defined(USE_GLES)
-        if (spr->Texture->ArrayLayer < 0)
-        {
-            const auto place =
-                Render_ArtArrayPlace(spr->Texture->Texture, spr->Texture->Width, spr->Texture->Height);
-            spr->Texture->ArrayLayer = place.layer;
-            spr->Texture->ArtU = place.u;
-            spr->Texture->ArtV = place.v;
-        }
+        const int arrayLayer = spr->Texture->ArtArrayPlace();
 #endif
         DrawLandTileCmd cmd{
             // the texture the tile actually samples: the shared array once the
@@ -4435,7 +4448,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             // per-sprite texture otherwise. Both the batcher key and the
             // unbatched fallback bind this, so it must be the real one
 #if defined(USE_GL3) || defined(USE_GLES)
-            (spr->Texture->ArrayLayer >= 0) ? Render_ArtArrayTexture() : spr->Texture->Texture,
+            (arrayLayer >= 0) ? Render_ArtArrayTexture() : spr->Texture->Texture,
 #else
             spr->Texture->Texture,
 #endif
@@ -4459,7 +4472,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             drawMode
 #if defined(USE_GL3) || defined(USE_GLES)
             ,
-            spr->Texture->ArrayLayer,
+            arrayLayer,
             spr->Texture->ArtU,
             spr->Texture->ArtV
 #endif
@@ -4498,7 +4511,31 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 #endif
         }
         assert(spr->Texture != nullptr);
+#if defined(USE_GL3) || defined(USE_GLES)
+        // flat land draws as a regular quad: array-place it like the sloped
+        // DrawLandTexture tiles so same-state tiles merge (placement falls
+        // back to the individual texture when not possible)
+        if (spr->Texture->Texture != RENDER_TEXTUREHANDLE_INVALID)
+        {
+            auto cmd = DrawQuadCmd{
+                spr->Texture->Texture,
+                x - 22,
+                y - 22,
+                spr->Texture->Width,
+                spr->Texture->Height
+            };
+            if (spr->Texture->ArtArrayPlace() >= 0)
+            {
+                cmd.texture = Render_ArtArrayTexture();
+                cmd.u = spr->Texture->ArtU;
+                cmd.v = spr->Texture->ArtV;
+                cmd.layer = float(spr->Texture->ArrayLayer);
+            }
+            RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        }
+#else
         spr->Texture->Draw(x - 22, y - 22);
+#endif
     }
 }
 
@@ -4529,7 +4566,31 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
         assert(spr->Texture != nullptr);
+#if defined(USE_GL3) || defined(USE_GLES)
+        // world statics: array-place so same-state runs merge across the
+        // isometric interleave (per-vertex layer keeps the painter order);
+        // falls back to the individual texture when placement is not possible
+        if (spr->Texture->Texture != RENDER_TEXTUREHANDLE_INVALID)
+        {
+            auto cmd = DrawQuadCmd{
+                spr->Texture->Texture,
+                x - g_Index.m_Static[id].Width,
+                y - g_Index.m_Static[id].Height,
+                spr->Texture->Width,
+                spr->Texture->Height
+            };
+            if (spr->Texture->ArtArrayPlace() >= 0)
+            {
+                cmd.texture = Render_ArtArrayTexture();
+                cmd.u = spr->Texture->ArtU;
+                cmd.v = spr->Texture->ArtV;
+                cmd.layer = float(spr->Texture->ArrayLayer);
+            }
+            RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        }
+#else
         spr->Texture->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
+#endif
     }
 }
 

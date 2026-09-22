@@ -32,6 +32,11 @@ struct CGLTexture
     virtual void DrawTransparent(int x, int y, bool stencil = true);
     virtual void Clear();
 
+    // world statics / flat land: lazily copy this sprite into the shared art
+    // texture array so same-state draws merge; the layer is cached on the
+    // texture (-1 = not placed, the individual texture stays the sampler)
+    int ArtArrayPlace();
+
     CGLTexture() = default;
     virtual ~CGLTexture();
 };
