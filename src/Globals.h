@@ -42,8 +42,12 @@ struct DebugContext
 };
 extern DebugContext g_DebugContext;
 
-// test harness, see Globals.cpp (XUO_TEST_LOGIN=1)
+// test harness, see Globals.cpp (XUO_AUTO_LOGIN=<server>,<character>)
 bool TestAutoLogin();
+// 1-based list positions, defaulting to 2 (XUO_AUTO_LOGIN=2,2 replicates the
+// original fixed harness behavior: second server, second character)
+int TestAutoLoginServer();
+int TestAutoLoginCharacter();
 
 enum
 {

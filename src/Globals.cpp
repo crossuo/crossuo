@@ -9,6 +9,7 @@
 #include "GameObjects/GameCharacter.h"
 
 #include <cstdlib>
+#include <cstring>
 
 #if USE_PING
 #include "Utility/PingThread.h"
@@ -21,14 +22,51 @@ astr_t g_PingString; // Debug Info
 
 DebugContext g_DebugContext;
 
-// test harness: when XUO_TEST_LOGIN=1 the login flow auto-advances without
-// user input (connect with the saved credentials -> pick the second server
-// -> pick the second character) so the in-game rendering can be benchmarked
-// and validated automatically
+// test harness: when XUO_AUTO_LOGIN is set the login flow auto-advances
+// without user input (connect with the saved credentials -> pick the
+// <server>'th server -> pick the <character>'th character) so the in-game
+// rendering can be benchmarked and validated automatically. Both are 1-based
+// list positions, defaulting to 2 (XUO_AUTO_LOGIN=2,2 replicates the original
+// fixed harness behavior: second server, second character).
 bool TestAutoLogin()
 {
-    static const bool autoLogin = getenv("XUO_TEST_LOGIN") != nullptr;
+    static const bool autoLogin = getenv("XUO_AUTO_LOGIN") != nullptr;
     return autoLogin;
+}
+
+// parses the <which>'th (0-based) comma-separated position out of
+// XUO_AUTO_LOGIN="server,character"; missing/invalid parts fall back to 2
+static int AutoLoginPosition(int which)
+{
+    static const char *value = getenv("XUO_AUTO_LOGIN");
+    if (value == nullptr || value[0] == '\0')
+    {
+        return 2;
+    }
+
+    const char *part = value;
+    for (int i = 0; i < which; i++)
+    {
+        part = strchr(part, ',');
+        if (part == nullptr)
+        {
+            return 2;
+        }
+        part++;
+    }
+
+    const int position = atoi(part);
+    return (position >= 1) ? position : 2;
+}
+
+int TestAutoLoginServer()
+{
+    return AutoLoginPosition(0);
+}
+
+int TestAutoLoginCharacter()
+{
+    return AutoLoginPosition(1);
 }
 
 bool g_AltPressed = false;

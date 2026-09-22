@@ -43,13 +43,15 @@ void CCharacterListScreen::PrepareContent()
 {
     CBaseScreen::PrepareContent();
 
-    // test harness (XUO_TEST_LOGIN): the screen is entered before the character
+    // test harness (XUO_AUTO_LOGIN): the screen is entered before the character
     // list packet arrives, so wait for the data here instead of in Init()
     if (TestAutoLogin() && !m_AutoLoginFired && SmoothScreenAction == 0 &&
         g_CharacterList.Count > 0)
     {
-        // pick the second available character (falls back to the first when
-        // only one slot is in use) and enter the world
+        // pick the character at the configured list position (default: the
+        // second available, falling back to the last available slot when the
+        // list is shorter)
+        const int wanted = TestAutoLoginCharacter();
         int pick = -1;
         int validSeen = 0;
         for (int i = 0; i < g_CharacterList.Count; i++)
@@ -58,7 +60,7 @@ void CCharacterListScreen::PrepareContent()
             {
                 validSeen++;
                 pick = i;
-                if (validSeen == 2)
+                if (validSeen == wanted)
                 {
                     break;
                 }

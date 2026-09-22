@@ -33,8 +33,19 @@ void CServerScreen::Init()
 
     if (TestAutoLogin())
     {
-        // pick the second server in the list (Demise > Test Center)
-        SelectionServerTempValue = 1;
+        // pick the configured server list position (default 2: Demise >
+        // Test Center), clamped to the list the login packet delivered
+        int index = TestAutoLoginServer() - 1;
+        const int last = g_ServerList.ServersCount() - 1;
+        if (index > last)
+        {
+            index = last;
+        }
+        if (index < 0)
+        {
+            index = 0;
+        }
+        SelectionServerTempValue = index;
         CreateSmoothAction(ID_SMOOTH_SS_SELECT_SERVER);
     }
 }

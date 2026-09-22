@@ -558,7 +558,7 @@ static int Run()
 #endif
 
         // 3] Calculate proper delay based on settings and frame time.
-        // the test harness (XUO_TEST_LOGIN) runs uncapped: the window is not
+        // the test harness (XUO_AUTO_LOGIN) runs uncapped: the window is not
         // focused during automated runs, which would apply the inactive-window
         // delay and mask the real frame cost being benchmarked
         if (!TestAutoLogin())
