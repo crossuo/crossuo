@@ -58,9 +58,11 @@ bool Icons_Init();
 // must still be 1, so the atlas must NOT be unregistered before that). The
 // assistant window calls this right after ui_shutdown returns.
 void Icons_Shutdown();
-// The assets/xuoassist lookup shared by the icon atlas and the other
-// png-loading UI modules (the About logo).
-fs_path IconAssetPath(const char *file);
+// Loads an assistant asset by file name (the embedded copy first, the
+// assets/xuoassist disk lookup as fallback); the caller frees with
+// stbi_image_free. Shared by the icon atlas and the other png-loading UI
+// modules (the About logo).
+unsigned char *IconAssetLoad(const char *file, int *w, int *h, int *comp);
 
 // --- IconButton ------------------------------------------------------------
 // Flat icon button: hover rgb(192,192,192), pressed rgb(160,160,160) with the

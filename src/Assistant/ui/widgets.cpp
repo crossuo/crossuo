@@ -21,9 +21,7 @@
 #include <external/gfx/imgui/imgui.h>
 #include <external/gfx/imgui/imgui_internal.h> // RegisterUserTexture
 
-#include <common/fs.h>
 #include <common/logging/logging.h>
-#include <xuocore/uodata.h> // ExeFilePath
 
 #include "GameObjects/GameWorld.h" // client g_World (status bar census)
 
@@ -91,18 +89,6 @@ static ImTextureData *s_Atlas = nullptr;
 static ImVec2 s_UV0[XA_ICON_COUNT];
 static ImVec2 s_UV1[XA_ICON_COUNT];
 
-fs_path IconAssetPath(const char *file)
-{
-    // dev builds run from the binary dir (assets copied there by CMake);
-    // installs keep them next to the exe
-    const fs_path relative = fs_path_join("assets", "xuoassist");
-    if (fs_path_exists(fs_path_join(relative, file)))
-    {
-        return fs_path_join(relative, file);
-    }
-    return fs_path_join(ExeFilePath("assets/xuoassist"), file);
-}
-
 bool Icons_Init()
 {
     if (s_Atlas != nullptr)
@@ -136,11 +122,10 @@ bool Icons_Init()
         const int cy = (icon / cols) * cell;
 
         int w = 0, h = 0, comp = 0;
-        const fs_path path = IconAssetPath(s_IconFiles[icon].File);
-        stbi_uc *data = stbi_load(fs_path_ascii(path), &w, &h, &comp, 4);
+        stbi_uc *data = IconAssetLoad(s_IconFiles[icon].File, &w, &h, &comp);
         if (data == nullptr)
         {
-            Warning(Assistant, "icon asset not found: %s", fs_path_ascii(path));
+            Warning(Assistant, "icon asset not found: %s", s_IconFiles[icon].File);
         }
         else
         {

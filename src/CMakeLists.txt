@@ -344,14 +344,9 @@ if(XUO_ASSISTANT_ENABLED)
   target_compile_definitions(crossuo PRIVATE XUO_ASSISTANT=1)
   add_dependencies(crossuo ${XUOASSIST_PROJECT})
   target_link_libraries(crossuo PUBLIC ${XUOASSIST_PROJECT})
-  # the icon-atlas assets + the About logo are copied next to the executable,
-  # where IconAssetPath looks them up (see src/Assistant/CMakeLists.txt)
-  add_custom_command(
-    TARGET crossuo POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/Assistant/assets"
-            "$<TARGET_FILE_DIR:crossuo>/assets/xuoassist"
-    COMMENT "Copying xuoassist icon assets")
+  # the icon-atlas assets + the About logo are embedded in the binary via
+  # create_resource (see src/Assistant/CMakeLists.txt); nothing is copied
+  # next to the executable - the client ships as a single file
   target_include_directories(crossuo PUBLIC ${XUOASSIST_INCLUDE})
   # Link guard: the assistant is part of this shared lib,
   # and a scriptgump declaration that never got a definition used to slip

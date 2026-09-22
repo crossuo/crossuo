@@ -171,11 +171,23 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
   target_link_libraries(xuoassist-script-test PRIVATE ${COMMON_PROJECT} m pthread)
 endif()
 
-# # icon-atlas assets. The copy lives on the crossuo POST_BUILD
-# (not on this static lib: a $<TARGET_FILE_DIR:crossuo> here would create a
-# dependency cycle xuoassist -> crossuo -> xuoassist). Destination is the
-# runtime lookup path - <exe dir>/assets/xuoassist, i.e. <build>/src/assets/
-# xuoassist since the single-executable change; a copy into CMAKE_BINARY_DIR
-# landed a level away from the ExeFilePath lookup ("about logo not found:
-# .../src/assets/xuoassist/tray.png"). Covers every png of the dir: the ~14
-# atlas icons (the same IconAssetPath lookup) and the About logo.
+# icon-atlas assets + the About logo: compiled into the binary via the
+# create_resource macro (CMake/Embedding.cmake, the resources/cover.png
+# pattern) so the client ships as a single file - nothing is copied next to
+# the exe. One generated header per png (asset_<file>.h), read back by
+# ui/assets.cpp (memory-first, the disk lookup stays as the fallback).
+# create_resource runs at configure time, so CMAKE_CONFIGURE_DEPENDS re-runs
+# the configure step when a png changes and the headers are regenerated.
+file(GLOB XUOASSIST_ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.png")
+set(XUOASSIST_ASSET_HEADERS "")
+foreach(asset ${XUOASSIST_ASSETS})
+  get_filename_component(name "${asset}" NAME)
+  # the symbol inside the header is create_resource's own name mangling
+  string(REGEX REPLACE "\\.| |-" "_" symbol "${name}")
+  set(header "${CMAKE_CURRENT_BINARY_DIR}/generated/asset_${symbol}.h")
+  create_resource("${asset}" "${header}")
+  list(APPEND XUOASSIST_ASSET_HEADERS "${header}")
+endforeach()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${XUOASSIST_ASSETS})
+target_sources(xuoassist PRIVATE ui/assets.cpp)
+target_include_directories(xuoassist PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")

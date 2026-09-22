@@ -47,11 +47,10 @@ bool Logo_Init()
     int w = 0;
     int h = 0;
     int comp = 0;
-    const fs_path path = IconAssetPath("tray.png");
-    stbi_uc *data = stbi_load(fs_path_ascii(path), &w, &h, &comp, 4);
+    stbi_uc *data = IconAssetLoad("tray.png", &w, &h, &comp);
     if (data == nullptr)
     {
-        Warning(Assistant, "about logo not found: %s", fs_path_ascii(path));
+        Warning(Assistant, "about logo not found: tray.png");
         return false;
     }
 
