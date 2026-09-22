@@ -41,18 +41,16 @@ bool CGump::DirectDrawActive()
 
 CPoint2Di CGump::GetDrawOriginOffset() const
 {
-    // Scissor boxes are authored in gump-local coordinates. How to map them to
-    // the space the items were actually drawn in depends on the gump pass:
-    //  - framebuffer pass: items are drawn gump-local but the pass bakes in a
-    //    translation of -GumpRect.Position, so the box must be shifted by the
-    //    same amount (this is the original behaviour, preserved verbatim);
-    //  - direct pass: items are drawn in window space from the gump's window
-    //    origin, so the box is shifted by that origin instead.
+    // Scissor boxes are authored in gump-local coordinates and must be mapped
+    // into the space the items were actually drawn in:
+    //  - framebuffer pass: items are baked gump-local with a translation of
+    //    -GumpRect.Position, so the box shifts by -GumpRect.Position too;
+    //  - direct pass: items are drawn at g_GumpTranslate + raw coordinate (the
+    //    framebuffer path's GumpRect.Position cancels on both sides, see
+    //    CGump::Draw), so the box shifts by the gump position alone.
     if (DirectDrawActive())
     {
-        return CPoint2Di(
-            (int)(g_GumpTranslate.X + GumpRect.Position.X),
-            (int)(g_GumpTranslate.Y + GumpRect.Position.Y));
+        return CPoint2Di((int)g_GumpTranslate.X, (int)g_GumpTranslate.Y);
     }
 
     return CPoint2Di(-GumpRect.Position.X, -GumpRect.Position.Y);
@@ -1375,16 +1373,27 @@ void CGump::Draw()
     // content preparation is still gated on the invalidate flags.
     if (s_gumpDirectDraw)
     {
-        // the gump translates into window space, so the gump-local origin
-        // shift the framebuffer pass needed is folded into the translation
-        const float gx = g_GumpTranslate.X + (float)GumpRect.Position.X;
-        const float gy = g_GumpTranslate.Y + (float)GumpRect.Position.Y;
+        // The framebuffer path cancels GumpRect.Position on both sides: items
+        // are baked at (raw - GumpRect.Position) and the texture is blitted at
+        // g_GumpTranslate + GumpRect.Position, so on screen an item lands at
+        // g_GumpTranslate + raw. Direct drawing must reproduce exactly that,
+        // so the model translation is the gump position alone - adding
+        // GumpRect.Position here too would displace every item by it (visible
+        // on server gumps whose content does not start at (0,0)).
+        const float gx = g_GumpTranslate.X;
+        const float gy = g_GumpTranslate.Y;
 
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList, SetModelViewTranslationCmd{ { gx, gy, 0.0f } });
 
+        // the clip still needs the content's on-screen extent, which starts at
+        // GumpRect.Position within the item space (RecalculateSize sets it to
+        // the item bounding-box minimum)
         Render_PushScissor(
-            (int)gx, (int)gy, (uint32_t)GumpRect.Size.Width, (uint32_t)GumpRect.Size.Height);
+            (int)(gx + GumpRect.Position.X),
+            (int)(gy + GumpRect.Position.Y),
+            (uint32_t)GumpRect.Size.Width,
+            (uint32_t)GumpRect.Size.Height);
 
         GenerateFrame();
 
@@ -1395,6 +1404,12 @@ void CGump::Draw()
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 
         DrawLocker();
+
+        // restore the state the item stream left behind: without this, the
+        // locker's blend stays on and bleeds into the next gump's items (the
+        // framebuffer path disabled blend right after its composite blit)
+        RenderAdd_DisableBlend(g_renderCmdList);
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 
         Render_PopScissor();
 
