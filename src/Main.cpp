@@ -5,6 +5,15 @@
 #include <time.h>
 #if defined(XUO_EMSC)
 #include <emscripten.h> // emscripten_run_script_string (product url origin)
+
+// workers have no alert(); route error dialogs to the log instead of dying
+// with an uncaught ReferenceError
+EM_JS(void, web_install_alert_shim, (), {
+    if (typeof globalThis.alert !== 'function')
+    {
+        globalThis.alert = function (msg) { console.warn('alert:', msg); };
+    }
+});
 #endif
 #include <common/str.h>
 #include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
@@ -719,6 +728,9 @@ int main(int argc, char **argv)
     exit(0);
 #endif
 
+#if defined(XUO_EMSC)
+    web_install_alert_shim();
+#endif
     g_fatalErrorCb = &fatal_error_dialog;
     if (!InitCli(argc, argv))
     {

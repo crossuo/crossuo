@@ -378,6 +378,18 @@ void vfs_fetch_set_ingame()
     s_cv_jobs.notify_all();
 }
 
+// true when the engine has nothing queued or in flight (all the blobs the
+// current plan requested are either stored or terminally failed); used by
+// the web bring-up to hold game data init until the streamed files are
+// complete on disk
+bool vfs_fetch_idle()
+{
+    std::unique_lock<std::mutex> lock(s_mutex);
+    if (!s_running)
+        return true;
+    return s_queue.empty() && s_stats.inflight == 0;
+}
+
 uint32_t vfs_fetch_active_workers()
 {
     std::lock_guard<std::mutex> lock(s_mutex);

@@ -2,6 +2,10 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "CrossUO.h"
+#if defined(XUO_EMSC)
+#include <xuocore/vfs_fetch.h> // vfs_fetch_idle (web streaming settle)
+#include <SDL_timer.h>
+#endif
 
 #include <common/str.h>
 #include "SDL_wrapper.h"
@@ -344,6 +348,23 @@ bool CGame::Install()
         vfs_shutdown();
         return false;
     }
+#if defined(XUO_EMSC)
+    // web: hold on the splash until the WHOLE streamed install is on disk.
+    // the plain fallback mappings snapshot files at open time and wasm has
+    // no fault-driven paging, so reads must happen after full
+    // materialization (the fetch pool + background tier run on other
+    // workers; the browser main thread stays free)
+    Splash_SetProgress(vfs_boot_web_progress());
+    Splash_Render();
+    while (!vfs_boot_web_poll())
+    {
+        Splash_SetProgress(vfs_boot_web_progress());
+        Splash_Render();
+        SDL_Delay(100);
+    }
+    Splash_SetProgress(1.0f);
+    Splash_Render();
+#endif
     if (!g_FileManager.Load())
     {
         auto errMsg =

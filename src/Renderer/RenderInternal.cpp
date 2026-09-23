@@ -439,7 +439,12 @@ void Render_SwapBuffers()
         GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
         GL_CHECK(glBufferData(GL_ARRAY_BUFFER, g_vboSize, nullptr, GL_DYNAMIC_DRAW));
         g_vboOffset = 0;
-#if !defined(XUO_EMSC)
+#if defined(XUO_EMSC)
+    // with OFFSCREEN_FRAMEBUFFER the frame lives in a wasm-side framebuffer:
+    // commit posts it to the visible canvas (proxied to the browser main
+    // thread, which stays free to process it)
+    emscripten_webgl_commit_frame();
+#elif !defined(XUO_EMSC)
     SDL_GL_SwapWindow(g_render.window);
 #endif
     // on web the canvas is composited by the browser after every frame

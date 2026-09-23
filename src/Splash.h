@@ -29,3 +29,7 @@ void Splash_Shutdown();
 
 // True once the splash texture is ready to be drawn.
 bool Splash_IsReady();
+
+// Draws a determinate progress bar under the splash image (clamped to
+// 0..1). Values stick until changed; call before Splash_Render().
+void Splash_SetProgress(float done01);

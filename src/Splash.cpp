@@ -45,6 +45,20 @@ texture_handle_t s_texture = RENDER_TEXTUREHANDLE_INVALID;
 bool s_decoded = false;
 bool s_uploaded = false;
 
+// determinate progress bar (web bring-up): two 1x1 solid textures stretched
+// into a bar under the splash image
+texture_handle_t s_barBack = RENDER_TEXTUREHANDLE_INVALID;
+texture_handle_t s_barFill = RENDER_TEXTUREHANDLE_INVALID;
+float s_progress01 = 0.0f;
+bool s_progressValid = false;
+
+bool Splash_CreateSolidTexture(uint8_t r, uint8_t g, uint8_t b, texture_handle_t *out)
+{
+    uint8_t pixels[4] = { r, g, b, 0xff };
+    *out = Render_CreateTexture2D(1, 1, TextureGPUFormat_RGBA4, pixels, TextureFormat_Unsigned_RGBA8);
+    return *out != RENDER_TEXTUREHANDLE_INVALID;
+}
+
 uint8_t PaethPredictor(int a, int b, int c)
 {
     const int p = a + b - c;
@@ -350,6 +364,13 @@ bool Splash_Init()
     // The decoded copy is only needed for the upload.
     free(s_image.pixels);
     s_image.pixels = nullptr;
+
+    if (!Splash_CreateSolidTexture(24, 24, 28, &s_barBack) ||
+        !Splash_CreateSolidTexture(32, 160, 255, &s_barFill))
+    {
+        Warning(Client, "splash: could not create the progress bar textures");
+    }
+
     s_uploaded = true;
     return true;
 #endif // #if defined(XUO_SPLASH_DISABLED)
@@ -358,6 +379,16 @@ bool Splash_Init()
 bool Splash_IsReady()
 {
     return s_uploaded;
+}
+
+void Splash_SetProgress(float done01)
+{
+    if (done01 < 0.0f)
+        done01 = 0.0f;
+    if (done01 > 1.0f)
+        done01 = 1.0f;
+    s_progress01 = done01;
+    s_progressValid = true;
 }
 
 void Splash_Shutdown()
@@ -412,6 +443,23 @@ void Splash_Render()
         SetViewParamsCmd{ 0, 0, windowWidth, windowHeight, windowWidth, windowHeight, -150, 150 });
     RenderAdd_DrawQuad(
         g_renderCmdList, DrawQuadCmd{ s_texture, x, y, (uint32_t)width, (uint32_t)height });
+    if (s_progressValid)
+    {
+        // progress bar under the splash image (web bring-up)
+        const int barWidth = (windowWidth * 3) / 5;
+        const int barHeight = 10;
+        const int barX = (windowWidth - barWidth) / 2;
+        const int barY = windowHeight - (barHeight * 3);
+        RenderAdd_DrawQuad(
+            g_renderCmdList,
+            DrawQuadCmd{ s_barBack, barX, barY, (uint32_t)barWidth, (uint32_t)barHeight });
+        const int fill = (int)((int64_t)barWidth * s_progress01);
+        if (fill > 0)
+        {
+            RenderAdd_DrawQuad(
+                g_renderCmdList, DrawQuadCmd{ s_barFill, barX, barY, (uint32_t)fill, (uint32_t)barHeight });
+        }
+    }
     RenderDraw_Execute(g_renderCmdList);
     Render_SwapBuffers();
 #endif // #if defined(XUO_SPLASH_DISABLED)

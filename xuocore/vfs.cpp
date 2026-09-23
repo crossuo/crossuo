@@ -1750,14 +1750,37 @@ static void vfs_boot_run_chunk(
 // remaining on-demand asset (T2 then T3) downloads strictly below demand
 // priority until the install is complete. Runs until done or shutdown;
 // failed blobs are logged and stay missing (retried on the next boot)
+#if defined(XUO_EMSC)
+// web boot: the client polls this while the splash is up (wasm has no
+// fault-driven paging, so the game init holds until the streamed install is
+// complete on disk - the sweep keeps running in the background after this)
+static std::atomic<bool> s_boot_web_done{false};
+static std::atomic<float> s_boot_web_progress{0.0f};
+
+bool vfs_boot_web_poll()
+{
+    return s_boot_web_done.load();
+}
+
+float vfs_boot_web_progress()
+{
+    return s_boot_web_progress.load();
+}
+#endif
+
 static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, std::vector<vfs_boot_item> sweep)
 {
     LOG_INFO("background tier: %zu assets", items.size());
+    const float background_total = items.size() > 0 ? float(items.size()) : 1.0f;
     for (size_t pos = 0; pos < items.size() && !s_boot_shutdown;)
     {
         const size_t count = vfs_boot_chunk_span(items, pos);
         vfs_boot_run_chunk(plan, items.data() + pos, count, VFS_FETCH_PRIO_BG, false);
         pos += count;
+#if defined(XUO_EMSC)
+        s_boot_web_progress.store(0.10f + 0.85f * (float(pos) / background_total),
+                                  std::memory_order_relaxed);
+#endif
     }
     LOG_INFO("background tier complete");
     vfs_state_fold(plan); // persist T1 (and reopen the journal)
@@ -1774,6 +1797,11 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
         else
             vfs_converge_from_store(plan);
     }
+#if defined(XUO_EMSC)
+    // the full install is on disk: the game init can proceed (the sweep
+    // continues below for as long as the session lasts)
+    s_boot_web_done.store(true, std::memory_order_release);
+#endif
 
     // the continuous sweep: the rest of the plan converges in the background
     // for as long as the session lasts (state re-checked per chunk; the lane
@@ -1824,6 +1852,9 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         if (!vfs_fetch_start(fetch_params))
             return false;
     }
+#if defined(XUO_EMSC)
+    s_boot_web_progress.store(0.02f, std::memory_order_relaxed);
+#endif
     if (progress)
         progress(0.0f, "manifests");
 
@@ -2041,11 +2072,18 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         vfs_runtime_close(); // journal + recorder were opened before T0
         if (progress)
             progress(1.0f, "failed");
+#if defined(XUO_EMSC)
+        s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
+        s_boot_web_done.store(true, std::memory_order_release);
+#endif
         return false;
     }
     // fold point for the blocking tier (reopens the journal in runtime mode:
     // marks from here on flush, folds are the durability barriers)
     vfs_state_fold(plan);
+#if defined(XUO_EMSC)
+    s_boot_web_progress.store(0.10f, std::memory_order_relaxed);
+#endif
     if (progress)
         progress(1.0f, "starting");
 

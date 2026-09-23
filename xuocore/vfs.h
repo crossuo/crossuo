@@ -130,6 +130,14 @@ void vfs_arena_residency(size_t *out_granules, size_t *out_resident);
 // ---------------------------------------------------------------------------
 
 bool vfs_boot(void (*progress)(float done01, const char *label));
+
+#if defined(XUO_EMSC)
+// web boot: the boot runs asynchronously (splash keeps rendering); poll
+// until this returns true (full streamed install on disk), reading
+// vfs_boot_web_progress() for the 0..1 bar value
+bool vfs_boot_web_poll();
+float vfs_boot_web_progress();
+#endif
 // the game calls this once the first frame rendered: boot-critical work is
 // over and the background worker may start post-frame convergence (store ->
 // install materialization). Until then the worker only serves the boot tiers

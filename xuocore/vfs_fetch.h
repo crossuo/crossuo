@@ -75,6 +75,9 @@ void vfs_fetch_stop();
 void vfs_fetch_set_ingame();
 // introspection (tests): the current active-worker target and how many
 // sweep-lane jobs are running right now
+// true when nothing is queued or in flight (or the engine is not running)
+bool vfs_fetch_idle();
+
 uint32_t vfs_fetch_active_workers();
 int vfs_fetch_sweep_running();
 
