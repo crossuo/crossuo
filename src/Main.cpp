@@ -564,79 +564,107 @@ static void AutoHelpTick()
     }
 }
 
-static int Run()
+#if defined(XUO_EMSC)
+#include <emscripten.h>
+#endif
+
+// one frame of the client loop; returns true when the client wants to quit
+static bool RunFrame(bool &raised)
 {
     bool quit = false;
+    FrameStatsTick();
+
+    // 1] Handle all SDL events. Mouse, keyboard, windows etc..
+    SDL_Event event;
+    while (SDL_PollEvent(&event) != 0)
+    {
+#if defined(XUO_LAUNCHER_EMBEDDED)
+        // events for the launcher window (and the launcher hotkey) never
+        // reach the game window procedure
+        if (LauncherWindow_ProcessEvent(event))
+            continue;
+#endif
+#if defined(XUO_ASSISTANT)
+        // events for assistant pop-out windows (and assistant key
+        // bindings) are consumed before the game window procedure sees
+        // them; while the
+        // assistant is up it also keeps the events ImGui captured
+        if (AssistantWindow_ProcessEvent(event))
+            continue;
+#endif
+        quit = Wisp::g_WispWindow->OnWindowProc(event);
+        if (quit)
+        {
+            break;
+        }
+    }
+
+    // 2] Run main loop, packets, rendering etc..
+    g_Ticks = SDL_GetTicks();
+    g_ConnectionManager.Recv();
+    g_PacketManager.SendMegaClilocRequests();
+    g_Game.Process(true);
+    AutoHelpTick();
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    LauncherWindow_Render();
+#endif
+
+    // 3] Calculate proper delay based on settings and frame time.
+    // the test harness (XUO_AUTO_LOGIN) runs uncapped: the window is not
+    // focused during automated runs, which would apply the inactive-window
+    // delay and mask the real frame cost being benchmarked
+    if (!TestAutoLogin())
+    {
+        int32_t iDelay = g_GameWindow.GetRenderDelay();
+
+        // a frame delay of 0 means uncapped; otherwise only sleep to hit
+        // the configured cap (the old 2ms floor forced ~140fps ceilings)
+        if (iDelay > 0)
+        {
+            const int32_t delay = iDelay - (SDL_GetTicks() - g_Ticks);
+            if (delay > 0)
+            {
+                SDL_Delay(delay);
+            }
+        }
+    }
+
+    if (!raised)
+    {
+        raised = true;
+        g_GameWindow.Raise(); // once, now that the first frame is on screen
+    }
+    return quit;
+}
+
+static int Run()
+{
     // one-time bring-to-front after the first frame is shown: the raise in
     // CWindow::Create runs before the window is mapped and some window
     // managers ignore it, leaving the client behind other applications
     bool raised = false;
-    while (!quit)
+#if defined(XUO_EMSC)
+    // the browser owns the thread: hand the loop over (0 fps =
+    // requestAnimationFrame pacing). simulate_infinite_loop keeps the stack
+    // alive across frames; the shutdown path below runs when the loop is
+    // cancelled (via an UNWIND on quit, teardown is handled by the runtime)
+    emscripten_set_main_loop_arg(
+        [](void *arg)
+        {
+            if (RunFrame(*static_cast<bool *>(arg)))
+            {
+                emscripten_cancel_main_loop();
+            }
+        },
+        &raised,
+        0,
+        1);
+#else
+    while (!RunFrame(raised))
     {
-        FrameStatsTick();
-
-        // 1] Handle all SDL events. Mouse, keyboard, windows etc..
-        SDL_Event event;
-        while (SDL_PollEvent(&event) != 0)
-        {
-#if defined(XUO_LAUNCHER_EMBEDDED)
-            // events for the launcher window (and the launcher hotkey) never
-            // reach the game window procedure
-            if (LauncherWindow_ProcessEvent(event))
-                continue;
-#endif
-#if defined(XUO_ASSISTANT)
-            // events for assistant pop-out windows (and assistant key
-            // bindings) are consumed before the game window procedure sees
-            // them; while the
-            // assistant is up it also keeps the events ImGui captured
-            if (AssistantWindow_ProcessEvent(event))
-                continue;
-#endif
-            quit = Wisp::g_WispWindow->OnWindowProc(event);
-            if (quit)
-            {
-                break;
-            }
-        }
-
-        // 2] Run main loop, packets, rendering etc..
-        g_Ticks = SDL_GetTicks();
-        g_ConnectionManager.Recv();
-        g_PacketManager.SendMegaClilocRequests();
-        g_Game.Process(true);
-        AutoHelpTick();
-
-#if defined(XUO_LAUNCHER_EMBEDDED)
-        LauncherWindow_Render();
-#endif
-
-        // 3] Calculate proper delay based on settings and frame time.
-        // the test harness (XUO_AUTO_LOGIN) runs uncapped: the window is not
-        // focused during automated runs, which would apply the inactive-window
-        // delay and mask the real frame cost being benchmarked
-        if (!TestAutoLogin())
-        {
-            int32_t iDelay = g_GameWindow.GetRenderDelay();
-
-            // a frame delay of 0 means uncapped; otherwise only sleep to hit
-            // the configured cap (the old 2ms floor forced ~140fps ceilings)
-            if (iDelay > 0)
-            {
-                const int32_t delay = iDelay - (SDL_GetTicks() - g_Ticks);
-                if (delay > 0)
-                {
-                    SDL_Delay(delay);
-                }
-            }
-        }
-
-        if (!raised)
-        {
-            raised = true;
-            g_GameWindow.Raise(); // once, now that the first frame is on screen
-        }
     }
+#endif
 #if defined(XUO_LAUNCHER_EMBEDDED)
     LauncherWindow_Shutdown();
 #endif

@@ -68,17 +68,22 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (NOT RENDER_GLES2 AND NOT RENDER_GL1 AND NOT RENDER_GL3)
-  message(STATUS "No render selected, defaulting to OpenGL 3")
-  set(RENDER_GL3 On)
+  if (XUO_EMSC)
+    # the browser only offers WebGL: GLES2 renderer
+    set(RENDER_GLES2 On)
+  else()
+    message(STATUS "No render selected, defaulting to OpenGL 3")
+    set(RENDER_GL3 On)
+  endif()
 endif()
 
 #
 # Build Dependencies
 #
-if (RENDER_GLES2)
+if (RENDER_GLES2 AND NOT XUO_EMSC)
   find_package(GLESv2 REQUIRED)
 endif()
-if (RENDER_GL1 OR RENDER_GL3)
+if ((RENDER_GL1 OR RENDER_GL3) AND NOT XUO_EMSC)
   if (NOT APPLE)
     if (XUO_STATIC_CXX_RUNTIME)
       # portable glibc builds: prefer legacy libGL (mesa-style, universal) over
@@ -95,7 +100,16 @@ if (RENDER_GL1 OR RENDER_GL3)
   find_package(OpenGL REQUIRED)
 endif()
 
-if (OPENGL_FOUND)
+if (XUO_EMSC)
+  # emscripten: GLES2/WebGL1 comes from the browser, SDL2 from the emsdk
+  # port (-s USE_SDL=2); nothing GL-related needs finding or linking
+  compile_definitions(USE_GLES2=1)
+  compile_definitions(NEW_RENDERER_ENABLED=1)
+  compile_definitions(USE_GLES)
+  set(USE_GLES2 1)
+  set(GL_LIBRARIES "")
+  message(STATUS "Building with new renderer (WebGL/GLES2 via emscripten)")
+elseif (OPENGL_FOUND)
   if (RENDERER_GL1 OR RENDER_GL1) # RENDERER_GL1 for compatibility, RENDER_GL1 is original
     # RENDER_GL1 selects the NEW_RENDERER GL1 legacy backend (the old GL2
     # mode is no longer reachable; it was only ever picked through the
@@ -150,7 +164,7 @@ endif()
 # only available on those renderers (same policy as XUO_LAUNCHER_EMBEDDED
 # above); GL1/GL2 legacy builds must not get it
 set(XUO_ASSISTANT_ENABLED Off)
-if (XUO_ASSISTANT AND (USE_GL3 OR USE_GLES2))
+if (XUO_ASSISTANT AND (USE_GL3 OR USE_GLES2) AND NOT XUO_EMSC)
   set(XUO_ASSISTANT_ENABLED On)
   message(STATUS "X:UO Assist: embedded in crossuo")
 endif()
@@ -171,7 +185,15 @@ if (NOT XUO_EMSC)
   set(3RDPARTY_STATIC SDL2-static cmcurl)
 else()
   add_compile_definitions(USE_SDL=2)
-  add_compile_options(-s USE_SDL=2)
+  # -pthread: the vfs fetch engine/mft use std::thread and 64-bit atomics,
+  # which require the atomics feature (SharedArrayBuffer at runtime - serve
+  # with COOP/COEP headers). pthread builds cannot grow memory, so size it
+  # upfront.
+  add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread)
+  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread)
+  add_link_options(-sINITIAL_MEMORY=134217728 -sPTHREAD_POOL_SIZE=8 -sEXIT_RUNTIME=0)
+  add_link_options(-sERROR_ON_UNDEFINED_SYMBOLS=0)
+  add_link_options(--shell-file ${PROJECT_SOURCE_DIR}/resources/shell.html)
 endif()
 
 if (XUO_WINDOWS AND MSVC)

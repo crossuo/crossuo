@@ -52,6 +52,39 @@
     #define GFX_GL_MINOR 1
     #define IMGUI_IMPL_OPENGL_ES2
     //#define IMGUI_IMPL_OPENGL_ES3
+    #if defined(XUO_EMSC)
+    // webgl2 (-sUSE_WEBGL2=1): GLES3 entry points the GLES2 headers omit,
+    // plus the desktop constants the renderer uses (GL_BGRA etc. are
+    // compile-time shims - check runtime support when touching those paths)
+    #ifndef GL_MAX_ARRAY_TEXTURE_LAYERS
+        #define GL_MAX_ARRAY_TEXTURE_LAYERS 0x88FF
+    #endif
+    #ifndef GL_TEXTURE_BINDING_2D_ARRAY
+        #define GL_TEXTURE_BINDING_2D_ARRAY 0x8C38
+    #endif
+    #ifndef GL_TEXTURE_BINDING_3D
+        #define GL_TEXTURE_BINDING_3D 0x806A
+    #endif
+    #ifndef GL_BGRA
+        #define GL_BGRA 0x80E1
+    #endif
+    #ifndef GL_UNSIGNED_SHORT_1_5_5_5_REV
+        #define GL_UNSIGNED_SHORT_1_5_5_5_REV 0x8366
+    #endif
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+    void glTexImage3D(
+        unsigned target, int level, int internalformat, unsigned width, unsigned height,
+        unsigned depth, int border, unsigned format, unsigned type, const void *data);
+    void glCopyImageSubData(
+        unsigned srcName, unsigned srcTarget, int srcLevel, int srcX, int srcY, int srcZ,
+        unsigned dstName, unsigned dstTarget, int dstLevel, int dstX, int dstY, int dstZ,
+        unsigned width, unsigned height, unsigned depth);
+    #ifdef __cplusplus
+    }
+    #endif
+#endif
 #elif defined(USE_DX11) // #elif defined(USE_GL2)
     #define SOKOL_D3D11
 #elif defined(USE_METAL) // #elif defined(USE_DX11)

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CrossUO (web)</title>
+    <style>
+      html, body { margin: 0; padding: 0; background: #101014; color: #cfd2dc;
+                   font-family: system-ui, sans-serif; height: 100%; }
+      #wrap { display: flex; flex-direction: column; align-items: center;
+              justify-content: center; height: 100%; }
+      canvas.crossuo { width: 960px; height: 600px; max-width: 100%;
+                       image-rendering: pixelated; background: #000;
+                       border: 1px solid #2a2c36; outline: none; }
+      #status { margin-top: 8px; font-size: 13px; opacity: .8; }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <!-- the emscripten runtime looks for Module.canvas / a #canvas node -->
+      <canvas class="crossuo" id="canvas" tabindex="-1"
+              oncontextmenu="event.preventDefault()"></canvas>
+      <div id="status">loading&#8230;</div>
+    </div>
+    <script>
+      var Module = {
+        canvas: (function () {
+          var c = document.getElementById('canvas');
+          c.addEventListener('webglcontextlost', function (e) {
+            e.preventDefault();
+            setStatus('context lost, reloading');
+            setTimeout(function () { location.reload(); }, 1000);
+          });
+          return c;
+        })(),
+        setStatus: function (text) {
+          document.getElementById('status').textContent = text;
+        },
+        onRuntimeInitialized: function () {
+          setStatus('running');
+        }
+      };
+      function setStatus(text) {
+        document.getElementById('status').textContent = text;
+      }
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

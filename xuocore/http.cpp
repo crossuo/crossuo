@@ -3,6 +3,119 @@
 
 #define LOGGER_MODULE Network
 
+#if defined(XUO_EMSC)
+// web build: libcurl does not exist on emscripten; the streaming engine
+// treats these as an unreachable network until the emscripten fetch backend
+// is wired in (the offline/preloaded product paths do not need it)
+#include "http.h"
+#include <string.h>
+#include <vector>
+
+#include <common/logging/logging.h>
+
+#ifndef LOG_ERROR
+#define LOG_ERROR(...) Error(LOGGER_MODULE, __VA_ARGS__)
+#endif
+
+static const char *s_agentName = nullptr;
+
+bool http_get(const char *url, const char *agent, size_t body_cap, http_response *out)
+{
+    (void)url;
+    (void)agent;
+    (void)body_cap;
+    if (out)
+    {
+        out->status = 0;
+        out->body.clear();
+    }
+    LOG_ERROR("http_get: network unavailable on the web build (%s)", url ? url : "");
+    return false;
+}
+
+bool http_get_range(
+    const char *url, const char *agent, uint64_t offset, uint64_t length, http_response *out)
+{
+    (void)url;
+    (void)agent;
+    (void)offset;
+    (void)length;
+    if (out)
+    {
+        out->status = 0;
+        out->body.clear();
+    }
+    LOG_ERROR("http_get_range: network unavailable on the web build");
+    return false;
+}
+
+void http_init()
+{
+}
+void http_shutdown()
+{
+}
+void http_set_user_agent(const char *name)
+{
+    s_agentName = name;
+}
+
+bool http_get_binary(const char *url, const uint8_t *buf, size_t *size)
+{
+    (void)url;
+    if (size)
+        *size = 0;
+    (void)buf;
+    return false;
+}
+
+bool http_get_binary(const char *url, std::vector<uint8_t> &data)
+{
+    (void)url;
+    data.clear();
+    return false;
+}
+
+bool http_get_string(const char *url, std::string &data)
+{
+    (void)url;
+    data.clear();
+    return false;
+}
+
+bool http_get_file(const char *url, const char *filename)
+{
+    (void)filename;
+    LOG_ERROR("http_get_file: network unavailable on the web build (%s)", url ? url : "");
+    return false;
+}
+
+std::string http_urlencode(std::string str)
+{
+    static const char *hex = "0123456789ABCDEF";
+    std::string out;
+    out.reserve(str.size());
+    for (char c : str)
+    {
+        const unsigned char ch = (unsigned char)c;
+        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') ||
+            ch == '-' || ch == '_' || ch == '.' || ch == '~' || ch == '/')
+        {
+            out += c;
+        }
+        else
+        {
+            out += '%';
+            out += hex[ch >> 4];
+            out += hex[ch & 0x0f];
+        }
+    }
+    (void)s_agentName;
+    return out;
+}
+
+#else // #if defined(XUO_EMSC)
+
 #include "http.h"
 
 #include <vector>
@@ -124,7 +237,7 @@ static size_t http_write_body(const char *data, size_t size, size_t nmemb, void 
     // can balloon
     if (st->cap != 0 && st->body->size() + amount > st->cap)
     {
-        LOG_WARN("GET: body exceeds cap (%zu bytes), aborting transfer", st->cap);
+        LOG_ERROR("GET: body exceeds cap (%zu bytes), aborting transfer", st->cap);
         return 0;
     }
     st->body->insert(st->body->end(), data, data + amount);
@@ -194,7 +307,7 @@ static http_response http_perform(
     const CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK)
     {
-        LOG_WARN("GET %s: %s", url, curl_easy_strerror(res));
+        LOG_ERROR("GET %s: %s", url, curl_easy_strerror(res));
         out.body.clear();
         out.status = 0;
         return out;
@@ -325,3 +438,4 @@ std::string http_urlencode(std::string str)
     curl_easy_cleanup(curl);
     return encoded;
 }
+#endif // #if defined(XUO_EMSC)
