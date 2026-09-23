@@ -4,23 +4,18 @@
 #define LOGGER_MODULE Network
 
 #if defined(XUO_EMSC)
-// web transport: emscripten_fetch on a dedicated worker thread. Blocking
-// semantics match the curl implementation (callers are the vfs fetch pool
-// threads and the boot path), and the browser main thread is never involved,
-// so the game loop keeps running while transfers are in flight.
-//
-// NOTE: the browser enforces CORS - the streaming product must be served
-// from the same origin as the page (or from a CORS-enabled mirror).
+// web transport: synchronous XHR executed on the calling pthread (sync XHR
+// is allowed in workers, and the emscripten main loop / browser main thread
+// are never involved). Same semantics as the curl implementation: real HTTP
+// status codes, Range support, body caps. The streaming product must be
+// same-origin (or CORS-enabled) - see scripts/serve-wasm.py.
 #include "http.h"
 #include <string.h>
+#include <stdlib.h>
 #include <vector>
 #include <string>
-#include <deque>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 
-#include <emscripten/fetch.h>
+#include <emscripten.h>
 
 #include <common/logging/logging.h>
 #include <common/fs.h>
@@ -29,148 +24,83 @@
 
 static const char *s_agentName = nullptr;
 
-namespace {
-
-enum class http_op
+// performs a blocking GET; returns the malloc'd body (free() it) or nullptr.
+// status receives the HTTP code (0 when the request failed at the transport
+// level).
+static uint8_t *http_xhr(const char *url, const char *range, long *status, size_t *len)
 {
-    op_get,
-    op_get_range,
-};
-
-struct http_request
-{
-    http_op op = http_op::op_get;
-    std::string url;
-    std::string range;   // "bytes=a-b" for ranged gets
-    size_t body_cap = 0; // 0: unbounded
-    // results
-    bool ok = false;
-    long status = 0;
-    std::vector<uint8_t> body;
-    bool done = false;
-};
-
-std::mutex s_mutex;
-std::condition_variable s_cv;
-std::deque<http_request *> s_queue;
-bool s_worker_stop = false;
-std::thread s_worker;
-
-void http_perform(http_request &req)
-{
-    emscripten_fetch_attr_t attr;
-    emscripten_fetch_attr_init(&attr);
-    strcpy(attr.requestMethod, "GET");
-    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
-
-    const char *headers[3] = {};
-    if (req.op == http_op::op_get_range && !req.range.empty())
+    *status = 0;
+    *len = 0;
+    uint8_t *data = (uint8_t *)EM_ASM_PTR(
     {
-        // user agent is a forbidden header name in browsers - skipped
-        headers[0] = "Range";
-        headers[1] = req.range.c_str();
-        attr.requestHeaders = headers;
-    }
-
-    emscripten_fetch_t *fetch = emscripten_fetch(&attr, req.url.c_str());
-    if (fetch == nullptr)
-    {
-        req.status = 0;
-        req.ok = false;
-        return;
-    }
-
-    req.status = (long)fetch->status;
-    if (fetch->status == 200 && fetch->data && fetch->numBytes > 0)
-    {
-        req.body.assign(fetch->data, fetch->data + fetch->numBytes);
-        req.ok = true;
-        if (req.body_cap && req.body.size() > req.body_cap)
+        const url = UTF8ToString($0);
+        const rangeHeader = UTF8ToString($1);
+        try
         {
-            LOG_ERROR(
-                "transfer exceeded the body cap (%zu > %zu): %s",
-                req.body.size(),
-                req.body_cap,
-                req.url.c_str());
-            req.ok = false;
+            const x = new XMLHttpRequest();
+            x.open('GET', url, false); // sync: allowed on workers
+            if (rangeHeader)
+                x.setRequestHeader('Range', rangeHeader);
+            x.responseType = 'arraybuffer';
+            x.send(null);
+            const data = x.response ? new Uint8Array(x.response) : new Uint8Array(0);
+            const ptr = _malloc(data.length + 1);
+            HEAPU8.set(data, ptr);
+            ptr[data.length] = 0;
+            setValue($2, x.status, 'i32');
+            setValue($3, data.length, 'i32');
+            return ptr;
         }
-    }
-    else if (fetch->status != 200)
+        catch (e)
+        {
+            setValue($2, 0, 'i32');
+            setValue($3, 0, 'i32');
+            return 0;
+        }
+    },
+        url, range ? range : "", status, len);
+    if (data)
     {
-        LOG_ERROR(
-            "transport failed (%ld): %s",
-            req.status,
-            fetch->status ? req.url.c_str() : "network error");
+        // the trailing terminator byte is not part of the payload
+        *len = *len;
     }
-    emscripten_fetch_close(fetch);
+    return data;
 }
 
-void http_worker()
+static bool http_xhr_body(const char *url, const char *range, size_t body_cap,
+                          long *status, std::vector<uint8_t> &body)
 {
-    for (;;)
+    size_t len = 0;
+    uint8_t *data = http_xhr(url, range, status, &len);
+    if (!data)
     {
-        http_request *req = nullptr;
-        {
-            std::unique_lock<std::mutex> lock(s_mutex);
-            s_cv.wait(lock, [] { return s_worker_stop || !s_queue.empty(); });
-            if (!s_queue.empty())
-            {
-                req = s_queue.front();
-                s_queue.pop_front();
-            }
-            else if (s_worker_stop)
-            {
-                return;
-            }
-        }
-        if (req)
-        {
-            http_perform(*req);
-            {
-                std::lock_guard<std::mutex> lock(s_mutex);
-                req->done = true;
-            }
-            s_cv.notify_all();
-        }
+        LOG_ERROR("transport failed (0): %s", url);
+        return false;
     }
-}
-
-// serializes the call over the dedicated transport worker: the caller blocks
-// exactly like the curl implementation does
-bool http_submit(http_request &req)
-{
+    *status = *status;
+    if (*status != 200 && *status != 206)
     {
-        std::lock_guard<std::mutex> lock(s_mutex);
-        if (s_worker_stop)
-            return false;
-        s_queue.push_back(&req);
+        LOG_ERROR("transport failed (%ld): %s", *status, url);
+        free(data);
+        return false;
     }
-    s_cv.notify_all();
-    std::unique_lock<std::mutex> lock(s_mutex);
-    s_cv.wait(lock, [&req] { return req.done; });
-    return req.ok;
+    if (body_cap && len > body_cap)
+    {
+        LOG_ERROR("transfer exceeded the body cap (%zu > %zu): %s", len, body_cap, url);
+        free(data);
+        return false;
+    }
+    body.assign(data, data + len);
+    free(data);
+    return true;
 }
-
-} // namespace
 
 void http_init()
 {
-    std::lock_guard<std::mutex> lock(s_mutex);
-    if (!s_worker.joinable())
-        s_worker = std::thread(http_worker);
 }
-
 void http_shutdown()
 {
-    {
-        std::lock_guard<std::mutex> lock(s_mutex);
-        s_worker_stop = true;
-    }
-    s_cv.notify_all();
-    if (s_worker.joinable())
-        s_worker.join();
 }
-
 void http_set_user_agent(const char *name)
 {
     // browsers forbid overriding the User-Agent header
@@ -182,15 +112,15 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
     (void)agent;
     if (!url || !out)
         return false;
-    http_request req;
-    req.op = http_op::op_get;
-    req.url = url;
-    req.body_cap = body_cap;
-    if (!http_submit(req))
+    long status = 0;
+    if (!http_xhr_body(url, nullptr, body_cap, &status, out->body))
+    {
+        out->status = status;
+        out->body.clear();
         return false;
-    out->status = req.status;
-    out->body = std::move(req.body);
-    return req.ok && out->status == 200;
+    }
+    out->status = status;
+    return out->status == 200;
 }
 
 bool http_get_range(
@@ -199,87 +129,72 @@ bool http_get_range(
     (void)agent;
     if (!url || !out)
         return false;
-    http_request req;
-    req.op = http_op::op_get_range;
-    req.url = url;
-    req.body_cap = length ? length : 0;
     char range[64];
     snprintf(range, sizeof(range), "bytes=%llu-%llu",
              (unsigned long long)offset, (unsigned long long)(offset + length - 1));
-    req.range = range;
-    if (!http_submit(req))
+    long status = 0;
+    std::vector<uint8_t> body;
+    if (!http_xhr_body(url, range, length, &status, body))
+    {
+        out->status = status;
         return false;
-    out->status = req.status;
+    }
     // like the curl implementation: only honor a real range answer (206 with
     // the exact byte count) - a 200 would deliver the whole file
-    out->body = std::move(req.body);
-    return req.ok && out->status == 206 && out->body.size() == length;
+    out->status = status;
+    out->body = std::move(body);
+    return out->status == 206 && out->body.size() == length;
 }
 
 bool http_get_binary(const char *url, const uint8_t *buf, size_t *size)
 {
     if (!url || !buf || !size)
         return false;
-    http_request req;
-    req.op = http_op::op_get;
-    req.url = url;
-    if (!http_submit(req))
+    long status = 0;
+    std::vector<uint8_t> body;
+    if (!http_xhr_body(url, nullptr, 0, &status, body) || status != 200)
         return false;
-    if (req.status != 200 || req.body.size() > *size)
+    if (body.size() > *size)
         return false;
-    memcpy((void *)buf, req.body.data(), req.body.size());
-    *size = req.body.size();
+    memcpy((void *)buf, body.data(), body.size());
+    *size = body.size();
     return true;
 }
 
 bool http_get_binary(const char *url, std::vector<uint8_t> &data)
 {
-    http_request req;
-    req.op = http_op::op_get;
-    req.url = url;
-    if (!http_submit(req))
+    long status = 0;
+    if (!http_xhr_body(url, nullptr, 0, &status, data) || status != 200)
     {
         data.clear();
         return false;
     }
-    if (req.status != 200)
-    {
-        data.clear();
-        return false;
-    }
-    data = std::move(req.body);
     return true;
 }
 
 bool http_get_string(const char *url, std::string &data)
 {
-    http_request req;
-    req.op = http_op::op_get;
-    req.url = url;
-    if (!http_submit(req))
+    long status = 0;
+    std::vector<uint8_t> body;
+    if (!http_xhr_body(url, nullptr, 0, &status, body) || status != 200)
     {
         data.clear();
         return false;
     }
-    if (req.status != 200)
-    {
-        data.clear();
-        return false;
-    }
-    data.assign(req.body.begin(), req.body.end());
+    data.assign(body.begin(), body.end());
     return true;
 }
 
 bool http_get_file(const char *url, const char *filename)
 {
-    http_request req;
-    req.op = http_op::op_get;
-    req.url = url;
-    if (!http_submit(req))
+    long status = 0;
+    std::vector<uint8_t> body;
+    if (!http_xhr_body(url, nullptr, 0, &status, body) || status != 200)
+    {
+        LOG_ERROR("http_get_file failed (%ld): %s", status, url);
         return false;
-    if (req.status != 200 || req.body.empty())
-        return false;
-    return fs_file_write(filename, req.body.data(), req.body.size());
+    }
+    return fs_file_write(filename, body.data(), body.size());
 }
 
 std::string http_urlencode(std::string str)
@@ -306,8 +221,6 @@ std::string http_urlencode(std::string str)
 }
 
 #else // #if defined(XUO_EMSC)
-
-#include "http.h"#else // #if defined(XUO_EMSC)
 
 #include "http.h"
 

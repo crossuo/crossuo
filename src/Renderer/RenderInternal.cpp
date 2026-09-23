@@ -156,9 +156,6 @@ bool Render_Init(SDL_Window *window)
         glGetString(GL_VERSION),
         GL_ARB_shader_objects);
 #elif defined(USE_GL3W)
-        glGetString(GL_VERSION),
-        GL_ARB_shader_objects);
-#elif defined(USE_GL3W)
     if (gl3wInit() != 0)
     {
         Error(Renderer, "could not initialize opengl\n");

@@ -12,7 +12,7 @@ Text responses (product/pkg manifests) have the absolute repo urls rewritten
 to the local prefixes, so every follow-up fetch stays same-origin too.
 
 Usage: python3 scripts/serve-wasm.py [dir] [port]
-Default: serve dist/wasm on http://localhost:8080
+Default: serve dist/wasm on http://localhost:8777
 """
 import http.server
 import os
@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 
 DIRECTORY = sys.argv[1] if len(sys.argv) > 1 else "dist/wasm"
-PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8080
+PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8777
 
 # same-origin proxy routes: local prefix -> upstream base url
 PROXY_ROUTES = [
@@ -75,11 +75,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         status = getattr(resp, "status", None) or resp.code
         body = resp.read()
         ctype = resp.headers.get("Content-Type", "application/octet-stream")
-        if any(t in ctype for t in ("text", "xml", "json")):
-            text = body.decode("utf-8", "replace")
+        try:
+            # rewrite only real text (manifests): binary payloads (zlib blobs)
+            # must pass through untouched
+            text = body.decode("utf-8")
             for upstream, local in TEXT_REWRITES:
                 text = text.replace(upstream, local)
             body = text.encode("utf-8")
+        except UnicodeDecodeError:
+            pass
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))

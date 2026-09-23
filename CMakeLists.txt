@@ -193,12 +193,12 @@ else()
   # stays free - required for blocking pthread ops (joins/futex/fetch
   # proxying) during the streaming bootstrap; GL renders through an
   # OffscreenCanvas transferred to that worker
-  add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1 -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1)
-  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1 -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1)
+  add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1)
+  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1)
   # the client comes from desktop-sized stacks: give every thread room
   # (default 64KB overflows before main); pthread builds cannot grow memory,
   # so size the fixed heap for the client + streaming buffers upfront
-  add_link_options(-sSTACK_SIZE=8388608 -sINITIAL_MEMORY=268435456)
+  add_link_options(-sSTACK_SIZE=8388608 -sINITIAL_MEMORY=1073741824)
   add_link_options(-sPTHREAD_POOL_SIZE=8 -sEXIT_RUNTIME=0)
   add_link_options(-sERROR_ON_UNDEFINED_SYMBOLS=0)
   add_link_options(--profiling-funcs)

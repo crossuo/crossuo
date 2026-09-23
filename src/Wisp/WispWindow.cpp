@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "WispWindow.h"
 #include "../SDL_wrapper.h"
+#include <common/utils.h> // countof
 #include <external/gfx/gfx.h> // win_gfx_context_attrbutes
 #include "icon_client.h"
 #include "../GameWindow.h"

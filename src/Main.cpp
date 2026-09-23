@@ -192,6 +192,15 @@ bool load_config()
     auto streaming_params = []() {
         vfs_params params;
         params.enabled = true;
+#if defined(XUO_EMSC)
+        // web defaults: in-memory granule store + the web product subset
+        // (the full legacy install cannot fit the wasm heap). Traps are off:
+        // wasm has no fault-driven paging, so reads go through the explicit
+        // vfs_ensure_range pre-resolve path
+        params.store_backend = vfs_store_backend_arena;
+        params.subset = vfs_subset_web;
+        params.traps = false;
+#endif
         params.offline = g_cli["streaming-offline"].was_set();
         params.update_check = !g_cli["streaming-no-update"].was_set();
         params.background_sweep = !g_cli["streaming-no-sweep"].was_set();
