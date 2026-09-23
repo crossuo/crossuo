@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+// SPDX-FileCopyrightText: 2026 Danny Angelo Carminati Grein
 
 #include <algorithm>
 #include "WispWindow.h"
 #include "../SDL_wrapper.h"
-#include <common/utils.h> // countof
+#include <external/gfx/gfx.h> // win_gfx_context_attrbutes
 #include "icon_client.h"
-#include "../Point.h"
 #include "../GameWindow.h"
 
 namespace Wisp
@@ -141,9 +140,6 @@ bool CWindow::Create(const char *title, bool showCursor, int width, int height)
     {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     }
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
     {
         return false;
@@ -151,8 +147,13 @@ bool CWindow::Create(const char *title, bool showCursor, int width, int height)
 
     m_Size.Width = width;
     m_Size.Height = height;
-    m_window =
-        SDL_CreateWindow(title, 0, 0, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    Uint32 window_flags = SDL_WINDOW_RESIZABLE;
+#if !defined(XUO_EMSC)
+    // on web the window is a plain event/size source: the WebGL2 context is
+    // created and bound directly on the canvas by the renderer
+    window_flags |= SDL_WINDOW_OPENGL;
+#endif
+    m_window = SDL_CreateWindow(title, 0, 0, width, height, window_flags);
     if (m_window == nullptr)
     {
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Coult not create window: %s\n", SDL_GetError());

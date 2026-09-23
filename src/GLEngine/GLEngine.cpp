@@ -360,7 +360,9 @@ void CGLEngine::EndDraw()
     ScopedPerfMarker(__FUNCTION__);
     Drawing = false;
     GL_CALL(glDisable(GL_ALPHA_TEST));
+#if !defined(XUO_EMSC)
     GL_CALL(SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window));
+#endif
 }
 
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)

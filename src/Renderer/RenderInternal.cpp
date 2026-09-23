@@ -9,9 +9,11 @@
 #include "Debug/RenderDebug.h"
 #include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
-#include <common/logging/logging.h>
-#include <xuocore/enumlist.h> // SDM_NO_COLOR
 #include <assert.h>
+#if defined(XUO_EMSC)
+#include <emscripten/html5.h>
+
+#endif
 #include <string.h> // memcmp, memcpy
 #include <stdlib.h> // malloc
 #include <glm/glm.hpp>
@@ -105,18 +107,44 @@ bool Render_Init(SDL_Window *window)
 {
     // mark the renderer as down on ANY process exit path (atexit handlers run
     // in reverse order, so this executes before the global/static destructors),
-    // guarding the Render_Destroy* calls against issuing GL commands without a
-    // live context
     atexit([] { g_render.shutdown = true; });
+#if defined(XUO_EMSC)
+    // the browser owns the canvas: create a WebGL2 context directly and bind
+    // it as the current GL context (SDL's EGL path is not usable on web).
+    // GLES3 entry points are available on a webgl2 context; the GLSL ES 1.00
+    // shaders keep working.
+    EmscriptenWebGLContextAttributes attrs;
+    emscripten_webgl_init_context_attributes(&attrs);
+    attrs.majorVersion = 2; // WebGL2
+    attrs.minorVersion = 0;
+    attrs.stencil = 1;
+    attrs.depth = 1;
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE wctx =
+        emscripten_webgl_create_context("#canvas", &attrs);
+    if (wctx <= 0)
+    {
+        Error(Renderer, "emscripten: could not create a WebGL2 context (%d)", (int)wctx);
+        return false;
+    }
+    emscripten_webgl_make_context_current(wctx);
+    g_render.context = (SDL_GLContext)(uintptr_t)wctx;
+#else
     win_gfx_context_attrbutes(true);
-    auto context = SDL_GL_CreateContext(window);
+    auto context = SDL_GL_GetCurrentContext();
+    if (!context)
+    {
+        win_gfx_context_attrbutes(true);
+        context = SDL_GL_CreateContext(window);
+    }
+    // always bind: the GL state (GL.currentContext) is only set on MakeCurrent
     SDL_GL_MakeCurrent(window, context);
+#endif
 
 #if defined(USE_GLEW)
     int glewInitResult = glewInit();
     if (glewInitResult != 0)
     {
-        SDL_GL_DeleteContext(context);
+        SDL_GL_DeleteContext(SDL_GL_GetCurrentContext());
         Error(Renderer, "glewInit: %s", glewGetErrorString(glewInitResult));
         return false;
     }
@@ -125,6 +153,9 @@ bool Render_Init(SDL_Window *window)
         "glew(%s), fb=%i v(%s) (shader: %i)",
         glewGetString(GLEW_VERSION),
         GL_ARB_framebuffer_object,
+        glGetString(GL_VERSION),
+        GL_ARB_shader_objects);
+#elif defined(USE_GL3W)
         glGetString(GL_VERSION),
         GL_ARB_shader_objects);
 #elif defined(USE_GL3W)
@@ -176,7 +207,7 @@ bool Render_Init(SDL_Window *window)
 
     if (!canUseFrameBuffer)
     {
-        SDL_GL_DeleteContext(context);
+        SDL_GL_DeleteContext(SDL_GL_GetCurrentContext());
         Error(Client, "Your graphics card does not support Frame Buffers");
         return false;
     }
@@ -195,10 +226,22 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glCompileShader(vs));
     GLint status = GL_TRUE;
     GL_CHECK(glGetShaderiv(vs, GL_COMPILE_STATUS, &status));
+#if defined(XUO_EMSC)
+    {
+        char vlog[1024] = {};
+        glGetShaderInfoLog(vs, sizeof(vlog), nullptr, vlog);
+        fprintf(stderr, "VS DIAG: status=%d log='%s'\n", (int)status, vlog);
+        fflush(stdout);
+    }
+#endif
     if (status == GL_FALSE)
     {
         glGetShaderInfoLog(vs, sizeof(msg), nullptr, msg);
         Error(Renderer, "vs compilation: %s", msg);
+#if defined(XUO_EMSC)
+        fprintf(stderr, "--- VS SOURCE ---\n%s\n---", g_vShader);
+        fflush(stdout);
+#endif
     }
 
     const auto ps = glCreateShader(GL_FRAGMENT_SHADER);
@@ -206,10 +249,24 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glCompileShader(ps));
     status = GL_TRUE;
     GL_CHECK(glGetShaderiv(ps, GL_COMPILE_STATUS, &status));
+#if defined(XUO_EMSC)
+    {
+        char slog[1024] = {};
+        glGetShaderInfoLog(ps, sizeof(slog), nullptr, slog);
+        fprintf(stderr, "PS DIAG: status=%d log='%s' version_ok=%d\n",
+               (int)status, slog,
+               (int)(strstr(g_pShader, "#version 300 es") == g_pShader));
+        fflush(stdout);
+    }
+#endif
     if (status == GL_FALSE)
     {
         glGetShaderInfoLog(ps, sizeof(msg), nullptr, msg);
         Error(Renderer, "ps compilation: %s", msg);
+#if defined(XUO_EMSC)
+        fprintf(stderr, "--- PS SOURCE ---\n%s\n---", g_pShader);
+        fflush(stdout);
+#endif
     }
 
     _pProg = glCreateProgram();
@@ -220,8 +277,12 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glGetProgramiv(_pProg, GL_LINK_STATUS, &status));
     if (status == GL_FALSE)
     {
-        glGetProgramInfoLog(ps, sizeof(msg), nullptr, msg);
+        glGetProgramInfoLog(_pProg, sizeof(msg), nullptr, msg);
         Error(Renderer, "program link: %s", msg);
+#if defined(XUO_EMSC)
+        fprintf(stderr, "--- LINK FAILED ---\n");
+        fflush(stdout);
+#endif
     }
 
     _inPos = glGetAttribLocation(_pProg, "inPos");
@@ -315,7 +376,7 @@ bool Render_Init(SDL_Window *window)
 
     // Initialize persistent vertex buffers for optimized rendering
     Render_InitVertexBuffers();
-    g_render.context = context;
+    g_render.context = SDL_GL_GetCurrentContext();
     g_render.window = window;
     return true;
 }
@@ -381,8 +442,11 @@ void Render_SwapBuffers()
         GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
         GL_CHECK(glBufferData(GL_ARRAY_BUFFER, g_vboSize, nullptr, GL_DYNAMIC_DRAW));
         g_vboOffset = 0;
-    }
+#if !defined(XUO_EMSC)
     SDL_GL_SwapWindow(g_render.window);
+#endif
+    // on web the canvas is composited by the browser after every frame
+}
 }
 
 size_t Render_UploadVertices(const void *data, size_t size)

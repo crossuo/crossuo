@@ -371,13 +371,14 @@ if(XUO_ASSISTANT_ENABLED)
   # (verified: the whole lib still links - its imports are all resolved
   # through the link line, the in-process "plugin" hooks do not rely on
   # undefined-symbol leniency).
-  # (apple ld64 spells the same check -undefined,error)
+  # (apple ld64 spells it -undefined,error; wasm-ld has no equivalent)
   if (APPLE)
     target_link_options(crossuo PRIVATE "LINKER:-undefined,error")
-  else()
+  elseif (NOT XUO_EMSC)
     target_link_options(crossuo PRIVATE "LINKER:--no-undefined")
   endif()
 endif()
+
 if(CLANG_FORMAT AND NOT $ENV{XUO_CI})
   add_dependencies(crossuo clang-format-7)
 endif()

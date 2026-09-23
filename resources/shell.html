@@ -13,16 +13,25 @@
                        image-rendering: pixelated; background: #000;
                        border: 1px solid #2a2c36; outline: none; }
       #status { margin-top: 8px; font-size: 13px; opacity: .8; }
+      #log { margin-top: 8px; font-size: 11px; opacity: .6; white-space: pre;
+             height: 4em; overflow: hidden; }
     </style>
   </head>
   <body>
     <div id="wrap">
-      <!-- the emscripten runtime looks for Module.canvas / a #canvas node -->
+      <!-- the emscripten runtime binds to Module.canvas -->
       <canvas class="crossuo" id="canvas" tabindex="-1"
               oncontextmenu="event.preventDefault()"></canvas>
       <div id="status">loading&#8230;</div>
+      <div id="log"></div>
     </div>
     <script>
+      var statusEl = document.getElementById('status');
+      var logEl = document.getElementById('log');
+      window.addEventListener('error', function (e) {
+        var t = (e.error && e.error.stack) ? e.error.stack : e.message;
+        logEl.textContent += 'EXCEPTION: ' + t + '\n';
+      });
       var Module = {
         canvas: (function () {
           var c = document.getElementById('canvas');
@@ -34,16 +43,23 @@
           return c;
         })(),
         setStatus: function (text) {
-          document.getElementById('status').textContent = text;
+          if (text) statusEl.textContent = text;
+        },
+        print: function (text) {
+          logEl.textContent += text + '\n';
+          logEl.scrollTop = logEl.scrollHeight;
+        },
+        printErr: function (text) {
+          logEl.textContent += text + '\n';
         },
         onRuntimeInitialized: function () {
           setStatus('running');
         }
       };
       function setStatus(text) {
-        document.getElementById('status').textContent = text;
+        statusEl.textContent = text;
       }
     </script>
-    {{{ SCRIPT }}}
+    <script async src="crossuo.js"></script>
   </body>
 </html>

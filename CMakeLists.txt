@@ -164,7 +164,7 @@ endif()
 # only available on those renderers (same policy as XUO_LAUNCHER_EMBEDDED
 # above); GL1/GL2 legacy builds must not get it
 set(XUO_ASSISTANT_ENABLED Off)
-if (XUO_ASSISTANT AND (USE_GL3 OR USE_GLES2) AND NOT XUO_EMSC)
+if (XUO_ASSISTANT AND (USE_GL3 OR USE_GLES2))
   set(XUO_ASSISTANT_ENABLED On)
   message(STATUS "X:UO Assist: embedded in crossuo")
 endif()
@@ -191,9 +191,14 @@ else()
   # upfront.
   add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread)
   add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread)
-  add_link_options(-sINITIAL_MEMORY=134217728 -sPTHREAD_POOL_SIZE=8 -sEXIT_RUNTIME=0)
+  # the client comes from desktop-sized stacks: give every thread room
+  # (default 64KB overflows before main); pthread builds cannot grow memory,
+  # so size the fixed heap for the client + streaming buffers upfront
+  add_link_options(-sSTACK_SIZE=8388608 -sINITIAL_MEMORY=268435456)
+  add_link_options(-sPTHREAD_POOL_SIZE=8 -sEXIT_RUNTIME=0)
   add_link_options(-sERROR_ON_UNDEFINED_SYMBOLS=0)
-  add_link_options(--shell-file ${PROJECT_SOURCE_DIR}/resources/shell.html)
+  add_link_options(--profiling-funcs)
+  add_link_options(--profiling-funcs)
 endif()
 
 if (XUO_WINDOWS AND MSVC)
@@ -239,8 +244,8 @@ include_directories("${PROJECT_BINARY_DIR}/")
 add_subdirectory(external)
 add_subdirectory(common)
 add_subdirectory(xuocore)
+add_subdirectory(external/gfx)
 if (NOT XUO_EMSC)
-  add_subdirectory(external/gfx)
   add_subdirectory(tools)
   add_subdirectory(tests)
 endif()

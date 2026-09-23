@@ -246,7 +246,16 @@ static void vfs_fetch_worker_run(size_t index)
                             }));
             });
             if (s_stop)
+            {
+#if defined(XUO_EMSC)
+                // park instead of exiting: the browser main thread cannot
+                // block on pthread_join, so the pool is reused by the next
+                // vfs_fetch_start instead of being torn down
+                continue;
+#else
                 break;
+#endif
+            }
             if (!vfs_fetch_pop(&job))
                 continue; // lost the race for the queued job
             s_buffered += job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
@@ -325,11 +334,25 @@ bool vfs_fetch_start(const vfs_fetch_params &params)
     s_active_target = s_fetch_params.workers;
     s_sweep_cap = s_active_target > 1 ? int(s_active_target - 1) : 1;
     s_sweep_running = 0;
+#if defined(XUO_EMSC)
+    // the worker threads park across stop/start cycles: spawn once, reuse
+    if (s_workers.empty())
+    {
+        s_workers.resize(s_fetch_params.workers);
+        for (size_t i = 0; i < s_workers.size(); ++i)
+        {
+            s_workers[i].thread = std::thread(vfs_fetch_worker_run, i);
+        }
+    }
+    if (s_active_target > s_workers.size())
+        s_active_target = s_workers.size();
+#else
     s_workers.resize(s_fetch_params.workers);
     for (size_t i = 0; i < s_workers.size(); ++i)
     {
         s_workers[i].thread = std::thread(vfs_fetch_worker_run, i);
     }
+#endif
     LOG_INFO(
         "fetch: %u workers, %u retries, %" PRIu64 "MB buffer cap",
         s_fetch_params.workers,
@@ -383,6 +406,15 @@ void vfs_fetch_stop()
     }
     s_cv_jobs.notify_all();
     s_cv_done.notify_all();
+#if defined(XUO_EMSC)
+    // the browser main thread cannot block on pthread_join (the tab would
+    // freeze): workers park on the stop flag and the pool is reused by the
+    // next vfs_fetch_start
+    std::unique_lock<std::mutex> lock(s_mutex);
+    s_queue.clear();
+    s_active.clear();
+    s_running = false;
+#else
     for (auto &worker : s_workers)
     {
         if (worker.thread.joinable())
@@ -393,6 +425,7 @@ void vfs_fetch_stop()
     s_queue.clear();
     s_active.clear();
     s_running = false;
+#endif
 }
 
 void vfs_fetch_set_repos(const char *manifest_repo, const char *file_repo)

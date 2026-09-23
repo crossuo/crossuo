@@ -11,7 +11,7 @@
     #define USE_GL3W
     #define SOKOL_GLCORE33
     #define SOKOL_GLES3
-    #define GFX_GL_MAJOR 3
+    #define GFX_GL_MAJOR 2
     #define GFX_GL_MINOR 2
     #if defined(__APPLE__)
         #define GL_SHADER_VERSION "150"
@@ -50,6 +50,23 @@
     #define GL_SHADER_OUT "varying "
     #define GFX_GL_MAJOR 2
     #define GFX_GL_MINOR 1
+    #if defined(XUO_EMSC)
+        // webgl2: GLES3 context (glTexImage3D/glCopyImageSubData) and GLSL
+        // ES 3.00 shaders (the ES 1.00 attribute/varying syntax above is not
+        // valid on a webgl2 context)
+        #undef GFX_GL_MAJOR
+        #undef GFX_GL_MINOR
+        #undef GL_SHADER_VERSION
+        #undef GL_SHADER_ATTRIBUTE
+        #undef GL_SHADER_IN
+        #undef GL_SHADER_OUT
+        #define GFX_GL_MAJOR 3
+        #define GFX_GL_MINOR 0
+        #define GL_SHADER_VERSION "300 es"
+        #define GL_SHADER_ATTRIBUTE(x) "layout (location = " #x " ) in "
+        #define GL_SHADER_IN "in "
+        #define GL_SHADER_OUT "out "
+    #endif
     #define IMGUI_IMPL_OPENGL_ES2
     //#define IMGUI_IMPL_OPENGL_ES3
     #if defined(XUO_EMSC)
@@ -71,6 +88,12 @@
     #ifndef GL_UNSIGNED_SHORT_1_5_5_5_REV
         #define GL_UNSIGNED_SHORT_1_5_5_5_REV 0x8366
     #endif
+    #ifndef GL_MAJOR_VERSION
+        #define GL_MAJOR_VERSION 0x821B
+    #endif
+    #ifndef GL_MINOR_VERSION
+        #define GL_MINOR_VERSION 0x821C
+    #endif
     #ifdef __cplusplus
     extern "C" {
     #endif
@@ -84,7 +107,7 @@
     #ifdef __cplusplus
     }
     #endif
-#endif
+#endif // GLES2 branch
 #elif defined(USE_DX11) // #elif defined(USE_GL2)
     #define SOKOL_D3D11
 #elif defined(USE_METAL) // #elif defined(USE_DX11)
@@ -194,14 +217,25 @@ static inline int gfx_gl_validation_enabled()
             } \
         } \
     } while(0)
+// GLES3/WebGL2 runtime support (emscripten): the array sampler needs an
+// explicit precision in fragment shaders and texture2D does not exist in
+// GLSL ES 3.00. Injected via the C preprocessor - GLSL-level #ifdefs cannot
+// see C compiler defines.
+#if defined(XUO_EMSC)
+#define GL_SHADER_ES3_COMPAT "precision highp sampler2DArray;\n" "#define texture2D texture\n"
+#else
+#define GL_SHADER_ES3_COMPAT ""
+#endif
 
 #define GL_SHADER_HEADER \
     "#version " GL_SHADER_VERSION "\n" \
+    GL_SHADER_ES3_COMPAT \
     "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" \
     "precision highp float;\n" \
     "#else\n" \
     "precision mediump float;\n" \
-    "#endif\n"
+    "#endif\n" \
+    "out highp vec4 xuo_fragColor;\n"
 #endif
 
 #if (__cplusplus >= 201100)
