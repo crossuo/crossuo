@@ -853,15 +853,45 @@ FS_PRIVATE fs_path fs_path_current()
     return path;
 }
 
-#if defined(_WIN32)
-#define USE_MMAP 0 /* no mmap on windows - plain read fallback below */
-#else
-#define USE_MMAP 1
-#endif
 FS_PRIVATE unsigned char *fs_map(const fs_path &path, size_t *length)
 {
     unsigned char *ptr = nullptr;
-#if USE_MMAP
+#if defined(_WIN32)
+    // CreateFileMapping keeps the POSIX shared-mapping semantics alive on
+    // windows: the view observes writes made through other handles (the VFS
+    // sparse materialization writes into mapped install files), and a plain
+    // read+copy fallback would serve stale bytes forever
+    HANDLE file = CreateFileA(
+        fs_path_ascii(path), GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        return nullptr;
+    }
+
+    LARGE_INTEGER win_size;
+    if (!GetFileSizeEx(file, &win_size) || win_size.QuadPart <= 0)
+    {
+        CloseHandle(file);
+        return nullptr;
+    }
+    size_t size = (size_t)win_size.QuadPart;
+
+    HANDLE map = CreateFileMappingA(file, nullptr, PAGE_READONLY, 0, 0, nullptr);
+    CloseHandle(file);
+    if (!map)
+    {
+        return nullptr;
+    }
+
+    ptr = (unsigned char *)MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
+    CloseHandle(map);
+    if (!ptr)
+    {
+        return nullptr;
+    }
+#else
     int fd = open(fs_path_ascii(path), O_RDONLY);
     if (fd < 0)
     {
@@ -881,28 +911,6 @@ FS_PRIVATE unsigned char *fs_map(const fs_path &path, size_t *length)
     }
 fail:
     close(fd);
-#else
-    FILE *fd = fopen(fs_path_ascii(path), "rb");
-    if (!fd)
-        return nullptr;
-
-    fseek(fd, 0, SEEK_END);
-    size_t size = ftell(fd);
-    if (size <= 0)
-        goto fail;
-
-    rewind(fd);
-    ptr = (unsigned char *)malloc(size);
-    if (!ptr)
-        goto fail;
-
-    if (fread(ptr, size, 1, fd) != 1)
-    {
-        free(ptr);
-        ptr = nullptr;
-    }
-fail:
-    fclose(fd);
 #endif
 
     if (length != nullptr)
@@ -915,11 +923,11 @@ fail:
 FS_PRIVATE void fs_unmap(unsigned char *ptr, size_t length)
 {
     assert(ptr);
-#if USE_MMAP
-    munmap(ptr, length);
-#else
+#if defined(_WIN32)
     UNUSED(length);
-    free(ptr);
+    UnmapViewOfFile(ptr);
+#else
+    munmap(ptr, length);
 #endif
 }
 

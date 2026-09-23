@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #else
 #include <windows.h>
+#include <io.h> // _chsize_s/_commit
 #endif
 
 #include <vector>
@@ -489,7 +490,37 @@ static bool vfs_store_write_loose(
     std::vector<uint8_t> payload;
     if (vfs_store_asset_inflate(asset, blob, &payload) != 0)
         return false;
-    return fs_file_write(fs_path_ascii(path), payload.data(), payload.size());
+
+    const char *ascii = fs_path_ascii(path);
+    // a managed file may hold a trap mapping: windows refuses to truncate a
+    // file with a mapped view (ERROR_USER_MAPPED_FILE), so write in place and
+    // only fall back to create/truncate when the file does not exist yet
+    FILE *fp = fopen(ascii, "r+b");
+    if (!fp)
+        fp = fopen(ascii, "wb");
+    if (!fp)
+        return false;
+    const bool wrote =
+        fseek(fp, 0, SEEK_SET) == 0 && fwrite(payload.data(), 1, payload.size(), fp) == payload.size();
+    if (wrote)
+    {
+        // best-effort size match (a mapped sparse file is already the exact
+        // plan size and windows refuses to resize it - ignore that failure)
+        fflush(fp);
+#if defined(XUO_WINDOWS)
+        _chsize_s(_fileno(fp), static_cast<long long>(payload.size()));
+        // publish the buffered writes to mapped views of the same file
+        _commit(_fileno(fp));
+#else
+        if (ftruncate(fileno(fp), static_cast<off_t>(payload.size())) != 0)
+        {
+            /* mapped on posix: length already matches, ignore */
+        }
+        fsync(fileno(fp));
+#endif
+    }
+    fclose(fp);
+    return wrote;
 }
 
 // ---------------------------------------------------------------------------
