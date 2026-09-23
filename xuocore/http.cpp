@@ -4,90 +4,282 @@
 #define LOGGER_MODULE Network
 
 #if defined(XUO_EMSC)
-// web build: libcurl does not exist on emscripten; the streaming engine
-// treats these as an unreachable network until the emscripten fetch backend
-// is wired in (the offline/preloaded product paths do not need it)
+// web transport: emscripten_fetch on a dedicated worker thread. Blocking
+// semantics match the curl implementation (callers are the vfs fetch pool
+// threads and the boot path), and the browser main thread is never involved,
+// so the game loop keeps running while transfers are in flight.
+//
+// NOTE: the browser enforces CORS - the streaming product must be served
+// from the same origin as the page (or from a CORS-enabled mirror).
 #include "http.h"
 #include <string.h>
 #include <vector>
+#include <string>
+#include <deque>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
+#include <emscripten/fetch.h>
 
 #include <common/logging/logging.h>
+#include <common/fs.h>
 
-#ifndef LOG_ERROR
 #define LOG_ERROR(...) Error(LOGGER_MODULE, __VA_ARGS__)
-#endif
 
 static const char *s_agentName = nullptr;
 
+namespace {
+
+enum class http_op
+{
+    op_get,
+    op_get_range,
+};
+
+struct http_request
+{
+    http_op op = http_op::op_get;
+    std::string url;
+    std::string range;   // "bytes=a-b" for ranged gets
+    size_t body_cap = 0; // 0: unbounded
+    // results
+    bool ok = false;
+    long status = 0;
+    std::vector<uint8_t> body;
+    bool done = false;
+};
+
+std::mutex s_mutex;
+std::condition_variable s_cv;
+std::deque<http_request *> s_queue;
+bool s_worker_stop = false;
+std::thread s_worker;
+
+void http_perform(http_request &req)
+{
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    strcpy(attr.requestMethod, "GET");
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+
+    const char *headers[3] = {};
+    if (req.op == http_op::op_get_range && !req.range.empty())
+    {
+        // user agent is a forbidden header name in browsers - skipped
+        headers[0] = "Range";
+        headers[1] = req.range.c_str();
+        attr.requestHeaders = headers;
+    }
+
+    emscripten_fetch_t *fetch = emscripten_fetch(&attr, req.url.c_str());
+    if (fetch == nullptr)
+    {
+        req.status = 0;
+        req.ok = false;
+        return;
+    }
+
+    req.status = (long)fetch->status;
+    if (fetch->status == 200 && fetch->data && fetch->numBytes > 0)
+    {
+        req.body.assign(fetch->data, fetch->data + fetch->numBytes);
+        req.ok = true;
+        if (req.body_cap && req.body.size() > req.body_cap)
+        {
+            LOG_ERROR(
+                "transfer exceeded the body cap (%zu > %zu): %s",
+                req.body.size(),
+                req.body_cap,
+                req.url.c_str());
+            req.ok = false;
+        }
+    }
+    else if (fetch->status != 200)
+    {
+        LOG_ERROR(
+            "transport failed (%ld): %s",
+            req.status,
+            fetch->status ? req.url.c_str() : "network error");
+    }
+    emscripten_fetch_close(fetch);
+}
+
+void http_worker()
+{
+    for (;;)
+    {
+        http_request *req = nullptr;
+        {
+            std::unique_lock<std::mutex> lock(s_mutex);
+            s_cv.wait(lock, [] { return s_worker_stop || !s_queue.empty(); });
+            if (!s_queue.empty())
+            {
+                req = s_queue.front();
+                s_queue.pop_front();
+            }
+            else if (s_worker_stop)
+            {
+                return;
+            }
+        }
+        if (req)
+        {
+            http_perform(*req);
+            {
+                std::lock_guard<std::mutex> lock(s_mutex);
+                req->done = true;
+            }
+            s_cv.notify_all();
+        }
+    }
+}
+
+// serializes the call over the dedicated transport worker: the caller blocks
+// exactly like the curl implementation does
+bool http_submit(http_request &req)
+{
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        if (s_worker_stop)
+            return false;
+        s_queue.push_back(&req);
+    }
+    s_cv.notify_all();
+    std::unique_lock<std::mutex> lock(s_mutex);
+    s_cv.wait(lock, [&req] { return req.done; });
+    return req.ok;
+}
+
+} // namespace
+
+void http_init()
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    if (!s_worker.joinable())
+        s_worker = std::thread(http_worker);
+}
+
+void http_shutdown()
+{
+    {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        s_worker_stop = true;
+    }
+    s_cv.notify_all();
+    if (s_worker.joinable())
+        s_worker.join();
+}
+
+void http_set_user_agent(const char *name)
+{
+    // browsers forbid overriding the User-Agent header
+    (void)name;
+}
+
 bool http_get(const char *url, const char *agent, size_t body_cap, http_response *out)
 {
-    (void)url;
     (void)agent;
-    (void)body_cap;
-    if (out)
-    {
-        out->status = 0;
-        out->body.clear();
-    }
-    LOG_ERROR("http_get: network unavailable on the web build (%s)", url ? url : "");
-    return false;
+    if (!url || !out)
+        return false;
+    http_request req;
+    req.op = http_op::op_get;
+    req.url = url;
+    req.body_cap = body_cap;
+    if (!http_submit(req))
+        return false;
+    out->status = req.status;
+    out->body = std::move(req.body);
+    return req.ok && out->status == 200;
 }
 
 bool http_get_range(
     const char *url, const char *agent, uint64_t offset, uint64_t length, http_response *out)
 {
-    (void)url;
     (void)agent;
-    (void)offset;
-    (void)length;
-    if (out)
-    {
-        out->status = 0;
-        out->body.clear();
-    }
-    LOG_ERROR("http_get_range: network unavailable on the web build");
-    return false;
-}
-
-void http_init()
-{
-}
-void http_shutdown()
-{
-}
-void http_set_user_agent(const char *name)
-{
-    s_agentName = name;
+    if (!url || !out)
+        return false;
+    http_request req;
+    req.op = http_op::op_get_range;
+    req.url = url;
+    req.body_cap = length ? length : 0;
+    char range[64];
+    snprintf(range, sizeof(range), "bytes=%llu-%llu",
+             (unsigned long long)offset, (unsigned long long)(offset + length - 1));
+    req.range = range;
+    if (!http_submit(req))
+        return false;
+    out->status = req.status;
+    // like the curl implementation: only honor a real range answer (206 with
+    // the exact byte count) - a 200 would deliver the whole file
+    out->body = std::move(req.body);
+    return req.ok && out->status == 206 && out->body.size() == length;
 }
 
 bool http_get_binary(const char *url, const uint8_t *buf, size_t *size)
 {
-    (void)url;
-    if (size)
-        *size = 0;
-    (void)buf;
-    return false;
+    if (!url || !buf || !size)
+        return false;
+    http_request req;
+    req.op = http_op::op_get;
+    req.url = url;
+    if (!http_submit(req))
+        return false;
+    if (req.status != 200 || req.body.size() > *size)
+        return false;
+    memcpy((void *)buf, req.body.data(), req.body.size());
+    *size = req.body.size();
+    return true;
 }
 
 bool http_get_binary(const char *url, std::vector<uint8_t> &data)
 {
-    (void)url;
-    data.clear();
-    return false;
+    http_request req;
+    req.op = http_op::op_get;
+    req.url = url;
+    if (!http_submit(req))
+    {
+        data.clear();
+        return false;
+    }
+    if (req.status != 200)
+    {
+        data.clear();
+        return false;
+    }
+    data = std::move(req.body);
+    return true;
 }
 
 bool http_get_string(const char *url, std::string &data)
 {
-    (void)url;
-    data.clear();
-    return false;
+    http_request req;
+    req.op = http_op::op_get;
+    req.url = url;
+    if (!http_submit(req))
+    {
+        data.clear();
+        return false;
+    }
+    if (req.status != 200)
+    {
+        data.clear();
+        return false;
+    }
+    data.assign(req.body.begin(), req.body.end());
+    return true;
 }
 
 bool http_get_file(const char *url, const char *filename)
 {
-    (void)filename;
-    LOG_ERROR("http_get_file: network unavailable on the web build (%s)", url ? url : "");
-    return false;
+    http_request req;
+    req.op = http_op::op_get;
+    req.url = url;
+    if (!http_submit(req))
+        return false;
+    if (req.status != 200 || req.body.empty())
+        return false;
+    return fs_file_write(filename, req.body.data(), req.body.size());
 }
 
 std::string http_urlencode(std::string str)
@@ -110,11 +302,12 @@ std::string http_urlencode(std::string str)
             out += hex[ch & 0x0f];
         }
     }
-    (void)s_agentName;
     return out;
 }
 
 #else // #if defined(XUO_EMSC)
+
+#include "http.h"#else // #if defined(XUO_EMSC)
 
 #include "http.h"
 

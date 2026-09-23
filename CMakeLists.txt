@@ -189,8 +189,8 @@ else()
   # which require the atomics feature (SharedArrayBuffer at runtime - serve
   # with COOP/COEP headers). pthread builds cannot grow memory, so size it
   # upfront.
-  add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread)
-  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread)
+  add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1)
+  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1)
   # the client comes from desktop-sized stacks: give every thread room
   # (default 64KB overflows before main); pthread builds cannot grow memory,
   # so size the fixed heap for the client + streaming buffers upfront
@@ -198,7 +198,18 @@ else()
   add_link_options(-sPTHREAD_POOL_SIZE=8 -sEXIT_RUNTIME=0)
   add_link_options(-sERROR_ON_UNDEFINED_SYMBOLS=0)
   add_link_options(--profiling-funcs)
-  add_link_options(--profiling-funcs)
+  # honor the shell-provided Module fields (arguments/canvas/print/...)
+  add_link_options(-sINCOMING_MODULE_JS_API=arguments,canvas,print,printErr,setStatus,onRuntimeInitialized,locateFile)
+  # web builds stream from their own origin by default (the browser blocks
+  # cross-origin fetches without CORS headers); override per build with
+  # -DXUO_WEB_PRODUCT_URL=<url>
+  if(NOT XUO_WEB_PRODUCT_URL)
+    # relative: resolved against the page origin, so the product must be
+    # served next to the wasm (scripts/serve-wasm.py does this)
+    set(XUO_WEB_PRODUCT_URL "patch" CACHE STRING
+        "default streaming product url for the web build")
+  endif()
+  add_compile_definitions(XUO_WEB_PRODUCT_URL="${XUO_WEB_PRODUCT_URL}")
 endif()
 
 if (XUO_WINDOWS AND MSVC)

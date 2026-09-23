@@ -3,6 +3,9 @@
 
 #include <algorithm>
 #include <time.h>
+#if defined(XUO_EMSC)
+#include <emscripten.h> // emscripten_run_script_string (product url origin)
+#endif
 #include <common/str.h>
 #include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
 #include "Config.h"
@@ -199,6 +202,21 @@ bool load_config()
             params.product_url =
                 vfs_aops_product_url(g_cli["streaming-product"].get().string);
         }
+#if defined(XUO_EMSC)
+        else
+        {
+            // web builds stream from their own origin: there is no launcher
+            // and no local install, and argv passthrough is best-effort.
+            // relative product urls are resolved against the page origin
+            // (fetch workers are created from blobs and have no base url)
+            std::string product = XUO_WEB_PRODUCT_URL;
+            if (product.find("http") != 0)
+            {
+                product = std::string(emscripten_run_script_string("location.origin")) + "/" + product;
+            }
+            params.product_url = product;
+        }
+#endif
         if (g_cli["streaming-trap"].was_set())
         {
             // --streaming-trap=off: holes stay readable (zeros) - the escape

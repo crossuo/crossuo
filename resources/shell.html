@@ -26,14 +26,28 @@
       <div id="log"></div>
     </div>
     <script>
-      var statusEl = document.getElementById('status');
-      var logEl = document.getElementById('log');
-      window.addEventListener('error', function (e) {
-        var t = (e.error && e.error.stack) ? e.error.stack : e.message;
-        logEl.textContent += 'EXCEPTION: ' + t + '\n';
-      });
-      var Module = {
-        canvas: (function () {
+      // pthread builds run the runtime before the glue reads this object, so
+      // create it up front and attach every handler to the same instance
+      var Module = window.Module || {};
+      (function () {
+        var statusEl = document.getElementById('status');
+        var logEl = document.getElementById('log');
+        function setStatus(text) {
+          statusEl.textContent = text;
+        }
+        // pass URL query parameters to the client as command line arguments:
+        //   index.html?streaming-product=http://host/patch&streaming-workers=4
+        Module.arguments = (function () {
+          var args = ['./crossuo'];
+          var q = window.location.search.substring(1);
+          if (q) {
+            q.split('&').forEach(function (kv) {
+              if (kv) args.push(decodeURIComponent(kv));
+            });
+          }
+          return args;
+        })();
+        Module.canvas = (function () {
           var c = document.getElementById('canvas');
           c.addEventListener('webglcontextlost', function (e) {
             e.preventDefault();
@@ -41,24 +55,25 @@
             setTimeout(function () { location.reload(); }, 1000);
           });
           return c;
-        })(),
-        setStatus: function (text) {
+        })();
+        Module.setStatus = function (text) {
           if (text) statusEl.textContent = text;
-        },
-        print: function (text) {
+        };
+        Module.print = function (text) {
           logEl.textContent += text + '\n';
-          logEl.scrollTop = logEl.scrollHeight;
-        },
-        printErr: function (text) {
+        };
+        Module.printErr = function (text) {
           logEl.textContent += text + '\n';
-        },
-        onRuntimeInitialized: function () {
+        };
+        Module.onRuntimeInitialized = function () {
           setStatus('running');
-        }
-      };
-      function setStatus(text) {
-        statusEl.textContent = text;
-      }
+          Module.print('ARGS: ' + JSON.stringify(Module.arguments));
+        };
+        window.addEventListener('error', function (e) {
+          var t = (e.error && e.error.stack) ? e.error.stack : e.message;
+          logEl.textContent += 'EXCEPTION: ' + t + '\n';
+        });
+      })();
     </script>
     <script async src="crossuo.js"></script>
   </body>
