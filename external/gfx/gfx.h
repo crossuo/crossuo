@@ -11,7 +11,7 @@
     #define USE_GL3W
     #define SOKOL_GLCORE33
     #define SOKOL_GLES3
-    #define GFX_GL_MAJOR 2
+    #define GFX_GL_MAJOR 3
     #define GFX_GL_MINOR 2
     #if defined(__APPLE__)
         #define GL_SHADER_VERSION "150"
