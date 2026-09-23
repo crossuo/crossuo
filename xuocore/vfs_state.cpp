@@ -10,6 +10,8 @@
 
 #if !defined(XUO_WINDOWS)
 #include <unistd.h> // fsync
+#else
+#include <io.h> // _commit
 #endif
 
 #include <vector>

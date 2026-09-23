@@ -504,7 +504,9 @@ FS_PRIVATE fs_path fs_path_appdata()
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#if !defined(_WIN32)
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 #include <codecvt>
 #include "str.h"
@@ -517,6 +519,13 @@ FS_PRIVATE fs_path fs_path_appdata()
 #elif defined(__APPLE__)
 #include <copyfile.h> // copyfile
 #include <libproc.h>  // proc_pidpath
+#elif defined(_WIN32)
+#include <direct.h> // _mkdir
+#include <windows.h>
+#define mkdir(p, m) _mkdir(p)
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
 #endif
 
 FS_PRIVATE fs_path fs_path_from(const astr_t &s)
@@ -609,20 +618,25 @@ static void fs_path_list_internal_r(const char *name, std::vector<fs_path> &out)
     }
 
     char it[FS_MAX_PATH]{};
+    struct stat st = {};
     while ((entry = readdir(dir)) != nullptr)
     {
-        if (entry->d_type == DT_DIR)
+        snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+        // stat each entry: not every platform's dirent carries d_type (mingw)
+        if (stat(it, &st) != 0)
+        {
+            continue;
+        }
+        if (S_ISDIR(st.st_mode))
         {
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             {
                 continue;
             }
-            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
             fs_path_list_internal_r(it, out);
         }
         else
         {
-            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
             astr_t p = it;
             out.emplace_back(fs_path_from(p));
         }
@@ -729,6 +743,8 @@ FS_PRIVATE uint64_t fs_timestamp_write(const fs_path &path)
         return -1;
 #if defined(__APPLE__)
     return static_cast<uint64_t>(stats.st_mtime);
+#elif defined(_WIN32)
+    return static_cast<uint64_t>(stats.st_mtime);
 #else
     return static_cast<uint64_t>(stats.st_mtim.tv_sec);
 #endif
@@ -811,6 +827,14 @@ FS_PRIVATE fs_path fs_path_process()
     if (fs_path_is_file(file))
         file = fs_directory(file);
     return file;
+#elif defined(_WIN32)
+    char buf[FS_MAX_PATH];
+    if (GetModuleFileNameA(nullptr, buf, FS_MAX_PATH) == 0)
+        return fs_path_current();
+    fs_path file = fs_path_from(buf);
+    if (fs_path_is_file(file))
+        file = fs_directory(file);
+    return file;
 #else
     char buf[FS_MAX_PATH];
     int len = readlink("/proc/self/exe", buf, FS_MAX_PATH);
@@ -829,7 +853,11 @@ FS_PRIVATE fs_path fs_path_current()
     return path;
 }
 
+#if defined(_WIN32)
+#define USE_MMAP 0 /* no mmap on windows - plain read fallback below */
+#else
 #define USE_MMAP 1
+#endif
 FS_PRIVATE unsigned char *fs_map(const fs_path &path, size_t *length)
 {
     unsigned char *ptr = nullptr;

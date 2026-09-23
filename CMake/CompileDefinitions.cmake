@@ -46,8 +46,10 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
   add_definitions(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
-  add_definitions(/wd4738) # storing 32-bit float result in memory, possible loss of performance
-  add_definitions(/wd4201) # nameless struct/union
+  if(MSVC)
+    add_definitions(/wd4738) # storing 32-bit float result in memory, possible loss of performance
+    add_definitions(/wd4201) # nameless struct/union
+  endif()
 else()
   #thread sanitizer - issues to fix
   #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")

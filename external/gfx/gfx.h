@@ -17,10 +17,10 @@
         #define GL_SHADER_VERSION "150"
     #else // #if defined(__APPLE__)
         #define GL_SHADER_VERSION "330"
+    #endif // #else // #if defined(__APPLE__)
     #define GL_SHADER_ATTRIBUTE(x) "layout (location = " #x " ) in "
     #define GL_SHADER_IN "in "
     #define GL_SHADER_OUT "out "
-    #endif // #else // #if defined(__APPLE__)
 #elif defined(USE_GL1)
     #define USE_GL
     #define USE_GLEW

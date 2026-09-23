@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
+// macOS gates the (deprecated) ucontext routines behind _XOPEN_SOURCE and the
+// feature macro must be defined before any libc header
+#if defined(__APPLE__)
+#define _XOPEN_SOURCE 600
+#endif
+
 // trap tests: hole-paged managed mappings with fault-driven resolution.
 // No display, no network: the store is pre-seeded and the
 // resolution backend runs offline (the game backend skips the fetch and

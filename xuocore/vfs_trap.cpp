@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 CrossUO Team
 
+// macOS gates the (deprecated) ucontext routines behind _XOPEN_SOURCE and the
+// feature macro must be defined before any libc header
+#if defined(__APPLE__)
+#define _XOPEN_SOURCE 600
+#endif
+
 // vfs_trap implementation. See vfs_trap.h for the design contract.
 //
 // Threading and lock order: trap_lock (s_mutex) ->
@@ -47,7 +53,7 @@
 #include "vfs_stub.h"
 #include <common/logging/logging.h>
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
@@ -138,7 +144,7 @@ struct vfs_trap_mapping
 
 size_t os_page_size()
 {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     SYSTEM_INFO info;
     GetSystemInfo(&info);
     return size_t(info.dwPageSize);
@@ -172,7 +178,7 @@ uint64_t trap_page_span(size_t page, const vfs_trap_mapping &m)
 // os primitives: RW-backed shared mapping + per-page protection
 // ---------------------------------------------------------------------------
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 
 uint8_t *os_map_rw(const fs_path &path, size_t *out_size)
 {
@@ -296,7 +302,7 @@ bool os_protect_read_write(uint8_t *base, size_t size)
     return os_protect(base, size, PROT_READ | PROT_WRITE);
 }
 
-#endif // defined(_MSC_VER)
+#endif // defined(_WIN32)
 
 // ---------------------------------------------------------------------------
 // module state
@@ -880,7 +886,7 @@ bool trap_handle_fault(uint8_t *addr)
 // fault handlers
 // ---------------------------------------------------------------------------
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 
 long NTAPI trap_veh(PEXCEPTION_POINTERS info)
 {
@@ -955,7 +961,7 @@ void trap_sigaction(int sig, siginfo_t *info, void *context)
     trap_chain(sig, info, context);
 }
 
-#endif // defined(_MSC_VER)
+#endif // defined(_WIN32)
 
 } // namespace
 
@@ -970,7 +976,7 @@ void trap_sigaction(int sig, siginfo_t *info, void *context)
 // read: writes must be chained, never resolved (resolving a write livelocks)
 bool vfs_trap_fault_is_write(void *context)
 {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     const auto *record = static_cast<const EXCEPTION_RECORD *>(context);
     if (!record || record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return false;
@@ -1015,7 +1021,7 @@ bool vfs_trap_install()
     std::lock_guard<std::mutex> lock(s_mutex);
     if (s_handler_installed)
         return true;
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     if (!AddVectoredExceptionHandler(1, reinterpret_cast<PVECTORED_EXCEPTION_HANDLER>(trap_veh)))
     {
         LOG_ERROR("vfs_trap: AddVectoredExceptionHandler failed");
@@ -1049,7 +1055,7 @@ void vfs_trap_shutdown()
     std::unique_lock<std::mutex> lock(s_mutex);
     if (!s_handler_installed)
         return;
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     RemoveVectoredExceptionHandler(reinterpret_cast<PVOID>(trap_veh));
 #else
     if (s_previous_valid)

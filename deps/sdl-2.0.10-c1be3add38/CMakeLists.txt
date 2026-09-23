@@ -100,8 +100,10 @@ endif()
 
 # Get the platform
 if(WIN32)
-  add_link_options(/ignore:4217 /ignore:4286)
-  add_definitions(/D_CRT_SUPPRESS_RESTRICT /wd4141 /wd4047 /wd4013 /wd4312 /wd4255 /wd4152 /wd4996 /wd4204 /wd4310 /wd4701 /wd4113 /wd4706 /wd4142 /wd4005 /wd4200 /wd5032 /wd4057 /wd4459)
+  if(MSVC) # MSVC-only flags; MinGW/mxe cross builds use GNU-style options
+    add_link_options(/ignore:4217 /ignore:4286)
+    add_definitions(/D_CRT_SUPPRESS_RESTRICT /wd4141 /wd4047 /wd4013 /wd4312 /wd4255 /wd4152 /wd4996 /wd4204 /wd4310 /wd4701 /wd4113 /wd4706 /wd4142 /wd4005 /wd4200 /wd5032 /wd4057 /wd4459)
+  endif()
   if(NOT WINDOWS)
     set(WINDOWS TRUE)
   endif()

@@ -37,7 +37,7 @@
 static bool vfs_file_seek(FILE *fp, uint64_t offset)
 {
 #if defined(XUO_WINDOWS)
-    return _fseeki64(fp, __int64(offset), SEEK_SET) == 0;
+    return _fseeki64(fp, (long long)(offset), SEEK_SET) == 0;
 #else
     return fseeko(fp, off_t(offset), SEEK_SET) == 0;
 #endif
@@ -47,7 +47,7 @@ static bool vfs_file_truncate(FILE *fp, uint64_t size)
 {
     fflush(fp);
 #if defined(XUO_WINDOWS)
-    return _chsize_s(_fileno(fp), __int64(size)) == 0;
+    return _chsize_s(_fileno(fp), (long long)(size)) == 0;
 #else
     return ftruncate(fileno(fp), off_t(size)) == 0;
 #endif

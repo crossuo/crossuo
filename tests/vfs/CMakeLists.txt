@@ -16,13 +16,16 @@ set(VFS_TESTS_SRCS
   test_product.h
   test_server.h
   test_state.cpp
-  test_trap.cpp
   test_store.cpp
   test_stub.cpp
   test_update.cpp
   test_urls.cpp
   test_uop_parse.cpp
 )
+# test_trap uses POSIX signals/ucontext and is not buildable on windows
+if (NOT XUO_WINDOWS)
+  list(APPEND VFS_TESTS_SRCS test_trap.cpp)
+endif()
 
 add_executable(${PROJECT_NAME} ${VFS_TESTS_SRCS})
 add_dependencies(${PROJECT_NAME} ${XUOCORE_PROJECT} ${EXTERNAL_PROJECT} ${COMMON_PROJECT} vuoi)

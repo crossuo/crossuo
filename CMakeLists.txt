@@ -11,6 +11,15 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 project(crossuo)
 
+if (XUO_WINDOWS AND NOT MSVC)
+  # mingw cross builds: .rc resources need the RC (windres) language enabled;
+  # MSVC generators enable it automatically
+  enable_language(RC)
+  # windres resolves ICON/BITMAP files against its include paths, not the .rc
+  # file's directory like MSVC's rc.exe does
+  set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -I${PROJECT_SOURCE_DIR}/resources")
+endif()
+
 if (NOT XUO_VERSION)
   set(XUO_VERSION "1.1.0")
 endif()
@@ -28,6 +37,8 @@ option(RENDER_GLES2 "Force OpenGL ES2 (default Off)" OFF)
 option(RENDER_GL3 "Force OpenGL 3.x (default Off)" OFF)
 option(RENDER_GL1 "Force OpenGL 1.1 (automatic)" OFF)
 option(XUO_ASSISTANT "Build in-client assistant (default: On)" ON)
+option(XUO_STATIC_BINARY "Fully static link the client executable (musl) (default: Off)" OFF)
+option(XUO_STATIC_CXX_RUNTIME "Statically link libgcc/libstdc++ (portable glibc builds) (default: Off)" OFF)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
@@ -40,6 +51,12 @@ if (ENABLE_FORMAT)
 endif()
 include(CompileDefinitions)
 include(Compiler)
+
+if (XUO_WINDOWS AND NOT MSVC)
+  # winsock must appear after every target archive on the link line (vendored
+  # libressl/curl reference it); CMake emits standard libraries last
+  set(CMAKE_CXX_STANDARD_LIBRARIES "-lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
+endif()
 include(CCache)
 include(Revision)
 include(Dependencies)
@@ -63,11 +80,17 @@ if (RENDER_GLES2)
 endif()
 if (RENDER_GL1 OR RENDER_GL3)
   if (NOT APPLE)
-    # Set the preferred opengl library to GLVND if there is GLVND and Legacy.
-    # Only if there is no GLVND Legacy will be used.
-    # The that is the default with cmake-3.11. Legacy is deprecated.
-    # See cmake --help-policy CMP0072
-    set(OpenGL_GL_PREFERENCE GLVND)
+    if (XUO_STATIC_CXX_RUNTIME)
+      # portable glibc builds: prefer legacy libGL (mesa-style, universal) over
+      # GLVND, whose libOpenGL.so.0 is missing on older target systems
+      set(OpenGL_GL_PREFERENCE LEGACY)
+    else()
+      # Set the preferred opengl library to GLVND if there is GLVND and Legacy.
+      # Only if there is no GLVND Legacy will be used.
+      # The that is the default with cmake-3.11. Legacy is deprecated.
+      # See cmake --help-policy CMP0072
+      set(OpenGL_GL_PREFERENCE GLVND)
+    endif()
   endif()
   find_package(OpenGL REQUIRED)
 endif()
@@ -98,6 +121,12 @@ if (OPENGL_FOUND)
     message(STATUS "Building with new modern renderer (GL3)")
   endif()
   set(GL_LIBRARIES ${OPENGL_LIBRARIES})
+  if (XUO_STATIC_BINARY AND NOT MSVC)
+    # fully static client: Mesa has no static archive, so restore dynamic
+    # resolution from the GL stack onward (flipped back to static at the end of
+    # the crossuo link line, see src/CMakeLists.txt)
+    set(GL_LIBRARIES "-Wl,-Bdynamic" ${GL_LIBRARIES})
+  endif()
 elseif (GLESv2_FOUND)
   compile_definitions(USE_GLES2=1)
   # the src renderer gates key off the generic family flag (USE_GLES - the
@@ -134,8 +163,8 @@ if (NOT XUO_EMSC)
   xuo_dependency(cmcurl cmcurl CURL)
   if (XUO_LAUNCHER_EMBEDDED)
     # the embedded launcher drags the http/updater stack into the crossuo
-    # shared library for the first time, which requires position independent
-    # code in the vendored static curl (libressl already builds with PIC)
+    # client executable, which requires position independent code in the
+    # vendored static curl (libressl already builds with PIC)
     set_property(TARGET cmcurl PROPERTY POSITION_INDEPENDENT_CODE ON)
   endif()
   xuo_dependency(XSDL2 sdl-2.0.10-c1be3add38 SDL2)
@@ -145,7 +174,7 @@ else()
   add_compile_options(-s USE_SDL=2)
 endif()
 
-if (XUO_WINDOWS)
+if (XUO_WINDOWS AND MSVC)
   add_link_options(/ignore:4217 /ignore:4286 /ignore:4049)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")

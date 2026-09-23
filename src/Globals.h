@@ -15,7 +15,7 @@
 
 #define USER_MESSAGE_ID 0x0400
 #if _WIN32
-#include <Windows.h>
+#include <windows.h>
 #define WindowHandle HWND
 #else
 #define WindowHandle void *

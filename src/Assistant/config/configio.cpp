@@ -9,9 +9,14 @@
 #include <string.h>
 #if !defined(_WIN32)
 #include <sys/stat.h> // stat/chmod (atomic-save file mode preservation)
+#if defined(_WIN32)
+#include <io.h> // _commit
+#else
 #include <unistd.h>   // fsync
+#endif
 #else
 #include <windows.h> // MoveFileExA / SetFileAttributesA
+#include <io.h> // _commit
 #endif
 
 #include <common/logging/logging.h>

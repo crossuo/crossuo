@@ -19,6 +19,20 @@
 #include <sys/socket.h>
 #include <string.h>
 
+#if defined(_WIN32)
+/* mingw-w64 declares gai_strerrorA/W but provides no implementation and
+ * windows does not export it; supply the ANSI one for the diagnostics */
+#undef gai_strerror
+char *gai_strerrorA(int);
+char *gai_strerrorA(int e)
+{
+    static char buf[64];
+    snprintf(buf, sizeof(buf), "getaddrinfo error %d", e);
+    return buf;
+}
+#define gai_strerror(e) gai_strerrorA(e)
+#endif
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>

@@ -91,7 +91,7 @@ if(CMAKE_USE_OPENSSL AND OPENSSL_FOUND AND WIN32)
   endif()
 endif()
 
-if (XUO_LINUX)
+if (CMAKE_USE_LIBRESSL)
   include_directories(${LIBRESSL_INCLUDE_DIR})
   add_subdirectory(libressl)
   add_library(

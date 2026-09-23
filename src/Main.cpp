@@ -35,6 +35,11 @@
 #include "Network/Packets.h" // CPacketHelpRequest (XUO_AUTO_HELP)
 #include "ScreenshotBuilder.h" // g_ScreenshotBuilder (XUO_AUTO_HELP capture)
 
+#if defined(main) /* SDL renames main to SDL_main for its win32 CRT shim;
+                    the client owns the real main() */
+#undef main
+#endif
+
 extern bool g_var_DisableRenderGame;
 bool g_var_DisableRenderGame = false;
 

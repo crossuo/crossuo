@@ -2813,10 +2813,12 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #endif
 
 #ifdef WINAPI_FAMILY
-#  define open _open
-#  define read _read
-#  define write _write
-#  define close _close
+#  if defined(_MSC_VER) /* UWP CRT shims; on mingw they rewrite method names */
+#    define open _open
+#    define read _read
+#    define write _write
+#    define close _close
+#  endif
 #endif
 
 #ifdef NO_DEFLATE       /* for compatibility with old definition */

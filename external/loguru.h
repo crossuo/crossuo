@@ -188,7 +188,11 @@ extern const char *log_system_name(int);
 	#define LOGURU_PTHREADS    1
 	#define LOGURU_WINTHREADS  0
 	#ifndef LOGURU_STACKTRACES
-		#define LOGURU_STACKTRACES 1
+		#if defined(__GLIBC__) /* musl et al have no <execinfo.h> */
+			#define LOGURU_STACKTRACES 1
+		#else
+			#define LOGURU_STACKTRACES 0
+		#endif
 	#endif
 #endif
 

@@ -10,8 +10,11 @@ tools/xuodeploy/release
 tools/xuodeploy/update
 Dependencies/
 screenshots/
-crossuo.log
+.crossuo/
 *.user
+.dockcross-cache/
+dist/
+scripts/docker/macos/sdk/
 *.obj
 *.o
 *.a

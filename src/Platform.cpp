@@ -6,7 +6,7 @@
 #include <common/logging/logging.h>
 
 #if _WIN32
-#include <Shellapi.h>
+#include <shellapi.h>
 #endif
 
 namespace Platform

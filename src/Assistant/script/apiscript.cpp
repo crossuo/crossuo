@@ -27,6 +27,12 @@
 
 #define LOGGER_MODULE Assistant
 
+#if defined(XUO_WINDOWS)
+// mingw/mvcrt: posix localtime_r unavailable; localtime_s takes (tm*, time_t*)
+#include <time.h>
+#define localtime_r(tp, tm) (localtime_s((tm), (tp)) == 0 ? (tm) : nullptr)
+#endif
+
 #include <common/logging/logging.h>
 
 extern "C" {

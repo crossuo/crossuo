@@ -39,8 +39,11 @@ set(HTTP_ONLY OFF CACHE INTERNAL "Curl is not http-only")
 set(PICKY_COMPILER OFF CACHE INTERNAL "Enable picky compiler options")
 set(USE_WIN32_LDAP OFF CACHE INTERNAL "No curl Windows LDAP")
 if(WIN32)
-  set(CMAKE_USE_WINSSL ON CACHE INTERNAL "enable Windows native SSL/TLS")
-  set(CURL_WINDOWS_SSPI ON CACHE INTERNAL "Use windows libraries to allow NTLM authentication without openssl")
+  # use the vendored libressl on windows as well: schannel.c relies on the
+  # windows min/max macros which conflict with NOMINMAX builds, and a single
+  # TLS backend keeps behavior identical across platforms
+  set(CMAKE_USE_LIBRESSL On)
+  set(CURL_WINDOWS_SSPI OFF CACHE INTERNAL "Use windows libraries to allow NTLM authentication without openssl")
 elseif(APPLE)
   # Use OS X SSL/TLS native implementation if available on target version.
   if(CMAKE_OSX_DEPLOYMENT_TARGET)
@@ -54,9 +57,13 @@ elseif(APPLE)
   endif()
   if(NOT OSX_VERSION VERSION_LESS 10.6 AND
       CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-    set(CMAKE_USE_SECTRANSP ON CACHE INTERNAL "enable Apple OS native SSL/TLS")
+    # SecureTransport was removed from newer macOS SDKs; use the vendored
+    # libressl so every platform shares one TLS backend
+    set(CMAKE_USE_SECTRANSP OFF CACHE INTERNAL "enable Apple OS native SSL/TLS")
+    set(CMAKE_USE_LIBRESSL On)
   else()
     set(CMAKE_USE_SECTRANSP OFF CACHE INTERNAL "enable Apple OS native SSL/TLS")
+    set(CMAKE_USE_LIBRESSL On)
   endif()
   unset(CMAKE_USE_DARWINSSL CACHE)
 else()

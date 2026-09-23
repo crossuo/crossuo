@@ -98,9 +98,8 @@ set_source_files_properties(
 # the define lives on this target for its own sources and on crossuo for the
 # hook call sites
 target_compile_definitions(xuoassist PRIVATE XUO_ASSISTANT=1)
-# linked into the client binary (the shared libcrossuo.so of the
-# XUO_ASSISTANT=OFF layout, or the single-executable assistant build),
-# so it needs position independent code either way
+# linked into the single self-contained client executable, so it needs
+# position independent code
 set_property(TARGET xuoassist PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 add_dependencies(xuoassist ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT})

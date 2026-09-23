@@ -328,6 +328,22 @@ endif()
 # The client builds ONE self-contained executable with a real main().
 add_executable(crossuo ${XUO_FILES})
 
+# musl-style fully static client binary; applied to the executable target only
+# so dependency configure-time checks keep linking dynamically. ld's -static
+# mode rejects even -Bdynamic-wrapped shared objects, so static resolution is
+# emulated: -Wl,-Bstatic up front, a -Wl,-Bdynamic zone around the GL stack
+# (opened in the root CMakeLists.txt, Mesa has no static archive) and back to
+# static after the last link item so the implicit -lc/-lgcc stay static.
+if (XUO_STATIC_BINARY AND NOT MSVC)
+  target_link_options(crossuo PRIVATE -static-libgcc -no-pie "-Wl,-Bstatic")
+endif()
+
+# portable glibc builds (e.g. manylinux2014): bake in the C++ runtime so the
+# binary never asks for a newer libstdc++/libgcc than the target has
+if (XUO_STATIC_CXX_RUNTIME AND NOT MSVC)
+  target_link_options(crossuo PRIVATE -static-libgcc -static-libstdc++)
+endif()
+
 add_dependencies(crossuo ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${3RDPARTY_STATIC})
 target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${GLM_LIBRARIES} ${THREAD} ${CURL_LIBRARIES})
 target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${EXTERNALGFX_INCLUDE} ${GLM_INCLUDE_DIR} ${XUOI_INCLUDE})
@@ -355,11 +371,22 @@ if(XUO_ASSISTANT_ENABLED)
   # (verified: the whole lib still links - its imports are all resolved
   # through the link line, the in-process "plugin" hooks do not rely on
   # undefined-symbol leniency).
-  target_link_options(crossuo PRIVATE "LINKER:--no-undefined")
+  # (apple ld64 spells the same check -undefined,error)
+  if (APPLE)
+    target_link_options(crossuo PRIVATE "LINKER:-undefined,error")
+  else()
+    target_link_options(crossuo PRIVATE "LINKER:--no-undefined")
+  endif()
 endif()
-
 if(CLANG_FORMAT AND NOT $ENV{XUO_CI})
   add_dependencies(crossuo clang-format-7)
 endif()
 
 xuo_disable_console(crossuo)
+
+if (XUO_STATIC_BINARY AND NOT MSVC)
+  # flip the link line back to static resolution so the implicit -lc/-lgcc
+  # still link statically (GL was switched to dynamic mid-line, see the root
+  # CMakeLists.txt)
+  target_link_libraries(crossuo PRIVATE "-Wl,-Bstatic")
+endif()

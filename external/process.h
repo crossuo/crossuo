@@ -37,17 +37,17 @@
 extern "C" {
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #pragma warning(push, 1)
 #endif
 
 #include <stdio.h>
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #pragma warning(pop)
 #endif
 
-#if !defined(_MSC_VER)
+#if !defined(_WIN32)
 #include <stdlib.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -56,7 +56,7 @@ extern "C" {
 #include <string.h>
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #ifdef _WIN64
 typedef __int64 intptr_t;
 typedef unsigned __int64 size_t;
@@ -119,13 +119,15 @@ __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(
 __declspec(dllimport) int __stdcall GetExitCodeProcess(
     void *, unsigned long *lpExitCode);
 __declspec(dllimport) int __cdecl _open_osfhandle(intptr_t, int);
+#if !defined(__MINGW32__) /* mingw: _alloca is a builtin/macro */
 void *__cdecl _alloca(size_t);
+#endif
 #endif
 
 #if defined(__clang__) || defined(__GNUC__)
 #define process_pure __attribute__((pure))
 #define process_weak __attribute__((weak))
-#elif defined(_MSC_VER)
+#elif defined(_WIN32)
 #define process_pure
 #define process_weak __inline
 #else
@@ -141,7 +143,7 @@ struct process_s {
   FILE *stdout_file;
   FILE *stderr_file;
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
   void *hProcess;
   void *hStdInput;
   void *hStdOutput;
@@ -225,7 +227,7 @@ process_weak int process_destroy(struct process_s *const process);
 
 int process_create(const char *const commandLine[], int options,
                    struct process_s *const out_process) {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
   int fd;
   void *rd, *wr;
   char *commandLineCombined;
@@ -509,7 +511,7 @@ FILE *process_stderr(const struct process_s *const process) {
 }
 
 int process_join(struct process_s *const process, int *const out_return_code) {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
   const unsigned long infinite = 0xFFFFFFFF;
 
   if (0 != process->stdin_file) {
@@ -578,7 +580,7 @@ int process_destroy(struct process_s *const process) {
     fclose(process->stderr_file);
   }
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
   CloseHandle(process->hProcess);
 
   if (0 != process->hStdInput) {

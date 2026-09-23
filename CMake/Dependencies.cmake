@@ -3,7 +3,12 @@
 
 macro(xuo_disable_console TARGET)
   if (XUO_WINDOWS)
-    set_target_properties(${TARGET} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+    if (MSVC)
+      set_target_properties(${TARGET} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+    elseif (MINGW)
+      # hide the console; the mingw crt (crtexewin.o) adapts WinMain -> main()
+      target_link_options(${TARGET} PRIVATE -mwindows)
+    endif()
   endif()
 endmacro()
 
@@ -14,16 +19,21 @@ macro(xuo_dependency DEP_NAME DEP_PATH DEP_PREFIX)
     if (XUO_WINDOWS)
       set(REQUIRED_LIBS "${REQUIRED_LIBS}" wsock32 crypt32 ws2_32)
     endif()
-    if (XUO_LINUX)
+    if (XUO_LINUX OR XUO_WINDOWS OR XUO_OSX)
       include_directories(BEFORE SYSTEM "${CMAKE_SOURCE_DIR}/deps/cmcurl/lib/libressl/include")
       set(REQUIRED_LIBS "${REQUIRED_LIBS}" "${CMAKE_BINARY_DIR}/deps/cmcurl/lib/libressl/ssl/libssl.a" "${CMAKE_BINARY_DIR}/deps/cmcurl/lib/libressl/crypto/libcrypto.a")
     endif()
-    # the streaming fetch engine links curl into the game's shared library
-    # (libcrossuo.so on linux): the static lib must be position independent
+    # curl is linked into the client (and the PIC-built xuoassist), so the
+    # static lib must be position independent
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   endif()
 
   if("${DEP_PREFIX}" MATCHES "SDL2")
+    if (MINGW)
+      # mingw link convention: the crt helper lib precedes SDL2main so the
+      # WinMain/SDL_main startup objects resolve in order
+      set(REQUIRED_LIBS "${REQUIRED_LIBS}" -lmingw32)
+    endif()
     set(REQUIRED_LIBS "${REQUIRED_LIBS}" XSDL2main "${GL_LIBRARIES}")
     add_definitions("-DGLEW_STATIC")
   endif()

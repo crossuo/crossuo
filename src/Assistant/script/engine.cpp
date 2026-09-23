@@ -21,7 +21,11 @@ extern "C" {
 #include "quickjs/quickjs.h"
 }
 
+#if defined(_WIN32)
+#include <malloc.h> // alloca
+#else
 #include <alloca.h>
+#endif
 #include <atomic>
 #include <chrono>
 #include <thread>
