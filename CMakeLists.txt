@@ -189,8 +189,12 @@ else()
   # which require the atomics feature (SharedArrayBuffer at runtime - serve
   # with COOP/COEP headers). pthread builds cannot grow memory, so size it
   # upfront.
-  add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1)
-  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1)
+  # PROXY_TO_PTHREAD: main() runs on a worker so the browser main thread
+  # stays free - required for blocking pthread ops (joins/futex/fetch
+  # proxying) during the streaming bootstrap; GL renders through an
+  # OffscreenCanvas transferred to that worker
+  add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1 -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1)
+  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sFETCH=1 -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1)
   # the client comes from desktop-sized stacks: give every thread room
   # (default 64KB overflows before main); pthread builds cannot grow memory,
   # so size the fixed heap for the client + streaming buffers upfront
@@ -205,9 +209,9 @@ else()
   # -DXUO_WEB_PRODUCT_URL=<url>
   if(NOT XUO_WEB_PRODUCT_URL)
     # relative: resolved against the page origin, so the product must be
-    # served next to the wasm (scripts/serve-wasm.py does this)
-    set(XUO_WEB_PRODUCT_URL "patch" CACHE STRING
-        "default streaming product url for the web build")
+    # served next to the wasm (scripts/serve-wasm.py proxies the streaming
+    # hosts and serves the local tree at /patch/)
+    set(XUO_WEB_PRODUCT_URL "patch/manifest/uo-legacyrelease.prod")
   endif()
   add_compile_definitions(XUO_WEB_PRODUCT_URL="${XUO_WEB_PRODUCT_URL}")
 endif()
