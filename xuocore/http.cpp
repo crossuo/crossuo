@@ -24,13 +24,16 @@
 
 static const char *s_agentName = nullptr;
 
-// performs a blocking GET; returns the malloc'd body (free() it) or nullptr.
-// status receives the HTTP code (0 when the request failed at the transport
-// level).
-static uint8_t *http_xhr(const char *url, const char *range, long *status, size_t *len)
+// single blocking GET; returns the malloc'd body (free() it). status
+// receives the HTTP code; total receives the resource size from
+// Content-Range (-1 when the header is absent).
+static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
+                             size_t *len, long *total)
 {
     *status = 0;
     *len = 0;
+    if (total)
+        *total = -1;
     uint8_t *data = (uint8_t *)EM_ASM_PTR(
     {
         const url = UTF8ToString($0);
@@ -43,12 +46,18 @@ static uint8_t *http_xhr(const char *url, const char *range, long *status, size_
                 x.setRequestHeader('Range', rangeHeader);
             x.responseType = 'arraybuffer';
             x.send(null);
-            const data = x.response ? new Uint8Array(x.response) : new Uint8Array(0);
-            const ptr = _malloc(data.length + 1);
-            HEAPU8.set(data, ptr);
-            ptr[data.length] = 0;
+            const arr = x.response ? new Uint8Array(x.response) : new Uint8Array(0);
+            const ptr = _malloc(arr.length + 1);
+            HEAPU8.set(arr, ptr);
+            ptr[arr.length] = 0;
             setValue($2, x.status, 'i32');
-            setValue($3, data.length, 'i32');
+            setValue($3, arr.length, 'i32');
+            if ($4)
+            {
+                const cr = x.getResponseHeader('Content-Range');
+                const slash = cr ? cr.indexOf('/') : -1;
+                setValue($4, slash >= 0 ? parseInt(cr.substring(slash + 1)) : -1, 'i32');
+            }
             return ptr;
         }
         catch (e)
@@ -57,42 +66,8 @@ static uint8_t *http_xhr(const char *url, const char *range, long *status, size_
             setValue($3, 0, 'i32');
             return 0;
         }
-    },
-        url, range ? range : "", status, len);
-    if (data)
-    {
-        // the trailing terminator byte is not part of the payload
-        *len = *len;
-    }
+    }, url, range ? range : "", status, len, total);
     return data;
-}
-
-static bool http_xhr_body(const char *url, const char *range, size_t body_cap,
-                          long *status, std::vector<uint8_t> &body)
-{
-    size_t len = 0;
-    uint8_t *data = http_xhr(url, range, status, &len);
-    if (!data)
-    {
-        LOG_ERROR("transport failed (0): %s", url);
-        return false;
-    }
-    *status = *status;
-    if (*status != 200 && *status != 206)
-    {
-        LOG_ERROR("transport failed (%ld): %s", *status, url);
-        free(data);
-        return false;
-    }
-    if (body_cap && len > body_cap)
-    {
-        LOG_ERROR("transfer exceeded the body cap (%zu > %zu): %s", len, body_cap, url);
-        free(data);
-        return false;
-    }
-    body.assign(data, data + len);
-    free(data);
-    return true;
 }
 
 void http_init()
@@ -113,14 +88,23 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
     if (!url || !out)
         return false;
     long status = 0;
-    if (!http_xhr_body(url, nullptr, body_cap, &status, out->body))
+    size_t len = 0;
+    long total = -1;
+    uint8_t *data = http_xhr_get(url, nullptr, &status, &len, &total);
+    if (!data || status != 200)
     {
-        out->status = status;
-        out->body.clear();
+        LOG_ERROR("transport failed (%ld): %s", status, url);
+        return false;
+    }
+    if (body_cap && len > body_cap)
+    {
+        LOG_ERROR("transfer exceeded the body cap (%zu > %zu): %s", len, body_cap, url);
         return false;
     }
     out->status = status;
-    return out->status == 200;
+    out->body.assign(data, data + len);
+    free(data);
+    return true;
 }
 
 bool http_get_range(
@@ -133,17 +117,27 @@ bool http_get_range(
     snprintf(range, sizeof(range), "bytes=%llu-%llu",
              (unsigned long long)offset, (unsigned long long)(offset + length - 1));
     long status = 0;
-    std::vector<uint8_t> body;
-    if (!http_xhr_body(url, range, length, &status, body))
+    size_t len = 0;
+    long total = -1;
+    uint8_t *data = http_xhr_get(url, range, &status, &len, &total);
+    if (!data)
     {
-        out->status = status;
+        LOG_ERROR("transport failed (%ld): %s", status, url);
         return false;
     }
-    // like the curl implementation: only honor a real range answer (206 with
-    // the exact byte count) - a 200 would deliver the whole file
-    out->status = status;
-    out->body = std::move(body);
-    return out->status == 206 && out->body.size() == length;
+    // only honor a real range answer (206 with the exact byte count) - a 200
+    // would deliver the whole file
+    if (status != 206 || len != length)
+    {
+        LOG_ERROR("range fetch mismatch (%ld, %zu vs %llu): %s", status, len,
+                  (unsigned long long)length, url);
+        free(data);
+        return false;
+    }
+    out->status = 206;
+    out->body.assign(data, data + len);
+    free(data);
+    return true;
 }
 
 bool http_get_binary(const char *url, const uint8_t *buf, size_t *size)
@@ -151,50 +145,72 @@ bool http_get_binary(const char *url, const uint8_t *buf, size_t *size)
     if (!url || !buf || !size)
         return false;
     long status = 0;
-    std::vector<uint8_t> body;
-    if (!http_xhr_body(url, nullptr, 0, &status, body) || status != 200)
+    size_t len = 0;
+    long total = -1;
+    uint8_t *data = http_xhr_get(url, nullptr, &status, &len, &total);
+    if (!data || status != 200)
+    {
+        LOG_ERROR("transport failed (%ld): %s", status, url);
         return false;
-    if (body.size() > *size)
+    }
+    if (len > *size)
+    {
+        LOG_ERROR("transfer exceeded the buffer size (%zu > %zu): %s", len, *size, url);
+        free(data);
         return false;
-    memcpy((void *)buf, body.data(), body.size());
-    *size = body.size();
+    }
+    memcpy((void *)buf, data, len);
+    *size = len;
+    free(data);
     return true;
 }
 
 bool http_get_binary(const char *url, std::vector<uint8_t> &data)
 {
     long status = 0;
-    if (!http_xhr_body(url, nullptr, 0, &status, data) || status != 200)
+    size_t len = 0;
+    long total = -1;
+    uint8_t *raw = http_xhr_get(url, nullptr, &status, &len, &total);
+    if (!raw || status != 200)
     {
-        data.clear();
+        LOG_ERROR("transport failed (%ld): %s", status, url);
         return false;
     }
+    data.assign(raw, raw + len);
+    free(raw);
     return true;
 }
 
 bool http_get_string(const char *url, std::string &data)
 {
     long status = 0;
-    std::vector<uint8_t> body;
-    if (!http_xhr_body(url, nullptr, 0, &status, body) || status != 200)
+    size_t len = 0;
+    long total = -1;
+    uint8_t *raw = http_xhr_get(url, nullptr, &status, &len, &total);
+    if (!raw || status != 200)
     {
-        data.clear();
+        LOG_ERROR("transport failed (%ld): %s", status, url);
         return false;
     }
-    data.assign(body.begin(), body.end());
+    data.assign(raw, raw + len);
+    free(raw);
     return true;
 }
 
 bool http_get_file(const char *url, const char *filename)
 {
     long status = 0;
-    std::vector<uint8_t> body;
-    if (!http_xhr_body(url, nullptr, 0, &status, body) || status != 200)
+    size_t len = 0;
+    long total = -1;
+    uint8_t *raw = http_xhr_get(url, nullptr, &status, &len, &total);
+    if (!raw || status != 200)
     {
         LOG_ERROR("http_get_file failed (%ld): %s", status, url);
         return false;
     }
-    return fs_file_write(filename, body.data(), body.size());
+    bool ok = fs_file_write(filename, raw, len);
+    free(raw);
+    return ok;
 }
 
 std::string http_urlencode(std::string str)
@@ -220,7 +236,7 @@ std::string http_urlencode(std::string str)
     return out;
 }
 
-#else // #if defined(XUO_EMSC)
+#else // #if defined(XUO_EMSC)#else // #if defined(XUO_EMSC)#else // #if defined(XUO_EMSC)
 
 #include "http.h"
 
