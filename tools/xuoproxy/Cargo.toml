@@ -1,0 +1,17 @@
+[package]
+name = "xuoproxy"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "Development server for the CrossUO web build: static wasm hosting, same-origin generic url proxy for the streaming hosts (disk-cached), and a WebSocket-to-TCP bridge for shard connections"
+
+[dependencies]
+axum = { version = "0.7", features = ["ws"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "signal", "fs"] }
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+regex = "1"
+sha2 = "0.10"
+
+[profile.release]
+opt-level = 2
