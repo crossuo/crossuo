@@ -335,6 +335,7 @@ bool CGame::Install()
     Info(Client, "loading files");
 #if defined(XUO_EMSC)
     void web_fs_wait_restore(); // src/Main.cpp
+    void web_fs_sync_persist(); // src/Main.cpp
     web_fs_wait_restore();      // idb restore lands before the boot reads caches
 #endif
     if (vfs_enabled() && !vfs_boot([](float done01, const char *label) {
@@ -368,11 +369,10 @@ bool CGame::Install()
     }
     Splash_SetProgress(1.0f);
     Splash_Render();
-    vfs_boot_web_wait();        // full streamed install, never joins the sweep
-    void web_fs_sync_persist(); // src/Main.cpp
-    web_fs_sync_persist();      // the streamed install just landed: persist
+    web_fs_sync_persist();      // persist what we have so far
     Splash_Render();
 #endif
+    Info(Client, "loading file manager");
     if (!g_FileManager.Load())
     {
         auto errMsg =
@@ -383,6 +383,7 @@ bool CGame::Install()
         Error(Client, "%s", errMsg.c_str());
         return false;
     }
+    Info(Client, "file manager loaded");
     Splash_RenderAndPumpEvents();
 
     g_SkillsManager.Init();

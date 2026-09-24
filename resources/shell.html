@@ -60,10 +60,14 @@
           if (text) statusEl.textContent = text;
         };
         Module.print = function (text) {
+          console.log(text);
           logEl.textContent += text + '\n';
+          logEl.scrollTop = logEl.scrollHeight;
         };
         Module.printErr = function (text) {
+          console.error(text);
           logEl.textContent += text + '\n';
+          logEl.scrollTop = logEl.scrollHeight;
         };
         Module.onRuntimeInitialized = function () {
           setStatus('running');

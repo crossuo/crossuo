@@ -1778,7 +1778,7 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
         vfs_boot_run_chunk(plan, items.data() + pos, count, VFS_FETCH_PRIO_BG, false);
         pos += count;
 #if defined(XUO_EMSC)
-        s_boot_web_progress.store(0.10f + 0.85f * (float(pos) / background_total),
+        s_boot_web_progress.store(1.0f * (float(pos) / background_total),
                                   std::memory_order_relaxed);
 #endif
     }
@@ -1800,12 +1800,14 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
 #if defined(XUO_EMSC)
     // the full install is on disk: the game init can proceed (the sweep
     // continues below for as long as the session lasts)
+    s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
     s_boot_web_done.store(true, std::memory_order_release);
 #endif
 
 #if defined(XUO_EMSC)
     // the web client waits for this point (full install on disk) and then
     // proceeds; the sweep keeps running for the rest of the session
+    s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
     s_boot_web_done.store(true, std::memory_order_release);
 #endif
     // the continuous sweep: the rest of the plan converges in the background
