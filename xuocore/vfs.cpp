@@ -1803,6 +1803,11 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
     s_boot_web_done.store(true, std::memory_order_release);
 #endif
 
+#if defined(XUO_EMSC)
+    // the web client waits for this point (full install on disk) and then
+    // proceeds; the sweep keeps running for the rest of the session
+    s_boot_web_done.store(true, std::memory_order_release);
+#endif
     // the continuous sweep: the rest of the plan converges in the background
     // for as long as the session lasts (state re-checked per chunk; the lane
     // cap keeps every demand request ahead of it)
@@ -2135,6 +2140,21 @@ void vfs_boot_wait()
     if (s_background.joinable())
         s_background.join();
 }
+
+#if defined(XUO_EMSC)
+// web boot wait: flags the first frame (unblocking the convergence gate in
+// the background tier) and returns once the streamed install is fully on
+// disk. Never joins the background thread - the sweep continues running for
+// the whole session and the browser main thread must not be blocked.
+void vfs_boot_web_wait()
+{
+    if (!s_boot_started)
+        return;
+    s_frame_seen = true;
+    while (!s_boot_web_done.load() && !s_boot_shutdown)
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+#endif
 
 // the game calls this once the first frame is out: post-frame convergence
 // (store -> install) may start spending disk behind the render loop, and

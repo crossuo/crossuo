@@ -333,6 +333,10 @@ bool CGame::Install()
     LoadAutoLoginNames();
 
     Info(Client, "loading files");
+#if defined(XUO_EMSC)
+    void web_fs_wait_restore(); // src/Main.cpp
+    web_fs_wait_restore();      // idb restore lands before the boot reads caches
+#endif
     if (vfs_enabled() && !vfs_boot([](float done01, const char *label) {
             Info(Client, "streaming: %3d%% (%s)", int(done01 * 100.0f), label);
         }))
@@ -363,6 +367,10 @@ bool CGame::Install()
         SDL_Delay(100);
     }
     Splash_SetProgress(1.0f);
+    Splash_Render();
+    vfs_boot_web_wait();        // full streamed install, never joins the sweep
+    void web_fs_sync_persist(); // src/Main.cpp
+    web_fs_sync_persist();      // the streamed install just landed: persist
     Splash_Render();
 #endif
     if (!g_FileManager.Load())

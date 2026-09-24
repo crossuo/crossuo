@@ -133,10 +133,15 @@ bool vfs_boot(void (*progress)(float done01, const char *label));
 
 #if defined(XUO_EMSC)
 // web boot: the boot runs asynchronously (splash keeps rendering); poll
-// until this returns true (full streamed install on disk), reading
-// vfs_boot_web_progress() for the 0..1 bar value
+// until vfs_boot_web_poll() returns true (full streamed install on disk),
+// reading vfs_boot_web_progress() for the 0..1 bar value
 bool vfs_boot_web_poll();
 float vfs_boot_web_progress();
+
+// one-shot hold: flags the first frame and blocks the caller until the
+// streamed install is fully materialized (never joins the background
+// thread - the sweep keeps running)
+void vfs_boot_web_wait();
 #endif
 // the game calls this once the first frame rendered: boot-critical work is
 // over and the background worker may start post-frame convergence (store ->

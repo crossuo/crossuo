@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <time.h>
 #if defined(XUO_EMSC)
+#include "Splash.h"
+#include <SDL_timer.h>
 #include <emscripten.h> // emscripten_run_script_string (product url origin)
 
 // workers have no alert(); route error dialogs to the log instead of dying
@@ -14,6 +16,56 @@ EM_JS(void, web_install_alert_shim, (), {
         globalThis.alert = function (msg) { console.warn('alert:', msg); };
     }
 });
+
+// the streamed install lives in MEMFS (wiped on reload); mount an
+// IndexedDB-backed filesystem over the streaming root and pull the
+// persisted data in, so previous sessions' downloads are reused
+EM_JS(void, web_fs_mount_and_load, (),
+{
+    const dir = '/crossuo';
+    try
+    {
+        FS.mkdirTree(dir);
+    }
+    catch (e) {}
+    FS.mount(IDBFS, {}, dir);
+    FS.syncfs(true, function (err)
+    {
+        if (err)
+            console.error('idb restore failed:', err);
+        globalThis.__xuoIdbReady = true;
+    });
+});
+
+// push MEMFS changes to IndexedDB (async, fire-and-forget)
+EM_JS(void, web_fs_sync_persist, (),
+{
+    FS.syncfs(false, function (err)
+    {
+        if (err)
+            console.error('idb persist failed:', err);
+    });
+});
+
+static bool s_idbLoaded = false;
+
+// waits (rendering the splash) until the IndexedDB restore lands; bounded
+void web_fs_wait_restore()
+{
+    if (s_idbLoaded)
+        return;
+    for (int i = 0; i < 600; ++i)
+    {
+        if (EM_ASM_INT(return globalThis.__xuoIdbReady === true))
+        {
+            s_idbLoaded = true;
+            break;
+        }
+        Splash_Render();
+        SDL_Delay(50);
+    }
+    s_idbLoaded = true;
+}
 #endif
 #include <common/str.h>
 #include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
@@ -671,6 +723,15 @@ static bool RunFrame(bool &raised)
         raised = true;
         g_GameWindow.Raise(); // once, now that the first frame is on screen
     }
+#if defined(XUO_EMSC)
+    // keep the streamed install + config durable on IndexedDB
+    static uint32_t s_lastPersist = 0;
+    if (g_Ticks - s_lastPersist > 30000)
+    {
+        s_lastPersist = g_Ticks;
+        web_fs_sync_persist();
+    }
+#endif
     return quit;
 }
 
@@ -730,6 +791,7 @@ int main(int argc, char **argv)
 
 #if defined(XUO_EMSC)
     web_install_alert_shim();
+    web_fs_mount_and_load(); // restore previous session downloads
 #endif
     g_fatalErrorCb = &fatal_error_dialog;
     if (!InitCli(argc, argv))

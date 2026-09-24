@@ -230,7 +230,7 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
     {
         if let Some((status, ctype, body)) = cache_get(state, &url)
         {
-            return respond_text_rewritten(status, &ctype, body, headers);
+            return respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers);
         }
     }
 
@@ -244,6 +244,7 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
         Ok(resp) => resp,
         Err(e) =>
         {
+            eprintln!("xuoproxy: upstream {url} failed: {e:?}");
             return (
                 StatusCode::BAD_GATEWAY,
                 format!("upstream fetch failed: {e}"),
@@ -253,12 +254,14 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
     };
 
     let status = resp.status().as_u16();
-    let ctype = resp
-        .headers()
-        .get(header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("application/octet-stream")
-        .to_string();
+    // the cdn occasionally serves content types with junk bytes on range
+    // answers, which would fail HeaderValue parsing on every relay
+    let ctype = sanitize_ctype(
+        resp.headers()
+            .get(header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("application/octet-stream"),
+    );
     let body = match resp.bytes().await
     {
         Ok(b) => b.to_vec(),
@@ -267,10 +270,18 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
 
     if state.use_cache && status == 200
     {
-        cache_put(state, &url, status, &ctype, &body);
+        cache_put(state, &url, status, &sanitize_ctype(&ctype), &body);
     }
 
-    respond_text_rewritten(status, &ctype, body, headers)
+    respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers)
+}
+
+fn sanitize_ctype(ctype: &str) -> String
+{
+    ctype
+        .chars()
+        .filter(|c| c.is_ascii_graphic() || *c == ' ')
+        .collect()
 }
 
 fn respond_text_rewritten(status: u16, ctype: &str, body: Vec<u8>, headers: &HeaderMap) -> Response
