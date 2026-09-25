@@ -794,6 +794,10 @@ int main(int argc, char **argv)
 
 #if defined(XUO_EMSC)
     web_install_alert_shim();
+    // force library_websocket.js inclusion: Sockets.cpp calls the
+    // emscripten_websocket_* functions from a different TU and the
+    // JS optimizer only scans the main compilation unit
+    EM_ASM({ if (typeof emscripten_websocket_is_supported !== 'undefined') {} });
     web_fs_mount_and_load(); // restore previous session downloads
 #endif
     g_fatalErrorCb = &fatal_error_dialog;
