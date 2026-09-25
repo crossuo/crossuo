@@ -138,6 +138,8 @@ bool vfs_boot(void (*progress)(float done01, const char *label));
 bool vfs_boot_web_poll();
 float vfs_boot_web_progress();
 
+void vfs_boot_web_mirror_run();
+
 // one-shot hold: flags the first frame and blocks the caller until the
 // streamed install is fully materialized (never joins the background
 // thread - the sweep keeps running)

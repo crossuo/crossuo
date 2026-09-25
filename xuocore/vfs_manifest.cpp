@@ -515,9 +515,14 @@ bool vfs_subset_web_excludes(const astr_t &name)
         return lower.rfind(prefix, 0) == 0;
     };
     // anim*.mul: the legacy MUL animation set (560 MB - the UOP animations
-    // cover it); anim.idx stays: it is KB-sized and not worth a special case
-    if (starts("anim") && lower.size() >= 4 && lower.compare(lower.size() - 4, 4, ".mul") == 0)
+    // cover it); anim.idx stays: it is KB-sized and not worth a special case.
+    // animdata.mul is NOT the legacy animation set - it is a ~4.5MB
+    // boot-critical table (Load aborts without it), so it stays
+    if (starts("anim") && lower.size() >= 4 && lower.compare(lower.size() - 4, 4, ".mul") == 0 &&
+        lower != "animdata.mul")
+    {
         return true;
+    }
     // Music/**: deferred on the web build
     if (starts("music/"))
         return true;

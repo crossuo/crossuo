@@ -13,6 +13,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h> // sbrk (web heap probe)
 
 #include <algorithm>
 #include <atomic>
@@ -27,6 +28,19 @@
 #if defined(XUO_WINDOWS)
 #include <windows.h> // MoveFileExA (atomic product manifest replace)
 #endif
+#if defined(XUO_EMSC)
+#include <emscripten.h>
+#include <emscripten/threading.h>
+#include <external/zlib_amalg.h>
+using zlib_uLongf = uLongf;
+using zlib_Bytef = Bytef;
+using zlib_uLong = uLong;
+#else
+using zlib_uLongf = size_t;
+using zlib_Bytef = uint8_t;
+using zlib_uLong = size_t;
+#endif
+#include "uop.h"
 
 #include "http.h"
 #include "vfs_fetch.h"
@@ -60,6 +74,12 @@
 static vfs_params s_params;
 static VfsPlan s_plan;
 static bool s_plan_loaded = false;
+#if defined(XUO_EMSC)
+// web boot progress: the splash polls these while the streaming install runs
+// (declared early: the convergence loop reports through them)
+static std::atomic<bool> s_boot_web_done{false};
+static std::atomic<float> s_boot_web_progress{0.0f};
+#endif
 
 // boot state (vfs_boot/vfs_shutdown own these; the background tier and the
 // fetch workers only touch vfs_fetch/store/state internals under s_state_mutex)
@@ -1248,9 +1268,10 @@ static bool vfs_boot_arena_ensure(
         for (const auto &item : *items)
         {
             const auto &asset = plan.files[item.file_index].assets[item.asset_index];
-            if (vfs_asset_is_hole(asset) ||
+            if (vfs_asset_is_hole(asset) || asset.blob_offset != 0 ||
                 fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
-                continue;
+                continue; // holes have no blob; refined blocks stream on
+                          // ensure (their source is never a stored blob)
             tails.push_back(item.tail);
             sizes.push_back(item.expected);
         }
@@ -1258,8 +1279,18 @@ static bool vfs_boot_arena_ensure(
     }
 
     bool ok = true;
+    size_t done = 0;
+    const size_t total = items->size();
+    const bool full_pass = all.size() > 0 && items == &all; // full convergence
     for (const auto &item : *items)
     {
+#if defined(XUO_EMSC)
+        if (full_pass && (++done & 1023) == 0)
+        {
+            s_boot_web_progress.store(0.95f * float(done) / float(total), std::memory_order_relaxed);
+            LOG_INFO("convergence: %zu of %zu assets", done, total);
+        }
+#endif
         const VfsAsset *asset = nullptr;
         uint8_t before = vfs_pending;
         {
@@ -1733,7 +1764,15 @@ static void vfs_boot_run_chunk(
     {
         std::vector<astr_t> tails;
         std::vector<uint64_t> sizes;
-        vfs_boot_items_to_tails(batch_items, &tails, &sizes);
+        for (const auto &item : batch_items)
+        {
+            const auto &asset = plan.files[item.file_index].assets[item.asset_index];
+            if (asset.blob_offset != 0)
+                continue; // refined block: the source is never a stored blob,
+                          // the ensure below streams the block by range
+            tails.push_back(item.tail);
+            sizes.push_back(item.expected);
+        }
         vfs_fetch_batch(tails, sizes, priority, false, nullptr);
     }
     if (s_boot_shutdown)
@@ -1754,8 +1793,6 @@ static void vfs_boot_run_chunk(
 // web boot: the client polls this while the splash is up (wasm has no
 // fault-driven paging, so the game init holds until the streamed install is
 // complete on disk - the sweep keeps running in the background after this)
-static std::atomic<bool> s_boot_web_done{false};
-static std::atomic<float> s_boot_web_progress{0.0f};
 
 bool vfs_boot_web_poll()
 {
@@ -1768,8 +1805,347 @@ float vfs_boot_web_progress()
 }
 #endif
 
+#if defined(XUO_EMSC)
+static void vfs_boot_verify_pack(const VfsPlan &plan, size_t file_index);
+
+// install-completion marker: written once the whole first-session install is
+// materialized; a later boot with this marker skips the streaming tiers
+// entirely - the game reads the materialized files, granule work would be
+// pure waste (the arena is volatile, files are what persist)
+static fs_path vfs_boot_web_marker_file()
+{
+    return fs_path_join(fs_path_join(s_params.install_dir, "cache"), "webinstall.marker");
+}
+
+static bool vfs_boot_web_install_done(const VfsPlan &plan)
+{
+    std::vector<uint8_t> data;
+    const bool read_ok = fs_file_read(fs_path_ascii(vfs_boot_web_marker_file()), data);
+    uint64_t serial = 0;
+    const bool serial_ok = vfs_product_serial(s_params.product_file, &serial);
+    const astr_t expect =
+        "webinstall " + std::to_string(serial) + " " + std::to_string(plan.files.size()) + "\n";
+    const bool ok = read_ok && serial_ok && data.size() == expect.size() &&
+                    memcmp(data.data(), expect.data(), expect.size()) == 0;
+    LOG_INFO(
+        "web install marker: read %d (%zu bytes), serial %d (%llu), match %d",
+        int(read_ok),
+        data.size(),
+        int(serial_ok),
+        (unsigned long long)serial,
+        int(ok));
+    return ok;
+}
+
+static void vfs_boot_web_install_marker_write(const VfsPlan &plan)
+{
+    uint64_t serial = 0;
+    if (!vfs_product_serial(s_params.product_file, &serial))
+        return;
+    const astr_t text =
+        "webinstall " + std::to_string(serial) + " " + std::to_string(plan.files.size()) + "\n";
+    if (!fs_file_write(fs_path_ascii(vfs_boot_web_marker_file()), text))
+        LOG_WARN("could not write the web install marker");
+}
+
+// the web persistence driver: the C side owns every byte moved between MEMFS
+// (its stdio proxies to the shared browser-thread filesystem) and the OPFS
+// handles JS opened. The set covers what the game reads as files at init plus
+// the state db and the install marker - blobs are NOT persisted (they are
+// re-fetchable granule sources; persisting ~500MB of them doubles storage).
+
+// files the game's file manager opens as files and reads through baked
+// pointers at init (LoadWithUop/LoadCommon): the arena keeps their bytes as
+// granules only, so they must be assembled on disk before the game proceeds.
+// Deliberately absent: soundLegacyMUL.uop (168MB, no login need), the map uops
+// (the map muls are the fallback), AnimationFrame* (resolve-only, phase 2) and
+// anim.mul (the excluded 190MB legacy animation set - LoadCommon tolerates its
+// absence on a >=7.0 client).
+static const char *const VFS_WEB_PACK_MATERIALIZE[] = {
+    "MainMisc.uop",
+    "string_dictionary.uop",
+    "artLegacyMUL.uop",
+    "gumpartLegacyMUL.uop",
+    "fonts.mul",
+    "multi.idx",
+    "multi.mul",
+    "animdata.mul",
+    "tiledata.mul",
+    "hues.mul",
+    "radarcol.mul",
+    "skills.idx",
+    "skills.mul",
+    "speech.mul",
+    "langcode.iff",
+    "multimap.rle",
+    "texidx.mul",
+    "texmaps.mul",
+    "lightidx.mul",
+    "light.mul",
+    "artidx.mul",
+    "gumpidx.mul",
+    "soundidx.mul",
+    "anim.idx",
+    "unifont.mul",
+    "unifont1.mul",
+    "unifont2.mul",
+    "unifont3.mul",
+    "unifont4.mul",
+    "unifont5.mul",
+    "unifont6.mul",
+    "unifont7.mul",
+    "unifont8.mul",
+    "unifont9.mul",
+    "unifont10.mul",
+    "unifont11.mul",
+    "unifont12.mul",
+    "unifont13.mul",
+    "unifont14.mul",
+    "unifont15.mul",
+    "unifont16.mul",
+    "unifont17.mul",
+    "unifont18.mul",
+    "unifont19.mul",
+};
+
+static std::vector<astr_t> s_webPersistPaths;
+
+
+static void vfs_boot_web_mkdirs(const char *path);
+
+
+
+
+
+static void vfs_boot_web_mkdirs(const char *path)
+{
+    fs_path_create(fs_path_from("crossuo"));
+    fs_path_create(fs_path_from("crossuo/streamed"));
+    fs_path_create(fs_path_from("crossuo/streamed/cache"));
+    (void)path;
+}
+
+
+
+
+
+
+
+static void vfs_boot_materialize_packs(const VfsPlan &plan)
+{
+    if (s_arena == nullptr)
+        return;
+    for (const char *name : VFS_WEB_PACK_MATERIALIZE)
+    {
+        bool found = false;
+        for (size_t fi = 0; fi < plan.files.size() && !found; ++fi)
+        {
+            if (strcasecmp(plan.files[fi].name.c_str(), name) != 0)
+                continue;
+            found = true;
+            const auto started = std::chrono::steady_clock::now();
+            if (vfs_store_materialize_pack(
+                    static_cast<vfs_store_arena *>(s_arena),
+                    plan,
+                    fi,
+                    s_params.install_dir,
+                    s_params.blobs_dir))
+            {
+                LOG_INFO(
+                    "web pack ready: %s (%.1fs)",
+                    name,
+                    std::chrono::duration<float>(std::chrono::steady_clock::now() - started).count());
+            }
+            else
+            {
+                LOG_ERROR("web pack materialization failed: %s (init may abort at Load)", name);
+            }
+        }
+        if (!found)
+            LOG_WARN("web pack materialize: %s not in the plan", name);
+    }
+    LOG_INFO(
+        "web packs ready: heap in use %.1f MB",
+        double(reinterpret_cast<uintptr_t>(sbrk(0))) / 1048576.0);
+    for (const char *name : VFS_WEB_PACK_MATERIALIZE)
+    {
+        for (size_t fi = 0; fi < plan.files.size(); ++fi)
+        {
+            if (strcasecmp(plan.files[fi].name.c_str(), name) == 0)
+            {
+                vfs_boot_verify_pack(plan, fi);
+                break;
+            }
+        }
+    }
+}
+
+// post-materialization integrity probe for one pack: re-opens the file the
+// way the game does (mmap) and, for a few sample assets, checks
+//   (a) the write path - mapped bytes == arena granule bytes
+//   (b) the range path - a fresh CACHE-BUSTED re-fetch inflates to the same
+//       granule bytes (a mismatch means an earlier fetch served stale bytes,
+//       e.g. a poisoned browser 206 cache; the query string is ignored by
+//       the proxy and by the file repo)
+static void vfs_boot_verify_pack(const VfsPlan &plan, size_t file_index)
+{
+    const auto &file = plan.files[file_index];
+    uint8_t *start = nullptr;
+    size_t mapped = 0;
+    if (!vfs_map_file(fs_path_join(s_params.install_dir, file.name), start, mapped) ||
+        mapped != file.size)
+    {
+        LOG_ERROR(
+            "pack verify: %s could not be mapped (%zu vs %llu)",
+            file.name.c_str(),
+            mapped,
+            (unsigned long long)file.size);
+        return;
+    }
+    const auto *header = (const UopHeader *)start;
+    if (!file.is_uop)
+    {
+        vfs_unmap_file(start, mapped);
+        return; // loose files (.mul, .idx) are not UOP archives
+    }
+    if (header->Magic != MYP_MAGIC || header->Version < 4 || header->Version > 5 ||
+        header->SectionOffset != sizeof(UopHeader) ||
+        header->FileCount != uint32_t(file.assets.size()))
+    {
+        LOG_ERROR(
+            "pack verify: %s header mismatch (magic %08x ver %u off %llu count %u)",
+            file.name.c_str(),
+            header->Magic,
+            header->Version,
+            (unsigned long long)header->SectionOffset,
+            header->FileCount);
+        vfs_unmap_file(start, mapped);
+        return;
+    }
+
+    auto *arena = static_cast<vfs_store_arena *>(s_arena);
+    int checked = 0;
+    int write_bad = 0;
+    int range_bad = 0;
+    for (size_t ai = 0; ai < file.assets.size() && checked < 8; ai += 1 + ai % 7)
+    {
+        const auto &asset = file.assets[ai];
+        if (vfs_asset_is_hole(asset) || asset.ul == 0)
+            continue;
+        ++checked;
+        std::vector<uint8_t> granule(size_t(asset.ul), 0);
+        const bool resident = arena != nullptr && arena->ensure(asset, true) &&
+                              arena->read(asset, 0, granule.data(), granule.size());
+        // (a) the write path: mapped bytes vs the granule
+        if (resident &&
+            memcmp(start + asset.file_offset + asset.ml, granule.data(), granule.size()) != 0)
+        {
+            ++write_bad;
+            LOG_ERROR("pack verify: %s asset %zu write mismatch", file.name.c_str(), ai);
+        }
+        // (b) the range path, independent of any HTTP cache
+        if (asset.blob_offset != 0 && !s_params.offline)
+        {
+            const uint64_t len = vfs_asset_range_len(asset);
+            const astr_t url =
+                plan.file_repo + asset.blob + "?xuo=" + std::to_string(asset.blob_offset);
+            std::vector<uint8_t> block(size_t(len), 0);
+            const vfs_transport_result res = vfs_transport_active()->range(
+                url.c_str(),
+                asset.blob.c_str(),
+                asset.blob_offset,
+                len,
+                [](void *context, const uint8_t *data, size_t size)
+                {
+                    static_cast<std::vector<uint8_t> *>(context)->assign(data, data + size);
+                    return true;
+                },
+                &block,
+                0,
+                false);
+            std::vector<uint8_t> payload(size_t(asset.ul), 0);
+            bool inflated = false;
+            if (res.ok && res.bytes == len && block.size() >= asset.ml)
+            {
+                const uint8_t *body = block.data() + asset.ml;
+                const size_t body_len = block.size() - asset.ml;
+                if (asset.ct == 1)
+                {
+                    zlib_uLongf dst_len = payload.size();
+                    inflated = uncompress(
+                                   payload.data(),
+                                   &dst_len,
+                                   reinterpret_cast<zlib_Bytef const *>(body),
+                                   zlib_uLong(body_len)) == Z_OK;
+                    payload.resize(size_t(dst_len));
+                }
+                else
+                {
+                    payload.assign(body, body + body_len);
+                    inflated = true;
+                }
+            }
+            if (!resident || !inflated || granule != payload)
+            {
+                ++range_bad;
+                LOG_ERROR(
+                    "pack verify: %s asset %zu range mismatch (resident %d inflated %d)",
+                    file.name.c_str(),
+                    ai,
+                    int(resident),
+                    int(inflated));
+            }
+        }
+    }
+    vfs_unmap_file(start, mapped);
+    LOG_INFO(
+        "pack verify: %s checked %d (write mismatches %d, range mismatches %d)",
+        file.name.c_str(),
+        checked,
+        write_bad,
+        range_bad);
+}
+#endif
+
 static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, std::vector<vfs_boot_item> sweep)
 {
+#if defined(XUO_EMSC)
+    // warm web boot: a previous session completed this exact install and the
+    // browser restored it - granule streaming would be pure waste (the game
+    // reads the materialized files). Assemble anything missing and open the
+    // gates; the sweep has nothing to add either.
+    if (vfs_boot_web_install_done(plan))
+    {
+        LOG_INFO("web install marker: previous install is complete, skipping the tiers");
+        vfs_boot_materialize_packs(plan);
+        vfs_state_fold(plan);
+        s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
+        s_boot_web_done.store(true, std::memory_order_release);
+        return;
+    }
+#endif
+    EM_ASM({ console.warn('ctx[boot-background] worker=' + (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope)); });
+    {
+        static char probeErr[256] = {0};
+        EM_ASM({
+            var out = function (p)
+            {
+                try
+                {
+                    return p + '=' + FS.readdir(p).length + ' entries';
+                }
+                catch (e)
+                {
+                    return p + ' ERR' + (e && e.errno !== undefined ? e.errno : '');
+                }
+            };
+            var cwd = '/';
+            try { cwd = FS.cwd(); } catch (e) { cwd = 'ERR'; }
+            stringToUTF8('cwd=' + cwd + ' | ' + out('/crossuo') + ' | ' + out('crossuo') +
+                         ' | ' + out('crossuo/streamed'), $0, $1);
+        }, (intptr_t)probeErr, sizeof(probeErr) - 1);
+        LOG_INFO("boot worker FS: %s", probeErr);
+    }
     LOG_INFO("background tier: %zu assets", items.size());
     const float background_total = items.size() > 0 ? float(items.size()) : 1.0f;
     for (size_t pos = 0; pos < items.size() && !s_boot_shutdown;)
@@ -1785,11 +2161,26 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
     LOG_INFO("background tier complete");
     vfs_state_fold(plan); // persist T1 (and reopen the journal)
 
+#if defined(XUO_EMSC)
+    // the web client sits on the splash poll until the install is resident
+    // (s_boot_web_done below) - no game frame can arrive before convergence,
+    // so the gate is cleared here: boot work is not competing with game
+    // frames while only the splash renders. The game's real first frame
+    // still notifies later (vfs_notify_first_frame demotes the pool).
+    s_frame_seen = true;
+#endif
     // convergence waits for the first frame: boot work must not compete with
     // it (headless callers get it via vfs_boot_wait, which flags the frame
     // immediately)
+#if defined(XUO_EMSC)
+    // yield to the worker event loop: the main worker needs to render frames
+    // and the async OPFS operations need their callbacks processed
+    while (!s_frame_seen && !s_boot_shutdown)
+        emscripten_thread_sleep(VFS_CONV_WAIT_POLL_MS);
+#else
     while (!s_frame_seen && !s_boot_shutdown)
         std::this_thread::sleep_for(std::chrono::milliseconds(VFS_CONV_WAIT_POLL_MS));
+#endif
     if (!s_boot_shutdown)
     {
         if (s_arena != nullptr)
@@ -1798,16 +2189,14 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
             vfs_converge_from_store(plan);
     }
 #if defined(XUO_EMSC)
+    // the packs the game opens as files must exist before init proceeds
+    vfs_boot_materialize_packs(plan);
+#endif
+#if defined(XUO_EMSC)
     // the full install is on disk: the game init can proceed (the sweep
     // continues below for as long as the session lasts)
-    s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
-    s_boot_web_done.store(true, std::memory_order_release);
-#endif
-
-#if defined(XUO_EMSC)
-    // the web client waits for this point (full install on disk) and then
-    // proceeds; the sweep keeps running for the rest of the session
-    s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
+    vfs_boot_web_install_marker_write(plan);
+        s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
     s_boot_web_done.store(true, std::memory_order_release);
 #endif
     // the continuous sweep: the rest of the plan converges in the background
@@ -1889,7 +2278,10 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         arena_params.store.blobs_dir = s_params.blobs_dir;
         std::unique_lock<std::mutex> lock(s_state_mutex);
         s_arena = vfs_store_backend_arena_create(arena_params);
-        if (s_arena == nullptr || !s_arena->open(plan))
+        // s_plan (not the local): the backend keeps the plan POINTER - the
+        // boot function's copy dies when it returns after spawning the
+        // background worker, s_plan lives for the process
+        if (s_arena == nullptr || !s_arena->open(s_plan))
         {
             LOG_ERROR("vfs: arena store failed to open");
             delete s_arena;
@@ -2154,7 +2546,11 @@ void vfs_boot_web_wait()
         return;
     s_frame_seen = true;
     while (!s_boot_web_done.load() && !s_boot_shutdown)
+#if defined(XUO_EMSC)
+        emscripten_thread_sleep(100);
+#else
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+#endif
 }
 #endif
 

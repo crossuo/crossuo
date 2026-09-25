@@ -657,7 +657,13 @@ bool CFileManager::LoadCommon()
     }
     if (!m_AnimMul[0].Load(UOFilePath("anim.mul")))
     {
-        return false;
+        // the legacy animation set is optional on a >=7.0 client: the UOP
+        // animations supersede it (the streaming web subset does not even
+        // ship the 190MB file). A pre-7 client still hard-requires it.
+        if (s_ClientVersion < CV_7000)
+        {
+            return false;
+        }
     }
     if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
     {
@@ -778,13 +784,13 @@ bool CFileManager::LoadWithUop()
     // pattern: "build/soundlegacymul/%08d.dat"
     if (!UopLoadFile(m_SoundLegacyMUL, "soundLegacyMUL.uop"))
     {
-        if (!m_SoundIdx.Load(UOFilePath("soundidx.mul")))
+        // no sound data at all: the client runs mute (the streaming web
+        // build defers the ~170MB sound pack to keep the heap bounded;
+        // the product carries no separate sound.mul/soundidx either)
+        if (!m_SoundIdx.Load(UOFilePath("soundidx.mul")) ||
+            !m_SoundMul.Load(UOFilePath("sound.mul")))
         {
-            return false;
-        }
-        if (!m_SoundMul.Load(UOFilePath("sound.mul")))
-        {
-            return false;
+            Warning(Data, "no sound data found - running without sound");
         }
     }
 
@@ -803,6 +809,14 @@ bool CFileManager::LoadWithUop()
 
     //UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
     UopLoadFile(m_Tileart, "tileart.uop"); // FIXME: parse tileart definitions
+
+    // animdata has no UOP home: the product ships it as a loose file and
+    // Load() aborts without it (streamed installs: it travels in the web
+    // subset - the anim*.mul exclusion only covers the legacy animation set)
+    if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
+    {
+        return false;
+    }
 
     /* Эти файлы не используются самой последней версией клиента 7.0.52.2
 	if (!m_tileart.Load(UOFilePath("tileart.uop")))

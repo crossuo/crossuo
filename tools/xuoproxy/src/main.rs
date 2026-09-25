@@ -228,8 +228,51 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
     // disk cache first: repeated boots do not hit the upstream services
     if state.use_cache
     {
+        // ranged request against a cached full body: read only the window
+        // (the cache stores full 200 bodies; without this a cached entry
+        // would shadow every range read, and a full read per range would
+        // drag hundreds of MB through memcpy per block serve)
+        if let Some(range) = headers.get(header::RANGE).and_then(|v| v.to_str().ok())
+        {
+            if let Some(spec) = range.strip_prefix("bytes=")
+            {
+                if let Some((start_s, end_s)) = spec.split_once('-')
+                {
+                    if let (Ok(start), Ok(end)) = (start_s.parse::<usize>(), end_s.parse::<usize>())
+                    {
+                        if let Some((status, ctype, total, body)) =
+                            cache_get_range(state, &url, start, end)
+                        {
+                            let ctype = sanitize_ctype(&ctype);
+                            let end = start + body.len().saturating_sub(1);
+                            let mut res = (
+                                StatusCode::PARTIAL_CONTENT,
+                                [(header::CONTENT_TYPE, ctype)],
+                                body,
+                            )
+                                .into_response();
+                            res.headers_mut().insert(
+                                header::CONTENT_RANGE,
+                                format!("bytes {start}-{end}/{total}")
+                                    .parse()
+                                    .expect("content-range"),
+                            );
+                            return res;
+                        }
+                    }
+                }
+            }
+        }
         if let Some((status, ctype, body)) = cache_get(state, &url)
         {
+            // ranged request against a cached full body: slice + 206 (the
+            // cache only stores full 200 bodies; without this a cached entry
+            // would shadow every range read - the web chunked fetch and the
+            // block streaming both depend on real 206 answers)
+            if let Some(resp) = range_from_cached(&sanitize_ctype(&ctype), &body, headers)
+            {
+                return resp;
+            }
             return respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers);
         }
     }
@@ -284,6 +327,43 @@ fn sanitize_ctype(ctype: &str) -> String
         .collect()
 }
 
+// "bytes=start-end" (or "bytes=start-") against a cached full body -> a 206
+// slice. Anything the client never sends (suffix ranges, multiple ranges,
+// non-byte units) falls through to the full-body answer (None).
+fn range_from_cached(ctype: &str, body: &[u8], headers: &HeaderMap) -> Option<Response>
+{
+    let range = headers.get(header::RANGE)?.to_str().ok()?;
+    let spec = range.strip_prefix("bytes=")?;
+    let (start_s, end_s) = spec.split_once('-')?;
+    let start: usize = start_s.parse().ok()?;
+    let end: usize = if end_s.is_empty()
+    {
+        body.len().checked_sub(1)?
+    }
+    else
+    {
+        end_s.parse().ok()?
+    };
+    if start > end || end >= body.len()
+    {
+        return None;
+    }
+    let slice = body[start..=end].to_vec();
+    let mut res = (
+        StatusCode::PARTIAL_CONTENT,
+        [(header::CONTENT_TYPE, ctype.to_string())],
+        slice,
+    )
+        .into_response();
+    res.headers_mut().insert(
+        header::CONTENT_RANGE,
+        format!("bytes {start}-{end}/{}", body.len())
+            .parse()
+            .expect("content-range"),
+    );
+    Some(res)
+}
+
 fn respond_text_rewritten(status: u16, ctype: &str, body: Vec<u8>, headers: &HeaderMap) -> Response
 {
     let status = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
@@ -324,19 +404,79 @@ fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, Vec<u8>)>
         }
     }
 
-    if raw.len() < 8
+    if raw.len() < 6
     {
         return None;
     }
     let status = u16::from_be_bytes([raw[0], raw[1]]);
-    let ctype_len = u32::from_be_bytes([raw[4], raw[5], raw[6], raw[7]]) as usize;
-    if raw.len() < 8 + ctype_len
+    let ctype_len = u32::from_be_bytes([raw[2], raw[3], raw[4], raw[5]]) as usize;
+    if raw.len() < 6 + ctype_len
     {
         return None;
     }
-    let ctype = String::from_utf8_lossy(&raw[8..8 + ctype_len]).into_owned();
-    let body = raw[8 + ctype_len..].to_vec();
+    let ctype = String::from_utf8_lossy(&raw[6..6 + ctype_len]).into_owned();
+    let body = raw[6 + ctype_len..].to_vec();
     Some((status, ctype, body))
+}
+
+// windowed cache read: [start, end] of the cached body without loading the
+// whole file (ranged serves hit multi-hundred-MB entries thousands of times
+// per boot; each full read is pure memcpy overhead). Also returns the total
+// body length for the Content-Range header.
+fn cache_get_range(
+    state: &AppState,
+    url: &str,
+    start: usize,
+    end_in: usize,
+) -> Option<(u16, String, u64, Vec<u8>)>
+{
+    let path = cache_entry(state, url);
+    let mut f = std::fs::File::open(&path).ok()?;
+
+    if state.cache_ttl > 0
+    {
+        if let Ok(meta) = f.metadata()
+        {
+            if let Ok(modified) = meta.modified()
+            {
+                if let Ok(age) = modified.elapsed()
+                {
+                    if age.as_secs() > state.cache_ttl
+                    {
+                        return None;
+                    }
+                }
+            }
+        }
+    }
+
+    let mut hdr = [0u8; 6];
+    std::io::Read::read_exact(&mut f, &mut hdr).ok()?;
+    let status = u16::from_be_bytes([hdr[0], hdr[1]]);
+    let ctype_len = u32::from_be_bytes([hdr[2], hdr[3], hdr[4], hdr[5]]) as usize;
+    let mut ctype_buf = vec![0u8; ctype_len];
+    std::io::Read::read_exact(&mut f, &mut ctype_buf).ok()?;
+    let ctype = String::from_utf8_lossy(&ctype_buf).into_owned();
+
+    let file_len = f.metadata().ok()?.len() as usize;
+    if file_len < 6 + ctype_len || start > end_in
+    {
+        return None;
+    }
+    let body_len = file_len - 6 - ctype_len;
+    let end = end_in.min(body_len.saturating_sub(1));
+    if start > end
+    {
+        return None;
+    }
+    std::io::Seek::seek(
+        &mut f,
+        std::io::SeekFrom::Start((6 + ctype_len + start) as u64),
+    )
+    .ok()?;
+    let mut body = vec![0u8; end - start + 1];
+    std::io::Read::read_exact(&mut f, &mut body).ok()?;
+    Some((status, ctype, body_len as u64, body))
 }
 
 fn cache_put(state: &AppState, url: &str, status: u16, ctype: &str, body: &[u8])

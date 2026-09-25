@@ -442,6 +442,162 @@ static bool vfs_store_pack_write_block(
     return fflush(fp) == 0;
 }
 
+// web pack assembly: the arena backend never puts pack bytes on disk (MEMFS
+// files live in the heap), but the game's file manager opens packs as files
+// and reads blocks through baked pointers. This writes the assembled pack -
+// the native layout, one granule resident at a time.
+bool vfs_store_materialize_pack(
+    class vfs_store_arena *arena,
+    const VfsPlan &plan,
+    size_t file_index,
+    const fs_path &install_dir,
+    const fs_path &blobs_dir)
+{
+    if (arena == nullptr || file_index >= plan.files.size())
+    return false;
+    const auto &file = plan.files[file_index];
+    if (file.assets.empty())
+    return false;
+
+    // loose whole-file packs (the product ships e.g. gumpart/sound/MainMisc
+    // as one blob each): the materialized file IS the inflated payload
+    if (!file.is_uop)
+    {
+    const auto &asset = file.assets.front();
+    if (vfs_asset_is_hole(asset))
+        return false;
+    const auto loose_path = fs_path_join(install_dir, file.name);
+    uint64_t existing = 0;
+    if (FILE *probe = fopen(fs_path_ascii(loose_path), "rb"))
+    {
+        vfs_file_size(probe, &existing);
+        fclose(probe);
+    }
+    if (existing == asset.ul && asset.ul != 0)
+    {
+        LOG_INFO(
+            "pack materialized: %s (already present, %" PRIu64 " bytes)",
+            file.name.c_str(),
+            existing);
+        return true;
+    }
+    std::vector<uint8_t> payload;
+    if (vfs_store_asset_payload(blobs_dir, asset, &payload) != 0)
+    {
+        // blob not in the store: pull it through the arena (fetches on
+        // demand), then copy the granule out
+        if (!arena->ensure(asset, true))
+            return false;
+        payload.resize(size_t(asset.ul), 0);
+        if (asset.ul != 0 && !arena->read(asset, 0, payload.data(), payload.size()))
+            return false;
+    }
+    if (!fs_file_write(fs_path_ascii(loose_path), payload.data(), payload.size()))
+    {
+        LOG_ERROR(
+            "pack materialize: %s write failed (%zu bytes)",
+            file.name.c_str(),
+            payload.size());
+        return false;
+    }
+    LOG_INFO(
+        "pack materialized: %s (%zu bytes, loose whole file)",
+        file.name.c_str(),
+        payload.size());
+    return true;
+    }
+
+    const auto path = fs_path_join(install_dir, file.name);
+    bool created = false;
+    FILE *fp = vfs_store_pack_open(path, file, &created);
+    if (fp == nullptr)
+    return false;
+    if (!created)
+    {
+    fclose(fp); // fingerprint + size match the plan: already assembled
+    return true;
+    }
+
+    LOG_INFO(
+    "materializing pack: %s (%" PRIu64 " bytes, %zu assets)",
+    file.name.c_str(),
+    file.size,
+    file.assets.size());
+    bool ok = true;
+    size_t written = 0;
+    for (size_t ai = 0; ai < file.assets.size() && ok; ++ai)
+    {
+    const auto &asset = file.assets[ai];
+    if (vfs_asset_is_hole(asset))
+        continue; // reserved slot: the table entry stays zero (Offset == 0)
+    if (!arena->ensure(asset, true))
+    {
+        LOG_ERROR(
+            "pack materialize: %s asset %zu failed to ensure (%s)",
+            file.name.c_str(),
+            ai,
+            asset.blob.c_str());
+        ok = false;
+        break;
+    }
+    std::vector<uint8_t> payload(size_t(asset.ul), 0);
+    if (asset.ul != 0 && !arena->read(asset, 0, payload.data(), payload.size()))
+    {
+        LOG_ERROR(
+            "pack materialize: %s asset %zu not resident after ensure",
+            file.name.c_str(),
+            ai);
+        ok = false;
+        break;
+    }
+    std::vector<uint8_t> metadata;
+    vfs_store_synthesize_metadata(asset, metadata);
+    if (!vfs_file_write_at(fp, asset.file_offset, metadata.data(), metadata.size()) ||
+        (!payload.empty() &&
+         !vfs_file_write_at(
+             fp, asset.file_offset + asset.ml, payload.data(), payload.size())))
+    {
+        LOG_ERROR(
+            "pack materialize: %s asset %zu write failed", file.name.c_str(), ai);
+        ok = false;
+        break;
+    }
+    UopFileEntry patch;
+    patch.Offset = asset.file_offset;
+    patch.MetadataSize = asset.ml;
+    patch.CompressedSize = uint32_t(asset.ul);
+    patch.DecompressedSize = uint32_t(asset.ul);
+    patch.Hash = asset.uop_hash;
+    patch.Checksum = asset.mc;
+    patch.Flags = uint16_t(asset.ct == 1 ? 0 : asset.ct);
+    if (!vfs_file_write_at(fp, vfs_store_table_pos(ai), &patch, sizeof(patch)))
+    {
+        LOG_ERROR(
+            "pack materialize: %s asset %zu table patch failed",
+            file.name.c_str(),
+            ai);
+        ok = false;
+        break;
+    }
+    ++written;
+    }
+    const bool flushed = fflush(fp) == 0;
+    fclose(fp);
+    if (!ok || !flushed)
+    {
+    LOG_ERROR(
+        "pack materialize failed: %s (%zu/%zu assets, flush %d)",
+        file.name.c_str(),
+        written,
+        file.assets.size(),
+        int(flushed));
+    return false;
+    }
+    LOG_INFO(
+    "pack materialized: %s (%zu assets)", file.name.c_str(), file.assets.size());
+    return true;
+}
+
 // loose files: materialized whole from the blob (decompressed when ct == 1)
 // ---------------------------------------------------------------------------
 

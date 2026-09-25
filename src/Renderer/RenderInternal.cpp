@@ -16,6 +16,7 @@
 #endif
 #include <string.h> // memcmp, memcpy
 #include <stdlib.h> // malloc
+#include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
@@ -373,7 +374,15 @@ bool Render_Init(SDL_Window *window)
 
     // Initialize persistent vertex buffers for optimized rendering
     Render_InitVertexBuffers();
+#if defined(XUO_EMSC)
+    // SDL never saw a MakeCurrent (the webgl context was made current via
+    // emscripten_webgl_make_context_current), so SDL_GL_GetCurrentContext
+    // reports null here and would wipe the handle the webgl branch stored
+    if (g_render.context == nullptr)
+        g_render.context = (SDL_GLContext)(uintptr_t)emscripten_webgl_get_current_context();
+#else
     g_render.context = SDL_GL_GetCurrentContext();
+#endif
     g_render.window = window;
     return true;
 }
@@ -783,11 +792,37 @@ texture_handle_t Render_CreateTexture2D(
     };
     const auto imgFormat = GL_BGRA;
 #else // #if defined(USE_GL)
+    // WebGL2/GLES: GL_BGRA and the *_REV packed types do not exist. The
+    // incoming pixels are BGRA-ordered (A1BGR5 for the 16-bit path, matching
+    // the desktop GL reading of the same data); expand/swizzle to RGBA bytes
+    // and upload as GL_RGBA + GL_UNSIGNED_BYTE.
+    const auto imgFormat = GL_RGBA;
+    std::vector<uint8_t> converted;
+    if (pixels != nullptr)
+    {
+        const size_t count = size_t(width) * height;
+        if (pixelsFormat == TextureFormat_Unsigned_A1_BGR5)
+        {
+            // ARGB1555 (bit15 = alpha, 14-10 = R, 9-5 = G, 4-0 = B) - the
+            // same field mapping the desktop GL_BGRA + 1_5_5_5_REV upload
+            // produces. The RGBA8 format arrives web-ready (no swizzle).
+            converted.resize(count * 4);
+            const auto *src = static_cast<const uint16_t *>(pixels);
+            for (size_t i = 0; i < count; ++i)
+            {
+                const uint32_t c = src[i];
+                converted[i * 4 + 0] = uint8_t((((c >> 10) & 0x1f) * 255 + 15) / 31);
+                converted[i * 4 + 1] = uint8_t((((c >> 5) & 0x1f) * 255 + 15) / 31);
+                converted[i * 4 + 2] = uint8_t(((c & 0x1f) * 255 + 15) / 31);
+                converted[i * 4 + 3] = (c & 0x8000) != 0 ? 0xff : 0x00;
+            }
+            pixels = converted.data();
+        }
+    }
     static GLenum s_pixelFormatToOGLFormat[] = {
-        GL_UNSIGNED_BYTE,          // TextureFormat_Unsigned_RGBA8
-        GL_UNSIGNED_SHORT_5_5_5_1, // TextureFormat_Unsigned_A1_BGR5
+        GL_UNSIGNED_BYTE, // TextureFormat_Unsigned_RGBA8
+        GL_UNSIGNED_BYTE, // TextureFormat_Unsigned_A1_BGR5 (converted above)
     };
-    const auto imgFormat = GL_RGBA; //GL_BGRA_EXT;
 #endif // #if defined(USE_GL)
 
     texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;
@@ -836,7 +871,7 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
         GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
 #else
     GL_CHECK(glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, nullptr));
+        GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
 #endif
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
@@ -1047,7 +1082,7 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, s_artArrayTexture));
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
-            s_artArrayCap, 0, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, nullptr));
+            s_artArrayCap, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
         GL_CHECK(glActiveTexture(GL_TEXTURE0));
@@ -1079,7 +1114,7 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, newArray));
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
-            newCap, 0, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, nullptr));
+            newCap, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
         GL_CHECK(glCopyImageSubData(

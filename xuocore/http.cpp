@@ -12,6 +12,8 @@
 #include "http.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <algorithm>
 #include <vector>
 #include <string>
 
@@ -21,8 +23,59 @@
 #include <common/fs.h>
 
 #define LOG_ERROR(...) Error(LOGGER_MODULE, __VA_ARGS__)
+#define LOG_INFO(...) Info(LOGGER_MODULE, __VA_ARGS__)
 
 static const char *s_agentName = nullptr;
+
+// responses at or above this size travel as ranged chunks: a single
+// multi-megabyte XHR response overflows the browser's in-memory handling
+// (Firefox spills big responses to temp files and fails them outright with
+// NS_ERROR_FILE_TOO_BIG), while every range stays small. The file repos
+// serve ranges (the streaming install depends on it); a server that ignores
+// Range keeps the single-response path below.
+static const size_t VFS_HTTP_CHUNK_MIN = 8 * 1024 * 1024;
+static const size_t VFS_HTTP_CHUNK_SIZE = 8 * 1024 * 1024;
+
+// assembles [0, size) from VFS_HTTP_CHUNK_SIZE ranged GETs (http_get_range
+// validated each part as a real 206 of the exact length)
+static bool http_get_chunked(const char *url, uint64_t size, size_t body_cap, http_response *out)
+{
+    http_response assembled;
+    assembled.body.reserve(size_t(size));
+    for (uint64_t offset = 0; offset < size;)
+    {
+        const uint64_t length = std::min<uint64_t>(VFS_HTTP_CHUNK_SIZE, size - offset);
+        http_response part;
+        if (!http_get_range(url, nullptr, offset, length, &part))
+        {
+            LOG_ERROR(
+                "chunked transfer failed at +%llu/%llu: %s",
+                (unsigned long long)offset,
+                (unsigned long long)size,
+                url);
+            return false;
+        }
+        assembled.body.insert(assembled.body.end(), part.body.begin(), part.body.end());
+        offset += length;
+    }
+    if (body_cap != 0 && assembled.body.size() > body_cap)
+    {
+        LOG_ERROR(
+            "transfer exceeded the body cap (%zu > %zu): %s",
+            assembled.body.size(),
+            body_cap,
+            url);
+        return false;
+    }
+    LOG_INFO(
+        "chunked transfer: %llu bytes in %llu ranges: %s",
+        (unsigned long long)assembled.body.size(),
+        (unsigned long long)((size + VFS_HTTP_CHUNK_SIZE - 1) / VFS_HTTP_CHUNK_SIZE),
+        url);
+    assembled.status = 200;
+    *out = std::move(assembled);
+    return true;
+}
 
 // single blocking GET; returns the malloc'd body (free() it). status
 // receives the HTTP code; total receives the resource size from
@@ -87,6 +140,21 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
     (void)agent;
     if (!url || !out)
         return false;
+    // big transfers stream as ranged chunks: the cap only decides *when to
+    // look*, the probe's Content-Range decides the size (a cap-only path
+    // would misbehave when the cap is an upper bound, e.g. manifest buffers).
+    // No range support (or no size): plain single-response GET as before.
+    if (body_cap >= VFS_HTTP_CHUNK_MIN)
+    {
+        long status = 0;
+        size_t len = 0;
+        long total = -1;
+        uint8_t *probe = http_xhr_get(url, "bytes=0-0", &status, &len, &total);
+        if (probe)
+            free(probe);
+        if (status == 206 && len == 1 && total > 0)
+            return http_get_chunked(url, uint64_t(total), body_cap, out);
+    }
     long status = 0;
     size_t len = 0;
     long total = -1;

@@ -232,6 +232,22 @@ bool vfs_store_materialize_asset_data(
     uint32_t asset_index,
     const std::vector<uint8_t> &block_bytes);
 
+// assembles the whole pack file for `file_index` in the install dir from the
+// arena's granules (web: the game mmaps packs at init and reads blocks through
+// baked pointers; the arena keeps granules in memory only, so the packs the
+// game opens as files must exist on disk before init). Writes the exact native
+// layout: synthesized [ml] metadata + inflated payload at the planned offsets
+// plus the patched table entry (Flags 0). A pack whose on-disk size and
+// fingerprint already match the plan is left untouched (warm boots). Every
+// asset is ensured first (fetching from the store on demand); the arena budget
+// holds - one granule is resident at a time, the rest streams into the file.
+bool vfs_store_materialize_pack(
+    class vfs_store_arena *arena,
+    const VfsPlan &plan,
+    size_t file_index,
+    const fs_path &install_dir,
+    const fs_path &blobs_dir);
+
 // update flow: re-opens the hole of one pack asset - the
 // on-disk entry keeps the plan's fields but Offset goes back to 0, so every
 // presence check (reconcile, verify, trap) reports the block absent and the

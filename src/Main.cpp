@@ -773,6 +773,9 @@ static int Run()
 
 int main(int argc, char **argv)
 {
+#if defined(XUO_EMSC)
+    web_install_alert_shim();
+    #endif
 #if 0 // TEST encoding
     str_init();
     // Add some tests, this cliloc message seems to use broken UTF8
@@ -883,5 +886,7 @@ int main(int argc, char **argv)
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
     gfx_render_list_destroy();
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
+#if !defined(XUO_EMSC)
     return ret;
+#endif
 }

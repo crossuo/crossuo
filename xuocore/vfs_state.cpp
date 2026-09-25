@@ -84,7 +84,9 @@ static const uint32_t VFS_STATE_MAGIC = 0x31545356; // "VST1"
 // Flags == 0 / CompressedSize == ul instead of the on-wire ml + cl) - the
 // layout change invalidates every persisted plan and state file, both are
 // rebuilt/reset on the next boot
-static const uint32_t VFS_SERIALIZATION_VERSION = 5;
+// 6: the web subset view changed (animdata.mul is no longer excluded);
+// persisted plans must rebuild to pick the new view up
+static const uint32_t VFS_SERIALIZATION_VERSION = 6;
 
 bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
 {

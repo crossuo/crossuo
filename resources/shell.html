@@ -9,9 +9,12 @@
                    font-family: system-ui, sans-serif; height: 100%; }
       #wrap { display: flex; flex-direction: column; align-items: center;
               justify-content: center; height: 100%; }
-      canvas.crossuo { width: 960px; height: 600px; max-width: 100%;
+      canvas.crossuo { width: 640px; height: 480px;
                        image-rendering: pixelated; background: #000;
                        border: 1px solid #2a2c36; outline: none; }
+      /* ?scale=page: fill the tab, preserving the 4:3 client ratio */
+      canvas.crossuo.page { width: min(100vw, calc(100vh * 4 / 3));
+                            height: auto; max-height: 100vh; }
       #status { margin-top: 8px; font-size: 13px; opacity: .8; }
       #log { margin-top: 8px; font-size: 11px; opacity: .6; white-space: pre;
              height: 4em; overflow: hidden; }
@@ -29,6 +32,20 @@
       // pthread builds run the runtime before the glue reads this object, so
       // create it up front and attach every handler to the same instance
       var Module = window.Module || {};
+      // mount IDBFS on the main browser thread (all C stdio from pthread
+      // workers proxies here, so this is the authoritative filesystem) and
+      // restore previous session data before the wasm starts. The run
+      // dependency makes emscripten wait for the restore before calling main.
+      Module.preRun = [function () {
+        Module.addRunDependency('idb-restore');
+        FS.mkdirTree('/crossuo');
+        FS.mount(IDBFS, {}, '/crossuo');
+        FS.syncfs(true, function (err) {
+          if (err) console.error('idb restore:', err);
+          Module.removeRunDependency('idb-restore');
+          console.log('idb restore complete');
+        });
+      }];
       (function () {
         var statusEl = document.getElementById('status');
         var logEl = document.getElementById('log');
@@ -49,6 +66,9 @@
         })();
         Module.canvas = (function () {
           var c = document.getElementById('canvas');
+          if (new URLSearchParams(window.location.search).get('scale') === 'page') {
+            c.classList.add('page');
+          }
           c.addEventListener('webglcontextlost', function (e) {
             e.preventDefault();
             setStatus('context lost, reloading');

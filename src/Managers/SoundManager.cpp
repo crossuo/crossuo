@@ -12,7 +12,11 @@
 #ifndef ASS_IMPLEMENTATION
 #define ASS_IMPLEMENTATION
 #define WITH_SDL2_STATIC
-
+#if defined(XUO_EMSC)
+// web: no SDL audio device (the AudioContext lives on the browser main
+// thread and needs a user gesture) - compile in soloud's null backend
+#define WITH_NULL
+#endif
 #include <cmath>
 namespace ass
 {
@@ -171,7 +175,13 @@ bool CSoundManager::Init()
 {
     SOUND_DEBUG_TRACE;
     Info(Client, "initializing sound system");
+#if defined(XUO_EMSC)
+    // the null driver: every play call is a safe no-op, the rest of the
+    // sound API keeps working (web has no SDL audio device in the worker)
+    s_backend.init(Soloud::CLIP_ROUNDOFF, Soloud::NULLDRIVER);
+#else
     s_backend.init();
+#endif
     s_backend.setGlobalVolume(0.30f);
     Info(Client, "sound init successfull");
 

@@ -5,6 +5,8 @@
 #if defined(XUO_EMSC)
 #include <xuocore/vfs_fetch.h> // vfs_fetch_idle (web streaming settle)
 #include <SDL_timer.h>
+// the EM_JS definition (src/Main.cpp) has C linkage; a function-scope
+// declaration is not allowed to specify linkage, so it lives here
 #endif
 
 #include <common/str.h>
@@ -333,11 +335,6 @@ bool CGame::Install()
     LoadAutoLoginNames();
 
     Info(Client, "loading files");
-#if defined(XUO_EMSC)
-    void web_fs_wait_restore(); // src/Main.cpp
-    void web_fs_sync_persist(); // src/Main.cpp
-    web_fs_wait_restore();      // idb restore lands before the boot reads caches
-#endif
     if (vfs_enabled() && !vfs_boot([](float done01, const char *label) {
             Info(Client, "streaming: %3d%% (%s)", int(done01 * 100.0f), label);
         }))
@@ -369,7 +366,7 @@ bool CGame::Install()
     }
     Splash_SetProgress(1.0f);
     Splash_Render();
-    web_fs_sync_persist();      // persist what we have so far
+    // persistence handled by RunFrame + vfs_boot_web_mirror_run
     Splash_Render();
 #endif
     Info(Client, "loading file manager");
