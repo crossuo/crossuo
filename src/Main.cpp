@@ -772,6 +772,18 @@ static int Run()
     return EXIT_SUCCESS;
 }
 
+#if defined(XUO_EMSC)
+// resize the canvas DOM element to match the game's SDL window size
+EM_JS(void, web_canvas_resize, (int width, int height), {
+    var canvas = Module.canvas || document.getElementById('canvas');
+    if (canvas)
+    {
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+    }
+});
+#endif
+
 int main(int argc, char **argv)
 {
 #if defined(XUO_EMSC)
