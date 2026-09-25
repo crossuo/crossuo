@@ -9,9 +9,11 @@
                    font-family: system-ui, sans-serif; height: 100%; }
       #wrap { display: flex; flex-direction: column; align-items: center;
               justify-content: center; height: 100%; }
+      /* no fixed size: SDL/emscripten controls the canvas dimensions
+         (SDL_SetWindowSize updates the canvas element size) */
       canvas.crossuo { image-rendering: pixelated; background: #000;
-                       border: 1px solid #2a2c36; outline: none; }
-      /* initial size set by the C code via web_canvas_resize */
+                       border: 1px solid #2a2c36; outline: none;
+                       max-width: 100vw; max-height: 100vh; }
       #status { margin-top: 8px; font-size: 13px; opacity: .8; }
       #log { margin-top: 8px; font-size: 11px; opacity: .6; white-space: pre;
              height: 4em; overflow: hidden; }

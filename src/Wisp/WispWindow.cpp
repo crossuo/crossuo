@@ -11,9 +11,6 @@
 #include "icon_client.h"
 #include "../GameWindow.h"
 
-#if defined(XUO_EMSC)
-extern "C" void web_canvas_resize(int width, int height);
-#endif
 
 namespace Wisp
 {
@@ -50,10 +47,6 @@ void CWindow::SetSize(const CSize &size)
 {
     SDL_SetWindowSize(m_window, size.Width, size.Height);
     m_Size = size;
-#if defined(XUO_EMSC)
-    // sync the canvas CSS display size with the SDL window size
-    web_canvas_resize(size.Width, size.Height);
-#endif
 }
 
 void CWindow::SetPositionSize(int x, int y, int width, int height)
