@@ -196,6 +196,9 @@ static fs_path account_create_config(const account::entry &account)
     entry.crossuo_crypt = account.account_crypt;
     entry.crossuo_custompath = account.account_data_path;
     entry.crossuo_loginserver = account.account_loginserver;
+    // the launcher profile names the shard: the client streams its data
+    // install into a per-shard directory named after it
+    entry.crossuo_shardname = account.account_profile;
 
     crossuo::write(fp, entry, nullptr);
     fclose(fp);

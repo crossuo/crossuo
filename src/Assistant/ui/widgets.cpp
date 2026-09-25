@@ -31,18 +31,9 @@
 #include <stdio.h>
 #include <string.h>
 
-// Vendored single-header PNG decoder (public domain). Assistant-local per the
-// master plan §6 "Icon atlas": stb_image is not part of external/.
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wswitch-default"
-#endif
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+// stb_image (external/gfx) decodes the icon-atlas pngs; the implementation is
+// instantiated in Splash.cpp, which is always built
+#include <external/gfx/stb_image.h>
 
 namespace xuoassist {
 

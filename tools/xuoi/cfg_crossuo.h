@@ -21,5 +21,6 @@ CFG_FIELD(crossuo, crypt, "no", bool)
 CFG_FIELD(crossuo, useverdata, "no", bool)
 CFG_FIELD(crossuo, clienttype, {}, astr_t)
 CFG_FIELD(crossuo, language, {}, astr_t)
+CFG_FIELD(crossuo, shardname, {}, astr_t)
 
 #undef CFG_FIELD

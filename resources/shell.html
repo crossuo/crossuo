@@ -10,10 +10,14 @@
       #wrap { display: flex; flex-direction: column; align-items: center;
               justify-content: center; height: 100%; }
       /* no fixed size: SDL/emscripten controls the canvas dimensions
-         (SDL_SetWindowSize updates the canvas element size) */
+         (SDL_SetWindowSize updates the canvas element size). SDL probes
+         the css box with a 1x1 canvas to detect external css sizing and
+         adopts whatever it reads when SDL_WINDOW_RESIZABLE - so the css
+         box must match the intrinsic size: use an outline (no layout
+         impact), never a border (1px border would turn the 1x1 probe
+         into a 3x3 bounding box and shrink the window to it) */
       canvas.crossuo { image-rendering: pixelated; background: #000;
-                       border: 1px solid #2a2c36; outline: none;
-                       max-width: 100vw; max-height: 100vh; }
+                       outline: 1px solid #2a2c36; outline-offset: -1px; }
       #status { margin-top: 8px; font-size: 13px; opacity: .8; }
       #log { margin-top: 8px; font-size: 11px; opacity: .6; white-space: pre;
              height: 4em; overflow: hidden; }
@@ -22,7 +26,7 @@
   <body>
     <div id="wrap">
       <!-- the emscripten runtime binds to Module.canvas -->
-      <canvas class="crossuo" id="canvas" tabindex="-1"
+      <canvas class="crossuo" id="canvas" width="640" height="480" tabindex="-1"
               oncontextmenu="event.preventDefault()"></canvas>
       <div id="status">loading&#8230;</div>
       <div id="log"></div>
@@ -53,6 +57,7 @@
         }
         // pass URL query parameters to the client as command line arguments:
         //   index.html?streaming-product=http://host/patch&streaming-workers=4
+        // 'shard' names the per-shard streaming install dir (see --shard)
         Module.arguments = (function () {
           var args = ['./crossuo'];
           var q = window.location.search.substring(1);

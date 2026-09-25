@@ -221,6 +221,8 @@ static bool vfs_fetch_and_materialize_asset(
     store_params.install_dir = s_params.install_dir;
     store_params.state_dir = s_params.state_dir;
     store_params.record = record; // T1 prefetch is cache-warming, not usage
+    store_params.quiet = true;    // the resolve outcome is logged below; the
+                                  // per-run stats line would be pure spam
 
     const auto log_resolve = [&](bool ok)
     {
@@ -1279,9 +1281,11 @@ static bool vfs_boot_arena_ensure(
     }
 
     bool ok = true;
+#if defined(XUO_EMSC)
     size_t done = 0;
     const size_t total = items->size();
     const bool full_pass = all.size() > 0 && items == &all; // full convergence
+#endif
     for (const auto &item : *items)
     {
 #if defined(XUO_EMSC)
@@ -1780,7 +1784,9 @@ static void vfs_boot_run_chunk(
     if (s_arena != nullptr)
         vfs_boot_arena_ensure(plan, &batch_items, s_arena);
     else
-        vfs_boot_materialize(plan, &batch_items, nullptr);
+        // quiet: chunk-sized stats lines are noise (one per downloaded
+        // asset); the tier/convergence aggregates carry the numbers
+        vfs_boot_materialize(plan, &batch_items, nullptr, true);
 }
 
 // the background thread: T1 fetch (ordered, byte-budgeted chunks) and the
@@ -1919,10 +1925,10 @@ static void vfs_boot_web_mkdirs(const char *path);
 
 static void vfs_boot_web_mkdirs(const char *path)
 {
-    fs_path_create(fs_path_from("crossuo"));
-    fs_path_create(fs_path_from("crossuo/streamed"));
-    fs_path_create(fs_path_from("crossuo/streamed/cache"));
-    (void)path;
+    // the caller names the root (the per-shard streaming install dir)
+    const auto root = fs_path_from(path);
+    fs_path_create(root);
+    fs_path_create(fs_path_join(root, "cache"));
 }
 
 
@@ -2124,30 +2130,40 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
         return;
     }
 #endif
+#if defined(XUO_EMSC)
     EM_ASM({ console.warn('ctx[boot-background] worker=' + (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope)); });
     {
         static char probeErr[256] = {0};
-        EM_ASM({
-            var out = function (p)
+        const astr_t install = fs_path_ascii(s_params.install_dir);
+        EM_ASM(
             {
-                try
+                var out = function (p)
                 {
-                    return p + '=' + FS.readdir(p).length + ' entries';
-                }
-                catch (e)
-                {
-                    return p + ' ERR' + (e && e.errno !== undefined ? e.errno : '');
-                }
-            };
-            var cwd = '/';
-            try { cwd = FS.cwd(); } catch (e) { cwd = 'ERR'; }
-            stringToUTF8('cwd=' + cwd + ' | ' + out('/crossuo') + ' | ' + out('crossuo') +
-                         ' | ' + out('crossuo/streamed'), $0, $1);
-        }, (intptr_t)probeErr, sizeof(probeErr) - 1);
+                    try
+                    {
+                        return p + '=' + FS.readdir(p).length + ' entries';
+                    }
+                    catch (e)
+                    {
+                        return p + ' ERR' + (e && e.errno !== undefined ? e.errno : '');
+                    }
+                };
+                var cwd = '/';
+                try { cwd = FS.cwd(); } catch (e) { cwd = 'ERR'; }
+                var inst = UTF8ToString($2);
+                stringToUTF8('cwd=' + cwd + ' | ' + out('/crossuo') + ' | ' + out(inst) +
+                             ' | ' + out(inst + '/cache'), $0, $1);
+            },
+            (intptr_t)probeErr,
+            sizeof(probeErr) - 1,
+            (intptr_t)install.c_str());
         LOG_INFO("boot worker FS: %s", probeErr);
     }
+#endif
     LOG_INFO("background tier: %zu assets", items.size());
+#if defined(XUO_EMSC)
     const float background_total = items.size() > 0 ? float(items.size()) : 1.0f;
+#endif
     for (size_t pos = 0; pos < items.size() && !s_boot_shutdown;)
     {
         const size_t count = vfs_boot_chunk_span(items, pos);

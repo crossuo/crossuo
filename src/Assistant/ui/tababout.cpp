@@ -16,7 +16,7 @@
 
 #include <string.h>
 
-#include "stb_image.h"
+#include <external/gfx/stb_image.h>
 
 #include "../core/global.h"
 #include "widgets.h" // DOCS_URL

@@ -280,7 +280,9 @@ static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &fi
     if (recreate)
     {
         // a recreate throws away every materialized block of the pack: say
-        // why, so a fingerprint/plan mismatch is never a silent wipe
+        // why, so a fingerprint/plan mismatch is never a silent wipe. A
+        // missing (or empty) file is the fresh-install create - nothing was
+        // thrown away and the create itself is traced below
         uint64_t existing_size = 0;
         uint32_t existing_sig = 0;
         if (FILE *probe = fopen(fs_path_ascii(path), "rb"))
@@ -291,13 +293,16 @@ static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &fi
             vfs_file_size(probe, &existing_size);
             fclose(probe);
         }
-        LOG_INFO(
-            "recreating pack %s (size %llu, sig %08x) for plan (size %llu, sig %08x)",
-            fs_path_ascii(path),
-            (unsigned long long)existing_size,
-            existing_sig,
-            (unsigned long long)file.size,
-            fingerprint);
+        if (existing_size != 0)
+        {
+            LOG_INFO(
+                "recreating pack %s (size %llu, sig %08x) for plan (size %llu, sig %08x)",
+                fs_path_ascii(path),
+                (unsigned long long)existing_size,
+                existing_sig,
+                (unsigned long long)file.size,
+                fingerprint);
+        }
     }
 
     FILE *fp = fopen(fs_path_ascii(path), recreate ? "wb+" : "r+b");
@@ -895,7 +900,12 @@ bool vfs_store_materialize(
         const size_t base = vfs_store_global_index(plan, fi, 0);
         for (size_t ai = 0; ai < file.assets.size(); ++ai)
             states[base + ai] = vfs_pending;
-        LOG_INFO("recreating pack for plan: %s", file.name.c_str());
+        // a pack not on disk yet is just the streaming install being built
+        // up - only an EXISTING file being thrown away is worth announcing
+        // (this runs on every materialize run while the install is
+        // incomplete, so a blanket log repeats the whole list every chunk)
+        if (fs_path_exists(path))
+            LOG_INFO("recreating pack for plan: %s", file.name.c_str());
     }
 
     fs_path_create(params.install_dir);

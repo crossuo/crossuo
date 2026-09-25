@@ -140,6 +140,11 @@ static bool InitCli(int argc, char *argv[])
     g_cli["character"].type(po::string).description("When using auto login, use this character");
     g_cli["fastlogin"].type(po::u32).description("1 to do a fast login");
 
+    g_cli["shard"].type(po::string).description(
+        "shard name: names the per-shard streaming install directory"
+        " (overrides the config file; defaults to the built-in shard name"
+        " " MACRO_TOSTRING(XUO_DEFAULT_SHARD_NAME) ")");
+
     g_cli["proxy-host"]
         .type(po::string)
         .description("Use proxy, host address. Requires 'proxy-port'");
@@ -311,7 +316,18 @@ bool load_config()
         if (g_cli["streaming"].was_set())
             dir = g_cli["streaming"].get().string;
         if (dir.empty())
-            dir = fs_path_ascii(FilePath("streamed"));
+        {
+            // the streaming install is per-shard: the shard name (launcher
+            // profile, config file, command line or the white-label default)
+            // names the directory, so installs do not mix between shards
+            astr_t shard = g_Config.ShardName;
+            std::replace(shard.begin(), shard.end(), '/', '_');
+            std::replace(shard.begin(), shard.end(), '\\', '_');
+            std::replace(shard.begin(), shard.end(), ' ', '_');
+            if (shard.empty())
+                shard = XUO_DEFAULT_SHARD_NAME;
+            dir = fs_path_ascii(FilePath(shard.c_str()));
+        }
         params.install_dir = fs_path_from(dir.c_str());
         // cache (blob store + state db) lives under the streaming dir
         params.blobs_dir = fs_path_join(params.install_dir, "cache", "blobs");
@@ -327,6 +343,12 @@ bool load_config()
         };
 
         const bool config_exists = LoadGlobalConfig();
+
+    // command line wins over the config file for the shard name
+    if (g_cli["shard"].was_set() && !g_cli["shard"].get().string.empty())
+    {
+        g_Config.ShardName = g_cli["shard"].get().string;
+    }
 
     // a config whose data path carries a streamed (vfs-managed) install -
     // its cache/state marks it - keeps streaming into that directory: the

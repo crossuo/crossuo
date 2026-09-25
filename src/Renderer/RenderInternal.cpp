@@ -1030,6 +1030,82 @@ texture_handle_t Render_ArtArrayTexture()
     return s_artArrayTexture;
 }
 
+#if defined(XUO_EMSC)
+// WebGL2 exposes no glCopyImageSubData (GLES3-only API, absent from the
+// WebGL2 IDL and from emscripten's GL bindings - the link would leave the
+// symbol unresolved and any call would abort at runtime). Emulate the two
+// uses below (2D -> array layer, and array grow) with a framebuffer attach
+// + copyTexSubImage, which is WebGL2 core. The build compiles against the
+// GLES2 headers (gl2.h), so the two GLES3 entry points used here get local
+// prototypes (same pattern as the glTexImage3D declaration in gfx.h) -
+// emscripten resolves them from the WebGL2 bindings. Framebuffer and
+// texture bindings are saved and restored around the copies: the callers
+// rely on the real glCopyImageSubData being side-effect free.
+extern "C" {
+void glFramebufferTextureLayer(
+    GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
+void glCopyTexSubImage3D(
+    GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x,
+    GLint y, GLsizei width, GLsizei height);
+}
+static void webgl_CopyImageSubData(
+    uint32_t srcName, GLenum srcTarget, int srcLevel, int srcX, int srcY, int srcZ,
+    uint32_t dstName, GLenum dstTarget, int dstLevel, int dstX, int dstY, int dstZ,
+    int width, int height, int depth)
+{
+    GLint savedFbo = 0;
+    GL_CHECK(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &savedFbo));
+    GLint savedActive = GL_TEXTURE0;
+    GL_CHECK(glGetIntegerv(GL_ACTIVE_TEXTURE, &savedActive));
+    const GLenum dstBindTarget =
+        (dstTarget == GL_TEXTURE_2D) ? GL_TEXTURE_2D : GL_TEXTURE_2D_ARRAY;
+    const GLint dstBindingEnum =
+        (dstBindTarget == GL_TEXTURE_2D) ? GL_TEXTURE_BINDING_2D : GL_TEXTURE_BINDING_2D_ARRAY;
+
+    GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    GLint savedTex = 0;
+    GL_CHECK(glGetIntegerv(dstBindingEnum, &savedTex));
+
+    GLuint fbo = 0;
+    GL_CHECK(glGenFramebuffers(1, &fbo));
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+    GL_CHECK(glBindTexture(dstBindTarget, dstName));
+    for (int i = 0; i < depth; ++i)
+    {
+        if (srcTarget == GL_TEXTURE_2D)
+        {
+            GL_CHECK(glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, srcName, srcLevel));
+        }
+        else
+        {
+            GL_CHECK(glFramebufferTextureLayer(
+                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, srcName, srcLevel, srcZ + i));
+        }
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            continue;
+        }
+        if (dstTarget == GL_TEXTURE_2D)
+        {
+            GL_CHECK(glCopyTexSubImage2D(
+                GL_TEXTURE_2D, dstLevel, dstX, dstY, srcX, srcY, width, height));
+        }
+        else
+        {
+            GL_CHECK(glCopyTexSubImage3D(
+                GL_TEXTURE_2D_ARRAY, dstLevel, dstX, dstY, dstZ + i, srcX, srcY, width, height));
+        }
+    }
+    GL_CHECK(glDeleteFramebuffers(1, &fbo));
+
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, savedFbo));
+    GL_CHECK(glBindTexture(dstBindTarget, savedTex));
+    GL_CHECK(glActiveTexture(savedActive));
+}
+#define glCopyImageSubData webgl_CopyImageSubData
+#endif // XUO_EMSC
+
 // copies srcTexture (w x h) into a fresh layer of the shared art array and
 // returns the uv scale to use for it (uv = size / ART_ARRAY_LAYER_SIZE);
 // returns layer < 0 when the sprite cannot be placed (too big / limits hit)

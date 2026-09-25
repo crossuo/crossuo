@@ -519,6 +519,7 @@ FS_PRIVATE fs_path fs_path_appdata()
 #elif defined(__APPLE__)
 #include <copyfile.h> // copyfile
 #include <libproc.h>  // proc_pidpath
+#include <pwd.h>      // getpwuid (appdata fallback)
 #elif defined(_WIN32)
 #include <direct.h> // _mkdir
 #include <windows.h>
@@ -998,9 +999,27 @@ FS_PRIVATE fs_path fs_path_appdata()
     if (is_home)
         fs_append(path, fs_path_from(".local/share"));
 #elif defined(__APPLE__)
-    datadir = getenv("HOME"); // FIXME: can this be null on osx?
+    // the standard per-user data location; a plain HOME lookup covers the
+    // normal launch paths, the passwd entry covers launchers that strip
+    // the environment (getenv would otherwise hand a null into fs_path_from)
+    datadir = getenv("HOME");
+    if (!datadir || !datadir[0])
+    {
+        struct passwd *pw = getpwuid(getuid());
+        datadir = (pw && pw->pw_dir && pw->pw_dir[0]) ? pw->pw_dir : ".";
+    }
     path = fs_path_from(datadir);
     fs_append(path, fs_path_from("/Library/Application Support"));
+#elif defined(_WIN32)
+    // the standard per-user roaming data path (%APPDATA%): the same folder
+    // SHGetFolderPath(CSIDL_APPDATA) resolves in the MSVC branch, read from
+    // the environment to keep the mingw builds free of the shell API/link
+    datadir = getenv("APPDATA");
+    if (!datadir || !datadir[0])
+        datadir = getenv("LOCALAPPDATA");
+    if (!datadir || !datadir[0])
+        datadir = "."; // no user profile: keep the legacy portable behavior
+    path = fs_path_from(datadir);
 #endif
 
     return path;

@@ -17,6 +17,10 @@ struct Config
     astr_t CustomPath;
     astr_t ServerAddress = XUO_DEFAULT_SERVER_ADDRESS;
     astr_t LocaleOverride;
+    // shard name: comes from the launcher profile, the config file, the
+    // command line (--shard) or the white-label default, in that order of
+    // recency; names the per-shard streaming install directory
+    astr_t ShardName = XUO_DEFAULT_SHARD_NAME;
     uint16_t ServerPort = XUO_DEFAULT_SERVER_PORT;
     uint16_t ClientFlag = 0;
     bool SavePassword = true;
@@ -61,6 +65,7 @@ bool ApplyClientProfile(
     const astr_t &custom_path,
     const astr_t &client_version,
     const astr_t &client_type,
-    bool crypt);
+    bool crypt,
+    const astr_t &shard_name);
 
 extern Config g_Config;

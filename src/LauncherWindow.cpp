@@ -270,7 +270,8 @@ apply_result client_apply_profile(const client_profile &profile)
         profile.data_path,
         profile.clientversion,
         profile.clienttype,
-        profile.crypt);
+        profile.crypt,
+        profile.profile); // the launcher profile names the shard
     if (live)
     {
         return apply_result::applied;

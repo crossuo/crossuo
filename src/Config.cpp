@@ -44,6 +44,7 @@ enum
     MSCC_USE_VERDATA,
     MSCC_CLIENT_TYPE,
     MSCC_LOCALE_OVERRIDE,
+    MSCC_SHARD_NAME,
     MSCC_COUNT,
 };
 
@@ -79,6 +80,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_USE_VERDATA, "useverdata" },
     { MSCC_CLIENT_TYPE, "clienttype" },
     { MSCC_LOCALE_OVERRIDE, "language" },
+    { MSCC_SHARD_NAME, "shardname" },
     { MSCC_COUNT, nullptr },
 };
 static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
@@ -508,6 +510,11 @@ bool LoadGlobalConfig()
                     g_Config.LocaleOverride = str_upper(strings[1]);
                 }
                 break;
+                case MSCC_SHARD_NAME:
+                {
+                    g_Config.ShardName = strings[1];
+                    break;
+                }
                 default:
                     break;
             }
@@ -589,6 +596,11 @@ void SaveGlobalConfig()
         fprintf(cfg, "Language=%s\n", g_Config.LocaleOverride.c_str());
     }
 
+    if (!g_Config.ShardName.empty())
+    {
+        fprintf(cfg, "ShardName=%s\n", g_Config.ShardName.c_str());
+    }
+
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
     if (g_Config.ClientKeysSet)
     {
@@ -634,7 +646,8 @@ bool ApplyClientProfile(
     const astr_t &custom_path,
     const astr_t &client_version,
     const astr_t &client_type,
-    bool crypt)
+    bool crypt,
+    const astr_t &shard_name)
 {
     const bool connected = g_ConnectionManager.Connected();
     const bool booted = g_CurrentScreen != nullptr;
@@ -655,6 +668,10 @@ bool ApplyClientProfile(
     g_Config.SavePassword = save_password;
     g_Config.AutoLogin = autologin;
     g_Config.UseCrypt = crypt;
+    if (!shard_name.empty())
+    {
+        g_Config.ShardName = shard_name;
+    }
 
     // loginserver uses the config file format and may carry a port: "host,port"
     g_Config.ServerAddress = loginserver;

@@ -229,6 +229,9 @@ void tcp_close(tcp_socket socket)
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
+typedef int SOCKET;
+#define INVALID_SOCKET (-1)
+#define closesocket close
 #endif
 
 uint16_t icmp_checksum(const uint16_t *addr, int count)
@@ -249,7 +252,7 @@ uint16_t icmp_checksum(const uint16_t *addr, int count)
 template<class T>
 SOCKET socket_fd(T socket)
 {
-    return (SOCKET)(size_t)socket;
+    return *reinterpret_cast<SOCKET *>(socket);
 }
 
 uint32_t socket_localaddress()
@@ -265,8 +268,13 @@ uint32_t socket_localaddress()
 bool socket_init()
 {
 #ifdef _WIN32
-    WSADATA wsa;
-    return WSAStartup(MAKEWORD(2, 2), &wsa) == 0;
+    static bool wsa_initialized = false;
+    if (!wsa_initialized)
+    {
+        WSADATA wsaData = { 0 };
+        wsa_initialized = WSAStartup(MAKEWORD(2, 2), &wsaData) == 0;
+    }
+    return wsa_initialized;
 #else
     return true;
 #endif
@@ -342,13 +350,8 @@ int tcp_send(tcp_socket socket, unsigned char *data, size_t size)
 void tcp_close(tcp_socket socket)
 {
     auto h = socket_fd(socket);
-#ifdef _WIN32
     closesocket(h);
-#else
-    close(h);
-#endif
     delete reinterpret_cast<SOCKET *>(socket);
-    socket = nullptr;
 }
 
 #endif // !XUO_EMSC

@@ -42,7 +42,13 @@
     #define GFX_GL_MAJOR 2
     #define GFX_GL_MINOR 2
 #elif defined(USE_GLES2) // #if defined(USE_GL2)
-    #define USE_GLES
+    // the build system passes -DUSE_GLES for the src renderer gates (it must
+    // exist before this header is included); only define it here when absent
+    // (a valueless -D is seen as '=1', which would otherwise conflict with the
+    // empty definition and warn on every user of this header)
+    #ifndef USE_GLES
+        #define USE_GLES
+    #endif
     #define SOKOL_GLES2
     #define GL_SHADER_VERSION "100"
     #define GL_SHADER_ATTRIBUTE(x) "in "
