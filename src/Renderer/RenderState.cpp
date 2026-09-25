@@ -15,17 +15,8 @@
 #include <assert.h>
 #include <string.h> // memcmp, memcpy
 
-// Exact float comparison for render-state caching: any bit difference means
-// the state changed and GL state must be re-issued. Bit-level compare keeps
-// the exact-match semantics while staying warning-free (-Wfloat-equal).
-static bool f32eq(float a, float b)
-{
-    static_assert(sizeof(float) == sizeof(uint32_t), "requires 32-bit float");
-    uint32_t ba, bb;
-    memcpy(&ba, &a, sizeof(ba));
-    memcpy(&bb, &b, sizeof(bb));
-    return ba == bb;
-}
+// Exact float comparison for render-state caching lives in RenderInternal.h
+// (f32eq): the batch key and the render-state cache must use the same one.
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 static ShaderPipeline g_pipeline = {};

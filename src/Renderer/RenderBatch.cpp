@@ -26,18 +26,6 @@ static bool BatchDisabled()
     return off;
 }
 
-// Bit-exact float compare matching RenderState.cpp's f32eq: the render-state
-// view-params cache compares this way, so the batch has to agree with it on
-// what counts as "unchanged" or the two would disagree about flushing.
-bool f32eq(float a, float b)
-{
-    static_assert(sizeof(float) == sizeof(uint32_t), "requires 32-bit float");
-    uint32_t ba, bb;
-    memcpy(&ba, &a, sizeof(ba));
-    memcpy(&bb, &b, sizeof(bb));
-    return ba == bb;
-}
-
 struct alignas(4) RenderBatchKey
 {
     texture_handle_t texture;

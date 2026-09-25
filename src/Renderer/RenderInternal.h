@@ -19,6 +19,22 @@ struct ShaderPipeline;
 #include "RenderTypes.h"
 #include "RenderCommands.h"
 
+#include <string.h> // memcpy
+
+// Exact float comparison for render-state caching: any bit difference means
+// the state changed and GL state must be re-issued. Bit-level compare keeps
+// the exact-match semantics while staying warning-free (-Wfloat-equal).
+// The render-state cache AND the batch key compare this way: they must agree
+// on what counts as "unchanged" or the two would disagree about flushing.
+inline bool f32eq(float a, float b)
+{
+    static_assert(sizeof(float) == sizeof(uint32_t), "requires 32-bit float");
+    uint32_t ba, bb;
+    memcpy(&ba, &a, sizeof(ba));
+    memcpy(&bb, &b, sizeof(bb));
+    return ba == bb;
+}
+
 // External variable declarations for shared renderer state
 extern bool g_rendererDebugForceStateReset;
 extern uint32_t g_drawVAO;
