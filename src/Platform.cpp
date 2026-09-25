@@ -2,6 +2,10 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Platform.h"
+
+#if defined(XUO_EMSC)
+#include <emscripten.h>
+#endif
 #include "Globals.h"
 #include <common/logging/logging.h>
 
@@ -75,7 +79,17 @@ void SetLanguageFromSystemLocale()
 
 void OpenBrowser(const astr_t &url)
 {
+#if defined(XUO_EMSC)
+    // open a new browser tab
+    EM_ASM(
+    {
+        var url = UTF8ToString($0);
+        if (url)
+            window.open(url, '_blank');
+    }, (intptr_t)url.c_str());
+#else
     ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+#endif
 }
 
 #else // Linux and MacOSX

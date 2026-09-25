@@ -846,12 +846,10 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
                         if (block >= 0)
                         {
 #if defined(XUO_EMSC)
-                            // GLES/WebGL2: GL_RGBA + GL_UNSIGNED_BYTE
-                            // expects RGBA byte order (R in byte 0)
-                            uint32_t r8 = (((pcl >> 10) & 0x1f) * 255 + 15) / 31;
-                            uint32_t g8 = (((pcl >> 5) & 0x1f) * 255 + 15) / 31;
-                            uint32_t b8 = ((pcl & 0x1f) * 255 + 15) / 31;
-                            pData[block] = 0xFF000000u | (b8 << 16) | (g8 << 8) | r8;
+                            // GLES/WebGL2: GL_RGBA reads RGBA byte order.
+                            // GetColor already returns 32-bit RGBA (via
+                            // Color16To32); just add the alpha channel.
+                            pData[block] = pcl | 0xFF000000u;
 #else
                             pData[block] = pcl << 8 | 0xFF;
 #endif
@@ -2559,11 +2557,8 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     else
     {
 #if defined(XUO_EMSC)
-        uint16_t pc16 = g_ColorManager.GetPolygoneColor(cell, color);
-        uint32_t r8 = (((pc16 >> 10) & 0x1f) * 255 + 15) / 31;
-        uint32_t g8 = (((pc16 >> 5) & 0x1f) * 255 + 15) / 31;
-        uint32_t b8 = ((pc16 & 0x1f) * 255 + 15) / 31;
-        datacolor = 0xFF000000u | (b8 << 16) | (g8 << 8) | r8;
+        // GetPolygoneColor returns 32-bit RGBA via Color16To32
+        datacolor = g_ColorManager.GetPolygoneColor(cell, color) | 0xFF000000u;
 #else
         datacolor = g_ColorManager.GetPolygoneColor(cell, color) << 8 | 0xFF;
 #endif

@@ -114,7 +114,11 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
     }
     else if (action == ID_SMOOTH_MS_QUIT)
     {
+#if defined(XUO_EMSC)
+        // quitting makes no sense in a browser; ignore
+#else
         g_GameWindow.Destroy();
+#endif
     }
 }
 
