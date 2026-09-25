@@ -5,119 +5,278 @@
 #include <cassert>
 #include <common/logging/logging.h>
 #include <common/str.h>
+#include <string.h>
+#include <algorithm>
+#include <vector>
+#include <string>
 
-#if 1
-#define SOCKET_DUMP(...)
 #define SOCKET_LOG(...)
-#else
-#define SOCKET_LOG(...) DEBUG(Network, __VA_ARGS__)
-#define SOCKET_DUMP(...) DEBUG_DUMP(Network, "<raw>", __VA_ARGS__)
-#endif
+#define SOCKET_DUMP(...)
 
-#if USE_PING
-bool g_DisablePing = false;
+#if defined(XUO_EMSC)
+// ---------------------------------------------------------------------------
+// WebSocket-based socket transport for emscripten.
+//
+// Browsers cannot open raw TCP sockets. The client connects to a WebSocket
+// proxy (xuoproxy /ws/<host>/<port>) that bridges binary WebSocket frames
+// to a TCP connection on the shard server.
+//
+// Each tcp_socket is a WebSocket context. tcp_connect builds the ws:// URL
+// from the current page origin: ws://<origin>/ws/<host>/<port>
+// ---------------------------------------------------------------------------
 
-struct ICMPHDR
+#include <emscripten.h>
+#include <emscripten/websocket.h>
+#include <emscripten/threading.h>
+
+struct ws_context
 {
-    unsigned char Type;
-    unsigned char Code;
-    uint16_t Checksum;
-    uint16_t ID;
-    uint16_t Seq;
-    char Data;
+    EMSCRIPTEN_WEBSOCKET_T handle = 0;
+    bool connected = false;
+    bool failed = false;
+    bool closed = false;
+    std::vector<uint8_t> recv_buf;
+    size_t recv_pos = 0;
 };
 
-struct ECHOREQUEST
+static EM_BOOL ws_on_open(int eventType, const EmscriptenWebSocketOpenEvent *e, void *userData)
 {
-    ICMPHDR icmpHdr;
-    uint32_t dwTime;
-    char cData[64];
-};
-
-struct IPHDR
-{
-    unsigned char VIHL;
-    unsigned char TOS;
-    short TotLen;
-    short ID;
-    short FlagOff;
-    unsigned char TTL;
-    unsigned char Protocol;
-    uint16_t Checksum;
-    struct in_addr iaSrc;
-    struct in_addr iaDst;
-};
-
-struct ECHOREPLY
-{
-    IPHDR ipHdr;
-    ECHOREQUEST echoRequest;
-    char cFiller[256];
-};
-
-uint16_t icmp_checksum(const uint16_t *addr, int count)
-{
-    uint16_t checksum = 0;
-    while (count > 1)
-    {
-        checksum += *addr++;
-        count -= 2;
-    }
-
-    if (count > 0)
-    {
-        checksum += *(unsigned char *)addr;
-    }
-
-    while ((checksum >> 16) != 0)
-    {
-        checksum = (checksum & 0xffff) + (checksum >> 16);
-    }
-
-    return ~checksum;
+    auto ctx = static_cast<ws_context *>(userData);
+    ctx->connected = true;
+    return 0;
 }
 
-#endif // USE_PING
-
-#if defined(XUO_WINDOWS)
-
-static bool wsa_initialized = false;
-
-template <class T>
-inline static SOCKET socket_fd(T socket)
+static EM_BOOL ws_on_close(int eventType, const EmscriptenWebSocketCloseEvent *e, void *userData)
 {
-    assert(socket && *(int *)socket != INVALID_SOCKET);
-    return *(SOCKET *)socket;
+    auto ctx = static_cast<ws_context *>(userData);
+    ctx->connected = false;
+    ctx->closed = true;
+    return 0;
 }
+
+static EM_BOOL ws_on_error(int eventType, const EmscriptenWebSocketErrorEvent *e, void *userData)
+{
+    auto ctx = static_cast<ws_context *>(userData);
+    ctx->failed = true;
+    ctx->connected = false;
+    return 0;
+}
+
+static EM_BOOL ws_on_message(int eventType, const EmscriptenWebSocketMessageEvent *e, void *userData)
+{
+    auto ctx = static_cast<ws_context *>(userData);
+    if (e->numBytes > 0 && e->data)
+    {
+        const auto *data = static_cast<const uint8_t *>(e->data);
+        ctx->recv_buf.insert(ctx->recv_buf.end(), data, data + e->numBytes);
+    }
+    return 0;
+}
+
+static bool socket_init_done = false;
 
 uint32_t socket_localaddress()
 {
-    char hostName[1024]{};
-    if (gethostname(hostName, sizeof(hostName)) != 0)
-        return 0;
-
-    LPHOSTENT lphost = gethostbyname(hostName);
-    if (!lphost)
-        return 0;
-
-    return ((LPIN_ADDR)lphost->h_addr)->s_addr;
+    return 0x7F000001; // 127.0.0.1
 }
 
 bool socket_init()
 {
-    if (!wsa_initialized)
+    if (!socket_init_done)
     {
-        WSADATA wsaData = { 0 };
-        wsa_initialized = !WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (!emscripten_websocket_is_supported())
+        {
+            Error(Client, "WebSocket not supported");
+            return false;
+        }
+        socket_init_done = true;
     }
-    return wsa_initialized;
+    return true;
 }
 
 void socket_shutdown()
 {
-    assert(wsa_initialized);
+}
+
+tcp_socket tcp_open()
+{
+    socket_init();
+    auto ctx = new ws_context();
+    return static_cast<tcp_socket>(ctx);
+}
+
+bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
+{
+    auto ctx = static_cast<ws_context *>(socket);
+    if (!ctx)
+        return false;
+
+    // build the ws:// URL from the current page origin
+    char url[512];
+    EM_ASM(
+    {
+        var origin = window.location.origin.replace(/^http/, 'ws');
+        var addr = UTF8ToString($0);
+        var port = $1;
+        var url = origin + '/ws/' + addr + '/' + port;
+        stringToUTF8(url, $2, $3);
+    },
+    reinterpret_cast<intptr_t>(address), static_cast<int>(port),
+    reinterpret_cast<intptr_t>(url), static_cast<int>(sizeof(url)));
+
+    EmscriptenWebSocketCreateAttributes attr;
+    emscripten_websocket_init_create_attributes(&attr);
+    attr.url = url;
+    attr.createOnMainThread = 0;
+
+    ctx->handle = emscripten_websocket_new(&attr);
+    if (ctx->handle <= 0)
+    {
+        Error(Client, "ws: create failed for %s", url);
+        return false;
+    }
+
+    emscripten_websocket_set_onopen_callback(ctx->handle, ctx, ws_on_open);
+    emscripten_websocket_set_onmessage_callback(ctx->handle, ctx, ws_on_message);
+    emscripten_websocket_set_onclose_callback(ctx->handle, ctx, ws_on_close);
+    emscripten_websocket_set_onerror_callback(ctx->handle, ctx, ws_on_error);
+
+    // the connection is async; yield to the event loop until the onopen
+    // callback fires (emscripten_thread_sleep processes worker events)
+    int wait = 0;
+    while (!ctx->connected && !ctx->failed && wait < 10000)
+    {
+        emscripten_thread_sleep(10);
+        wait += 10;
+    }
+
+    if (!ctx->connected)
+    {
+        Error(Client, "ws: connection timeout for %s", url);
+        return false;
+    }
+    return true;
+}
+
+int tcp_select(tcp_socket socket)
+{
+    auto ctx = static_cast<ws_context *>(socket);
+    if (!ctx || !ctx->connected)
+        return 0;
+    return (ctx->recv_buf.size() > ctx->recv_pos) ? 1 : 0;
+}
+
+int tcp_recv(tcp_socket socket, unsigned char *data, size_t max_size)
+{
+    auto ctx = static_cast<ws_context *>(socket);
+    if (!ctx || !ctx->connected)
+        return -1;
+
+    size_t available = ctx->recv_buf.size() - ctx->recv_pos;
+    if (available == 0)
+        return 0;
+
+    size_t to_copy = std::min(max_size, available);
+    memcpy(data, ctx->recv_buf.data() + ctx->recv_pos, to_copy);
+    ctx->recv_pos += to_copy;
+
+    if (ctx->recv_pos >= ctx->recv_buf.size())
+    {
+        ctx->recv_buf.clear();
+        ctx->recv_pos = 0;
+    }
+    return static_cast<int>(to_copy);
+}
+
+int tcp_send(tcp_socket socket, unsigned char *data, size_t size)
+{
+    auto ctx = static_cast<ws_context *>(socket);
+    if (!ctx || !ctx->connected)
+        return -1;
+
+    EMSCRIPTEN_RESULT res =
+        emscripten_websocket_send_binary(ctx->handle, data, static_cast<uint32_t>(size));
+    if (res != EMSCRIPTEN_RESULT_SUCCESS)
+    {
+        Error(Client, "ws: send failed (%d)", static_cast<int>(res));
+        return -1;
+    }
+    return static_cast<int>(size);
+}
+
+void tcp_close(tcp_socket socket)
+{
+    auto ctx = static_cast<ws_context *>(socket);
+    if (!ctx)
+        return;
+    if (ctx->handle > 0)
+    {
+        emscripten_websocket_close(ctx->handle, 1000, "normal");
+        emscripten_websocket_delete(ctx->handle);
+    }
+    delete ctx;
+}
+
+#else // !XUO_EMSC — native implementation
+
+#include <common/str.h>
+#ifdef _WIN32
+#include <winsock.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
+uint16_t icmp_checksum(const uint16_t *addr, int count)
+{
+    register long sum = 0;
+    while (count > 1)
+    {
+        sum += *addr++;
+        count -= 2;
+    }
+    if (count > 0)
+        sum += *reinterpret_cast<const uint8_t *>(addr);
+    while (sum >> 16)
+        sum = (sum & 0xffff) + (sum >> 16);
+    return static_cast<uint16_t>(~sum);
+}
+
+template<class T>
+SOCKET socket_fd(T socket)
+{
+    return (SOCKET)(size_t)socket;
+}
+
+uint32_t socket_localaddress()
+{
+    char host[256];
+    gethostname(host, sizeof(host));
+    struct hostent *he = gethostbyname(host);
+    if (he == nullptr)
+        return 0x7F000001;
+    return *reinterpret_cast<uint32_t *>(he->h_addr);
+}
+
+bool socket_init()
+{
+#ifdef _WIN32
+    WSADATA wsa;
+    return WSAStartup(MAKEWORD(2, 2), &wsa) == 0;
+#else
+    return true;
+#endif
+}
+
+void socket_shutdown()
+{
+#ifdef _WIN32
     WSACleanup();
-    wsa_initialized = false;
+#endif
 }
 
 tcp_socket tcp_open()
@@ -126,10 +285,9 @@ tcp_socket tcp_open()
     auto h = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
     if (h == INVALID_SOCKET)
         return nullptr;
-
     auto *s = new SOCKET;
     *s = h;
-    return (tcp_socket)s;
+    return reinterpret_cast<tcp_socket>(s);
 }
 
 bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
@@ -150,18 +308,12 @@ bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
         he = gethostbyname(address);
         if (he == nullptr)
             return false;
-
         memcpy(&caddr.sin_addr, he->h_addr, he->h_length);
     }
 
     caddr.sin_port = htons(port);
-    if (connect(h, (struct sockaddr *)&caddr, sizeof(caddr)) == -1)
-    {
-        //auto e = WSAGetLastError();
+    if (connect(h, reinterpret_cast<struct sockaddr *>(&caddr), sizeof(caddr)) == -1)
         return false;
-    }
-
-    WSASetLastError(0);
     return true;
 }
 
@@ -172,359 +324,31 @@ int tcp_select(tcp_socket socket)
     struct timeval tv = { 0, 0 };
     FD_ZERO(&rfds);
     FD_SET(h, &rfds);
-    return select((int)h, &rfds, nullptr, nullptr, &tv);
+    return select(static_cast<int>(h) + 1, &rfds, nullptr, nullptr, &tv);
 }
 
 int tcp_recv(tcp_socket socket, unsigned char *data, size_t max_size)
 {
     auto h = socket_fd(socket);
-    auto s = recv(h, (char *)data, (int)max_size, 0);
-    SOCKET_DUMP(data, s);
-    return s;
+    return static_cast<int>(recv(h, reinterpret_cast<char *>(data), static_cast<int>(max_size), 0));
 }
 
 int tcp_send(tcp_socket socket, unsigned char *data, size_t size)
 {
     auto h = socket_fd(socket);
-    SOCKET_DUMP(data, size);
-    return send(h, (char *)data, (int)size, 0);
+    return static_cast<int>(send(h, reinterpret_cast<const char *>(data), static_cast<int>(size), 0));
 }
 
 void tcp_close(tcp_socket socket)
 {
     auto h = socket_fd(socket);
+#ifdef _WIN32
     closesocket(h);
-    delete (int *)socket;
-    socket = nullptr;
-}
-
-#if USE_PING
-icmp_handle icmp_open()
-{
-    socket_init();
-    auto h = ::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (h == INVALID_SOCKET)
-        return nullptr;
-
-    if (h == SOCKET_ERROR)
-        return nullptr;
-
-    auto *s = new SOCKET;
-    *s = h;
-    return (icmp_handle)s;
-}
-
-int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
-{
-    assert(wsa_initialized);
-    assert(ip);
-    assert(timems);
-    auto h = socket_fd(handle);
-
-    LPHOSTENT lpHost = gethostbyname(ip);
-    if (lpHost != nullptr)
-    {
-        sockaddr_in destAddress;
-        destAddress.sin_addr.s_addr = ((in_addr *)lpHost->h_addr_list[0])->s_addr;
-        destAddress.sin_family = AF_INET;
-        destAddress.sin_port = 0;
-
-        const int ICMP_ECHOREQ = 8;
-        ECHOREQUEST request = {};
-        request.icmpHdr.Type = ICMP_ECHOREQ;
-        request.dwTime = *timems;
-        memset(request.cData, 80, sizeof(request.cData));
-
-        const auto rs = sizeof(ECHOREQUEST);
-        request.icmpHdr.Checksum = icmp_checksum((uint16_t *)&request, rs);
-
-        const auto r = (LPSTR)&request;
-        const auto dst = (LPSOCKADDR)&destAddress;
-        ::sendto(h, r, rs, 0, dst, sizeof(SOCKADDR_IN));
-
-        timeval timeoutInfo;
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(h, &readfds);
-        timeoutInfo.tv_sec = 1;
-        timeoutInfo.tv_usec = 0;
-
-        if (::select(1, &readfds, nullptr, nullptr, &timeoutInfo))
-        {
-            ECHOREPLY answer;
-            sockaddr_in sourceAddress;
-            int length = sizeof(sockaddr_in);
-
-            const auto a = (LPSTR)&answer;
-            const auto as = sizeof(ECHOREPLY);
-            const auto src = (LPSOCKADDR)&sourceAddress;
-            if (::recvfrom(h, a, as, 0, src, &length) != -1)
-            {
-                *timems = answer.echoRequest.dwTime;
-                return 0;
-            }
-            else
-                return -1;
-        }
-        return -2;
-    }
-    return -3;
-}
-
-void icmp_close(icmp_handle handle)
-{
-    auto h = socket_fd(handle);
-    closesocket(h);
-    delete (int *)handle;
-    handle = nullptr;
-}
-#endif // USE_PING
-
 #else
-
-#include <ifaddrs.h>
-#include <unistd.h>
-
-template <class T>
-inline static int socket_fd(T socket)
-{
-    assert(socket && *(int *)socket != -1);
-    return *(int *)socket;
-}
-
-uint32_t socket_localaddress()
-{
-    struct ifaddrs *addrs = nullptr;
-    struct ifaddrs *ifa = nullptr;
-    void *tmp = nullptr;
-    uint32_t r = 0;
-
-    getifaddrs(&addrs);
-    for (ifa = addrs; ifa != nullptr; ifa = ifa->ifa_next)
-    {
-        if (ifa->ifa_addr == nullptr)
-        {
-            continue;
-        }
-
-        if (ifa->ifa_addr->sa_family == AF_INET)
-        {
-            tmp = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
-            r = *(uint32_t *)tmp;
-            if (r == 0x0100007f)
-            {
-                continue;
-            }
-
-            char buff[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, tmp, buff, INET_ADDRSTRLEN);
-            SOCKET_LOG("%s IP Address %s (%x)", ifa->ifa_name, buff, r);
-            break;
-        }
-    }
-    if (addrs != nullptr)
-    {
-        freeifaddrs(addrs);
-    }
-
-    return r;
-}
-
-bool socket_init()
-{
-    return true;
-}
-
-void socket_shutdown()
-{
-}
-
-tcp_socket tcp_open()
-{
-    int h = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-    if (h == -1)
-    {
-        return nullptr;
-    }
-
-    SOCKET_LOG("socket opened");
-    int *s = new int;
-    *s = h;
-
-#if !USE_SELECT
-    struct timeval tv = { 0, 0 };
-    setsockopt(h, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
-#endif
-
-    return (tcp_socket)s;
-}
-
-bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
-{
-    auto h = socket_fd(socket);
-
-    sockaddr_in caddr;
-    memset(&caddr, 0, sizeof(sockaddr_in));
-    caddr.sin_family = AF_INET;
-
-    struct hostent *he;
-    int rt = inet_addr(address);
-    if (rt != -1)
-    {
-        caddr.sin_addr.s_addr = rt;
-    }
-    else
-    {
-        he = gethostbyname(address);
-        if (he == nullptr)
-        {
-            SOCKET_LOG("ERROR: gethostbyname: %d - %s", h_errno, hstrerror(h_errno));
-            return false;
-        }
-
-        memcpy(&caddr.sin_addr, he->h_addr, he->h_length);
-    }
-    SOCKET_LOG("socket connected");
-    caddr.sin_port = htons(port);
-    return (connect(h, (struct sockaddr *)&caddr, sizeof(caddr)) != -1);
-}
-
-int tcp_select(tcp_socket socket)
-{
-    auto h = socket_fd(socket);
-
-    fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET(h, &rfds);
-
-    struct timeval tv = { 0, 0 };
-
-    auto r = select(h + 1, &rfds, nullptr, nullptr, &tv);
-    //SOCKET_LOG("tcp_select: %d", r);
-
-    return r;
-}
-
-int tcp_recv(tcp_socket socket, unsigned char *data, size_t max_size)
-{
-    auto h = socket_fd(socket);
-    auto r = recv(h, data, max_size, 0);
-    SOCKET_LOG("RECV: %d", r);
-    SOCKET_DUMP(data, r);
-    return r;
-}
-
-int tcp_send(tcp_socket socket, unsigned char *data, size_t size)
-{
-    auto h = socket_fd(socket);
-    auto r = send(h, data, size, 0);
-    SOCKET_LOG("SEND: %d", r);
-    SOCKET_DUMP(data, r);
-    return r;
-}
-
-void tcp_close(tcp_socket socket)
-{
-    auto h = socket_fd(socket);
     close(h);
-    SOCKET_LOG("socket closed");
-    delete (int *)socket;
+#endif
+    delete reinterpret_cast<SOCKET *>(socket);
     socket = nullptr;
 }
 
-#if USE_PING
-
-icmp_handle icmp_open()
-{
-    if (g_DisablePing)
-    {
-        return nullptr;
-    }
-
-    int h = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (h == -1)
-    {
-        auto e = errno;
-        SOCKET_LOG("ERROR: %d - %s", e, strerror(e));
-        if (e == 1)
-        {
-            g_DisablePing = true;
-            SOCKET_LOG("\tPING disabled, not enough permission to create raw socket");
-        }
-        return nullptr;
-    }
-
-    SOCKET_LOG("icmp opened");
-    int *s = new int;
-    *s = h;
-    return (icmp_handle)s;
-}
-
-int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
-{
-    assert(timems);
-    auto h = socket_fd(handle);
-    SOCKET_LOG("icmp query");
-    auto lpHost = gethostbyname(ip);
-    if (lpHost != nullptr)
-    {
-        SOCKET_LOG("icmp %x", (uint32_t)((in_addr *)lpHost->h_addr_list[0])->s_addr);
-        sockaddr_in destAddress;
-        destAddress.sin_addr.s_addr = ((in_addr *)lpHost->h_addr_list[0])->s_addr;
-        destAddress.sin_family = AF_INET;
-        destAddress.sin_port = 0;
-
-        const int ICMP_ECHOREQ = 8;
-        ECHOREQUEST request = {};
-        request.icmpHdr.Type = ICMP_ECHOREQ;
-        request.dwTime = *timems;
-        memset(request.cData, 80, sizeof(request.cData));
-
-        const auto rs = sizeof(ECHOREQUEST);
-        request.icmpHdr.Checksum = icmp_checksum((uint16_t *)&request, rs);
-
-        const auto r = (void *)&request;
-        const auto dst = (LPSOCKADDR)&destAddress;
-        sendto(h, r, rs, 0, dst, sizeof(SOCKADDR_IN));
-
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(h, &readfds);
-
-        timeval tv = { 1, 0 };
-        if (select(1, &readfds, nullptr, nullptr, &tv) != 0)
-        {
-            ECHOREPLY answer;
-            sockaddr_in sourceAddress;
-
-            const auto a = (void *)&answer;
-            const auto as = sizeof(ECHOREPLY);
-            const auto src = (sockaddr *)&sourceAddress;
-            socklen_t length = sizeof(sockaddr_in);
-            if (recvfrom(h, a, as, 0, src, &length) != -1)
-            {
-                *timems = answer.echoRequest.dwTime;
-                SOCKET_LOG("icmp: %d", *timems);
-                return 0;
-            }
-            {
-                return -1;
-            }
-        }
-        return -2;
-    }
-    return -3;
-}
-
-void icmp_close(icmp_handle handle)
-{
-    auto h = socket_fd(handle);
-    close(h);
-    delete (int *)handle;
-    handle = nullptr;
-    SOCKET_LOG("icmp closed");
-}
-
-#endif // USE_PING
-
-#endif
+#endif // !XUO_EMSC

@@ -62,6 +62,12 @@
               if (kv) args.push(decodeURIComponent(kv));
             });
           }
+          // shard address override for the ws proxy (testing)
+          var params = new URLSearchParams(window.location.search);
+          var shardAddr = params.get('shard-address');
+          var shardPort = params.get('shard-port');
+          if (shardAddr) args.push('--shard-address=' + shardAddr);
+          if (shardPort) args.push('--shard-port=' + shardPort);
           return args;
         })();
         Module.canvas = (function () {
