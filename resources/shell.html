@@ -12,9 +12,11 @@
       canvas.crossuo { width: 640px; height: 480px;
                        image-rendering: pixelated; background: #000;
                        border: 1px solid #2a2c36; outline: none; }
-      /* ?scale=page: fill the tab, preserving the 4:3 client ratio */
+      /* ?scale=page (or after login): fill the tab, preserving the 4:3 ratio */
       canvas.crossuo.page { width: min(100vw, calc(100vh * 4 / 3));
                             height: auto; max-height: 100vh; }
+      /* ?scale=fixed: exact 640x480 for login screen */
+      canvas.crossuo.fixed { width: 640px; height: 480px; }
       #status { margin-top: 8px; font-size: 13px; opacity: .8; }
       #log { margin-top: 8px; font-size: 11px; opacity: .6; white-space: pre;
              height: 4em; overflow: hidden; }
@@ -72,7 +74,10 @@
         })();
         Module.canvas = (function () {
           var c = document.getElementById('canvas');
-          if (new URLSearchParams(window.location.search).get('scale') === 'page') {
+          var scaleMode = new URLSearchParams(window.location.search).get('scale');
+          if (scaleMode === 'fixed') {
+            c.classList.add('fixed');
+          } else {
             c.classList.add('page');
           }
           c.addEventListener('webglcontextlost', function (e) {

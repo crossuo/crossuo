@@ -331,11 +331,27 @@ static bool init()
     SDL_Window *window =
         Wisp::g_WispWindow != nullptr ? Wisp::g_WispWindow->m_window : nullptr;
     SDL_GLContext context = SDL_GL_GetCurrentContext();
+#if defined(XUO_EMSC)
+    // the emscripten WebGL context is current but SDL_GL_GetCurrentContext
+    // returns null (SDL does not track it). The GL is functional - rendering
+    // works - so skip the null pointer check and let ImGui initialize with
+    // the existing context.
+    if (window == nullptr && context == nullptr)
+    {
+        // proceed: the GL is current, ImGui just needs to be set up
+    }
+    else if (context == nullptr)
+    {
+        Error(Assistant, "could not initialize: no game window/context");
+        return false;
+    }
+#else
     if (window == nullptr || context == nullptr)
     {
         Error(Assistant, "could not initialize: no game window/context");
         return false;
     }
+#endif
 
     memset(&s_assistantWin, 0, sizeof(s_assistantWin));
     s_assistantWin.title = "X:UO Assist";
