@@ -6,7 +6,8 @@
 #if defined(XUO_EMSC)
 #include "Splash.h"
 #include <SDL_timer.h>
-#include <emscripten.h> // emscripten_run_script_string (product url origin)
+#include <emscripten.h>
+#include <emscripten/websocket.h>
 
 // workers have no alert(); route error dialogs to the log instead of dying
 // with an uncaught ReferenceError
@@ -797,7 +798,7 @@ int main(int argc, char **argv)
     // force library_websocket.js inclusion: Sockets.cpp calls the
     // emscripten_websocket_* functions from a different TU and the
     // JS optimizer only scans the main compilation unit
-    EM_ASM({ if (typeof emscripten_websocket_is_supported !== 'undefined') {} });
+    emscripten_websocket_is_supported();
     web_fs_mount_and_load(); // restore previous session downloads
 #endif
     g_fatalErrorCb = &fatal_error_dialog;

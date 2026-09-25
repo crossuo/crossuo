@@ -194,7 +194,7 @@ else()
   # proxying) during the streaming bootstrap; GL renders through an
   # OffscreenCanvas transferred to that worker
   add_compile_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1)
-  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1 -lidbfs.js)
+  add_link_options(-sUSE_SDL=2 -sUSE_WEBGL2=1 -pthread -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1 -lidbfs.js -lwebsocket.js)
   # the client comes from desktop-sized stacks: give every thread room
   # (default 64KB overflows before main); pthread builds cannot grow memory,
   # so size the fixed heap for the client + streaming buffers upfront
