@@ -115,7 +115,7 @@ bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
     char url[512];
     EM_ASM(
     {
-        var origin = window.location.origin.replace(/^http/, 'ws');
+        var origin = self.location.origin.replace(/^http/, 'ws');
         var addr = UTF8ToString($0);
         var port = $1;
         var url = origin + '/ws/' + addr + '/' + port;
