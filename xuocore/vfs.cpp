@@ -19,9 +19,13 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <deque>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -79,6 +83,9 @@ static bool s_plan_loaded = false;
 // (declared early: the convergence loop reports through them)
 static std::atomic<bool> s_boot_web_done{false};
 static std::atomic<float> s_boot_web_progress{0.0f};
+// assets whose blob never made it into a materialized pack (zero slots read
+// as zeros in game): the boot log and the splash report it
+static size_t s_boot_web_stub_assets = 0;
 #endif
 
 // boot state (vfs_boot/vfs_shutdown own these; the background tier and the
@@ -573,6 +580,263 @@ bool vfs_asset_entry_by_hash(uint64_t uop_hash, const char **out_owner, UopFileE
     if (out_owner != nullptr)
         *out_owner = file.name.c_str();
     return true;
+}
+
+#if defined(XUO_EMSC)
+// ---------------------------------------------------------------------------
+// punctual block fetch (web): the replacement for mapped-file block reads.
+// Resolves the plan asset behind an entry hash, ranged-GETs the block
+// ([ml metadata][payload]) straight from the file repo - the browser HTTP
+// cache persists it across sessions - and keeps a bounded LRU of raw block
+// payloads in the wasm heap. No MEMFS: a full pack never exists on disk or
+// in memory, only the hot blocks the game actually reads.
+// ---------------------------------------------------------------------------
+struct vfs_block_lru_entry
+{
+    std::shared_ptr<std::vector<uint8_t>> data;
+    uint64_t ticks = 0;
+};
+static std::mutex s_block_lru_mutex;
+static std::unordered_map<uint64_t, vfs_block_lru_entry> s_block_lru;
+static std::deque<uint64_t> s_block_lru_order;
+static size_t s_block_lru_bytes = 0;
+static size_t s_block_lru_clock = 0;
+static size_t s_block_fetch_hits = 0;
+static size_t s_block_fetch_miss = 0;
+static size_t s_block_fetch_fails = 0;
+constexpr size_t VFS_BLOCK_LRU_CAP = 128ull << 20; // 128 MB of hot blocks
+
+static std::shared_ptr<std::vector<uint8_t>> s_block_lru_hit(uint64_t hash)
+{
+    std::lock_guard<std::mutex> lock(s_block_lru_mutex);
+    const auto found = s_block_lru.find(hash);
+    if (found == s_block_lru.end())
+        return nullptr;
+    found->second.ticks = ++s_block_lru_clock;
+    return found->second.data;
+}
+
+static void s_block_lru_store(uint64_t hash, std::shared_ptr<std::vector<uint8_t>> data)
+{
+    std::lock_guard<std::mutex> lock(s_block_lru_mutex);
+    const size_t bytes = data->size();
+    s_block_lru[hash] = {std::move(data), ++s_block_lru_clock};
+    s_block_lru_bytes += bytes;
+    while (s_block_lru_bytes > VFS_BLOCK_LRU_CAP && !s_block_lru.empty())
+    {
+        // small victim scan: the map is keyed by hash, the clock orders
+        uint64_t victim = 0;
+        uint64_t best = UINT64_MAX;
+        for (const auto &entry : s_block_lru)
+        {
+            if (entry.second.ticks < best)
+            {
+                best = entry.second.ticks;
+                victim = entry.first;
+            }
+        }
+        const auto found = s_block_lru.find(victim);
+        const size_t entry_bytes = found->second.data ? found->second.data->size() : 0;
+        s_block_lru_bytes -= std::min(s_block_lru_bytes, entry_bytes);
+        s_block_lru.erase(found);
+    }
+}
+
+std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_range(uint64_t uop_hash)
+{
+    if (!vfs_enabled() || uop_hash == 0)
+        return nullptr;
+    if (auto hit = s_block_lru_hit(uop_hash))
+    {
+        ++s_block_fetch_hits;
+        return hit;
+    }
+
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return nullptr;
+    const auto file_index = found->second.first;
+    const auto asset_index = found->second.second;
+    if (file_index >= s_plan.files.size() || asset_index >= s_plan.files[file_index].assets.size())
+        return nullptr;
+    const auto &asset = s_plan.files[file_index].assets[asset_index];
+    if (vfs_asset_is_hole(asset))
+        return nullptr;
+    if (s_params.offline || !vfs_fetch_started())
+        return nullptr;
+
+    // whole-blob assets (packs refine could not split) would pull their
+    // entire source through here - that is not a punctual fetch; they must
+    // be normalized (proxy decompression) or prefetched instead
+    if (asset.blob_offset == 0)
+    {
+        static std::unordered_set<uint64_t> warned;
+        if (warned.insert(uop_hash).second)
+        {
+            LOG_ERROR(
+                "web fetch: %s is a whole-blob asset (%s, %" PRIu64
+                " bytes) - per-block fetch unavailable",
+                s_plan.files[file_index].name.c_str(),
+                asset.blob.c_str(),
+                asset.ul);
+        }
+        ++s_block_fetch_fails;
+        return nullptr;
+    }
+
+    const uint64_t len = vfs_asset_range_len(asset);
+    const astr_t url = s_plan.file_repo + asset.blob;
+    auto bytes = std::make_shared<std::vector<uint8_t>>(size_t(len), 0);
+    const vfs_transport_result res = vfs_transport_active()->range(
+        url.c_str(),
+        asset.blob.c_str(),
+        asset.blob_offset,
+        len,
+        [](void *context, const uint8_t *data, size_t size)
+        {
+            static_cast<std::vector<uint8_t> *>(context)->assign(data, data + size);
+            return true;
+        },
+        bytes.get(),
+        0,
+        false);
+    if (!res.ok || res.bytes != len)
+    {
+        ++s_block_fetch_fails;
+        return nullptr;
+    }
+    ++s_block_fetch_miss;
+    s_block_lru_store(uop_hash, bytes);
+    return bytes;
+}
+
+// block payload without the [ml] metadata prefix; decoded inflates zlib
+// blocks (ct == 1); stored (0) and game-decoded encodings (3 = BWT) pass
+// through untouched. `block` (optional) supplies the encoding; otherwise it
+// resolves from the plan asset.
+std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_payload(
+    uint64_t uop_hash, const UopFileEntry *block, bool decoded)
+{
+    const auto range = vfs_asset_fetch_block_range(uop_hash);
+    if (range == nullptr)
+        return nullptr;
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return nullptr;
+    const auto &asset = s_plan.files[found->second.first].assets[found->second.second];
+    const size_t ml = block != nullptr ? block->MetadataSize : size_t(asset.ml);
+    const uint32_t flags = block != nullptr ? block->Flags : uint32_t(asset.ct);
+    const uint32_t decoded_size = block != nullptr ? block->DecompressedSize : uint32_t(asset.ul);
+    if (range->size() < ml)
+        return nullptr;
+    const size_t payload_len = range->size() - ml;
+    const uint8_t *payload = range->data() + ml;
+    if (!decoded || flags != 1)
+        return std::make_shared<std::vector<uint8_t>>(payload, payload + payload_len);
+    auto out = std::make_shared<std::vector<uint8_t>>(decoded_size, 0);
+    uLongf dst_len = out->size();
+    if (uncompress(out->data(), &dst_len, reinterpret_cast<Bytef const *>(payload), uLong(payload_len)) != Z_OK)
+        return nullptr;
+    out->resize(size_t(dst_len));
+    return out;
+}
+
+void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lru_mb)
+{
+    std::lock_guard<std::mutex> lock(s_block_lru_mutex);
+    if (hits != nullptr) *hits = s_block_fetch_hits;
+    if (miss != nullptr) *miss = s_block_fetch_miss;
+    if (fails != nullptr) *fails = s_block_fetch_fails;
+    if (lru_mb != nullptr) *lru_mb = s_block_lru_bytes / 1048576;
+}
+#endif // XUO_EMSC
+
+bool vfs_asset_read(uint64_t uop_hash, std::vector<uint8_t> &out)
+{
+    // arena builds only: materialized installs read through the mapped file
+    // and its trap; the arena serves packs that never become heap files
+    // (web: the sound archive)
+    if (s_arena == nullptr || uop_hash == 0)
+        return false;
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return false;
+    const auto &file = s_plan.files[found->second.first];
+    const auto &asset = file.assets[found->second.second];
+    if (vfs_asset_is_hole(asset))
+        return false;
+    if (!s_arena->ensure(asset, true)) // blocking: fetches when not resident
+        return false;
+    out.resize(asset.ul, 0);
+    if (asset.ul != 0 && !s_arena->read(asset, 0, out.data(), out.size()))
+        return false;
+    return true;
+}
+
+bool vfs_plan_for_each_asset(
+    const char *pack_name, bool (*visit)(const VfsAsset &asset, void *ctx), void *ctx)
+{
+    if (!vfs_enabled() || pack_name == nullptr)
+        return false;
+    const astr_t lower = vfs_lower_ascii(pack_name);
+    for (const auto &file : s_plan.files)
+    {
+        if (!file.is_uop)
+            continue;
+        if (vfs_lower_ascii(file.name.c_str()) != lower)
+            continue;
+        if (visit != nullptr)
+        {
+            for (const auto &asset : file.assets)
+            {
+                if (vfs_asset_is_hole(asset))
+                    continue; // reserved slot: no bytes, never indexed
+                if (!visit(asset, ctx))
+                    break;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+bool vfs_ensure_file(const char *name, fs_path *out_path)
+{
+    if (!vfs_enabled() || name == nullptr || name[0] == '\0')
+        return false;
+    const astr_t lower = vfs_lower_ascii(name);
+    for (size_t fi = 0; fi < s_plan.files.size(); ++fi)
+    {
+        const auto &file = s_plan.files[fi];
+        if (vfs_lower_ascii(file.name.c_str()) != lower)
+            continue;
+        const auto path = fs_path_join(s_params.install_dir, file.name);
+        if (out_path != nullptr)
+            *out_path = path;
+        if (fs_path_exists(path))
+            return true;
+        if (s_arena != nullptr)
+        {
+            // arena backend: the pack writer ensures every asset (fetching
+            // on demand) and writes the file in one pass
+            return vfs_store_materialize_pack(
+                s_arena, s_plan, fi, s_params.install_dir, s_params.blobs_dir);
+        }
+        // sparse backend: fetch every missing asset (blocking); the
+        // materialization writes the file progressively
+        for (size_t ai = 0; ai < file.assets.size(); ++ai)
+        {
+            if (vfs_asset_is_hole(file.assets[ai]))
+                continue;
+            if (!vfs_fetch_and_materialize_asset(uint32_t(fi), uint32_t(ai), 0, false, 0))
+                return false;
+        }
+        return fs_path_exists(path);
+    }
+    return false;
 }
 
 bool vfs_file_is_stubbed(const uint8_t *base)
@@ -1661,6 +1925,24 @@ static void vfs_converge_from_store(const VfsPlan &plan)
     uint64_t folded_bytes = 0;
     vfs_materialize_stats total;
     auto last_fold = std::chrono::steady_clock::now();
+#if defined(XUO_EMSC)
+    // the web client sits on the splash while this runs: report real progress
+    // (it used to be silent for the whole write pass, so the splash looked
+    // frozen and the ~0.95 progress the caller published was reset)
+    size_t conv_total_assets = 0;
+    size_t conv_done_assets = 0;
+    for (const auto &file : plan.files)
+    {
+        for (const auto &asset : file.assets)
+        {
+            if (!vfs_asset_is_hole(asset))
+                ++conv_total_assets;
+        }
+    }
+    const size_t conv_total = conv_total_assets;
+    s_boot_web_progress.store(0.05f, std::memory_order_relaxed);
+    LOG_INFO("convergence: total assets to process: %zu", conv_total);
+#endif
 
     const auto flush_batch = [&](bool final_batch)
     {
@@ -1668,6 +1950,30 @@ static void vfs_converge_from_store(const VfsPlan &plan)
             return;
         if (!s_boot_shutdown)
         {
+#if defined(XUO_EMSC)
+            // web: the store does not have every blob yet (a fresh browser has
+            // an empty store), so fetch the chunk's missing blobs BEFORE
+            // materializing - the native post-frame convergence can rely on
+            // the store because the native boot already fetched T0..T3. This
+            // is what left MainMisc/string_dictionary/gumpart/fonts as zero
+            // slots: the materializer only reads the store, it never fetches.
+            if (!s_params.offline && vfs_fetch_started())
+            {
+                std::vector<astr_t> tails;
+                std::vector<uint64_t> sizes;
+                for (const auto &item : batch)
+                {
+                    const auto &asset =
+                        plan.files[item.file_index].assets[item.asset_index];
+                    if (vfs_asset_is_hole(asset) || asset.blob_offset != 0)
+                        continue; // holes have no blob; refined blocks stream on ensure
+                    tails.push_back(item.tail);
+                    sizes.push_back(item.expected);
+                }
+                if (!tails.empty())
+                    vfs_fetch_batch(tails, sizes, VFS_FETCH_PRIO_BG, false, nullptr);
+            }
+#endif
             vfs_materialize_stats stats;
             vfs_boot_materialize(plan, &batch, &stats, true);
             total.assets_total += stats.assets_total;
@@ -1676,6 +1982,15 @@ static void vfs_converge_from_store(const VfsPlan &plan)
             total.assets_missing += stats.assets_missing;
             total.assets_failed += stats.assets_failed;
             total.bytes_written += stats.bytes_written;
+#if defined(XUO_EMSC)
+            conv_done_assets += batch.size();
+            if (conv_total != 0 && (conv_done_assets & 1023) < batch.size())
+            {
+                const float done01 = float(conv_done_assets) / float(conv_total);
+                s_boot_web_progress.store(0.05f + 0.85f * done01, std::memory_order_relaxed);
+                LOG_INFO("convergence: %zu of %zu assets", conv_done_assets, conv_total);
+            }
+#endif
         }
         batch.clear();
         batch_bytes = 0;
@@ -1725,7 +2040,6 @@ static void vfs_converge_from_store(const VfsPlan &plan)
         total.assets_failed,
         (unsigned long long)total.bytes_written);
 }
-
 // processes one byte-budgeted chunk of `items` from `pos`: range assets
 // stream their own block on this thread (at `priority`), whole blobs go
 // through one batched fetch, then the chunk materializes (arena: residency).
@@ -1863,10 +2177,11 @@ static void vfs_boot_web_install_marker_write(const VfsPlan &plan)
 // files the game's file manager opens as files and reads through baked
 // pointers at init (LoadWithUop/LoadCommon): the arena keeps their bytes as
 // granules only, so they must be assembled on disk before the game proceeds.
-// Deliberately absent: soundLegacyMUL.uop (168MB, no login need), the map uops
-// (the map muls are the fallback), AnimationFrame* (resolve-only, phase 2) and
-// anim.mul (the excluded 190MB legacy animation set - LoadCommon tolerates its
-// absence on a >=7.0 client).
+// Deliberately absent: soundLegacyMUL.uop (168MB - its blocks read through
+// the arena on demand, see vfs_asset_read + the planned sound index), the
+// map uops (the map muls are the fallback), AnimationFrame* (resolve-only,
+// phase 2) and anim.mul (the excluded 190MB legacy animation set - LoadCommon
+// tolerates its absence on a >=7.0 client).
 static const char *const VFS_WEB_PACK_MATERIALIZE[] = {
     "MainMisc.uop",
     "string_dictionary.uop",
@@ -1939,8 +2254,6 @@ static void vfs_boot_web_mkdirs(const char *path)
 
 static void vfs_boot_materialize_packs(const VfsPlan &plan)
 {
-    if (s_arena == nullptr)
-        return;
     for (const char *name : VFS_WEB_PACK_MATERIALIZE)
     {
         bool found = false;
@@ -1950,29 +2263,50 @@ static void vfs_boot_materialize_packs(const VfsPlan &plan)
                 continue;
             found = true;
             const auto started = std::chrono::steady_clock::now();
-            if (vfs_store_materialize_pack(
-                    static_cast<vfs_store_arena *>(s_arena),
-                    plan,
-                    fi,
-                    s_params.install_dir,
-                    s_params.blobs_dir))
+            // arena-free: the payloads come from the blob store, one asset at
+            // a time - a full-plan arena residency cannot fit the wasm heap
+            // next to the install files (the old path is what failed ensures
+            // for the late/low-priority packs, e.g. fonts and string_dictionary)
+            const vfs_pack_write_stats stats = vfs_store_materialize_pack_from_store(
+                plan, fi, s_params.install_dir, s_params.blobs_dir);
+            const float secs =
+                std::chrono::duration<float>(std::chrono::steady_clock::now() - started).count();
+            const auto &file = plan.files[fi];
+            const bool sparse = !file.is_uop;
+            if (stats.stubbed == 0 && stats.failed == 0)
             {
                 LOG_INFO(
-                    "web pack ready: %s (%.1fs)",
+                    "web pack ready: %s (%zu written%s, %.1fs)",
                     name,
-                    std::chrono::duration<float>(std::chrono::steady_clock::now() - started).count());
+                    stats.written,
+                    stats.skipped != 0 ? ", already present" : "",
+                    secs);
             }
             else
             {
-                LOG_ERROR("web pack materialization failed: %s (init may abort at Load)", name);
+                // the census is the point: the web boot proceeds with stub
+                // slots (the game reads zeros there), so the boot log must
+                // name exactly which packs are incomplete and by how much
+                LOG_ERROR(
+                    "web pack INCOMPLETE: %s (written %zu, stubbed %zu, failed %zu, %.1fs) - "
+                    "stub slots read as zeros in game",
+                    name,
+                    stats.written,
+                    stats.stubbed,
+                    stats.failed,
+                    secs);
             }
+            s_boot_web_stub_assets += stats.stubbed + stats.failed;
+            if (sparse && stats.stubbed != 0)
+                LOG_WARN("web pack %s is a loose whole-file asset: a missing blob leaves it empty", name);
         }
         if (!found)
             LOG_WARN("web pack materialize: %s not in the plan", name);
     }
     LOG_INFO(
-        "web packs ready: heap in use %.1f MB",
-        double(reinterpret_cast<uintptr_t>(sbrk(0))) / 1048576.0);
+        "web packs ready: heap in use %.1f MB, %zu stub assets in materialized packs",
+        double(reinterpret_cast<uintptr_t>(sbrk(0))) / 1048576.0,
+        s_boot_web_stub_assets);
     for (const char *name : VFS_WEB_PACK_MATERIALIZE)
     {
         for (size_t fi = 0; fi < plan.files.size(); ++fi)
@@ -2204,6 +2538,17 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
         else
             vfs_converge_from_store(plan);
     }
+#if defined(XUO_EMSC)
+    // Web: the arena branch above must NOT run - a full-plan residency holds
+    // every decompressed payload in the wasm heap (the 1GB paging heap,
+    // already ~730MB deep from the streaming install), so the late ensures
+    // fail on allocation and their packs materialize as zero slots (that is
+    // how fonts/cliloc vanished). The store convergence instead pulls every
+    // missing blob into the on-disk store at a bounded cost, and the pack
+    // materialization below reads payloads from there one asset at a time.
+    // The install therefore holds exactly one asset's payload in memory per
+    // write, and the heap stays flat for the whole boot.
+#endif
 #if defined(XUO_EMSC)
     // the packs the game opens as files must exist before init proceeds
     vfs_boot_materialize_packs(plan);
@@ -2448,6 +2793,156 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
             sweep.end());
     }
 
+#if defined(XUO_EMSC)
+    // -----------------------------------------------------------------
+    // web boot: punctual mode.
+    // The pack files become table-only skeletons (a few hundred KB each);
+    // every block read is intercepted at use time by the punctual fetch
+    // layer (vfs_asset_fetch_block_*), with the browser HTTP cache as the
+    // persistent store. Loose files of the plan (fonts, tiledata, hues,
+    // ...) are small (< 10 MB) and materialize whole as real files. There
+    // is no T1 residency, no convergence, no sweep: a full-plan residency
+    // cannot fit the wasm heap next to the game (it OOM'd the browser at
+    // ~3 GB), and the lazy path needs none of it.
+    // -----------------------------------------------------------------
+    vfs_materialize_stats web_stats;
+    std::vector<vfs_boot_item> loose;
+    {
+        size_t gi = 0;
+        for (size_t fi = 0; fi < plan.files.size(); ++fi)
+        {
+            const auto &file = plan.files[fi];
+            for (size_t ai = 0; ai < file.assets.size(); ++ai, ++gi)
+            {
+                if (file.is_uop || vfs_asset_is_hole(file.assets[ai]))
+                    continue;
+                const auto &asset = file.assets[ai];
+                vfs_boot_item item;
+                item.file_index = fi;
+                item.asset_index = ai;
+                item.global_index = gi;
+                item.tail = asset.blob;
+                item.expected = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+                item.name = vfs_asset_is_loose(asset) ? asset.name : file.name;
+                loose.push_back(item);
+            }
+        }
+    }
+    size_t uop_packs = 0;
+    for (const auto &f : plan.files)
+        uop_packs += f.is_uop ? 1 : 0;
+    LOG_INFO("web boot: %zu loose files, %zu uop packs (skeleton)", loose.size(), uop_packs);
+
+    // loose size policy: files up to 10MB materialize as real files (the
+    // game mmaps them). A bounded set of larger files is exempt: the
+    // statics muls (random access through staidx positions - converting
+    // them to ranged fetches touches every statics consumer) and texmaps
+    // (texture decode reads). The rest - legacy anim muls, facet maps,
+    // Music, the x-variant map uops - is skipped: UOP animations replace
+    // the anim muls, and nothing reads the others on web.
+    static const char *const VFS_WEB_LOOSE_EXEMPT[] = {
+        "statics0.mul", "statics0x.mul", "statics1.mul", "statics1x.mul",
+        "statics2.mul", "statics3.mul", "statics4.mul", "statics5.mul",
+        "texmaps.mul",
+    };
+    auto loose_exempt = [](const astr_t &name)
+    {
+        for (const char *candidate : VFS_WEB_LOOSE_EXEMPT)
+        {
+            if (strcasecmp(name.c_str(), candidate) == 0)
+                return true;
+        }
+        return false;
+    };
+
+    size_t loose_skipped = 0;
+    uint64_t loose_skipped_bytes = 0;
+    {
+        std::vector<vfs_boot_item> keep;
+        keep.reserve(loose.size());
+        for (const auto &item : loose)
+        {
+            if (item.expected > 10ull * 1024 * 1024 && !loose_exempt(item.name))
+            {
+                ++loose_skipped;
+                loose_skipped_bytes += item.expected;
+                continue;
+            }
+            keep.push_back(item);
+        }
+        loose.swap(keep);
+    }
+    if (loose_skipped != 0)
+    {
+        LOG_WARN(
+            "web boot: skipping %zu large loose files (%.0f MB): legacy anims, facet maps, music",
+            loose_skipped,
+            double(loose_skipped_bytes) / 1048576.0);
+    }
+
+    if (online && !loose.empty())
+    {
+        std::vector<astr_t> tails;
+        std::vector<uint64_t> sizes;
+        tails.reserve(loose.size());
+        sizes.reserve(loose.size());
+        for (const auto &item : loose)
+        {
+            const auto &asset = plan.files[item.file_index].assets[item.asset_index];
+            tails.push_back(item.tail);
+            sizes.push_back(item.expected);
+        }
+        if (!vfs_fetch_batch(tails, sizes, 0, false, progress))
+        {
+            LOG_WARN("vfs boot: some loose files could not be downloaded");
+        }
+        vfs_boot_materialize(plan, &loose, &web_stats);
+        LOG_INFO(
+            "web boot: loose materialized (%zu files, %.1f MB written, %zu failed)",
+            web_stats.assets_fetched + web_stats.assets_present,
+            double(web_stats.bytes_written) / 1048576.0,
+            web_stats.assets_failed);
+    }
+    else
+    {
+        LOG_WARN("web boot: offline or no loose files - skipping the loose tier");
+    }
+
+    // skeletons for every uop pack (rewritten each boot - cheap and
+    // self-repairing; a few hundred KB per pack)
+    size_t skeletons = 0;
+    uint64_t skeleton_bytes = 0;
+    for (size_t fi = 0; fi < plan.files.size(); ++fi)
+    {
+        const auto &file = plan.files[fi];
+        if (!file.is_uop)
+            continue;
+        uint64_t size = 0;
+        if (vfs_store_materialize_skeleton(plan, fi, s_params.install_dir, &size))
+        {
+            ++skeletons;
+            skeleton_bytes += size;
+        }
+        else
+        {
+            LOG_ERROR("vfs boot: skeleton failed: %s (pack loads will fail)", file.name.c_str());
+        }
+    }
+    LOG_INFO(
+        "web boot: %zu skeletons (%.1f MB), heap %.1f MB",
+        skeletons,
+        double(skeleton_bytes) / 1048576.0,
+        double(reinterpret_cast<uintptr_t>(sbrk(0))) / 1048576.0);
+
+    vfs_state_fold(plan);
+    s_boot_shutdown = false;
+    s_boot_started = true;
+    s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
+    s_boot_web_done.store(true, std::memory_order_release);
+    if (progress)
+        progress(1.0f, "ready");
+    return true;
+#endif
     // T0: blocking fetch + materialize with progress on this thread
     if (!t0_fetch.empty() && online)
     {

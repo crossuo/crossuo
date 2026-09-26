@@ -152,6 +152,9 @@ struct CIndexSound : public CIndexObject
 {
     uint32_t Delay = 0;
     uint8_t *m_WaveFile = nullptr;
+    // streamed planned sound (web: the pack never materializes): the block
+    // resolves through the vfs store by hash on first use; Address stays 0
+    uint64_t UopHash = 0;
 
     CIndexSound() = default;
     virtual ~CIndexSound() = default;
@@ -209,7 +212,22 @@ struct CIndexMap
     size_t MapAddress = 0;
     size_t StaticAddress = 0;
     uint32_t StaticCount = 0;
+#if defined(XUO_EMSC)
+    // web: the pack is a table-only skeleton - the group assets behind this
+    // entry come from the punctual fetch layer by hash (MapAddress stays a
+    // non-zero marker for the native guards; never dereference it)
+    uint64_t WebMapGroupHash = 0;
+    uint64_t WebStaticGroupHash = 0;
+#endif
 };
+
+#if defined(XUO_EMSC)
+// web punctual map access: fetches the map / statics group asset behind a
+// CIndexMap entry (LRU-backed ranged GET) and returns a pointer into it,
+// valid until the next punctual fetch. Null when the entry has no group.
+const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index);
+const STATICS_BLOCK *vfs_index_statics_block(const CIndexMap *index);
+#endif
 
 struct Index
 {
@@ -517,6 +535,14 @@ struct CFileManager : public CDataReader // FIXME: not needed
     bool Load();
     void Unload();
 
+    // streaming builds that defer the sound archive to keep the boot heap
+    // bounded (web): materializes the sound pack (blocking fetch + inflate +
+    // write - the background sweep usually has its blob resident already) and
+    // builds the sound index from it. Safe to call repeatedly; also serves
+    // the per-block product shape (planned index, no pack file). False when
+    // there is no sound data at all.
+    bool EnsureSoundIndex();
+
     std::vector<SkillData> m_Skills;
     void LoadSkills();
 
@@ -542,6 +568,8 @@ struct CFileManager : public CDataReader // FIXME: not needed
     bool UopLoadFile(CUopMappedFile &file, const char *fileName, bool dumpFile = false);
 
 private:
+    bool m_SoundLazyTried = false;
+
     UopAnimationHeader UopReadAnimationHeader();
     UopAnimationFrame UopReadAnimationFrame();
     std::vector<UopAnimationFrame> UopReadAnimationFramesData();

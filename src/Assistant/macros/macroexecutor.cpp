@@ -102,7 +102,11 @@ uint16_t tile_graphic_at(int x, int y)
     CIndexMap *index = ::g_MapManager.GetIndex(::g_CurrentMap, x >> 3, y >> 3);
     if (index != nullptr)
     {
-        STATICS_BLOCK *sb = (STATICS_BLOCK *)index->StaticAddress;
+        #if defined(XUO_EMSC)
+            const STATICS_BLOCK *sb = vfs_index_statics_block(index);
+        #else
+            STATICS_BLOCK *sb = (STATICS_BLOCK *)index->StaticAddress;
+        #endif
         if (sb != nullptr)
         {
             const int count = (int)index->StaticCount;
@@ -120,7 +124,11 @@ uint16_t tile_graphic_at(int x, int y)
 
         if (graphic == 0u && index->MapAddress != 0)
         {
-            MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
+            #if defined(XUO_EMSC)
+                const MAP_BLOCK *pmb = vfs_index_map_block(index);
+            #else
+                MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
+            #endif
             graphic = (uint16_t)(pmb->Cells[((y & 7) * 8) + (x & 7)].TileID & 0x3FFF);
         }
     }

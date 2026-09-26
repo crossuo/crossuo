@@ -150,12 +150,16 @@ static void GetRadarMapBlockForMap(
         return;
     }
 
-    MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
+    #if defined(XUO_EMSC)
+        const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+    #else
+        MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
+    #endif
     for (int x = 0; x < 8; x++)
     {
         for (int y = 0; y < 8; y++)
         {
-            MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
+            const const MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
             RADAR_MAP_CELLS &outCell = mb.Cells[x][y];
             outCell.Graphic = inCell.TileID;
             outCell.Hue = 0u;

@@ -245,7 +245,14 @@ char CMapBlock::GetLandZ(int x, int y, int map)
     int mX = x % 8;
     int mY = y % 8;
 
+    #if defined(XUO_EMSC)
+    const MAP_BLOCK *block = vfs_index_map_block(blockIndex);
+    if (block == nullptr)
+        return 0;
+    return block->Cells[mY * 8 + mX].Z;
+#else
     return ((MAP_BLOCK *)blockIndex->MapAddress)->Cells[mY * 8 + mX].Z;
+#endif
 }
 
 CLandObject *CMapBlock::GetLand(int x, int y)

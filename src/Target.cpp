@@ -740,8 +740,12 @@ std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileN
 
             TARGET_TILE_INFO land = { tileID, x, y, z, false };
 
-            MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
-            const MAP_CELLS &cell = pmb->Cells[(tileY * 8) + tileX];
+            #if defined(XUO_EMSC)
+                const MAP_BLOCK *pmb = vfs_index_map_block(index);
+            #else
+                MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
+            #endif
+            const const MAP_CELLS &cell = pmb->Cells[(tileY * 8) + tileX];
             land.Graphic = (uint16_t)(cell.TileID & 0x3FFF);
             land.Z = cell.Z;
             land.Land = true;
@@ -762,7 +766,11 @@ std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileN
                 return result;
             }
 
-            STATICS_BLOCK *sb = (STATICS_BLOCK *)index->StaticAddress;
+            #if defined(XUO_EMSC)
+                const STATICS_BLOCK *sb = vfs_index_statics_block(index);
+            #else
+                STATICS_BLOCK *sb = (STATICS_BLOCK *)index->StaticAddress;
+            #endif
             if (sb != nullptr)
             {
                 const int count = index->StaticCount;

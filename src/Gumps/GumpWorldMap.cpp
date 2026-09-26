@@ -409,7 +409,11 @@ void CGumpWorldMap::LoadMap(int map)
                     int mapY = (int)by * 8;
                     MAP_BLOCK info = {};
 
-                    MAP_BLOCK *mapBlock = (MAP_BLOCK *)indexMap->MapAddress;
+                    #if defined(XUO_EMSC)
+                        const MAP_BLOCK *mapBlock = vfs_index_map_block(indexMap);
+                    #else
+                        MAP_BLOCK *mapBlock = (MAP_BLOCK *)indexMap->MapAddress;
+                    #endif
 
                     int pos = 0;
 
@@ -417,7 +421,7 @@ void CGumpWorldMap::LoadMap(int map)
                     {
                         for (int x = 0; x < 8; x++)
                         {
-                            MAP_CELLS &cell = mapBlock->Cells[pos];
+                            const MAP_CELLS &cell = mapBlock->Cells[pos];
                             MAP_CELLS &infoCell = info.Cells[pos];
                             infoCell.TileID = cell.TileID;
                             infoCell.Z = cell.Z;
@@ -425,7 +429,11 @@ void CGumpWorldMap::LoadMap(int map)
                         }
                     }
 
-                    STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
+                    #if defined(XUO_EMSC)
+                        const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
+                    #else
+                        STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
+                    #endif
 
                     if (sb != nullptr)
                     {
@@ -433,7 +441,7 @@ void CGumpWorldMap::LoadMap(int map)
 
                         for (int c = 0; c < count; c++)
                         {
-                            STATICS_BLOCK &staticBlock = sb[c];
+                            const STATICS_BLOCK &staticBlock = sb[c];
 
                             if ((staticBlock.Color != 0u) && staticBlock.Color != 0xFFFF &&
                                 !CRenderStaticObject::IsNoDrawTile(staticBlock.Color))

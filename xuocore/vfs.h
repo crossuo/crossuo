@@ -9,7 +9,10 @@
 
 #include <atomic>
 #include <common/fs.h>
+#include <cstdint>
+#include <memory>
 #include <stdint.h>
+#include <vector>
 
 #include "uop.h"
 #include "vfs_manifest.h"
@@ -69,7 +72,8 @@ struct vfs_params
     vfs_store_backend_kind store_backend = vfs_store_backend_sparse;
     // product subset filter for the plan build: none is the full native
     // view, the web subset drops the large legacy patterns (anim*.mul,
-    // Music/**, facet*, verdata). Persisted in plan.bin
+    // facet*, verdata; music rides along, materialized on demand). Persisted
+    // in plan.bin
     vfs_subset subset = vfs_subset_none;
 };
 
@@ -245,6 +249,49 @@ bool vfs_asset_by_hash(
 // receives the owning plan file's name ("AnimationFrame2.uop"). False when
 // streaming is disabled or the hash is unknown to the plan.
 bool vfs_asset_entry_by_hash(uint64_t uop_hash, const char **out_owner, UopFileEntry *out_entry);
+
+#if defined(XUO_EMSC)
+// web punctual block fetch: resolves the plan asset behind `uop_hash` and
+// ranged-GETs its stored bytes ([ml metadata][payload]) from the file repo.
+// The browser HTTP cache persists each range across sessions; a bounded LRU
+// (wasm heap) serves repeats within one. `mapping_base` identifies the pack
+// mapping the caller reads from (safety, the resolution is by hash).
+// Returns null when the hash is unknown, a hole, offline, or the fetch fails.
+std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_range(uint64_t uop_hash);
+
+// payload slice of the fetched range without the [ml] metadata prefix.
+// decoded inflates zlib blocks (ct == 1); stored (0) and game-decoded
+// encodings (3 = BWT) pass through untouched - the caller decodes those.
+// `block` (optional) supplies the encoding; otherwise it resolves from the
+// plan asset.
+std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_payload(
+    uint64_t uop_hash, const UopFileEntry *block, bool decoded);
+
+// punctual fetch counters (log telemetry): LRU hits, network misses, failures
+void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lru_mb);
+#endif
+
+// reads one asset's inflated payload bytes by its uop hash, fetching the
+// block into the store on demand (blocking). Serves the arena backend (web:
+// packs that never materialize into the heap, e.g. the sound archive);
+// materialized installs keep the mapped-pointer/trap read path, so this
+// returns false there. False when unknown to the plan, a hole, or the fetch
+// failed.
+bool vfs_asset_read(uint64_t uop_hash, std::vector<uint8_t> &out);
+
+// iterates a plan pack file's non-hole assets by case-insensitive pack name
+// ("soundLegacyMUL.uop"); the visitor returns false to stop early. False
+// when streaming is disabled or the plan has no such pack file.
+bool vfs_plan_for_each_asset(
+    const char *pack_name, bool (*visit)(const VfsAsset &asset, void *ctx), void *ctx);
+
+// materializes one plan file by case-insensitive name: fetches its missing
+// assets (blocking) and writes the file into the install dir (a few MB for a
+// music mp3; the game opens materialized files by path). `out_path`
+// (optional) receives the written file's path - the plan's case-exact name,
+// which matters on case-sensitive virtual filesystems. False when the plan
+// has no such file or the fetch/write failed.
+bool vfs_ensure_file(const char *name, fs_path *out_path = nullptr);
 
 // per-file bulk form of the markers above (perf): a mapped pack's plan
 // file resolves once per index build - `vfs_file_state_base` returns the

@@ -456,9 +456,20 @@ static bool UopDecompressBlock(const UopFileEntry *block, uint8_t *dst, int file
 {
     assert(block);
     assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
+#if defined(XUO_EMSC)
+    // web: punctual fetch of the stored (compressed) block, then decode
+    const auto payload =
+        vfs_asset_fetch_block_payload(block->Hash, block, false);
+    if (payload == nullptr || payload->empty())
+    {
+        return false;
+    }
+    return DecompressBlock(block, dst, payload->data());
+#else
     uint8_t *src =
         g_FileManager.m_AnimationFrame[fileId].Start + block->Offset + block->MetadataSize;
     return DecompressBlock(block, dst, src);
+#endif
 }
 
 // vector form for Flags == 3 entries: the BWT output length is discovered
@@ -467,14 +478,35 @@ static bool UopDecompressBlockBwt(const UopFileEntry *block, std::vector<uint8_t
 {
     assert(block);
     assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
+#if defined(XUO_EMSC)
+    // web: punctual fetch of the stored (compressed) block, then decode
+    const auto payload =
+        vfs_asset_fetch_block_payload(block->Hash, block, false);
+    if (payload == nullptr || payload->empty())
+    {
+        return false;
+    }
+    return DecompressBlockBwt(block, dst, payload->data());
+#else
     uint8_t *src =
         g_FileManager.m_AnimationFrame[fileId].Start + block->Offset + block->MetadataSize;
     return DecompressBlockBwt(block, dst, src);
+#endif
 }
 
 std::vector<uint8_t> CUopMappedFile::GetMeta(const UopFileEntry *block)
 {
     assert(block);
+#if defined(XUO_EMSC)
+    // web: the pack is a table-only skeleton - the block comes from the
+    // punctual fetch layer (browser-cached ranged GET), never from Start
+    const auto range = vfs_asset_fetch_block_range(block->Hash);
+    if (range == nullptr || range->size() < block->MetadataSize)
+    {
+        return {};
+    }
+    return std::vector<uint8_t>(range->begin(), range->begin() + block->MetadataSize);
+#else
     // streaming: resolve the metadata range before reading it (same pre-resolve
     // as GetRaw/GetData; the trap remains the safety net for raw-pointer reads)
     vfs_ensure_range(Start, size_t(block->Offset), size_t(block->MetadataSize));
@@ -482,11 +514,21 @@ std::vector<uint8_t> CUopMappedFile::GetMeta(const UopFileEntry *block)
     std::vector<uint8_t> dst;
     dst.assign(src, src + block->MetadataSize);
     return dst;
+#endif
 }
 
 std::vector<uint8_t> CUopMappedFile::GetRaw(const UopFileEntry *block)
 {
     assert(block);
+#if defined(XUO_EMSC)
+    // web: punctual fetch of the stored (still compressed) payload
+    const auto payload = vfs_asset_fetch_block_payload(block->Hash, block, false);
+    if (payload == nullptr)
+    {
+        return {};
+    }
+    return *payload;
+#else
     // streaming: resolve the block's byte range before reading it (no-op
     // when the range is present or streaming is disabled); the trap remains
     // the safety net for raw-pointer reads
@@ -496,11 +538,40 @@ std::vector<uint8_t> CUopMappedFile::GetRaw(const UopFileEntry *block)
     std::vector<uint8_t> dst;
     dst.assign(src, src + block->CompressedSize);
     return dst;
+#endif
 }
 
 std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 {
     assert(block);
+#if defined(XUO_EMSC)
+    // web: punctual fetch of the stored payload, decompressed per the
+    // block's own encoding (0 stored / 1 zlib / 3 BWT) - identical to the
+    // native decode below, but the source bytes come from the fetch layer
+    const auto payload = vfs_asset_fetch_block_payload(block->Hash, block, false);
+    if (payload == nullptr || payload->empty())
+    {
+        return {};
+    }
+    uint8_t *src = payload->data();
+    if (block->Flags == 3)
+    {
+        std::vector<uint8_t> dst;
+        if (DecompressBlockBwt(block, dst, src))
+        {
+            return dst;
+        }
+        dst.clear();
+        return dst;
+    }
+    std::vector<uint8_t> dst(block->DecompressedSize, 0);
+    if (DecompressBlock(block, dst.data(), src))
+    {
+        return dst;
+    }
+    dst.clear();
+    return dst;
+#else
     vfs_ensure_range(
         Start, size_t(block->Offset + block->MetadataSize), size_t(block->CompressedSize));
     uint8_t *src = Start + block->Offset + block->MetadataSize;
@@ -521,6 +592,7 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
     }
     dst.clear();
     return dst;
+#endif
 }
 
 bool CFileManager::Load()
@@ -741,6 +813,83 @@ bool CFileManager::LoadWithMul()
     return true;
 }
 
+// plan-driven sound index visitor (see LoadWithUop): entries the streamed
+// product carries as "build/soundlegacymul/%08d.dat" blocks resolve through
+// the vfs store on first use instead of pack pointers. The plan does not
+// carry per-asset names, so the visitor hashes the id space once and looks
+// the block's hash up in it.
+static bool SoundPlanEntryVisit(const VfsAsset &asset, void *ctx)
+{
+    static const std::map<uint64_t, int> s_soundIds = []()
+    {
+        std::map<uint64_t, int> ids;
+        char name[64];
+        for (int id = 0; id < MAX_SOUND_DATA_INDEX_COUNT; ++id)
+        {
+            snprintf(name, sizeof(name), "build/soundlegacymul/%08d.dat", id);
+            uint32_t ph = 0, sh = 0;
+            hashlittle2(name, strlen(name), &ph, &sh);
+            ids.emplace(UOP_HASH(sh, ph), id);
+        }
+        return ids;
+    }();
+    auto *count = static_cast<int *>(ctx);
+    const auto found = s_soundIds.find(asset.uop_hash);
+    if (found == s_soundIds.end())
+    {
+        return true;
+    }
+    CIndexSound &in = g_Index.m_Sound[found->second];
+    if (in.UopHash != 0)
+    {
+        return true;
+    }
+    in.UopHash = asset.uop_hash;
+    in.DataSize = uint32_t(asset.ul);
+    ++*count;
+    return true;
+}
+
+// streaming builds that never materialize the sound archive at boot (web:
+// the ~170MB pack does not fit the boot budget): fetch + write it, then build
+// the sound index from it. The background sweep usually has the whole blob
+// resident by the time the first sound plays, so this is mostly inflate +
+// write. Per-block products skip the download entirely (planned index).
+bool CFileManager::EnsureSoundIndex()
+{
+    if (m_SoundLegacyMUL.Start != nullptr)
+    {
+        return true;
+    }
+    if (!m_SoundLazyTried)
+    {
+        m_SoundLazyTried = true;
+        if (vfs_enabled())
+        {
+            const auto started = std::chrono::steady_clock::now();
+            if (vfs_ensure_file("soundLegacyMUL.uop"))
+            {
+                Info(
+                    Data,
+                    "sound pack materialized in %.1fs",
+                    std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count());
+            }
+        }
+    }
+    if (!UopLoadFile(m_SoundLegacyMUL, "soundLegacyMUL.uop"))
+    {
+        return false;
+    }
+    UopReadIndexFile(
+        MAX_SOUND_DATA_INDEX_COUNT,
+        [](int i) { return &g_Index.m_Sound[i]; },
+        "soundLegacyMUL",
+        8,
+        ".dat",
+        m_SoundLegacyMUL);
+    return true;
+}
+
 bool CFileManager::LoadWithUop()
 {
     if (UopLoadFile(m_StringDictionary, "string_dictionary.uop"))
@@ -784,10 +933,27 @@ bool CFileManager::LoadWithUop()
     // pattern: "build/soundlegacymul/%08d.dat"
     if (!UopLoadFile(m_SoundLegacyMUL, "soundLegacyMUL.uop"))
     {
-        // no sound data at all: the client runs mute (the streaming web
-        // build defers the ~170MB sound pack to keep the heap bounded;
-        // the product carries no separate sound.mul/soundidx either)
-        if (!m_SoundIdx.Load(UOFilePath("soundidx.mul")) ||
+        // streaming shapes, in order:
+        //  - per-block products: the plan carries every block's hash, so the
+        //    entries resolve through on-demand vfs reads (CIndexSound::UopHash)
+        //    and no pack file ever exists
+        //  - whole-blob products (the official web product): the pack
+        //    materializes on first sound use (EnsureSoundIndex, hooked in
+        //    PlaySoundEffect); the sweep usually has the blob resident by then
+        //  - otherwise the legacy muls, else the client runs mute
+        int plannedCount = 0;
+        const bool visited =
+            vfs_plan_for_each_asset("soundLegacyMUL.uop", SoundPlanEntryVisit, &plannedCount);
+        if (visited && plannedCount != 0)
+        {
+            Info(Data, "sound index: %d planned blocks (on-demand reads)", plannedCount);
+        }
+        else if (vfs_enabled())
+        {
+            Info(Data, "sound pack streams on first use");
+        }
+        else if (
+            !m_SoundIdx.Load(UOFilePath("soundidx.mul")) ||
             !m_SoundMul.Load(UOFilePath("sound.mul")))
         {
             Warning(Data, "no sound data found - running without sound");
@@ -1543,6 +1709,30 @@ void CFileManager::MulReadIndexFile(
         ptr = getNewPtrValue();
     }
 }
+
+#if defined(XUO_EMSC)
+// web punctual map access: fetches the map group asset behind a CIndexMap
+// entry (LRU-backed ranged GET) and returns a pointer into it, valid until
+// the next punctual fetch. Native builds read through the mapped pack.
+const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index)
+{
+    if (index == nullptr || index->WebMapGroupHash == 0)
+        return nullptr;
+    const auto payload = vfs_asset_fetch_block_payload(index->WebMapGroupHash, nullptr, true);
+    if (payload == nullptr || payload->size() < sizeof(MAP_BLOCK))
+        return nullptr;
+    return reinterpret_cast<const MAP_BLOCK *>(payload->data());
+}
+
+// statics are materialized whole on web (bounded exception), so the native
+// StaticAddress pointer stays valid: passthrough.
+const STATICS_BLOCK *vfs_index_statics_block(const CIndexMap *index)
+{
+    if (index == nullptr)
+        return nullptr;
+    return reinterpret_cast<const STATICS_BLOCK *>(index->StaticAddress);
+}
+#endif
 
 void CFileManager::UopReadIndexFile(
     size_t indexMaxCount,
@@ -2821,6 +3011,12 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                 if (file != nullptr)
                 {
                     uopOffset = size_t(file->Offset + file->MetadataSize);
+#if defined(XUO_EMSC)
+                    // web skeleton: remember the group asset hash - the block
+                    // bytes come from the punctual fetch layer at read time
+                    list[blockIdx].WebMapGroupHash = file->Hash;
+                    list[blockIdx].MapAddress = 1; // presence marker only
+#endif
                 }
                 else
                 {
@@ -2832,6 +3028,10 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                         // yet - its planned bytes come from the plan and
                         // read through the trap (streamed on demand)
                         uopOffset = size_t(uopOffset64);
+#if defined(XUO_EMSC)
+                        list[blockIdx].WebMapGroupHash = UOP_HASH(sh, ph);
+                        list[blockIdx].MapAddress = 1;
+#endif
                     }
                     else
                     {

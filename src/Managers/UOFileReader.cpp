@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <algorithm>
+#include <memory>
 #include "UOFileReader.h"
 #include <xuocore/vfs.h>
 #include "ColorManager.h"
@@ -19,6 +20,7 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
     std::vector<uint8_t> decoded;
     const uint32_t *lookupList = nullptr;
     int halfLen = 0;
+    const uint8_t *dataStart = nullptr;
 
     const auto *uopBlock = io.UopBlock;
     if (uopBlock != nullptr && uopBlock->Flags != 0)
@@ -60,9 +62,30 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
         halfLen = int(io.DataSize >> 2);
     }
 
-    const uint8_t *dataStart =
-        uopBlock != nullptr && uopBlock->Flags != 0 ? decoded.data() + 8
+#if defined(XUO_EMSC)
+    // web: the pack is a table-only skeleton - stored blocks live in the
+    // fetch layer, not at io.Address; the payload holder keeps the block
+    // alive for this function's scope
+    std::shared_ptr<std::vector<uint8_t>> storedPayload;
+    if (uopBlock != nullptr && uopBlock->Flags == 0)
+    {
+        storedPayload =
+            vfs_asset_fetch_block_payload(uopBlock->Hash, uopBlock, false);
+        if (storedPayload == nullptr || storedPayload->size() < 8)
+        {
+            Warning(Data, "UOFileReader::GetGumpPixels could not fetch the stored gump block");
+            return {};
+        }
+        lookupList = reinterpret_cast<const uint32_t *>(storedPayload->data());
+        halfLen = int((storedPayload->size() - 8) >> 2);
+        dataStart = storedPayload->data() + 8;
+    }
+    else
+#endif
+    {
+        dataStart = uopBlock != nullptr && uopBlock->Flags != 0 ? decoded.data() + 8
                                                     : reinterpret_cast<const uint8_t *>(io.Address);
+    }
 
     int blocksize = io.Width * io.Height;
 
@@ -139,7 +162,26 @@ CSprite *UOFileReader::ReadGump(CIndexObject &io)
 std::vector<uint16_t>
 UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height)
 {
+#if defined(XUO_EMSC)
+    // web: the art pack is a table-only skeleton - the block comes from the
+    // punctual fetch layer; the holder keeps it alive for this function.
+    // io.Address is a planned skeleton offset here, never dereferenced.
+    std::shared_ptr<std::vector<uint8_t>> artBlock;
+    if (io.UopBlock == nullptr)
+    {
+        return {};
+    }
+    artBlock = vfs_asset_fetch_block_payload(
+        io.UopBlock->Hash, io.UopBlock, true);
+    if (artBlock == nullptr || artBlock->empty())
+    {
+        Warning(Data, "UOFileReader::GetArtPixels could not fetch art block %u", id);
+        return {};
+    }
+    uint16_t *P = (uint16_t *)artBlock->data();
+#else
     uint16_t *P = (uint16_t *)io.Address;
+#endif
     uint16_t color = io.Color;
     std::vector<uint16_t> pixels;
     if (!run) //raw tile
@@ -226,7 +268,12 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
         }
         else
         {
+#if defined(XUO_EMSC)
+            // stored run tiles: [u16 width][u16 height][line offsets...]
+            uint16_t *ptr = reinterpret_cast<uint16_t *>(artBlock->data() + 4);
+#else
             uint16_t *ptr = (uint16_t *)(io.Address + 4);
+#endif
             width = *ptr;
             if ((width == 0) || width >= 1024)
             {

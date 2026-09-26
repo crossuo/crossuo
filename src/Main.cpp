@@ -260,11 +260,17 @@ bool load_config()
         vfs_params params;
         params.enabled = true;
 #if defined(XUO_EMSC)
-        // web defaults: in-memory granule store + the web product subset
+        // web defaults: on-disk (MEMFS) blob store + the web product subset
         // (the full legacy install cannot fit the wasm heap). Traps are off:
         // wasm has no fault-driven paging, so reads go through the explicit
-        // vfs_ensure_range pre-resolve path
-        params.store_backend = vfs_store_backend_arena;
+        // vfs_ensure_range pre-resolve path.
+        //
+        // NOT the arena backend: it keeps every decompressed payload
+        // resident in the wasm heap, which cannot hold the boot plan next to
+        // the install - the ensure failures that followed left the late packs
+        // (fonts, string_dictionary) fully stubbed. The sparse store writes
+        // the same bytes to files and keeps the heap flat.
+        params.store_backend = vfs_store_backend_sparse;
         params.subset = vfs_subset_web;
         params.traps = false;
 #endif

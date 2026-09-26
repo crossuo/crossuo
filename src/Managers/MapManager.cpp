@@ -277,12 +277,16 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
         return;
     }
 
-    MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
+    #if defined(XUO_EMSC)
+        const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+    #else
+        MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
+    #endif
     for (int x = 0; x < 8; x++)
     {
         for (int y = 0; y < 8; y++)
         {
-            MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
+            const MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
             RADAR_MAP_CELLS &outCell = mb.Cells[x][y];
             outCell.Graphic = inCell.TileID;
             outCell.Hue = 0u;
@@ -291,7 +295,11 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
         }
     }
 
-    STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
+    #if defined(XUO_EMSC)
+        const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
+    #else
+        STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
+    #endif
     if (sb != nullptr)
     {
         int count = indexMap->StaticCount;
@@ -472,7 +480,11 @@ void CMapManager::LoadBlock(CMapBlock *block)
         return;
     }
 
-    MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
+    #if defined(XUO_EMSC)
+        const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+    #else
+        MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
+    #endif
     int bx = block->X * 8;
     int by = block->Y * 8;
     for (int x = 0; x < 8; x++)
@@ -491,7 +503,11 @@ void CMapManager::LoadBlock(CMapBlock *block)
         }
     }
 
-    STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
+    #if defined(XUO_EMSC)
+        const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
+    #else
+        STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
+    #endif
     if (sb != nullptr)
     {
         int count = indexMap->StaticCount;

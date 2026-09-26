@@ -268,6 +268,84 @@ static void vfs_store_check_sparse(uint64_t planned_bytes, const fs_path &dir)
             planned_bytes / (1024 * 1024));
 }
 
+// web: writes ONLY the header + section + entry table (a few hundred KB)
+// and stops there - the game builds its block hashmap from the table, and
+// every block read is intercepted by the punctual fetch layer, so the full
+// planned size never exists on disk or in memory. MEMFS files live in the
+// browser JS heap: a full-size pack would allocate it whole (the OOM).
+// Returns the skeleton size through *out_size; the mapping and every block
+// offset stay the plan's virtual layout.
+bool vfs_store_materialize_skeleton(
+    const VfsPlan &plan, size_t file_index, const fs_path &install_dir, uint64_t *out_size)
+{
+    *out_size = 0;
+    if (file_index >= plan.files.size())
+        return false;
+    const auto &file = plan.files[file_index];
+    if (!file.is_uop || file.assets.empty())
+        return false;
+    const fs_path path = fs_path_join(install_dir, file.name);
+    fs_path_create(fs_directory(path));
+    const uint32_t fingerprint = vfs_store_plan_fingerprint(file);
+
+    UopHeader header;
+    header.Magic = MYP_MAGIC;
+    header.Version = 4;
+    header.Signature = fingerprint;
+    header.SectionOffset = sizeof(UopHeader);
+    header.FileCapacity = uint32_t(file.assets.size());
+    header.FileCount = uint32_t(file.assets.size());
+    header.SectionCount = 1;
+    header.Unk1 = 1;
+    header.Unk2 = 0;
+
+    UopSection section;
+    section.FileCount = uint32_t(file.assets.size());
+    section.NextSection = 0;
+
+    std::vector<uint8_t> table;
+    table.reserve(sizeof(header) + sizeof(section) + sizeof(UopFileEntry) * file.assets.size());
+    const auto push = [&table](const void *data, size_t size)
+    {
+        const auto *bytes = static_cast<const uint8_t *>(data);
+        table.insert(table.end(), bytes, bytes + size);
+    };
+    push(&header, sizeof(header));
+    push(&section, sizeof(section));
+    for (const auto &asset : file.assets)
+    {
+        // the planned layout travels in the table so the punctual fetch can
+        // relocate any block by its entry alone; Offset points into the
+        // VIRTUAL pack (past the skeleton end) and is never dereferenced -
+        // reads go through vfs_asset_fetch_block
+        UopFileEntry entry;
+        entry.Offset = vfs_asset_is_hole(asset) ? 0 : asset.file_offset;
+        entry.MetadataSize = asset.ml;
+        entry.CompressedSize = uint32_t(asset.ul);
+        entry.DecompressedSize = uint32_t(asset.ul);
+        entry.Hash = asset.uop_hash;
+        entry.Checksum = asset.mc;
+        entry.Flags = uint16_t(asset.ct);
+        push(&entry, sizeof(entry));
+    }
+
+    FILE *fp = fopen(fs_path_ascii(path), "wb");
+    if (fp == nullptr)
+    {
+        LOG_ERROR("web skeleton: cannot create %s", fs_path_ascii(path));
+        return false;
+    }
+    const bool wrote = fwrite(table.data(), 1, table.size(), fp) == table.size();
+    fclose(fp);
+    if (!wrote)
+    {
+        LOG_ERROR("web skeleton: write failed: %s", fs_path_ascii(path));
+        return false;
+    }
+    *out_size = table.size();
+    return true;
+}
+
 // opens the pack for block writes; creates the full header + section + entry
 // table from the plan when the file is missing or built for a different plan
 static FILE *vfs_store_pack_open(const fs_path &path, const VfsPlan::VfsFile &file, bool *created)
@@ -601,6 +679,134 @@ bool vfs_store_materialize_pack(
     LOG_INFO(
     "pack materialized: %s (%zu assets)", file.name.c_str(), file.assets.size());
     return true;
+}
+
+// arena-free counterpart of vfs_store_materialize_pack: the payload comes
+// from the blob store (vfs_store_asset_payload), never from a resident
+// granule. Web boot uses this - the arena holds decompressed payloads in the
+// wasm heap, and a full-plan residency cannot fit next to the install files.
+// Every asset is written in the pack's native sparse layout; an asset whose
+// blob is not in the store keeps its zeroed slot (the caller censuses it).
+vfs_pack_write_stats vfs_store_materialize_pack_from_store(
+    const VfsPlan &plan,
+    size_t file_index,
+    const fs_path &install_dir,
+    const fs_path &blobs_dir)
+{
+    vfs_pack_write_stats stats = {};
+    if (file_index >= plan.files.size())
+        return stats;
+    const auto &file = plan.files[file_index];
+    if (file.assets.empty())
+        return stats;
+
+    // loose whole-file packs: the materialized file IS the inflated payload
+    if (!file.is_uop)
+    {
+        const auto &asset = file.assets.front();
+        if (vfs_asset_is_hole(asset))
+            return stats;
+        std::vector<uint8_t> payload;
+        const int prv = vfs_store_asset_payload(blobs_dir, asset, &payload);
+        if (prv != 0)
+        {
+            LOG_WARN(
+                "web pack %s: blob payload unavailable (%s, res %d) - stays empty",
+                file.name.c_str(),
+                asset.blob.c_str(),
+                prv);
+            stats.failed = 1;
+            return stats;
+        }
+        if (!fs_file_write(
+                fs_path_ascii(fs_path_join(install_dir, file.name)),
+                payload.data(),
+                payload.size()))
+        {
+            LOG_ERROR("web pack %s: write failed (%zu bytes)", file.name.c_str(), payload.size());
+            stats.failed = 1;
+            return stats;
+        }
+        stats.written = 1;
+        stats.bytes = payload.size();
+        return stats;
+    }
+
+    const auto path = fs_path_join(install_dir, file.name);
+    bool created = false;
+    FILE *fp = vfs_store_pack_open(path, file, &created);
+    if (fp == nullptr)
+    {
+        LOG_ERROR(
+            "web pack %s: open/create failed (%s, %llu bytes planned)",
+            file.name.c_str(),
+            fs_path_ascii(path),
+            (unsigned long long)file.size);
+        stats.failed = 1;
+        return stats;
+    }
+    if (!created)
+    {
+        // fingerprint + size match the plan: already assembled. The caller
+        // re-censuses stubs, so a warm boot still reports its gaps.
+        fclose(fp);
+        stats.skipped = 1;
+        return stats;
+    }
+
+    for (size_t ai = 0; ai < file.assets.size(); ++ai)
+    {
+        const auto &asset = file.assets[ai];
+        if (vfs_asset_is_hole(asset))
+            continue; // reserved slot: the table entry stays zero
+
+        std::vector<uint8_t> payload;
+        const int prav = vfs_store_asset_payload(blobs_dir, asset, &payload);
+        if (prav != 0)
+        {
+            ++stats.stubbed; // zero slot + unpatched table entry
+            if (stats.stubbed <= 3)
+            {
+                LOG_WARN(
+                    "web pack %s: asset %zu blob unavailable (res %d, %s)",
+                    file.name.c_str(),
+                    ai,
+                    prav,
+                    asset.blob.c_str());
+            }
+            continue;
+        }
+        std::vector<uint8_t> metadata;
+        vfs_store_synthesize_metadata(asset, metadata);
+        if (!vfs_file_write_at(fp, asset.file_offset, metadata.data(), metadata.size()) ||
+            (!payload.empty() &&
+             !vfs_file_write_at(
+                 fp, asset.file_offset + asset.ml, payload.data(), payload.size())))
+        {
+            ++stats.failed;
+            continue;
+        }
+        UopFileEntry patch;
+        patch.Offset = asset.file_offset;
+        patch.MetadataSize = asset.ml;
+        patch.CompressedSize = uint32_t(asset.ul);
+        patch.DecompressedSize = uint32_t(asset.ul);
+        patch.Hash = asset.uop_hash;
+        patch.Checksum = asset.mc;
+        patch.Flags = uint16_t(asset.ct == 1 ? 0 : asset.ct);
+        if (!vfs_file_write_at(fp, vfs_store_table_pos(ai), &patch, sizeof(patch)))
+        {
+            ++stats.failed;
+            continue;
+        }
+        ++stats.written;
+        stats.bytes += payload.size();
+    }
+    const bool flushed = fflush(fp) == 0;
+    fclose(fp);
+    if (!flushed)
+        ++stats.failed;
+    return stats;
 }
 
 // loose files: materialized whole from the blob (decompressed when ct == 1)

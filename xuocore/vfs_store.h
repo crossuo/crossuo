@@ -248,6 +248,33 @@ bool vfs_store_materialize_pack(
     const fs_path &install_dir,
     const fs_path &blobs_dir);
 
+// arena-free materialization result: how the pack's assets were written
+struct vfs_pack_write_stats
+{
+    size_t written = 0; // real bytes landed in the pack file
+    size_t stubbed = 0; // blob missing from the store: zero slot, no table entry
+    size_t failed = 0;  // blob present but write/decompress failed
+    size_t skipped = 0; // 1 when a matching file was already on disk
+    uint64_t bytes = 0; // payload bytes written
+};
+
+// web: writes ONLY the pack's header + section + entry table (the block
+// hashmap the game builds from it) - never the planned full size. The game's
+// punctual fetch layer serves block bytes; the full pack exists nowhere.
+bool vfs_store_materialize_skeleton(
+    const VfsPlan &plan, size_t file_index, const fs_path &install_dir, uint64_t *out_size);
+
+// arena-free counterpart of vfs_store_materialize_pack: payloads are read
+// straight from the blob store (no granule residency), so it never touches
+// the wasm heap beyond one asset at a time. Assets whose blob is missing keep
+// their zeroed slot and are reported through the returned stats instead of
+// aborting the pack (the caller decides whether the gate may open).
+vfs_pack_write_stats vfs_store_materialize_pack_from_store(
+    const VfsPlan &plan,
+    size_t file_index,
+    const fs_path &install_dir,
+    const fs_path &blobs_dir);
+
 // update flow: re-opens the hole of one pack asset - the
 // on-disk entry keeps the plan's fields but Offset goes back to 0, so every
 // presence check (reconcile, verify, trap) reports the block absent and the
