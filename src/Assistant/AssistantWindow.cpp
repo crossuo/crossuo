@@ -332,19 +332,13 @@ static bool init()
         Wisp::g_WispWindow != nullptr ? Wisp::g_WispWindow->m_window : nullptr;
     SDL_GLContext context = SDL_GL_GetCurrentContext();
 #if defined(XUO_EMSC)
-    // the emscripten WebGL context is current but SDL_GL_GetCurrentContext
-    // returns null (SDL does not track it). The GL is functional - rendering
-    // works - so skip the null pointer check and let ImGui initialize with
-    // the existing context.
-    if (window == nullptr && context == nullptr)
-    {
-        // proceed: the GL is current, ImGui just needs to be set up
-    }
-    else if (context == nullptr)
-    {
-        Error(Assistant, "could not initialize: no game window/context");
-        return false;
-    }
+    // SDL does not track the WebGL context: the renderer binds it directly on
+    // the canvas (not through SDL_GL_MakeCurrent), so SDL_GL_GetCurrentContext
+    // returns null even though the GL is current and functional. The init call
+    // sites only run from the in-game render pass with the context current,
+    // so skip the SDL context gate entirely (DrawOverlay would otherwise
+    // re-attempt init every frame and spam this error)
+    (void)context;
 #else
     if (window == nullptr || context == nullptr)
     {
@@ -378,7 +372,14 @@ static bool init()
         ui_shutdown(s_ctx);
         s_ctx = ui_context();
         memset(&s_assistantWin, 0, sizeof(s_assistantWin));
-        Error(Assistant, "initialization failed: no ImGui context");
+        // DrawOverlay retries init every frame while uninitialized: report
+        // the failure once, not per frame
+        static bool warned = false;
+        if (!warned)
+        {
+            warned = true;
+            Error(Assistant, "initialization failed: no ImGui context");
+        }
         return false;
     }
     // the launcher color scheme is the final style: applied after ui_init (its
