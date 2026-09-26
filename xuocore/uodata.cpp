@@ -912,7 +912,29 @@ bool CFileManager::LoadWithUop()
     }
 
     // pattern: "build/gumpartlegacymul/%08d.tga"
-    if (!UopLoadFile(m_GumpartLegacyMUL, "gumpartLegacyMUL.uop")) // extra width,height
+    // streaming installs keep unrefined packs as zero-filled skeletons (a
+    // BWT-compressed source cannot be split into block assets), so the
+    // boot-time load reads zeros: fetch the archive once, then retry the
+    // load before falling back to the legacy muls (mirrors EnsureSoundIndex)
+    bool gumpartLoaded = UopLoadFile(m_GumpartLegacyMUL, "gumpartLegacyMUL.uop");
+    if (!gumpartLoaded && vfs_enabled() && !m_GumpartLazyTried)
+    {
+        m_GumpartLazyTried = true;
+        const auto started = std::chrono::steady_clock::now();
+        if (vfs_ensure_file("gumpartLegacyMUL.uop", nullptr, true))
+        {
+            Info(
+                Data,
+                "gumpart pack materialized in %.1fs",
+                std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count());
+            gumpartLoaded = UopLoadFile(m_GumpartLegacyMUL, "gumpartLegacyMUL.uop");
+        }
+        else
+        {
+            Warning(Data, "gumpart pack materialization failed");
+        }
+    }
+    if (!gumpartLoaded) // extra width,height
     {
         if (!m_GumpIdx.Load(UOFilePath("gumpidx.mul")))
         {
@@ -961,7 +983,27 @@ bool CFileManager::LoadWithUop()
     }
 
     // pattern: "build/multicollection/%06d.bin"
-    if (!UopLoadFile(m_MultiCollection, "MultiCollection.uop"))
+    // same streaming shape as gumpart: a pack the plan keeps whole boots as
+    // a zero-filled skeleton, so fetch it once before falling back
+    bool multiLoaded = UopLoadFile(m_MultiCollection, "MultiCollection.uop");
+    if (!multiLoaded && vfs_enabled() && !m_MultiLazyTried)
+    {
+        m_MultiLazyTried = true;
+        const auto started = std::chrono::steady_clock::now();
+        if (vfs_ensure_file("MultiCollection.uop", nullptr, true))
+        {
+            Info(
+                Data,
+                "multicollection pack materialized in %.1fs",
+                std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count());
+            multiLoaded = UopLoadFile(m_MultiCollection, "MultiCollection.uop");
+        }
+        else
+        {
+            Warning(Data, "multicollection pack materialization failed");
+        }
+    }
+    if (!multiLoaded)
     {
         if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
         {
@@ -3436,7 +3478,12 @@ void CFileManager::IndexReplaces()
         const size_t size = strings.size();
         if (size > 0)
         {
-            const uint32_t index = str_to_int(strings[0]);
+            const int index = str_to_int(strings[0]);
+            if (index < 0 || index >= MAX_MUSIC_DATA_INDEX_COUNT)
+            {
+                continue;
+            }
+
             CIndexMusic &mp3 = g_Index.m_MP3[index];
             astr_t name = "music/digital/" + strings[1];
             astr_t extension = ".mp3";

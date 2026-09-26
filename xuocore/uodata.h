@@ -569,6 +569,8 @@ struct CFileManager : public CDataReader // FIXME: not needed
 
 private:
     bool m_SoundLazyTried = false;
+    bool m_GumpartLazyTried = false;
+    bool m_MultiLazyTried = false;
 
     UopAnimationHeader UopReadAnimationHeader();
     UopAnimationFrame UopReadAnimationFrame();

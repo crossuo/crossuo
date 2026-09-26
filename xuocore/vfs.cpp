@@ -803,7 +803,7 @@ bool vfs_plan_for_each_asset(
     return false;
 }
 
-bool vfs_ensure_file(const char *name, fs_path *out_path)
+bool vfs_ensure_file(const char *name, fs_path *out_path, bool force)
 {
     if (!vfs_enabled() || name == nullptr || name[0] == '\0')
         return false;
@@ -816,7 +816,7 @@ bool vfs_ensure_file(const char *name, fs_path *out_path)
         const auto path = fs_path_join(s_params.install_dir, file.name);
         if (out_path != nullptr)
             *out_path = path;
-        if (fs_path_exists(path))
+        if (!force && fs_path_exists(path))
             return true;
         if (s_arena != nullptr)
         {

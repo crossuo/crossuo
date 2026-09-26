@@ -69,8 +69,15 @@ bool CSpeechManager::LoadSpeech()
         if (block != nullptr)
         {
             tempData = g_FileManager.m_MainMisc.GetData(block);
-            reader.SetData(&tempData[0], tempData.size());
-            isUOP = true;
+            // streamed installs can fail the punctual fetch of this block:
+            // an empty payload would underflow Size - 2 below (Size wraps to
+            // SIZE_MAX, the reader's bounds check then passes through the
+            // pointer overflow and the string reserve aborts the client)
+            if (!tempData.empty() && tempData.size() >= 2)
+            {
+                reader.SetData(&tempData[0], tempData.size());
+                isUOP = true;
+            }
         }
     }
 
@@ -83,7 +90,7 @@ bool CSpeechManager::LoadSpeech()
     {
         Info(Client, "loading speech from UOP");
         reader.Move(2);
-        auto mainData = reader.ReadWStringLE(reader.Size - 2);
+        auto mainData = reader.Size >= 2 ? reader.ReadWStringLE(reader.Size - 2) : wstr_t();
         std::vector<wstr_t> list;
         wstr_t temp;
         for (const auto &c : mainData)

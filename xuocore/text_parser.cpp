@@ -255,6 +255,13 @@ std::vector<astr_t> TextFileParser::ReadTokens(bool trim)
             {
                 m_Ptr++;
             }
+            else if (m_Ptr < m_EOL)
+            {
+                // unconsumable byte (e.g. an embedded NUL in a mapped file):
+                // skip it, otherwise the tokenizer never advances and the
+                // caller's IsEOF loop spins forever
+                m_Ptr++;
+            }
         }
         m_File.Ptr = m_EOL + 1;
     }
@@ -284,6 +291,11 @@ std::vector<astr_t> TextFileParser::GetTokens(const astr_t &str, bool trim)
         if (buf.length() != 0u)
         {
             result.push_back(buf);
+        }
+        else if (m_Ptr < m_EOL)
+        {
+            // see ReadTokens: always make progress on unconsumable bytes
+            m_Ptr++;
         }
     }
 

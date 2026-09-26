@@ -290,8 +290,10 @@ bool vfs_plan_for_each_asset(
 // music mp3; the game opens materialized files by path). `out_path`
 // (optional) receives the written file's path - the plan's case-exact name,
 // which matters on case-sensitive virtual filesystems. False when the plan
-// has no such file or the fetch/write failed.
-bool vfs_ensure_file(const char *name, fs_path *out_path = nullptr);
+// has no such file or the fetch/write failed. `force` re-materializes even
+// when a file already exists at the path - a streamed install's skeleton is
+// a real zero-filled file, so mere existence says nothing about content.
+bool vfs_ensure_file(const char *name, fs_path *out_path = nullptr, bool force = false);
 
 // per-file bulk form of the markers above (perf): a mapped pack's plan
 // file resolves once per index build - `vfs_file_state_base` returns the
