@@ -11,11 +11,42 @@
 #include "icon_client.h"
 #include "../GameWindow.h"
 
+#if defined(XUO_EMSC)
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
 
 namespace Wisp
 {
 CWindow *g_WispWindow = nullptr;
 WindowHandle CWindow::Handle = 0;
+
+#if defined(XUO_EMSC)
+// the browser document is the web "desktop": until the game maximizes, the
+// canvas keeps the authored resolution (640x480, like the native default
+// window); MaximizeWindow (CGameScreen::Init, on entering the world) flips
+// the canvas to track the viewport, like a native window filling the screen
+static bool s_webFillViewport = false;
+
+static CSize web_viewport_size()
+{
+    // DOM access is main-thread only and main() runs on a pthread worker
+    // (PROXY_TO_PTHREAD): run the JS on the main browser thread
+    const int w = MAIN_THREAD_EM_ASM_INT({ return window.innerWidth; });
+    const int h = MAIN_THREAD_EM_ASM_INT({ return window.innerHeight; });
+    return CSize(w > 0 ? w : 640, h > 0 ? h : 480);
+}
+
+static EM_BOOL web_on_window_resize(int eventType, const EmscriptenUiEvent *event, void *userData)
+{
+    if (s_webFillViewport && g_WispWindow != nullptr)
+    {
+        g_WispWindow->SetSize(web_viewport_size());
+    }
+    return EM_FALSE;
+}
+#endif
 
 CWindow::CWindow()
 {
@@ -39,6 +70,14 @@ void CWindow::SetMaxSize(int width, int height)
 
 void CWindow::MaximizeWindow()
 {
+#if defined(XUO_EMSC)
+    // native maximizes into the desktop; on web the desktop is the browser
+    // document. SetSize drives SDL, which resizes the canvas drawing buffer
+    // and sends the resize event the game already handles (same as native)
+    s_webFillViewport = true;
+    SetSize(web_viewport_size());
+    return;
+#endif
     SDL_RestoreWindow(m_window);
     SDL_MaximizeWindow(m_window);
 }
@@ -255,6 +294,14 @@ bool CWindow::Create(const char *title, bool showCursor, int width, int height)
     //SDL_SetWindowGrab(m_window, SDL_TRUE);
     SDL_RaiseWindow(m_window);
     SDL_ShowCursor(static_cast<int>(showCursor));
+
+#if defined(XUO_EMSC)
+    // keep filling the viewport after the game maximized (browser window
+    // resize, devtools, device rotation); registered on the main browser
+    // thread, the callback is delivered back here like SDL's own handlers
+    emscripten_set_resize_callback(
+        EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, EM_FALSE, web_on_window_resize);
+#endif
 
     return OnCreate();
 }
