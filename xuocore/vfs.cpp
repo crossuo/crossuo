@@ -757,10 +757,15 @@ std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_payload(
     const size_t ml = block != nullptr ? block->MetadataSize : size_t(asset.ml);
     const uint32_t flags = block != nullptr ? block->Flags : uint32_t(asset.ct);
     const uint32_t decoded_size = block != nullptr ? block->DecompressedSize : uint32_t(asset.ul);
-    if (range->size() < ml)
+    // range assets are [ml metadata][payload] windows into the pack source;
+    // whole-blob assets (blob_offset == 0, e.g. art's per-tile blobs) remote
+    // as the bare payload with no metadata prefix - stripping ml there
+    // corrupts the stream (the arena ensure makes the same distinction)
+    const size_t strip = asset.blob_offset != 0 ? ml : 0;
+    if (range->size() < strip)
         return nullptr;
-    const size_t payload_len = range->size() - ml;
-    const uint8_t *payload = range->data() + ml;
+    const size_t payload_len = range->size() - strip;
+    const uint8_t *payload = range->data() + strip;
     if (!decoded || flags != 1)
         return std::make_shared<std::vector<uint8_t>>(payload, payload + payload_len);
     auto out = std::make_shared<std::vector<uint8_t>>(decoded_size, 0);
