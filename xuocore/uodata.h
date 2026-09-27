@@ -218,6 +218,10 @@ struct CIndexMap
     // non-zero marker for the native guards; never dereference it)
     uint64_t WebMapGroupHash = 0;
     uint64_t WebStaticGroupHash = 0;
+    // position of this entry's block inside the fetched group payload (a
+    // group holds 4096 consecutive blocks; native seeks the same offset
+    // inside the mapped pack)
+    uint32_t WebMapGroupBlock = 0;
 #endif
 };
 

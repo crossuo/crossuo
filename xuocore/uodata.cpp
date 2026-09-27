@@ -1795,14 +1795,38 @@ void CFileManager::MulReadIndexFile(
 // web punctual map access: fetches the map group asset behind a CIndexMap
 // entry (LRU-backed ranged GET) and returns a pointer into it, valid until
 // the next punctual fetch. Native builds read through the mapped pack.
+
+// a map group holds at most 4096 blocks of sizeof(MAP_BLOCK) each (the last
+// group of a facet may hold fewer). A plan entry claiming a larger payload
+// is a corrupt part-manifest record: fetching it would block the client
+// thread on a multi-megabyte transfer that no reader can use.
+static constexpr uint32_t vfsMapGroupMaxBytes = uint32_t(4096 * sizeof(MAP_BLOCK)) + 4096;
+
+// the bytes a punctual fetch transfers for this entry ([ml] + stored or
+// compressed payload)
+static inline bool vfsMapGroupSizeValid(const UopFileEntry &entry)
+{
+    const uint32_t transfer =
+        entry.Flags == 1 ? entry.CompressedSize : entry.DecompressedSize;
+    return entry.DecompressedSize >= sizeof(MAP_BLOCK) && transfer <= vfsMapGroupMaxBytes;
+}
 const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index)
 {
     if (index == nullptr || index->WebMapGroupHash == 0)
         return nullptr;
     const auto payload = vfs_asset_fetch_block_payload(index->WebMapGroupHash, nullptr, true);
-    if (payload == nullptr || payload->size() < sizeof(MAP_BLOCK))
+    const size_t block = size_t(index->WebMapGroupBlock);
+    // the group payload holds 4096 consecutive blocks; seek the one this
+    // entry covers (native reads base + groupOffset + block * sizeof). An
+    // oversized payload means a corrupt plan entry slipped through - refuse
+    // it rather than trusting the bytes
+    if (
+        payload == nullptr || payload->size() > vfsMapGroupMaxBytes ||
+        payload->size() < (block + 1) * sizeof(MAP_BLOCK))
+    {
         return nullptr;
-    return reinterpret_cast<const MAP_BLOCK *>(payload->data());
+    }
+    return reinterpret_cast<const MAP_BLOCK *>(payload->data() + block * sizeof(MAP_BLOCK));
 }
 
 // statics are materialized whole on web (bounded exception), so the native
@@ -3082,6 +3106,11 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
     int fileNumber = -1;
     size_t uopOffset = 0;
     uint64_t uopOffset64 = 0;
+#if defined(XUO_EMSC)
+    // web: fetch hash of the group the walk is currently inside; stamped on
+    // every entry below - the walk only revisits a group once per 4096 blocks
+    uint64_t groupHash = 0;
+#endif
     for (int blockIdx = 0; blockIdx < maxBlockCount; blockIdx++)
     {
         CIndexMap &index = list[blockIdx];
@@ -3104,14 +3133,28 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                     map,
                     shifted);
                 auto file = uopFile.GetAsset(mapFilePath);
+#if defined(XUO_EMSC)
+                groupHash = 0; // a missed group leaves its whole range nodraw
+#endif
                 if (file != nullptr)
                 {
                     uopOffset = size_t(file->Offset + file->MetadataSize);
 #if defined(XUO_EMSC)
                     // web skeleton: remember the group asset hash - the block
                     // bytes come from the punctual fetch layer at read time
-                    list[blockIdx].WebMapGroupHash = file->Hash;
-                    list[blockIdx].MapAddress = 1; // presence marker only
+                    if (vfsMapGroupSizeValid(*file))
+                    {
+                        groupHash = file->Hash;
+                    }
+                    else
+                    {
+                        Warning(
+                            Data,
+                            "map group %s: corrupt entry size (%u/%u bytes), skipped",
+                            mapFilePath,
+                            file->DecompressedSize,
+                            file->CompressedSize);
+                    }
 #endif
                 }
                 else
@@ -3125,8 +3168,13 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                         // read through the trap (streamed on demand)
                         uopOffset = size_t(uopOffset64);
 #if defined(XUO_EMSC)
-                        list[blockIdx].WebMapGroupHash = UOP_HASH(sh, ph);
-                        list[blockIdx].MapAddress = 1;
+                        const char *owner = nullptr;
+                        UopFileEntry entry{};
+                        if (vfs_asset_entry_by_hash(UOP_HASH(sh, ph), &owner, &entry) &&
+                            vfsMapGroupSizeValid(entry))
+                        {
+                            groupHash = UOP_HASH(sh, ph);
+                        }
 #endif
                     }
                     else
@@ -3163,6 +3211,18 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
         index.MapAddress = realMapAddress;
         index.StaticAddress = realStaticAddress;
         index.StaticCount = realStaticCount;
+#if defined(XUO_EMSC)
+        // web: the table-only skeleton never maps block bytes, so the native
+        // address computed above is always past the mapping end and the group
+        // hash used to be stamped on the group's first block only - leaving
+        // 4095 of every 4096 blocks without a hash and everyone with
+        // MapAddress == 0 (the guards then skipped the whole map silently).
+        // Keep the presence marker for the guards and give every block of
+        // the group the same fetch hash plus its position inside the group.
+        index.WebMapGroupHash = groupHash;
+        index.WebMapGroupBlock = uint32_t(blockNumber);
+        index.MapAddress = groupHash != 0 ? 1 : 0; // presence marker only
+#endif
     }
 }
 

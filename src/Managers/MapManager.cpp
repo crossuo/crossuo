@@ -279,6 +279,10 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 
     #if defined(XUO_EMSC)
         const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+        if (pmb == nullptr)
+        {
+            return; // group not fetched: caller keeps the previous radar cells
+        }
     #else
         MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
     #endif
@@ -482,6 +486,12 @@ void CMapManager::LoadBlock(CMapBlock *block)
 
     #if defined(XUO_EMSC)
         const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+        if (pmb == nullptr)
+        {
+            // the group fetch is punctual: it can fail transiently - leave
+            // the block empty, a later Init pass re-runs LoadBlock
+            return;
+        }
     #else
         MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
     #endif
