@@ -666,23 +666,29 @@ std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_range(uint64_t uop_h
     if (s_params.offline || !vfs_fetch_started())
         return nullptr;
 
-    // whole-blob assets (packs refine could not split) would pull their
-    // entire source through here - that is not a punctual fetch; they must
+    // whole-blob assets are allowed when small (normalized pack part
+    // groups fetch this way - one ranged GET of the plain blob); beyond the
+    // cap the fetch would stall the caller on a giant transfer - those must
     // be normalized (proxy decompression) or prefetched instead
     if (asset.blob_offset == 0)
     {
-        static std::unordered_set<uint64_t> warned;
-        if (warned.insert(uop_hash).second)
+        constexpr uint64_t VFS_WEB_WHOLE_BLOB_MAX = 32ull << 20;
+        const uint64_t whole = vfs_asset_range_len(asset);
+        if (whole > VFS_WEB_WHOLE_BLOB_MAX)
         {
-            LOG_ERROR(
-                "web fetch: %s is a whole-blob asset (%s, %" PRIu64
-                " bytes) - per-block fetch unavailable",
-                s_plan.files[file_index].name.c_str(),
-                asset.blob.c_str(),
-                asset.ul);
+            static std::unordered_set<uint64_t> warned;
+            if (warned.insert(uop_hash).second)
+            {
+                LOG_ERROR(
+                    "web fetch: %s is a whole-blob asset (%s, %" PRIu64
+                    " bytes) - too large for a punctual fetch",
+                    s_plan.files[file_index].name.c_str(),
+                    asset.blob.c_str(),
+                    whole);
+            }
+            ++s_block_fetch_fails;
+            return nullptr;
         }
-        ++s_block_fetch_fails;
-        return nullptr;
     }
 
     const uint64_t len = vfs_asset_range_len(asset);

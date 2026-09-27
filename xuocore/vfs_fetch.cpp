@@ -269,13 +269,37 @@ static void vfs_fetch_worker_run(size_t index)
         {
             url = astr_t(repo) + job->tail;
             LOG_DEBUG("fetching: %s", url.c_str());
-            // the expected size is also the hard body cap (transport seam:
-            // exact-size validation stays here, the transfer aborts beyond)
+            // the expected size is also the hard body cap on native (the
+            // transfer aborts beyond it). Web: the normalizing proxy may
+            // serve plain rebuilt containers that legitimately exceed the
+            // manifest's compressed size - use a flat policy cap instead.
+#if defined(XUO_EMSC)
+            const uint64_t cap = 512ull << 20;
+#else
             const uint64_t cap = job->expected;
+#endif
             ok = vfs_fetch_http(
                 url.c_str(), job->tail.c_str(), cap, job->manifest, &body, job->tail.c_str());
             if (ok && job->expected && body.size() != job->expected)
             {
+#if defined(XUO_EMSC)
+                // normalized (plain) transfers legitimately differ from the
+                // manifest's compressed size; only a truncated transfer is
+                // a failure
+                if (body.size() < job->expected)
+                {
+                    LOG_WARN("size mismatch (truncated): %s", job->tail.c_str());
+                    vfs_fetch_store_purge(job->tail.c_str());
+                    ok = false;
+                }
+                else
+                {
+                    LOG_INFO(
+                        "size accepted (normalized): %s (%zu bytes)",
+                        job->tail.c_str(),
+                        body.size());
+                }
+#else
                 LOG_WARN(
                     "size mismatch: %s (got %zu, expected %" PRIu64 ")",
                     job->tail.c_str(),
@@ -283,6 +307,7 @@ static void vfs_fetch_worker_run(size_t index)
                     job->expected);
                 vfs_fetch_store_purge(job->tail.c_str());
                 ok = false;
+#endif
             }
             if (ok)
                 ok = vfs_fetch_store_write(job->tail.c_str(), body);

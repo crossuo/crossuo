@@ -607,17 +607,26 @@ bool CFileManager::Load()
     bool r = false;
     const bool useUop =
         s_ClientVersion >= VERSION(7, 0, 0, 0) && UopLoadFile(m_MainMisc, "MainMisc.uop");
+    Info(Data, "load trace: MainMisc useUop=%d", useUop ? 1 : 0);
+    if (!useUop)
+    {
+        Warning(Data, "Load: useUop=false (MainMisc skeleton load failed or old client)");
+    }
 
     if (useUop)
     {
         r = LoadWithUop();
+        Info(Data, "load trace: LoadWithUop -> %d", r ? 1 : 0);
     }
     else
     {
         r = LoadWithMul();
+        Info(Data, "load trace: LoadWithMul -> %d", r ? 1 : 0);
     }
 
-    r &= LoadCommon();
+    const bool common_ok = LoadCommon();
+    Info(Data, "load trace: LoadCommon -> %d", common_ok ? 1 : 0);
+    r &= common_ok;
 
     for (int i = 0; i < countof(m_AnimMul); i++)
     {
@@ -706,25 +715,30 @@ bool CFileManager::LoadCommon()
 {
     if (!m_AnimIdx[0].Load(UOFilePath("anim.idx")))
     {
+        Warning(Data, "file load: required file missing/failed (line 4)");
         return false;
     }
     if (!m_LightIdx.Load(UOFilePath("lightidx.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 9)");
         return false;
     }
     if (!m_SkillsIdx.Load(UOFilePath("Skills.idx")))
     {
+        Warning(Data, "file load: required file missing/failed (line 14)");
         return false;
     }
     if (!m_MultiMap.Load(UOFilePath("Multimap.rle")))
     {
         if (!m_MultiMap.Load(UOFilePath("multimap.rle")))
         {
+            Warning(Data, "file load: required file missing/failed (line 21)");
             return false;
         }
     }
     if (!m_TextureIdx.Load(UOFilePath("texidx.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 27)");
         return false;
     }
     if (!m_AnimMul[0].Load(UOFilePath("anim.mul")))
@@ -734,38 +748,46 @@ bool CFileManager::LoadCommon()
         // ship the 190MB file). A pre-7 client still hard-requires it.
         if (s_ClientVersion < CV_7000)
         {
+            Warning(Data, "file load: required file missing/failed (line 37)");
             return false;
         }
     }
     if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 43)");
         return false;
     }
     if (!m_HuesMul.Load(UOFilePath("hues.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 48)");
         return false;
     }
     if (!m_LightMul.Load(UOFilePath("light.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 53)");
         return false;
     }
     if (!m_RadarcolMul.Load(UOFilePath("radarcol.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 58)");
         return false;
     }
     if (!m_SkillsMul.Load(UOFilePath("skills.mul")))
     {
         if (!m_SkillsMul.Load(UOFilePath("Skills.mul")))
         {
+            Warning(Data, "file load: required file missing/failed (line 65)");
             return false;
         }
     }
     if (!m_TextureMul.Load(UOFilePath("texmaps.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 71)");
         return false;
     }
     if (!m_TiledataMul.Load(UOFilePath("tiledata.mul")))
     {
+        Warning(Data, "file load: required file missing/failed (line 76)");
         return false;
     }
 
@@ -779,34 +801,42 @@ bool CFileManager::LoadWithMul()
 {
     if (!m_ArtIdx.Load(UOFilePath("artidx.mul")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 0)");
         return false;
     }
     if (!m_ArtMul.Load(UOFilePath("art.mul")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 1)");
         return false;
     }
     if (!m_GumpIdx.Load(UOFilePath("gumpidx.mul")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 2)");
         return false;
     }
     if (!m_GumpMul.Load(UOFilePath("gumpart.mul")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 3)");
         return false;
     }
     if (!m_SoundIdx.Load(UOFilePath("soundidx.mul")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 4)");
         return false;
     }
     if (!m_SoundMul.Load(UOFilePath("sound.mul")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 5)");
         return false;
     }
     if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 6)");
         return false;
     }
     if (!m_MultiMul.Load(UOFilePath("multi.mul")))
     {
+        Warning(Data, "LoadWithMul: required file missing (case 7)");
         return false;
     }
 
@@ -903,10 +933,12 @@ bool CFileManager::LoadWithUop()
     {
         if (!m_ArtIdx.Load(UOFilePath("artidx.mul")))
         {
+            Warning(Data, "LoadWithUop: required pack/mul missing (line 0)");
             return false;
         }
         if (!m_ArtMul.Load(UOFilePath("art.mul")))
         {
+            Warning(Data, "LoadWithUop: required pack/mul missing (line 1)");
             return false;
         }
     }
@@ -938,10 +970,12 @@ bool CFileManager::LoadWithUop()
     {
         if (!m_GumpIdx.Load(UOFilePath("gumpidx.mul")))
         {
+            Warning(Data, "LoadWithUop: required pack/mul missing (line 2)");
             return false;
         }
         if (!m_GumpMul.Load(UOFilePath("gumpart.mul")))
         {
+            Warning(Data, "LoadWithUop: required pack/mul missing (line 3)");
             return false;
         }
 
@@ -1007,10 +1041,12 @@ bool CFileManager::LoadWithUop()
     {
         if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
         {
+            Warning(Data, "LoadWithUop: required pack/mul missing (line 4)");
             return false;
         }
         if (!m_MultiMul.Load(UOFilePath("multi.mul")))
         {
+            Warning(Data, "LoadWithUop: required pack/mul missing (line 5)");
             return false;
         }
     }
@@ -1023,13 +1059,16 @@ bool CFileManager::LoadWithUop()
     // subset - the anim*.mul exclusion only covers the legacy animation set)
     if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
     {
+        Warning(Data, "LoadWithUop: required pack/mul missing (line 6)");
         return false;
     }
 
     /* Эти файлы не используются самой последней версией клиента 7.0.52.2
 	if (!m_tileart.Load(UOFilePath("tileart.uop")))
+	Warning(Data, "LoadWithUop: required pack/mul missing (line 7)");
 	return false;
 	if (!m_AnimationSequence.Load(UOFilePath("AnimationSequence.uop")))
+	Warning(Data, "LoadWithUop: required pack/mul missing (line 8)");
 	return false;
 	*/
 

@@ -89,7 +89,7 @@ static int
 vfs_store_read_blob(const fs_path &blobs_dir, const VfsAsset &asset, std::vector<uint8_t> &out)
 {
     const bool ranged = asset.blob_offset != 0;
-    const uint64_t expected =
+    uint64_t expected =
         ranged ? vfs_asset_range_len(asset) : (asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl));
     const auto path = fs_path_join(blobs_dir, asset.blob);
     FILE *fp = fopen(fs_path_ascii(path), "rb");
@@ -126,13 +126,26 @@ vfs_store_read_blob(const fs_path &blobs_dir, const VfsAsset &asset, std::vector
     }
     else if (size != expected)
     {
-        LOG_ERROR(
-            "blob size mismatch: %s (got %" PRIu64 ", expected %" PRIu64 ")",
-            asset.blob.c_str(),
-            size,
-            expected);
-        fclose(fp);
-        return 2;
+#if defined(XUO_EMSC)
+        // web: whole-file transfers may be served by a normalizing proxy in
+        // rebuilt (all blocks stored) form, which is larger than the
+        // manifest's original decompressed size. Accept the bigger artifact
+        // whole (the payload is the entire file as stored).
+        if (!ranged && size > expected)
+        {
+            expected = size;
+        }
+        else
+#endif
+        {
+            LOG_ERROR(
+                "blob size mismatch: %s (got %" PRIu64 ", expected %" PRIu64 ")",
+                asset.blob.c_str(),
+                size,
+                expected);
+            fclose(fp);
+            return 2;
+        }
     }
     out.resize(size_t(expected));
     const size_t read = size ? fread(out.data(), 1, out.size(), fp) : 0;
