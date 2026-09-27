@@ -159,7 +159,7 @@ static void GetRadarMapBlockForMap(
     {
         for (int y = 0; y < 8; y++)
         {
-            const const MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
+            const MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
             RADAR_MAP_CELLS &outCell = mb.Cells[x][y];
             outCell.Graphic = inCell.TileID;
             outCell.Hue = 0u;

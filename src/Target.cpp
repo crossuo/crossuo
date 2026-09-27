@@ -745,7 +745,7 @@ std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileN
             #else
                 MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
             #endif
-            const const MAP_CELLS &cell = pmb->Cells[(tileY * 8) + tileX];
+            const MAP_CELLS &cell = pmb->Cells[(tileY * 8) + tileX];
             land.Graphic = (uint16_t)(cell.TileID & 0x3FFF);
             land.Z = cell.Z;
             land.Land = true;

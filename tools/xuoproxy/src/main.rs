@@ -364,11 +364,15 @@ async fn warm_uop_transfers(state: &AppState)
                 None => continue,
             },
         };
-        // nested manifests
+        // nested manifests - the regex matches the whole tag, the name is
+        // an attribute (using the tag itself as the name fetched garbage
+        // urls that failed silently: the warm pass warmed 0 transfers)
         for caps in manifest_n_re().find_iter(&text)
         {
-            let n = caps.as_str();
-            queue.push((rpath.clone(), n.to_string()));
+            if let Some(n) = attr_of(caps.as_str(), "n")
+            {
+                queue.push((rpath.clone(), n));
+            }
         }
         // loose .uop files
         for cap in normalize::manifest_loose_uop_tails(&text, &rpath)
@@ -748,11 +752,22 @@ async fn manifest_response(state: &AppState, tail: &str) -> Response
     // plan, fetch caps and materialized file sizes then match what the
     // proxy serves. Compressed NON-uop transfers (anim muls, statics, ...)
     // keep their ct: the client downloads and inflates those itself.
-    if let Ok(text) = std::str::from_utf8(&body)
+    //
+    // Most manifests transfer ct=1 (zlib): inflate first, rewrite the text,
+    // re-compress - the client picks the transform from the parent's ct and
+    // expects a zlib stream. Only a REWRITTEN manifest changes bytes; a
+    // compressed body that is not a manifest passes through untouched.
+    let compressed = normalize::looks_zlib(&body);
+    let mut plain = body.clone();
+    if compressed
+    {
+        plain = normalize::zlib_inflate(&body).unwrap_or(body.clone());
+    }
+    if let Ok(text) = std::str::from_utf8(&plain)
     {
         if text.trim_start().starts_with('<')
         {
-            let rewritten = rewrite_links(&body, &HeaderMap::new());
+            let rewritten = rewrite_links(&plain, &HeaderMap::new());
             let text = String::from_utf8_lossy(&rewritten).into_owned();
             let rpath = tail.split('/').next().unwrap_or("base");
             let tails = normalize::manifest_loose_uop_tails(&text, rpath);
@@ -776,9 +791,22 @@ async fn manifest_response(state: &AppState, tail: &str) -> Response
                 }
             }
             let sizes = normalized_sizes().lock().expect("sizes").clone();
-            body = normalize::rewrite_manifest_uop_entries(&text, &sizes);
+            let rewritten_text = normalize::rewrite_manifest_uop_entries(&text, &sizes);
+            body = if compressed
+            {
+                normalize::zlib_deflate(&rewritten_text)
+            }
+            else
+            {
+                rewritten_text
+            };
             status = 200;
-            println!("xuoproxy: manifest {tail} normalized ({} known sizes)", sizes.len());
+            println!(
+                "xuoproxy: manifest {tail} normalized ({} known sizes{}, {} bytes)",
+                sizes.len(),
+                if compressed { ", ct=1 recompressed" } else { "" },
+                body.len()
+            );
         }
     }
 

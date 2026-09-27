@@ -29,6 +29,16 @@ pub fn zlib_inflate(data: &[u8]) -> Option<Vec<u8>>
     Some(out)
 }
 
+pub fn zlib_deflate(data: &[u8]) -> Vec<u8>
+{
+    use std::io::Write;
+    let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+    encoder
+        .write_all(data)
+        .and_then(|_| encoder.finish())
+        .unwrap_or_else(|_| data.to_vec())
+}
+
 pub fn looks_zlib(data: &[u8]) -> bool
 {
     // 0x78 followed by a check byte making the first two bytes a valid
@@ -417,13 +427,41 @@ mod tests
         sizes.insert(tail.clone(), 176977098u64);
         let out = rewrite_manifest_uop_entries(text, &sizes);
         let text = String::from_utf8(out).unwrap();
-        assert!(text.contains("176977098"), "size not rewritten: {text}");
-        eprintln!("DEBUG rewritten: {text}");
-        eprintln!("DEBUG tail: {tail}");
+        // the client parses ul/cl with Hex64Attribute: sizes must be hex
+        let want = format!("{:x}", 176977098u64);
+        assert!(text.contains(&format!("ul=\"{want}\"")), "size not rewritten: {text}");
         assert!(text.contains("ct=\"0\""));
         assert!(!text.contains("4db77c3"), "old size still present: {text}");
+        // the tag must stay well formed: exactly one of each attribute, no
+        // doubled attributes from a value-span replacement
+        assert_eq!(text.matches("ul=").count(), 1, "mangled tag: {text}");
+        assert_eq!(text.matches("cl=").count(), 1, "mangled tag: {text}");
+        assert_eq!(text.matches("ct=").count(), 1, "mangled tag: {text}");
+        assert!(!text.contains("\"\""), "mangled tag: {text}");
         // and the tail lookup helper agrees
         assert!(manifest_loose_uop_tails(text.as_str(), "base").contains(&tail));
+    }
+
+    #[test]
+    fn manifest_rewrite_inserts_missing_attrs()
+    {
+        // gumpart ships with no ct/cl at all (plain transfer)
+        let text = "<files><f n=\"gumpartLegacyMUL.uop\" ul=\"4db77c3\" t=\"1\" rh=\"2\" /></files>";
+        let (ph, sh) = uop_name_hashes("gumpartLegacyMUL.uop");
+        let tail = format!("base/unpacked/{:08x}{:08x}", ph, sh);
+        let mut sizes = std::collections::HashMap::new();
+        sizes.insert(tail.clone(), 176977098u64);
+        let out = String::from_utf8(rewrite_manifest_uop_entries(text, &sizes)).unwrap();
+        let want = format!("{:x}", 176977098u64);
+        assert!(out.contains(&format!("ct=\"0\"")), "ct not inserted: {out}");
+        assert!(out.contains(&format!("cl=\"{want}\"")), "cl not inserted: {out}");
+        assert!(out.contains(&format!("ul=\"{want}\"")), "ul not rewritten: {out}");
+        assert!(out.contains("n=\"gumpartLegacyMUL.uop\""), "n attribute mangled: {out}");
+        // well formed: exactly one of each attribute, no doubled quotes
+        assert_eq!(out.matches("ul=").count(), 1, "mangled tag: {out}");
+        assert_eq!(out.matches("cl=").count(), 1, "mangled tag: {out}");
+        assert_eq!(out.matches("ct=").count(), 1, "mangled tag: {out}");
+        assert!(!out.contains("\"\""), "mangled tag: {out}");
     }
 
     #[test]
@@ -605,118 +643,6 @@ pub fn uop_name_hashes(name: &str) -> (u32, u32)
     hashlittle2(lower.as_bytes(), 0, 0)
 }
 
-// ---------------------------------------------------------------------------
-// manifest normalization: compressed transfers the proxy serves plain
-// ---------------------------------------------------------------------------
-
-/// Result of normalizing one MythicMFT manifest text.
-pub struct ManifestRewrite
-{
-    pub text: String,
-    /// blob tails ("<rpath>/<pack_rpath>/<ph><sh>" or
-    /// "<rpath>/unpacked/<ph><sh>") this proxy serves decompressed/plain
-    pub registered: Vec<String>,
-}
-
-/// Rewrites whole-file `.uop` transfers that this proxy serves in
-/// normalized (all-blocks-stored) form: ct -> 0 and ul/cl -> the normalized
-/// size, so the client's plan, fetch caps and materialized sizes all agree.
-/// `sizes` reports the normalized size for a blob tail (None = not
-/// (yet) normalized: the entry passes through unchanged).
-pub fn normalize_manifest(
-    text: &str,
-    manifest_rpath: &str,
-    sizes: &dyn Fn(&str) -> Option<u64>,
-) -> ManifestRewrite
-{
-    let mut registered = Vec::new();
-    let mut edits: Vec<(usize, usize, String)> = Vec::new();
-
-    let bytes = text.as_bytes();
-    // locate tag spans cheaply: walk '<'..'>' tokens
-    let mut spans: Vec<(usize, usize)> = Vec::new();
-    let mut i = 0usize;
-    while i < bytes.len()
-    {
-        if bytes[i] == b'<'
-        {
-            if let Some(end) = text[i..].find('>')
-            {
-                spans.push((i, i + end + 1));
-                i += end + 1;
-                continue;
-            }
-        }
-        i += 1;
-    }
-
-    // context walk: track the enclosing packs/p rpath
-    let mut in_packs = false;
-    let mut pack_rpath: Option<String> = None;
-    for (start, end) in &spans
-    {
-        let tag = &text[*start..*end];
-        if tag.starts_with("<packs")
-        {
-            in_packs = true;
-        }
-        else if tag.starts_with("</packs")
-        {
-            in_packs = false;
-            pack_rpath = None;
-        }
-        else if in_packs && tag.starts_with("<p ") || (in_packs && tag.starts_with("<p>"))
-        {
-            pack_rpath = extract_attr(tag, "rpath");
-        }
-        else if !in_packs && (tag.starts_with("<f ") || tag.starts_with("<f>"))
-        {
-            // whole-file transfers only: normalized uops are served with
-            // their blocks stored, so the manifest must declare the
-            // normalized size (the client's fetch cap and materializer use
-            // it). Pack parts keep their per-part encoding: the client
-            // inflates those itself.
-            let name = extract_attr(tag, "n");
-            let name = name.unwrap_or_default();
-            if !name.to_ascii_lowercase().ends_with(".uop")
-            {
-                continue;
-            }
-            let (ph, sh) = uop_name_hashes(&name);
-            let tail = format!(
-                "{}/unpacked/{:08x}{:08x}",
-                manifest_rpath, ph, sh
-            );
-            if let Some(size) = sizes(&tail)
-            {
-                registered.push(tail.clone());
-                let mut new = tag.to_string();
-                if let Some(cl_at) = find_attr_span(&new, "cl")
-                {
-                    new.replace_range(cl_at, &format!("cl=\"{}\"", size));
-                }
-                if let Some(ul_at) = find_attr_span(&new, "ul")
-                {
-                    new.replace_range(ul_at, &format!("ul=\"{}\"", size));
-                }
-                if let Some(ct_at) = find_attr_span(&new, "ct")
-                {
-                    new.replace_range(ct_at, "ct=\"0\"");
-                }
-                edits.push((*start, *end, new));
-            }
-        }
-    }
-
-    // apply edits back-to-front
-    let mut out = text.to_string();
-    for (start, end, replacement) in edits.iter().rev()
-    {
-        out.replace_range(*start..*end, replacement);
-    }
-    ManifestRewrite { text: out, registered }
-}
-
 pub fn extract_attr(tag: &str, name: &str) -> Option<String>
 {
     let needle = format!("{}=\"", name);
@@ -773,6 +699,32 @@ fn f_tag_regex() -> &'static regex::Regex
 
 /// rewrites one whole-file manifest entry to the normalized (all blocks
 /// stored, transferred uncompressed) shape: ct=0, cl=ul=size
+/// the client parses ul/cl with Hex64Attribute: sizes in MythicMFT are hex
+/// strings. Sets the attribute by replacement when present, insertion (after
+/// the n attribute, which every entry carries) otherwise - plain transfers
+/// like gumpartLegacyMUL.uop ship without ct/cl at all. The replacement span
+/// is the FULL attribute (name="value"): replacing just the value span with
+/// a full attribute mangles the tag (ul="ul=\"...\"").
+fn set_attr_hex(tag: &mut String, name: &str, value: u64)
+{
+    let encoded = format!("{value:x}");
+    let needle = format!("{name}=\"");
+    if let Some(at) = tag.find(&needle)
+    {
+        let value_start = at + needle.len();
+        let rest = &tag[value_start..];
+        let end = rest.find('"').expect("unterminated manifest attribute");
+        let span = at..value_start + end + 1;
+        tag.replace_range(span, &format!("{name}=\"{encoded}\""));
+        return;
+    }
+    if let Some(n_span) = find_attr_span(tag, "n")
+    {
+        let at = n_span.end + 1; // past the closing quote of n="..."
+        tag.insert_str(at, &format!(" {name}=\"{encoded}\""));
+    }
+}
+
 pub fn rewrite_manifest_entry(text: &str, name: &str, size: u64) -> Option<String>
 {
     for m in f_tag_regex().find_iter(text)
@@ -783,19 +735,9 @@ pub fn rewrite_manifest_entry(text: &str, name: &str, size: u64) -> Option<Strin
             continue;
         }
         let mut new = tag.to_string();
-        for attr in ["ct", "cl", "ul"]
-        {
-            if let Some(span) = find_attr_span(&new, attr)
-            {
-                let value = match attr
-                {
-                    "ct" => "0".to_string(),
-                    _ => format!("{size}"),
-                };
-                let replacement = format!("{attr}=\"{value}\"");
-                new.replace_range(span, &replacement);
-            }
-        }
+        set_attr_hex(&mut new, "ct", 0);
+        set_attr_hex(&mut new, "cl", size);
+        set_attr_hex(&mut new, "ul", size);
         return Some(text.replacen(tag, &new, 1));
     }
     None
@@ -830,19 +772,9 @@ pub fn rewrite_manifest_uop_entries(text: &str, sizes: &HashMap<String, u64>) ->
         if let Some(size) = size
         {
             let mut new = tag.to_string();
-            for attr in ["ct", "cl", "ul"]
-            {
-                if let Some(span) = find_attr_span(&new, attr)
-                {
-                    let value = match attr
-                    {
-                        "ct" => "0".to_string(),
-                        _ => format!("{size}"),
-                    };
-                    let replacement = format!("{attr}=\"{value}\"");
-                    new.replace_range(span, &replacement);
-                }
-            }
+            set_attr_hex(&mut new, "ct", 0);
+            set_attr_hex(&mut new, "cl", size);
+            set_attr_hex(&mut new, "ul", size);
             out.push_str(&text[last..m.start()]);
             out.push_str(&new);
             last = m.end();

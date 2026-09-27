@@ -76,7 +76,28 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
             Warning(Data, "UOFileReader::GetGumpPixels could not fetch the stored gump block");
             return {};
         }
-        lookupList = reinterpret_cast<const uint32_t *>(storedPayload->data());
+        // skeleton-baked entries have no dims: the payload's first words
+        // carry them, exactly like the compressed branch above
+        if (io.Width == 0 || io.Height == 0)
+        {
+            uint32_t width = 0;
+            uint32_t height = 0;
+            memcpy(&width, storedPayload->data(), sizeof(width));
+            memcpy(&height, storedPayload->data() + 4, sizeof(height));
+            constexpr uint32_t maxGumpDimension = 2048;
+            if (width == 0 || height == 0 || width > maxGumpDimension || height > maxGumpDimension)
+            {
+                Warning(
+                    Data,
+                    "UOFileReader::GetGumpPixels unsupported gump layout (w=%u h=%u)",
+                    width,
+                    height);
+                return {};
+            }
+            io.Width = int32_t(width);
+            io.Height = int32_t(height);
+        }
+        lookupList = reinterpret_cast<const uint32_t *>(storedPayload->data() + 8);
         halfLen = int((storedPayload->size() - 8) >> 2);
         dataStart = storedPayload->data() + 8;
     }
@@ -136,6 +157,13 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
             uint16_t a = (val != 0u ? 0x8000 : 0) | val;
 
             int count = gmul[i].Run;
+
+            // malformed blocks (or a half-written streamed one) must not
+            // run past the pixel buffer - clamp instead of overflowing
+            if (pos + count > blocksize)
+            {
+                count = blocksize - pos;
+            }
 
             for (int j = 0; j < count; j++)
             {

@@ -1889,31 +1889,46 @@ void CFileManager::UopReadIndexFile(
                 // decoding, which the gump read path does on first use
                 if (block->Flags == 0)
                 {
-                    uopFile.ResetPtr();
-                    uopFile.Move(checked_cast<intptr_t>(block->Offset + block->MetadataSize));
-
-                    const uint32_t width = uopFile.ReadUInt32LE();
-                    const uint32_t height = uopFile.ReadUInt32LE();
-
-                    constexpr uint32_t maxGumpDimension = 2048;
-                    if (width > 0 && width <= maxGumpDimension && height > 0 && height <= maxGumpDimension)
+#if defined(XUO_EMSC)
+                    if (state_base != SIZE_MAX)
                     {
-                        obj->Address += 8;
-                        obj->DataSize -= 8;
-                        obj->Width = int32_t(width);
-                        obj->Height = int32_t(height);
-                    }
-                    else
-                    {
-                        Warning(
-                            Data,
-                            "gump %i: unsupported payload layout (w=%u h=%u), entry ignored",
-                            i,
-                            width,
-                            height);
+                        // web: the pack is a table-only skeleton - the payload
+                        // bytes live in the fetch layer and the virtual table
+                        // offset reads the mapping's zero page. Keep the block
+                        // (its hash drives the punctual fetch) with Address 0;
+                        // the dims resolve punctually on first use
                         obj->Address = 0;
                         obj->DataSize = 0;
-                        obj->UopBlock = nullptr;
+                    }
+                    else
+#endif
+                    {
+                        uopFile.ResetPtr();
+                        uopFile.Move(checked_cast<intptr_t>(block->Offset + block->MetadataSize));
+
+                        const uint32_t width = uopFile.ReadUInt32LE();
+                        const uint32_t height = uopFile.ReadUInt32LE();
+
+                        constexpr uint32_t maxGumpDimension = 2048;
+                        if (width > 0 && width <= maxGumpDimension && height > 0 && height <= maxGumpDimension)
+                        {
+                            obj->Address += 8;
+                            obj->DataSize -= 8;
+                            obj->Width = int32_t(width);
+                            obj->Height = int32_t(height);
+                        }
+                        else
+                        {
+                            Warning(
+                                Data,
+                                "gump %i: unsupported payload layout (w=%u h=%u), entry ignored",
+                                i,
+                                width,
+                                height);
+                            obj->Address = 0;
+                            obj->DataSize = 0;
+                            obj->UopBlock = nullptr;
+                        }
                     }
                 }
             }

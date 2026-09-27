@@ -474,10 +474,32 @@ bool vfs_gump_dims_resolve(CIndexObject *io)
 {
     if (io == nullptr || !vfs_enabled() || !vfs_plan_ready())
         return false;
-    if (io->Address == 0u)
-        return false; // nodraw hole: genuinely no asset
     if (io->Width != 0 && io->Height != 0)
         return true; // materialized at index build or already resolved
+#if defined(XUO_EMSC)
+    // web: there are no fault-driven probes - the pack is a table-only
+    // skeleton and a raw read of io->Address returns the mapping's zero
+    // page. Resolve stored-block dims through the punctual fetch instead;
+    // the payload lands in the LRU, so the pixel fetch that follows is a
+    // cache hit. Compressed blocks keep decoding at the read path.
+    if (io->UopBlock != nullptr && io->UopBlock->Flags == 0)
+    {
+        const auto payload = vfs_asset_fetch_block_payload(io->UopBlock->Hash, io->UopBlock, false);
+        if (payload == nullptr || payload->size() < 8)
+            return false;
+        uint32_t width = 0, height = 0;
+        memcpy(&width, payload->data(), sizeof(width));
+        memcpy(&height, payload->data() + 4, sizeof(height));
+        constexpr uint32_t maxGumpDimension = 2048;
+        if (width == 0 || height == 0 || width > maxGumpDimension || height > maxGumpDimension)
+            return false;
+        io->Width = int32_t(width);
+        io->Height = int32_t(height);
+        return true; // Address stays 0: the pixels come from the fetch layer
+    }
+#endif
+    if (io->Address == 0u)
+        return false; // nodraw hole: genuinely no asset
     volatile const uint8_t *probe = reinterpret_cast<const volatile uint8_t *>(io->Address);
     (void)probe[0]; // the fault fetches the covering block synchronously
     (void)probe[4];

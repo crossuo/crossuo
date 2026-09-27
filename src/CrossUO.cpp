@@ -4035,10 +4035,19 @@ CSprite *CGame::ExecuteGump(uint16_t id)
     vfs_gump_dims_resolve(&io); // streamed hole-baked gumps resolve dims on first use
     if (io.UserData == nullptr)
     {
+#if defined(XUO_EMSC)
+        // web: skeleton-baked gumps keep Address 0 (the payload lives in
+        // the fetch layer); only holes (no block at all) are nodraw
+        if (io.Address == 0u && io.UopBlock == nullptr)
+        {
+            return nullptr;
+        }
+#else
         if (io.Address == 0u)
         {
             return nullptr;
         }
+#endif
 
         io.UserData = g_UOFileReader.ReadGump(io);
         if (io.UserData != nullptr)

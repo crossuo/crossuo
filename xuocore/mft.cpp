@@ -165,6 +165,11 @@ static mft_result mft_download(
 
     size_t ul = entry.uncompressed_len;
     assert(ul < *buffer_size);
+    (void)ul;
+    // the fetch below clobbers *buffer_size with the downloaded byte count:
+    // capture the real capacity up front (a rewritten manifest may grow past
+    // the declared ul, so decompression must be allowed up to the capacity)
+    const size_t capacity = *buffer_size;
 
     size_t bytes = 0;
     switch (entry.compression_type)
@@ -195,13 +200,24 @@ static mft_result mft_download(
                     int(entry.compressed_len),
                     int(cl));
             }
-            auto ol = checked_cast<uLongf>(ul);
+            auto ol = checked_cast<uLongf>(capacity);
             auto il = checked_cast<uLongf>(cl);
             int z_err = uncompress((unsigned char *)buffer, &ol, (unsigned char *)cbuffer, il);
             if (z_err != Z_OK)
             {
                 LOG_ERROR("(%s)%s: decompression error %d", entry.name, upath, z_err);
                 return mft_decompress_error;
+            }
+            if (ol != entry.uncompressed_len)
+            {
+                // normalizing origins may rewrite manifests slightly larger
+                // than the declared ul; the declared size is advisory
+                LOG_WARN(
+                    "(%s)%s: decompressed len mismatch: ul = %d, blob = %d",
+                    entry.name,
+                    upath,
+                    int(entry.uncompressed_len),
+                    int(ol));
             }
 
             *buffer_size = ol;
