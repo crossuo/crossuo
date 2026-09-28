@@ -1007,7 +1007,14 @@ static bool s_artArrayDisabled = false; // set when the GL limits are hit
 static int s_artArrayFree[ART_ARRAY_MAX_LAYERS];
 static int s_artArrayFreeCount = 0;
 
-static const bool g_artArrayLog = getenv("XUO_ART_ARRAY_LOG") != nullptr;
+// function-local static (NOT a file-scope const): on wasm the env var is set
+// inside main(), which runs after all namespace-scope initializers - a file
+// static would silently read the pre-main environment and never enable
+static bool artarray_log_enabled()
+{
+    static const bool enabled = getenv("XUO_ART_ARRAY_LOG") != nullptr;
+    return enabled;
+}
 
 void Render_ArtArrayRelease(int layer)
 {
@@ -1018,7 +1025,7 @@ void Render_ArtArrayRelease(int layer)
     if (s_artArrayFreeCount < (int)countof(s_artArrayFree))
     {
         s_artArrayFree[s_artArrayFreeCount++] = layer;
-        if (g_artArrayLog)
+        if (artarray_log_enabled())
         {
             fprintf(stderr, "[artarray] release layer=%d free=%d used=%d\n", layer, s_artArrayFreeCount, s_artArrayUsed);
         }
@@ -1103,6 +1110,73 @@ static void webgl_CopyImageSubData(
     GL_CHECK(glBindTexture(dstBindTarget, savedTex));
     GL_CHECK(glActiveTexture(savedActive));
 }
+
+// initialize every layer of the array through an FBO clear. WebGL2 textures
+// allocated with null data are UNINITIALIZED, and the first copyTexSubImage
+// into any layer then forces the browser to zero-fill the WHOLE level
+// ("forcing the browser to clear it. This may be slow" / "incurring lazy
+// initialization") - a multi-hundred-MB stall on real drivers at the worst
+// possible moment (the first world draws, on the GL thread). Clearing each
+// layer once here marks the texture initialized per the WebGL2
+// lazy-initialization rules, so the copy emulation never triggers it, and
+// the backing store is committed through small explicit clears instead of
+// one driver-surprise allocation (SwiftShader serves lazily-backed zero
+// pages, so this cost only shows on real GPUs).
+static void webgl_ArtArrayInitLayers(uint32_t texture, int layers)
+{
+    if (texture == 0 || layers <= 0)
+    {
+        return;
+    }
+    GLint savedFbo = 0;
+    GL_CHECK(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &savedFbo));
+    GLint savedActive = GL_TEXTURE0;
+    GL_CHECK(glGetIntegerv(GL_ACTIVE_TEXTURE, &savedActive));
+    GLfloat savedClear[4] = {0, 0, 0, 0};
+    GL_CHECK(glGetFloatv(GL_COLOR_CLEAR_VALUE, savedClear));
+    GLboolean savedMask[4] = {GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE};
+    GL_CHECK(glGetBooleanv(GL_COLOR_WRITEMASK, savedMask));
+    const GLboolean savedScissor = glIsEnabled(GL_SCISSOR_TEST);
+    GL_CHECK(glDisable(GL_SCISSOR_TEST));
+    GL_CHECK(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+    GL_CHECK(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+
+    GLuint fbo = 0;
+    GL_CHECK(glGenFramebuffers(1, &fbo));
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+    for (int layer = 0; layer < layers; ++layer)
+    {
+        GL_CHECK(glFramebufferTextureLayer(
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texture, 0, layer));
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            continue;
+        }
+        GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
+    }
+    GL_CHECK(glDeleteFramebuffers(1, &fbo));
+
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, savedFbo));
+    GL_CHECK(glColorMask(savedMask[0], savedMask[1], savedMask[2], savedMask[3]));
+    GL_CHECK(glClearColor(savedClear[0], savedClear[1], savedClear[2], savedClear[3]));
+    if (savedScissor)
+    {
+        GL_CHECK(glEnable(GL_SCISSOR_TEST));
+    }
+    GL_CHECK(glActiveTexture(savedActive));
+}
+
+// WebGL2 reports texture allocation failures only through glGetError (GL_CHECK
+// is compiled out in release): a dead array would leave every sprite and land
+// tile unrendered (black world) while the client keeps running, so callers
+// fall back to individual textures instead
+static bool webgl_ArtArrayAllocOk()
+{
+    glGetError(); // flush any STALE pending error (release builds consume no
+                  // errors anywhere else): only this alloc's result must count,
+                  // an unrelated old error would permanently kill the array
+    return glGetError() == GL_NO_ERROR;
+}
 #define glCopyImageSubData webgl_CopyImageSubData
 #endif // XUO_EMSC
 
@@ -1141,8 +1215,18 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
     {
         GLint maxLayers = 1024;
         GL_CHECK(glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxLayers));
+#if defined(XUO_EMSC)
+        // a real driver must commit the array's backing store up front:
+        // 1024 layers of 256x256 RGBA8 is ~256MB of VRAM at the FIRST world
+        // draw. Start small and let the grow path below scale on demand;
+        // SwiftShader (headless) serves lazily-backed zero pages, so this
+        // cost is invisible there and only hits real GPUs
+        const int initialLayers = 256;
+#else
+        const int initialLayers = ART_ARRAY_INITIAL_LAYERS;
+#endif
         s_artArrayCap =
-            (ART_ARRAY_INITIAL_LAYERS < maxLayers) ? ART_ARRAY_INITIAL_LAYERS : maxLayers;
+            (initialLayers < maxLayers) ? initialLayers : maxLayers;
         if (s_artArrayCap < 1)
         {
             s_artArrayDisabled = true;
@@ -1159,6 +1243,19 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
             s_artArrayCap, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+#if defined(XUO_EMSC)
+        if (!webgl_ArtArrayAllocOk())
+        {
+            GL_CHECK(glDeleteTextures(1, &s_artArrayTexture));
+            s_artArrayTexture = 0;
+            s_artArrayDisabled = true;
+            Warning(
+                Renderer,
+                "art texture array allocation failed, sprites fall back to individual textures");
+            return place;
+        }
+        webgl_ArtArrayInitLayers(s_artArrayTexture, s_artArrayCap);
+#endif
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
         GL_CHECK(glActiveTexture(GL_TEXTURE0));
@@ -1191,6 +1288,22 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
             newCap, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+#if defined(XUO_EMSC)
+        if (!webgl_ArtArrayAllocOk())
+        {
+            // keep the old array: already-placed sprites stay merged, only
+            // the overflow falls back to individual textures
+            GL_CHECK(glDeleteTextures(1, &newArray));
+            GL_CHECK(glActiveTexture(GL_TEXTURE0));
+            s_artArrayDisabled = true;
+            Warning(
+                Renderer,
+                "art texture array grow failed (%d layers), new sprites fall back to individual textures",
+                newCap);
+            return place;
+        }
+        webgl_ArtArrayInitLayers(newArray, newCap);
+#endif
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
         GL_CHECK(glCopyImageSubData(
@@ -1201,6 +1314,10 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glDeleteTextures(1, &s_artArrayTexture));
         s_artArrayTexture = newArray;
         s_artArrayCap = newCap;
+        if (artarray_log_enabled())
+        {
+            fprintf(stderr, "[artarray] grow cap=%d used=%d\n", s_artArrayCap, s_artArrayUsed);
+        }
 
         GL_CHECK(glActiveTexture(GL_TEXTURE0));
     }
@@ -1219,7 +1336,7 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         layer = s_artArrayUsed++;
         reused = false;
     }
-    if (g_artArrayLog)
+    if (artarray_log_enabled())
     {
         fprintf(
             stderr,

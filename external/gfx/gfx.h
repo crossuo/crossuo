@@ -83,7 +83,7 @@
         #define GL_MAX_ARRAY_TEXTURE_LAYERS 0x88FF
     #endif
     #ifndef GL_TEXTURE_BINDING_2D_ARRAY
-        #define GL_TEXTURE_BINDING_2D_ARRAY 0x8C38
+        #define GL_TEXTURE_BINDING_2D_ARRAY 0x8C1D
     #endif
     #ifndef GL_TEXTURE_BINDING_3D
         #define GL_TEXTURE_BINDING_3D 0x806A
