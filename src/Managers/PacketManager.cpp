@@ -998,7 +998,13 @@ PACKET_HANDLER(EnterWorld)
 
     Info(Network, "player 0x%08X entered the world", serial);
 
-    g_MapManager.Init();
+    g_MapManager.Reset();
+
+    // the map groups stream through the budgeted Init passes (the game
+    // screen re-runs Init(true) per frame): a full synchronous load here
+    // would stall packet dispatch on web, where each block can fault to a
+    // punctual network fetch
+    g_MapManager.Init(true);
     g_MapManager.AddRender(g_Player);
 
     g_Game.LoadStartupConfig(ConfigSerial);

@@ -41,6 +41,7 @@ public:
     void GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb);
     void GetMapZ(int x, int y, int &groundZ, int &staticZ);
     void Init(bool delayed = false);
+    void Reset();
     CMapBlock *GetBlock(uint32_t index);
     CMapBlock *AddBlock(uint32_t index);
     void DeleteBlock(uint32_t index);

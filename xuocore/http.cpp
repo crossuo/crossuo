@@ -95,6 +95,13 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
         {
             const x = new XMLHttpRequest();
             x.open('GET', url, false); // sync: allowed on workers
+            // fixed transfer guard, the web counterpart of the curl
+            // transport's 10s connect + 30s low-speed aborts: a sync XHR has
+            // no split stages, so one total bound stands in for both. Without
+            // it a stalled same-origin request parks the calling pthread
+            // forever (punctual in-game fetches included), freezing the
+            // client with no way to time out
+            x.timeout = 60000;
             if (rangeHeader)
                 x.setRequestHeader('Range', rangeHeader);
             x.responseType = 'arraybuffer';

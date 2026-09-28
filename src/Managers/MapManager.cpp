@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include "MapManager.h"
+#include <SDL_timer.h> // Init's wall-clock load budget (g_Ticks is frame-cached)
 #include "GumpManager.h"
 #include <common/checksum.h>
 #include <xuocore/uodata.h>
@@ -175,7 +176,13 @@ void CMapManager::UpdatePatched()
         }
     }
 
-    Init(false);
+    // the block table must be rebuilt for the new patch addresses, but the
+    // terrain reload streams through the budgeted Init(true) passes (the
+    // game screen re-runs Init(true) per frame): this runs inside packet
+    // dispatch (0xBF map diffs) and a full synchronous load stalls the whole
+    // client on web, where each block can fault to a punctual network fetch
+    Reset();
+    Init(true);
     for (CRenderWorldObject *item : objectsList)
     {
         AddRender(item);
@@ -396,6 +403,30 @@ void CMapManager::ClearUsedBlocks()
     }
 }
 
+// drops every loaded block and rebuilds the block table for the current
+// map's dimensions without loading anything: the table reset half of
+// Init(false), split out so callers that stream the actual blocks through
+// budgeted Init(true) passes can still (re)initialise the table safely (a
+// stale table hands out dangling block pointers after a map switch)
+void CMapManager::Reset()
+{
+    const int map = GetActualMap();
+    if (m_Blocks != nullptr)
+    {
+        ClearUsedBlocks();
+        delete[] m_Blocks;
+        m_Blocks = nullptr;
+    }
+
+    MaxBlockIndex = g_MapBlockSize[map].Width * g_MapBlockSize[map].Height;
+    m_Blocks = new CMapBlock *[MaxBlockIndex];
+    memset(&m_Blocks[0], 0, sizeof(CMapBlock *) * MaxBlockIndex);
+    ClearBlockAccess();
+    PatchesCount = 0;
+    memset(&m_MapPatchCount[0], 0, sizeof(m_MapPatchCount));
+    memset(&m_StaticPatchCount[0], 0, sizeof(m_StaticPatchCount));
+}
+
 void CMapManager::Init(bool delayed)
 {
     if (g_Player == nullptr)
@@ -403,23 +434,10 @@ void CMapManager::Init(bool delayed)
         return;
     }
 
-    int map = GetActualMap();
+    const int map = GetActualMap();
     if (!delayed)
     {
-        if (m_Blocks != nullptr)
-        {
-            ClearUsedBlocks();
-            delete[] m_Blocks;
-            m_Blocks = nullptr;
-        }
-
-        MaxBlockIndex = g_MapBlockSize[map].Width * g_MapBlockSize[map].Height;
-        m_Blocks = new CMapBlock *[MaxBlockIndex];
-        memset(&m_Blocks[0], 0, sizeof(CMapBlock *) * MaxBlockIndex);
-        ClearBlockAccess();
-        PatchesCount = 0;
-        memset(&m_MapPatchCount[0], 0, sizeof(m_MapPatchCount));
-        memset(&m_StaticPatchCount[0], 0, sizeof(m_StaticPatchCount));
+        Reset();
     }
 
     const int XY_Offset = 30; //70;
@@ -448,8 +466,11 @@ void CMapManager::Init(bool delayed)
         maxBlockY = g_MapBlockSize[map].Height - 1;
     }
 
-    uint32_t ticks = g_Ticks;
-    uint32_t maxDelay = g_FrameDelay[WINDOW_ACTIVE] / 2;
+    // wall clock, not g_Ticks: the budget must also hold when Init runs
+    // inside a packet handler, where the frame-cached g_Ticks never advances
+    // and the delayed pass would otherwise load the whole area in one go
+    const uint32_t ticks = SDL_GetTicks();
+    const uint32_t maxDelay = g_FrameDelay[WINDOW_ACTIVE] / 2;
     for (int i = minBlockX; i <= maxBlockX; i++)
     {
         uint32_t index = i * g_MapBlockSize[map].Height;
@@ -458,17 +479,23 @@ void CMapManager::Init(bool delayed)
             uint32_t realIndex = index + j;
             if (realIndex < MaxBlockIndex)
             {
+                // (re)load missing blocks and blocks whose load was deferred
+                // or failed (Added by AddRender before their terrain was
+                // available, or a transient punctual fetch failure)
                 CMapBlock *block = GetBlock(realIndex);
-                if (block == nullptr)
+                if (block == nullptr || !block->Loaded)
                 {
-                    if (delayed && g_Ticks - ticks >= maxDelay)
+                    if (delayed && SDL_GetTicks() - ticks >= maxDelay)
                     {
                         return;
                     }
 
-                    block = AddBlock(realIndex);
-                    block->X = i;
-                    block->Y = j;
+                    if (block == nullptr)
+                    {
+                        block = AddBlock(realIndex);
+                        block->X = i;
+                        block->Y = j;
+                    }
                     LoadBlock(block);
                 }
             }
@@ -541,6 +568,7 @@ void CMapManager::LoadBlock(CMapBlock *block)
     }
 
     block->CreateLandTextureRect();
+    block->Loaded = true;
 }
 
 int CMapManager::GetActualMap()
@@ -571,7 +599,15 @@ void CMapManager::AddRender(CRenderWorldObject *item)
             block = AddBlock(index);
             block->X = x;
             block->Y = y;
+#if defined(XUO_EMSC)
+            // web: create the block only - the terrain load is deferred to
+            // the budgeted Init(true) passes. Loading here faults to a
+            // punctual network fetch that would stall packet dispatch (the
+            // login burst draws dozens of objects, each on a cold block) or
+            // the render path; the per-frame Init streams the terrain in.
+#else
             LoadBlock(block);
+#endif
         }
         x = itemX % 8;
         y = itemY % 8;

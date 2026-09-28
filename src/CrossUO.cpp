@@ -5410,8 +5410,16 @@ void CGame::ChangeMap(uint8_t newmap)
                 obj = next;
             }
 
-            g_MapManager.Clear();
-            g_MapManager.Init();
+            // map switch: reset the block table for the new facet's
+            // dimensions, but let the blocks stream through the budgeted
+            // Init(true) passes (the game screen re-runs Init(true) per
+            // frame). A full synchronous load here runs inside packet
+            // dispatch: on web each block can fault to a punctual network
+            // fetch, so the reload would stall the whole client (the packet
+            // pump included - the login handshake stalled behind 0x55) for
+            // the length of ~a hundred block loads
+            g_MapManager.Reset();
+            g_MapManager.Init(true);
 
             g_MapManager.AddRender(g_Player);
         }

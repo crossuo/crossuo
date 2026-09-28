@@ -17,6 +17,11 @@ public:
     short X = 0;
     short Y = 0;
 
+    // false until LoadBlock filled the terrain/statics in (blocks created by
+    // AddRender before their terrain is available - or whose punctual fetch
+    // failed - get (re)loaded by the later Init passes)
+    bool Loaded = false;
+
 private:
     //Получить Z координату ландшафта
     char GetLandZ(int x, int y, int map);
