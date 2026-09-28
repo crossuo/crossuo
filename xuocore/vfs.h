@@ -267,6 +267,20 @@ std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_range(uint64_t uop_h
 std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_payload(
     uint64_t uop_hash, const UopFileEntry *block, bool decoded);
 
+// warm-only payload: serves the block from the LRU or the local blob store
+// (where the async fetch engine lands whole blobs) WITHOUT any network I/O.
+// Returns null on a cold cache; pair it with vfs_asset_block_enqueue so the
+// background pool streams the blob and a later call finds it warm. The
+// renderer/packet-dispatch paths must use this instead of the punctual fetch:
+// a cold punctual fetch is a synchronous transfer on the calling thread.
+std::shared_ptr<std::vector<uint8_t>> vfs_asset_block_payload_warm(
+    uint64_t uop_hash, const UopFileEntry *block, bool decoded);
+
+// background-stream the blob behind `uop_hash` through the async fetch pool
+// (demand precedence, deduplicated, no-op when the store already has the
+// blob). Re-queues of a failing blob are rate-limited (one window per tail).
+void vfs_asset_block_enqueue(uint64_t uop_hash);
+
 // punctual fetch counters (log telemetry): LRU hits, network misses, failures
 void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lru_mb);
 #endif

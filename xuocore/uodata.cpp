@@ -1814,7 +1814,24 @@ const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index)
 {
     if (index == nullptr || index->WebMapGroupHash == 0)
         return nullptr;
-    const auto payload = vfs_asset_fetch_block_payload(index->WebMapGroupHash, nullptr, true);
+    // web map groups stream through the async fetch pool: serve only warm
+    // bytes (LRU / blob store, decoded payload cached in the LRU). A cold
+    // group used to fault to a punctual ranged GET here - a synchronous WAN
+    // transfer on the calling thread - and the callers sit in packet
+    // dispatch (0x1B EnterWorld Init), the per-frame Init pass, the radar
+    // and the walking path: on a cold cache every read parked the frame for
+    // the whole transfer, crawling the client to ~0.1fps with a black world
+    // and starving the login handshake behind dispatch. A miss enqueues the
+    // group into the background pool instead and reports no data; the
+    // per-frame Init pass (and every other reader) retries and picks the
+    // group up when the blob lands in the store, so terrain and radar
+    // populate progressively while frames keep running.
+    const auto payload = vfs_asset_block_payload_warm(index->WebMapGroupHash, nullptr, true);
+    if (payload == nullptr)
+    {
+        vfs_asset_block_enqueue(index->WebMapGroupHash);
+        return nullptr;
+    }
     const size_t block = size_t(index->WebMapGroupBlock);
     // the group payload holds 4096 consecutive blocks; seek the one this
     // entry covers (native reads base + groupOffset + block * sizeof). An

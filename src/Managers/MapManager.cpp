@@ -179,8 +179,9 @@ void CMapManager::UpdatePatched()
     // the block table must be rebuilt for the new patch addresses, but the
     // terrain reload streams through the budgeted Init(true) passes (the
     // game screen re-runs Init(true) per frame): this runs inside packet
-    // dispatch (0xBF map diffs) and a full synchronous load stalls the whole
-    // client on web, where each block can fault to a punctual network fetch
+    // dispatch (0xBF map diffs) - on web each cold block read is served
+    // warm-only (the group streams through the fetch pool) instead of
+    // blocking this handler on a network transfer
     Reset();
     Init(true);
     for (CRenderWorldObject *item : objectsList)
@@ -510,13 +511,13 @@ void CMapManager::LoadBlock(CMapBlock *block)
     {
         return;
     }
-
     #if defined(XUO_EMSC)
         const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
         if (pmb == nullptr)
         {
-            // the group fetch is punctual: it can fail transiently - leave
-            // the block empty, a later Init pass re-runs LoadBlock
+            // the group streams through the async fetch pool and is not
+            // warm yet: leave the block empty (warm-only access, no network
+            // on this thread), a later Init pass re-runs LoadBlock
             return;
         }
     #else
@@ -601,10 +602,10 @@ void CMapManager::AddRender(CRenderWorldObject *item)
             block->Y = y;
 #if defined(XUO_EMSC)
             // web: create the block only - the terrain load is deferred to
-            // the budgeted Init(true) passes. Loading here faults to a
-            // punctual network fetch that would stall packet dispatch (the
-            // login burst draws dozens of objects, each on a cold block) or
-            // the render path; the per-frame Init streams the terrain in.
+            // the budgeted Init(true) passes. Loading here would read the
+            // group, whose cold path must never run on the dispatch/render
+            // thread (it would sync-fetch); the per-frame Init streams the
+            // terrain in as the fetch pool delivers the groups.
 #else
             LoadBlock(block);
 #endif

@@ -739,30 +739,14 @@ std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_range(uint64_t uop_h
     return bytes;
 }
 
-// block payload without the [ml] metadata prefix; decoded inflates zlib
-// blocks (ct == 1); stored (0) and game-decoded encodings (3 = BWT) pass
-// through untouched. `block` (optional) supplies the encoding; otherwise it
-// resolves from the plan asset.
-std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_payload(
-    uint64_t uop_hash, const UopFileEntry *block, bool decoded)
+ // shared tail of the punctual/warm block paths: strip the [ml] metadata
+// prefix (range assets only - whole-blob assets remote as the bare payload)
+// and inflate ct == 1 blocks when `decoded`.
+static std::shared_ptr<std::vector<uint8_t>> vfs_block_payload_decode(
+    const std::shared_ptr<std::vector<uint8_t>> &range,
+    size_t strip, uint32_t flags, uint32_t decoded_size, bool decoded)
 {
-    const auto range = vfs_asset_fetch_block_range(uop_hash);
-    if (range == nullptr)
-        return nullptr;
-    vfs_managed_build();
-    const auto found = s_managed_hashes.find(uop_hash);
-    if (found == s_managed_hashes.end())
-        return nullptr;
-    const auto &asset = s_plan.files[found->second.first].assets[found->second.second];
-    const size_t ml = block != nullptr ? block->MetadataSize : size_t(asset.ml);
-    const uint32_t flags = block != nullptr ? block->Flags : uint32_t(asset.ct);
-    const uint32_t decoded_size = block != nullptr ? block->DecompressedSize : uint32_t(asset.ul);
-    // range assets are [ml metadata][payload] windows into the pack source;
-    // whole-blob assets (blob_offset == 0, e.g. art's per-tile blobs) remote
-    // as the bare payload with no metadata prefix - stripping ml there
-    // corrupts the stream (the arena ensure makes the same distinction)
-    const size_t strip = asset.blob_offset != 0 ? ml : 0;
-    if (range->size() < strip)
+    if (range == nullptr || range->size() < strip)
         return nullptr;
     const size_t payload_len = range->size() - strip;
     const uint8_t *payload = range->data() + strip;
@@ -774,6 +758,131 @@ std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_payload(
         return nullptr;
     out->resize(size_t(dst_len));
     return out;
+}
+
+// resolve the plan asset behind a block hash (bounds + hole checks applied);
+// null when the hash is unknown or reserved
+static const VfsAsset *vfs_block_asset_of(uint64_t uop_hash)
+{
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return nullptr;
+    const auto file_index = found->second.first;
+    const auto asset_index = found->second.second;
+    if (file_index >= s_plan.files.size() || asset_index >= s_plan.files[file_index].assets.size())
+        return nullptr;
+    const auto &asset = s_plan.files[file_index].assets[asset_index];
+    if (vfs_asset_is_hole(asset))
+        return nullptr;
+    return &asset;
+}
+
+// block payload without the [ml] metadata prefix; decoded inflates zlib
+// blocks (ct == 1); stored (0) and game-decoded encodings (3 = BWT) pass
+// through untouched. `block` (optional) supplies the encoding; otherwise it
+// resolves from the plan asset.
+std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_payload(
+    uint64_t uop_hash, const UopFileEntry *block, bool decoded)
+{
+    const auto range = vfs_asset_fetch_block_range(uop_hash);
+    if (range == nullptr)
+        return nullptr;
+    const auto *asset = vfs_block_asset_of(uop_hash);
+    if (asset == nullptr)
+        return nullptr;
+    const size_t ml = block != nullptr ? block->MetadataSize : size_t(asset->ml);
+    const uint32_t flags = block != nullptr ? block->Flags : uint32_t(asset->ct);
+    const uint32_t decoded_size = block != nullptr ? block->DecompressedSize : uint32_t(asset->ul);
+    // range assets are [ml metadata][payload] windows into the pack source;
+    // whole-blob assets (blob_offset == 0, e.g. art's per-tile blobs) remote
+    // as the bare payload with no metadata prefix - stripping ml there
+    // corrupts the stream (the arena ensure makes the same distinction)
+    return vfs_block_payload_decode(
+        range, asset->blob_offset != 0 ? ml : 0, flags, decoded_size, decoded);
+}
+
+// warm-only payload: LRU first, then the blob store (where the async fetch
+// engine lands whole blobs) - a store hit is a local file read, never
+// network. Returns null on a cold cache; callers pair that with
+// vfs_asset_block_enqueue and retry once the pool delivers the blob. This is
+// what render/packet-dispatch readers must use: the punctual fetch above
+// transfers synchronously on the calling thread, and a cold upstream costs
+// the frame loop one WAN round trip per read.
+std::shared_ptr<std::vector<uint8_t>> vfs_asset_block_payload_warm(
+    uint64_t uop_hash, const UopFileEntry *block, bool decoded)
+{
+    if (!vfs_enabled() || uop_hash == 0)
+        return nullptr;
+    if (auto hit = s_block_lru_hit(uop_hash))
+    {
+        const auto *asset = vfs_block_asset_of(uop_hash);
+        if (asset == nullptr)
+            return nullptr;
+        const size_t ml = block != nullptr ? block->MetadataSize : size_t(asset->ml);
+        const uint32_t flags = block != nullptr ? block->Flags : uint32_t(asset->ct);
+        const uint32_t decoded_size = block != nullptr ? block->DecompressedSize : uint32_t(asset->ul);
+        return vfs_block_payload_decode(
+            hit, asset->blob_offset != 0 ? ml : 0, flags, decoded_size, decoded);
+    }
+
+    const auto *asset = vfs_block_asset_of(uop_hash);
+    if (asset == nullptr || fs_path_empty(s_params.blobs_dir))
+        return nullptr;
+    const auto path = fs_path_join(s_params.blobs_dir, asset->blob);
+    if (!fs_path_exists(path))
+        return nullptr;
+    std::vector<uint8_t> blob;
+    if (!fs_file_read(fs_path_ascii(path), blob))
+        return nullptr;
+    // the store mirrors the remote tree with whole blobs; slice this asset's
+    // window ([blob_offset, +len)) out of it. A short file is a partial or
+    // foreign entry - treat it as cold, the store write path owns correctness
+    const uint64_t len = vfs_asset_range_len(*asset);
+    if (blob.size() < asset->blob_offset || uint64_t(blob.size()) - asset->blob_offset < len)
+        return nullptr;
+    auto bytes = std::make_shared<std::vector<uint8_t>>(
+        blob.begin() + asset->blob_offset, blob.begin() + asset->blob_offset + len);
+    // prime the LRU so later reads of this block stop re-reading the store
+    s_block_lru_store(uop_hash, bytes);
+    const size_t ml = block != nullptr ? block->MetadataSize : size_t(asset->ml);
+    const uint32_t flags = block != nullptr ? block->Flags : uint32_t(asset->ct);
+    const uint32_t decoded_size = block != nullptr ? block->DecompressedSize : uint32_t(asset->ul);
+    return vfs_block_payload_decode(
+        bytes, asset->blob_offset != 0 ? ml : 0, flags, decoded_size, decoded);
+}
+
+// ---------------------------------------------------------------------------
+
+// background-stream the blob behind a block hash into the store: fire the
+// async fetch pool at it (demand precedence; deduplicated and idempotent)
+// and let the warm path above pick it up on a later call. Render-critical
+// callers invoke this on every cache miss, so a blob that keeps failing
+// (404, stalled upstream) is re-queued at most once per cooldown window
+// instead of once per render pass.
+void vfs_asset_block_enqueue(uint64_t uop_hash)
+{
+    if (!vfs_enabled() || uop_hash == 0 || s_params.offline || !vfs_fetch_started())
+        return;
+    const auto *asset = vfs_block_asset_of(uop_hash);
+    if (asset == nullptr)
+        return;
+    static std::mutex s_enqueue_mutex;
+    static std::unordered_map<astr_t, uint64_t> s_next_try;
+    const uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                             std::chrono::steady_clock::now().time_since_epoch())
+                             .count();
+    {
+        std::lock_guard<std::mutex> lock(s_enqueue_mutex);
+        const auto found = s_next_try.find(asset->blob);
+        if (found != s_next_try.end() && now < found->second)
+            return;
+        s_next_try[asset->blob] = now + 2000;
+    }
+    // the wire size is the stored/compressed transfer (the pool tolerates
+    // normalized transfers that legitimately differ on web)
+    const uint64_t wire = asset->ct == 0 ? uint64_t(asset->ul) : uint64_t(asset->cl);
+    vfs_fetch_queue_blob(asset->blob.c_str(), wire, false, VFS_FETCH_PRIO_DEMAND);
 }
 
 void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lru_mb)
