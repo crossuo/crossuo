@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <time.h>
 #if defined(XUO_EMSC)
-#include "Splash.h"
 #include <SDL_timer.h>
 #include <emscripten.h>
 #include <emscripten/websocket.h>
@@ -18,55 +17,20 @@ EM_JS(void, web_install_alert_shim, (), {
     }
 });
 
-// the streamed install lives in MEMFS (wiped on reload); mount an
-// IndexedDB-backed filesystem over the streaming root and pull the
-// persisted data in, so previous sessions' downloads are reused
-EM_JS(void, web_fs_mount_and_load, (),
-{
-    const dir = '/crossuo';
-    try
-    {
-        FS.mkdirTree(dir);
-    }
-    catch (e) {}
-    FS.mount(IDBFS, {}, dir);
-    FS.syncfs(true, function (err)
-    {
-        if (err)
-            console.error('idb restore failed:', err);
-        globalThis.__xuoIdbReady = true;
-    });
-});
-
-// push MEMFS changes to IndexedDB (async, fire-and-forget)
-EM_JS(void, web_fs_sync_persist, (),
-{
-    FS.syncfs(false, function (err)
-    {
-        if (err)
-            console.error('idb persist failed:', err);
-    });
-});
-
-static bool s_idbLoaded = false;
-
-// waits (rendering the splash) until the IndexedDB restore lands; bounded
-void web_fs_wait_restore()
-{
-    if (s_idbLoaded)
-        return;
-    for (int i = 0; i < 600; ++i)
-    {
-        if (EM_ASM_INT(return globalThis.__xuoIdbReady === true))
-        {
-            s_idbLoaded = true;
-            break;
-        }
-        Splash_Render();
-        SDL_Delay(50);
-    }
-    s_idbLoaded = true;
-}
+// Web file topology (PROXY_TO_PTHREAD): every C-level file operation from
+// the pthread worker is served by the MAIN browser thread's filesystem
+// (emscripten syscall proxying), so the authoritative state - the streamed
+// install, crossuo.cfg, logs - lives in the page's MEMFS, not in this
+// worker. Persistence (idbfs) is owned by the page too: resources/shell.html
+// mounts IndexedDB there, restores the persisted mutable state
+// (crossuo.cfg, log, assistant ini, /desktop profiles) at startup and
+// re-persists it on a slow tick.
+// The streamed install is deliberately NEVER persisted: it is re-fetchable
+// (the browser http cache keeps the fetched blobs; boot re-fetches on
+// demand - see the install relocation in load_config: it lives in the
+// session-local '/install' tree, outside the idbfs whitelist) and
+// serializing hundreds of MB of blob store on a ui tick would stall the
+// page.
 #endif
 #include <common/str.h>
 #include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
@@ -334,6 +298,16 @@ bool load_config()
                 shard = XUO_DEFAULT_SHARD_NAME;
             dir = fs_path_ascii(FilePath(shard.c_str()));
         }
+#if defined(XUO_EMSC)
+        // keep the streamed install OUT of the persisted state: the web
+        // persist path (shell.html) syncs only the small mutable state
+        // (crossuo.cfg, log, profiles), and the install is re-fetchable
+        // session-local data - the browser http cache persists the fetched
+        // blobs, boot re-fetches what it needs on demand. See the web file
+        // topology note at the top of this file.
+        if (!dir.empty() && dir[0] != '/')
+            dir = "/install/" + dir;
+#endif
         params.install_dir = fs_path_from(dir.c_str());
         // cache (blob store + state db) lives under the streaming dir
         params.blobs_dir = fs_path_join(params.install_dir, "cache", "blobs");
@@ -752,15 +726,6 @@ static bool RunFrame(bool &raised)
         raised = true;
         g_GameWindow.Raise(); // once, now that the first frame is on screen
     }
-#if defined(XUO_EMSC)
-    // keep the streamed install + config durable on IndexedDB
-    static uint32_t s_lastPersist = 0;
-    if (g_Ticks - s_lastPersist > 30000)
-    {
-        s_lastPersist = g_Ticks;
-        web_fs_sync_persist();
-    }
-#endif
     return quit;
 }
 
@@ -830,7 +795,6 @@ int main(int argc, char **argv)
     // emscripten_websocket_* functions from a different TU and the
     // JS optimizer only scans the main compilation unit
     emscripten_websocket_is_supported();
-    web_fs_mount_and_load(); // restore previous session downloads
 #endif
     g_fatalErrorCb = &fatal_error_dialog;
     if (!InitCli(argc, argv))

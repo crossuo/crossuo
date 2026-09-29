@@ -35,20 +35,10 @@
       // pthread builds run the runtime before the glue reads this object, so
       // create it up front and attach every handler to the same instance
       var Module = window.Module || {};
-      // mount IDBFS on the main browser thread (all C stdio from pthread
-      // workers proxies here, so this is the authoritative filesystem) and
-      // restore previous session data before the wasm starts. The run
-      // dependency makes emscripten wait for the restore before calling main.
-      Module.preRun = [function () {
-        Module.addRunDependency('idb-restore');
-        FS.mkdirTree('/crossuo');
-        FS.mount(IDBFS, {}, '/crossuo');
-        FS.syncfs(true, function (err) {
-          if (err) console.error('idb restore:', err);
-          Module.removeRunDependency('idb-restore');
-          console.log('idb restore complete');
-        });
-      }];
+      // NOTE: Module.preRun does NOT run on the page in PROXY_TO_PTHREAD
+      // builds (the boot sequence that consumes it executes on the pthread
+      // worker) - everything that must happen on the page lives in the
+      // when-ready block below.
       (function () {
         var statusEl = document.getElementById('status');
         var logEl = document.getElementById('log');
@@ -92,6 +82,29 @@
         Module.setStatus = function (text) {
           if (text) statusEl.textContent = text;
         };
+        // ?diag=1: main-thread responsiveness probe. A blocked main thread
+        // (a huge IndexedDB persist, a proxied GL storm) shows up as
+        // heartbeat gaps far above the timer interval together with a
+        // collapsing requestAnimationFrame cadence.
+        if (new URLSearchParams(window.location.search).get('diag') === '1') {
+          var lastBeat = performance.now(), worstBeat = 0;
+          var lastFrame = performance.now(), worstFrame = 0, frames = 0;
+          setInterval(function () {
+            var now = performance.now(), gap = now - lastBeat;
+            lastBeat = now;
+            if (gap > worstBeat) worstBeat = gap;
+            console.log('[diag] beat ' + gap.toFixed(0) + 'ms (worst ' + worstBeat.toFixed(0) +
+                        'ms), rAF ' + frames + ' (worst frame gap ' + worstFrame.toFixed(0) + 'ms)');
+            frames = 0; worstFrame = 0;
+          }, 5000);
+          (function loop() {
+            var now = performance.now(), gap = now - lastFrame;
+            lastFrame = now;
+            if (gap > worstFrame) worstFrame = gap;
+            frames++;
+            requestAnimationFrame(loop);
+          })();
+        }
         Module.print = function (text) {
           console.log(text);
           logEl.textContent += text + '\n';
@@ -110,6 +123,90 @@
           var t = (e.error && e.error.stack) ? e.error.stack : e.message;
           logEl.textContent += 'EXCEPTION: ' + t + '\n';
         });
+      })();
+      // Web persistence (idbfs). This page's MEMFS is the authoritative
+      // filesystem: PROXY_TO_PTHREAD serves every C-level file operation of
+      // the pthread worker through the main thread, so the mutable state
+      // (crossuo.cfg, the session log, the assistant ini, the profile data
+      // under /desktop) lives HERE. Mount IndexedDB over /data (scratch
+      // mountpoint - entries are keyed by their real absolute paths), pull
+      // the persisted state in once, then re-persist the whitelist on a
+      // slow tick. The streamed install under /install is deliberately
+      // NEVER synced: it is re-fetchable session-local data (the browser
+      // http cache keeps the fetched blobs, boot re-fetches on demand) and
+      // serializing hundreds of MB of blob store on the ui thread would
+      // stall the page. Whitelist scoping (instead of a whole-tree
+      // FS.syncfs) keeps every tick KB-scale and O(1) in the install size.
+      (function () {
+        var MOUNT = '/data';
+        var PERSIST_FILES = ['/crossuo.cfg', '/crossuo.log', '/xuoassist.ini'];
+        var PERSIST_TREES = ['/desktop']; // profile data (macros, gumps, custom houses)
+        var PERSIST_MAX_FILE = 1 * 1024 * 1024;
+        var PERSIST_MS = 30000;
+        function collect(out, path, depth) {
+          var names;
+          try { names = FS.readdir(path); } catch (e) { return; }
+          names.forEach(function (name) {
+            if (name === '.' || name === '..') return;
+            var full = (path === '/' ? '' : path) + '/' + name;
+            var st;
+            try { st = FS.stat(full); } catch (e) { return; }
+            if (FS.isDir(st.mode)) {
+              if (depth > 0) collect(out, full, depth - 1);
+            } else if (st.size <= PERSIST_MAX_FILE) {
+              out.push(full);
+            }
+          });
+        }
+        function restore() {
+          try {
+            FS.mkdirTree(MOUNT);
+            FS.mount(IDBFS, {}, MOUNT);
+          } catch (e) {
+            console.error('[idb][main] mount failed:', e);
+            return;
+          }
+          var t0 = performance.now();
+          FS.syncfs(true, function (err) {
+            if (err) console.error('[idb][main] restore failed:', err);
+            console.log('[idb][main] restore done in ' + (performance.now() - t0).toFixed(0) + 'ms' +
+                        (err ? ' (FAILED)' : ''));
+          });
+        }
+        function persistTick() {
+          var paths = [];
+          PERSIST_FILES.forEach(function (p) {
+            try { if (FS.isFile(FS.stat(p).mode)) paths.push(p); } catch (e) { /* not written yet */ }
+          });
+          PERSIST_TREES.forEach(function (root) { collect(paths, root, 6); });
+          if (!paths.length) return;
+          IDBFS.getDB(MOUNT, function (err, db) {
+            if (err) { console.error('[idb][main] persist: db unavailable:', err); return; }
+            var t0 = performance.now(), files = 0, bytes = 0;
+            try {
+              var store = db.transaction(['FILE_DATA'], 'readwrite').objectStore('FILE_DATA');
+              paths.forEach(function (path) {
+                var st = FS.stat(path);
+                store.put({ timestamp: st.mtime, mode: st.mode, contents: FS.readFile(path) }, path);
+                files++;
+                bytes += st.size;
+              });
+            } catch (e) {
+              console.error('[idb][main] persist failed:', e);
+              return;
+            }
+            console.log('[idb][main] persist tick: ' + files + ' files, ' +
+                        (bytes / 1024).toFixed(0) + ' kB, ' +
+                        (performance.now() - t0).toFixed(0) + 'ms');
+          });
+        }
+        (function whenReady() {
+          if (typeof FS === 'undefined' || typeof IDBFS === 'undefined' || !FS.mounts) {
+            return setTimeout(whenReady, 25);
+          }
+          restore();
+          setInterval(persistTick, PERSIST_MS);
+        })();
       })();
     </script>
     <script async src="crossuo.js"></script>
