@@ -1191,7 +1191,11 @@ async fn bridge(socket: WebSocket, host: String, port: u16)
 // static wasm hosting
 // ---------------------------------------------------------------------------
 
-async fn static_file(State(state): State<AppState>, uri: axum::http::Uri) -> Response
+async fn static_file(
+    State(state): State<AppState>,
+    req_headers: axum::http::HeaderMap,
+    uri: axum::http::Uri,
+) -> Response
 {
     let path = uri.path();
     let rel = if path == "/" { "/index.html" } else { path };
@@ -1206,28 +1210,52 @@ async fn static_file(State(state): State<AppState>, uri: axum::http::Uri) -> Res
         Ok(bytes) =>
         {
             let mime = mime_of(&full);
-            let mut res = ([(header::CONTENT_TYPE, mime)], bytes).into_response();
-            // content-addressed artifacts cache forever; the shell stays fresh
-            let cacheable = matches!(
-                full.extension().and_then(|e| e.to_str()),
-                Some("wasm") | Some("data") | Some("bin") | Some("uop") | Some("mul")
-            );
-            let cache_control = if cacheable
+            // the dist artifacts share filenames across builds (crossuo.js /
+            // crossuo.wasm are NOT content-addressed): any long-lived cache
+            // eventually pairs an old artifact with a new one and the wasm
+            // link fails ("import object field ... is not a Function").
+            // Revalidate every load; the ETag keeps unchanged loads at 304.
+            // (The content-addressed data lives under /patch/files, whose
+            // hash-named responses stay immutable.)
+            let etag = format!("\"{:016x}-{:x}\"", fnv1a64(&bytes), bytes.len());
+            if req_headers
+                .get(header::IF_NONE_MATCH)
+                .and_then(|v| v.to_str().ok())
+                .map(|v| v.split(',').any(|t| t.trim() == etag))
+                .unwrap_or(false)
             {
-                "public, max-age=31536000, immutable"
+                let mut not_modified = StatusCode::NOT_MODIFIED.into_response();
+                not_modified
+                    .headers_mut()
+                    .insert(header::ETAG, etag.parse().expect("etag"));
+                not_modified
+                    .headers_mut()
+                    .insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
+                return not_modified;
             }
-            else
-            {
-                "no-cache"
-            };
+            let mut res = ([(header::CONTENT_TYPE, mime)], bytes).into_response();
+            res.headers_mut().insert(header::ETAG, etag.parse().expect("etag"));
             res.headers_mut().insert(
                 header::CACHE_CONTROL,
-                cache_control.parse().expect("cache-control"),
+                "no-cache".parse().expect("cache-control"),
             );
             res
         }
         Err(_) => (StatusCode::NOT_FOUND, "not found").into_response(),
     }
+}
+
+// FNV-1a 64: cheap content fingerprint for the ETag (64-bit is plenty to
+// detect "the file changed" between builds)
+fn fnv1a64(data: &[u8]) -> u64
+{
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for &b in data
+    {
+        hash ^= u64::from(b);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
 }
 
 fn mime_of(path: &std::path::Path) -> &'static str
