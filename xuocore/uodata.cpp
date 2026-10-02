@@ -14,6 +14,7 @@
 #include <condition_variable>
 #include <map>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <inttypes.h>
 #include <unordered_set>
@@ -1546,6 +1547,13 @@ bool CFileManager::IsMulFileOpen(int idx) const
 uint8_t *CFileManager::MulReadAnimationData(const AnimationDirection &direction) const
 {
     auto &file = m_AnimMul[direction.FileIndex];
+    // web streaming hardening: a bogus/unlanded index entry used to hand out
+    // a pointer outside the mapping; the palette/frame reads in
+    // LoadAnimationFrame then walked off the wasm heap and trapped the client
+    if (file.Start == nullptr || size_t(direction.Address) + direction.Size > file.Size)
+    {
+        return nullptr;
+    }
     return file.Start + direction.Address;
 }
 
@@ -1815,31 +1823,69 @@ const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index)
     if (index == nullptr || index->WebMapGroupHash == 0)
         return nullptr;
     // web map groups stream through the async fetch pool: serve only warm
-    // bytes (LRU / blob store, decoded payload cached in the LRU). A cold
-    // group used to fault to a punctual ranged GET here - a synchronous WAN
-    // transfer on the calling thread - and the callers sit in packet
-    // dispatch (0x1B EnterWorld Init), the per-frame Init pass, the radar
-    // and the walking path: on a cold cache every read parked the frame for
-    // the whole transfer, crawling the client to ~0.1fps with a black world
-    // and starving the login handshake behind dispatch. A miss enqueues the
+    // bytes (LRU / blob store, never the network). A cold group would fault
+    // to a punctual ranged GET here - a synchronous WAN transfer on the
+    // calling thread - and the callers sit in packet dispatch (0x1B
+    // EnterWorld Init), the per-frame Init pass, the radar and the walking
+    // path: on a cold cache every read parked the frame for the whole
+    // transfer, crawling the client to ~0.1fps with a black world and
+    // starving the login handshake behind dispatch. A miss enqueues the
     // group into the background pool instead and reports no data; the
     // per-frame Init pass (and every other reader) retries and picks the
     // group up when the blob lands in the store, so terrain and radar
     // populate progressively while frames keep running.
-    const auto payload = vfs_asset_block_payload_warm(index->WebMapGroupHash, nullptr, true);
+    //
+    // The decoded group payload is memoized BELOW at this boundary: terrain
+    // probes every neighbor cell of all 64 tiles per map block (GetLandZ),
+    // and the LRU holds the compressed transfer, so a memo-less read
+    // re-inflates the whole group every time - measured ~3.8-7.6s of frame
+    // time PER streamed block (one LoadBlock per frame => a frozen canvas at
+    // ~1 frame / 5s right after entering the world). The memo is
+    // deliberately kept out of the shared block LRU (raw-transfer semantics
+    // for every other reader) and holds the decoded bytes alive so the
+    // returned MAP_BLOCK pointer stays valid for the reader - without it the
+    // pointer aliased a temporary that died at return.
+    static std::mutex s_group_memo_mutex;
+    // 32 direct-mapped slots: the hot set is the 3x3 block neighborhood
+    // (9 groups) plus the walking/radar look-ahead; collisions merely
+    // re-decode (identical to the memo-less path), never stall
+    constexpr size_t XUO_GROUP_MEMO_SLOTS = 32;
+    struct xuoGroupMemoSlot
+    {
+        uint64_t hash = 0;
+        std::shared_ptr<const std::vector<uint8_t>> decoded;
+    };
+    static std::array<xuoGroupMemoSlot, XUO_GROUP_MEMO_SLOTS> s_group_memo;
+    const size_t memoSlot = size_t(index->WebMapGroupHash) % XUO_GROUP_MEMO_SLOTS;
+    std::shared_ptr<const std::vector<uint8_t>> payload;
+    {
+        std::lock_guard<std::mutex> lock(s_group_memo_mutex);
+        auto &slot = s_group_memo[memoSlot];
+        if (slot.hash == index->WebMapGroupHash && slot.decoded != nullptr)
+        {
+            payload = slot.decoded;
+        }
+    }
     if (payload == nullptr)
     {
-        vfs_asset_block_enqueue(index->WebMapGroupHash);
-        return nullptr;
+        auto decoded = vfs_asset_block_payload_warm(index->WebMapGroupHash, nullptr, true);
+        if (decoded == nullptr)
+        {
+            vfs_asset_block_enqueue(index->WebMapGroupHash);
+            return nullptr;
+        }
+        payload = std::const_pointer_cast<const std::vector<uint8_t>>(decoded);
+        std::lock_guard<std::mutex> lock(s_group_memo_mutex);
+        auto &slot = s_group_memo[memoSlot];
+        slot.hash = index->WebMapGroupHash;
+        slot.decoded = payload;
     }
     const size_t block = size_t(index->WebMapGroupBlock);
     // the group payload holds 4096 consecutive blocks; seek the one this
     // entry covers (native reads base + groupOffset + block * sizeof). An
     // oversized payload means a corrupt plan entry slipped through - refuse
     // it rather than trusting the bytes
-    if (
-        payload == nullptr || payload->size() > vfsMapGroupMaxBytes ||
-        payload->size() < (block + 1) * sizeof(MAP_BLOCK))
+    if (payload->size() > vfsMapGroupMaxBytes || payload->size() < (block + 1) * sizeof(MAP_BLOCK))
     {
         return nullptr;
     }
@@ -2054,6 +2100,14 @@ void CFileManager::UopReadAnimationFrameInfo(
     (void)_header;
     auto frame = UopReadAnimationFrame(); // read only first frame to get image dimensions
     Ptr = frame.DataStart + frame.PixelDataOffset + PALETTE_SIZE;
+    // corrupt/truncated block hardening: validate before dereferencing (a
+    // garbage offset used to trap the heap here)
+    if (
+        frame.DataStart == nullptr || frame.DataStart < scratchBuffer.data() ||
+        Ptr + sizeof(AnimationFrameInfo) > scratchBuffer.data() + scratchSize)
+    {
+        return;
+    }
     auto frameInfo = (AnimationFrameInfo *)Ptr;
     result = *frameInfo;
     Move(sizeof(AnimationFrameInfo));
@@ -2101,11 +2155,32 @@ CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16
     }
     auto animation = uo_animation_create(anim);
 
+    // corrupt/truncated block hardening: every frame offset below comes from
+    // the (possibly garbage) block bytes - a bad offset used to walk the
+    // palette/frame-header reads out of the scratch buffer and trap the whole
+    // wasm heap ("memory access out of bounds") instead of degrading to a
+    // missing frame
+    const uint8_t *scratchBegin = scratchBuffer.data();
+    const uint8_t *scratchEnd = scratchBegin + scratchSize;
     for (int i = 0; i < frameCount; i++)
     {
         UopAnimationFrame frameData = framesData[i + dirFrameStartIdx];
         if (frameData.DataStart == nullptr)
         {
+            continue;
+        }
+        if (frameData.DataStart < scratchBegin ||
+            frameData.DataStart + frameData.PixelDataOffset + PALETTE_SIZE +
+                    sizeof(AnimationFrameInfo) >
+                scratchEnd)
+        {
+            Error(
+                Data,
+                "animation frame out of bounds (graphic %d group %d dir %d frame %d)",
+                anim.Graphic,
+                anim.Group,
+                anim.Direction,
+                i);
             continue;
         }
 
@@ -2126,6 +2201,10 @@ void CFileManager::MulReadAnimationFrameInfo(
     if (!direction.IsVerdata)
     {
         ptr = MulReadAnimationData(direction);
+        if (ptr == nullptr || direction.Size < PALETTE_SIZE + sizeof(uint32_t))
+        {
+            return;
+        }
     }
     SetData(ptr, direction.Size);
 
@@ -2141,6 +2220,12 @@ void CFileManager::MulReadAnimationFrameInfo(
     {
         uint32_t *frameOffset = (uint32_t *)Ptr;
         Ptr = dataStart + frameOffset[frameIndex];
+        // corrupt index hardening: validate before dereferencing (a garbage
+        // offset used to read outside the mapped data)
+        if (Ptr == nullptr || Ptr + sizeof(AnimationFrameInfo) > End)
+        {
+            return;
+        }
         auto frameInfo = (AnimationFrameInfo *)Ptr;
         result = *frameInfo;
     }
@@ -2155,6 +2240,10 @@ CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16
     if (!direction.IsVerdata)
     {
         ptr = MulReadAnimationData(direction);
+        if (ptr == nullptr || direction.Size < PALETTE_SIZE + sizeof(uint32_t))
+        {
+            return false;
+        }
     }
     SetData(ptr, direction.Size);
 
@@ -2190,6 +2279,16 @@ CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16
 void CFileManager::LoadAnimationFrame(
     AnimationFrame &frame, uint16_t *palette, LoadPixelData16Cb pLoadFunc)
 {
+    // central bounds guard: callers hand out pointers computed from data that
+    // can be garbage on the web streaming paths (an unlanded index block
+    // yields a bogus direction.Address/Size); without this check the frame
+    // header read below walks off the mapped data and traps the whole wasm
+    // heap ("memory access out of bounds"), killing the client
+    if (Ptr == nullptr || Ptr + sizeof(AnimationFrameInfo) > End)
+    {
+        Error(Data, "animation frame data out of bounds");
+        return;
+    }
     auto frameInfo = (AnimationFrameInfo *)Ptr;
     Move(sizeof(AnimationFrameInfo));
 
@@ -2198,6 +2297,17 @@ void CFileManager::LoadAnimationFrame(
     if (frameInfo->Width == 0 || frameInfo->Height == 0)
     {
         Error(Data, "image data invalid (%d,%d)", frameInfo->Width, frameInfo->Height);
+        return;
+    }
+    // corrupt/short data hardening: garbage dimensions (negative or absurd)
+    // used to drive `pixels[block++]` far out of the pixel buffer below and
+    // corrupt the heap / trap the wasm memory - degrade to a missing frame
+    // instead. Legitimate UO animation frames are far smaller than this cap.
+    if (
+        frameInfo->Width < 0 || frameInfo->Height < 0 || frameInfo->Width > 1024 ||
+        frameInfo->Height > 1024)
+    {
+        Error(Data, "image data out of range (%d,%d)", frameInfo->Width, frameInfo->Height);
         return;
     }
 
@@ -2240,7 +2350,13 @@ void CFileManager::LoadAnimationFrame(
             {
                 val |= 0x8000;
             }
-            pixels[block++] = val;
+            // per-pixel bounds: a corrupt header/offset used to write out of
+            // the pixel buffer (heap corruption / wasm trap)
+            if (block >= 0 && block < textureSize)
+            {
+                pixels[block] = val;
+            }
+            block++;
         }
         header = ReadUInt32LE();
     }
