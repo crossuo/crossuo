@@ -448,35 +448,44 @@ VFS_TEST(subset_web_excludes_patterns)
     vfs_manifest_apply_subset(plan, vfs_subset_web);
     TEST_CHECK(plan.subset == uint8_t(vfs_subset_web));
 
-    // excluded: every pattern file + the default product's Music dir
-    const auto has_file = [&plan](const char *name)
+    // excluded loose files are RETAINED as streamable metadata (the on-demand
+    // stream lane resolves its URL from the plan entry); only excluded UOP
+    // packs would drop out entirely
+    const auto find_file = [&plan](const char *name) -> const VfsPlan::VfsFile *
     {
         for (const auto &file : plan.files)
         {
             if (file.name == name)
-                return true;
+                return &file;
         }
-        return false;
+        return nullptr;
     };
-    TEST_CHECK(!has_file("anim.mul"));
-    TEST_CHECK(!has_file("anim2.mul"));
-    TEST_CHECK(!has_file("facet0.mul"));
-    TEST_CHECK(!has_file("verdata.mul"));
-    TEST_CHECK(!has_file("Music/Digital/Britainpos.mp3"));
+    const auto *anim = find_file("anim.mul");
+    const auto *anim2 = find_file("anim2.mul");
+    const auto *facet = find_file("facet0.mul");
+    const auto *verdata = find_file("verdata.mul");
+    const auto *music = find_file("Music/Digital/Britainpos.mp3");
+    TEST_CHECK(anim != nullptr && anim->streamable);
+    TEST_CHECK(anim2 != nullptr && anim2->streamable);
+    TEST_CHECK(facet != nullptr && facet->streamable);
+    TEST_CHECK(verdata != nullptr && verdata->streamable);
+    TEST_CHECK(music != nullptr && music->streamable);
 
-    // kept: the pack (whole, hole entry included) and the survivors
-    TEST_CHECK(has_file("pack0.uop"));
-    TEST_CHECK(plan.files[0].is_uop);
-    TEST_CHECK(plan.files[0].assets.size() == 4); // 3 parts + the hole
-    TEST_CHECK(has_file("tiledata.mul"));
+    // kept, not streamable: the pack (whole, hole entry included) and the survivors
+    const auto *pack = find_file("pack0.uop");
+    TEST_CHECK(pack != nullptr && pack->is_uop && !pack->streamable);
+    TEST_CHECK(pack->assets.size() == 4); // 3 parts + the hole
+    const auto *tiledata = find_file("tiledata.mul");
+    TEST_CHECK(tiledata != nullptr && !tiledata->streamable);
 
     // idempotent: re-applying changes nothing
     const size_t web_count = plan.files.size();
     vfs_manifest_apply_subset(plan, vfs_subset_web);
     TEST_CHECK(plan.files.size() == web_count);
 
-    // the web plan is a strict subset of the same manifests
-    TEST_CHECK(web_count < full_count);
+    // the web plan holds no MORE files than the same manifests unfiltered
+    // (excluded UOP packs drop; excluded loose files are retained)
+    TEST_CHECK(web_count <= full_count);
 }
 
 VFS_TEST(subset_plan_roundtrip_and_v2_compat)
@@ -550,9 +559,11 @@ VFS_TEST(subset_drift_rebuild_reapplies_subset)
     for (const auto &file : persisted.files)
     {
         TEST_CHECK_MSG(
-            !vfs_subset_web_excludes(file.name), "subset plan kept %s", file.name.c_str());
+            !vfs_subset_web_excludes(file.name) || file.streamable,
+            "subset plan kept %s without the streamable mark",
+            file.name.c_str());
     }
-    // ... and the skeleton never prepared an excluded file
+    // ... and the skeleton never prepared a streamable file
     TEST_CHECK(!fs_path_exists(fs_path_join(params.install_dir, "anim.mul")));
     TEST_CHECK(
         !fs_path_exists(fs_path_join(params.install_dir, "Music", "Digital", "Britainpos.mp3")));
@@ -578,7 +589,9 @@ VFS_TEST(subset_drift_rebuild_reapplies_subset)
     for (const auto &file : persisted.files)
     {
         TEST_CHECK_MSG(
-            !vfs_subset_web_excludes(file.name), "drifted plan kept %s", file.name.c_str());
+            !vfs_subset_web_excludes(file.name) || file.streamable,
+            "drifted plan kept %s without the streamable mark",
+            file.name.c_str());
     }
     vfs_shutdown();
     test_server_stop(srv);
@@ -615,9 +628,14 @@ VFS_TEST(subset_policy_drift_rebuilds_plan)
         vfs_boot_wait();
         size_t granules = 0, resident = 0;
         vfs_arena_residency(&granules, &resident);
+        // the arena carries every non-streamable asset; the warm-boot T0
+        // contract keeps at least the core granule resident. Full residency
+        // is only asserted on a state reset (asset-count change), which a
+        // subset switch no longer triggers: the web view RETAINS its
+        // excluded loose files, so both views count the same assets
         TEST_CHECK_MSG(
-            granules > 0 && resident == granules,
-            "a stale state mark survived the subset switch");
+            granules > 0 && resident >= 1,
+            "the arena lost its residency across the subset switch");
         TEST_CHECK(vfs_plan_load(plan_path, persisted));
         vfs_shutdown();
     };
@@ -625,15 +643,28 @@ VFS_TEST(subset_policy_drift_rebuilds_plan)
     // web -> none: the stored web view must not shadow the params subset
     boot_view(vfs_subset_web);
     TEST_CHECK(persisted.subset == uint8_t(vfs_subset_web));
-    TEST_CHECK(persisted.files.size() == 2); // pack0 + tiledata (music/anim excluded)
+    {
+        bool has_music = false, has_anim = false, wrongly_streamable = false;
+        for (const auto &file : persisted.files)
+        {
+            has_music = has_music || file.name == "Music/Digital/Britainpos.mp3";
+            has_anim = has_anim || file.name == "anim.mul";
+            wrongly_streamable =
+                wrongly_streamable || (file.streamable && !vfs_subset_web_excludes(file.name));
+        }
+        TEST_CHECK_MSG(has_music && has_anim, "the web view dropped its streamable files");
+        TEST_CHECK(!wrongly_streamable); // only excluded files are streamable
+    }
 
     // simulate a crash before the next rotation: a stale fetched mark in the
-    // journal must not survive the switch - the cleared state flushes BEFORE
-    // the journal truncate (rotation rule), so the replay sees nothing
+    // journal. The web view retains its excluded loose files, so a subset
+    // switch no longer changes the asset count and no state reset truncates
+    // the journal - the mark replays against the SAME asset order, where it
+    // is benign (it marks pack0 part0 fetched, which a full store agrees with)
     {
         FILE *fp = fopen(fs_path_ascii(fs_path_join(params.state_dir, "journal.log")), "a");
         TEST_CHECK(fp != nullptr);
-        fputs("F 0 0\n", fp); // pack0 part0: would skip its re-ensure if replayed
+        fputs("F 0 0\n", fp); // pack0 part0
         fclose(fp);
     }
 
@@ -644,6 +675,7 @@ VFS_TEST(subset_policy_drift_rebuilds_plan)
     {
         has_music = has_music || file.name == "Music/Digital/Britainpos.mp3";
         has_anim = has_anim || file.name == "anim.mul";
+        TEST_CHECK_MSG(!file.streamable, "the none view kept %s streamable", file.name.c_str());
     }
     TEST_CHECK_MSG(has_music && has_anim, "the web view shadowed the none params");
 
@@ -652,7 +684,10 @@ VFS_TEST(subset_policy_drift_rebuilds_plan)
     TEST_CHECK(persisted.subset == uint8_t(vfs_subset_web));
     for (const auto &file : persisted.files)
     {
-        TEST_CHECK_MSG(!vfs_subset_web_excludes(file.name), "plan kept %s", file.name.c_str());
+        TEST_CHECK_MSG(
+            !vfs_subset_web_excludes(file.name) || file.streamable,
+            "plan kept %s without the streamable mark",
+            file.name.c_str());
     }
 }
 

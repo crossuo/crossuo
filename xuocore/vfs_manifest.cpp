@@ -514,14 +514,14 @@ bool vfs_subset_web_excludes(const astr_t &name)
     {
         return lower.rfind(prefix, 0) == 0;
     };
-    // anim*.mul: the legacy MUL animation set (560 MB) is not part of the
-    // web plan. anim.mul itself (players/humans - the AnimationFrame UOP
-    // packs carry only bodies added after it) streams out-of-band through
-    // vfs_web_anim_mul_range (paced ranged chunks, inflated into the
-    // install); anim2-5.mul (expansion bodies) stay unavailable on web.
-    // anim.idx stays: it is KB-sized and boot-critical for the MUL decode.
-    // animdata.mul is NOT the legacy animation set - it is a ~4.5MB
-    // boot-critical table (Load aborts without it), so it stays
+    // anim*.mul: the legacy MUL animation set (560 MB across anim + anim2-5)
+    // is not part of the web boot install. The files stay in the plan as
+    // streamable metadata: the stream-file lane (vfs_stream_file_read)
+    // acquires their bytes on demand (paced ranged chunks, whole-stream zlib
+    // inflated into the install). anim.idx stays materialized: it is
+    // KB-sized and boot-critical for the MUL decode. animdata.mul is NOT the
+    // legacy animation set - it is a ~4.5MB boot-critical table (Load aborts
+    // without it), so it stays
     if (starts("anim") && lower.size() >= 4 && lower.compare(lower.size() - 4, 4, ".mul") == 0 &&
         lower != "animdata.mul")
     {
@@ -544,16 +544,32 @@ void vfs_manifest_apply_subset(VfsPlan &plan, vfs_subset subset)
     if (subset == vfs_subset_none)
         return;
     plan.subset = uint8_t(subset);
+    size_t retained = 0;
     size_t removed = 0;
     for (size_t i = plan.files.size(); i > 0; --i)
     {
         const size_t index = i - 1;
         if (!vfs_subset_web_excludes(plan.files[index].name))
             continue;
+        // loose whole-file entries keep their metadata (name, sizes, blob
+        // tail): the stream-file lane resolves its URL from it. The bytes
+        // stay out of boot - every byte-touching path skips streamable
+        // files. UOP packs excluded here drop out entirely (no consumer).
+        if (!plan.files[index].is_uop)
+        {
+            plan.files[index].streamable = true;
+            ++retained;
+            continue;
+        }
         plan.files.erase(plan.files.begin() + ptrdiff_t(index));
         ++removed;
     }
-    LOG_INFO("subset: web view keeps %zu of %zu files", plan.files.size(), plan.files.size() + removed);
+    LOG_INFO(
+        "subset: web view keeps %zu of %zu files (%zu streamable, %zu packs removed)",
+        plan.files.size(),
+        plan.files.size() + removed,
+        retained,
+        removed);
 }
 
 // ---------------------------------------------------------------------------
@@ -770,7 +786,7 @@ bool vfs_manifest_refine_ranges(
     size_t candidates = 0;
     for (auto &file : plan.files)
     {
-        if (file.is_uop || file.assets.size() != 1 || file.size < min_size)
+        if (file.is_uop || file.streamable || file.assets.size() != 1 || file.size < min_size)
             continue;
         astr_t lower = str_lower(file.name);
         if (lower.rfind(".uop") != lower.size() - 4)

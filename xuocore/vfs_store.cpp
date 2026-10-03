@@ -1221,6 +1221,10 @@ bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params)
     bool ok = true;
     for (const auto &file : plan.files)
     {
+        // streamable files keep metadata only: the install must not gain a
+        // sparse body for them (the stream lane writes the real bytes)
+        if (file.streamable)
+            continue;
         const auto path = fs_path_join(params.install_dir, file.name);
         if (file.is_uop)
         {

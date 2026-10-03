@@ -86,7 +86,11 @@ static const uint32_t VFS_STATE_MAGIC = 0x31545356; // "VST1"
 // rebuilt/reset on the next boot
 // 6: the web subset view changed (animdata.mul is no longer excluded);
 // persisted plans must rebuild to pick the new view up
-static const uint32_t VFS_SERIALIZATION_VERSION = 6;
+// 7: the web subset retains its excluded loose files as streamable
+// metadata (VfsFile::streamable) instead of erasing them - the serialized
+// per-file flag changes and asset global indexes shift, so every persisted
+// plan/state file is rebuilt/reset on the next boot
+static const uint32_t VFS_SERIALIZATION_VERSION = 7;
 
 bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
 {
@@ -101,7 +105,7 @@ bool vfs_plan_serialize(const VfsPlan &plan, std::vector<uint8_t> &out)
     {
         w.str(file.name);
         w.pod(file.size);
-        w.pod(uint8_t(file.is_uop ? 1 : 0));
+        w.pod(uint8_t((file.is_uop ? 1 : 0) | (file.streamable ? 2 : 0)));
         w.pod(uint64_t(file.assets.size()));
         for (const auto &asset : file.assets)
         {
@@ -149,11 +153,12 @@ bool vfs_plan_deserialize(const uint8_t *data, size_t size, VfsPlan &out_plan)
     for (uint64_t i = 0; i < file_count; ++i)
     {
         VfsPlan::VfsFile file;
-        uint8_t is_uop = 0;
+        uint8_t flags = 0;
         uint64_t asset_count = 0;
-        if (!r.str(&file.name) || !r.pod(&file.size) || !r.pod(&is_uop) || !r.pod(&asset_count))
+        if (!r.str(&file.name) || !r.pod(&file.size) || !r.pod(&flags) || !r.pod(&asset_count))
             return false;
-        file.is_uop = is_uop != 0;
+        file.is_uop = (flags & 1) != 0;
+        file.streamable = (flags & 2) != 0;
         for (uint64_t j = 0; j < asset_count; ++j)
         {
             VfsAsset asset;

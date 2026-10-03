@@ -48,6 +48,12 @@ bool vfs_store_arena::open(const VfsPlan &plan)
     for (size_t fi = 0; fi < plan.files.size(); ++fi)
     {
         const auto &file = plan.files[fi];
+        if (file.streamable)
+        {
+            // subset-retained metadata: no bytes anywhere for the arena -
+            // the on-demand stream lane acquires these
+            continue;
+        }
         for (size_t ai = 0; ai < file.assets.size(); ++ai)
         {
             const auto &asset = file.assets[ai];

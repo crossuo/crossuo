@@ -360,7 +360,11 @@ bool vfs_map_file(const fs_path &path, uint8_t *&out_start, size_t &out_size)
     if (vfs_enabled())
     {
         const int64_t index = vfs_managed_index_of(path);
-        if (index >= 0)
+        // streamable files (subset-retained metadata, e.g. the legacy anim
+        // muls on web) never map through the managed/trap path: their bytes
+        // belong to the on-demand stream lane, and the file is absent from
+        // the install until that lane completes it
+        if (index >= 0 && !s_plan.files[size_t(index)].streamable)
         {
             vfs_trap_backend_ensure();
             // state snapshot for the file (loose presence comes from the
@@ -888,29 +892,36 @@ void vfs_asset_block_enqueue(uint64_t uop_hash)
 
 #if defined(XUO_EMSC)
 // ---------------------------------------------------------------------------
-// legacy anim.mul streaming (web install)
+// stream files (web install): paced remote->disk materialization for the
+// loose whole-file transfers the web subset keeps only as plan metadata
+// (VfsFile::streamable - the plan carries name/URL/sizes, boot never touches
+// the bytes).
 //
-// The legacy MUL animation set (players, humans, classic creatures) exists
-// ONLY in anim.mul + anim.idx: the AnimationFrame UOP packs carry just the
-// bodies added after it (no build/animationlegacyframe/<400|401>/ bins exist
-// in packs 1-6 - verified against the upstream archives), and the streamed
-// web subset drops anim*.mul from the plan. With those bytes missing, every
-// legacy body fails to decode and the player renders nothing.
-//
-// The upstream anim.mul blob is a whole-stream zlib (123MB compressed ->
-// 194MB raw), so punctual range reads cannot decode a middle window, and the
-// fixed 1GB wasm heap holds neither shape: a whole-blob fetch buffers ~123MB
-// in the fetch worker, and a mapped image would sit ~190MB in the heap next
-// to the other install files. The blob therefore streams down in modest
-// ranged chunks (one sync range GET per decode miss, paced), inflates
-// incrementally into the install file, and the completed file then serves
-// the MUL reads in bounded windows straight from disk - the image is never
+// The legacy MUL animation set (players, humans, classic creatures plus the
+// bodyconv expansion bodies) exists ONLY in anim.mul/anim2-5.mul beside
+// their .idx tables: the AnimationFrame UOP packs carry just the bodies
+// added after the legacy set, and the streamed web subset keeps the mul
+// bytes out of the boot install. The upstream blobs are whole-stream zlib
+// (anim.mul: 123MB compressed -> 194MB raw), so punctual range reads cannot
+// decode a middle window, and the fixed 1GB wasm heap holds neither a
+// whole-blob fetch buffer nor a mapped image. Each file therefore streams
+// down in modest ranged chunks (one sync range GET per decode miss, paced),
+// inflates incrementally into the install file, and the completed file then
+// serves bounded window reads straight from disk - the image is never
 // resident.
+//
+// Registry shape: one state-machine instance per canonical file name and
+// ONE shared scheduler: at most a single chunk transfer is in flight
+// globally and the pace (2MB / 120ms) bounds the render-thread stall no
+// matter how many files stream at once. A read miss is the demand signal
+// that advances its own file (no speculative prefetch). Restarts (<=3) and
+// the 60s failure cooldown stay per instance. Stream reads never touch the
+// shared block LRU - the returned window aliases the instance's own buffer.
 // ---------------------------------------------------------------------------
 
 namespace {
 
-struct WebAnimMulStream
+struct WebStreamFile
 {
     enum class Phase
     {
@@ -920,12 +931,15 @@ struct WebAnimMulStream
         Failed     // gave up after repeated restarts (cooling down)
     };
 
+    astr_t name;        // canonical lowercase plan name ("anim.mul")
+    astr_t url;         // file repo + the plan entry's blob tail
+    bool url_ready = false;
+    bool url_missing_logged = false;
+    fs_path out_path;   // install_dir/<name>
+    fs_path done_path;  // install_dir/cache/<name>.ready
     Phase phase = Phase::Probe;
-    astr_t url;
-    fs_path out_path;
-    fs_path done_path;
-    FILE *out = nullptr;   // install anim.mul being written
-    FILE *ro = nullptr;    // install anim.mul opened for reads
+    FILE *out = nullptr; // install file being written
+    FILE *ro = nullptr;  // install file opened for reads
     size_t ro_size = 0;
     z_stream zs {};
     bool zs_active = false;
@@ -934,63 +948,89 @@ struct WebAnimMulStream
     uint64_t inflated_total = 0;
     uint64_t chunk_failures = 0;
     int restarts = 0;
-    std::chrono::steady_clock::time_point next_step {};
     std::chrono::steady_clock::time_point retry_at {};
-    bool paced = false;
     std::vector<uint8_t> window; // last served read window
-    bool url_ready = false;
 };
 
-WebAnimMulStream s_web_anim_mul;
+constexpr size_t WEB_STREAM_FILES_MAX = 8;
+WebStreamFile s_web_stream_files[WEB_STREAM_FILES_MAX];
+size_t s_web_stream_files_count = 0;
 
-constexpr uint64_t WEB_ANIM_MUL_CHUNK = 2u << 20;      // compressed bytes/step
-constexpr size_t WEB_ANIM_MUL_READ_CAP = 4u << 20;     // sanity per read
+constexpr uint64_t WEB_STREAM_CHUNK = 2u << 20;  // compressed bytes/step
+constexpr size_t WEB_STREAM_READ_CAP = 4u << 20; // sanity per read
 
-bool web_anim_mul_compose_url()
+// the one global in-flight gate: the next chunk of ANY stream file may run
+// no earlier than this (2MB/120ms across the whole registry)
+std::chrono::steady_clock::time_point s_web_stream_next_step {};
+bool s_web_stream_paced = false;
+
+WebStreamFile *web_stream_instance(const char *name)
 {
-    auto &s = s_web_anim_mul;
-    if (s.url_ready)
-        return !s.url.empty();
-    s.url_ready = true;
-    if (s_plan.file_repo.empty())
+    const astr_t lower = vfs_lower_ascii(name);
+    if (lower.empty())
+        return nullptr;
+    for (size_t i = 0; i < s_web_stream_files_count; ++i)
     {
-        return false;
+        if (s_web_stream_files[i].name == lower)
+            return &s_web_stream_files[i];
     }
-    // the CDN addresses loose files by jenkins(ph, sh) of the lowercased
-    // name under "<manifest rpath>/unpacked/" (mft_entry_remote_path); take
-    // the rpath from a loose file that IS in the plan - they all share the
-    // manifest's remote root
+    // register on demand, but only names the plan carries as streamable:
+    // an unknown name has no URL and no bytes anywhere
     vfs_managed_build();
-    for (const auto &file : s_plan.files)
+    if (!vfs_plan_ready())
+        return nullptr;
+    const auto found = s_managed_files.find(lower);
+    if (found == s_managed_files.end() || !s_plan.files[found->second].streamable)
+        return nullptr;
+    if (s_web_stream_files_count >= WEB_STREAM_FILES_MAX)
     {
-        if (file.is_uop || file.assets.empty())
-            continue;
-        const auto &blob = file.assets.front().blob;
-        // anim.mul is listed in the base manifest's <files> section - anchor
-        // on that root specifically (other sections - e.g. notes - have
-        // their own roots that do not serve the unpacked tree)
-        const auto pos = blob.find("/unpacked/");
-        if (pos == astr_t::npos || blob.compare(0, 5, "base/") != 0)
-            continue;
-        char lower[32] = "anim.mul";
-        for (char *p = lower; *p; ++p)
-        {
-            if (*p >= 'A' && *p <= 'Z')
-                *p += 32;
-        }
-        uint32_t ph = 0, sh = 0;
-        hashlittle2(lower, strlen(lower), &ph, &sh);
-        char name[32] = {};
-        snprintf(name, sizeof(name), "%08x%08x", ph, sh);
-        s.url = s_plan.file_repo + blob.substr(0, pos) + "/unpacked/" + name;
-        return true;
+        LOG_ERROR("stream files: registry full (%zu), cannot stream %s", s_web_stream_files_count, name);
+        return nullptr;
     }
-    return false;
+    WebStreamFile &s = s_web_stream_files[s_web_stream_files_count++];
+    s.name = lower;
+    s.out_path = fs_path_join(s_params.install_dir, s.name);
+    s.done_path = fs_path_join(fs_path_join(s_params.install_dir, "cache"), s.name + ".ready");
+    return &s;
 }
 
-void web_anim_mul_reset_stream()
+bool web_stream_compose_url(WebStreamFile &s)
 {
-    auto &s = s_web_anim_mul;
+    if (s.url_ready)
+        return !s.url.empty();
+    if (!vfs_plan_ready() || s_plan.file_repo.empty())
+        return false;
+    vfs_managed_build();
+    const auto found = s_managed_files.find(s.name);
+    if (found == s_managed_files.end() || !s_plan.files[found->second].streamable)
+    {
+        // the plan does not carry the file (older manifest/plan): no URL,
+        // the instance stays cold - retry composition on later calls, log once
+        if (!s.url_missing_logged)
+        {
+            s.url_missing_logged = true;
+            LOG_WARN("stream files: %s is not in the plan, staying cold", s.name.c_str());
+        }
+        return false;
+    }
+    const auto &file = s_plan.files[found->second];
+    if (file.is_uop || file.assets.empty())
+    {
+        if (!s.url_missing_logged)
+        {
+            s.url_missing_logged = true;
+            LOG_WARN("stream files: %s has no loose plan asset, staying cold", s.name.c_str());
+        }
+        return false;
+    }
+    // the fetch engine's own join: repo + the asset's blob tail
+    s.url = s_plan.file_repo + file.assets.front().blob;
+    s.url_ready = true;
+    return true;
+}
+
+void web_stream_reset(WebStreamFile &s)
+{
     if (s.out != nullptr)
     {
         fclose(s.out);
@@ -1005,24 +1045,23 @@ void web_anim_mul_reset_stream()
     s.inflated_total = 0;
 }
 
-bool web_anim_mul_step()
+bool web_stream_step(WebStreamFile &s)
 {
-    auto &s = s_web_anim_mul;
-    if (s.url.empty() && !web_anim_mul_compose_url())
+    if (s.url.empty() && !web_stream_compose_url(s))
     {
-        s.phase = WebAnimMulStream::Phase::Failed;
+        s.phase = WebStreamFile::Phase::Failed;
         s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
         return false;
     }
 
     std::vector<uint8_t> chunk;
     const uint64_t want = s.compressed_total != 0
-        ? std::min<uint64_t>(WEB_ANIM_MUL_CHUNK, s.compressed_total - s.compressed_off)
-        : WEB_ANIM_MUL_CHUNK;
+        ? std::min<uint64_t>(WEB_STREAM_CHUNK, s.compressed_total - s.compressed_off)
+        : WEB_STREAM_CHUNK;
     if (want == 0)
     {
         // the stream state ran past the source: restart cleanly
-        web_anim_mul_reset_stream();
+        web_stream_reset(s);
         return false;
     }
     const vfs_transport_result res = vfs_transport_active()->range(
@@ -1050,8 +1089,8 @@ bool web_anim_mul_step()
             // the source keeps failing: cool down instead of hammering it
             s.chunk_failures = 0;
             s.restarts = 4; // surface as failed after the current stream resets
-            web_anim_mul_reset_stream();
-            s.phase = WebAnimMulStream::Phase::Failed;
+            web_stream_reset(s);
+            s.phase = WebStreamFile::Phase::Failed;
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
         }
         return false;
@@ -1064,7 +1103,7 @@ bool web_anim_mul_step()
         s.out = fopen(fs_path_ascii(s.out_path), "wb");
         if (s.out == nullptr)
         {
-            s.phase = WebAnimMulStream::Phase::Failed;
+            s.phase = WebStreamFile::Phase::Failed;
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
             return false;
         }
@@ -1073,7 +1112,7 @@ bool web_anim_mul_step()
         {
             fclose(s.out);
             s.out = nullptr;
-            s.phase = WebAnimMulStream::Phase::Failed;
+            s.phase = WebStreamFile::Phase::Failed;
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
             return false;
         }
@@ -1085,7 +1124,6 @@ bool web_anim_mul_step()
     std::vector<uint8_t> outbuf(256 << 10);
     bool finished = false;
     bool corrupt = false;
-    uLong produced_total = 0;
     while (true)
     {
         s.zs.next_out = outbuf.data();
@@ -1109,7 +1147,6 @@ bool web_anim_mul_step()
                 break;
             }
             s.inflated_total += produced;
-            produced_total += produced;
         }
         if (finished || (s.zs.avail_in == 0 && produced == 0))
         {
@@ -1121,11 +1158,11 @@ bool web_anim_mul_step()
     {
         // truncate and restart from byte 0 (a mid-stream restart cannot
         // resume a zlib stream without the preceding window)
-        web_anim_mul_reset_stream();
+        web_stream_reset(s);
         ++s.restarts;
         if (s.restarts > 3)
         {
-            s.phase = WebAnimMulStream::Phase::Failed;
+            s.phase = WebStreamFile::Phase::Failed;
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
         }
         return false;
@@ -1140,7 +1177,7 @@ bool web_anim_mul_step()
         s.zs_active = false;
         if (!flushed)
         {
-            web_anim_mul_reset_stream();
+            web_stream_reset(s);
             return false;
         }
         // the marker publishes the validated output across sessions (the
@@ -1153,7 +1190,8 @@ bool web_anim_mul_step()
             fwrite(text, 1, strlen(text), done);
             fclose(done);
         }
-        s.phase = WebAnimMulStream::Phase::Ready;
+        LOG_INFO("stream files: %s complete (%llu raw bytes)", s.name.c_str(), (unsigned long long)s.inflated_total);
+        s.phase = WebStreamFile::Phase::Ready;
         return true;
     }
 
@@ -1162,11 +1200,11 @@ bool web_anim_mul_step()
     {
         // fed the whole source: the inflater must have seen the stream end -
         // anything else is a truncated/corrupt transfer, restart
-        web_anim_mul_reset_stream();
+        web_stream_reset(s);
         ++s.restarts;
         if (s.restarts > 3)
         {
-            s.phase = WebAnimMulStream::Phase::Failed;
+            s.phase = WebStreamFile::Phase::Failed;
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
         }
         return false;
@@ -1174,7 +1212,7 @@ bool web_anim_mul_step()
     return true;
 }
 
-size_t web_anim_mul_file_size(FILE *fp)
+size_t web_stream_file_size(FILE *fp)
 {
     if (fp == nullptr || fseek(fp, 0, SEEK_END) != 0)
     {
@@ -1186,42 +1224,45 @@ size_t web_anim_mul_file_size(FILE *fp)
 }
 } // namespace
 
-uint8_t *vfs_web_anim_mul_range(size_t offset, uint32_t size)
+bool vfs_stream_file_available(const char *name)
 {
-    if (!vfs_enabled() || s_params.offline)
+    if (!vfs_enabled() || name == nullptr)
+        return false;
+    vfs_managed_build();
+    if (!vfs_plan_ready())
+        return false;
+    const auto found = s_managed_files.find(vfs_lower_ascii(name));
+    return found != s_managed_files.end() && s_plan.files[found->second].streamable;
+}
+
+const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t size)
+{
+    if (!vfs_enabled() || s_params.offline || name == nullptr)
     {
         return nullptr;
     }
-    auto &s = s_web_anim_mul;
-    if (fs_path_empty(s.out_path))
+    WebStreamFile *const s = web_stream_instance(name);
+    if (s == nullptr)
     {
-        s.out_path = fs_path_join(s_params.install_dir, "anim.mul");
-        s.done_path =
-            fs_path_join(fs_path_join(s_params.install_dir, "cache"), "anim.mul.ready");
-    }
-    if (!s.url_ready && !web_anim_mul_compose_url())
-    {
-        // the plan has no loose file to anchor the remote root to (or no
-        // repo): retry composition on later calls rather than failing hard
-        s.url_ready = false;
+        return nullptr;
     }
     const auto now = std::chrono::steady_clock::now();
 
-    if (s.phase == WebAnimMulStream::Phase::Failed)
+    if (s->phase == WebStreamFile::Phase::Failed)
     {
-        if (now < s.retry_at)
+        if (now < s->retry_at)
         {
             return nullptr;
         }
-        s.restarts = 0;
-        s.phase = WebAnimMulStream::Phase::Probe;
+        s->restarts = 0;
+        s->phase = WebStreamFile::Phase::Probe;
     }
 
-    if (s.phase == WebAnimMulStream::Phase::Probe)
+    if (s->phase == WebStreamFile::Phase::Probe)
     {
         // a completed previous session's output validates through its marker
         bool done = false;
-        FILE *marker = fopen(fs_path_ascii(s.done_path), "rb");
+        FILE *marker = fopen(fs_path_ascii(s->done_path), "rb");
         if (marker != nullptr)
         {
             char text[32] = {};
@@ -1229,64 +1270,65 @@ uint8_t *vfs_web_anim_mul_range(size_t offset, uint32_t size)
             fclose(marker);
             text[n] = '\0';
             const auto expected = strtoull(text, nullptr, 10);
-            FILE *fp = fopen(fs_path_ascii(s.out_path), "rb");
+            FILE *fp = fopen(fs_path_ascii(s->out_path), "rb");
             if (fp != nullptr)
             {
-                const size_t actual = web_anim_mul_file_size(fp);
+                const size_t actual = web_stream_file_size(fp);
                 fclose(fp);
                 done = expected != 0 && actual == size_t(expected);
             }
         }
-        s.phase = done ? WebAnimMulStream::Phase::Ready : WebAnimMulStream::Phase::Streaming;
+        s->phase = done ? WebStreamFile::Phase::Ready : WebStreamFile::Phase::Streaming;
     }
 
-    if (s.phase == WebAnimMulStream::Phase::Streaming)
+    if (s->phase == WebStreamFile::Phase::Streaming)
     {
-        // one paced chunk per miss: the sync range GET blocks the render
-        // thread, so the pace bounds the frame stall
-        if (!s.paced)
+        // one paced chunk per miss, globally: the sync range GET blocks the
+        // render thread, so a single shared gate (2MB / 120ms across the
+        // whole registry) bounds the stall no matter how many files stream
+        if (!s_web_stream_paced)
         {
-            s.next_step = now;
-            s.paced = true;
+            s_web_stream_next_step = now;
+            s_web_stream_paced = true;
         }
-        if (now >= s.next_step && web_anim_mul_step())
+        if (now >= s_web_stream_next_step && web_stream_step(*s))
         {
-            s.next_step = now + std::chrono::milliseconds(120);
+            s_web_stream_next_step = now + std::chrono::milliseconds(120);
         }
     }
 
-    if (s.phase != WebAnimMulStream::Phase::Ready)
+    if (s->phase != WebStreamFile::Phase::Ready)
     {
         return nullptr;
     }
 
     // completed install file: serve the window straight from disk
-    if (size == 0 || size > WEB_ANIM_MUL_READ_CAP)
+    if (size == 0 || size > WEB_STREAM_READ_CAP)
     {
         return nullptr;
     }
-    if (s.ro == nullptr)
+    if (s->ro == nullptr)
     {
-        s.ro = fopen(fs_path_ascii(s.out_path), "rb");
-        if (s.ro == nullptr)
+        s->ro = fopen(fs_path_ascii(s->out_path), "rb");
+        if (s->ro == nullptr)
         {
             return nullptr;
         }
-        s.ro_size = web_anim_mul_file_size(s.ro);
+        s->ro_size = web_stream_file_size(s->ro);
     }
-    if (offset + size > s.ro_size)
+    if (offset + size > s->ro_size)
     {
         return nullptr;
     }
-    if (s.window.size() < size)
+    if (s->window.size() < size)
     {
-        s.window.resize(size);
+        s->window.resize(size);
     }
-    if (fseek(s.ro, long(offset), SEEK_SET) != 0 || fread(s.window.data(), 1, size, s.ro) != size)
+    if (fseek(s->ro, long(offset), SEEK_SET) != 0 || fread(s->window.data(), 1, size, s->ro) != size)
     {
         return nullptr;
     }
-    return s.window.data();
+    return s->window.data();
 }
 #endif // XUO_EMSC
 
@@ -2055,6 +2097,12 @@ static bool vfs_boot_arena_ensure(
         size_t gi = 0;
         for (size_t fi = 0; fi < plan.files.size(); ++fi)
         {
+            if (plan.files[fi].streamable)
+            {
+                // subset-retained metadata: bytes only via the on-demand lane
+                gi += plan.files[fi].assets.size();
+                continue;
+            }
             for (size_t ai = 0; ai < plan.files[fi].assets.size(); ++ai, ++gi)
             {
                 const auto &asset = plan.files[fi].assets[ai];
@@ -3359,6 +3407,13 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         for (size_t fi = 0; fi < plan.files.size(); ++fi)
         {
             const auto &file = plan.files[fi];
+            if (file.streamable)
+            {
+                // subset-retained metadata: the boot install never touches
+                // these bytes (the stream-file lane acquires them on demand)
+                gi += file.assets.size();
+                continue;
+            }
             for (size_t ai = 0; ai < file.assets.size(); ++ai, ++gi)
             {
                 if (file.is_uop || vfs_asset_is_hole(file.assets[ai]))
@@ -3480,7 +3535,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         skeletons,
         double(skeleton_bytes) / 1048576.0,
         double(reinterpret_cast<uintptr_t>(sbrk(0))) / 1048576.0);
-
     vfs_state_fold(plan);
     s_boot_shutdown = false;
     s_boot_started = true;
@@ -3643,6 +3697,8 @@ bool vfs_fetch_all(void (*progress)(float done01, const char *label))
         std::unique_lock<std::mutex> lock(s_state_mutex);
         for (const auto &file : s_plan.files)
         {
+            if (file.streamable)
+                continue; // stream-lane bytes: never whole-blob fetched
             for (const auto &asset : file.assets)
             {
                 ++total;

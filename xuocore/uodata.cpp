@@ -743,8 +743,8 @@ bool CFileManager::LoadCommon()
         return false;
     }
 #if defined(XUO_EMSC)
-    // web: anim.mul is materialized lazily by the streaming layer (see
-    // vfs_web_anim_mul_range) and must never be mapped - the fixed 1GB heap
+    // web: anim.mul is materialized lazily by the stream-file lane (see
+    // vfs_stream_file_read) and must never be mapped - the fixed 1GB heap
     // cannot hold the ~190MB image next to the other install files, and the
     // MUL reads go through the streamed file directly
     m_AnimMul[0].Start = nullptr;
@@ -1548,27 +1548,61 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
     return true;
 }
 
+// native FileIndex -> legacy MUL animation file name, mirroring
+// CFileManager's own loads exactly: LoadCommon maps index 0 ("anim.mul") and
+// the load loop only loads "anim%i.mul" for i > 1 (anim2-anim5; the product
+// has no anim1.mul and the bodyconv pass never routes to FileIndex 1)
+#if defined(XUO_EMSC)
+static const char *const ANIM_MUL_STREAM_NAMES[6] = {
+    "anim.mul", nullptr, "anim2.mul", "anim3.mul", "anim4.mul", "anim5.mul",
+};
+
+static const char *anim_mul_stream_name(int fileIndex)
+{
+    return fileIndex >= 0 && fileIndex < int(countof(ANIM_MUL_STREAM_NAMES))
+               ? ANIM_MUL_STREAM_NAMES[fileIndex]
+               : nullptr;
+}
+#endif
+
 bool CFileManager::IsMulFileOpen(int idx) const
 {
-    return idx < countof(m_AnimMul) ? m_AnimMul[idx].Start != 0 : false;
+    if (idx < 0 || idx >= countof(m_AnimMul))
+        return false;
+#if defined(XUO_EMSC)
+    // web: anim2-anim5.mul are stream-on-demand and never mapped, so the
+    // mapped-pointer check below is always false for them. The plan decides:
+    // the bodyconv pass may route bodies to these files when the web plan
+    // carries them as streamable (native checks the mapped image here)
+    if (idx >= 2)
+    {
+        const char *name = anim_mul_stream_name(idx);
+        return name != nullptr && vfs_stream_file_available(name);
+    }
+#endif
+    return m_AnimMul[idx].Start != 0;
 }
 
 uint8_t *CFileManager::MulReadAnimationData(const AnimationDirection &direction) const
 {
 #if defined(XUO_EMSC)
-    // web: the streamed install ships anim.mul through the streaming layer,
-    // never as a mapped image (the fixed 1GB heap cannot hold the ~190MB
-    // alongside the other install files, and the UOP AnimationFrame packs do
-    // not carry legacy bodies - see vfs_web_anim_mul_range). Bounded window
-    // reads once the streamed file is complete; null (the same "no data"
-    // the mapped guard below yields) while it is still streaming.
-    // anim2-anim5.mul (expansion bodies via bodyconv FileIndex) are not part
-    // of the streamed subset - those reads stay unsupported on web.
-    if (direction.FileIndex == 0)
+    // web: the streamed install serves the legacy MUL animation set through
+    // the stream-file registry (anim.mul, and anim2-anim5.mul for bodyconv
+    // bodies) - never as a mapped image (the fixed 1GB heap cannot hold the
+    // ~190MB anim.mul alongside the other install files, and the UOP
+    // AnimationFrame packs do not carry legacy bodies). Bounded window reads
+    // once the streamed file is complete; null (the same "no data" the
+    // mapped guard below yields) while it is cold or still streaming.
+    uint8_t *result = nullptr;
+    if (const char *name = anim_mul_stream_name(direction.FileIndex))
     {
-        return vfs_web_anim_mul_range(size_t(direction.Address), direction.Size);
+        const uint8_t *window =
+            vfs_stream_file_read(name, size_t(direction.Address), direction.Size);
+        // the parse cursor (SetData) wants a mutable pointer; the stream
+        // window is borrowed read-only and is never written through it
+        result = const_cast<uint8_t *>(window);
     }
-    return nullptr;
+    return result;
 #else
     auto &file = m_AnimMul[direction.FileIndex];
     // web streaming hardening: a bogus/unlanded index entry used to hand out

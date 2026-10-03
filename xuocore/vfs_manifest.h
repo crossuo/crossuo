@@ -44,7 +44,8 @@ enum vfs_tier : uint8_t
 enum vfs_subset : uint8_t
 {
     vfs_subset_none = 0, // the full product view (native default)
-    vfs_subset_web,      // drops the legacy anim/music/facet/verdata files
+    vfs_subset_web,      // boot drops the legacy anim/music/facet/verdata
+                         // bytes (loose files stay as streamable metadata)
 };
 
 struct VfsAsset
@@ -78,6 +79,14 @@ struct VfsPlan
         astr_t name;       // output file name ("artLegacyMUL.uop", "tiledata.mul")
         uint64_t size = 0; // planned total size (packs: table + blocks; loose: ul)
         bool is_uop = false;
+        // subset-retained metadata: the file is outside this build's boot
+        // view (e.g. the web subset's legacy anim mul/music/facet/verdata
+        // loose files) but the plan keeps its entry (name, sizes, blob tail)
+        // so an on-demand lane (stream files) can still acquire the bytes.
+        // Every byte-touching path (loose fetch tier, skeleton/prepare,
+        // materialize, refine, managed mapping, whole-blob passes) must skip
+        // these files: metadata is KB, bytes only on demand.
+        bool streamable = false;
         std::vector<VfsAsset> assets;
     };
     std::vector<VfsFile> files;
@@ -225,13 +234,17 @@ void vfs_manifest_assign_tiers(VfsPlan &plan);
 // ---------------------------------------------------------------------------
 
 // the web exclusion rule: true when the plan file `name` is outside the web
-// product view - the legacy MUL animation set ("anim*.mul": the UOP
-// animations cover it), Music/** (deferred), facet* and verdata*
+// boot view - the legacy MUL animation set ("anim*.mul": the bytes stream on
+// demand through the stream-file lane), Music/** (deferred), facet* and
+// verdata*. The matching LOOSE files stay in the plan as streamable
+// metadata (see VfsFile::streamable); only UOP packs are dropped entirely.
 bool vfs_subset_web_excludes(const astr_t &name);
 
 // applies the subset filter in place (no-op for vfs_subset_none): excluded
-// files drop out entirely, and the plan records what was applied. Idempotent
-// (re-applying the same subset changes nothing). Removed-by-subset entries
-// behave like plan-removed in the update flow: bytes stay in the store,
-// accounting drops them (plan diff "removed").
+// loose files are KEPT as streamable metadata (VfsFile::streamable) - the
+// boot plan must never fetch or write their bytes, an on-demand lane may -
+// and excluded UOP packs drop out entirely. Idempotent (re-applying the same
+// subset changes nothing). Entries removed by the subset behave like
+// plan-removed in the update flow: bytes stay in the store, accounting drops
+// them (plan diff "removed").
 void vfs_manifest_apply_subset(VfsPlan &plan, vfs_subset subset);

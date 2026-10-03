@@ -286,16 +286,22 @@ void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lr
 #endif
 
 #if defined(XUO_EMSC)
-// legacy anim.mul streaming for the web install (web-only; see the long
-// comment at the implementation). The streamed subset drops anim*.mul and
-// the AnimationFrame UOP packs do not carry legacy bodies, so the MUL decode
-// path would find nothing: this streams the upstream blob down in paced
-// ranged chunks, inflates it into <install>/anim.mul and then serves
-// [offset, offset+size) reads from that file. Returns a borrowed buffer
-// (valid until the next call) once the file is complete, null while the
-// stream is still running (the caller keeps degrading exactly like today).
-// Advances the stream by at most one chunk per call.
-uint8_t *vfs_web_anim_mul_range(size_t offset, uint32_t size);
+// stream files (web-only; see the long comment at the implementation): the
+// streamed subset keeps some loose files as plan metadata only
+// (VfsFile::streamable - the legacy anim muls). vfs_stream_file_read serves
+// [offset, offset+size) of such a file through a per-name state machine that
+// streams the upstream blob down in paced ranged chunks, inflates it into
+// <install>/<name> and then serves bounded window reads from that file.
+// Returns a borrowed buffer (valid until the next read of the SAME file)
+// once the file is complete, null while the file is cold/still streaming/in
+// its failure cooldown (the caller keeps degrading exactly like today).
+// Advances the owning stream by at most one globally-paced chunk per call.
+const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t size);
+
+// true when the plan carries `name` as a streamable file (the registry can
+// acquire its bytes on demand); the bodyconv pass uses this in place of the
+// mapped-file check native does
+bool vfs_stream_file_available(const char *name);
 #endif
 
 // reads one asset's inflated payload bytes by its uop hash, fetching the
