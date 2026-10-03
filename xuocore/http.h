@@ -28,9 +28,16 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
 // ranged GET (bytes=offset-(offset+length-1)); the body is only delivered
 // when the server honors the range (206 + exactly length bytes) - a 200
 // answer is aborted and reported failed, so callers never receive megabytes
-// they did not ask for.
+// they did not ask for. `out_total` (optional) receives the resource total
+// from the answer's Content-Range (-1 when unavailable) - the tail chunk of
+// a length-clamped stream learns the real size this way.
 bool http_get_range(
-    const char *url, const char *agent, uint64_t offset, uint64_t length, http_response *out);
+    const char *url,
+    const char *agent,
+    uint64_t offset,
+    uint64_t length,
+    http_response *out,
+    int64_t *out_total = nullptr);
 
 void http_init();
 void http_shutdown();

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "RenderWorldObject.h"
+#include "GameObjects/MapBlock.h"
 #include "Managers/ConfigManager.h"
 #include "ScreenStages/GameScreen.h"
 
@@ -28,6 +29,22 @@ CRenderWorldObject::CRenderWorldObject(
 CRenderWorldObject::~CRenderWorldObject()
 {
     RemoveRender();
+    if (PendingRenderBlock != nullptr)
+    {
+        // unregister from the deferred queue so the flush never sees a
+        // dangling pointer (the object can be deleted while its block is
+        // still unloaded - e.g. a mobile removed by a 0x1D packet)
+        auto &pending = PendingRenderBlock->PendingRender;
+        for (size_t i = 0; i < pending.size(); i++)
+        {
+            if (pending[i] == this)
+            {
+                pending.erase(pending.begin() + ptrdiff_t(i));
+                break;
+            }
+        }
+        PendingRenderBlock = nullptr;
+    }
 }
 
 bool CRenderWorldObject::ProcessAlpha(int maxAlpha)

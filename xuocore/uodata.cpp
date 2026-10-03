@@ -742,6 +742,14 @@ bool CFileManager::LoadCommon()
         Warning(Data, "file load: required file missing/failed (line 27)");
         return false;
     }
+#if defined(XUO_EMSC)
+    // web: anim.mul is materialized lazily by the streaming layer (see
+    // vfs_web_anim_mul_range) and must never be mapped - the fixed 1GB heap
+    // cannot hold the ~190MB image next to the other install files, and the
+    // MUL reads go through the streamed file directly
+    m_AnimMul[0].Start = nullptr;
+    m_AnimMul[0].Size = 0;
+#else
     if (!m_AnimMul[0].Load(UOFilePath("anim.mul")))
     {
         // the legacy animation set is optional on a >=7.0 client: the UOP
@@ -753,6 +761,7 @@ bool CFileManager::LoadCommon()
             return false;
         }
     }
+#endif
     if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
     {
         Warning(Data, "file load: required file missing/failed (line 43)");
@@ -1546,6 +1555,21 @@ bool CFileManager::IsMulFileOpen(int idx) const
 
 uint8_t *CFileManager::MulReadAnimationData(const AnimationDirection &direction) const
 {
+#if defined(XUO_EMSC)
+    // web: the streamed install ships anim.mul through the streaming layer,
+    // never as a mapped image (the fixed 1GB heap cannot hold the ~190MB
+    // alongside the other install files, and the UOP AnimationFrame packs do
+    // not carry legacy bodies - see vfs_web_anim_mul_range). Bounded window
+    // reads once the streamed file is complete; null (the same "no data"
+    // the mapped guard below yields) while it is still streaming.
+    // anim2-anim5.mul (expansion bodies via bodyconv FileIndex) are not part
+    // of the streamed subset - those reads stay unsupported on web.
+    if (direction.FileIndex == 0)
+    {
+        return vfs_web_anim_mul_range(size_t(direction.Address), direction.Size);
+    }
+    return nullptr;
+#else
     auto &file = m_AnimMul[direction.FileIndex];
     // web streaming hardening: a bogus/unlanded index entry used to hand out
     // a pointer outside the mapping; the palette/frame reads in
@@ -1555,6 +1579,7 @@ uint8_t *CFileManager::MulReadAnimationData(const AnimationDirection &direction)
         return nullptr;
     }
     return file.Start + direction.Address;
+#endif
 }
 
 // tiledata.mul
@@ -2364,6 +2389,9 @@ void CFileManager::LoadAnimationFrame(
     assert(pLoadFunc);
     assert(frame.UserData == nullptr);
     frame.UserData = pLoadFunc(imageWidth, imageHeight, pixels.data());
+    if (frame.UserData != nullptr)
+    {
+    }
 }
 
 void CFileManager::LoadAnimationFrameInfo(
@@ -2371,6 +2399,20 @@ void CFileManager::LoadAnimationFrameInfo(
 {
     assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[0];
+#if defined(XUO_EMSC)
+    // web: source availability routing (see LoadAnimation). Legacy bodies
+    // decode from the streamed anim.mul; the UOP AnimationFrame fallback
+    // covers bodies the legacy set never carried (no anim.idx entry).
+    if (direction.Size != 0)
+    {
+        MulReadAnimationFrameInfo(result, direction, frameIndex, isCorpse);
+        if (result.Width != 0 || result.Height != 0)
+        {
+            return;
+        }
+    }
+    UopReadAnimationFrameInfo(result, direction, uo_animation_group_get(anim), isCorpse);
+#else
     if (direction.Size != 0)
     {
         MulReadAnimationFrameInfo(result, direction, frameIndex, isCorpse);
@@ -2380,6 +2422,7 @@ void CFileManager::LoadAnimationFrameInfo(
         auto file = uo_animation_group_get(anim);
         UopReadAnimationFrameInfo(result, direction, file, isCorpse);
     }
+#endif
 }
 
 bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
@@ -2387,6 +2430,23 @@ bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb p
     assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
     bool res = false;
+#if defined(XUO_EMSC)
+    // web: route by data availability. The legacy MUL set (players, humans,
+    // classic creatures) decodes from the streamed anim.mul file (see
+    // MulReadAnimationData); the UOP AnimationFrame fallback covers the
+    // bodies that only exist there (added after the legacy set, typically
+    // with no anim.idx entry). MUL first matches native semantics - on a
+    // full install both sources exist and native reads the MUL bytes.
+    res = false;
+    if (direction.Size != 0)
+    {
+        res = MulReadAnimationFrames(anim, pLoadFunc);
+    }
+    if (!res)
+    {
+        res = UopReadAnimationFrames(anim, pLoadFunc);
+    }
+#else
     if (direction.Size != 0)
     {
         res = MulReadAnimationFrames(anim, pLoadFunc);
@@ -2395,6 +2455,7 @@ bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb p
     {
         res = UopReadAnimationFrames(anim, pLoadFunc);
     }
+#endif
     return res;
 }
 

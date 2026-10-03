@@ -5,6 +5,8 @@
 
 #include "../BaseQueue.h"
 
+#include <vector>
+
 class CMapObject;
 class CLandObject;
 class CRenderWorldObject;
@@ -44,6 +46,12 @@ public:
 
     //Добавить объект в очередь рендера
     void AddRender(CRenderWorldObject *item, int x, int y);
+
+    // web streaming: objects AddRender deferred while the block had no
+    // terrain yet (the XY sort in AddRender needs Block[x][y] as its anchor,
+    // and a world object must never head that chain - it is AddObject's
+    // m_Next list). LoadBlock flushes these once the terrain exists.
+    std::vector<class CRenderWorldObject *> PendingRender;
 
     //Получить начало очереди рендера
     CRenderWorldObject *GetRender(int x, int y);

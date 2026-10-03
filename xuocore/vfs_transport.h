@@ -31,6 +31,7 @@ struct vfs_transport_result
     long status = 0;       // HTTP status (0: transport-level failure)
     long retry_after = -1; // Retry-After seconds, when the server sent one
     uint64_t bytes = 0;    // body bytes delivered to the sink
+    int64_t total = -1;    // resource total from Content-Range (ranges only)
 };
 
 // receives body bytes as they arrive (once, with the whole buffer, for the

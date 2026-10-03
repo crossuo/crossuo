@@ -285,6 +285,19 @@ void vfs_asset_block_enqueue(uint64_t uop_hash);
 void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lru_mb);
 #endif
 
+#if defined(XUO_EMSC)
+// legacy anim.mul streaming for the web install (web-only; see the long
+// comment at the implementation). The streamed subset drops anim*.mul and
+// the AnimationFrame UOP packs do not carry legacy bodies, so the MUL decode
+// path would find nothing: this streams the upstream blob down in paced
+// ranged chunks, inflates it into <install>/anim.mul and then serves
+// [offset, offset+size) reads from that file. Returns a borrowed buffer
+// (valid until the next call) once the file is complete, null while the
+// stream is still running (the caller keeps degrading exactly like today).
+// Advances the stream by at most one chunk per call.
+uint8_t *vfs_web_anim_mul_range(size_t offset, uint32_t size);
+#endif
+
 // reads one asset's inflated payload bytes by its uop hash, fetching the
 // block into the store on demand (blocking). Serves the arena backend (web:
 // packs that never materialize into the heap, e.g. the sound archive);

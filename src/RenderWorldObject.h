@@ -47,6 +47,11 @@ public:
     CRenderWorldObject *m_NextXY{ nullptr };
     CRenderWorldObject *m_PrevXY{ nullptr };
 
+    // web streaming: non-null while the object sits in a CMapBlock's
+    // PendingRender queue (its terrain has not been parsed yet); the block
+    // clears it on flush, the destructor unregisters (dangling-ptr guard)
+    class CMapBlock *PendingRenderBlock{ nullptr };
+
     class CLandObject *GetLand();
     virtual uint16_t GetLightID() { return 0; }
     virtual void Draw(int x, int y) {}

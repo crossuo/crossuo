@@ -96,7 +96,8 @@ public:
         if (!url || !*url || length == 0)
             return result;
         http_response reply;
-        if (!http_get_range(url, VUOI_AGENT_NAME, offset, length, &reply))
+        int64_t total = -1;
+        if (!http_get_range(url, VUOI_AGENT_NAME, offset, length, &reply, &total))
         {
             LOG_WARN(
                 "range GET %s: status %ld, %zu bytes (wanted %" PRIu64 ")",
@@ -104,10 +105,12 @@ public:
                 reply.status,
                 reply.body.size(),
                 length);
+            result.total = total;
             return result;
         }
         result.ok = true;
         result.status = reply.status;
+        result.total = total;
         if (sink)
         {
             if (sink(sink_context, reply.body.data(), reply.body.size()))

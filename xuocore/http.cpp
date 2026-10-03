@@ -183,14 +183,18 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
 }
 
 bool http_get_range(
-    const char *url, const char *agent, uint64_t offset, uint64_t length, http_response *out)
+    const char *url,
+    const char *agent,
+    uint64_t offset,
+    uint64_t length,
+    http_response *out,
+    int64_t *out_total)
 {
     (void)agent;
     if (!url || !out)
         return false;
     char range[64];
-    snprintf(range, sizeof(range), "bytes=%llu-%llu",
-             (unsigned long long)offset, (unsigned long long)(offset + length - 1));
+    snprintf(range, sizeof(range), "bytes=%llu-%llu", (unsigned long long)offset, (unsigned long long)(offset + length - 1));
     long status = 0;
     size_t len = 0;
     long total = -1;
@@ -200,12 +204,15 @@ bool http_get_range(
         LOG_ERROR("transport failed (%ld): %s", status, url);
         return false;
     }
+    if (out_total != nullptr)
+    {
+        *out_total = total;
+    }
     // only honor a real range answer (206 with the exact byte count) - a 200
     // would deliver the whole file
     if (status != 206 || len != length)
     {
-        LOG_ERROR("range fetch mismatch (%ld, %zu vs %llu): %s", status, len,
-                  (unsigned long long)length, url);
+        LOG_ERROR("range fetch mismatch (%ld, %zu vs %llu): %s", status, len, (unsigned long long)length, url);
         free(data);
         return false;
     }
@@ -523,13 +530,24 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
 }
 
 bool http_get_range(
-    const char *url, const char *agent, uint64_t offset, uint64_t length, http_response *out)
+    const char *url,
+    const char *agent,
+    uint64_t offset,
+    uint64_t length,
+    http_response *out,
+    int64_t *out_total)
 {
     if (!url || !*url || out == nullptr || length == 0)
         return false;
     const std::string range =
         std::to_string(offset) + "-" + std::to_string(offset + length - 1);
     *out = http_perform(url, agent, range.c_str(), length);
+    if (out_total != nullptr)
+    {
+        // curl has no Content-Range total parsed here; callers only need it
+        // on the web transport
+        *out_total = -1;
+    }
     return out->status == 206 && out->body.size() == length;
 }
 

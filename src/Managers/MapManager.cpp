@@ -412,6 +412,29 @@ void CMapManager::ClearUsedBlocks()
 void CMapManager::Reset()
 {
     const int map = GetActualMap();
+#if defined(XUO_EMSC)
+    // web streaming: carry objects waiting for their block's terrain across
+    // the reset (a login/map-switch resets the table right after the first
+    // AddRender - dropping them here loses the player until a packet that
+    // never comes re-adds it)
+    std::vector<CRenderWorldObject *> carried;
+    if (m_Blocks != nullptr)
+    {
+        for (CMapBlock *block = (CMapBlock *)m_Items; block != nullptr;
+             block = (CMapBlock *)block->m_Next)
+        {
+            for (CRenderWorldObject *item : block->PendingRender)
+            {
+                if (item->PendingRenderBlock != nullptr)
+                {
+                    item->PendingRenderBlock = nullptr;
+                    carried.push_back(item);
+                }
+            }
+            block->PendingRender.clear();
+        }
+    }
+#endif
     if (m_Blocks != nullptr)
     {
         ClearUsedBlocks();
@@ -426,6 +449,12 @@ void CMapManager::Reset()
     PatchesCount = 0;
     memset(&m_MapPatchCount[0], 0, sizeof(m_MapPatchCount));
     memset(&m_StaticPatchCount[0], 0, sizeof(m_StaticPatchCount));
+#if defined(XUO_EMSC)
+    for (CRenderWorldObject *item : carried)
+    {
+        AddRender(item);
+    }
+#endif
 }
 
 void CMapManager::Init(bool delayed)
@@ -570,6 +599,30 @@ void CMapManager::LoadBlock(CMapBlock *block)
 
     block->CreateLandTextureRect();
     block->Loaded = true;
+#if defined(XUO_EMSC)
+    if (!block->PendingRender.empty())
+    {
+        // terrain exists now: the deferred objects (characters that arrived
+        // while the map group was still streaming) take their place in the
+        // render tree
+        std::vector<CRenderWorldObject *> pending;
+        pending.swap(block->PendingRender);
+        for (CRenderWorldObject *item : pending)
+        {
+            item->PendingRenderBlock = nullptr;
+            if (item->GetX() / 8 == block->X && item->GetY() / 8 == block->Y)
+            {
+                block->AddRender(item, item->GetX() % 8, item->GetY() % 8);
+            }
+            else
+            {
+                // the object moved blocks while deferred: hand it back to
+                // the normal path (it re-resolves the target block)
+                AddRender(item);
+            }
+        }
+    }
+#endif
 }
 
 int CMapManager::GetActualMap()
@@ -612,6 +665,23 @@ void CMapManager::AddRender(CRenderWorldObject *item)
         }
         x = itemX % 8;
         y = itemY % 8;
+    #if defined(XUO_EMSC)
+        // web streaming: a block created before its map group is warm has no
+        // terrain yet - AddRender's XY sort needs Block[x][y] as an anchor (and
+        // a world object must never head that chain: it is AddObject's m_Next
+        // list), so the insert used to be silently dropped and the object never
+        // rendered (the player has no repeat packet to re-add it). Defer until
+        // LoadBlock parsed the terrain, then flush in the item's sort order.
+        if (!block->Loaded)
+        {
+            if (item->PendingRenderBlock == nullptr)
+            {
+                item->PendingRenderBlock = block;
+                block->PendingRender.push_back(item);
+            }
+            return;
+        }
+    #endif
         block->AddRender(item, x, y);
     }
 }

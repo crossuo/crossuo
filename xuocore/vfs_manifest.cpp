@@ -514,8 +514,12 @@ bool vfs_subset_web_excludes(const astr_t &name)
     {
         return lower.rfind(prefix, 0) == 0;
     };
-    // anim*.mul: the legacy MUL animation set (560 MB - the UOP animations
-    // cover it); anim.idx stays: it is KB-sized and not worth a special case.
+    // anim*.mul: the legacy MUL animation set (560 MB) is not part of the
+    // web plan. anim.mul itself (players/humans - the AnimationFrame UOP
+    // packs carry only bodies added after it) streams out-of-band through
+    // vfs_web_anim_mul_range (paced ranged chunks, inflated into the
+    // install); anim2-5.mul (expansion bodies) stay unavailable on web.
+    // anim.idx stays: it is KB-sized and boot-critical for the MUL decode.
     // animdata.mul is NOT the legacy animation set - it is a ~4.5MB
     // boot-critical table (Load aborts without it), so it stays
     if (starts("anim") && lower.size() >= 4 && lower.compare(lower.size() - 4, 4, ".mul") == 0 &&

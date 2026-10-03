@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <SDL_timer.h>
+#include <vector>
 #include "MapBlock.h"
 #include "LandObject.h"
 #include "CustomHouseMultiObject.h"
@@ -26,6 +27,15 @@ CMapBlock::CMapBlock(int index)
 
 CMapBlock::~CMapBlock()
 {
+#if defined(XUO_EMSC)
+    // the deferred items outlive this block: drop their back-pointers so a
+    // later delete does not unregister through a freed vector
+    for (CRenderWorldObject *item : PendingRender)
+    {
+        item->PendingRenderBlock = nullptr;
+    }
+    PendingRender.clear();
+#endif
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
