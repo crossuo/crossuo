@@ -8,7 +8,21 @@
       html, body { margin: 0; padding: 0; background: #101014; color: #cfd2dc;
                    font-family: system-ui, sans-serif; height: 100%; }
       #wrap { display: flex; flex-direction: column; align-items: center;
-              justify-content: center; height: 100%; }
+              justify-content: center;
+              /* safe center: keep the loading layout centered while it fits,
+                 but never center an OVERFLOWING stack - centering overflows
+                 both edges and a page cannot scroll to negative y, so the
+                 maximized (viewport-sized) canvas ended up with its top
+                 rows unreachable (measured: rect.top = -24 => the top of the
+                 game render cut off). Overflow must fall back to start */
+              justify-content: safe center;
+              height: 100%; }
+      /* once the game maximizes, the canvas alone IS the page: the status/log
+         rows must leave the flow, otherwise they extend the document below
+         the viewport and the resulting scrollbars shrink the client area
+         (vertical scrollbar re-centered the canvas into a 7px horizontal
+         cut and a 15px-shorter wrap re-introduced a vertical offset) */
+      #wrap.maximized #status, #wrap.maximized #log { display: none; }
       /* no fixed size: SDL/emscripten controls the canvas dimensions
          (SDL_SetWindowSize updates the canvas element size). SDL probes
          the css box with a 1x1 canvas to detect external css sizing and
@@ -77,6 +91,20 @@
             setStatus('context lost, reloading');
             setTimeout(function () { location.reload(); }, 1000);
           });
+          // the maximize (CGameScreen::Init -> MaximizeWindow) sizes the
+          // canvas to the viewport; from then on the canvas box alone must
+          // own the layout - the loading rows below it would otherwise
+          // overflow the flex column (see the .maximized rule above and the
+          // safe-center comment). The observer only fires on real box
+          // changes, so this is O(1) per canvas resize
+          if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(function (entries) {
+              var r = entries[entries.length - 1].contentRect;
+              var full = r.height >= window.innerHeight &&
+                         r.width >= window.innerWidth;
+              document.getElementById('wrap').classList.toggle('maximized', full);
+            }).observe(c);
+          }
           return c;
         })();
         Module.setStatus = function (text) {
@@ -192,7 +220,18 @@
                       ' texUp=' + glStats.texUp +
                       ' canvas=' + glCtx.canvas.width + 'x' + glCtx.canvas.height +
                       ' buf=' + glCtx.drawingBufferWidth + 'x' + glCtx.drawingBufferHeight +
-                      ' css=' + Math.round(rect.width) + 'x' + Math.round(rect.height) + st;
+                      ' css=' + Math.round(rect.width) + 'x' + Math.round(rect.height) +
+                      ' top=' + Math.round(rect.top) + ' left=' + Math.round(rect.left) +
+                      ' dpr=' + window.devicePixelRatio + ' scrollY=' + window.scrollY +
+                      ' inner=' + window.innerWidth + 'x' + window.innerHeight +
+                      ' scrollH=' + document.documentElement.scrollHeight + st;
+              try {
+                // where does the layout put the canvas box? (the element can
+                // sit partially outside the page while its bitmap is intact)
+                var wrapR = document.getElementById('wrap').getBoundingClientRect();
+                line += ' wrap=' + Math.round(wrapR.top) + '+' + Math.round(wrapR.height) +
+                        ' bodyMargin=' + getComputedStyle(document.body).margin;
+              } catch (e) { /* diagnostics only */ }
               var per = '';
               for (var i = 0; i < glPerCtx.length; i++) {
                 var t = glPerCtx[i];
@@ -218,6 +257,32 @@
                   lum += (d[i] + d[i + 1] + d[i + 2]) / 3;
                 }
                 content = ' content16=' + Math.round(lum / (d.length / 4));
+                // row luminance profile of the VISIBLE canvas content: the
+                // first/last non-black row tell whether the render reaches
+                // the element edges. Compared with rect.top this separates
+                // "the element box sits outside the page viewport" (content
+                // complete, top != 0) from "the render is offset inside the
+                // canvas" (topRow > 0 with top == 0).
+                c2.width = 256;
+                c2.height = Math.max(1, Math.round(256 * glCtx.canvas.height / glCtx.canvas.width));
+                g2.drawImage(glCtx.canvas, 0, 0, c2.width, c2.height);
+                var rows = g2.getImageData(0, 0, c2.width, c2.height).data;
+                var rowLum = function (y) {
+                  var s = 0;
+                  for (var x = 0; x < c2.width; x++) {
+                    var o = (y * c2.width + x) * 4;
+                    s += (rows[o] + rows[o + 1] + rows[o + 2]) / 3;
+                  }
+                  return s / c2.width;
+                };
+                var first = -1, last = -1;
+                for (var y = 0; y < c2.height; y++) {
+                  if (rowLum(y) > 1) { if (first < 0) first = y; last = y; }
+                }
+                var topBand = 0, botBand = 0, band = Math.min(8, c2.height);
+                for (var y2 = 0; y2 < band; y2++) { topBand += rowLum(y2); botBand += rowLum(c2.height - 1 - y2); }
+                content += ' rowProfile=' + first + '..' + last + '/' + c2.height +
+                           ' top8=' + Math.round(topBand / band) + ' bot8=' + Math.round(botBand / band);
               } catch (e) { content = ' content-err'; }
               line += per + content;
               glStats.draws = 0; glStats.clears = 0; glStats.blits = 0; glStats.texUp = 0;
