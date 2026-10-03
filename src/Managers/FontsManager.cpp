@@ -15,6 +15,27 @@
 
 CFontsManager g_FontManager;
 
+// HTML gump colors travel through the engine in the desktop 32-bit pixel
+// convention (alpha in the LOW byte: 0xBBGGRRFF - PacketManager's
+// 0x010101FF / Color16To32(color) << 8 | 0xFF and GetHTMLColorFromText's
+// "#rrggbb" decode all author colors this way) and GeneratePixelsW writes
+// them into the text pixel buffer verbatim. The GLES/WebGL2 texture upload
+// expects the EMSC pixel order instead (alpha in the HIGH byte, see the
+// GetPolygoneColor branch below), so translate here - without this every
+// HTML text pixel carries alpha 1/255 and server gump text is invisible.
+// The non-HTML colors never see this helper: they are produced directly in
+// the native pixel order of each platform.
+static uint32_t HTMLColorToPixelColor(uint32_t color)
+{
+#if defined(XUO_EMSC)
+    // desktop [31:24]=B [23:16]=G [15:8]=R [7:0]=A -> emsc [31:24]=A [23:16]=B [15:8]=G [7:0]=R
+    return ((color & 0x000000FFu) << 24) | (color & 0xFF000000u) | ((color & 0x00FF0000u) >> 8) |
+           ((color & 0x0000FF00u) >> 8);
+#else
+    return color;
+#endif
+}
+
 CFontsManager::~CFontsManager()
 {
     delete[] Font;
@@ -2568,7 +2589,10 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     bool isSolid = (flags & UOFONT_SOLID) != 0;
     bool isBlackBorder = (flags & UOFONT_BLACK_BORDER) != 0;
     bool isUnderline = (flags & UOFONT_UNDERLINE) != 0;
-    uint32_t blackColor = 0x010101FF;
+    // 0x010101FF is authored in the desktop pixel order (near-black, alpha
+    // low); translate once so the buffer writes and the comparisons below
+    // stay consistent on every platform
+    uint32_t blackColor = HTMLColorToPixelColor(0x010101FF);
 
     bool isLink = false;
     int linkStartX = 0;
@@ -2699,6 +2723,9 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
                         isBlackPixel =
                             (((charcolor >> 24) & 0xFF) <= 8 && ((charcolor >> 16) & 0xFF) <= 8 &&
                              ((charcolor >> 8) & 0xFF) <= 8);
+                        // the black-ness test above reads the desktop-order
+                        // channels; convert only the value written to pixels
+                        charcolor = HTMLColorToPixelColor(charcolor);
                     }
                 }
 
@@ -2918,10 +2945,10 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
                     isUnderline = ((dataPtr.flags & UOFONT_UNDERLINE) != 0);
                     if (dataPtr.color != 0xFFFFFFFF)
                     {
-                        charcolor = dataPtr.color;
+                        charcolor = HTMLColorToPixelColor(dataPtr.color);
                         isBlackPixel =
-                            (((charcolor >> 24) & 0xFF) <= 8 && ((charcolor >> 16) & 0xFF) <= 8 &&
-                             ((charcolor >> 8) & 0xFF) <= 8);
+                            (((dataPtr.color >> 24) & 0xFF) <= 8 && ((dataPtr.color >> 16) & 0xFF) <= 8 &&
+                             ((dataPtr.color >> 8) & 0xFF) <= 8);
                     }
                 }
             }
@@ -2959,7 +2986,9 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
 
     if (m_UseHTML && m_HTMLBackgroundCanBeColored && (m_BackgroundColor != 0u))
     {
-        m_BackgroundColor |= 0xFF;
+        // m_BackgroundColor holds a desktop-order color (| 0xFF sets its alpha
+        // low byte); convert before writing it into the pixel buffer
+        m_BackgroundColor = HTMLColorToPixelColor(m_BackgroundColor | 0xFF);
         for (int y = 0; y < height; y++)
         {
             int yPos = (y * width);
