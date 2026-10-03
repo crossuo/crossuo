@@ -2430,23 +2430,6 @@ bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb p
     assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
     bool res = false;
-#if defined(XUO_EMSC)
-    // web: route by data availability. The legacy MUL set (players, humans,
-    // classic creatures) decodes from the streamed anim.mul file (see
-    // MulReadAnimationData); the UOP AnimationFrame fallback covers the
-    // bodies that only exist there (added after the legacy set, typically
-    // with no anim.idx entry). MUL first matches native semantics - on a
-    // full install both sources exist and native reads the MUL bytes.
-    res = false;
-    if (direction.Size != 0)
-    {
-        res = MulReadAnimationFrames(anim, pLoadFunc);
-    }
-    if (!res)
-    {
-        res = UopReadAnimationFrames(anim, pLoadFunc);
-    }
-#else
     if (direction.Size != 0)
     {
         res = MulReadAnimationFrames(anim, pLoadFunc);
@@ -2455,7 +2438,6 @@ bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb p
     {
         res = UopReadAnimationFrames(anim, pLoadFunc);
     }
-#endif
     return res;
 }
 
