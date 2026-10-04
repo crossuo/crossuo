@@ -48,24 +48,21 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::Router;
 use futures_util::{SinkExt, StreamExt};
-use tokio::io::AsyncWriteExt;
 use sha2::{Digest, Sha256};
+use tokio::io::AsyncWriteExt;
 
 static PKG_RE: OnceLock<regex::Regex> = OnceLock::new();
 static MANIFEST_N_RE: OnceLock<regex::Regex> = OnceLock::new();
 
-fn pkg_re() -> &'static regex::Regex
-{
+fn pkg_re() -> &'static regex::Regex {
     PKG_RE.get_or_init(|| regex::Regex::new("<package[^>]*>").unwrap())
 }
 
-fn manifest_n_re() -> &'static regex::Regex
-{
+fn manifest_n_re() -> &'static regex::Regex {
     MANIFEST_N_RE.get_or_init(|| regex::Regex::new("<manifest\\s[^>]*>").unwrap())
 }
 
-fn attr_of(tag: &str, name: &str) -> Option<String>
-{
+fn attr_of(tag: &str, name: &str) -> Option<String> {
     let needle = format!("{name}=\"");
     let at = tag.find(&needle)? + needle.len();
     let rest = &tag[at..];
@@ -77,8 +74,7 @@ fn attr_of(tag: &str, name: &str) -> Option<String>
 // sizes per blob tail; filled by the manifest handler on first touch and by
 // the startup warm pass - the manifest rewrite needs them so the client's
 // plan, fetch caps and materialized sizes agree with what this proxy serves
-fn normalized_sizes() -> &'static Mutex<HashMap<String, u64>>
-{
+fn normalized_sizes() -> &'static Mutex<HashMap<String, u64>> {
     static SIZES: OnceLock<Mutex<HashMap<String, u64>>> = OnceLock::new();
     SIZES.get_or_init(|| Mutex::new(HashMap::new()))
 }
@@ -88,8 +84,7 @@ fn normalized_sizes() -> &'static Mutex<HashMap<String, u64>>
 // ---------------------------------------------------------------------------
 
 #[derive(Clone, Debug)]
-struct Config
-{
+struct Config {
     listen: String,
     dist: PathBuf,
     cache_dir: PathBuf,
@@ -105,8 +100,7 @@ struct Config
 // ---------------------------------------------------------------------------
 
 #[tokio::main]
-async fn main()
-{
+async fn main() {
     let mut listen = String::from("127.0.0.1:8777");
     let mut dist = String::from("dist/wasm");
     let mut cache_dir = String::from("xuoproxy-cache");
@@ -120,52 +114,31 @@ async fn main()
         String::from("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo");
 
     let mut args = std::env::args().skip(1);
-    while let Some(arg) = args.next()
-    {
+    while let Some(arg) = args.next() {
         let mut value = |name: &str| -> Option<String> {
-            if arg == name
-            {
+            if arg == name {
                 args.next()
-            }
-            else
-            {
+            } else {
                 arg.strip_prefix(&format!("{name}=")).map(str::to_string)
             }
         };
-        if let Some(v) = value("--listen")
-        {
+        if let Some(v) = value("--listen") {
             listen = v;
-        }
-        else if let Some(v) = value("--dist")
-        {
+        } else if let Some(v) = value("--dist") {
             dist = v;
-        }
-        else if let Some(v) = value("--cache-dir")
-        {
+        } else if let Some(v) = value("--cache-dir") {
             cache_dir = v;
-        }
-        else if let Some(v) = value("--cache-ttl")
-        {
+        } else if let Some(v) = value("--cache-ttl") {
             cache_ttl = v.parse().unwrap_or(0);
-        }
-        else if arg == "--no-cache"
-        {
+        } else if arg == "--no-cache" {
             use_cache = false;
-        }
-        else if let Some(v) = value("--manifest-upstream")
-        {
+        } else if let Some(v) = value("--manifest-upstream") {
             upstream_manifest = v;
-        }
-        else if let Some(v) = value("--files-upstream")
-        {
+        } else if let Some(v) = value("--files-upstream") {
             upstream_files = v;
-        }
-        else if let Some(v) = value("--aops-upstream")
-        {
+        } else if let Some(v) = value("--aops-upstream") {
             upstream_aops = v;
-        }
-        else
-        {
+        } else {
             eprintln!("unknown argument: {arg}");
             eprintln!("see --help");
             std::process::exit(2);
@@ -218,8 +191,7 @@ async fn main()
     // normalized sizes in the manifests and range-able blobs on disk
     {
         let warm_state = state.clone();
-        tokio::spawn(async move
-        {
+        tokio::spawn(async move {
             // small startup grace so the listener is accepting first
             tokio::time::sleep(std::time::Duration::from_millis(250)).await;
             warm_uop_transfers(&warm_state).await;
@@ -228,7 +200,10 @@ async fn main()
 
     println!("xuoproxy listening on http://{listen}");
     println!("  static: {dist}");
-    println!("  proxy:  /patch/manifest|files|eamythic + /stream/<url> (cache: {})", cache_dir);
+    println!(
+        "  proxy:  /patch/manifest|files|eamythic + /stream/<url> (cache: {})",
+        cache_dir
+    );
     println!("  bridge: /ws/<host>/<port>");
     let listener = tokio::net::TcpListener::bind(&listen).await.expect("bind");
     axum::serve(listener, app).await.expect("serve");
@@ -240,50 +215,43 @@ async fn main()
 
 // fetches one whole-file uop transfer in normalized (all blocks stored,
 // transferred uncompressed) form and caches it under its blob url
-async fn ensure_uop_normalized(state: &AppState, blob_tail: &str)
-{
+async fn ensure_uop_normalized(state: &AppState, blob_tail: &str) {
     let blob_url = format!("{}/{blob_tail}", state.upstream_files);
-    if state.use_cache && cache_get(state, &blob_url).is_some()
-    {
+    if state.use_cache && cache_get(state, &blob_url).is_some() {
         return;
     }
     let started = std::time::Instant::now();
-    let raw = match state.http.get(&blob_url).send().await
-    {
-        Ok(resp) => match resp.bytes().await
-        {
+    let raw = match state.http.get(&blob_url).send().await {
+        Ok(resp) => match resp.bytes().await {
             Ok(b) => b.to_vec(),
-            Err(e) =>
-            {
+            Err(e) => {
                 eprintln!("xuoproxy: warm {blob_tail} read failed: {e}");
                 return;
             }
         },
-        Err(e) =>
-        {
+        Err(e) => {
             eprintln!("xuoproxy: warm {blob_tail} fetch failed: {e}");
             return;
         }
     };
     let size_before = raw.len();
     let mut body = raw;
-    if normalize::looks_zlib(&body)
-    {
-        if let Some(inflated) = normalize::zlib_inflate(&body)
-        {
+    if normalize::looks_zlib(&body) {
+        if let Some(inflated) = normalize::zlib_inflate(&body) {
             body = inflated;
         }
     }
-    if normalize::uop_needs_normalization(&body)
-    {
-        if let Some(normalized) = normalize::uop_normalize(&body)
-        {
+    if normalize::uop_needs_normalization(&body) {
+        if let Some(normalized) = normalize::uop_normalize(&body) {
             body = normalized;
         }
     }
     let _ = std::fs::create_dir_all(&state.cache_dir);
     cache_put(state, &blob_url, 200, "application/octet-stream", &body);
-    registered_sizes().lock().expect("sizes").insert(blob_tail.to_string(), body.len() as u64);
+    registered_sizes()
+        .lock()
+        .expect("sizes")
+        .insert(blob_tail.to_string(), body.len() as u64);
     println!(
         "xuoproxy: warmed {blob_tail} ({} -> {} bytes) in {:.1}s",
         size_before,
@@ -294,34 +262,32 @@ async fn ensure_uop_normalized(state: &AppState, blob_tail: &str)
 
 // walks the product manifest chain (prod -> pkg.mft -> *.mft) and warms
 // every whole-file .uop transfer declared as a loose file
-async fn warm_uop_transfers(state: &AppState)
-{
+async fn warm_uop_transfers(state: &AppState) {
     let manifest_base = format!("{}/patch/manifest", "");
     let _ = manifest_base;
-    let prod_url = format!("{}/{}/{}", state.upstream_manifest, "legacyrelease", "uo-legacyrelease.prod");
+    let prod_url = format!(
+        "{}/{}/{}",
+        state.upstream_manifest, "legacyrelease", "uo-legacyrelease.prod"
+    );
     // the upstream manifest base layout varies; try the configured repo root
     // with the same tail the client uses (the product url path)
-    let prod_url = match state.upstream_manifest.rsplit_once('/')
-    {
-        Some((_, last)) if last == "manifest" =>
-            format!("{}/uo-legacyrelease.prod", state.upstream_manifest),
+    let prod_url = match state.upstream_manifest.rsplit_once('/') {
+        Some((_, last)) if last == "manifest" => {
+            format!("{}/uo-legacyrelease.prod", state.upstream_manifest)
+        }
         _ => format!("{}/uo-legacyrelease.prod", state.upstream_manifest),
     };
     let _ = &prod_url;
-    let body = match state.http.get(&prod_url).send().await
-    {
-        Ok(r) => match r.bytes().await
-        {
+    let body = match state.http.get(&prod_url).send().await {
+        Ok(r) => match r.bytes().await {
             Ok(b) => b.to_vec(),
             Err(_) => return,
         },
         Err(_) => return,
     };
-    let text = match std::str::from_utf8(&body)
-    {
+    let text = match std::str::from_utf8(&body) {
         Ok(t) => t.to_string(),
-        Err(_) => match normalize::zlib_inflate(&body)
-        {
+        Err(_) => match normalize::zlib_inflate(&body) {
             Some(t) => String::from_utf8_lossy(&t).into_owned(),
             None => return,
         },
@@ -329,8 +295,7 @@ async fn warm_uop_transfers(state: &AppState)
 
     // package rpaths + their pkg.mft names from the prod
     let mut queue: Vec<(String, String)> = Vec::new(); // (rpath, manifest name)
-    for caps in pkg_re().find_iter(&text)
-    {
+    for caps in pkg_re().find_iter(&text) {
         let tag = caps.as_str();
         let rpath = attr_of(tag, "rpath").unwrap_or_else(|| "base".into());
         let n = attr_of(tag, "n").unwrap_or_else(|| "pkg.mft".into());
@@ -339,27 +304,21 @@ async fn warm_uop_transfers(state: &AppState)
 
     let mut uop_blobs: Vec<String> = Vec::new();
     let mut seen_manifests = std::collections::HashSet::new();
-    while let Some((rpath, manifest_name)) = queue.pop()
-    {
+    while let Some((rpath, manifest_name)) = queue.pop() {
         let mft_url = format!("{}/{}/{}", state.upstream_manifest, rpath, manifest_name);
-        if !seen_manifests.insert(mft_url.clone())
-        {
+        if !seen_manifests.insert(mft_url.clone()) {
             continue;
         }
-        let body = match state.http.get(&mft_url).send().await
-        {
-            Ok(r) => match r.bytes().await
-            {
+        let body = match state.http.get(&mft_url).send().await {
+            Ok(r) => match r.bytes().await {
                 Ok(b) => b.to_vec(),
                 Err(_) => continue,
             },
             Err(_) => continue,
         };
-        let text = match std::str::from_utf8(&body)
-        {
+        let text = match std::str::from_utf8(&body) {
             Ok(t) => t.to_string(),
-            Err(_) => match normalize::zlib_inflate(&body)
-            {
+            Err(_) => match normalize::zlib_inflate(&body) {
                 Some(t) => String::from_utf8_lossy(&t).into_owned(),
                 None => continue,
             },
@@ -367,23 +326,19 @@ async fn warm_uop_transfers(state: &AppState)
         // nested manifests - the regex matches the whole tag, the name is
         // an attribute (using the tag itself as the name fetched garbage
         // urls that failed silently: the warm pass warmed 0 transfers)
-        for caps in manifest_n_re().find_iter(&text)
-        {
-            if let Some(n) = attr_of(caps.as_str(), "n")
-            {
+        for caps in manifest_n_re().find_iter(&text) {
+            if let Some(n) = attr_of(caps.as_str(), "n") {
                 queue.push((rpath.clone(), n));
             }
         }
         // loose .uop files
-        for cap in normalize::manifest_loose_uop_tails(&text, &rpath)
-        {
+        for cap in normalize::manifest_loose_uop_tails(&text, &rpath) {
             uop_blobs.push(cap);
         }
     }
 
     println!("xuoproxy: warming {} whole-uop transfers", uop_blobs.len());
-    for blob_tail in uop_blobs
-    {
+    for blob_tail in uop_blobs {
         ensure_uop_normalized(state, &blob_tail).await;
     }
 }
@@ -394,8 +349,7 @@ async fn warm_uop_transfers(state: &AppState)
 // ---------------------------------------------------------------------------
 
 #[derive(Clone)]
-struct AppState
-{
+struct AppState {
     dist: PathBuf,
     cache_dir: PathBuf,
     cache_ttl: u64,
@@ -406,8 +360,7 @@ struct AppState
     http: reqwest::Client,
 }
 
-async fn coop_coep(req: axum::extract::Request, next: axum::middleware::Next) -> Response
-{
+async fn coop_coep(req: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let mut res = next.run(req).await;
     let headers = res.headers_mut();
     headers.insert(
@@ -425,32 +378,29 @@ async fn coop_coep(req: axum::extract::Request, next: axum::middleware::Next) ->
 // reverse proxy with manifest link rewriting
 // ---------------------------------------------------------------------------
 
-async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &HeaderMap) -> Response
-{
+async fn proxied(
+    state: &AppState,
+    upstream_base: &str,
+    tail: &str,
+    headers: &HeaderMap,
+) -> Response {
     let url = format!("{upstream_base}/{tail}");
 
     // files route: per-block punctual fetches depend on the proxy serving
     // normalized content (whole-transfer zlib inflated, uop containers
     // rebuilt with stored blocks) - see normalize.rs
-    if upstream_base == state.upstream_manifest
-    {
+    if upstream_base == state.upstream_manifest {
         return manifest_response(state, tail).await;
     }
-    if upstream_base == state.upstream_files
-    {
-        if state.use_cache
-        {
-            if let Some(range) = headers.get(header::RANGE).and_then(|v| v.to_str().ok())
-            {
-                if let Some(resp) = cached_file_range(state, &url, range)
-                {
+    if upstream_base == state.upstream_files {
+        if state.use_cache {
+            if let Some(range) = headers.get(header::RANGE).and_then(|v| v.to_str().ok()) {
+                if let Some(resp) = cached_file_range(state, &url, range) {
                     return resp;
                 }
             }
-            if let Some((ctype, body)) = cached_file(state, &url)
-            {
-                if let Some(resp) = range_from_cached(&ctype, &body, headers)
-                {
+            if let Some((ctype, body)) = cached_file(state, &url) {
+                if let Some(resp) = range_from_cached(&ctype, &body, headers) {
                     return resp;
                 }
                 return file_response(&ctype, body);
@@ -458,40 +408,44 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
         }
         // full fetch on first touch: normalization needs the whole body, and
         // every later range is served from the normalized cache entry
-        let body = match state.http.get(&url).send().await
-        {
-            Ok(resp) => match resp.bytes().await
-            {
+        let body = match state.http.get(&url).send().await {
+            Ok(resp) => match resp.bytes().await {
                 Ok(b) => b.to_vec(),
-                Err(e) => return (StatusCode::BAD_GATEWAY, format!("upstream read failed: {e}")).into_response(),
+                Err(e) => {
+                    return (
+                        StatusCode::BAD_GATEWAY,
+                        format!("upstream read failed: {e}"),
+                    )
+                        .into_response()
+                }
             },
-            Err(e) => return (StatusCode::BAD_GATEWAY, format!("upstream fetch failed: {e}")).into_response(),
+            Err(e) => {
+                return (
+                    StatusCode::BAD_GATEWAY,
+                    format!("upstream fetch failed: {e}"),
+                )
+                    .into_response()
+            }
         };
         let body = normalize_file_body(tail, body);
-        if state.use_cache
-        {
+        if state.use_cache {
             cache_put(state, &url, 200, "application/octet-stream", &body);
         }
-        if let Some(resp) = range_from_cached("application/octet-stream", &body, headers)
-        {
+        if let Some(resp) = range_from_cached("application/octet-stream", &body, headers) {
             return resp;
         }
         return file_response("application/octet-stream", body);
     }
 
     // disk cache first: repeated boots do not hit the upstream services
-    if state.use_cache
-    {
+    if state.use_cache {
         // ranged request against a cached full body: read only the window
         // (the cache stores full 200 bodies; without this a cached entry
         // would shadow every range read, and a full read per range would
         // drag hundreds of MB through memcpy per block serve)
-        if let Some(range) = headers.get(header::RANGE).and_then(|v| v.to_str().ok())
-        {
-            if let Some(spec) = range.strip_prefix("bytes=")
-            {
-                if let Some((start_s, end_s)) = spec.split_once('-')
-                {
+        if let Some(range) = headers.get(header::RANGE).and_then(|v| v.to_str().ok()) {
+            if let Some(spec) = range.strip_prefix("bytes=") {
+                if let Some((start_s, end_s)) = spec.split_once('-') {
                     if let (Ok(start), Ok(end)) = (start_s.parse::<usize>(), end_s.parse::<usize>())
                     {
                         if let Some((ctype, total, body)) =
@@ -517,14 +471,12 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
                 }
             }
         }
-        if let Some((status, ctype, body)) = cache_get(state, &url)
-        {
+        if let Some((status, ctype, body)) = cache_get(state, &url) {
             // ranged request against a cached full body: slice + 206 (the
             // cache only stores full 200 bodies; without this a cached entry
             // would shadow every range read - the web chunked fetch and the
             // block streaming both depend on real 206 answers)
-            if let Some(resp) = range_from_cached(&sanitize_ctype(&ctype), &body, headers)
-            {
+            if let Some(resp) = range_from_cached(&sanitize_ctype(&ctype), &body, headers) {
                 return resp;
             }
             return respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers);
@@ -532,21 +484,18 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
     }
 
     let mut upstream = state.http.get(&url);
-    if let Some(range) = headers.get(header::RANGE).and_then(|v| v.to_str().ok())
-    {
+    if let Some(range) = headers.get(header::RANGE).and_then(|v| v.to_str().ok()) {
         upstream = upstream.header(header::RANGE, range);
     }
-    let resp = match upstream.send().await
-    {
+    let resp = match upstream.send().await {
         Ok(resp) => resp,
-        Err(e) =>
-        {
+        Err(e) => {
             eprintln!("xuoproxy: upstream {url} failed: {e:?}");
             return (
                 StatusCode::BAD_GATEWAY,
                 format!("upstream fetch failed: {e}"),
             )
-                .into_response()
+                .into_response();
         }
     };
 
@@ -559,42 +508,39 @@ async fn proxied(state: &AppState, upstream_base: &str, tail: &str, headers: &He
             .and_then(|v| v.to_str().ok())
             .unwrap_or("application/octet-stream"),
     );
-    let body = match resp.bytes().await
-    {
+    let body = match resp.bytes().await {
         Ok(b) => b.to_vec(),
-        Err(e) => return (StatusCode::BAD_GATEWAY, format!("upstream read failed: {e}")).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                format!("upstream read failed: {e}"),
+            )
+                .into_response()
+        }
     };
 
-    if state.use_cache && status == 200
-    {
+    if state.use_cache && status == 200 {
         cache_put(state, &url, status, &sanitize_ctype(&ctype), &body);
     }
 
     respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers)
 }
 
-fn cache_entry(state: &AppState, url: &str) -> PathBuf
-{
+fn cache_entry(state: &AppState, url: &str) -> PathBuf {
     let digest = Sha256::digest(url.as_bytes());
     let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
     state.cache_dir.join(format!("{hex}.cache"))
 }
 
-fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, Vec<u8>)>
-{
+fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, Vec<u8>)> {
     let path = cache_entry(state, url);
     let raw = std::fs::read(&path).ok()?;
 
-    if state.cache_ttl > 0
-    {
-        if let Ok(meta) = std::fs::metadata(&path)
-        {
-            if let Ok(modified) = meta.modified()
-            {
-                if let Ok(age) = modified.elapsed()
-                {
-                    if age.as_secs() > state.cache_ttl
-                    {
+    if state.cache_ttl > 0 {
+        if let Ok(meta) = std::fs::metadata(&path) {
+            if let Ok(modified) = meta.modified() {
+                if let Ok(age) = modified.elapsed() {
+                    if age.as_secs() > state.cache_ttl {
                         return None;
                     }
                 }
@@ -602,14 +548,12 @@ fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, Vec<u8>)>
         }
     }
 
-    if raw.len() < 6
-    {
+    if raw.len() < 6 {
         return None;
     }
     let status = u16::from_be_bytes([raw[0], raw[1]]);
     let ctype_len = u32::from_be_bytes([raw[2], raw[3], raw[4], raw[5]]) as usize;
-    if raw.len() < 6 + ctype_len
-    {
+    if raw.len() < 6 + ctype_len {
         return None;
     }
     let ctype = String::from_utf8_lossy(&raw[6..6 + ctype_len]).into_owned();
@@ -617,10 +561,14 @@ fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, Vec<u8>)>
     Some((status, ctype, body))
 }
 
-fn cache_put(state: &AppState, url: &str, status: u16, ctype: &str, body: &[u8])
-{
+fn cache_put(state: &AppState, url: &str, status: u16, ctype: &str, body: &[u8]) {
     let path = cache_entry(state, url);
-    println!("cache_put {} ({} bytes, {})", path.display(), body.len(), ctype);
+    println!(
+        "cache_put {} ({} bytes, {})",
+        path.display(),
+        body.len(),
+        ctype
+    );
     let _ = std::fs::create_dir_all(&state.cache_dir);
     let mut out = Vec::with_capacity(8 + ctype.len() + body.len());
     out.extend_from_slice(&status.to_be_bytes());
@@ -631,19 +579,16 @@ fn cache_put(state: &AppState, url: &str, status: u16, ctype: &str, body: &[u8])
 }
 
 // web punctual fetch support: per-blob normalization for the files route
-fn normalize_file_body(tail: &str, body: Vec<u8>) -> Vec<u8>
-{
+fn normalize_file_body(tail: &str, body: Vec<u8>) -> Vec<u8> {
     // normalize ONLY plain uop containers whose blocks use encodings the
     // client's refine walk refuses (Flags == 3 BWT - gumpart ships that
     // way): rebuilt with every block stored, which turns the pack into an
     // ordinary range-able source. Everything else passes through
     // byte-identical - in particular ct=1 transfers (the client inflates
     // those itself, exactly like native).
-    if normalize::uop_needs_normalization(&body)
-    {
+    if normalize::uop_needs_normalization(&body) {
         let size_before = body.len();
-        if let Some(normalized) = normalize::uop_normalize(&body)
-        {
+        if let Some(normalized) = normalize::uop_normalize(&body) {
             println!(
                 "xuoproxy: normalized uop container {tail} ({} -> {} bytes, blocks stored)",
                 size_before,
@@ -656,8 +601,7 @@ fn normalize_file_body(tail: &str, body: Vec<u8>) -> Vec<u8>
     body
 }
 
-fn sanitize_ctype(ctype: &str) -> String
-{
+fn sanitize_ctype(ctype: &str) -> String {
     ctype
         .chars()
         .filter(|c| c.is_ascii_graphic() || *c == ' ')
@@ -667,22 +611,17 @@ fn sanitize_ctype(ctype: &str) -> String
 // "bytes=start-end" (or "bytes=start-") against a cached full body -> a 206
 // slice. Anything the client never sends (suffix ranges, multiple ranges,
 // non-byte units) falls through to the full-body answer (None).
-fn range_from_cached(ctype: &str, body: &[u8], headers: &HeaderMap) -> Option<Response>
-{
+fn range_from_cached(ctype: &str, body: &[u8], headers: &HeaderMap) -> Option<Response> {
     let range = headers.get(header::RANGE)?.to_str().ok()?;
     let spec = range.strip_prefix("bytes=")?;
     let (start_s, end_s) = spec.split_once('-')?;
     let start: usize = start_s.parse().ok()?;
-    let end: usize = if end_s.is_empty()
-    {
+    let end: usize = if end_s.is_empty() {
         body.len().checked_sub(1)?
-    }
-    else
-    {
+    } else {
         end_s.parse().ok()?
     };
-    if start > end || end >= body.len()
-    {
+    if start > end || end >= body.len() {
         return None;
     }
     let slice = body[start..=end].to_vec();
@@ -701,8 +640,12 @@ fn range_from_cached(ctype: &str, body: &[u8], headers: &HeaderMap) -> Option<Re
     Some(res)
 }
 
-fn respond_text_rewritten(status: u16, ctype: &str, body: Vec<u8>, headers: &HeaderMap) -> Response
-{
+fn respond_text_rewritten(
+    status: u16,
+    ctype: &str,
+    body: Vec<u8>,
+    headers: &HeaderMap,
+) -> Response {
     let status = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let body = rewrite_links(&body, headers);
     (status, [(header::CONTENT_TYPE, ctype.to_string())], body).into_response()
@@ -713,25 +656,26 @@ fn respond_text_rewritten(status: u16, ctype: &str, body: Vec<u8>, headers: &Hea
 // transfers for the web client
 // ---------------------------------------------------------------------------
 
-async fn manifest_response(state: &AppState, tail: &str) -> Response
-{
+async fn manifest_response(state: &AppState, tail: &str) -> Response {
     let url = format!("{}/{tail}", state.upstream_manifest);
-    if state.use_cache
-    {
-        if let Some((ctype, body)) = cached_file(state, &url)
-        {
-            if let Some(resp) = range_from_cached(&ctype, &body, &HeaderMap::new())
-            {
+    if state.use_cache {
+        if let Some((ctype, body)) = cached_file(state, &url) {
+            if let Some(resp) = range_from_cached(&ctype, &body, &HeaderMap::new()) {
                 return resp;
             }
             return file_response(&ctype, body);
         }
     }
 
-    let resp = match state.http.get(&url).send().await
-    {
+    let resp = match state.http.get(&url).send().await {
         Ok(resp) => resp,
-        Err(e) => return (StatusCode::BAD_GATEWAY, format!("upstream fetch failed: {e}")).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                format!("upstream fetch failed: {e}"),
+            )
+                .into_response()
+        }
     };
     let mut status = resp.status().as_u16();
     let ctype = resp
@@ -740,10 +684,15 @@ async fn manifest_response(state: &AppState, tail: &str) -> Response
         .and_then(|v| v.to_str().ok())
         .unwrap_or("text/xml")
         .to_string();
-    let mut body = match resp.bytes().await
-    {
+    let mut body = match resp.bytes().await {
         Ok(b) => b.to_vec(),
-        Err(e) => return (StatusCode::BAD_GATEWAY, format!("upstream read failed: {e}")).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                format!("upstream read failed: {e}"),
+            )
+                .into_response()
+        }
     };
 
     // text manifests: rewrite upstream urls, then normalize every whole-file
@@ -759,66 +708,65 @@ async fn manifest_response(state: &AppState, tail: &str) -> Response
     // compressed body that is not a manifest passes through untouched.
     let compressed = normalize::looks_zlib(&body);
     let mut plain = body.clone();
-    if compressed
-    {
+    if compressed {
         plain = normalize::zlib_inflate(&body).unwrap_or(body.clone());
     }
-    if let Ok(text) = std::str::from_utf8(&plain)
-    {
-        if text.trim_start().starts_with('<')
-        {
+    if let Ok(text) = std::str::from_utf8(&plain) {
+        if text.trim_start().starts_with('<') {
             let rewritten = rewrite_links(&plain, &HeaderMap::new());
             let text = String::from_utf8_lossy(&rewritten).into_owned();
             let rpath = tail.split('/').next().unwrap_or("base");
             let tails = normalize::manifest_loose_uop_tails(&text, rpath);
-            for blob_tail in &tails
-            {
+            for blob_tail in &tails {
                 let blob_url = format!("{}/{blob_tail}", state.upstream_files);
                 // already normalized and cached: record its size (the
                 // manifest rewrite needs it) and skip the refetch
-                if let Some(size) = cached_size(state, &blob_url)
-                {
-                    normalized_sizes().lock().expect("sizes").insert(blob_tail.clone(), size);
+                if let Some(size) = cached_size(state, &blob_url) {
+                    normalized_sizes()
+                        .lock()
+                        .expect("sizes")
+                        .insert(blob_tail.clone(), size);
                     continue;
                 }
-                match fetch_normalized_blob(state, &blob_url, blob_tail).await
-                {
-                    Ok(size) =>
-                    {
-                        normalized_sizes().lock().expect("sizes").insert(blob_tail.clone(), size);
+                match fetch_normalized_blob(state, &blob_url, blob_tail).await {
+                    Ok(size) => {
+                        normalized_sizes()
+                            .lock()
+                            .expect("sizes")
+                            .insert(blob_tail.clone(), size);
                     }
                     Err(e) => eprintln!("xuoproxy: normalize {blob_tail} failed: {e}"),
                 }
             }
             let sizes = normalized_sizes().lock().expect("sizes").clone();
             let rewritten_text = normalize::rewrite_manifest_uop_entries(&text, &sizes);
-            body = if compressed
-            {
+            body = if compressed {
                 normalize::zlib_deflate(&rewritten_text)
-            }
-            else
-            {
+            } else {
                 rewritten_text
             };
             status = 200;
             println!(
                 "xuoproxy: manifest {tail} normalized ({} known sizes{}, {} bytes)",
                 sizes.len(),
-                if compressed { ", ct=1 recompressed" } else { "" },
+                if compressed {
+                    ", ct=1 recompressed"
+                } else {
+                    ""
+                },
                 body.len()
             );
         }
     }
 
-    if state.use_cache && status == 200
-    {
+    if state.use_cache && status == 200 {
         cache_put(state, &url, status, "text/xml", &body);
     }
     let served_bytes = body.len();
     let mut res = (StatusCode::from_u16(status).unwrap_or(StatusCode::OK), body).into_response();
-    res.headers_mut().insert(header::CONTENT_TYPE, "text/xml".parse().expect("ctype"));
-    if status == 200
-    {
+    res.headers_mut()
+        .insert(header::CONTENT_TYPE, "text/xml".parse().expect("ctype"));
+    if status == 200 {
         println!("xuoproxy: manifest {tail} served ({served_bytes} bytes, rewritten)");
     }
     res
@@ -831,16 +779,14 @@ async fn fetch_normalized_blob(
     state: &AppState,
     blob_url: &str,
     blob_tail: &str,
-) -> Result<u64, String>
-{
+) -> Result<u64, String> {
     let resp = state
         .http
         .get(blob_url)
         .send()
         .await
         .map_err(|e| format!("upstream fetch failed: {e}"))?;
-    if !resp.status().is_success()
-    {
+    if !resp.status().is_success() {
         return Err(format!("upstream status {}", resp.status().as_u16()));
     }
     let raw = resp
@@ -849,8 +795,7 @@ async fn fetch_normalized_blob(
         .map_err(|e| format!("upstream read failed: {e}"))?
         .to_vec();
     let body = normalize_file_body(blob_tail, raw);
-    if state.use_cache
-    {
+    if state.use_cache {
         cache_put(state, blob_url, 200, "application/octet-stream", &body);
     }
     Ok(body.len() as u64)
@@ -860,33 +805,26 @@ async fn fetch_normalized_blob(
 // files route: normalized-content cache + response helpers
 // ---------------------------------------------------------------------------
 
-fn cached_file(state: &AppState, url: &str) -> Option<(String, Vec<u8>)>
-{
+fn cached_file(state: &AppState, url: &str) -> Option<(String, Vec<u8>)> {
     let (status, ctype, body) = cache_get(state, url)?;
-    if status != 200
-    {
+    if status != 200 {
         return None;
     }
     Some((sanitize_ctype(&ctype), body))
 }
 
-fn cached_size(state: &AppState, url: &str) -> Option<u64>
-{
+fn cached_size(state: &AppState, url: &str) -> Option<u64> {
     let (_, body) = cached_file(state, url)?;
     Some(body.len() as u64)
 }
 
-fn cached_file_range(state: &AppState, url: &str, range: &str) -> Option<Response>
-{
+fn cached_file_range(state: &AppState, url: &str, range: &str) -> Option<Response> {
     let spec = range.strip_prefix("bytes=")?;
     let (start_s, end_s) = spec.split_once('-')?;
     let start: usize = start_s.parse().ok()?;
-    let end_in: usize = if end_s.is_empty()
-    {
+    let end_in: usize = if end_s.is_empty() {
         usize::MAX
-    }
-    else
-    {
+    } else {
         end_s.parse().ok()?
     };
     let (ctype, total, body) = cache_get_range_window(state, url, start, end_in)?;
@@ -899,7 +837,9 @@ fn cached_file_range(state: &AppState, url: &str, range: &str) -> Option<Respons
         .into_response();
     res.headers_mut().insert(
         header::CONTENT_RANGE,
-        format!("bytes {start}-{end}/{total}").parse().expect("range"),
+        format!("bytes {start}-{end}/{total}")
+            .parse()
+            .expect("range"),
     );
     Some(res)
 }
@@ -910,8 +850,7 @@ fn cache_get_range_window(
     url: &str,
     start: usize,
     end_in: usize,
-) -> Option<(String, u64, Vec<u8>)>
-{
+) -> Option<(String, u64, Vec<u8>)> {
     let path = cache_entry(state, url);
     let mut f = std::fs::File::open(&path).ok()?;
     let mut hdr = [0u8; 6];
@@ -921,30 +860,30 @@ fn cache_get_range_window(
     std::io::Read::read_exact(&mut f, &mut ctype_buf).ok()?;
     let ctype = String::from_utf8_lossy(&ctype_buf).into_owned();
     let file_len = f.metadata().ok()?.len() as usize;
-    if file_len < 6 + ctype_len
-    {
+    if file_len < 6 + ctype_len {
         return None;
     }
     let body_len = (file_len - 6 - ctype_len) as u64;
     let start64 = start as u64;
-    if start64 >= body_len
-    {
+    if start64 >= body_len {
         return None;
     }
     let end = (end_in as u64).min(body_len.saturating_sub(1));
-    if end < start64
-    {
+    if end < start64 {
         return None;
     }
-    std::io::Seek::seek(&mut f, std::io::SeekFrom::Start(6 + ctype_len as u64 + start64)).ok()?;
+    std::io::Seek::seek(
+        &mut f,
+        std::io::SeekFrom::Start(6 + ctype_len as u64 + start64),
+    )
+    .ok()?;
     let len = (end - start64 + 1) as usize;
     let mut body = vec![0u8; len];
     std::io::Read::read_exact(&mut f, &mut body).ok()?;
     Some((ctype, body_len, body))
 }
 
-fn file_response(ctype: &str, body: Vec<u8>) -> Response
-{
+fn file_response(ctype: &str, body: Vec<u8>) -> Response {
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, ctype.to_string())],
@@ -960,26 +899,20 @@ fn file_response(ctype: &str, body: Vec<u8>) -> Response
 // plan, fetch caps and materialized sizes all match what this proxy serves
 // ---------------------------------------------------------------------------
 
-fn registered_sizes() -> &'static Mutex<HashMap<String, u64>>
-{
+fn registered_sizes() -> &'static Mutex<HashMap<String, u64>> {
     static SIZES: OnceLock<Mutex<HashMap<String, u64>>> = OnceLock::new();
     SIZES.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-fn normalized_manifest_url(manifest_url: &str) -> String
-{
+fn normalized_manifest_url(manifest_url: &str) -> String {
     format!("{manifest_url}#normalized")
 }
 
 // inflate a ct=1 manifest transfer when its stored copy is still compressed
-fn decompress_cached_manifest(state: &AppState, url: &str)
-{
-    if let Some((_, _, body)) = cache_get(state, url)
-    {
-        if normalize::looks_zlib(&body)
-        {
-            if let Some(text) = normalize::zlib_inflate(&body)
-            {
+fn decompress_cached_manifest(state: &AppState, url: &str) {
+    if let Some((_, _, body)) = cache_get(state, url) {
+        if normalize::looks_zlib(&body) {
+            if let Some(text) = normalize::zlib_inflate(&body) {
                 cache_put(state, url, 200, "text/xml", &text);
             }
         }
@@ -993,17 +926,14 @@ fn decompress_cached_manifest(state: &AppState, url: &str)
 
 static URL_RE: OnceLock<regex::Regex> = OnceLock::new();
 
-fn rewrite_links(body: &[u8], headers: &HeaderMap) -> Vec<u8>
-{
+fn rewrite_links(body: &[u8], headers: &HeaderMap) -> Vec<u8> {
     // only rewrite text bodies (product manifests, pkg.mft xml, patchlists);
     // binary payloads (zlib chunks, uop data) pass through byte-identical
-    let text = match std::str::from_utf8(body)
-    {
+    let text = match std::str::from_utf8(body) {
         Ok(text) => text,
         Err(_) => return body.to_vec(),
     };
-    if !text.trim_start().starts_with('<')
-    {
+    if !text.trim_start().starts_with('<') {
         return body.to_vec();
     }
 
@@ -1011,20 +941,31 @@ fn rewrite_links(body: &[u8], headers: &HeaderMap) -> Vec<u8>
     let replaced = re.replace_all(text, |caps: &regex::Captures| {
         let upstream = caps[0].trim_end_matches('/');
         // map each known upstream host to its local proxy prefix
-        if upstream.starts_with("http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest")
+        if upstream
+            .starts_with("http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest")
         {
-            format!("/patch/manifest/{}", upstream.trim_start_matches("http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest"))
-        }
-        else if upstream.starts_with("http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files")
+            format!(
+                "/patch/manifest/{}",
+                upstream.trim_start_matches(
+                    "http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest"
+                )
+            )
+        } else if upstream
+            .starts_with("http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files")
         {
-            format!("/patch/files/{}", upstream.trim_start_matches("http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files"))
-        }
-        else if upstream.starts_with("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo")
-        {
-            format!("/patch/eamythic/{}", upstream.trim_start_matches("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo"))
-        }
-        else
-        {
+            format!(
+                "/patch/files/{}",
+                upstream.trim_start_matches(
+                    "http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files"
+                )
+            )
+        } else if upstream.starts_with("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo") {
+            format!(
+                "/patch/eamythic/{}",
+                upstream
+                    .trim_start_matches("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo")
+            )
+        } else {
             caps[0].to_string()
         }
     });
@@ -1035,27 +976,28 @@ fn rewrite_links(body: &[u8], headers: &HeaderMap) -> Vec<u8>
 // /stream/<url>: generic same-origin url proxy (any manifest type)
 // ---------------------------------------------------------------------------
 
-async fn stream_proxy(State(state): State<AppState>, Path(url): Path<String>) -> Response
-{
+async fn stream_proxy(State(state): State<AppState>, Path(url): Path<String>) -> Response {
     // axum already percent-decoded the wildcard; validate the scheme
     let url = percent_decode(&url);
-    if !(url.starts_with("http://") || url.starts_with("https://"))
-    {
+    if !(url.starts_with("http://") || url.starts_with("https://")) {
         return (StatusCode::BAD_REQUEST, "expected an absolute http(s) url").into_response();
     }
 
-    if state.use_cache
-    {
-        if let Some((status, ctype, body)) = cache_get(&state, &url)
-        {
+    if state.use_cache {
+        if let Some((status, ctype, body)) = cache_get(&state, &url) {
             return respond_plain(status, &ctype, body);
         }
     }
 
-    let resp = match state.http.get(&url).send().await
-    {
+    let resp = match state.http.get(&url).send().await {
         Ok(resp) => resp,
-        Err(e) => return (StatusCode::BAD_GATEWAY, format!("upstream fetch failed: {e}")).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                format!("upstream fetch failed: {e}"),
+            )
+                .into_response()
+        }
     };
 
     let status = resp.status().as_u16();
@@ -1065,37 +1007,36 @@ async fn stream_proxy(State(state): State<AppState>, Path(url): Path<String>) ->
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream")
         .to_string();
-    let body = match resp.bytes().await
-    {
+    let body = match resp.bytes().await {
         Ok(b) => b.to_vec(),
-        Err(e) => return (StatusCode::BAD_GATEWAY, format!("upstream read failed: {e}")).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                format!("upstream read failed: {e}"),
+            )
+                .into_response()
+        }
     };
 
-    if status == 200 && state.use_cache
-    {
+    if status == 200 && state.use_cache {
         cache_put(&state, &url, status, &ctype, &body);
     }
 
     respond_plain(status, &ctype, body)
 }
 
-fn respond_plain(status: u16, ctype: &str, body: Vec<u8>) -> Response
-{
+fn respond_plain(status: u16, ctype: &str, body: Vec<u8>) -> Response {
     let status = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     (status, [(header::CONTENT_TYPE, ctype.to_string())], body).into_response()
 }
 
-fn percent_decode(text: &str) -> String
-{
+fn percent_decode(text: &str) -> String {
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;
-    while i < bytes.len()
-    {
-        if bytes[i] == b'%' && i + 2 < bytes.len() + 1 && i + 3 <= bytes.len()
-        {
-            if let Ok(byte) = u8::from_str_radix(&text[i + 1..i + 3], 16)
-            {
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() + 1 && i + 3 <= bytes.len() {
+            if let Ok(byte) = u8::from_str_radix(&text[i + 1..i + 3], 16) {
                 out.push(byte);
                 i += 3;
                 continue;
@@ -1111,21 +1052,14 @@ fn percent_decode(text: &str) -> String
 // /ws/<host>/<port>: WebSocket-to-TCP bridge (shard connections)
 // ---------------------------------------------------------------------------
 
-async fn ws_shard(
-    Path((host, port)): Path<(String, u16)>,
-    upgrade: WebSocketUpgrade,
-) -> Response
-{
+async fn ws_shard(Path((host, port)): Path<(String, u16)>, upgrade: WebSocketUpgrade) -> Response {
     upgrade.on_upgrade(move |socket| async move { bridge(socket, host, port).await })
 }
 
-async fn bridge(socket: WebSocket, host: String, port: u16)
-{
-    let tcp = match tokio::net::TcpStream::connect((host.as_str(), port)).await
-    {
+async fn bridge(socket: WebSocket, host: String, port: u16) {
+    let tcp = match tokio::net::TcpStream::connect((host.as_str(), port)).await {
         Ok(tcp) => tcp,
-        Err(e) =>
-        {
+        Err(e) => {
             eprintln!("xuoproxy: ws bridge to {host}:{port} failed: {e}");
             return;
         }
@@ -1136,16 +1070,11 @@ async fn bridge(socket: WebSocket, host: String, port: u16)
     let (mut tcp_rx, mut tcp_tx) = tokio::io::split(tcp);
 
     // client -> shard: binary websocket frames are raw protocol bytes
-    let to_shard = async move
-    {
-        while let Some(Ok(msg)) = ws_rx.next().await
-        {
-            match msg
-            {
-                axum::extract::ws::Message::Binary(data) =>
-                {
-                    if tcp_tx.write_all(&data).await.is_err()
-                    {
+    let to_shard = async move {
+        while let Some(Ok(msg)) = ws_rx.next().await {
+            match msg {
+                axum::extract::ws::Message::Binary(data) => {
+                    if tcp_tx.write_all(&data).await.is_err() {
                         break;
                     }
                 }
@@ -1157,18 +1086,17 @@ async fn bridge(socket: WebSocket, host: String, port: u16)
     };
 
     // shard -> client: tcp bytes become binary websocket frames
-    let to_client = async move
-    {
+    let to_client = async move {
         let mut buf = vec![0u8; 16384];
-        loop
-        {
-            match tokio::io::AsyncReadExt::read(&mut tcp_rx, &mut buf).await
-            {
+        loop {
+            match tokio::io::AsyncReadExt::read(&mut tcp_rx, &mut buf).await {
                 Ok(0) | Err(_) => break,
-                Ok(n) =>
-                {
+                Ok(n) => {
                     use tokio::io::AsyncWriteExt;
-                    if ws_tx.send(axum::extract::ws::Message::Binary(buf[..n].to_vec())).await.is_err()
+                    if ws_tx
+                        .send(axum::extract::ws::Message::Binary(buf[..n].to_vec()))
+                        .await
+                        .is_err()
                     {
                         break;
                     }
@@ -1179,8 +1107,7 @@ async fn bridge(socket: WebSocket, host: String, port: u16)
     };
 
     // whichever direction ends first tears the bridge down
-    tokio::select!
-    {
+    tokio::select! {
         _ = to_shard => {},
         _ = to_client => {},
     }
@@ -1195,20 +1122,16 @@ async fn static_file(
     State(state): State<AppState>,
     req_headers: axum::http::HeaderMap,
     uri: axum::http::Uri,
-) -> Response
-{
+) -> Response {
     let path = uri.path();
     let rel = if path == "/" { "/index.html" } else { path };
-    if rel.contains("..")
-    {
+    if rel.contains("..") {
         return (StatusCode::FORBIDDEN, "forbidden").into_response();
     }
 
     let full = state.dist.join(rel.trim_start_matches('/'));
-    match tokio::fs::read(&full).await
-    {
-        Ok(bytes) =>
-        {
+    match tokio::fs::read(&full).await {
+        Ok(bytes) => {
             let mime = mime_of(&full);
             // the dist artifacts share filenames across builds (crossuo.js /
             // crossuo.wasm are NOT content-addressed): any long-lived cache
@@ -1228,13 +1151,15 @@ async fn static_file(
                 not_modified
                     .headers_mut()
                     .insert(header::ETAG, etag.parse().expect("etag"));
-                not_modified
-                    .headers_mut()
-                    .insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
+                not_modified.headers_mut().insert(
+                    header::CACHE_CONTROL,
+                    "no-cache".parse().expect("cache-control"),
+                );
                 return not_modified;
             }
             let mut res = ([(header::CONTENT_TYPE, mime)], bytes).into_response();
-            res.headers_mut().insert(header::ETAG, etag.parse().expect("etag"));
+            res.headers_mut()
+                .insert(header::ETAG, etag.parse().expect("etag"));
             res.headers_mut().insert(
                 header::CACHE_CONTROL,
                 "no-cache".parse().expect("cache-control"),
@@ -1247,21 +1172,17 @@ async fn static_file(
 
 // FNV-1a 64: cheap content fingerprint for the ETag (64-bit is plenty to
 // detect "the file changed" between builds)
-fn fnv1a64(data: &[u8]) -> u64
-{
+fn fnv1a64(data: &[u8]) -> u64 {
     let mut hash: u64 = 0xcbf29ce484222325;
-    for &b in data
-    {
+    for &b in data {
         hash ^= u64::from(b);
         hash = hash.wrapping_mul(0x100000001b3);
     }
     hash
 }
 
-fn mime_of(path: &std::path::Path) -> &'static str
-{
-    match path.extension().and_then(|e| e.to_str()).unwrap_or("")
-    {
+fn mime_of(path: &std::path::Path) -> &'static str {
+    match path.extension().and_then(|e| e.to_str()).unwrap_or("") {
         "html" => "text/html",
         "js" => "text/javascript",
         "mjs" => "text/javascript",
