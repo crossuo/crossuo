@@ -26,6 +26,10 @@
 #define WITH_NULL
 #endif
 #include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <vector>
+#include <cstdio>
 namespace ass
 {
 #include <external/ass.h>
@@ -439,29 +443,77 @@ bool CSoundManager::IsPlayingNormalMusic()
 void CSoundManager::PlayMP3(const char *fileName, int index, bool loop, bool warmode)
 {
     SOUND_DEBUG_TRACE;
+    int cur = warmode ? 1 : 0;
+    int old = warmode ? 0 : 1;
 #if defined(XUO_EMSC)
-    // music DATA lane (web): the mp3 streams through the stream-file
-    // registry - complete it (bounded, pool-driven) before SoLoud opens it,
-    // otherwise WavStream::load reads a truncated file. The registry is
-    // keyed by the bare plan name (the caller passes an install path)
+    // music DATA lane (web): complete the mp3 through the stream-file
+    // registry (bounded, pool-driven), then hand the finished bytes to
+    // SoLoud as memory. Two reasons to never let WavStream touch the file:
+    // the lane materializes at the plan's case-exact install path (MEMFS
+    // is case-sensitive) while the music index spells the config's
+    // lowercase name, and streaming would re-open the file mid-mix. The
+    // registry is keyed by the bare plan name (the caller passes an
+    // install path)
+    bool musicLoaded = false;
     if (fileName != nullptr)
     {
         const astr_t lower = str_lower(astr_t(fileName));
         const auto at = lower.find("music/");
         if (at != astr_t::npos)
         {
-            vfs_stream_file_ensure(lower.c_str() + at);
+            const char *key = lower.c_str() + at;
+            if (vfs_stream_file_ensure(key))
+            {
+                vfs_stream_file_stats_entry entry[32] = {};
+                uint64_t total = 0;
+                const int entries = vfs_stream_file_stats(entry, 32);
+                for (int i = 0; i < entries; i++)
+                {
+                    if (strcmp(entry[i].name, key) == 0 && entry[i].phase == 2)
+                    {
+                        total = entry[i].inflated_total;
+                        break;
+                    }
+                }
+                if (total > 0 && total <= (64u << 20))
+                {
+                    std::vector<uint8_t> bytes;
+                    bytes.resize(size_t(total));
+                    bool complete = true;
+                    for (uint64_t off = 0; off < total;)
+                    {
+                        const uint32_t chunk =
+                            uint32_t((total - off) > (1u << 20) ? (1u << 20) : (total - off));
+                        const uint8_t *window = vfs_stream_file_read(key, size_t(off), chunk);
+                        if (window == nullptr)
+                        {
+                            complete = false;
+                            break;
+                        }
+                        memcpy(bytes.data() + off, window, chunk);
+                        off += chunk;
+                    }
+                    if (complete)
+                    {
+                        musicLoaded =
+                            s_MusicStream[cur].loadMem(bytes.data(), int(bytes.size()), true, false) == 0;
+                    }
+                }
+            }
         }
     }
+#else
+    const bool musicLoaded = false;
 #endif
-    int cur = warmode ? 1 : 0;
-    int old = warmode ? 0 : 1;
     if (s_Music[cur])
     {
         s_backend.stop(s_Music[cur]);
     }
 
-    s_MusicStream[cur].load(fileName);
+    if (!musicLoaded)
+    {
+        s_MusicStream[cur].load(fileName);
+    }
     s_MusicStream[cur].setLooping(loop);
     s_Music[cur] = s_backend.play(s_MusicStream[cur], 0, 0);
     s_backend.fadeVolume(s_Music[cur], VOLUME_FACTOR, 2);
