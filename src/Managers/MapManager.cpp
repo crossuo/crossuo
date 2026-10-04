@@ -407,6 +407,21 @@ void CMapManager::ClearUsedBlocks()
 // Init(false), split out so callers that stream the actual blocks through
 // budgeted Init(true) passes can still (re)initialise the table safely (a
 // stale table hands out dangling block pointers after a map switch)
+// full release: the queue items (blocks) plus the direct index table.
+// Clearing only the items left m_Blocks full of dangling pointers (and
+// MaxBlockIndex stale) for everything between a logout and the next Reset -
+// a re-login must rebuild the world's map state from scratch.
+void CMapManager::Clear()
+{
+    CBaseQueue::Clear();
+    if (m_Blocks != nullptr)
+    {
+        delete[] m_Blocks;
+        m_Blocks = nullptr;
+    }
+    MaxBlockIndex = 0;
+}
+
 void CMapManager::Reset()
 {
     const int map = GetActualMap();
@@ -498,7 +513,17 @@ void CMapManager::Init(bool delayed)
     // inside a packet handler, where the frame-cached g_Ticks never advances
     // and the delayed pass would otherwise load the whole area in one go
     const uint32_t ticks = SDL_GetTicks();
-    const uint32_t maxDelay = g_FrameDelay[WINDOW_ACTIVE] / 2;
+    // an uncapped FPS (frame delay 0) must not collapse the budget:
+    // `elapsed >= 0` is always true, so the pass would stop before its first
+    // load and every deferred block (the player's own block on web, created
+    // terrain-less by AddRender) would stay unloaded forever - a black
+    // block-sized square around the player after a logout/login cycle
+    uint32_t maxDelay = g_FrameDelay[WINDOW_ACTIVE] / 2;
+    constexpr uint32_t XUO_MIN_INIT_BUDGET_MS = 4;
+    if (maxDelay < XUO_MIN_INIT_BUDGET_MS)
+    {
+        maxDelay = XUO_MIN_INIT_BUDGET_MS;
+    }
     for (int i = minBlockX; i <= maxBlockX; i++)
     {
         uint32_t index = i * g_MapBlockSize[map].Height;
@@ -593,6 +618,26 @@ void CMapManager::LoadBlock(CMapBlock *block)
                 block->AddObject(obj, x, y);
             }
         }
+    }
+
+    // a fully zeroed MAP_BLOCK (every cell tile 0 / z 0) is not real terrain -
+    // it is the signature of a zero-filled payload (fresh allocation or a
+    // corrupted transfer that decoded silently). Never mark such a block
+    // Loaded: leaving it deferred keeps every retry path honest instead of
+    // baking a black void into the render tree
+    bool zeroed = true;
+    for (int pos = 0; pos < 64 && zeroed; pos++)
+    {
+        zeroed = pmb->Cells[pos].TileID == 0 && pmb->Cells[pos].Z == 0;
+    }
+    if (zeroed)
+    {
+        Warning(Client,
+                "map block %u (%d,%d): zeroed terrain payload rejected",
+                block->Index,
+                block->X,
+                block->Y);
+        return;
     }
 
     block->CreateLandTextureRect();

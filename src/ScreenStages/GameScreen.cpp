@@ -511,6 +511,15 @@ void CGameScreen::CalculateRenderList()
                         block = g_MapManager.AddBlock(blockIndex);
                         block->X = blockX;
                         block->Y = blockY;
+                    }
+
+                    // web streaming: an existing block can still be
+                    // terrain-less (created by AddRender before its group
+                    // was warm, or a failed load) - retry it here or it
+                    // renders as a black block-sized diamond until a full
+                    // reload (the budgeted Init pass is the only other retry)
+                    if (!block->Loaded)
+                    {
                         g_MapManager.LoadBlock(block);
                     }
 
@@ -540,6 +549,12 @@ void CGameScreen::CalculateRenderList()
                 mb = g_MapManager.AddBlock(blockIndex);
                 mb->X = bx;
                 mb->Y = by;
+            }
+
+            // web streaming: retry terrain-less blocks (see the checkerboard
+            // branch above)
+            if (!mb->Loaded)
+            {
                 g_MapManager.LoadBlock(mb);
             }
 

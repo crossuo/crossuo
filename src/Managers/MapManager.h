@@ -42,6 +42,10 @@ public:
     void GetMapZ(int x, int y, int &groundZ, int &staticZ);
     void Init(bool delayed = false);
     void Reset();
+    // full release: drops the blocks AND the direct index table - a logout
+    // must leave no stale table entries behind (the table is rebuilt by
+    // Reset on the next world entry)
+    void Clear() override;
     CMapBlock *GetBlock(uint32_t index);
     CMapBlock *AddBlock(uint32_t index);
     void DeleteBlock(uint32_t index);
