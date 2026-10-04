@@ -496,6 +496,29 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 
     CIndexMulti &index = g_Index.m_Multi[MultiGraphic - 1];
     int count = (int)index.Count;
+
+    const uint8_t *multiWindow = nullptr;
+#if defined(XUO_EMSC)
+    if (index.UopBlock == nullptr && vfs_stream_multi_windowed())
+    {
+        // stream-file lane: multi.mul is streamable metadata and not mapped
+        // - the index entry holds the relative offset; resolve the whole
+        // multi's bytes as one registry window (null while cold: retry on
+        // the next target update). Mapped installs keep the pointer path.
+        int itemOffset = sizeof(MULTI_BLOCK);
+        if (g_Config.ClientVersion >= CV_7090)
+        {
+            itemOffset = sizeof(MULTI_BLOCK_NEW);
+        }
+        multiWindow =
+            vfs_stream_read_multi(size_t(index.Address), uint32_t(count * itemOffset));
+        if (multiWindow == nullptr && (index.Address != 0 || count != 0))
+        {
+            return;
+        }
+    }
+#endif
+
     if (index.UopBlock != nullptr)
     {
         std::vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(index.UopBlock);
@@ -525,7 +548,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
             AddMultiObject(mo);
         }
     }
-    else if (index.Address != 0)
+    else if (multiWindow != nullptr || index.Address != 0)
     {
         int itemOffset = sizeof(MULTI_BLOCK);
 
@@ -534,9 +557,11 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
             itemOffset = sizeof(MULTI_BLOCK_NEW);
         }
 
+        const size_t multiBase =
+            multiWindow != nullptr ? size_t(multiWindow) : size_t(index.Address);
         for (int j = 0; j < count; j++)
         {
-            MULTI_BLOCK *pmb = (MULTI_BLOCK *)(index.Address + (j * itemOffset));
+            MULTI_BLOCK *pmb = (MULTI_BLOCK *)(multiBase + (j * itemOffset));
 
             CMultiObject *mo = new CMultiObject(
                 pmb->ID, offsetX + pmb->X, offsetY + pmb->Y, offsetZ + (char)pmb->Z, 2);

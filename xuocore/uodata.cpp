@@ -675,7 +675,25 @@ bool CFileManager::Load()
 
     if (s_UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
     {
-        s_UseVerdata = false;
+#if defined(XUO_EMSC)
+        // stream-file lane: the legacy patch overlay is boot-time data (its
+        // consumers store absolute pointers into the mapped file), so when
+        // the plan carries it, stream it to completion here (blocking-with-
+        // retry, no prefetch loop) and map the result once. A plan without
+        // verdata keeps today's tolerated absence.
+        if (vfs_stream_file_ensure("verdata.mul"))
+        {
+            s_UseVerdata = m_VerdataMul.Load(UOFilePath("verdata.mul"));
+            if (s_UseVerdata)
+            {
+                Info(Data, "verdata.mul streamed and mapped");
+            }
+        }
+        else
+#endif
+        {
+            s_UseVerdata = false;
+        }
     }
 
     if (!m_AnimdataMul.Size)
@@ -739,8 +757,19 @@ bool CFileManager::LoadCommon()
     }
     if (!m_TextureIdx.Load(UOFilePath("texidx.mul")))
     {
-        Warning(Data, "file load: required file missing/failed (line 27)");
-        return false;
+#if defined(XUO_EMSC)
+        // stream-file lane: a plan that keeps texidx.mul as streamable
+        // metadata (custom shards) demands it in LoadIndexFiles below
+        if (vfs_stream_file_available("texidx.mul"))
+        {
+            Warning(Data, "texidx.mul left to the stream-file lane");
+        }
+        else
+#endif
+        {
+            Warning(Data, "file load: required file missing/failed (line 27)");
+            return false;
+        }
     }
 #if defined(XUO_EMSC)
     // web: anim.mul is materialized lazily by the stream-file lane (see
@@ -792,8 +821,20 @@ bool CFileManager::LoadCommon()
     }
     if (!m_TextureMul.Load(UOFilePath("texmaps.mul")))
     {
-        Warning(Data, "file load: required file missing/failed (line 71)");
-        return false;
+#if defined(XUO_EMSC)
+        // stream-file lane: a plan that keeps texmaps.mul as streamable
+        // metadata (custom shards ship bigger ones) leaves the file unmapped
+        // at boot; land texture reads route through the registry instead
+        if (vfs_stream_file_available("texmaps.mul"))
+        {
+            Warning(Data, "texmaps.mul left to the stream-file lane");
+        }
+        else
+#endif
+        {
+            Warning(Data, "file load: required file missing/failed (line 71)");
+            return false;
+        }
     }
     if (!m_TiledataMul.Load(UOFilePath("tiledata.mul")))
     {
@@ -1049,15 +1090,23 @@ bool CFileManager::LoadWithUop()
     }
     if (!multiLoaded)
     {
-        if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
+#if defined(XUO_EMSC)
+        // stream-file lane: a plan that keeps the multi muls as streamable
+        // metadata (custom shards) loads them below through the registry
+        // (LoadIndexFiles); only a plan without them fails the boot here
+        if (!vfs_stream_file_available("multi.idx") && !vfs_stream_file_available("multi.mul"))
+#endif
         {
-            Warning(Data, "LoadWithUop: required pack/mul missing (line 4)");
-            return false;
-        }
-        if (!m_MultiMul.Load(UOFilePath("multi.mul")))
-        {
-            Warning(Data, "LoadWithUop: required pack/mul missing (line 5)");
-            return false;
+            if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
+            {
+                Warning(Data, "LoadWithUop: required pack/mul missing (line 4)");
+                return false;
+            }
+            if (!m_MultiMul.Load(UOFilePath("multi.mul")))
+            {
+                Warning(Data, "LoadWithUop: required pack/mul missing (line 5)");
+                return false;
+            }
         }
     }
 
@@ -1691,6 +1740,27 @@ void CFileManager::LoadIndexFiles()
 {
     Info(Data, "loading indexes");
 
+#if defined(XUO_EMSC)
+    // stream-file lane: index files the plan keeps as streamable metadata are
+    // boot-time tables (the index objects snapshot their entries once below)
+    // - demand them now (blocking-with-retry, same contract as verdata) and
+    // map the streamed result before the table walk
+    if (m_TextureIdx.Start == nullptr && vfs_stream_file_available("texidx.mul"))
+    {
+        if (vfs_stream_file_ensure("texidx.mul"))
+        {
+            m_TextureIdx.Load(UOFilePath("texidx.mul"));
+        }
+    }
+    if (m_MultiIdx.Start == nullptr && vfs_stream_file_available("multi.idx"))
+    {
+        if (vfs_stream_file_ensure("multi.idx"))
+        {
+            m_MultiIdx.Load(UOFilePath("multi.idx"));
+        }
+    }
+#endif
+
     auto *LandArtPtr = (ArtIdxBlock *)m_ArtIdx.Start;
     auto *StaticArtPtr =
         (ArtIdxBlock *)((size_t)m_ArtIdx.Start + (g_Data.m_Land.size() * sizeof(ArtIdxBlock)));
@@ -1811,6 +1881,22 @@ void CFileManager::LoadIndexFiles()
             MultiPtr,
             [&MultiPtr]() { return ++MultiPtr; });
     }
+#if defined(XUO_EMSC)
+    else if (vfs_stream_file_available("multi.mul"))
+    {
+        // stream-file lane: multi.mul is streamable metadata and not mapped.
+        // The index entries keep the RELATIVE file offset as their address
+        // (base 0); the multi consumers resolve windows through the registry
+        // at read time (vfs_stream_read_multi), null while the stream is cold.
+        Info(Data, "multi.mul left to the stream-file lane");
+        MulReadIndexFile(
+            g_Index.m_MultiIndexCount,
+            [&](int i) { return &g_Index.m_Multi[i]; },
+            0,
+            MultiPtr,
+            [&MultiPtr]() { return ++MultiPtr; });
+    }
+#endif
     else
     {
         CUopMappedFile &file = m_MultiCollection;
@@ -1950,14 +2036,120 @@ const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index)
     }
     return reinterpret_cast<const MAP_BLOCK *>(payload->data() + block * sizeof(MAP_BLOCK));
 }
+#endif
 
-// statics are materialized whole on web (bounded exception), so the native
-// StaticAddress pointer stays valid: passthrough.
+// classic map file presence, platform-split: native answers from the mapped
+// files; web also accepts the stream-file lane (plan-streamable staidx/
+// statics metadata, custom shards)
+#if defined(XUO_EMSC)
+static const char *statics_stream_name(int map)
+{
+    static char name[16];
+    snprintf(name, sizeof(name), "statics%i.mul", map);
+    return name;
+}
+
+static const char *staidx_stream_name(int map)
+{
+    static char name[16];
+    snprintf(name, sizeof(name), "staidx%i.mul", map);
+    return name;
+}
+#endif // XUO_EMSC
+
+bool vfs_map_files_present(int map)
+{
+    if (map < 0 || map >= MAX_MAPS_COUNT)
+    {
+        return false;
+    }
+    auto &mgr = g_FileManager;
+#if defined(XUO_EMSC)
+    const bool idx = mgr.m_StaticIdx[map].Start != nullptr ||
+                     vfs_stream_file_available(staidx_stream_name(map));
+    const bool mul = mgr.m_StaticMul[map].Start != nullptr ||
+                     vfs_stream_file_available(statics_stream_name(map));
+    return idx && mul;
+#else
+    return mgr.m_StaticIdx[map].Start != nullptr && mgr.m_StaticMul[map].Start != nullptr;
+#endif
+}
+
+#if defined(XUO_EMSC)
+// stream-file statics lane: when a plan keeps the classic statics muls as
+// streamable metadata (custom shards ship bigger ones), block table entries
+// capture their statics position instead of a mapped address and this
+// accessor serves the bytes as registry windows. Mapped installs (the web
+// subset's default) keep the native pointer path below - byte-identical.
 const STATICS_BLOCK *vfs_index_statics_block(const CIndexMap *index)
 {
     if (index == nullptr)
+    {
         return nullptr;
-    return reinterpret_cast<const STATICS_BLOCK *>(index->StaticAddress);
+    }
+    if (index->StaticAddress != 0)
+    {
+        return reinterpret_cast<const STATICS_BLOCK *>(index->StaticAddress);
+    }
+    // stream lane: the entry captured its statics position at table build
+    if (index->WebStaticsStreamFile != 0xFF && index->WebStaticsBytes != 0)
+    {
+        const uint8_t *window = vfs_stream_file_read(
+            statics_stream_name(index->WebStaticsStreamFile),
+            index->WebStaticsOffset,
+            index->WebStaticsBytes);
+        return reinterpret_cast<const STATICS_BLOCK *>(window);
+    }
+    return nullptr;
+}
+
+bool vfs_stream_texmaps_windowed()
+{
+    return g_FileManager.m_TextureMul.Start == nullptr &&
+           vfs_stream_file_available("texmaps.mul");
+}
+
+const uint8_t *vfs_stream_read_texmaps(size_t offset, uint32_t size)
+{
+    if (!vfs_stream_texmaps_windowed())
+    {
+        return nullptr;
+    }
+    return vfs_stream_file_read("texmaps.mul", offset, size);
+}
+
+bool vfs_stream_multi_windowed()
+{
+    return g_FileManager.m_MultiMul.Start == nullptr &&
+           vfs_stream_file_available("multi.mul");
+}
+
+const uint8_t *vfs_stream_read_multi(size_t offset, uint32_t size)
+{
+    if (!vfs_stream_multi_windowed())
+    {
+        return nullptr;
+    }
+    return vfs_stream_file_read("multi.mul", offset, size);
+}
+
+void vfs_stream_music_kick(const char *local_path)
+{
+    // the sound system opens music files by path (SoLoud load); route the
+    // request through the registry so the bytes land for it. Playback stays
+    // the null driver on web (the audio output stack is a separate project).
+    if (local_path == nullptr)
+    {
+        return;
+    }
+    const astr_t lower = str_lower(astr_t(local_path));
+    const auto at = lower.find("music/");
+    if (at == astr_t::npos)
+    {
+        return;
+    }
+    const char *name = lower.c_str() + at;
+    vfs_stream_file_read(name, 0, 1);
 }
 #endif
 
@@ -3305,13 +3497,41 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
     }
 
     size_t staticIdxAddress = (size_t)g_FileManager.m_StaticIdx[map].Start;
+#if defined(XUO_EMSC)
+    // stream-file lane: a plan that keeps staidx<map>.mul as streamable
+    // metadata (custom shards) still needs its positions at table build -
+    // the index is small relative to the statics mul, so demand the whole
+    // file here (blocking-with-retry, the same boot-time contract verdata
+    // uses) and map the streamed result
+    if (staticIdxAddress == 0u && vfs_stream_file_available(staidx_stream_name(map)))
+    {
+        if (vfs_stream_file_ensure(staidx_stream_name(map)))
+        {
+            g_FileManager.m_StaticIdx[map].Load(UOFilePath(staidx_stream_name(map)));
+            staticIdxAddress = (size_t)g_FileManager.m_StaticIdx[map].Start;
+        }
+    }
+#endif
     size_t endStaticIdxAddress = staticIdxAddress + g_FileManager.m_StaticIdx[map].Size;
     size_t staticAddress = (size_t)g_FileManager.m_StaticMul[map].Start;
     size_t endStaticAddress = staticAddress + g_FileManager.m_StaticMul[map].Size;
+#if defined(XUO_EMSC)
+    // web: the statics mul may live in the stream-file lane (plan-streamable,
+    // not materialized) or be absent entirely. Build the table for the map
+    // groups regardless and let the entries without statics stay static-less
+    // (terrain-only) - native keeps its all-or-nothing guard.
+    const bool staticsWindowed =
+        staticAddress == 0u && vfs_stream_file_available(statics_stream_name(map));
+    if ((mapAddress == 0u) || (staticIdxAddress == 0u))
+    {
+        return;
+    }
+#else
     if ((mapAddress == 0u) || (staticIdxAddress == 0u) || (staticAddress == 0u))
     {
         return;
     }
+#endif
 
     int fileNumber = -1;
     size_t uopOffset = 0;
@@ -3404,17 +3624,47 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
         const auto *sidx = (StaIdxBlock *)(staticIdxAddress + blockIdx * sizeof(StaIdxBlock));
         if ((size_t)sidx < endStaticIdxAddress && sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
         {
-            const size_t address2 = staticAddress + sidx->Position;
-            if (address2 < endStaticAddress)
+#if defined(XUO_EMSC)
+            if (staticsWindowed)
             {
-                realStaticAddress = address2;
-                realStaticCount = sidx->Size / sizeof(STATICS_BLOCK);
-                if (realStaticCount > 1024)
+                // stream lane: the statics mul is not mapped - record where
+                // this block's statics live in the streamed file instead of
+                // computing a mapped address (vfs_index_statics_block serves
+                // the window at read time, null while the stream is cold)
+                int count = int(sidx->Size / sizeof(STATICS_BLOCK));
+                if (count > 1024)
                 {
-                    realStaticCount = 1024;
+                    count = 1024;
+                }
+                index.WebStaticsStreamFile = uint8_t(map & 0xFF);
+                index.WebStaticsOffset = uint32_t(sidx->Position);
+                index.WebStaticsBytes = uint32_t(count * sizeof(STATICS_BLOCK));
+                realStaticCount = count;
+            }
+            else
+#endif
+            {
+                const size_t address2 = staticAddress + sidx->Position;
+                if (address2 < endStaticAddress)
+                {
+                    realStaticAddress = address2;
+                    realStaticCount = sidx->Size / sizeof(STATICS_BLOCK);
+                    if (realStaticCount > 1024)
+                    {
+                        realStaticCount = 1024;
+                    }
                 }
             }
         }
+#if defined(XUO_EMSC)
+        if (!staticsWindowed)
+        {
+            // the entry carries no lane statics (mapped path or no data)
+            index.WebStaticsStreamFile = 0xFF;
+            index.WebStaticsOffset = 0;
+            index.WebStaticsBytes = 0;
+        }
+#endif
         index.OriginalMapAddress = realMapAddress;
         index.OriginalStaticAddress = realStaticAddress;
         index.OriginalStaticCount = realStaticCount;
@@ -3593,6 +3843,19 @@ void CFileManager::IndexReplaces()
     TextFileParser gumpParser(UOFilePath("gump.def"), " \t", "#;//", "{}");
     TextFileParser multiParser(UOFilePath("Multi.def"), " \t", "#;//", "{}");
     TextFileParser soundParser(UOFilePath("Sound.def"), " \t", "#;//", "{}");
+#if defined(XUO_EMSC)
+    // stream-file lane: the music config is plan-streamable metadata on web;
+    // the sound system needs it at index build (PlayMusic resolves file
+    // paths through it) - demand it like the other boot-time streamed files
+    if (!fs_path_exists(UOFilePath("Music/Digital/Config.txt")) &&
+        vfs_stream_file_available("Music/Digital/Config.txt"))
+    {
+        if (vfs_stream_file_ensure("Music/Digital/Config.txt"))
+        {
+            Info(Data, "music config streamed (Music/Digital/Config.txt)");
+        }
+    }
+#endif
     TextFileParser mp3Parser(UOFilePath("Music/Digital/Config.txt"), " ,", "#;", "");
 
     Info(Data, "replacing arts");

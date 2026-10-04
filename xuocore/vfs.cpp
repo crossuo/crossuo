@@ -932,9 +932,11 @@ struct WebStreamFile
     };
 
     astr_t name;        // canonical lowercase plan name ("anim.mul")
+    astr_t out_name;    // the plan's case-exact name (install path; MEMFS is case-sensitive)
     astr_t url;         // file repo + the plan entry's blob tail
     bool url_ready = false;
     bool url_missing_logged = false;
+    bool stored = false; // plan asset shipped uncompressed (ct != 1): verbatim copy
     fs_path out_path;   // install_dir/<name>
     fs_path done_path;  // install_dir/cache/<name>.ready
     Phase phase = Phase::Probe;
@@ -952,9 +954,13 @@ struct WebStreamFile
     std::vector<uint8_t> window; // last served read window
 };
 
-constexpr size_t WEB_STREAM_FILES_MAX = 8;
-WebStreamFile s_web_stream_files[WEB_STREAM_FILES_MAX];
-size_t s_web_stream_files_count = 0;
+// the registry holds one instance per demanded streamable plan name (the
+// legacy anim muls, facet charts, verdata, the music files, and - when a
+// plan stops materializing them - the statics/texmaps/multi muls). A flat
+// vector keeps insertion order and instance state is tiny until the file is
+// demanded; the cap only guards against pathological plan names.
+constexpr size_t WEB_STREAM_FILES_MAX = 128;
+std::vector<WebStreamFile> s_web_stream_files;
 
 constexpr uint64_t WEB_STREAM_CHUNK = 2u << 20;  // compressed bytes/step
 constexpr size_t WEB_STREAM_READ_CAP = 4u << 20; // sanity per read
@@ -969,10 +975,10 @@ WebStreamFile *web_stream_instance(const char *name)
     const astr_t lower = vfs_lower_ascii(name);
     if (lower.empty())
         return nullptr;
-    for (size_t i = 0; i < s_web_stream_files_count; ++i)
+    for (auto &instance : s_web_stream_files)
     {
-        if (s_web_stream_files[i].name == lower)
-            return &s_web_stream_files[i];
+        if (instance.name == lower)
+            return &instance;
     }
     // register on demand, but only names the plan carries as streamable:
     // an unknown name has no URL and no bytes anywhere
@@ -982,14 +988,18 @@ WebStreamFile *web_stream_instance(const char *name)
     const auto found = s_managed_files.find(lower);
     if (found == s_managed_files.end() || !s_plan.files[found->second].streamable)
         return nullptr;
-    if (s_web_stream_files_count >= WEB_STREAM_FILES_MAX)
+    if (s_web_stream_files.size() >= WEB_STREAM_FILES_MAX)
     {
-        LOG_ERROR("stream files: registry full (%zu), cannot stream %s", s_web_stream_files_count, name);
+        LOG_ERROR("stream files: registry full (%zu), cannot stream %s", s_web_stream_files.size(), name);
         return nullptr;
     }
-    WebStreamFile &s = s_web_stream_files[s_web_stream_files_count++];
+    s_web_stream_files.emplace_back();
+    WebStreamFile &s = s_web_stream_files.back();
     s.name = lower;
-    s.out_path = fs_path_join(s_params.install_dir, s.name);
+    // install path keeps the plan's case-exact name: consumers open the
+    // completed file by their own path spelling and MEMFS is case-sensitive
+    s.out_name = s_plan.files[found->second].name;
+    s.out_path = fs_path_join(s_params.install_dir, s.out_name);
     s.done_path = fs_path_join(fs_path_join(s_params.install_dir, "cache"), s.name + ".ready");
     return &s;
 }
@@ -1025,6 +1035,9 @@ bool web_stream_compose_url(WebStreamFile &s)
     }
     // the fetch engine's own join: repo + the asset's blob tail
     s.url = s_plan.file_repo + file.assets.front().blob;
+    // most whole-file blobs are one zlib stream (anim.mul); some loose files
+    // ship stored (ct != 1, e.g. LoginLoop.mp3) and copy through verbatim
+    s.stored = file.assets.front().ct != 1;
     s.url_ready = true;
     return true;
 }
@@ -1064,19 +1077,32 @@ bool web_stream_step(WebStreamFile &s)
         web_stream_reset(s);
         return false;
     }
-    const vfs_transport_result res = vfs_transport_active()->range(
-        s.url.c_str(),
-        s.url.c_str(),
-        s.compressed_off,
-        want,
-        [](void *context, const uint8_t *data, size_t size)
+    // transient-failure absorption: the worker thread's sync range GETs can
+    // fail spuriously (status 0) while the async fetch pool is saturating the
+    // browser's connection budget (observed at boot and during world entry).
+    // A failed step used to burn one of the 8 chunk_failures; now a failed
+    // GET is retried immediately (bounded) before it counts as a failure.
+    vfs_transport_result res {};
+    for (int attempt = 0; attempt < 3; ++attempt)
+    {
+        res = vfs_transport_active()->range(
+            s.url.c_str(),
+            s.url.c_str(),
+            s.compressed_off,
+            want,
+            [](void *context, const uint8_t *data, size_t size)
+            {
+                static_cast<std::vector<uint8_t> *>(context)->assign(data, data + size);
+                return true;
+            },
+            &chunk,
+            0,
+            false);
+        if (res.ok && !chunk.empty())
         {
-            static_cast<std::vector<uint8_t> *>(context)->assign(data, data + size);
-            return true;
-        },
-        &chunk,
-        0,
-        false);
+            break;
+        }
+    }
     if (res.total > 0 && s.compressed_total == 0)
     {
         s.compressed_total = uint64_t(res.total);
@@ -1107,16 +1133,60 @@ bool web_stream_step(WebStreamFile &s)
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
             return false;
         }
-        memset(&s.zs, 0, sizeof(s.zs));
-        if (inflateInit(&s.zs) != Z_OK)
+        if (!s.stored)
         {
-            fclose(s.out);
-            s.out = nullptr;
-            s.phase = WebStreamFile::Phase::Failed;
-            s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+            memset(&s.zs, 0, sizeof(s.zs));
+            if (inflateInit(&s.zs) != Z_OK)
+            {
+                fclose(s.out);
+                s.out = nullptr;
+                s.phase = WebStreamFile::Phase::Failed;
+                s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+                return false;
+            }
+            s.zs_active = true;
+        }
+    }
+
+    if (s.stored)
+    {
+        // stored blob: the bytes are the file, copy the chunk verbatim
+        if (fwrite(chunk.data(), 1, chunk.size(), s.out) != chunk.size())
+        {
+            web_stream_reset(s);
+            ++s.restarts;
+            if (s.restarts > 3)
+            {
+                s.phase = WebStreamFile::Phase::Failed;
+                s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+            }
             return false;
         }
-        s.zs_active = true;
+        s.inflated_total += chunk.size();
+        s.compressed_off += chunk.size();
+        if (s.compressed_total != 0 && s.compressed_off >= s.compressed_total)
+        {
+            const bool flushed = fflush(s.out) == 0;
+            fclose(s.out);
+            s.out = nullptr;
+            if (!flushed)
+            {
+                web_stream_reset(s);
+                return false;
+            }
+            char text[32] = {};
+            snprintf(text, sizeof(text), "%llu", (unsigned long long)s.inflated_total);
+            FILE *done = fopen(fs_path_ascii(s.done_path), "wb");
+            if (done != nullptr)
+            {
+                fwrite(text, 1, strlen(text), done);
+                fclose(done);
+            }
+            LOG_INFO("stream files: %s complete (%llu raw bytes)", s.name.c_str(), (unsigned long long)s.inflated_total);
+            s.phase = WebStreamFile::Phase::Ready;
+            return true;
+        }
+        return true;
     }
 
     s.zs.next_in = chunk.data();
@@ -1329,6 +1399,55 @@ const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t si
         return nullptr;
     }
     return s->window.data();
+}
+
+bool vfs_stream_file_ensure(const char *name)
+{
+    if (!vfs_enabled() || s_params.offline || name == nullptr)
+    {
+        return false;
+    }
+    WebStreamFile *const s = web_stream_instance(name);
+    if (s == nullptr)
+    {
+        return false;
+    }
+    if (s->phase == WebStreamFile::Phase::Ready)
+    {
+        return true;
+    }
+    if (s->phase == WebStreamFile::Phase::Failed)
+    {
+        // the demand path already gave up on this file recently; the ensure
+        // caller (boot verdata, a facet chart open) retries after the cooldown
+        if (std::chrono::steady_clock::now() < s->retry_at)
+        {
+            return false;
+        }
+        s->restarts = 0;
+        s->phase = WebStreamFile::Phase::Probe;
+    }
+    if (s->phase == WebStreamFile::Phase::Probe)
+    {
+        // reuse the demand path's probe (marker validation) by serving a
+        // zero-size read: it advances the state machine without transferring
+        vfs_stream_file_read(name, 0, 0);
+    }
+    // demand the completion: back-to-back paced chunk steps (each step is one
+    // bounded 2MB sync transfer) until the marker publisher flips the phase.
+    // Boot-time / rare-UI blocking-with-retry per the stream-file plan; the
+    // restart/cooldown semantics stay the demand path's own.
+    size_t steps = 0;
+    while (s->phase == WebStreamFile::Phase::Streaming && steps < 4096)
+    {
+        if (web_stream_step(*s))
+        {
+            ++steps;
+            continue;
+        }
+        break; // failure or cooldown: the caller sees not-ready and bails
+    }
+    return s->phase == WebStreamFile::Phase::Ready;
 }
 #endif // XUO_EMSC
 

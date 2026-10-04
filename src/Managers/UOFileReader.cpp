@@ -535,6 +535,21 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
 
     std::vector<uint16_t> pixels(w * h);
     uint16_t *P = (uint16_t *)io.Address;
+#if defined(XUO_EMSC)
+    if (vfs_stream_texmaps_windowed())
+    {
+        // stream-file lane: texmaps.mul is streamable metadata and not
+        // mapped - the index entry holds the relative offset; resolve the
+        // bytes as a registry window (null while cold: skip like missing
+        // data; mapped installs keep the pointer above, byte-identical)
+        const uint8_t *window = vfs_stream_read_texmaps(size_t(io.Address), io.DataSize);
+        if (window == nullptr)
+        {
+            return nullptr;
+        }
+        P = (uint16_t *)window;
+    }
+#endif
     for (int i = 0; i < h; i++)
     {
         int pos = (int)i * w;

@@ -6,6 +6,7 @@
 #include "Managers/ColorManager.h"
 #include <common/logging/logging.h>
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h>
 
 CMultiMap g_MultiMap;
 
@@ -123,6 +124,24 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
     }
 
     auto &file = g_FileManager.m_FacetMul[facet];
+#if defined(XUO_EMSC)
+    // stream-file lane: the facet charts are plan-streamable metadata on web
+    // (the mmap of the absent file silently failed at boot). The gump is
+    // opened rarely - demand the whole chart here once (blocking-with-retry,
+    // paced chunks) and map the streamed result for the parse below.
+    if (file.Size == 0u)
+    {
+        // the registry is keyed by the bare plan name (UOFilePath resolves to
+        // the absolute install path)
+        char facetName[16];
+        snprintf(facetName, sizeof(facetName), "facet0%i.mul", facet);
+        const fs_path facetPath = UOFilePath("%s", facetName);
+        if (vfs_stream_file_available(facetName) && vfs_stream_file_ensure(facetName))
+        {
+            file.Load(facetPath);
+        }
+    }
+#endif
     file.ResetPtr();
     if (file.Size == 0u)
     {

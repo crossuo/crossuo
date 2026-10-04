@@ -302,6 +302,15 @@ const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t si
 // acquire its bytes on demand); the bodyconv pass uses this in place of the
 // mapped-file check native does
 bool vfs_stream_file_available(const char *name);
+
+// demand the COMPLETE file now: drives the owning stream to its Ready phase
+// with back-to-back paced chunk steps (each one bounded sync transfer) and
+// returns true when the install file is complete and seek-readable, false
+// while cold/absent/failed (the caller keeps today's absence behavior).
+// For boot-time loads (verdata, streamed index files) and rarely-opened UI
+// (facet charts) only - demand reads and the single global pace gate remain
+// the common path.
+bool vfs_stream_file_ensure(const char *name);
 #endif
 
 // reads one asset's inflated payload bytes by its uop hash, fetching the

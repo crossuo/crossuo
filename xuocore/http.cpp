@@ -208,9 +208,14 @@ bool http_get_range(
     {
         *out_total = total;
     }
-    // only honor a real range answer (206 with the exact byte count) - a 200
-    // would deliver the whole file
-    if (status != 206 || len != length)
+    // only honor a real range answer (206) - a 200 would deliver the whole
+    // file. A clamped tail (the request ran past EOF: 206 shorter than the
+    // asked length, exactly the remaining bytes) is a valid answer and the
+    // only one small resources can ever give: the stream-file lane chunks
+    // fixed 2MB reads and files smaller than that (multi.mul, the music
+    // config, facet charts on small shards) always clamp on the first read.
+    const bool clamped_tail = total > 0 && len == size_t(total - offset) && len < length;
+    if (status != 206 || (len != length && !clamped_tail))
     {
         LOG_ERROR("range fetch mismatch (%ld, %zu vs %llu): %s", status, len, (unsigned long long)length, url);
         free(data);

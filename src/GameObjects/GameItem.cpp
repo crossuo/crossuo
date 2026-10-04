@@ -753,6 +753,27 @@ void CGameItem::LoadMulti(bool dropAlpha)
         alpha = 0xFF;
     }
 
+    const uint8_t *multiWindow = nullptr;
+#if defined(XUO_EMSC)
+    if (index.UopBlock == nullptr && vfs_stream_multi_windowed())
+    {
+        // stream-file lane: multi.mul is streamable metadata and not mapped
+        // - the index entry holds the relative offset; resolve the whole
+        // multi's bytes as one registry window (null while cold: retry on
+        // the next update). Mapped installs keep the pointer path below.
+        int itemOffset = sizeof(MULTI_BLOCK);
+        if (g_Config.ClientVersion >= CV_7090)
+        {
+            itemOffset = sizeof(MULTI_BLOCK_NEW);
+        }
+        multiWindow = vfs_stream_read_multi(size_t(address), uint32_t(count * itemOffset));
+        if (multiWindow == nullptr && (address != 0 || count != 0))
+        {
+            return;
+        }
+    }
+#endif
+
     if (index.UopBlock != nullptr)
     {
         std::vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(index.UopBlock);
@@ -807,7 +828,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
             }
         }
     }
-    else if (address != 0)
+    else if (multiWindow != nullptr || address != 0)
     {
         int itemOffset = sizeof(MULTI_BLOCK);
 
@@ -816,9 +837,10 @@ void CGameItem::LoadMulti(bool dropAlpha)
             itemOffset = sizeof(MULTI_BLOCK_NEW);
         }
 
+        const size_t multiBase = multiWindow != nullptr ? size_t(multiWindow) : address;
         for (int j = 0; j < count; j++)
         {
-            MULTI_BLOCK *pmb = (MULTI_BLOCK *)(address + (j * itemOffset));
+            MULTI_BLOCK *pmb = (MULTI_BLOCK *)(multiBase + (j * itemOffset));
 
             if (pmb->Flags != 0u)
             {

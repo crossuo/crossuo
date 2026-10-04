@@ -39,9 +39,7 @@ void CMapManager::ResetPatchesInBlockTable()
             return;
         }
 
-        if (g_FileManager.m_MapMul[map].Start == nullptr ||
-            g_FileManager.m_StaticIdx[map].Start == nullptr ||
-            g_FileManager.m_StaticMul[map].Start == nullptr)
+        if (g_FileManager.m_MapMul[map].Start == nullptr || !vfs_map_files_present(map))
         {
             return;
         }
@@ -627,10 +625,10 @@ void CMapManager::LoadBlock(CMapBlock *block)
 
 int CMapManager::GetActualMap()
 {
-    if (g_CurrentMap == 1 && (((g_FileManager.m_MapUOP[1].Start == nullptr) &&
-                               (g_FileManager.m_MapMul[1].Start == nullptr)) ||
-                              (g_FileManager.m_StaticIdx[1].Start == nullptr) ||
-                              (g_FileManager.m_StaticMul[1].Start == nullptr)))
+    if (g_CurrentMap == 1 &&
+        (((g_FileManager.m_MapUOP[1].Start == nullptr) &&
+          (g_FileManager.m_MapMul[1].Start == nullptr)) ||
+         !vfs_map_files_present(1)))
     {
         return 0;
     }

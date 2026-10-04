@@ -222,6 +222,14 @@ struct CIndexMap
     // group holds 4096 consecutive blocks; native seeks the same offset
     // inside the mapped pack)
     uint32_t WebMapGroupBlock = 0;
+    // stream-file statics lane (custom shards that do not materialize the
+    // classic statics muls): when the entry was built against a plan whose
+    // statics<map>.mul is streamable metadata, StaticAddress stays 0 and the
+    // block's statics resolve through vfs_index_statics_block as a registry
+    // window instead. 0xFF in the file slot means "no lane entry".
+    uint8_t WebStaticsStreamFile = 0xFF;
+    uint32_t WebStaticsOffset = 0;
+    uint32_t WebStaticsBytes = 0;
 #endif
 };
 
@@ -230,8 +238,26 @@ struct CIndexMap
 // CIndexMap entry (LRU-backed ranged GET) and returns a pointer into it,
 // valid until the next punctual fetch. Null when the entry has no group.
 const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index);
+// statics for a block table entry: the mapped statics<map>.mul pointer when
+// the file materialized, else a stream-file registry window (valid until the
+// next read of the same file) when the plan carries the file as streamable.
 const STATICS_BLOCK *vfs_index_statics_block(const CIndexMap *index);
+// stream-file lane helpers: windows into the streamed texmaps.mul /
+// multi.mul for an index entry, or null when the mapped file serves the
+// caller (lane not active) or the stream is cold (caller skips the draw).
+// `vfs_stream_music_kick` registers a music request with the registry (the
+// sound system still opens the file; playback stays the null driver on web).
+bool vfs_stream_texmaps_windowed();
+const uint8_t *vfs_stream_read_texmaps(size_t offset, uint32_t size);
+bool vfs_stream_multi_windowed();
+const uint8_t *vfs_stream_read_multi(size_t offset, uint32_t size);
+void vfs_stream_music_kick(const char *local_path);
 #endif
+
+// "the classic staidx/statics files for this map are readable": true via the
+// mapped files, or (web only) via the stream-file lane when the plan carries
+// them as streamable metadata. Native evaluates the mapped-file check only.
+bool vfs_map_files_present(int map);
 
 struct Index
 {

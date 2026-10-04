@@ -316,6 +316,13 @@ bool CSoundManager::IsPlayingNormalMusic()
 void CSoundManager::PlayMP3(const char *fileName, int index, bool loop, bool warmode)
 {
     SOUND_DEBUG_TRACE;
+#if defined(XUO_EMSC)
+    // music DATA lane (web): playback is the null driver here, but the sound
+    // system still opens the file below - register the request with the
+    // stream-file registry (one paced chunk per call) so the bytes land for
+    // it. The audio output stack is a separate project; do not build it here.
+    vfs_stream_music_kick(fileName);
+#endif
     int cur = warmode ? 1 : 0;
     int old = warmode ? 0 : 1;
     if (s_Music[cur])

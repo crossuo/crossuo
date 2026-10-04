@@ -290,8 +290,15 @@ void CGumpWorldMap::LoadMap(int map)
     if (!Called ||
         (g_FileManager.m_MapUOP[map].Start == nullptr &&
          g_FileManager.m_MapMul[map].Start == nullptr) ||
+#if defined(XUO_EMSC)
+        // stream-file lane: the statics files may be plan-streamable rather
+        // than mapped; the per-block walk below resolves through
+        // vfs_index_statics_block either way
+        !vfs_map_files_present(map))
+#else
         g_FileManager.m_StaticIdx[map].Start == nullptr ||
         g_FileManager.m_StaticMul[map].Start == nullptr)
+#endif
     {
         return;
     }
@@ -311,10 +318,22 @@ void CGumpWorldMap::LoadMap(int map)
                 crc32_checksum(g_FileManager.m_MapUOP[map].Start, g_FileManager.m_MapUOP[map].Size);
         }
 
-        crc32 ^= crc32_checksum(
-            g_FileManager.m_StaticIdx[map].Start, g_FileManager.m_StaticIdx[map].Size);
-        crc32 ^= crc32_checksum(
-            g_FileManager.m_StaticMul[map].Start, g_FileManager.m_StaticMul[map].Size);
+#if defined(XUO_EMSC)
+        // lane builds hash only the files they actually have mapped: the
+        // cache name just has to be deterministic per data state
+        if (g_FileManager.m_StaticIdx[map].Start != nullptr)
+#endif
+        {
+            crc32 ^= crc32_checksum(
+                g_FileManager.m_StaticIdx[map].Start, g_FileManager.m_StaticIdx[map].Size);
+        }
+#if defined(XUO_EMSC)
+        if (g_FileManager.m_StaticMul[map].Start != nullptr)
+#endif
+        {
+            crc32 ^= crc32_checksum(
+                g_FileManager.m_StaticMul[map].Start, g_FileManager.m_StaticMul[map].Size);
+        }
 
         if (g_FileManager.m_MapMul[map].Start != nullptr)
         {
@@ -343,7 +362,15 @@ void CGumpWorldMap::LoadMap(int map)
 
         std::vector<uint16_t> buf;
 
-        if (fs_path_exists(path))
+#if defined(XUO_EMSC)
+        // stream-file lane: while the statics mul is not mapped, a partial
+        // (cold-stream) render must not poison the cache - skip it entirely
+        // and recompute per open until the lane has delivered the file
+        const bool worldMapCacheable = g_FileManager.m_StaticMul[map].Start != nullptr;
+#else
+        const bool worldMapCacheable = true;
+#endif
+        if (worldMapCacheable && fs_path_exists(path))
         {
             fromFile = true;
             FILE *mapFile = fs_open(path, FS_READ);
@@ -485,13 +512,16 @@ void CGumpWorldMap::LoadMap(int map)
                 }
             }
 
-            fs_path_create(FilePath("data"));
-            FILE *mapFile = fs_open(path, FS_WRITE); // "wb"
-            if (mapFile != nullptr)
+            if (worldMapCacheable)
             {
-                size_t writen = fwrite(&buf[0], sizeof(short), buf.size(), mapFile);
-                fs_close(mapFile);
-                Error(Client, "writing world map file, need=%zi, writen=%zi\n", buf.size(), writen);
+                fs_path_create(FilePath("data"));
+                FILE *mapFile = fs_open(path, FS_WRITE); // "wb"
+                if (mapFile != nullptr)
+                {
+                    size_t writen = fwrite(&buf[0], sizeof(short), buf.size(), mapFile);
+                    fs_close(mapFile);
+                    Error(Client, "writing world map file, need=%zi, writen=%zi\n", buf.size(), writen);
+                }
             }
         }
 
