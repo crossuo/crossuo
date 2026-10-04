@@ -288,6 +288,21 @@
               glStats.draws = 0; glStats.clears = 0; glStats.blits = 0; glStats.texUp = 0;
               glStats.fbblit = 0; glStats.bindNull = 0; glStats.viewports = 0;
             }
+            // audio meters (?diag=1): context state, ring fill level and the
+            // RMS of what the ScriptProcessorNode actually output since the
+            // last beat. Non-zero RMS while music/sfx play == audible signal.
+            var au = window.__xuoAudio;
+            if (au) {
+              var avgRms = au.rmsCount ? (au.rmsSum / au.rmsCount) : 0;
+              line += ' | [diag-audio] state=' + au.ctx.state +
+                      ' unlocked=' + (au.unlocked ? 1 : 0) +
+                      (au.words ? ' ring=yes' : ' ring=no') +
+                      ' fill=' + au.fill + '/' + au.cap +
+                      ' cb=' + au.callbacks + ' underruns=' + au.underruns +
+                      ' rms=' + avgRms.toFixed(5) + ' (peak ' + au.rmsPeak.toFixed(5) +
+                      ' over ' + au.rmsCount + ' cb)';
+              au.rmsSum = 0; au.rmsCount = 0; au.rmsPeak = 0;
+            }
             console.log(line);
           }, 5000);
           (function loop() {
@@ -316,6 +331,170 @@
           var t = (e.error && e.error.stack) ? e.error.stack : e.message;
           logEl.textContent += 'EXCEPTION: ' + t + '\n';
         });
+      })();
+      // Web Audio output. The AudioContext MUST live on this (DOM) thread:
+      // (a) autoplay policies require a user gesture and the gesture happens
+      // here, (b) the pthread worker has no audio device (the earlier attempt
+      // to let SDL2 create the context inside the worker crashed on
+      // Module.SDL2.audioContext). The context is created suspended at page
+      // load (the hardware sample rate is readable right away - the sound
+      // system inits SoLoud to it before any gesture) and the first
+      // pointerdown/keydown resumes it; CDP-dispatched input counts as a
+      // gesture. PCM travels through a SharedArrayBuffer ring the pthread
+      // worker fills from SoLoud's manual mixer (SoundManager web backend):
+      //
+      //   [0] writeIdx (frames, worker)   [1] readIdx (frames, here)
+      //   [2] capacity (frames)           [3] context sampleRate (here)
+      //   [4] unlocked (here)             [5] context running (here)
+      //   [6] underrun callbacks (here)   [7] magic 'XUA1'
+      //   float32 area @ byte 32: capacity * 2 interleaved stereo samples
+      //
+      // A ScriptProcessorNode pulls the ring (deprecated but universal and
+      // needs no extra module file in dist; an AudioWorklet would read the
+      // same ring - swap it in later without touching the worker side).
+      (function () {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC || !window.SharedArrayBuffer) {
+          console.warn('[audio] WebAudio/SAB unavailable, web sound disabled');
+          return;
+        }
+        var ctx = new AC();
+        var node = ctx.createScriptProcessor(4096, 2, 2);
+        var analyser = ctx.createAnalyser();
+        analyser.fftSize = 2048;
+        node.connect(analyser);
+        analyser.connect(ctx.destination);
+        var td = new Float32Array(analyser.fftSize);
+        var audio = (window.__xuoAudio = {
+          ctx: ctx,
+          unlocked: false,
+          ring: null,
+          words: null,
+          samples: null,
+          cap: 0,
+          read: 0,
+          callbacks: 0,
+          underruns: 0,
+          // rolling RMS of what this node actually output (diag beat reads
+          // and resets these)
+          rmsSum: 0,
+          rmsCount: 0,
+          rmsPeak: 0,
+          fill: -1
+        });
+        node.onaudioprocess = function (e) {
+          audio.callbacks++;
+          var out = e.outputBuffer;
+          var L = out.getChannelData(0);
+          var R = out.getChannelData(1);
+          var w = audio.words;
+          if (!w || !audio.unlocked) {
+            L.fill(0);
+            R.fill(0);
+            return;
+          }
+          var n = L.length;
+          // wrap-safe (both counters are Int32 and advance together)
+          var avail = (Atomics.load(w, 0) - Atomics.load(w, 1)) | 0;
+          var got = avail < n ? avail : n;
+          if (got > 0) {
+            var s = audio.samples;
+            var cap = audio.cap;
+            var r = audio.read % cap;
+            for (var i = 0; i < got; i++) {
+              var o = ((r + i) % cap) * 2;
+              L[i] = s[o];
+              R[i] = s[o + 1];
+            }
+            audio.read = (audio.read + got) | 0;
+            Atomics.store(w, 1, audio.read);
+          }
+          if (got < n) {
+            // underrun: render silence for the remainder (a worker stall or
+            // a hidden tab - rAF stops, the pump stops, the ring drains)
+            L.fill(0, got);
+            R.fill(0, got);
+            Atomics.add(w, 6, 1);
+            audio.underruns++;
+          }
+          audio.fill = avail;
+          // meters: RMS of the actual output (non-zero => audible signal)
+          try {
+            analyser.getFloatTimeDomainData(td);
+            var sq = 0;
+            for (var j = 0; j < td.length; j++) sq += td[j] * td[j];
+            var rms = Math.sqrt(sq / td.length);
+            audio.rmsSum += rms;
+            audio.rmsCount++;
+            if (rms > audio.rmsPeak) audio.rmsPeak = rms;
+          } catch (err) { /* meters must never break the callback */ }
+        };
+        var words = null;
+        function publishState() {
+          if (words) {
+            Atomics.store(words, 4, audio.unlocked ? 1 : 0);
+            Atomics.store(words, 5, ctx.state === 'running' ? 1 : 0);
+          }
+        }
+        function unlock() {
+          if (audio.unlocked) return;
+          audio.unlocked = true;
+          publishState();
+          ctx.resume().then(publishState).catch(function (err) {
+            console.warn('[audio] resume rejected:', err);
+          });
+          console.log('[audio] unlocked (gesture), context state=' + ctx.state);
+        }
+        // capture phase: gestures anywhere on the page count
+        window.addEventListener('pointerdown', unlock, true);
+        window.addEventListener('keydown', unlock, true);
+        ctx.onstatechange = publishState;
+        function bindRing(sab) {
+          if (audio.ring) return;
+          audio.ring = sab;
+          words = new Int32Array(sab, 0, 8);
+          audio.words = words;
+          audio.cap = Atomics.load(words, 2);
+          audio.samples = new Float32Array(sab, 32, audio.cap * 2);
+          audio.read = Atomics.load(words, 1);
+          Atomics.store(words, 3, ctx.sampleRate | 0);
+          publishState();
+          console.log('[audio] ring bound: cap=' + audio.cap + ' frames (' +
+                      (audio.cap / ctx.sampleRate).toFixed(2) + 's), rate=' +
+                      ctx.sampleRate + ', state=' + ctx.state +
+                      (audio.unlocked ? ', unlocked' : ', waiting for gesture'));
+        }
+        function onWorkerMsg(e) {
+          if (e.data && e.data.xuoAudioRing) bindRing(e.data.xuoAudioRing);
+        }
+        // the ring arrives via postMessage from the pthread worker. Messages
+        // from a Worker fire on the Worker object (not the window) and the
+        // objects live in emscripten's PThread registry; addEventListener
+        // adds a second listener next to emscripten's onmessage (our message
+        // carries no cmd field, so emscripten's pump ignores it silently).
+        var hooked = [];
+        function hookWorker(w) {
+          if (w && w.addEventListener && hooked.indexOf(w) < 0) {
+            hooked.push(w);
+            w.addEventListener('message', onWorkerMsg);
+          }
+        }
+        function hookPThread() {
+          if (!window.PThread) {
+            return setTimeout(hookPThread, 100);
+          }
+          if (!PThread.__xuoAudioHooked) {
+            PThread.__xuoAudioHooked = true;
+            var orig = PThread.loadWasmModuleToWorker;
+            PThread.loadWasmModuleToWorker = function (worker) {
+              hookWorker(worker);
+              return orig.apply(this, arguments);
+            };
+          }
+          Object.keys(PThread.pthreads).forEach(function (k) { hookWorker(PThread.pthreads[k]); });
+          (PThread.unusedWorkers || []).forEach(hookWorker);
+        }
+        hookPThread();
       })();
       // Web persistence (idbfs). This page's MEMFS is the authoritative
       // filesystem: PROXY_TO_PTHREAD serves every C-level file operation of

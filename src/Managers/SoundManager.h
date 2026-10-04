@@ -19,6 +19,9 @@ public:
 
     bool Init();
     void Free();
+    // web only: per-frame pump of SoLoud's manual mix() into the page's
+    // AudioContext (no-op on native builds - the backend thread mixes there)
+    void Update();
     void ResumeSound();
     void PauseSound();
     void FreeSound(SoundHandle stream);

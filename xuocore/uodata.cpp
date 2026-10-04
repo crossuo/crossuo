@@ -2132,25 +2132,6 @@ const uint8_t *vfs_stream_read_multi(size_t offset, uint32_t size)
     }
     return vfs_stream_file_read("multi.mul", offset, size);
 }
-
-void vfs_stream_music_kick(const char *local_path)
-{
-    // the sound system opens music files by path (SoLoud load); route the
-    // request through the registry so the bytes land for it. Playback stays
-    // the null driver on web (the audio output stack is a separate project).
-    if (local_path == nullptr)
-    {
-        return;
-    }
-    const astr_t lower = str_lower(astr_t(local_path));
-    const auto at = lower.find("music/");
-    if (at == astr_t::npos)
-    {
-        return;
-    }
-    const char *name = lower.c_str() + at;
-    vfs_stream_file_read(name, 0, 1);
-}
 #endif
 
 void CFileManager::UopReadIndexFile(

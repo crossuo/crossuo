@@ -1199,6 +1199,9 @@ void CGame::Process(bool rendering)
         removeUnusedTexturesTime = g_Ticks + CLEAR_TEXTURES_DELAY;
     }
 
+    // web audio output: pump SoLoud's manual mix into the page's
+    // AudioContext (SharedArrayBuffer ring, SoundManager web backend)
+    g_SoundManager.Update();
     g_AnimationManager.GarbageCollect();
 }
 

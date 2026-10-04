@@ -4,6 +4,9 @@
 #include "SoundManager.h"
 #include "ConfigManager.h"
 #include <xuocore/uodata.h>
+#if defined(XUO_EMSC)
+#include <xuocore/vfs.h> // vfs_stream_file_ensure (music data lane)
+#endif
 #include <common/utils.h>
 #include "../CrossUO.h"
 #include "../GameWindow.h"
@@ -13,8 +16,13 @@
 #define ASS_IMPLEMENTATION
 #define WITH_SDL2_STATIC
 #if defined(XUO_EMSC)
-// web: no SDL audio device (the AudioContext lives on the browser main
-// thread and needs a user gesture) - compile in soloud's null backend
+// web: compile in soloud's null backend - it provides the whole mixer state
+// machine WITHOUT a device and WITHOUT a mixing thread (see soloud_null.cpp:
+// postinit only), so the game loop can drive the mix() output itself and
+// pump it into the SharedArrayBuffer ring the page's ScriptProcessorNode
+// pulls (CSoundManager::Update + shell.html). SDL2 audio can not run here:
+// the AudioContext lives on the browser main thread (autoplay policy + the
+// worker crash on Module.SDL2.audioContext)
 #define WITH_NULL
 #endif
 #include <cmath>
@@ -23,6 +31,10 @@ namespace ass
 #include <external/ass.h>
 };
 #endif // ASS_IMPLEMENTATION
+
+#if defined(XUO_EMSC)
+#include <emscripten.h>
+#endif
 
 #if 0
 #define SOUND_DEBUG_TRACE DEBUG_TRACE_FUNCTION
@@ -171,14 +183,69 @@ CSoundManager::~CSoundManager()
 {
 }
 
+#if defined(XUO_EMSC)
+// --- web output backend ----------------------------------------------------
+// The browser owns the audio device: its AudioContext lives on the page
+// (shell.html) and is created suspended - autoplay policy only allows the
+// page's user gesture to resume it. SoLoud keeps running on the null driver
+// (full mixer state machine, no device, no thread) and the game loop pumps
+// its mix() output into a SharedArrayBuffer ring that the page's
+// ScriptProcessorNode pulls (4096-frame quantum). Ring layout (words are
+// int32, then interleaved stereo float32; monotonic frame counters keep the
+// fill math wrap-safe - see shell.html for the JS side):
+//   [0] writeIdx (this thread) [1] readIdx (page) [2] capacity
+//   [3] sampleRate (page)      [4] unlocked (page) [5] context running (page)
+//   [6] underrun callbacks     [7] magic 'XUA1'
+#define XUO_WEB_RING_FRAMES 16384 // ~340ms at 48kHz: absorbs frame hitches
+#define XUO_WEB_MIX_CHUNK 4096    // == soloud's scratch size (init buffer)
+
+static float s_web_mixBuffer[XUO_WEB_MIX_CHUNK * 2];
+
+static void web_audio_init()
+{
+    // the context exists (suspended) from page load, so the hardware rate is
+    // known before any gesture exists: mix exactly at it, nothing resamples
+    const unsigned int rate = MAIN_THREAD_EM_ASM_INT(
+    {
+        if (window.__xuoAudio && window.__xuoAudio.ctx)
+            return window.__xuoAudio.ctx.sampleRate | 0;
+        return 48000;
+    });
+    s_backend.init(Soloud::CLIP_ROUNDOFF, Soloud::NULLDRIVER, rate, XUO_WEB_MIX_CHUNK, 2);
+    // create the ring here (the mixer writes from the wasm heap) and hand
+    // the SharedArrayBuffer to the page. No cmd field: emscripten's pthread
+    // message pump on the main thread ignores it, the shell's own listener
+    // picks it up (shell.html hookPThread)
+    EM_ASM(
+    {
+        if (globalThis.__xuoRing)
+            return;
+        const frames = $0;
+        const sab = new SharedArrayBuffer(8 * 4 + frames * 2 * 4);
+        const words = new Int32Array(sab, 0, 8);
+        words[2] = frames;
+        words[7] = 0x58554131; // 'XUA1'
+        globalThis.__xuoRing = ({
+            words: words,
+            samples: new Float32Array(sab, 32, frames * 2),
+            cap: frames
+        });
+        postMessage({ xuoAudioRing: sab });
+    },
+    XUO_WEB_RING_FRAMES);
+    Info(Client, "web audio: soloud manual mix at %u Hz into a %d frame sab ring", rate, XUO_WEB_RING_FRAMES);
+}
+#endif // XUO_EMSC
+
 bool CSoundManager::Init()
 {
     SOUND_DEBUG_TRACE;
     Info(Client, "initializing sound system");
 #if defined(XUO_EMSC)
-    // the null driver: every play call is a safe no-op, the rest of the
-    // sound API keeps working (web has no SDL audio device in the worker)
-    s_backend.init(Soloud::CLIP_ROUNDOFF, Soloud::NULLDRIVER);
+    // web output backend: SoLoud stays on the null driver (no device, no
+    // thread) and CSoundManager::Update pumps its mix() into the page's
+    // AudioContext through a SharedArrayBuffer ring
+    web_audio_init();
 #else
     s_backend.init();
 #endif
@@ -193,6 +260,62 @@ void CSoundManager::Free()
     SOUND_DEBUG_TRACE;
     StopMusic();
     s_backend.deinit();
+}
+
+void CSoundManager::Update()
+{
+#if defined(XUO_EMSC)
+    // pump SoLoud's mixer into the web audio ring - only while the page has
+    // unlocked the context AND it is running: before the unlock gesture the
+    // ring could not drain, and mixing would burn every queued voice down
+    // silently (a hidden tab stops rAF, the pump stops with it)
+    if (!EM_ASM_INT(
+    {
+        const r = globalThis.__xuoRing;
+        if (!r)
+            return 0;
+        return (Atomics.load(r.words, 4) === 1 && Atomics.load(r.words, 5) === 1) ? 1 : 0;
+    }))
+    {
+        return;
+    }
+    // sample the free space once: the page only drains the ring, so it can
+    // not shrink under us while we fill it (overruns are impossible)
+    int due = EM_ASM_INT(
+    {
+        const r = globalThis.__xuoRing;
+        return r.cap - ((Atomics.load(r.words, 0) - Atomics.load(r.words, 1)) | 0);
+    });
+    if (due <= 0)
+    {
+        return;
+    }
+    if (due > XUO_WEB_RING_FRAMES)
+    {
+        due = XUO_WEB_RING_FRAMES;
+    }
+    do
+    {
+        const int chunk = due < XUO_WEB_MIX_CHUNK ? due : XUO_WEB_MIX_CHUNK;
+        s_backend.mix(s_web_mixBuffer, chunk);
+        EM_ASM(
+        {
+            const r = globalThis.__xuoRing;
+            const frames = $1;
+            const src = HEAPF32.subarray($0 >> 2, ($0 >> 2) + frames * 2);
+            const off = (Atomics.load(r.words, 0) % r.cap) * 2;
+            const first = Math.min(frames * 2, r.cap * 2 - off);
+            r.samples.set(src.subarray(0, first), off);
+            if (frames * 2 > first)
+            {
+                r.samples.set(src.subarray(first), 0);
+            }
+            Atomics.add(r.words, 0, frames);
+        },
+        reinterpret_cast<intptr_t>(s_web_mixBuffer), chunk);
+        due -= chunk;
+    } while (due > 0);
+#endif
 }
 
 void CSoundManager::PauseSound()
@@ -317,11 +440,19 @@ void CSoundManager::PlayMP3(const char *fileName, int index, bool loop, bool war
 {
     SOUND_DEBUG_TRACE;
 #if defined(XUO_EMSC)
-    // music DATA lane (web): playback is the null driver here, but the sound
-    // system still opens the file below - register the request with the
-    // stream-file registry (one paced chunk per call) so the bytes land for
-    // it. The audio output stack is a separate project; do not build it here.
-    vfs_stream_music_kick(fileName);
+    // music DATA lane (web): the mp3 streams through the stream-file
+    // registry - complete it (bounded, pool-driven) before SoLoud opens it,
+    // otherwise WavStream::load reads a truncated file. The registry is
+    // keyed by the bare plan name (the caller passes an install path)
+    if (fileName != nullptr)
+    {
+        const astr_t lower = str_lower(astr_t(fileName));
+        const auto at = lower.find("music/");
+        if (at != astr_t::npos)
+        {
+            vfs_stream_file_ensure(lower.c_str() + at);
+        }
+    }
 #endif
     int cur = warmode ? 1 : 0;
     int old = warmode ? 0 : 1;

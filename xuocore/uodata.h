@@ -245,13 +245,12 @@ const STATICS_BLOCK *vfs_index_statics_block(const CIndexMap *index);
 // stream-file lane helpers: windows into the streamed texmaps.mul /
 // multi.mul for an index entry, or null when the mapped file serves the
 // caller (lane not active) or the stream is cold (caller skips the draw).
-// `vfs_stream_music_kick` registers a music request with the registry (the
-// sound system still opens the file; playback stays the null driver on web).
+// (music requests go straight through vfs_stream_file_ensure from the
+// SoundManager before SoLoud opens the file)
 bool vfs_stream_texmaps_windowed();
 const uint8_t *vfs_stream_read_texmaps(size_t offset, uint32_t size);
 bool vfs_stream_multi_windowed();
 const uint8_t *vfs_stream_read_multi(size_t offset, uint32_t size);
-void vfs_stream_music_kick(const char *local_path);
 #endif
 
 // "the classic staidx/statics files for this map are readable": true via the
