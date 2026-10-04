@@ -54,9 +54,21 @@
       // worker) - everything that must happen on the page lives in the
       // when-ready block below.
       (function () {
+        // ?log=1: keep the page furniture (status line + log pane) and mirror
+        // every client line to the console. Without it the page ships ONLY
+        // the canvas: console.log is a per-line serialization cost and the
+        // log pane's textContent += re-copies the whole pane per line, which
+        // is measurable at INFO flood rates
+        var WEBLOG = new URLSearchParams(window.location.search).get('log') === '1';
         var statusEl = document.getElementById('status');
         var logEl = document.getElementById('log');
+        if (!WEBLOG)
+        {
+          if (statusEl && statusEl.parentNode) statusEl.parentNode.removeChild(statusEl);
+          if (logEl && logEl.parentNode) logEl.parentNode.removeChild(logEl);
+        }
         function setStatus(text) {
+          if (!WEBLOG) return;
           statusEl.textContent = text;
         }
         // pass URL query parameters to the client as command line arguments:
@@ -108,7 +120,7 @@
           return c;
         })();
         Module.setStatus = function (text) {
-          if (text) statusEl.textContent = text;
+          if (text && WEBLOG) statusEl.textContent = text;
         };
         // ?diag=1: main-thread responsiveness probe. A blocked main thread
         // (a huge IndexedDB persist, a proxied GL storm) shows up as
@@ -314,11 +326,13 @@
           })();
         }
         Module.print = function (text) {
+          if (!WEBLOG) return;
           console.log(text);
           logEl.textContent += text + '\n';
           logEl.scrollTop = logEl.scrollHeight;
         };
         Module.printErr = function (text) {
+          if (!WEBLOG) return;
           console.error(text);
           logEl.textContent += text + '\n';
           logEl.scrollTop = logEl.scrollHeight;
@@ -328,6 +342,7 @@
           Module.print('ARGS: ' + JSON.stringify(Module.arguments));
         };
         window.addEventListener('error', function (e) {
+          if (!WEBLOG) return;
           var t = (e.error && e.error.stack) ? e.error.stack : e.message;
           logEl.textContent += 'EXCEPTION: ' + t + '\n';
         });
@@ -443,7 +458,7 @@
           ctx.resume().then(publishState).catch(function (err) {
             console.warn('[audio] resume rejected:', err);
           });
-          console.log('[audio] unlocked (gesture), context state=' + ctx.state);
+          if (WEBLOG) console.log('[audio] unlocked (gesture), context state=' + ctx.state);
         }
         // capture phase: gestures anywhere on the page count
         window.addEventListener('pointerdown', unlock, true);
@@ -459,7 +474,8 @@
           audio.read = Atomics.load(words, 1);
           Atomics.store(words, 3, ctx.sampleRate | 0);
           publishState();
-          console.log('[audio] ring bound: cap=' + audio.cap + ' frames (' +
+          if (WEBLOG)
+            console.log('[audio] ring bound: cap=' + audio.cap + ' frames (' +
                       (audio.cap / ctx.sampleRate).toFixed(2) + 's), rate=' +
                       ctx.sampleRate + ', state=' + ctx.state +
                       (audio.unlocked ? ', unlocked' : ', waiting for gesture'));
@@ -541,6 +557,7 @@
           var t0 = performance.now();
           FS.syncfs(true, function (err) {
             if (err) console.error('[idb][main] restore failed:', err);
+            if (!WEBLOG) return;
             console.log('[idb][main] restore done in ' + (performance.now() - t0).toFixed(0) + 'ms' +
                         (err ? ' (FAILED)' : ''));
           });
@@ -567,6 +584,7 @@
               console.error('[idb][main] persist failed:', e);
               return;
             }
+            if (!WEBLOG) return;
             console.log('[idb][main] persist tick: ' + files + ' files, ' +
                         (bytes / 1024).toFixed(0) + ' kB, ' +
                         (performance.now() - t0).toFixed(0) + 'ms');
