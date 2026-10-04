@@ -49,6 +49,9 @@
       // pthread builds run the runtime before the glue reads this object, so
       // create it up front and attach every handler to the same instance
       var Module = window.Module || {};
+      // ?log=1 gate - page-global: the audio and idbfs blocks below live
+      // outside the boot IIFE and share it
+      var WEBLOG = new URLSearchParams(window.location.search).get('log') === '1';
       // NOTE: Module.preRun does NOT run on the page in PROXY_TO_PTHREAD
       // builds (the boot sequence that consumes it executes on the pthread
       // worker) - everything that must happen on the page lives in the
@@ -59,7 +62,6 @@
         // the canvas: console.log is a per-line serialization cost and the
         // log pane's textContent += re-copies the whole pane per line, which
         // is measurable at INFO flood rates
-        var WEBLOG = new URLSearchParams(window.location.search).get('log') === '1';
         var statusEl = document.getElementById('status');
         var logEl = document.getElementById('log');
         if (!WEBLOG)
@@ -82,12 +84,13 @@
               if (kv) args.push(decodeURIComponent(kv));
             });
           }
-          // shard address override for the ws proxy (testing)
+          // shard address override for the ws proxy (testing): maps to the
+          // client's login-server override flags (LoadLogin consults them)
           var params = new URLSearchParams(window.location.search);
           var shardAddr = params.get('shard-address');
           var shardPort = params.get('shard-port');
-          if (shardAddr) args.push('--shard-address=' + shardAddr);
-          if (shardPort) args.push('--shard-port=' + shardPort);
+          if (shardAddr) args.push('--host=' + shardAddr);
+          if (shardPort) args.push('--port=' + shardPort);
           return args;
         })();
         Module.canvas = (function () {

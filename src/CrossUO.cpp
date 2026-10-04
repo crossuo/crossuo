@@ -3179,6 +3179,20 @@ void CGame::LoadLogin(astr_t &login, int &port)
         return;
     }
 
+    // the CLI login-server override (--host/--port, e.g. the shell's
+    // ?shard-address testing params) is applied by ProcessCommandLine,
+    // which the auto-login connect path can precede: consult the parsed
+    // values directly so an early connect still honors them
+    if (g_cli["host"].was_set())
+    {
+        login = g_cli["host"].get().string;
+        port = g_cli["port"].get().u32;
+        if (port != 0)
+        {
+            return;
+        }
+    }
+
     if (!g_Config.ServerAddress.empty())
     {
         login = g_Config.ServerAddress;
