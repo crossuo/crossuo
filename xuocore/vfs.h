@@ -288,14 +288,17 @@ void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lr
 #if defined(XUO_EMSC)
 // stream files (web-only; see the long comment at the implementation): the
 // streamed subset keeps some loose files as plan metadata only
-// (VfsFile::streamable - the legacy anim muls). vfs_stream_file_read serves
-// [offset, offset+size) of such a file through a per-name state machine that
-// streams the upstream blob down in paced ranged chunks, inflates it into
-// <install>/<name> and then serves bounded window reads from that file.
-// Returns a borrowed buffer (valid until the next read of the SAME file)
-// once the file is complete, null while the file is cold/still streaming/in
-// its failure cooldown (the caller keeps degrading exactly like today).
-// Advances the owning stream by at most one globally-paced chunk per call.
+// (VfsFile::streamable - the legacy anim muls). The chunk transfers run in
+// the fetch pool's stream lane (never on the render thread): a read miss
+// or an ensure demands the file's chunk loop, the pool streams it down in
+// paced ranged chunks (mid-stream resume on failed/corrupt chunks) into
+// <install>/<name>, and the completed file then serves bounded window
+// reads from that file.
+//
+// vfs_stream_file_read is WARM-ONLY: it returns a borrowed buffer (valid
+// until the next read of the SAME file) once the file is complete, null
+// while the file is cold/still streaming/in its failure cooldown (the
+// caller keeps degrading exactly like today) - and never transfers.
 const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t size);
 
 // true when the plan carries `name` as a streamable file (the registry can
@@ -303,14 +306,29 @@ const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t si
 // mapped-file check native does
 bool vfs_stream_file_available(const char *name);
 
-// demand the COMPLETE file now: drives the owning stream to its Ready phase
-// with back-to-back paced chunk steps (each one bounded sync transfer) and
-// returns true when the install file is complete and seek-readable, false
-// while cold/absent/failed (the caller keeps today's absence behavior).
-// For boot-time loads (verdata, streamed index files) and rarely-opened UI
-// (facet charts) only - demand reads and the single global pace gate remain
-// the common path.
+// demand the COMPLETE file now: queues the file's chunk loop at the demand
+// tier and waits (bounded) for the pool to deliver it - the contract stays
+// "ready when true" for boot-time loads (verdata, streamed index files)
+// and rarely-opened UI (facet charts); the transfers stay off the render
+// thread.
 bool vfs_stream_file_ensure(const char *name);
+
+// progress surfaced: per-file phase/bytes/health for diagnostics.
+// phase: 0 probe, 1 streaming, 2 ready, 3 failed (cooldown). `name` points
+// into the registry (instances live for the whole session).
+struct vfs_stream_file_stats_entry
+{
+    const char *name = nullptr;
+    int phase = 0;
+    uint64_t compressed_off = 0;
+    uint64_t compressed_total = 0;
+    uint64_t inflated_total = 0;
+    uint64_t chunks_ok = 0;
+    uint64_t chunk_failures = 0;
+    int restarts = 0;
+    bool resumed = false; // the inflater runs on a mid-stream resume window
+};
+int vfs_stream_file_stats(vfs_stream_file_stats_entry *out, int max);
 #endif
 
 // reads one asset's inflated payload bytes by its uop hash, fetching the

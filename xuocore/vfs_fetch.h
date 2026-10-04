@@ -46,9 +46,12 @@ struct vfs_fetch_params
 // the blocking single-blob path) preempts everything; the background tier
 // (T1, the update wave, fetch_all) preempts the sweep; the sweep - the
 // continuous T2/T3 download - runs strictly below anything user-driven.
-// The arena demand granule path rides one above the background tier
+// The arena demand granule path rides one above the background tier; the
+// web stream-file chunk lane shares that tier (re-queued chunks; a fresh
+// read miss promotes its file's chunk to the demand tier)
 #define VFS_FETCH_PRIO_DEMAND 0
 #define VFS_FETCH_PRIO_BG 1
+#define VFS_FETCH_PRIO_STREAM 2
 #define VFS_FETCH_PRIO_SWEEP 3
 
 struct vfs_fetch_stats
@@ -117,6 +120,26 @@ bool vfs_fetch_batch(
 // when the blob lands in the store. Deduplicated with equal in-flight
 // requests; a no-op when the pool is not running or the blob is stored.
 void vfs_fetch_queue_blob(const char *tail, uint64_t expected_size, bool manifest, int priority);
+
+#if defined(XUO_EMSC)
+// the stream-file chunk lane (web): vfs_stream_file_read/ensure demand a
+// file's chunk loop through here instead of transferring on the render
+// thread. The registry keeps the loop alive: every executed chunk step
+// re-queues itself at VFS_FETCH_PRIO_STREAM until the file leaves its
+// streaming phase. Deduplicated/promoted like any other request; a no-op
+// when the pool is not running.
+void vfs_fetch_queue_stream(const char *name, int priority);
+
+// introspection: stream chunk jobs currently running (0 or 1)
+int vfs_fetch_stream_running();
+
+// pool seam for one chunk step, implemented by the vfs stream registry
+// (vfs.cpp): runs ONE paced range-GET + inflate + write for the named
+// stream file ON A POOL WORKER and returns the milliseconds until the file
+// wants its next chunk, or a negative value when the file left its
+// streaming phase (Ready/Failed/cooling: no job should follow).
+int vfs_stream_pool_step(const char *name);
+#endif
 
 // mft fetch seam over HTTP for the manifest recursion: downloads the resource
 // into the blob store and copies the bytes to the caller's buffer

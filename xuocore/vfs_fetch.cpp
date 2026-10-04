@@ -34,6 +34,10 @@
 #define VFS_FETCH_BACKOFF_MAX_MS 8000
 // guess used for backpressure accounting when no size is known up front
 #define VFS_FETCH_SIZE_GUESS (64 * 1024)
+// the stream-file chunk lane (web): ONE paced chunk in flight across the
+// whole registry (the old render-thread gate's semantics, moved into the
+// pool); chunks always leave demand headroom (see the admission checks)
+#define VFS_STREAM_LANE_CAP 1
 
 // ---------------------------------------------------------------------------
 // state
@@ -55,6 +59,8 @@ struct vfs_fetch_job
     uint64_t seq = 0;          // FIFO within a priority
     uint64_t expected = 0;     // exact size when known (0: unknown)
     uint8_t state = vfs_fetch_queued;
+    bool stream = false;       // stream-file chunk step (web lane)
+    int64_t runnable_at = 0;   // steady ms: pacing gate (stream chunks)
 };
 
 struct vfs_fetch_worker
@@ -83,6 +89,42 @@ static bool s_stop = false;
 static uint32_t s_active_target = 0;
 static int s_sweep_cap = 0;
 static int s_sweep_running = 0;
+static int s_stream_running = 0; // stream-file chunk jobs in flight (0..1)
+
+static int64_t vfs_fetch_now_ms()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+               std::chrono::steady_clock::now().time_since_epoch())
+        .count();
+}
+
+static astr_t vfs_fetch_stream_key(const char *name)
+{
+    // namespaced so a stream key can never collide with a blob tail
+    return astr_t("stream:") + name;
+}
+
+// admission checks, shared by pop and the workers' wait predicate. A
+// stream chunk runs only while the demand reservation holds: a running
+// chunk shrinks the sweep lane (instead of the other way round), so
+// sweep + stream jobs can never occupy the worker that DEMAND block
+// fetches are entitled to
+static bool vfs_fetch_runnable(const vfs_fetch_job &q)
+{
+    if (q.state != vfs_fetch_queued)
+        return false;
+    if (q.stream)
+    {
+        if (s_stream_running >= VFS_STREAM_LANE_CAP)
+            return false;
+        if (s_sweep_running + s_stream_running >= s_sweep_cap)
+            return false;
+        return q.runnable_at <= vfs_fetch_now_ms();
+    }
+    if (q.priority >= VFS_FETCH_PRIO_SWEEP)
+        return s_sweep_running + s_stream_running < s_sweep_cap;
+    return true;
+}
 
 static const char *vfs_fetch_repo_of(const vfs_fetch_job &job)
 {
@@ -194,13 +236,10 @@ static bool vfs_fetch_pop(std::shared_ptr<vfs_fetch_job> *out)
     // sweep job only runs inside the sweep lane (s_sweep_cap): when the
     // lane is full the sweep is skipped for demand and background work,
     // which is exactly the render-critical precedence the lane exists for
-    const bool sweep_slot = s_sweep_running < s_sweep_cap;
     auto best = s_queue.end();
     for (auto it = s_queue.begin(); it != s_queue.end(); ++it)
     {
-        if (it->state != vfs_fetch_queued)
-            continue;
-        if (it->priority >= VFS_FETCH_PRIO_SWEEP && !sweep_slot)
+        if (!vfs_fetch_runnable(*it))
             continue;
         if (
             best == s_queue.end() ||
@@ -211,12 +250,20 @@ static bool vfs_fetch_pop(std::shared_ptr<vfs_fetch_job> *out)
     }
     if (best == s_queue.end())
         return false;
-    if (best->priority >= VFS_FETCH_PRIO_SWEEP)
+    if (best->stream)
+        ++s_stream_running;
+    else if (best->priority >= VFS_FETCH_PRIO_SWEEP)
         ++s_sweep_running;
     *out = s_active[best->tail];
     best->state = vfs_fetch_running;
     return true;
 }
+
+// assumes s_mutex held; see the definition in the requests section (the
+// worker's completion re-queues stream chunk loops through it)
+static std::shared_ptr<vfs_fetch_job> vfs_fetch_enqueue(
+    const astr_t &tail, uint64_t expected, bool manifest, int priority,
+    bool stream = false, int64_t runnable_at = 0);
 
 static void vfs_fetch_worker_run(size_t index)
 {
@@ -230,21 +277,30 @@ static void vfs_fetch_worker_run(size_t index)
             // parked workers (index >= s_active_target, the in-game
             // demotion) sleep here until stop; the rest wait for a runnable
             // job: queued, inside the backpressure budget, and - for the
-            // sweep lane - with a lane slot free
-            s_cv_jobs.wait(lock, [&] {
-                return s_stop ||
-                       (index < s_active_target &&
-                        s_buffered < uint64_t(s_fetch_params.max_buffered) * 1024 * 1024 &&
-                        std::any_of(
-                            s_queue.begin(),
-                            s_queue.end(),
-                            [](const vfs_fetch_job &q)
-                            {
-                                return q.state == vfs_fetch_queued &&
-                                       (q.priority < VFS_FETCH_PRIO_SWEEP ||
-                                        s_sweep_running < s_sweep_cap);
-                            }));
-            });
+            // sweep and stream lanes - with a lane slot free. A queued
+            // paced stream chunk that is not yet runnable wakes the wait
+            // at its gate instead of polling
+            const auto pred = [&] {
+                if (s_stop)
+                    return true;
+                if (index >= s_active_target || s_buffered >= uint64_t(s_fetch_params.max_buffered) * 1024 * 1024)
+                    return false;
+                return std::any_of(s_queue.begin(), s_queue.end(), vfs_fetch_runnable);
+            };
+            const int64_t now = vfs_fetch_now_ms();
+            std::chrono::steady_clock::time_point gate = std::chrono::steady_clock::time_point::max();
+            for (const auto &q : s_queue)
+            {
+                if (q.state == vfs_fetch_queued && q.stream && q.runnable_at > now)
+                {
+                    const auto at = std::chrono::steady_clock::time_point(std::chrono::milliseconds(q.runnable_at));
+                    gate = std::min(gate, at);
+                }
+            }
+            if (gate == std::chrono::steady_clock::time_point::max())
+                s_cv_jobs.wait(lock, pred);
+            else
+                s_cv_jobs.wait_until(lock, gate, pred);
             if (s_stop)
             {
 #if defined(XUO_EMSC)
@@ -261,56 +317,70 @@ static void vfs_fetch_worker_run(size_t index)
             s_buffered += job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
         }
 
-        const char *repo = vfs_fetch_repo_of(*job);
-        astr_t url;
-        bool ok = false;
+        int stream_again_ms = -1;
         std::vector<uint8_t> body;
-        if (repo)
+        bool ok = false;
+        if (job->stream)
         {
-            url = astr_t(repo) + job->tail;
-            LOG_DEBUG("fetching: %s", url.c_str());
-            // the expected size is also the hard body cap on native (the
-            // transfer aborts beyond it). Web: the normalizing proxy may
-            // serve plain rebuilt containers that legitimately exceed the
-            // manifest's compressed size - use a flat policy cap instead.
 #if defined(XUO_EMSC)
-            const uint64_t cap = 512ull << 20;
-#else
-            const uint64_t cap = job->expected;
+            // one paced chunk on the worker: the render thread never issues
+            // stream transfers. A negative answer ends the file's loop; a
+            // non-negative one re-queues the chunk at that pace below
+            stream_again_ms = vfs_stream_pool_step(job->tail.c_str() + 7); // strlen("stream:")
+            ok = true;
 #endif
-            ok = vfs_fetch_http(
-                url.c_str(), job->tail.c_str(), cap, job->manifest, &body, job->tail.c_str());
-            if (ok && job->expected && body.size() != job->expected)
+        }
+        else
+        {
+            const char *repo = vfs_fetch_repo_of(*job);
+            astr_t url;
+            if (repo)
             {
+                url = astr_t(repo) + job->tail;
+                LOG_DEBUG("fetching: %s", url.c_str());
+                // the expected size is also the hard body cap on native (the
+                // transfer aborts beyond it). Web: the normalizing proxy may
+                // serve plain rebuilt containers that legitimately exceed the
+                // manifest's compressed size - use a flat policy cap instead.
 #if defined(XUO_EMSC)
-                // normalized (plain) transfers legitimately differ from the
-                // manifest's compressed size; only a truncated transfer is
-                // a failure
-                if (body.size() < job->expected)
+                const uint64_t cap = 512ull << 20;
+#else
+                const uint64_t cap = job->expected;
+#endif
+                ok = vfs_fetch_http(
+                    url.c_str(), job->tail.c_str(), cap, job->manifest, &body, job->tail.c_str());
+                if (ok && job->expected && body.size() != job->expected)
                 {
-                    LOG_WARN("size mismatch (truncated): %s", job->tail.c_str());
+#if defined(XUO_EMSC)
+                    // normalized (plain) transfers legitimately differ from the
+                    // manifest's compressed size; only a truncated transfer is
+                    // a failure
+                    if (body.size() < job->expected)
+                    {
+                        LOG_WARN("size mismatch (truncated): %s", job->tail.c_str());
+                        vfs_fetch_store_purge(job->tail.c_str());
+                        ok = false;
+                    }
+                    else
+                    {
+                        LOG_INFO(
+                            "size accepted (normalized): %s (%zu bytes)",
+                            job->tail.c_str(),
+                            body.size());
+                    }
+#else
+                    LOG_WARN(
+                        "size mismatch: %s (got %zu, expected %" PRIu64 ")",
+                        job->tail.c_str(),
+                        body.size(),
+                        job->expected);
                     vfs_fetch_store_purge(job->tail.c_str());
                     ok = false;
-                }
-                else
-                {
-                    LOG_INFO(
-                        "size accepted (normalized): %s (%zu bytes)",
-                        job->tail.c_str(),
-                        body.size());
-                }
-#else
-                LOG_WARN(
-                    "size mismatch: %s (got %zu, expected %" PRIu64 ")",
-                    job->tail.c_str(),
-                    body.size(),
-                    job->expected);
-                vfs_fetch_store_purge(job->tail.c_str());
-                ok = false;
 #endif
+                }
+                if (ok)
+                    ok = vfs_fetch_store_write(job->tail.c_str(), body);
             }
-            if (ok)
-                ok = vfs_fetch_store_write(job->tail.c_str(), body);
         }
 
         {
@@ -319,7 +389,9 @@ static void vfs_fetch_worker_run(size_t index)
             s_stats.requests++;
             s_stats.bytes += body.size();
             s_buffered -= job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
-            if (job->priority >= VFS_FETCH_PRIO_SWEEP)
+            if (job->stream)
+                --s_stream_running; // the chunk lane frees for the next step
+            else if (job->priority >= VFS_FETCH_PRIO_SWEEP)
                 --s_sweep_running; // the lane slot frees for the next sweep
             job->state = ok ? vfs_fetch_done : vfs_fetch_failed;
             if (!ok)
@@ -332,6 +404,15 @@ static void vfs_fetch_worker_run(size_t index)
                               }),
                           s_queue.end());
             s_active.erase(job->tail);
+            if (job->stream && stream_again_ms >= 0)
+            {
+                // keep the file's chunk loop alive: re-queue at the stream
+                // tier with its pace gate (a demand read miss meanwhile can
+                // promote the next copy through vfs_fetch_enqueue)
+                vfs_fetch_enqueue(
+                    job->tail, 0, false, VFS_FETCH_PRIO_STREAM, true,
+                    vfs_fetch_now_ms() + stream_again_ms);
+            }
         }
         s_cv_done.notify_all();
         s_cv_jobs.notify_all();
@@ -491,7 +572,8 @@ void vfs_fetch_stats_get(vfs_fetch_stats *out)
 // ---------------------------------------------------------------------------
 
 static std::shared_ptr<vfs_fetch_job> vfs_fetch_enqueue(
-    const astr_t &tail, uint64_t expected, bool manifest, int priority)
+    const astr_t &tail, uint64_t expected, bool manifest, int priority,
+    bool stream, int64_t runnable_at)
 {
     // assumes s_mutex held; dedup: an equal in-flight request is reused.
     // A STILL-QUEUED duplicate is PROMOTED when the new request is higher
@@ -523,6 +605,8 @@ static std::shared_ptr<vfs_fetch_job> vfs_fetch_enqueue(
     job->priority = priority;
     job->expected = expected;
     job->seq = s_seq++;
+    job->stream = stream;
+    job->runnable_at = runnable_at;
     s_queue.push_back(*job);
     s_active[tail] = job;
     s_stats.inflight++;
@@ -655,6 +739,28 @@ void vfs_fetch_queue_blob(const char *tail, uint64_t expected_size, bool manifes
     vfs_fetch_enqueue(tail, expected_size, manifest, priority);
     s_cv_jobs.notify_all(); // the demand granule heals only if a worker wakes
 }
+
+#if defined(XUO_EMSC)
+void vfs_fetch_queue_stream(const char *name, int priority)
+{
+    if (!name || !*name)
+        return;
+    std::unique_lock<std::mutex> lock(s_mutex);
+    if (!s_running)
+        return;
+    // dedup: a queued copy is promoted, a running chunk keeps the file's
+    // loop alive (its own re-queue lands with the next completion)
+    vfs_fetch_enqueue(vfs_fetch_stream_key(name), 0, false, priority, true, 0);
+    lock.unlock();
+    s_cv_jobs.notify_all();
+}
+
+int vfs_fetch_stream_running()
+{
+    std::lock_guard<std::mutex> lock(s_mutex);
+    return s_stream_running;
+}
+#endif
 
 bool vfs_fetch_manifest_fn(
     void *context,

@@ -35,6 +35,7 @@
 #if defined(XUO_EMSC)
 #include <emscripten.h>
 #include <emscripten/threading.h>
+#include <pthread.h>
 #include <external/zlib_amalg.h>
 #include <external/lookup3.h> // anim.mul CDN blob name (loose-file hash addressing)
 using zlib_uLongf = uLongf;
@@ -905,18 +906,32 @@ void vfs_asset_block_enqueue(uint64_t uop_hash)
 // (anim.mul: 123MB compressed -> 194MB raw), so punctual range reads cannot
 // decode a middle window, and the fixed 1GB wasm heap holds neither a
 // whole-blob fetch buffer nor a mapped image. Each file therefore streams
-// down in modest ranged chunks (one sync range GET per decode miss, paced),
-// inflates incrementally into the install file, and the completed file then
-// serves bounded window reads straight from disk - the image is never
-// resident.
+// down in modest ranged chunks, inflates incrementally into the install
+// file, and the completed file then serves bounded window reads straight
+// from disk - the image is never resident.
 //
-// Registry shape: one state-machine instance per canonical file name and
-// ONE shared scheduler: at most a single chunk transfer is in flight
-// globally and the pace (2MB / 120ms) bounds the render-thread stall no
-// matter how many files stream at once. A read miss is the demand signal
-// that advances its own file (no speculative prefetch). Restarts (<=3) and
-// the 60s failure cooldown stay per instance. Stream reads never touch the
-// shared block LRU - the returned window aliases the instance's own buffer.
+// Registry shape: one state-machine instance per canonical file name. The
+// chunk steps execute in the fetch pool (vfs_fetch's stream lane): a read
+// miss or an ensure DEMANDS the file's chunk loop, the pool runs one paced
+// chunk at a time on a worker, and every executed step re-queues itself
+// until the file leaves its streaming phase. The render thread NEVER
+// issues a stream transfer - vfs_stream_file_read is warm-only (a window
+// read once the file is ready, null otherwise) and only its demand signal
+// reaches the pool. Pacing (2MB / 120ms) is enforced pool-side through the
+// job's runnable gate; demand block fetches always outrank stream chunks
+// and keep a reserved worker (the stream chunk shrinks the sweep lane).
+//
+// A chunk failure never costs the stream its progress: the z_stream (which
+// carries zlib's own 32KB sliding window), the compressed offset and the
+// append-mode output handle are INSTANCE state and survive job boundaries,
+// so a failed transfer just refetches its chunk. A chunk that arrives
+// intact but decodes bad additionally rebuilds the inflater at a
+// checkpoint (the last 32KB of inflated output plus the exact compressed
+// bit position) instead of restarting the file from byte 0 - only a
+// second decode failure at the same region falls back to the bounded
+// from-zero restart. Restarts (<=3) and the 60s failure cooldown stay per
+// instance. Stream reads never touch the shared block LRU - the returned
+// window aliases the instance's own buffer.
 // ---------------------------------------------------------------------------
 
 namespace {
@@ -926,7 +941,7 @@ struct WebStreamFile
     enum class Phase
     {
         Probe,     // validate a previous session's output
-        Streaming, // chunk loop: range GET -> inflate -> write
+        Streaming, // chunk loop: range GET -> inflate -> write (pool-driven)
         Ready,     // the install file is complete
         Failed     // gave up after repeated restarts (cooling down)
     };
@@ -939,9 +954,18 @@ struct WebStreamFile
     bool stored = false; // plan asset shipped uncompressed (ct != 1): verbatim copy
     fs_path out_path;   // install_dir/<name>
     fs_path done_path;  // install_dir/cache/<name>.ready
+
+    // everything below is guarded by `mutex`: the render thread's
+    // probe/read/ensure and the pool worker's chunk steps both touch it.
+    // The writer handle is closed + flushed and the marker published
+    // BEFORE the phase flips to Ready under this same mutex, and readers
+    // only open the install file once Ready - the no-concurrent-read/write
+    // invariant on one install path holds by construction.
+    mutable std::mutex mutex;
+    std::condition_variable cv; // wakes a blocking ensure on phase flips
     Phase phase = Phase::Probe;
-    FILE *out = nullptr; // install file being written
-    FILE *ro = nullptr;  // install file opened for reads
+    FILE *out = nullptr; // install file being written (append semantics)
+    FILE *ro = nullptr;  // install file opened for reads (Ready only)
     size_t ro_size = 0;
     z_stream zs {};
     bool zs_active = false;
@@ -951,34 +975,76 @@ struct WebStreamFile
     uint64_t chunk_failures = 0;
     int restarts = 0;
     std::chrono::steady_clock::time_point retry_at {};
+
+    // mid-stream resume checkpoint (the ~32KB zlib window the original
+    // anim.mul design deferred): the tail of inflated output plus the
+    // exact compressed bit position, captured after every good chunk. A
+    // chunk that decodes bad rebuilds the inflater here instead of
+    // restarting the whole file from byte 0. Between checkpoints the live
+    // z_stream IS the sliding window (transfer failures resume from
+    // compressed_off without any rebuild).
+    std::vector<uint8_t> resume_window; // <= 32KB inflated tail
+    uint64_t resume_off = 0;            // compressed byte offset to re-feed
+    uint32_t resume_bits = 0;           // consumed bits of the byte at resume_off
+    uint8_t resume_byte = 0;            // that partial byte's value
+    uint64_t resume_inflated = 0;       // inflated_total at the checkpoint
+    bool resumed = false;               // the inflater runs in resumed raw mode
+    int decode_resumes = 0;             // resume attempts since the last good chunk
+
+    // progress telemetry
+    uint64_t chunks_ok = 0;
+    std::chrono::steady_clock::time_point last_log {};
     std::vector<uint8_t> window; // last served read window
 };
 
 // the registry holds one instance per demanded streamable plan name (the
 // legacy anim muls, facet charts, verdata, the music files, and - when a
-// plan stops materializing them - the statics/texmaps/multi muls). A flat
-// vector keeps insertion order and instance state is tiny until the file is
-// demanded; the cap only guards against pathological plan names.
+// plan stops materializing them - the statics/texmaps/multi muls). The
+// unique_ptr keeps instance addresses stable: pool workers hold a pointer
+// across steps while the render thread registers new files. Instances are
+// never evicted. A flat vector keeps insertion order; the cap only guards
+// against pathological plan names.
 constexpr size_t WEB_STREAM_FILES_MAX = 128;
-std::vector<WebStreamFile> s_web_stream_files;
+std::vector<std::unique_ptr<WebStreamFile>> s_web_stream_files;
+std::mutex s_web_stream_registry; // guards the vector only (not the instances)
 
 constexpr uint64_t WEB_STREAM_CHUNK = 2u << 20;  // compressed bytes/step
 constexpr size_t WEB_STREAM_READ_CAP = 4u << 20; // sanity per read
+// polite-network pacing between chunks, enforced pool-side through the
+// job's runnable gate (no render-thread stall to bound anymore, but the
+// lane stays a citizen and leaves workers + connections to DEMAND block
+// fetches): 2MB / 120ms ~= 16MB/s warm
+constexpr int WEB_STREAM_PACE_MS = 120;
+// how often a streaming file logs its progress line
+constexpr int WEB_STREAM_LOG_MS = 5000;
 
-// the one global in-flight gate: the next chunk of ANY stream file may run
-// no earlier than this (2MB/120ms across the whole registry)
-std::chrono::steady_clock::time_point s_web_stream_next_step {};
-bool s_web_stream_paced = false;
+WebStreamFile *web_stream_lookup(const char *name)
+{
+    // registration-free lookup (pool workers); caller registers on demand
+    const astr_t lower = vfs_lower_ascii(name);
+    if (lower.empty())
+        return nullptr;
+    std::lock_guard<std::mutex> lock(s_web_stream_registry);
+    for (auto &instance : s_web_stream_files)
+    {
+        if (instance->name == lower)
+            return instance.get();
+    }
+    return nullptr;
+}
 
 WebStreamFile *web_stream_instance(const char *name)
 {
     const astr_t lower = vfs_lower_ascii(name);
     if (lower.empty())
         return nullptr;
-    for (auto &instance : s_web_stream_files)
     {
-        if (instance.name == lower)
-            return &instance;
+        std::lock_guard<std::mutex> lock(s_web_stream_registry);
+        for (auto &instance : s_web_stream_files)
+        {
+            if (instance->name == lower)
+                return instance.get();
+        }
     }
     // register on demand, but only names the plan carries as streamable:
     // an unknown name has no URL and no bytes anywhere
@@ -988,20 +1054,28 @@ WebStreamFile *web_stream_instance(const char *name)
     const auto found = s_managed_files.find(lower);
     if (found == s_managed_files.end() || !s_plan.files[found->second].streamable)
         return nullptr;
+    std::lock_guard<std::mutex> lock(s_web_stream_registry);
+    // re-check under the lock (two demanders can race the registration)
+    for (auto &instance : s_web_stream_files)
+    {
+        if (instance->name == lower)
+            return instance.get();
+    }
     if (s_web_stream_files.size() >= WEB_STREAM_FILES_MAX)
     {
         LOG_ERROR("stream files: registry full (%zu), cannot stream %s", s_web_stream_files.size(), name);
         return nullptr;
     }
-    s_web_stream_files.emplace_back();
-    WebStreamFile &s = s_web_stream_files.back();
-    s.name = lower;
+    auto s = std::make_unique<WebStreamFile>();
+    s->name = lower;
     // install path keeps the plan's case-exact name: consumers open the
     // completed file by their own path spelling and MEMFS is case-sensitive
-    s.out_name = s_plan.files[found->second].name;
-    s.out_path = fs_path_join(s_params.install_dir, s.out_name);
-    s.done_path = fs_path_join(fs_path_join(s_params.install_dir, "cache"), s.name + ".ready");
-    return &s;
+    s->out_name = s_plan.files[found->second].name;
+    s->out_path = fs_path_join(s_params.install_dir, s->out_name);
+    s->done_path = fs_path_join(fs_path_join(s_params.install_dir, "cache"), s->name + ".ready");
+    WebStreamFile *const ptr = s.get();
+    s_web_stream_files.push_back(std::move(s));
+    return ptr;
 }
 
 bool web_stream_compose_url(WebStreamFile &s)
@@ -1056,16 +1130,118 @@ void web_stream_reset(WebStreamFile &s)
     }
     s.compressed_off = 0;
     s.inflated_total = 0;
+    // the resume checkpoint dies with the stream state (a fresh stream
+    // re-captures it after its first good chunk)
+    s.resume_window.clear();
+    s.resume_off = 0;
+    s.resume_bits = 0;
+    s.resume_byte = 0;
+    s.resume_inflated = 0;
+    s.resumed = false;
+    s.decode_resumes = 0;
 }
 
-bool web_stream_step(WebStreamFile &s)
+// from-zero restart, bounded: true keeps the loop alive (the next chunk
+// starts over), false entered the Failed cooldown (no re-queue)
+bool web_stream_restart(WebStreamFile &s)
 {
-    if (s.url.empty() && !web_stream_compose_url(s))
+    web_stream_reset(s);
+    ++s.restarts;
+    if (s.restarts > 3)
     {
         s.phase = WebStreamFile::Phase::Failed;
         s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+        LOG_WARN(
+            "stream files: %s failed after %d restarts, cooling down 60s",
+            s.name.c_str(),
+            s.restarts - 1);
         return false;
     }
+    LOG_WARN("stream files: %s restarting from byte 0 (restart %d/3)", s.name.c_str(), s.restarts);
+    return true;
+}
+
+// capture the resume checkpoint at the current stream position: zlib hands
+// out its own 32KB sliding window (inflateGetDictionary) and reports the
+// unused bits of the last taken input byte through data_type, which pins
+// the exact bit position inside the fed chunk
+void web_stream_capture_checkpoint(WebStreamFile &s, uint8_t last_fed_byte)
+{
+    uint8_t dict[32 * 1024];
+    uInt dict_len = 0;
+    if (inflateGetDictionary(&s.zs, dict, &dict_len) != Z_OK)
+        return;
+    s.resume_window.assign(dict, dict + dict_len);
+    const uint32_t unused = uint32_t(s.zs.data_type) & 63u; // low bits: unused bits
+    if (unused == 0)
+    {
+        s.resume_off = s.compressed_off;
+        s.resume_bits = 0;
+    }
+    else
+    {
+        // the last byte was only partially consumed: the checkpoint sits on
+        // it, and a resume primes its consumed bits before re-feeding
+        s.resume_off = s.compressed_off - 1;
+        s.resume_bits = 8 - unused;
+        s.resume_byte = last_fed_byte;
+    }
+    s.resume_inflated = s.inflated_total;
+}
+
+// rebuild the inflater at the checkpoint after a chunk decoded bad: a raw
+// inflate seeded with the 32KB window plus the partial input byte's bits
+// continues the stream at the exact bit position. The zlib wrapper's
+// adler32 validation is forfeited on a resumed stream (the marker's byte
+// count stays the completion authority, as documented)
+bool web_stream_resume_inflate(WebStreamFile &s)
+{
+    if (s.zs_active)
+    {
+        inflateEnd(&s.zs);
+        s.zs_active = false;
+    }
+    memset(&s.zs, 0, sizeof(s.zs));
+    if (inflateInit2(&s.zs, -15) != Z_OK) // raw deflate: resuming mid-body
+        return false;
+    s.zs_active = true;
+    if (
+        !s.resume_window.empty() &&
+        inflateSetDictionary(&s.zs, s.resume_window.data(), uInt(s.resume_window.size())) != Z_OK)
+    {
+        return false;
+    }
+    if (s.resume_bits > 0 && inflatePrime(&s.zs, int(s.resume_bits), int(s.resume_byte)) != Z_OK)
+    {
+        return false;
+    }
+    // rewind the output to the checkpoint: the corrupt chunk may have
+    // inflated valid-looking bytes before the bad symbol
+    if (s.out != nullptr)
+    {
+        if (fflush(s.out) != 0 || ftruncate(fileno(s.out), off_t(s.resume_inflated)) != 0 ||
+            fseek(s.out, long(s.resume_inflated), SEEK_SET) != 0)
+        {
+            return false;
+        }
+    }
+    s.inflated_total = s.resume_inflated;
+    s.compressed_off = s.resume_off + (s.resume_bits > 0 ? 1 : 0);
+    s.resumed = true;
+    return true;
+}
+
+// ONE chunk step, executed by the fetch pool's stream lane with the
+// instance mutex held (never on the render thread). Returns the
+// milliseconds until the file wants its next chunk (the pool re-queues the
+// loop), or -1 when the file left its streaming phase (Ready/Failed/
+// cooling: no job should follow). A failed step keeps the stream state
+// (offsets, live zlib window, append handle) untouched, so the re-queued
+// chunk resumes from compressed_off instead of restarting from byte 0.
+int web_stream_step(WebStreamFile &s)
+{
+    if (!s.url_ready) // composed on the demand path before the job was queued
+        return -1;
 
     std::vector<uint8_t> chunk;
     const uint64_t want = s.compressed_total != 0
@@ -1074,14 +1250,12 @@ bool web_stream_step(WebStreamFile &s)
     if (want == 0)
     {
         // the stream state ran past the source: restart cleanly
-        web_stream_reset(s);
-        return false;
+        return web_stream_restart(s) ? WEB_STREAM_PACE_MS : -1;
     }
-    // transient-failure absorption: the worker thread's sync range GETs can
-    // fail spuriously (status 0) while the async fetch pool is saturating the
-    // browser's connection budget (observed at boot and during world entry).
-    // A failed step used to burn one of the 8 chunk_failures; now a failed
-    // GET is retried immediately (bounded) before it counts as a failure.
+    // transient-failure absorption: a range GET can fail spuriously
+    // (status 0) while the fetch pool saturates the browser's connection
+    // budget (observed at boot and during world entry). A failed GET is
+    // retried immediately (bounded) before it counts as a failure.
     vfs_transport_result res {};
     for (int attempt = 0; attempt < 3; ++attempt)
     {
@@ -1109,6 +1283,9 @@ bool web_stream_step(WebStreamFile &s)
     }
     if (!res.ok || chunk.empty())
     {
+        // TRANSFER-FAILURE RESUME: the live z_stream (zlib's own 32KB
+        // window), compressed_off and the append handle are all intact -
+        // the re-queued chunk refetches from compressed_off
         ++s.chunk_failures;
         if (s.chunk_failures >= 8)
         {
@@ -1118,8 +1295,9 @@ bool web_stream_step(WebStreamFile &s)
             web_stream_reset(s);
             s.phase = WebStreamFile::Phase::Failed;
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+            return -1;
         }
-        return false;
+        return WEB_STREAM_PACE_MS;
     }
     s.chunk_failures = 0;
 
@@ -1131,7 +1309,7 @@ bool web_stream_step(WebStreamFile &s)
         {
             s.phase = WebStreamFile::Phase::Failed;
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
-            return false;
+            return -1;
         }
         if (!s.stored)
         {
@@ -1142,7 +1320,7 @@ bool web_stream_step(WebStreamFile &s)
                 s.out = nullptr;
                 s.phase = WebStreamFile::Phase::Failed;
                 s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
-                return false;
+                return -1;
             }
             s.zs_active = true;
         }
@@ -1153,14 +1331,9 @@ bool web_stream_step(WebStreamFile &s)
         // stored blob: the bytes are the file, copy the chunk verbatim
         if (fwrite(chunk.data(), 1, chunk.size(), s.out) != chunk.size())
         {
-            web_stream_reset(s);
-            ++s.restarts;
-            if (s.restarts > 3)
-            {
-                s.phase = WebStreamFile::Phase::Failed;
-                s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
-            }
-            return false;
+            if (!web_stream_restart(s))
+                return -1;
+            return WEB_STREAM_PACE_MS;
         }
         s.inflated_total += chunk.size();
         s.compressed_off += chunk.size();
@@ -1171,8 +1344,9 @@ bool web_stream_step(WebStreamFile &s)
             s.out = nullptr;
             if (!flushed)
             {
-                web_stream_reset(s);
-                return false;
+                if (!web_stream_restart(s))
+                    return -1;
+                return WEB_STREAM_PACE_MS;
             }
             char text[32] = {};
             snprintf(text, sizeof(text), "%llu", (unsigned long long)s.inflated_total);
@@ -1184,9 +1358,9 @@ bool web_stream_step(WebStreamFile &s)
             }
             LOG_INFO("stream files: %s complete (%llu raw bytes)", s.name.c_str(), (unsigned long long)s.inflated_total);
             s.phase = WebStreamFile::Phase::Ready;
-            return true;
+            return -1;
         }
-        return true;
+        return WEB_STREAM_PACE_MS;
     }
 
     s.zs.next_in = chunk.data();
@@ -1226,16 +1400,39 @@ bool web_stream_step(WebStreamFile &s)
 
     if (corrupt)
     {
-        // truncate and restart from byte 0 (a mid-stream restart cannot
-        // resume a zlib stream without the preceding window)
-        web_stream_reset(s);
-        ++s.restarts;
-        if (s.restarts > 3)
+        // A Z_DATA_ERROR carries two very different meanings here: a chunk
+        // that fails to decode IN FLIGHT (its own bytes are damaged - the
+        // checkpoint resume refetches exactly that region), and zlib's
+        // end-of-stream Adler-32 check failing (the corruption entered the
+        // stream earlier and silently decoded - the window is already
+        // poisoned, no resume point can help). Only the first is worth a
+        // resume attempt; a check failure restarts from byte 0 directly.
+        const bool check_bad =
+            s.zs.msg != nullptr && strstr(s.zs.msg, "incorrect data check") != nullptr;
+        if (
+            !check_bad &&
+            s.decode_resumes < 1 &&
+            (s.resume_off != 0 || !s.resume_window.empty()) &&
+            web_stream_resume_inflate(s))
         {
-            s.phase = WebStreamFile::Phase::Failed;
-            s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
+            ++s.decode_resumes;
+            LOG_WARN(
+                "stream files: %s chunk decoded bad, resuming from compressed offset %llu "
+                "(32KB window, %llu raw bytes kept)",
+                s.name.c_str(),
+                (unsigned long long)s.compressed_off,
+                (unsigned long long)s.inflated_total);
+            return WEB_STREAM_PACE_MS;
         }
-        return false;
+        if (check_bad)
+        {
+            LOG_WARN(
+                "stream files: %s stream check failed at compressed offset %llu, "
+                "restarting clean (corruption entered upstream)",
+                s.name.c_str(),
+                (unsigned long long)s.compressed_off);
+        }
+        return web_stream_restart(s) ? WEB_STREAM_PACE_MS : -1;
     }
 
     if (finished)
@@ -1247,11 +1444,13 @@ bool web_stream_step(WebStreamFile &s)
         s.zs_active = false;
         if (!flushed)
         {
-            web_stream_reset(s);
-            return false;
+            if (!web_stream_restart(s))
+                return -1;
+            return WEB_STREAM_PACE_MS;
         }
         // the marker publishes the validated output across sessions (the
-        // zlib end-of-stream + adler32 is the only size authority)
+        // zlib end-of-stream - plus adler32 on a non-resumed stream - is
+        // the only size authority)
         char text[32] = {};
         snprintf(text, sizeof(text), "%llu", (unsigned long long)s.inflated_total);
         FILE *done = fopen(fs_path_ascii(s.done_path), "wb");
@@ -1262,24 +1461,41 @@ bool web_stream_step(WebStreamFile &s)
         }
         LOG_INFO("stream files: %s complete (%llu raw bytes)", s.name.c_str(), (unsigned long long)s.inflated_total);
         s.phase = WebStreamFile::Phase::Ready;
-        return true;
+        return -1;
     }
 
+    // good chunk: advance the compressed position first (the checkpoint
+    // pins the resume point relative to it), then pin the resume checkpoint
     s.compressed_off += chunk.size();
+    web_stream_capture_checkpoint(s, chunk.back());
+    s.decode_resumes = 0;
+    ++s.chunks_ok;
+    const auto now = std::chrono::steady_clock::now();
+    if (now - s.last_log >= std::chrono::milliseconds(WEB_STREAM_LOG_MS))
+    {
+        s.last_log = now;
+                if (s.compressed_total != 0)
+        {
+            LOG_INFO(
+                "stream files: %s %llu%% (compressed %llu/%llu, raw %llu, chunks %llu, "
+                "restarts %d, chunk-failures %llu)",
+                s.name.c_str(),
+                (unsigned long long)(s.compressed_off * 100 / s.compressed_total),
+                (unsigned long long)s.compressed_off,
+                (unsigned long long)s.compressed_total,
+                (unsigned long long)s.inflated_total,
+                (unsigned long long)s.chunks_ok,
+                s.restarts,
+                (unsigned long long)s.chunk_failures);
+        }
+    }
     if (s.compressed_total != 0 && s.compressed_off >= s.compressed_total)
     {
         // fed the whole source: the inflater must have seen the stream end -
         // anything else is a truncated/corrupt transfer, restart
-        web_stream_reset(s);
-        ++s.restarts;
-        if (s.restarts > 3)
-        {
-            s.phase = WebStreamFile::Phase::Failed;
-            s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
-        }
-        return false;
+        return web_stream_restart(s) ? WEB_STREAM_PACE_MS : -1;
     }
-    return true;
+    return WEB_STREAM_PACE_MS;
 }
 
 size_t web_stream_file_size(FILE *fp)
@@ -1305,6 +1521,33 @@ bool vfs_stream_file_available(const char *name)
     return found != s_managed_files.end() && s_plan.files[found->second].streamable;
 }
 
+// the marker validation shared by the demand paths (disk-only, cheap):
+// flips Probe to Ready (a previous session's completed output) or to
+// Streaming. Caller holds the instance mutex.
+static void web_stream_probe(WebStreamFile &s)
+{
+    if (s.phase != WebStreamFile::Phase::Probe)
+        return;
+    bool done = false;
+    FILE *marker = fopen(fs_path_ascii(s.done_path), "rb");
+    if (marker != nullptr)
+    {
+        char text[32] = {};
+        const size_t n = fread(text, 1, sizeof(text) - 1, marker);
+        fclose(marker);
+        text[n] = '\0';
+        const auto expected = strtoull(text, nullptr, 10);
+        FILE *fp = fopen(fs_path_ascii(s.out_path), "rb");
+        if (fp != nullptr)
+        {
+            const size_t actual = web_stream_file_size(fp);
+            fclose(fp);
+            done = expected != 0 && actual == size_t(expected);
+        }
+    }
+    s.phase = done ? WebStreamFile::Phase::Ready : WebStreamFile::Phase::Streaming;
+}
+
 const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t size)
 {
     if (!vfs_enabled() || s_params.offline || name == nullptr)
@@ -1316,89 +1559,80 @@ const uint8_t *vfs_stream_file_read(const char *name, size_t offset, uint32_t si
     {
         return nullptr;
     }
-    const auto now = std::chrono::steady_clock::now();
 
-    if (s->phase == WebStreamFile::Phase::Failed)
+    bool demand = false;
     {
-        if (now < s->retry_at)
+        // try_lock, never lock: a worker stepping this file holds the
+        // mutex for a whole chunk (~2MB transfer), and a read miss must
+        // degrade to null THIS FRAME, not stall it. A worker never holds
+        // the mutex of a Ready file, so warm reads never contend.
+        std::unique_lock<std::mutex> guard(s->mutex, std::try_to_lock);
+        if (!guard.owns_lock())
+        {
+            return nullptr; // mid-step: cold for now, the consumer retries
+        }
+        if (s->phase == WebStreamFile::Phase::Failed)
+        {
+            if (std::chrono::steady_clock::now() < s->retry_at)
+            {
+                return nullptr;
+            }
+            s->restarts = 0;
+            s->phase = WebStreamFile::Phase::Probe;
+        }
+        web_stream_probe(*s);
+        if (s->phase == WebStreamFile::Phase::Streaming)
+        {
+            // warm-only: demand the file's chunk loop in the pool (the
+            // demand tier jumps any other stream's queued chunk); the
+            // enqueue happens after the unlock below
+            demand = true;
+        }
+        else if (s->phase != WebStreamFile::Phase::Ready)
         {
             return nullptr;
         }
-        s->restarts = 0;
-        s->phase = WebStreamFile::Phase::Probe;
-    }
-
-    if (s->phase == WebStreamFile::Phase::Probe)
-    {
-        // a completed previous session's output validates through its marker
-        bool done = false;
-        FILE *marker = fopen(fs_path_ascii(s->done_path), "rb");
-        if (marker != nullptr)
+        if (demand)
         {
-            char text[32] = {};
-            const size_t n = fread(text, 1, sizeof(text) - 1, marker);
-            fclose(marker);
-            text[n] = '\0';
-            const auto expected = strtoull(text, nullptr, 10);
-            FILE *fp = fopen(fs_path_ascii(s->out_path), "rb");
-            if (fp != nullptr)
+            if (!s->url_ready && !web_stream_compose_url(*s))
             {
-                const size_t actual = web_stream_file_size(fp);
-                fclose(fp);
-                done = expected != 0 && actual == size_t(expected);
+                return nullptr; // the plan does not carry the file: stays cold
             }
         }
-        s->phase = done ? WebStreamFile::Phase::Ready : WebStreamFile::Phase::Streaming;
-    }
-
-    if (s->phase == WebStreamFile::Phase::Streaming)
-    {
-        // one paced chunk per miss, globally: the sync range GET blocks the
-        // render thread, so a single shared gate (2MB / 120ms across the
-        // whole registry) bounds the stall no matter how many files stream
-        if (!s_web_stream_paced)
+        else
         {
-            s_web_stream_next_step = now;
-            s_web_stream_paced = true;
+            // completed install file: serve the window straight from disk
+            if (size == 0 || size > WEB_STREAM_READ_CAP)
+            {
+                return nullptr;
+            }
+            if (s->ro == nullptr)
+            {
+                s->ro = fopen(fs_path_ascii(s->out_path), "rb");
+                if (s->ro == nullptr)
+                {
+                    return nullptr;
+                }
+                s->ro_size = web_stream_file_size(s->ro);
+            }
+            if (offset + size > s->ro_size)
+            {
+                return nullptr;
+            }
+            if (s->window.size() < size)
+            {
+                s->window.resize(size);
+            }
+            if (fseek(s->ro, long(offset), SEEK_SET) != 0 ||
+                fread(s->window.data(), 1, size, s->ro) != size)
+            {
+                return nullptr;
+            }
+            return s->window.data();
         }
-        if (now >= s_web_stream_next_step && web_stream_step(*s))
-        {
-            s_web_stream_next_step = now + std::chrono::milliseconds(120);
-        }
     }
-
-    if (s->phase != WebStreamFile::Phase::Ready)
-    {
-        return nullptr;
-    }
-
-    // completed install file: serve the window straight from disk
-    if (size == 0 || size > WEB_STREAM_READ_CAP)
-    {
-        return nullptr;
-    }
-    if (s->ro == nullptr)
-    {
-        s->ro = fopen(fs_path_ascii(s->out_path), "rb");
-        if (s->ro == nullptr)
-        {
-            return nullptr;
-        }
-        s->ro_size = web_stream_file_size(s->ro);
-    }
-    if (offset + size > s->ro_size)
-    {
-        return nullptr;
-    }
-    if (s->window.size() < size)
-    {
-        s->window.resize(size);
-    }
-    if (fseek(s->ro, long(offset), SEEK_SET) != 0 || fread(s->window.data(), 1, size, s->ro) != size)
-    {
-        return nullptr;
-    }
-    return s->window.data();
+    vfs_fetch_queue_stream(s->name.c_str(), VFS_FETCH_PRIO_DEMAND);
+    return nullptr;
 }
 
 bool vfs_stream_file_ensure(const char *name)
@@ -1412,42 +1646,112 @@ bool vfs_stream_file_ensure(const char *name)
     {
         return false;
     }
-    if (s->phase == WebStreamFile::Phase::Ready)
+    if (!vfs_fetch_started())
     {
-        return true;
-    }
-    if (s->phase == WebStreamFile::Phase::Failed)
-    {
-        // the demand path already gave up on this file recently; the ensure
-        // caller (boot verdata, a facet chart open) retries after the cooldown
-        if (std::chrono::steady_clock::now() < s->retry_at)
+        // the pool drives every chunk; before it runs (no engine yet)
+        // nothing can advance - the boot order brings the engine up first
+        static bool logged = false;
+        if (!logged)
         {
-            return false;
+            logged = true;
+            LOG_WARN("stream files: ensure(%s) without a fetch pool, staying cold", name);
         }
-        s->restarts = 0;
-        s->phase = WebStreamFile::Phase::Probe;
+        return false;
     }
-    if (s->phase == WebStreamFile::Phase::Probe)
+    // demand the completion and WAIT for the pool to deliver it: the
+    // ensure contract stays "ready when true" (boot verdata / streamed
+    // index files / facet chart opens), but the transfers happen on pool
+    // workers - the render thread only parks on this file's phase flip.
+    // A stalled connection is bounded by the deadline (a step that fails
+    // outright flips the phase and returns through the cooldown instead).
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(120);
+    while (std::chrono::steady_clock::now() < deadline)
     {
-        // reuse the demand path's probe (marker validation) by serving a
-        // zero-size read: it advances the state machine without transferring
-        vfs_stream_file_read(name, 0, 0);
-    }
-    // demand the completion: back-to-back paced chunk steps (each step is one
-    // bounded 2MB sync transfer) until the marker publisher flips the phase.
-    // Boot-time / rare-UI blocking-with-retry per the stream-file plan; the
-    // restart/cooldown semantics stay the demand path's own.
-    size_t steps = 0;
-    while (s->phase == WebStreamFile::Phase::Streaming && steps < 4096)
-    {
-        if (web_stream_step(*s))
         {
-            ++steps;
-            continue;
+            std::unique_lock<std::mutex> guard(s->mutex);
+            if (s->phase == WebStreamFile::Phase::Failed)
+            {
+                // the demand path already gave up on this file recently; the
+                // ensure caller retries after the cooldown
+                if (std::chrono::steady_clock::now() < s->retry_at)
+                {
+                    return false;
+                }
+                s->restarts = 0;
+                s->phase = WebStreamFile::Phase::Probe;
+            }
+            web_stream_probe(*s);
+            if (s->phase == WebStreamFile::Phase::Ready)
+            {
+                return true;
+            }
+            if (!s->url_ready && !web_stream_compose_url(*s))
+            {
+                return false; // the plan does not carry the file: stays cold
+            }
+            if (s->phase != WebStreamFile::Phase::Streaming)
+            {
+                continue;
+            }
         }
-        break; // failure or cooldown: the caller sees not-ready and bails
+        vfs_fetch_queue_stream(s->name.c_str(), VFS_FETCH_PRIO_DEMAND);
+        {
+            std::unique_lock<std::mutex> guard(s->mutex);
+            // the worker notifies on every step; the predicate re-arms the
+            // demand only when a step left the file failed (cooldown)
+            s->cv.wait_until(guard, deadline, [s] { return s->phase != WebStreamFile::Phase::Streaming; });
+        }
     }
-    return s->phase == WebStreamFile::Phase::Ready;
+    LOG_WARN("stream files: ensure(%s) timed out waiting for the pool", name);
+    return false;
+}
+
+// pool seam (vfs_fetch's stream lane): ONE chunk step on a worker, the
+// instance mutex held for its whole duration. Returns the re-queue pace,
+// or -1 when the file left its streaming phase.
+int vfs_stream_pool_step(const char *name)
+{
+    WebStreamFile *const s = web_stream_lookup(name);
+    if (s == nullptr)
+        return -1;
+    int delay = -1;
+    {
+        std::lock_guard<std::mutex> guard(s->mutex);
+        if (s->phase == WebStreamFile::Phase::Streaming)
+        {
+            delay = web_stream_step(*s);
+        }
+        s->cv.notify_all(); // phase flips (and progress) wake a blocking ensure
+    }
+    return delay;
+}
+
+// progress surfaced: one entry per registered stream file (phase, bytes,
+// totals, health). Returns the number of entries written.
+int vfs_stream_file_stats(vfs_stream_file_stats_entry *out, int max)
+{
+    if (out == nullptr || max <= 0)
+        return 0;
+    std::lock_guard<std::mutex> lock(s_web_stream_registry);
+    int n = 0;
+    for (auto &instance : s_web_stream_files)
+    {
+        if (n >= max)
+            break;
+        WebStreamFile &s = *instance;
+        std::lock_guard<std::mutex> guard(s.mutex);
+        vfs_stream_file_stats_entry &e = out[n++];
+        e.name = s.name.c_str();
+        e.phase = int(s.phase);
+        e.compressed_off = s.compressed_off;
+        e.compressed_total = s.compressed_total;
+        e.inflated_total = s.inflated_total;
+        e.chunks_ok = s.chunks_ok;
+        e.chunk_failures = s.chunk_failures;
+        e.restarts = s.restarts;
+        e.resumed = s.resumed;
+    }
+    return n;
 }
 #endif // XUO_EMSC
 
