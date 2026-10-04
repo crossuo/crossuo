@@ -153,7 +153,42 @@ CSoundManager g_SoundManager;
 static uint8_t *CreateWaveFile(CIndexSound &is)
 {
     SOUND_DEBUG_TRACE;
-    size_t dataSize = is.DataSize - sizeof(SOUND_BLOCK);
+    // web: the sound pack materializes as a table-only skeleton - the index
+    // bakes Address into the ORIGINAL archive layout, far past the end of the
+    // small skeleton mapping, so a raw read lands in unrelated heap memory
+    // (the pcm bytes change from run to run). Fetch the real block through
+    // the punctual layer like every other streamed reader
+    // (CUopMappedFile::GetData). Native keeps the raw pointer: the mapping
+    // is the whole file there and the trap resolves ranges on fault.
+    std::vector<uint8_t> fetched;
+    const uint8_t *blockData = reinterpret_cast<const uint8_t *>(is.Address);
+    size_t blockSize = is.DataSize;
+#if defined(XUO_EMSC)
+    if (is.UopBlock != nullptr)
+    {
+        fetched = g_FileManager.m_SoundLegacyMUL.GetData(is.UopBlock);
+        if (fetched.size() < sizeof(SOUND_BLOCK))
+        {
+            Warning(Client, "sound block fetch failed: %u", is.DataSize);
+            return nullptr;
+        }
+        blockData = fetched.data();
+        blockSize = fetched.size();
+    }
+    else if (is.UopHash != 0 && vfs_asset_read(is.UopHash, fetched) &&
+             fetched.size() >= sizeof(SOUND_BLOCK))
+    {
+        // planned index (no table entry): the whole block by hash
+        blockData = fetched.data();
+        blockSize = fetched.size();
+    }
+    else if (is.UopBlock == nullptr && is.UopHash != 0)
+    {
+        Warning(Client, "sound block fetch failed: %u", is.DataSize);
+        return nullptr;
+    }
+#endif
+    size_t dataSize = blockSize - sizeof(SOUND_BLOCK);
     auto waveSound = (uint8_t *)malloc(dataSize + sizeof(WaveHeader));
     auto waveHeader = reinterpret_cast<WaveHeader *>(waveSound);
 
@@ -173,7 +208,7 @@ static uint8_t *CreateWaveFile(CIndexSound &is)
     waveHeader->dataSize = uint32_t(dataSize);
 
     is.Delay = uint32_t((dataSize - 16) / 88.2f);
-    auto sndDataPtr = reinterpret_cast<uint8_t *>(is.Address + sizeof(SOUND_BLOCK));
+    auto sndDataPtr = blockData + sizeof(SOUND_BLOCK);
     memcpy(waveSound + sizeof(WaveHeader), sndDataPtr + 16, dataSize - 16);
 
     return waveSound;
