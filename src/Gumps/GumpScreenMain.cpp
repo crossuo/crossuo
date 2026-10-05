@@ -288,27 +288,27 @@ void CGumpScreenMain::GUMP_BUTTON_EVENT_C
 #endif
         case ID_MS_UOACCOUNT:
         {
-            Platform::OpenBrowser(XUO_DEFAULT_SHARD_ACCOUNT);
+            Platform::OpenBrowser(g_Config.ShardAccount);
             break;
         }
         case ID_MS_UOCOM:
         {
-            Platform::OpenBrowser(XUO_DEFAULT_SHARD_WEB);
+            Platform::OpenBrowser(g_Config.ShardWeb);
             break;
         }
         case ID_MS_HELP:
         {
-            Platform::OpenBrowser(XUO_DEFAULT_SHARD_HELP);
+            Platform::OpenBrowser(g_Config.ShardHelp);
             break;
         }
         case ID_MS_MOVIE:
         {
-            Platform::OpenBrowser(XUO_DEFAULT_SHARD_VIDEO);
+            Platform::OpenBrowser(g_Config.ShardVideo);
             break;
         }
         case ID_MS_CREDITS:
         {
-            Platform::OpenBrowser(XUO_DEFAULT_SHARD_CREDITS);
+            Platform::OpenBrowser(g_Config.ShardCredits);
             break;
         }
         default:

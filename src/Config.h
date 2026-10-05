@@ -56,6 +56,10 @@ struct Config
     // true when the config file explicitly set the data path (CustomPath);
     // not saved back
     bool CustomPathSet = false;
+
+    // true when the config file explicitly set the data product url
+    // (ProductUrl=); not saved back
+    bool DataProductUrlSet = false;
 };
 
 bool LoadGlobalConfig();
@@ -78,5 +82,31 @@ bool ApplyClientProfile(
     const astr_t &client_type,
     bool crypt,
     const astr_t &shard_name);
+
+// a complete shard description as handed over by every shard-selection path
+// (launcher pick, embedded live-apply, later --config / web flows)
+struct shard_profile
+{
+    astr_t name;        // shard name; names the per-shard streaming install dir
+    astr_t loginserver; // "host,port" (config-file format)
+    astr_t clientversion;
+    astr_t clienttype;
+    bool crypt = false;
+    astr_t product_url; // manifest root (trailing /) or full manifest url
+    astr_t web, account_page, help, video, credits, discord; // login-screen links
+};
+
+// The single entry point all shard-selection paths go through. The caller
+// provides a COMPLETE shard description: an empty link field resets that
+// link to its white-label default, so switching shards is deterministic
+// (defaults are never empty for web/account/help/video/credits; discord may
+// be genuinely empty). Sets the shard name, the links, the streaming product
+// url (only when non-empty: shards without an installer keep whatever url
+// was in effect), then delegates identity/credentials to ApplyClientProfile
+// passing the CURRENT credentials from g_Config - shard selection never
+// touches them - and the current data path (preserved, never triggers a
+// restart). Returns ApplyClientProfile's result: false when the client must
+// be restarted for the shard to take effect.
+bool ApplyShardProfile(const shard_profile &profile);
 
 extern Config g_Config;

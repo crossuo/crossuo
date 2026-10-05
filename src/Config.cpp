@@ -418,6 +418,7 @@ bool LoadGlobalConfig()
             {
                 case MSCC_DATA_PRODUCT_URL:
                     g_Config.DataProductUrl.clear();
+                    g_Config.DataProductUrlSet = true;
                     break;
                 case MSCC_SHARD_WEB:
                     g_Config.ShardWeb.clear();
@@ -565,6 +566,7 @@ bool LoadGlobalConfig()
                 case MSCC_DATA_PRODUCT_URL:
                 {
                     g_Config.DataProductUrl = strings[1];
+                    g_Config.DataProductUrlSet = true;
                     break;
                 }
                 case MSCC_SHARD_WEB:
@@ -843,4 +845,60 @@ bool ApplyClientProfile(
         }
     }
     return true;
+}
+
+bool ApplyShardProfile(const shard_profile &profile)
+{
+    // the shard name and the presentation links are applied directly; an
+    // empty link resets to the white-label default so shard switches are
+    // deterministic (see the contract in Config.h)
+    g_Config.ShardName = profile.name;
+    g_Config.ShardWeb = !profile.web.empty() ? profile.web : astr_t(XUO_DEFAULT_SHARD_WEB);
+    g_Config.ShardAccount =
+        !profile.account_page.empty() ? profile.account_page : astr_t(XUO_DEFAULT_SHARD_ACCOUNT);
+    g_Config.ShardHelp = !profile.help.empty() ? profile.help : astr_t(XUO_DEFAULT_SHARD_HELP);
+    g_Config.ShardVideo = !profile.video.empty() ? profile.video : astr_t(XUO_DEFAULT_SHARD_VIDEO);
+    g_Config.ShardCredits =
+        !profile.credits.empty() ? profile.credits : astr_t(XUO_DEFAULT_SHARD_CREDITS);
+    g_Config.ShardDiscord = profile.discord;
+
+    // an empty product url is not a reset: the launcher always sends a
+    // complete profile, and live shard entries without an installer keep
+    // whatever product url was in effect
+    if (!profile.product_url.empty())
+    {
+        g_Config.DataProductUrl = profile.product_url;
+        g_Config.DataProductUrlSet = true;
+    }
+
+    // identity/credentials go through ApplyClientProfile for its live-apply
+    // and needs-restart semantics. login/password/save_password/autologin
+    // come from the current g_Config (assigning them back is a no-op), and
+    // so does the data path: an empty custom_path is skipped there, and a
+    // non-empty one is already reflected in g_UOPath, so a shard switch can
+    // never report a data-path change (no spurious restart)
+    //
+    // `character` has no g_Config field: the live client keeps it in
+    // g_PacketManager.AutoLoginNames ("|name[|name...]"), which
+    // ApplyClientProfile rewrites as "|" + character - passing the current
+    // list back (minus the leading separator) reproduces it byte for byte,
+    // so shard selection leaves the auto-login character untouched
+    auto character = g_PacketManager.AutoLoginNames;
+    if (!character.empty() && character[0] == '|')
+    {
+        character.erase(0, 1);
+    }
+
+    return ApplyClientProfile(
+        g_Config.Login,
+        g_Config.Password,
+        g_Config.SavePassword,
+        g_Config.AutoLogin,
+        character,
+        profile.loginserver,
+        g_Config.CustomPath,
+        profile.clientversion,
+        profile.clienttype,
+        profile.crypt,
+        profile.name);
 }

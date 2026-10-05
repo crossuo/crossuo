@@ -248,6 +248,29 @@ bool load_config()
             params.product_url =
                 vfs_aops_product_url(g_cli["streaming-product"].get().string);
         }
+        else if (g_Config.DataProductUrlSet && !g_Config.DataProductUrl.empty())
+        {
+            // shard profile product url (crossuo.cfg ProductUrl=): unlike the
+            // vfs fallback below it may be a manifest ROOT (trailing /), so
+            // the manifest file name is appended to give the fetch a concrete
+            // url (a full manifest url passes through unchanged; an empty
+            // value is not a usable url and falls through to the defaults)
+            std::string product = g_Config.DataProductUrl;
+#if defined(XUO_EMSC)
+            // relative product urls are resolved against the page origin
+            // (fetch workers are created from blobs and have no base url) -
+            // same rule as the web default below
+            if (product.find("http") != 0)
+            {
+                product = std::string(emscripten_run_script_string("location.origin")) + "/" + product;
+            }
+#endif
+            if (!product.empty() && product.back() == '/')
+            {
+                product += "uo-legacyrelease.prod";
+            }
+            params.product_url = product;
+        }
 #if defined(XUO_EMSC)
         else
         {
