@@ -80,12 +80,22 @@ void SetLanguageFromSystemLocale()
 void OpenBrowser(const astr_t &url)
 {
 #if defined(XUO_EMSC)
-    // open a new browser tab
-    EM_ASM(
+    if (url.empty())
+    {
+        return;
+    }
+    // the game runs on a pthread worker where `window` does not exist:
+    // proxied execution opens the tab on the page, inside the click's
+    // user activation (popup blockers require it)
+    MAIN_THREAD_EM_ASM(
     {
         var url = UTF8ToString($0);
         if (url)
-            window.open(url, '_blank');
+        {
+            var w = window.open(url, '_blank');
+            if (!w)
+                console.warn('[main] popup blocked:', url);
+        }
     }, (intptr_t)url.c_str());
 #else
     ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);

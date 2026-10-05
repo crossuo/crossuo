@@ -483,6 +483,11 @@
         // capture phase: gestures anywhere on the page count
         window.addEventListener('pointerdown', unlock, true);
         window.addEventListener('keydown', unlock, true);
+        // keep game-consumed keys inside the page: Tab moves between login
+        // fields in the game and must not hand focus to the browser
+        window.addEventListener('keydown', function (e) {
+          if (e.key === 'Tab') e.preventDefault();
+        }, true);
         ctx.onstatechange = publishState;
         function bindRing(sab) {
           if (audio.ring) return;
@@ -928,7 +933,8 @@
         if (deepLink) {
           // deep link: never show the picker - resolve, then boot right away
           setPageStatus('loading shards\u2026');
-          loadShards(function (err) {
+          loadShards(function (err, list) {
+            shards = list || []; // resolveShard reads the module-global list
             var entry = err ? null : resolveShard(deepLink);
             if (err || !entry)
               console.warn('[shards] ?shard=' + deepLink +
