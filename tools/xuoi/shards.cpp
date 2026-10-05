@@ -20,140 +20,6 @@ namespace shard
 {
 #include "cfg_converters.h"
 
-struct url_other
-{
-    astr_t name; // dynamic ui
-    astr_t type;
-    astr_t url;
-};
-
-astr_t as_str(const url_other &in)
-{
-    if (in.url.length() == 0)
-        return "";
-    if (in.type.length() == 0)
-        return in.url;
-    return in.type + "+" + in.url;
-}
-
-bool convert(url_other &out, const char *raw)
-{
-    if (!raw || !raw[0])
-        return true;
-
-    auto v = split(raw, '+');
-    if (v.size() != 2)
-    {
-        LOG_ERROR("parsing urlother field: '%s'", raw);
-        return false;
-    }
-
-    if (!valid_url(v[1]))
-    {
-        LOG_ERROR("invalid url in urlother field: '%s'", v[1].c_str());
-        return false;
-    }
-
-    out.type = v[0];
-    out.name = "Goto: " + v[0];
-    out.url = v[1];
-    return true;
-}
-
-struct tag_install
-{
-    astr_t url;
-    tag_install_type type;
-};
-
-astr_t as_str(const tag_install &in)
-{
-    astr_t r = "uo+latest";
-    switch (in.type)
-    {
-        case tag_install_type::website:
-            r = "website+" + in.url;
-            break;
-        case tag_install_type::download_zip:
-            r = "download+zip+" + in.url;
-            break;
-        case tag_install_type::download_web:
-            r = "download+web+" + in.url;
-            break;
-        case tag_install_type::download_exe:
-            r = "download+exe+" + in.url;
-            break;
-        case tag_install_type::uo_patch_server:
-            r = "uo+" + in.url;
-            break;
-        case tag_install_type::xuo_patch_server:
-            r = "xuo+" + in.url;
-            break;
-        case tag_install_type::uo_latest:
-            break;
-        default:
-            break;
-    }
-    return r;
-}
-
-bool convert(tag_install &out, const char *raw)
-{
-    if (!raw || !raw[0])
-        return true;
-
-    auto v = split(raw, '+');
-    const auto size = int(v.size());
-    if (size < 2 || size > 3)
-    {
-        LOG_ERROR("parsing installer field (%d): '%s'", size, raw);
-        return false;
-    }
-
-    auto type = v[0];
-    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    auto sub = v[1];
-    std::transform(sub.begin(), sub.end(), sub.begin(), ::tolower);
-    auto url = v[size - 1];
-    bool latest = sub == "latest";
-    if (!latest && !valid_url(url))
-    {
-        LOG_ERROR("invalid url in installer field: '%s'", url.c_str());
-        return false;
-    }
-
-    if (type == "website")
-        out.type = tag_install_type::website;
-    if (type == "download")
-    {
-        if (sub == "exe")
-            out.type = tag_install_type::download_exe;
-        else if (sub == "zip")
-            out.type = tag_install_type::download_zip;
-        else if (sub == "web")
-            out.type = tag_install_type::download_web;
-        else
-        {
-            LOG_ERROR("invalid download type in installer field: '%s'", sub.c_str());
-            return false;
-        }
-    }
-    if (type == "uo")
-    {
-        if (latest)
-        {
-            out.type = tag_install_type::uo_latest;
-            url = "";
-        }
-        else
-            out.type = tag_install_type::uo_patch_server;
-    }
-    if (type == "xuo")
-        out.type = tag_install_type::xuo_patch_server;
-    out.url = url;
-    return true;
-}
-
 struct tag_data
 {
     std::vector<astr_t> tags;
@@ -200,6 +66,16 @@ bool convert(lang_type &out, const char *raw)
 }
 
 }; // namespace shard
+
+bool url_is_discord(const astr_t &url)
+{
+    // a discord community link is detected from the url itself (the old
+    // `Name+url` grammar carried the name); hosts are case-insensitive
+    astr_t lower(url);
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    return lower.find("discord.gg/") != astr_t::npos ||
+           lower.find("discord.com/") != astr_t::npos;
+}
 
 #define CFG_NAME shard
 #define CFG_DEFINITION "cfg_shard.h"
@@ -299,10 +175,8 @@ shard_data shard_by_id(int id)
              s.shard_crypt,
              s.shard_url.c_str(),
              s.shard_urlregister.c_str(),
-             s.shard_urlother.name.c_str(),
-             s.shard_urlother.url.c_str(),
-             s.shard_installer.type,
-             s.shard_installer.url.c_str() };
+             s.shard_urlother,
+             s.shard_installer.c_str() };
 }
 
 } // namespace xuol
@@ -354,6 +228,16 @@ int main(int argc, char **argv)
         LOG_INFO("validating '%s'", fs_path_ascii(cfg));
         load_shard_file(cfg, shard);
         error |= shard.error;
+
+        // a stray file (non-shard or comment-only) parses to zero entries:
+        // nothing to validate here, skip it instead of touching entries[0].
+        // not a validation failure, just nothing to validate.
+        if (shard.entries.empty())
+        {
+            LOG_WARN("no [Shard] entry in '%s', skipping", fs_path_ascii(cfg));
+            continue;
+        }
+
         if (shard.entries.size() != 1)
         {
             LOG_ERROR("invalid file, contains multiple entries.");
@@ -392,73 +276,20 @@ int main(int argc, char **argv)
                 entry.shard_urlregister.c_str());
             error = true;
         }
-        // urlother is parsed by its converter which enforces the <name>+<url>
-        // shape and a http(s) url, erroring out on malformed input.
-        if (entry.shard_urlother.url.empty() && !entry.raw_shard_urlother.empty())
+        // installer/urlother are plain urls: empty is fine (manual install /
+        // no community link), a non-empty value must be a http(s) url
+        if (!entry.shard_urlother.empty() && !valid_url(entry.shard_urlother))
         {
-            LOG_ERROR("invalid field 'urlother': '%s'", entry.raw_shard_urlother.c_str());
+            LOG_ERROR(
+                "invalid field 'urlother', not a http(s) url: '%s'", entry.shard_urlother.c_str());
             error = true;
         }
+        if (!entry.shard_installer.empty() && !valid_url(entry.shard_installer))
         {
-            const auto &url = entry.shard_installer.url;
-            switch (entry.shard_installer.type)
-            {
-                case shard::tag_install_type::uo_latest:
-                    // default uo+latest, url must be empty
-                    if (!url.empty() && !valid_url(url))
-                    {
-                        LOG_ERROR(
-                            "invalid field 'installer' (uo+latest), url must be empty or a "
-                            "http(s) url: '%s'",
-                            url.c_str());
-                        error = true;
-                    }
-                    break;
-                case shard::tag_install_type::uo_patch_server:
-                    // uo+<url>, url must be a non-empty http(s) url
-                    if (url.empty() || !valid_url(url))
-                    {
-                        LOG_ERROR(
-                            "invalid field 'installer' (uo+<url>), url must be a http(s) url: "
-                            "'%s'",
-                            url.c_str());
-                        error = true;
-                    }
-                    break;
-                case shard::tag_install_type::xuo_patch_server:
-                    // xuo+<url>, url must be a non-empty http(s) url; 'xuo+latest' is nonsense
-                    if (entry.raw_shard_installer.find("+latest") != astr_t::npos)
-                    {
-                        LOG_ERROR(
-                            "invalid field 'installer': 'xuo+latest' is not a valid form, "
-                            "expects xuo+<url>");
-                        error = true;
-                    }
-                    else if (url.empty() || !valid_url(url))
-                    {
-                        LOG_ERROR(
-                            "invalid field 'installer' (xuo+<url>), url must be a http(s) url: "
-                            "'%s'",
-                            url.c_str());
-                        error = true;
-                    }
-                    break;
-                case shard::tag_install_type::website:
-                case shard::tag_install_type::download_zip:
-                case shard::tag_install_type::download_web:
-                case shard::tag_install_type::download_exe:
-                    // website+<url> / download+<type>+<url>, url must be a non-empty http(s) url
-                    if (url.empty() || !valid_url(url))
-                    {
-                        LOG_ERROR(
-                            "invalid field 'installer', url must be a http(s) url: '%s'",
-                            url.c_str());
-                        error = true;
-                    }
-                    break;
-                default:
-                    break;
-            }
+            LOG_ERROR(
+                "invalid field 'installer', not a http(s) url: '%s'",
+                entry.shard_installer.c_str());
+            error = true;
         }
         if (entry.shard_loginserver.empty())
         {

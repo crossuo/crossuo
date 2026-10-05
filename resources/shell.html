@@ -684,10 +684,11 @@
         // InitCli): --shard names the per-shard streaming install dir and is
         // sanitized like the desktop (Main.cpp: '/' '\' ' ' -> '_');
         // loginserver "host,port" maps to --host/--port (port only when
-        // numeric - the flag is u32); installer uo+<url>/xuo+<url> streams
-        // that product via --streaming-product, while uo+latest and the
-        // website+/download+ installers map to nothing (v1: clientversion
-        // and the links stay unparsed - see the block comment above)
+        // numeric - the flag is u32); installer is a plain data product url
+        // passed via --streaming-product (the client deduces the product
+        // style from the content, vfs_aops_product_url), empty = manual
+        // install and maps to nothing (v1: clientversion and the links stay
+        // unparsed - see the block comment above)
         function shardToArgs(shard) {
           var args = [];
           if (!shard || !shard.name) return args;
@@ -699,8 +700,8 @@
           // 1-5 digits, 1-65535 only; out-of-range/non-numeric ports fall back
           // to the client default by omission of the --port flag
           if (/^\d{1,5}$/.test(port) && port > 0 && port <= 65535) args.push('--port=' + port);
-          var m = /^(uo|xuo)\+(https?:\/\/\S+)$/i.exec(String(shard.installer || '').trim());
-          if (m) args.push('--streaming-product=' + m[2]);
+          var installer = String(shard.installer || '').trim();
+          if (installer) args.push('--streaming-product=' + installer);
           return args;
         }
 

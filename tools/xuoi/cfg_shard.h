@@ -34,34 +34,33 @@ CFG_FIELD(shard, urlforum, {}, astr_t)
 // optional
 // website forum url
 
-CFG_FIELD(shard, urlother, {}, url_other)
+CFG_FIELD(shard, urlother, {}, astr_t)
 // optional
-// other url, eg. community chat or anything
+// plain community url, eg. a discord invite
 // format:
-//   <textual description>+<url>
-//   Discord+https://discord.gg/INVITE
+//   <url>
+//   https://discord.gg/INVITE
+// no name prefix anymore: a discord link is detected from the url itself
+// (contains discord.gg/ or discord.com/)
 
 CFG_FIELD(shard, urlregister, {}, astr_t)
 // optional
 // url where to register IF the shard is not auto account creation
 // if empty, it IS considered auto account creation
 
-CFG_FIELD(shard, installer, "uo+latest", tag_install) // (not fully implemented)
+CFG_FIELD(shard, installer, {}, astr_t)
 // optional
-// install command/url/type
+// data install source: where the client streams/downloads its data from
 // format:
-//   website+<url>
-//   download+<type>+<url>
-//     this will download the thing in the url and if <type> is 'zip' it will
-//     unpack upon download. if <type> is 'exe' it will execute directly.
-//     or 'web' for cloud based storage services like google drive et al.
-//   uo+<latest|url>
-//     this uses the same official uo patching system, latest will use the
-//     official and latest uo.com data, if <url> is used, then this will try
-//     to use this as entry point for a uo compatible patching data (can be 
-//     created with xuoi --mirror mode for example.
-//   xuo+<url>
-//     this uses the X:UO update server and manifest format
+//   <url>
+//   http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo/manifest/
+//   empty for manual-install shards: no streaming product, the client falls
+//     back to its configured default data
+//   a plain http(s) url pointing at a data product: the official uo patch
+//     server manifest root/.prod or an aops patch server root
+// no type prefixes anymore (uo+/xuo+/website+/download+ are gone): the
+//   client deduces the product style from the url content
+//   (--streaming-product, xuocore/vfs_source_aops.cpp vfs_aops_product_url)
 
 CFG_FIELD(shard, loginserver, {}, astr_t)
 // required

@@ -4,23 +4,9 @@
 #pragma once
 
 #include <stdint.h>
+#include <common/str.h> // astr_t
 
 namespace xuol {
-
-namespace shard
-{
-// install source of the shard data, as parsed from `installer = <type>+<url>`
-enum class tag_install_type : uint8_t
-{
-    website,
-    download_zip,
-    download_exe,
-    download_web,
-    uo_latest,
-    uo_patch_server,
-    xuo_patch_server,
-};
-} // namespace shard
 
 // a snapshot of a shard entry, enough to build a launch profile from it;
 // the pointers refer to the loaded shard list and stay valid until the
@@ -34,11 +20,15 @@ struct shard_data
     bool crypt;
     const char *url;         // website
     const char *urlregister; // account registration page
-    const char *urlother_name;
-    const char *urlother_url;
-    shard::tag_install_type install_type;
-    const char *install_url;
+    astr_t urlother;         // plain community url ("" = none); a discord
+                             // link is detected from the url itself
+                             // (contains discord.gg/ or discord.com/)
+    const char *install_url; // plain data product url ("" = manual install,
+                             // the client falls back to its default)
 };
+
+// true when the url looks like a discord community link
+bool url_is_discord(const astr_t &url);
 
 bool shard_getter(void *data, int idx, const char **out_text);
 void load_shards();

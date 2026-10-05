@@ -39,6 +39,12 @@ bool ui_shards_combo(
 
 static int s_selected = 0;
 static int s_picked = -1;
+
+// menu label for a plain urlother community link
+static const char *urlother_label(const astr_t &url)
+{
+    return url_is_discord(url) ? "Open Discord" : "Open Link";
+}
 const ImVec4 bg_selected = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
 const ImVec4 bg_highlighted = ImVec4(0.45f, 0.35f, 0.35f, 1.00f);
 const ImVec4 bg_alt = ImVec4(0.23f, 0.23f, 0.23f, 1.00f);
@@ -106,9 +112,8 @@ void ui_shards(ui_model &m, bool picker)
             continue;
         const bool has_url = !it.shard_url.empty() && valid_url(it.shard_url);
         const bool has_forum = !it.shard_urlforum.empty() && valid_url(it.shard_urlforum);
-        const bool has_other = !it.shard_urlother.url.empty();
-        const bool has_install = !it.shard_installer.url.empty();
-        const bool has_context = has_url || has_reg || has_forum || has_other || has_install;
+        const bool has_other = !it.shard_urlother.empty() && valid_url(it.shard_urlother);
+        const bool has_context = has_url || has_reg || has_forum || has_other;
         // others
         const bool has_desc = !it.shard_description.empty();
         const bool has_lang = !it.shard_language.langs.empty();
@@ -180,46 +185,11 @@ void ui_shards(ui_model &m, bool picker)
                     open_url(it.shard_urlregister);
                 if (has_forum && ImGui::MenuItem("Open Forum", nullptr, false))
                     open_url(it.shard_urlforum);
-                if (has_other && ImGui::MenuItem(it.shard_urlother.name.c_str(), nullptr, false))
-                    open_url(it.shard_urlother.url);
-                if (has_install)
-                {
-                    switch (it.shard_installer.type)
-                    {
-                        case shard::tag_install_type::website:
-                        {
-                            if (ImGui::MenuItem("View Instructions", nullptr, false))
-                                open_url(it.shard_installer.url);
-                        }
-                        break;
-                        case shard::tag_install_type::download_zip:
-                        case shard::tag_install_type::download_web:
-                        case shard::tag_install_type::download_exe:
-                        {
-                            if (ImGui::MenuItem("Download Installer", nullptr, false))
-                                open_url(it.shard_installer.url);
-                        }
-                        break;
-                        case shard::tag_install_type::xuo_patch_server:
-                        {
-                            if (ImGui::MenuItem("Install Now (not implemented)", nullptr, false))
-                            {
-                            }
-                        }
-                        break;
-                        case shard::tag_install_type::uo_patch_server:
-                        case shard::tag_install_type::uo_latest:
-                        {
-                            // TODO: fix using xuoi/vuoi installer
-                            if (ImGui::MenuItem("Download Now", nullptr, false))
-                                open_url(
-                                    "http://web.cdn.eamythic.com/us/uo/installers/20120309/UOClassicSetup_7_0_24_0.exe");
-                        }
-                        break;
-                        default:
-                            break;
-                    }
-                }
+                if (has_other &&
+                    ImGui::MenuItem(urlother_label(it.shard_urlother), nullptr, false))
+                    open_url(it.shard_urlother);
+                // installer is a streaming data product url the client
+                // consumes via Play: no menu action (empty = manual install)
                 // by knowing all our data paths and data version, we can match supported shards
                 // and enable a quick join feature where no account profile setup is required
                 //if (!has_reg && ImGui::MenuItem("Quick Join", nullptr, false))

@@ -38,3 +38,10 @@
 - ?shard-address/?shard-port testing overrides deliberately win (appended last; popts single-option push_back replaces = last-wins, verified in external/popts.h).
 - Parser: ES5, tolerant (CRLF/CR, comments, nameless sections skipped), BOM stripped, remote text rendered via textContent only.
 - Known follow-ups: generic k=v URL passthrough pushes junk positionals (pre-existing); duplicate shard names resolve first-wins (documented in code); showPicker lacks a try/catch fallback boot (NIT).
+
+## Shard schema: installer/urlother prefix grammars removed (2026-10-05)
+- `installer` = plain data-product url (uo patch server or aops root — `vfs_aops_product_url` deduces the style) or empty (manual install; configs keep `; original: ...` comments). `urlother` = plain community url; discord detected by domain (discord.gg/discord.com), the "Goto: " prefix hack is gone.
+- `tag_install`/`url_other` converters + the per-type validator switch deleted; shardchk: empty installer/urlother is valid, non-empty must be http(s).
+- deploy.sh (gitignored like all *.sh): `wasm` target now regenerates dist/wasm/shards.cfg from the shards depot via shardchk after a successful build (depot: ${XUO_SHARDS_DEPOT:-../shards}; shardchk resolved from native build trees or $XUO_SHARDCHK; graceful skip if absent). expected_binary() gained the wasm case.
+- shardchk now skips zero-entry files with a WARN instead of crashing (the earlier mystery segfault: stray/comment-only files hit an unchecked entries[0] after the size!=1 check).
+- Depot (uncommitted, by request): demise.cfg fully white_label-driven (7.0.117.0, EA product url, account page, uo.com); osi/cryptonite/erebor installers emptied with original-url comments; template.cfg updated; shards.cfg regenerated (matches committed one).
