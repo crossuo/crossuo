@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include <external/gfx/gfx.h>
-#include <external/process.h>
 #include <xuocore/common.h>
 
 #include "icon_launcher.h"
@@ -24,8 +23,8 @@ int main(int argc, char **argv)
     win_context win;
     memset(&win, 0, sizeof(win_context));
     win.title = XUOL_AGENT_NAME;
-    win.width = 550;
-    win.height = 284;
+    win.width = 640;
+    win.height = 420;
     win.vsync = 0;
     win.icon = &g_icon_xuolauncher;
     if (win_init(&win) != 0)

@@ -67,6 +67,27 @@ enum class apply_result
 };
 
 apply_result client_apply_profile(const client_profile &profile);
+// a complete shard description for the shard views; field names mirror the
+// client's Config::shard_profile (xuol keeps its own type so the launcher
+// side stays independent of the client headers)
+struct shard_profile
+{
+    astr_t name;
+    astr_t loginserver;
+    astr_t clientversion;
+    astr_t clienttype;
+    bool crypt = false;
+    astr_t product_url;
+    astr_t web;
+    astr_t account_page;
+    astr_t help;
+    astr_t video;
+    astr_t credits;
+    astr_t discord;
+};
+// applies a shard selection to the running client instead of spawning a new
+// process; see client_apply_profile for the result semantics
+apply_result client_apply_shard(const shard_profile &profile);
 // relaunches the client process (used for applying updates and profiles that
 // cannot be applied live); the current process exits afterwards
 void client_request_restart();

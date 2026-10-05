@@ -46,8 +46,8 @@ bool LauncherWindow_Init()
 
     memset(&s_launcher_win, 0, sizeof(s_launcher_win));
     s_launcher_win.title = XUOL_AGENT_NAME;
-    s_launcher_win.width = 550;
-    s_launcher_win.height = 284;
+    s_launcher_win.width = 640;
+    s_launcher_win.height = 420;
     s_launcher_win.vsync = 0;
     s_launcher_win.icon = &g_icon_xuolauncher;
     if (win_init(&s_launcher_win) != 0)
@@ -279,6 +279,31 @@ apply_result client_apply_profile(const client_profile &profile)
     // the profile was persisted to crossuo.cfg, but the running client state
     // does not allow a safe live application (in game, connected, or the data
     // path changed after the client data was loaded)
+    return apply_result::needs_restart;
+}
+
+apply_result client_apply_shard(const shard_profile &profile)
+{
+    xuol_app_notify_profile_applied();
+    ::shard_profile shard;
+    shard.name = profile.name;
+    shard.loginserver = profile.loginserver;
+    shard.clientversion = profile.clientversion;
+    shard.clienttype = profile.clienttype;
+    shard.crypt = profile.crypt;
+    shard.product_url = profile.product_url;
+    shard.web = profile.web;
+    shard.account_page = profile.account_page;
+    shard.help = profile.help;
+    shard.video = profile.video;
+    shard.credits = profile.credits;
+    shard.discord = profile.discord;
+    if (ApplyShardProfile(shard))
+    {
+        return apply_result::applied;
+    }
+    // the shard was persisted to crossuo.cfg, but the running client state
+    // does not allow a safe live application (in game or connected)
     return apply_result::needs_restart;
 }
 

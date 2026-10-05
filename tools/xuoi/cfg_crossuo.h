@@ -22,5 +22,15 @@ CFG_FIELD(crossuo, useverdata, "no", bool)
 CFG_FIELD(crossuo, clienttype, {}, astr_t)
 CFG_FIELD(crossuo, language, {}, astr_t)
 CFG_FIELD(crossuo, shardname, {}, astr_t)
+// shard presentation links: written by the launcher's shard picker only when
+// the shard provides them (an explicit empty value would clear the client
+// default); keys match src/Config.cpp s_Keys
+CFG_FIELD(crossuo, producturl, {}, astr_t)
+CFG_FIELD(crossuo, shardweb, {}, astr_t)
+CFG_FIELD(crossuo, shardaccount, {}, astr_t)
+CFG_FIELD(crossuo, shardhelp, {}, astr_t)
+CFG_FIELD(crossuo, shardvideo, {}, astr_t)
+CFG_FIELD(crossuo, shardcredits, {}, astr_t)
+CFG_FIELD(crossuo, sharddiscord, {}, astr_t)
 
 #undef CFG_FIELD

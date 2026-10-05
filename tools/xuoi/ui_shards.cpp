@@ -5,6 +5,7 @@
 
 #include "ui_model.h"
 #include "ui_shards.h"
+#include "accounts.h"
 #include "shards.cpp"
 #include <xuocore/common.h>
 
@@ -80,7 +81,8 @@ void ui_shards(ui_model &m, bool picker)
         HoverToolTip("Auto account creation, just log-in and play");
         ImGui::TreePop();
     }
-    const int filler = picker ? -13 : +10;
+    // both footers (the picker's Pick/Cancel and the tab's Play) reserve a row
+    const int filler = -13;
     const float y = m.area.y - ImGui::GetCursorPosY() + line_size + filler;
     ImGui::BeginChild("shards", { m.area.x, y }, false, window_flags);
     for (int i = 1; i < (int)s_shards.entries.size(); i++)
@@ -162,6 +164,12 @@ void ui_shards(ui_model &m, bool picker)
                 ImGui::IsItemClicked(ImGuiMouseButton_Right))
                 s_selected = i;
 
+            // double-click launches the shard right away (tab mode only: the
+            // picker confirms the selection with its own footer button)
+            if (!picker && ImGui::IsItemClicked(ImGuiMouseButton_Left) &&
+                ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                account_launch_shard(i);
+
             if (has_context && ImGui::BeginPopupContextItem("item context menu"))
             {
                 if (has_url && ImGui::MenuItem("Open Website", nullptr, false))
@@ -235,6 +243,24 @@ void ui_shards(ui_model &m, bool picker)
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
             ui_pop(m);
+    }
+    else
+    {
+        // footer: a hint for the selected shard on the left, the launch
+        // action on the right (the picker has its own Pick/Cancel footer)
+        const bool can_play = s_selected > 0 && s_selected < (int)s_shards.entries.size() &&
+                              !s_shards.entries[s_selected].shard_loginserver.empty();
+        ImGui::NewLine();
+        if (can_play)
+            ImGui::TextDisabled("Login: %s", s_shards.entries[s_selected].shard_loginserver.c_str());
+        ImGui::SameLine(m.area.x - 160.0f);
+        ImGui::BeginDisabled(!can_play);
+        if (ImGui::Button("Play"))
+        {
+            LOG_TRACE("launch shard: %d", s_selected);
+            account_launch_shard(s_selected);
+        }
+        ImGui::EndDisabled();
     }
 }
 

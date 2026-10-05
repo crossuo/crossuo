@@ -60,17 +60,6 @@ bool convert(url_other &out, const char *raw)
     return true;
 }
 
-enum class tag_install_type : uint8_t
-{
-    website,
-    download_zip,
-    download_exe,
-    download_web,
-    uo_latest,
-    uo_patch_server,
-    xuo_patch_server,
-};
-
 struct tag_install
 {
     astr_t url;
@@ -286,6 +275,11 @@ void write_shards(void *_fp)
     }
 }
 
+int shard_count()
+{
+    return (int)s_shards.entries.size();
+}
+
 int shard_index_by_loginserver(const char *login_server)
 {
     auto it = s_shard_by_loginserver.find(login_server);
@@ -298,9 +292,17 @@ shard_data shard_by_id(int id)
 {
     assert(id < (int)s_shards.entries.size());
     const auto &s = s_shards.entries[id];
-    return { s.shard_loginserver.c_str(),
+    return { s.shard_name.c_str(),
+             s.shard_loginserver.c_str(),
              s.shard_clienttype.c_str(),
-             s.shard_clientversion.c_str() };
+             s.shard_clientversion.c_str(),
+             s.shard_crypt,
+             s.shard_url.c_str(),
+             s.shard_urlregister.c_str(),
+             s.shard_urlother.name.c_str(),
+             s.shard_urlother.url.c_str(),
+             s.shard_installer.type,
+             s.shard_installer.url.c_str() };
 }
 
 } // namespace xuol

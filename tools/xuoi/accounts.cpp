@@ -168,14 +168,20 @@ int account_client_type_index_by_name(const char *name)
     return 0;
 }
 
+// the launch configuration of a profile lives next to the launcher data,
+// named after the profile with path-unfriendly characters sanitized away
+static fs_path profile_cfg_path(const astr_t &name)
+{
+    astr_t fname = name + ".cfg";
+    std::replace(fname.begin(), fname.end(), '/', '_');
+    std::replace(fname.begin(), fname.end(), '\\', '_');
+    std::replace(fname.begin(), fname.end(), ' ', '_');
+    return fs_path_join(xuol_data_path(), fname);
+}
+
 static fs_path account_create_config(const account::entry &account)
 {
-    astr_t name = account.account_profile + ".cfg";
-    std::replace(name.begin(), name.end(), '/', '_');
-    std::replace(name.begin(), name.end(), '\\', '_');
-    std::replace(name.begin(), name.end(), ' ', '_');
-
-    const auto fname = fs_path_join(xuol_data_path(), name);
+    const auto fname = profile_cfg_path(account.account_profile);
     auto fp = fs_open(fname, FS_WRITE);
     if (!fp)
     {
@@ -200,6 +206,75 @@ static fs_path account_create_config(const account::entry &account)
     crossuo::write(fp, entry, nullptr);
     fclose(fp);
     return fname;
+}
+
+// maps a shard list entry onto the crossuo launch configuration schema; keys
+// the shard does not provide are left at their default so cfg_loader's write
+// skips them and the client keeps its own defaults (an explicit "key=" line
+// would clear them client-side)
+static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
+{
+    // identity: what the client needs to reach the shard and name its data
+    // (shard_data pointers come from the shard list, but guard anyway)
+    if (shard.name)
+        e.crossuo_shardname = shard.name;
+    if (shard.loginserver)
+        e.crossuo_loginserver = shard.loginserver;
+    if (shard.clientversion)
+        e.crossuo_clientversion = shard.clientversion;
+    if (shard.clienttype) // empty: the client autodetects
+        e.crossuo_clienttype = shard.clienttype;
+    e.crossuo_crypt = shard.crypt;
+
+    // a shard launch never carries credentials: the login screen asks for
+    // them, picking a shard is not an account login
+    e.crossuo_acctid = {};
+    e.crossuo_acctpassword = {};
+    e.crossuo_rememberacctpw = false;
+    e.crossuo_autologin = false;
+
+    // data install source: where the client streams/downloads its data from
+    switch (shard.install_type)
+    {
+        case shard::tag_install_type::uo_latest:
+        case shard::tag_install_type::uo_patch_server:
+            // "uo+latest" parses to an empty url: the official patch server
+            // is the client default, nothing to set
+            if (shard.install_url && shard.install_url[0])
+                e.crossuo_producturl = shard.install_url;
+            break;
+        case shard::tag_install_type::xuo_patch_server:
+            e.crossuo_producturl = shard.install_url;
+            // TODO: xuo update-server manifest format may need normalization for the streaming product path
+            break;
+        case shard::tag_install_type::website:
+        case shard::tag_install_type::download_zip:
+        case shard::tag_install_type::download_web:
+        case shard::tag_install_type::download_exe:
+        default:
+            break; // manual data install: no streaming product url
+    }
+
+    // presentation links, only when the shard provides them
+    if (shard.url && shard.url[0])
+        e.crossuo_shardweb = shard.url;
+    if (shard.urlregister && shard.urlregister[0])
+        e.crossuo_shardaccount = shard.urlregister;
+    if (shard.urlother_url && shard.urlother_url[0] && shard.urlother_name)
+    {
+        // the shard parser prefixes urlother names with "Goto: " (see url_other
+        // converter in shards.cpp: name = "Goto: " + type). The raw type token
+        // is kept in url_other::type, which shard_data does not expose, so we
+        // recover it by stripping the prefix and compare it as an exact token,
+        // case-insensitively: only a "discord" urlother maps to the discord key.
+        const char *name = shard.urlother_name;
+        static const char prefix[] = "Goto: ";
+        if (strncmp(name, prefix, sizeof(prefix) - 1) == 0)
+            name += sizeof(prefix) - 1;
+        if (strcasecmp(name, "discord") == 0)
+            e.crossuo_sharddiscord = shard.urlother_url;
+    }
+    // help/video/credits have no shard.ini source: the client keeps its defaults
 }
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
@@ -243,6 +318,108 @@ static xuol::apply_result account_apply_live(int account_index)
 }
 #endif // XUO_LAUNCHER_EMBEDDED
 
+#if !defined(XUO_LAUNCHER_EMBEDDED)
+static fs_path xuo_client_bin()
+{
+    const fs_path paths[] = {
+        fs_path_join(xuol_data_path(), XUO_EXE),
+        fs_path_join(fs_path_current(), XUO_EXE),
+        fs_path_join(fs_path_process(), XUO_EXE),
+    };
+    for (int i = 0; i < countof(paths); ++i)
+    {
+        if (fs_path_is_file(paths[i]))
+            return paths[i];
+    }
+    return {};
+}
+#endif // !XUO_LAUNCHER_EMBEDDED
+
+void account_launch_shard(int shard_index)
+{
+    // entry 0 is the "<custom shard>" placeholder, it has nothing to launch
+    if (shard_index <= 0 || shard_index >= shard_count())
+        return;
+
+    const auto shard = shard_by_id(shard_index);
+    if (!shard.loginserver || !shard.loginserver[0])
+    {
+        LOG_ERROR("shard '%s' has no login server set, cannot launch", shard.name);
+        return;
+    }
+
+    // map the shard through the same config-file schema the standalone path
+    // writes: fields the shard does not provide stay at their default, which
+    // the embedded bridge treats as "not provided"
+    auto entry = crossuo::default_entry();
+    shard_fill_entry(shard, entry);
+
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    xuol::shard_profile profile;
+    profile.name = entry.crossuo_shardname;
+    profile.loginserver = entry.crossuo_loginserver;
+    profile.clientversion = entry.crossuo_clientversion;
+    profile.clienttype = entry.crossuo_clienttype;
+    profile.crypt = entry.crossuo_crypt;
+    profile.product_url = entry.crossuo_producturl;
+    profile.web = entry.crossuo_shardweb;
+    profile.account_page = entry.crossuo_shardaccount;
+    profile.discord = entry.crossuo_sharddiscord;
+
+    const auto result = xuol::client_apply_shard(profile);
+    // needs_restart already latched the reload, which the app frame performs;
+    // do NOT request a close in that case: hiding the launcher would stop the
+    // frame from running and the pending reload would never be acted upon.
+    // The relaunched client takes this process down anyway.
+    if (result == xuol::apply_result::applied)
+    {
+        LOG_INFO("shard applied: %s", profile.name.c_str());
+        xuol_launch_quit();
+    }
+    else if (result == xuol::apply_result::needs_restart)
+    {
+        LOG_INFO("shard saved, the client reloads to apply it");
+        xuol_request_reload();
+    }
+#else
+    // the shard names the launch configuration, mirroring the per-shard
+    // naming of account profiles
+    const auto cfg = profile_cfg_path(shard.name);
+    auto fp = fs_open(cfg, FS_WRITE);
+    if (!fp)
+    {
+        LOG_ERROR("failed to write shard launch configuration");
+        return;
+    }
+    LOG_DEBUG("writing shard launch configuration in: %s", fs_path_ascii(cfg));
+    crossuo::write(fp, entry, nullptr);
+    fclose(fp);
+
+    auto bin = xuo_client_bin();
+    if (fs_path_empty(bin))
+    {
+        LOG_ERROR("could not find executable: %s", XUO_EXE);
+        return;
+    }
+    fs_path_change(fs_directory(bin));
+
+    const char *args[] = { fs_path_ascii(bin), "--config", fs_path_ascii(cfg), 0 };
+    LOG_INFO("running %s", args[0]);
+
+    process_s process;
+    const auto options = process_option_inherit_environment | process_option_child_detached |
+                         process_option_dont_touch_descriptors;
+    if (process_create(args, options, &process) != 0)
+    {
+        LOG_ERROR("could not launch client %s", args[0]);
+        return; // the launch failed, keep the launcher open
+    }
+
+    LOG_INFO("shard launched: %s", shard.name);
+    xuol_launch_quit();
+#endif // XUO_LAUNCHER_EMBEDDED
+}
+
 static void account_launch(int account_index)
 {
     if (account_index == 0)
@@ -271,25 +448,13 @@ static void account_launch(int account_index)
         return;
     }
 
-    fs_path xuo_bin;
-    const fs_path paths[] = {
-        fs_path_join(xuol_data_path(), XUO_EXE),
-        fs_path_join(fs_path_current(), XUO_EXE),
-        fs_path_join(fs_path_process(), XUO_EXE),
-    };
-    for (int i = 0; i < countof(paths); ++i)
-    {
-        if (fs_path_is_file(paths[i]))
-        {
-            xuo_bin = paths[i];
-            break;
-        }
-    }
+    fs_path xuo_bin = xuo_client_bin();
 
     auto bin = xuo_bin;
     if (fs_path_empty(bin))
     {
         LOG_ERROR("could not find executable: %s", fs_path_ascii(bin));
+        return; // keep the launcher open: cannot launch without a client binary
     }
     fs_path_change(fs_directory(bin));
 
@@ -302,6 +467,7 @@ static void account_launch(int account_index)
     if (process_create(args, options, &process) != 0)
     {
         LOG_ERROR("could not launch client %s", args[0]);
+        return; // the launch failed, keep the launcher open
     }
 
     xuol_set_last_used(account_index);

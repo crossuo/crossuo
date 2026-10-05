@@ -8,8 +8,9 @@
 #endif
 
 CFG_FIELD(global, auto_close, "yes", bool)
-// default: yes
-// auto close after launching the client
+// deprecated, parsed for compat: the launcher always closes after a
+// successful client launch, the key is kept so old xuolauncher.cfg files
+// still load (the loader is strict about unknown keys)
 
 // deprecated, parsed for compat: the updater is gone, the key is kept so old
 // xuolauncher.cfg files still load (the loader is strict about unknown keys)

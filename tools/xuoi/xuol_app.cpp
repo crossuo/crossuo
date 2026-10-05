@@ -125,8 +125,9 @@ void request_close()
 
 void xuol_launch_quit()
 {
-    if (config().global_auto_close)
-        request_close();
+    // the launcher closes after every successful client spawn/apply; the
+    // auto_close key is kept parse-only so old configs still load
+    request_close();
 }
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
@@ -307,8 +308,10 @@ void xuol_app_frame()
             // to the plain ui_model& signature; wrap it.
             const auto shards_body = [](ui_model &m) { ui_shards(m); };
 
-            tab(ui_view::accounts, ICON_FK_USER " Accounts", ui_accounts);
+            // Shards is the home tab: picking a shard launches without any
+            // account setup; Accounts stays for the advanced profile flow.
             tab(ui_view::shards, ICON_FK_GLOBE_W " Shards", shards_body);
+            tab(ui_view::accounts, ICON_FK_USER " Accounts", ui_accounts);
             ImGui::EndTabBar();
         }
 

@@ -18,3 +18,10 @@
 - Self-relaunch copy-to-`xuolauncher_` removed; release builds start directly.
 - `XUOL_AGENT_NAME` moved from xuo_updater.h to per-host defines (xuol_app.cpp, xuolauncher_main.cpp); embedded host keeps its own LAUNCHER_TITLE.
 - Follow-up folded into T4: drop orphaned `#include <external/process.h>` in xuolauncher_main.cpp. `XUO_DEFAULT_SHARD_CHANGELOG` (white_label.h) now has zero users — kept as white-label surface for a future changelog entry.
+
+## T4 — Launcher as shard picker: shards-first + click-to-launch (2026-10-04)
+- Shards = home tab with Play button + double-click launch; account NOT required (credentials zeroed in the shard profile; login screen handles auth). Launcher closes only on successful spawn (also fixed for the legacy account-launch path, incl. missing `return` after empty-bin error).
+- Shard → client profile: `shard_fill_entry` maps identity + installer→producturl + links into the extended `crossuo::entry` schema; keys omitted (never written empty) when the shard doesn't provide them. Discord matched by exact urlother token (strip "Goto: " prefix, strcasecmp) — not substring.
+- Embedded: `xuol::client_apply_shard` bridge → `ApplyShardProfile` (applied→hide launcher; needs_restart→latched reload, no quit). `xuol::shard_profile` (xuol_app.h) is intentionally a distinct mirror of Config's `::shard_profile` — TU boundary (launcher doesn't compile src/Config.cpp).
+- Known limitations (accepted): empty clienttype/version in a shard = "keep current" on live switch (inherited ApplyShardProfile contract; shardchk requires clientversion so exposure is clienttype only); shard launch cfgs share the profile-name namespace with account profiles (a shard named like a profile overwrites that cfg); `installer = xuo+latest` nonsense input would write `producturl=latest` (parser-level, pre-existing).
+- UI automation note: XTEST pointer no-ops in this VM; verify window content via `import -window <id>` + stddev (x11grab captures black for GL windows).
