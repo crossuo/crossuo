@@ -10,8 +10,6 @@ namespace xuol {
 enum class ui_view : uint32_t
 {
     accounts,
-    updates,
-    backups,
     shards,
     shard_picker,
 
@@ -21,7 +19,7 @@ enum class ui_view : uint32_t
 struct ui_model
 {
     ImVec2 area;
-    ui_view view = ui_view::updates;
+    ui_view view = ui_view::shards;
 };
 
 void ui_push(ui_model &m, ui_view v);

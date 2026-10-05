@@ -314,8 +314,6 @@ if(XUO_LAUNCHER_EMBEDDED)
     ${XUOI_DIR}/ui_shards.h
     ${XUOI_DIR}/widgets.cpp
     ${XUOI_DIR}/widgets.h
-    ${XUOI_DIR}/xuo_updater.cpp
-    ${XUOI_DIR}/xuo_updater.h
   )
   source_group("xuoi" FILES ${XUOL_EMBEDDED_SRCS})
   set(XUO_FILES ${XUO_FILES} ${XUOL_EMBEDDED_SRCS})

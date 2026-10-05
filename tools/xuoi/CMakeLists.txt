@@ -32,8 +32,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${XUOCORE_PROJECT})
 set(XUOL_SRCS
   widgets.cpp
   widgets.h
-  xuo_updater.cpp
-  xuo_updater.h
   xuol_app.cpp
   xuol_app.h
   xuolauncher_main.cpp

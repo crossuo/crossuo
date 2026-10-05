@@ -17,8 +17,8 @@
 //   xuol_app_init(win)          -> create ImGui context, load config/accounts/shards
 //   xuol_app_process_event(e)   -> feed each SDL event
 //   xuol_app_frame()            -> new frame, draw views, render into the current context
-//   xuol_app_wants_close()      -> app close intent (auto-close after launch, restart, quit)
-//   xuol_app_shutdown()         -> flush config, stop updater, destroy ImGui context
+//   xuol_app_wants_close()      -> app close intent (auto-close after launch, quit)
+//   xuol_app_shutdown()         -> flush config, destroy ImGui context
 //
 
 bool xuol_app_init(win_context &win, const char *ini_name = nullptr, bool enable_viewports = true);

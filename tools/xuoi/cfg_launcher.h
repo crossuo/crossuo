@@ -11,10 +11,16 @@ CFG_FIELD(global, auto_close, "yes", bool)
 // default: yes
 // auto close after launching the client
 
+// deprecated, parsed for compat: the updater is gone, the key is kept so old
+// xuolauncher.cfg files still load (the loader is strict about unknown keys)
 CFG_FIELD(global, check_updates, "yes", bool)
 
+// deprecated, parsed for compat: the updater is gone, the key is kept so old
+// xuolauncher.cfg files still load (the loader is strict about unknown keys)
 CFG_FIELD(global, auto_update, "yes", bool)
 
+// deprecated, parsed for compat: the launcher assist is gone, the key is kept
+// so old xuolauncher.cfg files still load (the loader is strict about unknown keys)
 CFG_FIELD(global, enable_assist, "yes", bool)
 
 CFG_FIELD(global, last_used, "0", int)

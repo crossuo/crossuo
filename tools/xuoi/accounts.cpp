@@ -36,16 +36,13 @@ namespace xuol {
 
 #if defined(XUO_WINDOWS)
 #define XUO_EXE "crossuo.exe"
-#define XUOA_EXE "crossuo.exe"
 #else
 #define XUO_EXE "crossuo"
-#define XUOA_EXE "xuoassist"
 #endif
 
 // xuolauncher.cpp
 extern void save_config();
 extern const fs_path &xuol_data_path();
-extern bool xuol_launch_assist();
 extern void xuol_launch_quit();
 #if defined(XUO_LAUNCHER_EMBEDDED)
 extern void xuol_request_reload();
@@ -274,21 +271,6 @@ static void account_launch(int account_index)
         return;
     }
 
-    fs_path xuoa_bin;
-    const fs_path xuoa_paths[] = {
-        fs_path_join(xuol_data_path(), XUOA_EXE),
-        fs_path_join(fs_path_current(), XUOA_EXE),
-        fs_path_join(fs_path_process(), XUOA_EXE),
-    };
-    for (int i = 0; i < countof(xuoa_paths); ++i)
-    {
-        if (fs_path_is_file(xuoa_paths[i]))
-        {
-            xuoa_bin = xuoa_paths[i];
-            break;
-        }
-    }
-
     fs_path xuo_bin;
     const fs_path paths[] = {
         fs_path_join(xuol_data_path(), XUO_EXE),
@@ -304,7 +286,7 @@ static void account_launch(int account_index)
         }
     }
 
-    auto bin = xuol_launch_assist() && !fs_path_empty(xuoa_bin) ? xuoa_bin : xuo_bin;
+    auto bin = xuo_bin;
     if (fs_path_empty(bin))
     {
         LOG_ERROR("could not find executable: %s", fs_path_ascii(bin));
