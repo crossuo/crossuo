@@ -21,6 +21,17 @@ struct Config
     // command line (--shard) or the white-label default, in that order of
     // recency; names the per-shard streaming install directory
     astr_t ShardName = XUO_DEFAULT_SHARD_NAME;
+    // shard presentation + data-product fields: like ShardName they come
+    // from the shard profile (launcher pick / crossuo.cfg keys below) and
+    // override the white-label defaults at runtime
+    astr_t DataProductUrl = XUO_DEFAULT_DATA_PRODUCT_SERVER XUO_DEFAULT_DATA_PRODUCT_PATH;
+    astr_t ShardWeb = XUO_DEFAULT_SHARD_WEB;
+    astr_t ShardAccount = XUO_DEFAULT_SHARD_ACCOUNT;
+    astr_t ShardHelp = XUO_DEFAULT_SHARD_HELP;
+    astr_t ShardVideo = XUO_DEFAULT_SHARD_VIDEO;
+    astr_t ShardCredits = XUO_DEFAULT_SHARD_CREDITS;
+    // no white-label default: shards carry discord via `urlother = Discord+<url>`
+    astr_t ShardDiscord;
     uint16_t ServerPort = XUO_DEFAULT_SERVER_PORT;
     uint16_t ClientFlag = 0;
     bool SavePassword = true;

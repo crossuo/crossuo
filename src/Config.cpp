@@ -45,6 +45,13 @@ enum
     MSCC_CLIENT_TYPE,
     MSCC_LOCALE_OVERRIDE,
     MSCC_SHARD_NAME,
+    MSCC_DATA_PRODUCT_URL,
+    MSCC_SHARD_WEB,
+    MSCC_SHARD_ACCOUNT,
+    MSCC_SHARD_HELP,
+    MSCC_SHARD_VIDEO,
+    MSCC_SHARD_CREDITS,
+    MSCC_SHARD_DISCORD,
     MSCC_COUNT,
 };
 
@@ -81,6 +88,13 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_CLIENT_TYPE, "clienttype" },
     { MSCC_LOCALE_OVERRIDE, "language" },
     { MSCC_SHARD_NAME, "shardname" },
+    { MSCC_DATA_PRODUCT_URL, "producturl" },
+    { MSCC_SHARD_WEB, "shardweb" },
+    { MSCC_SHARD_ACCOUNT, "shardaccount" },
+    { MSCC_SHARD_HELP, "shardhelp" },
+    { MSCC_SHARD_VIDEO, "shardvideo" },
+    { MSCC_SHARD_CREDITS, "shardcredits" },
+    { MSCC_SHARD_DISCORD, "sharddiscord" },
     { MSCC_COUNT, nullptr },
 };
 static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
@@ -394,6 +408,39 @@ bool LoadGlobalConfig()
     while (!file.IsEOF())
     {
         auto strings = file.ReadTokens(false); // Trim remove spaces from paths
+        if (strings.size() == 1)
+        {
+            // the text parser drops empty values, so `key=` arrives as a
+            // single token: assign the empty string as-is instead of keeping
+            // the default (launcher profiles intentionally overwrite the
+            // white-label defaults with shard-specific values)
+            switch (config::GetConfigKey(strings[0]))
+            {
+                case MSCC_DATA_PRODUCT_URL:
+                    g_Config.DataProductUrl.clear();
+                    break;
+                case MSCC_SHARD_WEB:
+                    g_Config.ShardWeb.clear();
+                    break;
+                case MSCC_SHARD_ACCOUNT:
+                    g_Config.ShardAccount.clear();
+                    break;
+                case MSCC_SHARD_HELP:
+                    g_Config.ShardHelp.clear();
+                    break;
+                case MSCC_SHARD_VIDEO:
+                    g_Config.ShardVideo.clear();
+                    break;
+                case MSCC_SHARD_CREDITS:
+                    g_Config.ShardCredits.clear();
+                    break;
+                case MSCC_SHARD_DISCORD:
+                    g_Config.ShardDiscord.clear();
+                    break;
+                default:
+                    break;
+            }
+        }
         if (strings.size() >= 2)
         {
             const auto key = config::GetConfigKey(strings[0]);
@@ -515,6 +562,41 @@ bool LoadGlobalConfig()
                     g_Config.ShardName = strings[1];
                     break;
                 }
+                case MSCC_DATA_PRODUCT_URL:
+                {
+                    g_Config.DataProductUrl = strings[1];
+                    break;
+                }
+                case MSCC_SHARD_WEB:
+                {
+                    g_Config.ShardWeb = strings[1];
+                    break;
+                }
+                case MSCC_SHARD_ACCOUNT:
+                {
+                    g_Config.ShardAccount = strings[1];
+                    break;
+                }
+                case MSCC_SHARD_HELP:
+                {
+                    g_Config.ShardHelp = strings[1];
+                    break;
+                }
+                case MSCC_SHARD_VIDEO:
+                {
+                    g_Config.ShardVideo = strings[1];
+                    break;
+                }
+                case MSCC_SHARD_CREDITS:
+                {
+                    g_Config.ShardCredits = strings[1];
+                    break;
+                }
+                case MSCC_SHARD_DISCORD:
+                {
+                    g_Config.ShardDiscord = strings[1];
+                    break;
+                }
                 default:
                     break;
             }
@@ -599,6 +681,40 @@ void SaveGlobalConfig()
     if (!g_Config.ShardName.empty())
     {
         fprintf(cfg, "ShardName=%s\n", g_Config.ShardName.c_str());
+    }
+
+    // shard presentation fields are only written when they differ from the
+    // white-label defaults (ShardDiscord when non-empty): baking defaults
+    // into every crossuo.cfg would later fight shard switches driven by
+    // launcher profiles, as a stale baked value would win over the default
+    // of the newly selected shard
+    if (g_Config.DataProductUrl != XUO_DEFAULT_DATA_PRODUCT_SERVER XUO_DEFAULT_DATA_PRODUCT_PATH)
+    {
+        fprintf(cfg, "ProductUrl=%s\n", g_Config.DataProductUrl.c_str());
+    }
+    if (g_Config.ShardWeb != XUO_DEFAULT_SHARD_WEB)
+    {
+        fprintf(cfg, "ShardWeb=%s\n", g_Config.ShardWeb.c_str());
+    }
+    if (g_Config.ShardAccount != XUO_DEFAULT_SHARD_ACCOUNT)
+    {
+        fprintf(cfg, "ShardAccount=%s\n", g_Config.ShardAccount.c_str());
+    }
+    if (g_Config.ShardHelp != XUO_DEFAULT_SHARD_HELP)
+    {
+        fprintf(cfg, "ShardHelp=%s\n", g_Config.ShardHelp.c_str());
+    }
+    if (g_Config.ShardVideo != XUO_DEFAULT_SHARD_VIDEO)
+    {
+        fprintf(cfg, "ShardVideo=%s\n", g_Config.ShardVideo.c_str());
+    }
+    if (g_Config.ShardCredits != XUO_DEFAULT_SHARD_CREDITS)
+    {
+        fprintf(cfg, "ShardCredits=%s\n", g_Config.ShardCredits.c_str());
+    }
+    if (!g_Config.ShardDiscord.empty())
+    {
+        fprintf(cfg, "ShardDiscord=%s\n", g_Config.ShardDiscord.c_str());
     }
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
