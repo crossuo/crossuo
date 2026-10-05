@@ -30,7 +30,15 @@ import re
 import sys
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+# python 3.6 (the manylinux2014 test image) predates ThreadingHTTPServer
+try:
+    from http.server import ThreadingHTTPServer
+except ImportError:
+
+    class ThreadingHTTPServer(HTTPServer):
+        daemon_threads = True
 
 RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)$")
 

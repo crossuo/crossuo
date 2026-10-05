@@ -2366,6 +2366,15 @@ static void vfs_boot_collect(
     for (size_t fi = 0; fi < plan.files.size(); ++fi)
     {
         const auto &file = plan.files[fi];
+        if (file.streamable)
+        {
+            // subset-retained metadata: the bytes arrive through the
+            // stream-file lane, never a boot fetch pass (regardless of the
+            // tier the manifest assigned). gi still advances: it is the
+            // plan-global asset index and the state DB stays aligned.
+            gi += file.assets.size();
+            continue;
+        }
         for (size_t ai = 0; ai < file.assets.size(); ++ai, ++gi)
         {
             const auto &asset = file.assets[ai];
