@@ -31,3 +31,10 @@
 - shardchk now validates: non-empty url/urlforum/urlregister = http(s); urlother name+url backstop; installer per-type (rejects `xuo+latest`, requires http(s) urls); loginserver port shape = WARN only (host-only entries keep passing).
 - Auto-account filter in ui_shards confirmed CORRECT as originally written (my earlier plan note claiming inversion was wrong): select_aac skips shards that HAVE urlregister → shows true auto-account shards. Comment added.
 - Known nits: malformed urlother double-reports (converter + backstop); `,2593` (empty host) passes the warn check; `find("+latest")` substring test is safe today, could be `raw == "xuo+latest"` for clarity.
+
+## T7 — Web pre-boot shard picker (2026-10-04)
+- shell.html (ships as index.html; not an emscripten --shell-file) now gates crossuo.js behind bootClient(): fetch shards.cfg (same-origin → GitHub raw → ?shards=<url> override), minimal picker, or ?shard=<name|index> deep-link boots directly; every failure path falls back to today's immediate boot.
+- v1 mapping: name→--shard (sanitized), loginserver→--host/--port (1-65535), installer uo+/xuo+ url→--streaming-product. Not passed (no CLI surface yet): clientversion/crypt/links — crossuo.cfg-in-IDBFS is the future carrier; client-side ?shard= resolution is the v2 shape.
+- ?shard-address/?shard-port testing overrides deliberately win (appended last; popts single-option push_back replaces = last-wins, verified in external/popts.h).
+- Parser: ES5, tolerant (CRLF/CR, comments, nameless sections skipped), BOM stripped, remote text rendered via textContent only.
+- Known follow-ups: generic k=v URL passthrough pushes junk positionals (pre-existing); duplicate shard names resolve first-wins (documented in code); showPicker lacks a try/catch fallback boot (NIT).

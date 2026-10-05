@@ -35,6 +35,37 @@
       #status { margin-top: 8px; font-size: 13px; opacity: .8; }
       #log { margin-top: 8px; font-size: 11px; opacity: .6; white-space: pre;
              height: 4em; overflow: hidden; }
+      /* pre-boot shard picker: dependency-free overlay, shown only before
+         crossuo.js loads (bootClient removes it); monospace panel matching
+         the page's dark scheme */
+      #shardPicker { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                     background: rgba(8, 8, 12, .88); z-index: 1000;
+                     display: flex; align-items: center; justify-content: center;
+                     font-family: ui-monospace, Menlo, Consolas, monospace; }
+      #shardPicker .panel { background: #16171d; border: 1px solid #2a2c36;
+                            border-radius: 6px; width: 440px; max-width: 92vw;
+                            max-height: 76vh; box-sizing: border-box; padding: 14px;
+                            display: flex; flex-direction: column; }
+      #shardPicker .title { font-size: 14px; color: #e8eaf2; margin-bottom: 10px; }
+      #shardPicker .list { flex: 1; min-height: 0; overflow-y: auto;
+                           border: 1px solid #2a2c36; }
+      #shardPicker .row { padding: 7px 10px; cursor: pointer;
+                          border-bottom: 1px solid #20222b; }
+      #shardPicker .row:last-child { border-bottom: none; }
+      #shardPicker .row:hover { background: #1d1f27; }
+      #shardPicker .row.sel,
+      #shardPicker .row.sel:hover { background: #24304a; }
+      #shardPicker .name { font-size: 13px; color: #dfe3ee; }
+      #shardPicker .sub { font-size: 11px; opacity: .65; margin-top: 2px; }
+      #shardPicker .footer { margin-top: 12px; }
+      #shardPicker .state { font-size: 11px; opacity: .7; min-height: 1em; }
+      #shardPicker .buttons { margin-top: 10px; }
+      #shardPicker button { background: #24304a; color: #dfe3ee;
+                            border: 1px solid #3d5aa8; border-radius: 4px;
+                            padding: 6px 14px; font: inherit; font-size: 12px;
+                            cursor: pointer; margin-right: 8px; }
+      #shardPicker button:disabled { opacity: .4; cursor: default; }
+      #shardPicker button:not(:disabled):hover { background: #2c3b5c; }
     </style>
   </head>
   <body>
@@ -75,24 +106,10 @@
         }
         // pass URL query parameters to the client as command line arguments:
         //   index.html?streaming-product=http://host/patch&streaming-workers=4
-        // 'shard' names the per-shard streaming install dir (see --shard)
-        Module.arguments = (function () {
-          var args = ['./crossuo'];
-          var q = window.location.search.substring(1);
-          if (q) {
-            q.split('&').forEach(function (kv) {
-              if (kv) args.push(decodeURIComponent(kv));
-            });
-          }
-          // shard address override for the ws proxy (testing): maps to the
-          // client's login-server override flags (LoadLogin consults them)
-          var params = new URLSearchParams(window.location.search);
-          var shardAddr = params.get('shard-address');
-          var shardPort = params.get('shard-port');
-          if (shardAddr) args.push('--host=' + shardAddr);
-          if (shardPort) args.push('--port=' + shardPort);
-          return args;
-        })();
+        // NOTE: Module.arguments is NOT assembled here anymore - the runtime
+        // consumes it once at init and the pre-boot shard picker below must
+        // merge the chosen shard's flags in first, so the final assembly
+        // moved into buildClientArgs()/bootClient() at the bottom of the page
         Module.canvas = (function () {
           var c = document.getElementById('canvas');
           var scaleMode = new URLSearchParams(window.location.search).get('scale');
@@ -602,6 +619,332 @@
         })();
       })();
     </script>
-    <script async src="crossuo.js"></script>
+    <script>
+      // Pre-boot shard picker + client boot gating. crossuo.js used to load
+      // statically from a <script async> tag here; it now loads ONLY from
+      // bootClient(): the emscripten runtime consumes Module.arguments once
+      // at init (PROXY_TO_PTHREAD forwards it to the worker), so the final
+      // argument assembly must be done before the glue is injected. The
+      // whole block is best-effort: any fetch/parse failure falls back to
+      // the previous behavior (boot immediately, client defaults, the URL
+      // params honored). The picker click doubles as the audio-unlock
+      // gesture (the audio block above listens on window in capture phase).
+      //
+      // v1 scope (see shardToArgs): only flags that already exist in
+      // src/Main.cpp InitCli are emitted. clientversion, crypt and the
+      // url/urlforum/urlregister/urlother links have NO CLI surface yet, so
+      // they are deliberately NOT passed - the client keeps its defaults
+      // (a crossuo.cfg persisted in IDBFS could carry them later).
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var shards = [];
+        var booted = false;
+        var selected = -1;
+        var ui = null;
+
+        // ---- pure helpers (extracted verbatim for the node test harness) ----
+
+        // tolerant ini parser for the aggregated shards.cfg ([Shard]
+        // sections): handles CRLF/CR/LF, line-leading ';'/'#' comments and
+        // blank lines; keys are lower-cased; '[Shard]' sections without a
+        // usable name= are skipped (warned)
+        function parseShardsIni(text, warn) {
+          function flush() {
+            if (!cur) return;
+            if (cur.name) out.push(cur);
+            else if (warn) warn('[shards] section without name, skipped');
+            cur = null;
+          }
+          var out = [];
+          var cur = null;
+          var lines = String(text).replace(/^\uFEFF/, '').split(/\r\n|\r|\n/);
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
+            if (!line || line.charAt(0) === ';' || line.charAt(0) === '#') continue;
+            if (line.charAt(0) === '[') {
+              flush();
+              cur = /^\[\s*shard\s*\]$/i.test(line) ? {} : null;
+              continue;
+            }
+            var eq = line.indexOf('=');
+            if (!cur || eq < 1) continue; // stray line or empty key
+            cur[line.substring(0, eq).replace(/[ \t]+$/, '').toLowerCase()] =
+              line.substring(eq + 1).replace(/^[ \t]+/, '');
+          }
+          flush();
+          return out;
+        }
+
+        // chosen shard -> client args. ONLY existing flags (src/Main.cpp
+        // InitCli): --shard names the per-shard streaming install dir and is
+        // sanitized like the desktop (Main.cpp: '/' '\' ' ' -> '_');
+        // loginserver "host,port" maps to --host/--port (port only when
+        // numeric - the flag is u32); installer uo+<url>/xuo+<url> streams
+        // that product via --streaming-product, while uo+latest and the
+        // website+/download+ installers map to nothing (v1: clientversion
+        // and the links stay unparsed - see the block comment above)
+        function shardToArgs(shard) {
+          var args = [];
+          if (!shard || !shard.name) return args;
+          args.push('--shard=' + String(shard.name).replace(/[/\\ ]/g, '_'));
+          var ls = String(shard.loginserver || '').split(',');
+          var host = (ls[0] || '').trim();
+          var port = (ls[1] || '').trim();
+          if (host) args.push('--host=' + host);
+          // 1-5 digits, 1-65535 only; out-of-range/non-numeric ports fall back
+          // to the client default by omission of the --port flag
+          if (/^\d{1,5}$/.test(port) && port > 0 && port <= 65535) args.push('--port=' + port);
+          var m = /^(uo|xuo)\+(https?:\/\/\S+)$/i.exec(String(shard.installer || '').trim());
+          if (m) args.push('--streaming-product=' + m[2]);
+          return args;
+        }
+
+        // ---- boot gating ----------------------------------------------------
+
+        // final argument assembly (moved out of the boot IIFE above so the
+        // chosen shard's flags merge in BEFORE crossuo.js loads). Order
+        // matters: popts keeps the LAST value of a repeated flag, so the
+        // testing overrides (?shard-address/?shard-port) go last and win
+        // over the shard entry's own --host/--port
+        function buildClientArgs(extraArgs) {
+          var args = ['./crossuo'];
+          var q = window.location.search.substring(1);
+          if (q) {
+            q.split('&').forEach(function (kv) {
+              if (!kv) return;
+              // a malformed %-escape must never prevent boot: on decode throw
+              // push the RAW pair (the client tolerates junk args)
+              try {
+                args.push(decodeURIComponent(kv));
+              } catch (e) {
+                args.push(kv);
+              }
+            });
+          }
+          if (extraArgs) args.push.apply(args, extraArgs);
+          // shard address override for the ws proxy (testing): maps to the
+          // client's login-server override flags (LoadLogin consults them)
+          var shardAddr = params.get('shard-address');
+          var shardPort = params.get('shard-port');
+          if (shardAddr) args.push('--host=' + shardAddr);
+          if (shardPort) args.push('--port=' + shardPort);
+          return args;
+        }
+
+        // idempotent: every path (picker Play, Play Default, deep link,
+        // fallback) funnels here and the module boots exactly once
+        function bootClient(extraArgs) {
+          if (booted) return;
+          booted = true;
+          hidePicker();
+          // Module.arguments must be FINAL before the glue runs (consumed
+          // once at runtime init)
+          Module.arguments = buildClientArgs(extraArgs);
+          var s = document.createElement('script');
+          s.src = 'crossuo.js';
+          s.async = true;
+          document.body.appendChild(s);
+        }
+
+        function setPageStatus(text) {
+          // #status only exists with ?log=1 (the boot IIFE removes it
+          // otherwise); the picker panel carries its own state line
+          var el = document.getElementById('status');
+          if (el) el.textContent = text;
+        }
+
+        // ---- shards.cfg loading ---------------------------------------------
+
+        function shardSources() {
+          // ?shards=<url> replaces the whole source list (testing)
+          var override = params.get('shards');
+          if (override) return [override];
+          // same-origin first (deployments may vendor shards.cfg next to
+          // index.html), then the curated list on GitHub (CORS-enabled)
+          return ['shards.cfg',
+                  'https://raw.githubusercontent.com/crossuo/shards/release/shards.cfg'];
+        }
+
+        function fetchText(url, cb) {
+          var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+          // 10s cap: shard infra must never delay the boot indefinitely
+          var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 10000) : null;
+          var opts = { credentials: 'omit' };
+          if (ctrl) opts.signal = ctrl.signal;
+          fetch(url, opts)
+            .then(function (r) {
+              if (!r.ok) throw new Error('http ' + r.status);
+              return r.text();
+            })
+            .then(function (text) {
+              if (timer) clearTimeout(timer);
+              cb(null, text);
+            })
+            .catch(function (err) {
+              if (timer) clearTimeout(timer);
+              cb(err);
+            });
+        }
+
+        // the first source that fetches AND parses into >= 1 shard wins;
+        // every failure falls through, exhausted sources => fallback mode
+        function loadShards(cb) {
+          var sources = shardSources();
+          (function next(i) {
+            if (i >= sources.length) {
+              console.warn('[shards] no usable shards.cfg source');
+              return cb(new Error('shards unavailable'));
+            }
+            fetchText(sources[i], function (err, text) {
+              var list = [];
+              if (!err) {
+                try {
+                  list = parseShardsIni(text, function (msg) { console.warn(msg); });
+                } catch (e) { err = e; }
+              }
+              if (err || !list.length) {
+                console.warn('[shards] source unusable:', sources[i], err || 'empty');
+                return next(i + 1);
+              }
+              if (WEBLOG) console.log('[shards] ' + list.length + ' shards from ' + sources[i]);
+              cb(null, list);
+            });
+          })(0);
+        }
+
+        // ?shard=<name|index>: case-insensitive name match first, then a
+        // 0-based numeric index into the loaded list
+        function resolveShard(key) {
+          var want = String(key).toLowerCase();
+          for (var i = 0; i < shards.length; i++) {
+            if (String(shards[i].name).toLowerCase() === want) return shards[i];
+          }
+          if (/^\d+$/.test(want)) {
+            var n = parseInt(want, 10);
+            if (n < shards.length) return shards[n];
+          }
+          return null;
+        }
+
+        // ---- picker UI ------------------------------------------------------
+
+        function hidePicker() {
+          if (ui && ui.overlay.parentNode) ui.overlay.parentNode.removeChild(ui.overlay);
+          ui = null;
+        }
+
+        function select(i) {
+          selected = i;
+          if (!ui) return;
+          var rows = ui.list.childNodes;
+          for (var k = 0; k < rows.length; k++) {
+            rows[k].classList[k === i ? 'add' : 'remove']('sel');
+          }
+          ui.play.disabled = i < 0;
+        }
+
+        function play(i) {
+          var entry = shards[i];
+          if (!entry || booted) return;
+          setPageStatus('starting ' + entry.name + '\u2026');
+          if (ui) ui.state.textContent = 'starting ' + entry.name + '\u2026';
+          bootClient(shardToArgs(entry));
+        }
+
+        function showPicker() {
+          if (booted || ui) return;
+          var overlay = document.createElement('div');
+          overlay.id = 'shardPicker';
+          overlay.tabIndex = 0;
+          var panel = document.createElement('div');
+          panel.className = 'panel';
+          var title = document.createElement('div');
+          title.className = 'title';
+          title.textContent = 'Choose a Shard';
+          var list = document.createElement('div');
+          list.className = 'list';
+          var footer = document.createElement('div');
+          footer.className = 'footer';
+          var state = document.createElement('div');
+          state.className = 'state';
+          var buttons = document.createElement('div');
+          buttons.className = 'buttons';
+          var playBtn = document.createElement('button');
+          playBtn.textContent = 'Play';
+          playBtn.disabled = true;
+          playBtn.addEventListener('click', function () { play(selected); });
+          var defBtn = document.createElement('button');
+          defBtn.textContent = 'Play Default';
+          defBtn.addEventListener('click', function () { play(0); });
+          for (var i = 0; i < shards.length; i++) {
+            (function (i) {
+              var row = document.createElement('div');
+              row.className = 'row';
+              var name = document.createElement('div');
+              name.className = 'name';
+              name.textContent = shards[i].name; // display name stays raw
+              row.appendChild(name);
+              var sub = shards[i].loginserver || '';
+              if (shards[i].tags) sub += (sub ? ' \u00b7 ' : '') + shards[i].tags;
+              if (sub) {
+                var subEl = document.createElement('div');
+                subEl.className = 'sub';
+                subEl.textContent = sub;
+                row.appendChild(subEl);
+              }
+              row.addEventListener('click', function () { select(i); });
+              row.addEventListener('dblclick', function () { play(i); });
+              list.appendChild(row);
+            })(i);
+          }
+          // arrows move the selection, enter plays it
+          overlay.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              var n = shards.length;
+              if (!n) return;
+              var base = selected < 0 ? (e.key === 'ArrowDown' ? -1 : 0) : selected;
+              select((base + (e.key === 'ArrowDown' ? 1 : n - 1)) % n);
+            } else if (e.key === 'Enter' && selected >= 0) {
+              play(selected);
+            }
+          });
+          buttons.appendChild(playBtn);
+          buttons.appendChild(defBtn);
+          footer.appendChild(state);
+          footer.appendChild(buttons);
+          panel.appendChild(title);
+          panel.appendChild(list);
+          panel.appendChild(footer);
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+          ui = { overlay: overlay, list: list, play: playBtn, state: state };
+          overlay.focus();
+        }
+
+        // ---- flow -------------------------------------------------------------
+
+        var deepLink = params.get('shard');
+        if (deepLink) {
+          // deep link: never show the picker - resolve, then boot right away
+          setPageStatus('loading shards\u2026');
+          loadShards(function (err) {
+            var entry = err ? null : resolveShard(deepLink);
+            if (err || !entry)
+              console.warn('[shards] ?shard=' + deepLink +
+                           (err ? ' unavailable' : ' not found') + ', booting with defaults');
+            setPageStatus('starting ' + (entry ? entry.name : 'client') + '\u2026');
+            bootClient(entry ? shardToArgs(entry) : []);
+          });
+        } else {
+          setPageStatus('loading shards\u2026');
+          loadShards(function (err, list) {
+            if (err || !list.length) return bootClient([]); // old behavior
+            shards = list;
+            showPicker();
+          });
+        }
+      })();
+    </script>
   </body>
 </html>
