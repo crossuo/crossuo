@@ -8,10 +8,9 @@
 //
 // X:UO Launcher application lifecycle.
 //
-// The launcher UI is hosted by two different hosts:
-// - the standalone xuolauncher executable (tools/xuoi/xuolauncher_main.cpp)
-// - embedded in the crossuo client (src/LauncherWindow.cpp), except on
-//   legacy OpenGL 1 builds, where only the standalone host is available.
+// The launcher UI is hosted embedded in the crossuo client
+// (src/LauncherWindow.cpp) on GL3 desktop builds (XUO_LAUNCHER_EMBEDDED);
+// other renderer builds run without a launcher.
 //
 // The host owns the OS window and the GL context, and drives the app:
 //   xuol_app_init(win)          -> create ImGui context, load config/accounts/shards

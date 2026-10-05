@@ -4,8 +4,8 @@
 #ifndef _LAUNCHER_WINDOW_H_
 #define _LAUNCHER_WINDOW_H_
 
-// Embedded X:UO Launcher host (GL3 builds only; GL1 legacy uses the
-// standalone xuolauncher executable). See CMake XUO_LAUNCHER_EMBEDDED.
+// Embedded X:UO Launcher host (GL3 builds only; other renderer builds run
+// without a launcher). See CMake XUO_LAUNCHER_EMBEDDED.
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
 

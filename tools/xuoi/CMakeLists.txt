@@ -27,48 +27,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${XUOCORE_PROJECT} ${CURL_LIBRARIES
 target_include_directories(${PROJECT_NAME} PUBLIC ${XUOCORE_PROJECT})
 
 #
-# Launcher
-#
-set(XUOL_SRCS
-  widgets.cpp
-  widgets.h
-  xuol_app.cpp
-  xuol_app.h
-  xuolauncher_main.cpp
-  accounts.cpp
-  accounts.h
-  ui_model.cpp
-  ui_model.h
-  ui_shards.cpp
-  ui_shards.h
-  cfg_converters.h
-  cfg_crossuo.h
-  cfg_launcher.h
-  cfg_loader.h
-  cfg_shard.h
-)
-
-if(XUO_WINDOWS)
-  set(XUOL_SRCS ${XUOL_SRCS}
-    ${CMAKE_SOURCE_DIR}/resources/launcher.rc
-  )
-endif()
-
-set(XUOL_PROJECT xuolauncher)
-
-add_executable(${XUOL_PROJECT} ${XUOL_SRCS})
-add_dependencies(${XUOL_PROJECT} ${XUOCORE_PROJECT} ${EXTERNALGFX_PROJECT} ${3RDPARTY_STATIC})
-
-target_link_libraries(${XUOL_PROJECT} PUBLIC ${XUOCORE_PROJECT} ${CURL_LIBRARIES} ${EXTERNALGFX_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES})
-target_include_directories(${XUOL_PROJECT} PUBLIC ${XUOCORE_PROJECT} ${EXTERNALGFX_INCLUDE})
-xuo_disable_console(${XUOL_PROJECT})
-
-add_custom_command(TARGET ${XUOL_PROJECT} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${XUOL_PROJECT}> ${PROJECT_BINARY_DIR}/../../src/${XUOL_PROJECT}
-  COMMENT "Copied ${PROJECT_BINARY_DIR}/../../src/${XUOL_PROJECT}"
-)
-
-#
 # shardchk
 #
 set(XUOL_SRCS

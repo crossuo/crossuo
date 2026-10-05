@@ -21,7 +21,7 @@ if (XUO_WINDOWS AND NOT MSVC)
 endif()
 
 if (NOT XUO_VERSION)
-  set(XUO_VERSION "1.1.0")
+  set(XUO_VERSION "2.0.0")
 endif()
 
 string(REPLACE "." "," XUO_VERSION_NUM ${XUO_VERSION})
@@ -125,8 +125,9 @@ elseif (OPENGL_FOUND)
     compile_definitions(NEW_RENDERER_ENABLED=1)
     set(USE_GL3 1)
     if (NOT XUO_EMSC)
-      # GL3 builds embed the X:UO Launcher inside the client; legacy GL1 and
-      # the original GL2 renderer keep using the standalone xuolauncher binary.
+      # GL3 desktop builds embed the X:UO Launcher inside the client; other
+      # renderer builds run without a launcher (configuration via crossuo.cfg
+      # / --config).
       # (the -D define itself is attached to the crossuo target only, so the
       # dependency tree is not polluted and rebuilt)
       set(XUO_LAUNCHER_EMBEDDED 1)

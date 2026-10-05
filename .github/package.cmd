@@ -10,5 +10,4 @@ if %GITHUB_REF_NAME% == master (
 echo Building %BUILD% package
 md crossuo-win64-%BUILD%
 copy build\src\Release\crossuo.exe crossuo-win64-%BUILD%\crossuo.exe
-copy build\tools\xuoi\Release\xuolauncher.exe crossuo-win64-%BUILD%\xuolauncher.exe
 7z a crossuo-win64-%BUILD%.zip crossuo-win64-%BUILD%\

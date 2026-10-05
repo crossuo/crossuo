@@ -48,11 +48,9 @@ EM_JS(void, web_install_alert_shim, (), {
 #if defined(XUO_LAUNCHER_EMBEDDED)
 #include "xuol_app.h"
 #endif
-#include "Platform.h"
 #include "SDL_wrapper.h"
 #include "Wisp/WispThread.h"
 #include <external/popts.h>
-#include <external/process.h>
 #include <xuocore/client_info.h>
 #include <xuocore/uodata.h>
 #include <xuocore/vfs.h>
@@ -84,7 +82,7 @@ static bool InitCli(int argc, char *argv[])
         std::cout << g_cli << '\n';
     });
 
-    // xuolauncher
+    // launcher/account options (the embedded launcher passes these)
     g_cli["host"].abbreviation('s').type(po::string).description("LoginServer address");
     g_cli["port"]
         .abbreviation('p')
@@ -211,14 +209,6 @@ void fatal_error_dialog(const char *message)
 
 bool load_config()
 {
-#if !defined(XUO_LAUNCHER_EMBEDDED)
-#if defined(XUO_WINDOWS)
-#define LAUNCHER_EXE "xuolauncher.exe"
-#else
-#define LAUNCHER_EXE "xuolauncher"
-#endif
-#endif
-
     // builds the streaming params from the command line flags
     auto streaming_params = []() {
         vfs_params params;
@@ -408,36 +398,17 @@ bool load_config()
     }
 
 #if !defined(XUO_LAUNCHER_EMBEDDED)
-    const auto bin_fs = fs_path_join(fs_path_current(), LAUNCHER_EXE);
-    const auto bin = fs_path_ascii(bin_fs);
-    const bool launcher_exists = fs_path_exists(bin_fs);
-    if (!config_exists && !launcher_exists)
+    if (!config_exists)
     {
-        Platform::OpenBrowser("https://crossuo.com/#download");
+        // builds without the embedded launcher have nothing to create a
+        // configuration: point at the config file (crossuo.cfg in the current
+        // directory, or --config) and bail out
         ErrorMessage(
             Client,
-            "You need X:UO Launcher to launch CrossUO.\n"
-            "Please download from https://crossuo.com/#download",
-            "Could not find X:UO Launcher.");
-        return false;
-    }
-
-    auto launcher = [bin]() {
-        // TODO: check if one instance is already running and do nothing.
-        const char *args[] = { bin, 0 };
-        Info(Client, "Launching X:UO Launcher %s due missing config", bin);
-        process_s process;
-        const auto options = process_option_inherit_environment | process_option_child_detached;
-        if (process_create(args, options, &process) != 0)
-        {
-            ErrorMessage(Client, "Could not launch X:UO Launcher", "could not launch: %s", bin);
-        }
-        SDL_Delay(500);
-    };
-
-    if (!config_exists && launcher_exists)
-    {
-        launcher();
+            "CrossUO requires a configuration file to run.\n"
+            "Provide a crossuo.cfg (or pass one with --config); there is no"
+            " launcher to configure the client.",
+            "Could not find configuration file (crossuo.cfg).");
         return false;
     }
 #else
@@ -457,10 +428,6 @@ bool load_config()
         {
             Warning(Client, "Couldn't find data files in the path: %s", uopath);
 #if !defined(XUO_LAUNCHER_EMBEDDED)
-            if (launcher_exists)
-            {
-                launcher();
-            }
             ErrorMessage(
                 Client,
                 "Couldn't find Ultima Online(tm) data files.\n"
@@ -531,10 +498,6 @@ bool load_config()
             if (check_valid_data)
             {
 #if !defined(XUO_LAUNCHER_EMBEDDED)
-                if (launcher_exists)
-                {
-                    launcher();
-                }
                 ErrorMessage(
                     Client,
                     "Couldn't find valid Ultima Online(tm) data files matching your current configuration.\n"

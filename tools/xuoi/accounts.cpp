@@ -40,7 +40,7 @@ namespace xuol {
 #define XUO_EXE "crossuo"
 #endif
 
-// xuolauncher.cpp
+// xuol_app.cpp
 extern void save_config();
 extern const fs_path &xuol_data_path();
 extern void xuol_launch_quit();

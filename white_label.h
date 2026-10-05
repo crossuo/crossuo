@@ -22,5 +22,3 @@
 // Data Installer
 #define XUO_DEFAULT_DATA_PRODUCT_SERVER     "http://patch.uo.eamythic.com/"
 #define XUO_DEFAULT_DATA_PRODUCT_PATH       "uopatch-sa/legacyrelease/uo/manifest/"
-
-// Resources (tools/xuoi/xuolauncher.rc)
