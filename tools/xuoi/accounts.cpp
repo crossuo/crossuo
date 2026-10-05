@@ -715,33 +715,31 @@ void ui_accounts(ui_model &m)
         ImGui::SameLine();
         HelpMarker("The place where Ultima Online client is installed");
 
-        if (ImGui::TreeNode("Advanced"))
-        {
-            w = w - label_size2.x + label_size.x;
-            ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
+        // Accounts is already the advanced tab: the former "Advanced" tree node
+        // is inlined so Login Server / Client Version / Type / Use Cryptography
+        // are always visible. The width juggling it used to carry is kept so the
+        // right-column rows keep their previous (fully expanded) widths.
+        w = w - label_size2.x + label_size.x;
 
-            InputText("##4", "  Login Server:", w - 27, loginServer, sizeof(loginServer));
-            ImGui::SameLine();
-            if (ImGui::Button("" ICON_FK_GLOBE_W))
-                ui_push(m, ui_view::shard_picker);
-            HoverToolTip("Shard picker");
-            InputText(
-                "##7", "Client Version:", w / 3 - spacing_w, clientVersion, sizeof(clientVersion));
-            ImGui::SameLine();
-            HelpMarker("Client version to emulate");
-            ImGui::SameLine();
-            //const auto w3 = w - ImGui::GetCursorPosX() + 14;
-            //InputText("##8", " Protocol:", w3, protocolVersion, sizeof(protocolVersion));
-            //ImGui::SameLine(); HelpMarker("Network protocol version to emulate (if empty, this will use be the same as client version)");
-            //InputText("##9", "  Type:", w3, clientType, sizeof(clientType));
-            const auto w3 = right_w - ImGui::GetCursorPosX() - 66;
-            ComboBox("##9", "  Type:", w3, &current_type, client_types, IM_ARRAYSIZE(client_types));
-            //InputText("##a", "  Command Line:", w, commandLine, sizeof(commandLine));
-            ImGui::Checkbox("Use Cryptography", &useCrypto);
+        InputText("##4", "  Login Server:", w - 27, loginServer, sizeof(loginServer));
+        ImGui::SameLine();
+        if (ImGui::Button("" ICON_FK_GLOBE_W))
+            ui_push(m, ui_view::shard_picker);
+        HoverToolTip("Shard picker");
+        InputText(
+            "##7", "Client Version:", w / 3 - spacing_w, clientVersion, sizeof(clientVersion));
+        ImGui::SameLine();
+        HelpMarker("Client version to emulate");
+        ImGui::SameLine();
+        //const auto w3 = w - ImGui::GetCursorPosX() + 14;
+        //InputText("##8", " Protocol:", w3, protocolVersion, sizeof(protocolVersion));
+        //ImGui::SameLine(); HelpMarker("Network protocol version to emulate (if empty, this will use be the same as client version)");
+        //InputText("##9", "  Type:", w3, clientType, sizeof(clientType));
+        const auto w3 = right_w - ImGui::GetCursorPosX() - 66;
+        ComboBox("##9", "  Type:", w3, &current_type, client_types, IM_ARRAYSIZE(client_types));
+        //InputText("##a", "  Command Line:", w, commandLine, sizeof(commandLine));
+        ImGui::Checkbox("Use Cryptography", &useCrypto);
 
-            ImGui::Indent(ImGui::GetTreeNodeToLabelSpacing());
-            ImGui::TreePop();
-        }
         ImGui::NewLine();
         ImGui::SameLine(right_w - 45.0f);
         if (ImGui::Button("Save"))
