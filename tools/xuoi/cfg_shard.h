@@ -73,7 +73,7 @@ CFG_FIELD(shard, clientversion, {}, astr_t)
 // required
 // same as in crossuo.cfg, specify the client version to emulate with crossuo
 
-CFG_FIELD(account, protocolversion, {}, astr_t)
+CFG_FIELD(shard, protocolversion, {}, astr_t)
 // optional
 // same as in crossuo.cfg, specify the network protocol version to force
 

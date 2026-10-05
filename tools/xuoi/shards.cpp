@@ -373,15 +373,118 @@ int main(int argc, char **argv)
             LOG_ERROR("missing required field 'servertype'");
             error = true;
         }
-        /*if (entry.shard_url.empty())
+        // optional urls: only validated when non-empty, must be http(s)
+        if (!entry.shard_url.empty() && !valid_url(entry.shard_url))
         {
-            LOG_ERROR("missing required field 'url'");
+            LOG_ERROR("invalid field 'url', not a http(s) url: '%s'", entry.shard_url.c_str());
             error = true;
-        }*/
+        }
+        if (!entry.shard_urlforum.empty() && !valid_url(entry.shard_urlforum))
+        {
+            LOG_ERROR(
+                "invalid field 'urlforum', not a http(s) url: '%s'", entry.shard_urlforum.c_str());
+            error = true;
+        }
+        if (!entry.shard_urlregister.empty() && !valid_url(entry.shard_urlregister))
+        {
+            LOG_ERROR(
+                "invalid field 'urlregister', not a http(s) url: '%s'",
+                entry.shard_urlregister.c_str());
+            error = true;
+        }
+        // urlother is parsed by its converter which enforces the <name>+<url>
+        // shape and a http(s) url, erroring out on malformed input.
+        if (entry.shard_urlother.url.empty() && !entry.raw_shard_urlother.empty())
+        {
+            LOG_ERROR("invalid field 'urlother': '%s'", entry.raw_shard_urlother.c_str());
+            error = true;
+        }
+        {
+            const auto &url = entry.shard_installer.url;
+            switch (entry.shard_installer.type)
+            {
+                case shard::tag_install_type::uo_latest:
+                    // default uo+latest, url must be empty
+                    if (!url.empty() && !valid_url(url))
+                    {
+                        LOG_ERROR(
+                            "invalid field 'installer' (uo+latest), url must be empty or a "
+                            "http(s) url: '%s'",
+                            url.c_str());
+                        error = true;
+                    }
+                    break;
+                case shard::tag_install_type::uo_patch_server:
+                    // uo+<url>, url must be a non-empty http(s) url
+                    if (url.empty() || !valid_url(url))
+                    {
+                        LOG_ERROR(
+                            "invalid field 'installer' (uo+<url>), url must be a http(s) url: "
+                            "'%s'",
+                            url.c_str());
+                        error = true;
+                    }
+                    break;
+                case shard::tag_install_type::xuo_patch_server:
+                    // xuo+<url>, url must be a non-empty http(s) url; 'xuo+latest' is nonsense
+                    if (entry.raw_shard_installer.find("+latest") != astr_t::npos)
+                    {
+                        LOG_ERROR(
+                            "invalid field 'installer': 'xuo+latest' is not a valid form, "
+                            "expects xuo+<url>");
+                        error = true;
+                    }
+                    else if (url.empty() || !valid_url(url))
+                    {
+                        LOG_ERROR(
+                            "invalid field 'installer' (xuo+<url>), url must be a http(s) url: "
+                            "'%s'",
+                            url.c_str());
+                        error = true;
+                    }
+                    break;
+                case shard::tag_install_type::website:
+                case shard::tag_install_type::download_zip:
+                case shard::tag_install_type::download_web:
+                case shard::tag_install_type::download_exe:
+                    // website+<url> / download+<type>+<url>, url must be a non-empty http(s) url
+                    if (url.empty() || !valid_url(url))
+                    {
+                        LOG_ERROR(
+                            "invalid field 'installer', url must be a http(s) url: '%s'",
+                            url.c_str());
+                        error = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
         if (entry.shard_loginserver.empty())
         {
             LOG_ERROR("missing required field 'loginserver'");
             error = true;
+        }
+        else
+        {
+            // shape check only, the client defaults the port if missing so
+            // published entries without a port must keep working (LOG_WARN)
+            const auto &ls = entry.shard_loginserver;
+            const auto comma = ls.find(',');
+            bool ok = comma != astr_t::npos && comma + 1 < ls.size();
+            if (ok)
+            {
+                for (size_t i = comma + 1; i < ls.size(); ++i)
+                {
+                    if (ls[i] < '0' || ls[i] > '9')
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+            }
+            if (!ok)
+                LOG_WARN("field 'loginserver' does not look like host,port: '%s'", ls.c_str());
         }
         if (entry.shard_clientversion.empty())
         {

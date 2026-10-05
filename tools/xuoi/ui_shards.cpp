@@ -100,6 +100,7 @@ void ui_shards(ui_model &m, bool picker)
                 continue;
         }
         // context menu entries
+        // urlregister empty = auto-account creation
         const bool has_reg = !it.shard_urlregister.empty();
         if (select_aac && !it.shard_urlregister.empty())
             continue;

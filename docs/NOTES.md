@@ -25,3 +25,9 @@
 - Embedded: `xuol::client_apply_shard` bridge → `ApplyShardProfile` (applied→hide launcher; needs_restart→latched reload, no quit). `xuol::shard_profile` (xuol_app.h) is intentionally a distinct mirror of Config's `::shard_profile` — TU boundary (launcher doesn't compile src/Config.cpp).
 - Known limitations (accepted): empty clienttype/version in a shard = "keep current" on live switch (inherited ApplyShardProfile contract; shardchk requires clientversion so exposure is clienttype only); shard launch cfgs share the profile-name namespace with account profiles (a shard named like a profile overwrites that cfg); `installer = xuo+latest` nonsense input would write `producturl=latest` (parser-level, pre-existing).
 - UI automation note: XTEST pointer no-ops in this VM; verify window content via `import -window <id>` + stddev (x11grab captures black for GL windows).
+
+## T6 — shardchk hardening + schema fix (2026-10-04)
+- `protocolversion` was declared under section `account` (copy-paste) — with the shard table's strict parse it made ANY `[Shard] protocolversion` line abort the whole file; now `shard`. `[Account] protocolversion` was silently ignored before, so no published data regressed.
+- shardchk now validates: non-empty url/urlforum/urlregister = http(s); urlother name+url backstop; installer per-type (rejects `xuo+latest`, requires http(s) urls); loginserver port shape = WARN only (host-only entries keep passing).
+- Auto-account filter in ui_shards confirmed CORRECT as originally written (my earlier plan note claiming inversion was wrong): select_aac skips shards that HAVE urlregister → shows true auto-account shards. Comment added.
+- Known nits: malformed urlother double-reports (converter + backstop); `,2593` (empty host) passes the warn check; `find("+latest")` substring test is safe today, could be `raw == "xuo+latest"` for clarity.
