@@ -957,6 +957,8 @@ FS_PRIVATE bool fs_copy(const fs_path &from, const fs_path &to)
                fs_path_ascii(to),
                nullptr,
                COPYFILE_ALL | COPYFILE_NOFOLLOW_DST) == 0;
+#elif defined(_WIN32)
+    return CopyFileA(fs_path_ascii(from), fs_path_ascii(to), FALSE) ? true : false;
 #endif
 }
 

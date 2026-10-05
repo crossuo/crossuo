@@ -99,9 +99,9 @@ static void APIENTRY OGLDebugMsgCallback(
     (void)length;
     (void)userParam;
 
-    auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id, OpenGLDebugMsgState &outAssert, OpenGLDebugMsgState &outLog) {
+    auto getMsgInfo = [](GLenum sev, GLenum msgType, GLuint msgId, OpenGLDebugMsgState &outAssert, OpenGLDebugMsgState &outLog) {
         auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
-        auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
+        auto &infoType = s_openglDebugMsgType[msgType % OGL_DEBUGMSG_TYPE_COUNT];
         OpenGLDebugMsgState &shouldAssert = infoSeverity.assert;
         OpenGLDebugMsgState &shouldLog = infoSeverity.log;
         if (infoType.assert != OGL_DBGMSG_UNSET)
@@ -122,7 +122,7 @@ static void APIENTRY OGLDebugMsgCallback(
                 break;
             }
 
-            if (ctrl.id == id && ctrl.assert != OGL_DBGMSG_UNSET)
+            if (ctrl.id == msgId && ctrl.assert != OGL_DBGMSG_UNSET)
             {
                 shouldAssert = ctrl.assert;
                 shouldLog = ctrl.log;

@@ -319,7 +319,7 @@ void uop_unpack_file(CUopMappedFile &file, astr_t filename)
         char fname[100];
         snprintf(
             fname, sizeof(fname), "%08x%08x", UOP_HASH_SH(asset->Hash), UOP_HASH_PH(asset->Hash));
-        char mname[100];
+        char mname[sizeof(fname) + 5];
         snprintf(mname, sizeof(mname), "%s.meta", fname);
 
         auto f = fs_path_join(p, fname);

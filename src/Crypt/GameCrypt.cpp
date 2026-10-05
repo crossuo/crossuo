@@ -380,8 +380,8 @@ static unsigned int s_table[CRYPT_GAMEKEY_COUNT][1024];
 
 #define ROUND(LL, R, S, P)                                                                         \
     LL = (LL) ^ (P) ^                                                                              \
-         ((S[(R) >> 24] + S[0x0100 + (((R) >> 16) & 0xff)]) ^ S[0x0200 + (((R) >> 8) & 0xff)]) +   \
-             S[0x0300 + ((R)&0xff)]
+         (((S[(R) >> 24] + S[0x0100 + (((R) >> 16) & 0xff)]) ^ S[0x0200 + (((R) >> 8) & 0xff)]) + \
+             S[0x0300 + ((R)&0xff)])
 
 // static
 static bool s_tables_ready = false;

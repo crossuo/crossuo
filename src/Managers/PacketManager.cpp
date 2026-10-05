@@ -2085,9 +2085,9 @@ PACKET_HANDLER(DenyMoveItem)
         g_ObjectInHand.Clear();
     }
 
-    uint8_t code = ReadUInt8();
+    uint8_t denyReason = ReadUInt8();
 
-    if (code < 5)
+    if (denyReason < 5)
     {
         const astr_t errorMessages[] = {
             "You can not pick that up.",
@@ -2097,7 +2097,7 @@ PACKET_HANDLER(DenyMoveItem)
             "You are already holding an item."
         };
 
-        g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, errorMessages[code]);
+        g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, errorMessages[denyReason]);
     }
 }
 
@@ -2488,6 +2488,7 @@ void CPacketManager::SetWeather(uint8_t type, uint8_t count, uint8_t temperature
             g_Weather.Earthquake(3, 1);
             g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "An earthquake is in action");
         }
+        // fall through
         case 0xFE:
         case 0xFF:
         {
@@ -4669,13 +4670,13 @@ PACKET_HANDLER(CharacterListNotification)
 
 PACKET_HANDLER(ErrorCode)
 {
-    uint8_t code = ReadUInt8();
+    uint8_t errorCode = ReadUInt8();
 
     g_Game.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_GAME_LOGIN);
-    g_ConnectionScreen.SetErrorCode(code);
+    g_ConnectionScreen.SetErrorCode(errorCode);
 
-    if (code > 7)
+    if (errorCode > 7)
     {
         g_ConnectionScreen.SetErrorCode(3);
     }

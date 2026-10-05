@@ -1893,9 +1893,9 @@ bool CGumpCustomHouse::ValidateItemPlace(
     }
     if ((item->State & CHMOF_FLOOR) != 0)
     {
-        auto existsInList = [](std::vector<CPoint2Di> &validatedFloors,
+        auto existsInList = [](std::vector<CPoint2Di> &floors,
                                const CPoint2Di &testPoint) {
-            for (const CPoint2Di &point : validatedFloors)
+            for (const CPoint2Di &point : floors)
             {
                 if (testPoint.X == point.X && testPoint.Y == point.Y)
                 {

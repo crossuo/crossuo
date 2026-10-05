@@ -262,7 +262,9 @@ void vfs_store_arena::evict(size_t bytes_target)
     const uint64_t before = m_bytes_resident;
     evict_locked(bytes_target);
     if (m_bytes_resident < before)
+    {
         LOG_TRACE("arena: evicted %" PRIu64 " bytes", before - m_bytes_resident);
+    }
 }
 
 bool vfs_store_arena::is_ready(const VfsAsset &asset) const

@@ -448,6 +448,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int pageAmount)
                         break;
                     }
                 }
+                // fall through
                 default:
                 {
                     item->Draw();
@@ -701,6 +702,7 @@ void CGump::TestItemsLeftMouseDown(
                         gump->Page = box->ToPage;
                     }
                 }
+                // fall through
                 case GOT_COLOREDPOLYGONE:
                 {
                     if (((CGUIPolygonal *)item)->CallOnMouseUp)
@@ -708,6 +710,7 @@ void CGump::TestItemsLeftMouseDown(
                         break;
                     }
                 }
+                // fall through
                 case GOT_RESIZEPIC:
                 {
                     uint32_t serial = item->Serial;
@@ -1720,6 +1723,7 @@ void CGump::GetItemsSize(
             }
             case GOT_SCISSOR:
                 ((CGUIScissor *)item)->GumpParent = gump;
+                // fall through
             default:
             {
                 int x = item->GetX() + offset.X;

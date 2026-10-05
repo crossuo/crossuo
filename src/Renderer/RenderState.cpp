@@ -661,8 +661,8 @@ bool RenderState_DisableShaderPipeline(RenderState *state, bool forced)
 bool RenderState_SetTexture(
     RenderState *state, TextureType type, texture_handle_t texture, bool forced)
 {
-    auto textureTypeToOGLType = [](TextureType type) {
-        switch (type)
+    auto textureTypeToOGLType = [](TextureType textureType) {
+        switch (textureType)
         {
             case TextureType::TextureType_Texture2D:
             case TextureType::TextureType_Texture2D_Mipmapped:

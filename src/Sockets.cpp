@@ -236,7 +236,7 @@ typedef int SOCKET;
 
 uint16_t icmp_checksum(const uint16_t *addr, int count)
 {
-    register long sum = 0;
+    long sum = 0;
     while (count > 1)
     {
         sum += *addr++;
@@ -271,7 +271,7 @@ bool socket_init()
     static bool wsa_initialized = false;
     if (!wsa_initialized)
     {
-        WSADATA wsaData = { 0 };
+        WSADATA wsaData = {};
         wsa_initialized = WSAStartup(MAKEWORD(2, 2), &wsaData) == 0;
     }
     return wsa_initialized;

@@ -109,7 +109,7 @@ void CGameWorld::ProcessAnimation()
             ProcessFootstepsSound(g_Ticks, gc);
             if (gc->LastAnimationChangeTime < g_Ticks && !gc->NoIterateAnimIndex())
             {
-                char frameIndex = gc->AnimIndex;
+                int frameIndex = gc->AnimIndex;
                 if (gc->AnimationFromServer && !gc->AnimationDirection)
                 {
                     frameIndex--;
@@ -233,7 +233,7 @@ void CGameWorld::ProcessAnimation()
                                 }
                             }
                         }
-                        gc->AnimIndex = frameIndex;
+                        gc->AnimIndex = (char)frameIndex;
                     }
                     else if ((obj->Serial & 0x80000000) != 0u)
                     {

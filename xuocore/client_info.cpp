@@ -132,7 +132,6 @@ static int get_version(const unsigned char *version, int &offset)
         for (i = 0; i < val_len; ++i)
         {
             // skip
-            READ_U16(version + offset);
             offset += 2;
         }
     }

@@ -1377,6 +1377,7 @@ CFontsManager::GetHTMLData(uint8_t font, const wstr_t &str, TEXT_ALIGN_TYPE alig
                         endTag = true;
                     }
                 }
+                // fall through
                 case HTT_P:
                 {
                     if (endTag)
@@ -1529,6 +1530,7 @@ HTML_DATA_INFO CFontsManager::GetCurrentHTMLInfo(const HTMLINFO_LIST &list)
             case HTT_H4:
             case HTT_H5:
                 info.Flags |= current.Flags;
+                // fall through
             case HTT_H3:
             case HTT_H6:
                 if (current.Font != 0xFF && (m_UnicodeFontAddress[current.Font] != 0u))

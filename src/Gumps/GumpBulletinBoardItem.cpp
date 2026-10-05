@@ -182,6 +182,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
             m_ButtonRemove = (CGUIButton *)Add(
                 new CGUIButton(ID_GBBI_REMOVE, 0x0885, 0x0885, 0x0885, 235, Height - 22)); //Remove
             m_ButtonRemove->BoundingBoxCheck = true;
+        // fall through
         case 1:
         {
             m_ButtonReply = (CGUIButton *)Add(

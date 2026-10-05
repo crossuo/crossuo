@@ -882,7 +882,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                     }
                     else
                     {
-                        uint16_t handAnimIDs[2];
+                        uint16_t handAnimIDs[2] = { 0 };
                         const auto hand1 = FindLayer(OL_1_HAND);
                         if (hand1 != nullptr)
                         {

@@ -112,7 +112,7 @@ void CWeather::Draw(int x, int y)
 
         WindTimer = g_Ticks + (RandomIntMinMax(7, 13) * 1000);
 
-        char lastWind = Wind;
+        int8_t lastWind = Wind;
 
         Wind = RandomInt(4);
 

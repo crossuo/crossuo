@@ -90,10 +90,14 @@ bool CSocket::Connect(const astr_t &address, uint16_t port)
                     Info(Network, "Proxy wants Username/Password");
                     int totalSize = 3 + (int)ProxyAccount.length() + (int)ProxyPassword.length();
                     std::vector<char> buffer(totalSize, 0);
-                    sprintf(&buffer[0], "  %s %s", ProxyAccount.c_str(), ProxyPassword.c_str());
                     buffer[0] = 1;
                     buffer[1] = (char)ProxyAccount.length();
+                    memcpy(&buffer[2], ProxyAccount.c_str(), ProxyAccount.length());
                     buffer[2 + (int)ProxyAccount.length()] = (char)ProxyPassword.length();
+                    memcpy(
+                        &buffer[3 + (int)ProxyAccount.length()],
+                        ProxyPassword.c_str(),
+                        ProxyPassword.length());
                     tcp_send(m_Socket, (unsigned char *)&buffer[0], totalSize);
                     tcp_recv(m_Socket, str, 255);
                     if (str[1] != 0)

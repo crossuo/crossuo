@@ -1024,7 +1024,7 @@ bool CConfigManager::Load(const fs_path &path)
     int windowWidth = -1;
     int windowHeight = -1;
     UpdateRange = g_MaxViewRange;
-    auto contPos = ContainerDefaultPosition();
+    auto &contPos = ContainerDefaultPosition();
 
     while (!file.IsEOF())
     {

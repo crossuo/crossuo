@@ -4193,7 +4193,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.HoldShiftForEnablePathfind = g_OptionsConfig.HoldShiftForEnablePathfind;
             g_ConfigManager.SetCharacterBackpackStyle(g_OptionsConfig.GetCharacterBackpackStyle());
 
-            auto defaultContainerPos = ContainerDefaultPosition();
+            auto &defaultContainerPos = ContainerDefaultPosition();
             if (m_ContainerOffsetX->m_Entry.Length() != 0u)
             {
                 defaultContainerPos.X = str_to_int(m_ContainerOffsetX->m_Entry.GetTextA());

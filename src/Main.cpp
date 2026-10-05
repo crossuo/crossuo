@@ -503,8 +503,8 @@ bool load_config()
                 {
                     Warning(
                         Client,
-                        "Client version not found, signature: 0x%016lx, 0x%08x",
-                        info.xxh3,
+                        "Client version not found, signature: 0x%016llx, 0x%08x",
+                        (unsigned long long)info.xxh3,
                         info.crc32);
                 }
             }

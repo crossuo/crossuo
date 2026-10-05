@@ -1203,10 +1203,10 @@ void CFileManager::Unload()
 static const UopFileEntry *UopGetAnimationAsset(uint64_t hash, int &fileIndex)
 {
     const static int count = countof(CFileManager::m_AnimationFrame);
-    auto getAssetOwner = [](uint64_t hash) -> int {
+    auto getAssetOwner = [](uint64_t assetHash) -> int {
         for (int i = 0; i < count; ++i)
         {
-            if (g_FileManager.m_AnimationFrame[i].HasAsset(hash))
+            if (g_FileManager.m_AnimationFrame[i].HasAsset(assetHash))
                 return i;
         }
         return -1;
@@ -1784,7 +1784,7 @@ void CFileManager::LoadIndexFiles()
     }
 
     int maxGumpsCount =
-        (int)(m_GumpIdx.Start == nullptr ? MAX_GUMP_DATA_INDEX_COUNT : (m_GumpIdx.End - m_GumpIdx.Start) / sizeof(GumpIdxBlock));
+        (int)(m_GumpIdx.Start == nullptr ? (int)MAX_GUMP_DATA_INDEX_COUNT : (m_GumpIdx.End - m_GumpIdx.Start) / sizeof(GumpIdxBlock));
     if (m_ArtMul.Start != nullptr)
     {
         MulReadIndexFile(

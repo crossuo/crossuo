@@ -612,7 +612,7 @@ namespace loguru
 			else if (c == '\'') { out += "\\\'"; }
 			else if (c == '\"') { out += "\\\""; }
 			else if (c == ' ')  { out += "\\ ";  }
-			else if (0 <= c && c < 0x20) { // ASCI control character:
+			else if (static_cast<unsigned char>(c) < 0x20) { // ASCI control character:
 			// else if (c < 0x20 || c != (c & 127)) { // ASCII control character or UTF-8:
 				out += "\\x";
 				write_hex_byte(out, static_cast<uint8_t>(c));
@@ -1017,7 +1017,14 @@ namespace loguru
 #if LOGURU_WINTHREADS
 	char* get_thread_name_win32()
 	{
-		__declspec( thread ) static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
+		// On MinGW, __declspec(thread) is ignored ('thread' attribute directive ignored,
+		// -Wattributes), so the buffer already compiles as a plain function-local static;
+		// declaring it that way explicitly is behavior-identical.
+		#if defined(__MINGW32__) || defined(__MINGW64__)
+			static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
+		#else
+			__declspec( thread ) static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
+		#endif
 		return &thread_name[0];
 	}
 #endif // LOGURU_WINTHREADS
@@ -1734,7 +1741,7 @@ namespace loguru
 		else if (c == '\n') { str += "\\n";  }
 		else if (c == '\r') { str += "\\r";  }
 		else if (c == '\t') { str += "\\t";  }
-		else if (0 <= c && c < 0x20) {
+		else if (static_cast<unsigned char>(c) < 0x20) {
 			str += "\\u";
 			write_hex_16(static_cast<uint16_t>(c));
 		} else { str += c; }
@@ -1789,8 +1796,6 @@ namespace loguru {
 	{
 		#if defined(_MSC_VER)
 		#pragma message ( "No signal handlers on Win32" )
-		#else
-		#warning "No signal handlers on Win32"
 		#endif
 	}
 } // namespace loguru
@@ -2038,7 +2043,13 @@ namespace loguru
 #if defined(__clang__) || defined(__GNUC__)
 	// Helper macro for declaring functions as having similar signature to printf.
 	// This allows the compiler to catch format errors at compile-time.
+#if defined(__MINGW32__) && defined(__USE_MINGW_ANSI_STDIO)
+	// With the ANSI stdio layer, MinGW's printf family is C99-compliant
+	// (%zu works); plain __printf__ is checked as ms_printf, which rejects it.
+	#define LOGURU_PRINTF_LIKE(fmtarg, firstvararg) __attribute__((__format__ (gnu_printf, fmtarg, firstvararg)))
+#else
 	#define LOGURU_PRINTF_LIKE(fmtarg, firstvararg) __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
+#endif
 	#define LOGURU_FORMAT_STRING_TYPE const char*
 #elif defined(_MSC_VER)
 	#define LOGURU_PRINTF_LIKE(fmtarg, firstvararg)

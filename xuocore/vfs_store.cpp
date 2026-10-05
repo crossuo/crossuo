@@ -1233,7 +1233,9 @@ bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params)
             if (fp)
             {
                 if (created)
+                {
                     LOG_TRACE("prepared pack: %s", file.name.c_str());
+                }
                 fclose(fp);
             }
             else

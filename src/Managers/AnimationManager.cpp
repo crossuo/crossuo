@@ -265,9 +265,8 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool
         {
             if (!third)
                 return 8;
-
-            // [[fallthrough]]
         }
+            // fall through
         case AGT_MONSTER:
         {
             if (flags & AF_USE_UOP_ANIMATION)
@@ -1902,6 +1901,7 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
             {
                 break;
             }
+            // fall through
         case OL_HAIR:
         {
             uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
@@ -1956,15 +1956,15 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 
 uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index)
 {
-    auto getReplaceGroup = [](const auto &list, uint16_t index) -> uint8_t {
+    auto getReplaceGroup = [](const auto &list, uint16_t animIndex) -> uint8_t {
         for (const auto &item : list)
         {
-            if (item.first == index)
+            if (item.first == animIndex)
             {
                 return checked_cast<uint8_t>(item.second == 0xff ? 0 : item.second);
             }
         }
-        return checked_cast<uint8_t>(index);
+        return checked_cast<uint8_t>(animIndex);
     };
 
     const ANIMATION_GROUPS group = GetGroupIndex(obj->Graphic);
@@ -2019,6 +2019,7 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                     {
                         return 12;
                     }
+                    // fall through
                 case 0:
                     return 4;
                 default:

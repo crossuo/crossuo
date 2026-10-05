@@ -350,7 +350,7 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
 
 bool CGumpResourceTracker::OnLeftMouseButtonDoubleClick()
 {
-    if (g_PressedObject.LeftObject == nullptr && !g_PressedObject.LeftObject->IsGUI())
+    if (g_PressedObject.LeftObject == nullptr)
     {
         return false;
     }

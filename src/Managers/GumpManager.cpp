@@ -1728,6 +1728,7 @@ void CGumpManager::Save(const fs_path &path)
                 {
                     break;
                 }
+                // fall through
             case GT_MINIMAP:
             case GT_SKILLS:
             case GT_JOURNAL:
@@ -1834,6 +1835,7 @@ void CGumpManager::Save(const fs_path &path)
 
                 writer.WriteBuffer();
                 count++;
+                break;
             }
             case GT_SKILL:
             case GT_ABILITY:

@@ -47,16 +47,21 @@ else()
     add_compile_options(-fno-strict-aliasing)
     add_compile_options(-Wswitch-default)
     add_compile_options(-Wmissing-variable-declarations)
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GCC")
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-Wno-switch-default) # SDL_stdinc.h
     add_compile_options(-Wlogical-op)
+    if(WIN32)
+      # MinGW CRT printf lacks %zu: route through the ANSI stdio layer so
+      # size_t conversions are understood (safe with static linking)
+      compile_definitions(__USE_MINGW_ANSI_STDIO=1)
+    endif()
   endif()
 
   # these are the only we want to really always disable
   add_compile_options(-Wno-sign-compare)
   add_compile_options(-Wno-unused-parameter)
-  add_compile_options(-Wmissing-field-initializers)
-  add_compile_options(-Wfloat-equal)
+  add_compile_options(-Wno-missing-field-initializers)
+  add_compile_options(-Wno-float-equal)
   #add_compile_options(-Wconversion)
   #add_compile_options(-Wzero-as-null-pointer-constant)
 

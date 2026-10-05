@@ -17,6 +17,7 @@ public:
     CSize();
     CSize(int width, int height);
     CSize(const CSize &size);
+    CSize &operator=(const CSize &size) = default;
 
     virtual ~CSize() {}
 
@@ -38,6 +39,7 @@ public:
     CPoint2Di(float x, float y);
     CPoint2Di(const CPoint2Di &point);
     CPoint2Di(const CPoint2Df &point);
+    CPoint2Di &operator=(const CPoint2Di &point) = default;
 
     virtual ~CPoint2Di() {}
 

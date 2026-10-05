@@ -368,7 +368,7 @@ static int vuoi_streaming_fetch()
     VfsStats stats;
     vfs_stats(&stats);
     printf(
-        "streaming-fetch: %zu/%zu files, %" PRIu64 "/%" PRIu64 " bytes%s\n",
+        "streaming-fetch: %zu/%zu files, %zu/%zu bytes%s\n",
         stats.files_done,
         stats.files_total,
         stats.bytes_done,

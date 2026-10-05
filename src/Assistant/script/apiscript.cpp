@@ -1183,8 +1183,10 @@ JSValue jsn_selectmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     command->TextA = arg_text(ctx, argv, argc, 0, ""); // menu name
     command->TextB = arg_text(ctx, argv, argc, 1, ""); // item name
     ScriptQueue_Exec(command);
+    // result_bool owns the command: it copies the value out, deletes the
+    // command, and returns it. The explicit delete that used to follow here
+    // double-freed the already-freed pointer (gcc -Wuse-after-free).
     bool result = result_bool(command);
-    delete command;
     pause_gate(ctx);
     return JS_NewBool(ctx, result);
 }
@@ -1495,7 +1497,7 @@ JSValue jsn_time(JSContext *ctx, JSValueConst, int, JSValueConst *)
     char buf[16] = { 0 };
     time_t now = time(nullptr);
     struct tm local = {};
-    localtime_r(&now, &local); // thread-safe: script workers call this
+    (void)localtime_r(&now, &local); // thread-safe: script workers call this
     strftime(buf, sizeof(buf), "%H:%M:%S", &local);
     return JS_NewString(ctx, buf);
 }
@@ -1505,7 +1507,8 @@ JSValue jsn_date(JSContext *ctx, JSValueConst, int, JSValueConst *)
     char buf[16] = { 0 };
     time_t now = time(nullptr);
     struct tm local = {};
-    localtime_r(&now, &local);
+    (void)localtime_r(&now, &local); // result unused (mingw shim yields a
+                                     // value, hence the explicit discard)
     strftime(buf, sizeof(buf), "%d.%m.%Y", &local);
     return JS_NewString(ctx, buf);
 }
@@ -1978,8 +1981,10 @@ JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
         }
     }
     ScriptQueue_Exec(command);
+    // result_bool owns the command: it copies the value out, deletes the
+    // command, and returns it. The explicit delete that used to follow here
+    // double-freed the already-freed pointer (gcc -Wuse-after-free).
     bool result = result_bool(command);
-    delete command;
     pause_gate(ctx);
     return JS_NewBool(ctx, result);
 }
@@ -2079,8 +2084,10 @@ JSValue menu_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
     command->TextA = menu->Name;
     command->TextB = itemName;
     ScriptQueue_Exec(command);
+    // result_bool owns the command: it copies the value out, deletes the
+    // command, and returns it. The explicit delete that used to follow here
+    // double-freed the already-freed pointer (gcc -Wuse-after-free).
     bool result = result_bool(command);
-    delete command;
     pause_gate(ctx);
     return JS_NewBool(ctx, result);
 }

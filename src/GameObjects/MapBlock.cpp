@@ -231,7 +231,7 @@ bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
             {
                 char testZ = GetLandZ(x + (int)i, y + (int)j, map);
 
-                result = (testZ != z && testZ != -125);
+                result = (testZ != z && testZ != (char)-125);
             }
         }
     }

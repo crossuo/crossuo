@@ -2309,7 +2309,7 @@ void vfs_hud_stats(VfsStats *out)
             bool complete = !file.assets.empty();
             for (const auto &asset : file.assets)
             {
-                const uint8_t state = gi < s_states.size() ? s_states[gi] : vfs_pending;
+                const uint8_t state = gi < s_states.size() ? s_states[gi] : static_cast<uint8_t>(vfs_pending);
                 if (state == vfs_fetched)
                 {
                     stats.bytes_done += vfs_asset_block_size(asset);

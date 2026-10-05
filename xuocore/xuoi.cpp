@@ -359,7 +359,7 @@ mft_result xuoi_product_install(mft_config &cfg, const char *product_url, const 
         {
             if (!prod.config.latest_checked && prod.last_version == prod.timestamp)
             {
-                LOG_INFO("mirror is up-to-date, version %lu.", prod.timestamp);
+                LOG_INFO("mirror is up-to-date, version %" PRIu64 ".", prod.timestamp);
                 break;
             }
 

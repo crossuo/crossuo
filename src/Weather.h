@@ -15,7 +15,7 @@ public:
     uint16_t CurrentCount = 0;
     uint8_t Temperature = 0;
     uint32_t Timer = 0;
-    char Wind = 0;
+    int8_t Wind = 0;
     uint32_t WindTimer = 0;
     uint32_t EarthquakeTimer = 0;
     uint32_t LastTick = 0;

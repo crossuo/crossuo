@@ -6,6 +6,13 @@
 #include "ClilocManager.h"
 #include <xuocore/uodata.h>
 
+// FourCC tags stored big-endian in the intloc files (matches what gcc's
+// implementation-defined multi-character constants produced before).
+static constexpr uint32_t intloc_tag(char a, char b, char c, char d)
+{
+    return (uint32_t(a) << 24) | (uint32_t(b) << 16) | (uint32_t(c) << 8) | uint32_t(d);
+}
+
 CIntlocManager g_IntlocManager;
 
 CIntloc::CIntloc(int fileIndex, const astr_t &lang)
@@ -20,7 +27,7 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
             while (!m_File.IsEOF())
             {
                 uint32_t code = m_File.ReadUInt32BE();
-                if (code == 'TEXT')
+                if (code == intloc_tag('T', 'E', 'X', 'T'))
                 {
                     int len = m_File.ReadInt32BE();
                     uint8_t *end = m_File.Ptr + len;
@@ -29,16 +36,17 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
                         m_Strings.push_back(wstr_from_utf8(m_File.ReadString()));
                     }
                 }
-                else if (code == 'FORM')
+                else if (code == intloc_tag('F', 'O', 'R', 'M'))
                 {
                     m_File.Move(4);
                 }
-                else if (code == 'INFO')
+                else if (code == intloc_tag('I', 'N', 'F', 'O'))
                 {
                     int len = m_File.ReadInt32BE();
                     m_File.Move(len + 1);
                 }
-                else if (code == 'DATA' || code == 'LANG')
+                else if (
+                    code == intloc_tag('D', 'A', 'T', 'A') || code == intloc_tag('L', 'A', 'N', 'G'))
                 {
                 }
                 else

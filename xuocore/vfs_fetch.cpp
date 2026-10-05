@@ -98,11 +98,13 @@ static int64_t vfs_fetch_now_ms()
         .count();
 }
 
+#if defined(XUO_EMSC)
 static astr_t vfs_fetch_stream_key(const char *name)
 {
     // namespaced so a stream key can never collide with a blob tail
     return astr_t("stream:") + name;
 }
+#endif
 
 // admission checks, shared by pop and the workers' wait predicate. A
 // stream chunk runs only while the demand reservation holds: a running

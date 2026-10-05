@@ -246,7 +246,7 @@ int process_create(const char *const commandLine[], int options,
 
   if (process_option_inherit_environment !=
       (options & process_option_inherit_environment)) {
-    environment = "\0\0";
+    environment = (char *)"\0\0";
   }
 
   if (!CreatePipe(&rd, &wr, (LPSECURITY_ATTRIBUTES)&saAttr, 0)) {

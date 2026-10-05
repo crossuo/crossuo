@@ -363,8 +363,7 @@ VFS_TEST(store_pack_signature_fingerprint)
             vfs_test_fail(__FILE__, __LINE__, "pack missing");
             return 0;
         }
-        UopHeader header;
-        memset(&header, 0, sizeof(header));
+        UopHeader header{};
         const bool ok = fread(&header, sizeof(header), 1, fp) == 1;
         fclose(fp);
         if (!ok)
