@@ -139,12 +139,8 @@ void CGUISkillItem::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)m_X, (float)m_Y, 0.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
-#endif
 
     if (m_ButtonUse != nullptr)
     {
@@ -153,11 +149,7 @@ void CGUISkillItem::Draw(bool checktrans)
 
     if (g_PressedObject.LeftObject == this)
     {
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.DrawPolygone(20, 0, 250, 14);
-#else
         RenderAdd_DrawUntexturedQuad(g_renderCmdList, DrawUntexturedQuadCmd{ 20, 0, 250, 14 });
-#endif
     }
 
     m_NameText.Draw(22, 0, checktrans);
@@ -166,12 +158,8 @@ void CGUISkillItem::Draw(bool checktrans)
 
     m_ValueText.Draw(250 - m_ValueText.Width, 0);
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
-#endif
 }
 
 bool CGUISkillItem::Select()

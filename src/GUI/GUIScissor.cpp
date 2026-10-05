@@ -23,11 +23,7 @@ void CGUIScissor::PushGumpLocal(int x, int y, int width, int height)
     // draw origin (installed as the scissor origin provider), so nothing to do
     // here beyond forwarding. Kept as a named entry point so gump code has an
     // obvious call to reach for instead of Render_PushScissor.
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.PushScissor(x, y, width, height);
-#else
     Render_PushScissor(x, y, (uint32_t)width, (uint32_t)height);
-#endif
 }
 
 void CGUIScissor::Draw(bool checktrans)
@@ -40,10 +36,6 @@ void CGUIScissor::Draw(bool checktrans)
     }
     else
     {
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.PopScissor();
-#else
         Render_PopScissor();
-#endif
     }
 }

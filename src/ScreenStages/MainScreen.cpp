@@ -28,7 +28,7 @@ bool DebugRenderScreen()
     return debug;
 }
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
 static void DebugRenderScreenInternal()
 {
     // big red untextured quad
@@ -69,9 +69,6 @@ void CMainScreen::Init()
     Load();
     Reset();
     g_GameWindow.SetTitle(CLIENT_TITLE);
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.UpdateRect();
-#endif
     g_GumpManager.RedrawAll();
 
     g_EntryPointer = m_MainGump.m_PasswordFake;
@@ -255,7 +252,7 @@ void CMainScreen::DebugScreen()
         return;
     }
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     DebugRenderScreenInternal();
 #endif
 }

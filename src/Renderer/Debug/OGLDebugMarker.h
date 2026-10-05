@@ -7,9 +7,9 @@
 #include "../RenderCommands.h"
 
 // OpenGL debug markers for RenderDoc support
-// Only enabled for GL3 (NEW_RENDERER_ENABLED) to ensure KHR_debug extension availability
+// Only enabled for GL3/GLES (KHR_debug extension availability)
 
-#if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (!defined(USE_GL2) || defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
 
 // Forward declarations - implemented in RenderAdd.cpp
 bool RenderAdd_PushDebugMarker(RenderCmdList *cmdList, const char *label);
@@ -47,11 +47,11 @@ struct ScopedGLDebugMarker
 #define GL_DEBUG_MARKER_PUSH(label) RenderAdd_PushDebugMarker(g_renderCmdList, label)
 #define GL_DEBUG_MARKER_POP() RenderAdd_PopDebugMarker(g_renderCmdList)
 
-#else // #if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
+#else // #if defined(USE_GL3) || defined(USE_GLES)
 
 #define SCOPED_GL_DEBUG_MARKER()
 #define SCOPED_GL_DEBUG_MARKER_LABEL(label)
 #define GL_DEBUG_MARKER_PUSH(label)
 #define GL_DEBUG_MARKER_POP()
 
-#endif // #if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)

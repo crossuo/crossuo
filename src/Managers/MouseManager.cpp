@@ -188,11 +188,7 @@ bool CMouseManager::GetCursorDrawRect(
     {
         return false;
     }
-#ifndef NEW_RENDERER_ENABLED
-    if (spr->Texture->Texture == 0)
-#else
     if (spr->Texture->Texture == RENDER_TEXTUREHANDLE_INVALID)
-#endif
     {
         return false;
     }
@@ -550,11 +546,7 @@ void CMouseManager::Draw(uint16_t id)
             {
                 SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw Color");
                 g_ColorizerShader.Enable();
-#ifndef NEW_RENDERER_ENABLED
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-#else
                 RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
-#endif
                 g_ColorManager.SendColorsToShader(color);
             }
             spr->Texture->Draw(x, y);
@@ -584,24 +576,6 @@ void CMouseManager::Draw(uint16_t id)
                 if (auraColor != 0u)
                 {
                     SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw auraColor");
-#ifndef NEW_RENDERER_ENABLED
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-                    glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-                    glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
-
-                    CGLTexture tex;
-                    tex.Texture = g_AuraTexture.Texture;
-                    tex.Width = 35;
-                    tex.Height = 35;
-
-                    g_GL.Draw(tex, x - 6, y - 2);
-
-                    tex.Texture = 0;
-
-                    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-                    glDisable(GL_BLEND);
-#else
                     RenderAdd_SetBlend(
                         g_renderCmdList,
                         BlendStateCmd{ BlendFactor::BlendFactor_One,
@@ -619,7 +593,6 @@ void CMouseManager::Draw(uint16_t id)
 
                     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                     RenderAdd_DisableBlend(g_renderCmdList);
-#endif
                 }
             }
         }

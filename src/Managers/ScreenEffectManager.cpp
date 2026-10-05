@@ -91,25 +91,6 @@ void CScreenEffectManager::Draw()
     SCOPED_GL_DEBUG_MARKER_LABEL("CScreenEffectManager::Draw");
     if (Mode != SEM_NONE)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(ColorR, ColorG, ColorB, Alpha);
-
-        if (Type == SET_TO_WHITE_THEN_BLACK && Alpha >= 1.0f)
-        {
-            g_GL.DrawPolygone(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
-        }
-        else
-        {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            g_GL.DrawPolygone(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
-
-            glDisable(GL_BLEND);
-        }
-
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
             DrawUntexturedQuadCmd{ 0,
@@ -117,7 +98,6 @@ void CScreenEffectManager::Draw()
                                    uint32_t(g_GameWindow.GetSize().Width),
                                    uint32_t(g_GameWindow.GetSize().Height),
                                    { ColorR, ColorG, ColorB, Alpha } });
-#endif
     }
 }
 bool CScreenEffectManager::Use(

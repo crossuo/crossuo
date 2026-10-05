@@ -67,19 +67,11 @@ CGameObject::~CGameObject()
 
     m_Next = nullptr;
     m_Prev = nullptr;
-#ifndef NEW_RENDERER_ENABLED
-    if (m_TextureObjectHandles.Texture != 0)
-    {
-        glDeleteTextures(1, &m_TextureObjectHandles.Texture);
-        m_TextureObjectHandles.Texture = 0;
-    }
-#else
     if (m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID)
     {
         Render_DestroyTexture(m_TextureObjectHandles.Texture);
         m_TextureObjectHandles.Texture = RENDER_TEXTUREHANDLE_INVALID;
     }
-#endif
 
     Clear();
 
@@ -210,19 +202,11 @@ void CGameObject::SelectObjectHandlesTexture()
 
 void CGameObject::GenerateObjectHandlesTexture(wstr_t text)
 {
-#ifndef NEW_RENDERER_ENABLED
-    if (m_TextureObjectHandles.Texture != 0)
-    {
-        glDeleteTextures(1, &m_TextureObjectHandles.Texture);
-        m_TextureObjectHandles.Texture = 0;
-    }
-#else
     if (m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID)
     {
         Render_DestroyTexture(m_TextureObjectHandles.Texture);
         m_TextureObjectHandles.Texture = RENDER_TEXTUREHANDLE_INVALID;
     }
-#endif
 
     int width = g_ObjectHandlesWidth - 20;
     uint8_t font = 1;
@@ -310,9 +294,6 @@ void CGameObject::GenerateObjectHandlesTexture(wstr_t text)
             }
         }
     }
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.BindTexture16(m_TextureObjectHandles, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
-#else
     m_TextureObjectHandles.Width = g_ObjectHandlesWidth;
     m_TextureObjectHandles.Height = g_ObjectHandlesHeight;
     m_TextureObjectHandles.Texture = Render_CreateTexture2D(
@@ -322,7 +303,6 @@ void CGameObject::GenerateObjectHandlesTexture(wstr_t text)
         pixels,
         TextureFormat::TextureFormat_Unsigned_A1_BGR5);
     assert(m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID);
-#endif
 }
 
 void CGameObject::AddText(CTextData *msg)

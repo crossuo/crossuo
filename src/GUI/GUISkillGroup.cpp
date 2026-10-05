@@ -122,12 +122,8 @@ void CGUISkillGroup::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)m_X, (float)m_Y, 0.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
-#endif
 
     m_Minimizer->Draw(checktrans);
 
@@ -136,21 +132,13 @@ void CGUISkillGroup::Draw(bool checktrans)
     if (m_Name->Focused && g_EntryPointer == &m_Name->m_Entry)
     {
         drawOrnament = false;
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.DrawPolygone(16, 0, 200, 14);
-#else
         RenderAdd_DrawUntexturedQuad(g_renderCmdList, DrawUntexturedQuadCmd{ 16, 0, 200, 14 });
-#endif
     }
     else if (m_Name->Focused)
     {
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.DrawPolygone(16, 0, m_Name->m_Entry.m_Texture.Width, 14);
-#else
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
             DrawUntexturedQuadCmd{ 16, 0, uint32_t(m_Name->m_Entry.m_Texture.Width), 14 });
-#endif
     }
 
     m_Name->Draw(checktrans);
@@ -168,30 +156,18 @@ void CGUISkillGroup::Draw(bool checktrans)
 
     if (!GetMinimized() && m_Items != nullptr)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glTranslatef(0.0f, 19.0f, 0.0f);
-#else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList, SetModelViewTranslationCmd{ { 0.0f, 19.0f, 0.0f } });
-#endif
 
         for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
         item->Draw(checktrans);
 
-#ifndef NEW_RENDERER_ENABLED
-        glTranslatef(0.0f, -19.0f, 0.0f);
-#else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList, SetModelViewTranslationCmd{ { 0.0f, -19.0f, 0.0f } });
-#endif
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
-#endif
 }
 
 bool CGUISkillGroup::Select()

@@ -166,7 +166,7 @@ static bool InitCli(int argc, char *argv[])
     return g_cli["help"].size() == 0;
 }
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 RenderCmdList *g_renderCmdList = nullptr;
 static void *s_renderCmdListData = nullptr;
 
@@ -181,11 +181,11 @@ void gfx_render_list_init()
     s_renderCmdListData = malloc(s_renderCmdListSize);
     assert(s_renderCmdListData);
 
-#if defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
     const bool immediateMode = true;
 #else
     const bool immediateMode = !g_cli["indirect-rendering"].was_set();
-#endif //#if defined(RENDERER_LEGACY)
+#endif // #if defined(USE_GL1)
     static RenderCmdList s_renderCmdList(
         s_renderCmdListData, s_renderCmdListSize, Render_DefaultState(), immediateMode);
     g_renderCmdList = &s_renderCmdList;
@@ -200,7 +200,7 @@ void gfx_render_list_destroy()
     }
     g_renderCmdList = nullptr;
 }
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
+#endif // #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 
 void fatal_error_dialog(const char *message)
 {
@@ -528,7 +528,7 @@ bool load_config()
 // Prints aggregated frame timings and renderer counters every 5 seconds to stdout.
 static void FrameStatsTick()
 {
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     static const bool enabled = getenv("XUO_FPS_LOG") != nullptr;
     if (!enabled)
     {
@@ -592,7 +592,7 @@ static void FrameStatsTick()
         maxMs = 0;
         windowTick = now;
     }
-#endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES)
+#endif
 }
 
 // test harness (XUO_AUTO_HELP): fires the client's help request once, 15s
@@ -845,9 +845,9 @@ int main(int argc, char **argv)
 
     if (!isHeadless)
     {
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
         gfx_render_list_init();
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
+#endif // #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
         if (!g_GameWindow.Create(CLIENT_TITLE, false, 640, 480))
         {
             const char *errMsg =
@@ -869,9 +869,9 @@ int main(int argc, char **argv)
     auto ret = Run();
     SDL_Quit();
     str_terminate();
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
     gfx_render_list_destroy();
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(RENDERER_LEGACY))
+#endif // #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 #if !defined(XUO_EMSC)
     return ret;
 #endif

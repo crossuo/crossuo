@@ -105,9 +105,9 @@ extern uint32_t g_TotalRecvSize;
 extern uint32_t g_Ticks;
 
 extern uint32_t g_ShaderColorTableInUse;
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
 extern uint32_t g_ShaderDrawMode;
-#endif // #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#endif // #if defined(USE_GL1)
 
 extern astr_t g_Language;
 

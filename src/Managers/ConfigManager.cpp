@@ -1507,7 +1507,6 @@ bool CConfigManager::Load(const fs_path &path)
         if (zoomed)
         {
             g_GameScreen.SetMaximized(true);
-#ifdef NEW_RENDERER_ENABLED
             // FIXME this should be deferred until there's something to draw
             // and set once at the beginning of the renderer frame, where there's
             // a command list
@@ -1522,23 +1521,17 @@ bool CConfigManager::Load(const fs_path &path)
                                                        sdlWindowHeight,
                                                        -150,
                                                        150 });
-#endif
         }
         else
         {
             g_GameWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
-#ifdef NEW_RENDERER_ENABLED
             // FIXME this should be deferred until there's something to draw
             // and set once at the beginning of the renderer frame, where there's
             // a command list
             HACKRender_SetViewParams(SetViewParamsCmd{
                 0, 0, windowWidth, windowHeight, windowWidth, windowHeight, -150, 150 });
-#endif
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.UpdateRect();
-#endif
         g_GumpManager.RedrawAll();
     }
     else

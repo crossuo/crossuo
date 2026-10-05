@@ -22,7 +22,7 @@
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
 // Gumps paint straight into the scene under a scissor (no per-gump
 // framebuffer pass/blit). XUO_GUMP_LEGACY=1 opts back into the per-gump
 // framebuffer path. Read once; the coordinate-space consequences for child
@@ -32,7 +32,7 @@ static const bool s_gumpDirectDraw = getenv("XUO_GUMP_LEGACY") == nullptr;
 
 bool CGump::DirectDrawActive()
 {
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     return s_gumpDirectDraw;
 #else
     return false;
@@ -69,9 +69,11 @@ CGump *CGump::CurrentDrawGump()
     return s_currentDrawGump;
 }
 
+#if defined(USE_GL3) || defined(USE_GLES)
 // Applies the active gump's draw origin to any scissor pushed while that gump is
 // being drawn, so gump item code can keep authoring boxes in gump-local
-// coordinates without knowing which pass is active.
+// coordinates without knowing which pass is active. (GL1 has no scissor origin
+// provider in the renderer.)
 static void GumpScissorOriginProvider(int *x, int *y)
 {
     if (s_currentDrawGump == nullptr)
@@ -83,6 +85,7 @@ static void GumpScissorOriginProvider(int *x, int *y)
     *x += origin.X;
     *y += origin.Y;
 }
+#endif // USE_GL3 || USE_GLES
 
 CGump::CGump()
     : CGump(GT_NONE, 0, 0, 0)
@@ -398,12 +401,8 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int pageAmount)
                     float x = (float)htmlGump->GetX();
                     float y = (float)htmlGump->GetY();
 
-#ifndef NEW_RENDERER_ENABLED
-                    glTranslatef(x, y, 0.0f);
-#else
                     RenderAdd_SetModelViewTranslation(
                         g_renderCmdList, SetModelViewTranslationCmd{ { x, y, 0.f } });
-#endif
 
                     CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
                     for (int j = 0; j < 5; j++)
@@ -418,12 +417,6 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int pageAmount)
                     float offsetX = (float)(htmlGump->DataOffset.X - htmlGump->CurrentOffset.X);
                     float offsetY = (float)(htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y);
 
-#ifndef NEW_RENDERER_ENABLED
-                    glTranslatef(offsetX, offsetY, 0.0f);
-                    CGump::DrawItems(subItem, currentPage, pageAmount);
-                    g_GL.PopScissor();
-                    glTranslatef(-(x + offsetX), -(y + offsetY), 0.0f);
-#else
                     RenderAdd_SetModelViewTranslation(
                         g_renderCmdList, SetModelViewTranslationCmd{ { offsetX, offsetY, 0.0f } });
                     CGump::DrawItems(subItem, currentPage, pageAmount);
@@ -431,7 +424,6 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int pageAmount)
                     RenderAdd_SetModelViewTranslation(
                         g_renderCmdList,
                         SetModelViewTranslationCmd{ { -(x + offsetX), -(y + offsetY), 0.0f } });
-#endif
 
                     break;
                 }
@@ -463,14 +455,10 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int pageAmount)
         combo->Draw();
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
     // sanitize the shared draw state so a leaked drawMode/color from any item
     // cannot tint the draws that follow this batch
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
     //RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ SDM_NO_COLOR });
-#endif
 }
 
 CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int pageAmount)
@@ -1322,15 +1310,6 @@ bool CGump::EntryPointerHere()
 
 void CGump::GenerateFrame()
 {
-#ifndef NEW_RENDERER_ENABLED
-    assert(g_GL.Drawing); // CHECK the stack if this asserts
-    if (!g_GL.Drawing)
-    {
-        FrameCreated = false;
-        WantRedraw = true;
-        return;
-    }
-#endif
     CalculateGumpState();
     PrepareTextures();
 
@@ -1340,7 +1319,7 @@ void CGump::GenerateFrame()
     // The renderer reads the same state through the origin provider, so every
     // scissor pushed from inside here is shifted without the caller knowing.
     // (the provider lives in the new GL3/GLES renderer only)
-#if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     static const bool providerInstalled = []() {
         Render_SetScissorOriginProvider(GumpScissorOriginProvider);
         return true;
@@ -1369,7 +1348,7 @@ void CGump::Draw()
         FrameCreated = false;
     }
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     // The framebuffer path bakes the gump into a texture once and blits that
     // texture on every later frame. There is no such cached artifact here, so
     // the item commands are re-emitted every frame while the (more expensive)
@@ -1435,12 +1414,6 @@ void CGump::Draw()
 
         if (m_FrameBuffer.Use())
         {
-#ifndef NEW_RENDERER_ENABLED
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glTranslatef(-(float)GumpRect.Position.X, -(float)GumpRect.Position.Y, 0.0f);
-#else
             RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ { 0.f, 0.f, 0.f, 0.f } });
             RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Color });
             RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ g_ColorBlack });
@@ -1448,45 +1421,11 @@ void CGump::Draw()
                 g_renderCmdList,
                 SetModelViewTranslationCmd{
                     { -(float)GumpRect.Position.X, -(float)GumpRect.Position.Y, 0.0f } });
-#endif
 
             GenerateFrame();
 
             if (g_DeveloperMode == DM_DEBUGGING)
             {
-#ifndef NEW_RENDERER_ENABLED
-                if (g_SelectedObject.Gump == this)
-                {
-                    glColor4f(0.0f, 1.0f, 0.0f, 0.2f);
-                }
-                else
-                {
-                    glColor4f(1.0f, 1.0f, 1.0f, 0.2f);
-                }
-
-                g_GL.DrawLine(
-                    GumpRect.Position.X + 1,
-                    GumpRect.Position.Y + 1,
-                    GumpRect.Position.X + GumpRect.Size.Width,
-                    GumpRect.Position.Y + 1);
-                g_GL.DrawLine(
-                    GumpRect.Position.X + GumpRect.Size.Width,
-                    GumpRect.Position.Y + 1,
-                    GumpRect.Position.X + GumpRect.Size.Width,
-                    GumpRect.Position.Y + GumpRect.Size.Height);
-                g_GL.DrawLine(
-                    GumpRect.Position.X + GumpRect.Size.Width,
-                    GumpRect.Position.Y + GumpRect.Size.Height,
-                    GumpRect.Position.X + 1,
-                    GumpRect.Position.Y + GumpRect.Size.Height);
-                g_GL.DrawLine(
-                    GumpRect.Position.X + 1,
-                    GumpRect.Position.Y + GumpRect.Size.Height,
-                    GumpRect.Position.X + 1,
-                    GumpRect.Position.Y + 1);
-
-                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
                 static float4 s_colorThisGump = { 0.0f, 1.0f, 0.0f, 0.2f };
                 static float4 s_colorOtherGump = { 1.0f, 1.0f, 1.0f, 0.2f };
                 if (g_SelectedObject.Gump != this)
@@ -1524,17 +1463,12 @@ void CGump::Draw()
                                  GumpRect.Position.Y + 1 });
 
                 RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
-#endif
             }
 
-#ifndef NEW_RENDERER_ENABLED
-            glTranslatef((float)GumpRect.Position.X, (float)GumpRect.Position.Y, 0.0f);
-#else
             RenderAdd_SetModelViewTranslation(
                 g_renderCmdList,
                 SetModelViewTranslationCmd{
                     { (float)GumpRect.Position.X, (float)GumpRect.Position.Y, 0.0f } });
-#endif
 
             m_FrameBuffer.Release();
         }
@@ -1551,15 +1485,6 @@ void CGump::Draw()
     posX += (float)GumpRect.Position.X;
     posY += (float)GumpRect.Position.Y;
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef(posX, posY, 0.0f);
-
-    glEnable(GL_BLEND);
-    //glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { posX, posY, 0.0f } });
 
@@ -1569,24 +1494,15 @@ void CGump::Draw()
                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
     //RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{ SDM_NO_COLOR });
-#endif
 
     m_FrameBuffer.Draw(0, 0);
 
-#ifndef NEW_RENDERER_ENABLED
-    glDisable(GL_BLEND);
-#else
     RenderAdd_DisableBlend(g_renderCmdList);
-#endif
 
     DrawLocker();
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef(-posX, -posY, 0.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { -posX, -posY, 0.0f } });
-#endif
 }
 
 CRenderObject *CGump::Select()

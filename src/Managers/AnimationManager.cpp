@@ -559,20 +559,6 @@ void CAnimationManager::Draw(
     if (isShadow)
     {
         SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Shadow");
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_DST_COLOR, GL_ZERO);
-        g_GL.DrawShadow(*spr->Texture, x, y, mirror);
-        if (m_UseBlending)
-        {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        }
-        else
-        {
-            glDisable(GL_BLEND);
-        }
-#else
         auto tex = spr->Texture;
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_SHADOW});
         RenderAdd_DrawShadow(
@@ -584,7 +570,6 @@ void CAnimationManager::Draw(
                            tex->Height,
                            mirror,
                            m_UseBlending });
-#endif
         sdmNoColor = false;
     }
     else
@@ -622,19 +607,6 @@ void CAnimationManager::Draw(
             {
                 SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw SpectralColor");
                 spectralColor = true;
-#ifndef NEW_RENDERER_ENABLED
-                glEnable(GL_BLEND);
-                if (color == SPECTRAL_COLOR_SPECIAL)
-                {
-                    glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-                    glUniform1iARB(g_ShaderDrawMode, SDM_SPECIAL_SPECTRAL);
-                }
-                else
-                {
-                    glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-                    glUniform1iARB(g_ShaderDrawMode, SDM_SPECTRAL);
-                }
-#else
                 auto uniformValue = SDM_SPECTRAL;
                 auto blendSrc = BlendFactor::BlendFactor_Zero;
                 auto blendDst = BlendFactor::BlendFactor_SrcColor;
@@ -646,27 +618,15 @@ void CAnimationManager::Draw(
 
                 RenderAdd_SetBlend(g_renderCmdList, BlendStateCmd{ blendSrc, blendDst });
                 RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
                 sdmNoColor = false;
             }
             else if (color != 0u)
             {
                 SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Colored");
-#ifndef NEW_RENDERER_ENABLED
-                if (partialHue)
-                {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-                }
-                else
-                {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-                }
-#else
 {
     SCOPED_GL_DEBUG_MARKER_LABEL(partialHue?"CAnimationManager::Draw SDM_PARTIAL_HUE":"CAnimationManager::Draw SDM_COLORED");
                 RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{partialHue ? SDM_PARTIAL_HUE : SDM_COLORED});
 }
-#endif
                 g_ColorManager.SendColorsToShader(color);
                 sdmNoColor = false;
             }
@@ -675,11 +635,7 @@ void CAnimationManager::Draw(
         if (sdmNoColor)
         {
             SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw NoColor");
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
         }
 
         if (m_Transform)
@@ -773,9 +729,6 @@ void CAnimationManager::Draw(
                     }
                 }
             }
-#ifndef NEW_RENDERER_ENABLED
-            g_GL.DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
-#else
             auto cmd = DrawCharacterSittingCmd{ spr->Texture->Texture,
                                                 x,
                                                 y,
@@ -786,15 +739,11 @@ void CAnimationManager::Draw(
                                                 h9mod,
                                                 mirror };
             RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
-#endif
         }
         else
         {
             SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Mirrored");
 
-#ifndef NEW_RENDERER_ENABLED
-            g_GL.DrawMirrored(*spr->Texture, x, y, mirror);
-#else
             auto textureCmd = DrawQuadCmd{ spr->Texture->Texture,
                                            x,
                                            y,
@@ -805,7 +754,6 @@ void CAnimationManager::Draw(
                                            g_ColorWhite,
                                            mirror };
             RenderAdd_DrawQuad(g_renderCmdList, textureCmd);
-#endif
         }
 
         if (spectralColor)
@@ -813,23 +761,15 @@ void CAnimationManager::Draw(
             if (m_UseBlending)
             {
                 SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw UseBlending");
-#ifndef NEW_RENDERER_ENABLED
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#else
                 RenderAdd_SetBlend(
                     g_renderCmdList,
                     BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                                    BlendFactor::BlendFactor_OneMinusSrcAlpha });
-#endif
             }
             else
             {
                 SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw NoBlending");
-#ifndef NEW_RENDERER_ENABLED
-                glDisable(GL_BLEND);
-#else
                 RenderAdd_DisableBlend(g_renderCmdList);
-#endif
             }
         }
     }
@@ -975,14 +915,6 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     {
         uint32_t auraColor = g_ColorManager.GetPolygoneColor(
             16, g_ConfigManager.GetColorByNotoriety(obj->Notoriety));
-#ifndef NEW_RENDERER_ENABLED
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-        glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
-
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_One,
@@ -995,16 +927,10 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                            ToColorA(auraColor) / 255.f } });
 
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glDisable(GL_BLEND);
-#else
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
-#endif
     }
 
     if (obj->Hidden())
@@ -1020,11 +946,6 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                 {
                     m_UseBlending = true;
 
-#ifndef NEW_RENDERER_ENABLED
-                    glColor4ub(0xFF, 0xFF, 0xFF, g_ConfigManager.HiddenAlpha);
-                    glEnable(GL_BLEND);
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#else
                     RenderAdd_SetColor(
                         g_renderCmdList,
                         SetColorCmd{ { 1.f, 1.f, 1.f, g_ConfigManager.HiddenAlpha / 255.f } });
@@ -1032,7 +953,6 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                         g_renderCmdList,
                         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
-#endif
 
                     Color = 0x038C;
 
@@ -1092,12 +1012,6 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     if (!m_UseBlending && drawTextureColor[3] != 0xFF)
     {
         m_UseBlending = true;
-#ifndef NEW_RENDERER_ENABLED
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4ub(
-            drawTextureColor[0], drawTextureColor[1], drawTextureColor[2], drawTextureColor[3]);
-#else
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -1108,7 +1022,6 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                            drawTextureColor[1] / 255.f,
                            drawTextureColor[2] / 255.f,
                            drawTextureColor[3] / 255.f } });
-#endif
     }
 
     bool isAttack = (serial == g_LastAttackObject);
@@ -1229,11 +1142,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                     int xOffset = mirror ? -20 : 0;
                     int yOffset = -70;
 
-#ifndef NEW_RENDERER_ENABLED
-                    g_GL.PushScissor(
-#else
                     Render_PushScissor(
-#endif
                         drawX + xOffset,
                         g_GameWindow.GetSize().Height - drawY + yOffset - 40,
                         20,
@@ -1245,11 +1154,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                         ro->RealDrawX,
                         ro->RealDrawY,
                         !selected);
-#ifndef NEW_RENDERER_ENABLED
-                    g_GL.PopScissor();
-#else
                     Render_PopScissor();
-#endif
                     break;
                 }
             }
@@ -1259,13 +1164,8 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     if (m_UseBlending)
     {
         m_UseBlending = false;
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glDisable(GL_BLEND);
-#else
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
-#endif
     }
 
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == obj->Serial)

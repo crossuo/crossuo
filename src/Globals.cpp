@@ -99,9 +99,9 @@ uint32_t g_Ticks = 0;
 
 uint32_t g_ShaderColorTableInUse = 0;
 
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
 uint32_t g_ShaderDrawMode = 0;
-#endif // #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#endif // #if defined(USE_GL1)
 
 astr_t g_Language = "enu";
 

@@ -73,22 +73,10 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     X = x - m_Sprite.Width / 2;
     Y = y - m_Sprite.Height / 2;
 
-#ifndef NEW_RENDERER_ENABLED
-    glEnable(GL_STENCIL_TEST);
-    glColorMask(0u, 0u, 0u, 1u);
-    glStencilFunc(GL_ALWAYS, 1, 1);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    g_GL.Draw(*m_Sprite.Texture, X, Y);
-    glColorMask(1u, 1u, 1u, 1u);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilFunc(GL_NOTEQUAL, 1, 1);
-    glDisable(GL_STENCIL_TEST);
-#else
     SCOPED_GL_DEBUG_MARKER_LABEL("CircleOfTransparency");
 
     // the checktrans shader evaluates the circle analytically
     // (uCircleTrans + uFragToGame), no stencil mask is needed
     RenderAdd_SetCircleTrans(
         g_renderCmdList, SetCircleTransCmd{ float(x), float(y), float(Radius) });
-#endif
 }

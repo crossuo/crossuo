@@ -19,14 +19,6 @@ void CGUIChecktrans::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     SCOPED_GL_DEBUG_MARKER();
-#ifndef NEW_RENDERER_ENABLED
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.3f, 0.3f, 0.3f, 0.3f);
-    g_GL.DrawPolygone(m_X, m_Y, Width, Height);
-    glDisable(GL_BLEND);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
     RenderAdd_SetBlend(
         g_renderCmdList,
         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -36,5 +28,4 @@ void CGUIChecktrans::Draw(bool checktrans)
         g_renderCmdList, DrawUntexturedQuadCmd{ m_X, m_Y, uint32_t(Width), uint32_t(Height) });
     RenderAdd_DisableBlend(g_renderCmdList);
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.0f, 1.0f, 1.0f, 1.0f } });
-#endif
 }

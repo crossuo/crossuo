@@ -482,9 +482,6 @@ bool CGame::Install()
 
     for (int i = 0; i < 2; i++)
     {
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
-#else
         g_TextureGumpState[i].Width = 10;
         g_TextureGumpState[i].Height = 14;
         g_TextureGumpState[i].Texture = Render_CreateTexture2D(
@@ -494,7 +491,6 @@ bool CGame::Install()
             &pdwlt[i][0],
             TextureFormat::TextureFormat_Unsigned_A1_BGR5);
         assert(g_TextureGumpState[i].Texture != RENDER_TEXTUREHANDLE_INVALID);
-#endif
     }
 
     memset(&m_WinterTile[0], 0, sizeof(m_WinterTile));
@@ -541,7 +537,7 @@ bool CGame::Install()
     Info(Client, "creating aura");
     CreateAuraTexture();
 
-#if !defined(RENDERER_LEGACY)
+#if !defined(USE_GL1)
     Info(Client, "loading shaders");
     LoadShaders();
 #endif
@@ -675,11 +671,7 @@ void CGame::Uninstall()
     vfs_shutdown(); // no-op when streaming is disabled
     g_LightBuffer.Free();
 
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.Uninstall();
-#else
     Render_Shutdown();
-#endif
 }
 
 void CGame::InitScreen(GAME_STATE state)
@@ -3730,9 +3722,6 @@ void CGame::CreateAuraTexture()
             pixel = (value << 24) | (value << 16) | (value << 8) | value;
         }
     }
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.BindTexture32(g_AuraTexture, width, height, pixels.data());
-#else
     g_AuraTexture.Width = width;
     g_AuraTexture.Height = height;
     g_AuraTexture.Texture = Render_CreateTexture2D(
@@ -3742,7 +3731,6 @@ void CGame::CreateAuraTexture()
         pixels.data(),
         TextureFormat::TextureFormat_Unsigned_RGBA8);
     assert(g_AuraTexture.Texture != RENDER_TEXTUREHANDLE_INVALID);
-#endif
 }
 
 void CGame::CreateObjectHandlesBackground()
@@ -3892,7 +3880,7 @@ void CGame::CreateObjectHandlesBackground()
     }
 }
 
-#if !defined(RENDERER_LEGACY)
+#if !defined(USE_GL1)
 void CGame::LoadShaders()
 {
     g_DeathShader.Init(g_Vert_ShaderData, g_Frag_DeathShaderData, 0);
@@ -4216,21 +4204,13 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
         if (!g_GrayedPixels && (color != 0u))
         {
             auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
 
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
         }
 
         spr->Texture->Draw(x, y);
@@ -4247,21 +4227,13 @@ void CGame::DrawGump(
         if (!g_GrayedPixels && (color != 0u))
         {
             auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
 
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
         }
         spr->Texture->Draw(x, y, width, height);
     }
@@ -4294,9 +4266,6 @@ static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int
             th[i] = pth;
         }
     }
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.DrawResizepic(th, x, y, width, height);
-#else
     int offsetTop = std::max(th[0]->Height, th[2]->Height) - th[1]->Height;
     int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
     int offsetLeft = std::max(th[0]->Width, th[5]->Width) - th[3]->Width;
@@ -4409,28 +4378,11 @@ static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int
                          drawCountX,
                          drawCountY });
     }
-#endif
 }
 
 void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, bool checktrans)
 {
     SCOPED_GL_DEBUG_MARKER();
-#ifndef NEW_RENDERER_ENABLED
-    if (checktrans)
-    {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        DrawResizepicGump_Internal(id, x, y, height, height);
-        glDisable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-        DrawResizepicGump_Internal(id, x, y, width, height);
-        glDisable(GL_STENCIL_TEST);
-    }
-    else
-    {
-        DrawResizepicGump_Internal(id, x, y, width, height);
-    }
-#else
     if (checktrans)
     {
         RenderAdd_SetBlend(
@@ -4459,7 +4411,6 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, 
     {
         DrawResizepicGump_Internal(id, x, y, width, height);
     }
-#endif
 }
 
 void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
@@ -4483,10 +4434,6 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             drawMode = SDM_LAND_COLORED;
         }
         assert(spr->Texture != nullptr);
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, drawMode);
-        g_GL.DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{drawMode});
         if (drawMode == SDM_LAND_COLORED)
         {
@@ -4531,7 +4478,6 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 #endif
         };
         RenderAdd_DrawLandTile(g_renderCmdList, cmd);
-#endif
     }
 }
 
@@ -4548,20 +4494,12 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 
         if (!g_GrayedPixels && (color != 0u))
         {
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
-#endif
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
         }
         assert(spr->Texture != nullptr);
 #if defined(USE_GL3) || defined(USE_GLES)
@@ -4613,11 +4551,7 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
             }
             g_ColorManager.SendColorsToShader(color);
         }
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
         assert(spr->Texture != nullptr);
 #if defined(USE_GL3) || defined(USE_GLES)
         // world statics: array-place so same-state runs merge across the
@@ -4670,11 +4604,7 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
             uniformValue = SDM_COLORED;
             g_ColorManager.SendColorsToShader(color);
         }
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawRotated(x, y, angle);
     }
@@ -4706,12 +4636,7 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
             }
             g_ColorManager.SendColorsToShader(color);
         }
-#ifndef NEW_RENDERER_ENABLED
-        (void)uniformValue;
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawTransparent(
             x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
@@ -4752,11 +4677,7 @@ void CGame::DrawStaticArtInContainer(
             }
             g_ColorManager.SendColorsToShader(color);
         }
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x, y);
     }
@@ -4774,11 +4695,7 @@ void CGame::DrawLight(LIGHT_DATA &light)
             uniformValue = SDM_COLORED;
             g_ColorManager.SendColorsToShader(light.Color);
         }
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(
             light.DrawX - g_RenderBounds.GameWindowPosX - (spr->Width / 2),

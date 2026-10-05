@@ -15,25 +15,6 @@ CGLTexture::~CGLTexture()
 void CGLTexture::Draw(int x, int y, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-#ifndef NEW_RENDERER_ENABLED
-    if (Texture == 0)
-        return;
-
-    if (checktrans)
-    {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        g_GL.Draw(*this, x, y);
-        glDisable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-        g_GL.Draw(*this, x, y);
-        glDisable(GL_STENCIL_TEST);
-    }
-    else
-    {
-        g_GL.Draw(*this, x, y);
-    }
-#else
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
         return;
 
@@ -65,17 +46,12 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     {
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
     }
-#endif
 }
 
 void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-#ifndef NEW_RENDERER_ENABLED
-    if (Texture == 0)
-#else
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
-#endif
     {
         return;
     }
@@ -90,22 +66,6 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
         height = Height;
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    if (checktrans)
-    {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        g_GL.DrawStretched(*this, x, y, width, height);
-        glDisable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-        g_GL.DrawStretched(*this, x, y, width, height);
-        glDisable(GL_STENCIL_TEST);
-    }
-    else
-    {
-        g_GL.DrawStretched(*this, x, y, width, height);
-    }
-#else
     auto cmd = DrawQuadCmd{ Texture,
                             x,
                             y,
@@ -135,21 +95,11 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
     {
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
     }
-#endif
 }
 
 void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
 {
     SCOPED_GL_DEBUG_MARKER_LABEL("CGLTexture::Draw_Tooltip");
-#ifndef NEW_RENDERER_ENABLED
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-    g_GL.DrawPolygone(x, y, width, height);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glDisable(GL_BLEND);
-    g_GL.Draw(*this, x + 6, y + 4);
-#else
     RenderAdd_SetBlend(
         g_renderCmdList,
         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -161,19 +111,10 @@ void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
     RenderAdd_DrawQuad(
         g_renderCmdList,
         DrawQuadCmd{ Texture, x + 6, y + 4, Width, Height });
-#endif
 }
 
 void CGLTexture::DrawRotated(int x, int y, float angle)
 {
-#ifndef NEW_RENDERER_ENABLED
-    if (Texture == 0)
-    {
-        return;
-    }
-
-    g_GL.DrawRotated(*this, x, y, angle);
-#else
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
     {
         return;
@@ -181,30 +122,10 @@ void CGLTexture::DrawRotated(int x, int y, float angle)
 
     auto cmd = DrawRotatedQuadCmd{ Texture, x, y - Height, Width, Height, angle };
     RenderAdd_DrawRotatedQuad(g_renderCmdList, cmd);
-#endif
 }
 
 void CGLTexture::DrawTransparent(int x, int y, bool stencil)
 {
-#ifndef NEW_RENDERER_ENABLED
-    if (Texture == 0)
-    {
-        return;
-    }
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(1.0f, 1.0f, 1.0f, 0.25f);
-    g_GL.Draw(*this, x, y);
-    glDisable(GL_BLEND);
-
-    if (stencil)
-    {
-        glEnable(GL_STENCIL_TEST);
-        g_GL.Draw(*this, x, y);
-        glDisable(GL_STENCIL_TEST);
-    }
-#else
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
     {
         return;
@@ -233,12 +154,10 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
     }
 
     RenderAdd_DisableBlend(g_renderCmdList);
-#endif
 }
 
 void CGLTexture::Clear()
 {
-#ifdef NEW_RENDERER_ENABLED
     // the array placement is a property of the texture object: once the
     // texture handle is gone the sprite must be re-placed (the array layer
     // still holds the previous pixels, and the stale layer index would keep
@@ -259,13 +178,6 @@ void CGLTexture::Clear()
         Render_DestroyTexture(Texture);
         Texture = RENDER_TEXTUREHANDLE_INVALID;
     }
-#else
-    if (Texture != 0)
-    {
-        glDeleteTextures(1, &Texture);
-        Texture = 0;
-    }
-#endif
 }
 
 int CGLTexture::ArtArrayPlace()

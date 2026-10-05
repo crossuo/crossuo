@@ -23,32 +23,20 @@ void CGUIGumppicHightlighted::SetShaderMode()
 {
     if (SelectedColor != 0) // was if (g_SelectedObject.Object == this) in case there is a bug
     {
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
-#endif
 
         g_ColorManager.SendColorsToShader(SelectedColor);
     }
     else if (Color != 0)
     {
         auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
     }
 }
 

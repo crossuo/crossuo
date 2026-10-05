@@ -1350,12 +1350,8 @@ void CGameScreen::DrawGameWindow(bool render)
     const int playerZPlus5 = g_RenderBounds.PlayerZ + 5;
     if (render)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(g_DrawColor, g_DrawColor, g_DrawColor, 1.0f);
-#else
         RenderAdd_SetColor(
             g_renderCmdList, SetColorCmd{ { g_DrawColor, g_DrawColor, g_DrawColor, 1.0f } });
-#endif
         if (g_ConfigManager.UseCircleTrans)
         {
             if (g_CircleOfTransparency.Create(g_ConfigManager.CircleTransRadius))
@@ -1365,14 +1361,14 @@ void CGameScreen::DrawGameWindow(bool render)
                             (g_RenderBounds.PlayerZ * 4 + g_Player->OffsetZ);
                 g_CircleOfTransparency.Draw(drawX, drawY);
             }
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
             else
             {
                 RenderAdd_SetCircleTrans(g_renderCmdList, SetCircleTransCmd{});
             }
 #endif
         }
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
         else
         {
             RenderAdd_SetCircleTrans(g_renderCmdList, SetCircleTransCmd{});
@@ -1491,11 +1487,7 @@ void CGameScreen::DrawGameWindow(bool render)
             }
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        glDisable(GL_DEPTH_TEST);
-#else
         RenderAdd_DisableDepth(g_renderCmdList);
-#endif
         //UnuseShader();
         for (int i = 0; i < m_ObjectHandlesCount; i++)
         {
@@ -1529,11 +1521,7 @@ void CGameScreen::DrawGameWindow(bool render)
 void CGameScreen::DrawGameWindowLight()
 {
     SCOPED_GL_DEBUG_MARKER_LABEL("CGameScreen::DrawGameWindowLight");
-#ifndef NEW_RENDERER_ENABLED
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
-#endif
 
     if (!UseLight)
     {
@@ -1551,14 +1539,6 @@ void CGameScreen::DrawGameWindowLight()
             newLightColor += 0.2f;
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        glClearColor(newLightColor, newLightColor, newLightColor, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-#else
         RenderAdd_SetClearColor(
             g_renderCmdList,
             SetClearColorCmd{ { newLightColor, newLightColor, newLightColor, 1.f } });
@@ -1567,7 +1547,6 @@ void CGameScreen::DrawGameWindowLight()
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });
-#endif
 
         int offsetX = 0;
         int offsetY = 0;
@@ -1581,41 +1560,22 @@ void CGameScreen::DrawGameWindowLight()
         float translateOffsetX = (float)offsetX;
         float translateOffsetY = (float)offsetY;
 
-#ifndef NEW_RENDERER_ENABLED
-        glTranslatef(translateOffsetX, translateOffsetY, 0.0f);
-#else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList,
             SetModelViewTranslationCmd{ { translateOffsetX, translateOffsetY, 0.f } });
-#endif
 
         for (int i = 0; i < m_LightCount; i++)
         {
             g_Game.DrawLight(m_Light[i]);
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        glTranslatef(-translateOffsetX, -translateOffsetY, 0.0f);
-#else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList,
             SetModelViewTranslationCmd{ { -translateOffsetX, -translateOffsetY, 0.f } });
-#endif
 
         g_LightColorizerShader.Disable();
         g_LightBuffer.Release();
 
-#ifndef NEW_RENDERER_ENABLED
-        //g_GL.RestorePort();
-
-        g_GL.ViewPortScaled(
-            g_RenderBounds.GameWindowPosX,
-            g_RenderBounds.GameWindowPosY,
-            g_RenderBounds.GameWindowWidth,
-            g_RenderBounds.GameWindowHeight);
-
-        glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-#else
         const auto windowSize = g_GameWindow.GetSize();
         auto viewParams = SetViewParamsCmd{ g_RenderBounds.GameWindowPosX,
                                             g_RenderBounds.GameWindowPosY,
@@ -1632,7 +1592,6 @@ void CGameScreen::DrawGameWindowLight()
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_Zero, BlendFactor::BlendFactor_SrcColor });
-#endif
 
         if (g_ConfigManager.GetUseScaling())
         {
@@ -1644,11 +1603,7 @@ void CGameScreen::DrawGameWindowLight()
             g_LightBuffer.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        glDisable(GL_BLEND);
-#else
         RenderAdd_DisableBlend(g_renderCmdList);
-#endif
     }
 
     g_LightColorizerShader.Disable();
@@ -1710,12 +1665,6 @@ void CGameScreen::DrawGameWindowText(bool render)
                     {
                         if (text->Transparent)
                         {
-#ifndef NEW_RENDERER_ENABLED
-                            glEnable(GL_BLEND);
-                            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-                            glColor4ub(0xFF, 0xFF, 0xFF, (uint8_t)text->Color);
-#else
                             RenderAdd_SetBlend(
                                 g_renderCmdList,
                                 BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -1723,15 +1672,10 @@ void CGameScreen::DrawGameWindowText(bool render)
                             RenderAdd_SetColor(
                                 g_renderCmdList,
                                 SetColorCmd{ { 1.f, 1.f, 1.f, (uint8_t)text->Color / 255.f } });
-#endif
 
                             text->m_TextSprite.Draw(text->RealDrawX, text->RealDrawY);
 
-#ifndef NEW_RENDERER_ENABLED
-                            glDisable(GL_BLEND);
-#else
                             RenderAdd_DisableBlend(g_renderCmdList);
-#endif
                         }
                         else
                         {
@@ -1741,11 +1685,7 @@ void CGameScreen::DrawGameWindowText(bool render)
                 }
             }
         }
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
-#endif
     }
     else
     {
@@ -1876,7 +1816,7 @@ void CGameScreen::Render()
         currentFPS++;
     }
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
     g_FontManager.ClearTextSpritePool(); // Clear previous frame's text sprites
     RenderAdd_FlushState(g_renderCmdList);
@@ -1886,7 +1826,7 @@ void CGameScreen::Render()
     // Gump-something; investigate it and remove/move it elsewhere so
     // we can get rid of glEngine
     g_GL.BeginDraw();
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)
 
     if (DrawSmoothMonitor() != 0)
     {
@@ -1919,13 +1859,6 @@ void CGameScreen::Render()
 
     m_LightCount = 0;
 
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.ViewPortScaled(
-        g_RenderBounds.GameWindowPosX,
-        g_RenderBounds.GameWindowPosY,
-        g_RenderBounds.GameWindowWidth,
-        g_RenderBounds.GameWindowHeight);
-#else
     const auto windowSize = g_GameWindow.GetSize();
     auto viewParams = SetViewParamsCmd{ g_RenderBounds.GameWindowPosX,
                                         g_RenderBounds.GameWindowPosY,
@@ -1937,7 +1870,6 @@ void CGameScreen::Render()
                                         150,
                                         float(g_GlobalScale) };
     RenderAdd_SetViewParams(g_renderCmdList, viewParams);
-#endif
 
     g_DrawColor = 1.0f;
 
@@ -1980,15 +1912,6 @@ void CGameScreen::Render()
             }
             else
             {
-    #ifndef NEW_RENDERER_ENABLED
-                glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-                g_GL.DrawPolygone(
-                    g_RenderBounds.GameWindowPosX,
-                    g_RenderBounds.GameWindowPosY,
-                    g_RenderBounds.GameWindowWidth,
-                    g_RenderBounds.GameWindowHeight);
-                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    #else
                 RenderAdd_DrawUntexturedQuad(
                     g_renderCmdList,
                     DrawUntexturedQuadCmd{ g_RenderBounds.GameWindowPosX,
@@ -1996,7 +1919,6 @@ void CGameScreen::Render()
                                         uint32_t(g_RenderBounds.GameWindowWidth),
                                         uint32_t(g_RenderBounds.GameWindowHeight),
                                         g_ColorBlack });
-    #endif
 
                 g_FontManager.DrawA(
                     3,
@@ -2023,14 +1945,10 @@ void CGameScreen::Render()
 
     {
         SCOPED_GL_DEBUG_MARKER_LABEL("Debug Text");
-    #ifndef NEW_RENDERER_ENABLED
-        g_GL.RestorePort();
-    #else
         auto viewParamsCmd = SetViewParamsCmd{
             0, 0, windowSize.Width, windowSize.Height, windowSize.Width, windowSize.Height, -150, 150
         };
         RenderAdd_SetViewParams(g_renderCmdList, viewParamsCmd);
-    #endif
         m_GameScreenGump.Draw();
 
         if (g_DeveloperMode == DM_SHOW_FPS_ONLY)
@@ -2214,7 +2132,7 @@ void CGameScreen::Render()
     }
 
     CVfsStatusHud::Draw(); // streamed-install HUD, top-right (gone when idle)
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
 #if defined(XUO_ASSISTANT)
@@ -2235,7 +2153,7 @@ void CGameScreen::Render()
     AssistantWindow_DrawOverlay();
 #endif
     g_GL.EndDraw();
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)
 }
 
 void CGameScreen::SelectObject()

@@ -25,11 +25,7 @@ CGUIHTMLButton::~CGUIHTMLButton()
 
 void CGUIHTMLButton::SetShaderMode()
 {
-#ifndef NEW_RENDERER_ENABLED
-    glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
 }
 
 void CGUIHTMLButton::Scroll(bool up, int delay)

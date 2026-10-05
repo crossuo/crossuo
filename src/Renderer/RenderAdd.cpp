@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || (defined(RENDERER_LEGACY) && defined(USE_GL1)))
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
@@ -506,4 +506,4 @@ bool RenderAdd_PopDebugMarker(RenderCmdList *cmdList)
     RenderDraw_PopDebugMarker(cmd, &cmdList->state);
     return true;
 }
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // USE_GL3 || USE_GLES || USE_GL1

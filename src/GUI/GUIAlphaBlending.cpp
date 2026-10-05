@@ -16,19 +16,6 @@ void CGUIAlphaBlending::Draw(bool)
 {
     ScopedPerfMarker(__FUNCTION__);
     SCOPED_GL_DEBUG_MARKER();
-#ifndef NEW_RENDERER_ENABLED
-    if (Enabled)
-    {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(1.0f, 1.0f, 1.0f, Alpha);
-    }
-    else
-    {
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glDisable(GL_BLEND);
-    }
-#else
     if (Enabled)
     {
         RenderAdd_SetBlend(
@@ -44,5 +31,4 @@ void CGUIAlphaBlending::Draw(bool)
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
     }
-#endif
 }

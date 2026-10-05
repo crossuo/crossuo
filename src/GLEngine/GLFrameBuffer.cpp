@@ -6,9 +6,7 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-#ifdef NEW_RENDERER_ENABLED
 frame_buffer_t CGLFrameBuffer::m_OldFrameBuffer;
-#endif
 
 CGLFrameBuffer::CGLFrameBuffer()
 {
@@ -28,44 +26,6 @@ bool CGLFrameBuffer::Init(int width, int height)
 
     if (width > 0 && height > 0)
     {
-#ifndef NEW_RENDERER_ENABLED
-        GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-        GL_CALL(glGenTextures(1, &Texture.Texture));
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, Texture.Texture));
-        Info(Renderer, "Texture: %d", Texture.Texture);
-        GL_CALL(glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RGBA8,
-            width,
-            height,
-            0,
-            GL_BGRA,
-            GL_UNSIGNED_INT_8_8_8_8,
-            nullptr));
-        GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)); // new
-        GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)); // new
-
-        GLint currentFrameBuffer = 0;
-        GL_CALL(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFrameBuffer));
-        GL_CALL(glGenFramebuffers(1, &m_FrameBuffer));
-        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBuffer));
-        GL_CALL(glFramebufferTexture2D(
-            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Texture.Texture, 0));
-
-        int glresult;
-        GL_CALL(glresult = glCheckFramebufferStatus(GL_FRAMEBUFFER));
-        if (glresult == GL_FRAMEBUFFER_COMPLETE)
-        {
-            Texture.Width = width;
-            Texture.Height = height;
-
-            result = true;
-            m_Ready = true;
-        }
-
-        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, currentFrameBuffer));
-#else
         m_FrameBuffer = Render_CreateFrameBuffer(uint32_t(width), uint32_t(height));
         result = m_FrameBuffer.texture != RENDER_TEXTUREHANDLE_INVALID &&
                  m_FrameBuffer.handle != RENDER_FRAMEBUFFER_INVALID;
@@ -75,7 +35,6 @@ bool CGLFrameBuffer::Init(int width, int height)
             m_Width = uint32_t(width);
             m_Height = uint32_t(height);
         }
-#endif
     }
 
     return result;
@@ -85,22 +44,12 @@ void CGLFrameBuffer::Free()
 {
     ScopedPerfMarker(__FUNCTION__);
 
-#ifndef NEW_RENDERER_ENABLED
-    Texture.Clear();
-
-    if (m_FrameBuffer != 0)
-    {
-        glDeleteFramebuffers(1, &m_FrameBuffer);
-        m_FrameBuffer = 0;
-    }
-#else
     if (m_FrameBuffer.handle != RENDER_FRAMEBUFFER_INVALID)
     {
         Render_DestroyFrameBuffer(m_FrameBuffer);
     }
 
     m_FrameBuffer = {};
-#endif
 
     m_OldFrameBuffer = {};
 }
@@ -109,14 +58,6 @@ void CGLFrameBuffer::Release()
 {
     ScopedPerfMarker(__FUNCTION__);
 
-#ifndef NEW_RENDERER_ENABLED
-    glBindFramebuffer(GL_FRAMEBUFFER, m_OldFrameBuffer);
-
-    glBindTexture(GL_TEXTURE_2D, Texture.Texture);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    g_GL.RestorePort();
-#else
     // TODO this isn't the place to keep track of the previous frame buffer
     RenderAdd_SetFrameBuffer(g_renderCmdList, SetFrameBufferCmd{ m_OldFrameBuffer });
 
@@ -130,27 +71,18 @@ void CGLFrameBuffer::Release()
         0, 0, window_width, window_height, window_width, window_height, -150, 150
     };
     RenderAdd_SetViewParams(g_renderCmdList, viewParams);
-#endif
 }
 
 bool CGLFrameBuffer::Ready(int width, int height)
 {
     assert(width >= 0 && height >= 0);
-#ifndef NEW_RENDERER_ENABLED
-    return (m_Ready && Texture.Width == width && Texture.Height == height);
-#else
     return (m_Ready && m_Width == uint32_t(width) && m_Height == uint32_t(height));
-#endif
 }
 
 bool CGLFrameBuffer::ReadyMinSize(int width, int height)
 {
     assert(width >= 0 && height >= 0);
-#ifndef NEW_RENDERER_ENABLED
-    return (m_Ready && Texture.Width >= width && Texture.Height >= height);
-#else
     return (m_Ready && m_Width >= uint32_t(width) && m_Height >= uint32_t(height));
-#endif
 }
 
 bool CGLFrameBuffer::Use()
@@ -160,22 +92,6 @@ bool CGLFrameBuffer::Use()
 
     if (m_Ready)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glEnable(GL_TEXTURE_2D);
-
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_OldFrameBuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBuffer);
-        glBindTexture(GL_TEXTURE_2D, Texture.Texture);
-
-        glViewport(0, 0, Texture.Width, Texture.Height);
-
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        glOrtho(0.0, Texture.Width, 0.0, Texture.Height, -150.0, 150.0);
-
-        glMatrixMode(GL_MODELVIEW);
-#else
         HACKRender_GetFrameBuffer(g_renderCmdList, &m_OldFrameBuffer);
         RenderAdd_SetFrameBuffer(g_renderCmdList, SetFrameBufferCmd{ m_FrameBuffer });
         static constexpr bool flipped_y = true;
@@ -191,7 +107,6 @@ bool CGLFrameBuffer::Use()
                               150,
                               1.f,
                               flipped_y });
-#endif
 
         result = true;
     }
@@ -205,17 +120,8 @@ void CGLFrameBuffer::Draw(int x, int y)
     SCOPED_GL_DEBUG_MARKER_LABEL("CGLFrameBuffer::Draw");
     if (m_Ready)
     {
-#ifndef NEW_RENDERER_ENABLED
-        // the framebuffer's own texture is about to be bound directly: drop the
-        // cached name AND the "unit 0 holds it" claim so the next cached draw
-        // rebinds instead of trusting a stale name
-        g_GL.OldTexture = 0;
-        g_GL.m_unit0IsBoundTexture = false;
-        g_GL.Draw(Texture, x, y);
-#else
         auto cmd =
             DrawQuadCmd{ m_FrameBuffer.texture, x, y, m_Width, m_Height, 1.f, 1.f, g_ColorInvalid };
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
-#endif
     }
 }

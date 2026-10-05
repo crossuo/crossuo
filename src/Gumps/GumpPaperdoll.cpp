@@ -776,23 +776,15 @@ void CGumpPaperdoll::Draw()
     CGump::Draw();
     if (!Minimized)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glTranslatef(g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f);
-#else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList,
             SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
-#endif
         g_FontColorizerShader.Enable();
         m_TextRenderer.Draw();
         g_FontColorizerShader.Disable();
-#ifndef NEW_RENDERER_ENABLED
-        glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
-#else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList,
             SetModelViewTranslationCmd{ { -g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f } });
-#endif
     }
 }
 

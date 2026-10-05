@@ -257,20 +257,6 @@ void CGumpMap::GenerateFrame()
                 int nextDrawX = next->GetX() + 20;
                 int nextDrawY = next->GetY() + 30;
 
-#ifndef NEW_RENDERER_ENABLED
-                if (next == m_PinOnCursor || item == m_PinOnCursor)
-                {
-                    glColor4f(0.87f, 0.87f, 0.87f, 1.0f);
-                }
-                else
-                {
-                    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-                }
-
-                g_GL.DrawLine(drawX + 2, drawY + 8, nextDrawX, nextDrawY);
-
-                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
                 static float4 s_colorGray87 = { .87f, .87f, .87f, 1.f };
                 const auto useGray = next == m_PinOnCursor || item == m_PinOnCursor;
                 RenderAdd_DrawLine(
@@ -280,7 +266,6 @@ void CGumpMap::GenerateFrame()
                                  nextDrawX,
                                  nextDrawY,
                                  useGray ? s_colorGray87 : g_ColorWhite });
-#endif
 
                 if (m_PinOnCursor == nullptr && g_SelectedObject.Serial >= ID_GM_PIN_LIST_INSERT &&
                     (g_SelectedObject.Serial - ID_GM_PIN_LIST_INSERT) == idx)

@@ -1,7 +1,7 @@
 // AGPLv3 License
 // Copyright (C) 2019 Everton Fernando Patitucci da Silva
 
-#if defined(NEW_RENDERER_ENABLED) && defined(RENDERER_LEGACY) && defined(USE_GL1)
+#if defined(USE_GL1)
 #include "Globals.h"
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
@@ -132,7 +132,7 @@ bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state)
     // tracking in sync) or the light pass clears the default framebuffer and
     // composites an empty texture over the scene (black screen).
     // NOTE: this mirrors RenderState_SetFrameBuffer, which is not compiled for
-    // RENDERER_LEGACY builds (RenderState.cpp is GL3/GLES-only); legacy runs in
+    // GL1 builds (RenderState.cpp is GL3/GLES-only); GL1 runs in
     // immediate mode, so there is no cached state to compare against.
     if (cmd.frameBuffer.handle != RENDER_FRAMEBUFFER_INVALID)
     {
@@ -1430,4 +1430,4 @@ bool Render_AppendCmdType(
     return true;
 }
 
-#endif // defined(NEW_RENDERER_ENABLED) && defined(RENDERER_LEGACY) && defined(USE_GL1)
+#endif // defined(USE_GL1)

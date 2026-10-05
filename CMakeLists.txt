@@ -104,25 +104,20 @@ if (XUO_EMSC)
   # emscripten: GLES2/WebGL1 comes from the browser, SDL2 from the emsdk
   # port (-s USE_SDL=2); nothing GL-related needs finding or linking
   compile_definitions(USE_GLES2=1)
-  compile_definitions(NEW_RENDERER_ENABLED=1)
   compile_definitions(USE_GLES)
   set(USE_GLES2 1)
   set(GL_LIBRARIES "")
-  message(STATUS "Building with new renderer (WebGL/GLES2 via emscripten)")
+  message(STATUS "Building with GLES2 renderer (WebGL via emscripten)")
 elseif (OPENGL_FOUND)
   if (RENDERER_GL1 OR RENDER_GL1) # RENDERER_GL1 for compatibility, RENDER_GL1 is original
-    # RENDER_GL1 selects the NEW_RENDERER GL1 legacy backend (the old GL2
-    # mode is no longer reachable; it was only ever picked through the
-    # broken check below, which tested RENDERER_LEGACY before setting it)
+    # RENDER_GL1 selects the GL1 legacy backend (the old GL2 mode is no
+    # longer reachable)
     compile_definitions(USE_GL1=1)
-    compile_definitions(NEW_RENDERER_ENABLED=1)
-    compile_definitions(RENDERER_LEGACY=1)
     set(USE_GL1 1)
-    message(STATUS "Building with NEW_RENDERER_ENABLED + RENDERER_LEGACY (GL1)")
+    message(STATUS "Building with GL1 legacy backend")
   else()
-    # Modern mode: GL3 with new renderer
+    # Modern mode: GL3
     compile_definitions(USE_GL3=1)
-    compile_definitions(NEW_RENDERER_ENABLED=1)
     set(USE_GL3 1)
     if (NOT XUO_EMSC)
       # GL3 desktop builds embed the X:UO Launcher inside the client; other
@@ -133,7 +128,7 @@ elseif (OPENGL_FOUND)
       set(XUO_LAUNCHER_EMBEDDED 1)
       message(STATUS "X:UO Launcher: embedded in crossuo")
     endif()
-    message(STATUS "Building with new modern renderer (GL3)")
+    message(STATUS "Building with GL3 renderer")
   endif()
   set(GL_LIBRARIES ${OPENGL_LIBRARIES})
   if (XUO_STATIC_BINARY AND NOT MSVC)
@@ -152,10 +147,9 @@ elseif (GLESv2_FOUND)
   # Passed without a value to match gfx.h's empty '#define USE_GLES' (a -1
   # value would trigger a macro redefinition warning in every gfx.h user).
   compile_definitions(USE_GLES)
-  compile_definitions(NEW_RENDERER_ENABLED=1)
   set(USE_GLES2 1)
   set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR})
-  message(STATUS "Building with new renderer (GLES2)")
+  message(STATUS "Building with GLES2 renderer")
 endif()
 
 #

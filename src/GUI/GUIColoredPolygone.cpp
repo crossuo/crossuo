@@ -39,30 +39,6 @@ void CGUIColoredPolygone::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     SCOPED_GL_DEBUG_MARKER();
-#ifndef NEW_RENDERER_ENABLED
-    glColor4ub(ColorR, ColorG, ColorB, ColorA);
-
-    if (ColorA < 0xFF)
-    {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        g_GL.DrawPolygone(m_X, m_Y, Width, Height);
-
-        glDisable(GL_BLEND);
-    }
-    else
-    {
-        g_GL.DrawPolygone(m_X, m_Y, Width, Height);
-    }
-
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-    if (Focused || (DrawDot && g_GumpSelectedElement == this))
-    {
-        g_GL.DrawPolygone(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2);
-    }
-#else
     // NOTE: the color is fully carried by the vertex color, SDM_COLORED would
     // multiply it by the stale colors[] shader palette (black on fresh state)
     // and leak drawMode 1 into every drawcall that follows until something
@@ -86,7 +62,6 @@ void CGUIColoredPolygone::Draw(bool checktrans)
             g_renderCmdList,
             DrawUntexturedQuadCmd{ m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2 });
     }
-#endif
 }
 
 void CGUIColoredPolygone::OnMouseEnter()

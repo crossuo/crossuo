@@ -6,10 +6,8 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Globals.h" // ToColor*, g_ShaderColorTableInUse, SPECTRAL_COLOR_FLAG
 
-#if defined(NEW_RENDERER_ENABLED)
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
-#endif
 
 CColorManager g_ColorManager;
 
@@ -73,13 +71,9 @@ void CColorManager::SendColorsToShader(uint16_t color)
     }
 
     assert(palette);
-#ifndef NEW_RENDERER_ENABLED
-    glUniform1fv(g_ShaderColorTableInUse, 32 * 3, palette);
-#else
     SetColorPaletteCmd cmd{};
     memcpy(cmd.palette, palette, sizeof(cmd.palette));
     RenderAdd_SetColorPalette(g_renderCmdList, cmd);
-#endif
 }
 
 uint32_t CColorManager::Color16To32(uint16_t c) const

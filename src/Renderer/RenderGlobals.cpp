@@ -2,7 +2,6 @@
 // Copyright (C) 2026 Danny Angelo Carminati Grein
 
 #include "../Renderer/RenderAPI.h"
-#if defined(NEW_RENDERER_ENABLED)
 
 #include <float.h>
 
@@ -40,4 +39,3 @@ int Render_GetCurrentDrawMode()
     return 0;
 }
 
-#endif // #if defined(NEW_RENDERER_ENABLED)

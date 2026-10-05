@@ -25,9 +25,9 @@
 #include "Walker/PathFinder.h"
 #include "Splash.h"
 
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
 #include "GLEngine/GLEngine.h"
-#endif // #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#endif // #if defined(USE_GL1)
 
 #if USE_PING
 #include "Utility/PingThread.h"
@@ -51,21 +51,15 @@ void CGameWindow::SetRenderTimerDelay(int delay)
 
 bool CGameWindow::OnCreate()
 {
-#if !defined(NEW_RENDERER_ENABLED)
-    if (!g_GL.Install())
-#else
     if (!Render_Init(m_window))
-#endif
     {
         Error(Client, "error initializing OpenGL");
         ShowMessage("Error initializing OpenGL", "Error");
         return false;
     }
 
-#if defined(NEW_RENDERER_ENABLED)
     HACKRender_SetViewParams(SetViewParamsCmd{
         0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
-#endif
 
     // Present the embedded splash image as soon as there is a GL context: it
     // covers the window while the data files are loaded and the first screen is
@@ -82,9 +76,6 @@ bool CGameWindow::OnCreate()
         return false;
     }
 
-#if !defined(NEW_RENDERER_ENABLED)
-    g_GL.UpdateRect();
-#endif
     g_GumpManager.RedrawAll();
     return true;
 }
@@ -97,14 +88,10 @@ void CGameWindow::OnDestroy()
 
 void CGameWindow::OnResize()
 {
-#if !defined(NEW_RENDERER_ENABLED)
-    g_GL.UpdateRect();
-#else
     RenderAdd_SetViewParams(
         g_renderCmdList,
         SetViewParamsCmd{
             0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
-#endif
     g_GumpManager.RedrawAll();
 }
 

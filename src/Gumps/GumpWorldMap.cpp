@@ -527,10 +527,6 @@ void CGumpWorldMap::LoadMap(int map)
 
         if (buf.size() == wantSize)
         {
-#ifndef NEW_RENDERER_ENABLED
-            g_GL.BindTexture16(
-                g_MapTexture[map], g_MapSize[map].Width, g_MapSize[map].Height, &buf[0]);
-#else
             g_MapTexture[map].Width = g_MapSize[map].Width;
             g_MapTexture[map].Height = g_MapSize[map].Height;
             g_MapTexture[map].Texture = Render_CreateTexture2D(
@@ -540,7 +536,6 @@ void CGumpWorldMap::LoadMap(int map)
                 &buf[0],
                 TextureFormat::TextureFormat_Unsigned_A1_BGR5);
             assert(g_MapTexture[map].Texture != RENDER_TEXTUREHANDLE_INVALID);
-#endif
         }
         else
         {
@@ -569,16 +564,6 @@ void CGumpWorldMap::GenerateFrame()
 
         m_Scissor->Draw(false);
 
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        g_GL.DrawPolygone(
-            m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2);
-        g_GL.DrawPolygone(
-            m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16);
-        g_GL.DrawCircle(
-            m_MapData->OffsetX + playerX + 8.0f, m_MapData->OffsetY + playerY + 31.0f, 3.0f);
-        g_GL.PopScissor();
-#else
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
@@ -593,7 +578,6 @@ void CGumpWorldMap::GenerateFrame()
             DrawCircleCmd{
                 m_MapData->OffsetX + playerX + 8, m_MapData->OffsetY + playerY + 31, 3.f });
         Render_PopScissor();
-#endif
     }
 }
 

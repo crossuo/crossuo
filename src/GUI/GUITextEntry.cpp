@@ -154,17 +154,12 @@ void CGUITextEntry::Draw(bool checktrans)
     {
         if (UseGlobalColor)
         {
-#ifndef NEW_RENDERER_ENABLED
-            glColor4ub(
-                GlobalColorFocusedR, GlobalColorFocusedG, GlobalColorFocusedB, GlobalColorFocusedA);
-#else
             RenderAdd_SetColor(
                 g_renderCmdList,
                 SetColorCmd{ { GlobalColorFocusedR / 255.f,
                                GlobalColorFocusedG / 255.f,
                                GlobalColorFocusedB / 255.f,
                                GlobalColorFocusedA / 255.f } });
-#endif
         }
         else
         {
@@ -181,20 +176,12 @@ void CGUITextEntry::Draw(bool checktrans)
     {
         if (UseGlobalColor)
         {
-#ifndef NEW_RENDERER_ENABLED
-            glColor4ub(
-                GlobalColorSelectedR,
-                GlobalColorSelectedG,
-                GlobalColorSelectedB,
-                GlobalColorSelectedA);
-#else
             RenderAdd_SetColor(
                 g_renderCmdList,
                 SetColorCmd{ { GlobalColorSelectedR / 255.f,
                                GlobalColorSelectedG / 255.f,
                                GlobalColorSelectedB / 255.f,
                                GlobalColorSelectedA / 255.f } });
-#endif
         }
         else
         {
@@ -203,16 +190,12 @@ void CGUITextEntry::Draw(bool checktrans)
     }
     else if (UseGlobalColor)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glColor4ub(GlobalColorR, GlobalColorG, GlobalColorB, GlobalColorA);
-#else
         RenderAdd_SetColor(
             g_renderCmdList,
             SetColorCmd{ { GlobalColorR / 255.f,
                            GlobalColorG / 255.f,
                            GlobalColorB / 255.f,
                            GlobalColorA / 255.f } });
-#endif
     }
 
     if ((color != 0u) && Unicode)
@@ -222,15 +205,10 @@ void CGUITextEntry::Draw(bool checktrans)
 
     if (checktrans)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#else
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                            BlendFactor::BlendFactor_OneMinusSrcAlpha });
-#endif
 
         if (Unicode)
         {
@@ -241,14 +219,9 @@ void CGUITextEntry::Draw(bool checktrans)
             m_Entry.DrawA(Font, color, m_X, y, Align, TextFlags);
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        glDisable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-#else
         RenderAdd_DisableBlend(g_renderCmdList);
         RenderAdd_EnableStencil(g_renderCmdList);
         RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{});
-#endif
 
         if (Unicode)
         {
@@ -259,11 +232,7 @@ void CGUITextEntry::Draw(bool checktrans)
             m_Entry.DrawA(Font, color, m_X, y, Align, TextFlags);
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        glDisable(GL_STENCIL_TEST);
-#else
         RenderAdd_DisableStencil(g_renderCmdList);
-#endif
     }
     else
     {
@@ -279,11 +248,7 @@ void CGUITextEntry::Draw(bool checktrans)
 
     if (UseGlobalColor)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, 1.f } });
-#endif
     }
 }
 

@@ -63,21 +63,13 @@ void CGUIExternalTexture::SetShaderMode()
     if (Color != 0)
     {
         auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
     }
 }
 
@@ -89,29 +81,6 @@ void CGUIExternalTexture::Draw(bool checktrans)
         SetShaderMode();
         if ((DrawWidth != 0) || (DrawHeight != 0))
         {
-#ifndef NEW_RENDERER_ENABLED
-            CGLTexture tex;
-            tex.Texture = m_Sprite->Texture->Texture;
-            if (DrawWidth != 0)
-            {
-                tex.Width = DrawWidth;
-            }
-            else
-            {
-                tex.Width = m_Sprite->Width;
-            }
-
-            if (DrawHeight != 0)
-            {
-                tex.Height = DrawHeight;
-            }
-            else
-            {
-                tex.Height = m_Sprite->Height;
-            }
-            g_GL.Draw(tex, m_X, m_Y);
-            tex.Texture = 0;
-#else
             auto cmd =
                 DrawQuadCmd{ m_Sprite->Texture->Texture,
                              m_X,
@@ -119,7 +88,6 @@ void CGUIExternalTexture::Draw(bool checktrans)
                              DrawWidth ? uint32_t(DrawWidth) : uint32_t(m_Sprite->Width),
                              DrawHeight ? uint32_t(DrawHeight) : uint32_t(m_Sprite->Height) };
             RenderAdd_DrawQuad(g_renderCmdList, cmd);
-#endif
         }
         else
         {

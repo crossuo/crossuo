@@ -1,7 +1,6 @@
 // AGPLv3 License
 // Copyright (C) 2026 Danny Angelo Carminati Grein
 
-#if defined(NEW_RENDERER_ENABLED)
 #include "RenderTypes.h"
 #include <assert.h>
 #include <string.h>
@@ -39,4 +38,3 @@ bool float3::operator!=(const float3 &other) const
 {
     return !(*this == other);
 }
-#endif // #if defined(NEW_RENDERER_ENABLED)

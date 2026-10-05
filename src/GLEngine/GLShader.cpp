@@ -19,7 +19,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         return false;
     }
     m_Type = type;
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
     auto validate_shader_compile = [](GLuint shader) {
         auto val = GL_FALSE;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &val);
@@ -149,7 +149,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
 
 CGLShader::~CGLShader()
 {
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
     if (m_Shader != 0)
     {
         glDeleteObjectARB(m_Shader);
@@ -176,7 +176,7 @@ CGLShader::~CGLShader()
 void CGLShader::Enable()
 {
     bool result = false;
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
     // TODO useless?
     // UnuseShader();
     if (m_Shader != 0)
@@ -194,7 +194,7 @@ void CGLShader::Enable()
 
     if (result && m_Type == 1)
     {
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
         //assert(m_ColorTablePointer);
         g_ShaderColorTableInUse = m_ColorTablePointer;
         g_ShaderDrawMode = m_DrawModePointer;
@@ -207,7 +207,7 @@ void CGLShader::Enable()
 
 void CGLShader::Disable()
 {
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
     glUseProgramObjectARB(0);
     g_ShaderColorTableInUse = 0;
     g_ShaderDrawMode = 0;
@@ -219,7 +219,7 @@ void CGLShader::Disable()
 
 void CGLShader::Pause()
 {
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
     glUseProgramObjectARB(0);
     g_ShaderColorTableInUse = 0;
     g_ShaderDrawMode = 0;
@@ -231,7 +231,7 @@ void CGLShader::Pause()
 
 void CGLShader::Resume()
 {
-#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
+#if defined(USE_GL1)
     glUseProgramObjectARB(m_Shader);
 #else
     // if (m_ShaderPipeline.program != RENDER_SHADERPROGRAM_INVALID)

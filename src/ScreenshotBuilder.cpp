@@ -22,16 +22,6 @@ void CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
     m_Width = width;
     m_Height = height;
 
-#ifndef NEW_RENDERER_ENABLED
-    glReadPixels(
-        x,
-        g_GameWindow.GetSize().Height - y - height,
-        width,
-        height,
-        GL_RGBA,
-        GL_UNSIGNED_INT_8_8_8_8_REV,
-        &m_Pixels[0]);
-#else
     m_WaitingForGPUData = true;
     const auto windowSize = g_GameWindow.GetSize();
     auto window_width = uint32_t(windowSize.Width);
@@ -46,7 +36,6 @@ void CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
                                  window_height,
                                  &m_Pixels[0],
                                  m_Pixels.size() * sizeof(decltype(m_Pixels)::value_type) });
-#endif
 }
 
 CScreenshotBuilder::CScreenshotBuilder()
@@ -143,18 +132,13 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
 
     GetScenePixels(x, y, width, height);
 
-#ifndef NEW_RENDERER_ENABLED
-    WritePixelsToDisk();
-#endif
 }
 
 void CScreenshotBuilder::GPUDataReady()
 {
-#ifdef NEW_RENDERER_ENABLED
     if (m_WaitingForGPUData)
     {
         WritePixelsToDisk();
     }
-#endif
     m_WaitingForGPUData = false;
 }

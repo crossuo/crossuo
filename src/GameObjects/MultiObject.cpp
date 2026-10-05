@@ -57,27 +57,16 @@ void CMultiObject::Draw(int x, int y)
 
         if ((State & CHMOF_TRANSPARENT) != 0)
         {
-#ifndef NEW_RENDERER_ENABLED
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glColor4f(1.0f, 1.0f, 1.0f, 0.75f);
-#else
             RenderAdd_SetBlend(
                 g_renderCmdList,
                 BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                                BlendFactor::BlendFactor_OneMinusSrcAlpha });
             RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, 0.75f } });
-#endif
 
             g_Game.DrawStaticArt(Graphic, color, x, y);
 
-#ifndef NEW_RENDERER_ENABLED
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-            glDisable(GL_BLEND);
-#else
             RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
             RenderAdd_DisableBlend(g_renderCmdList);
-#endif
 
             g_RenderedObjectsCountInGameWindow++;
 
@@ -89,23 +78,14 @@ void CMultiObject::Draw(int x, int y)
 
     if (OnTarget)
     {
-#ifndef NEW_RENDERER_ENABLED
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-#else
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcColor,
                            BlendFactor::BlendFactor_OneMinusSrcColor });
-#endif
 
         g_Game.DrawStaticArt(Graphic, color, x, y);
 
-#ifndef NEW_RENDERER_ENABLED
-        glDisable(GL_BLEND);
-#else
         RenderAdd_DisableBlend(g_renderCmdList);
-#endif
     }
     else
     {

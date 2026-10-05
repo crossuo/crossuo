@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #pragma once
-#if defined(NEW_RENDERER_ENABLED)
 #ifndef RENDERER_INTERNAL
 #error "Do not include this directly. Include RenderAPI.h"
 #endif
@@ -214,4 +213,3 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
 // Debug functions for command dumping
 void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state);
 void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state);
-#endif // #if defined(NEW_RENDERER_ENABLED)

@@ -202,11 +202,7 @@ void CGUIComboBox::Draw(bool checktrans)
             g_Game.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6, false);
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
-#else
         CGUIScissor::PushGumpLocal(currentX, currentY, m_WorkWidth, m_WorkHeight);
-#endif
 
         CBaseGUI *start = SkipToStart();
         int count = 0;
@@ -217,11 +213,6 @@ void CGUIComboBox::Draw(bool checktrans)
             {
                 if (g_SelectedObject.Object == item)
                 {
-#ifndef NEW_RENDERER_ENABLED
-                    glColor4f(0.7f, 0.7f, 0.7f, 1.0f);
-                    g_GL.DrawPolygone(currentX, currentY, m_WorkWidth, 14);
-                    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
                     RenderAdd_DrawUntexturedQuad(
                         g_renderCmdList,
                         DrawUntexturedQuadCmd{ currentX,
@@ -229,7 +220,6 @@ void CGUIComboBox::Draw(bool checktrans)
                                                uint32_t(m_WorkWidth),
                                                14,
                                                { 0.7f, 0.7f, 0.7f, 1.f } });
-#endif
                 }
 
                 CGUIText *text = (CGUIText *)item;
@@ -246,11 +236,7 @@ void CGUIComboBox::Draw(bool checktrans)
             }
         }
 
-#ifndef NEW_RENDERER_ENABLED
-        g_GL.PopScissor();
-#else
         Render_PopScissor();
-#endif
     }
     else
     {
@@ -284,15 +270,9 @@ void CGUIComboBox::Draw(bool checktrans)
 
             if (selected != nullptr)
             {
-#ifndef NEW_RENDERER_ENABLED
-                g_GL.PushScissor(m_X + 6, m_Y, m_MinimizedArrowX, 20);
-                selected->m_Texture.Draw(m_X + 6, m_Y + 6 + TextOffsetY);
-                g_GL.PopScissor();
-#else
                 CGUIScissor::PushGumpLocal(m_X + 6, m_Y, m_MinimizedArrowX, 20);
                 selected->m_Texture.Draw(m_X + 6, m_Y + 6 + TextOffsetY);
                 Render_PopScissor();
-#endif
             }
 
             g_Game.DrawGump(0x0985, 0, m_X + m_MinimizedArrowX, m_Y + 6);
@@ -303,15 +283,9 @@ void CGUIComboBox::Draw(bool checktrans)
 
             if (selected != nullptr)
             {
-#ifndef NEW_RENDERER_ENABLED
-                g_GL.PushScissor(m_X + 3, m_Y, Width - 6, 20);
-                selected->m_Texture.Draw(m_X + 3, m_Y + 4 + TextOffsetY);
-                g_GL.PopScissor();
-#else
                 CGUIScissor::PushGumpLocal(m_X + 3, m_Y, Width - 6, 20);
                 selected->m_Texture.Draw(m_X + 3, m_Y + 4 + TextOffsetY);
                 Render_PopScissor();
-#endif
             }
 
             g_Game.DrawGump(0x00FC, 0, m_X + m_MinimizedArrowX, m_Y - 1);

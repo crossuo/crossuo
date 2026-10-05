@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
 
 #include "RenderTypes.h"
 #include "RenderCommands.h"
@@ -37,4 +37,4 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
 void RenderBatch_Flush(RenderState *state);
 void RenderBatch_FlushAll(RenderState *state);
 
-#endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES)
+#endif

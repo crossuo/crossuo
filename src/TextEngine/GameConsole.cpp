@@ -291,14 +291,14 @@ void SendConsoleText(wstr_t text, uint16_t defaultColor)
                 {
                     g_GameWindow.Destroy();
                 }
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
                 else if (command == "dumpframe")
                 {
                     RenderDebug_EnableDump();
                     g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, "Render dump enabled for next frame");
                     return;
                 }
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)
                 else
                 {
                     astr_t str = "Unknown command: %s" + command;

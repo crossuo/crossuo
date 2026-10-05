@@ -26,7 +26,7 @@ void CBaseScreen::Init()
 
 void CBaseScreen::Render()
 {
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
     g_FontManager.ClearTextSpritePool(); // Clear previous frame's text sprites
     RenderAdd_FlushState(g_renderCmdList);
@@ -36,27 +36,23 @@ void CBaseScreen::Render()
     // Gump-something; investigate it and remove/move it elsewhere so
     // we can get rid of glEngine
     g_GL.BeginDraw();
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)
 
     if (DrawSmoothMonitor() != 0)
     {
         return;
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
     // FlushState command above already sets color to white with alpha 100%
-#endif
     m_Gump.Draw();
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     DebugScreen();
 #endif
     InitToolTip();
     DrawSmoothMonitorEffect();
     CVfsStatusHud::Draw(); // streamed-install HUD, top-right (gone when idle)
     g_MouseManager.Draw(CursorGraphic);
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
     // swap (which submits the leftover batched text/cursor quads) must run
@@ -66,7 +62,7 @@ void CBaseScreen::Render()
     g_ScreenshotBuilder.GPUDataReady();
 #else
     g_GL.EndDraw();
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)
 }
 
 void CBaseScreen::SelectObject()
@@ -99,12 +95,8 @@ int CBaseScreen::DrawSmoothMonitor()
     if ((g_ScreenEffectManager.Process() != 0) && (SmoothScreenAction != 0u))
     {
         ProcessSmoothAction();
-#ifdef NEW_RENDERER_ENABLED
         Render_SwapBuffers();
         g_ScreenshotBuilder.GPUDataReady();
-#else
-        g_GL.EndDraw();
-#endif
         return 1;
     }
     return 0;

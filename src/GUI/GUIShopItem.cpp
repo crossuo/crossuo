@@ -148,21 +148,13 @@ void CGUIShopItem::SetShaderMode()
     if (Color != 0)
     {
         auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
     }
 }
 
@@ -172,14 +164,9 @@ void CGUIShopItem::Draw(bool checktrans)
 
     CGLTexture *th = nullptr;
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)m_X, (float)m_Y, 0.0f);
-    glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.f } });
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
 
     m_NameText.Draw(52, m_TextOffset);
     m_CountText.Draw(196 - m_CountText.Width, (m_MaxOffset / 2) - (m_CountText.Height / 2));
@@ -205,30 +192,6 @@ void CGUIShopItem::Draw(bool checktrans)
             const auto *originalTexture = (CSprite *)anim->Frames[0].UserData;
             if (originalTexture && originalTexture->Texture != nullptr)
             {
-#ifndef NEW_RENDERER_ENABLED
-                CGLTexture tex;
-                tex.Texture = originalTexture->Texture->Texture;
-                if (originalTexture->Width > 35)
-                {
-                    tex.Width = 35;
-                }
-                else
-                {
-                    tex.Width = originalTexture->Width;
-                }
-
-                if (originalTexture->Height > 35)
-                {
-                    tex.Height = 35;
-                }
-                else
-                {
-                    tex.Height = originalTexture->Height;
-                }
-
-                g_GL.Draw(tex, 2, m_ImageOffset);
-                tex.Texture = 0;
-#else
                 auto quadCmd = DrawQuadCmd{
                     originalTexture->Texture->Texture,
                     2,
@@ -238,17 +201,12 @@ void CGUIShopItem::Draw(bool checktrans)
                 };
 
                 RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
-#endif
                 //originalTexture.Draw(2, m_ImageOffset, checktrans);
             }
         }
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
     auto spr = g_Game.ExecuteGump(0x0039);
     if (spr != nullptr && spr->Texture != nullptr)
     {
@@ -266,12 +224,8 @@ void CGUIShopItem::Draw(bool checktrans)
     {
         spr->Texture->Draw(166, m_MaxOffset, checktrans);
     }
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
-#endif
 }
 
 bool CGUIShopItem::Select()

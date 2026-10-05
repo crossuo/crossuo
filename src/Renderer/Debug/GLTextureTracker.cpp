@@ -3,7 +3,7 @@
 
 #include "GLTextureTracker.h"
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1))
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 
 #include "Backend.h"
 #include <external/gfx/gfx.h>
@@ -130,6 +130,7 @@ static NameRecord *record_for(unsigned int name)
     return nullptr;
 }
 
+#if defined(USE_GL3W) // only the gl3w hooks below use these
 static NameRecord &record_slot(unsigned int name)
 {
     if (auto *found = record_for(name))
@@ -155,16 +156,19 @@ static void push_event(EventKind kind, unsigned int name)
     ev.frame = s_frame;
     hist.push_back(ev);
 }
+#endif // USE_GL3W
 
 // ---------------------------------------------------------------------------
 // entry point wrappers (gl3w only: GLEW's are real symbols, not pointers)
 // ---------------------------------------------------------------------------
 
+#if defined(USE_GL3W)
 typedef void (*PFN_TRACKED_GEN)(GLsizei, GLuint *);
 typedef void (*PFN_TRACKED_DELETE)(GLsizei, const GLuint *);
 
 static PFN_TRACKED_GEN s_real_gen = nullptr;
 static PFN_TRACKED_DELETE s_real_delete = nullptr;
+#endif // USE_GL3W
 
 #ifndef APIENTRY
 #define APIENTRY
@@ -472,4 +476,4 @@ void GLTextureTracker_Dump()
         s_bad_binds);
 }
 
-#endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES || USE_GL1)
+#endif

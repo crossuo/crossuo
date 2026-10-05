@@ -208,12 +208,7 @@ void CTextRenderer::Draw()
                 }
             }
 
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, uniformValue);
-
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
 
             if (text.Transparent)
             {
@@ -224,28 +219,17 @@ void CTextRenderer::Draw()
                     alpha = 0x7F;
                 }
 
-#ifndef NEW_RENDERER_ENABLED
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glColor4ub(0xFF, 0xFF, 0xFF, alpha);
-#else
                 RenderAdd_SetBlend(
                     g_renderCmdList,
                     BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                                    BlendFactor::BlendFactor_OneMinusSrcAlpha });
                 RenderAdd_SetColor(
                     g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha / 255.f } });
-#endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
-#ifndef NEW_RENDERER_ENABLED
-                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-                glDisable(GL_BLEND);
-#else
                 RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                 RenderAdd_DisableBlend(g_renderCmdList);
-#endif
             }
             else
             {
@@ -384,11 +368,7 @@ void CTextRenderer::WorldDraw()
                     uniformValue = SDM_PARTIAL_HUE;
                 }
             }
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, uniformValue);
-#else
             RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
-#endif
 
             if (text.Transparent)
             {
@@ -399,28 +379,17 @@ void CTextRenderer::WorldDraw()
                     alpha = 0x7F;
                 }
 
-#ifndef NEW_RENDERER_ENABLED
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glColor4ub(0xFF, 0xFF, 0xFF, alpha);
-#else
                 RenderAdd_SetBlend(
                     g_renderCmdList,
                     BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                                    BlendFactor::BlendFactor_OneMinusSrcAlpha });
                 RenderAdd_SetColor(
                     g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha / 255.f } });
-#endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
-#ifndef NEW_RENDERER_ENABLED
-                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-                glDisable(GL_BLEND);
-#else
                 RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                 RenderAdd_DisableBlend(g_renderCmdList);
-#endif
             }
             else
             {

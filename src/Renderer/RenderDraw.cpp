@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
-#if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
 #include "../Renderer/RenderAPI.h"
 #include <xuocore/enumlist.h>
 #define RENDERER_INTERNAL
@@ -794,7 +794,7 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
 bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state)
 {
     (void)state;
-#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
+#if defined(USE_GL3)
     // markers are recorded for the frame dumps but the GL debug group calls
     // (3.3k/frame) only run when explicitly requested - they are pure overhead
     // otherwise
@@ -812,7 +812,7 @@ bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *stat
 bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
 {
     (void)state;
-#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
+#if defined(USE_GL3)
     static const bool markers = getenv("XUO_RENDER_MARKERS") != nullptr;
     if (markers)
     {
@@ -891,4 +891,4 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
 
     return true;
 }
-#endif // #if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)

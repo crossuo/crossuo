@@ -203,11 +203,7 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-#ifndef NEW_RENDERER_ENABLED
-    glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
     for (int i = 0; i < 2; i++)
     {
         auto spr = g_Game.ExecuteGump(Graphic + (int)i);

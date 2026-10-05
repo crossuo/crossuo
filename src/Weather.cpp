@@ -141,21 +141,13 @@ void CWeather::Draw(int x, int y)
         case WT_RAIN:
         case WT_FIERCE_STORM:
         {
-#ifndef NEW_RENDERER_ENABLED
-            glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-#else
             RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorBlue });
-#endif
             break;
         }
         case WT_SNOW:
         case WT_STORM:
         {
-#ifndef NEW_RENDERER_ENABLED
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
             RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
-#endif
             break;
         }
         default:
@@ -281,13 +273,9 @@ void CWeather::Draw(int x, int y)
                     oldY = (int)(effect->Y + maxOffsetXY);
                 }
 
-#ifndef NEW_RENDERER_ENABLED
-                g_GL.DrawLine(x + oldX, y + oldY, x + (int)effect->X, y + (int)effect->Y);
-#else
                 RenderAdd_DrawLine(
                     g_renderCmdList,
                     DrawLineCmd{ x + oldX, y + oldY, x + (int)effect->X, y + (int)effect->Y });
-#endif
 
                 break;
             }
@@ -297,13 +285,9 @@ void CWeather::Draw(int x, int y)
                 effect->X += (effect->SpeedX * speedOffset);
                 effect->Y += (effect->SpeedY * speedOffset);
 
-#ifndef NEW_RENDERER_ENABLED
-                g_GL.DrawPolygone(x + (int)effect->X, y + (int)effect->Y, 2, 2);
-#else
                 RenderAdd_DrawUntexturedQuad(
                     g_renderCmdList,
                     DrawUntexturedQuadCmd{ x + (int)effect->X, y + (int)effect->Y, 2, 2 });
-#endif
 
                 break;
             }
@@ -314,11 +298,7 @@ void CWeather::Draw(int x, int y)
         ++effect;
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
-#endif
     LastTick = g_Ticks;
 }
 

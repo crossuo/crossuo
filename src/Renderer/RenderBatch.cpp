@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Danny Angelo Carminati Grein
 
 #include "RenderBatch.h"
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
 
 #include "RenderAPI.h"
 #define RENDERER_INTERNAL
@@ -550,4 +550,4 @@ void RenderBatch_Flush(RenderState *state)
     s_kind = BatchKind::None;
 }
 
-#endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES)
+#endif

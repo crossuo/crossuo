@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #include "../Renderer/RenderAPI.h"
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "../Renderer/RenderBatch.h"
@@ -1368,4 +1368,4 @@ void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state)
     cmdList->state = state;
 }
 
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)

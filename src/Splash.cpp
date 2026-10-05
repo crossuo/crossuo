@@ -29,13 +29,8 @@
 
 #include <SDL_events.h>
 
-// The splash draws through the new renderer's command list, which is the only
-// API that exposes texture creation and quad drawing. The original GL2 path
-// does not have it, so the splash is compiled out there (see Splash.h: the
-// entry points are still defined, they just do nothing).
-#if !defined(NEW_RENDERER_ENABLED)
-#define XUO_SPLASH_DISABLED 1
-#endif
+// The splash draws through the renderer's command list, which is the only
+// API that exposes texture creation and quad drawing.
 
 // The splash image is embedded at build time and decoded straight from memory.
 // Everything here runs before the client's data files are loaded, so it must
@@ -132,9 +127,6 @@ bool Splash_Init()
         return true;
     }
 
-#if defined(XUO_SPLASH_DISABLED)
-    return false;
-#else
     if (!DecodeCoverPng())
     {
         return false;
@@ -164,7 +156,6 @@ bool Splash_Init()
 
     s_uploaded = true;
     return true;
-#endif // #if defined(XUO_SPLASH_DISABLED)
 }
 
 bool Splash_IsReady()
@@ -184,21 +175,16 @@ void Splash_SetProgress(float done01)
 
 void Splash_Shutdown()
 {
-#if !defined(XUO_SPLASH_DISABLED)
     if (s_texture != RENDER_TEXTUREHANDLE_INVALID)
     {
         Render_DestroyTexture(s_texture);
         s_texture = RENDER_TEXTUREHANDLE_INVALID;
     }
     s_uploaded = false;
-#endif // #if !defined(XUO_SPLASH_DISABLED)
 }
 
 void Splash_Render()
 {
-#if defined(XUO_SPLASH_DISABLED)
-    return;
-#else
     if (!s_uploaded || s_texture == RENDER_TEXTUREHANDLE_INVALID)
     {
         return;
@@ -251,9 +237,10 @@ void Splash_Render()
                 g_renderCmdList, DrawQuadCmd{ s_barFill, barX, barY, (uint32_t)fill, (uint32_t)barHeight });
         }
     }
-    RenderDraw_Execute(g_renderCmdList);
+#if defined(USE_GL3) || defined(USE_GLES)
+    RenderDraw_Execute(g_renderCmdList); // no-op in immediate mode (GL1)
+#endif
     Render_SwapBuffers();
-#endif // #if defined(XUO_SPLASH_DISABLED)
 }
 
 void Splash_RenderAndPumpEvents()

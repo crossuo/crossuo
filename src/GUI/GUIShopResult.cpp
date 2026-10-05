@@ -65,24 +65,15 @@ void CGUIShopResult::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)m_X, (float)m_Y, 0.0f);
-    glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
 
     m_NameText.Draw(34, 0, checktrans);
     m_MinMaxButtons->Draw(checktrans);
 
-#ifndef NEW_RENDERER_ENABLED
-    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
-#else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
-#endif
 }
 
 bool CGUIShopResult::Select()

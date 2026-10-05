@@ -21,7 +21,7 @@
 
 #pragma once
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1))
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 
 // installs the wrappers; call once after the GL loader is initialized
 void GLTextureTracker_Install();
@@ -36,4 +36,4 @@ void GLTextureTracker_OnFrame();
 // dumps a one-line census (no per-name detail); used for manual probing
 void GLTextureTracker_Dump();
 
-#endif // NEW_RENDERER_ENABLED && (USE_GL3 || USE_GLES || USE_GL1)
+#endif

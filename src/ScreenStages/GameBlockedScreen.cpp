@@ -29,7 +29,7 @@ void CGameBlockedScreen::Init()
 
 void CGameBlockedScreen::Render()
 {
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     // this screen renders MID-frame (inside CGameScreen::Render), so the pool
     // clear must come first: it submits the still-pending batch (console/gump
     // text from earlier in this frame) under the state it was recorded with,
@@ -39,15 +39,15 @@ void CGameBlockedScreen::Render()
     g_FontManager.ClearTextSpritePool();
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
     RenderAdd_FlushState(g_renderCmdList);
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)
     g_GumpManager.Draw(true);
     InitToolTip();
     g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
     g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(USE_GL3) || defined(USE_GLES)
 }
 
 void CGameBlockedScreen::SelectObject()

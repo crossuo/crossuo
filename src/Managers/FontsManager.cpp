@@ -52,7 +52,7 @@ void CFontsManager::ClearTextSpritePool()
     // frame), and a mid-frame clear with a non-empty batch made the next flush
     // bind deleted names (GL_INVALID_OPERATION, "non-gen name"). Same ordering
     // rule as Render_SwapBuffers, enforced where it cannot be bypassed.
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(USE_GL3) || defined(USE_GLES)
     if (g_renderCmdList != nullptr && g_renderCmdList->immediateMode)
     {
         RenderBatch_Flush(&g_renderCmdList->state);

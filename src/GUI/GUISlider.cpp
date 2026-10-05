@@ -335,11 +335,7 @@ void CGUISlider::Draw(bool checktrans)
 	UpdateText();
 	CalculateOffset();*/
 
-#ifndef NEW_RENDERER_ENABLED
-    glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-#endif
     if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)
