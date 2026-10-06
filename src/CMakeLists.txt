@@ -31,20 +31,16 @@ set(gameobjects_src
   GameObjects/ObjectOnCursor.cpp
 )
 
-set(glengine_src
-  GLEngine/GLEngine.cpp
-  GLEngine/GLFrameBuffer.cpp
-  GLEngine/GLShader.cpp
-  GLEngine/GLTextureCircleOfTransparency.cpp
-  GLEngine/GLTexture.cpp
-)
-
 set(renderer_src
   Renderer/RenderAdd.cpp
   Renderer/RenderBatch.cpp
+  Renderer/RenderCircleOfTransparency.cpp
   Renderer/RenderDraw.cpp
   Renderer/RenderDraw_GL1.cpp
   Renderer/RenderDebug.cpp
+  Renderer/RenderFrameBuffer.cpp
+  Renderer/RenderShader.cpp
+  Renderer/RenderTexture.cpp
   Renderer/Debug/GLTextureTracker.cpp
   Renderer/RenderGlobals.cpp
   Renderer/RenderState.cpp
@@ -290,7 +286,7 @@ if (XUO_ASSISTANT_ENABLED)
   add_subdirectory(Assistant)
 endif()
 
-set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${glengine_src} ${renderer_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
+set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${renderer_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
 file(GLOB XUO_HDRS ${XUO_DIR}/**/*.h)
 
 set(XUO_FILES ${XUO_SRCS} ${XUO_HDRS})

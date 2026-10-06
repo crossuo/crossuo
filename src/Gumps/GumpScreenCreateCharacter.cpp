@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpScreenCreateCharacter.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Config.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"

@@ -72,7 +72,7 @@ void CGUIScrollBackground::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    CGLTexture *th[4] = { nullptr };
+    CRenderTexture *th[4] = { nullptr };
 
     for (int i = 0; i < 4; i++)
     {

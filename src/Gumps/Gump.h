@@ -6,6 +6,7 @@
 #include "../Platform.h"
 #include "../GUI/GUI.h"
 #include "../RenderObject.h"
+#include "../Renderer/RenderFrameBuffer.h" // m_FrameBuffer value member
 
 class CBaseGUI;
 
@@ -63,7 +64,7 @@ public:
 
 protected:
     CGUIButton m_Locker{ 0, 0, 0, 0, 0, 0 };
-    CGLFrameBuffer m_FrameBuffer;
+    CRenderFrameBuffer m_FrameBuffer;
     virtual void CalculateGumpState();
     virtual void RecalculateSize();
 

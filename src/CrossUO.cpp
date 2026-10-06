@@ -170,6 +170,8 @@
 
 #include <external/popts.h>
 #include "Renderer/RenderAPI.h"
+#include "Renderer/RenderShader.h" // g_ColorizerShader and friends
+#include "Renderer/RenderCircleOfTransparency.h" // g_CircleOfTransparency
 
 extern po::parser g_cli;
 
@@ -4242,7 +4244,7 @@ void CGame::DrawGump(
 static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int height)
 {
     SCOPED_GL_DEBUG_MARKER();
-    CGLTexture *th[9] = { nullptr };
+    CRenderTexture *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
         auto spr = g_Game.ExecuteGump(id + (uint16_t)i);

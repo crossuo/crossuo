@@ -340,7 +340,7 @@ void CGUISlider::Draw(bool checktrans)
     {
         if (CompositeBackground)
         {
-            CGLTexture *th[3] = { nullptr };
+            CRenderTexture *th[3] = { nullptr };
             for (int i = 0; i < 3; i++)
             {
                 auto spr = g_Game.ExecuteGump(BackgroundGraphic + (int)i);

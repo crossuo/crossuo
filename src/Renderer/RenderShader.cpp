@@ -1,18 +1,18 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "GLShader.h"
+#include "RenderShader.h"
 #include <assert.h>
 #include <common/logging/logging.h>
 #include <external/gfx/gfx.h>
 #include "../Globals.h" // g_ShaderDrawMode / SDM_NO_COLOR, g_ShaderColorTableInUse
 
-CGLShader g_DeathShader;
-CGLShader g_ColorizerShader;
-CGLShader g_FontColorizerShader;
-CGLShader g_LightColorizerShader;
+CRenderShader g_DeathShader;
+CRenderShader g_ColorizerShader;
+CRenderShader g_FontColorizerShader;
+CRenderShader g_LightColorizerShader;
 
-bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderData, int type)
+bool CRenderShader::Init(const char *vertexShaderData, const char *fragmentShaderData, int type)
 {
     if (vertexShaderData == nullptr && fragmentShaderData == nullptr)
     {
@@ -147,7 +147,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
 #endif
 }
 
-CGLShader::~CGLShader()
+CRenderShader::~CRenderShader()
 {
 #if defined(USE_GL1)
     if (m_Shader != 0)
@@ -173,7 +173,7 @@ CGLShader::~CGLShader()
     m_TexturePointer = 0;
 }
 
-void CGLShader::Enable()
+void CRenderShader::Enable()
 {
     bool result = false;
 #if defined(USE_GL1)
@@ -205,7 +205,7 @@ void CGLShader::Enable()
     }
 }
 
-void CGLShader::Disable()
+void CRenderShader::Disable()
 {
 #if defined(USE_GL1)
     glUseProgramObjectARB(0);
@@ -217,7 +217,7 @@ void CGLShader::Disable()
 #endif
 }
 
-void CGLShader::Pause()
+void CRenderShader::Pause()
 {
 #if defined(USE_GL1)
     glUseProgramObjectARB(0);
@@ -229,7 +229,7 @@ void CGLShader::Pause()
 #endif
 }
 
-void CGLShader::Resume()
+void CRenderShader::Resume()
 {
 #if defined(USE_GL1)
     glUseProgramObjectARB(m_Shader);

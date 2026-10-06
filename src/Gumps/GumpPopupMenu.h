@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Gump.h"
+#include "../Wisp/WispPacketReader.h" // Wisp::CPacketReader
 
 class CGumpPopupMenu : public CGump
 {

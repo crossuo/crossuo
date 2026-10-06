@@ -4,6 +4,7 @@
 #include "GUIWorldMapTexture.h"
 #include "../Managers/MouseManager.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderTexture.h" // g_MapTexture full type
 #include "../Utility/PerfMarker.h"
 #include "../Globals.h" // g_MapTexture
 

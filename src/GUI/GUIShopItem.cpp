@@ -162,7 +162,7 @@ void CGUIShopItem::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    CGLTexture *th = nullptr;
+    CRenderTexture *th = nullptr;
 
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.f } });

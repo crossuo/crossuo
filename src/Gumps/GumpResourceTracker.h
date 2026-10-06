@@ -3,6 +3,8 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Gump.h"
+#include "../Wisp/WispBinaryFileWriter.h" // Wisp::CBinaryFileWriter
+#include <xuocore/mappedfile.h> // CMappedFile
 
 #define TRACKER_BOX_SIZE (60)
 #define TRACKER_WIDTH ((8 * TRACKER_BOX_SIZE) + 5)

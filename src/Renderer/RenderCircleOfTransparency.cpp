@@ -2,12 +2,12 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <cmath> // sqrt
-#include "GLTextureCircleOfTransparency.h"
+#include "RenderCircleOfTransparency.h"
 #include "../Managers/ConfigManager.h"
-#include "../Renderer/RenderAPI.h"
+#include "RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-CGLTextureCircleOfTransparency g_CircleOfTransparency;
+CRenderCircleOfTransparency g_CircleOfTransparency;
 
 std::vector<uint32_t> CreateCircleSprite(int radius, int16_t &width, int16_t &height)
 {
@@ -32,12 +32,12 @@ std::vector<uint32_t> CreateCircleSprite(int radius, int16_t &width, int16_t &he
     return pixels;
 }
 
-CGLTextureCircleOfTransparency::~CGLTextureCircleOfTransparency()
+CRenderCircleOfTransparency::~CRenderCircleOfTransparency()
 {
     m_Sprite.Clear();
 }
 
-bool CGLTextureCircleOfTransparency::Create(int radius)
+bool CRenderCircleOfTransparency::Create(int radius)
 {
     if (radius <= 0)
     {
@@ -62,7 +62,7 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
     return true;
 }
 
-void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
+void CRenderCircleOfTransparency::Draw(int x, int y, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     if (m_Sprite.Texture == nullptr)

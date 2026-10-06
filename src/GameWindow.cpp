@@ -25,10 +25,6 @@
 #include "Walker/PathFinder.h"
 #include "Splash.h"
 
-#if defined(USE_GL1)
-#include "GLEngine/GLEngine.h"
-#endif // #if defined(USE_GL1)
-
 #if USE_PING
 #include "Utility/PingThread.h"
 #endif // USE_PING

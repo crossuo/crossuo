@@ -4,9 +4,9 @@
 #pragma once
 
 #include <external/gfx/gfx.h>
-#include "../Renderer/RenderAPI.h"
+#include "RenderAPI.h"
 
-struct CGLShader
+struct CRenderShader
 {
 #if defined(USE_GL1)
     GLuint m_Shader = 0;
@@ -29,10 +29,10 @@ struct CGLShader
     void Disable();
     void Pause();
     void Resume();
-    ~CGLShader();
+    ~CRenderShader();
 };
 
-extern CGLShader g_DeathShader;
-extern CGLShader g_ColorizerShader;
-extern CGLShader g_FontColorizerShader;
-extern CGLShader g_LightColorizerShader;
+extern CRenderShader g_DeathShader;
+extern CRenderShader g_ColorizerShader;
+extern CRenderShader g_FontColorizerShader;
+extern CRenderShader g_LightColorizerShader;

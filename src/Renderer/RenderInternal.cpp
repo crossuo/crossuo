@@ -1000,7 +1000,7 @@ static int s_artArrayUsed = 0;
 static bool s_artArrayDisabled = false; // set when the GL limits are hit
 
 // layers of destroyed sprites: the texture GC (3s unused -> DestroySprite ->
-// CGLTexture::Clear) releases them here so re-visited areas re-place into dead
+// CRenderTexture::Clear) releases them here so re-visited areas re-place into dead
 // layers instead of growing forever; only the owning sprite can reference a
 // layer, and it releases before any other sprite can be handed it, so a
 // reused layer can never be sampled through a stale reference
@@ -1197,7 +1197,7 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
     }
 
     // the source name must still be a live texture object: the streaming layer
-    // hot-swaps sprites (DestroySprite -> CGLTexture::Clear -> delete) while
+    // hot-swaps sprites (DestroySprite -> CRenderTexture::Clear -> delete) while
     // the game runs, and a recycled/zero name here makes glCopyImageSubData
     // read an incomplete or foreign source. A non-texture name is
     // GL_INVALID_OPERATION, so leave the sprite on its own texture path

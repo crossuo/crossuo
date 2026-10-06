@@ -18,6 +18,7 @@
 #include "../Network/Packets.h"
 #include "../Walker/PathFinder.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Utility/PerfMarker.h"
 
 CMouseManager g_MouseManager;
@@ -164,7 +165,7 @@ uint16_t CMouseManager::GetGameCursor()
 }
 
 bool CMouseManager::GetCursorDrawRect(
-    uint16_t id, int *x, int *y, int *w, int *h, CGLTexture **texture)
+    uint16_t id, int *x, int *y, int *w, int *h, CRenderTexture **texture)
 {
     // mirrors the tail of Draw(): the same index math decides both what the
     // game renders and where it places it

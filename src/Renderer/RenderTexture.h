@@ -4,10 +4,9 @@
 #pragma once
 
 #include <external/gfx/gfx.h>
-// FIXME only RenderTypes.h should be needed here
-#include "../Renderer/RenderAPI.h"
+#include "RenderTypes.h"
 
-struct CGLTexture
+struct CRenderTexture
 {
     uint16_t Width = 0;
     uint16_t Height = 0;
@@ -33,6 +32,6 @@ struct CGLTexture
     // texture (-1 = not placed, the individual texture stays the sampler)
     int ArtArrayPlace();
 
-    CGLTexture() = default;
-    virtual ~CGLTexture();
+    CRenderTexture() = default;
+    virtual ~CRenderTexture();
 };

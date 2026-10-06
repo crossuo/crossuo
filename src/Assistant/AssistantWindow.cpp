@@ -18,7 +18,7 @@
 #include <xuocore/enumlist.h>
 #include <xuocore/uodata.h> // ExeFilePath
 #include <vector>
-#include "GLEngine/GLTexture.h" // CGLTexture (the cursor mirror source)
+#include "Renderer/RenderTexture.h" // CRenderTexture (the cursor mirror source)
 #include "Managers/MouseManager.h" // g_MouseManager (game cursor draw geometry)
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
 #include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
@@ -208,7 +208,7 @@ static void assistant_cursor_draw()
     g_MouseManager.Hide();
 
     int x = 0, y = 0, w = 0, h = 0;
-    CGLTexture *texture = nullptr;
+    CRenderTexture *texture = nullptr;
     const uint16_t id = 0x206A + 7;//g_MouseManager.GetGameCursor();
     if (!g_MouseManager.GetCursorDrawRect(id, &x, &y, &w, &h, &texture))
     {

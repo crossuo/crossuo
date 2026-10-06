@@ -6,7 +6,7 @@
 #include "../Sprite.h"
 
 // FIXME: gfx
-struct CGLTextureCircleOfTransparency
+struct CRenderCircleOfTransparency
 {
     CSprite m_Sprite;
 
@@ -14,13 +14,13 @@ struct CGLTextureCircleOfTransparency
     int X = 0;
     int Y = 0;
 
-    CGLTextureCircleOfTransparency() = default;
-    virtual ~CGLTextureCircleOfTransparency();
+    CRenderCircleOfTransparency() = default;
+    virtual ~CRenderCircleOfTransparency();
 
     bool Create(int radius);
     virtual void Draw(int x, int y, bool checktrans = false);
 };
 
-extern CGLTextureCircleOfTransparency g_CircleOfTransparency;
+extern CRenderCircleOfTransparency g_CircleOfTransparency;
 
 std::vector<uint32_t> CreateCircleSprite(int radius, int16_t &width, int16_t &height);

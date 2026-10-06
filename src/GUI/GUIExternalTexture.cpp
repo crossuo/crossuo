@@ -7,6 +7,7 @@
 #include "../Globals.h"
 #include "../Sprite.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderTexture.h" // g_AuraTexture full type
 #include "../Utility/PerfMarker.h"
 
 CGUIExternalTexture::CGUIExternalTexture(

@@ -4,6 +4,7 @@
 #include "GumpScreenSelectTown.h"
 #include "../Config.h"
 #include "../CityList.h"
+#include "../Misc.h" // CalculatePercents
 #include "../Managers/ClilocManager.h"
 #include "../Managers/FontsManager.h"
 #include "../ScreenStages/SelectTownScreen.h"

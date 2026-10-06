@@ -7,7 +7,7 @@
 #include <vector>
 #include <deque>
 
-struct CGLTexture;
+struct CRenderTexture;
 
 struct CSprite
 {
@@ -18,7 +18,7 @@ struct CSprite
     int16_t ImageWidth = 0;
     int16_t ImageHeight = 0;
     std::vector<bool> m_HitMap;
-    CGLTexture *Texture = nullptr;
+    CRenderTexture *Texture = nullptr;
 
     void LoadSprite16(int width, int height, uint16_t *pixels, bool skipHitMask = false);
     void LoadSprite32(int width, int height, uint32_t *pixels, bool skipHitMask = false);

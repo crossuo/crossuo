@@ -19,6 +19,7 @@
 #include "../CrossUO.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 
 static constexpr int GRID_SIZE = 20;
 static constexpr int MAX_WIDTH = GRID_SIZE * TRACKER_BOX_SIZE;

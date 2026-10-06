@@ -3,6 +3,7 @@
 
 #include "CustomHousesManager.h"
 #include <xuocore/mappedfile.h>
+#include "../Wisp/WispBinaryFileWriter.h" // Wisp::CBinaryFileWriter
 #include "../Gumps/GumpCustomHouse.h"
 #include "../GameObjects/GameItem.h"
 

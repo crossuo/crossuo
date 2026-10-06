@@ -28,6 +28,8 @@
 #include "../Network/Packets.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
+#include "../Renderer/RenderCircleOfTransparency.h" // g_CircleOfTransparency
 
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;

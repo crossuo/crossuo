@@ -16,6 +16,7 @@
 #include "../Network/Packets.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #if defined(XUO_ASSISTANT)
 #include <managers/trademanager.h> // xuoassist::g_TradeManager
 #endif

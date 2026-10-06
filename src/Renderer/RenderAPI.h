@@ -6,8 +6,11 @@
 #include <external/gfx/gfx.h>
 
 #if defined(USE_GL1)
-#include "../GLEngine/GLEngine.h"
-#include "Debug/OGLDebugMarker.h"
+// legacy GL1 frame entry points, formerly methods of the pre-migration
+// engine class (removed by the renderer migration)
+void Render_GL1BeginDraw();
+void Render_GL1EndDraw();
+void Render_GL1Uninstall();
 #endif // #if defined(USE_GL1)
 
 #include "../SDL_wrapper.h"
@@ -116,7 +119,7 @@ bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd 
 bool RenderAdd_SetCircleTrans(RenderCmdList *cmdList, const SetCircleTransCmd &cmd);
 texture_handle_t Render_ArtArrayTexture();
 RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t width, uint32_t height);
-// releases a layer whose sprite was destroyed (CGLTexture::Clear); the layer
+// releases a layer whose sprite was destroyed (CRenderTexture::Clear); the layer
 // is reused by the next placement so revisited areas don't grow the array
 void Render_ArtArrayRelease(int layer);
 int Render_GetCurrentDrawMode();

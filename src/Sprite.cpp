@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#include "Backend.h"
+#include "Renderer/RenderTexture.h"
 #include "Sprite.h"
 #include "Managers/MouseManager.h"
 #include "Renderer/RenderAPI.h"
@@ -9,7 +9,7 @@
 void CSprite::LoadSprite16(int width, int height, uint16_t *pixels, bool skipHitMask)
 {
     if (Texture == nullptr)
-        Texture = new CGLTexture;
+        Texture = new CRenderTexture;
     Texture->Width = width;
     Texture->Height = height;
     Texture->Texture = Render_CreateTexture2D(
@@ -25,7 +25,7 @@ void CSprite::LoadSprite16(int width, int height, uint16_t *pixels, bool skipHit
 void CSprite::LoadSprite32(int width, int height, uint32_t *pixels, bool skipHitMask)
 {
     if (Texture == nullptr)
-        Texture = new CGLTexture;
+        Texture = new CRenderTexture;
     Texture->Width = width;
     Texture->Height = height;
     Texture->Texture = Render_CreateTexture2D(
@@ -110,7 +110,7 @@ template void CSprite::Init<uint32_t>(int width, int height, uint32_t *pixels, b
 void CTextSprite::Init(int width, int height, uint32_t *pixels, bool skipHitMask)
 {
     if (Texture == nullptr)
-        Texture = new CGLTexture;
+        Texture = new CRenderTexture;
     Texture->Width = width;
     Texture->Height = height;
     Texture->Texture = Render_CreateTexture2D(

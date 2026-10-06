@@ -59,6 +59,8 @@
 #include "../TextEngine/GameConsole.h"
 #include "../TextEngine/TextData.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
+#include "../Renderer/RenderCircleOfTransparency.h" // g_CircleOfTransparency
 #include "../Utility/PerfMarker.h"
 #if defined(XUO_ASSISTANT)
 #include "AssistantWindow.h"
@@ -1822,10 +1824,7 @@ void CGameScreen::Render()
     RenderAdd_FlushState(g_renderCmdList);
     RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{});
 #else
-    // TODO renderer BeginDraw exists only to set Drawing to true, as it's used by
-    // Gump-something; investigate it and remove/move it elsewhere so
-    // we can get rid of glEngine
-    g_GL.BeginDraw();
+    Render_GL1BeginDraw();
 #endif // #if defined(USE_GL3) || defined(USE_GLES)
 
     if (DrawSmoothMonitor() != 0)
@@ -2152,7 +2151,7 @@ void CGameScreen::Render()
     // the assistant draws inside the game context, before the frame is shown
     AssistantWindow_DrawOverlay();
 #endif
-    g_GL.EndDraw();
+    Render_GL1EndDraw();
 #endif // #if defined(USE_GL3) || defined(USE_GLES)
 }
 

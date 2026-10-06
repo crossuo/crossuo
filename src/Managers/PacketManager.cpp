@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "PacketManager.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "GumpManager.h"
 #include "ConfigManager.h"
 #include "CustomHousesManager.h"

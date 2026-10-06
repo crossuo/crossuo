@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpTargetSystem.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../CrossUO.h"
 #include "../Target.h"
 #include "../TargetGump.h"

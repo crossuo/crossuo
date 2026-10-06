@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpStatusbar.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include <SDL_rect.h>
 #include <common/utils.h> // countof
 #include <xuocore/uodata.h>

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "BaseGUI.h"
-#include "../Backend.h"
+#include "../Sprite.h" // CTextSprite value members
 
 class CGUIButton;
 

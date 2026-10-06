@@ -5,7 +5,6 @@
 
 #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 
-#include "Backend.h"
 #include <external/gfx/gfx.h>
 #include <common/logging/logging.h>
 #include <xuocore/common.h> // LOG_INFO / LOG_ERROR (LOGGER_MODULE scoped)

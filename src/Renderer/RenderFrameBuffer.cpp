@@ -1,23 +1,23 @@
 ﻿// SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include "Backend.h"
-#include "GameWindow.h"
-#include "../Renderer/RenderAPI.h"
+#include "RenderFrameBuffer.h"
+#include "../GameWindow.h"
+#include "RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-frame_buffer_t CGLFrameBuffer::m_OldFrameBuffer;
+frame_buffer_t CRenderFrameBuffer::m_OldFrameBuffer;
 
-CGLFrameBuffer::CGLFrameBuffer()
+CRenderFrameBuffer::CRenderFrameBuffer()
 {
 }
 
-CGLFrameBuffer::~CGLFrameBuffer()
+CRenderFrameBuffer::~CRenderFrameBuffer()
 {
     Free();
 }
 
-bool CGLFrameBuffer::Init(int width, int height)
+bool CRenderFrameBuffer::Init(int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
     Free();
@@ -40,7 +40,7 @@ bool CGLFrameBuffer::Init(int width, int height)
     return result;
 }
 
-void CGLFrameBuffer::Free()
+void CRenderFrameBuffer::Free()
 {
     ScopedPerfMarker(__FUNCTION__);
 
@@ -54,7 +54,7 @@ void CGLFrameBuffer::Free()
     m_OldFrameBuffer = {};
 }
 
-void CGLFrameBuffer::Release()
+void CRenderFrameBuffer::Release()
 {
     ScopedPerfMarker(__FUNCTION__);
 
@@ -73,19 +73,19 @@ void CGLFrameBuffer::Release()
     RenderAdd_SetViewParams(g_renderCmdList, viewParams);
 }
 
-bool CGLFrameBuffer::Ready(int width, int height)
+bool CRenderFrameBuffer::Ready(int width, int height)
 {
     assert(width >= 0 && height >= 0);
     return (m_Ready && m_Width == uint32_t(width) && m_Height == uint32_t(height));
 }
 
-bool CGLFrameBuffer::ReadyMinSize(int width, int height)
+bool CRenderFrameBuffer::ReadyMinSize(int width, int height)
 {
     assert(width >= 0 && height >= 0);
     return (m_Ready && m_Width >= uint32_t(width) && m_Height >= uint32_t(height));
 }
 
-bool CGLFrameBuffer::Use()
+bool CRenderFrameBuffer::Use()
 {
     ScopedPerfMarker(__FUNCTION__);
     bool result = false;
@@ -114,10 +114,10 @@ bool CGLFrameBuffer::Use()
     return result;
 }
 
-void CGLFrameBuffer::Draw(int x, int y)
+void CRenderFrameBuffer::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER_LABEL("CGLFrameBuffer::Draw");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CRenderFrameBuffer::Draw");
     if (m_Ready)
     {
         auto cmd =

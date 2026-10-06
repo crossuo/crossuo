@@ -5,6 +5,8 @@
 
 #include "Target.h"
 #include "Point.h"
+#include "Renderer/RenderTexture.h"  // CRenderTexture globals defined below
+#include "Renderer/RenderFrameBuffer.h"
 #include "GameObjects/GameWorld.h"
 #include "GameObjects/GameCharacter.h"
 
@@ -85,8 +87,8 @@ int g_RenderedObjectsCountInGameWindow = 0;
 
 float g_GlobalScale = 1.0;
 
-CGLTexture g_MapTexture[MAX_MAPS_COUNT];
-CGLTexture g_AuraTexture;
+CRenderTexture g_MapTexture[MAX_MAPS_COUNT];
+CRenderTexture g_AuraTexture;
 
 bool g_LogoutAfterClick = false;
 int g_FrameDelay[2] = { FRAME_DELAY_INACTIVE_WINDOW, FRAME_DELAY_ACTIVE_WINDOW };
@@ -107,9 +109,9 @@ astr_t g_Language = "enu";
 
 GAME_STATE g_GameState = GS_MAIN;
 
-CGLTexture g_TextureGumpState[2];
+CRenderTexture g_TextureGumpState[2];
 
-CGLFrameBuffer g_LightBuffer;
+CRenderFrameBuffer g_LightBuffer;
 
 bool g_GumpPressed = false;
 class CRenderObject *g_GumpSelectedElement = nullptr;

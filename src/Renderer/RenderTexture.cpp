@@ -3,16 +3,16 @@
 
 #include <external/gfx/gfx.h>
 #include <xuocore/enumlist.h>
-#include "GLTexture.h"
-#include "../Renderer/RenderAPI.h"
+#include "RenderTexture.h"
+#include "RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-CGLTexture::~CGLTexture()
+CRenderTexture::~CRenderTexture()
 {
     Clear();
 }
 
-void CGLTexture::Draw(int x, int y, bool checktrans)
+void CRenderTexture::Draw(int x, int y, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
@@ -48,7 +48,7 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     }
 }
 
-void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
+void CRenderTexture::Draw(int x, int y, int width, int height, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
@@ -97,9 +97,9 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
     }
 }
 
-void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
+void CRenderTexture::Draw_Tooltip(int x, int y, int width, int height)
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL("CGLTexture::Draw_Tooltip");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CRenderTexture::Draw_Tooltip");
     RenderAdd_SetBlend(
         g_renderCmdList,
         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -113,7 +113,7 @@ void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
         DrawQuadCmd{ Texture, x + 6, y + 4, Width, Height });
 }
 
-void CGLTexture::DrawRotated(int x, int y, float angle)
+void CRenderTexture::DrawRotated(int x, int y, float angle)
 {
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
     {
@@ -124,7 +124,7 @@ void CGLTexture::DrawRotated(int x, int y, float angle)
     RenderAdd_DrawRotatedQuad(g_renderCmdList, cmd);
 }
 
-void CGLTexture::DrawTransparent(int x, int y, bool stencil)
+void CRenderTexture::DrawTransparent(int x, int y, bool stencil)
 {
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
     {
@@ -156,7 +156,7 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
     RenderAdd_DisableBlend(g_renderCmdList);
 }
 
-void CGLTexture::Clear()
+void CRenderTexture::Clear()
 {
     // the array placement is a property of the texture object: once the
     // texture handle is gone the sprite must be re-placed (the array layer
@@ -180,7 +180,7 @@ void CGLTexture::Clear()
     }
 }
 
-int CGLTexture::ArtArrayPlace()
+int CRenderTexture::ArtArrayPlace()
 {
 #if defined(USE_GL3) || defined(USE_GLES)
     if (ArrayLayer < 0)

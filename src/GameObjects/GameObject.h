@@ -9,7 +9,7 @@
 #include <common/str.h>
 #include "../Config.h"
 #include "RenderStaticObject.h"
-#include "GLEngine/GLTexture.h"
+#include "Renderer/RenderTexture.h"
 
 class CGameEffect;
 
@@ -56,7 +56,7 @@ public:
 
 protected:
     CGameEffect *m_Effects = nullptr;
-    CGLTexture m_TextureObjectHandles;
+    CRenderTexture m_TextureObjectHandles;
 
 public:
     CGameObject(int serial = 0);

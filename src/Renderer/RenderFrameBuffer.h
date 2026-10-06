@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "GLTexture.h"
+#include "RenderTexture.h"
 #include "../Point.h"
 
-class CGLFrameBuffer
+class CRenderFrameBuffer
 {
 private:
     bool m_Ready = false;
@@ -16,8 +16,8 @@ private:
     uint32_t m_Height = 0;
 
 public:
-    CGLFrameBuffer();
-    ~CGLFrameBuffer();
+    CRenderFrameBuffer();
+    ~CRenderFrameBuffer();
 
 
     bool Init(int width, int height);

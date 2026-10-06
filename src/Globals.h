@@ -6,8 +6,11 @@
 #pragma once
 
 #include <stdint.h>
-#include "GLEngine/GLTexture.h"     // REMOVE
-#include "GLEngine/GLFrameBuffer.h" // REMOVE
+// full definitions live in Renderer/RenderTexture.h and
+// Renderer/RenderFrameBuffer.h; only pointers/extern declarations here
+struct CRenderTexture;
+class CRenderFrameBuffer;
+#include "Renderer/RenderAPI.h" // transitively provided by GLEngine/GLTexture.h before
 #include <common/str.h>             // REMOVE
 #include "Point.h"
 #include "Constants.h"
@@ -85,10 +88,10 @@ extern int g_RenderedObjectsCountInGameWindow;
 
 extern float g_GlobalScale;
 
-extern CGLTexture g_MapTexture[MAX_MAPS_COUNT]; // FIXME
-extern CGLTexture g_AuraTexture;                // FIXME
-extern CGLTexture g_TextureGumpState[2];        // FIXME
-extern class CGLFrameBuffer g_LightBuffer;      // FIXME
+extern CRenderTexture g_MapTexture[MAX_MAPS_COUNT]; // FIXME
+extern CRenderTexture g_AuraTexture;                // FIXME
+extern CRenderTexture g_TextureGumpState[2];        // FIXME
+extern class CRenderFrameBuffer g_LightBuffer;      // FIXME
 
 extern bool g_LogoutAfterClick;
 

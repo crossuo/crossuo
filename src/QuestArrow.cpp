@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "QuestArrow.h"
+#include "Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "CrossUO.h"
 #include "Point.h"
 #include "Managers/MouseManager.h"

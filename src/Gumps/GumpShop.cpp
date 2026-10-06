@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpShop.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Target.h"
 #include "../PressedObject.h"
 #include "../SelectedObject.h"

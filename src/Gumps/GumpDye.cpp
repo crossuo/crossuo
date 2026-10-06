@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpDye.h"
+#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Network/Packets.h"
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (font color capture)

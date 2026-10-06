@@ -10,6 +10,7 @@
 #include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
 #include "../GameWindow.h"
+#include "../Wisp/WispWindow.h" // Render_GL1EndDraw swaps via g_WispWindow
 #include <external/gfx/gfx.h>
 #include <GL/gl.h>
 #include <math.h>
@@ -400,9 +401,9 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    // Same geometry as the GL3 backend (and the old CGLEngine::DrawShadow):
-    // the shadow is the sprite squashed to half height and sheared along the
-    // ground diagonal.
+    // Same geometry as the GL3 backend (and the old pre-migration GL1 shadow
+    // draw): the shadow is the sprite squashed to half height and sheared
+    // along the ground diagonal.
     const float width = (float)cmd.width;
     const float height = cmd.height / 2.0f;
     const int x = cmd.x;
@@ -1377,6 +1378,45 @@ void Render_Shutdown()
         SDL_GL_DeleteContext(g_render.context);
         g_render.context = nullptr;
     }
+}
+
+// Legacy GL1 frame entry points, formerly methods of the pre-migration
+// engine class (removed by the renderer migration). The context member they used to carry was never
+// assigned anywhere (the real GL1 context lives in g_render.context, created
+// in Render_Init and released in Render_Shutdown), so the static below stays
+// null and Render_GL1Uninstall is a preserved no-op kept for API parity.
+static SDL_GLContext s_gl1LegacyContext = nullptr;
+
+void Render_GL1Uninstall()
+{
+    if (s_gl1LegacyContext != nullptr)
+    {
+        SDL_GL_DeleteContext(s_gl1LegacyContext);
+    }
+}
+
+void Render_GL1BeginDraw()
+{
+    ScopedPerfMarker(__FUNCTION__);
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+    GL_CALL(glLoadIdentity());
+
+    GL_CALL(glDisable(GL_DEPTH_TEST));
+    GL_CALL(glDepthFunc(GL_LEQUAL));
+    GL_CALL(glDisable(GL_STENCIL_TEST));
+    GL_CALL(glDisable(GL_BLEND));
+
+    GL_CALL(glEnable(GL_ALPHA_TEST));
+    GL_CALL(glAlphaFunc(GL_GREATER, 0.0f));
+}
+
+void Render_GL1EndDraw()
+{
+    ScopedPerfMarker(__FUNCTION__);
+    GL_CALL(glDisable(GL_ALPHA_TEST));
+#if !defined(XUO_EMSC)
+    GL_CALL(SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window));
+#endif
 }
 
 void Render_SwapBuffers()

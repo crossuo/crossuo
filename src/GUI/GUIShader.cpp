@@ -3,9 +3,9 @@
 
 #include "GUIShader.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLShader.h" // REMOVE
+#include "../Renderer/RenderShader.h"
 
-CGUIShader::CGUIShader(CGLShader *shader, bool enabled)
+CGUIShader::CGUIShader(CRenderShader *shader, bool enabled)
     : CBaseGUI(GOT_SHADER, 0, 0, 0, 0, 0)
     , m_Shader(shader)
 {
