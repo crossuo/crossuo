@@ -701,7 +701,28 @@
           // to the client default by omission of the --port flag
           if (/^\d{1,5}$/.test(port) && port > 0 && port <= 65535) args.push('--port=' + port);
           var installer = String(shard.installer || '').trim();
-          if (installer) args.push('--streaming-product=' + installer);
+          if (installer) {
+            // aops patch servers ("uo+<root>" / "xuo+<root>" installer
+            // prefixes or a bare patch-server root: the client's
+            // vfs_aops_product_url accepts root, patchlist or patchcfg urls)
+            // cannot be fetched cross-origin from the browser: normalize to
+            // the server ROOT and route it through the same-origin /stream
+            // proxy (the proxy rewrites the patchcfg's repo urls back to
+            // /stream). A MythicMFT manifest root keeps the client's own
+            // default product lanes (the proxy mirrors the official
+            // manifest; an aops-normalized --streaming-product would point
+            // the plan at <root>patchlist); anything that is not a url
+            // passes through unchanged
+            var target = installer.replace(/^(?:uo|xuo)\+/i, '');
+            if (/^https?:\/\//i.test(target)) {
+              if (!/\/manifest\/?$/i.test(target)) {
+                var root = target.replace(/\/+$/, '').replace(/\/patch(?:list|cfg)$/i, '');
+                args.push('--streaming-product=/stream/' + encodeURIComponent(root) + '/');
+              }
+            } else {
+              args.push('--streaming-product=' + installer);
+            }
+          }
           return args;
         }
 

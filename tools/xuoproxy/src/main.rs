@@ -15,8 +15,10 @@
 //!    Works with any manifest type: proxied text bodies (MythicMFT, aops
 //!    patchlists, JSON manifests) get their absolute repo urls rewritten to
 //!    the same local prefixes, so manifest-referenced file repos and nested
-//!    manifests stay on the proxy automatically. Binary bodies (zlib chunks,
-//!    uop payloads) pass through byte-identical.
+//!    manifests stay on the proxy automatically. /stream additionally
+//!    rewrites aops patchcfg ini bodies (the three repo keys) to
+//!    `/stream/<encoded upstream url>`; binary bodies (zlib chunks, uop
+//!    payloads, data files) pass through byte-identical.
 //!
 //! 3. A WebSocket-to-TCP bridge at `/ws/<host>/<port>`: the web client
 //!    cannot open raw TCP sockets to shards, so it connects here and the
@@ -976,7 +978,122 @@ fn rewrite_links(body: &[u8], headers: &HeaderMap) -> Vec<u8> {
 // /stream/<url>: generic same-origin url proxy (any manifest type)
 // ---------------------------------------------------------------------------
 
-async fn stream_proxy(State(state): State<AppState>, Path(url): Path<String>) -> Response {
+// ---------------------------------------------------------------------------
+// aops patchcfg rewrite: the ini's repo urls are absolute upstream addresses
+// the browser cannot fetch cross-origin, so every value of the three repo
+// keys is re-pointed at this proxy's /stream passthrough (percent-encoded,
+// trailing slash kept literal - the client treats the value as a repo root
+// and joins tails onto it). Relative values resolve against the patchcfg's
+// own upstream root, mirroring the client's resolve(). The sniff only ever
+// matches an ASCII ini: the UTF-16 patchlist and the binary data files pass
+// through byte-identical. The rewritten body is what gets cached, so cache
+// hits serve it verbatim (never re-rewritten).
+// ---------------------------------------------------------------------------
+
+const AOPS_REPO_KEYS: [&str; 5] = [
+    "online_patch_directory",
+    "patch_directory",
+    "online_patchlist_file",
+    "patchlist_url",
+    "patch_salt_url",
+];
+
+// percent-encode everything outside the unreserved set (':' and '/' too) so
+// the encoded url survives the wildcard capture; the route's decode returns
+// exactly the upstream url
+fn stream_url_encode(url: &str) -> String {
+    let mut out = String::with_capacity(url.len() + 16);
+    for byte in url.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(byte as char)
+            }
+            _ => out.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    out
+}
+
+fn stream_rewrite_aops(body: &[u8], upstream: &str) -> Vec<u8> {
+    let text = match std::str::from_utf8(body) {
+        Ok(text) => text,
+        Err(_) => return body.to_vec(), // binary: never touched
+    };
+    // the root the client would resolve against: the patchcfg's own url up
+    // to (and including) the last '/'
+    let root = match upstream.rfind('/') {
+        Some(at) => &upstream[..=at],
+        None => return body.to_vec(),
+    };
+    let mut rewritten = false;
+    let mut out = String::with_capacity(text.len() + 128);
+    for line in text.split_inclusive('\n') {
+        out.push_str(&stream_rewrite_aops_line(line, root, &mut rewritten));
+    }
+    if rewritten {
+        out.into_bytes()
+    } else {
+        body.to_vec()
+    }
+}
+
+fn stream_rewrite_aops_line(line: &str, root: &str, rewritten: &mut bool) -> String {
+    let at = match line.find('=') {
+        Some(at) => at,
+        None => return line.to_string(),
+    };
+    let key = line[..at].trim();
+    let value = line[at + 1..].trim();
+    if !AOPS_REPO_KEYS.contains(&key) || value.is_empty() {
+        return line.to_string();
+    }
+    // mirror the client's resolve(): absolute urls are kept, anything else
+    // joins the root (which always ends with '/')
+    let resolved = if value.starts_with("http://") || value.starts_with("https://") {
+        value.to_string()
+    } else {
+        format!("{root}{}", value.trim_start_matches('/'))
+    };
+    // the patch directories are repo roots: keep the trailing slash the
+    // client's parse enforces
+    let mut url = resolved;
+    if key.contains("patch_directory") && !url.ends_with('/') {
+        url.push('/');
+    }
+    let slash = url.ends_with('/');
+    let enc = stream_url_encode(if slash { &url[..url.len() - 1] } else { &url });
+    // preserve the line's own ending (the client tolerates mixed endings)
+    let ending = if line.ends_with("\r\n") {
+        "\r\n"
+    } else if line.ends_with('\n') {
+        "\n"
+    } else {
+        ""
+    };
+    *rewritten = true;
+    format!(
+        "{key}=/stream/{enc}{}{ending}",
+        if slash { "/" } else { "" }
+    )
+}
+
+// full-body or ranged answer: the web transport only honors a 206 on its
+// ranged reads (a 200 would re-download the whole file per window), so the
+// cached body serves slices the same way the /patch/files lane does
+fn stream_respond(status: u16, ctype: &str, body: Vec<u8>, headers: &HeaderMap) -> Response {
+    if status == 200 {
+        if let Some(resp) = range_from_cached(ctype, &body, headers) {
+            return resp;
+        }
+    }
+    respond_plain(status, ctype, body)
+}
+
+async fn stream_proxy(
+    State(state): State<AppState>,
+    Path(url): Path<String>,
+    headers: HeaderMap,
+) -> Response {
     // axum already percent-decoded the wildcard; validate the scheme
     let url = percent_decode(&url);
     if !(url.starts_with("http://") || url.starts_with("https://")) {
@@ -985,7 +1102,7 @@ async fn stream_proxy(State(state): State<AppState>, Path(url): Path<String>) ->
 
     if state.use_cache {
         if let Some((status, ctype, body)) = cache_get(&state, &url) {
-            return respond_plain(status, &ctype, body);
+            return stream_respond(status, &ctype, body, &headers);
         }
     }
 
@@ -1018,11 +1135,19 @@ async fn stream_proxy(State(state): State<AppState>, Path(url): Path<String>) ->
         }
     };
 
+    // an aops patchcfg is rewritten to same-origin /stream urls before it is
+    // cached or served (200 only: error bodies pass through untouched)
+    let body = if status == 200 {
+        stream_rewrite_aops(&body, &url)
+    } else {
+        body
+    };
+
     if status == 200 && state.use_cache {
         cache_put(&state, &url, status, &ctype, &body);
     }
 
-    respond_plain(status, &ctype, body)
+    stream_respond(status, &ctype, body, &headers)
 }
 
 fn respond_plain(status: u16, ctype: &str, body: Vec<u8>) -> Response {

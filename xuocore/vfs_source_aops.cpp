@@ -319,6 +319,15 @@ bool vfs_aops_parse_patchcfg(
     const auto resolve = [&root](astr_t &url) {
         if (url.empty() || url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0)
             return;
+#if defined(XUO_EMSC)
+        // web: the streaming proxy's rewritten patchcfg hands out
+        // same-origin proxy paths (/stream/<encoded upstream>) - they are
+        // already absolute for the page origin, a root-relative join would
+        // double-prefix them. Native keeps the root-relative semantics
+        // (patch-server relative directories).
+        if (url.front() == '/')
+            return;
+#endif
         if (url.front() == '/')
             url.insert(0, root);
         else
