@@ -1448,7 +1448,13 @@ void CFileManager::LoadStringDictionary()
 bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bool dumpInfo)
 {
     auto path{ UOFilePath(uopFilename) };
-    if (!fs_path_exists(path))
+    // the managed install materializes lowercase names (aops plans lowercase
+    // every entry) while the game asks for the stock client's mixed-case
+    // names, so the literal check only passes once a previous boot restored
+    // the install; when streaming is on the map below resolves the request
+    // through the case-normalized managed lookup (CMappedFile::Load), so
+    // only short-circuit when there is no managed install to ask
+    if (!fs_path_exists(path) && !vfs_enabled())
     {
         return false;
     }
