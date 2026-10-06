@@ -104,6 +104,61 @@ static void load_shard_file(const fs_path &fname, shard::data &data)
     fs_close(fp);
 }
 
+// case-insensitive `prefix` check against the head of `value`
+static bool starts_with_ci(const astr_t &value, const char *prefix)
+{
+    const astr_t p(prefix);
+    if (value.size() < p.size())
+        return false;
+    astr_t head = value.substr(0, p.size());
+    std::transform(head.begin(), head.end(), head.begin(), ::tolower);
+    return head == p;
+}
+
+// tolerate the pre-2.0 published lists until they are republished (the
+// prefix grammar is gone from the client, which only takes plain urls):
+//   installer: `uo+<url>`/`xuo+<url>` carried a streamable product url, keep
+//     the remainder; `website+`/`download+` never did, clear to a manual
+//     install; already-plain values are kept as-is
+//   urlother: the old `Name+<url>` form keeps only the url, so the discord
+//     sniff (url_is_discord) and the ui link work on both grammars
+static int normalize_legacy_fields(shard::entry &e)
+{
+    int count = 0;
+    if (starts_with_ci(e.shard_installer, "xuo+"))
+    {
+        e.shard_installer.erase(0, 4);
+        ++count;
+    }
+    else if (starts_with_ci(e.shard_installer, "uo+"))
+    {
+        e.shard_installer.erase(0, 3);
+        ++count;
+    }
+    else if (starts_with_ci(e.shard_installer, "website+") || starts_with_ci(e.shard_installer, "download+"))
+    {
+        // store/download links are not streamable product urls
+        e.shard_installer.clear();
+        ++count;
+    }
+
+    const auto plus = e.shard_urlother.find('+');
+    if (plus != astr_t::npos && plus > 0)
+    {
+        const auto name = e.shard_urlother.substr(0, plus);
+        const auto url = e.shard_urlother.substr(plus + 1);
+        const bool plain_name = std::all_of(name.begin(), name.end(), [](char c) {
+            return ::isalnum((unsigned char)c) || c == ' ';
+        });
+        if (plain_name && (starts_with_ci(url, "http://") || starts_with_ci(url, "https://")))
+        {
+            e.shard_urlother = url;
+            ++count;
+        }
+    }
+    return count;
+}
+
 void load_shards()
 {
     s_shards = shard::data();
@@ -119,6 +174,13 @@ void load_shards()
     const auto fname = fs_path_join(fs_path_current(), "shards.cfg");
 #endif
     load_shard_file(fname, s_shards);
+
+    // the published list may still use the removed prefix grammar
+    int normalized = 0;
+    for (auto &e : s_shards.entries)
+        normalized += normalize_legacy_fields(e);
+    if (normalized > 0)
+        LOG_INFO("normalized %d legacy installer/urlother fields", normalized);
 
     // sort by tags 'highlight', then name alphabetically
     std::sort(

@@ -701,6 +701,11 @@
           // to the client default by omission of the --port flag
           if (/^\d{1,5}$/.test(port) && port > 0 && port <= 65535) args.push('--port=' + port);
           var installer = String(shard.installer || '').trim();
+          // tolerate the pre-2.0 published lists until they are republished
+          // (the prefix grammar is gone from the client): `uo+`/`xuo+`
+          // carried a streamable url, keep the remainder; `website+` and
+          // `download+` never did - manual install, no product flag
+          if (/^(?:website|download)\+/i.test(installer)) installer = '';
           if (installer) {
             // aops patch servers ("uo+<root>" / "xuo+<root>" installer
             // prefixes or a bare patch-server root: the client's
@@ -720,7 +725,7 @@
                 args.push('--streaming-product=/stream/' + encodeURIComponent(root) + '/');
               }
             } else {
-              args.push('--streaming-product=' + installer);
+              args.push('--streaming-product=' + target);
             }
           }
           return args;
