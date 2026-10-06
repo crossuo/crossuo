@@ -49,15 +49,21 @@ bool http_get_range(
 // chunked transfer's bytes=0-0 probe contributes its 1 byte; the assembled
 // 8MB ranges are the body itself. `vfs_web_bytes_expect` grows the denominator
 // as the plan and the streaming lanes learn sizes (vfs.cpp registers them).
-// Readers feed vfs_boot_web_progress() and the page shell (shell.html polls
-// the exported getters - see the -sEXPORTED_FUNCTIONS link flag). Native
-// builds carry no-op stubs (curl stays uncounted: the splash surfaces are
-// web-only), so callers link everywhere and read zeros.
+// Readers feed vfs_boot_web_progress() and the page shell (shell.html). The
+// page cannot call the exported getters reliably: in PROXY_TO_PTHREAD builds
+// the exports bind on the worker where the module instantiates. Instead
+// `vfs_web_progress_addrs` hands the page the static pair's address and it
+// reads the two i64 counters straight out of the shared heap (HEAPU64) -
+// pthread builds share one heap across main + workers. Native builds carry
+// no-op stubs (curl stays uncounted: the splash surfaces are web-only), so
+// callers link everywhere and read zeros; the address getter answers 0 and
+// the page treats that as "not available".
 // ---------------------------------------------------------------------------
 extern "C" {
 uint64_t vfs_web_bytes_done(void);
 uint64_t vfs_web_bytes_total(void);
 void vfs_web_bytes_expect(uint64_t bytes);
+uint32_t vfs_web_progress_addrs(void);
 }
 
 void http_init();

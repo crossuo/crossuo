@@ -764,41 +764,118 @@
         }
 
         // ---- streaming download accounting ----------------------------------
-        // The client exports two zero-arg i64 getters (CMakeLists
-        // -sEXPORTED_FUNCTIONS, declared in xuocore/http.h). BigInt results
-        // are Number()-normalized (older toolchains may hand back plain
-        // numbers). A light interval poll renders the live ratio only while
-        // bytes actually move - rAF is pointless for a 500ms cadence and
-        // stops in hidden tabs, which would freeze the line anyway.
+        // The counters live in the wasm's static memory (xuocore/http.h:
+        // vfs_web_progress_counters). Reading them needs NO exported getter:
+        // in PROXY_TO_PTHREAD builds the module (and its exports) bind on the
+        // worker, so page-side calls into _vfs_web_bytes_* resolve to nothing.
+        // Instead _vfs_web_progress_addrs hands over the static pair's
+        // address and the poll reads the two i64s straight through HEAPU64 -
+        // pthread builds share one heap across the page, main and workers,
+        // so the reads see the live values wherever the writes happened.
+        //
+        // Two render modes, driven purely by the two counters:
+        //   percent    done <= total (the bounded boot plan): "streaming
+        //              250 / 730 MB (34%)"
+        //   throughput done >  total (the open-ended in-game sweep, whose
+        //              denominator the client never registers): "streamed
+        //              1.2 GB (12.4 MB/s)" - no percent, honestly open-ended.
+        // The overlay stays visible while bytes move (any done delta over the
+        // last STREAM_IDLE_MS) OR while percent-mode has frac in [0.01,0.98];
+        // it hides only when idle or before the first byte. There is NO
+        // frac<0.99 hide: the throughput sweep runs for minutes after the
+        // bounded plan clamps and must stay on screen.
+        //
+        // ES5 only: BigInt shows up purely as values (Number()-ed below).
+        var STREAM_RATE_SAMPLES = 4;  // 4 samples x 500ms poll => ~2s window
+        var STREAM_IDLE_MS = 3000;    // no delta for 3s => considered idle
+        var streamAddr = -1; // -1 = not resolved yet, 0 = unavailable
         var streamDonePrev = -1;
         var streamMovedAt = 0;
+        var streamSamples = []; // [{t:ms, d:bytes}] rolling rate window
         var streamEl = null;
         var streamTimer = 0;
-        function streamBytes(name) {
-          var f = Module['_vfs_web_bytes_' + name];
-          if (typeof f !== 'function') return -1;
-          var v = f();
-          return typeof v === 'bigint' ? Number(v) : v;
+        function streamCounter(wordIndex) {
+          // re-fetch the view every poll: memory growth detaches old ones
+          // (emscripten re-publishes Module.HEAPU64 on growth)
+          var heap = Module.HEAPU64;
+          if (!heap || streamAddr <= 0) return -1;
+          return Number(heap[(streamAddr >> 3) + wordIndex]);
+        }
+        function resolveStreamAddr() {
+          if (streamAddr !== -1) return; // resolved once (0 = unavailable)
+          if (typeof Module._vfs_web_progress_addrs !== 'function')
+            return; // runtime not booted yet - retry on the next tick
+          try {
+            streamAddr = Number(Module._vfs_web_progress_addrs()) || 0;
+          } catch (e) {
+            streamAddr = 0; // never available - stop asking
+          }
+        }
+        // bytes -> "B"/"KB"/"MB"/"GB" with one decimal (pure)
+        function formatBytes(n) {
+          n = Number(n) || 0;
+          if (n < 1024) return n.toFixed(1) + ' B';
+          if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+          if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+          return (n / 1073741824).toFixed(1) + ' GB';
+        }
+        // bytes/sec -> rate string, MB/s or GB/s automatically (pure)
+        function formatRate(bps) {
+          bps = Number(bps) || 0;
+          if (bps < 0) bps = 0; // never render a negative rate
+          if (!isFinite(bps) || bps < 1048576) // sub-MB stays on the MB/s line
+            return (bps / 1048576).toFixed(1) + ' MB/s';
+          if (bps < 1073741824) return (bps / 1048576).toFixed(1) + ' MB/s';
+          return (bps / 1073741824).toFixed(1) + ' GB/s';
+        }
+        // the whole display decision, kept pure for the node harness: takes the
+        // raw counters + now() + the rolling sample window, returns
+        // {show, text, samples}. samples is the (possibly updated) window.
+        function streamDisplay(done, total, now, samples) {
+          var i;
+          if (done !== streamDonePrev) { // bytes are moving right now
+            streamDonePrev = done;
+            streamMovedAt = now;
+          }
+          // rolling window: append the fresh sample, drop the stale tail
+          samples = samples ? samples.slice(0) : [];
+          samples.push({ t: now, d: done });
+          while (samples.length > STREAM_RATE_SAMPLES) samples.shift();
+          // throughput over the window; guarded against a zero/negative span
+          var rate = 0;
+          if (samples.length >= 2) {
+            var first = samples[0];
+            var last = samples[samples.length - 1];
+            var dt = (last.t - first.t) / 1000;
+            if (dt > 0 && last.d >= first.d) rate = (last.d - first.d) / dt;
+          }
+          var moving = now - streamMovedAt < STREAM_IDLE_MS;
+          var frac = total > 0 && done > 0 ? done / total : 0;
+          var out;
+          if (done > 0 && total > 0 && done <= total) { // percent mode
+            out = { show: moving || (frac >= 0.01 && frac <= 0.98),
+                    text: 'streaming ' + formatBytes(done) + ' / ' +
+                          formatBytes(total) + ' (' +
+                          Math.round(frac * 100) + '%)' };
+          } else if (done > 0) { // throughput mode (open-ended sweep)
+            out = { show: moving,
+                    text: 'streamed ' + formatBytes(done) +
+                          ' (' + formatRate(rate) + ')' };
+          } else { // nothing fetched yet
+            out = { show: false, text: null };
+          }
+          out.samples = samples;
+          return out;
         }
         function pollStreamProgress() {
-          var done = streamBytes('done');
-          if (done < 0) return; // runtime not up (or native export missing)
-          var total = streamBytes('total');
-          if (total < done) total = done; // unregistered traffic cannot overflow
-          var frac = done > 0 && total > 0 ? done / total : 0;
-          if (done !== streamDonePrev) {
-            streamDonePrev = done;
-            streamMovedAt = Date.now();
-          }
-          // 3s idle window ends the line: fetches stopped (or everything the
-          // session needs is in) and the splash/canvas carries the state again
-          var show = frac >= 0.01 && frac < 0.99 &&
-                     Date.now() - streamMovedAt < 3000;
-          var text = show
-            ? 'streaming ' + (done / 1048576).toFixed(1) + ' / ' +
-              (total / 1048576).toFixed(1) + ' MB (' +
-              Math.round(frac * 100) + '%)'
-            : null;
+          resolveStreamAddr();
+          var done = streamCounter(0);
+          if (done < 0) return; // runtime not up (or native: addr 0)
+          var total = streamCounter(1);
+          var r = streamDisplay(done, total, Date.now(), streamSamples);
+          streamSamples = r.samples;
+          var show = r.show;
+          var text = r.text;
           var statusNow = document.getElementById('status');
           if (statusNow) { // ?log=1 furniture: write the compact line there
             if (show) statusNow.textContent = text;

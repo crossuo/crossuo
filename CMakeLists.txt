@@ -215,11 +215,18 @@ else()
   add_link_options(--profiling-funcs)
   # honor the shell-provided Module fields (arguments/canvas/print/...)
   add_link_options(-sINCOMING_MODULE_JS_API=arguments,canvas,print,printErr,setStatus,onRuntimeInitialized,locateFile)
-  # the page shell polls the live download accounting (shell.html -> http.h):
-  # keep the two zero-arg i64 getters in the export table. Out-pointer styles
-  # are deliberately avoided: the page would have to malloc through the
-  # pthread build's shared allocator. i64 results surface as JS BigInt
-  add_link_options(-sEXPORTED_FUNCTIONS=_main,_vfs_web_bytes_done,_vfs_web_bytes_total)
+  # the page shell polls the live download accounting (shell.html ->
+  # http.h). The zero-arg i64 getters are NOT exported: in PROXY_TO_PTHREAD
+  # builds the exports bind on the worker where the module instantiates, so
+  # page-side calls into them resolve to nothing. Instead the shell reads
+  # the counters straight out of the shared wasm heap - one tiny u32 export
+  # hands over the static pair's address (contiguous, 8-aligned) and HEAPU64
+  # does the rest; no cross-thread calls, no shared-heap mallocs. HEAPU64
+  # must be exported onto Module: without it the views live only in the glue
+  # closure (updateMemoryViews runs on the worker; the page-side module copy
+  # never assigns them, so the page has no TypedArray to read through)
+  add_link_options(-sEXPORTED_RUNTIME_METHODS=HEAPU64)
+  add_link_options(-sEXPORTED_FUNCTIONS=_main,_vfs_web_progress_addrs)
   # web builds stream from their own origin by default (the browser blocks
   # cross-origin fetches without CORS headers); override per build with
   # -DXUO_WEB_PRODUCT_URL=<url>

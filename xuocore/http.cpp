@@ -36,24 +36,42 @@ static const size_t VFS_HTTP_CHUNK_MIN = 8 * 1024 * 1024;
 static const size_t VFS_HTTP_CHUNK_SIZE = 8 * 1024 * 1024;
 
 // web download accounting (http.h): written from pool workers and the main
-// thread alike - both counters are lock-free atomics
-static std::atomic<uint64_t> s_web_bytes_done{ 0 };
-static std::atomic<uint64_t> s_web_bytes_total{ 0 };
+// thread alike - both counters are lock-free atomics. They live in one
+// contiguous struct so the page shell can read them straight out of the
+// shared wasm heap (see vfs_web_progress_addrs): in PROXY_TO_PTHREAD builds
+// the exports bind on the worker that instantiates the module, so page-side
+// function calls into them are unreliable - a raw address read needs no
+// cross-thread call at all.
+struct vfs_web_progress_counters
+{
+    volatile std::atomic<uint64_t> done;  // bytes fetched (all web requests)
+    volatile std::atomic<uint64_t> total; // registered expectation
+};
+// shared-heap layout: the page reads these addresses directly (see
+// vfs_web_progress_addrs) - keep the pair contiguous and 8-aligned
+static vfs_web_progress_counters s_web_bytes = {{0}, {0}};
 
 uint64_t vfs_web_bytes_done(void)
 {
-    return s_web_bytes_done.load(std::memory_order_relaxed);
+    return s_web_bytes.done.load(std::memory_order_relaxed);
 }
 
 uint64_t vfs_web_bytes_total(void)
 {
-    return s_web_bytes_total.load(std::memory_order_relaxed);
+    return s_web_bytes.total.load(std::memory_order_relaxed);
 }
 
 void vfs_web_bytes_expect(uint64_t bytes)
 {
     if (bytes != 0)
-        s_web_bytes_total.fetch_add(bytes, std::memory_order_relaxed);
+        s_web_bytes.total.fetch_add(bytes, std::memory_order_relaxed);
+}
+
+// the static pair's address (wasm32: fits i32). 0 would mean "no module
+// memory" - the page shell treats it as "not available"
+uint32_t vfs_web_progress_addrs(void)
+{
+    return uint32_t(uintptr_t(&s_web_bytes));
 }
 
 // assembles [0, size) from VFS_HTTP_CHUNK_SIZE ranged GETs (http_get_range
@@ -152,7 +170,7 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
     // of noise), the chunked probe contributes its single byte and the
     // assembled ranges their payloads - together exactly the body once
     if (data != nullptr && len != 0 && (*status == 200 || *status == 206))
-        s_web_bytes_done.fetch_add(uint64_t(len), std::memory_order_relaxed);
+        s_web_bytes.done.fetch_add(uint64_t(len), std::memory_order_relaxed);
     return data;
 }
 
@@ -710,7 +728,8 @@ std::string http_urlencode(std::string str)
 
 // web download accounting (http.h): the curl transport carries no byte
 // accounting - the splash/progress surfaces it feeds are web-only. The no-op
-// stubs keep every caller linking; the readers answer "nothing known".
+// stubs keep every caller linking; the readers answer "nothing known". The
+// address getter answers 0 - the page shell treats it as "not available"
 uint64_t vfs_web_bytes_done(void)
 {
     return 0;
@@ -724,5 +743,10 @@ uint64_t vfs_web_bytes_total(void)
 void vfs_web_bytes_expect(uint64_t bytes)
 {
     (void)bytes;
+}
+
+uint32_t vfs_web_progress_addrs(void)
+{
+    return 0;
 }
 #endif // #if defined(XUO_EMSC)
