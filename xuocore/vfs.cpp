@@ -81,10 +81,12 @@ static vfs_params s_params;
 static VfsPlan s_plan;
 static bool s_plan_loaded = false;
 #if defined(XUO_EMSC)
-// web boot progress: the splash polls these while the streaming install runs
-// (declared early: the convergence loop reports through them)
-static std::atomic<bool> s_boot_web_done{false};
-static std::atomic<float> s_boot_web_progress{0.0f};
+// web boot completion: the splash polls this while the streaming install runs
+// (declared early: the convergence loop reports through it). The progress
+// VALUE lives in the transport byte accounting (http.cpp) - vfs_boot_web_progress
+// derives the ratio from it, so no float is published from the boot paths
+// anymore (every old writer fought the live byte ratio)
+static std::atomic<bool> s_boot_web_done{ false };
 // assets whose blob never made it into a materialized pack (zero slots read
 // as zeros in game): the boot log and the splash report it
 static size_t s_boot_web_stub_assets = 0;
@@ -632,6 +634,9 @@ static size_t s_block_lru_clock = 0;
 static size_t s_block_fetch_hits = 0;
 static size_t s_block_fetch_miss = 0;
 static size_t s_block_fetch_fails = 0;
+// hashes whose size already joined the web download denominator (the LRU
+// evicts and re-fetches, the expectation must register once)
+static std::unordered_set<uint64_t> s_block_expect;
 constexpr size_t VFS_BLOCK_LRU_CAP = 128ull << 20; // 128 MB of hot blocks
 
 static std::shared_ptr<std::vector<uint8_t>> s_block_lru_hit(uint64_t hash)
@@ -720,6 +725,13 @@ std::shared_ptr<std::vector<uint8_t>> vfs_asset_fetch_block_range(uint64_t uop_h
     }
 
     const uint64_t len = vfs_asset_range_len(asset);
+    {
+        std::lock_guard<std::mutex> lock(s_block_lru_mutex);
+        // denominator: per-block sizes register once per session (re-fetches
+        // of evicted blocks re-count done bytes, never the expectation)
+        if (s_block_expect.insert(uop_hash).second)
+            vfs_web_bytes_expect(len);
+    }
     const astr_t url = s_plan.file_repo + asset.blob;
     auto bytes = std::make_shared<std::vector<uint8_t>>(size_t(len), 0);
     const vfs_transport_result res = vfs_transport_active()->range(
@@ -1280,6 +1292,10 @@ int web_stream_step(WebStreamFile &s)
     if (res.total > 0 && s.compressed_total == 0)
     {
         s.compressed_total = uint64_t(res.total);
+        // denominator: the lane's full compressed size registers once, at the
+        // chunk that learned it (that chunk's own bytes are already counted
+        // done, so the ratio stays monotonic from here on)
+        vfs_web_bytes_expect(s.compressed_total);
     }
     if (!res.ok || chunk.empty())
     {
@@ -2581,10 +2597,7 @@ static bool vfs_boot_arena_ensure(
     {
 #if defined(XUO_EMSC)
         if (full_pass && (++done & 1023) == 0)
-        {
-            s_boot_web_progress.store(0.95f * float(done) / float(total), std::memory_order_relaxed);
             LOG_INFO("convergence: %zu of %zu assets", done, total);
-        }
 #endif
         const VfsAsset *asset = nullptr;
         uint8_t before = vfs_pending;
@@ -2967,7 +2980,6 @@ static void vfs_converge_from_store(const VfsPlan &plan)
         }
     }
     const size_t conv_total = conv_total_assets;
-    s_boot_web_progress.store(0.05f, std::memory_order_relaxed);
     LOG_INFO("convergence: total assets to process: %zu", conv_total);
 #endif
 
@@ -3013,8 +3025,6 @@ static void vfs_converge_from_store(const VfsPlan &plan)
             conv_done_assets += batch.size();
             if (conv_total != 0 && (conv_done_assets & 1023) < batch.size())
             {
-                const float done01 = float(conv_done_assets) / float(conv_total);
-                s_boot_web_progress.store(0.05f + 0.85f * done01, std::memory_order_relaxed);
                 LOG_INFO("convergence: %zu of %zu assets", conv_done_assets, conv_total);
             }
 #endif
@@ -3148,7 +3158,20 @@ bool vfs_boot_web_poll()
 
 float vfs_boot_web_progress()
 {
-    return s_boot_web_progress.load();
+    // live ratio over the transport byte accounting (http.cpp): the splash
+    // keeps moving through the whole session - the streaming lanes continue
+    // fetching after the boot tiers hand over, and the ratio follows. The
+    // denominator grows as the plan and the lanes learn sizes; unregistered
+    // traffic clamps through max(total, done) and the 0.99 cap below (1.0
+    // belongs to the poll() flip - the splash pins it and stops polling)
+    if (s_boot_web_done.load())
+        return 1.0f;
+    const uint64_t done = vfs_web_bytes_done();
+    const uint64_t total = vfs_web_bytes_total();
+    if (done == 0 || total == 0)
+        return 0.0f; // nothing fetched or nothing known yet: keep the bar down
+    float f = float(double(done) / double(total > done ? total : done));
+    return f > 0.99f ? 0.99f : f;
 }
 #endif
 
@@ -3486,7 +3509,6 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
         LOG_INFO("web install marker: previous install is complete, skipping the tiers");
         vfs_boot_materialize_packs(plan);
         vfs_state_fold(plan);
-        s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
         s_boot_web_done.store(true, std::memory_order_release);
         return;
     }
@@ -3522,18 +3544,11 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
     }
 #endif
     LOG_INFO("background tier: %zu assets", items.size());
-#if defined(XUO_EMSC)
-    const float background_total = items.size() > 0 ? float(items.size()) : 1.0f;
-#endif
     for (size_t pos = 0; pos < items.size() && !s_boot_shutdown;)
     {
         const size_t count = vfs_boot_chunk_span(items, pos);
         vfs_boot_run_chunk(plan, items.data() + pos, count, VFS_FETCH_PRIO_BG, false);
         pos += count;
-#if defined(XUO_EMSC)
-        s_boot_web_progress.store(1.0f * (float(pos) / background_total),
-                                  std::memory_order_relaxed);
-#endif
     }
     LOG_INFO("background tier complete");
     vfs_state_fold(plan); // persist T1 (and reopen the journal)
@@ -3584,7 +3599,6 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
     // the full install is on disk: the game init can proceed (the sweep
     // continues below for as long as the session lasts)
     vfs_boot_web_install_marker_write(plan);
-        s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
     s_boot_web_done.store(true, std::memory_order_release);
 #endif
     // the continuous sweep: the rest of the plan converges in the background
@@ -3636,9 +3650,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         if (!vfs_fetch_start(fetch_params))
             return false;
     }
-#if defined(XUO_EMSC)
-    s_boot_web_progress.store(0.02f, std::memory_order_relaxed);
-#endif
     if (progress)
         progress(0.0f, "manifests");
 
@@ -3914,6 +3925,20 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
             double(loose_skipped_bytes) / 1048576.0);
     }
 
+    // denominator seeding: every loose file the boot intends to fetch
+    // registers its expected size before the fetch pass - absent blobs only,
+    // present ones add no traffic, so the ratio stays honest across partial
+    // installs (granule/stream traffic registers later, as the lanes learn it)
+    uint64_t web_plan_bytes = 0;
+    for (const auto &item : loose)
+    {
+        const auto &asset = plan.files[item.file_index].assets[item.asset_index];
+        if (!fs_path_exists(fs_path_join(s_params.blobs_dir, asset.blob)))
+            web_plan_bytes += item.expected;
+    }
+    vfs_web_bytes_expect(web_plan_bytes);
+    LOG_INFO("web boot: %.1f MB planned (loose tier denominator)", double(web_plan_bytes) / 1048576.0);
+
     if (online && !loose.empty())
     {
         std::vector<astr_t> tails;
@@ -3922,7 +3947,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         sizes.reserve(loose.size());
         for (const auto &item : loose)
         {
-            const auto &asset = plan.files[item.file_index].assets[item.asset_index];
             tails.push_back(item.tail);
             sizes.push_back(item.expected);
         }
@@ -3970,7 +3994,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     vfs_state_fold(plan);
     s_boot_shutdown = false;
     s_boot_started = true;
-    s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
     s_boot_web_done.store(true, std::memory_order_release);
     if (progress)
         progress(1.0f, "ready");
@@ -4016,7 +4039,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         if (progress)
             progress(1.0f, "failed");
 #if defined(XUO_EMSC)
-        s_boot_web_progress.store(1.0f, std::memory_order_relaxed);
         s_boot_web_done.store(true, std::memory_order_release);
 #endif
         return false;
@@ -4024,9 +4046,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     // fold point for the blocking tier (reopens the journal in runtime mode:
     // marks from here on flush, folds are the durability barriers)
     vfs_state_fold(plan);
-#if defined(XUO_EMSC)
-    s_boot_web_progress.store(0.10f, std::memory_order_relaxed);
-#endif
     if (progress)
         progress(1.0f, "starting");
 

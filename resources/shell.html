@@ -758,12 +758,71 @@
           return args;
         }
 
+        // ---- streaming download accounting ----------------------------------
+        // The client exports two zero-arg i64 getters (CMakeLists
+        // -sEXPORTED_FUNCTIONS, declared in xuocore/http.h). BigInt results
+        // are Number()-normalized (older toolchains may hand back plain
+        // numbers). A light interval poll renders the live ratio only while
+        // bytes actually move - rAF is pointless for a 500ms cadence and
+        // stops in hidden tabs, which would freeze the line anyway.
+        var streamDonePrev = -1;
+        var streamMovedAt = 0;
+        var streamEl = null;
+        var streamTimer = 0;
+        function streamBytes(name) {
+          var f = Module['_vfs_web_bytes_' + name];
+          if (typeof f !== 'function') return -1;
+          var v = f();
+          return typeof v === 'bigint' ? Number(v) : v;
+        }
+        function pollStreamProgress() {
+          var done = streamBytes('done');
+          if (done < 0) return; // runtime not up (or native export missing)
+          var total = streamBytes('total');
+          if (total < done) total = done; // unregistered traffic cannot overflow
+          var frac = done > 0 && total > 0 ? done / total : 0;
+          if (done !== streamDonePrev) {
+            streamDonePrev = done;
+            streamMovedAt = Date.now();
+          }
+          // 3s idle window ends the line: fetches stopped (or everything the
+          // session needs is in) and the splash/canvas carries the state again
+          var show = frac >= 0.01 && frac < 0.99 &&
+                     Date.now() - streamMovedAt < 3000;
+          var text = show
+            ? 'streaming ' + (done / 1048576).toFixed(1) + ' / ' +
+              (total / 1048576).toFixed(1) + ' MB (' +
+              Math.round(frac * 100) + '%)'
+            : null;
+          var statusNow = document.getElementById('status');
+          if (statusNow) { // ?log=1 furniture: write the compact line there
+            if (show) statusNow.textContent = text;
+          } else {         // bare page: tiny non-intrusive overlay line only
+            if (!streamEl) {
+              streamEl = document.createElement('div');
+              streamEl.style.cssText =
+                'position:fixed;left:8px;bottom:6px;z-index:5;' +
+                'font:11px monospace;color:#aab;opacity:.75;' +
+                'pointer-events:none;text-shadow:0 1px 2px #000';
+              document.body.appendChild(streamEl);
+            }
+            streamEl.textContent = show ? text : '';
+            streamEl.style.display = show ? 'block' : 'none';
+          }
+        }
+        function startStreamPolling() {
+          if (streamTimer) return;
+          pollStreamProgress();
+          streamTimer = setInterval(pollStreamProgress, 500);
+        }
+
         // idempotent: every path (picker Play, Play Default, deep link,
         // fallback) funnels here and the module boots exactly once
         function bootClient(extraArgs) {
           if (booted) return;
           booted = true;
           hidePicker();
+          startStreamPolling();
           // Module.arguments must be FINAL before the glue runs (consumed
           // once at runtime init)
           Module.arguments = buildClientArgs(extraArgs);

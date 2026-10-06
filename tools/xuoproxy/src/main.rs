@@ -392,7 +392,7 @@ async fn proxied(
     // normalized content (whole-transfer zlib inflated, uop containers
     // rebuilt with stored blocks) - see normalize.rs
     if upstream_base == state.upstream_manifest {
-        return manifest_response(state, tail).await;
+        return manifest_response(state, tail, headers).await;
     }
     if upstream_base == state.upstream_files {
         if state.use_cache {
@@ -402,10 +402,13 @@ async fn proxied(
                 }
             }
             if let Some((ctype, body)) = cached_file(state, &url) {
-                if let Some(resp) = range_from_cached(&ctype, &body, headers) {
+                // one content hash per serve: the 200 and its 206 slices
+                // carry the same strong validator
+                let etag = strong_etag(&body);
+                if let Some(resp) = range_from_cached(&ctype, &body, headers, &etag) {
                     return resp;
                 }
-                return file_response(&ctype, body);
+                return file_response(&ctype, body, headers, &etag);
             }
         }
         // full fetch on first touch: normalization needs the whole body, and
@@ -433,10 +436,11 @@ async fn proxied(
         if state.use_cache {
             cache_put(state, &url, 200, "application/octet-stream", &body);
         }
-        if let Some(resp) = range_from_cached("application/octet-stream", &body, headers) {
+        let etag = strong_etag(&body);
+        if let Some(resp) = range_from_cached("application/octet-stream", &body, headers, &etag) {
             return resp;
         }
-        return file_response("application/octet-stream", body);
+        return file_response("application/octet-stream", body, headers, &etag);
     }
 
     // disk cache first: repeated boots do not hit the upstream services
@@ -450,7 +454,7 @@ async fn proxied(
                 if let Some((start_s, end_s)) = spec.split_once('-') {
                     if let (Ok(start), Ok(end)) = (start_s.parse::<usize>(), end_s.parse::<usize>())
                     {
-                        if let Some((ctype, total, body)) =
+                        if let Some((ctype, _etag, total, body)) =
                             cache_get_range_window(state, &url, start, end)
                         {
                             let ctype = sanitize_ctype(&ctype);
@@ -473,15 +477,16 @@ async fn proxied(
                 }
             }
         }
-        if let Some((status, ctype, body)) = cache_get(state, &url) {
+        if let Some((status, ctype, _etag, body)) = cache_get(state, &url) {
             // ranged request against a cached full body: slice + 206 (the
             // cache only stores full 200 bodies; without this a cached entry
             // would shadow every range read - the web chunked fetch and the
             // block streaming both depend on real 206 answers)
-            if let Some(resp) = range_from_cached(&sanitize_ctype(&ctype), &body, headers) {
+            let etag = strong_etag(&body);
+            if let Some(resp) = range_from_cached(&sanitize_ctype(&ctype), &body, headers, &etag) {
                 return resp;
             }
-            return respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers);
+            return respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers, None);
         }
     }
 
@@ -502,6 +507,14 @@ async fn proxied(
     };
 
     let status = resp.status().as_u16();
+    // pass upstream validators through when present (binary payloads relay
+    // byte-identical, so the upstream ETag stays a valid validator here);
+    // rewritten bodies fall back to their own content hash below
+    let upstream_etag = resp
+        .headers()
+        .get(header::ETAG)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_string);
     // the cdn occasionally serves content types with junk bytes on range
     // answers, which would fail HeaderValue parsing on every relay
     let ctype = sanitize_ctype(
@@ -525,16 +538,26 @@ async fn proxied(
         cache_put(state, &url, status, &sanitize_ctype(&ctype), &body);
     }
 
-    respond_text_rewritten(status, &sanitize_ctype(&ctype), body, headers)
+    respond_text_rewritten(
+        status,
+        &sanitize_ctype(&ctype),
+        body,
+        headers,
+        upstream_etag.as_deref(),
+    )
 }
 
 fn cache_entry(state: &AppState, url: &str) -> PathBuf {
-    let digest = Sha256::digest(url.as_bytes());
-    let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
-    state.cache_dir.join(format!("{hex}.cache"))
+    state.cache_dir.join(format!("{}.cache", sha256_hex(url.as_bytes())))
 }
 
-fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, Vec<u8>)> {
+// cache entry v2 layout:
+//   [status:2 BE][etag_len:4 BE][ctype_len:4 BE][etag][ctype][body]
+// 10-byte fixed prefix (status + the two length fields); the etag is stored
+// WITH its quotes (exactly as strong_etag produces it), so the whole-body 200
+// and the windowed 206 answer the same URL with an identical validator without
+// the 206 path reading (or hashing) the body.
+fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, String, Vec<u8>)> {
     let path = cache_entry(state, url);
     let raw = std::fs::read(&path).ok()?;
 
@@ -550,31 +573,51 @@ fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, Vec<u8>)> {
         }
     }
 
-    if raw.len() < 6 {
+    // 10-byte fixed prefix: status(2) + etag_len(4) + ctype_len(4)
+    if raw.len() < 10 {
         return None;
     }
     let status = u16::from_be_bytes([raw[0], raw[1]]);
-    let ctype_len = u32::from_be_bytes([raw[2], raw[3], raw[4], raw[5]]) as usize;
-    if raw.len() < 6 + ctype_len {
+    let etag_len = u32::from_be_bytes([raw[2], raw[3], raw[4], raw[5]]) as usize;
+    let ctype_len = u32::from_be_bytes([raw[6], raw[7], raw[8], raw[9]]) as usize;
+    // deterministically reject v1 entries: their [2..6] is the ctype length and
+    // the bytes that follow are ASCII ctype text, so the quote-delimited guard
+    // on the etag field can never hold. A v1 entry is thus a miss, and the next
+    // cache_put rewrites it as v2 - one re-download per entry, no migration pass.
+    if etag_len == 0
+        || etag_len > 128
+        || raw.len() < 10 + etag_len
+        || raw[10] != b'"'
+        || raw[10 + etag_len - 1] != b'"'
+    {
         return None;
     }
-    let ctype = String::from_utf8_lossy(&raw[6..6 + ctype_len]).into_owned();
-    let body = raw[6 + ctype_len..].to_vec();
-    Some((status, ctype, body))
+    let etag = String::from_utf8_lossy(&raw[10..10 + etag_len]).into_owned();
+    let bo = 10 + etag_len;
+    if raw.len() < bo + ctype_len {
+        return None;
+    }
+    let ctype = String::from_utf8_lossy(&raw[bo..bo + ctype_len]).into_owned();
+    let body = raw[bo + ctype_len..].to_vec();
+    Some((status, ctype, etag, body))
 }
 
 fn cache_put(state: &AppState, url: &str, status: u16, ctype: &str, body: &[u8]) {
     let path = cache_entry(state, url);
+    let etag = strong_etag(body);
     println!(
-        "cache_put {} ({} bytes, {})",
+        "cache_put {} ({} bytes, {}, {})",
         path.display(),
         body.len(),
-        ctype
+        ctype,
+        etag
     );
     let _ = std::fs::create_dir_all(&state.cache_dir);
-    let mut out = Vec::with_capacity(8 + ctype.len() + body.len());
+    let mut out = Vec::with_capacity(10 + etag.len() + ctype.len() + body.len());
     out.extend_from_slice(&status.to_be_bytes());
+    out.extend_from_slice(&(etag.len() as u32).to_be_bytes());
     out.extend_from_slice(&(ctype.len() as u32).to_be_bytes());
+    out.extend_from_slice(etag.as_bytes());
     out.extend_from_slice(ctype.as_bytes());
     out.extend_from_slice(body);
     let _ = std::fs::write(&path, &out);
@@ -610,10 +653,91 @@ fn sanitize_ctype(ctype: &str) -> String {
         .collect()
 }
 
+// freshness policies: content-addressed artifacts (the hash-named /patch/files
+// blobs and every pinned patch payload) never change per url -> immutable;
+// manifests/patchlists change with every publish -> must revalidate
+const CACHE_IMMUTABLE: &str = "public, max-age=31536000, immutable";
+const CACHE_REVALIDATE: &str = "no-cache";
+
+fn sha256_hex(data: &[u8]) -> String {
+    let digest = Sha256::digest(data);
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+// strong content validator (RFC 9110): quoted sha256 of the exact bytes this
+// server returns for the resource
+fn strong_etag(body: &[u8]) -> String {
+    format!("\"{}\"", sha256_hex(body))
+}
+
+fn etag_matches(headers: &HeaderMap, etag: &str) -> bool {
+    headers
+        .get(header::IF_NONE_MATCH)
+        .and_then(|v| v.to_str().ok())
+        .map(|v| {
+            v.split(',').any(|t| {
+                let t = t.trim();
+                t == "*" || t.strip_prefix("W/").unwrap_or(t) == etag
+            })
+        })
+        .unwrap_or(false)
+}
+
+// conditional GET -> 304 with the same validators: the browser keeps its
+// copy without re-downloading the body
+fn not_modified_response(etag: &str, cache_control: &str) -> Response {
+    let mut res = StatusCode::NOT_MODIFIED.into_response();
+    let hs = res.headers_mut();
+    hs.insert(header::ETAG, etag.parse().expect("etag"));
+    hs.insert(
+        header::CACHE_CONTROL,
+        cache_control.parse().expect("cache-control"),
+    );
+    res
+}
+
+// 200 + freshness/validators shared by every /patch answer; `cache_control`
+// picks the policy (CACHE_IMMUTABLE for content-addressed bodies,
+// CACHE_REVALIDATE for manifests)
+fn cacheable_response(
+    status: StatusCode,
+    ctype: &str,
+    body: Vec<u8>,
+    req_headers: &HeaderMap,
+    etag: &str,
+    cache_control: &str,
+) -> Response {
+    if etag_matches(req_headers, etag) {
+        return not_modified_response(etag, cache_control);
+    }
+    let mut res = (
+        status,
+        [(header::CONTENT_TYPE, ctype.to_string())],
+        body,
+    )
+        .into_response();
+    let hs = res.headers_mut();
+    hs.insert(header::ETAG, etag.parse().expect("etag"));
+    hs.insert(
+        header::CACHE_CONTROL,
+        cache_control.parse().expect("cache-control"),
+    );
+    hs.insert(
+        header::ACCEPT_RANGES,
+        header::HeaderValue::from_static("bytes"),
+    );
+    res
+}
+
 // "bytes=start-end" (or "bytes=start-") against a cached full body -> a 206
 // slice. Anything the client never sends (suffix ranges, multiple ranges,
 // non-byte units) falls through to the full-body answer (None).
-fn range_from_cached(ctype: &str, body: &[u8], headers: &HeaderMap) -> Option<Response> {
+fn range_from_cached(
+    ctype: &str,
+    body: &[u8],
+    headers: &HeaderMap,
+    etag: &str,
+) -> Option<Response> {
     let range = headers.get(header::RANGE)?.to_str().ok()?;
     let spec = range.strip_prefix("bytes=")?;
     let (start_s, end_s) = spec.split_once('-')?;
@@ -639,6 +763,18 @@ fn range_from_cached(ctype: &str, body: &[u8], headers: &HeaderMap) -> Option<Re
             .parse()
             .expect("content-range"),
     );
+    // 206 + validators is what lets browsers and CDNs treat partial answers
+    // as reusable cache entries instead of one-shot downloads
+    let hs = res.headers_mut();
+    hs.insert(header::ETAG, etag.parse().expect("etag"));
+    hs.insert(
+        header::CACHE_CONTROL,
+        CACHE_IMMUTABLE.parse().expect("cache-control"),
+    );
+    hs.insert(
+        header::ACCEPT_RANGES,
+        header::HeaderValue::from_static("bytes"),
+    );
     Some(res)
 }
 
@@ -647,10 +783,27 @@ fn respond_text_rewritten(
     ctype: &str,
     body: Vec<u8>,
     headers: &HeaderMap,
+    upstream_etag: Option<&str>,
 ) -> Response {
     let status = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    let body = rewrite_links(&body, headers);
-    (status, [(header::CONTENT_TYPE, ctype.to_string())], body).into_response()
+    let rewritten = rewrite_links(&body, headers);
+    // a body that survived rewriting byte-identical (binary payloads) can
+    // carry the upstream validator as-is; rewritten text bodies validate by
+    // their own final hash
+    let unrewritten = rewritten == body;
+    let body = rewritten;
+    if status != StatusCode::OK {
+        return (status, [(header::CONTENT_TYPE, ctype.to_string())], body).into_response();
+    }
+    let etag = match upstream_etag {
+        Some(etag) if unrewritten => etag.to_string(),
+        _ => strong_etag(&body),
+    };
+    // generic-route payloads are versioned-repo artifacts the disk cache
+    // already pins forever (cache_ttl 0): the same immutable + content-hash
+    // treatment as /patch/files lets browsers reuse them, while the ETag
+    // still answers explicit conditional GETs with a cheap 304
+    cacheable_response(status, ctype, body, headers, &etag, CACHE_IMMUTABLE)
 }
 
 // ---------------------------------------------------------------------------
@@ -658,14 +811,22 @@ fn respond_text_rewritten(
 // transfers for the web client
 // ---------------------------------------------------------------------------
 
-async fn manifest_response(state: &AppState, tail: &str) -> Response {
+async fn manifest_response(state: &AppState, tail: &str, req_headers: &HeaderMap) -> Response {
     let url = format!("{}/{tail}", state.upstream_manifest);
     if state.use_cache {
         if let Some((ctype, body)) = cached_file(state, &url) {
-            if let Some(resp) = range_from_cached(&ctype, &body, &HeaderMap::new()) {
-                return resp;
-            }
-            return file_response(&ctype, body);
+            // the cached copy is exactly the body a fresh fetch would
+            // produce: same validator + revalidation policy as below, so a
+            // conditional GET 304s identically whichever path serves it
+            let etag = strong_etag(&body);
+            return cacheable_response(
+                StatusCode::OK,
+                &ctype,
+                body,
+                req_headers,
+                &etag,
+                CACHE_REVALIDATE,
+            );
         }
     }
 
@@ -765,9 +926,29 @@ async fn manifest_response(state: &AppState, tail: &str) -> Response {
         cache_put(state, &url, status, "text/xml", &body);
     }
     let served_bytes = body.len();
-    let mut res = (StatusCode::from_u16(status).unwrap_or(StatusCode::OK), body).into_response();
-    res.headers_mut()
-        .insert(header::CONTENT_TYPE, "text/xml".parse().expect("ctype"));
+    // manifests change with every publish: never let the browser trust its
+    // copy blindly (no-cache), but hand it the content hash so an unchanged
+    // revalidation is a cheap 304 instead of a full refetch
+    let etag = strong_etag(&body);
+    let res = if status == 200 {
+        cacheable_response(
+            StatusCode::OK,
+            "text/xml",
+            body,
+            req_headers,
+            &etag,
+            CACHE_REVALIDATE,
+        )
+    } else {
+        let mut res = (
+            StatusCode::from_u16(status).unwrap_or(StatusCode::OK),
+            body,
+        )
+            .into_response();
+        res.headers_mut()
+            .insert(header::CONTENT_TYPE, "text/xml".parse().expect("ctype"));
+        res
+    };
     if status == 200 {
         println!("xuoproxy: manifest {tail} served ({served_bytes} bytes, rewritten)");
     }
@@ -808,7 +989,7 @@ async fn fetch_normalized_blob(
 // ---------------------------------------------------------------------------
 
 fn cached_file(state: &AppState, url: &str) -> Option<(String, Vec<u8>)> {
-    let (status, ctype, body) = cache_get(state, url)?;
+    let (status, ctype, _etag, body) = cache_get(state, url)?;
     if status != 200 {
         return None;
     }
@@ -829,7 +1010,7 @@ fn cached_file_range(state: &AppState, url: &str, range: &str) -> Option<Respons
     } else {
         end_s.parse().ok()?
     };
-    let (ctype, total, body) = cache_get_range_window(state, url, start, end_in)?;
+    let (ctype, etag, total, body) = cache_get_range_window(state, url, start, end_in)?;
     let end = start + body.len().saturating_sub(1);
     let mut res = (
         StatusCode::PARTIAL_CONTENT,
@@ -843,6 +1024,18 @@ fn cached_file_range(state: &AppState, url: &str, range: &str) -> Option<Respons
             .parse()
             .expect("range"),
     );
+    // 206 + validators: the ETag is the stored whole-body strong validator, so
+    // it is byte-identical to the one a 200 for the same URL carries
+    let hs = res.headers_mut();
+    hs.insert(header::ETAG, etag.parse().expect("etag"));
+    hs.insert(
+        header::CACHE_CONTROL,
+        CACHE_IMMUTABLE.parse().expect("cache-control"),
+    );
+    hs.insert(
+        header::ACCEPT_RANGES,
+        header::HeaderValue::from_static("bytes"),
+    );
     Some(res)
 }
 
@@ -852,20 +1045,29 @@ fn cache_get_range_window(
     url: &str,
     start: usize,
     end_in: usize,
-) -> Option<(String, u64, Vec<u8>)> {
+) -> Option<(String, String, u64, Vec<u8>)> {
     let path = cache_entry(state, url);
     let mut f = std::fs::File::open(&path).ok()?;
-    let mut hdr = [0u8; 6];
+    // 10-byte fixed prefix: status(2) + etag_len(4) + ctype_len(4)
+    let mut hdr = [0u8; 10];
     std::io::Read::read_exact(&mut f, &mut hdr).ok()?;
-    let ctype_len = u32::from_be_bytes([hdr[2], hdr[3], hdr[4], hdr[5]]) as usize;
+    let etag_len = u32::from_be_bytes([hdr[2], hdr[3], hdr[4], hdr[5]]) as usize;
+    if etag_len == 0 || etag_len > 128 {
+        return None;
+    }
+    let ctype_len = u32::from_be_bytes([hdr[6], hdr[7], hdr[8], hdr[9]]) as usize;
+    let mut etag_buf = vec![0u8; etag_len];
+    std::io::Read::read_exact(&mut f, &mut etag_buf).ok()?;
+    let etag = String::from_utf8_lossy(&etag_buf).into_owned();
     let mut ctype_buf = vec![0u8; ctype_len];
     std::io::Read::read_exact(&mut f, &mut ctype_buf).ok()?;
     let ctype = String::from_utf8_lossy(&ctype_buf).into_owned();
     let file_len = f.metadata().ok()?.len() as usize;
-    if file_len < 6 + ctype_len {
+    let offset = 10 + etag_len + ctype_len;
+    if file_len < offset {
         return None;
     }
-    let body_len = (file_len - 6 - ctype_len) as u64;
+    let body_len = (file_len - offset) as u64;
     let start64 = start as u64;
     if start64 >= body_len {
         return None;
@@ -874,24 +1076,25 @@ fn cache_get_range_window(
     if end < start64 {
         return None;
     }
-    std::io::Seek::seek(
-        &mut f,
-        std::io::SeekFrom::Start(6 + ctype_len as u64 + start64),
-    )
-    .ok()?;
+    std::io::Seek::seek(&mut f, std::io::SeekFrom::Start(offset as u64 + start64)).ok()?;
     let len = (end - start64 + 1) as usize;
     let mut body = vec![0u8; len];
     std::io::Read::read_exact(&mut f, &mut body).ok()?;
-    Some((ctype, body_len, body))
+    Some((ctype, etag, body_len, body))
 }
 
-fn file_response(ctype: &str, body: Vec<u8>) -> Response {
-    (
+// /patch/files answers are content-addressed (the url names a fixed artifact
+// and normalized containers are rebuilt deterministically): immutable + a
+// strong body-hash ETag so browsers and CDNs reuse them without revalidating
+fn file_response(ctype: &str, body: Vec<u8>, req_headers: &HeaderMap, etag: &str) -> Response {
+    cacheable_response(
         StatusCode::OK,
-        [(header::CONTENT_TYPE, ctype.to_string())],
+        ctype,
         body,
+        req_headers,
+        etag,
+        CACHE_IMMUTABLE,
     )
-        .into_response()
 }
 
 // ---------------------------------------------------------------------------
@@ -912,7 +1115,7 @@ fn normalized_manifest_url(manifest_url: &str) -> String {
 
 // inflate a ct=1 manifest transfer when its stored copy is still compressed
 fn decompress_cached_manifest(state: &AppState, url: &str) {
-    if let Some((_, _, body)) = cache_get(state, url) {
+    if let Some((_, _, _, body)) = cache_get(state, url) {
         if normalize::looks_zlib(&body) {
             if let Some(text) = normalize::zlib_inflate(&body) {
                 cache_put(state, url, 200, "text/xml", &text);
@@ -1081,8 +1284,9 @@ fn stream_rewrite_aops_line(line: &str, root: &str, rewritten: &mut bool) -> Str
 // ranged reads (a 200 would re-download the whole file per window), so the
 // cached body serves slices the same way the /patch/files lane does
 fn stream_respond(status: u16, ctype: &str, body: Vec<u8>, headers: &HeaderMap) -> Response {
-    if status == 200 {
-        if let Some(resp) = range_from_cached(ctype, &body, headers) {
+    if status == 200 && headers.contains_key(header::RANGE) {
+        let etag = strong_etag(&body);
+        if let Some(resp) = range_from_cached(ctype, &body, headers, &etag) {
             return resp;
         }
     }
@@ -1101,7 +1305,7 @@ async fn stream_proxy(
     }
 
     if state.use_cache {
-        if let Some((status, ctype, body)) = cache_get(&state, &url) {
+        if let Some((status, ctype, _etag, body)) = cache_get(&state, &url) {
             return stream_respond(status, &ctype, body, &headers);
         }
     }

@@ -39,6 +39,27 @@ bool http_get_range(
     http_response *out,
     int64_t *out_total = nullptr);
 
+// ---------------------------------------------------------------------------
+// web download accounting (wasm): the emscripten XHR transport counts every
+// successful (HTTP 200/206) response body it delivers into one process-wide
+// atomic pair. http_xhr_get is the single chokepoint ALL web traffic shares -
+// transport fetch/range (loose blobs, granule ranges, stream-file chunks,
+// heals, the fetch engine), the manifest getters, the chunked assembler - so
+// everything is counted exactly once, with no per-callsite bookkeeping. The
+// chunked transfer's bytes=0-0 probe contributes its 1 byte; the assembled
+// 8MB ranges are the body itself. `vfs_web_bytes_expect` grows the denominator
+// as the plan and the streaming lanes learn sizes (vfs.cpp registers them).
+// Readers feed vfs_boot_web_progress() and the page shell (shell.html polls
+// the exported getters - see the -sEXPORTED_FUNCTIONS link flag). Native
+// builds carry no-op stubs (curl stays uncounted: the splash surfaces are
+// web-only), so callers link everywhere and read zeros.
+// ---------------------------------------------------------------------------
+extern "C" {
+uint64_t vfs_web_bytes_done(void);
+uint64_t vfs_web_bytes_total(void);
+void vfs_web_bytes_expect(uint64_t bytes);
+}
+
 void http_init();
 void http_shutdown();
 void http_set_user_agent(const char *name);

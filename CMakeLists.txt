@@ -215,6 +215,11 @@ else()
   add_link_options(--profiling-funcs)
   # honor the shell-provided Module fields (arguments/canvas/print/...)
   add_link_options(-sINCOMING_MODULE_JS_API=arguments,canvas,print,printErr,setStatus,onRuntimeInitialized,locateFile)
+  # the page shell polls the live download accounting (shell.html -> http.h):
+  # keep the two zero-arg i64 getters in the export table. Out-pointer styles
+  # are deliberately avoided: the page would have to malloc through the
+  # pthread build's shared allocator. i64 results surface as JS BigInt
+  add_link_options(-sEXPORTED_FUNCTIONS=_main,_vfs_web_bytes_done,_vfs_web_bytes_total)
   # web builds stream from their own origin by default (the browser blocks
   # cross-origin fetches without CORS headers); override per build with
   # -DXUO_WEB_PRODUCT_URL=<url>

@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <algorithm>
+#include <atomic>
 #include <vector>
 #include <string>
 
@@ -25,8 +26,6 @@
 #define LOG_ERROR(...) Error(LOGGER_MODULE, __VA_ARGS__)
 #define LOG_INFO(...) Info(LOGGER_MODULE, __VA_ARGS__)
 
-static const char *s_agentName = nullptr;
-
 // responses at or above this size travel as ranged chunks: a single
 // multi-megabyte XHR response overflows the browser's in-memory handling
 // (Firefox spills big responses to temp files and fails them outright with
@@ -35,6 +34,27 @@ static const char *s_agentName = nullptr;
 // Range keeps the single-response path below.
 static const size_t VFS_HTTP_CHUNK_MIN = 8 * 1024 * 1024;
 static const size_t VFS_HTTP_CHUNK_SIZE = 8 * 1024 * 1024;
+
+// web download accounting (http.h): written from pool workers and the main
+// thread alike - both counters are lock-free atomics
+static std::atomic<uint64_t> s_web_bytes_done{ 0 };
+static std::atomic<uint64_t> s_web_bytes_total{ 0 };
+
+uint64_t vfs_web_bytes_done(void)
+{
+    return s_web_bytes_done.load(std::memory_order_relaxed);
+}
+
+uint64_t vfs_web_bytes_total(void)
+{
+    return s_web_bytes_total.load(std::memory_order_relaxed);
+}
+
+void vfs_web_bytes_expect(uint64_t bytes)
+{
+    if (bytes != 0)
+        s_web_bytes_total.fetch_add(bytes, std::memory_order_relaxed);
+}
 
 // assembles [0, size) from VFS_HTTP_CHUNK_SIZE ranged GETs (http_get_range
 // validated each part as a real 206 of the exact length)
@@ -127,6 +147,12 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
             return 0;
         }
     }, url, range ? range : "", status, len, total);
+    // accounting (http.h): every successful response body, counted once at
+    // this chokepoint. 404/error bodies stay uncounted (a few hundred bytes
+    // of noise), the chunked probe contributes its single byte and the
+    // assembled ranges their payloads - together exactly the body once
+    if (data != nullptr && len != 0 && (*status == 200 || *status == 206))
+        s_web_bytes_done.fetch_add(uint64_t(len), std::memory_order_relaxed);
     return data;
 }
 
@@ -147,13 +173,52 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
     (void)agent;
     if (!url || !out)
         return false;
-    // big transfers stream as ranged chunks: the cap only decides *when to
-    // look*, the probe's Content-Range decides the size (a cap-only path
-    // would misbehave when the cap is an upper bound, e.g. manifest buffers).
-    // No range support (or no size): plain single-response GET as before.
+
+    // Plain whole GET first: the chunked assembler below builds the exact
+    // same body in RAM anyway, but a single 200 is what browser HTTP caches
+    // can actually reuse - the streaming proxy marks whole responses with an
+    // ETag + immutable Cache-Control, and that treatment never attaches to a
+    // storm of 206 chunks (each re-boot would re-download every part). The
+    // probe + ranged assembly is kept as the escape hatch for servers that
+    // fail whole-file transfers: transport error / timeout / non-200 status,
+    // or browsers giving up on very large single responses (Firefox
+    // NS_ERROR_FILE_TOO_BIG). Inherently-ranged granule/stream traffic keeps
+    // its 206 reads by design through http_get_range.
+    //
+    // Cap semantics are unchanged (vfs_fetch passes the flat 512 MB web cap):
+    // a body that downloads fine but exceeds the cap is a failure, not a
+    // fallback trigger - the chunked path enforces the very same cap on the
+    // assembled size, so re-downloading everything through it can only fail
+    // again, one full extra transfer later.
+    long status = 0;
+    {
+        size_t len = 0;
+        uint8_t *data = http_xhr_get(url, nullptr, &status, &len, nullptr);
+        if (data && status == 200)
+        {
+            if (body_cap && len > body_cap)
+            {
+                LOG_ERROR("transfer exceeded the body cap (%zu > %zu): %s", len, body_cap, url);
+                free(data);
+                return false;
+            }
+            out->status = status;
+            out->body.assign(data, data + len);
+            free(data);
+            return true;
+        }
+        if (data)
+            free(data);
+        LOG_INFO(
+            "whole-body GET failed (%ld), falling back to ranged chunks: %s", status, url);
+    }
+
+    // ranged fallback: the probe's Content-Range decides the size (a cap-only
+    // path would misbehave when the cap is an upper bound, e.g. manifest
+    // buffers). No range support (or no size, or a cap below the chunking
+    // floor): nothing left to try.
     if (body_cap >= VFS_HTTP_CHUNK_MIN)
     {
-        long status = 0;
         size_t len = 0;
         long total = -1;
         uint8_t *probe = http_xhr_get(url, "bytes=0-0", &status, &len, &total);
@@ -162,24 +227,8 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
         if (status == 206 && len == 1 && total > 0)
             return http_get_chunked(url, uint64_t(total), body_cap, out);
     }
-    long status = 0;
-    size_t len = 0;
-    long total = -1;
-    uint8_t *data = http_xhr_get(url, nullptr, &status, &len, &total);
-    if (!data || status != 200)
-    {
-        LOG_ERROR("transport failed (%ld): %s", status, url);
-        return false;
-    }
-    if (body_cap && len > body_cap)
-    {
-        LOG_ERROR("transfer exceeded the body cap (%zu > %zu): %s", len, body_cap, url);
-        return false;
-    }
-    out->status = status;
-    out->body.assign(data, data + len);
-    free(data);
-    return true;
+    LOG_ERROR("transport failed (%ld): %s", status, url);
+    return false;
 }
 
 bool http_get_range(
@@ -323,7 +372,7 @@ std::string http_urlencode(std::string str)
     return out;
 }
 
-#else // #if defined(XUO_EMSC)#else // #if defined(XUO_EMSC)#else // #if defined(XUO_EMSC)
+#else // #if defined(XUO_EMSC)
 
 #include "http.h"
 
@@ -657,5 +706,23 @@ std::string http_urlencode(std::string str)
     }
     curl_easy_cleanup(curl);
     return encoded;
+}
+
+// web download accounting (http.h): the curl transport carries no byte
+// accounting - the splash/progress surfaces it feeds are web-only. The no-op
+// stubs keep every caller linking; the readers answer "nothing known".
+uint64_t vfs_web_bytes_done(void)
+{
+    return 0;
+}
+
+uint64_t vfs_web_bytes_total(void)
+{
+    return 0;
+}
+
+void vfs_web_bytes_expect(uint64_t bytes)
+{
+    (void)bytes;
 }
 #endif // #if defined(XUO_EMSC)

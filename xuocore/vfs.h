@@ -138,7 +138,9 @@ bool vfs_boot(void (*progress)(float done01, const char *label));
 #if defined(XUO_EMSC)
 // web boot: the boot runs asynchronously (splash keeps rendering); poll
 // until vfs_boot_web_poll() returns true (full streamed install on disk),
-// reading vfs_boot_web_progress() for the 0..1 bar value
+// reading vfs_boot_web_progress() for the live 0..1 download ratio - derived
+// from the transport byte accounting (http.h), so it keeps moving after the
+// boot completes while the session's streaming lanes keep fetching
 bool vfs_boot_web_poll();
 float vfs_boot_web_progress();
 
