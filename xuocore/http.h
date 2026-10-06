@@ -45,19 +45,26 @@ bool http_get_range(
 // atomic pair. http_xhr_get is the single chokepoint ALL web traffic shares -
 // transport fetch/range (loose blobs, granule ranges, stream-file chunks,
 // heals, the fetch engine), the manifest getters, the chunked assembler - so
-// everything is counted exactly once, with no per-callsite bookkeeping. The
-// chunked transfer's bytes=0-0 probe contributes its 1 byte; the assembled
-// 8MB ranges are the body itself. `vfs_web_bytes_expect` grows the denominator
-// as the plan and the streaming lanes learn sizes (vfs.cpp registers them).
-// Readers feed vfs_boot_web_progress() and the page shell (shell.html). The
-// page cannot call the exported getters reliably: in PROXY_TO_PTHREAD builds
-// the exports bind on the worker where the module instantiates. Instead
-// `vfs_web_progress_addrs` hands the page the static pair's address and it
-// reads the two i64 counters straight out of the shared heap (HEAPU64) -
-// pthread builds share one heap across main + workers. Native builds carry
-// no-op stubs (curl stays uncounted: the splash surfaces are web-only), so
-// callers link everywhere and read zeros; the address getter answers 0 and
-// the page treats that as "not available".
+// everything is counted exactly once, with no per-callsite bookkeeping. Each
+// distinct (url, range) target counts once per session: the browser http
+// cache re-serves identical bodies with no new wire traffic, and retry or
+// re-walk cycles re-request the same target, so re-counting repeats would
+// unmoor the counter from reality (multi-GB "streamed" values while the
+// network carried megabytes). A ranged request answered 200 (server ignored
+// the range) is never counted: http_get_range rejects that body outright.
+// The chunked transfer's bytes=0-0 probe contributes its 1 byte; the
+// assembled 8MB ranges are the body itself. `vfs_web_bytes_expect` grows the
+// denominator as the plan and the streaming lanes learn sizes (vfs.cpp
+// registers them) - also once per target, so the done/total ratio stays
+// monotonic and bounded. Readers feed vfs_boot_web_progress() and the page
+// shell (shell.html). The page cannot call the exported getters reliably: in
+// PROXY_TO_PTHREAD builds the exports bind on the worker where the module
+// instantiates. Instead `vfs_web_progress_addrs` hands the page the static
+// pair's address and it reads the two i64 counters straight out of the
+// shared heap (HEAPU64) - pthread builds share one heap across main +
+// workers. Native builds carry no-op stubs (curl stays uncounted: the splash
+// surfaces are web-only), so callers link everywhere and read zeros; the
+// address getter answers 0 and the page treats that as "not available".
 // ---------------------------------------------------------------------------
 extern "C" {
 uint64_t vfs_web_bytes_done(void);

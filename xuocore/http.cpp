@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <algorithm>
 #include <atomic>
+#include <mutex>
+#include <unordered_set>
 #include <vector>
 #include <string>
 
@@ -165,12 +167,46 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
             return 0;
         }
     }, url, range ? range : "", status, len, total);
-    // accounting (http.h): every successful response body, counted once at
-    // this chokepoint. 404/error bodies stay uncounted (a few hundred bytes
-    // of noise), the chunked probe contributes its single byte and the
-    // assembled ranges their payloads - together exactly the body once
-    if (data != nullptr && len != 0 && (*status == 200 || *status == 206))
-        s_web_bytes.done.fetch_add(uint64_t(len), std::memory_order_relaxed);
+    // accounting (http.h): every successful response body is counted once at
+    // this chokepoint, by SIZE. `len` is the buffer-pointer out-parameter:
+    // the value added must be *len - an unadorned `len` books the heap
+    // ADDRESS of the body into the counter, which is exactly the nonsense
+    // the splash used to show ("streamed" tens of GB of pointer values).
+    // Two more guards keep the counter meaningful against the denominator,
+    // which registers every transfer target once:
+    //
+    //  - a ranged request answered 200 (server ignored the range) is not
+    //    counted: http_get_range rejects that whole-file body right after
+    //    this point, so the bytes never reach the caller (observed: a 256 KB
+    //    refine window booked at 39 MB, nine times)
+    //
+    //  - each distinct (url, range) target counts once per session. The
+    //    browser http cache re-serves identical bodies with no new wire
+    //    traffic, and the engine's retry/purge cycles re-request the same
+    //    target - re-counting those repeats unmoors the cumulative counter
+    //    from reality during manifest re-walks and whole-blob retry storms
+    if (data != nullptr && len != 0 && *len != 0 && (*status == 200 || *status == 206))
+    {
+        static std::mutex s_counted_mutex;
+        static std::unordered_set<std::string> s_counted;
+        const bool ranged = range != nullptr && range[0] != 0;
+        bool count = false;
+        if (!ranged || *status == 206)
+        {
+            std::string key;
+            key.reserve(strlen(url) + (ranged ? strlen(range) : 0) + 1);
+            key = url;
+            if (ranged)
+            {
+                key.push_back('|');
+                key += range;
+            }
+            std::lock_guard<std::mutex> lock(s_counted_mutex);
+            count = s_counted.insert(std::move(key)).second;
+        }
+        if (count)
+            s_web_bytes.done.fetch_add(uint64_t(*len), std::memory_order_relaxed);
+    }
     return data;
 }
 

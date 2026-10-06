@@ -66,6 +66,27 @@
                             cursor: pointer; margin-right: 8px; }
       #shardPicker button:disabled { opacity: .4; cursor: default; }
       #shardPicker button:not(:disabled):hover { background: #2c3b5c; }
+      /* graphical streaming progress bar: lives OUTSIDE the flow entirely.
+         #wrap is a flex column and any in-flow row below the canvas extends
+         the document past the viewport once maximized (scrollbars re-center
+         and clip the canvas - the measured bugs documented above), so the bar
+         is position:fixed and re-anchored to the canvas rect every poll:
+         visually just below the canvas, never in flow. DOM placement is
+         cosmetic. z-index 900 keeps it below #shardPicker (1000). */
+      #streamBar { position: fixed; display: none; height: 16px;
+                   background: #16171d; border: 1px solid #2a2c36;
+                   border-radius: 4px; overflow: hidden; z-index: 900;
+                   box-sizing: border-box; }
+      #streamBarFill { height: 100%; width: 0%; background: #4f7bd9; }
+      #streamBarText { position: absolute; left: 0; right: 0; top: 0;
+                       text-align: center; font: 11px ui-monospace, Menlo,
+                       Consolas, monospace; color: #dfe3ee; line-height: 14px;
+                       white-space: nowrap; overflow: hidden; }
+      /* throughput mode (open-ended sweep, no percent): full-width bar with a
+         subtle opacity pulse instead of a growing fill */
+      #streamBar.indet #streamBarFill { width: 100%; }
+      #streamBar.indet #streamBarFill { animation: streamPulse 1.2s infinite; }
+      @keyframes streamPulse { 0%, 100% { opacity: .45; } 50% { opacity: .9; } }
     </style>
   </head>
   <body>
@@ -777,8 +798,13 @@
         //   percent    done <= total (the bounded boot plan): "streaming
         //              250 / 730 MB (34%)"
         //   throughput done >  total (the open-ended in-game sweep, whose
-        //              denominator the client never registers): "streamed
-        //              1.2 GB (12.4 MB/s)" - no percent, honestly open-ended.
+        //              denominator the client never registers): "streaming
+        //              12.4 MB/s (sweep +180 MB, repeats uncounted)" - the
+        //              rolling rate plus this session's unique-transfer
+        //              volume. The LIFETIME counter is never rendered here:
+        //              a lifetime total reads as data volume and unmoors
+        //              with re-fetch churn (cache re-serves, retry cycles),
+        //              which is exactly the nonsense-magnitude failure mode.
         // The overlay stays visible while bytes move (any done delta over the
         // last STREAM_IDLE_MS) OR while percent-mode has frac in [0.01,0.98];
         // it hides only when idle or before the first byte. There is NO
@@ -790,10 +816,12 @@
         var STREAM_IDLE_MS = 3000;    // no delta for 3s => considered idle
         var streamAddr = -1; // -1 = not resolved yet, 0 = unavailable
         var streamDonePrev = -1;
+        var streamSessionBase = -1; // counter value at first sighting (session delta base)
         var streamMovedAt = 0;
         var streamSamples = []; // [{t:ms, d:bytes}] rolling rate window
         var streamEl = null;
         var streamTimer = 0;
+        var streamBar = null; // lazily created fixed progress bar
         function streamCounter(wordIndex) {
           // re-fetch the view every poll: memory growth detaches old ones
           // (emscripten re-publishes Module.HEAPU64 on growth)
@@ -851,6 +879,7 @@
           }
           var moving = now - streamMovedAt < STREAM_IDLE_MS;
           var frac = total > 0 && done > 0 ? done / total : 0;
+          if (done > 0 && streamSessionBase < 0) streamSessionBase = done;
           var out;
           if (done > 0 && total > 0 && done <= total) { // percent mode
             out = { show: moving || (frac >= 0.01 && frac <= 0.98),
@@ -858,14 +887,60 @@
                           formatBytes(total) + ' (' +
                           Math.round(frac * 100) + '%)' };
           } else if (done > 0) { // throughput mode (open-ended sweep)
+            // rolling rate + this session's unique-transfer volume; the
+            // lifetime counter stays off the screen (see the mode notes)
+            var session = Math.max(0, done - streamSessionBase);
             out = { show: moving,
-                    text: 'streamed ' + formatBytes(done) +
-                          ' (' + formatRate(rate) + ')' };
+                    text: 'streaming ' + formatRate(rate) +
+                          ' (sweep +' + formatBytes(session) +
+                          ', repeats uncounted)' };
           } else { // nothing fetched yet
             out = { show: false, text: null };
           }
           out.samples = samples;
           return out;
+        }
+        // create the fixed bar once; DOM placement is cosmetic (position:fixed)
+        function ensureStreamBar() {
+          if (streamBar) return streamBar;
+          var canvas = document.getElementById('canvas');
+          if (!canvas) return null;
+          streamBar = document.createElement('div');
+          streamBar.id = 'streamBar';
+          var fill = document.createElement('div');
+          fill.id = 'streamBarFill';
+          var text = document.createElement('div');
+          text.id = 'streamBarText';
+          streamBar.appendChild(fill);
+          streamBar.appendChild(text);
+          canvas.insertAdjacentElement('afterend', streamBar);
+          return streamBar;
+        }
+        // re-anchor to the canvas rect + drive fill/label from the display mode
+        function updateStreamBar(show, text, percent, indeterminate) {
+          var bar = ensureStreamBar();
+          if (!bar) return;
+          if (!show) { bar.style.display = 'none'; return; }
+          var canvas = document.getElementById('canvas');
+          if (canvas) {
+            var r = canvas.getBoundingClientRect();
+            bar.style.left = r.left + 'px';
+            bar.style.width = r.width + 'px';
+            bar.style.top = Math.min(r.bottom + 6,
+                                     window.innerHeight - 22) + 'px';
+          }
+          var fill = document.getElementById('streamBarFill');
+          if (percent) {
+            if (fill) fill.style.width = (percent * 100) + '%';
+            bar.className = '';
+          } else { // throughput: full fill + pulse
+            if (fill) fill.style.width = '100%';
+            bar.className = 'indet';
+          }
+          var textEl = document.getElementById('streamBarText');
+          if (textEl) textEl.textContent = text;
+          bar.style.transform = 'translateZ(0)'; // force a fresh anchor paint
+          bar.style.display = 'block';
         }
         function pollStreamProgress() {
           resolveStreamAddr();
@@ -891,11 +966,21 @@
             streamEl.textContent = show ? text : '';
             streamEl.style.display = show ? 'block' : 'none';
           }
+          // graphical bar, same visibility rules as the text overlay.
+          // percent mode (done <= total, total > 0): growing fill, no pulse.
+          // throughput mode (done > total): full fill + pulse.
+          var frac = total > 0 && done > 0 ? done / total : 0;
+          updateStreamBar(show, text, done <= total ? frac : 0, done > total);
         }
         function startStreamPolling() {
           if (streamTimer) return;
           pollStreamProgress();
           streamTimer = setInterval(pollStreamProgress, 500);
+          // resize just re-anchors; the 500ms tick keeps fill/label current
+          window.addEventListener('resize', function () {
+            if (streamBar && streamBar.style.display !== 'none')
+              pollStreamProgress();
+          }, false);
         }
 
         // idempotent: every path (picker Play, Play Default, deep link,
