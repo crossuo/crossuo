@@ -48,6 +48,10 @@ CFG_FIELD(shard, urlregister, {}, astr_t)
 // url where to register IF the shard is not auto account creation
 // if empty, it IS considered auto account creation
 
+CFG_FIELD(shard, urlvideo, {}, astr_t)
+// optional, plain http(s) url — shard video/trailer; drives the client's
+// video link (crossuo.cfg 'shardvideo') when the launcher writes the profile
+
 CFG_FIELD(shard, installer, {}, astr_t)
 // optional
 // data install source: where the client streams/downloads its data from

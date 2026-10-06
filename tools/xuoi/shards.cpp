@@ -175,6 +175,7 @@ shard_data shard_by_id(int id)
              s.shard_crypt,
              s.shard_url.c_str(),
              s.shard_urlregister.c_str(),
+             s.shard_urlvideo.c_str(),
              s.shard_urlother,
              s.shard_installer.c_str() };
 }
@@ -274,6 +275,12 @@ int main(int argc, char **argv)
             LOG_ERROR(
                 "invalid field 'urlregister', not a http(s) url: '%s'",
                 entry.shard_urlregister.c_str());
+            error = true;
+        }
+        if (!entry.shard_urlvideo.empty() && !valid_url(entry.shard_urlvideo))
+        {
+            LOG_ERROR(
+                "invalid field 'urlvideo', not a http(s) url: '%s'", entry.shard_urlvideo.c_str());
             error = true;
         }
         // installer/urlother are plain urls: empty is fine (manual install /

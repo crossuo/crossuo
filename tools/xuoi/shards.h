@@ -20,6 +20,7 @@ struct shard_data
     bool crypt;
     const char *url;         // website
     const char *urlregister; // account registration page
+    const char *urlvideo;    // video/trailer url ("" = none)
     astr_t urlother;         // plain community url ("" = none); a discord
                              // link is detected from the url itself
                              // (contains discord.gg/ or discord.com/)

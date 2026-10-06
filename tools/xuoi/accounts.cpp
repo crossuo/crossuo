@@ -247,7 +247,9 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
         e.crossuo_shardaccount = shard.urlregister;
     if (!shard.urlother.empty() && url_is_discord(shard.urlother))
         e.crossuo_sharddiscord = shard.urlother;
-    // help/video/credits have no shard.ini source: the client keeps its defaults
+    if (shard.urlvideo && shard.urlvideo[0])
+        e.crossuo_shardvideo = shard.urlvideo;
+    // help/credits have no shard.ini source: the client keeps its defaults
 }
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
