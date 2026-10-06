@@ -33,7 +33,7 @@ message(STATUS "Version: ${XUO_VERSION} (${XUO_VERSION_NUM})")
 #
 option(ENABLE_LTO "Enables Link Time Optimization (default: On)" ON)
 option(ENABLE_FORMAT "Enables clang-format (default: On)" ON)
-option(RENDER_GLES2 "Force OpenGL ES2 (default Off)" OFF)
+option(RENDER_GLES2 "Force OpenGL ES2 (default Off; web builds only, unsupported on desktop)" OFF)
 option(RENDER_GL3 "Force OpenGL 3.x (default Off)" OFF)
 option(RENDER_GL1 "Force OpenGL 1.1 (automatic)" OFF)
 option(XUO_ASSISTANT "Build in-client assistant (default: On)" ON)
@@ -81,6 +81,19 @@ endif()
 # Build Dependencies
 #
 if (RENDER_GLES2 AND NOT XUO_EMSC)
+  if (NOT CMAKE_CROSSCOMPILING)
+    # the renderer calls GLES3 entry points (glTexImage3D, glCopyImageSubData,
+    # GL_TEXTURE_BINDING_2D_ARRAY, GL_MAX_ARRAY_TEXTURE_LAYERS) that desktop
+    # libGLESv2 does not expose, so this combination can never compile
+    message(FATAL_ERROR
+        "RENDER_GLES2 is not supported on desktop builds: the renderer requires "
+        "GLES3 entry points that desktop libGLESv2 lacks.\n"
+        "Build the web target for GLES2 (emscripten/WebGL2), or use GL3 "
+        "(default) or GL1 (-DRENDER_GL1=On) on desktop.")
+  endif()
+  # cross builds are toolchain-based: their toolchain files set
+  # CMAKE_SYSTEM_NAME, which is what makes CMake set CMAKE_CROSSCOMPILING, so
+  # the gate above never fires for e.g. dockcross armv7/musl-arm64
   find_package(GLESv2 REQUIRED)
 endif()
 if ((RENDER_GL1 OR RENDER_GL3) AND NOT XUO_EMSC)
