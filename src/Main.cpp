@@ -22,9 +22,13 @@ EM_JS(void, web_install_alert_shim, (), {
 // (emscripten syscall proxying), so the authoritative state - the streamed
 // install, crossuo.cfg, logs - lives in the page's MEMFS, not in this
 // worker. Persistence (idbfs) is owned by the page too: resources/shell.html
-// mounts IndexedDB there, restores the persisted mutable state
-// (crossuo.cfg, log, assistant ini, /desktop profiles) at startup and
-// re-persists it on a slow tick.
+// mounts IndexedDB over /data, restores the persisted mutable state at
+// startup and re-persists it on a slow tick (plus a best-effort flush on
+// pagehide / visibilitychange(hidden)). fs_path_appdata() resolves to /data
+// on the web (common/fs.h), so everything the client generates under
+// FilePath() and the assistant config root lands in /data/crossuo and
+// persists; the root-level crossuo.cfg / crossuo.log / xuoassist.ini and the
+// /screenshots tree are whitelisted separately.
 // The streamed install is deliberately NEVER persisted: it is re-fetchable
 // (the browser http cache keeps the fetched blobs; boot re-fetches on
 // demand - see the install relocation in load_config: it lives in the
@@ -296,6 +300,12 @@ bool load_config()
         // popts: .get() on an option that was never set reads out of bounds
         // (release builds compile the guard out) - always check was_set first
         astr_t dir;
+#if defined(XUO_EMSC)
+        // an explicit --streaming dir keeps its meaning; only the
+        // FilePath()-derived dir is relocated (see the comment below)
+        const bool install_dir_from_cli =
+            g_cli["streaming"].was_set() && !g_cli["streaming"].get().string.empty();
+#endif
         if (g_cli["streaming"].was_set())
             dir = g_cli["streaming"].get().string;
         if (dir.empty())
@@ -313,13 +323,21 @@ bool load_config()
         }
 #if defined(XUO_EMSC)
         // keep the streamed install OUT of the persisted state: the web
-        // persist path (shell.html) syncs only the small mutable state
-        // (crossuo.cfg, log, profiles), and the install is re-fetchable
+        // persist path (shell.html) syncs only the small mutable state under
+        // the persisted appdata root (/data), and the install is re-fetchable
         // session-local data - the browser http cache persists the fetched
         // blobs, boot re-fetches what it needs on demand. See the web file
-        // topology note at the top of this file.
-        if (!dir.empty() && dir[0] != '/')
+        // topology note at the top of this file. The relocation is
+        // unconditional for the derived path: fs_path_appdata() resolves
+        // inside the persisted idbfs tree since the statefulness work, so a
+        // leading slash no longer marks a session-local dir. An explicit
+        // --streaming dir keeps its absolute meaning.
+        if (!install_dir_from_cli && !dir.empty() && dir.rfind("/install", 0) != 0)
+        {
+            if (dir[0] == '/')
+                dir.erase(0, 1);
             dir = "/install/" + dir;
+        }
 #endif
         params.install_dir = fs_path_from(dir.c_str());
         // cache (blob store + state db) lives under the streaming dir

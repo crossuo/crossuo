@@ -983,7 +983,20 @@ FS_PRIVATE fs_path fs_path_appdata()
     if (datadir)
         return path;
 
-#if defined(__linux__)
+#if defined(__EMSCRIPTEN__)
+    // web: the page owns persistence (resources/shell.html mounts idbfs over
+    // /data and re-persists the whitelist on a tick), while MEMFS dies with
+    // the page - so every client-generated path must resolve INSIDE the
+    // mounted tree or it is lost with the session. Hand out the mount point:
+    // FilePath() (xuocore/uodata.cpp) composes <appdata>/crossuo/<name>, so
+    // profile saves, the assistant config trees and the config fallback all
+    // land under /data/crossuo and persist natively; the streamed install is
+    // kept out of it by the /install relocation in src/Main.cpp load_config.
+    // This branch stays first on purpose: emscripten may or may not define
+    // __linux__, but it never provides the desktop data-dir semantics below.
+    datadir = "/data";
+    path = fs_path_from(datadir);
+#elif defined(__linux__)
     // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
     bool is_home = false;
     do
