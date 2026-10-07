@@ -44,17 +44,22 @@
                      font-family: ui-monospace, Menlo, Consolas, monospace; }
       #shardPicker .panel { background: #16171d; border: 1px solid #2a2c36;
                             border-radius: 6px; width: 440px; max-width: 92vw;
-                            max-height: 76vh; box-sizing: border-box; padding: 14px;
+                            box-sizing: border-box; padding: 14px;
                             display: flex; flex-direction: column; }
       #shardPicker .title { font-size: 14px; color: #e8eaf2; margin-bottom: 10px; }
-      #shardPicker .list { flex: 1; min-height: 0; overflow-y: auto;
-                           border: 1px solid #2a2c36; }
+      /* the list never exceeds ~80% of the viewport; overflow scrolls (a
+         long list scrolls inside .list, the panel stays compact) */
+      #shardPicker .list { flex: 1; min-height: 0; max-height: 80vh;
+                           overflow-y: auto; border: 1px solid #2a2c36; }
       #shardPicker .row { padding: 7px 10px; cursor: pointer;
                           border-bottom: 1px solid #20222b; }
       #shardPicker .row:last-child { border-bottom: none; }
       #shardPicker .row:hover { background: #1d1f27; }
       #shardPicker .row.sel,
       #shardPicker .row.sel:hover { background: #24304a; }
+      /* highlighted entries are promoted to the top and marked with a
+         subtle accent bar + star prefix (see the row builder) */
+      #shardPicker .row.featured { border-left: 3px solid #4f7bd9; }
       #shardPicker .name { font-size: 13px; color: #dfe3ee; }
       #shardPicker .sub { font-size: 11px; opacity: .65; margin-top: 2px; }
       #shardPicker .footer { margin-top: 12px; }
@@ -63,7 +68,8 @@
       #shardPicker button { background: #24304a; color: #dfe3ee;
                             border: 1px solid #3d5aa8; border-radius: 4px;
                             padding: 6px 14px; font: inherit; font-size: 12px;
-                            cursor: pointer; margin-right: 8px; }
+                            cursor: pointer; }
+      #shardPicker .buttons button { margin: 12px auto 0; display: block; }
       #shardPicker button:disabled { opacity: .4; cursor: default; }
       #shardPicker button:not(:disabled):hover { background: #2c3b5c; }
       /* graphical streaming progress bar: lives OUTSIDE the flow entirely.
@@ -691,6 +697,7 @@
       (function () {
         var params = new URLSearchParams(window.location.search);
         var shards = [];
+        var view = []; // display-ordered picker items (highlighted first)
         var booted = false;
         var selected = -1;
         var ui = null;
@@ -1011,8 +1018,8 @@
           }, false);
         }
 
-        // idempotent: every path (picker Play, Play Default, deep link,
-        // fallback) funnels here and the module boots exactly once
+        // idempotent: every path (picker Play, deep link, fallback) funnels
+        // here and the module boots exactly once
         function bootClient(extraArgs) {
           if (booted) return;
           booted = true;
@@ -1114,6 +1121,30 @@
           ui = null;
         }
 
+        // entries sorted for display: highlighted ('highlighted' tag) first,
+        // stable so the manifest order is preserved within each group. Returns
+        // a new array of {entry, featured, displayTags} so the manifest order
+        // (and shardToArgs(entry)) is untouched.
+        function pickerEntries(list) {
+          var hi = [];
+          var lo = [];
+          for (var i = 0; i < list.length; i++) {
+            var entry = list[i];
+            var tags = entry.tags ? String(entry.tags).split(',') : [];
+            var featured = false;
+            var shown = [];
+            for (var t = 0; t < tags.length; t++) {
+              var tok = tags[t].replace(/^[ \t]+|[ \t]+$/g, '');
+              if (!tok) continue;
+              if (tok.toLowerCase() === 'highlighted') { featured = true; continue; }
+              shown.push(tok);
+            }
+            var item = { entry: entry, featured: featured, displayTags: shown.join(',') };
+            (featured ? hi : lo).push(item);
+          }
+          return hi.concat(lo);
+        }
+
         function select(i) {
           selected = i;
           if (!ui) return;
@@ -1121,11 +1152,12 @@
           for (var k = 0; k < rows.length; k++) {
             rows[k].classList[k === i ? 'add' : 'remove']('sel');
           }
-          ui.play.disabled = i < 0;
+          ui.play.disabled = i < 0; // only an empty list keeps Play disabled
         }
 
         function play(i) {
-          var entry = shards[i];
+          var item = i >= 0 ? view[i] : null;
+          var entry = item ? item.entry : null;
           if (!entry || booted) return;
           setPageStatus('starting ' + entry.name + '\u2026');
           if (ui) ui.state.textContent = 'starting ' + entry.name + '\u2026';
@@ -1134,6 +1166,8 @@
 
         function showPicker() {
           if (booted || ui) return;
+          // display order: highlighted first (promoted), manifest order kept
+          view = pickerEntries(shards);
           var overlay = document.createElement('div');
           overlay.id = 'shardPicker';
           overlay.tabIndex = 0;
@@ -1154,23 +1188,24 @@
           playBtn.textContent = 'Play';
           playBtn.disabled = true;
           playBtn.addEventListener('click', function () { play(selected); });
-          var defBtn = document.createElement('button');
-          defBtn.textContent = 'Play Default';
-          defBtn.addEventListener('click', function () { play(0); });
-          for (var i = 0; i < shards.length; i++) {
+          for (var i = 0; i < view.length; i++) {
             (function (i) {
+              var item = view[i];
               var row = document.createElement('div');
-              row.className = 'row';
+              row.className = item.featured ? 'row featured' : 'row';
               var name = document.createElement('div');
               name.className = 'name';
-              name.textContent = shards[i].name; // display name stays raw
+              // highlighted entries carry a star prefix; name stays raw otherwise
+              name.textContent = (item.featured ? '\u2605 ' : '') + item.entry.name;
               row.appendChild(name);
-              var sub = shards[i].loginserver || '';
-              if (shards[i].tags) sub += (sub ? ' \u00b7 ' : '') + shards[i].tags;
-              if (sub) {
+              var sub = item.entry.loginserver || '';
+              var tagsLine = item.displayTags
+                ? (sub ? sub + ' \u00b7 ' + item.displayTags : item.displayTags)
+                : sub;
+              if (tagsLine) {
                 var subEl = document.createElement('div');
                 subEl.className = 'sub';
-                subEl.textContent = sub;
+                subEl.textContent = tagsLine;
                 row.appendChild(subEl);
               }
               row.addEventListener('click', function () { select(i); });
@@ -1182,7 +1217,7 @@
           overlay.addEventListener('keydown', function (e) {
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
               e.preventDefault();
-              var n = shards.length;
+              var n = view.length;
               if (!n) return;
               var base = selected < 0 ? (e.key === 'ArrowDown' ? -1 : 0) : selected;
               select((base + (e.key === 'ArrowDown' ? 1 : n - 1)) % n);
@@ -1191,7 +1226,6 @@
             }
           });
           buttons.appendChild(playBtn);
-          buttons.appendChild(defBtn);
           footer.appendChild(state);
           footer.appendChild(buttons);
           panel.appendChild(title);
@@ -1200,6 +1234,9 @@
           overlay.appendChild(panel);
           document.body.appendChild(overlay);
           ui = { overlay: overlay, list: list, play: playBtn, state: state };
+          // pre-selection: the first (promoted) entry is highlighted first by
+          // the sort, so it is always the default choice
+          select(view.length ? 0 : -1);
           overlay.focus();
         }
 
