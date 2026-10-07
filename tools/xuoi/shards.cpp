@@ -115,11 +115,19 @@ static bool starts_with_ci(const astr_t &value, const char *prefix)
     return head == p;
 }
 
+// case-insensitive whole-value compare
+static bool equals_ci(const astr_t &value, const char *other)
+{
+    return value.size() == strlen(other) && starts_with_ci(value, other);
+}
+
 // tolerate the pre-2.0 published lists until they are republished (the
 // prefix grammar is gone from the client, which only takes plain urls):
 //   installer: `uo+<url>`/`xuo+<url>` carried a streamable product url, keep
 //     the remainder; `website+`/`download+` never did, clear to a manual
-//     install; already-plain values are kept as-is
+//     install; the bare `latest` token (e.g. `uo+latest`) means "use the
+//     client's default product", which is exactly what an empty installer
+//     already means, clear it; already-plain urls are kept as-is
 //   urlother: the old `Name+<url>` form keeps only the url, so the discord
 //     sniff (url_is_discord) and the ui link work on both grammars
 static int normalize_legacy_fields(shard::entry &e)
@@ -141,6 +149,10 @@ static int normalize_legacy_fields(shard::entry &e)
         e.shard_installer.clear();
         ++count;
     }
+    // `latest` is not a url: clearing it keeps clients from building a
+    // garbage --streaming-product=latest / latest/patchlist request
+    if (equals_ci(e.shard_installer, "latest"))
+        e.shard_installer.clear();
 
     const auto plus = e.shard_urlother.find('+');
     if (plus != astr_t::npos && plus > 0)

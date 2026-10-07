@@ -146,6 +146,38 @@ static std::string uri_percent_encode(const char *text)
     return out;
 }
 
+// dedupe-key url: the phase-0 cache busting stamps resource urls with
+// `?v=<token>`, and blob-form urls embed the resource url (token included,
+// percent-encoded) inside their `?u=` value. A mid-session manifest refresh
+// changes the token, which must not change the identity of the same logical
+// read - or the per-(url|range) dedupe in http_xhr_get would re-count its
+// bytes as a "new" target. Strips the token from a COPY used as the key only
+// (the request itself keeps it): the literal form on plain resource urls,
+// and the encoded one inside `u=` values (encodeURIComponent emits uppercase
+// hex: `?` -> `%3F`, `=` -> `%3D`, `v` stays literal). Case-insensitive find
+// on a lowercased copy; the token runs to the next `&`/`%26` or the end.
+static std::string http_dedupe_url(const char *url)
+{
+    std::string key(url ? url : "");
+    std::string lower(key);
+    for (auto &c : lower)
+    {
+        if (c >= 'A' && c <= 'Z')
+            c = char(c - 'A' + 'a');
+    }
+    static const char *const needles[] = { "?v=", "%3fv%3d" };
+    static const char *const stops[] = { "&", "%26" };
+    for (size_t i = 0; i < 2; ++i)
+    {
+        const size_t at = lower.find(needles[i]);
+        if (at == std::string::npos)
+            continue;
+        const size_t stop = lower.find(stops[i], at);
+        key.erase(at, (stop == std::string::npos ? lower.size() : stop) - at);
+    }
+    return key;
+}
+
 // single blocking GET; returns the malloc'd body (free() it). status
 // receives the HTTP code; total receives the resource size from
 // Content-Range (-1 when the header is absent).
@@ -221,7 +253,10 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
     //    browser http cache re-serves identical bodies with no new wire
     //    traffic, and the engine's retry/purge cycles re-request the same
     //    target - re-counting those repeats unmoors the cumulative counter
-    //    from reality during manifest re-walks and whole-blob retry storms
+    //    from reality during manifest re-walks and whole-blob retry storms.
+    //    The key carries the url with its `?v=` cache-buster stripped (see
+    //    http_dedupe_url): a mid-session token refresh must not resurrect an
+    //    already-counted target under a different name
     if (data != nullptr && len != 0 && *len != 0 && (*status == 200 || *status == 206))
     {
         static std::mutex s_counted_mutex;
@@ -230,11 +265,10 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
         bool count = false;
         if (!ranged || *status == 206)
         {
-            std::string key;
-            key.reserve(strlen(url) + (ranged ? strlen(range) : 0) + 1);
-            key = url;
+            std::string key = http_dedupe_url(url);
             if (ranged)
             {
+                key.reserve(key.size() + strlen(range) + 1);
                 key.push_back('|');
                 key += range;
             }
@@ -245,6 +279,33 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
             s_web_bytes.done.fetch_add(uint64_t(*len), std::memory_order_relaxed);
     }
     return data;
+}
+
+// HEAD probe for the body cap: returns the advertised Content-Length (-1
+// when the request fails or the server sends no usable length). No body
+// travels (a HEAD response has none), so nothing reaches the byte
+// accounting inside http_xhr_get - that path stays GET-only by construction.
+static long http_xhr_head_length(const char *url)
+{
+    return (long)EM_ASM_INT(
+    {
+        try
+        {
+            const x = new XMLHttpRequest();
+            x.open('HEAD', UTF8ToString($0), false); // sync: allowed on workers
+            x.timeout = 60000;
+            x.send(null);
+            if (x.status !== 200)
+                return -1;
+            const cl = x.getResponseHeader('Content-Length');
+            const n = cl === null ? NaN : parseInt(cl, 10);
+            return isFinite(n) ? n : -1;
+        }
+        catch (e)
+        {
+            return -1;
+        }
+    }, url);
 }
 
 void http_init()
@@ -276,11 +337,24 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
     // NS_ERROR_FILE_TOO_BIG). Inherently-ranged granule/stream traffic keeps
     // its 206 reads by design through http_get_range.
     //
-    // Cap semantics are unchanged (vfs_fetch passes the flat 512 MB web cap):
-    // a body that downloads fine but exceeds the cap is a failure, not a
-    // fallback trigger - the chunked path enforces the very same cap on the
-    // assembled size, so re-downloading everything through it can only fail
-    // again, one full extra transfer later.
+    // Cap semantics (vfs_fetch passes the flat 512 MB web cap): a body that
+    // exceeds the cap is a failure, not a fallback trigger - the chunked
+    // path enforces the very same cap on the assembled size, so
+    // re-downloading everything through it can only fail again, one full
+    // extra transfer later. The cap is therefore enforced PRE-transfer
+    // through a HEAD whenever the server advertises a Content-Length (no
+    // body moves); the post-download check below remains the final
+    // authority for servers that don't.
+    if (body_cap)
+    {
+        const long advertised = http_xhr_head_length(url);
+        if (advertised >= 0 && uint64_t(advertised) > uint64_t(body_cap))
+        {
+            LOG_ERROR(
+                "resource exceeds the body cap (%ld > %zu): %s", advertised, body_cap, url);
+            return false;
+        }
+    }
     long status = 0;
     {
         size_t len = 0;

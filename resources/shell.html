@@ -752,8 +752,11 @@
           // tolerate the pre-2.0 published lists until they are republished
           // (the prefix grammar is gone from the client): `uo+`/`xuo+`
           // carried a streamable url, keep the remainder; `website+` and
-          // `download+` never did - manual install, no product flag
+          // `download+` never did, and the bare `latest` token means "use
+          // the client's default product", which is exactly what an empty
+          // installer already means - manual install, no product flag
           if (/^(?:website|download)\+/i.test(installer)) installer = '';
+          if (/^(?:(?:uo|xuo)\+)?latest$/i.test(installer)) installer = '';
           if (installer) {
             // aops patch servers ("uo+<root>" / "xuo+<root>" installer
             // prefixes or a bare patch-server root: the client's

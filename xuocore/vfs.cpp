@@ -3220,9 +3220,13 @@ static void vfs_boot_web_install_marker_write(const VfsPlan &plan)
 
 // the web persistence driver: the C side owns every byte moved between MEMFS
 // (its stdio proxies to the shared browser-thread filesystem) and the OPFS
-// handles JS opened. The set covers what the game reads as files at init plus
-// the state db and the install marker - blobs are NOT persisted (they are
-// re-fetchable granule sources; persisting ~500MB of them doubles storage).
+// handles JS opened. The set covers what the game reads as files at init;
+// nothing persists the install itself - it is session-local (the shell's
+// IDBFS whitelist keeps the appdata tree only, not the install dir), so the
+// reuse layer between sessions is the browser/proxy http cache, and the
+// verify-pack probe cache-busts its re-fetches through the blob route.
+// Blobs are NOT persisted (they are re-fetchable granule sources;
+// persisting ~500MB of them doubles storage).
 
 // files the game's file manager opens as files and reads through baked
 // pointers at init (LoadWithUop/LoadCommon): the arena keeps their bytes as
