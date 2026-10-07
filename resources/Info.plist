@@ -9,7 +9,7 @@
         <key>CFBundleName</key>
         <string>CrossUO</string>
         <key>CFBundleExecutable</key>
-        <string>xuolauncher</string>
+        <string>crossuo</string>
         <key>CFBundleIconFile</key>
         <string>crossuo.icns</string>
     </dict>

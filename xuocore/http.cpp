@@ -345,8 +345,7 @@ bool http_get_range(
     // construction (a "/../" re-anchor would only pop the resource's own
     // file segment, not the directory chain, and land back inside
     // /patch/files). The reference itself travels as the percent-encoded
-    // ?u= value the proxy decodes to re-derive its cache key (never
-    // re-encoded here: it is already url-safe).
+    // ?u= value the proxy decodes to re-derive its cache key.
     // A proxy-relative reference is the only deployment guaranteed to know
     // the route; anything else goes straight to the ranged read below.
     // One blob-form failure (non-200, timeout, body longer than asked, or a

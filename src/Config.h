@@ -30,7 +30,8 @@ struct Config
     astr_t ShardHelp = XUO_DEFAULT_SHARD_HELP;
     astr_t ShardVideo = XUO_DEFAULT_SHARD_VIDEO;
     astr_t ShardCredits = XUO_DEFAULT_SHARD_CREDITS;
-    // no white-label default: shards carry discord via `urlother = Discord+<url>`
+    // no white-label default: shards carry discord as a plain community url
+    // (a discord link is detected from the url itself)
     astr_t ShardDiscord;
     uint16_t ServerPort = XUO_DEFAULT_SERVER_PORT;
     uint16_t ClientFlag = 0;

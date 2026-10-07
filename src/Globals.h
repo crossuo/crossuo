@@ -10,8 +10,8 @@
 // Renderer/RenderFrameBuffer.h; only pointers/extern declarations here
 struct CRenderTexture;
 class CRenderFrameBuffer;
-#include "Renderer/RenderAPI.h" // transitively provided by GLEngine/GLTexture.h before
-#include <common/str.h>             // REMOVE
+#include "Renderer/RenderAPI.h"
+#include <common/str.h>
 #include "Point.h"
 #include "Constants.h"
 #include <xuocore/enumlist.h>

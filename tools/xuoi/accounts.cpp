@@ -222,6 +222,8 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
         e.crossuo_loginserver = shard.loginserver;
     if (shard.clientversion)
         e.crossuo_clientversion = shard.clientversion;
+    if (shard.protocolversion && shard.protocolversion[0])
+        e.crossuo_protocolclientversion = shard.protocolversion;
     if (shard.clienttype) // empty: the client autodetects
         e.crossuo_clienttype = shard.clienttype;
     e.crossuo_crypt = shard.crypt;
@@ -340,6 +342,7 @@ void account_launch_shard(int shard_index)
     profile.web = entry.crossuo_shardweb;
     profile.account_page = entry.crossuo_shardaccount;
     profile.discord = entry.crossuo_sharddiscord;
+    profile.video = entry.crossuo_shardvideo;
 
     const auto result = xuol::client_apply_shard(profile);
     // needs_restart already latched the reload, which the app frame performs;
@@ -753,7 +756,7 @@ void ui_accounts(ui_model &m)
                 acct.account_clienttype = astr_t(client_types_cfg[current_type]);
             }
 
-            save_config(); // force xuolauncher to save all configurations
+            save_config(); // persist all account configuration changes to disk
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
             // saving may have fixed the data path (or anything else); apply

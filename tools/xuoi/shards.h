@@ -17,6 +17,7 @@ struct shard_data
     const char *loginserver;
     const char *clienttype;
     const char *clientversion;
+    const char *protocolversion; // network protocol version to force ("" = none)
     bool crypt;
     const char *url;         // website
     const char *urlregister; // account registration page

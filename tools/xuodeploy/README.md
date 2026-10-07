@@ -28,7 +28,7 @@ $ cp crossuo-build/src/crossuo release/linux/crossuo/
 
 Generate the specific product update data by specifying the desired version number:
 ```bash
-$ ./xuodeploy --platform linux --product "CrossUO" --version "1.1.0" --force
+$ ./xuodeploy --platform linux --product "CrossUO" --version "2.0.0" --force
 ```
 
 And finally, to start a development test server:

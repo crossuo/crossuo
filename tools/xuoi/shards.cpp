@@ -234,6 +234,7 @@ shard_data shard_by_id(int id)
              s.shard_loginserver.c_str(),
              s.shard_clienttype.c_str(),
              s.shard_clientversion.c_str(),
+             s.shard_protocolversion.c_str(),
              s.shard_crypt,
              s.shard_url.c_str(),
              s.shard_urlregister.c_str(),
