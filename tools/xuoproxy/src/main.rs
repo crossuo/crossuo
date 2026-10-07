@@ -376,6 +376,7 @@ async fn coop_coep(req: axum::extract::Request, next: axum::middleware::Next) ->
     res
 }
 
+
 // ---------------------------------------------------------------------------
 // reverse proxy with manifest link rewriting
 // ---------------------------------------------------------------------------
@@ -1155,14 +1156,21 @@ fn rewrite_links(body: &[u8], headers: &HeaderMap) -> Vec<u8> {
                     "http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest"
                 )
             )
-        } else if upstream
-            .starts_with("http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files")
+        // any published patch version: the files repo layout is stable, only
+        // the version segment moves (250, 251, ...) - pin whatever the live
+        // manifest declares to the same-origin /patch/files lane (whose
+        // upstream is picked by --files-upstream at startup)
+        } else if upstream.starts_with("http://patch.ak-cdn.eamythic.com/uopatch-sa/")
+            && upstream.contains("/legacyrelease/uo/files")
         {
+            let after_version = upstream
+                .split("uopatch-sa/")
+                .nth(1)
+                .and_then(|rest| rest.splitn(2, '/').nth(1))
+                .unwrap_or("");
             format!(
                 "/patch/files/{}",
-                upstream.trim_start_matches(
-                    "http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files"
-                )
+                after_version.trim_start_matches("legacyrelease/uo/files")
             )
         } else if upstream.starts_with("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo") {
             format!(
