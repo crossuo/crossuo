@@ -12,6 +12,14 @@
 //!    - `/patch/eamythic/<path>` -> upstream aops root
 //!    - `/stream/<url>`          -> generic: any absolute http(s) url
 //!
+//!    Plus the whole-blob window route for cacheable ranged reads:
+//!    `/blob/<urlhash>/<offset>/<size>?u=<url>` answers 200 with exactly the
+//!    `[offset, offset+size)` window of the upstream resource (clamped at
+//!    EOF) under the same immutable treatment as whole files - plain 200s
+//!    every intermediate cache can store, instead of one-shot 206s. The
+//!    client always sends `u`: the proxy hashes it (the disk-cache key) and
+//!    rejects a mismatch with the path hash.
+//!
 //!    Works with any manifest type: proxied text bodies (MythicMFT, aops
 //!    patchlists, JSON manifests) get their absolute repo urls rewritten to
 //!    the same local prefixes, so manifest-referenced file repos and nested
@@ -44,7 +52,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
-use axum::extract::{ws::WebSocket, DefaultBodyLimit, Path, State, WebSocketUpgrade};
+use axum::extract::{ws::WebSocket, DefaultBodyLimit, Path, RawQuery, State, WebSocketUpgrade};
 use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
@@ -180,10 +188,13 @@ async fn main() {
                 proxied(&st, &st.upstream_aops, &path, &headers).await
             }),
         )
+        .route("/blob/:hash/:offset/:size", get(blob_window))
+        .route("/blob/:offset/:size", get(blob_window_open))
         .route("/stream/*url", get(stream_proxy))
         .route("/ws/:host/:port", get(ws_shard))
         .fallback(static_file)
         .layer(axum::middleware::from_fn(coop_coep))
+        .layer(axum::middleware::from_fn(log_requests))
         .layer(DefaultBodyLimit::max(512 * 1024 * 1024))
         .with_state(state.clone());
 
@@ -203,7 +214,7 @@ async fn main() {
     println!("xuoproxy listening on http://{listen}");
     println!("  static: {dist}");
     println!(
-        "  proxy:  /patch/manifest|files|eamythic + /stream/<url> (cache: {})",
+        "  proxy:  /patch/manifest|files|eamythic + /stream/<url> + /blob/[<hash>/]<off>/<len> (cache: {})",
         cache_dir
     );
     println!("  bridge: /ws/<host>/<port>");
@@ -360,6 +371,38 @@ struct AppState {
     upstream_files: String,
     upstream_aops: String,
     http: reqwest::Client,
+}
+
+// one-line request log (stdout): boot-flow visibility and run-to-run request
+// counts (blob-window route hits vs ranged 206 answers, first vs warm boots)
+async fn log_requests(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> Response {
+    let method = req.method().clone();
+    let path = req
+        .uri()
+        .path_and_query()
+        .map(|pq| pq.as_str().to_string())
+        .unwrap_or_else(|| req.uri().path().to_string());
+    // percent-encoded ?u= values get long; keep one line readable
+    let shown: String = if path.chars().count() > 160 {
+        path.chars().take(160).collect::<String>() + "..."
+    } else {
+        path
+    };
+    let started = std::time::Instant::now();
+    let mut res = next.run(req).await;
+    println!(
+        "xuoproxy: {method} {shown} -> {} ({} bytes, {} us)",
+        res.status().as_u16(),
+        {
+            use axum::body::HttpBody;
+            res.body_mut().size_hint().exact().unwrap_or(0)
+        },
+        started.elapsed().as_micros()
+    );
+    res
 }
 
 async fn coop_coep(req: axum::extract::Request, next: axum::middleware::Next) -> Response {
@@ -562,16 +605,8 @@ fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, String, Vec<u8
     let path = cache_entry(state, url);
     let raw = std::fs::read(&path).ok()?;
 
-    if state.cache_ttl > 0 {
-        if let Ok(meta) = std::fs::metadata(&path) {
-            if let Ok(modified) = meta.modified() {
-                if let Ok(age) = modified.elapsed() {
-                    if age.as_secs() > state.cache_ttl {
-                        return None;
-                    }
-                }
-            }
-        }
+    if !cache_fresh(state, &path) {
+        return None;
     }
 
     // 10-byte fixed prefix: status(2) + etag_len(4) + ctype_len(4)
@@ -1096,6 +1131,300 @@ fn file_response(ctype: &str, body: Vec<u8>, req_headers: &HeaderMap, etag: &str
         etag,
         CACHE_IMMUTABLE,
     )
+}
+
+// ---------------------------------------------------------------------------
+// /blob/<urlhash>/<offset>/<size>?u=<url>: whole-blob window route
+//
+// Ranged reads as plain cacheable 200s instead of one-shot 206s: exactly
+// `size` bytes of the upstream resource starting at `offset` (clamped at
+// EOF), immutable freshness + a strong slice ETag, so every intermediate
+// cache (browser, HTTP, this proxy's own disk) can store and reuse the
+// window like a whole file. Never answers 206 and never forwards a Range
+// upstream - the proxy fetches the whole body once and ranges itself.
+// ---------------------------------------------------------------------------
+
+// --cache-ttl freshness (0 = entries live forever). Unreadable metadata
+// defers to the read itself, exactly like the cache_get fast path.
+fn cache_fresh(state: &AppState, path: &std::path::Path) -> bool {
+    if state.cache_ttl == 0 {
+        return true;
+    }
+    let Ok(meta) = std::fs::metadata(path) else {
+        return true;
+    };
+    let Ok(modified) = meta.modified() else {
+        return true;
+    };
+    let Ok(age) = modified.elapsed() else {
+        return true;
+    };
+    age.as_secs() <= state.cache_ttl
+}
+
+// resource length of a cached entry without reading the body: the v2 prefix
+// is fixed-width, so total = file size - 10 - etag_len - ctype_len. A stale
+// or malformed entry is a miss (None), never a length.
+fn cached_entry_len(state: &AppState, url: &str) -> Option<u64> {
+    let path = cache_entry(state, url);
+    let mut f = std::fs::File::open(&path).ok()?;
+    if !cache_fresh(state, &path) {
+        return None;
+    }
+    // 10-byte fixed prefix: status(2) + etag_len(4) + ctype_len(4)
+    let mut hdr = [0u8; 10];
+    std::io::Read::read_exact(&mut f, &mut hdr).ok()?;
+    let etag_len = u32::from_be_bytes([hdr[2], hdr[3], hdr[4], hdr[5]]) as u64;
+    if etag_len == 0 || etag_len > 128 {
+        return None;
+    }
+    let ctype_len = u32::from_be_bytes([hdr[6], hdr[7], hdr[8], hdr[9]]) as u64;
+    let file_len = f.metadata().ok()?.len();
+    let prefix = 10 + etag_len + ctype_len;
+    if file_len < prefix {
+        return None;
+    }
+    Some(file_len - prefix)
+}
+
+async fn blob_window(
+    State(state): State<AppState>,
+    Path((hash, offset, size)): Path<(String, u64, u64)>,
+    RawQuery(query): RawQuery,
+    headers: HeaderMap,
+) -> Response {
+    // the hash alone is not reversible, so the client always sends
+    // ?u=<percent-encoded upstream url>; the proxy re-derives the disk-cache
+    // key from it and refuses a mismatch (keeps cache keys exact without a
+    // hash -> url registry). Stays useful for CDN deployments where a
+    // pre-mirroring layer knows the hashes.
+    let url = blob_query_url(query.as_deref()).map(percent_decode);
+    let Some(url) = url else {
+        return (StatusCode::BAD_REQUEST, "missing u=<upstream url>").into_response();
+    };
+    if sha256_hex(url.as_bytes()) != hash {
+        return (
+            StatusCode::BAD_REQUEST,
+            format!("u does not hash to {hash}"),
+        )
+            .into_response();
+    }
+    blob_window_serve(state, headers, url, offset, size).await
+}
+
+// no-hash form: /blob/<offset>/<size>?u=<url>, for clients that only know
+// the proxy-relative resource url a rewritten manifest handed them and can
+// therefore not precompute the hash. `u` is either an absolute upstream url
+// (cache key re-derived from it, nothing to verify) or a proxy-relative path
+// resolved exactly like the matching route above. Unknown prefixes 404.
+async fn blob_window_open(
+    State(state): State<AppState>,
+    Path((offset, size)): Path<(u64, u64)>,
+    RawQuery(query): RawQuery,
+    headers: HeaderMap,
+) -> Response {
+    let url = blob_query_url(query.as_deref()).map(percent_decode);
+    let Some(url) = url else {
+        return (StatusCode::BAD_REQUEST, "missing u=<resource url>").into_response();
+    };
+    let Some(url) = resolve_resource_url(&state, &url) else {
+        return (
+            StatusCode::NOT_FOUND,
+            format!("unknown resource reference: {url}"),
+        )
+            .into_response();
+    };
+    blob_window_serve(state, headers, url, offset, size).await
+}
+
+// the shared u=<...> query parameter, still percent-encoded (RawQuery is raw)
+fn blob_query_url(query: Option<&str>) -> Option<&str> {
+    query.and_then(|q| q.split('&').find_map(|kv| kv.strip_prefix("u=")))
+}
+
+// map a client-supplied resource reference to the upstream url whose sha256
+// is the shared disk-cache key. Absolute urls pass through untouched; a
+// proxy-relative path maps to the same upstream base its route uses, with
+// the tail percent-decoded once (what axum hands the /patch/* routes; the
+// /stream lane additionally insists on an absolute url, like stream_proxy)
+fn resolve_resource_url(state: &AppState, reference: &str) -> Option<String> {
+    if reference.starts_with("http://") || reference.starts_with("https://") {
+        return Some(reference.to_string());
+    }
+    let rest = reference.strip_prefix('/')?;
+    let (tail, base) = if let Some(t) = rest.strip_prefix("patch/files/") {
+        (t, &state.upstream_files)
+    } else if let Some(t) = rest.strip_prefix("patch/manifest/") {
+        (t, &state.upstream_manifest)
+    } else if let Some(t) = rest.strip_prefix("patch/eamythic/") {
+        (t, &state.upstream_aops)
+    } else if let Some(t) = rest.strip_prefix("stream/") {
+        let url = percent_decode(t);
+        return (url.starts_with("http://") || url.starts_with("https://")).then_some(url);
+    } else {
+        return None;
+    };
+    Some(format!("{base}/{}", percent_decode(tail)))
+}
+
+// the window answer shared by both forms: cache-backed or freshly fetched,
+// identical bytes and headers either way
+async fn blob_window_serve(
+    state: AppState,
+    headers: HeaderMap,
+    url: String,
+    offset: u64,
+    size: u64,
+) -> Response {
+    // usize windows (saturating on 32-bit targets)
+    let start = offset.min(usize::MAX as u64) as usize;
+    let end_in = offset
+        .saturating_add(size)
+        .saturating_sub(1)
+        .min(usize::MAX as u64) as usize;
+
+    // v2 disk cache hit: windowed read off disk, the stored resource etag
+    // reused as the validator family for the slice
+    if state.use_cache {
+        if let Some((ctype, etag, total, body)) =
+            cache_get_range_window(&state, &url, start, end_in)
+        {
+            return blob_window_response(
+                &headers,
+                &sanitize_ctype(&ctype),
+                &etag,
+                offset,
+                total,
+                body,
+            );
+        }
+        // no window: a fresh, well-formed entry whose length sits at or
+        // before `offset` is a real 416; anything else is a cache miss
+        if let Some(total) = cached_entry_len(&state, &url) {
+            if offset >= total {
+                return blob_unsatisfiable(total);
+            }
+        }
+    }
+
+    // cache miss: one whole upstream GET (no Range - the proxy is the
+    // middleman doing the ranging), cached like a files-route 200, then the
+    // window served from those exact bytes
+    let tail = url
+        .strip_prefix(&format!("{}/", state.upstream_files))
+        .unwrap_or(&url);
+    let resp = match state.http.get(&url).send().await {
+        Ok(resp) => resp,
+        Err(e) => {
+            eprintln!("xuoproxy: blob upstream {url} failed: {e:?}");
+            return (
+                StatusCode::NOT_FOUND,
+                format!("blob source unavailable: {e}"),
+            )
+                .into_response();
+        }
+    };
+    if !resp.status().is_success() {
+        return (
+            StatusCode::NOT_FOUND,
+            format!("blob upstream status {}", resp.status().as_u16()),
+        )
+            .into_response();
+    }
+    let raw = match resp.bytes().await {
+        Ok(b) => b.to_vec(),
+        Err(e) => {
+            return (
+                StatusCode::NOT_FOUND,
+                format!("blob upstream read failed: {e}"),
+            )
+                .into_response()
+        }
+    };
+    // the entry is shared with /patch/files: same normalization, so a window
+    // never disagrees with what the files route serves for the same hash
+    let body = normalize_file_body(tail, raw);
+    if state.use_cache {
+        cache_put(&state, &url, 200, "application/octet-stream", &body);
+    }
+    if offset >= body.len() as u64 {
+        return blob_unsatisfiable(body.len() as u64);
+    }
+    let served = if size == 0 {
+        Vec::new()
+    } else {
+        body[start..=end_in.min(body.len() - 1)].to_vec()
+    };
+    blob_window_response(
+        &headers,
+        "application/octet-stream",
+        &strong_etag(&body),
+        offset,
+        body.len() as u64,
+        served,
+    )
+}
+
+// 200 with exactly the window bytes: immutable + strong slice etag
+// "<stored-resource-etag>-<offset>-<served>" + debug headers. Conditional
+// GETs 304 on the slice etag like anywhere else. X-Blob-Total hands the
+// client the resource length (its stand-in for a 206's Content-Range total).
+fn blob_window_response(
+    req_headers: &HeaderMap,
+    ctype: &str,
+    resource_etag: &str,
+    offset: u64,
+    total: u64,
+    body: Vec<u8>,
+) -> Response {
+    let served = body.len();
+    let etag = format!(
+        "\"{}-{offset}-{served}\"",
+        resource_etag.trim_matches('"')
+    );
+    if etag_matches(req_headers, &etag) {
+        return not_modified_response(&etag, CACHE_IMMUTABLE);
+    }
+    let mut res = (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, ctype.to_string())],
+        body,
+    )
+        .into_response();
+    let hs = res.headers_mut();
+    hs.insert(header::ETAG, etag.parse().expect("etag"));
+    hs.insert(
+        header::CACHE_CONTROL,
+        CACHE_IMMUTABLE.parse().expect("cache-control"),
+    );
+    hs.insert(
+        header::ACCEPT_RANGES,
+        header::HeaderValue::from_static("bytes"),
+    );
+    hs.insert(
+        header::HeaderName::from_static("x-blob-offset"),
+        offset.to_string().parse().expect("offset"),
+    );
+    hs.insert(
+        header::HeaderName::from_static("x-blob-size"),
+        served.to_string().parse().expect("size"),
+    );
+    hs.insert(
+        header::HeaderName::from_static("x-blob-total"),
+        total.to_string().parse().expect("total"),
+    );
+    res
+}
+
+// offset at or past the resource end: a real 416 with the only meaningful
+// Content-Range (the client falls back to real ranged requests)
+fn blob_unsatisfiable(total: u64) -> Response {
+    let mut res = StatusCode::RANGE_NOT_SATISFIABLE.into_response();
+    res.headers_mut().insert(
+        header::CONTENT_RANGE,
+        format!("bytes */{total}").parse().expect("content-range"),
+    );
+    res
 }
 
 // ---------------------------------------------------------------------------
