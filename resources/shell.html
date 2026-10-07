@@ -891,9 +891,7 @@
             // lifetime counter stays off the screen (see the mode notes)
             var session = Math.max(0, done - streamSessionBase);
             out = { show: moving,
-                    text: 'streaming ' + formatRate(rate) +
-                          ' (sweep +' + formatBytes(session) +
-                          ', repeats uncounted)' };
+                    text: 'downloaded ' + formatBytes(session) + '(streaming ' + formatRate(rate) + ')'};
           } else { // nothing fetched yet
             out = { show: false, text: null };
           }

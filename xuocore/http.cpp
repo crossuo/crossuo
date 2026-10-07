@@ -117,6 +117,35 @@ static bool http_get_chunked(const char *url, uint64_t size, size_t body_cap, ht
     return true;
 }
 
+// percent-encodes a string exactly like JavaScript's encodeURIComponent:
+// A-Z a-z 0-9 - _ . ! ~ * ' ( ) stay literal, every other byte becomes %HH.
+// Matches the proxy's percent_decode, which decodes %XX sequences and leaves
+// a literal '+' alone (so spaces must travel as %20, never as '+')
+static std::string uri_percent_encode(const char *text)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    std::string out;
+    const size_t n = strlen(text);
+    out.reserve(n + 16);
+    for (size_t i = 0; i < n; ++i)
+    {
+        const uint8_t c = uint8_t(text[i]);
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
+            c == '-' || c == '_' || c == '.' || c == '!' || c == '~' || c == '*' ||
+            c == '\'' || c == '(' || c == ')')
+        {
+            out.push_back(char(c));
+        }
+        else
+        {
+            out.push_back('%');
+            out.push_back(hex[c >> 4]);
+            out.push_back(hex[c & 0x0F]);
+        }
+    }
+    return out;
+}
+
 // single blocking GET; returns the malloc'd body (free() it). status
 // receives the HTTP code; total receives the resource size from
 // Content-Range (-1 when the header is absent).
@@ -156,7 +185,15 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
             {
                 const cr = x.getResponseHeader('Content-Range');
                 const slash = cr ? cr.indexOf('/') : -1;
-                setValue($4, slash >= 0 ? parseInt(cr.substring(slash + 1)) : -1, 'i32');
+                if (slash >= 0)
+                    setValue($4, parseInt(cr.substring(slash + 1)), 'i32');
+                else
+                {
+                    // whole-blob window answers carry the resource length
+                    // here instead (no Content-Range on a plain 200)
+                    const bt = x.getResponseHeader('X-Blob-Total');
+                    setValue($4, bt ? parseInt(bt) : -1, 'i32');
+                }
             }
             return ptr;
         }
@@ -296,6 +333,79 @@ bool http_get_range(
     (void)agent;
     if (!url || !out)
         return false;
+
+    // whole-blob window route first: the streaming proxy answers
+    // /blob/<offset>/<length>?u=<resource url> with a plain cacheable 200
+    // carrying exactly the window (clamped at EOF, X-Blob-Total = resource
+    // length) instead of a one-shot 206 - every intermediate cache can store
+    // the read like a whole file, which is what keeps warm boots off the
+    // wire. `url` is the proxy-relative reference the rewritten manifest
+    // handed us (/patch/files/<tail>, /stream/<encoded url>, ...), so the
+    // window GET is built as an origin-rooted path: same origin by
+    // construction (a "/../" re-anchor would only pop the resource's own
+    // file segment, not the directory chain, and land back inside
+    // /patch/files). The reference itself travels as the percent-encoded
+    // ?u= value the proxy decodes to re-derive its cache key (never
+    // re-encoded here: it is already url-safe).
+    // A proxy-relative reference is the only deployment guaranteed to know
+    // the route; anything else goes straight to the ranged read below.
+    // One blob-form failure (non-200, timeout, body longer than asked, or a
+    // 200 without the route's X-Blob-Total marker - i.e. some other handler
+    // matched the path) parks the route for the session and - so mixed
+    // deployments keep working - still attempts the real ranged request
+    // once before the fallback sticks.
+    static std::atomic<bool> s_blob_route_active(false);
+    static std::atomic<bool> s_blob_route_broken(false);
+    if (!s_blob_route_broken.load(std::memory_order_relaxed) && url[0] == '/')
+    {
+        std::string blob_url("/blob/");
+        blob_url += std::to_string(offset);
+        blob_url += '/';
+        blob_url += std::to_string(length);
+        blob_url += "?u=";
+        blob_url += uri_percent_encode(url);
+        long status = 0;
+        size_t len = 0;
+        long total = -1;
+        uint8_t *data = http_xhr_get(blob_url.c_str(), nullptr, &status, &len, &total);
+        // the served window must equal the window we asked for, derived from
+        // the trusted X-Blob-Total: a short body (len < expect) is a truncated
+        // mid-resource window - a proxy truncation or a corrupted intermediate
+        // entry - and accepting it would masquerade as EOF data. An absent
+        // marker (total < 0, i.e. some other handler matched the path, or an
+        // old proxy without the route) leaves expect at 0 and is rejected the
+        // same way, so those deployments keep working through the ranged read.
+        const uint64_t expect = (total > 0 && uint64_t(total) > offset)
+                                    ? std::min<uint64_t>(length, uint64_t(total) - offset)
+                                    : 0;
+        if (data && status == 200 && total >= 0 && expect > 0 && len == expect)
+        {
+            if (out_total != nullptr)
+                *out_total = total; // X-Blob-Total: the resource length
+            if (!s_blob_route_active.exchange(true, std::memory_order_relaxed))
+                LOG_INFO("blob window route active: ranged reads as plain 200s via /blob/<offset>/<length>");
+            out->status = 200;
+            out->body.assign(data, data + len);
+            free(data);
+            return true;
+        }
+        if (data)
+            free(data);
+        // a size mismatch with the route marker present is a one-shot
+        // rejection - this request still uses the ranged path, but a later one
+        // may succeed - so the route is only parked for a genuine route
+        // failure (non-200, or a 200 without the marker).
+        if (status != 200 || total < 0)
+            s_blob_route_broken.store(true, std::memory_order_relaxed);
+        LOG_INFO(
+            "blob window route %s (%ld, %zu vs %llu bytes) - ranged read for this request: %s",
+            (status != 200 || total < 0) ? "failed, session falls back to Range/206 reads" : "size mismatch",
+            status,
+            len,
+            (unsigned long long)length,
+            url);
+    }
+
     char range[64];
     snprintf(range, sizeof(range), "bytes=%llu-%llu", (unsigned long long)offset, (unsigned long long)(offset + length - 1));
     long status = 0;
