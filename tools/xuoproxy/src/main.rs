@@ -115,6 +115,9 @@ fn normalized_sizes() -> &'static Mutex<HashMap<String, u64>> {
 // configuration
 // ---------------------------------------------------------------------------
 
+// reserved config surface (covers the --dist/--cache-dir startup knobs); the
+// running server carries its settings in AppState
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 struct Config {
     listen: String,
@@ -311,19 +314,11 @@ async fn ensure_uop_normalized(state: &AppState, blob_tail: &str) {
 async fn warm_uop_transfers(state: &AppState) {
     let manifest_base = format!("{}/patch/manifest", "");
     let _ = manifest_base;
-    let prod_url = format!(
-        "{}/{}/{}",
-        state.upstream_manifest, "legacyrelease", "uo-legacyrelease.prod"
-    );
-    // the upstream manifest base layout varies; try the configured repo root
-    // with the same tail the client uses (the product url path)
     let prod_url = match state.upstream_manifest.rsplit_once('/') {
-        Some((_, last)) if last == "manifest" => {
-            format!("{}/uo-legacyrelease.prod", state.upstream_manifest)
-        }
+        // both arms resolve to the product url the client requests
+        Some((_, _last)) => format!("{}/uo-legacyrelease.prod", state.upstream_manifest),
         _ => format!("{}/uo-legacyrelease.prod", state.upstream_manifest),
     };
-    let _ = &prod_url;
     let body = match state.http.get(&prod_url).send().await {
         Ok(r) => match r.bytes().await {
             Ok(b) => b.to_vec(),
@@ -568,7 +563,7 @@ async fn proxied(
                         generic_manifest_process(state, &url, raw, etag, lm).await
                     },
                     |status, ctype, body| {
-                        respond_text_rewritten(state, status, ctype, body, headers, None)
+                        respond_text_rewritten(state, status, ctype, body, headers, None, true)
                     },
                 )
                 .await;
@@ -588,6 +583,7 @@ async fn proxied(
                 body,
                 headers,
                 None,
+                meta.manifest,
             );
         }
     }
@@ -641,6 +637,7 @@ async fn proxied(
         }
     };
 
+    let mut manifest = false;
     if state.use_cache && status == 200 {
         let (_, meta) = generic_manifest_process(
             state,
@@ -650,6 +647,7 @@ async fn proxied(
             upstream_lm,
         )
         .await;
+        manifest = meta.manifest;
         cache_put_with_meta(state, &url, status, &sanitize_ctype(&ctype), &body, &meta);
     }
 
@@ -660,6 +658,7 @@ async fn proxied(
         body,
         headers,
         upstream_etag.as_deref(),
+        manifest,
     )
 }
 
@@ -1060,7 +1059,7 @@ fn strip_version_param(url: &str) -> String {
     };
     let value_start = at + 3;
     let value_end = url[value_start..]
-        .find(|c| c == '&' || c == '/')
+        .find(['&', '/'])
         .map(|i| value_start + i)
         .unwrap_or(url.len());
     let mut out = String::with_capacity(url.len());
@@ -1185,6 +1184,7 @@ fn respond_text_rewritten(
     body: Vec<u8>,
     headers: &HeaderMap,
     upstream_etag: Option<&str>,
+    manifest: bool,
 ) -> Response {
     let status = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let rewritten = rewrite_links(state, &body, headers);
@@ -1200,11 +1200,24 @@ fn respond_text_rewritten(
         Some(etag) if unrewritten => etag.to_string(),
         _ => strong_etag(&body),
     };
-    // generic-route payloads are versioned-repo artifacts the disk cache
-    // already pins forever (cache_ttl 0): the same immutable + content-hash
-    // treatment as /patch/files lets browsers reuse them, while the ETag
-    // still answers explicit conditional GETs with a cheap 304
-    cacheable_response(status, ctype, body, headers, &etag, CACHE_IMMUTABLE)
+    // generic-route payloads: content bodies are versioned-repo artifacts the
+    // disk cache already pins forever (cache_ttl 0): the same immutable +
+    // content-hash treatment as /patch/files lets browsers reuse them, while
+    // the ETag still answers explicit conditional GETs with a cheap 304;
+    // manifest-flavored entries (aops patchlists/patchcfgs) can change
+    // upstream, so they revalidate like every other manifest lane
+    cacheable_response(
+        status,
+        ctype,
+        body,
+        headers,
+        &etag,
+        if manifest {
+            CACHE_REVALIDATE
+        } else {
+            CACHE_IMMUTABLE
+        },
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -1718,11 +1731,10 @@ fn resolve_resource_url(state: &AppState, reference: &str) -> Option<String> {
         (t, &state.upstream_manifest)
     } else if let Some(t) = rest.strip_prefix("patch/eamythic/") {
         (t, &state.upstream_aops)
-    } else if let Some(t) = rest.strip_prefix("stream/") {
+    } else {
+        let t = rest.strip_prefix("stream/")?;
         let url = percent_decode(t);
         return (url.starts_with("http://") || url.starts_with("https://")).then_some(url);
-    } else {
-        return None;
     };
     Some(format!("{base}/{}", percent_decode(tail)))
 }
@@ -1896,11 +1908,15 @@ fn registered_sizes() -> &'static Mutex<HashMap<String, u64>> {
     SIZES.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+// retained for callers that need a cache-distinct key per normalized manifest;
+// the streaming path carries the distinction in CacheMeta
+#[allow(dead_code)]
 fn normalized_manifest_url(manifest_url: &str) -> String {
     format!("{manifest_url}#normalized")
 }
 
 // inflate a ct=1 manifest transfer when its stored copy is still compressed
+#[allow(dead_code)]
 fn decompress_cached_manifest(state: &AppState, url: &str) {
     if let Some((_, _, _, body)) = cache_get(state, url) {
         if normalize::looks_zlib(&body) {
@@ -1938,7 +1954,9 @@ fn rewrite_links(state: &AppState, body: &[u8], headers: &HeaderMap) -> Vec<u8> 
 fn rewrite_links_tokened(
     state: &AppState,
     body: &[u8],
-    headers: &HeaderMap,
+    // request headers are threaded through for the caller's API shape; the
+    // rewrite itself is header-independent
+    _headers: &HeaderMap,
     fallback_token: Option<&str>,
 ) -> (Vec<u8>, Vec<String>) {
     // only rewrite text bodies (product manifests, pkg.mft xml, patchlists);
@@ -1985,7 +2003,7 @@ fn rewrite_links_tokened(
             let after_version = upstream
                 .split("uopatch-sa/")
                 .nth(1)
-                .and_then(|rest| rest.splitn(2, '/').nth(1))
+                .and_then(|rest| rest.split_once('/').map(|x| x.1))
                 .unwrap_or("")
                 .trim_start_matches("legacyrelease/uo/files")
                 .trim_start_matches('/')
@@ -2128,7 +2146,7 @@ fn aops_decode_text(data: &[u8]) -> Option<String> {
         return std::str::from_utf8(data).ok().map(str::to_string);
     };
     let mut out = String::with_capacity(body.len() / 2);
-    for unit in body.chunks_exact(2) {
+    for unit in body.as_chunks::<2>().0 {
         let u = if little_endian {
             u16::from_le_bytes([unit[0], unit[1]])
         } else {
@@ -2388,15 +2406,30 @@ fn stream_rewrite_aops_line(line: &str, root: &str, rewritten: &mut bool) -> Str
 
 // full-body or ranged answer: the web transport only honors a 206 on its
 // ranged reads (a 200 would re-download the whole file per window), so the
-// cached body serves slices the same way the /patch/files lane does
-fn stream_respond(status: u16, ctype: &str, body: Vec<u8>, headers: &HeaderMap) -> Response {
-    if status == 200 && headers.contains_key(header::RANGE) {
+// cached body serves slices the same way the /patch/files lane does.
+// `cache_control` follows the body flavor: bodies the lane sniffed as
+// manifests/patchlists/patchcfgs revalidate (no-cache + ETag, they can
+// change upstream), content bodies are immutable + ETag; error bodies pass
+// through without cache state
+fn stream_respond(
+    status: u16,
+    ctype: &str,
+    body: Vec<u8>,
+    headers: &HeaderMap,
+    cache_control: &str,
+) -> Response {
+    if status != 200 {
+        return respond_plain(status, ctype, body);
+    }
+    if headers.contains_key(header::RANGE) {
         let etag = strong_etag(&body);
         if let Some(resp) = range_from_cached(ctype, &body, headers, &etag) {
             return resp;
         }
     }
-    respond_plain(status, ctype, body)
+    let status = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    let etag = strong_etag(&body);
+    cacheable_response(status, ctype, body, headers, &etag, cache_control)
 }
 
 // classify + process a fetched stream body: aops flavor sniffing (patchlist /
@@ -2512,6 +2545,9 @@ async fn generic_manifest_process(
 // invalidates the content entries the old body referenced, upstream errors
 // serve stale. The `serve` shaping is the caller's (its range/rewrite
 // semantics differ); `process` turns a fresh upstream body into (body, meta).
+// 8 params by design: the caller owns the request lane (url/status/ctype/
+// body/meta) and the response shaping (process/serve) for it
+#[allow(clippy::too_many_arguments)]
 async fn manifest_entry_serve(
     state: &AppState,
     url: &str,
@@ -2601,11 +2637,13 @@ async fn stream_proxy(
                     body,
                     &meta,
                     async |raw, etag, lm| stream_process_body(&state, &url, raw, etag, lm).await,
-                    |status, ctype, body| stream_respond(status, ctype, body, &headers),
+                    |status, ctype, body| {
+                        stream_respond(status, ctype, body, &headers, CACHE_REVALIDATE)
+                    },
                 )
                 .await;
             }
-            return stream_respond(status, &ctype, body, &headers);
+            return stream_respond(status, &ctype, body, &headers, CACHE_IMMUTABLE);
         }
     }
 
@@ -2649,10 +2687,20 @@ async fn stream_proxy(
         if state.use_cache {
             cache_put_with_meta(&state, &url, status, &ctype, &body, &meta);
         }
-        return stream_respond(status, &ctype, body, &headers);
+        return stream_respond(
+            status,
+            &ctype,
+            body,
+            &headers,
+            if meta.manifest {
+                CACHE_REVALIDATE
+            } else {
+                CACHE_IMMUTABLE
+            },
+        );
     }
 
-    stream_respond(status, &ctype, body, &headers)
+    stream_respond(status, &ctype, body, &headers, CACHE_IMMUTABLE)
 }
 
 fn respond_plain(status: u16, ctype: &str, body: Vec<u8>) -> Response {
@@ -2722,7 +2770,6 @@ async fn bridge(socket: WebSocket, host: String, port: u16) {
             match tokio::io::AsyncReadExt::read(&mut tcp_rx, &mut buf).await {
                 Ok(0) | Err(_) => break,
                 Ok(n) => {
-                    use tokio::io::AsyncWriteExt;
                     if ws_tx
                         .send(axum::extract::ws::Message::Binary(buf[..n].to_vec()))
                         .await

@@ -13,7 +13,7 @@
 //! Everything else passes through byte-identical.
 
 use std::collections::HashMap;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::ops::Range;
 use std::sync::OnceLock;
 
@@ -40,7 +40,9 @@ pub fn zlib_deflate(data: &[u8]) -> Vec<u8> {
 pub fn looks_zlib(data: &[u8]) -> bool {
     // 0x78 followed by a check byte making the first two bytes a valid
     // big-endian multiple of 31 (0x08..0x7f window sizes)
-    data.len() >= 2 && data[0] == 0x78 && (((data[0] as u16) << 8) | data[1] as u16) % 31 == 0
+    data.len() >= 2
+        && data[0] == 0x78
+        && (((data[0] as u16) << 8) | data[1] as u16).is_multiple_of(31u16)
 }
 
 // ---------------------------------------------------------------------------
@@ -62,11 +64,7 @@ pub fn bwt_decompress(coded: &[u8]) -> Option<Vec<u8>> {
     let list_len = coded.len() - 4;
     let mut list = vec![0u8; list_len];
     let mut first = coded[4];
-    let mut li = 0usize;
-    for pos in 5..coded.len() {
-        if li >= list_len {
-            break;
-        }
+    for (li, &next) in coded.iter().skip(5).take(list_len).enumerate() {
         let current_value = first;
         let value = table[current_value as usize];
         if current_value > 0 {
@@ -76,8 +74,7 @@ pub fn bwt_decompress(coded: &[u8]) -> Option<Vec<u8>> {
         }
         table[0] = value;
         list[li] = value as u8;
-        first = coded[pos];
-        li += 1;
+        first = next;
     }
 
     // the coded stream carries a 1KB frequency header followed by the two
@@ -100,8 +97,8 @@ pub fn bwt_decompress(coded: &[u8]) -> Option<Vec<u8>> {
     let mut out = vec![0u8; sum as usize];
 
     let mut non_zero_count: i32 = 0;
-    for fi in 0..256 {
-        if partial_input[fi] != 0 {
+    for &v in partial_input[..256].iter() {
+        if v != 0 {
             non_zero_count += 1;
         }
     }
@@ -110,7 +107,7 @@ pub fn bwt_decompress(coded: &[u8]) -> Option<Vec<u8>> {
     {
         let mut tmp = [0i32; 256];
         tmp.copy_from_slice(&partial_input[..256]);
-        for fi in 0..256 {
+        for freq in frequency[..non_zero_count as usize].iter_mut() {
             let mut best_value = 0u32;
             let mut best_index = 0u8;
             for (fj, &v) in tmp.iter().enumerate() {
@@ -122,7 +119,7 @@ pub fn bwt_decompress(coded: &[u8]) -> Option<Vec<u8>> {
             if best_value == 0 {
                 break;
             }
-            frequency[fi] = best_index;
+            *freq = best_index;
             tmp[best_index as usize] = 0;
         }
     }
@@ -133,8 +130,7 @@ pub fn bwt_decompress(coded: &[u8]) -> Option<Vec<u8>> {
     }
 
     let mut m: i32 = 0;
-    for i in 0..non_zero_count as usize {
-        let freq = frequency[i];
+    for &freq in frequency[..non_zero_count as usize].iter() {
         symbol_table[list[m as usize + 1024] as usize] = freq;
         partial_input[(freq as usize) + 256] = m + 1;
         m += partial_input[freq as usize];
@@ -179,6 +175,9 @@ pub const MYP_MAGIC: u32 = 0x0050_594D; // 'MYP\0'
 
 struct UopEntry {
     metadata_size: u32,
+    // record the stored field for structural completeness; the normalization
+    // walk never consults it
+    #[allow(dead_code)]
     decompressed_size: u32,
     hash: u64,
     checksum: u32,
@@ -349,6 +348,7 @@ pub fn uop_normalize(data: &[u8]) -> Option<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
 
     #[test]
     fn zlib_roundtrip() {
@@ -452,7 +452,7 @@ fn mix(a: &mut u32, b: &mut u32, c: &mut u32) {
 
 /// lookup3 hashlittle2: returns (pc, pb) - the UOP part blob name is
 /// "%08x%08x" of (pc, sh=pb) with both seeds zero.
-pub fn hashlittle2(key: &[u8], mut pc: u32, mut pb: u32) -> (u32, u32) {
+pub fn hashlittle2(key: &[u8], pc: u32, pb: u32) -> (u32, u32) {
     let mut a: u32;
     let mut b: u32;
     let mut c: u32;
@@ -644,6 +644,9 @@ fn set_attr_hex(tag: &mut String, name: &str, value: u64) {
     }
 }
 
+// kept for targeted single-entry rewrites; the streaming path rewrites whole
+// manifests via rewrite_manifest_uop_entries
+#[allow(dead_code)]
 pub fn rewrite_manifest_entry(text: &str, name: &str, size: u64) -> Option<String> {
     for m in f_tag_regex().find_iter(text) {
         let tag = m.as_str();
