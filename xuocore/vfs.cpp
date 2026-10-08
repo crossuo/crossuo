@@ -3046,6 +3046,14 @@ static bool vfs_boot_product_fetch()
         LOG_ERROR("vfs: offline and no product manifest: %s", fs_path_ascii(s_params.product_file));
         return false;
     }
+    // launcher profiles carry bare aops roots ("https://host/pov") while the
+    // mythic layout carries the full manifest file url: normalize once at the
+    // point of use, after the cache checks above (the blob-store product_file
+    // path stays untouched). Only bare roots are rewritten (idempotent:
+    // strips a trailing /, strips a /patchlist|/patchcfg leaf, appends
+    // /patchlist); full manifest file urls and the empty case pass through.
+    if (!s_params.product_url.empty())
+        s_params.product_url = vfs_aops_product_url_canonical(s_params.product_url);
     LOG_INFO("fetching product manifest: %s", s_params.product_url.c_str());
     std::vector<uint8_t> data;
     if (http_get_binary(s_params.product_url.c_str(), data))
@@ -3062,6 +3070,20 @@ static bool vfs_boot_product_fetch()
             astr_t retry = s_params.product_url;
             while (!retry.empty() && retry.back() == '/')
                 retry.pop_back();
+            // idempotence: a url that already carries a patch leaf retries at
+            // its root, never at ".../patchlist/patchlist"
+            static const char *const retry_leaves[] = { "/patchlist", "/patchcfg" };
+            for (const char *leaf : retry_leaves)
+            {
+                const size_t leaf_len = strlen(leaf);
+                if (
+                    retry.size() > leaf_len &&
+                    retry.compare(retry.size() - leaf_len, leaf_len, leaf) == 0)
+                {
+                    retry.resize(retry.size() - leaf_len);
+                    break;
+                }
+            }
             retry += "/patchlist";
             LOG_INFO("product manifest unrecognized: retrying at %s", retry.c_str());
             std::vector<uint8_t> retry_data;

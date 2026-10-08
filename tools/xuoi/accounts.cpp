@@ -15,6 +15,7 @@
 #include <external/tinyfiledialogs.h>
 #include <xuocore/client_info.h>
 #include <xuocore/http.h>
+#include <xuocore/vfs_source_aops.h>
 #include <xuocore/common.h>
 #include "widgets.h"
 #include "ui_model.h"
@@ -236,11 +237,14 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
     e.crossuo_autologin = false;
 
     // data install source: where the client streams/downloads its data from;
-    // a plain url becomes the streaming product (the client deduces the
-    // product style from the content, vfs_aops_product_url), empty means a
-    // manual install: no product url, the client keeps its configured default
+    // a plain url becomes the streaming product: write the canonical aops
+    // patchlist url (the launcher links xuocore, and the canonicalization is
+    // idempotent - the client re-normalizes at the point of use anyway). A
+    // full manifest file url passes through unchanged (the client dispatches
+    // the product style from the content), empty means a manual install: no
+    // product url, the client keeps its configured default
     if (shard.install_url && shard.install_url[0])
-        e.crossuo_producturl = shard.install_url;
+        e.crossuo_producturl = vfs_aops_product_url_canonical(shard.install_url);
 
     // presentation links, only when the shard provides them
     if (shard.url && shard.url[0])
