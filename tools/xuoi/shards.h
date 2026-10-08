@@ -34,6 +34,10 @@ bool url_is_discord(const astr_t &url);
 
 bool shard_getter(void *data, int idx, const char **out_text);
 void load_shards();
+// override the shard list source with a local file (no network fetch); must
+// be set before load_shards(), an unreadable path falls back to the online
+// list
+void xuol_set_shards_cfg(const astr_t &path);
 int shard_count();
 int shard_index_by_loginserver(const char *login_server);
 shard_data shard_by_id(int id);

@@ -119,3 +119,8 @@
 3. Browser: fresh profile or hard-refresh (index.html/crossuo.js are no-cache+ETag but site data accrues).
 4. Headless proof stack: pkill -9 "[c]hromium" (bracket); CDP driver with fresh --user-data-dir + dynamic port per run (orphans hold ports); attach ALL targets; read #log innerText; screenshot + PIL near-black ratio for render proofs (POV login was 98% black with the broken gump lane, 0.82% after).
 5. Known-good: POV/Demise/Faerham all reach initialization completed headless on current master.
+
+## --shards-cfg: local shard list for the launcher (2026-10-07)
+- `--shards-cfg <file>` loads the launcher shard list from a local shards.cfg (no GitHub fetch, fully offline) — built for the depot-edit-test-publish loop. Missing/unopenable file → loud LOG_ERROR + graceful fall back to the online list. Normalization/sort/index identical for both sources.
+- Plumbing: xuol_set_shards_cfg (shards.{h,cpp}) set from Main.cpp InitCli under XUO_LAUNCHER_EMBEDDED (the shard list consumer is the embedded launcher; wasm/web is covered by the shell page's ?shards=<url> param instead). strace-verified: zero AF_INET connects with the flag set; per-entry dumps are compiled out repo-wide (cfg_loader.h CFG_DEBUG no-op) — verify contents via gdb or the picker UI.
+- Verification gotcha: the launcher UI only materializes at the login screen (Alt+L; SDL_VIDEODRIVER=x11 for headless-ish runs).

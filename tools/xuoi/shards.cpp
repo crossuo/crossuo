@@ -86,6 +86,13 @@ bool url_is_discord(const astr_t &url)
 static shard::data s_shards;
 static std::unordered_map<astr_t, int> s_shard_by_loginserver;
 
+static astr_t s_shards_cfg_override; // set via xuol_set_shards_cfg, see shards.h
+
+void xuol_set_shards_cfg(const astr_t &path)
+{
+    s_shards_cfg_override = path;
+}
+
 const char *shard_getter(void *data, int idx)
 {
     auto *items = (std::vector<shard::entry> *)data;
@@ -94,9 +101,9 @@ const char *shard_getter(void *data, int idx)
     return items->at(idx).shard_name.c_str();
 }
 
-static void load_shard_file(const fs_path &fname, shard::data &data)
+static void load_shard_file(const fs_path &fname, shard::data &data, const char *source = "")
 {
-    LOG_INFO("loading shards from %s", fs_path_ascii(fname));
+    LOG_INFO("loading shards from %s%s", fs_path_ascii(fname), source);
     auto fp = fs_open(fname, FS_READ);
     if (!fp)
         return;
@@ -177,15 +184,36 @@ void load_shards()
     auto custom = shard::default_entry();
     custom.shard_name = "<custom shard>";
     s_shards.entries.emplace_back(custom);
+    fs_path fname;
+    if (!s_shards_cfg_override.empty())
+    {
+        // a local list replaces the download; a missing/unopenable file
+        // leaves fname empty and falls through to the online path below
+        fname = fs_path_from(s_shards_cfg_override);
+        if (!fs_path_exists(fname))
+        {
+            LOG_ERROR(
+                "shards-cfg: cannot open '%s' - falling back to the online list",
+                fs_path_ascii(fname));
+            fname = fs_path();
+        }
+        else
+        {
+            load_shard_file(fname, s_shards, " (local)");
+        }
+    }
+    if (fs_path_empty(fname))
+    {
 #if !defined(VALIDATOR)
-    const auto fname = fs_path_join(xuol_data_path(), "shards.cfg");
-    http_get_file(
-        "https://raw.githubusercontent.com/crossuo/shards/release/shards.cfg",
-        fs_path_ascii(fname));
+        fname = fs_path_join(xuol_data_path(), "shards.cfg");
+        http_get_file(
+            "https://raw.githubusercontent.com/crossuo/shards/release/shards.cfg",
+            fs_path_ascii(fname));
 #else
-    const auto fname = fs_path_join(fs_path_current(), "shards.cfg");
+        fname = fs_path_join(fs_path_current(), "shards.cfg");
 #endif
-    load_shard_file(fname, s_shards);
+        load_shard_file(fname, s_shards);
+    }
 
     // the published list may still use the removed prefix grammar
     int normalized = 0;

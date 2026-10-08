@@ -51,6 +51,7 @@ EM_JS(void, web_install_alert_shim, (), {
 #endif
 #if defined(XUO_LAUNCHER_EMBEDDED)
 #include "xuol_app.h"
+#include "shards.h" // xuol_set_shards_cfg
 #endif
 #include "SDL_wrapper.h"
 #include "Wisp/WispThread.h"
@@ -110,6 +111,9 @@ static bool InitCli(int argc, char *argv[])
         "shard name: names the per-shard streaming install directory"
         " (overrides the config file; defaults to the built-in shard name"
         " " MACRO_TOSTRING(XUO_DEFAULT_SHARD_NAME) ")");
+    g_cli["shards-cfg"].type(po::string).description(
+        "Use a local shards.cfg file for the launcher shard list (no network"
+        " fetch: implies no GitHub fetch, a fully offline shard list)");
 
     g_cli["proxy-host"]
         .type(po::string)
@@ -166,6 +170,10 @@ static bool InitCli(int argc, char *argv[])
     g_cli(argc, argv);
 
     g_var_DisableRenderGame = g_cli["DisableRenderGame"].was_set();
+#if defined(XUO_LAUNCHER_EMBEDDED)
+    if (g_cli["shards-cfg"].was_set())
+        xuol::xuol_set_shards_cfg(g_cli["shards-cfg"].get().string);
+#endif
 
     return g_cli["help"].size() == 0;
 }
