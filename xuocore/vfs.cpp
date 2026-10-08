@@ -3054,52 +3054,84 @@ static bool vfs_boot_product_fetch()
     // /patchlist); full manifest file urls and the empty case pass through.
     if (!s_params.product_url.empty())
         s_params.product_url = vfs_aops_product_url_canonical(s_params.product_url);
-    LOG_INFO("fetching product manifest: %s", s_params.product_url.c_str());
-    std::vector<uint8_t> data;
-    if (http_get_binary(s_params.product_url.c_str(), data))
+    // One url is not always enough: the launcher appends the mythic default
+    // file name to profile roots with a trailing / ("https://host/pov/"
+    // becomes ".../pov/uo-legacyrelease.prod"), which poisons a bare aops
+    // root - the leaf's extension makes the canonical helper treat it as a
+    // full manifest url. Fetch+sniff an ordered candidate ladder instead,
+    // most likely first, deduped (capped at three; one request each):
+    //   1. the url as given (mythic full urls, canonical patchlist urls)
+    //   2. the auto-appended-filename signature: the de-leafed root's
+    //      patchlist (".../pov/uo-legacyrelease.prod" -> ".../pov/patchlist")
+    //   3. any remaining bare root: ".../patchlist" (trailing /s stripped)
+    // The first candidate that sniffs as a manifest (aops patchlist or a
+    // MythicMFT product file) wins and becomes s_params.product_url: the
+    // downstream derivations (manifest repo, blob tails) are built from it.
+    astr_t candidates[3];
+    size_t candidate_count = 0;
+    candidates[candidate_count++] = s_params.product_url;
     {
-        // aops roots are accepted bare ("https://host/fc"): when the fetch
-        // came back as neither manifest format it is likely a site landing
-        // page - retry once at the root's patchlist
-        const size_t len = s_params.product_url.size();
-        const bool looks_patchlist =
-            len >= 9 && s_params.product_url.compare(len - 9, 9, "/patchlist") == 0;
-        if (!vfs_aops_sniff_patchlist(data.data(), data.size()) &&
-            (data.size() < 9 || memcmp(data.data(), "<MythicMFT", 9) != 0) && !looks_patchlist)
+        // "/uo-legacyrelease.prod": the launcher's auto-appended mythic
+        // default file name (profile roots with a trailing /)
+        static const char *const default_leaf = "/" VFS_PRODUCT_FILE_DEFAULT;
+        const size_t default_len = strlen(default_leaf);
+        astr_t root = s_params.product_url;
+        if (
+            root.size() > default_len &&
+            root.compare(root.size() - default_len, default_len, default_leaf) == 0)
         {
-            astr_t retry = s_params.product_url;
-            while (!retry.empty() && retry.back() == '/')
-                retry.pop_back();
-            // idempotence: a url that already carries a patch leaf retries at
-            // its root, never at ".../patchlist/patchlist"
-            static const char *const retry_leaves[] = { "/patchlist", "/patchcfg" };
-            for (const char *leaf : retry_leaves)
+            root.resize(root.size() - default_len);
+            root += "/patchlist";
+            candidates[candidate_count++] = root;
+        }
+        astr_t bare = s_params.product_url;
+        while (!bare.empty() && bare.back() == '/')
+            bare.pop_back();
+        // idempotence: a url that already carries a patch leaf stays put,
+        // never ".../patchlist/patchlist"
+        static const char *const rooted_leaves[] = { "/patchlist", "/patchcfg" };
+        bool rooted = false;
+        for (const char *leaf : rooted_leaves)
+        {
+            const size_t leaf_len = strlen(leaf);
+            if (
+                bare.size() > leaf_len && bare.compare(bare.size() - leaf_len, leaf_len, leaf) == 0)
             {
-                const size_t leaf_len = strlen(leaf);
-                if (
-                    retry.size() > leaf_len &&
-                    retry.compare(retry.size() - leaf_len, leaf_len, leaf) == 0)
-                {
-                    retry.resize(retry.size() - leaf_len);
-                    break;
-                }
-            }
-            retry += "/patchlist";
-            LOG_INFO("product manifest unrecognized: retrying at %s", retry.c_str());
-            std::vector<uint8_t> retry_data;
-            if (http_get_binary(retry.c_str(), retry_data) &&
-                (vfs_aops_sniff_patchlist(retry_data.data(), retry_data.size()) ||
-                    (retry_data.size() >= 9 &&
-                        memcmp(retry_data.data(), "<MythicMFT", 9) == 0)))
-            {
-                s_params.product_url = retry;
-                data = std::move(retry_data);
-            }
-            else
-            {
-                LOG_WARN("vfs: %s is not a product manifest either", retry.c_str());
+                rooted = true;
+                break;
             }
         }
+        if (!rooted && !bare.empty())
+            candidates[candidate_count++] = bare + "/patchlist";
+    }
+    std::vector<uint8_t> data;
+    bool unrecognized = false;
+    for (size_t i = 0; i < candidate_count && data.empty(); ++i)
+    {
+        LOG_INFO("fetching product manifest: %s", candidates[i].c_str());
+        std::vector<uint8_t> attempt;
+        if (!http_get_binary(candidates[i].c_str(), attempt))
+            continue;
+        if (
+            vfs_aops_sniff_patchlist(attempt.data(), attempt.size()) ||
+            (attempt.size() >= 9 && memcmp(attempt.data(), "<MythicMFT", 9) == 0))
+        {
+            s_params.product_url = candidates[i];
+            data = std::move(attempt);
+            LOG_INFO("product manifest recognized at %s", candidates[i].c_str());
+        }
+        else
+        {
+            unrecognized = true;
+        }
+    }
+    if (unrecognized && data.empty())
+    {
+        // every fetch came back as neither manifest format (a site landing
+        // page, or the profile's auto-appended file name shadowing the real
+        // patchlist with no ladder candidate reaching it)
+        const astr_t &last = candidates[candidate_count - 1];
+        LOG_WARN("vfs: %s is not a product manifest either", last.c_str());
     }
     if (!data.empty() && !fs_path_empty(s_params.blobs_dir))
     {
