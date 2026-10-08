@@ -112,3 +112,10 @@
 - Mapdif lane on web: patched map blocks read from the streamed mapdifN.mul at baked offsets (CIndexMap WebMapInPatch/WebMapDifOffset/WebMapStreamFile EMSC fields, mirroring the statics lane); MapAddress kept as a non-zero PRESENCE sentinel (offset 0 = "no map block" sentinel — bake lane fields, not the raw offset). MapManager::ResetPatchesInBlockTable now also clears the statics lane fields (stale-across-reapplies bug).
 - vfs_ensure_file_range removed (dead API, incomplete span semantics); statics scratch zeroed on failed/short reads; dumpInfo metadata overread bounded; ReadBuffer cursor unified; EMSC log "opening ... (file-backed)".
 - In-world mapdif draw verification still pending (needs credentials) — compile+boot verified on all targets; mirrors the field-proven statics lane.
+
+## Session verification checklist for web streaming changes
+1. Rebuild: ./scripts/cross-build.sh --jobs 20 wasm (+ deploy or serve dist/wasm).
+2. RESTART xuoproxy — a running instance keeps pre-change code (frozen manifests, no /blob route); rebuild tools/xuoproxy (cargo build --release) first.
+3. Browser: fresh profile or hard-refresh (index.html/crossuo.js are no-cache+ETag but site data accrues).
+4. Headless proof stack: pkill -9 "[c]hromium" (bracket); CDP driver with fresh --user-data-dir + dynamic port per run (orphans hold ports); attach ALL targets; read #log innerText; screenshot + PIL near-black ratio for render proofs (POV login was 98% black with the broken gump lane, 0.82% after).
+5. Known-good: POV/Demise/Faerham all reach initialization completed headless on current master.

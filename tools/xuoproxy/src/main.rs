@@ -59,10 +59,18 @@
 //! ```text
 //! xuoproxy [--listen 127.0.0.1:8777] [--dist dist/wasm]
 //!          [--cache-dir xuoproxy-cache] [--cache-ttl <secs>] [--no-cache]
-//!          [--manifest-ttl <secs>]
+//!          [--manifest-ttl <secs>] [--upstream-timeout <secs>]
 //!          [--manifest-upstream <url>] [--files-upstream <url>]
 //!          [--aops-upstream <url>]
 //! ```
+//!
+//! `--upstream-timeout <secs>` (default 300) bounds how long the proxy waits
+//! on a stalled upstream: the connection is aborted if no body bytes arrive
+//! for that long (see the client construction in main), so a hung EA CDN /
+//! TLS-middlebox upstream cannot pin the handler (and the per-request log
+//! line) forever. It is an idle/read-progress budget, not a total request
+//! deadline, so legitimately large multi-minute transfers keep flowing while
+//! they make progress.
 //!
 //! The web client boots against this server out of the box: the build default
 //! `XUO_WEB_PRODUCT_URL` points at `/patch/manifest/...` (proxied), and shard
@@ -144,6 +152,9 @@ async fn main() {
     let mut cache_dir = String::from("xuoproxy-cache");
     let mut cache_ttl = 0u64;
     let mut manifest_ttl = 0u64;
+    // seconds of upstream read inactivity (no body progress) before a fetch
+    // is aborted - see the http client construction below
+    let mut upstream_timeout = 300u64;
     let mut use_cache = true;
     let mut upstream_manifest =
         String::from("http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest");
@@ -171,6 +182,11 @@ async fn main() {
             cache_ttl = v.parse().unwrap_or(0);
         } else if let Some(v) = value("--manifest-ttl") {
             manifest_ttl = v.parse().unwrap_or(0);
+        } else if let Some(v) = value("--upstream-timeout") {
+            // clamp to >= 1s: 0 would disable reqwest's read timeout
+            // entirely, turning the footgun into stuck upstreams that hang
+            // a request (and its log line) forever
+            upstream_timeout = v.parse().unwrap_or(300).max(1);
         } else if arg == "--no-cache" {
             use_cache = false;
         } else if let Some(v) = value("--manifest-upstream") {
@@ -195,8 +211,22 @@ async fn main() {
         upstream_manifest: upstream_manifest.trim_end_matches('/').to_string(),
         upstream_files: upstream_files.trim_end_matches('/').to_string(),
         upstream_aops: upstream_aops.trim_end_matches('/').to_string(),
+        upstream_timeout,
         http: reqwest::Client::builder()
             .connect_timeout(std::time::Duration::from_secs(30))
+            // idle/read-progress budget for upstream connections: this is
+            // reqwest's per-read timeout (it resets after every successful
+            // body frame), NOT a total request deadline. It bounds a stuck
+            // handler - and therefore the per-request log line - when an
+            // upstream accepts the connection but stops sending (EA CDN
+            // hiccups, TLS-intercepting middleboxes, slow mirrors), while a
+            // legitimately huge transfer keeps flowing as long as it makes
+            // progress. A total `.timeout()` was rejected: the relay routes
+            // (/stream, /blob, generic) stream multi-GB bodies through this
+            // same client, and a fixed total deadline would abort legitimate
+            // long transfers mid-stream. The web client's own retry/backoff
+            // masks brief stalls far faster than this budget.
+            .read_timeout(std::time::Duration::from_secs(upstream_timeout))
             .build()
             .expect("http client"),
     };
@@ -249,6 +279,7 @@ async fn main() {
         "  proxy:  /patch/manifest|files|eamythic + /stream/<url> + /blob/[<hash>/]<off>/<len> (cache: {})",
         cache_dir
     );
+    println!("  upstream: read-timeout {upstream_timeout}s (idle/read-progress)");
     println!("  bridge: /ws/<host>/<port>");
     println!(
         "  fresh:  manifests revalidate upstream every request (manifest-ttl {}s; conditional GET + content invalidation on change)",
@@ -399,7 +430,23 @@ struct AppState {
     upstream_manifest: String,
     upstream_files: String,
     upstream_aops: String,
+    upstream_timeout: u64,
     http: reqwest::Client,
+}
+
+// reqwest's Display for a body-read failure is just "error decoding
+// response body", which reads like a proxy bug; name the real cause when
+// the error is a timeout (the client builder's read_timeout is the budget).
+// Status codes stay as chosen by the caller.
+fn upstream_error_body(state: &AppState, kind: &str, e: &reqwest::Error) -> String {
+    if e.is_timeout() {
+        format!(
+            "upstream timeout after {}s ({} stalled)",
+            state.upstream_timeout, kind
+        )
+    } else {
+        format!("upstream {kind} failed: {e}")
+    }
 }
 
 // one-line request log (stdout): boot-flow visibility and run-to-run request
@@ -488,7 +535,7 @@ async fn proxied(
                 Err(e) => {
                     return (
                         StatusCode::BAD_GATEWAY,
-                        format!("upstream read failed: {e}"),
+                        upstream_error_body(state, "read", &e),
                     )
                         .into_response()
                 }
@@ -496,7 +543,7 @@ async fn proxied(
             Err(e) => {
                 return (
                     StatusCode::BAD_GATEWAY,
-                    format!("upstream fetch failed: {e}"),
+                    upstream_error_body(state, "fetch", &e),
                 )
                     .into_response()
             }
@@ -598,7 +645,7 @@ async fn proxied(
             eprintln!("xuoproxy: upstream {url} failed: {e:?}");
             return (
                 StatusCode::BAD_GATEWAY,
-                format!("upstream fetch failed: {e}"),
+                upstream_error_body(state, "fetch", &e),
             )
                 .into_response();
         }
@@ -631,7 +678,7 @@ async fn proxied(
         Err(e) => {
             return (
                 StatusCode::BAD_GATEWAY,
-                format!("upstream read failed: {e}"),
+                upstream_error_body(state, "read", &e),
             )
                 .into_response()
         }
@@ -1361,7 +1408,7 @@ async fn manifest_response(state: &AppState, tail: &str, req_headers: &HeaderMap
         Err(e) => {
             return (
                 StatusCode::BAD_GATEWAY,
-                format!("upstream fetch failed: {e}"),
+                upstream_error_body(state, "fetch", &e),
             )
                 .into_response()
         }
@@ -1373,7 +1420,7 @@ async fn manifest_response(state: &AppState, tail: &str, req_headers: &HeaderMap
         Err(e) => {
             return (
                 StatusCode::BAD_GATEWAY,
-                format!("upstream read failed: {e}"),
+                upstream_error_body(state, "read", &e),
             )
                 .into_response()
         }
@@ -1440,14 +1487,14 @@ async fn fetch_normalized_blob(
         .get(blob_url)
         .send()
         .await
-        .map_err(|e| format!("upstream fetch failed: {e}"))?;
+        .map_err(|e| upstream_error_body(state, "fetch", &e))?;
     if !resp.status().is_success() {
         return Err(format!("upstream status {}", resp.status().as_u16()));
     }
     let raw = resp
         .bytes()
         .await
-        .map_err(|e| format!("upstream read failed: {e}"))?
+        .map_err(|e| upstream_error_body(state, "read", &e))?
         .to_vec();
     let body = normalize_file_body(blob_tail, raw);
     if state.use_cache {
@@ -2652,7 +2699,7 @@ async fn stream_proxy(
         Err(e) => {
             return (
                 StatusCode::BAD_GATEWAY,
-                format!("upstream fetch failed: {e}"),
+                upstream_error_body(&state, "fetch", &e),
             )
                 .into_response()
         }
@@ -2671,7 +2718,7 @@ async fn stream_proxy(
         Err(e) => {
             return (
                 StatusCode::BAD_GATEWAY,
-                format!("upstream read failed: {e}"),
+                upstream_error_body(&state, "read", &e),
             )
                 .into_response()
         }
