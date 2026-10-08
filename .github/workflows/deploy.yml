@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# deploy - build every cross target via scripts/deploy.sh and publish each
+# target package to a GitHub release.
+#
+#   push to master      -> rolling "latest" prerelease (all target assets)
+#   push tag v*         -> tagged release with all target assets
+#   workflow_dispatch   -> build only (artifacts), no release
+#
+# Each matrix job builds one target in isolation through the same script used
+# locally (docker toolchains), uploads its dist/ output as a workflow artifact
+# and a final job gathers everything into a single release.
+
+name: deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    tags: ['v*']
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - linux-x64
+          - linux-x86
+          - linux-arm64
+          - linux-armv7
+          - linux-musl-x64
+          - linux-musl-arm64
+          - linux-musl-armv7
+          - windows-x64
+          - windows-x86
+          - windows-arm64
+          - wasm
+          - macos-x64
+          - macos-arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # the crossuo/macos image (osxcross) requires a SDK tarball in
+      # scripts/docker/macos/sdk/ before it can be built - see the Dockerfile
+      - name: fetch macOS SDK
+        if: startsWith(matrix.target, 'macos-')
+        run: |
+          mkdir -p scripts/docker/macos/sdk
+          curl -L --fail --retry 3 \
+            -o scripts/docker/macos/sdk/MacOSX15.1.sdk.tar.xz \
+            https://github.com/joseluisq/macosx-sdks/releases/latest/download/MacOSX15.1.sdk.tar.xz
+
+      # deploy.sh builds xuoproxy (release) into dist/wasm for the wasm target
+      - name: rust toolchain
+        if: matrix.target == 'wasm'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: build ${{ matrix.target }}
+        run: ./scripts/deploy.sh "${{ matrix.target }}"
+
+      - name: upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.target }}
+          path: |
+            dist/crossuo-${{ matrix.target }}-*
+            dist/${{ matrix.target }}/
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: release
+    needs: build
+    # manual dispatch builds and archives artifacts only; master/tags publish
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      # release payload: the packaged archives plus the wasm proxy binary
+      # (deploy.sh places it in dist/wasm after cross-build.sh zips the dist)
+      - name: collect release files
+        run: |
+          mkdir -p release
+          find artifacts -maxdepth 1 -type f -name 'crossuo-*' -exec cp {} release/ \;
+          ver="$(git describe --always --dirty 2>/dev/null || echo dev)"
+          cp artifacts/wasm/xuoproxy "release/xuoproxy-${ver}-linux-x64"
+          ls -lh release/
+
+      - name: release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+
+      - name: release latest
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          prerelease: true
+          files: release/*
