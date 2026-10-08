@@ -339,9 +339,10 @@ package_target() {
       [[ -f "$b/src/crossuo.worker.js" ]] && cp "$b/src/crossuo.worker.js" "$out/"
       cp resources/shell.html "$out/index.html"
       # Regenerate the shard list so a direct wasm build ships a fresh
-      # shards.cfg (the zip below must include it). Non-fatal: a missing
-      # depot on a fresh machine must not fail the wasm build.
-      if ! ./scripts/wasm-shards.sh "$out"; then
+      # shards.cfg (the zip below must include it). The fetch variant
+      # clones crossuo/shards and builds a host shardchk when missing, so
+      # this works on fresh machines/CI too. Non-fatal by design.
+      if ! ./scripts/wasm-shards-fetch.sh "$out"; then
         echo ">> [$target] warning: shards.cfg regeneration failed - continuing"
       fi
       if command -v zip >/dev/null; then

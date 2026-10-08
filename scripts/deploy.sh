@@ -48,10 +48,12 @@ expected_binary() {
 }
 
 # Regenerate dist/wasm/shards.cfg from the shards depot via the shared
-# scripts/wasm-shards.sh (same logic used by cross-build.sh packaging).
+# scripts/wasm-shards-fetch.sh, which fetches whatever is missing first
+# (clones crossuo/shards when there is no local depot, builds a native host
+# shardchk when none exists - the CI and fresh-machine path).
 # Non-fatal: the wasm deploy must not fail on this.
 regenerate_wasm_shards() {
-  ./scripts/wasm-shards.sh "dist/wasm" || true
+  ./scripts/wasm-shards-fetch.sh "dist/wasm" || true
 }
 
 # Build xuoproxy in release (native host binary) and ship it inside dist/wasm
