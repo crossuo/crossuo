@@ -30,8 +30,9 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
                 if (code == intloc_tag('T', 'E', 'X', 'T'))
                 {
                     int len = m_File.ReadInt32BE();
-                    uint8_t *end = m_File.Ptr + len;
-                    while (m_File.Ptr < end && !m_File.IsEOF())
+                    // bounds are logical positions (platform-neutral cursor)
+                    const size_t end = m_File.Pos() + size_t(len);
+                    while (m_File.Pos() < end && !m_File.IsEOF())
                     {
                         m_Strings.push_back(wstr_from_utf8(m_File.ReadString()));
                     }

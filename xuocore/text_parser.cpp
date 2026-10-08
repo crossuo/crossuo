@@ -11,6 +11,15 @@ TextFileParser::TextFileParser(
     if (!fs_path_empty(path))
     {
         m_File.Load(path);
+#if defined(XUO_EMSC)
+        // web: the parser walks raw pointers across the whole file; these are
+        // small dist text files, so adopt them as owned heap memory instead
+        // of paging them through a window
+        if (m_File.FileBacked)
+        {
+            m_File.Attach(m_File.FileReadWhole());
+        }
+#endif
     }
     StartupInitalize(delimiters, comentaries, quotes);
 }

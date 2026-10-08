@@ -390,6 +390,10 @@ void CProfessionManager::LoadProfessionDescription()
 
     if (file.Load(UOFilePath("Professn.enu")))
     {
+        // this walk keeps NUL-terminated C string pointers into the payload:
+        // web adopts the (small) file as owned heap memory, native keeps the
+        // mapping behind the pointers
+        file.Materialize();
         char *ptr = (char *)file.Start;
         char *end = (char *)((uintptr_t)file.Start + file.Size);
 

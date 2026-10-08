@@ -696,6 +696,17 @@ bool CFileManager::Load()
         }
     }
 
+#if defined(XUO_EMSC)
+    // web: verdata consumers (load_verdata, PatchFiles, the MUL animation
+    // readers) bake and dereference absolute pointers into the file - adopt
+    // it as owned heap memory so the pointer math stays valid. The file is
+    // bounded (it streams to completion first), so the copy is acceptable.
+    if (m_VerdataMul.FileBacked)
+    {
+        m_VerdataMul.Attach(m_VerdataMul.FileReadWhole());
+    }
+#endif
+
     if (!m_AnimdataMul.Size)
     {
         Fatal(
@@ -703,8 +714,23 @@ bool CFileManager::Load()
         return false;
     }
 
+#if defined(XUO_EMSC)
+    // web: the file is not mapped - read the table through the windowed
+    // reader (one large read, direct pread into the destination)
+    g_Data.m_Anim.resize(m_AnimdataMul.Size);
+    if (m_AnimdataMul.FileBacked)
+    {
+        m_AnimdataMul.Seek(0);
+        m_AnimdataMul.ReadDataLE(&g_Data.m_Anim[0], m_AnimdataMul.Size);
+    }
+    else
+    {
+        memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+    }
+#else
     g_Data.m_Anim.resize(m_AnimdataMul.Size);
     memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+#endif
     LoadTiledata();
     LoadIndexFiles();
 
@@ -776,8 +802,7 @@ bool CFileManager::LoadCommon()
     // vfs_stream_file_read) and must never be mapped - the fixed 1GB heap
     // cannot hold the ~190MB image next to the other install files, and the
     // MUL reads go through the streamed file directly
-    m_AnimMul[0].Start = nullptr;
-    m_AnimMul[0].Size = 0;
+    m_AnimMul[0].Unload();
 #else
     if (!m_AnimMul[0].Load(UOFilePath("anim.mul")))
     {
@@ -938,7 +963,11 @@ static bool SoundPlanEntryVisit(const VfsAsset &asset, void *ctx)
 // write. Per-block products skip the download entirely (planned index).
 bool CFileManager::EnsureSoundIndex()
 {
+#if defined(XUO_EMSC)
+    if (m_SoundLegacyMUL.Loaded())
+#else
     if (m_SoundLegacyMUL.Start != nullptr)
+#endif
     {
         return true;
     }
@@ -1396,7 +1425,11 @@ static const char *g_strings[MAX_STRINGS];
 static std::vector<uint8_t> g_stringData;
 void CFileManager::LoadStringDictionary()
 {
+#if defined(XUO_EMSC)
+    if (m_StringDictionary.Loaded())
+#else
     if (m_StringDictionary.Start != nullptr)
+#endif
     {
         auto block = g_FileManager.m_StringDictionary.GetAsset(Asset::Strings);
         if (block != nullptr)
@@ -1466,6 +1499,117 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
 
     const char *filename = fs_path_ascii(path);
     DEBUG(Data, "loading UOP: %s", filename);
+#if defined(XUO_EMSC)
+    if (file.FileBacked)
+    {
+        // web: the pack is file-backed (nothing is mapped) - parse the table
+        // through the windowed reader into an owned, stable copy; the asset
+        // pointers handed out below must outlive this parse
+        file.m_MapByHash.clear();
+        file.m_MapByOffset.clear();
+        file.m_NameHashes.clear();
+        file.m_FileOffsets.clear();
+        file.m_OwnedEntries.clear();
+
+        UopHeader &header = file.m_OwnedHeader;
+        file.Seek(0);
+        header.Magic = file.ReadUInt32LE();
+        header.Version = file.ReadUInt32LE();
+        header.Signature = file.ReadUInt32LE();
+        header.SectionOffset = file.ReadUInt64LE();
+        header.FileCapacity = file.ReadUInt32LE();
+        header.FileCount = file.ReadUInt32LE();
+        header.SectionCount = file.ReadUInt32LE();
+        header.Unk1 = file.ReadUInt32LE();
+        header.Unk2 = file.ReadUInt32LE();
+        file.Header = &header;
+        if (header.Magic != MYP_MAGIC)
+        {
+            Error(Data, "%s:unknown file format 0x%08x", filename, header.Magic);
+            return false;
+        }
+        if (header.Version < 4 || header.Version > 5)
+        {
+            Error(Data, "%s:unsupported version %d (client supports 4-5)", filename, header.Version);
+            return false;
+        }
+        TRACE(Data, "%s:signature is 0x%08x", filename, header.Signature);
+        TRACE(Data, "%s:file_count is %d", filename, header.FileCount);
+
+        dumpInfo = dumpInfo || (g_dumpUopFile.compare(uopFilename) == 0);
+
+        uint64_t next = header.SectionOffset;
+        do
+        {
+            if (next + sizeof(UopSection) > uint64_t(file.Size))
+            {
+                Error(Data, "%s:corrupt section chain (offset %llu)", filename, (unsigned long long)next);
+                break;
+            }
+            file.Seek(size_t(next));
+            UopSection section{};
+            section.FileCount = file.ReadUInt32LE();
+            section.NextSection = file.ReadUInt64LE();
+            const uint64_t entriesBegin = next + sizeof(UopSection);
+            for (uint32_t i = 0; i < section.FileCount; i++)
+            {
+                const uint64_t at = entriesBegin + uint64_t(i) * sizeof(UopFileEntry);
+                if (at + sizeof(UopFileEntry) > uint64_t(file.Size))
+                {
+                    break;
+                }
+                file.Seek(size_t(at));
+                UopFileEntry entry{};
+                entry.Offset = file.ReadUInt64LE();
+                entry.MetadataSize = file.ReadUInt32LE();
+                entry.CompressedSize = file.ReadUInt32LE();
+                entry.DecompressedSize = file.ReadUInt32LE();
+                entry.Hash = file.ReadUInt64LE();
+                entry.Checksum = file.ReadUInt32LE();
+                entry.Flags = file.ReadUInt16LE();
+                if (entry.Offset == 0)
+                {
+                    continue;
+                }
+                file.m_OwnedEntries.push_back(entry);
+            }
+            next = section.NextSection;
+        } while (next != 0);
+
+        // stable storage first, then the maps (AddAsset copies the pointer)
+        const size_t count = file.m_OwnedEntries.size();
+        file.m_NameHashes.reserve(count);
+        file.m_FileOffsets.reserve(count);
+        for (size_t i = 0; i < count; i++)
+        {
+            file.AddAsset(&file.m_OwnedEntries[i]);
+        }
+        file.Seek(0);
+
+        if (dumpInfo)
+        {
+            // debug-only: the metadata walk reads through the window too
+            std::sort(file.m_NameHashes.begin(), file.m_NameHashes.end());
+            for (const auto it : file.m_NameHashes)
+            {
+                const auto block = file.m_MapByHash[it];
+                std::vector<uint8_t> meta(std::min(size_t(block->MetadataSize), size_t(4096)), 0);
+                file.Seek(size_t(block->Offset));
+                file.ReadDataLE(meta.data(), meta.size());
+                fprintf(stderr, "%s: block %016" PRIX64 " offset %llu\n", uopFilename, block->Hash, (unsigned long long)block->Offset);
+                if (meta.size() >= sizeof(UopFileMetadata))
+                {
+                    // only interpret the header when the blob can carry it:
+                    // MetadataSize can be smaller than the 4-byte header, and
+                    // the read below would overrun the buffer (debug-only)
+                    auto *m = (UopFileMetadata *)meta.data();
+                    fprintf(stderr, "\tType: %d Size: %d\n", m->Type, m->Size);
+                }
+            }
+        }
+        return true;
+    }
+#endif
     file.Header = (UopHeader *)file.Start;
     if (file.Header->Magic != MYP_MAGIC)
     {
@@ -1742,6 +1886,35 @@ void CFileManager::LoadTiledata()
     }
 }
 
+#if defined(XUO_EMSC)
+// web: the idx tables are file-backed - read each block through the windowed
+// reader instead of walking a mapped image. All legacy idx blocks share the
+// 12-byte IndexBlock layout (position, size, kind data), so one reader serves
+// every table; Address bakes as a file offset (base 0).
+static void MulReadIndexFileWindowed(
+    size_t indexMaxCount,
+    const std::function<CIndexObject *(int index)> &getIdxObj,
+    CMappedFile &idxFile,
+    size_t tableOffset)
+{
+    if (!idxFile.Loaded())
+    {
+        return;
+    }
+    // perf: one stub lookup per file (the whole loose file stubs as one)
+    const bool file_stubbed = vfs_file_is_stubbed_path(idxFile.Path());
+    for (int i = 0; i < (int)indexMaxCount; i++)
+    {
+        CIndexObject *obj = getIdxObj((int)i);
+        IndexBlock block{};
+        idxFile.Seek(tableOffset + size_t(i) * sizeof(IndexBlock));
+        idxFile.ReadDataLE((uint8_t *)&block, sizeof(block));
+        obj->ReadIndexFile(0, &block);
+        obj->Stubbed = file_stubbed ? 1 : 0;
+    }
+}
+#endif // XUO_EMSC
+
 void CFileManager::LoadIndexFiles()
 {
     Info(Data, "loading indexes");
@@ -1751,14 +1924,14 @@ void CFileManager::LoadIndexFiles()
     // boot-time tables (the index objects snapshot their entries once below)
     // - demand them now (blocking-with-retry, same contract as verdata) and
     // map the streamed result before the table walk
-    if (m_TextureIdx.Start == nullptr && vfs_stream_file_available("texidx.mul"))
+    if (!m_TextureIdx.Loaded() && vfs_stream_file_available("texidx.mul"))
     {
         if (vfs_stream_file_ensure("texidx.mul"))
         {
             m_TextureIdx.Load(UOFilePath("texidx.mul"));
         }
     }
-    if (m_MultiIdx.Start == nullptr && vfs_stream_file_available("multi.idx"))
+    if (!m_MultiIdx.Loaded() && vfs_stream_file_available("multi.idx"))
     {
         if (vfs_stream_file_ensure("multi.idx"))
         {
@@ -1767,6 +1940,15 @@ void CFileManager::LoadIndexFiles()
     }
 #endif
 
+#if defined(XUO_EMSC)
+    // web: the idx files are file-backed - walk them through the windowed
+    // reader; Address bakes as a file offset into the (also file-backed) mul
+    const bool artMulOpen = m_ArtMul.Loaded();
+    const bool gumpMulOpen = m_GumpMul.Loaded();
+    const bool soundMulOpen = m_SoundMul.Loaded();
+    const bool multiMulOpen = m_MultiMul.Loaded();
+    const size_t landBlocks = g_Data.m_Land.size();
+#else
     auto *LandArtPtr = (ArtIdxBlock *)m_ArtIdx.Start;
     auto *StaticArtPtr =
         (ArtIdxBlock *)((size_t)m_ArtIdx.Start + (g_Data.m_Land.size() * sizeof(ArtIdxBlock)));
@@ -1775,8 +1957,17 @@ void CFileManager::LoadIndexFiles()
     auto *MultiPtr = (MultiIdxBlock *)m_MultiIdx.Start;
     auto *SoundPtr = (SoundIdxBlock *)m_SoundIdx.Start;
     auto *LightPtr = (LightIdxBlock *)m_LightIdx.Start;
+    const bool artMulOpen = m_ArtMul.Start != nullptr;
+    const bool gumpMulOpen = m_GumpMul.Start != nullptr;
+    const bool soundMulOpen = m_SoundMul.Start != nullptr;
+    const bool multiMulOpen = m_MultiMul.Start != nullptr;
+#endif
 
+#if defined(XUO_EMSC)
+    if (m_MultiCollection.Loaded())
+#else
     if (m_MultiCollection.Start != nullptr)
+#endif
     {
         g_Index.m_MultiIndexCount = MAX_MULTI_DATA_INDEX_COUNT;
     }
@@ -1789,10 +1980,29 @@ void CFileManager::LoadIndexFiles()
         }
     }
 
-    int maxGumpsCount =
-        (int)(m_GumpIdx.Start == nullptr ? (int)MAX_GUMP_DATA_INDEX_COUNT : (m_GumpIdx.End - m_GumpIdx.Start) / sizeof(GumpIdxBlock));
-    if (m_ArtMul.Start != nullptr)
+    int maxGumpsCount = (int)(
+#if defined(XUO_EMSC)
+        !m_GumpIdx.Loaded() ? (int)MAX_GUMP_DATA_INDEX_COUNT
+                            : m_GumpIdx.Size / sizeof(GumpIdxBlock)
+#else
+        m_GumpIdx.Start == nullptr ? (int)MAX_GUMP_DATA_INDEX_COUNT
+                                   : (m_GumpIdx.End - m_GumpIdx.Start) / sizeof(GumpIdxBlock)
+#endif
+    );
+    if (artMulOpen)
     {
+#if defined(XUO_EMSC)
+        MulReadIndexFileWindowed(
+            MAX_LAND_DATA_INDEX_COUNT,
+            [&](int i) { return &g_Index.m_Land[i]; },
+            m_ArtIdx,
+            0);
+        MulReadIndexFileWindowed(
+            g_Data.m_Static.size(),
+            [&](int i) { return &g_Index.m_Static[i]; },
+            m_ArtIdx,
+            landBlocks * sizeof(IndexBlock));
+#else
         MulReadIndexFile(
             MAX_LAND_DATA_INDEX_COUNT,
             [&](int i) { return &g_Index.m_Land[i]; },
@@ -1805,6 +2015,7 @@ void CFileManager::LoadIndexFiles()
             (size_t)m_ArtMul.Start,
             StaticArtPtr,
             [&StaticArtPtr]() { return ++StaticArtPtr; });
+#endif
     }
     else
     {
@@ -1825,14 +2036,22 @@ void CFileManager::LoadIndexFiles()
             MAX_LAND_DATA_INDEX_COUNT);
     }
 
-    if (m_SoundMul.Start != nullptr)
+    if (soundMulOpen)
     {
+#if defined(XUO_EMSC)
+        MulReadIndexFileWindowed(
+            MAX_SOUND_DATA_INDEX_COUNT,
+            [&](int i) { return &g_Index.m_Sound[i]; },
+            m_SoundIdx,
+            0);
+#else
         MulReadIndexFile(
             MAX_SOUND_DATA_INDEX_COUNT,
             [&](int i) { return &g_Index.m_Sound[i]; },
             (size_t)m_SoundMul.Start,
             SoundPtr,
             [&SoundPtr]() { return ++SoundPtr; });
+#endif
     }
     else
     {
@@ -1845,14 +2064,19 @@ void CFileManager::LoadIndexFiles()
             m_SoundLegacyMUL);
     }
 
-    if (m_GumpMul.Start != nullptr)
+    if (gumpMulOpen)
     {
+#if defined(XUO_EMSC)
+        MulReadIndexFileWindowed(
+            maxGumpsCount, [&](int i) { return &g_Index.m_Gump[i]; }, m_GumpIdx, 0);
+#else
         MulReadIndexFile(
             maxGumpsCount,
             [&](int i) { return &g_Index.m_Gump[i]; },
             (size_t)m_GumpMul.Start,
             GumpArtPtr,
             [&GumpArtPtr]() { return ++GumpArtPtr; });
+#endif
     }
     else
     {
@@ -1865,6 +2089,20 @@ void CFileManager::LoadIndexFiles()
             m_GumpartLegacyMUL);
     }
 
+#if defined(XUO_EMSC)
+    // web: the texture/light idx tables are file-backed; the entries keep the
+    // relative file offset (base 0) whichever lane serves the mul at read time
+    MulReadIndexFileWindowed(
+        m_TextureIdx.Size / sizeof(TexIdxBlock),
+        [&](int i) { return &g_Index.m_Texture[i]; },
+        m_TextureIdx,
+        0);
+    MulReadIndexFileWindowed(
+        MAX_LIGHTS_DATA_INDEX_COUNT,
+        [&](int i) { return &g_Index.m_Light[i]; },
+        m_LightIdx,
+        0);
+#else
     MulReadIndexFile(
         m_TextureIdx.Size / sizeof(TexIdxBlock),
         [&](int i) { return &g_Index.m_Texture[i]; },
@@ -1877,15 +2115,24 @@ void CFileManager::LoadIndexFiles()
         (size_t)m_LightMul.Start,
         LightPtr,
         [&LightPtr]() { return ++LightPtr; });
+#endif
 
-    if (m_MultiMul.Start != nullptr)
+    if (multiMulOpen)
     {
+#if defined(XUO_EMSC)
+        MulReadIndexFileWindowed(
+            g_Index.m_MultiIndexCount,
+            [&](int i) { return &g_Index.m_Multi[i]; },
+            m_MultiIdx,
+            0);
+#else
         MulReadIndexFile(
             g_Index.m_MultiIndexCount,
             [&](int i) { return &g_Index.m_Multi[i]; },
             (size_t)m_MultiMul.Start,
             MultiPtr,
             [&MultiPtr]() { return ++MultiPtr; });
+#endif
     }
 #if defined(XUO_EMSC)
     else if (vfs_stream_file_available("multi.mul"))
@@ -1895,12 +2142,11 @@ void CFileManager::LoadIndexFiles()
         // (base 0); the multi consumers resolve windows through the registry
         // at read time (vfs_stream_read_multi), null while the stream is cold.
         Info(Data, "multi.mul left to the stream-file lane");
-        MulReadIndexFile(
+        MulReadIndexFileWindowed(
             g_Index.m_MultiIndexCount,
             [&](int i) { return &g_Index.m_Multi[i]; },
-            0,
-            MultiPtr,
-            [&MultiPtr]() { return ++MultiPtr; });
+            m_MultiIdx,
+            0);
     }
 #endif
     else
@@ -1921,7 +2167,12 @@ void CFileManager::LoadIndexFiles()
             if (id < MAX_MULTI_DATA_INDEX_COUNT)
             {
                 CIndexMulti &index = g_Index.m_Multi[id];
+#if defined(XUO_EMSC)
+                // file-backed pack: the address is the payload's file offset
+                index.Address = size_t(block->Offset + block->MetadataSize);
+#else
                 index.Address = size_t(file.Start + block->Offset + block->MetadataSize);
+#endif
                 index.DataSize = block->DecompressedSize;
                 index.UopBlock = block;
                 //index.ID = -1;
@@ -1950,7 +2201,6 @@ void CFileManager::MulReadIndexFile(
     }
 }
 
-#if defined(XUO_EMSC)
 // web punctual map access: fetches the map group asset behind a CIndexMap
 // entry (LRU-backed ranged GET) and returns a pointer into it, valid until
 // the next punctual fetch. Native builds read through the mapped pack.
@@ -1959,6 +2209,7 @@ void CFileManager::MulReadIndexFile(
 // group of a facet may hold fewer). A plan entry claiming a larger payload
 // is a corrupt part-manifest record: fetching it would block the client
 // thread on a multi-megabyte transfer that no reader can use.
+#if defined(XUO_EMSC)
 static constexpr uint32_t vfsMapGroupMaxBytes = uint32_t(4096 * sizeof(MAP_BLOCK)) + 4096;
 
 // the bytes a punctual fetch transfers for this entry ([ml] + stored or
@@ -1969,9 +2220,140 @@ static inline bool vfsMapGroupSizeValid(const UopFileEntry &entry)
         entry.Flags == 1 ? entry.CompressedSize : entry.DecompressedSize;
     return entry.DecompressedSize >= sizeof(MAP_BLOCK) && transfer <= vfsMapGroupMaxBytes;
 }
+#endif
+
+bool uo_animation_group_healed(AnimationState anim, const UopFileEntry *block)
+{
+    if (block == nullptr || block->Hash == 0)
+    {
+        return false;
+    }
+#if defined(XUO_EMSC)
+    // web: file-backed packs keep no mapping address - heal by uop hash
+    (void)anim;
+    return vfs_refresh_block_hash(block->Hash);
+#else
+    auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
+    const auto *base = g_FileManager.m_AnimationFrame[direction.FileIndex].Start;
+    if (base == nullptr)
+    {
+        return false;
+    }
+    return vfs_refresh_block(base + block->Offset);
+#endif
+}
+
+// sound block data resolver (CreateWaveFile's platform split): native keeps
+// the raw mapped index pointer (the mapping is the whole file, the trap
+// resolves ranges on fault); web fetches the real block through the punctual
+// layer (the pack materializes as a table-only skeleton there) or reads the
+// file-backed classic sound mul through the windowed reader. `fetched` keeps
+// the payload alive for the caller's scope; blockSize becomes the payload
+// size. Null = fetch failed (the caller warns/skips).
+const uint8_t *uo_sound_block_data(
+    CIndexSound &is, std::vector<uint8_t> &fetched, size_t &blockSize)
+{
+#if !defined(XUO_EMSC)
+    (void)fetched;
+    blockSize = is.DataSize;
+    return reinterpret_cast<const uint8_t *>(is.Address);
+#else
+    blockSize = is.DataSize;
+    if (is.UopBlock != nullptr)
+    {
+        fetched = g_FileManager.m_SoundLegacyMUL.GetData(is.UopBlock);
+        if (fetched.size() < sizeof(SOUND_BLOCK))
+        {
+            return nullptr;
+        }
+        blockSize = fetched.size();
+        return fetched.data();
+    }
+    if (is.UopHash != 0 && vfs_asset_read(is.UopHash, fetched) &&
+        fetched.size() >= sizeof(SOUND_BLOCK))
+    {
+        // planned index (no table entry): the whole block by hash
+        blockSize = fetched.size();
+        return fetched.data();
+    }
+    if (is.UopBlock == nullptr && is.UopHash == 0 && g_FileManager.m_SoundMul.FileBacked &&
+        g_FileManager.m_SoundMul.Loaded())
+    {
+        // classic MUL sound: the file is file-backed - read through the
+        // windowed reader (Address is the payload's file offset)
+        fetched.resize(is.DataSize);
+        g_FileManager.m_SoundMul.Seek(is.Address);
+        g_FileManager.m_SoundMul.ReadDataLE(fetched.data(), is.DataSize);
+        if (fetched.size() < sizeof(SOUND_BLOCK))
+        {
+            return nullptr;
+        }
+        blockSize = fetched.size();
+        return fetched.data();
+    }
+    return nullptr; // planned but unfetchable (web): no data to decode
+#endif
+}
+
 const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index)
 {
-    if (index == nullptr || index->WebMapGroupHash == 0)
+    if (index == nullptr)
+        return nullptr;
+#if !defined(XUO_EMSC)
+    // native: the mapping is the whole file - the entry's address IS the
+    // block (the read guard checks MapAddress != 0)
+    return reinterpret_cast<const MAP_BLOCK *>(index->MapAddress);
+#else
+    if (index->WebMapInPatch != 0)
+    {
+        // map-diff lane (the terrain counterpart of the statics patch lane):
+        // the block was patched by mapdif<map>.mul - a loose, materialized
+        // file - so the bytes serve through a plain windowed read at the
+        // offset ApplyPatches baked (no fetch pool involved). The scratch is
+        // zeroed first: a short read must never serve the previous block's
+        // bytes, and an all-zero result trips the caller's zeroed-payload
+        // rejection instead of drawing corrupt terrain. Valid until the next
+        // read on this thread (the statics lane contract).
+        const int map = index->WebMapStreamFile;
+        if (map >= MAX_MAPS_COUNT || !g_FileManager.m_MapDif[map].Loaded())
+        {
+            return nullptr;
+        }
+        auto &dif = g_FileManager.m_MapDif[map];
+        if (uint64_t(index->WebMapDifOffset) + sizeof(MAP_BLOCK) > uint64_t(dif.Size))
+        {
+            return nullptr; // truncated dif: out-of-range entry, no data
+        }
+        static thread_local MAP_BLOCK tls_map_patch_block{};
+        memset(&tls_map_patch_block, 0, sizeof(MAP_BLOCK));
+        dif.Seek(size_t(index->WebMapDifOffset));
+        dif.ReadDataLE((uint8_t *)&tls_map_patch_block, sizeof(MAP_BLOCK));
+        return &tls_map_patch_block;
+    }
+    if (index->WebMapStreamFile != 0xFF)
+    {
+        // classic MUL lane (file-backed reads): the block lives at a file
+        // offset in map<map>.mul (MapAddress carries the offset and doubles
+        // as the non-zero presence marker the callers check). The mul may
+        // be a stream-on-demand source - the windowed read below waits out
+        // the stream lane for its span (bounded) or serves no block.
+        const int map = index->WebMapStreamFile;
+        if (map >= MAX_MAPS_COUNT || !g_FileManager.m_MapMul[map].Loaded())
+        {
+            return nullptr;
+        }
+        auto &mul = g_FileManager.m_MapMul[map];
+        if (uint64_t(index->MapAddress) + sizeof(MAP_BLOCK) > uint64_t(mul.Size))
+        {
+            return nullptr; // out-of-range entry: no data
+        }
+        static thread_local MAP_BLOCK tls_map_mul_block{};
+        memset(&tls_map_mul_block, 0, sizeof(MAP_BLOCK));
+        mul.Seek(size_t(index->MapAddress));
+        mul.ReadDataLE((uint8_t *)&tls_map_mul_block, sizeof(MAP_BLOCK));
+        return &tls_map_mul_block;
+    }
+    if (index->WebMapGroupHash == 0)
         return nullptr;
     // web map groups stream through the async fetch pool: serve only warm
     // bytes (LRU / blob store, never the network). A cold group would fault
@@ -2041,8 +2423,8 @@ const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index)
         return nullptr;
     }
     return reinterpret_cast<const MAP_BLOCK *>(payload->data() + block * sizeof(MAP_BLOCK));
-}
 #endif
+}
 
 // classic map file presence, platform-split: native answers from the mapped
 // files; web also accepts the stream-file lane (plan-streamable staidx/
@@ -2071,10 +2453,10 @@ bool vfs_map_files_present(int map)
     }
     auto &mgr = g_FileManager;
 #if defined(XUO_EMSC)
-    const bool idx = mgr.m_StaticIdx[map].Start != nullptr ||
-                     vfs_stream_file_available(staidx_stream_name(map));
-    const bool mul = mgr.m_StaticMul[map].Start != nullptr ||
-                     vfs_stream_file_available(statics_stream_name(map));
+    const bool idx =
+        mgr.m_StaticIdx[map].Loaded() || vfs_stream_file_available(staidx_stream_name(map));
+    const bool mul =
+        mgr.m_StaticMul[map].Loaded() || vfs_stream_file_available(statics_stream_name(map));
     return idx && mul;
 #else
     return mgr.m_StaticIdx[map].Start != nullptr && mgr.m_StaticMul[map].Start != nullptr;
@@ -2085,34 +2467,89 @@ bool vfs_map_files_present(int map)
 // stream-file statics lane: when a plan keeps the classic statics muls as
 // streamable metadata (custom shards ship bigger ones), block table entries
 // capture their statics position instead of a mapped address and this
-// accessor serves the bytes as registry windows. Mapped installs (the web
-// subset's default) keep the native pointer path below - byte-identical.
+// accessor serves the bytes as registry windows. With the file-backed reads
+// the same entry shape serves the materialized case: the position resolves
+// through a windowed read of the statics (or map-diff staDif) store file.
+// The returned block is valid until the next read on this thread.
+static std::vector<STATICS_BLOCK> &tls_statics_scratch()
+{
+    static thread_local std::vector<STATICS_BLOCK> scratch;
+    return scratch;
+}
+#endif
+
 const STATICS_BLOCK *vfs_index_statics_block(const CIndexMap *index)
 {
     if (index == nullptr)
     {
         return nullptr;
     }
-    if (index->StaticAddress != 0)
+#if !defined(XUO_EMSC)
+    // native: the mapped statics mul backs the entry's address directly
+    return reinterpret_cast<const STATICS_BLOCK *>(index->StaticAddress);
+#else
+    auto &mgr = g_FileManager;
+    const int map = index->WebStaticsStreamFile;
+    if (index->WebStaticsInPatch != 0)
     {
-        return reinterpret_cast<const STATICS_BLOCK *>(index->StaticAddress);
+        // map-diff lane: the entry's statics live in staDif<map>.mul at the
+        // (file-relative) StaticAddress captured by ApplyPatches
+        if (map >= MAX_MAPS_COUNT || !mgr.m_StaDif[map].Loaded())
+        {
+            // a bad entry must not leave the previous read's bytes reachable:
+            // drop the scratch so the failure can only ever yield no statics
+            tls_statics_scratch().clear();
+            return nullptr;
+        }
+        auto &scratch = tls_statics_scratch();
+        scratch.resize(index->StaticCount);
+        // zero before the read: a failed/short read (out-of-range entry,
+        // truncated dif) serves zeros - every consumer filters Color 0 - so
+        // a bad idx draws no statics instead of the previous block's window
+        if (!scratch.empty())
+        {
+            memset(scratch.data(), 0, scratch.size() * sizeof(STATICS_BLOCK));
+        }
+        if (!mgr.m_StaDif[map].Seek(size_t(index->StaticAddress)))
+        {
+            return nullptr; // offset past the dif: no statics (native guard parity)
+        }
+        mgr.m_StaDif[map].ReadDataLE(
+            (uint8_t *)scratch.data(), index->StaticCount * sizeof(STATICS_BLOCK));
+        return scratch.data();
     }
-    // stream lane: the entry captured its statics position at table build
-    if (index->WebStaticsStreamFile != 0xFF && index->WebStaticsBytes != 0)
+    if (map != 0xFF && index->WebStaticsBytes != 0)
     {
+        if (map >= 0 && map < MAX_MAPS_COUNT && mgr.m_StaticMul[map].Loaded())
+        {
+            // file-backed classic statics mul: resolve through the windowed
+            // reader (one bounded read per block visit). Zero the scratch
+            // first - a failed/short read (out-of-range entry, truncated
+            // mul) must serve zeros, not the previous block's bytes
+            auto &scratch = tls_statics_scratch();
+            const uint32_t count = index->WebStaticsBytes / sizeof(STATICS_BLOCK);
+            scratch.resize(count);
+            if (!scratch.empty())
+            {
+                memset(scratch.data(), 0, scratch.size() * sizeof(STATICS_BLOCK));
+            }
+            mgr.m_StaticMul[map].Seek(index->WebStaticsOffset);
+            mgr.m_StaticMul[map].ReadDataLE((uint8_t *)scratch.data(), index->WebStaticsBytes);
+            return scratch.data();
+        }
+        // stream lane: the entry captured its statics position at table build
         const uint8_t *window = vfs_stream_file_read(
-            statics_stream_name(index->WebStaticsStreamFile),
-            index->WebStaticsOffset,
-            index->WebStaticsBytes);
+            statics_stream_name(map), index->WebStaticsOffset, index->WebStaticsBytes);
         return reinterpret_cast<const STATICS_BLOCK *>(window);
     }
     return nullptr;
+#endif
 }
 
+#if defined(XUO_EMSC)
 bool vfs_stream_texmaps_windowed()
 {
-    return g_FileManager.m_TextureMul.Start == nullptr &&
-           vfs_stream_file_available("texmaps.mul");
+    return !g_FileManager.m_TextureMul.Loaded() && vfs_stream_file_available("texmaps.mul");
 }
 
 const uint8_t *vfs_stream_read_texmaps(size_t offset, uint32_t size)
@@ -2126,8 +2563,7 @@ const uint8_t *vfs_stream_read_texmaps(size_t offset, uint32_t size)
 
 bool vfs_stream_multi_windowed()
 {
-    return g_FileManager.m_MultiMul.Start == nullptr &&
-           vfs_stream_file_available("multi.mul");
+    return !g_FileManager.m_MultiMul.Loaded() && vfs_stream_file_available("multi.mul");
 }
 
 const uint8_t *vfs_stream_read_multi(size_t offset, uint32_t size)
@@ -2138,7 +2574,7 @@ const uint8_t *vfs_stream_read_multi(size_t offset, uint32_t size)
     }
     return vfs_stream_file_read("multi.mul", offset, size);
 }
-#endif
+#endif // XUO_EMSC
 
 void CFileManager::UopReadIndexFile(
     size_t indexMaxCount,
@@ -2158,7 +2594,13 @@ void CFileManager::UopReadIndexFile(
 
     // perf: one plan-file resolution per pack - the per-entry stub check
     // below is a single state read instead of a hash lookup + plan walk
+#if defined(XUO_EMSC)
+    // web: file-backed packs have no mapping base to resolve - the path (the
+    // pack's managed install path) identifies the plan file instead
+    const size_t state_base = vfs_file_state_base_path(uopFile.Path());
+#else
     const size_t state_base = vfs_file_state_base(uopFile.Start);
+#endif
 
     for (int i = startIndex; i < (int)indexMaxCount; i++)
     {
@@ -2177,10 +2619,20 @@ void CFileManager::UopReadIndexFile(
             hashlittle2(filename, strlen(filename), &ph, &sh);
             uint64_t offset = 0;
             uint32_t size = 0;
+#if defined(XUO_EMSC)
+            if (!vfs_asset_by_hash_planned(UOP_HASH(sh, ph), &offset, &size))
+                continue;
+#else
             if (!vfs_asset_by_hash(uopFile.Start, UOP_HASH(sh, ph), &offset, &size))
                 continue;
+#endif
             CIndexObject *obj = getIdxObj((int)i);
+#if defined(XUO_EMSC)
+            // file-backed pack: the baked address is the payload's file offset
+            obj->Address = offset;
+#else
             obj->Address = uintptr_t(uopFile.Start) + offset;
+#endif
             obj->DataSize = size;
             obj->UopBlock = nullptr;
             obj->Stubbed = vfs_asset_is_stubbed(UOP_HASH(sh, ph)) ? 1 : 0;
@@ -2193,7 +2645,12 @@ void CFileManager::UopReadIndexFile(
 
         {
             CIndexObject *obj = getIdxObj((int)i);
+#if defined(XUO_EMSC)
+            // file-backed pack: the baked address is the payload's file offset
+            obj->Address = size_t(block->Offset + block->MetadataSize);
+#else
             obj->Address = uintptr_t(uopFile.Start + block->Offset + block->MetadataSize);
+#endif
             obj->DataSize = block->DecompressedSize;
             obj->UopBlock = block;
             //obj->ID = -1;
@@ -2873,6 +3330,16 @@ static void load_mobtype()
 static void load_animations(CFileManager *mgr)
 {
     DBG_ANIM("load_animations");
+#if defined(XUO_EMSC)
+    // web: anim.idx is file-backed - read the walked blocks through a
+    // windowed reader bound to it (positions stay file-relative, exactly the
+    // values the stream-lane read path resolves at decode time)
+    CDataReader idxReader;
+    if (mgr->m_AnimIdx[0].FileBacked)
+    {
+        idxReader.BeginFile(mgr->m_AnimIdx[0].Fd(), 0, mgr->m_AnimIdx[0].Size);
+    }
+#endif
     size_t maxAddress = mgr->m_AddressIdx[0] + mgr->m_SizeIdx[0];
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
@@ -2907,6 +3374,24 @@ static void load_animations(CFileManager *mgr)
             for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
             {
                 auto &direction = group.Direction[d];
+#if defined(XUO_EMSC)
+                AnimIdxBlock blk{};
+                const size_t at = address + size_t(block) * sizeof(AnimIdxBlock);
+                block++;
+                if (!idxReader.IsFileBacked() || at >= maxAddress)
+                    break;
+                idxReader.Seek(at);
+                idxReader.ReadDataLE((uint8_t *)&blk, sizeof(blk));
+                if (blk.Size > 0 && blk.Position != -1 && blk.Size != -1)
+                {
+                    direction.BaseAddress = blk.Position;
+                    direction.BaseSize = blk.Size;
+                    direction.Address = direction.BaseAddress;
+                    direction.Size = direction.BaseSize;
+                    isValid = true;
+                    DBG_ANIM_ID(i, "\t\t\tdir: %d address: %d size: %d", d, blk.Position, blk.Size);
+                }
+#else
                 const auto *file = (AnimIdxBlock *)(address + block * sizeof(AnimIdxBlock));
                 block++;
                 if ((size_t)file >= maxAddress)
@@ -2921,6 +3406,7 @@ static void load_animations(CFileManager *mgr)
                     DBG_ANIM_ID(
                         i, "\t\t\tdir: %d address: %d size: %d", d, file->Position, file->Size);
                 }
+#endif
             }
         }
         index.IsValidMUL = isValid;
@@ -3162,7 +3648,11 @@ static void load_bodyconv(CFileManager *mgr)
             int animFile = 1;
             uint16_t realAnimId = -1;
             char mountedHeightOffset = 0;
+            #if defined(XUO_EMSC)
+            if (anim[0] != -1 && g_FileManager.m_AnimIdx[2].Loaded() && g_FileManager.IsMulFileOpen(2))
+#else
             if (anim[0] != -1 && mgr->m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
+#endif
             {
                 animFile = 2;
                 realAnimId = anim[0];
@@ -3171,7 +3661,11 @@ static void load_bodyconv(CFileManager *mgr)
                     mountedHeightOffset = -9;
                 }
             }
+#if defined(XUO_EMSC)
+            else if (anim[1] != -1 && g_FileManager.m_AnimIdx[3].Loaded() && g_FileManager.IsMulFileOpen(3))
+#else
             else if (anim[1] != -1 && mgr->m_AddressIdx[3] != 0 && g_FileManager.IsMulFileOpen(3))
+#endif
             {
                 animFile = 3;
                 realAnimId = anim[1];
@@ -3180,12 +3674,20 @@ static void load_bodyconv(CFileManager *mgr)
                     mountedHeightOffset = 9;
                 }
             }
+#if defined(XUO_EMSC)
+            else if (anim[2] != -1 && g_FileManager.m_AnimIdx[4].Loaded() && g_FileManager.IsMulFileOpen(4))
+#else
             else if (anim[2] != -1 && mgr->m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
+#endif
             {
                 animFile = 4;
                 realAnimId = anim[2];
             }
+#if defined(XUO_EMSC)
+            else if (anim[3] != -1 && g_FileManager.m_AnimIdx[5].Loaded() && g_FileManager.IsMulFileOpen(5))
+#else
             else if (anim[3] != -1 && mgr->m_AddressIdx[5] != 0 && g_FileManager.IsMulFileOpen(5))
+#endif
             {
                 animFile = 5;
                 realAnimId = anim[3];
@@ -3228,6 +3730,18 @@ static void load_bodyconv(CFileManager *mgr)
 
                     dataOffset += mgr->m_AddressIdx[animFile];
                     const auto maxAddress = mgr->m_AddressIdx[animFile] + mgr->m_SizeIdx[animFile];
+#if defined(XUO_EMSC)
+                    // web: the anim idx files are file-backed - read the
+                    // walked blocks through a windowed reader (positions stay
+                    // file-relative; IsMulFileOpen already gated this lane on
+                    // the streamed files being complete)
+                    CDataReader aidxReader;
+                    auto &aidxFile = g_FileManager.m_AnimIdx[animFile];
+                    if (aidxFile.FileBacked)
+                    {
+                        aidxReader.BeginFile(aidxFile.Fd(), 0, aidxFile.Size);
+                    }
+#endif
                     int block = 0;
                     for (int j = 0; j < count; j++)
                     {
@@ -3235,6 +3749,18 @@ static void load_bodyconv(CFileManager *mgr)
                         auto &group = dataIndex.Groups[j];
                         for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                         {
+#if defined(XUO_EMSC)
+                            AnimIdxBlock blk{};
+                            const size_t at = size_t(dataOffset) + size_t(block) * sizeof(AnimIdxBlock);
+                            block++;
+                            if (!aidxReader.IsFileBacked() || at >= maxAddress)
+                            {
+                                continue;
+                            }
+                            aidxReader.Seek(at);
+                            aidxReader.ReadDataLE((uint8_t *)&blk, sizeof(blk));
+                            const AnimIdxBlock *aidx = &blk;
+#else
                             const auto *aidx =
                                 (AnimIdxBlock *)(dataOffset + block * sizeof(AnimIdxBlock));
                             block++;
@@ -3242,6 +3768,7 @@ static void load_bodyconv(CFileManager *mgr)
                             {
                                 continue;
                             }
+#endif
                             DBG_ANIM_ID(
                                 index,
                                 "\t\tpatch group: %d dir: %d offset: %d size: %d",
@@ -3420,6 +3947,22 @@ void CFileManager::LoadSkills()
     m_Skills.clear();
     auto &idx = m_SkillsIdx;
     auto &mul = m_SkillsMul;
+#if defined(XUO_EMSC)
+    // web: both files are file-backed - walk the idx table by logical
+    // position and resolve the name through the windowed reader
+    while (!idx.IsEOF())
+    {
+        SkillIdxBlock idxBlock{};
+        idx.ReadDataLE((uint8_t *)&idxBlock, sizeof(idxBlock));
+        if (idxBlock.Size != 0 && idxBlock.Position != ~0 && idxBlock.Size != ~0)
+        {
+            mul.Seek(idxBlock.Position);
+            const bool haveButton = (mul.ReadUInt8() != 0);
+            SkillData data = { mul.ReadString(idxBlock.Size - 1), haveButton };
+            m_Skills.emplace_back(data);
+        }
+    }
+#else
     while (!idx.IsEOF())
     {
         const auto idxBlock = (SkillIdxBlock *)idx.Ptr;
@@ -3432,10 +3975,30 @@ void CFileManager::LoadSkills()
             m_Skills.emplace_back(data);
         }
     }
+#endif
 }
 
 void CFileManager::LoadHues()
 {
+#if defined(XUO_EMSC)
+    // web: the file is not mapped - read the hues through the windowed
+    // reader (one large read, direct pread into the destination)
+    const auto size = m_HuesMul.Size;
+    if (size == 0)
+        return;
+
+    const size_t count = size / sizeof(HUES_GROUP);
+    m_Hues.resize(count * 8);
+    if (m_HuesMul.FileBacked)
+    {
+        m_HuesMul.Seek(0);
+        m_HuesMul.ReadDataLE((uint8_t *)&m_Hues[0], count * sizeof(HUES_GROUP));
+    }
+    else
+    {
+        memcpy(&m_Hues[0], (void *)m_HuesMul.Start, count * sizeof(HUES_GROUP));
+    }
+#else
     const auto addr = (intptr_t)m_HuesMul.Start;
     const auto size = m_HuesMul.Size;
     if (addr == 0 || size == 0)
@@ -3444,6 +4007,7 @@ void CFileManager::LoadHues()
     const size_t count = size / sizeof(HUES_GROUP);
     m_Hues.resize(count * 8);
     memcpy(&m_Hues[0], (void *)addr, count * sizeof(HUES_GROUP));
+#endif
 }
 
 void CFileManager::CreateBlocksTable()
@@ -3472,6 +4036,41 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
 
     list.resize(maxBlockCount);
 
+#if defined(XUO_EMSC)
+    // web: files are file-backed - the walk uses file-relative offsets and a
+    // windowed reader over the staidx table instead of mapped pointers
+    const bool mapMulOpen = g_FileManager.m_MapMul[map].Loaded();
+    CUopMappedFile &uopFile = g_FileManager.m_MapUOP[map];
+    const bool isUop = uopFile.Loaded();
+    const size_t mapAddress = 0;
+    const size_t endMapAddress = isUop ? uopFile.Size : g_FileManager.m_MapMul[map].Size;
+    if (!g_FileManager.m_StaticIdx[map].Loaded() && vfs_stream_file_available(staidx_stream_name(map)))
+    {
+        // stream-file lane: a plan that keeps staidx<map>.mul as streamable
+        // metadata (custom shards) still needs its positions at table build -
+        // the index is small relative to the statics mul, so demand the whole
+        // file here (blocking-with-retry, the same boot-time contract verdata
+        // uses) and read the streamed result
+        if (vfs_stream_file_ensure(staidx_stream_name(map)))
+        {
+            g_FileManager.m_StaticIdx[map].Load(UOFilePath(staidx_stream_name(map)));
+        }
+    }
+    CDataReader staticIdxReader;
+    if (g_FileManager.m_StaticIdx[map].FileBacked)
+    {
+        staticIdxReader.BeginFile(
+            g_FileManager.m_StaticIdx[map].Fd(), 0, g_FileManager.m_StaticIdx[map].Size);
+    }
+    const size_t staticIdxSize = g_FileManager.m_StaticIdx[map].Size;
+    const bool staticMulOpen = g_FileManager.m_StaticMul[map].Loaded();
+    const bool staticsWindowed =
+        !staticMulOpen && vfs_stream_file_available(statics_stream_name(map));
+    if ((!mapMulOpen && !isUop) || !staticIdxReader.IsFileBacked())
+    {
+        return;
+    }
+#else
     size_t mapAddress = (size_t)g_FileManager.m_MapMul[map].Start;
     size_t endMapAddress = mapAddress + g_FileManager.m_MapMul[map].Size;
 
@@ -3484,36 +4083,9 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
     }
 
     size_t staticIdxAddress = (size_t)g_FileManager.m_StaticIdx[map].Start;
-#if defined(XUO_EMSC)
-    // stream-file lane: a plan that keeps staidx<map>.mul as streamable
-    // metadata (custom shards) still needs its positions at table build -
-    // the index is small relative to the statics mul, so demand the whole
-    // file here (blocking-with-retry, the same boot-time contract verdata
-    // uses) and map the streamed result
-    if (staticIdxAddress == 0u && vfs_stream_file_available(staidx_stream_name(map)))
-    {
-        if (vfs_stream_file_ensure(staidx_stream_name(map)))
-        {
-            g_FileManager.m_StaticIdx[map].Load(UOFilePath(staidx_stream_name(map)));
-            staticIdxAddress = (size_t)g_FileManager.m_StaticIdx[map].Start;
-        }
-    }
-#endif
     size_t endStaticIdxAddress = staticIdxAddress + g_FileManager.m_StaticIdx[map].Size;
     size_t staticAddress = (size_t)g_FileManager.m_StaticMul[map].Start;
     size_t endStaticAddress = staticAddress + g_FileManager.m_StaticMul[map].Size;
-#if defined(XUO_EMSC)
-    // web: the statics mul may live in the stream-file lane (plan-streamable,
-    // not materialized) or be absent entirely. Build the table for the map
-    // groups regardless and let the entries without statics stay static-less
-    // (terrain-only) - native keeps its all-or-nothing guard.
-    const bool staticsWindowed =
-        staticAddress == 0u && vfs_stream_file_available(statics_stream_name(map));
-    if ((mapAddress == 0u) || (staticIdxAddress == 0u))
-    {
-        return;
-    }
-#else
     if ((mapAddress == 0u) || (staticIdxAddress == 0u) || (staticAddress == 0u))
     {
         return;
@@ -3578,7 +4150,11 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                 {
                     uint32_t ph = 0, sh = 0;
                     hashlittle2(mapFilePath, strlen(mapFilePath), &ph, &sh);
+#if defined(XUO_EMSC)
+                    if (vfs_asset_by_hash_planned(UOP_HASH(sh, ph), &uopOffset64, nullptr))
+#else
                     if (vfs_asset_by_hash(uopFile.Start, UOP_HASH(sh, ph), &uopOffset64, nullptr))
+#endif
                     {
                         // streamed installs: the chunk is not materialized
                         // yet - its planned bytes come from the plan and
@@ -3603,18 +4179,31 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
         }
 
         const size_t address = mapAddress + uopOffset + (blockNumber * sizeof(MAP_BLOCK));
-        if (address < endMapAddress)
+        const bool mapAddressInRange = address < endMapAddress;
+        if (mapAddressInRange)
         {
             realMapAddress = address;
         }
 
+#if defined(XUO_EMSC)
+        StaIdxBlock sidxBlk{};
+        const size_t sidxAt = size_t(blockIdx) * sizeof(StaIdxBlock);
+        if (sidxAt + sizeof(StaIdxBlock) <= staticIdxSize)
+        {
+            staticIdxReader.Seek(sidxAt);
+            staticIdxReader.ReadDataLE((uint8_t *)&sidxBlk, sizeof(sidxBlk));
+        }
+        const StaIdxBlock *sidx = &sidxBlk;
+        if (sidxBlk.Size > 0 && sidxBlk.Position != 0xFFFFFFFF)
+#else
         const auto *sidx = (StaIdxBlock *)(staticIdxAddress + blockIdx * sizeof(StaIdxBlock));
         if ((size_t)sidx < endStaticIdxAddress && sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
+#endif
         {
 #if defined(XUO_EMSC)
             if (staticsWindowed)
             {
-                // stream lane: the statics mul is not mapped - record where
+                // stream lane: the statics mul is not materialized - record where
                 // this block's statics live in the streamed file instead of
                 // computing a mapped address (vfs_index_statics_block serves
                 // the window at read time, null while the stream is cold)
@@ -3629,7 +4218,26 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                 realStaticCount = count;
             }
             else
-#endif
+            {
+                // file-backed statics mul: the entry records the file offset
+                // (served through the windowed statics reader at read time;
+                // never a dereferenceable pointer)
+                const size_t address2 = sidx->Position;
+                if (address2 < g_FileManager.m_StaticMul[map].Size)
+                {
+                    int count = int(sidx->Size / sizeof(STATICS_BLOCK));
+                    if (count > 1024)
+                    {
+                        count = 1024;
+                    }
+                    realStaticAddress = address2;
+                    realStaticCount = count;
+                    index.WebStaticsStreamFile = uint8_t(map & 0xFF);
+                    index.WebStaticsOffset = uint32_t(address2);
+                    index.WebStaticsBytes = uint32_t(count * sizeof(STATICS_BLOCK));
+                }
+            }
+#else
             {
                 const size_t address2 = staticAddress + sidx->Position;
                 if (address2 < endStaticAddress)
@@ -3642,15 +4250,18 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
                     }
                 }
             }
+#endif
         }
 #if defined(XUO_EMSC)
-        if (!staticsWindowed)
+        // the entry carries no statics lane when it has no data (0xFF file
+        // slot); the classic statics mul lane is the default either way
+        if (realStaticCount == 0)
         {
-            // the entry carries no lane statics (mapped path or no data)
             index.WebStaticsStreamFile = 0xFF;
             index.WebStaticsOffset = 0;
             index.WebStaticsBytes = 0;
         }
+        index.WebStaticsInPatch = 0;
 #endif
         index.OriginalMapAddress = realMapAddress;
         index.OriginalStaticAddress = realStaticAddress;
@@ -3668,7 +4279,27 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
         // the group the same fetch hash plus its position inside the group.
         index.WebMapGroupHash = groupHash;
         index.WebMapGroupBlock = uint32_t(blockNumber);
-        index.MapAddress = groupHash != 0 ? 1 : 0; // presence marker only
+        if (isUop)
+        {
+            index.MapAddress = groupHash != 0 ? 1 : 0; // presence marker only
+            index.WebMapStreamFile = 0xFF;
+            index.WebMapBlockValid = groupHash != 0;
+        }
+        else
+        {
+            // classic MUL lane: the block lives at a file offset in the
+            // (file-backed, possibly stream-on-demand) map mul - MapAddress
+            // carries the offset; vfs_index_map_block serves it through a
+            // windowed read that waits out the stream lane when the mul is
+            // not materialized. Presence rides WebMapBlockValid: block (0,0)
+            // sits at file offset 0 and a MapAddress != 0 sentinel would
+            // read it as absent.
+            index.MapAddress = realMapAddress;
+            index.WebMapStreamFile = uint8_t(map & 0xFF);
+            index.WebMapBlockValid = mapAddressInRange;
+        }
+        index.WebMapDifOffset = 0;
+        index.WebMapInPatch = 0;
 #endif
     }
 }

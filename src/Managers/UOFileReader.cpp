@@ -65,8 +65,10 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 #if defined(XUO_EMSC)
     // web: the pack is a table-only skeleton - stored blocks live in the
     // fetch layer, not at io.Address; the payload holder keeps the block
-    // alive for this function's scope
+    // alive for this function's scope. Classic MUL gumps are file-backed and
+    // read through a bounded window instead.
     std::shared_ptr<std::vector<uint8_t>> storedPayload;
+    CDataReader mulReader;
     if (uopBlock != nullptr && uopBlock->Flags == 0)
     {
         storedPayload =
@@ -101,12 +103,44 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
         halfLen = int((storedPayload->size() - 8) >> 2);
         dataStart = storedPayload->data() + 8;
     }
-    else
-#endif
+    else if (uopBlock != nullptr && uopBlock->Flags != 0)
     {
-        dataStart = uopBlock != nullptr && uopBlock->Flags != 0 ? decoded.data() + 8
-                                                    : reinterpret_cast<const uint8_t *>(io.Address);
+        // compressed UOP: the decode above already produced the block (the
+        // native branch below does the same on desktop)
+        dataStart = decoded.data() + 8; // past the extra width,height
     }
+    else if (uopBlock == nullptr && g_FileManager.m_GumpMul.FileBacked &&
+             g_FileManager.m_GumpMul.Loaded())
+    {
+        // classic MUL gump: io.Address is the payload's file offset and the
+        // row walk below reads through the windowed reader. MUL gump blocks
+        // carry NO [width][height] header (that is the UOP layout): the u32
+        // row lookup table starts at block+0 with offsets relative to the
+        // block start, and the dimensions come from the index entry
+        // (CIndexGump). Same table arithmetic as the native tail below.
+        auto &file = g_FileManager.m_GumpMul;
+        if (!mulReader.Attach(file, io.Address, io.DataSize) || io.Width == 0 || io.Height == 0)
+        {
+            return {};
+        }
+        lookupList = nullptr; // u32 table resolved per row below (window reads)
+        halfLen = int(io.DataSize >> 2);
+        dataStart = nullptr;
+    }
+    else
+    {
+        return {}; // no fetchable block and no file-backed MUL gump
+    }
+#else
+    // native: the mapping is the whole file - the picture starts past the
+    // lookup table (compressed blocks were decoded above, classic gumps
+    // point straight into the mapping). Statement-for-statement the same
+    // tail HEAD ran after the EMSC region's #endif; the restructure only
+    // moved it into the #else arm to give web its own lanes.
+    dataStart = uopBlock != nullptr && uopBlock->Flags != 0
+                    ? decoded.data() + 8
+                    : reinterpret_cast<const uint8_t *>(io.Address);
+#endif
 
     int blocksize = io.Width * io.Height;
 
@@ -128,6 +162,62 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
     }
 
     uint16_t color = io.Color;
+
+#if defined(XUO_EMSC)
+    // file-backed MUL gump: the same walk as the native loop below, with
+    // the u32 lookup table and every row resolved through the windowed
+    // reader. The table starts at block+0 (no [width][height] header in a
+    // MUL gump block) and its offsets are relative to the block start;
+    // dimensions come from the index entry.
+    if (dataStart == nullptr && lookupList == nullptr)
+    {
+        std::vector<uint32_t> lookup(size_t(io.Height), 0);
+        mulReader.ReadDataLE(
+            (uint8_t *)lookup.data(), int(lookup.size()) * int(sizeof(uint32_t)));
+        for (int y = 0; y < io.Height; y++)
+        {
+            int gSize = 0;
+            if (y < io.Height - 1)
+            {
+                gSize = int(lookup[size_t(y) + 1] - lookup[size_t(y)]);
+            }
+            else
+            {
+                gSize = halfLen - int(lookup[size_t(y)]);
+            }
+            mulReader.Seek(size_t(lookup[size_t(y)]) * 4);
+            int pos = (int)y * io.Width;
+            for (int i = 0; i < gSize; i++)
+            {
+                GUMP_BLOCK gmul{};
+                mulReader.ReadDataLE((uint8_t *)&gmul, sizeof(gmul));
+                uint16_t val = gmul.Value;
+
+                if ((color != 0u) && (val != 0u))
+                {
+                    val = g_ColorManager.GetColor16(val, color);
+                }
+
+                const uint16_t a = (val != 0u ? 0x8000 : 0) | val;
+
+                int count = gmul.Run;
+
+                // malformed blocks (or a half-written streamed one) must not
+                // run past the pixel buffer - clamp instead of overflowing
+                if (pos + count > blocksize)
+                {
+                    count = blocksize - pos;
+                }
+
+                for (int j = 0; j < count; j++)
+                {
+                    pixels[pos++] = a;
+                }
+            }
+        }
+        return pixels;
+    }
+#endif
 
     for (int y = 0; y < io.Height; y++)
     {
@@ -193,17 +283,28 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
 #if defined(XUO_EMSC)
     // web: the art pack is a table-only skeleton - the block comes from the
     // punctual fetch layer; the holder keeps it alive for this function.
-    // io.Address is a planned skeleton offset here, never dereferenced.
+    // Classic MUL art is file-backed: the block reads through a bounded
+    // window into a local holder (io.Address is a file offset there).
+    // io.Address never dereferences on the web build.
     std::shared_ptr<std::vector<uint8_t>> artBlock;
-    if (io.UopBlock == nullptr)
+    if (io.UopBlock != nullptr)
     {
-        return {};
+        artBlock = vfs_asset_fetch_block_payload(
+            io.UopBlock->Hash, io.UopBlock, true);
+        if (artBlock == nullptr || artBlock->empty())
+        {
+            Warning(Data, "UOFileReader::GetArtPixels could not fetch art block %u", id);
+            return {};
+        }
     }
-    artBlock = vfs_asset_fetch_block_payload(
-        io.UopBlock->Hash, io.UopBlock, true);
-    if (artBlock == nullptr || artBlock->empty())
+    else if (g_FileManager.m_ArtMul.FileBacked && g_FileManager.m_ArtMul.Loaded())
     {
-        Warning(Data, "UOFileReader::GetArtPixels could not fetch art block %u", id);
+        artBlock = std::make_shared<std::vector<uint8_t>>(io.DataSize, 0);
+        g_FileManager.m_ArtMul.Seek(io.Address);
+        g_FileManager.m_ArtMul.ReadDataLE(artBlock->data(), io.DataSize);
+    }
+    else
+    {
         return {};
     }
     uint16_t *P = (uint16_t *)artBlock->data();
@@ -536,18 +637,32 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
     std::vector<uint16_t> pixels(w * h);
     uint16_t *P = (uint16_t *)io.Address;
 #if defined(XUO_EMSC)
+    std::shared_ptr<std::vector<uint8_t>> texBlock;
     if (vfs_stream_texmaps_windowed())
     {
         // stream-file lane: texmaps.mul is streamable metadata and not
-        // mapped - the index entry holds the relative offset; resolve the
-        // bytes as a registry window (null while cold: skip like missing
-        // data; mapped installs keep the pointer above, byte-identical)
+        // materialized - the index entry holds the relative offset; resolve
+        // the bytes as a registry window (null while cold: skip like missing
+        // data)
         const uint8_t *window = vfs_stream_read_texmaps(size_t(io.Address), io.DataSize);
         if (window == nullptr)
         {
             return nullptr;
         }
         P = (uint16_t *)window;
+    }
+    else if (g_FileManager.m_TextureMul.FileBacked && g_FileManager.m_TextureMul.Loaded())
+    {
+        // file-backed texmaps.mul: read the texture through the windowed
+        // reader (io.Address is the payload's file offset)
+        texBlock = std::make_shared<std::vector<uint8_t>>(io.DataSize, 0);
+        g_FileManager.m_TextureMul.Seek(io.Address);
+        g_FileManager.m_TextureMul.ReadDataLE(texBlock->data(), io.DataSize);
+        P = (uint16_t *)texBlock->data();
+    }
+    else
+    {
+        return nullptr; // no lane and no file: nothing to read (web)
     }
 #endif
     for (int i = 0; i < h; i++)
@@ -573,7 +688,27 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
 CSprite *UOFileReader::ReadLight(CIndexObject &io)
 {
     std::vector<uint16_t> pixels(io.Width * io.Height);
+#if defined(XUO_EMSC)
+    std::vector<uint8_t> lightBlock;
+    const uint8_t *lightData = nullptr;
+    if (g_FileManager.m_LightMul.FileBacked && g_FileManager.m_LightMul.Loaded())
+    {
+        // web: file-backed light.mul - read through the windowed reader
+        // (io.Address is the payload's file offset)
+        const uint32_t bytes = uint32_t(io.Width * io.Height);
+        lightBlock.resize(bytes);
+        g_FileManager.m_LightMul.Seek(io.Address);
+        g_FileManager.m_LightMul.ReadDataLE(lightBlock.data(), bytes);
+        lightData = lightBlock.data();
+    }
+    else
+    {
+        lightData = reinterpret_cast<const uint8_t *>(io.Address);
+    }
+    const uint8_t *p = lightData;
+#else
     uint8_t *p = (uint8_t *)io.Address;
+#endif
     for (int i = 0; i < io.Height; i++)
     {
         int pos = (int)i * io.Width;

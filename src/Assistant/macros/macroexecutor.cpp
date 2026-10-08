@@ -122,14 +122,18 @@ uint16_t tile_graphic_at(int x, int y)
             }
         }
 
-        if (graphic == 0u && index->MapAddress != 0)
+        if (graphic == 0u && index->HasMapBlock())
         {
             #if defined(XUO_EMSC)
                 const MAP_BLOCK *pmb = vfs_index_map_block(index);
+                if (pmb != nullptr)
+                {
+                    graphic = (uint16_t)(pmb->Cells[((y & 7) * 8) + (x & 7)].TileID & 0x3FFF);
+                }
             #else
                 MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
+                graphic = (uint16_t)(pmb->Cells[((y & 7) * 8) + (x & 7)].TileID & 0x3FFF);
             #endif
-            graphic = (uint16_t)(pmb->Cells[((y & 7) * 8) + (x & 7)].TileID & 0x3FFF);
         }
     }
 

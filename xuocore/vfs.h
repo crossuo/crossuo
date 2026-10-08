@@ -183,6 +183,28 @@ void vfs_unmap_file(uint8_t *start, size_t size);
 // makes [offset, offset + length) of a mapped managed base readable (fetch +
 // materialize + flip, deduplicated); false when resolution failed hard
 bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length);
+
+#if defined(XUO_EMSC)
+// web file-backed reads (no mapped images on the web build - a MEMFS mmap
+// allocates the full size inside the fixed wasm heap). The mapped-file API
+// above resolves paths for them instead:
+// materialized install path of a (possibly mixed-case) game file path; false
+// when the path is not a managed artifact
+bool vfs_managed_file_path(const fs_path &path, fs_path *out_install_path);
+// (vfs_ensure_file_range removed: zero callers, and its span semantics only
+// materialized the single covering asset - readers materialize per read)
+// state-db base index / whole-file stub mark for a managed path (native
+// resolves both through the trap registry by mapping base)
+size_t vfs_file_state_base_path(const fs_path &path);
+bool vfs_file_is_stubbed_path(const fs_path &path);
+// planned byte range of a pack entry by uop name hash, no mapped base
+// required (the hash resolves through the managed registry directly)
+bool vfs_asset_by_hash_planned(uint64_t uop_hash, uint64_t *out_offset, uint32_t *out_size);
+// hot-swap check for file-backed packs: true when the block was served a
+// stub and its real bytes materialized since (one-shot per block, like the
+// address-based vfs_refresh_block)
+bool vfs_refresh_block_hash(uint64_t uop_hash);
+#endif
 // true when the byte at `offset` holds real materialized data (sealed
 // or flipped pages). Unmanaged/native addresses are always ready. The cheap
 // check behind stub-refresh decisions and diagnostics
@@ -315,6 +337,19 @@ bool vfs_stream_file_available(const char *name);
 // thread.
 bool vfs_stream_file_ensure(const char *name);
 
+// stream-on-demand range wait for file-backed readers: waits (bounded) for
+// the paced lane front to pass [offset, offset+len) of `name`'s install
+// file, then hands back a borrowed read descriptor. -1 on timeout/failure -
+// the caller must fail the read loudly (hollow zeros are never served
+// silently); the lane keeps its pacing and the .ready marker semantics
+// (reads ahead of the front wait briefly; sequential-ish loaders converge).
+int vfs_stream_file_ensure_fd(const char *name, uint64_t offset, uint64_t len);
+
+// plan lookup for file-backed readers: true when `path` resolves to a plan
+// file the web boot keeps as stream-on-demand metadata (*name = stream
+// registry key, *size = planned unpacked bytes). 0-size for everything else.
+bool vfs_stream_file_plan(const fs_path &path, const char **name, uint64_t *size);
+
 // progress surfaced: per-file phase/bytes/health for diagnostics.
 // phase: 0 probe, 1 streaming, 2 ready, 3 failed (cooldown). `name` points
 // into the registry (instances live for the whole session).
@@ -332,6 +367,12 @@ struct vfs_stream_file_stats_entry
 };
 int vfs_stream_file_stats(vfs_stream_file_stats_entry *out, int max);
 #endif
+
+// music DATA lane: complete the mp3 through the stream-file registry
+// (bounded, pool-driven) and copy the finished bytes out for a memory load
+// (SoLoud must never re-open the file mid-mix). Native has no lane: returns
+// false (the caller keeps the plain file load).
+bool vfs_music_stream_bytes(const char *fileName, std::vector<uint8_t> &out);
 
 // reads one asset's inflated payload bytes by its uop hash, fetching the
 // block into the store on demand (blocking). Serves the arena backend (web:

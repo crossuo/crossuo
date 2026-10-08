@@ -62,7 +62,7 @@ bool CSpeechManager::LoadSpeech()
     CDataReader reader;
     std::vector<uint8_t> tempData;
     bool isUOP = false;
-    if (g_FileManager.m_MainMisc.Start != nullptr)
+    if (g_FileManager.m_MainMisc.Loaded())
     {
         auto block = g_FileManager.m_MainMisc.GetAsset(Asset::CommandsTranslate);
         //0x0891F809004D8081); // FIXME: find the string for this hash
@@ -81,9 +81,12 @@ bool CSpeechManager::LoadSpeech()
         }
     }
 
-    if (reader.Start == nullptr)
+    if (!isUOP)
     {
-        reader.SetData(g_FileManager.m_SpeechMul.Start, g_FileManager.m_SpeechMul.Size);
+        // the whole speech.mul through THE platform factory (web: a bounded
+        // file-backed window; native: a pointer into the mapping)
+        auto &speech = g_FileManager.m_SpeechMul;
+        reader.Attach(speech, 0, speech.Size);
     }
 
     if (isUOP)

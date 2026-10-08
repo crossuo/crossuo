@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpWorldMap.h"
-#include <common/checksum.h>
+#include <external/zlib_amalg.h> // crc32 (whole-file running checksum)
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../PressedObject.h"
@@ -285,91 +285,98 @@ void CGumpWorldMap::FixOffsets(int &offsetX, int &offsetY, int &width, int &heig
     }
 }
 
+// file-backed (web) or mapped (native): checksum through a bounded reader
+// walk (chunked reads, one window fill per 64KB on web; a mapped copy on
+// native - identical byte stream). One running whole-file CRC32: the chunk
+// bytes feed a single zlib crc32 context, so the value is the file's real
+// checksum regardless of the chunk boundaries (an XOR of per-chunk CRCs
+// would depend on both)
+static uint32_t crc32_checksum_filebacked(CMappedFile &file)
+{
+    if (!file.Loaded() || file.Size == 0)
+    {
+        return 0;
+    }
+    uLong crc = crc32(0l, Z_NULL, 0);
+    std::vector<uint8_t> chunk;
+    const size_t chunkSize = 64 * 1024;
+    chunk.resize(std::min(size_t(file.Size), chunkSize));
+    for (size_t off = 0; off < file.Size;)
+    {
+        const size_t n = std::min(size_t(file.Size) - off, chunk.size());
+        file.Seek(off);
+        file.ReadDataLE(chunk.data(), n);
+        crc = crc32(crc, chunk.data(), uInt(n));
+        off += n;
+    }
+    return uint32_t(crc);
+}
+
 void CGumpWorldMap::LoadMap(int map)
 {
-    if (!Called ||
-        (g_FileManager.m_MapUOP[map].Start == nullptr &&
-         g_FileManager.m_MapMul[map].Start == nullptr) ||
-#if defined(XUO_EMSC)
-        // stream-file lane: the statics files may be plan-streamable rather
-        // than mapped; the per-block walk below resolves through
-        // vfs_index_statics_block either way
+    if (!Called || (!g_FileManager.m_MapUOP[map].Loaded() && !g_FileManager.m_MapMul[map].Loaded()) ||
+        // the statics files may be plan-streamable rather than mapped (web);
+        // the per-block walk below resolves through vfs_index_statics_block
         !vfs_map_files_present(map))
-#else
-        g_FileManager.m_StaticIdx[map].Start == nullptr ||
-        g_FileManager.m_StaticMul[map].Start == nullptr)
-#endif
     {
         return;
     }
 
     if (g_MapTexture[map].Texture == 0)
     {
-        uint32_t crc32 = 0;
+        uint32_t worldCrc = 0;
 
-        if (g_FileManager.m_MapUOP[map].Start == nullptr)
+        // the files checksum through the reader walk (one running whole-file
+        // CRC32 each; per-file results combine by XOR - the cache name just
+        // has to be deterministic per data state; empty/absent files add 0)
+        if (g_FileManager.m_MapUOP[map].Loaded())
         {
-            crc32 =
-                crc32_checksum(g_FileManager.m_MapMul[map].Start, g_FileManager.m_MapMul[map].Size);
+            worldCrc = crc32_checksum_filebacked(g_FileManager.m_MapUOP[map]);
         }
         else
         {
-            crc32 =
-                crc32_checksum(g_FileManager.m_MapUOP[map].Start, g_FileManager.m_MapUOP[map].Size);
+            worldCrc = crc32_checksum_filebacked(g_FileManager.m_MapMul[map]);
         }
 
-#if defined(XUO_EMSC)
-        // lane builds hash only the files they actually have mapped: the
+        // lane builds hash only the files they actually have: the
         // cache name just has to be deterministic per data state
-        if (g_FileManager.m_StaticIdx[map].Start != nullptr)
-#endif
+        if (g_FileManager.m_StaticIdx[map].Loaded())
         {
-            crc32 ^= crc32_checksum(
-                g_FileManager.m_StaticIdx[map].Start, g_FileManager.m_StaticIdx[map].Size);
+            worldCrc ^= crc32_checksum_filebacked(g_FileManager.m_StaticIdx[map]);
         }
-#if defined(XUO_EMSC)
-        if (g_FileManager.m_StaticMul[map].Start != nullptr)
-#endif
+        if (g_FileManager.m_StaticMul[map].Loaded())
         {
-            crc32 ^= crc32_checksum(
-                g_FileManager.m_StaticMul[map].Start, g_FileManager.m_StaticMul[map].Size);
+            worldCrc ^= crc32_checksum_filebacked(g_FileManager.m_StaticMul[map]);
         }
 
-        if (g_FileManager.m_MapMul[map].Start != nullptr)
+        if (g_FileManager.m_MapMul[map].Loaded())
         {
             for (int i = 0; i < g_MapManager.PatchesCount; i++)
             {
                 if (g_MapManager.m_MapPatchCount[i] != 0)
                 {
-                    crc32 ^= crc32_checksum(
-                        g_FileManager.m_MapDifl[i].Start, g_FileManager.m_MapDifl[i].Size);
-                    crc32 ^= crc32_checksum(
-                        g_FileManager.m_MapDif[i].Start, g_FileManager.m_MapDif[i].Size);
+                    worldCrc ^= crc32_checksum_filebacked(g_FileManager.m_MapDifl[i]);
+                    worldCrc ^= crc32_checksum_filebacked(g_FileManager.m_MapDif[i]);
                 }
 
                 if (g_MapManager.m_StaticPatchCount[i] != 0)
                 {
-                    crc32 ^= crc32_checksum(
-                        g_FileManager.m_StaDifl[i].Start, g_FileManager.m_StaDifl[i].Size);
-                    crc32 ^= crc32_checksum(
-                        g_FileManager.m_StaDifi[i].Start, g_FileManager.m_StaDifi[i].Size);
+                    worldCrc ^= crc32_checksum_filebacked(g_FileManager.m_StaDifl[i]);
+                    worldCrc ^= crc32_checksum_filebacked(g_FileManager.m_StaDifi[i]);
                 }
             }
         }
 
-        auto path = FilePath("data/worldmap%08X.xuo", crc32);
+        auto path = FilePath("data/worldmap%08X.xuo", worldCrc);
         bool fromFile = false;
 
         std::vector<uint16_t> buf;
 
-#if defined(XUO_EMSC)
-        // stream-file lane: while the statics mul is not mapped, a partial
-        // (cold-stream) render must not poison the cache - skip it entirely
-        // and recompute per open until the lane has delivered the file
-        const bool worldMapCacheable = g_FileManager.m_StaticMul[map].Start != nullptr;
-#else
-        const bool worldMapCacheable = true;
-#endif
+        // cache-poisoning guard: a partial (cold-stream, web) render must
+        // not poison the cache - skip it and recompute per open until the
+        // lane delivered the file (native: the guard always passes, the
+        // mapped files are whole by construction)
+        const bool worldMapCacheable = g_FileManager.m_StaticMul[map].Loaded();
         if (worldMapCacheable && fs_path_exists(path))
         {
             fromFile = true;
@@ -428,7 +435,7 @@ void CGumpWorldMap::LoadMap(int map)
                 {
                     CIndexMap *indexMap = g_MapManager.GetIndex(map, (int)bx, (int)by);
 
-                    if (indexMap == nullptr || indexMap->MapAddress == 0)
+                    if (indexMap == nullptr || !indexMap->HasMapBlock())
                     {
                         continue;
                     }
@@ -436,12 +443,9 @@ void CGumpWorldMap::LoadMap(int map)
                     int mapY = (int)by * 8;
                     MAP_BLOCK info = {};
 
-                    #if defined(XUO_EMSC)
-                        const MAP_BLOCK *mapBlock = vfs_index_map_block(indexMap);
-                    #else
-                        MAP_BLOCK *mapBlock = (MAP_BLOCK *)indexMap->MapAddress;
-                    #endif
-
+                    const MAP_BLOCK *mapBlock = vfs_index_map_block(indexMap);
+                    if (mapBlock != nullptr)
+                    {
                     int pos = 0;
 
                     for (int y = 0; y < 8; y++)
@@ -456,11 +460,7 @@ void CGumpWorldMap::LoadMap(int map)
                         }
                     }
 
-                    #if defined(XUO_EMSC)
-                        const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
-                    #else
-                        STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
-                    #endif
+                    const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
 
                     if (sb != nullptr)
                     {
@@ -509,6 +509,7 @@ void CGumpWorldMap::LoadMap(int map)
                             pos++;
                         }
                     }
+                    } // mapBlock != nullptr (web: cold stream lane skips the draw)
                 }
             }
 

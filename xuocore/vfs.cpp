@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
@@ -360,6 +361,15 @@ bool vfs_map_file(const fs_path &path, uint8_t *&out_start, size_t &out_size)
 {
     out_start = nullptr;
     out_size = 0;
+#if defined(XUO_EMSC)
+    // web: mapped images are gone - a MEMFS mmap allocates the full file
+    // size inside the fixed wasm linear heap (no true paging), which OOMs
+    // products shipping more than the heap size. Data reads are file-backed
+    // (bounded pread windows over the store file); nothing may map here.
+    // (void)path: kept for signature parity with the native transport
+    (void)path;
+    return false;
+#else
     if (vfs_enabled())
     {
         const int64_t index = vfs_managed_index_of(path);
@@ -400,6 +410,7 @@ bool vfs_map_file(const fs_path &path, uint8_t *&out_start, size_t &out_size)
     // unmanaged path (or streaming disabled): exactly the pre-VFS behavior
     out_start = reinterpret_cast<uint8_t *>(fs_map(path, &out_size));
     return out_start != nullptr;
+#endif
 }
 
 void vfs_unmap_file(uint8_t *start, size_t size)
@@ -415,6 +426,103 @@ bool vfs_ensure_range(uint8_t *base, size_t offset, size_t length)
         return true; // disabled: no-op, zero behavior change
     return vfs_trap_resolve_range(base, uint64_t(offset), uint64_t(length));
 }
+
+#if defined(XUO_EMSC)
+// web file-backed reads: path-based counterparts of the mapped-file API
+// above (native resolves these through the trap registry by mapping base).
+// The fetch + materialize engine is shared with the trap fault path.
+static bool vfs_asset_state_is(uint32_t file_index, uint32_t asset_index, uint8_t state);
+
+bool vfs_managed_file_path(const fs_path &path, fs_path *out_install_path)
+{
+    const int64_t index = vfs_managed_index_of(path);
+    if (index < 0)
+        return false;
+    if (out_install_path != nullptr)
+        *out_install_path =
+            fs_path_join(s_params.install_dir, s_plan.files[size_t(index)].name);
+    return true;
+}
+
+// (vfs_ensure_file_range removed: it had zero callers and its span semantics
+// were wrong anyway - only the single covering asset materialized, spans
+// crossing an asset boundary were not ensured and holes failed silently.
+// The EMSC readers materialize per block read, so nothing needs it.)
+
+size_t vfs_file_state_base_path(const fs_path &path)
+{
+    if (!vfs_enabled() || !vfs_plan_ready())
+        return SIZE_MAX;
+    const int64_t index = vfs_managed_index_of(path);
+    if (index < 0)
+        return SIZE_MAX;
+    return vfs_state_base_index(s_plan, size_t(index));
+}
+
+bool vfs_file_is_stubbed_path(const fs_path &path)
+{
+    if (!vfs_enabled())
+        return false;
+    const int64_t index = vfs_managed_index_of(path);
+    if (index < 0)
+        return false;
+    return vfs_asset_state_is(uint32_t(index), 0, vfs_stubbed);
+}
+
+bool vfs_asset_by_hash_planned(uint64_t uop_hash, uint64_t *out_offset, uint32_t *out_size)
+{
+    if (!vfs_enabled() || uop_hash == 0)
+        return false;
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return false;
+    const auto file_index = found->second.first;
+    const auto asset_index = found->second.second;
+    if (file_index >= s_plan.files.size() || asset_index >= s_plan.files[file_index].assets.size())
+        return false;
+    const auto &asset = s_plan.files[file_index].assets[asset_index];
+    if (vfs_asset_is_hole(asset))
+        return false; // reserved slot: genuinely no asset
+    if (out_offset != nullptr)
+        *out_offset = asset.file_offset + asset.ml;
+    if (out_size != nullptr)
+        *out_size = uint32_t(asset.ul);
+    return true;
+}
+
+bool vfs_refresh_block_hash(uint64_t uop_hash)
+{
+    if (!vfs_enabled() || uop_hash == 0)
+        return false;
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end())
+        return false;
+    // one-shot heal marker: remember the hashes first seen stubbed, then
+    // fire once their real bytes materialize (mirrors the address-based
+    // trap stubbed->present flip without a mapping to look up)
+    static std::set<uint64_t> s_pending;
+    const bool stubbed =
+        vfs_asset_state_is(uint32_t(found->second.first), uint32_t(found->second.second), vfs_stubbed);
+    if (stubbed)
+    {
+        s_pending.insert(uop_hash);
+        return false;
+    }
+    return s_pending.erase(uop_hash) != 0;
+}
+
+// stub kind of the plan file owning a uop block hash (vfs_misc when unknown)
+static vfs_stub_kind vfs_stub_kind_of_hash(uint64_t uop_hash)
+{
+    vfs_managed_build();
+    const auto found = s_managed_hashes.find(uop_hash);
+    if (found == s_managed_hashes.end() || found->second.first >= s_plan.files.size())
+        return vfs_stub_misc;
+    return vfs_stub_kind_for(s_plan.files[found->second.first].name.c_str());
+}
+#endif
 
 // ---------------------------------------------------------------------------
 // stubs and hot-swap
@@ -446,10 +554,17 @@ bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj))
 {
     if (io == nullptr || !vfs_enabled() || io->Stubbed == 0)
         return false;
+#if defined(XUO_EMSC)
+    // web: file-backed packs leave no mapping address to resolve the block
+    // through - the block's uop hash identifies the asset instead
+    if (io->UopBlock == nullptr || !vfs_refresh_block_hash(io->UopBlock->Hash))
+        return false;
+#else
     // Address is the payload pointer the index was built from: it identifies
     // the trap asset whose real bytes may have landed in the meantime
     if (io->Address == 0 || !vfs_refresh_block(reinterpret_cast<const uint8_t *>(io->Address)))
         return false;
+#endif
     if (destroy != nullptr)
         destroy(io); // game-supplied teardown (DestroySprite and friends)
     io->UserData = nullptr;
@@ -459,13 +574,31 @@ bool vfs_refresh_index(CIndexObject *io, void (*destroy)(CIndexObject *obj))
     // past them - so the dims sit 8 bytes behind Address. Re-read them from
     // the healed bytes before the caller reloads, mirroring that bake exactly.
     if (io->UopBlock != nullptr &&
+#if defined(XUO_EMSC)
+        vfs_stub_kind_of_hash(io->UopBlock->Hash) == vfs_stub_gump)
+#else
         vfs_trap_stub_kind_at(reinterpret_cast<const uint8_t *>(io->Address)) == vfs_stub_gump)
+#endif
     {
+#if defined(XUO_EMSC)
+        // the dims ride in the block payload's first words (fetch on demand,
+        // warm-only: this is the post-heal reload path, never the boot path)
+        const auto payload = vfs_asset_fetch_block_payload(io->UopBlock->Hash, io->UopBlock, true);
+        if (payload != nullptr && payload->size() >= 8)
+        {
+            uint32_t width = 0, height = 0;
+            memcpy(&width, payload->data(), sizeof(width));
+            memcpy(&height, payload->data() + 4, sizeof(height));
+            io->Width = int32_t(width);
+            io->Height = int32_t(height);
+        }
+#else
         const uint8_t *dims = reinterpret_cast<const uint8_t *>(io->Address) - 8;
         io->Width = int32_t(dims[0]) | int32_t(dims[1]) << 8 | int32_t(dims[2]) << 16 |
                     int32_t(dims[3]) << 24;
         io->Height = int32_t(dims[4]) | int32_t(dims[5]) << 8 | int32_t(dims[6]) << 16 |
                      int32_t(dims[7]) << 24;
+#endif
     }
     io->Stubbed = 0;
     return true; // caller must reload
@@ -485,6 +618,13 @@ bool vfs_gump_dims_resolve(CIndexObject *io)
     if (io->Width != 0 && io->Height != 0)
         return true; // materialized at index build or already resolved
 #if defined(XUO_EMSC)
+    if (io->UopBlock == nullptr)
+    {
+        // web: classic MUL gumps are file-backed (no mapping to probe); the
+        // idx table carries their dims, so the reader-side short-circuit is
+        // the resolution - never fault-probe a non-pointer address
+        return io->Width != 0 && io->Height != 0;
+    }
     // web: there are no fault-driven probes - the pack is a table-only
     // skeleton and a raw read of io->Address returns the mapping's zero
     // page. Resolve stored-block dims through the punctual fetch instead;
@@ -964,6 +1104,18 @@ struct WebStreamFile
     bool url_ready = false;
     bool url_missing_logged = false;
     bool stored = false; // plan asset shipped uncompressed (ct != 1): verbatim copy
+    // the inflate-vs-raw decision is proven by the inflate OUTCOME, not the
+    // head probe alone: once a stream fails to inflate before producing a
+    // single byte, the blob is raw that starts with zlib-looking bytes -
+    // serve it verbatim for the instance's lifetime (mirrors the store-side
+    // vfs_store_asset_inflate raw fallback; survives web_stream_reset so a
+    // restart cannot re-commit the false-positive head to inflate)
+    bool raw_forced = false;
+    // set when the head probe flipped a stored plan entry to inflate (the
+    // only path whose false positive the raw fallback below may correct;
+    // a plan-ct==1 stream failing on chunk 0 is plain corruption and keeps
+    // the restart path)
+    bool probed_inflate = false;
     fs_path out_path;   // install_dir/<name>
     fs_path done_path;  // install_dir/cache/<name>.ready
 
@@ -1327,6 +1479,15 @@ int web_stream_step(WebStreamFile &s)
             s.retry_at = std::chrono::steady_clock::now() + std::chrono::seconds(60);
             return -1;
         }
+        if (s.stored && !s.raw_forced && vfs_blob_head_is_zlib(chunk.data(), chunk.size()))
+        {
+            // stored-metadata lie: the plan says verbatim but the stream is
+            // a real deflate stream (see vfs_store_asset_inflate) - inflate.
+            // A false-positive head on a raw file is caught by the inflate
+            // outcome below (raw fallback), not re-decided from the head.
+            s.stored = false;
+            s.probed_inflate = true;
+        }
         if (!s.stored)
         {
             memset(&s.zs, 0, sizeof(s.zs));
@@ -1353,6 +1514,15 @@ int web_stream_step(WebStreamFile &s)
         }
         s.inflated_total += chunk.size();
         s.compressed_off += chunk.size();
+        // make the appended bytes visible to the range readers immediately
+        // (file-backed reads borrow their own descriptor; buffered appends
+        // would leave them reading stale sizes)
+        if (fflush(s.out) != 0)
+        {
+            if (!web_stream_restart(s))
+                return -1;
+            return WEB_STREAM_PACE_MS;
+        }
         if (s.compressed_total != 0 && s.compressed_off >= s.compressed_total)
         {
             const bool flushed = fflush(s.out) == 0;
@@ -1416,6 +1586,24 @@ int web_stream_step(WebStreamFile &s)
 
     if (corrupt)
     {
+        // RAW FALLBACK ON INFLATE OUTCOME: an inflate failure with no output
+        // produced yet means the head probe was a false positive (a raw file
+        // whose first bytes look like a stream header). Without this the
+        // lane re-probes the same head after every restart and cool-downs
+        // forever; with it the blob serves verbatim (the store-side
+        // vfs_store_asset_inflate makes the same call on inflate failure).
+        // A mid-stream failure always has prior output - it stays on the
+        // checkpoint/restart path below (a false-positive head also never
+        // reaches a resume: no checkpoint exists before the first chunk).
+        if (s.inflated_total == 0 && s.probed_inflate && !s.raw_forced)
+        {
+            s.raw_forced = true;
+            s.stored = true;
+            LOG_WARN(
+                "stream files: %s carries a zlib head but does not inflate, serving raw",
+                s.name.c_str());
+            return web_stream_restart(s) ? WEB_STREAM_PACE_MS : -1;
+        }
         // A Z_DATA_ERROR carries two very different meanings here: a chunk
         // that fails to decode IN FLIGHT (its own bytes are damaged - the
         // checkpoint resume refetches exactly that region), and zlib's
@@ -1486,6 +1674,13 @@ int web_stream_step(WebStreamFile &s)
     web_stream_capture_checkpoint(s, chunk.back());
     s.decode_resumes = 0;
     ++s.chunks_ok;
+    // publish the appended bytes to the range readers (see the stored path)
+    if (fflush(s.out) != 0)
+    {
+        if (!web_stream_restart(s))
+            return -1;
+        return WEB_STREAM_PACE_MS;
+    }
     const auto now = std::chrono::steady_clock::now();
     if (now - s.last_log >= std::chrono::milliseconds(WEB_STREAM_LOG_MS))
     {
@@ -1535,6 +1730,27 @@ bool vfs_stream_file_available(const char *name)
         return false;
     const auto found = s_managed_files.find(vfs_lower_ascii(name));
     return found != s_managed_files.end() && s_plan.files[found->second].streamable;
+}
+
+bool vfs_stream_file_plan(const fs_path &path, const char **name, uint64_t *size)
+{
+    if (name != nullptr)
+        *name = nullptr;
+    if (size != nullptr)
+        *size = 0;
+    if (!vfs_enabled() || !vfs_plan_ready())
+        return false;
+    const int64_t index = vfs_managed_index_of(path);
+    if (index < 0 || !s_plan.files[size_t(index)].streamable)
+        return false;
+    const auto &file = s_plan.files[size_t(index)];
+    if (file.is_uop || file.assets.empty())
+        return false;
+    if (name != nullptr)
+        *name = file.name.c_str(); // registry key (plan-owned storage)
+    if (size != nullptr)
+        *size = file.assets.front().ul; // planned unpacked bytes
+    return true;
 }
 
 // the marker validation shared by the demand paths (disk-only, cheap):
@@ -1722,6 +1938,94 @@ bool vfs_stream_file_ensure(const char *name)
     return false;
 }
 
+int vfs_stream_file_ensure_fd(const char *name, uint64_t offset, uint64_t len)
+{
+    if (!vfs_enabled() || s_params.offline || name == nullptr)
+    {
+        return -1;
+    }
+    WebStreamFile *const s = web_stream_instance(name);
+    if (s == nullptr)
+    {
+        return -1;
+    }
+    // the pool drives every chunk; before it runs nothing can advance
+    if (!vfs_fetch_started())
+    {
+        return -1;
+    }
+    // bounded range wait: the lane inflates sequentially, so the front
+    // (inflated_total) passing the span end means the bytes are on disk.
+    // Reads ahead of the front park here while the lane catches up - the
+    // deadline keeps a stalled transfer from wedging the render thread.
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    const uint64_t spanEnd = offset + len;
+    bool ready = false;
+    while (std::chrono::steady_clock::now() < deadline)
+    {
+        {
+            std::unique_lock<std::mutex> guard(s->mutex);
+            if (s->phase == WebStreamFile::Phase::Failed)
+            {
+                if (std::chrono::steady_clock::now() < s->retry_at)
+                {
+                    break;
+                }
+                s->restarts = 0;
+                s->phase = WebStreamFile::Phase::Probe;
+            }
+            web_stream_probe(*s);
+            if (s->phase == WebStreamFile::Phase::Ready ||
+                (s->phase == WebStreamFile::Phase::Streaming && s->inflated_total >= spanEnd))
+            {
+                ready = true;
+                break;
+            }
+            if (!s->url_ready && !web_stream_compose_url(*s))
+            {
+                break; // the plan does not carry the file: stays cold
+            }
+        }
+        vfs_fetch_queue_stream(s->name.c_str(), VFS_FETCH_PRIO_DEMAND);
+        {
+            std::unique_lock<std::mutex> guard(s->mutex);
+            s->cv.wait_until(
+                guard,
+                deadline,
+                [s, spanEnd]
+                { return s->phase != WebStreamFile::Phase::Streaming || s->inflated_total >= spanEnd; });
+        }
+    }
+    if (!ready)
+    {
+        return -1; // the reader logs the failure loudly (once per file)
+    }
+    // borrow the completed-enough install file for reads; re-stat when a
+    // bounds check trips (the file grew since the handle was opened) - all
+    // under the instance mutex: the pool worker's chunk steps race the
+    // render thread's ensure here (s->ro is part of the guarded state)
+    {
+        std::lock_guard<std::mutex> guard(s->mutex);
+        if (s->ro == nullptr)
+        {
+            s->ro = fopen(fs_path_ascii(s->out_path), "rb");
+            if (s->ro != nullptr)
+            {
+                s->ro_size = web_stream_file_size(s->ro);
+            }
+        }
+        else if (offset + len > s->ro_size)
+        {
+            s->ro_size = web_stream_file_size(s->ro);
+        }
+        if (s->ro == nullptr || offset + len > s->ro_size)
+        {
+            return -1;
+        }
+        return fileno(s->ro);
+    }
+}
+
 // pool seam (vfs_fetch's stream lane): ONE chunk step on a worker, the
 // instance mutex held for its whole duration. Returns the re-queue pace,
 // or -1 when the file left its streaming phase.
@@ -1741,6 +2045,7 @@ int vfs_stream_pool_step(const char *name)
     }
     return delay;
 }
+
 
 // progress surfaced: one entry per registered stream file (phase, bytes,
 // totals, health). Returns the number of entries written.
@@ -1771,6 +2076,7 @@ int vfs_stream_file_stats(vfs_stream_file_stats_entry *out, int max)
 }
 #endif // XUO_EMSC
 
+
 void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lru_mb)
 {
     std::lock_guard<std::mutex> lock(s_block_lru_mutex);
@@ -1780,6 +2086,66 @@ void vfs_block_fetch_stats(size_t *hits, size_t *miss, size_t *fails, size_t *lr
     if (lru_mb != nullptr) *lru_mb = s_block_lru_bytes / 1048576;
 }
 #endif // XUO_EMSC
+
+// music DATA lane (web): complete the mp3 through the stream-file registry
+// (bounded, pool-driven) and copy the finished bytes out for SoLoud's memory
+// loader. The registry is keyed by the bare plan name (the caller passes an
+// install path - the lane matches its music/ suffix). Native has no lane:
+// reports no bytes (the caller keeps the file load).
+bool vfs_music_stream_bytes(const char *fileName, std::vector<uint8_t> &out)
+{
+#if !defined(XUO_EMSC)
+    (void)fileName;
+    (void)out;
+    return false;
+#else
+    if (fileName == nullptr)
+    {
+        return false;
+    }
+    const astr_t lower = str_lower(astr_t(fileName));
+    const auto at = lower.find("music/");
+    if (at == astr_t::npos)
+    {
+        return false;
+    }
+    const char *key = lower.c_str() + at;
+    if (!vfs_stream_file_ensure(key))
+    {
+        return false;
+    }
+    vfs_stream_file_stats_entry entry[32] = {};
+    uint64_t total = 0;
+    const int entries = vfs_stream_file_stats(entry, 32);
+    for (int i = 0; i < entries; i++)
+    {
+        if (strcmp(entry[i].name, key) == 0 && entry[i].phase == 2)
+        {
+            total = entry[i].inflated_total;
+            break;
+        }
+    }
+    if (total == 0 || total > (64u << 20))
+    {
+        return false;
+    }
+    out.resize(size_t(total));
+    for (uint64_t off = 0; off < total;)
+    {
+        const uint32_t chunk = uint32_t((total - off) > (1u << 20) ? (1u << 20) : (total - off));
+        const uint8_t *window = vfs_stream_file_read(key, size_t(off), chunk);
+        if (window == nullptr)
+        {
+            out.clear();
+            return false;
+        }
+        memcpy(out.data() + off, window, chunk);
+        off += chunk;
+    }
+    return true;
+#endif
+}
+
 
 bool vfs_asset_read(uint64_t uop_hash, std::vector<uint8_t> &out)
 {
@@ -3286,19 +3652,35 @@ static const char *const VFS_WEB_PACK_MATERIALIZE[] = {
 static std::vector<astr_t> s_webPersistPaths;
 
 
-static void vfs_boot_web_mkdirs(const char *path);
-
-
-
-
-
-static void vfs_boot_web_mkdirs(const char *path)
+#if defined(XUO_EMSC)
+// web loose size policy: files up to 10MB materialize as real files (the
+// game reads them file-backed). A bounded set of larger files is exempt and
+// stays whole at boot: the statics muls (random access through staidx
+// positions - streaming them would park every statics consumer behind the
+// paced lane) and texmaps (texture decode reads). Everything else larger is
+// stream-on-demand: it materializes through the stream-file lane when a
+// read actually needs it (never as a hollow zero-filled placeholder).
+static bool vfs_web_loose_too_large(const astr_t &name, uint64_t bytes)
 {
-    // the caller names the root (the per-shard streaming install dir)
-    const auto root = fs_path_from(path);
-    fs_path_create(root);
-    fs_path_create(fs_path_join(root, "cache"));
+    static const char *const VFS_WEB_LOOSE_EXEMPT[] = {
+        "statics0.mul", "statics0x.mul", "statics1.mul", "statics1x.mul",
+        "statics2.mul", "statics3.mul", "statics4.mul", "statics5.mul",
+        "texmaps.mul",
+    };
+    if (bytes <= 10ull * 1024 * 1024)
+        return false;
+    for (const char *candidate : VFS_WEB_LOOSE_EXEMPT)
+    {
+        if (strcasecmp(name.c_str(), candidate) == 0)
+            return false;
+    }
+    return true;
 }
+#endif
+
+
+
+
 
 
 
@@ -3375,27 +3757,94 @@ static void vfs_boot_materialize_packs(const VfsPlan &plan)
 }
 
 // post-materialization integrity probe for one pack: re-opens the file the
-// way the game does (mmap) and, for a few sample assets, checks
-//   (a) the write path - mapped bytes == arena granule bytes
+// way the game does (mmap, or a plain read on the web build - the game does
+// not map there anymore) and, for a few sample assets, checks
+//   (a) the write path - file bytes == arena granule bytes
 //   (b) the range path - a fresh CACHE-BUSTED re-fetch inflates to the same
 //       granule bytes (a mismatch means an earlier fetch served stale bytes,
 //       e.g. a poisoned browser 206 cache; the query string is ignored by
 //       the proxy and by the file repo)
+#if defined(XUO_EMSC)
+// web: reads go through the store file directly (nothing maps)
+static size_t vfs_boot_verify_pread(FILE *fp, uint64_t offset, uint8_t *dst, size_t bytes)
+{
+    if (fp == nullptr || fseek(fp, long(offset), SEEK_SET) != 0)
+        return 0;
+    return fread(dst, 1, bytes, fp);
+}
+
 static void vfs_boot_verify_pack(const VfsPlan &plan, size_t file_index)
 {
     const auto &file = plan.files[file_index];
-    uint8_t *start = nullptr;
-    size_t mapped = 0;
-    if (!vfs_map_file(fs_path_join(s_params.install_dir, file.name), start, mapped) ||
-        mapped != file.size)
+    const auto path = fs_path_join(s_params.install_dir, file.name);
+    FILE *fp = fs_open(path, FS_READ);
+    if (fp == nullptr)
     {
-        LOG_ERROR(
-            "pack verify: %s could not be mapped (%zu vs %llu)",
-            file.name.c_str(),
-            mapped,
-            (unsigned long long)file.size);
+        LOG_ERROR("pack verify: %s could not be opened", file.name.c_str());
         return;
     }
+    fseek(fp, 0, SEEK_END);
+    const long size = ftell(fp);
+    rewind(fp);
+    if (size < 0 || uint64_t(size) != file.size)
+    {
+        LOG_ERROR(
+            "pack verify: %s size mismatch (%ld vs %llu)",
+            file.name.c_str(),
+            size,
+            (unsigned long long)file.size);
+        fs_close(fp);
+        return;
+    }
+    UopHeader header{};
+    if (!file.is_uop)
+    {
+        fs_close(fp);
+        return; // loose files (.mul, .idx) are not UOP archives
+    }
+    if (vfs_boot_verify_pread(fp, 0, (uint8_t *)&header, sizeof(header)) != sizeof(header) ||
+        header.Magic != MYP_MAGIC || header.Version < 4 || header.Version > 5 ||
+        header.SectionOffset != sizeof(UopHeader) ||
+        header.FileCount != uint32_t(file.assets.size()))
+    {
+        LOG_ERROR(
+            "pack verify: %s header mismatch (magic %08x ver %u off %llu count %u)",
+            file.name.c_str(),
+            header.Magic,
+            header.Version,
+            (unsigned long long)header.SectionOffset,
+            header.FileCount);
+        fs_close(fp);
+        return;
+    }
+
+    auto *arena = static_cast<vfs_store_arena *>(s_arena);
+    int checked = 0;
+    int write_bad = 0;
+    int range_bad = 0;
+    for (size_t ai = 0; ai < file.assets.size() && checked < 8; ai += 1 + ai % 7)
+    {
+        const auto &asset = file.assets[ai];
+        if (vfs_asset_is_hole(asset) || asset.ul == 0)
+            continue;
+        ++checked;
+        std::vector<uint8_t> granule(size_t(asset.ul), 0);
+        const bool resident = arena != nullptr && arena->ensure(asset, true) &&
+                              arena->read(asset, 0, granule.data(), granule.size());
+        // (a) the write path: file bytes vs the granule
+        if (resident)
+        {
+            std::vector<uint8_t> fileBytes(size_t(asset.ul), 0);
+            const bool readOk = vfs_boot_verify_pread(
+                                    fp, asset.file_offset + asset.ml, fileBytes.data(),
+                                    fileBytes.size()) == fileBytes.size();
+            if (!readOk || memcmp(fileBytes.data(), granule.data(), granule.size()) != 0)
+            {
+                ++write_bad;
+                LOG_ERROR("pack verify: %s asset %zu write mismatch", file.name.c_str(), ai);
+            }
+        }
+#else
     const auto *header = (const UopHeader *)start;
     if (!file.is_uop)
     {
@@ -3437,6 +3886,7 @@ static void vfs_boot_verify_pack(const VfsPlan &plan, size_t file_index)
             ++write_bad;
             LOG_ERROR("pack verify: %s asset %zu write mismatch", file.name.c_str(), ai);
         }
+#endif
         // (b) the range path, independent of any HTTP cache
         if (asset.blob_offset != 0 && !s_params.offline)
         {
@@ -3491,7 +3941,11 @@ static void vfs_boot_verify_pack(const VfsPlan &plan, size_t file_index)
             }
         }
     }
+#if defined(XUO_EMSC)
+    fs_close(fp);
+#else
     vfs_unmap_file(start, mapped);
+#endif
     LOG_INFO(
         "pack verify: %s checked %d (write mismatches %d, range mismatches %d)",
         file.name.c_str(),
@@ -3532,7 +3986,7 @@ static void vfs_boot_background(VfsPlan plan, std::vector<vfs_boot_item> items, 
                     }
                     catch (e)
                     {
-                        return p + ' ERR' + (e && e.errno !== undefined ? e.errno : '');
+                        return p + ' ERR' + (e && e.errno !== undefined ? e.errno : "");
                     }
                 };
                 var cwd = '/';
@@ -3751,6 +4205,51 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         }
     }
 
+#if defined(XUO_EMSC)
+    // -----------------------------------------------------------------
+    // web: files the loose tier will skip (larger than the small-file
+    // budget and not exempt) become stream-on-demand BEFORE the skeleton
+    // pass: vfs_store_prepare then leaves them metadata-only. This closes
+    // the hollow-placeholder defect - a skipped file used to materialize
+    // as a full-size ZERO-FILLED file silently served by every file-backed
+    // read (black art/gumps, "0 entries" parses). The stream lane (already
+    // proven by the legacy anim muls) materializes them on first use.
+    // -----------------------------------------------------------------
+    size_t web_stream_on_demand = 0;
+    uint64_t web_stream_on_demand_bytes = 0;
+    for (auto &file : plan.files)
+    {
+        if (file.streamable || file.is_uop || file.assets.empty())
+            continue;
+        const auto &asset = file.assets.front();
+        const uint64_t bytes = asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl);
+        if (!vfs_web_loose_too_large(file.name, bytes))
+            continue;
+        file.streamable = true;
+        ++web_stream_on_demand;
+        web_stream_on_demand_bytes += bytes;
+        LOG_INFO(
+            "web boot: %s (%.1f MB) is stream-on-demand (no hollow placeholder)",
+            file.name.c_str(),
+            double(bytes) / 1048576.0);
+    }
+    if (web_stream_on_demand != 0)
+    {
+        LOG_INFO(
+            "web boot: %zu large loose files (%.0f MB) deferred to the stream lane",
+            web_stream_on_demand,
+            double(web_stream_on_demand_bytes) / 1048576.0);
+        // mirror into the LIVE plan: the stream lane and the file-backed
+        // plan lookups (vfs_stream_file_plan) consult s_plan, the tier lists
+        // below consult the local copy - both must agree on the deferred set
+        if (vfs_plan_ready() && s_plan.files.size() == plan.files.size())
+        {
+            for (size_t i = 0; i < plan.files.size(); ++i)
+                s_plan.files[i].streamable = plan.files[i].streamable;
+        }
+    }
+#endif
+
     vfs_store_params store_params;
     store_params.blobs_dir = s_params.blobs_dir;
     store_params.install_dir = s_params.install_dir;
@@ -3842,10 +4341,13 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
     // every block read is intercepted at use time by the punctual fetch
     // layer (vfs_asset_fetch_block_*), with the browser HTTP cache as the
     // persistent store. Loose files of the plan (fonts, tiledata, hues,
-    // ...) are small (< 10 MB) and materialize whole as real files. There
-    // is no T1 residency, no convergence, no sweep: a full-plan residency
-    // cannot fit the wasm heap next to the game (it OOM'd the browser at
-    // ~3 GB), and the lazy path needs none of it.
+    // ...) are small (< 10 MB) and materialize whole as real files. Larger
+    // non-exempt loose files were marked stream-on-demand above (BEFORE
+    // the skeleton pass) and ride the stream-file lane instead of hollow
+    // zero-filled placeholders. There is no T1 residency, no convergence,
+    // no sweep: a full-plan residency cannot fit the wasm heap next to the
+    // game (it OOM'd the browser at ~3 GB), and the lazy path needs none
+    // of it.
     // -----------------------------------------------------------------
     vfs_materialize_stats web_stats;
     std::vector<vfs_boot_item> loose;
@@ -3882,53 +4384,6 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         uop_packs += f.is_uop ? 1 : 0;
     LOG_INFO("web boot: %zu loose files, %zu uop packs (skeleton)", loose.size(), uop_packs);
 
-    // loose size policy: files up to 10MB materialize as real files (the
-    // game mmaps them). A bounded set of larger files is exempt: the
-    // statics muls (random access through staidx positions - converting
-    // them to ranged fetches touches every statics consumer) and texmaps
-    // (texture decode reads). The rest - legacy anim muls, facet maps,
-    // Music, the x-variant map uops - is skipped: UOP animations replace
-    // the anim muls, and nothing reads the others on web.
-    static const char *const VFS_WEB_LOOSE_EXEMPT[] = {
-        "statics0.mul", "statics0x.mul", "statics1.mul", "statics1x.mul",
-        "statics2.mul", "statics3.mul", "statics4.mul", "statics5.mul",
-        "texmaps.mul",
-    };
-    auto loose_exempt = [](const astr_t &name)
-    {
-        for (const char *candidate : VFS_WEB_LOOSE_EXEMPT)
-        {
-            if (strcasecmp(name.c_str(), candidate) == 0)
-                return true;
-        }
-        return false;
-    };
-
-    size_t loose_skipped = 0;
-    uint64_t loose_skipped_bytes = 0;
-    {
-        std::vector<vfs_boot_item> keep;
-        keep.reserve(loose.size());
-        for (const auto &item : loose)
-        {
-            if (item.expected > 10ull * 1024 * 1024 && !loose_exempt(item.name))
-            {
-                ++loose_skipped;
-                loose_skipped_bytes += item.expected;
-                continue;
-            }
-            keep.push_back(item);
-        }
-        loose.swap(keep);
-    }
-    if (loose_skipped != 0)
-    {
-        LOG_WARN(
-            "web boot: skipping %zu large loose files (%.0f MB): legacy anims, facet maps, music",
-            loose_skipped,
-            double(loose_skipped_bytes) / 1048576.0);
-    }
-
     // denominator seeding: every loose file the boot intends to fetch
     // registers its expected size before the fetch pass - absent blobs only,
     // present ones add no traffic, so the ratio stays honest across partial
@@ -3964,6 +4419,29 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
             web_stats.assets_fetched + web_stats.assets_present,
             double(web_stats.bytes_written) / 1048576.0,
             web_stats.assets_failed);
+        // failed boot tiers surface (once, with the tail list): assets
+        // missing = visible artifacts downstream, never a fake success the
+        // client then chases with silent re-request loops
+        if (web_stats.assets_failed != 0)
+        {
+            std::vector<astr_t> failed;
+            for (const auto &item : loose)
+            {
+                if (item.global_index >= s_states.size() ||
+                    s_states[item.global_index] != vfs_fetched)
+                {
+                    failed.push_back(item.name);
+                }
+            }
+            LOG_ERROR(
+                "web boot: %zu loose files FAILED to materialize (%zu listed):",
+                web_stats.assets_failed,
+                failed.size());
+            for (const auto &name : failed)
+            {
+                LOG_ERROR("web boot: loose failed: %s", name.c_str());
+            }
+        }
     }
     else
     {

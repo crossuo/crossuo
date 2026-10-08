@@ -1301,21 +1301,22 @@ void CGumpManager::Load(const fs_path &path)
     if (file.Load(path) && file.Size != 0)
     {
         const auto version = file.ReadUInt8();
-        uint8_t *oldPtr = file.Ptr;
+        // absolute seeks go through the logical cursor (platform-neutral)
+        const size_t oldPos = file.Pos();
         uint16_t count = 0;
         uint16_t spellGroupsCount = 0;
         if (version != 0)
         {
-            file.Ptr = (uint8_t *)file.Start + (file.Size - 8);
+            file.Seek(file.Size - 8);
             spellGroupsCount = file.ReadInt16LE();
             count = file.ReadInt16LE();
         }
         else
         {
-            file.Ptr = (uint8_t *)file.Start + (file.Size - 6);
+            file.Seek(file.Size - 6);
             count = file.ReadInt16LE();
         }
-        file.Ptr = oldPtr;
+        file.Seek(oldPos);
 
         // custom static blob data
         if (version == 3)
@@ -1344,7 +1345,7 @@ void CGumpManager::Load(const fs_path &path)
         for (int i = 0; i < count; i++)
         {
             CGump *gump = nullptr;
-            uint8_t *next = file.Ptr;
+            size_t next = file.Pos();
             uint8_t size = file.ReadUInt8();
             next += size;
 
@@ -1534,7 +1535,7 @@ void CGumpManager::Load(const fs_path &path)
                 gump->WantUpdateContent = true;
             }
 
-            file.Ptr = next;
+            file.Seek(next);
         }
 
         for (int i = 0; i < spellGroupsCount; i++)
@@ -1543,7 +1544,7 @@ void CGumpManager::Load(const fs_path &path)
             uint16_t spellsCount = file.ReadUInt16LE();
             for (int j = 0; j < spellsCount; j++)
             {
-                uint8_t *next = file.Ptr;
+                size_t next = file.Pos();
                 uint8_t size = file.ReadUInt8();
                 next += size;
 
@@ -1579,7 +1580,7 @@ void CGumpManager::Load(const fs_path &path)
                 }
 
                 spell->WantUpdateContent = true;
-                file.Ptr = next;
+                file.Seek(next);
             }
         }
 

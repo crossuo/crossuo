@@ -288,7 +288,9 @@ bool CSkillGroupManager::Load(const fs_path &path)
 
         for (int i = 0; i < count; i++)
         {
-            uint8_t *next = file.Ptr;
+            // logical cursor hops (platform-neutral: Pos/Seek wrap the mapped
+            // pointer on native and the windowed cursor on web)
+            size_t next = file.Pos();
             short size = file.ReadUInt16LE();
             next += size;
 
@@ -314,7 +316,7 @@ bool CSkillGroupManager::Load(const fs_path &path)
 
             Add(group);
 
-            file.Ptr = next;
+            file.Seek(next);
         }
 
         file.Unload();

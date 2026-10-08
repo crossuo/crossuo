@@ -13,13 +13,14 @@ CColorManager g_ColorManager;
 
 void CColorManager::Init()
 {
-    if (g_FileManager.m_RadarcolMul.Size != 0)
+    // the radarcol table reads through the reader (the LoadHues pattern: one
+    // large read; a windowed pread on web, a mapped copy on native)
+    const auto size = g_FileManager.m_RadarcolMul.Size;
+    if (size != 0)
     {
-        m_Radarcol.resize(g_FileManager.m_RadarcolMul.Size / 2);
-        memcpy(
-            &m_Radarcol[0],
-            (void *)g_FileManager.m_RadarcolMul.Start,
-            g_FileManager.m_RadarcolMul.Size);
+        m_Radarcol.resize(size / 2);
+        g_FileManager.m_RadarcolMul.Seek(0);
+        g_FileManager.m_RadarcolMul.ReadDataLE((uint8_t *)&m_Radarcol[0], size);
     }
     g_ColorManager.CreateHuesPalette();
 }

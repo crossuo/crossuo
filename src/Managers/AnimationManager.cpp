@@ -58,18 +58,15 @@ static void AnimationRefreshStub(const AnimationState &anim)
     {
         return;
     }
-    auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
-    const auto *base = g_FileManager.m_AnimationFrame[direction.FileIndex].Start;
-    if (base == nullptr)
-    {
-        return;
-    }
     const auto group_id = uint64_t{GroupId(anim.Graphic, anim.Group)};
     if (s_anim_refreshed_groups.count(group_id) != 0u)
     {
         return; // already dropped once: the reload below is authoritative
     }
-    if (!vfs_refresh_block(base + block->Offset))
+    // the healed check runs by the block's uop hash on web (file-backed packs
+    // keep no mapping address) and by the mapped address on native - the
+    // platform split lives in the core helper
+    if (!uo_animation_group_healed(anim, block))
     {
         return; // not (yet) healed
     }

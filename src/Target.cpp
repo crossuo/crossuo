@@ -758,7 +758,7 @@ std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileN
     if (xuoassist::EnabledCommandExtendedTargetTile() && g_World != nullptr)
     {
         CIndexMap *index = g_MapManager.GetIndex(g_CurrentMap, x >> 3, y >> 3);
-        if (index != nullptr && index->MapAddress != 0)
+        if (index != nullptr && index->HasMapBlock())
         {
             const int tileX = x & 7;
             const int tileY = y & 7;
@@ -767,6 +767,10 @@ std::vector<TARGET_TILE_INFO> GetTileAt(int x, int y, int z, const astr_t &tileN
 
             #if defined(XUO_EMSC)
                 const MAP_BLOCK *pmb = vfs_index_map_block(index);
+                if (pmb == nullptr)
+                {
+                    return result; // block bytes not servable right now (web)
+                }
             #else
                 MAP_BLOCK *pmb = (MAP_BLOCK *)index->MapAddress;
             #endif

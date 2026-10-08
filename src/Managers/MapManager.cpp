@@ -39,10 +39,16 @@ void CMapManager::ResetPatchesInBlockTable()
             return;
         }
 
-        if (g_FileManager.m_MapMul[map].Start == nullptr || !vfs_map_files_present(map))
+        if (!g_FileManager.m_MapMul[map].Loaded() || !vfs_map_files_present(map))
         {
             return;
         }
+
+        // classic map-mul lane state (see the reset below): the uop-group
+        // lane is exclusive with it
+#if defined(XUO_EMSC)
+        const bool mapUopLoaded = g_FileManager.m_MapUOP[map].Loaded();
+#endif
 
         for (int block = 0; block < maxBlockCount; block++)
         {
@@ -50,6 +56,36 @@ void CMapManager::ResetPatchesInBlockTable()
             index.MapAddress = index.OriginalMapAddress;
             index.StaticAddress = index.OriginalStaticAddress;
             index.StaticCount = index.OriginalStaticCount;
+#if defined(XUO_EMSC)
+            // the patch lanes ride the same table reset: a re-apply must not
+            // inherit lane markers from a previous patch set (a facet without
+            // diffs would keep serving the stale dif/statics windows). The
+            // reset restores the CLASSIC lanes (map mul / statics mul or the
+            // streamed-statics window) - only the dif lanes drop, so the
+            // unpatched blocks survive the re-apply.
+            index.WebMapStreamFile = mapUopLoaded ? 0xFF : uint8_t(map & 0xFF);
+            index.WebMapDifOffset = 0;
+            index.WebMapInPatch = 0;
+            if (index.OriginalStaticCount != 0)
+            {
+                // WebStaticsOffset/WebStaticsBytes keep the walker-baked
+                // classic values: the streamed-statics build bakes the
+                // offset ONLY into WebStaticsOffset (its OriginalStaticAddress
+                // stays 0), so restoring from Original* would point every
+                // streamed-statics block at file offset 0 after any reset.
+                // The dif bake no longer clobbers these (its reader serves
+                // from StaticAddress/StaticCount), so the baked lane
+                // survives the reset intact.
+                index.WebStaticsStreamFile = uint8_t(map & 0xFF);
+            }
+            else
+            {
+                index.WebStaticsStreamFile = 0xFF;
+                index.WebStaticsOffset = 0;
+                index.WebStaticsBytes = 0;
+            }
+            index.WebStaticsInPatch = 0;
+#endif
         }
     }
 }
@@ -72,7 +108,7 @@ void CMapManager::ApplyPatches(CDataReader &stream)
     memset(&m_StaticPatchCount[0], 0, sizeof(m_StaticPatchCount));
     for (int i = 0; i < PatchesCount; i++)
     {
-        if (g_FileManager.m_MapMul[i].Start == nullptr)
+        if (!g_FileManager.m_MapMul[i].Loaded())
         {
             stream.Move(8);
             continue;
@@ -98,7 +134,11 @@ void CMapManager::ApplyPatches(CDataReader &stream)
                 const uint32_t blockIndex = difl.ReadUInt32LE();
                 if (blockIndex < maxBlockCount)
                 {
-                    list[blockIndex].MapAddress = (size_t)dif.Ptr;
+                    // file-backed reads: the patch lives at a file offset in
+                    // the dif mul (never a mapped pointer) - the platform
+                    // split lives in CIndexMap::BakeMapDifPatch (web bakes
+                    // the patch-lane fields, native the mapped address)
+                    list[blockIndex].BakeMapDifPatch(dif, i);
                 }
 
                 dif.Move(sizeof(MAP_BLOCK));
@@ -109,7 +149,13 @@ void CMapManager::ApplyPatches(CDataReader &stream)
         {
             auto &difl = g_FileManager.m_StaDifl[i];
             auto &difi = g_FileManager.m_StaDifi[i];
-            size_t startAddress = (size_t)g_FileManager.m_StaDif[i].Start;
+#if defined(XUO_EMSC)
+            // file-backed: the patched statics resolve through the windowed
+            // reader over the dif mul - startAddress stays 0 (offsets only)
+            const size_t startAddress = 0;
+#else
+            const size_t startAddress = (size_t)g_FileManager.m_StaDif[i].Start;
+#endif
             staticsPatchesCount = std::min(staticsPatchesCount, (intptr_t)difl.Size / 4);
 
             difl.ResetPtr();
@@ -117,7 +163,15 @@ void CMapManager::ApplyPatches(CDataReader &stream)
             for (int j = 0; j < staticsPatchesCount; j++)
             {
                 const uint32_t blockIndex = difl.ReadUInt32LE();
-                const auto *sidx = (StaIdxBlock *)difi.Ptr;
+                // the index entry copies through the reader (file-backed on
+                // web; a plain mapped copy on native - identical bytes)
+                StaIdxBlock sidxBlk{};
+                if (difi.Pos() + sizeof(StaIdxBlock) <= difi.Size)
+                {
+                    difi.Seek(difi.Pos());
+                    difi.ReadDataLE((uint8_t *)&sidxBlk, sizeof(sidxBlk));
+                }
+                const StaIdxBlock *sidx = &sidxBlk;
                 difi.Move(sizeof(StaIdxBlock));
                 if (blockIndex < maxBlockCount)
                 {
@@ -137,6 +191,15 @@ void CMapManager::ApplyPatches(CDataReader &stream)
                     }
                     list[blockIndex].StaticAddress = realStaticAddress;
                     list[blockIndex].StaticCount = realStaticCount;
+#if defined(XUO_EMSC)
+                    // serve the patched statics through the dif mul window:
+                    // the InPatch discriminator flips the reader to
+                    // StaticAddress/StaticCount in the dif; the walker-baked
+                    // WebStaticsOffset/Bytes stay untouched so the reset can
+                    // drop straight back onto the classic lane
+                    list[blockIndex].WebStaticsStreamFile = uint8_t(i & 0xFF);
+                    list[blockIndex].WebStaticsInPatch = realStaticCount != 0 ? 1 : 0;
+#endif
                 }
             }
         }
@@ -278,20 +341,16 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
 void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 {
     CIndexMap *indexMap = GetIndex(GetActualMap(), blockX, blockY);
-    if (indexMap == nullptr || indexMap->MapAddress == 0)
+    if (indexMap == nullptr || !indexMap->HasMapBlock())
     {
         return;
     }
 
-    #if defined(XUO_EMSC)
-        const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
-        if (pmb == nullptr)
-        {
-            return; // group not fetched: caller keeps the previous radar cells
-        }
-    #else
-        MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
-    #endif
+    const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+    if (pmb == nullptr)
+    {
+        return; // group not fetched (web) / absent block: keep the radar cells
+    }
     for (int x = 0; x < 8; x++)
     {
         for (int y = 0; y < 8; y++)
@@ -305,11 +364,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
         }
     }
 
-    #if defined(XUO_EMSC)
-        const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
-    #else
-        STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
-    #endif
+    const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
     if (sb != nullptr)
     {
         int count = indexMap->StaticCount;
@@ -559,22 +614,18 @@ void CMapManager::Init(bool delayed)
 void CMapManager::LoadBlock(CMapBlock *block)
 {
     CIndexMap *indexMap = GetIndex(GetActualMap(), block->X, block->Y);
-    if (indexMap == nullptr || indexMap->MapAddress == 0)
+    if (indexMap == nullptr || !indexMap->HasMapBlock())
     {
         return;
     }
-    #if defined(XUO_EMSC)
-        const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
-        if (pmb == nullptr)
-        {
-            // the group streams through the async fetch pool and is not
-            // warm yet: leave the block empty (warm-only access, no network
-            // on this thread), a later Init pass re-runs LoadBlock
-            return;
-        }
-    #else
-        MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
-    #endif
+    const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+    if (pmb == nullptr)
+    {
+        // the group streams through the async fetch pool and is not
+        // warm yet: leave the block empty (warm-only access, no network
+        // on this thread), a later Init pass re-runs LoadBlock
+        return;
+    }
     int bx = block->X * 8;
     int by = block->Y * 8;
     for (int x = 0; x < 8; x++)
@@ -593,11 +644,7 @@ void CMapManager::LoadBlock(CMapBlock *block)
         }
     }
 
-    #if defined(XUO_EMSC)
-        const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
-    #else
-        STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
-    #endif
+    const STATICS_BLOCK *sb = vfs_index_statics_block(indexMap);
     if (sb != nullptr)
     {
         int count = indexMap->StaticCount;
@@ -671,8 +718,7 @@ void CMapManager::LoadBlock(CMapBlock *block)
 int CMapManager::GetActualMap()
 {
     if (g_CurrentMap == 1 &&
-        (((g_FileManager.m_MapUOP[1].Start == nullptr) &&
-          (g_FileManager.m_MapMul[1].Start == nullptr)) ||
+        ((!g_FileManager.m_MapUOP[1].Loaded() && !g_FileManager.m_MapMul[1].Loaded()) ||
          !vfs_map_files_present(1)))
     {
         return 0;

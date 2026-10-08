@@ -137,7 +137,11 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
 
 CMacro *CMacro::Load(CMappedFile &file)
 {
+#if defined(XUO_EMSC)
+    size_t next = file.Pos();
+#else
     uint8_t *next = file.Ptr;
+#endif
     short size = file.ReadInt16LE();
     next += size;
 
@@ -193,7 +197,11 @@ CMacro *CMacro::Load(CMappedFile &file)
             macro->Add(obj);
         }
     }
+#if defined(XUO_EMSC)
+    file.Seek(next);
+#else
     file.Ptr = next;
+#endif
     return macro;
 }
 

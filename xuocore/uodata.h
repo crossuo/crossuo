@@ -212,36 +212,85 @@ struct CIndexMap
     size_t MapAddress = 0;
     size_t StaticAddress = 0;
     uint32_t StaticCount = 0;
+    // map-diff patch bake (ApplyPatches): the platform split lives here, not
+    // at the call site - native bakes the mapped dif address, web keeps a
+    // non-zero presence marker in MapAddress and rides the patch-lane fields
+    // (vfs_index_map_block serves the bytes through the windowed dif reader)
+    void BakeMapDifPatch(const struct CDataReader &dif, int difIndex)
+    {
 #if defined(XUO_EMSC)
+        WebMapStreamFile = uint8_t(difIndex & 0xFF);
+        WebMapDifOffset = uint32_t(dif.Pos());
+        WebMapInPatch = 1;
+#else
+        (void)difIndex;
+        MapAddress = (size_t)dif.Ptr;
+#endif
+    }
+
+    // presence guard for the read sites: native keeps the mapped-address
+    // sentinel (a mapped block at file offset 0 is a valid address), web
+    // needs the explicit flag - block (0,0) of a classic MUL map sits at
+    // file offset 0 and the MapAddress == 0 sentinel would read it as
+    // absent (an 8x8 terrain/statics hole plus a blank radar corner)
+    bool HasMapBlock() const
+    {
+#if defined(XUO_EMSC)
+        return WebMapBlockValid;
+#else
+        return MapAddress != 0;
+#endif
+    }
+
+#if defined(XUO_EMSC)
+    // web presence flag behind HasMapBlock (walker-baked; see the guard)
+    bool WebMapBlockValid = false;
+
     // web: the pack is a table-only skeleton - the group assets behind this
     // entry come from the punctual fetch layer by hash (MapAddress stays a
     // non-zero marker for the native guards; never dereference it)
     uint64_t WebMapGroupHash = 0;
-    uint64_t WebStaticGroupHash = 0;
-    // position of this entry's block inside the fetched group payload (a
-    // group holds 4096 consecutive blocks; native seeks the same offset
-    // inside the mapped pack)
-    uint32_t WebMapGroupBlock = 0;
+    uint64_t WebMapGroupBlock = 0;
     // stream-file statics lane (custom shards that do not materialize the
     // classic statics muls): when the entry was built against a plan whose
     // statics<map>.mul is streamable metadata, StaticAddress stays 0 and the
     // block's statics resolve through vfs_index_statics_block as a registry
-    // window instead. 0xFF in the file slot means "no lane entry".
+    // window instead. 0xFF in the file slot means "no lane entry"; with the
+    // file-backed reads the slot also carries the map number for entries
+    // served from the (file-backed) statics mul itself.
     uint8_t WebStaticsStreamFile = 0xFF;
     uint32_t WebStaticsOffset = 0;
     uint32_t WebStaticsBytes = 0;
+    // statics source discriminator for file-backed reads: 0 - the classic
+    // statics<map>.mul, 1 - the map-diff staDif<map>.mul (StaticAddress is a
+    // file offset in either case, never a dereferenceable pointer)
+    uint8_t WebStaticsInPatch = 0;
+    // map-diff lane (the terrain counterpart): when the block was patched by
+    // mapdif<map>.mul, WebMapDifOffset is the patched block's offset in that
+    // (file-backed, loose) dif mul and vfs_index_map_block serves the bytes
+    // through a windowed read of it instead of the streamed base group.
+    // MapAddress keeps only the non-zero presence marker the read guards
+    // check (it must never bake the offset: the first dif block would read
+    // as offset 0, the "no map block" sentinel). 0xFF in the file slot means
+    // "no map patch lane".
+    uint8_t WebMapStreamFile = 0xFF;
+    uint32_t WebMapDifOffset = 0;
+    uint8_t WebMapInPatch = 0;
 #endif
 };
 
-#if defined(XUO_EMSC)
 // web punctual map access: fetches the map / statics group asset behind a
 // CIndexMap entry (LRU-backed ranged GET) and returns a pointer into it,
 // valid until the next punctual fetch. Null when the entry has no group.
+// Platform-neutral read boundary for every map-block consumer (native
+// resolves through the mapped table addresses; see the implementation).
 const MAP_BLOCK *vfs_index_map_block(const CIndexMap *index);
 // statics for a block table entry: the mapped statics<map>.mul pointer when
 // the file materialized, else a stream-file registry window (valid until the
 // next read of the same file) when the plan carries the file as streamable.
 const STATICS_BLOCK *vfs_index_statics_block(const CIndexMap *index);
+
+#if defined(XUO_EMSC)
 // stream-file lane helpers: windows into the streamed texmaps.mul /
 // multi.mul for an index entry, or null when the mapped file serves the
 // caller (lane not active) or the stream is cold (caller skips the draw).
@@ -390,6 +439,15 @@ inline const UopFileEntry *uo_animation_group_get(AnimationState anim)
     return uo_animation_group_get(groupId);
 }
 
+// "the block's real bytes landed (or were never stub-served)": web checks by
+// the block's uop hash (file-backed packs keep no mapping address), native by
+// the mapped address - the platform split lives here, not at the call sites
+bool uo_animation_group_healed(AnimationState anim, const UopFileEntry *block);
+
+// sound block data resolver (see the implementation comment in uodata.cpp)
+const uint8_t *uo_sound_block_data(
+    CIndexSound &is, std::vector<uint8_t> &fetched, size_t &blockSize);
+
 inline static bool uo_has_body_conversion(const IndexAnimation &data)
 {
     const auto flag = data.GraphicConversion;
@@ -481,6 +539,14 @@ struct CUopMappedFile : public CMappedFile // FIXME: not needed
     std::vector<uint64_t> m_FileOffsets;
     UopSectionHeaderMap m_MapByHash;
     UopSectionHeaderMap m_MapByOffset;
+#if defined(XUO_EMSC)
+    // web: the pack is file-backed (nothing is mapped) - the table is parsed
+    // through the windowed reader into this owned, stable storage, because
+    // the asset pointers below must outlive the parse. Header points into
+    // m_OwnedHeader there.
+    UopHeader m_OwnedHeader = {};
+    std::vector<UopFileEntry> m_OwnedEntries;
+#endif
 
     bool HasAsset(uint64_t hash) const;
     void AddAsset(const UopFileEntry *item);

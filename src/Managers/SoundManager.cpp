@@ -4,9 +4,7 @@
 #include "SoundManager.h"
 #include "ConfigManager.h"
 #include <xuocore/uodata.h>
-#if defined(XUO_EMSC)
-#include <xuocore/vfs.h> // vfs_stream_file_ensure (music data lane)
-#endif
+#include <xuocore/vfs.h> // vfs_music_stream_bytes (music data lane)
 #include <common/utils.h>
 #include "../CrossUO.h"
 #include "../GameWindow.h"
@@ -153,41 +151,18 @@ CSoundManager g_SoundManager;
 static uint8_t *CreateWaveFile(CIndexSound &is)
 {
     SOUND_DEBUG_TRACE;
-    // web: the sound pack materializes as a table-only skeleton - the index
-    // bakes Address into the ORIGINAL archive layout, far past the end of the
-    // small skeleton mapping, so a raw read lands in unrelated heap memory
-    // (the pcm bytes change from run to run). Fetch the real block through
-    // the punctual layer like every other streamed reader
-    // (CUopMappedFile::GetData). Native keeps the raw pointer: the mapping
-    // is the whole file there and the trap resolves ranges on fault.
+    // the block data comes through the core resolver (platform split lives
+    // there): native keeps the raw mapped pointer (the mapping is the whole
+    // file, the trap resolves ranges on fault); web fetches the real block
+    // through the punctual layer like every other streamed reader
     std::vector<uint8_t> fetched;
-    const uint8_t *blockData = reinterpret_cast<const uint8_t *>(is.Address);
     size_t blockSize = is.DataSize;
-#if defined(XUO_EMSC)
-    if (is.UopBlock != nullptr)
-    {
-        fetched = g_FileManager.m_SoundLegacyMUL.GetData(is.UopBlock);
-        if (fetched.size() < sizeof(SOUND_BLOCK))
-        {
-            Warning(Client, "sound block fetch failed: %u", is.DataSize);
-            return nullptr;
-        }
-        blockData = fetched.data();
-        blockSize = fetched.size();
-    }
-    else if (is.UopHash != 0 && vfs_asset_read(is.UopHash, fetched) &&
-             fetched.size() >= sizeof(SOUND_BLOCK))
-    {
-        // planned index (no table entry): the whole block by hash
-        blockData = fetched.data();
-        blockSize = fetched.size();
-    }
-    else if (is.UopBlock == nullptr && is.UopHash != 0)
+    const uint8_t *blockData = uo_sound_block_data(is, fetched, blockSize);
+    if (blockData == nullptr)
     {
         Warning(Client, "sound block fetch failed: %u", is.DataSize);
         return nullptr;
     }
-#endif
     size_t dataSize = blockSize - sizeof(SOUND_BLOCK);
     auto waveSound = (uint8_t *)malloc(dataSize + sizeof(WaveHeader));
     auto waveHeader = reinterpret_cast<WaveHeader *>(waveSound);
@@ -480,66 +455,16 @@ void CSoundManager::PlayMP3(const char *fileName, int index, bool loop, bool war
     SOUND_DEBUG_TRACE;
     int cur = warmode ? 1 : 0;
     int old = warmode ? 0 : 1;
-#if defined(XUO_EMSC)
-    // music DATA lane (web): complete the mp3 through the stream-file
-    // registry (bounded, pool-driven), then hand the finished bytes to
-    // SoLoud as memory. Two reasons to never let WavStream touch the file:
-    // the lane materializes at the plan's case-exact install path (MEMFS
-    // is case-sensitive) while the music index spells the config's
-    // lowercase name, and streaming would re-open the file mid-mix. The
-    // registry is keyed by the bare plan name (the caller passes an
-    // install path)
-    bool musicLoaded = false;
-    if (fileName != nullptr)
-    {
-        const astr_t lower = str_lower(astr_t(fileName));
-        const auto at = lower.find("music/");
-        if (at != astr_t::npos)
-        {
-            const char *key = lower.c_str() + at;
-            if (vfs_stream_file_ensure(key))
-            {
-                vfs_stream_file_stats_entry entry[32] = {};
-                uint64_t total = 0;
-                const int entries = vfs_stream_file_stats(entry, 32);
-                for (int i = 0; i < entries; i++)
-                {
-                    if (strcmp(entry[i].name, key) == 0 && entry[i].phase == 2)
-                    {
-                        total = entry[i].inflated_total;
-                        break;
-                    }
-                }
-                if (total > 0 && total <= (64u << 20))
-                {
-                    std::vector<uint8_t> bytes;
-                    bytes.resize(size_t(total));
-                    bool complete = true;
-                    for (uint64_t off = 0; off < total;)
-                    {
-                        const uint32_t chunk =
-                            uint32_t((total - off) > (1u << 20) ? (1u << 20) : (total - off));
-                        const uint8_t *window = vfs_stream_file_read(key, size_t(off), chunk);
-                        if (window == nullptr)
-                        {
-                            complete = false;
-                            break;
-                        }
-                        memcpy(bytes.data() + off, window, chunk);
-                        off += chunk;
-                    }
-                    if (complete)
-                    {
-                        musicLoaded =
-                            s_MusicStream[cur].loadMem(bytes.data(), int(bytes.size()), true, false) == 0;
-                    }
-                }
-            }
-        }
-    }
-#else
-    const bool musicLoaded = false;
-#endif
+    // music DATA lane: complete the mp3 through the stream-file registry
+    // (web; bounded, pool-driven) and hand the finished bytes to SoLoud as
+    // memory - the lane materializes at the plan's case-exact install path
+    // (MEMFS is case-sensitive) while the music index spells the config's
+    // lowercase name, and streaming would re-open the file mid-mix. Native
+    // has no lane (the helper reports no bytes) and keeps the file load.
+    std::vector<uint8_t> musicBytes;
+    const bool musicLoaded =
+        fileName != nullptr && vfs_music_stream_bytes(fileName, musicBytes) &&
+        s_MusicStream[cur].loadMem(musicBytes.data(), int(musicBytes.size()), true, false) == 0;
     if (s_Music[cur])
     {
         s_backend.stop(s_Music[cur]);

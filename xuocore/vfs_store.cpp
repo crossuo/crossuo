@@ -846,6 +846,36 @@ int vfs_store_asset_inflate(
         out->resize(size_t(dst_len));
         return 0;
     }
+    // stored per the plan - unless the bytes say otherwise: some products
+    // record <files> entries with ct=0 / ul == cl while the CDN blob is a
+    // real deflate stream (the raw write lands zlib bytes in the install and
+    // every parse of the file fails). A zlib head probe decides: inflate
+    // growable (the metadata carries no true size), fall back to the raw
+    // copy when the blob turns out not to be a stream after all.
+    if (vfs_blob_head_is_zlib(data, size))
+    {
+        size_t dst = size * 4;
+        for (int attempt = 0; attempt < 8; ++attempt)
+        {
+            out->resize(dst);
+            uLongf dst_len = out->size();
+            auto *src = reinterpret_cast<Bytef const *>(blob.data());
+            const int rc = uncompress(out->data(), &dst_len, src, uLong(blob.size()));
+            if (rc == Z_OK)
+            {
+                out->resize(size_t(dst_len));
+                return 0;
+            }
+            if (rc != Z_BUF_ERROR)
+            {
+                break; // not a (complete) stream: serve raw below
+            }
+            dst *= 2; // plan size was too small: grow and retry
+        }
+        LOG_WARN(
+            "stored blob carries a zlib head but does not inflate, serving raw: %s",
+            asset.blob.c_str());
+    }
     out->assign(data, data + size);
     return 0;
 }

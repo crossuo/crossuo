@@ -145,13 +145,17 @@ static void GetRadarMapBlockForMap(
     int map, int blockX, int blockY, bool withStatics, RADAR_MAP_BLOCK &mb)
 {
     CIndexMap *indexMap = ::g_MapManager.GetIndex(map, blockX, blockY);
-    if (indexMap == nullptr || indexMap->MapAddress == 0)
+    if (indexMap == nullptr || !indexMap->HasMapBlock())
     {
         return;
     }
 
     #if defined(XUO_EMSC)
         const MAP_BLOCK *pmb = vfs_index_map_block(indexMap);
+        if (pmb == nullptr)
+        {
+            return; // block bytes not servable right now (web)
+        }
     #else
         MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
     #endif

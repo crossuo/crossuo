@@ -26,21 +26,25 @@ CCliloc::CCliloc(const astr_t &lang)
         auto file = astr_t("Cliloc.") + lang;
         auto path = UOFilePath(file.c_str());
         Loaded = m_File.Load(path);
-        if (Loaded && m_File.Size > 4 && m_File.Start[3] == 0x8E)
+        if (Loaded && m_File.Loaded() && m_File.Size > 4)
         {
-            // the current distribution stores the cliloc table bwt-compressed
-            // (the 0x8E byte at offset 3 is the tell); decode it up front,
-            // the sequential parser below cannot walk the coded stream
-            std::vector<uint8_t> coded(m_File.Start, m_File.Start + m_File.Size);
-            std::vector<uint8_t> out;
-            if (bwt_decompress(coded, out))
+            // peek the magic at offset 3 (window peek on web, mapped byte on
+            // native): the bwt-coded layout must decode into owned heap memory
+            // up front - the sequential parser cannot walk the coded stream
+            m_File.Seek(3);
+            if (m_File.WindowByte() == 0x8E)
             {
-                m_File.Attach(std::move(out));
-            }
-            else
-            {
-                Error(Data, "%s: bwt decompression failed", file.c_str());
-                Loaded = false;
+                std::vector<uint8_t> coded = m_File.FileReadWhole();
+                std::vector<uint8_t> out;
+                if (bwt_decompress(coded, out))
+                {
+                    m_File.Attach(std::move(out));
+                }
+                else
+                {
+                    Error(Data, "%s: bwt decompression failed", file.c_str());
+                    Loaded = false;
+                }
             }
         }
     }

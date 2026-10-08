@@ -178,6 +178,15 @@ bool vfs_store_pack_asset_present(
 // same blob, so the format lives in exactly one place.
 // ---------------------------------------------------------------------------
 
+// RFC1950 head probe: 0x78 CMF (deflate, header checksum % 31). The plan
+// metadata can lie about storage (observed: ct=0 entries whose CDN blob is a
+// real deflate stream) - readers probe the bytes instead of trusting ct.
+inline bool vfs_blob_head_is_zlib(const uint8_t *data, size_t size)
+{
+    return size >= 2 && data[0] == 0x78 && (data[0] & 0x0f) == 0x08 &&
+           (uint32_t(data[0]) * 256 + data[1]) % 31 == 0;
+}
+
 // pure payload step: stored assets pass the blob through, zlib assets
 // inflate (the same uncompress the loose writer always ran). Returns 0 with
 // `out` = the payload, 2 when the blob cannot supply it (zlib failure).

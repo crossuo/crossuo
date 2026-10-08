@@ -87,16 +87,23 @@ bool CFontsManager::LoadFonts()
     }
 
     FontCount = 0;
+    // the header walk peeks through the reader (platform-neutral: WindowPtr
+    // serves the mapped pointer on native, the bounded window on web)
     while (!fontFile.IsEOF())
     {
         bool exit = false;
         fontFile.Move(1);
         for (int i = 0; i < 224; i++)
         {
-            FONT_HEADER *fh = (FONT_HEADER *)fontFile.Ptr;
+            auto *fh = (FONT_HEADER *)fontFile.WindowPtr(sizeof(FONT_HEADER));
+            if (fh == nullptr)
+            {
+                exit = true;
+                break;
+            }
             fontFile.Move(sizeof(FONT_HEADER));
             int bcount = fh->Width * fh->Height * 2;
-            if (fontFile.Ptr + bcount > fontFile.End) //Bad font file...
+            if (fontFile.Pos() + size_t(bcount) > fontFile.Size) //Bad font file...
             {
                 exit = true;
                 break;
@@ -139,6 +146,10 @@ bool CFontsManager::LoadFonts()
 
     for (int i = 0; i < 20; i++)
     {
+        // the glyph renderer keeps (and dereferences) these addresses for the
+        // whole session: web adopts each (small) file as owned heap memory
+        // (Materialize), native keeps the mapping behind them
+        g_FileManager.m_UnifontMul[i].Materialize();
         m_UnicodeFontAddress[i] = (size_t)g_FileManager.m_UnifontMul[i].Start;
         m_UnicodeFontSize[i] = (uint32_t)g_FileManager.m_UnifontMul[i].Size;
     }

@@ -30,30 +30,35 @@ void CCityManager::Init()
     CMappedFile file;
     if (file.Load(UOFilePath("citytext.enu")))
     {
-        uint8_t *end = file.Ptr + file.Size;
-        while (file.Ptr < end)
+        // the walk runs on logical positions and window peeks (platform
+        // neutral: WindowPtr/WindowByte/Pos resolve through the mapping on
+        // native and through the bounded file-backed window on web)
+        const size_t end = file.Size;
+        while (file.Pos() < end)
         {
-            if (memcmp(&file.Ptr[0], "END\0", 4) == 0)
+            const uint8_t *tag = file.WindowPtr(4);
+            if (tag != nullptr && memcmp(tag, "END\0", 4) == 0)
             {
                 file.Move(4);
 
-                uint8_t *startBlock = file.Ptr + 4;
-                uint8_t *ptrBlock = startBlock;
+                const size_t startBlock = file.Pos() + 4;
+                size_t ptrBlock = startBlock;
                 astr_t name{};
                 while (ptrBlock < end)
                 {
-                    if (*ptrBlock == '<')
+                    if (file.Seek(ptrBlock) && file.WindowByte() == '<')
                     {
                         size_t len = ptrBlock - startBlock;
                         name.resize(len);
-                        memcpy(&name[0], &startBlock[0], len);
+                        file.Seek(startBlock);
+                        file.ReadDataLE((uint8_t *)&name[0], len);
                         break;
                     }
                     ptrBlock++;
                 }
 
                 astr_t text{};
-                while (file.Ptr < end)
+                while (file.Pos() < end)
                 {
                     auto str = file.ReadString();
                     if (text.length() != 0u)
@@ -62,7 +67,9 @@ void CCityManager::Init()
                     }
 
                     text += str;
-                    if (*file.Ptr == 0x2E || (memcmp(&file.Ptr[0], "END\0", 4) == 0))
+                    const uint8_t *endTag = file.WindowPtr(4);
+                    if (file.WindowByte() == 0x2E ||
+                        (endTag != nullptr && memcmp(endTag, "END\0", 4) == 0))
                     {
                         break;
                     }
