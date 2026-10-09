@@ -620,9 +620,22 @@ static void fs_path_list_internal_r(const char *name, std::vector<fs_path> &out)
 
     char it[FS_MAX_PATH]{};
     struct stat st = {};
+    // the seed path may carry a trailing separator (user-supplied install
+    // paths often do): doubling it would make listed paths differ from the
+    // ones fs_path_join builds for the same base, breaking the lowercase
+    // lookup table fs_insensitive resolves against
+    const size_t name_len = strlen(name);
+    const bool name_slash = name_len > 0 && name[name_len - 1] == '/';
     while ((entry = readdir(dir)) != nullptr)
     {
-        snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+        if (name_slash)
+        {
+            snprintf(it, sizeof(it), "%s%s", name, entry->d_name);
+        }
+        else
+        {
+            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+        }
         // stat each entry: not every platform's dirent carries d_type (mingw)
         if (stat(it, &st) != 0)
         {
