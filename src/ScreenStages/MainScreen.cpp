@@ -77,7 +77,19 @@ void CMainScreen::Init()
     g_GameWindow.SetTitle(CLIENT_TITLE);
     g_GumpManager.RedrawAll();
 
-    g_EntryPointer = m_MainGump.m_PasswordFake;
+    // Focus the account field by default. Only jump to the password field
+    // when an account was pre-filled from config/CLI - that means the user
+    // only has the password left to type. With an empty account the password
+    // field would be a dead end (nothing to log in with), so the account
+    // field must come first.
+    if (g_Config.Login.empty())
+    {
+        g_EntryPointer = m_Account;
+    }
+    else
+    {
+        g_EntryPointer = m_MainGump.m_PasswordFake;
+    }
     g_AnimationManager.ClearUnusedAnimations();
     g_QuestArrow.Enabled = false;
     g_TotalSendSize = 0;
@@ -90,6 +102,17 @@ void CMainScreen::Init()
     }
     SmoothScreenAction = 0;
     m_Gump.PrepareTextures();
+
+    // the command-line credentials must be in the account/password entries
+    // before the auto-connect serializes them (CPacketFirstLogin). On the
+    // web there is no launcher and the boot order builds this screen before
+    // ProcessCommandLine runs, so the values come straight from the config
+    // stash here; ProcessCommandLine's own SetAccounting call is a no-op
+    // (identical values) on native boots
+    if (g_Config.CliLoginSet)
+    {
+        SetAccounting(g_Config.CliLogin, g_Config.CliPassword);
+    }
 
     if (TestAutoLogin())
     {
