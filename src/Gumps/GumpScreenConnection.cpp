@@ -3,6 +3,7 @@
 
 #include "GumpScreenConnection.h"
 #include "../CharacterList.h"
+#include "../Config.h"
 #include "../Network/Connection.h"
 #include "../Managers/ClilocManager.h"
 #include "../ScreenStages/ConnectionScreen.h"
@@ -35,14 +36,26 @@ void CGumpScreenConnection::UpdateContent()
 {
     Clear();
 
-    Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
-    Add(new CGUIGumppic(0x157C, 0, 0));
-    Add(new CGUIGumppic(0x15A0, 0, 4));
-    Add(new CGUIGumppic(0x1589, 555, 4));
-
-    if (g_ConnectionScreen.GetType() != CST_CONLOST)
+    if (g_Config.ClientVersion < CV_200)
     {
-        Add(new CGUIResizepic(0, 0x0A28, 142, 134, 356, 212));
+        //the original never cleared its framebuffer between these screens:
+        //status text appears over the baked scene - the account panel while
+        //the account is verified, the character-select panel afterwards
+        Add(new CGUIGumppic(0x3E8, 0, 0));
+        //Add(new CGUIResizepic(0, 0x0A28, 142, 134, 356, 212));
+        Add(new CGUIGumppic(0x0474, 121, 102));
+    }
+    else
+    {
+        Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
+        Add(new CGUIGumppic(0x157C, 0, 0));
+        Add(new CGUIGumppic(0x15A0, 0, 4));
+        Add(new CGUIGumppic(0x1589, 555, 4));
+
+        if (g_ConnectionScreen.GetType() != CST_CONLOST)
+        {
+            Add(new CGUIResizepic(0, 0x0A28, 142, 134, 356, 212));
+        }
     }
 
     g_ConnectionScreen.CursorGraphic = 0x2073; //Main Gump mouse cursor

@@ -20,6 +20,16 @@ enum
     ID_CS_ARROW_NEXT,
     ID_CS_NEW,
     ID_CS_DELETE,
+
+    //1.25.32 (1998) character-select buttons; kept before ID_CS_CHARACTERS
+    //so the per-slot ids (ID_CS_CHARACTERS + i) stay clear of these values
+    //in the tooltip and double-click lookups
+    ID_CS_1998_NEW,
+    ID_CS_1998_LOGOUT,
+    ID_CS_1998_PLAY,
+    ID_CS_1998_DELETE,
+    ID_CS_1998_PASSWORD,
+
     ID_CS_CHARACTERS,
 
     ID_CS_COUNT,
@@ -37,6 +47,85 @@ void CGumpScreenCharacterList::UpdateContent()
     Clear();
 
     const int count = g_CharacterList.Count;
+
+    // The 1.25.32 (1998) character-select screen, reproduced with the gump
+    // art ids and pixel positions of the original client's Login gump: the
+    // wood backdrop, the character panel with its five name-slot boxes and
+    // the NEW/LOGOUT/PLAY/DELETE/PASSWORD buttons.
+    if (g_Config.ClientVersion < CV_200)
+    {
+        //fullscreen wood backdrop (640x480): stays behind every 1998
+        //login-flow screen (the original never cleared the framebuffer
+        //between the screens)
+        Add(new CGUIGumppic(0x3E8, 0, 0));
+
+        //character-select panel (384x266)
+        Add(new CGUIGumppic(0x44C, 124, 104));
+
+        //the five name-slot boxes; the art trio per slot holds brightness
+        //variants of the same box: base / unfocused / focused. The selected
+        //row is the focused one; empty and named slots look identical - the
+        //names are plain text over the box inset (4,2) - the original wrote
+        //them into read-only entry controls.
+        static const uint16_t slotArt[5][3] = {
+            { 0x045C, 0x045D, 0x045E },
+            { 0x045F, 0x0460, 0x0461 },
+            { 0x0462, 0x0463, 0x0464 },
+            { 0x0465, 0x0466, 0x0467 },
+            { 0x0468, 0x0469, 0x046A },
+        };
+        static const int slotPos[5][2] = {
+            { 205, 181 }, { 217, 200 }, { 224, 218 }, { 216, 238 }, { 202, 257 },
+        };
+        static const int slotSize[5][2] = {
+            { 222, 15 }, { 197, 15 }, { 184, 16 }, { 199, 15 }, { 228, 16 },
+        };
+        for (int i = 0; i < 5; i++)
+        {
+            //slot art: the selected slot is drawn focused (index 2); every
+            //other slot - empty or named - uses the unfocused variant (index
+            //1). The first art of each trio (base, index 0) is unused here.
+            int art = slotArt[i][2];
+            if (g_CharacterList.Selected != i)
+            {
+                art = slotArt[i][1];
+            }
+            const bool hasName = (i < count && !g_CharacterList.GetName(i).empty());
+            Add(new CGUIGumppic(art, slotPos[i][0], slotPos[i][1]));
+
+            if (hasName)
+            {
+                auto *name = new CGUIText(0x0386, slotPos[i][0] + 4, slotPos[i][1] + 2);
+                name->CreateTextureA(1, g_CharacterList.GetName(i));
+                Add(name);
+            }
+
+            //invisible click area selecting this character (covers the box)
+            Add(new CGUIHitBox(
+                ID_CS_CHARACTERS + i,
+                slotPos[i][0],
+                slotPos[i][1],
+                slotSize[i][0],
+                slotSize[i][1],
+                true));
+        }
+
+        // The five original buttons (art up/down/pressed). The whole list is
+        // rebuilt on selection (see the slot hit box handling below), so no
+        // separate art state machine is needed here.
+        if (!g_CharacterList.SingleSlot)
+        {
+            Add(new CGUIButton(ID_CS_1998_NEW, 0x0453, 0x0454, 0x0455, 187, 134));
+        }
+        Add(new CGUIButton(ID_CS_1998_LOGOUT, 0x0456, 0x0457, 0x0458, 284, 117));
+        Add(new CGUIButton(ID_CS_1998_PLAY, 0x0459, 0x045A, 0x045B, 369, 134));
+        Add(new CGUIButton(ID_CS_1998_DELETE, 0x044D, 0x044E, 0x044F, 181, 287));
+        //no-op in crossuo: the change-password flow is not implemented
+        Add(new CGUIButton(ID_CS_1998_PASSWORD, 0x0450, 0x0451, 0x0452, 370, 287));
+
+        return;
+    }
+
     const bool testField = (g_Config.ClientVersion >= CV_305D);
     int posInList = 0;
     int yOffset = 150;
@@ -136,6 +225,26 @@ void CGumpScreenCharacterList::InitToolTip()
             g_ToolTip.Set(L"Delete this character", 150);
             break;
         }
+        case ID_CS_1998_PLAY:
+        {
+            g_ToolTip.Set(L"Play UO with selected character", 150);
+            break;
+        }
+        case ID_CS_1998_NEW:
+        {
+            g_ToolTip.Set(L"Create new character", 150);
+            break;
+        }
+        case ID_CS_1998_DELETE:
+        {
+            g_ToolTip.Set(L"Delete this character", 150);
+            break;
+        }
+        case ID_CS_1998_LOGOUT:
+        {
+            g_ToolTip.Set(L"Quit Ultima Online", 80);
+            break;
+        }
         default:
             break;
     }
@@ -178,6 +287,38 @@ void CGumpScreenCharacterList::GUMP_BUTTON_EVENT_C
     else if (serial == ID_CS_DELETE)
     {
         g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::GotoScreenDelete);
+    }
+    else if (serial == ID_CS_1998_NEW)
+    {
+        g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::GotoScreenProfession);
+    }
+    else if (serial == ID_CS_1998_LOGOUT)
+    {
+        //Main Menu: notify the shard, disconnect and return to the title
+        //screen - the original sent the logout packet, dropped the
+        //connection and rebuilt its main menu
+        g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::LogOut);
+    }
+    else if (serial == ID_CS_1998_PLAY)
+    {
+        g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::SelectCharacter);
+    }
+    else if (serial == ID_CS_1998_DELETE)
+    {
+        //opens the delete/password screen (GotoScreenDelete), but only if a
+        //character is selected (has a name); that screen asks for the account
+        //password again and, on confirm, sends the delete-character packet
+        //and returns to the character list
+        g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::GotoScreenDelete);
+    }
+    //ID_CS_1998_PASSWORD: intentionally inert (no change-password flow)
+    else if (serial >= ID_CS_CHARACTERS && serial < (ID_CS_CHARACTERS + g_CharacterList.Count))
+    {
+        //1998 slot boxes: a click selects the character; the slot art state
+        //is rebuilt from g_CharacterList.Selected on the content refresh
+        g_CharacterList.Selected = serial - ID_CS_CHARACTERS;
+        WantUpdateContent = true;
+        WantRedraw = true;
     }
 }
 

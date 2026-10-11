@@ -15,6 +15,13 @@ public:
 
     CEntryText *m_PasswordFake{ nullptr };
 
+protected:
+    //1.25.32 login: the entry box art is swapped per state (filler text /
+    //empty / focused) - see PrepareContent
+    CGUIGumppic *m_1998AccountArt{ nullptr };
+    CGUIGumppic *m_1998PasswordArt{ nullptr };
+    CGUITextEntry *m_1998AccountEntry{ nullptr };
+
     virtual void PrepareContent() override;
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;

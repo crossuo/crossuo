@@ -20,6 +20,8 @@ public:
     static const uint8_t ID_SMOOTH_STS_QUIT = 1;
     static const uint8_t ID_SMOOTH_STS_GO_SCREEN_CHARACTER = 2;
     static const uint8_t ID_SMOOTH_STS_GO_SCREEN_GAME_CONNECT = 3;
+    //1.25.32 wizard: CharCreation PREV goes back to InitSkill (GS_CREATE)
+    static const uint8_t ID_SMOOTH_STS_GO_SCREEN_CREATE = 4;
 
     CCityItem *m_City{ nullptr };
 

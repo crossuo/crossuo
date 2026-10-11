@@ -6,6 +6,8 @@
 #include "BaseScreen.h"
 #include "../Gumps/GumpScreenSelectProfession.h"
 
+class CEntryText;
+
 class CSelectProfessionScreen : public CBaseScreen
 {
 protected:
@@ -29,6 +31,9 @@ public:
 
     virtual void Init() override;
     virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
+    //1.25.32 CharStat name/password entries
+    virtual void OnTextInput(const TextEvent &ev) override;
+    virtual void OnKeyDown(const KeyEvent &ev) override;
 };
 
 extern CSelectProfessionScreen g_SelectProfessionScreen;

@@ -52,8 +52,11 @@ void CLoginCrypt::Encrypt_Old(const uint8_t *in, uint8_t *out, int size)
         const uint32_t table0 = m_key[0];
         const uint32_t table1 = m_key[1];
 
-        m_key[0] = ((table0 >> 1) | (table1 << 31)) ^ m_k2;
-        m_key[1] = ((table1 >> 1) | (table0 << 31)) ^ m_k1;
+        // Wire-exact pairing: the low state word (m_key[0], the byte-XOR
+        // stream) shifts in the high word and XORs Key3; the high word
+        // (m_key[1]) XORs Key2.
+        m_key[0] = ((table0 >> 1) | (table1 << 31)) ^ m_k3;
+        m_key[1] = ((table1 >> 1) | (table0 << 31)) ^ m_k2;
     }
 }
 

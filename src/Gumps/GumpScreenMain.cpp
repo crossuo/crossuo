@@ -29,6 +29,16 @@ enum
     ID_MS_LAUNCHER,
 
     ID_MS_COUNT,
+
+    //1998 (1.25.32) title screen buttons; MENU1/2/3/5 are the original
+    //client's sub-screen buttons (credits, movie, etc.) kept for looks only
+    ID_1998_LOGIN,
+    ID_1998_LOGON,
+    ID_1998_BACK,
+    ID_1998_MENU1,
+    ID_1998_MENU2,
+    ID_1998_MENU3,
+    ID_1998_MENU5,
 };
 
 CGumpScreenMain::CGumpScreenMain()
@@ -46,6 +56,44 @@ void CGumpScreenMain::PrepareContent()
 {
     static uint32_t lastArrowTick = 0;
     static bool arrowLighted = false;
+
+    //1.25.32 login: mirror the original's entry art state machine - the
+    //filler-text box shows while the field is unfocused and empty, the
+    //plain box once it holds text, and the bright variant while focused
+    if (g_Config.ClientVersion < CV_200 && m_1998AccountArt != nullptr)
+    {
+        const bool accountFocused = g_EntryPointer == &m_1998AccountEntry->m_Entry;
+        int accountArt = 0x411;
+        if (accountFocused)
+        {
+            accountArt = 0x420;
+        }
+        else if (m_1998AccountEntry->m_Entry.GetTextA().length() != 0)
+        {
+            accountArt = 0x412;
+        }
+        if (m_1998AccountArt->Graphic != accountArt)
+        {
+            m_1998AccountArt->Graphic = accountArt;
+            WantRedraw = true;
+        }
+
+        const bool passwordFocused = g_EntryPointer == m_PasswordFake;
+        int passwordArt = 0x413;
+        if (passwordFocused)
+        {
+            passwordArt = 0x422;
+        }
+        else if (m_PasswordFake->GetTextA().length() != 0)
+        {
+            passwordArt = 0x414;
+        }
+        if (m_1998PasswordArt->Graphic != passwordArt)
+        {
+            m_1998PasswordArt->Graphic = passwordArt;
+            WantRedraw = true;
+        }
+    }
 
     if (lastArrowTick < g_Ticks && m_Arrow != nullptr)
     {
@@ -86,9 +134,14 @@ void CGumpScreenMain::UpdateContent()
         return;
     }
 
-    Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
+    // The 1.25.32 (1998) login screens paint their own backdrop art over a
+    // cleared framebuffer; the modern tiled background is not part of them.
+    if (g_Config.ClientVersion >= CV_200)
+    {
+        Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
 
-    Add(new CGUIGumppic(0x157C, 0, 0));
+        Add(new CGUIGumppic(0x157C, 0, 0));
+    }
 
     if (DebugRenderScreen())
     {
@@ -97,6 +150,81 @@ void CGumpScreenMain::UpdateContent()
         // the polygone must not inherit its draw state
         Add(new CGUIColoredPolygone(0, 0, 0, 0, 40, 40, 0xFF0000FF));
         Add(new CGUIGumppic(0x157C, 320, 0));
+        return;
+    }
+
+    // The 1.25.32 (1998) client's login screens, reproduced with the gump art
+    // ids and pixel positions of the original client's MainMenu/AcctLogin.
+    // Both screens live in this gump: the title backdrop below is added
+    // before any page so it stays visible behind the account panel (the
+    // original client did not clear the framebuffer between the two screens);
+    // the pages are swapped from GUMP_BUTTON_EVENT_C.
+    if (g_Config.ClientVersion < CV_200)
+    {
+        //fullscreen backdrop (640x480): the inside-of-the-box artwork the
+        //original blits into its framebuffer before the title screen; gump
+        //0x587 is the post-intro variant, 0x3E8 the intro-skipped one. The
+        //framebuffer is never cleared afterwards, so this stays behind both
+        //screens
+        Add(new CGUIGumppic(0x3E8, 0, 0));
+
+        Add(new CGUIPage(1)); //page 1: the MainMenu (title) plate + buttons
+
+        //MainMenu (title) backdrop (422x240) - page 1 only: the original
+        //hides the title gump when the account screen opens, leaving just
+        //the baked backdrop behind the login panel
+        Add(new CGUIGumppic(0x3F2, 106, 117));
+
+        // The six original title buttons (art up/down/pressed).
+        Add(new CGUIButton(ID_1998_MENU1, 0x3F6, 0x3F7, 0x3F8, 145, 199));
+        Add(new CGUIButton(ID_1998_MENU2, 0x3FC, 0x3FD, 0x3FE, 257, 130));
+        Add(new CGUIButton(ID_1998_MENU3, 0x3FF, 0x400, 0x401, 265, 155));
+        Add(new CGUIButton(ID_1998_LOGIN, 0x3F3, 0x3F4, 0x3F5, 247, 187));
+        Add(new CGUIButton(ID_1998_MENU5, 0x3F9, 0x3FA, 0x3FB, 415, 199));
+        Add(new CGUIButton(ID_MS_QUIT, 0x402, 0x403, 0x404, 281, 284));
+
+        Add(new CGUIPage(2)); //page 2: the AcctLogin (account login) panel
+
+        //login panel (371x256)
+        Add(new CGUIGumppic(0x410, 128, 108));
+
+        //account name entry: the three 190x21 box variants are complete
+        //pieces with an identical shape - 0x411 carries the "USER I.D."
+        //filler text (unfocused + empty), 0x412 is the empty unfocused one
+        //and 0x420 the focused one; PrepareContent swaps them by state
+        m_1998AccountArt = (CGUIGumppic *)Add(new CGUIGumppic(0x411, 219, 138));
+        CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
+            ID_MS_ACCOUNT, 0x0386, 0x0386, 0x0386, 224, 139, 190, false, 2, TS_LEFT, 0, 30));
+        entry->CheckOnSerial = true;
+        g_MainScreen.m_Account = &entry->m_Entry;
+        m_1998AccountEntry = entry;
+
+        //password entry: the entry itself is not masked, the fake entry keeps
+        //the asterisks while the real text goes to g_MainScreen.m_Password;
+        //0x413 carries the "PASSWORD" filler, 0x414 empty unfocused, 0x422 focused
+        m_1998PasswordArt = (CGUIGumppic *)Add(new CGUIGumppic(0x413, 217, 173));
+        entry = (CGUITextEntry *)Add(new CGUITextEntry(
+            ID_MS_PASSWORD, 0x0386, 0x0386, 0x0386, 224, 175, 190, false, 2, TS_LEFT, 0, 30));
+        entry->CheckOnSerial = true;
+        m_PasswordFake = &entry->m_Entry;
+
+        //save password toggle
+        g_MainScreen.m_SavePassword = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x41B, 0x41D, 0x41B, 261, 212));
+
+        //logon button
+        Add(new CGUIButton(ID_1998_LOGON, 0x418, 0x419, 0x41A, 371, 222));
+        //back button
+        Add(new CGUIButton(ID_1998_BACK, 0x415, 0x416, 0x417, 161, 222));
+
+        Add(new CGUIPage(3)); //page 3: never shown, never selected
+
+        // CMainScreen::Load()/Save() always dereference the auto login
+        // checkbox, so keep one alive off-screen (the 1998 screens have none).
+        g_MainScreen.m_AutoLogin = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 0, 0));
+
+        Page = 1; //the client boots on the title screen
         return;
     }
 
@@ -275,8 +403,23 @@ void CGumpScreenMain::GUMP_BUTTON_EVENT_C
             break;
         }
         case ID_MS_ARROW_NEXT:
+        case ID_1998_LOGON:
         {
             g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_CONNECT);
+            break;
+        }
+        case ID_1998_LOGIN:
+        {
+            Page = 2; //AcctLogin panel page
+            WantRedraw = true;
+            WantUpdateContent = true; //re-run RecalculateSize for the page-2 gump extent
+            break;
+        }
+        case ID_1998_BACK:
+        {
+            Page = 1; //MainMenu title page
+            WantRedraw = true;
+            WantUpdateContent = true;
             break;
         }
 #if defined(XUO_LAUNCHER_EMBEDDED)

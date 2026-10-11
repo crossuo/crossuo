@@ -64,6 +64,12 @@ CMainScreen::~CMainScreen()
 void CMainScreen::Init()
 {
     CBaseScreen::Init();
+    // The 1998 (1.25.32) login screens keep both layouts in one gump;
+    // re-entering the main screen always goes back to the title screen.
+    if (g_Config.ClientVersion < CV_200)
+    {
+        m_MainGump.Page = 1;
+    }
     g_ConfigLoaded = false;
     g_GlobalScale = 1.0;
     Load();

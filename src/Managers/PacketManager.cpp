@@ -270,7 +270,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x7E*/ BMSG(XUO_SAVE_PACKET, "God view query (God client)", 0x02),
     /*0x7F*/ BMSG(XUO_SAVE_PACKET, "God view data (God client)", PACKET_VARIABLE_SIZE),
     /*0x80*/ SMSG(XUO_IGNORE_PACKET, "First Login", 0x3e),
-    /*0x81*/ RMSG(XUO_SAVE_PACKET, "Change character", PACKET_VARIABLE_SIZE),
+    /*0x81*/ RMSGH(XUO_SAVE_PACKET, "Change character", PACKET_VARIABLE_SIZE, LegacyServerList),
     /*0x82*/ RMSGH(XUO_IGNORE_PACKET, "Login Error", 0x02, LoginError),
     /*0x83*/ SMSG(XUO_IGNORE_PACKET, "Delete Character", 0x27),
     /*0x84*/ BMSG(XUO_SAVE_PACKET, "Change password", 0x45),
@@ -446,6 +446,15 @@ bool CPacketManager::AutoLoginNameExists(const astr_t &name)
 
 void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
 {
+    if (newClientVersion < CV_200)
+    {
+        CVPRINT("Using old client packet sizes (< 2.0.0)");
+    }
+    else
+    {
+        CVPRINT("Using standart packet sizes (>= 2.0.0)");
+    }
+
     if (newClientVersion >= CV_500A)
     {
         CVPRINT("Set new length for packet 0x0B (>= 5.0.0a)");
@@ -759,13 +768,33 @@ PACKET_HANDLER(LoginError)
     {
         g_ConnectionScreen.SetConnectionFailed(true);
         g_ConnectionScreen.SetErrorCode(ReadUInt8());
-        g_ConnectionManager.Disconnect();
+        // Pre-2.0 (PktH_0x82_LoginDenied, 0x461290) shows the denial over the
+        // login screen and keeps the socket; the retry from the main screen
+        // reuses the live connection (Connect() is idempotent while
+        // connected). Modern clients get a fresh socket per attempt.
+        if (g_Config.ProtocolClientVersion >= CV_200)
+        {
+            g_ConnectionManager.Disconnect();
+        }
     }
 }
 
 PACKET_HANDLER(ServerList)
 {
     g_ServerList.ParsePacket(*this);
+}
+
+// 0x81: pre-2.0 server list. The 1998 dispatcher frames it as a dynamic
+// packet (size-table entry 0x8000 at 0x4ae18c), matching the variable-size
+// row above. A 2.0+ server never sends it; the handler no-ops for modern
+// clients so a stray frame cannot hijack the screen flow.
+PACKET_HANDLER(LegacyServerList)
+{
+    if (g_Config.ProtocolClientVersion >= CV_200)
+    {
+        return;
+    }
+    g_ServerList.ParseLegacyPacket(*this);
 }
 
 PACKET_HANDLER(RelayServer)
@@ -822,7 +851,18 @@ PACKET_HANDLER(CharacterList)
         }
     }
 
-    g_ClientFlag = ReadUInt32BE();
+    // Feature-flag dword: absent from the pre-2.0 packet - the 1998 handler
+    // (0x460b80) stops after the location records. Zero it so the derived
+    // feature bits (single slot / popups / paperdoll books) stay off, as in
+    // the 1998 client.
+    if (g_Config.ProtocolClientVersion < CV_200)
+    {
+        g_ClientFlag = 0;
+    }
+    else
+    {
+        g_ClientFlag = ReadUInt32BE();
+    }
     g_CharacterList.SingleSlot = (g_ClientFlag & CLF_ONE_CHARACTER_SLOT) != 0;
     //g_SendLogoutNotification = (g_ClientFlag & LFF_RE) != 0;
     g_PopupEnabled = (g_ClientFlag & CLF_CONTEXT_MENU) != 0;
@@ -1013,7 +1053,19 @@ PACKET_HANDLER(EnterWorld)
     g_LastSpellIndex = 1;
     g_LastSkillIndex = 1;
 
-    CPacketClientVersion(g_Config.ProtocolClientVersionString).Send();
+    // Post-EnterWorld asks: the 1998 client sends the 4-byte tip-window ack
+    // {0xA7, tip number u16, 1} here, gated on its tips-enabled flag (default
+    // on): flag 1, echoing its current tip-number global - 0xFFFF before any
+    // tip window arrived (0x457b90; write helpers 0x457570/0x457520). 0xBD
+    // did not exist in that client.
+    if (g_Config.ProtocolClientVersion < CV_200)
+    {
+        CPacketTipRequest(0xFFFF, 1).Send();
+    }
+    else
+    {
+        CPacketClientVersion(g_Config.ProtocolClientVersionString).Send();
+    }
 
     if (g_Config.ProtocolClientVersion >= CV_200)
     {
@@ -1290,7 +1342,16 @@ PACKET_HANDLER(UpdatePlayer)
 #endif
 
     // Invert character wakthrough bit.
-    flags ^= 0x10;
+    // Pre-2.0.0 servers send the flag byte in the polarity the client stores
+    // it (the 1998 client keeps the byte raw, no 0x10 walk-through flip).
+    if (g_Config.ProtocolClientVersion >= CV_200)
+    {
+        flags ^= 0x10;
+    }
+    // The rest of the 1998 behavior (packet hue applied through the hue
+    // sanitizer, walk queue cleared on the forced reposition) is already the
+    // unconditional CGameWorld::UpdatePlayer path below (FixColor + the
+    // g_Walker.DenyWalk(-1, -1, -1, -1) reset), so no further gate is needed.
 
     Info(
         Network,
@@ -1384,10 +1445,25 @@ PACKET_HANDLER(CharacterStatus)
             g_Player->Mana = ReadUInt16BE();
             g_Player->MaxMana = ReadUInt16BE();
             g_Player->Gold = ReadUInt32BE();
-            g_Player->Armor = ReadInt16BE();
-            g_Player->Weight = ReadInt16BE(); //+64
+            // Pre-2.0.0 wire: two u16s follow the gold u32. Assigning weight
+            // then armor is inferred — the 1998 handler stores both into
+            // anonymous status fields and their identities are not recoverable
+            // from it.
+            if (g_Config.ProtocolClientVersion < CV_200)
+            {
+                g_Player->Weight = ReadInt16BE();
+                g_Player->Armor = ReadInt16BE();
+            }
+            else
+            {
+                g_Player->Armor = ReadInt16BE();
+                g_Player->Weight = ReadInt16BE(); //+64
+            }
 
-            if (flag >= 5)
+            // The extended flag blocks (>= 5) do not exist on the pre-2.0.0
+            // wire; a legacy frame never carries those bits, so treat them as
+            // absent and keep the derived max-weight instead of reading on.
+            if (flag >= 5 && g_Config.ProtocolClientVersion >= CV_200)
             {
                 g_Player->MaxWeight = ReadInt16BE(); //unpack16(buf + 66);
                 auto race = ReadUInt8();
@@ -1645,6 +1721,13 @@ PACKET_HANDLER(UpdateObject)
     uint16_t color = ReadUInt16BE();
     uint8_t flags = ReadUInt8();
     uint8_t notoriety = ReadUInt8();
+    // Pre-2.0.0 wire: the 0x78 header framing here is unchanged for legacy
+    // servers — the 1998 client reads the same 16 payload bytes (z, direction,
+    // hue u16, flags, notoriety) and starts the equipment entries at
+    // payload+16, so no legacy gate is needed. The entry hue rule below
+    // (bit 15 = hue follows) is the only era difference, and the
+    // ProtocolClientVersion >= CV_70331 gate already resolves to that legacy
+    // bit-15 branch for any client below 7.0.33 (1.25.32 included).
     bool oldDead = false;
 
     if (serial == g_PlayerSerial)
@@ -1832,13 +1915,29 @@ PACKET_HANDLER(EquipItem)
 #endif
 
     CGameItem *obj = g_World->GetWorldItem(serial);
+    if (obj == nullptr)
+    {
+        // unknown serial: the 1998 client synthesizes the item here; crossuo
+        // cannot, so skip instead of dereferencing null (version-neutral)
+        return;
+    }
     obj->MapIndex = g_CurrentMap;
     if ((obj->Graphic != 0u) && obj->Layer != OL_BACKPACK)
     {
         obj->Clear();
     }
-    obj->Graphic = graphic;
-    obj->Color = g_ColorManager.FixColor(color);
+    // Pre-2.0.0 wire: the only difference from the modern packet is the
+    // graphic mask (&0x3FFF); the sanitized hue is applied in both eras.
+    if (g_Config.ProtocolClientVersion < CV_200)
+    {
+        obj->Graphic = graphic & 0x3FFF;
+        obj->Color = g_ColorManager.FixColor(color);
+    }
+    else
+    {
+        obj->Graphic = graphic;
+        obj->Color = g_ColorManager.FixColor(color);
+    }
     if (obj->Container != 0xFFFFFFFF)
     {
         g_GumpManager.UpdateContent(obj->Container, 0, GT_CONTAINER);
@@ -1931,8 +2030,19 @@ PACKET_HANDLER(UpdateContainedItems)
     }
 
     const uint16_t itemsCount = ReadUInt16BE();
+    // Per-entry byte length: serial u32 + graphic u16 + increment u8 + count
+    // u16 + x u16 + y u16 + container u32 + color u16, plus the grid byte on
+    // the 6.0.1.7 wire. Entries are listed up front, so a frame shorter than
+    // its own count is malformed; the walk stops instead of applying the
+    // zero-filled entries the refused reads would produce.
+    const size_t entrySize = (g_Config.ProtocolClientVersion >= CV_6017) ? 20 : 19;
     for (int i = 0; i < itemsCount; i++)
     {
+        if (IsEOF() || Size - Pos() < entrySize)
+        {
+            break;
+        }
+
         const uint32_t serial = ReadUInt32BE();
         const uint16_t graphic = ReadUInt16BE();
         const uint8_t graphicIncrement = ReadUInt8();
@@ -2518,6 +2628,18 @@ PACKET_HANDLER(SetWeather)
     }
 #endif
 
+    // Pre-2.0.0 servers signal a season change through this packet: the 1998
+    // handler (0x45c970 → 0x47d610) stores season=count and temperature=temp
+    // on its weather object and skips the normal weather setup (the season
+    // callback 0x478cd0 there is a stub — no music, no journal). crossuo
+    // applies the season through the 0xBC path; the music slot stays silent
+    // like the 1998 client.
+    if (g_Config.ProtocolClientVersion < CV_200 && type == 0xFE)
+    {
+        SetSeason(count, 0);
+        return;
+    }
+
     SetWeather(type, count, temperature);
 }
 
@@ -2617,6 +2739,22 @@ PACKET_HANDLER(OpenContainer)
         xuoassist::g_LastContainerObject = serial;
     }
 #endif
+
+    // Pre-2.0.0 servers share this id with a different value table: the field
+    // selects the gump type in both eras (the 1998 handler 0x459020 dispatches
+    // on it through the shared gump opener 0x43bd20), but 0xFFFF is "close the
+    // object's open gump" on the old wire instead of the spellbook. The other
+    // legacy-only types (0x07/0x08/0x0A/0x31 client UIs, plain containers
+    // 0x01F4/0x01F5, hair styling 0x1392/0x1393) have no crossuo gump parallels
+    // and drop through the modern generic path, which ignores unknown gump
+    // graphics; 0x0030 is the shop gump in both eras.
+    if (g_Config.ProtocolClientVersion < CV_200 && gumpid == 0xFFFF)
+    {
+        // the 1998 close also detaches an open drag through a scratch gump
+        // object; crossuo has no such state to detach
+        g_GumpManager.CloseGump(serial, 0, GT_CONTAINER);
+        return;
+    }
 
     CGump *gump = nullptr;
 
@@ -2912,19 +3050,44 @@ PACKET_HANDLER(UpdateSkills)
         {
             break;
         }
-        if ((type == 0u) || type == 0x02)
+
+        // Pre-2.0.0 wire: entries are {id u16, value u16}; the id is 1-based
+        // (decremented) only in the sub-0x01 list, and the single-update
+        // (0xFF) frame carries a single {index, value} pair. 2.0+ entries are
+        // {id, base, real, lock[, cap]} with 0-based ids in subs 0x00/0x02.
+        const bool legacySkillEntry = (g_Config.ProtocolClientVersion < CV_200);
+
+        if (legacySkillEntry)
+        {
+            if (type == 0x01)
+            {
+                id--;
+            }
+        }
+        else if ((type == 0u) || type == 0x02)
         {
             id--;
         }
 
-        uint16_t baseVal = ReadUInt16BE();
-        uint16_t realVal = ReadUInt16BE();
-        uint8_t lock = ReadUInt8();
+        uint16_t baseVal;
+        uint16_t realVal;
+        uint8_t lock = 0;
         uint16_t cap = 1000;
 
-        if (haveCap)
+        if (legacySkillEntry)
         {
-            cap = ReadUInt16BE();
+            baseVal = realVal = ReadUInt16BE();
+        }
+        else
+        {
+            baseVal = ReadUInt16BE();
+            realVal = ReadUInt16BE();
+            lock = ReadUInt8();
+
+            if (haveCap)
+            {
+                cap = ReadUInt16BE();
+            }
         }
 
         CSkill *skill = g_SkillsManager.Get(id);
@@ -3585,7 +3748,28 @@ PACKET_HANDLER(DenyWalk)
     uint8_t direction = ReadUInt8();
     char z = ReadUInt8();
 
-    g_Walker.DenyWalk(sequence, x, y, z);
+    // Pre-2.0.0: the sequence 0xFF form is the queue-reset-only request — the
+    // 1998 handler (0x459400 → Walk_TeleportPlayer 0x449a20) leaves the
+    // coordinates untouched for it. For the position form the 1998 handler
+    // runs its render/coordinate-update tail unconditionally after the apply
+    // (the render tail commented out in Walker.cpp DenyWalk); UpdatePlayer's
+    // UpdateDrawPos is crossuo's equivalent.
+    if (g_Config.ProtocolClientVersion < CV_200)
+    {
+        if (sequence == 0xFF)
+        {
+            g_Walker.DenyWalk(sequence, -1, -1, -1);
+        }
+        else
+        {
+            g_Walker.DenyWalk(sequence, x, y, z);
+            g_GameScreen.UpdateDrawPos = true;
+        }
+    }
+    else
+    {
+        g_Walker.DenyWalk(sequence, x, y, z);
+    }
 
     g_Player->Direction = direction;
 
@@ -3603,14 +3787,21 @@ PACKET_HANDLER(ConfirmWalk)
 
     //player->SetDirection(newdir);
 
-    uint8_t newnoto = ReadUInt8() & (~0x40);
-
-    if ((newnoto == 0u) || newnoto >= 8)
+    // Pre-2.0.0 servers confirm a walk with the sequence byte only; the
+    // notoriety byte does not exist on that wire (the 1998 client ignores it).
+    // The handler frame stays 3 bytes (fixed-size table row), so skipping the
+    // read leaves the framing intact.
+    if (g_Config.ProtocolClientVersion >= CV_200)
     {
-        newnoto = 0x01;
-    }
+        uint8_t newnoto = ReadUInt8() & (~0x40);
 
-    g_Player->Notoriety = newnoto;
+        if ((newnoto == 0u) || newnoto >= 8)
+        {
+            newnoto = 0x01;
+        }
+
+        g_Player->Notoriety = newnoto;
+    }
 
     g_Walker.ConfirmWalk(sequence);
 
@@ -3899,7 +4090,12 @@ PACKET_HANDLER(UnicodeTalk)
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
     ReadUInt32BE(); // language code (not used for display)
-    auto name = ReadString();
+
+    // Pre-2.0.0: the speaker name is a fixed 30-byte field (the 1998 handler
+    // 0x47c1f0 reads it through the fixed-length reader — no NUL scan) and the
+    // text is clamped to 0x800 bytes (0x400 UTF-16 chars).
+    const bool legacyTalk = (g_Config.ProtocolClientVersion < CV_200);
+    auto name = legacyTalk ? ReadString(30) : ReadString();
 
     if (serial == 0u && graphic == 0u && type == ST_NORMAL && font == 0xFFFF &&
         textColor == 0xFFFF && str_lower(name) == "system")
@@ -3912,7 +4108,12 @@ PACKET_HANDLER(UnicodeTalk)
     if (Size > 48)
     {
         Ptr = Start + 48;
-        str = ReadWStringBE((Size - 48) / 2);
+        size_t textLen = (Size - 48) / 2;
+        if (legacyTalk && textLen > 0x400)
+        {
+            textLen = 0x400;
+        }
+        str = ReadWStringBE(textLen);
     }
 
     CGameObject *obj = g_World->FindWorldObject(serial);
@@ -4021,8 +4222,17 @@ PACKET_HANDLER(MultiPlacement)
     // mirror/hook state when the world is not up. A consumed reply skips the
     // client processing.
     xuoassist::g_TargetReceived = true;
+    // SetMultiData captures the cursor id on both of its exits (the hook
+    // mirror and the pass-through body) and leaves the reader consumed; a
+    // capture here would read past the packet and clobber it with 0.
     const bool pass = g_Target.SetMultiData(*this);
 #else
+    // The cursor id is echoed by the 0x6C target reply: the 1998 handler
+    // (0x45d9a0) stores it in the same slot its reply builder (0x45d630)
+    // reads. Plain builds have no SetMultiData parse, so the capture only
+    // happens here, over the untouched packet (the fixed-size id byte at
+    // offset 0 is skipped).
+    g_Target.CursorID = ReadUInt32BE(1);
     const bool pass = true;
 #endif
 
@@ -4266,6 +4476,26 @@ PACKET_HANDLER(DeathScreen)
         g_Target.Reset();
 
         g_GumpManager.CloseGump(0, 0, GT_DRAG);
+
+        // Pre-2.0.0: the 1998 death branch (0x459ff0) closes every open gump
+        // (the flag==1 branch only closes the resurrection menu, which crossuo
+        // does not implement — the 0x2C answer sender is
+        // CPacketResurrectChoice for the menu that would drive it).
+        if (g_Config.ProtocolClientVersion < CV_200)
+        {
+            for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
+            {
+                CGump *next = (CGump *)gump->m_Next;
+                g_GumpManager.RemoveGump(gump);
+                gump = next;
+            }
+
+            // a deleted gump may have owned the text-entry focus
+            if (g_EntryPointer != &g_GameConsole)
+            {
+                g_EntryPointer = nullptr;
+            }
+        }
 
         if (g_ConfigManager.GetMusic())
         {
@@ -4672,6 +4902,25 @@ PACKET_HANDLER(CharacterListNotification)
 PACKET_HANDLER(ErrorCode)
 {
     uint8_t errorCode = ReadUInt8();
+
+    // Pre-2.0 game-socket case: 1998 (PktH_0x53_LoginError, 0x45c2d0) closes
+    // the connecting dialog and reports the message over the character-list
+    // screen, keeping the game socket so the user picks another character on
+    // the same connection. Code 1 (character does not exist) also drops the
+    // failed character from the list, shrinking the count (floor 0). The
+    // character-list gump has no message slot, so both paths render the
+    // reason through the shared CST_GAME_LOGIN error table below (same codes
+    // 0-6, >7 falls back to 3, as in the 1998 default); its OK button lands
+    // on GS_CHARACTER with the socket untouched.
+    if (g_Config.ProtocolClientVersion < CV_200 && g_GameState == GS_GAME_CONNECT &&
+        errorCode == 1)
+    {
+        g_CharacterList.SetName(g_CharacterList.Selected, "");
+        if (g_CharacterList.Count > 0)
+        {
+            g_CharacterList.Count--;
+        }
+    }
 
     g_Game.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_GAME_LOGIN);
@@ -5656,15 +5905,22 @@ PACKET_HANDLER(OpenGump)
     int locX = ReadInt32BE();
     int locY = ReadInt32BE();
 
-    auto found = m_GumpsCoordsCache.find(id);
-    if (found != m_GumpsCoordsCache.end())
+    // Pre-2.0.0: the 1998 handler (0x462580) always places the gump at the
+    // server x/y (its own coords cache only feeds the 0x24 container gumps),
+    // so the cached-coords override and the store are modern-only. The
+    // trailing text-args block parses the same in both eras.
+    if (g_Config.ProtocolClientVersion >= CV_200)
     {
-        locX = found->second.X;
-        locY = found->second.Y;
-    }
-    else
-    {
-        SetCachedGumpCoords(id, locX, locY);
+        auto found = m_GumpsCoordsCache.find(id);
+        if (found != m_GumpsCoordsCache.end())
+        {
+            locX = found->second.X;
+            locY = found->second.Y;
+        }
+        else
+        {
+            SetCachedGumpCoords(id, locX, locY);
+        }
     }
 
     CGumpGeneric *gump = new CGumpGeneric(serial, locX, locY, id);
@@ -6317,6 +6573,16 @@ PACKET_HANDLER(DisplayMap)
     uint32_t serial = ReadUInt32BE();
     uint16_t gumpid = ReadUInt16BE();
 
+    // Pre-2.0.0 guards (0x459200): the map gump only opens for a map graphic
+    // (gumpid > 0x139C) on an object that resolves — the 1998 handler calls a
+    // virtual on the lookup result unchecked, crossuo skips instead (the
+    // item-class virtual there folds into the existence check).
+    if (g_Config.ProtocolClientVersion < CV_200 &&
+        (gumpid <= 0x139C || g_World->FindWorldItem(serial) == nullptr))
+    {
+        return;
+    }
+
     TRACE(Network, "gumpid = 0x%04X", gumpid);
 
     uint16_t startX = ReadUInt16BE();
@@ -6712,8 +6978,17 @@ PACKET_HANDLER(BookData)
     {
         uint16_t pageCount = ReadUInt16BE();
 
-        for (int i = 0; i < pageCount; i++)
+        for (int i = 0; i < pageCount && !IsEOF(); i++)
         {
+            // An entry is page u16 + line count u16; a well-formed frame
+            // carries every entry its page count lists, so a short remainder
+            // means the frame is malformed and the walk stops here rather
+            // than pulling zeroed pages from past the frame end.
+            if (Size - Pos() < 4)
+            {
+                break;
+            }
+
             uint16_t page = ReadUInt16BE();
 
             if (page > gump->PageCount)
@@ -6723,9 +6998,18 @@ PACKET_HANDLER(BookData)
 
             uint16_t lineCount = ReadUInt16BE();
 
+            // A book page holds at most 20 lines; the field is u16, so a
+            // larger count is malformed input. The clamp keeps the line walk
+            // on the page the entry describes instead of letting it run for
+            // 65k lines off the end of the frame.
+            if (lineCount > 20)
+            {
+                lineCount = 20;
+            }
+
             wstr_t str;
 
-            for (int j = 0; j < lineCount; j++)
+            for (int j = 0; j < lineCount && !IsEOF(); j++)
             {
                 if (j != 0)
                 {
@@ -6755,6 +7039,15 @@ PACKET_HANDLER(BuyList)
     // lives in this handler)
     xuoassist::g_ShopReceived = true;
 #endif
+    // Pre-2.0.0: the 1998 client (0x45dda0) rebuilds its vendor item list from
+    // this packet, but crossuo's parse targets the modern wire and there is no
+    // legacy shop UI behind it, so the packet is dropped
+    if (g_Config.ProtocolClientVersion < CV_200)
+    {
+        Warning(Network, "0x74 vendor buy list ignored (pre-2.0 protocol)");
+        return;
+    }
+
     if (g_World == nullptr)
     {
         return;
@@ -6984,6 +7277,15 @@ PACKET_HANDLER(SellList)
 
 PACKET_HANDLER(BuyReply)
 {
+    // Pre-2.0.0: the 1998 handler (0x45b390) resets/closes its shop gumps on
+    // this packet; with 0x74 dropped above no shop gump exists on the legacy
+    // flow, so the packet is dropped too
+    if (g_Config.ProtocolClientVersion < CV_200)
+    {
+        Warning(Network, "0x3B vendor buy reply ignored (pre-2.0 protocol)");
+        return;
+    }
+
     uint32_t serial = ReadUInt32BE();
     uint8_t flag = ReadUInt8();
 
@@ -7299,6 +7601,14 @@ PACKET_HANDLER(PacketsList)
 PACKET_HANDLER(MovePlayer)
 {
     if (g_World == nullptr)
+    {
+        return;
+    }
+
+    // Pre-2.0.0 servers drive no pathfinder through this id: the 1998 handler
+    // (0x465b30) only ticks its local walk queue (0x44a5f0) and reads nothing
+    // from the packet.
+    if (g_Config.ProtocolClientVersion < CV_200)
     {
         return;
     }

@@ -5,6 +5,7 @@
 #include "PathFinder.h"
 #include "Walker.h"
 #include "../CrossUO.h"
+#include "../Config.h" // g_Config.ProtocolClientVersion (walk request fastwalk key)
 #include "../Managers/ConfigManager.h"
 #include "../Managers/CustomHousesManager.h"
 #include "../Managers/MapManager.h"
@@ -715,8 +716,17 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     g_Player->m_Steps.push_back(
         CWalkData(x, y, z, direction, g_Player->Graphic, g_Player->GetFlags()));
 
-    CPacketWalkRequest(direction, g_Walker.WalkSequence, g_Player->m_FastWalkStack.GetValue())
-        .Send();
+    if (g_Config.ProtocolClientVersion < CV_12536)
+    {
+        // The walk request carries no fastwalk key, so the key stack is left
+        // untouched (GetValue consumes the oldest key).
+        CPacketWalkRequest(direction, g_Walker.WalkSequence, 0).Send();
+    }
+    else
+    {
+        CPacketWalkRequest(direction, g_Walker.WalkSequence, g_Player->m_FastWalkStack.GetValue())
+            .Send();
+    }
 
 #if defined(XUO_ASSISTANT)
     // the assistant's walk-send hooks: the macro walk recording and the

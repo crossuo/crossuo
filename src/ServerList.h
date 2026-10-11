@@ -50,6 +50,13 @@ public:
     int ServersCount() { return (int)m_Servers.size(); }
     CServer *Select(int index);
     void ParsePacket(CDataReader &reader);
+    // 0x81 pre-2.0 server list (see ServerList.cpp for the record layout)
+    void ParseLegacyPacket(CDataReader &reader);
+
+private:
+    // shared 0xA8/0x81 tail: auto-select the last server or open the
+    // shard-select screen
+    void PostParse(uint16_t numServers);
 };
 
 extern CServerList g_ServerList;

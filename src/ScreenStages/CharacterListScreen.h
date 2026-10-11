@@ -19,6 +19,7 @@ public:
         SelectCharacter = 3,
         GotoScreenProfession = 4,
         GotoScreenDelete = 5,
+        LogOut = 6,
     };
 
     CCharacterListScreen();

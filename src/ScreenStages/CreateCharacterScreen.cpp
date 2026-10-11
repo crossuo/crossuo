@@ -3,6 +3,8 @@
 
 #include "CreateCharacterScreen.h"
 #include "ConnectionScreen.h"
+#include "SelectProfessionScreen.h"
+#include "../Config.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
 #include "../GameWindow.h"
@@ -37,6 +39,26 @@ void CCreateCharacterScreen::Init()
 {
     CBaseScreen::Init();
 
+    //1.25.32 wizard (InitSkill): the name and the appearance were entered
+    //on CharStat / CharCreation and must survive BACK navigation, so the
+    //manager and name reset below runs for the modern flow only
+    if (g_Config.ClientVersion < CV_200)
+    {
+        m_StyleSelection = 0;
+        m_ColorSelection = 0;
+
+        //the InitSkill panel is page 1 (the skill scrollchoice popup is
+        //page 2); set here so rebuilds don't clobber an open popup
+        m_CreateCharacterGump.Page = 1;
+
+        g_ScreenEffectManager.UseSunrise();
+        SmoothScreenAction = 0;
+
+        m_Gump.PrepareTextures();
+        m_Gump.WantUpdateContent = true;
+        return;
+    }
+
     g_CreateCharacterManager.Clear();
 
     Name = "";
@@ -64,6 +86,11 @@ void CCreateCharacterScreen::ProcessSmoothAction(uint8_t action)
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_CHARACTER)
     {
         g_Game.InitScreen(GS_CHARACTER);
+    }
+    else if (action == ID_SMOOTH_CCS_GO_SCREEN_PROFESSION)
+    {
+        //1.25.32 wizard: BACK from InitSkill to CharStat
+        g_Game.InitScreen(GS_PROFESSION_SELECT);
     }
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_CONNECT)
     {

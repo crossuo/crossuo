@@ -86,7 +86,11 @@ enum ENCRYPTION_TYPE
 
 enum CLIENT_VERSION
 {
-    CV_OLD = VERSION(0, 0, 0, 0),    // CF_T2A, Standard (<2.0.0)
+    CV_OLD = VERSION(0, 0, 0, 0), // CF_T2A, Standard (<2.0.0)
+    // Pre-T2A reference target: huffman S->C, seed-keyed rot-xor C->S, 3-byte walk request
+    CV_12532 = VERSION(1, 25, 32, 0),
+    // Login crypto algorithm change (ET_1_25_36)
+    CV_12536 = VERSION(1, 25, 36, 0),
     CV_200 = VERSION(2, 0, 0, 0),    // CF_RE, Packet sent with screen dimensions
     CV_200X = VERSION(2, 0, 0, 'x'), // Special Crypto keys
     //CV_204C, // Introduced *.def files

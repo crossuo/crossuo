@@ -26,6 +26,12 @@ public:
     CPacketSelectServer(uint8_t index);
 };
 
+class CPacketDisconnect : public CPacket
+{
+public:
+    CPacketDisconnect();
+};
+
 class CPacketSecondLogin : public CPacket
 {
 public:
@@ -237,6 +243,16 @@ class CPacketLogoutNotification : public CPacket
 {
 public:
     CPacketLogoutNotification();
+};
+
+class CPacketResurrectChoice : public CPacket
+{
+public:
+    // The 0x2C answer to the death menu: 2 bytes {0x2C, action}. The 1998
+    // builder (0x463a30) writes the action byte behind the fixed-size id; its
+    // only call site (0x44dda0) sends 0. The death-menu pairing sends
+    // 1 = resurrect, 2 = ghost.
+    CPacketResurrectChoice(uint8_t action);
 };
 
 class CPacketTextEntryDialogResponse : public CPacket

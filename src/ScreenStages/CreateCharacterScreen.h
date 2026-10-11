@@ -35,6 +35,8 @@ public:
     static const uint8_t ID_SMOOTH_CCS_GO_SCREEN_CHARACTER = 2;
     static const uint8_t ID_SMOOTH_CCS_GO_SCREEN_CONNECT = 3;
     static const uint8_t ID_SMOOTH_CCS_GO_SCREEN_SELECT_TOWN = 4;
+    //1.25.32 wizard: InitSkill BACK goes to CharStat (profession select)
+    static const uint8_t ID_SMOOTH_CCS_GO_SCREEN_PROFESSION = 5;
 
     virtual void Init() override;
     virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;

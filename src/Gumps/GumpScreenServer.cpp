@@ -21,6 +21,17 @@ enum
     ID_SS_TIME_ZONE,
     ID_SS_FULL,
     ID_SS_CONNECTION,
+
+    //1998 (1.25.32) character select buttons: the server popup draws over
+    //the character select panel, whose five buttons are rendered but inert
+    //until the character select stage; they stay below ID_SS_SERVER_LIST so
+    //the row range checks in InitToolTip/GUMP_TEXT_ENTRY_EVENT_C keep valid
+    ID_1998_SS_NEW,
+    ID_1998_SS_LOGOUT,
+    ID_1998_SS_PLAY,
+    ID_1998_SS_DELETE,
+    ID_1998_SS_PASSWORD,
+
     ID_SS_EARTH,
     ID_SS_HTML_GUMP,
     ID_SS_SERVER_LIST,
@@ -42,6 +53,77 @@ CGumpScreenServer::~CGumpScreenServer()
 void CGumpScreenServer::UpdateContent()
 {
     Clear();
+
+    // The 1.25.32 (1998) client opens the server scrollchoice popup on top of
+    // the character select screen, with the wood background baked into the
+    // never-cleared framebuffer behind both; the modern tiled chrome is not
+    // part of it. Selection still works through the same hit boxes and
+    // CGUIHTMLGump rows, only the art and positions differ.
+    if (g_Config.ClientVersion < CV_200)
+    {
+        //fullscreen backdrop (640x480): the inside-of-the-box artwork the
+        //original blits into its framebuffer before the login screens; gump
+        //0x587 is the post-intro variant, 0x3E8 the intro-skipped one. The
+        //framebuffer is never cleared afterwards, so this stays behind the
+        //popup and the character select panel
+        Add(new CGUIGumppic(0x3E8, 0, 0));
+
+        //character select base ("Login gump" 0x44C), inert decoration here:
+        //the panel the popup opens over
+        Add(new CGUIGumppic(0x44C, 124, 104));
+
+        //the five (still empty) character slot boxes
+        Add(new CGUIGumppic(0x45C, 205, 181));
+        Add(new CGUIGumppic(0x45F, 217, 200));
+        Add(new CGUIGumppic(0x462, 224, 218));
+        Add(new CGUIGumppic(0x465, 216, 238));
+        Add(new CGUIGumppic(0x468, 202, 257));
+
+        //the five character select buttons (art up/hover/pressed), drawn but
+        //inert - they act in the character select stage only
+        Add(new CGUIButton(ID_1998_SS_NEW, 0x0453, 0x0454, 0x0455, 187, 134));
+        Add(new CGUIButton(ID_1998_SS_LOGOUT, 0x0456, 0x0457, 0x0458, 284, 117));
+        Add(new CGUIButton(ID_1998_SS_PLAY, 0x0459, 0x045A, 0x045B, 369, 134));
+        Add(new CGUIButton(ID_1998_SS_DELETE, 0x044D, 0x044E, 0x044F, 181, 287));
+        Add(new CGUIButton(ID_1998_SS_PASSWORD, 0x0450, 0x0451, 0x0452, 370, 287));
+
+        //server scrollchoice popup (400x293) at its original position
+        Add(new CGUIGumppic(0x4CC, 120, 93));
+
+        //the popup's list rect: abs (194,127)-(480,346) = popup origin
+        //(120,93) + rel (74,34)-(360,253); the rows render font 5 hue 0x386
+        //at the same 25px pitch as the modern list, selection unchanged
+        CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)Add(
+            new CGUIHTMLGump(ID_SS_HTML_GUMP, 0x0DAC, 194, 127, 286, 219, false, true));
+
+        int offsetY = 0;
+
+        for (int i = 0; i < g_ServerList.ServersCount(); i++)
+        {
+            CServer *server = g_ServerList.GetServer((uint32_t)i);
+
+            htmlGump->Add(new CGUIHitBox(ID_SS_SERVER_LIST + (int)i, 0, offsetY, 286, 25));
+
+            CGUITextEntry *entry = new CGUITextEntry(
+                ID_SS_SERVER_LIST + (int)i, 0x0386, 0x0021, 0x0021, 0, offsetY, 0, false, 5);
+            entry->m_Entry.SetTextA(server->Name);
+            entry->ReadOnly = true;
+            entry->CheckOnSerial = true;
+            htmlGump->Add(entry);
+
+            offsetY += 25;
+        }
+
+        htmlGump->CalculateDataSize();
+
+        //the three sort buttons along the popup's bottom edge (art
+        //up/hover/pressed), same actions as the modern screen
+        Add(new CGUIButton(ID_SS_TIME_ZONE, 0x093B, 0x093C, 0x093D, 228, 358));
+        Add(new CGUIButton(ID_SS_FULL, 0x093E, 0x093F, 0x0940, 305, 358));
+        Add(new CGUIButton(ID_SS_CONNECTION, 0x0941, 0x0942, 0x0943, 370, 358));
+
+        return;
+    }
 
     Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
     Add(new CGUIGumppic(0x157C, 0, 0));
@@ -249,6 +331,11 @@ void CGumpScreenServer::GUMP_BUTTON_EVENT_C
     {
         g_ServerScreen.SelectionServerTempValue = g_ServerList.LastServerIndex;
         g_ServerScreen.CreateSmoothAction(CServerScreen::ID_SMOOTH_SS_SELECT_SERVER);
+    }
+    else if (serial >= ID_1998_SS_NEW && serial <= ID_1998_SS_PASSWORD)
+    {
+        //1.25.32: the character select buttons behind the server popup are
+        //rendered but inert - they belong to the character select stage
     }
 }
 

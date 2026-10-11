@@ -64,6 +64,13 @@ CPacketSelectServer::CPacketSelectServer(uint8_t index)
     WriteUInt8(index);
 }
 
+CPacketDisconnect::CPacketDisconnect()
+    : CPacket(5)
+{
+    WriteUInt8(0x01);
+    WriteUInt32BE(0xFFFFFFFF);
+}
+
 CPacketSecondLogin::CPacketSecondLogin()
     : CPacket(65)
 {
@@ -83,7 +90,7 @@ CPacketSecondLogin::CPacketSecondLogin()
 }
 
 CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
-    : CPacket(104)
+    : CPacket(g_Config.ProtocolClientVersion < CV_200 ? 100 : 104)
 {
     int skillsCount = 3;
     uint32_t packetID = 0x00;
@@ -102,25 +109,39 @@ CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
     WriteUInt8(0x00);
     WriteString(name, 30, false);
 
-    //Move(30); //На самом деле, клиент пихает сюда пароль на 30 байт, но по какой-то причине (мб мусор в памяти) - идет то что идет
-    WriteUInt16BE(0x0000); //?
-
-    uint32_t clientFlag = 0;
-    for (int i = 0; i < g_Config.ClientFlag; i++)
+    // Pre-2.0.0 wire: the 100-byte 1997 create-character frame carries the
+    // account password at [40-69] where 2.0+ clients send the client-flag /
+    // login-count / profession block, and ends after the client IP at [97]
+    // (no shirt/pants tail at [100-103]). Verified against the 1998 client
+    // builder (PktS_0x00_CreateCharacter).
+    const bool legacyCreateChar = (g_Config.ProtocolClientVersion < CV_200);
+    if (legacyCreateChar)
     {
-        clientFlag |= (1 << i);
+        WriteString(g_Config.Password, 30, false);
+    }
+    else
+    {
+        //Move(30); //На самом деле, клиент пихает сюда пароль на 30 байт, но по какой-то причине (мб мусор в памяти) - идет то что идет
+        WriteUInt16BE(0x0000); //?
+
+        uint32_t clientFlag = 0;
+        for (int i = 0; i < g_Config.ClientFlag; i++)
+        {
+            clientFlag |= (1 << i);
+        }
+
+        WriteUInt32BE(clientFlag); //clientflag
+        WriteUInt32BE(0x00000001); //?
+        WriteUInt32BE(0x00000000); //logincount
+
+        CProfession *profession = (CProfession *)g_ProfessionManager.Selected;
+        WriteUInt8((uint8_t)profession->DescriptionIndex); //profession
+        Move(15);        //?
     }
 
-    WriteUInt32BE(clientFlag); //clientflag
-    WriteUInt32BE(0x00000001); //?
-    WriteUInt32BE(0x00000000); //logincount
-
     CProfession *profession = (CProfession *)g_ProfessionManager.Selected;
-    uint8_t val = (uint8_t)profession->DescriptionIndex;
-    WriteUInt8(val); //profession
-    Move(15);        //?
-
-    if (g_Config.ProtocolClientVersion < CV_4011D)
+    uint8_t val;
+    if (legacyCreateChar || g_Config.ProtocolClientVersion < CV_4011D)
     {
         val = (uint8_t)g_CreateCharacterManager.GetFemale();
     }
@@ -136,7 +157,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
         val = (val * 2) + (uint8_t)g_CreateCharacterManager.GetFemale();
     }
 
-    WriteUInt8(val);
+    WriteUInt8(val); // sex @70 on the legacy frame
     val = profession->Str;
     WriteUInt8(val);
     val = profession->Dex;
@@ -216,15 +237,27 @@ CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
         WriteUInt32BE(slot);
     }
     WriteDataBE(g_ConnectionManager.GetClientIP(), 4);
-    WriteUInt16BE(g_CreateCharacterManager.ShirtColor);
-    WriteUInt16BE(g_CreateCharacterManager.PantsColor);
+    if (!legacyCreateChar) // the 1997 frame ends at the client IP [97]
+    {
+        WriteUInt16BE(g_CreateCharacterManager.ShirtColor);
+        WriteUInt16BE(g_CreateCharacterManager.PantsColor);
+    }
 }
 
 CPacketDeleteCharacter::CPacketDeleteCharacter(int charIndex)
     : CPacket(39)
 {
     WriteUInt8(0x83);
-    Move(30); //character password
+    // Pre-2.0.0 wire: the delete-character frame carries the account password
+    // (zero-filled when shorter) where 2.0+ clients send 30 zero bytes.
+    if (g_Config.ProtocolClientVersion < CV_200)
+    {
+        WriteString(g_Config.Password, 30, false);
+    }
+    else
+    {
+        Move(30); //character password
+    }
     WriteUInt32BE(charIndex);
     WriteDataBE(g_ConnectionManager.GetClientIP(), 4);
 }
@@ -780,6 +813,13 @@ CPacketLogoutNotification::CPacketLogoutNotification()
 {
     WriteUInt8(0x01);
     WriteUInt32BE(0xFFFFFFFF);
+}
+
+CPacketResurrectChoice::CPacketResurrectChoice(uint8_t action)
+    : CPacket(2)
+{
+    WriteUInt8(0x2C);
+    WriteUInt8(action);
 }
 
 CPacketTextEntryDialogResponse::CPacketTextEntryDialogResponse(
@@ -1723,13 +1763,19 @@ CPacketResend::CPacketResend()
     WriteUInt8(0x22);
 }
 
+// Pre-1.25.36 clients send a 3-byte walk request {direction (bit 0x80 = run),
+// sequence} without the trailing fastwalk key.
 CPacketWalkRequest::CPacketWalkRequest(uint8_t direction, uint8_t sequence, int fastWalkKey)
-    : CPacket(7)
+    : CPacket(g_Config.ProtocolClientVersion < CV_12536 ? 3 : 7)
 {
     WriteUInt8(0x02);
     WriteUInt8(direction);
     WriteUInt8(sequence);
-    WriteUInt32BE(fastWalkKey);
+
+    if (g_Config.ProtocolClientVersion >= CV_12536)
+    {
+        WriteUInt32BE(fastWalkKey);
+    }
 }
 
 CPacketCustomHouseBackup::CPacketCustomHouseBackup()

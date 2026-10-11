@@ -82,6 +82,7 @@ protected:
 
     HANDLER_PACKET(LoginError);
     HANDLER_PACKET(ServerList);
+    HANDLER_PACKET(LegacyServerList);
     HANDLER_PACKET(RelayServer);
     HANDLER_PACKET(CharacterList);
     HANDLER_PACKET(ResendCharacterList);

@@ -22,6 +22,14 @@ void Init(bool is_login, uint8_t seed[4])
     }
     else
     {
+        if (g_Config.EncryptionType == ET_OLD_BFISH)
+        {
+            // Old clients derive the stream keys from the connection seed:
+            // the game socket re-seeds the same stream used on the login
+            // socket with the seed carried by the relay (0x8C) packet.
+            g_LoginCrypt.Init(seed);
+        }
+
         if (g_Config.EncryptionType != ET_NOCRYPT)
         {
             g_BlowfishCrypt.Init();
@@ -58,6 +66,13 @@ void Encrypt(bool is_login, uint8_t *src, uint8_t *dest, int size)
         {
             g_LoginCrypt.Encrypt(src, dest, size);
         }
+    }
+    else if (g_Config.EncryptionType == ET_OLD_BFISH)
+    {
+        // Old clients encrypt every post-seed C->S byte on the game socket
+        // with the same seed-keyed stream as the login socket; only the
+        // leading 4-byte seed travels in the clear.
+        g_LoginCrypt.Encrypt_Old(src, dest, size);
     }
     else if (g_Config.EncryptionType == ET_203)
     {

@@ -6,6 +6,7 @@
 #include "MainScreen.h"
 #include "../CrossUO.h"
 #include "../Globals.h"
+#include "../Network/Packets.h"
 #include "../ServerList.h"
 #include "../GameWindow.h"
 #include "../CharacterList.h"
@@ -118,6 +119,13 @@ void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
             g_Game.InitScreen(GS_DELETE);
             g_ConnectionScreen.SetType(CST_CHARACTER_LIST);
         }
+    }
+    else if (action == CCharacterListScreen::LogOut)
+    {
+        //Main Menu: notify the shard and return to the title screen with
+        //the connection dropped
+        CPacketDisconnect().Send();
+        g_Game.LogOut();
     }
 }
 

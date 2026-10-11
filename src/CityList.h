@@ -50,6 +50,13 @@ public:
     void AddCity(CCityItem *city) { m_CityList.push_back(city); }
     CCityItem *GetCity(int index);
     void Clear();
+
+    //!1.25.32 (1998): the start-location list the CityChoice scroll shows is
+    //!NOT server-driven - the original loads it from regions.mul at startup
+    //!(FUN_0046B1D0, and again from the 0x57 push). Fills the list when it
+    //!is still empty; falls back to the classic nine-city table when the
+    //!file is absent so the scroll is never empty. Returns the row count.
+    size_t LoadRegionsOrDefault();
 };
 
 extern CCityList g_CityList;
