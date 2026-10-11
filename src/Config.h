@@ -61,11 +61,24 @@ struct Config
     // true when the config file explicitly set the data product url
     // (ProductUrl=); not saved back
     bool DataProductUrlSet = false;
+
+    // command-line account credentials (--login/--password). Kept here
+    // because the web boot order builds the main screen (whose account and
+    // password entries CPacketFirstLogin reads) BEFORE ProcessCommandLine
+    // runs; the screen-init path consumes these directly
+    astr_t CliLogin;
+    astr_t CliPassword;
+    bool CliLoginSet = false;
 };
 
 bool LoadGlobalConfig();
 void SaveGlobalConfig();
 void ApplyClientVersionDefaults();
+void ApplyClientVersionOverride(
+    const astr_t &client_version, const astr_t &protocol_version, const astr_t &client_type);
+// prints the APPLIED version markers and everything derived from them (after
+// the command-line override)
+void LogClientVersionInfo();
 
 // Applies a launcher profile to the running client (embedded launcher):
 // persists the new state with SaveGlobalConfig() and mirrors it into the

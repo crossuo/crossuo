@@ -114,6 +114,24 @@ static bool InitCli(int argc, char *argv[])
     g_cli["shards-cfg"].type(po::string).description(
         "Use a local shards.cfg file for the launcher shard list (no network"
         " fetch: implies no GitHub fetch, a fully offline shard list)");
+    g_cli["clientversion"].type(po::string).description(
+        "client version to emulate (e.g. 1.25.32, 7.0.117.0) - overrides the"
+        " config file; drives cryptography, packet layout, client type and"
+        " verdata usage");
+    g_cli["protocolversion"].type(po::string).description(
+        "network protocol version when it differs from the client version");
+    g_cli["clienttype"].type(po::string).description(
+        "client data type: t2a,re,td,lbr,aos,se,sa,ml,ej (auto from the"
+        " client version by default)");
+    g_cli["crypt"].type(po::u32).description(
+        "force network cryptography (1 = the version-derived cipher,"
+        " 0 = plain); mirrors the launcher profile's Crypt option");
+    g_cli["packet-dump"]
+        .description(
+            "hex-dump every network packet (client -> server and"
+            " server -> client) to the log, with the account/password block"
+            " censored (SAFE_DEBUG_DUMP); also raises the log verbosity the"
+            " dump needs");
 
     g_cli["proxy-host"]
         .type(po::string)
@@ -369,6 +387,38 @@ bool load_config()
         g_Config.ShardName = g_cli["shard"].get().string;
     }
 
+    // ... and for the version markers (the web shell passes the shard
+    // profile's clientversion/protocolversion/clienttype here; there is no
+    // launcher to write a crossuo.cfg on that path). The profile's crypt
+    // option rides along, and so does autologin: UseCrypt gates the version
+    // ciphers (with it false the fixups pin the encryption to NOCRYPT
+    // regardless of the version) and AutoLogin drives the auto-CONNECT,
+    // whose decision point (MainScreen::Init via g_GameWindow.Create below)
+    // runs BEFORE ProcessCommandLine - both must be applied here, from the
+    // config-load stage
+    if (g_cli["crypt"].was_set())
+    {
+        g_Config.UseCrypt = g_cli["crypt"].get().u32 != 0;
+    }
+    if (g_cli["autologin"].was_set())
+    {
+        g_Config.AutoLogin = g_cli["autologin"].get().u32 != 0;
+    }
+    // account credentials: stashed for the screen-init path (see
+    // Config::CliLogin - the web boot builds the main screen before
+    // ProcessCommandLine reaches SetAccounting) and applied there
+    if (g_cli["login"].was_set())
+    {
+        g_Config.CliLogin = g_cli["login"].get().string;
+        g_Config.CliPassword = g_cli["password"].get().string;
+        g_Config.CliLoginSet = true;
+    }
+    ApplyClientVersionOverride(
+        g_cli["clientversion"].was_set() ? g_cli["clientversion"].get().string : astr_t(),
+        g_cli["protocolversion"].was_set() ? g_cli["protocolversion"].get().string : astr_t(),
+        g_cli["clienttype"].was_set() ? g_cli["clienttype"].get().string : astr_t());
+    LogClientVersionInfo();
+
     // a config whose data path carries a streamed (vfs-managed) install -
     // its cache/state marks it - keeps streaming into that directory: the
     // install may be partial (holes stream on demand), so plain mapping
@@ -400,19 +450,24 @@ bool load_config()
         }
         vfs_set_params(params);
         g_UOPath = fs_path_from(vfs_install_path());
-        if (!config_exists || !g_Config.ClientVersionModified)
+        // no (explicit) client version anywhere: assume the good defaults
+        // the streamed install runs with (latest client version, and
+        // everything derived from it - cryptography, client type, packet
+        // layout, view range). Only the modified marker decides: on the web
+        // there is no config file at all, and the CLI override above must
+        // survive this point
+        if (!g_Config.ClientVersionModified)
         {
-            // no (explicit) client version: assume the good defaults the
-            // streamed install runs with (latest client version, and
-            // everything derived from it - cryptography, client type,
-            // packet layout, view range)
             ApplyClientVersionDefaults();
         }
         uo_data_init(fs_path_ascii(g_UOPath), g_Config.ClientVersion, g_Config.UseVerdata);
         Info(Client, "\tStreaming Data Path: %s", fs_path_ascii(g_UOPath));
         // the streamed product is the modern uop distribution; a config
-        // pinned to a pre-uop client version cannot consume it
-        if (g_Config.ClientVersion < VERSION(7, 0, 0, 0))
+        // pinned to a pre-uop client version cannot consume it. An EXPLICIT
+        // product (--streaming-product, the shard deployment's own data) is
+        // the shard owner's vouch: their version stands, however old
+        if (!g_cli["streaming-product"].was_set() &&
+            g_Config.ClientVersion < VERSION(7, 0, 0, 0))
         {
             g_Config.ClientVersion = CV_LATEST;
             char str[32] = {};
@@ -545,6 +600,18 @@ bool load_config()
                     Client, "client will continue but errors may happen - please report any issue");
             }
         }
+    }
+
+    // non-streaming path: a plain (mapped) install. The data layer was never
+    // initialized above (uo_data_init lives in the streaming branch and used
+    // to be folded into LoadGlobalConfig); without it s_ClientVersion stays 0
+    // and UOFilePath() reads a stale/empty path, so CFileManager::Load() runs
+    // the mul fallback against the wrong directory and fails. Do it here, once
+    // g_UOPath and the (possibly auto-detected) client version are final.
+    const auto uopath = fs_path_ascii(g_UOPath);
+    if (uopath && uopath[0] && fs_path_exists(g_UOPath))
+    {
+        uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);
     }
 
     return true;
@@ -817,7 +884,20 @@ int main(int argc, char **argv)
     xuol::client_set_restart_args(argc, argv);
 #endif
 
-    LogInit(argc, argv, "crossuo.log");
+    // --packet-dump: enable the Network system and raise the stderr cutoff so
+    // the compiled-in hex dumps (DEBUG_DUMP/SAFE_DEBUG_DUMP in
+    // CPacketManager::OnPacket and CGame::ProcessPacket) actually print.
+    // The dump level is 2 (SAFE_*) / 1 (DEBUG_*); both need the system bit,
+    // and SAFE needs cutoff >= 2. g_LogEnabled is the runtime gate.
+    if (g_cli["packet-dump"].was_set())
+    {
+        g_LogEnabled = eLogSystem::LogSystemAll;
+        LogInit(argc, argv, "crossuo.log", 3);
+    }
+    else
+    {
+        LogInit(argc, argv, "crossuo.log");
+    }
 
     if (SDL_Init(SDL_INIT_TIMER) < 0)
     {

@@ -91,7 +91,19 @@ int CBaseScreen::DrawSmoothMonitor()
 {
     if ((g_ScreenEffectManager.Process() != 0) && (SmoothScreenAction != 0u))
     {
-        ProcessSmoothAction();
+        // Consume the queued action BEFORE dispatching it. The action handler
+        // may call InitScreen (CGame::Connect -> InitScreen(GS_MAIN_CONNECT)),
+        // but that screen swap - and therefore the SmoothScreenAction = 0 in
+        // the new screen's Init() - only lands after this frame. Without
+        // clearing here, every frame that still reports effect progress
+        // re-enters this branch and re-fires the SAME action: on the web boot
+        // that meant CGame::Connect() ran twice, dialing the login server a
+        // second time (the double /ws bridge) and tearing down the connection
+        // carrying the in-flight 0x8C relay handshake. Native's frame pacing
+        // usually hides it, the web boot does not.
+        const uint8_t action = SmoothScreenAction;
+        SmoothScreenAction = 0;
+        ProcessSmoothAction(action);
         Render_SwapBuffers();
         g_ScreenshotBuilder.GPUDataReady();
         return 1;

@@ -89,8 +89,19 @@ extern fatalErrorCb g_fatalErrorCb;
 #define TRACE(...)
 #define DEBUG(...)
 #define TRACE_DUMP(...)
+// The packet hex dumps stay COMPILED IN for the emscripten build even in
+// Release: the web client is diagnosed from its console log, and the only
+// way to see packet flow there is these dumps. The runtime gate is
+// g_LogEnabled (a build with logging stripped still costs nothing, and the
+// callers guard on it via --packet-dump). Native release keeps them compiled
+// out.
+#if defined(XUO_EMSC)
+#define DEBUG_DUMP(system, ...) LOG_DUMP_(system, 1, __VA_ARGS__)
+#define SAFE_DEBUG_DUMP(system, ...) LOG_DUMP_(system, 2, __VA_ARGS__)
+#else
 #define DEBUG_DUMP(...)
 #define SAFE_DEBUG_DUMP(...)
+#endif
 #endif
 
 #else
@@ -109,4 +120,6 @@ extern fatalErrorCb g_fatalErrorCb;
 #endif
 
 void LogHexBuffer(eLogSystem system, int level, const char *title, uint8_t *buf, int size);
-void LogInit(int argc, char *argv[], const char *filename);
+// `verbosity` raises loguru's stderr cutoff (default 1); level 2+ lets the
+// hex packet dumps (SAFE_DEBUG_DUMP) through when their system is enabled
+void LogInit(int argc, char *argv[], const char *filename, int verbosity = 1);

@@ -83,6 +83,7 @@ void CConnectionManager::Init()
     m_GameSocket.Init();
 
     m_IsLoginSocket = true;
+    m_LoginHandoff = false;
     const auto localIp = socket_localaddress();
     m_Seed[0] = static_cast<unsigned char>((localIp >> 24) & 0xff);
     m_Seed[1] = static_cast<unsigned char>((localIp >> 16) & 0xff);
@@ -196,6 +197,11 @@ bool CConnectionManager::Connect(const astr_t &address, int port, uint8_t *gameS
         SendIP(m_GameSocket, gameSeed);
     }
 
+    // the login socket is closed because the relay handed us off to the game
+    // server, NOT because the connection was lost: flag it so Recv() does not
+    // report CST_CONLOST and bounce the client back to the main screen (which
+    // would re-run the login)
+    m_LoginHandoff = true;
     m_LoginSocket.Disconnect();
     return result;
 }
@@ -226,6 +232,14 @@ void CConnectionManager::Recv()
         {
             if (m_LoginSocket.DataReady == -1)
             {
+                if (m_LoginHandoff)
+                {
+                    // the login socket was closed on purpose by the relay
+                    // handoff - not a connection loss. Swallow it and let the
+                    // game socket take over (Recv()'s next call sees the game
+                    // phase); reporting CONLOST here re-runs the whole login.
+                    return;
+                }
                 Info(Network, "Failed to Recv()...Disconnecting...");
                 g_Game.InitScreen(GS_MAIN_CONNECT);
                 g_ConnectionScreen.SetType(CST_CONLOST);
@@ -306,7 +320,17 @@ int CConnectionManager::Send(uint8_t *buf, int size)
         }
     }
 
-    if (m_IsLoginSocket)
+    // socket routing: m_IsLoginSocket is the phase flag (Init()/Init(seed)
+    // flip it), but it goes stale between the relay (0x8C) handoff and the
+    // actual game-socket connect - and the 0xA0 server pick is sent right in
+    // that window. Decide by socket LIVENESS first: a live login socket wins,
+    // so the pick reaches the server instead of being dropped by a
+    // disconnected login socket (the web boot is slower than native and hits
+    // the gap reliably). m_IsLoginSocket still guards the both-dead case so
+    // a not-yet-connected game socket cannot swallow a login packet.
+    const bool useLogin = m_LoginSocket.Connected ||
+                          (!m_GameSocket.Connected && m_IsLoginSocket);
+    if (useLogin)
     {
         if (!m_LoginSocket.Connected)
         {

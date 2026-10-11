@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
+#include "Config.h"
 #include "Target.h"
 #include "Point.h"
 #include "Renderer/RenderTexture.h"  // CRenderTexture globals defined below
@@ -32,18 +33,25 @@ DebugContext g_DebugContext;
 // fixed harness behavior: second server, second character).
 bool TestAutoLogin()
 {
-    static const bool autoLogin = getenv("XUO_AUTO_LOGIN") != nullptr;
+    // the test harness env (XUO_AUTO_LOGIN) and the --autologin flag share
+    // the auto-connect: the flag's documented meaning ("1 to log in
+    // automatically") is the whole flow - connect, then auto-select the
+    // first server and the first character (the env form keeps its 1-based
+    // position list for the render harness)
+    static const bool autoLogin = getenv("XUO_AUTO_LOGIN") != nullptr || g_Config.AutoLogin;
     return autoLogin;
 }
 
 // parses the <which>'th (0-based) comma-separated position out of
-// XUO_AUTO_LOGIN="server,character"; missing/invalid parts fall back to 2
+// XUO_AUTO_LOGIN="server,character"; missing/invalid parts fall back to the
+// first entry (the env harness passes explicit positions when it wants
+// others)
 static int AutoLoginPosition(int which)
 {
     static const char *value = getenv("XUO_AUTO_LOGIN");
     if (value == nullptr || value[0] == '\0')
     {
-        return 2;
+        return 1;
     }
 
     const char *part = value;
@@ -52,13 +60,13 @@ static int AutoLoginPosition(int which)
         part = strchr(part, ',');
         if (part == nullptr)
         {
-            return 2;
+            return 1;
         }
         part++;
     }
 
     const int position = atoi(part);
-    return (position >= 1) ? position : 2;
+    return (position >= 1) ? position : 1;
 }
 
 int TestAutoLoginServer()

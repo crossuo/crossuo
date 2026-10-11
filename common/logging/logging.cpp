@@ -39,9 +39,9 @@ const char *log_system_name(int sys)
     return "Unknown";
 }
 
-void LogInit(int argc, char *argv[], const char *filename)
+void LogInit(int argc, char *argv[], const char *filename, int verbosity)
 {
-    loguru::g_stderr_verbosity = 1;
+    loguru::g_stderr_verbosity = verbosity;
     loguru::init(argc, argv);
     loguru::add_file(filename, loguru::Truncate, loguru::Verbosity_INFO);
     loguru::g_preamble_date = false;

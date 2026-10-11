@@ -906,6 +906,13 @@
             });
           }
           if (extraArgs) args.push.apply(args, extraArgs);
+          // ?diag=1 turns on the client's hex packet dump too
+          // (--packet-dump): every network packet, both directions, with the
+          // account/password block censored. Diagnostics must not fight the
+          // locked deployment, so it is a plain appended flag (never a login
+          // override) and the query passthrough cannot set it twice - popts
+          // keeps the last value and this one is last
+          if (params.get('diag') === '1') args.push('--packet-dump');
           if (!lockedMode) {
             // shard address override for the ws proxy (testing): maps to the
             // client's login-server override flags (LoadLogin consults them)

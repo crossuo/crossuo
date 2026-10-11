@@ -55,13 +55,43 @@
 //!    shard address is supplied by the client (the login server list), so
 //!    any shard works.
 //!
+//! 4. Local data mounts at `/data/<name>/<path>`: a shard owner keeps the
+//!    ORIGINAL client install on the proxy host. Two ways to mount:
+//!    `--data <name>=<dir>` (repeatable - one mount per shard, so hub
+//!    deployments expose many), and shards.cfg entries whose installer
+//!    points at a server-side folder, `Installer=local:<path>` (absolute,
+//!    or relative to the dist tree). Those are auto-mounted under a name
+//!    derived from the shard's own Name, and the served shards.cfg carries
+//!    the same-origin product url in the installer field, so any deployment
+//!    exposing local folders needs no flags beyond --dist. A remote CDN url
+//!    keeps working unchanged.
+//!
+//!    A mount speaks MythicMFT: when the folder has no manifest on disk, the
+//!    proxy SYNTHESIZES a MYP product for it - a generated product manifest
+//!    (served at the `<root>patchlist` url the client always requests, and
+//!    dispatched on content like the official one), one generated
+//!    `base/pkg.mft` sub-manifest listing the walk of the folder (the same
+//!    UO-data file filter the client applies), and loose-file blobs at
+//!    `base/unpacked/<name hash>` (lookup3 of the lowercased name, the exact
+//!    resource scheme the official servers use). Entries are stored (ct=0);
+//!    big .uop files refine into ranged block assets client-side. The
+//!    generated product carries a content fingerprint as its serial, so a
+//!    changed folder re-plans the client on the next boot. An EXISTING
+//!    manifest on disk (a real aops mirror's patchlist/patchcfg, say) is
+//!    always served byte-identical instead - no synthesis, no rewriting.
+//!    Data files serve whole (streamed) and ranged (206), case-insensitively
+//!    on the last path component (the client requests lowercased basenames;
+//!    legacy installs ship `ART.MUL`-style names). Blob windows
+//!    (`/blob/...?u=/data/...`) read straight off the mounted file - local
+//!    disk needs no second cache.
+//!
 //! Usage:
 //! ```text
 //! xuoproxy [--listen 127.0.0.1:8777] [--dist dist/wasm]
 //!          [--cache-dir xuoproxy-cache] [--cache-ttl <secs>] [--no-cache]
 //!          [--manifest-ttl <secs>] [--upstream-timeout <secs>]
 //!          [--manifest-upstream <url>] [--files-upstream <url>]
-//!          [--aops-upstream <url>]
+//!          [--aops-upstream <url>] [--data <name>=<dir>]...
 //! ```
 //!
 //! `--upstream-timeout <secs>` (default 300) bounds how long the proxy waits
@@ -78,9 +108,9 @@
 
 mod normalize;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use axum::extract::{ws::WebSocket, DefaultBodyLimit, Path, RawQuery, State, WebSocketUpgrade};
 use axum::http::{header, HeaderMap, StatusCode};
@@ -89,7 +119,7 @@ use axum::routing::get;
 use axum::Router;
 use futures_util::{SinkExt, StreamExt};
 use sha2::{Digest, Sha256};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 
 static PKG_RE: OnceLock<regex::Regex> = OnceLock::new();
 static MANIFEST_N_RE: OnceLock<regex::Regex> = OnceLock::new();
@@ -162,6 +192,8 @@ async fn main() {
         String::from("http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files");
     let mut upstream_aops =
         String::from("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo");
+    let data_dirs: Arc<Mutex<HashMap<String, PathBuf>>> =
+        Arc::new(Mutex::new(HashMap::new()));
 
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
@@ -195,6 +227,32 @@ async fn main() {
             upstream_files = v;
         } else if let Some(v) = value("--aops-upstream") {
             upstream_aops = v;
+        } else if let Some(v) = value("--data") {
+            // repeatable named mount: --data <name>=<dir> serves <dir> at
+            // /data/<name>/... (a shard's local install; shards.cfg points
+            // its installer= at the mount name)
+            let Some((name, dir)) = v.split_once('=') else {
+                eprintln!("--data expects <name>=<dir>, got: {v}");
+                std::process::exit(2);
+            };
+            let name = name.trim();
+            if name.is_empty()
+                || !name
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+            {
+                eprintln!("--data mount name must be [A-Za-z0-9_-]+, got: {name}");
+                std::process::exit(2);
+            }
+            if data_dirs
+                .lock()
+                .expect("data mounts")
+                .insert(name.to_string(), PathBuf::from(dir.trim()))
+                .is_some()
+            {
+                eprintln!("--data mount redefined: {name}");
+                std::process::exit(2);
+            }
         } else {
             eprintln!("unknown argument: {arg}");
             eprintln!("see --help");
@@ -212,6 +270,7 @@ async fn main() {
         upstream_files: upstream_files.trim_end_matches('/').to_string(),
         upstream_aops: upstream_aops.trim_end_matches('/').to_string(),
         upstream_timeout,
+        data_dirs: data_dirs.clone(),
         http: reqwest::Client::builder()
             .connect_timeout(std::time::Duration::from_secs(30))
             // idle/read-progress budget for upstream connections: this is
@@ -254,6 +313,7 @@ async fn main() {
         .route("/blob/:offset/:size", get(blob_window_open))
         .route("/stream/*url", get(stream_proxy))
         .route("/ws/:host/:port", get(ws_shard))
+        .route("/data/:name/*path", get(data_file))
         .fallback(static_file)
         .layer(axum::middleware::from_fn(coop_coep))
         .layer(axum::middleware::from_fn(log_requests))
@@ -281,6 +341,24 @@ async fn main() {
     );
     println!("  upstream: read-timeout {upstream_timeout}s (idle/read-progress)");
     println!("  bridge: /ws/<host>/<port>");
+    {
+        let mounts = data_dirs.lock().expect("data mounts");
+        if mounts.is_empty() {
+            println!("  data:   no local mounts (--data <name>=<dir>; shards.cfg Installer=local:<path> auto-mounts too)");
+        } else {
+            let mut names: Vec<_> = mounts.iter().collect();
+            names.sort_by(|a, b| a.0.cmp(b.0));
+            println!(
+                "  data:   /data/<name>/ with {} mount(s): {}",
+                names.len(),
+                names
+                    .iter()
+                    .map(|(n, d)| format!("{n} -> {}", d.display()))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+        }
+    }
     println!(
         "  fresh:  manifests revalidate upstream every request (manifest-ttl {}s; conditional GET + content invalidation on change)",
         manifest_ttl
@@ -431,6 +509,11 @@ struct AppState {
     upstream_files: String,
     upstream_aops: String,
     upstream_timeout: u64,
+    // local data mounts (/data/<name>/...): explicit --data mounts plus the
+    // shards.cfg `Installer=local:<path>` auto-mounts (shared because the
+    // registry grows lazily when shards.cfg is served or an unknown mount is
+    // resolved)
+    data_dirs: Arc<Mutex<HashMap<String, PathBuf>>>,
     http: reqwest::Client,
 }
 
@@ -1778,6 +1861,10 @@ fn resolve_resource_url(state: &AppState, reference: &str) -> Option<String> {
         (t, &state.upstream_manifest)
     } else if let Some(t) = rest.strip_prefix("patch/eamythic/") {
         (t, &state.upstream_aops)
+    } else if let Some(t) = rest.strip_prefix("data/") {
+        // local data mounts: the reference IS the resource (proxy-relative);
+        // decoded once like the /stream lane, resolved against the mounts
+        return Some(format!("/data/{}", percent_decode(t)));
     } else {
         let t = rest.strip_prefix("stream/")?;
         let url = percent_decode(t);
@@ -1795,6 +1882,12 @@ async fn blob_window_serve(
     offset: u64,
     size: u64,
 ) -> Response {
+    // /data references bypass the whole cache machinery: the source is the
+    // local mount, windows pread straight off the file
+    if url.starts_with("/data/") {
+        return data_blob_window(&state, &headers, &url, offset, size).await;
+    }
+
     // usize windows (saturating on 32-bit targets)
     let start = offset.min(usize::MAX as u64) as usize;
     let end_in = offset
@@ -2839,6 +2932,1048 @@ async fn bridge(socket: WebSocket, host: String, port: u16) {
 }
 
 // ---------------------------------------------------------------------------
+// /data/<name>/<path>: local data mounts (shard-owned UO installs)
+// ---------------------------------------------------------------------------
+
+// files up to this size are read whole, which doubles as the aops flavor
+// sniff (patchlist/patchcfg bodies need in-memory rewriting); anything
+// bigger is a data payload and streams straight from disk
+const DATA_INLINE_MAX: u64 = 1024 * 1024;
+// in-memory cap for one ranged read; bigger ranges stream from the seeked
+// file instead of materializing
+const DATA_WINDOW_MAX: u64 = 8 * 1024 * 1024;
+// synthesis walk limits: a mount is one shard's install, not a filesystem
+const DATA_WALK_MAX_FILES: usize = 65536;
+const DATA_WALK_MAX_DEPTH: usize = 8;
+
+fn data_dir_of(state: &AppState, name: &str) -> Option<PathBuf> {
+    if name.is_empty()
+        || !name
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    {
+        return None;
+    }
+    state.data_dirs.lock().expect("data mounts").get(name).cloned()
+}
+
+// the client appends cache-busting query tokens to resource references
+// the client appends cache-busting query tokens to resource references
+// ("?xuo=<offset>", rewritten-manifest "?v=<token>"); a filesystem path ends
+// at the first such token
+fn data_strip_client_params(tail: &str) -> &str {
+    let mut cut = tail.len();
+    for pat in ["?xuo=", "&xuo=", "?v=", "&v="] {
+        if let Some(at) = tail.find(pat) {
+            cut = cut.min(at);
+        }
+    }
+    &tail[..cut]
+}
+
+// resolve a request tail against a mount root: component-wise join under a
+// strict grammar (no traversal, no backslashes - the wire format uses them
+// as separators, never as name bytes) with a case-insensitive fallback for
+// the LAST component: the client requests lowercased basenames (the plan
+// lowercases on install) while legacy installs ship "ART.MUL"-style names
+async fn data_resolve(base: &std::path::Path, tail: &str) -> Option<PathBuf> {
+    let comps: Vec<&str> = tail.split('/').filter(|c| !c.is_empty() && *c != ".").collect();
+    let last = comps.len().checked_sub(1)?;
+    let mut cur = base.to_path_buf();
+    for (i, comp) in comps.iter().enumerate() {
+        if *comp == ".." || comp.contains('\\') || comp.contains('\0') {
+            return None;
+        }
+        let candidate = cur.join(comp);
+        if tokio::fs::metadata(&candidate).await.is_ok() {
+            cur = candidate;
+            continue;
+        }
+        if i == last {
+            let mut matched: Option<PathBuf> = None;
+            if let Ok(mut rd) = tokio::fs::read_dir(&cur).await {
+                let want = comp.to_ascii_lowercase();
+                while let Ok(Some(entry)) = rd.next_entry().await {
+                    if entry.file_name().to_string_lossy().to_ascii_lowercase() == want {
+                        matched = Some(cur.join(entry.file_name()));
+                        break;
+                    }
+                }
+            }
+            if let Some(p) = matched {
+                cur = p;
+                continue;
+            }
+        }
+        return None;
+    }
+    Some(cur)
+}
+
+// cheap validator for local bodies: content is served from the owner's disk,
+// so the etag rides on (size, mtime) - no whole-file read per request
+fn data_etag(len: u64, mtime: Option<(u64, u32)>) -> String {
+    let (secs, nanos) = mtime.unwrap_or((0, 0));
+    format!(
+        "\"{:016x}\"",
+        fnv1a64(format!("data:{len}:{secs}:{nanos}").as_bytes())
+    )
+}
+
+async fn data_mtime(meta: &std::fs::Metadata) -> Option<(u64, u32)> {
+    meta.modified()
+        .ok()?
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .map(|d| (d.as_secs(), d.subsec_nanos()))
+}
+
+// single-range parser: "bytes=start-end" (inclusive), "bytes=start-" and
+// "bytes=-suffix"; returns the inclusive (start, end) clamped to the file.
+// None when malformed or unsatisfiable (the caller then serves the whole
+// body or a 416 - the client only ever sends one explicit range)
+fn data_parse_range(headers: &HeaderMap, len: u64) -> Option<(u64, u64)> {
+    let spec = headers.get(header::RANGE)?.to_str().ok()?;
+    let spec = spec.trim().strip_prefix("bytes=")?;
+    let (start_s, end_s) = spec.trim().split_once('-')?;
+    if start_s.is_empty() {
+        let suffix: u64 = end_s.trim().parse().ok()?;
+        if suffix == 0 || len == 0 {
+            return None;
+        }
+        return Some((len.saturating_sub(suffix), len - 1));
+    }
+    let start: u64 = start_s.trim().parse().ok()?;
+    let end = if end_s.is_empty() {
+        len.checked_sub(1)?
+    } else {
+        end_s.trim().parse::<u64>().ok()?.min(len.saturating_sub(1))
+    };
+    if start > end || start >= len {
+        return None;
+    }
+    Some((start, end))
+}
+
+// disk-backed streaming body: 256 KiB chunks via unfold, so whole-file reads
+// of multi-GB .uop/.mul payloads never materialize in memory
+fn data_stream(file: tokio::fs::File, remaining: u64) -> axum::body::Body {
+    axum::body::Body::from_stream(futures_util::stream::unfold(
+        (file, remaining),
+        |(mut file, mut remaining)| async move {
+            if remaining == 0 {
+                return None;
+            }
+            let want = usize::try_from(remaining.min(256 * 1024)).unwrap_or(256 * 1024);
+            let mut buf = vec![0u8; want];
+            match file.read(&mut buf).await {
+                Ok(0) | Err(_) => None,
+                Ok(n) => {
+                    remaining -= n as u64;
+                    buf.truncate(n);
+                    Some((
+                        Ok::<_, std::io::Error>(axum::body::Bytes::from(buf)),
+                        (file, remaining),
+                    ))
+                }
+            }
+        },
+    ))
+}
+
+// the UO data filter, ported from vfs_source_aops.cpp (vfs_aops_filter_accept
+// and its tables): what a client install is made of. The generated MythicMFT
+// manifest is the only filter the client sees on this lane, so the tables
+// must stay in lockstep with the client's own notion of UO data.
+const DATA_EXT: [&str; 6] = [".mul", ".idx", ".uop", ".def", ".bin", ".iff"];
+const DATA_LANG_STEMS: [&str; 15] = [
+    "cliloc.",
+    "skilname.",
+    "skill16.",
+    "skill30.",
+    "chat.",
+    "gesture.",
+    "intloc",
+    "intro.",
+    "options.",
+    "optnuotd.",
+    "optuotd.",
+    "professn.",
+    "tilehelp.",
+    "tooltips.",
+    "gt_",
+];
+const DATA_LANGS: [&str; 8] = [".cht", ".chs", ".deu", ".enu", ".esp", ".fra", ".jpn", ".kor"];
+const DATA_NAMES: [&str; 28] = [
+    "arttable.cfg",
+    "blueprints.tbp",
+    "conf_ignore.lst",
+    "credits.dat",
+    "default.mac",
+    "doors.txt",
+    "floors.txt",
+    "gamegen.txt",
+    "helpindx.dat",
+    "ignore.lst",
+    "keynames.txt",
+    "langcode.iff",
+    "macros.txt",
+    "macros2d.txt",
+    "misc.txt",
+    "mobtypes.txt",
+    "multimap.rle",
+    "obscene.lst",
+    "prof.txt",
+    "roof.txt",
+    "stairs.txt",
+    "teleprts.txt",
+    "tile1024.txt",
+    "tile256.txt",
+    "uobscene.lst",
+    "version.dat",
+    "version.txt",
+    "walls.txt",
+];
+
+fn data_has_suffix(lower: &str, exts: &[&str]) -> bool {
+    exts.iter()
+        .any(|e| lower.len() > e.len() && lower.ends_with(e))
+}
+
+fn data_filter_accept(base_lower: &str) -> bool {
+    if base_lower.is_empty() {
+        return false;
+    }
+    if data_has_suffix(base_lower, &DATA_EXT) {
+        return true;
+    }
+    if data_has_suffix(base_lower, &DATA_LANGS) {
+        return DATA_LANG_STEMS.iter().any(|s| base_lower.starts_with(s));
+    }
+    DATA_NAMES.contains(&base_lower)
+}
+
+struct DataEntry {
+    rel: String, // '/'-separated, original directory case, lowercased basename
+    len: u64,
+    mtime: Option<(u64, u32)>,
+}
+
+async fn data_walk(dir: &std::path::Path, rel: &str, out: &mut Vec<DataEntry>, depth: usize) {
+    if depth > DATA_WALK_MAX_DEPTH || out.len() >= DATA_WALK_MAX_FILES {
+        return;
+    }
+    let Ok(mut rd) = tokio::fs::read_dir(dir).await else {
+        return;
+    };
+    while let Ok(Some(entry)) = rd.next_entry().await {
+        // symlinks are skipped outright: no loops, no escaping the mount
+        let Ok(ft) = entry.file_type().await else {
+            continue;
+        };
+        if ft.is_symlink() {
+            continue;
+        }
+        let fname = entry.file_name().to_string_lossy().to_string();
+        let child_rel = if rel.is_empty() {
+            fname.clone()
+        } else {
+            format!("{rel}/{fname}")
+        };
+        if ft.is_dir() {
+            Box::pin(data_walk(&dir.join(&fname), &child_rel, out, depth + 1)).await;
+            continue;
+        }
+        if !data_filter_accept(&fname.to_ascii_lowercase()) {
+            continue;
+        }
+        let Ok(meta) = entry.metadata().await else {
+            continue;
+        };
+        if !meta.is_file() {
+            continue;
+        }
+        if out.len() >= DATA_WALK_MAX_FILES {
+            return;
+        }
+        // the wire relpath's basename is emitted LOWERCASED because that is
+        // exactly the url the client will request (vfs_source_aops.cpp
+        // lowercases before building the remote path); the file route's
+        // case-insensitive last-component fallback bridges the difference to
+        // the on-disk name
+        let lowered = match child_rel.rfind('/') {
+            Some(at) => format!("{}{}", &child_rel[..at + 1], child_rel[at + 1..].to_ascii_lowercase()),
+            None => child_rel.to_ascii_lowercase(),
+        };
+        out.push(DataEntry {
+            rel: lowered,
+            len: meta.len(),
+            mtime: data_mtime(&meta).await,
+        });
+    }
+}
+
+// lookup3 hashlittle2 (Bob Jenkins), the byte-at-a-time path - the client
+// derives every MythicMFT loose-file resource name from it:
+// mft_entry_remote_name hashlittle2()s the LOWERCASED file name with the
+// entry's ph/sh as seeds (absent attributes parse as 0) and fetches
+// "<rpath>/unpacked/<%08x%08x of ph,sh>". Ported verbatim (external/lookup3.h)
+// so the names this proxy generates and serves match what the client requests.
+fn lookup3_hashlittle2(key: &[u8], pc: u32, pb: u32) -> (u32, u32) {
+    #[inline]
+    fn rot(x: u32, k: u32) -> u32 {
+        x.rotate_left(k)
+    }
+    macro_rules! mix {
+        ($a:expr, $b:expr, $c:expr) => {{
+            $a = $a.wrapping_sub($c);
+            $a ^= rot($c, 4);
+            $c = $c.wrapping_add($b);
+            $b = $b.wrapping_sub($a);
+            $b ^= rot($a, 6);
+            $a = $a.wrapping_add($c);
+            $c = $c.wrapping_sub($b);
+            $c ^= rot($b, 8);
+            $b = $b.wrapping_add($a);
+            $a = $a.wrapping_sub($c);
+            $a ^= rot($c, 16);
+            $c = $c.wrapping_add($b);
+            $b = $b.wrapping_sub($a);
+            $b ^= rot($a, 19);
+            $a = $a.wrapping_add($c);
+            $c = $c.wrapping_sub($b);
+            $c ^= rot($b, 4);
+            $b = $b.wrapping_add($a);
+        }};
+    }
+    macro_rules! hash_final {
+        ($a:expr, $b:expr, $c:expr) => {{
+            $c ^= $b;
+            $c = $c.wrapping_sub(rot($b, 14));
+            $a ^= $c;
+            $a = $a.wrapping_sub(rot($c, 11));
+            $b ^= $a;
+            $b = $b.wrapping_sub(rot($a, 25));
+            $c ^= $b;
+            $c = $c.wrapping_sub(rot($b, 16));
+            $a ^= $c;
+            $a = $a.wrapping_sub(rot($c, 4));
+            $b ^= $a;
+            $b = $b.wrapping_sub(rot($a, 14));
+            $c ^= $b;
+            $c = $c.wrapping_sub(rot($b, 24));
+        }};
+    }
+
+    let mut len = key.len();
+    let a = 0xdeadbeefu32.wrapping_add(len as u32).wrapping_add(pc);
+    let mut a = a;
+    let mut b = a;
+    let mut c = a.wrapping_add(pb);
+
+    let mut k = key;
+    while len > 12 {
+        a = a.wrapping_add(u32::from_le_bytes([k[0], k[1], k[2], k[3]]));
+        b = b.wrapping_add(u32::from_le_bytes([k[4], k[5], k[6], k[7]]));
+        c = c.wrapping_add(u32::from_le_bytes([k[8], k[9], k[10], k[11]]));
+        mix!(a, b, c);
+        len -= 12;
+        k = &k[12..];
+    }
+    // the last block: the switch's fall-through chain adds the remaining
+    // bytes little-endian across a/b/c (len == 0 returns without mixing)
+    if len > 0 {
+        if len >= 4 {
+            a = a.wrapping_add(u32::from_le_bytes([k[0], k[1], k[2], k[3]]));
+        } else {
+            let mut v = 0u32;
+            for (i, byte) in k[..len].iter().enumerate() {
+                v |= u32::from(*byte) << (8 * i);
+            }
+            a = a.wrapping_add(v);
+        }
+        if len > 4 {
+            if len >= 8 {
+                b = b.wrapping_add(u32::from_le_bytes([k[4], k[5], k[6], k[7]]));
+            } else {
+                let mut v = 0u32;
+                for (i, byte) in k[4..len].iter().enumerate() {
+                    v |= u32::from(*byte) << (8 * i);
+                }
+                b = b.wrapping_add(v);
+            }
+        }
+        if len > 8 {
+            if len >= 12 {
+                c = c.wrapping_add(u32::from_le_bytes([k[8], k[9], k[10], k[11]]));
+            } else {
+                let mut v = 0u32;
+                for (i, byte) in k[8..len].iter().enumerate() {
+                    v |= u32::from(*byte) << (8 * i);
+                }
+                c = c.wrapping_add(v);
+            }
+        }
+        hash_final!(a, b, c);
+    }
+    (c, b)
+}
+
+// the resource name of a loose file: "%08x%08x" of hashlittle2(lowercase name)
+// seeded with the entry's (absent => zero) ph/sh
+fn data_blob_name(name_lower: &str) -> String {
+    let (ph, sh) = lookup3_hashlittle2(name_lower.as_bytes(), 0, 0);
+    format!("{ph:08x}{sh:08x}")
+}
+
+// ---------------------------------------------------------------------------
+// the generated product: a raw install folder is presented to the client as a
+// first-class MythicMFT product, built on the fly and cached
+//
+// The client's --streaming-product always lands on "<root>patchlist" (Main.cpp
+// vfs_aops_product_url) and the product ladder dispatches on CONTENT
+// (vfs_manifest_build), so the generated product manifest is served at
+// /data/<mount>/patchlist and plans through the exact same MythicMFT path as
+// the official CDN: the product references one sub-manifest
+// (base/pkg.mft, rpath "base" - the top level cannot carry <files>, the plan
+// build skips entries whose remote_path is null and only packages confer one),
+// whose loose files fetch from <filerepos>/base/unpacked/<name hash>.
+// Every entry is stored (ct=0): the mount serves raw bytes, big .uop files
+// refine into block-range assets via ranged reads after the plan walks them.
+// ---------------------------------------------------------------------------
+
+struct DataProduct {
+    // content fingerprint of the listing: the product serial, so a changed
+    // folder bumps the client's plan drift on the next boot
+    serial: u64,
+    product: Vec<u8>,
+    pkg: Vec<u8>,
+    // name hash -> file on disk
+    blobs: HashMap<String, PathBuf>,
+}
+
+static DATA_PRODUCTS: OnceLock<Mutex<HashMap<String, Arc<DataProduct>>>> = OnceLock::new();
+
+fn data_products() -> &'static Mutex<HashMap<String, Arc<DataProduct>>> {
+    DATA_PRODUCTS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn xml_escape(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for c in text.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&apos;"),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+// the walk is also the cache key: relpath + size + mtime fingerprint
+// (FNV-1a 64 continuation over the whole listing, same constants as fnv1a64)
+fn data_listing_serial(entries: &[DataEntry]) -> u64 {
+    let mut hash = 0xcbf29ce484222325u64;
+    let step = |hash: &mut u64, bytes: &[u8]| {
+        for byte in bytes {
+            *hash ^= u64::from(*byte);
+            *hash = hash.wrapping_mul(0x100000001b3);
+        }
+    };
+    for entry in entries {
+        step(&mut hash, entry.rel.as_bytes());
+        step(&mut hash, &entry.len.to_le_bytes());
+        step(&mut hash, &entry.mtime.unwrap_or((0, 0)).0.to_le_bytes());
+    }
+    hash
+}
+
+async fn data_build_product(name: &str, base: PathBuf) -> Option<Arc<DataProduct>> {
+    let mut entries: Vec<DataEntry> = Vec::new();
+    data_walk(&base, "", &mut entries, 0).await;
+    entries.sort_by(|a, b| a.rel.cmp(&b.rel));
+    // one entry per lowercased basename (the install name is flat), keeping
+    // the entry whose on-disk name is ALREADY lowercase: n names the install
+    // file and the blob tail derives from it
+    let mut seen: HashSet<String> = HashSet::new();
+    let mut chosen: Vec<DataEntry> = Vec::new();
+    for entry in entries {
+        let basename = entry.rel.rsplit('/').next().unwrap_or(&entry.rel).to_string();
+        if !seen.insert(basename.clone()) {
+            if entry.rel == entry.rel.to_lowercase() {
+                if let Some(slot) = chosen
+                    .iter_mut()
+                    .find(|e| e.rel.rsplit('/').next() == Some(basename.as_str()))
+                {
+                    *slot = entry;
+                }
+            }
+            continue;
+        }
+        chosen.push(entry);
+    }
+    if chosen.is_empty() {
+        return None;
+    }
+    let serial = data_listing_serial(&chosen);
+
+    let mut blobs: HashMap<String, PathBuf> = HashMap::with_capacity(chosen.len());
+    let mut files_xml = String::with_capacity(chosen.len() * 96);
+    let mut max_mtime = 0u64;
+    for entry in &chosen {
+        let basename = entry.rel.rsplit('/').next().unwrap_or(&entry.rel);
+        let blob = data_blob_name(basename);
+        // the wire relpath carries the lowercased basename; resolve the REAL
+        // on-disk path (the case-insensitive last-component fallback bridges
+        // legacy installs like ART.MUL)
+        let real = match data_resolve(&base, &entry.rel).await {
+            Some(real) => real,
+            None => base.join(&entry.rel),
+        };
+        blobs.insert(blob.clone(), real);
+        let (secs, _) = entry.mtime.unwrap_or((0, 0));
+        max_mtime = max_mtime.max(secs);
+        files_xml.push_str(&format!(
+            "            <f n=\"{}\" ul=\"{:x}\" ct=\"0\" cl=\"{:x}\" t=\"{:x}\" rh=\"0\" />\r\n",
+            xml_escape(basename),
+            entry.len,
+            entry.len,
+            secs
+        ));
+    }
+
+    let pkg = format!(
+        "<MythicMFT>\r\n    <manifest>\r\n        <files>\r\n{}        </files>\r\n    </manifest>\r\n</MythicMFT>\r\n",
+        files_xml
+    );
+    let pkg_len = pkg.len();
+    let product = format!(
+        "<MythicMFT>\r\n    <product serial=\"{serial}\" launchfile=\"client.exe\">\r\n        <manifestrepos>\r\n            <repo url=\"/data/{name}/\" />\r\n        </manifestrepos>\r\n        <filerepos>\r\n            <repo url=\"/data/{name}/\" />\r\n        </filerepos>\r\n        <stages>\r\n            <stage name=\"main\" priority=\"10\" verifyunpacked=\"0\">\r\n                <completion />\r\n                <packages>\r\n                    <package name=\"base\" rpath=\"base\" priority=\"0\">\r\n                        <manifest n=\"pkg.mft\" ul=\"{pkg_len:x}\" ct=\"0\" cl=\"{pkg_len:x}\" t=\"{max_mtime:x}\" rh=\"0\" />\r\n                    </package>\r\n                </packages>\r\n            </stage>\r\n        </stages>\r\n    </product>\r\n</MythicMFT>\r\n"
+    );
+    Some(Arc::new(DataProduct {
+        serial,
+        product: product.into_bytes(),
+        pkg: pkg.into_bytes(),
+        blobs,
+    }))
+}
+
+// the mount's cached product, rebuilt when the listing fingerprint changes
+async fn data_product(state: &AppState, name: &str) -> Option<Arc<DataProduct>> {
+    let base = data_dir_of(state, name)?;
+    let fresh = data_build_product(name, base).await?;
+    let mut cache = data_products().lock().expect("data products");
+    match cache.get(name) {
+        Some(cached) if cached.serial == fresh.serial => Some(cached.clone()),
+        _ => {
+            cache.insert(name.to_string(), fresh.clone());
+            Some(fresh)
+        }
+    }
+}
+
+// conditional + ranged response for an in-memory body (small files and the
+// synthesized products)
+fn data_inline_response(
+    headers: &HeaderMap,
+    body: Vec<u8>,
+    ctype: &str,
+    cache_control: &str,
+) -> Response {
+    let etag = strong_etag(&body);
+    if etag_matches(headers, &etag) {
+        return not_modified_response(&etag, cache_control);
+    }
+    let len = body.len();
+    if let Some((start, end)) = data_parse_range(headers, len as u64) {
+        let (start, end) = (start as usize, end as usize);
+        let mut res = (
+            StatusCode::PARTIAL_CONTENT,
+            [(header::CONTENT_TYPE, ctype.to_string())],
+            body[start..=end].to_vec(),
+        )
+            .into_response();
+        let hs = res.headers_mut();
+        hs.insert(
+            header::CONTENT_RANGE,
+            format!("bytes {start}-{end}/{len}")
+                .parse()
+                .expect("content-range"),
+        );
+        hs.insert(header::ETAG, etag.parse().expect("etag"));
+        hs.insert(
+            header::CACHE_CONTROL,
+            cache_control.parse().expect("cache-control"),
+        );
+        hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+        return res;
+    }
+    if headers.get(header::RANGE).is_some() {
+        let mut res = StatusCode::RANGE_NOT_SATISFIABLE.into_response();
+        res.headers_mut().insert(
+            header::CONTENT_RANGE,
+            format!("bytes */{len}").parse().expect("content-range"),
+        );
+        return res;
+    }
+    let mut res = (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, ctype.to_string())],
+        body,
+    )
+        .into_response();
+    let hs = res.headers_mut();
+    hs.insert(header::ETAG, etag.parse().expect("etag"));
+    hs.insert(
+        header::CACHE_CONTROL,
+        cache_control.parse().expect("cache-control"),
+    );
+    hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+    res
+}
+
+// whole + ranged answers for files too big to read whole
+async fn data_big_response(
+    headers: &HeaderMap,
+    full: &std::path::Path,
+    len: u64,
+    mtime: Option<(u64, u32)>,
+) -> Response {
+    let etag = data_etag(len, mtime);
+    if etag_matches(headers, &etag) {
+        return not_modified_response(&etag, "no-cache");
+    }
+    let ctype = "application/octet-stream";
+    let Some(range) = data_parse_range(headers, len) else {
+        if headers.get(header::RANGE).is_some() {
+            // present but unsatisfiable: the honest 416
+            return blob_unsatisfiable(len);
+        }
+        let Ok(file) = tokio::fs::File::open(full).await else {
+            return (StatusCode::NOT_FOUND, "not found").into_response();
+        };
+        let mut res = (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, ctype.to_string())],
+            data_stream(file, len),
+        )
+            .into_response();
+        let hs = res.headers_mut();
+        hs.insert(
+            header::CONTENT_LENGTH,
+            len.to_string().parse().expect("content-length"),
+        );
+        hs.insert(header::ETAG, etag.parse().expect("etag"));
+        hs.insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
+        hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+        return res;
+    };
+    let (start, end) = range;
+    let window = end - start + 1;
+    let body = if window <= DATA_WINDOW_MAX {
+        let Ok(mut file) = tokio::fs::File::open(full).await else {
+            return (StatusCode::NOT_FOUND, "not found").into_response();
+        };
+        if file.seek(std::io::SeekFrom::Start(start)).await.is_err() {
+            return (StatusCode::INTERNAL_SERVER_ERROR, "seek failed").into_response();
+        }
+        let mut buf = vec![0u8; usize::try_from(window).unwrap_or(usize::MAX)];
+        // a short read means the file shrank underneath us: serve what is
+        // there, the client's length check rejects the truncated window
+        let mut got = 0usize;
+        while got < buf.len() {
+            match file.read(&mut buf[got..]).await {
+                Ok(0) => break,
+                Ok(n) => got += n,
+                Err(_) => break,
+            }
+        }
+        buf.truncate(got);
+        buf
+    } else {
+        let Ok(file) = tokio::fs::File::open(full).await else {
+            return (StatusCode::NOT_FOUND, "not found").into_response();
+        };
+        // oversized range: not representable as a Vec answer - stream it,
+        // the 206 framing carries the true length
+        let mut res = (
+            StatusCode::PARTIAL_CONTENT,
+            [(header::CONTENT_TYPE, ctype.to_string())],
+            data_stream(file, window),
+        )
+            .into_response();
+        let hs = res.headers_mut();
+        hs.insert(
+            header::CONTENT_RANGE,
+            format!("bytes {start}-{end}/{len}").parse().expect("content-range"),
+        );
+        hs.insert(
+            header::CONTENT_LENGTH,
+            window.to_string().parse().expect("content-length"),
+        );
+        hs.insert(header::ETAG, etag.parse().expect("etag"));
+        hs.insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
+        hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+        return res;
+    };
+    let mut res = (
+        StatusCode::PARTIAL_CONTENT,
+        [(header::CONTENT_TYPE, ctype.to_string())],
+        body,
+    )
+        .into_response();
+    let hs = res.headers_mut();
+    hs.insert(
+        header::CONTENT_RANGE,
+        format!("bytes {start}-{end}/{len}").parse().expect("content-range"),
+    );
+    hs.insert(header::ETAG, etag.parse().expect("etag"));
+    hs.insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
+    hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+    res
+}
+
+// serve one resolved (or mapped) file: inline + flavor processing for small
+// bodies, streamed/ranged for big ones
+// serve one resolved (or mapped) file verbatim: inlined when small, streamed
+// and ranged when big. An on-disk manifest (a real aops mirror's
+// patchlist/patchcfg, say) is served byte-identical - no synthesis, no
+// rewriting happens on mounted content.
+async fn data_serve_file(headers: &HeaderMap, full: &std::path::Path) -> Response {
+    let Ok(meta) = tokio::fs::metadata(full).await else {
+        return (StatusCode::NOT_FOUND, "not found").into_response();
+    };
+    if meta.is_dir() {
+        return (StatusCode::NOT_FOUND, "not found").into_response();
+    }
+    let len = meta.len();
+    if len <= DATA_INLINE_MAX {
+        let Ok(bytes) = tokio::fs::read(full).await else {
+            return (StatusCode::INTERNAL_SERVER_ERROR, "read failed").into_response();
+        };
+        data_inline_response(headers, bytes, "application/octet-stream", "no-cache")
+    } else {
+        data_big_response(headers, full, len, data_mtime(&meta).await).await
+    }
+}
+
+// the mount route: everything the client can ask a patch server for. On-disk
+// files win (an existing manifest on disk is served as-is); the generated
+// MythicMFT product lanes (patchlist product manifest, base/pkg.mft,
+// base/unpacked/<name hash>) fill in a raw install folder.
+async fn data_file(
+    State(state): State<AppState>,
+    Path((name, path)): Path<(String, String)>,
+    headers: HeaderMap,
+) -> Response {
+    if data_dir_of(&state, &name).is_none() {
+        register_shards_mounts(&state).await;
+    }
+    let Some(base) = data_dir_of(&state, &name) else {
+        return (StatusCode::NOT_FOUND, format!("unknown data mount: {name}")).into_response();
+    };
+    let tail = data_strip_client_params(&path);
+    if let Some(full) = data_resolve(&base, tail).await {
+        // on-disk content serves as-is (including an existing manifest)
+        return data_serve_file(&headers, &full).await;
+    }
+
+    // generated product lanes (a raw install folder presents as a MythicMFT
+    // product; see the DataProduct notes)
+    match tail {
+        "patchlist" => {
+            // the product ladder fetches "<root>patchlist" and sniffs the
+            // content: a MythicMFT product file plans through the official
+            // manifest path
+            let Some(product) = data_product(&state, &name).await else {
+                return (StatusCode::NOT_FOUND, "empty data mount").into_response();
+            };
+            data_inline_response(&headers, product.product.clone(), "text/xml", "no-cache")
+        }
+        "base/pkg.mft" => {
+            let Some(product) = data_product(&state, &name).await else {
+                return (StatusCode::NOT_FOUND, "empty data mount").into_response();
+            };
+            data_inline_response(&headers, product.pkg.clone(), "text/xml", "no-cache")
+        }
+        unpacked if unpacked.starts_with("base/unpacked/") => {
+            let hash = &unpacked["base/unpacked/".len()..];
+            let Some(full) = data_product(&state, &name)
+                .await
+                .and_then(|p| p.blobs.get(hash).cloned())
+            else {
+                return (StatusCode::NOT_FOUND, "not found").into_response();
+            };
+            data_serve_file(&headers, &full).await
+        }
+        _ => (StatusCode::NOT_FOUND, "not found").into_response(),
+    }
+}
+
+// blob-window answers for /data references (the ?u= form of the ranged
+// read): straight off the mounted file (or the generated product's blob map)
+// - the source is already local, so there is no second disk cache to consult.
+// Same response shape as the upstream lanes (X-Blob-Total = file length) so
+// the client cannot tell the difference.
+async fn data_blob_window(
+    state: &AppState,
+    headers: &HeaderMap,
+    reference: &str,
+    offset: u64,
+    size: u64,
+) -> Response {
+    let not_found = || (StatusCode::NOT_FOUND, "not found").into_response();
+    let rest = reference.strip_prefix("/data/").unwrap_or(reference);
+    let Some((name, tail)) = rest.split_once('/') else {
+        return not_found();
+    };
+    if data_dir_of(state, name).is_none() {
+        register_shards_mounts(state).await;
+    }
+    let Some(base) = data_dir_of(state, name) else {
+        return not_found();
+    };
+    let tail = data_strip_client_params(tail);
+    let mut full = data_resolve(&base, tail).await;
+    if full.is_none() {
+        // not on disk: the generated product's blob map answers for the
+        // name-hashed loose files
+        if let Some(hash) = tail.strip_prefix("base/unpacked/") {
+            if let Some(product) = data_product(state, name).await {
+                full = product.blobs.get(hash).cloned();
+            }
+        }
+    }
+    let Some(full) = full else {
+        return not_found();
+    };
+    let Ok(meta) = tokio::fs::metadata(&full).await else {
+        return not_found();
+    };
+    if meta.is_dir() {
+        return not_found();
+    }
+    let len = meta.len();
+    if offset >= len {
+        return blob_unsatisfiable(len);
+    }
+    let start = offset;
+    let end_in = offset.saturating_add(size).saturating_sub(1).min(len - 1);
+    let served_len = if size == 0 { 0 } else { end_in - start + 1 };
+    let mut buf = vec![0u8; usize::try_from(served_len).unwrap_or(0)];
+    if served_len > 0 {
+        let Ok(mut file) = tokio::fs::File::open(&full).await else {
+            return not_found();
+        };
+        if file.seek(std::io::SeekFrom::Start(start)).await.is_err() {
+            return (StatusCode::INTERNAL_SERVER_ERROR, "seek failed").into_response();
+        }
+        let mut got = 0usize;
+        while got < buf.len() {
+            match file.read(&mut buf[got..]).await {
+                Ok(0) => break,
+                Ok(n) => got += n,
+                Err(_) => break,
+            }
+        }
+        buf.truncate(got);
+    }
+    blob_window_response(
+        headers,
+        "application/octet-stream",
+        &data_etag(len, data_mtime(&meta).await),
+        offset,
+        len,
+        buf,
+    )
+}
+
+// ---------------------------------------------------------------------------
+// shards.cfg integration: `Installer=local:<path>` entries are SERVER-SIDE
+// references to folders this proxy can serve. They are mounted under a name
+// derived from the shard's own Name, and the served shards.cfg carries the
+// same-origin product url in the installer field - the shell passes it to the
+// client unchanged and the whole flow stays on this origin.
+// ---------------------------------------------------------------------------
+
+// tolerant [Shard]-section scan mirroring the page's parseShardsIni: returns
+// (shard name, local installer path) pairs
+fn shards_local_installers(text: &str) -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = Vec::new();
+    let mut name: Option<String> = None;
+    let mut installer: Option<String> = None;
+    let flush = |out: &mut Vec<(String, String)>, name: &mut Option<String>, installer: &mut Option<String>| {
+        if let (Some(n), Some(i)) = (name.take(), installer.take()) {
+            out.push((n, i));
+        }
+        *name = None;
+        *installer = None;
+    };
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with(';') || line.starts_with('#') {
+            continue;
+        }
+        if line.starts_with('[') {
+            flush(&mut out, &mut name, &mut installer);
+            continue;
+        }
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
+        let key = key.trim().to_ascii_lowercase();
+        let value = value.trim();
+        match key.as_str() {
+            "name" => name = Some(value.to_string()),
+            "installer" => {
+                if let Some(path) = value.strip_prefix("local:") {
+                    installer = Some(path.trim().trim_end_matches('/').to_string());
+                }
+            }
+            _ => {}
+        }
+    }
+    flush(&mut out, &mut name, &mut installer);
+    out
+}
+
+fn data_sanitize_mount_name(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    let mut last_underscore = false;
+    for c in raw.chars() {
+        let ok = c.is_ascii_alphanumeric() || c == '_' || c == '-';
+        let c = if ok { c.to_ascii_lowercase() } else { '_' };
+        if c == '_' && last_underscore {
+            continue;
+        }
+        last_underscore = c == '_';
+        out.push(c);
+    }
+    out.trim_matches('_').to_string()
+}
+
+// parse + register the dist shards.cfg's local installers (idempotent, cheap:
+// one small file read; also self-heals /data requests that arrive before any
+// shards.cfg fetch)
+async fn register_shards_mounts(state: &AppState) {
+    let Ok(text) = tokio::fs::read_to_string(state.dist.join("shards.cfg")).await else {
+        return;
+    };
+    for (shard_name, path) in shards_local_installers(&text) {
+        let mut mount = data_sanitize_mount_name(&shard_name);
+        if mount.is_empty() {
+            mount = format!("data-{:08x}", fnv1a64(path.as_bytes()) as u32);
+        }
+        let resolved = if std::path::Path::new(&path).is_absolute() {
+            PathBuf::from(&path)
+        } else {
+            // relative installers live next to the served tree
+            state.dist.join(&path)
+        };
+        let mut mounts = state.data_dirs.lock().expect("data mounts");
+        if let Some(existing) = mounts.get(&mount) {
+            if existing != &resolved {
+                println!(
+                    "xuoproxy: shards mount '{}' already points at {}, not replacing with {}",
+                    mount,
+                    existing.display(),
+                    resolved.display()
+                );
+            }
+            continue;
+        }
+        if mounts
+            .insert(mount.clone(), resolved.clone())
+            .is_none()
+        {
+            println!(
+                "xuoproxy: shards mount '{}' -> {}",
+                mount,
+                resolved.display()
+            );
+        }
+    }
+}
+
+// the served shards.cfg: local installers become the same-origin product url
+// ("/data/<mount>/"), which the shell passes through and the client plans
+// against (the generated product manifest answers at that root's patchlist)
+async fn serve_shards_cfg(state: &AppState, req_headers: &axum::http::HeaderMap) -> Option<Response> {
+    let bytes = tokio::fs::read(state.dist.join("shards.cfg")).await.ok()?;
+    register_shards_mounts(state).await;
+    let text = String::from_utf8_lossy(&bytes).into_owned();
+    let mounts = |shard: &str, path: &str| -> String {
+        let mut mount = data_sanitize_mount_name(shard);
+        if mount.is_empty() {
+            mount = format!("data-{:08x}", fnv1a64(path.as_bytes()) as u32);
+        }
+        format!("/data/{mount}/")
+    };
+    let mut out = String::with_capacity(text.len() + 64);
+    let mut name = String::new();
+    let mut replaced = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') {
+            name.clear();
+        } else if let Some((key, value)) = trimmed.split_once('=') {
+            match key.trim().to_ascii_lowercase().as_str() {
+                "name" => name = value.trim().to_string(),
+                "installer" => {
+                    if let Some(path) = value.trim().strip_prefix("local:") {
+                        let eq = line.find('=').expect("installer line has =");
+                        out.push_str(&line[..eq + 1]);
+                        out.push_str(&mounts(&name, path.trim()));
+                        out.push('\n');
+                        replaced = true;
+                        continue;
+                    }
+                }
+                _ => {}
+            }
+        }
+        out.push_str(line);
+        out.push('\n');
+    }
+    if !replaced {
+        return None; // nothing local: serve the file verbatim below
+    }
+    let body = out.into_bytes();
+    let etag = format!("\"{:016x}-{:x}\"", fnv1a64(&body), body.len());
+    if req_headers
+        .get(header::IF_NONE_MATCH)
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.split(',').any(|t| t.trim() == etag))
+        .unwrap_or(false)
+    {
+        let mut not_modified = StatusCode::NOT_MODIFIED.into_response();
+        not_modified
+            .headers_mut()
+            .insert(header::ETAG, etag.parse().expect("etag"));
+        not_modified.headers_mut().insert(
+            header::CACHE_CONTROL,
+            "no-cache".parse().expect("cache-control"),
+        );
+        return Some(not_modified);
+    }
+    let mut res = (
+        [(header::CONTENT_TYPE, "text/plain")],
+        body,
+    )
+        .into_response();
+    res.headers_mut()
+        .insert(header::ETAG, etag.parse().expect("etag"));
+    res.headers_mut().insert(
+        header::CACHE_CONTROL,
+        "no-cache".parse().expect("cache-control"),
+    );
+    Some(res)
+}
+
+// ---------------------------------------------------------------------------
 // static wasm hosting
 // ---------------------------------------------------------------------------
 
@@ -2851,6 +3986,14 @@ async fn static_file(
     let rel = if path == "/" { "/index.html" } else { path };
     if rel.contains("..") {
         return (StatusCode::FORBIDDEN, "forbidden").into_response();
+    }
+
+    // the shard list is served THROUGH the proxy so its `Installer=local:`
+    // entries can be mounted and rewritten to same-origin product urls
+    if rel == "/shards.cfg" {
+        if let Some(response) = serve_shards_cfg(&state, &req_headers).await {
+            return response;
+        }
     }
 
     let full = state.dist.join(rel.trim_start_matches('/'));
@@ -2918,5 +4061,48 @@ fn mime_of(path: &std::path::Path) -> &'static str {
         "data" => "application/octet-stream",
         "xml" | "prod" | "mft" => "text/xml",
         _ => "application/octet-stream",
+    }
+}
+
+// ---------------------------------------------------------------------------
+// tests: the name-hash port must match external/lookup3.h bit for bit (the
+// client fetches by these names); vectors produced by the C implementation
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::lookup3_hashlittle2;
+
+    #[test]
+    fn lookup3_matches_c_reference() {
+        let cases: [(&str, &str); 12] = [
+            ("art.mul", "f52ecc510653c443"),
+            ("map0leg.uop", "6f51007c3b82fa4b"),
+            ("cliloc.enu", "bc90bd486945d920"),
+            ("a", "58d68708582647ac"),
+            ("ab", "fbb3a8df6b79a0f2"),
+            ("abc", "0e3976313c03be9e"),
+            ("abcd", "b5f4889ce20dd3fa"),
+            ("abcde", "026d72de03cd18df"),
+            (
+                "abcdefabcdefabcdefghijkl",
+                "6a87023dbbbddc78",
+            ),
+            (
+                "abcdefabcdefabcdefghijk",
+                "8a49d082b73c25bd",
+            ),
+            ("0123456789ab", "1065e50af0ec5868"),
+            ("0123456789abc", "7351ce56595621ef"),
+        ];
+        for (name, want) in cases {
+            let (ph, sh) = lookup3_hashlittle2(name.as_bytes(), 0, 0);
+            assert_eq!(format!("{ph:08x}{sh:08x}"), want, "name {name}");
+        }
+    }
+
+    #[test]
+    fn blob_name_uses_lowercase_name() {
+        assert_eq!(super::data_blob_name("art.mul"), "f52ecc510653c443");
     }
 }

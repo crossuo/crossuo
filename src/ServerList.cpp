@@ -100,7 +100,14 @@ void CServerList::ParsePacket(CDataReader &reader)
 
 void CServerList::PostParse(uint16_t numServers)
 {
-    if (LastServerIndex < numServers && g_MainScreen.m_AutoLogin->Checked)
+    // the auto-login decision comes from the config (g_Config.AutoLogin,
+    // set by --autologin): the checkbox mirror is populated from the CLI in
+    // ProcessCommandLine, which on the web boot runs AFTER the main screen
+    // was built - consulting the config directly keeps the auto-selection
+    // working on both boot orders
+    const bool autoLogin =
+        g_Config.AutoLogin || g_MainScreen.m_AutoLogin->Checked;
+    if (LastServerIndex < numServers && autoLogin)
     {
         g_Game.ServerSelection(LastServerIndex);
     }

@@ -372,6 +372,39 @@ void ApplyClientVersionDefaults()
     ClientVersionFixup(false);
 }
 
+// command-line override of the version markers (--clientversion /
+// --protocolversion / --clienttype): mirrors a config file entry - the
+// strings are set and everything derived from them (cryptography, client
+// type, packet layout, view range, verdata) is refixed. An empty argument
+// leaves its marker untouched; a protocol version set by the config file
+// keeps winning unless the command line sets one too.
+void ApplyClientVersionOverride(
+    const astr_t &client_version, const astr_t &protocol_version, const astr_t &client_type)
+{
+    if (client_version.empty() && protocol_version.empty() && client_type.empty())
+    {
+        return;
+    }
+    if (!client_version.empty())
+    {
+        g_Config.ClientVersionString = client_version;
+        g_Config.ClientVersionModified = true;
+    }
+    bool protocol_overridden = false;
+    if (!protocol_version.empty())
+    {
+        g_Config.ProtocolClientVersionString = protocol_version;
+        protocol_overridden = true;
+    }
+    const auto flag = GetClientTypeFromString(client_type);
+    if (flag != CF_UNDEFINED)
+    {
+        g_Config.ClientFlag = (uint16_t)flag;
+        s_Mark.ClientFlag = true; // the CLI is the last word on the client type
+    }
+    ClientVersionFixup(protocol_overridden || s_Mark.ProtocolVersion);
+}
+
 // priority order looking for a config file:
 // 1. command line -c/--config option
 // 2. crossuo.cfg on the side with executable
@@ -606,7 +639,15 @@ bool LoadGlobalConfig()
     }
 
     ClientVersionFixup(s_Mark.ProtocolVersion);
+    return true;
+}
 
+// the applied version markers and everything derived from them. Called AFTER
+// the command-line override so the printed values are the ones in effect
+// (the web shell passes the shard profile's version flags; there is no
+// launcher report on that path)
+void LogClientVersionInfo()
+{
     char version[32];
     client_version_string(g_Config.ClientVersion, version, sizeof(version));
 
@@ -632,15 +673,8 @@ bool LoadGlobalConfig()
         GetClientTypeName((CLIENT_FLAG)g_Config.ClientFlag),
         g_Config.ClientFlag);
     Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
-    const auto uopath = fs_path_ascii(g_UOPath);
-    Info(Client, "\tUltima Online Path: %s", uopath);
-    if (uopath && uopath[0] && fs_path_exists(g_UOPath))
-    {
-        uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);
-    }
-    return true;
+    Info(Client, "\tUltima Online Path: %s", fs_path_ascii(g_UOPath));
 }
-
 void SaveGlobalConfig()
 {
     Info(Config, "saving global config to: %s", fs_path_ascii(GetConfigFile()));

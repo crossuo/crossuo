@@ -258,7 +258,12 @@ void CGame::ProcessCommandLine()
 
     if (g_cli["autologin"].was_set())
     {
-        g_MainScreen.m_AutoLogin->Checked = g_cli["autologin"].get().u32 != 0;
+        const bool autoLogin = g_cli["autologin"].get().u32 != 0;
+        g_MainScreen.m_AutoLogin->Checked = autoLogin;
+        // the flag's documented meaning is "log in automatically": it also
+        // drives the auto-CONNECT (TestAutoLogin), not just the server and
+        // character auto-selection the checkbox covers
+        g_Config.AutoLogin = autoLogin;
     }
 
     if (g_cli["savepassword"].was_set())
@@ -1514,6 +1519,20 @@ void CGame::ClearUnusedTextures()
 
 void CGame::Connect()
 {
+    // Idempotent: a repeat call must NOT tear down a handshake already in
+    // flight. Connect() is reachable more than once while the login/relay
+    // exchange is running, and the unconditional Disconnect() below would
+    // kill the live socket mid-handshake - losing the relay (0x8C) reply and
+    // bouncing the boot back to the main screen. Keeping a socket that is
+    // already up removes that failure mode; a genuinely needed re-login
+    // calls Disconnect() first (the LogOut/Disconnect paths do).
+    //
+    // NOTE: this hardens the path but is NOT a confirmed root-cause fix for
+    // the intermittent web login stall - see the commit message.
+    if (g_ConnectionManager.Connected())
+    {
+        return;
+    }
     InitScreen(GS_MAIN_CONNECT);
     Process(true);
 
@@ -1571,9 +1590,18 @@ int CGame::Send(uint8_t *buf, int size)
 
         if (*buf == 0x80 || *buf == 0x91)
         {
+            // login packets embed the account and password in the clear (two
+            // 30-byte fields after the 1-byte opcode). Dump the bytes as ZEROED
+            // instead of relying on a reader to ignore them: a packet trace
+            // must never write credentials into the console log, the on-disk
+            // log file or a screen recording.
+            std::vector<uint8_t> redacted(buf, buf + size);
+            const size_t body = size > 1 ? size_t(size - 1) : 0;
+            const size_t hide = body < 60 ? body : 60; // account + password
+            std::fill(redacted.begin() + 1, redacted.begin() + 1 + hide, 0x2A); // '*'
             DEBUG_DUMP(Network, "SEND:", buf, 1);
-            SAFE_DEBUG_DUMP(Network, "SEND:", buf, size);
-            DEBUG(Network, "**** ACCOUNT AND PASSWORD CENSORED ****");
+            SAFE_DEBUG_DUMP(Network, "SEND:", redacted.data(), size);
+            DEBUG(Network, "**** ACCOUNT AND PASSWORD CENSORED (bytes 1..%zu masked) ****", hide);
         }
         else
         {
