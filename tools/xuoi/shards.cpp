@@ -276,6 +276,7 @@ shard_data shard_by_id(int id)
              s.shard_clientversion.c_str(),
              s.shard_protocolversion.c_str(),
              s.shard_crypt,
+             s.shard_autoacct,
              s.shard_url.c_str(),
              s.shard_urlregister.c_str(),
              s.shard_urlvideo.c_str(),
@@ -431,6 +432,16 @@ int main(int argc, char **argv)
         {
             LOG_ERROR("missing required field 'clientversion'");
             error = true;
+        }
+        // autoacct=no without a registration page leaves the user nowhere to
+        // go (the desktop menu and the web picker hide their Create-account
+        // action when urlregister is empty) - advisory only, the entry still
+        // loads
+        if (!entry.shard_autoacct && entry.shard_urlregister.empty())
+        {
+            LOG_WARN(
+                "field 'autoacct' is 'no' but no 'urlregister' is set: clients"
+                " have no registration page to offer");
         }
 
         if (!error)

@@ -52,7 +52,8 @@
       #shardPicker .list { flex: 1; min-height: 0; max-height: 80vh;
                            overflow-y: auto; border: 1px solid #2a2c36; }
       #shardPicker .row { padding: 7px 10px; cursor: pointer;
-                          border-bottom: 1px solid #20222b; }
+                          border-bottom: 1px solid #20222b;
+                          display: flex; align-items: center; gap: 10px; }
       #shardPicker .row:last-child { border-bottom: none; }
       #shardPicker .row:hover { background: #1d1f27; }
       #shardPicker .row.sel,
@@ -60,8 +61,21 @@
       /* highlighted entries are promoted to the top and marked with a
          subtle accent bar + star prefix (see the row builder) */
       #shardPicker .row.featured { border-left: 3px solid #4f7bd9; }
+      /* the text column grows, the optional card action stays right and
+         vertically centered (flex align-items on .row) */
+      #shardPicker .rowmain { flex: 1; min-width: 0; }
       #shardPicker .name { font-size: 13px; color: #dfe3ee; }
       #shardPicker .sub { font-size: 11px; opacity: .65; margin-top: 2px; }
+      /* the shard url in the sub line: a link, so it must not look like the
+         row's selection text; underlined, brightened on hover */
+      #shardPicker .sub a { color: inherit; text-decoration: underline;
+                            text-decoration-style: dotted; }
+      #shardPicker .sub a:hover { opacity: 1; color: #8fb0ff; }
+      /* per-card action (Create account): a small, self-contained button on
+         the right of the row; the row's own click must not fire when it is
+         used, so its handler stops propagation */
+      #shardPicker .card-action { flex: 0 0 auto; padding: 4px 10px;
+                                  font-size: 11px; }
       #shardPicker .footer { margin-top: 12px; }
       #shardPicker .state { font-size: 11px; opacity: .7; min-height: 1em; }
       #shardPicker .buttons { margin-top: 10px; }
@@ -694,6 +708,16 @@
       // url/urlforum/urlregister/urlother links have NO CLI surface yet, so
       // they are deliberately NOT passed - the client keeps its defaults
       // (a crossuo.cfg persisted in IDBFS could carry them later).
+      //
+      // Single-shard lock: a deployment opts in by serving a shards.cfg with
+      // EXACTLY ONE entry from its own origin (vendored next to index.html).
+      // The picker is bypassed, the boot goes straight to that entry, and
+      // every user-controllable login address/port vector is stripped: the
+      // ?shards= source override, the ?shard= deep link and the
+      // ?shard-address/?shard-port testing params are ignored, and
+      // buildClientArgs filters the login flags out of the query passthrough
+      // (--host/--port/-s/-p in every popts form) - a crafted URL cannot
+      // redirect the login anywhere else.
       (function () {
         var params = new URLSearchParams(window.location.search);
         var shards = [];
@@ -701,6 +725,7 @@
         var booted = false;
         var selected = -1;
         var ui = null;
+        var lockedMode = false; // single-entry same-origin shards.cfg engaged
 
         // ---- pure helpers (extracted verbatim for the node test harness) ----
 
@@ -741,9 +766,11 @@
         // loginserver "host,port" maps to --host/--port (port only when
         // numeric - the flag is u32); installer is a plain data product url
         // passed via --streaming-product (the client deduces the product
-        // style from the content, vfs_aops_product_url), empty = manual
-        // install and maps to nothing (v1: clientversion and the links stay
-        // unparsed - see the block comment above)
+        // style from the content, vfs_aops_product_url) - an http(s) url
+        // routes through the /stream relay, "local:<name>"/bare-relative
+        // values map to the deployment's same-origin /data/<name>/ mounts,
+        // empty = manual install and maps to nothing (v1: clientversion and
+        // the links stay unparsed - see the block comment above)
         function shardToArgs(shard) {
           var args = [];
           if (!shard || !shard.name) return args;
@@ -755,6 +782,21 @@
           // 1-5 digits, 1-65535 only; out-of-range/non-numeric ports fall back
           // to the client default by omission of the --port flag
           if (/^\d{1,5}$/.test(port) && port > 0 && port <= 65535) args.push('--port=' + port);
+          // version markers (there is no launcher on the web to write a
+          // crossuo.cfg): clientversion drives cryptography, packet layout,
+          // client type and verdata usage - a 1.25.x shard cannot boot with
+          // the modern defaults
+          var cv = String(shard.clientversion || '').trim();
+          if (cv) args.push('--clientversion=' + cv);
+          var pv = String(shard.protocolversion || '').trim();
+          if (pv) args.push('--protocolversion=' + pv);
+          var ct = String(shard.clienttype || '').trim();
+          if (ct) args.push('--clienttype=' + ct);
+          // the profile's Crypt option: without it the client pins the
+          // encryption to NOCRYPT whatever the version - a shard asking for
+          // the classic ciphers never connects
+          var crypt = String(shard.crypt || '').trim().toLowerCase();
+          if (crypt) args.push('--crypt=' + (/^(1|yes|true)$/.test(crypt) ? '1' : '0'));
           var installer = String(shard.installer || '').trim();
           // tolerate the pre-2.0 published lists until they are republished
           // (the prefix grammar is gone from the client): `uo+`/`xuo+`
@@ -782,6 +824,38 @@
                 var root = target.replace(/\/+$/, '').replace(/\/patch(?:list|cfg)$/i, '');
                 args.push('--streaming-product=/stream/' + encodeURIComponent(root) + '/');
               }
+            } else if (target.charAt(0) !== '/') {
+              // deployment-local data mount (xuoproxy --data <name>=<dir>):
+              // "local:<name>" sugar or any bare relative value maps to the
+              // same-origin /data/<name>/ lane the proxy serves (generated
+              // MythicMFT product); leading-'/' values are explicit
+              // page-absolute product urls and pass through unchanged. A
+              // '..' segment is refused outright - the client would only
+              // 404 on it, but a locked deployment's installer is trusted
+              // input and stays that way
+              var mount = target.replace(/^local:/i, '');
+              if (mount.charAt(0) === '/') {
+                // an absolute path is a SERVER-SIDE reference
+                // ("Installer=local:/home/shard/client"): xuoproxy mounts it
+                // and rewrites the served shards.cfg to /data/<mount>/. If
+                // the raw value still reaches this page, shards.cfg was
+                // served by something that cannot rewrite it (an older
+                // proxy, a static server) - the browser can never read a
+                // host path, so skip the product flag rather than fetch a
+                // garbage url
+                console.warn('[shards] installer "' + installer +
+                             '" is a host path but was not rewritten by the' +
+                             ' proxy (shards.cfg must be served BY' +
+                             ' xuoproxy) - no streaming product');
+              } else {
+                mount = mount
+                  .replace(/(?:^|\/)\.(?:\/|$)/g, '/') // drop ./ segments
+                  .replace(/\/{2,}/g, '/')
+                  .replace(/^\/+|\/+$/g, '');
+                if (mount && !/(^|\/)\.\.(?:\/|$)/.test(mount)) {
+                  args.push('--streaming-product=/data/' + mount + '/');
+                }
+              }
             } else {
               args.push('--streaming-product=' + target);
             }
@@ -791,11 +865,27 @@
 
         // ---- boot gating ----------------------------------------------------
 
+        // login address/port vectors in the query passthrough, matched on the
+        // raw AND the percent-decoded pair so encoding cannot smuggle one
+        // past: --host/--port in every popts form (--flag=v, "--flag" bare
+        // consuming the next argv, -f=v, -fv attached) plus the shell's own
+        // testing params (which buildClientArgs would translate into
+        // --host/--port below)
+        function isLoginOverrideArg(kv) {
+          return /^--ho(?:st)?(?:=|$)/.test(kv) ||
+                 /^--po(?:rt)?(?:=|$)/.test(kv) ||
+                 /^-[sp]/.test(kv) ||
+                 /^shard-(?:address|port)=/.test(kv);
+        }
+
         // final argument assembly (moved out of the boot IIFE above so the
         // chosen shard's flags merge in BEFORE crossuo.js loads). Order
         // matters: popts keeps the LAST value of a repeated flag, so the
         // testing overrides (?shard-address/?shard-port) go last and win
-        // over the shard entry's own --host/--port
+        // over the shard entry's own --host/--port. In locked mode both
+        // override mechanisms are dead: the single-shard deployment's
+        // shards.cfg loginserver is the only login endpoint the page will
+        // ever hand the client
         function buildClientArgs(extraArgs) {
           var args = ['./crossuo'];
           var q = window.location.search.substring(1);
@@ -804,20 +894,26 @@
               if (!kv) return;
               // a malformed %-escape must never prevent boot: on decode throw
               // push the RAW pair (the client tolerates junk args)
+              var dec;
               try {
-                args.push(decodeURIComponent(kv));
+                dec = decodeURIComponent(kv);
               } catch (e) {
-                args.push(kv);
+                dec = kv;
               }
+              if (lockedMode &&
+                  (isLoginOverrideArg(kv) || isLoginOverrideArg(dec))) return;
+              args.push(dec);
             });
           }
           if (extraArgs) args.push.apply(args, extraArgs);
-          // shard address override for the ws proxy (testing): maps to the
-          // client's login-server override flags (LoadLogin consults them)
-          var shardAddr = params.get('shard-address');
-          var shardPort = params.get('shard-port');
-          if (shardAddr) args.push('--host=' + shardAddr);
-          if (shardPort) args.push('--port=' + shardPort);
+          if (!lockedMode) {
+            // shard address override for the ws proxy (testing): maps to the
+            // client's login-server override flags (LoadLogin consults them)
+            var shardAddr = params.get('shard-address');
+            var shardPort = params.get('shard-port');
+            if (shardAddr) args.push('--host=' + shardAddr);
+            if (shardPort) args.push('--port=' + shardPort);
+          }
           return args;
         }
 
@@ -1075,13 +1171,23 @@
         }
 
         // the first source that fetches AND parses into >= 1 shard wins;
-        // every failure falls through, exhausted sources => fallback mode
+        // every failure falls through, exhausted sources => fallback mode.
+        // The winning source is reported (2nd cb arg) so the caller can
+        // engage the single-shard lock when a deployment's OWN shards.cfg
+        // (same-origin) carries exactly one entry.
+        //
+        // With a ?shards= override the same-origin file is still probed
+        // first - but ONLY as a lock candidate: a single-entry shards.cfg
+        // wins over the override (an override must never defeat the lock),
+        // anything else defers to the override so testing keeps working
+        // (no lock, unchanged semantics)
         function loadShards(cb) {
-          var sources = shardSources();
+          var override = params.get('shards');
+          var sources = override ? ['shards.cfg', override] : shardSources();
           (function next(i) {
             if (i >= sources.length) {
               console.warn('[shards] no usable shards.cfg source');
-              return cb(new Error('shards unavailable'));
+              return cb(new Error('shards unavailable'), null);
             }
             fetchText(sources[i], function (err, text) {
               var list = [];
@@ -1090,12 +1196,19 @@
                   list = parseShardsIni(text, function (msg) { console.warn(msg); });
                 } catch (e) { err = e; }
               }
+              if (override && sources[i] === 'shards.cfg') {
+                if (!err && list.length === 1) return cb(null, list, sources[i]);
+                if (!err && list.length)
+                  console.warn('[shards] lock probe: multi-entry shards.cfg,' +
+                               ' honoring the ?shards= override');
+                return next(i + 1);
+              }
               if (err || !list.length) {
                 console.warn('[shards] source unusable:', sources[i], err || 'empty');
                 return next(i + 1);
               }
               if (WEBLOG) console.log('[shards] ' + list.length + ' shards from ' + sources[i]);
-              cb(null, list);
+              cb(null, list, sources[i]);
             });
           })(0);
         }
@@ -1193,20 +1306,69 @@
               var item = view[i];
               var row = document.createElement('div');
               row.className = item.featured ? 'row featured' : 'row';
+              // text column (name + sub line); the optional card action sits
+              // after it, right-aligned by the row's flex layout
+              var main = document.createElement('div');
+              main.className = 'rowmain';
               var name = document.createElement('div');
               name.className = 'name';
               // highlighted entries carry a star prefix; name stays raw otherwise
               name.textContent = (item.featured ? '\u2605 ' : '') + item.entry.name;
-              row.appendChild(name);
+              main.appendChild(name);
+              // sub line: the shard's WEB url (a clickable link), not the raw
+              // login address - the picker only shows when there is more than
+              // one shard, and the address means nothing to the player. Falls
+              // back to the loginserver when the shard has no url.
+              var url = String(item.entry.url || '').trim();
               var sub = item.entry.loginserver || '';
+              if (url) sub = url;
               var tagsLine = item.displayTags
-                ? (sub ? sub + ' \u00b7 ' + item.displayTags : item.displayTags)
-                : sub;
-              if (tagsLine) {
+                ? (sub ? ' \u00b7 ' + item.displayTags : item.displayTags)
+                : '';
+              if (sub || item.displayTags) {
                 var subEl = document.createElement('div');
                 subEl.className = 'sub';
-                subEl.textContent = tagsLine;
-                row.appendChild(subEl);
+                if (url) {
+                  // only http(s) urls are linkified (a bare value must not
+                  // become a javascript: or relative href)
+                  var link = document.createElement('a');
+                  if (/^https?:\/\//i.test(url)) {
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    // a click on the link must not also select/play the row
+                    link.addEventListener('click', function (e) { e.stopPropagation(); });
+                  }
+                  link.textContent = url;
+                  subEl.appendChild(link);
+                } else {
+                  subEl.textContent = sub;
+                }
+                if (item.displayTags) {
+                  subEl.appendChild(document.createTextNode(
+                    (sub ? ' \u00b7 ' : '') + item.displayTags));
+                }
+                main.appendChild(subEl);
+              }
+              row.appendChild(main);
+              // autoacct (default yes): when a shard does not create the
+              // account on first login, offer a Create account button that
+              // opens its registration page. Needs a urlregister to point at.
+              var autoacct = item.entry.autoacct;
+              var acctOn = !(autoacct !== undefined && autoacct !== null &&
+                             /^(no|false|0)$/i.test(String(autoacct).trim()));
+              var reg = String(item.entry.urlregister || '').trim();
+              if (!acctOn && reg && /^https?:\/\//i.test(reg)) {
+                var regBtn = document.createElement('button');
+                regBtn.className = 'card-action';
+                regBtn.textContent = 'Create account';
+                regBtn.addEventListener('click', function (e) {
+                  e.stopPropagation();
+                  window.open(reg, '_blank', 'noopener');
+                });
+                // the button must not steal the row's select-on-click
+                regBtn.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+                row.appendChild(regBtn);
               }
               row.addEventListener('click', function () { select(i); });
               row.addEventListener('dblclick', function () { play(i); });
@@ -1242,11 +1404,33 @@
 
         // ---- flow -------------------------------------------------------------
 
+        // single-shard lock: the deployment opted in by serving a one-entry
+        // shards.cfg from its own origin. The picker never shows, the boot
+        // goes straight to that entry, and buildClientArgs strips every
+        // user-controllable login address/port vector (query flags,
+        // ?shard-address/?shard-port). The entry's own loginserver maps to
+        // --host/--port, which the client's LoadLogin applies ahead of any
+        // config file, so the endpoint is pinned.
+        function engageLockedShard(list) {
+          lockedMode = true;
+          shards = list; // resolveShard reads the module-global list
+          if (WEBLOG) console.log('[shards] single-shard lock engaged:', list[0].name);
+          setPageStatus('starting ' + list[0].name + '\u2026');
+          bootClient(shardToArgs(list[0]));
+        }
+
+        // locked = a winning source that is the deployment's own file AND
+        // exactly one entry
+        function isLockedSource(err, list, source) {
+          return !err && source === 'shards.cfg' && !!list && list.length === 1;
+        }
+
         var deepLink = params.get('shard');
         if (deepLink) {
           // deep link: never show the picker - resolve, then boot right away
           setPageStatus('loading shards\u2026');
-          loadShards(function (err, list) {
+          loadShards(function (err, list, source) {
+            if (isLockedSource(err, list, source)) return engageLockedShard(list);
             shards = list || []; // resolveShard reads the module-global list
             var entry = err ? null : resolveShard(deepLink);
             if (err || !entry)
@@ -1257,7 +1441,8 @@
           });
         } else {
           setPageStatus('loading shards\u2026');
-          loadShards(function (err, list) {
+          loadShards(function (err, list, source) {
+            if (isLockedSource(err, list, source)) return engageLockedShard(list);
             if (err || !list.length) return bootClient([]); // old behavior
             shards = list;
             showPicker();

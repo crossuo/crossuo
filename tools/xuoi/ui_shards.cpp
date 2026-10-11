@@ -106,9 +106,12 @@ void ui_shards(ui_model &m, bool picker)
                 continue;
         }
         // context menu entries
-        // urlregister empty = auto-account creation
+        // autoacct (default yes) is the authority on auto-account: urlregister
+        // is now independent - it is a page to reach for account creation OR
+        // management, offered whenever it is set
+        const bool autoacct = it.shard_autoacct;
         const bool has_reg = !it.shard_urlregister.empty();
-        if (select_aac && !it.shard_urlregister.empty())
+        if (select_aac && !autoacct)
             continue;
         const bool has_url = !it.shard_url.empty() && valid_url(it.shard_url);
         const bool has_forum = !it.shard_urlforum.empty() && valid_url(it.shard_urlforum);
@@ -180,8 +183,11 @@ void ui_shards(ui_model &m, bool picker)
             {
                 if (has_url && ImGui::MenuItem("Open Website", nullptr, false))
                     open_url(it.shard_url);
+                // the launcher's "Create account" action follows autoacct: a
+                // non-auto shard needs the registration page; an auto one may
+                // still link a page to MANAGE the account
                 if (has_reg && valid_url(it.shard_urlregister) &&
-                    ImGui::MenuItem("Create Account", nullptr, false))
+                    ImGui::MenuItem(autoacct ? "Manage Account" : "Create Account", nullptr, false))
                     open_url(it.shard_urlregister);
                 if (has_forum && ImGui::MenuItem("Open Forum", nullptr, false))
                     open_url(it.shard_urlforum);

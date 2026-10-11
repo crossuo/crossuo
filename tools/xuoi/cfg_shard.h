@@ -62,6 +62,12 @@ CFG_FIELD(shard, installer, {}, astr_t)
 //     back to its configured default data
 //   a plain http(s) url pointing at a data product: the official uo patch
 //     server manifest root/.prod or an aops patch server root
+//   a folder on the WEB PROXY host: "local:<path>" (absolute, or relative to
+//     the dist tree). xuoproxy auto-mounts it and rewrites the served
+//     shards.cfg to a same-origin product url; a raw install folder is
+//     presented to clients as a generated MythicMFT product (an existing
+//     manifest on disk is served as-is). Web only - the desktop launcher
+//     does not mount local: installers
 // no type prefixes anymore (uo+/xuo+/website+/download+ are gone): the
 //   client deduces the product style from the url content
 //   (--streaming-product, xuocore/vfs_source_aops.cpp vfs_aops_product_url)
@@ -90,6 +96,17 @@ CFG_FIELD(shard, crypt, "no", bool)
 // format:
 //   <no|yes>
 // if 'yes', uo protocol cryptography will be used
+
+CFG_FIELD(shard, autoacct, "yes", bool)
+// optional, default: yes (assumed when the field is absent)
+// format:
+//   <no|yes>
+// whether the shard creates the game account on first login. With 'no' the
+// clients must offer a way to reach the registration page (urlregister):
+// the desktop launcher's row menu and the web picker's card both grow a
+// "Create account" action. urlregister is INDEPENDENT of this flag now: a
+// shard may be autoacct=yes and still link a page where users manage their
+// accounts.
 
 CFG_FIELD(shard, tags, "pvp", tag_data)
 // optional, default: pvp

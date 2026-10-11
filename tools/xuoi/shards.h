@@ -19,8 +19,10 @@ struct shard_data
     const char *clientversion;
     const char *protocolversion; // network protocol version to force ("" = none)
     bool crypt;
+    bool autoacct;           // shard creates the account on first login
+                             // (default true: absent = yes)
     const char *url;         // website
-    const char *urlregister; // account registration page
+    const char *urlregister; // account registration/management page
     const char *urlvideo;    // video/trailer url ("" = none)
     astr_t urlother;         // plain community url ("" = none); a discord
                              // link is detected from the url itself
