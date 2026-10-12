@@ -20,6 +20,24 @@ CGumpScreenConnection::~CGumpScreenConnection()
 {
 }
 
+// the 1.25.32 art set lacks the modern dialog buttons (0x0481..0x0483 and
+// 0x047E..0x0480 do not exist in its GUMPART.MUL - the button renders as
+// nothing and the player stares at a dialog they cannot dismiss): the era's
+// message gump carries a 71x37 green OK (0x047B..D) / brown (0x0478..A)
+// pair, which the original centers on the 0x0474 panel
+static CGUIButton *CreateDialogButton(int id, bool ok, int modernX, int modernY)
+{
+    if (g_Config.ClientVersion < CV_200)
+    {
+        const int x = 121 + (393 - 71) / 2; // centered on the 0x0474 panel
+        const int y = 102 + 190;            // the original's message-gump slot
+        return ok ? new CGUIButton(id, 0x047B, 0x047C, 0x047D, x, y)
+                  : new CGUIButton(id, 0x0478, 0x0479, 0x047A, x - 101, y);
+    }
+    return ok ? new CGUIButton(id, 0x0481, 0x0482, 0x0483, modernX, modernY)
+              : new CGUIButton(id, 0x047E, 0x047F, 0x0480, modernX, modernY);
+}
+
 void CGumpScreenConnection::CreateText(int x, int y, astr_t str, uint8_t font)
 {
     if (g_ConnectionScreen.GetTextA().length() != 0u)
@@ -91,7 +109,7 @@ void CGumpScreenConnection::UpdateContent()
             }
             CreateText(189, 178, text[index], 2);
 
-            Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
+            Add(CreateDialogButton(ID_CS_OK, true, 306, 304));
         }
         else
         {
@@ -100,8 +118,8 @@ void CGumpScreenConnection::UpdateContent()
 
             CreateText(193, 184, buf, 2);
 
-            Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 264, 304));
-            Add(new CGUIButton(ID_CS_CANCEL, 0x047E, 0x047F, 0x0480, 348, 304));
+            Add(CreateDialogButton(ID_CS_OK, true, 264, 304));
+            Add(CreateDialogButton(ID_CS_CANCEL, false, 348, 304));
         }
     }
     else if (g_ConnectionScreen.GetType() == CST_GAME)
@@ -125,7 +143,7 @@ void CGumpScreenConnection::UpdateContent()
             }
             CreateText(189, 178, text[index], 2);
 
-            Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
+            Add(CreateDialogButton(ID_CS_OK, true, 306, 304));
         }
         else
         {
@@ -184,13 +202,13 @@ void CGumpScreenConnection::UpdateContent()
         }
         CreateText(189, 178, text[index], 2);
 
-        Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
+        Add(CreateDialogButton(ID_CS_OK, true, 306, 304));
     }
     else if (g_ConnectionScreen.GetType() == CST_SELECT_PROFESSOIN)
     {
         CreateText(189, 178, "You must have three unique skills choosen!", 2);
 
-        Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
+        Add(CreateDialogButton(ID_CS_OK, true, 306, 304));
     }
     else if (g_ConnectionScreen.GetType() == CST_CONLOST)
     {
@@ -198,7 +216,7 @@ void CGumpScreenConnection::UpdateContent()
 
         CreateText(215, 222, "Connection lost", 1);
 
-        Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 297, 257));
+        Add(CreateDialogButton(ID_CS_OK, true, 297, 257));
 
         g_ConnectionScreen.CursorGraphic = 0x2077; //Waiting mouse cursor
     }
@@ -232,7 +250,7 @@ void CGumpScreenConnection::UpdateContent()
             }
             CreateText(189, 178, text[index], 2);
 
-            Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
+            Add(CreateDialogButton(ID_CS_OK, true, 306, 304));
         }
         else
         {
