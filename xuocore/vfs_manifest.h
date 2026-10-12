@@ -132,9 +132,10 @@ inline bool vfs_asset_is_loose(const VfsAsset &asset)
 
 struct vfs_manifest_params
 {
-    fs_path product_file; // product manifest ("prod" XML), read from disk
+    fs_path product_file; // product manifest (MythicMFT XML, aops patchlist, uog json)
     // the product's remote url when known: the aops source derives its
-    // patchcfg url (config beside the patchlist) from it
+    // patchcfg url (config beside the patchlist) from it, the uog source
+    // its blob repo (the manifest url's directory)
     astr_t product_url;
     fs_path blobs_dir;    // local blob store root, mirroring the remote URL tree
     // optional acquisition override (the HTTP fetch engine); when null,
@@ -223,6 +224,11 @@ const std::vector<vfs_embedded_entry> &vfs_manifest_embedded();
 const std::vector<vfs_embedded_entry> &vfs_manifest_embedded_table();
 // replaces the override table (empty restores the embedded file's table)
 void vfs_manifest_embedded_set(std::vector<vfs_embedded_entry> table);
+
+// the tier of one asset: the name tables key on the file and apply to both
+// shapes (loose assets and refined pack blocks); pure - boot assigns tiers
+// on the in-memory plan
+uint8_t vfs_manifest_tier_of(const VfsPlan::VfsFile &file, const VfsAsset &asset);
 
 // applies the tier table + the embedded T1 order to a freshly built plan
 void vfs_manifest_assign_tiers(VfsPlan &plan);

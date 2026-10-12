@@ -51,6 +51,11 @@ astr_t vfs_aops_product_url_canonical(const astr_t &root_or_url);
 // plan's drift fingerprint, same value vfs_product_serial reports)
 uint64_t vfs_aops_serial(const uint8_t *data, size_t size);
 
+// the shared UO-data classifier used by both sources: accepts a lowercased
+// basename when it names a file a client install is made of (data
+// extensions, language stems, exact data-file names)
+bool vfs_aops_filter_accept(const astr_t &basename_lower);
+
 // parses the patchcfg ini: data urls resolve relative to `root`, the
 // extension and the version-file name carry through to the plan build
 bool vfs_aops_parse_patchcfg(

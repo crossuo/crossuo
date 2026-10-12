@@ -12,6 +12,7 @@
 #include "mft.h"
 #include "vfs_manifest.h"
 #include "vfs_source_aops.h"
+#include "vfs_source_uog.h"
 #include "vfs_transport.h"
 #include "uop.h"
 
@@ -250,7 +251,12 @@ bool vfs_manifest_build(const vfs_manifest_params &params, VfsPlan &out_plan)
     }
 
     // format dispatch: the official MythicMFT product walks the manifest
-    // tree below; an aops patchlist builds through the aops source
+    // tree below; the streaming json (uog) and the aops patchlist build
+    // through their sources (json first: cheap and unambiguous)
+    if (vfs_uog_sniff_manifest(data.data(), data.size()))
+    {
+        return vfs_uog_build_plan(p, data, p.product_url, out_plan);
+    }
     if (vfs_aops_sniff_patchlist(data.data(), data.size()))
     {
         return vfs_aops_build_plan(p, data, p.product_url, out_plan);
@@ -422,26 +428,36 @@ static const uint64_t VFS_TIER_T0_MAINMISC[] = {
     Asset::AssetMap,
 };
 
+// the legacy animation mul set (anim.mul..anim6.mul): fully replaced by the
+// AnimationFrame*.uop block packs on >= 7.0 clients and kept only as the
+// pre-7.0 fallback. A repacked product ships ~730 MB of it near the top of
+// the manifest, so plan-order sweeping led with it - T3 converges it last,
+// after every file a modern client demands (traps still fetch on use)
+static const char *const VFS_TIER_T3_ANIM_MULS[] = {
+    "anim.mul", "anim2.mul", "anim3.mul", "anim4.mul", "anim5.mul", "anim6.mul",
+};
+
 uint8_t vfs_manifest_tier_of(const VfsPlan::VfsFile &file, const VfsAsset &asset)
 {
-    if (vfs_asset_is_loose(asset))
-    {
-        const astr_t lower = str_lower(asset.name);
-        if (lower.rfind("music/", 0) == 0)
-            return vfs_tier_t3; // deferred to idle bandwidth
-        if (vfs_tier_name_is(lower, VFS_TIER_T0_FILES, sizeof(VFS_TIER_T0_FILES) / sizeof(*VFS_TIER_T0_FILES)))
-            return vfs_tier_t0;
-        if (vfs_tier_t1_file(lower))
-            return vfs_tier_t1;
-        // anim.mul (190 MB legacy fallback) deliberately stays T2: the boot
-        // skeleton prepares it valid-but-unfetched, LoadCommon passes, and the
-        // idle tier converges the content
-        return vfs_tier_t2;
-    }
+    // the name tables key on the file and apply to BOTH shapes: the loose
+    // asset and the per-block pack assets the range refinement turns loose
+    // uop files into (refined files would otherwise fall into the pack
+    // defaults below and lose their boot tier - soundlegacymul.uop's T1
+    // ride-along degraded to sweep order)
+    const astr_t lower = str_lower(vfs_asset_is_loose(asset) ? asset.name : file.name);
+    if (lower.rfind("music/", 0) == 0)
+        return vfs_tier_t3; // deferred to idle bandwidth
+    if (vfs_tier_name_is(
+            lower, VFS_TIER_T3_ANIM_MULS, sizeof(VFS_TIER_T3_ANIM_MULS) / sizeof(*VFS_TIER_T3_ANIM_MULS)))
+        return vfs_tier_t3;
+    if (vfs_tier_name_is(lower, VFS_TIER_T0_FILES, sizeof(VFS_TIER_T0_FILES) / sizeof(*VFS_TIER_T0_FILES)))
+        return vfs_tier_t0;
+    if (vfs_tier_t1_file(lower))
+        return vfs_tier_t1;
 
-    // pack assets: only the MainMisc core set is T0; the rest comes from the
-    // embedded manifest (T1) or defaults to on-demand (T2)
-    if (strcasecmp(file.name.c_str(), "MainMisc.uop") == 0)
+    // pack assets keep one hash-keyed special case: the MainMisc core set
+    // is boot-critical; every other pack block defaults to on-demand
+    if (!vfs_asset_is_loose(asset) && strcasecmp(file.name.c_str(), "MainMisc.uop") == 0)
     {
         for (uint64_t hash : VFS_TIER_T0_MAINMISC)
         {

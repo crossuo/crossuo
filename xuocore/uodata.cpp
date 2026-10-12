@@ -315,6 +315,14 @@ bool bwt_decompress(const std::vector<uint8_t> &coded, std::vector<uint8_t> &out
         return false;
     }
 
+    // the coded reads below index list across [1024, sum + 1024): a coded
+    // stream always carries the frequency header plus at least sum payload
+    // bytes - garbage headers must not walk past the buffer
+    if (uint64_t(sum) + 1024 > list.size())
+    {
+        return false;
+    }
+
     out.assign(size_t(sum), 0);
 
     int nonZeroCount = 0;
@@ -1423,6 +1431,42 @@ static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
 #define MAX_STRINGS (128 * 1000)
 static const char *g_strings[MAX_STRINGS];
 static std::vector<uint8_t> g_stringData;
+// walks the flat dictionary layout: a UopDictionary header followed by
+// Count - 1 length-prefixed strings (slot 0 is reserved). Valid only when
+// the walk lands exactly on the payload end - the discriminator between
+// the raw payload and anything coded, because the coded layouts share the
+// raw's byte shapes (the magic's byte 3 was the old tell and is just a
+// per-build value: 0xe6 on 7.0.85.15, 0x8e on newer builds)
+bool uop_dictionary_walks(const std::vector<uint8_t> &data)
+{
+    if (data.size() < sizeof(UopDictionary) + 2)
+    {
+        return false;
+    }
+    uint32_t count = 0;
+    memcpy(&count, &data[offsetof(UopDictionary, Count)], sizeof(count));
+    if (count == 0 || count - 1 >= MAX_STRINGS)
+    {
+        return false;
+    }
+    size_t at = sizeof(UopDictionary);
+    for (uint32_t i = 0; i + 1 < count; ++i)
+    {
+        if (at + 2 > data.size())
+        {
+            return false;
+        }
+        uint16_t len = 0;
+        memcpy(&len, &data[at], sizeof(len));
+        at += sizeof(len) + len; // size_t math: no overflow from the u16
+        if (at > data.size())
+        {
+            return false;
+        }
+    }
+    return at == data.size();
+}
+
 void CFileManager::LoadStringDictionary()
 {
 #if defined(XUO_EMSC)
@@ -1435,12 +1479,15 @@ void CFileManager::LoadStringDictionary()
         if (block != nullptr)
         {
             g_stringData = g_FileManager.m_StringDictionary.GetData(block);
-            if (g_stringData.size() > 4 && g_stringData[3] == 0x8E)
+            if (!uop_dictionary_walks(g_stringData) && g_stringData.size() > 4 &&
+                g_stringData[3] == 0x8E)
             {
-                // the payload carries the bwt-coded layout (the 0x8E byte at
-                // offset 3 is the tell, same as the cliloc files)
+                // the payload walks as nothing raw: the legacy bwt-coded
+                // layout is the only remaining shape (current builds carry
+                // the plain dictionary and their magic can carry the 0x8e
+                // byte the old tell keyed on)
                 std::vector<uint8_t> out;
-                if (bwt_decompress(g_stringData, out))
+                if (bwt_decompress(g_stringData, out) && uop_dictionary_walks(out))
                 {
                     g_stringData = std::move(out);
                 }
@@ -1450,31 +1497,39 @@ void CFileManager::LoadStringDictionary()
                     g_stringData.clear();
                 }
             }
-            CDataReader reader;
-            reader.SetData(&g_stringData[0], g_stringData.size());
-            auto header = (UopDictionary *)reader.Start;
-            Info(
-                Data,
-                "dictionary: 0x%08x 0x%08x ... 0x%08x - total: %u",
-                header->Unk1,
-                header->Unk2,
-                header->Unk3,
-                header->Count);
-            reader.Move(sizeof(UopDictionary));
-
-            assert(header->Count - 1 < MAX_STRINGS);
-            for (int i = 0; i < int(header->Count - 1) && i < MAX_STRINGS; ++i)
+            // two terminators for the last string (its end is the payload
+            // end): the walk keeps every read below in bounds and the parse
+            // never runs on an empty payload
+            if (!g_stringData.empty())
             {
-                const auto len = reader.ReadInt16LE();
-                *(reader.Ptr - 2) = '\0';
-                g_strings[i + 1] = (const char *)reader.Ptr;
-                reader.Move(len);
+                g_stringData.push_back(0);
+                g_stringData.push_back(0);
             }
-            //for (int i = 1; g_strings[i]; ++i)
-            //{
-            //    fprintf(stdout, " %d: %s\n", i, g_strings[i]);
-            //}
         }
+    }
+    if (g_stringData.empty())
+    {
+        Error(Data, "string dictionary: no usable payload");
+        return;
+    }
+    CDataReader reader;
+    reader.SetData(&g_stringData[0], g_stringData.size());
+    auto header = (UopDictionary *)reader.Start;
+    Info(
+        Data,
+        "dictionary: %016" PRIx64 " - strings: %u (build value %u)",
+        header->Unk1,
+        header->Count,
+        header->Unk2);
+    reader.Move(sizeof(UopDictionary));
+
+    assert(header->Count - 1 < MAX_STRINGS);
+    for (int i = 0; i < int(header->Count - 1) && i < MAX_STRINGS; ++i)
+    {
+        const auto len = reader.ReadInt16LE();
+        *(reader.Ptr - 2) = '\0';
+        g_strings[i + 1] = (const char *)reader.Ptr;
+        reader.Move(len);
     }
 }
 

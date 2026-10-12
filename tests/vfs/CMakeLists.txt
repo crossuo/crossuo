@@ -19,6 +19,8 @@ set(VFS_TESTS_SRCS
   test_store.cpp
   test_stub.cpp
   test_update.cpp
+  test_uog.cpp
+  test_tiers.cpp
   test_urls.cpp
   test_uop_parse.cpp
 )

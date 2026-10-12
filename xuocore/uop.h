@@ -139,13 +139,15 @@ struct UopAnimationSequenceReplacement
 static_assert(
     sizeof(UopAnimationSequenceReplacement) == 72, "Invalid UopAnimationSequenceReplacement size");
 
-// string_dictionary.uop
+// string_dictionary.uop: the payload header. The magic is a per-build value
+// (0x01d5aa96e6b90880 on 7.0.85.15, 0x01d65c3f8e0e3880 on newer builds) and
+// the count is 1-based: the payload carries Count - 1 length-prefixed
+// strings, slot 0 stays reserved
 struct UopDictionary
 {
-    uint32_t Unk1;
-    uint32_t Unk2;
+    uint64_t Unk1;
     uint32_t Count;
-    uint32_t Unk3;
+    uint32_t Unk2;
 };
 static_assert(sizeof(UopDictionary) == 16, "Invalid UopDictionary size");
 

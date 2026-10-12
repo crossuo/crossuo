@@ -563,3 +563,71 @@ VFS_TEST(uop_fixture_part_roundtrip)
     // manifest attributes ph="3cf84" sh="fc599ef4"
     TEST_CHECK(part.hash == 0xfc599ef40003cf84ull);
 }
+
+// ---------------------------------------------------------------------------
+// string dictionary payload shape (the raw-vs-coded dispatch)
+//
+// The current string_dictionary.uop payload is the flat dictionary: a
+// UopDictionary header followed by Count - 1 length-prefixed strings. The
+// old dispatch keyed on the magic's byte 3 being 0x8E and ran the bwt
+// decoder over raw payloads whose per-build magic happens to carry that
+// byte - the decoder failed and the empty-payload fallback crashed the
+// client (vector operator[] on a cleared buffer). The walker below is the
+// dispatch now; these tests pin the regression shape.
+// ---------------------------------------------------------------------------
+
+VFS_TEST(uop_dictionary_walks_raw_with_8e_magic)
+{
+    // 7.0.85-era magic ends 0xe6, newer builds (the UOGamers repack) end
+    // 0x8e: both are raw dictionaries, neither may take the bwt path
+    std::vector<uint8_t> payload(sizeof(UopDictionary) + 2 + 3, 0);
+    const uint64_t magic = 0x01d65c3f8e0e3880ull;
+    memcpy(&payload[0], &magic, sizeof(magic));
+    const uint32_t count = 2; // 1-based: slot 0 reserved, one string
+    memcpy(&payload[8], &count, sizeof(count));
+    const uint16_t len = 3;
+    memcpy(&payload[sizeof(UopDictionary)], &len, sizeof(len));
+    payload[sizeof(UopDictionary) + 2] = 'a';
+    payload[sizeof(UopDictionary) + 3] = 'b';
+    payload[sizeof(UopDictionary) + 4] = 'c';
+    TEST_CHECK(uop_dictionary_walks(payload));
+    TEST_CHECK(payload[3] == 0x8E); // the old tell fires on this raw payload
+}
+
+VFS_TEST(uop_dictionary_walks_rejects_malformed)
+{
+    // header too short
+    TEST_CHECK(!uop_dictionary_walks(std::vector<uint8_t>(8, 0)));
+    // count of zero
+    std::vector<uint8_t> zero(sizeof(UopDictionary), 0);
+    TEST_CHECK(!uop_dictionary_walks(zero));
+    // string running past the payload end
+    std::vector<uint8_t> over(sizeof(UopDictionary) + 2, 0);
+    const uint32_t count = 2;
+    memcpy(&over[8], &count, sizeof(count));
+    over[sizeof(UopDictionary)] = 0xFF; // declares 255 bytes, none follow
+    TEST_CHECK(!uop_dictionary_walks(over));
+    // trailing junk after the last string (not an exact fit)
+    std::vector<uint8_t> tail(sizeof(UopDictionary) + 2 + 3 + 1, 0);
+    memcpy(&tail[8], &count, sizeof(count));
+    const uint16_t short_len = 3;
+    memcpy(&tail[sizeof(UopDictionary)], &short_len, sizeof(short_len));
+    tail.back() = 'x'; // one byte past the walked end
+    TEST_CHECK(!uop_dictionary_walks(tail));
+    // a bwt-coded stream shape: coded bytes cannot walk as valid strings
+    std::vector<uint8_t> coded(sizeof(UopDictionary) + 2048, 0);
+    memcpy(&coded[0], &count, sizeof(count)); // garbage counts from noise
+    coded[8] = 0xAB;
+    TEST_CHECK(!uop_dictionary_walks(coded));
+}
+
+VFS_TEST(uop_dictionary_bwt_fallback_stays_bounded)
+{
+    // a walk-invalid stream still routes through bwt_decompress: garbage
+    // headers (sum <= 0, or sums that outrun the buffer) must come back as
+    // a clean false, never an out-of-bounds read
+    std::vector<uint8_t> garbage(4096, 0xAB);
+    std::vector<uint8_t> out;
+    TEST_CHECK(!bwt_decompress(garbage, out));
+    TEST_CHECK(out.empty());
+}

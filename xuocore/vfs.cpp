@@ -7,6 +7,7 @@
 // any header that pulls common/logging.h (vfs.h does)
 #include "mft.h"
 #include "vfs_source_aops.h"
+#include "vfs_source_uog.h"
 
 #include "vfs.h"
 
@@ -276,6 +277,14 @@ static bool vfs_fetch_and_materialize_asset(
         const uint64_t len = vfs_asset_range_len(asset);
         astr_t url = astr_t(s_plan.file_repo) + asset.blob;
         std::vector<uint8_t> bytes(static_cast<size_t>(len), 0);
+        // visibility: this path runs on the sweep thread with no engine
+        // logging - without it a slow transfer is total log silence
+        DEBUG(
+            Vfs,
+            "ranged fetch: %s (%llu bytes @+%llu)",
+            url.c_str(),
+            (unsigned long long)len,
+            (unsigned long long)asset.blob_offset);
         // the sink is what lands the transfer body: without it the transport
         // reports success with zero bytes and the block would stub out
         vfs_transport_result res = vfs_transport_active()->range(
@@ -285,7 +294,13 @@ static bool vfs_fetch_and_materialize_asset(
                 static_cast<std::vector<uint8_t> *>(context)->assign(data, data + size);
                 return true;
             },
-            &bytes, 0, false);
+            &bytes,
+            // the curl defaults' low-speed guard never trips on a slow
+            // trickle (1 B/s survives), which would hold the sweep thread
+            // in silence for the length of the stall - bound the transfer
+            // like the whole-blob trap path does
+            VFS_TRAP_FETCH_TIMEOUT_MS,
+            false);
         const bool ok = res.ok && res.bytes == len;
         log_resolve(ok);
         if (!ok)
@@ -2366,9 +2381,14 @@ static bool vfs_params_ready()
 // when the product manifest still carries the same serial
 static bool vfs_product_serial_data(const uint8_t *data, size_t size, uint64_t *out_serial)
 {
-    // format dispatch: official XML carries the serial attribute; an aops
-    // patchlist fingerprints itself (any stable content hash works - the
-    // serial is only ever compared against itself)
+    // format dispatch: official XML carries the serial attribute; the uog
+    // json and the aops patchlist fingerprint themselves (any stable content
+    // hash works - the serial is only ever compared against itself)
+    if (vfs_uog_sniff_manifest(data, size))
+    {
+        *out_serial = vfs_uog_serial(data, size);
+        return size != 0;
+    }
     if (size < 9 || memcmp(data, "<MythicMFT", 9) != 0)
     {
         *out_serial = vfs_aops_serial(data, size);
@@ -3059,15 +3079,22 @@ static bool vfs_boot_product_fetch()
     // becomes ".../pov/uo-legacyrelease.prod"), which poisons a bare aops
     // root - the leaf's extension makes the canonical helper treat it as a
     // full manifest url. Fetch+sniff an ordered candidate ladder instead,
-    // most likely first, deduped (capped at three; one request each):
+    // most likely first, deduped (capped at four; one request each):
     //   1. the url as given (mythic full urls, canonical patchlist urls)
     //   2. the auto-appended-filename signature: the de-leafed root's
     //      patchlist (".../pov/uo-legacyrelease.prod" -> ".../pov/patchlist")
-    //   3. any remaining bare root: ".../patchlist" (trailing /s stripped)
-    // The first candidate that sniffs as a manifest (aops patchlist or a
-    // MythicMFT product file) wins and becomes s_params.product_url: the
-    // downstream derivations (manifest repo, blob tails) are built from it.
-    astr_t candidates[3];
+    //   3. any remaining bare root: ".../Manifest.json" (the uog cdn form:
+    //      a bare "https://host/Client" bootstraps its json manifest - the
+    //      /patchlist root canonical rewrote above is de-leafed again so
+    //      the rung still fires for it)
+    //   4. any remaining bare root: ".../patchlist" (trailing /s stripped)
+    // The first candidate that sniffs as a manifest (an aops patchlist, a
+    // uog json manifest or a MythicMFT product file) wins and becomes
+    // s_params.product_url: the downstream derivations (manifest repo, blob
+    // tails) are built from it. One request per candidate and the ladder
+    // stops at the first sniffed manifest, so aops roots pay at most one
+    // extra 404/html request for the uog candidate.
+    astr_t candidates[4];
     size_t candidate_count = 0;
     candidates[candidate_count++] = s_params.product_url;
     {
@@ -3087,9 +3114,26 @@ static bool vfs_boot_product_fetch()
         astr_t bare = s_params.product_url;
         while (!bare.empty() && bare.back() == '/')
             bare.pop_back();
+        // canonical rewrote a bare root onto /patchlist above (and a profile
+        // may carry the leaf itself): strip the aops leaves again so the uog
+        // rung below reaches the same root - ".../Client/patchlist" boots
+        // ".../Client/Manifest.json"
+        static const char *const aops_leaves[] = { "/patchlist", "/patchcfg" };
+        for (const char *leaf : aops_leaves)
+        {
+            const size_t leaf_len = strlen(leaf);
+            if (
+                bare.size() > leaf_len &&
+                bare.compare(bare.size() - leaf_len, leaf_len, leaf) == 0)
+            {
+                bare.resize(bare.size() - leaf_len);
+                break;
+            }
+        }
         // idempotence: a url that already carries a patch leaf stays put,
-        // never ".../patchlist/patchlist"
-        static const char *const rooted_leaves[] = { "/patchlist", "/patchcfg" };
+        // never ".../patchlist/patchlist"; the uog leaf joins for the same
+        // reason (no ".../Manifest.json/patchlist" candidates)
+        static const char *const rooted_leaves[] = { "/patchlist", "/patchcfg", "/Manifest.json" };
         bool rooted = false;
         for (const char *leaf : rooted_leaves)
         {
@@ -3102,7 +3146,12 @@ static bool vfs_boot_product_fetch()
             }
         }
         if (!rooted && !bare.empty())
-            candidates[candidate_count++] = bare + "/patchlist";
+        {
+            candidates[candidate_count++] = bare + "/Manifest.json";
+            const astr_t patchlist = bare + "/patchlist";
+            if (patchlist != candidates[0]) // the rewritten bare root: already candidate 0
+                candidates[candidate_count++] = patchlist;
+        }
     }
     std::vector<uint8_t> data;
     bool unrecognized = false;
@@ -3114,6 +3163,7 @@ static bool vfs_boot_product_fetch()
             continue;
         if (
             vfs_aops_sniff_patchlist(attempt.data(), attempt.size()) ||
+            vfs_uog_sniff_manifest(attempt.data(), attempt.size()) ||
             (attempt.size() >= 9 && memcmp(attempt.data(), "<MythicMFT", 9) == 0))
         {
             s_params.product_url = candidates[i];
