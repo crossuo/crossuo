@@ -683,10 +683,28 @@ void CPacketManager::AddMegaClilocRequest(int serial)
 void CPacketManager::OnReadFailed()
 {
     Info(Network, "OnReadFailed. disconnecting.");
-    g_Game.DisconnectGump();
-    //g_Game. Disconnect();
     g_AbyssPacket03First = true;
     g_ConnectionManager.Disconnect();
+    // servers that close after a login denial (0x82 then FIN) land here: the
+    // connection screen is the active screen and already carries the denial
+    // (failed + error code from the packet handler). A bare close without a
+    // denial becomes a generic communication problem - either way the player
+    // gets the dialog's OK back to the main screen. DisconnectGump here
+    // would bury the denial under the in-game notify gump on GS_GAME_BLOCKED
+    // and strand the player: its logout action runs on the game screen,
+    // which is not the active screen at the login stages.
+    if (
+        g_GameState == GS_MAIN_CONNECT || g_GameState == GS_SERVER_CONNECT ||
+        g_GameState == GS_GAME_CONNECT || g_GameState == GS_DELETE)
+    {
+        if (!g_ConnectionScreen.GetConnectionFailed())
+        {
+            g_ConnectionScreen.SetConnectionFailed(true);
+            g_ConnectionScreen.SetErrorCode(8); // "Communication problem."
+        }
+        return;
+    }
+    g_Game.DisconnectGump();
 }
 
 void CPacketManager::OnPacket()
