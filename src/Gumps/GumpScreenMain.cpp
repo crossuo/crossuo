@@ -224,7 +224,9 @@ void CGumpScreenMain::UpdateContent()
         g_MainScreen.m_AutoLogin = (CGUICheckbox *)Add(
             new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 0, 0));
 
-        Page = 1; //the client boots on the title screen
+        // the title screen reset lives in CMainScreen::Init: a rebuild here
+        // runs after button handlers set the page (ID_1998_LOGIN opens the
+        // AcctLogin panel) and would yank the user back mid-flow
         return;
     }
 
