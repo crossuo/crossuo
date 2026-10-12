@@ -26,6 +26,10 @@ class CGumpScreenCreateCharacter : public CGump
     };
 
 private:
+    //the >= 2.0 client layout (gump frame, name entry, hair/beard combos,
+    //hue grids, race/sex radios)
+    void UpdateContentModern();
+
     //1.25.32 (1998) InitSkill step: three skill picks
     void UpdateContent1998();
 
