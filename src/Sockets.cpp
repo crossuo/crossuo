@@ -161,20 +161,39 @@ bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
 int tcp_select(tcp_socket socket)
 {
     auto ctx = static_cast<ws_context *>(socket);
-    if (!ctx || !ctx->connected)
+    if (!ctx)
         return 0;
-    return (ctx->recv_buf.size() > ctx->recv_pos) ? 1 : 0;
+    // A closed WebSocket must not hide buffered data. A server that writes
+    // its final packet(s) and immediately closes (the login server sends the
+    // 0x8C relay reply and drops the connection) delivers the binary frame
+    // and the close event to the worker in the same event-loop turn; gating
+    // readability on ctx->connected loses that tail - the 0x8C stays in
+    // recv_buf forever, is never dispatched, and the client stalls at the
+    // server-pick screen (intermittently, depending on whether the browser
+    // happens to split the two events across turns; a native select()
+    // reports a closed-with-data socket readable, which is the contract
+    // CConnection expects). Model the native EOF: buffered bytes remain
+    // readable, and -1 (error) is reported only once the buffer has drained.
+    if (ctx->recv_buf.size() > ctx->recv_pos)
+        return 1;
+    if (ctx->closed || ctx->failed)
+        return -1;
+    return 0;
 }
 
 int tcp_recv(tcp_socket socket, unsigned char *data, size_t max_size)
 {
     auto ctx = static_cast<ws_context *>(socket);
-    if (!ctx || !ctx->connected)
+    if (!ctx)
         return -1;
 
     size_t available = ctx->recv_buf.size() - ctx->recv_pos;
     if (available == 0)
-        return 0;
+    {
+        // drained (or never filled): EOF when the socket ended, plain
+        // "no data" while it is still live
+        return (ctx->closed || ctx->failed) ? 0 : (ctx->connected ? 0 : -1);
+    }
 
     size_t to_copy = std::min(max_size, available);
     memcpy(data, ctx->recv_buf.data() + ctx->recv_pos, to_copy);
