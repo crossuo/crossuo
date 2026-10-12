@@ -451,5 +451,57 @@ void CGumpScreenSelectTown::GUMP_SLIDER_MOVE_EVENT_C
 
 void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
 {
-    //the CityChoice step has no text entries
+    if (g_Config.ClientVersion < CV_200)
+    {
+        return; //the CityChoice step has no text entries
+    }
+
+    // the modern layout's town rows are read-only text entries: the click
+    // selects the start city and refreshes the description panel
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+    {
+        if (item->Type == GOT_TEXTENTRY)
+        {
+            if (item->Serial == serial)
+            {
+                CCityItem *city = g_CityList.GetCity(serial - ID_STS_TOWN + 1);
+
+                if (city == nullptr || g_SelectTownScreen.m_City->Name == city->Name)
+                {
+                    break;
+                }
+
+                g_SelectTownScreen.m_City = city;
+
+                auto description = city->m_City.Description;
+
+                if (city->IsNewCity())
+                {
+                    description =
+                        g_ClilocManager.Cliloc(g_Language)->GetW(((CCityItemNew *)city)->Cliloc);
+                }
+
+                g_FontManager.SetUseHTML(true);
+
+                if (m_Description != nullptr)
+                {
+                    m_Description->CreateTextureW(1, description, 30, 150);
+                }
+
+                g_FontManager.SetUseHTML(false);
+
+                if (m_HTMLGump != nullptr)
+                {
+                    m_HTMLGump->ResetDataOffset();
+                    m_HTMLGump->CalculateDataSize();
+                }
+
+                ((CGUITextEntry *)item)->Focused = true;
+            }
+            else
+            {
+                ((CGUITextEntry *)item)->Focused = false;
+            }
+        }
+    }
 }
