@@ -1,6 +1,6 @@
 // Ad-hoc harness for the shell.html shard IIFE (extracted and evaluated with
 // browser stubs). Exercises: single-shard lock, ?shards= override semantics,
-// login-override stripping, installer->/data mapping.
+// login-override stripping, producturl->/data mapping.
 'use strict';
 const fs = require('fs');
 const vm = require('vm');
@@ -26,9 +26,9 @@ const makeDocumentStub = () => ({
 });
 
 const CANNED = {
-  'http://x/single.cfg': '[Shard]\nname=OnlyShard\nloginserver=play.only.example,2593\ninstaller=local:mydata\nclientversion=1.25.32\ncrypt=yes\n',
-  'http://x/multi.cfg': '[Shard]\nname=A\nloginserver=a.example,2593\n\n[Shard]\nname=B\nloginserver=b.example,2593\n',
-  'http://x/override.cfg': '[Shard]\nname=Evil\nloginserver=evil.example,5193\ninstaller=\n',
+  'http://x/single.cfg': '[Shard]\nshardname=OnlyShard\nloginserver=play.only.example,2593\nproducturl=local:mydata\nclientversion=1.25.32\ncrypt=yes\n',
+  'http://x/multi.cfg': '[Shard]\nshardname=A\nloginserver=a.example,2593\n\n[Shard]\nshardname=B\nloginserver=b.example,2593\n',
+  'http://x/override.cfg': '[Shard]\nshardname=Evil\nloginserver=evil.example,5193\nproducturl=\n',
   'shards.cfg': null, // per-test
 };
 
@@ -81,7 +81,7 @@ function check(name, cond, extra) {
   let r = await run('', CANNED['http://x/single.cfg']);
   check('locked: boots without picker', !!r.args, JSON.stringify(r.args));
   check('locked: shard login pinned', extractArgs(r.args).includes('--host=play.only.example'), JSON.stringify(r.args));
-  check('locked: installer local: -> /data mount', extractArgs(r.args).includes('--streaming-product=/data/mydata/'), JSON.stringify(r.args));
+  check('locked: producturl local: -> /data mount', extractArgs(r.args).includes('--streaming-product=/data/mydata/'), JSON.stringify(r.args));
   check('locked: --shard emitted', extractArgs(r.args).includes('--shard=OnlyShard'), JSON.stringify(r.args));
   check('locked: clientversion passed', extractArgs(r.args).includes('--clientversion=1.25.32'), JSON.stringify(r.args));
   check('locked: crypt passed', extractArgs(r.args).includes('--crypt=1'), JSON.stringify(r.args));
@@ -130,37 +130,39 @@ function check(name, cond, extra) {
   r = await run('', null);
   check('no cfg: fallback boot', !!r.args && extractArgs(r.args).length === 0, JSON.stringify(r.args));
 
-  // 10. installer mapping variants (through the locked single entry)
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=mydata\n';
+  // 10. producturl mapping variants (through the locked single entry)
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=mydata\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('installer bare-relative -> /data/mydata/', extractArgs(r.args).includes('--streaming-product=/data/mydata/'), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=./uodata\n';
+  check('producturl bare-relative -> /data/mydata/', extractArgs(r.args).includes('--streaming-product=/data/mydata/'), JSON.stringify(extractArgs(r.args)));
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=./uodata\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('installer ./uodata -> /data/uodata/', extractArgs(r.args).includes('--streaming-product=/data/uodata/'), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=a/./b\n';
+  check('producturl ./uodata -> /data/uodata/', extractArgs(r.args).includes('--streaming-product=/data/uodata/'), JSON.stringify(extractArgs(r.args)));
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=a/./b\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('installer a/./b -> /data/a/b/', extractArgs(r.args).includes('--streaming-product=/data/a/b/'), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=local:a/b\n';
+  check('producturl a/./b -> /data/a/b/', extractArgs(r.args).includes('--streaming-product=/data/a/b/'), JSON.stringify(extractArgs(r.args)));
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=local:a/b\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('installer local:a/b -> /data/a/b/', extractArgs(r.args).includes('--streaming-product=/data/a/b/'), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=../evil\n';
+  check('producturl local:a/b -> /data/a/b/', extractArgs(r.args).includes('--streaming-product=/data/a/b/'), JSON.stringify(extractArgs(r.args)));
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=../evil\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('installer .. refused (no product flag)', !extractArgs(r.args).some(x => x.startsWith('--streaming-product')), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=https://cdn.example/uo/manifest\n';
+  check('producturl .. refused (no product flag)', !extractArgs(r.args).some(x => x.startsWith('--streaming-product')), JSON.stringify(extractArgs(r.args)));
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=https://cdn.example/uo/manifest\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('manifest installer -> default lanes (no flag)', !extractArgs(r.args).some(x => x.startsWith('--streaming-product')), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=https://uniteuo.example/fc\n';
+  check('manifest producturl -> default lanes (no flag)', !extractArgs(r.args).some(x => x.startsWith('--streaming-product')), JSON.stringify(extractArgs(r.args)));
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=https://uniteuo.example/fc\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('aops installer -> /stream relay', extractArgs(r.args).includes('--streaming-product=/stream/https%3A%2F%2Funiteuo.example%2Ffc/'), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=local:/srv/shard/client\n';
+  check('aops producturl -> /stream relay', extractArgs(r.args).includes('--streaming-product=/stream/https%3A%2F%2Funiteuo.example%2Ffc/'), JSON.stringify(extractArgs(r.args)));
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=local:/srv/shard/client\n';
   r = await run('', CANNED['http://x/single.cfg']);
   check('absolute local: host path -> no product flag (needs proxy rewrite)', !extractArgs(r.args).some(x => x.startsWith('--streaming-product')), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=/data/t/\n';
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=/data/t/\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('rewritten installer passes through', extractArgs(r.args).includes('--streaming-product=/data/t/'), JSON.stringify(extractArgs(r.args)));
-  CANNED['http://x/single.cfg'] = '[Shard]\nname=T\nloginserver=t.example,2593\ninstaller=latest\n';
+  check('rewritten producturl passes through', extractArgs(r.args).includes('--streaming-product=/data/t/'), JSON.stringify(extractArgs(r.args)));
+  // the `latest` token is gone with the prefix grammar: producturl is a
+  // plain url, a bare value is a deployment-local mount like any other
+  CANNED['http://x/single.cfg'] = '[Shard]\nshardname=T\nloginserver=t.example,2593\nproducturl=latest\n';
   r = await run('', CANNED['http://x/single.cfg']);
-  check('latest -> no product flag', !extractArgs(r.args).some(x => x.startsWith('--streaming-product')), JSON.stringify(extractArgs(r.args)));
+  check('bare producturl -> /data mount', extractArgs(r.args).includes('--streaming-product=/data/latest/'), JSON.stringify(extractArgs(r.args)));
 
   // 11. picker sub-line + card action (web shard picker)
   // walk the stub tree collecting nodes matching a predicate
@@ -180,8 +182,8 @@ function check(name, cond, extra) {
   // 11a. multi-shard: the sub line shows the WEB url (clickable), not the
   // login address
   CANNED['http://x/multi.cfg'] =
-    '[Shard]\nname=A\nloginserver=a.example,2593\nurl=https://a.example/\n\n' +
-    '[Shard]\nname=B\nloginserver=b.example,2593\nurl=https://b.example/\n';
+    '[Shard]\nshardname=A\nloginserver=a.example,2593\nshardweb=https://a.example/\n\n' +
+    '[Shard]\nshardname=B\nloginserver=b.example,2593\nshardweb=https://b.example/\n';
   r = await run('', CANNED['http://x/multi.cfg']);
   let rows = pickerRows(r.body);
   check('picker: two rows rendered', rows.length === 2, 'rows=' + rows.length);
@@ -196,8 +198,8 @@ function check(name, cond, extra) {
 
   // 11b. fallback: no url -> the login address is still shown
   CANNED['http://x/multi.cfg'] =
-    '[Shard]\nname=A\nloginserver=a.example,2593\n\n' +
-    '[Shard]\nname=B\nloginserver=b.example,2593\n';
+    '[Shard]\nshardname=A\nloginserver=a.example,2593\n\n' +
+    '[Shard]\nshardname=B\nloginserver=b.example,2593\n';
   r = await run('', CANNED['http://x/multi.cfg']);
   check('picker: no url -> loginserver fallback',
     pickerText(r.body).includes('a.example,2593'), pickerText(r.body));
@@ -205,9 +207,9 @@ function check(name, cond, extra) {
   // 11c. autoacct=no + urlregister -> Create account button on that card,
   // opening the registration page
   CANNED['http://x/multi.cfg'] =
-    '[Shard]\nname=A\nloginserver=a.example,2593\nurl=https://a.example/\n' +
-    'AutoAcct=no\nurlregister=https://a.example/register\n\n' +
-    '[Shard]\nname=B\nloginserver=b.example,2593\nurl=https://b.example/\n';
+    '[Shard]\nshardname=A\nloginserver=a.example,2593\nshardweb=https://a.example/\n' +
+    'AutoAcct=no\nshardaccount=https://a.example/register\n\n' +
+    '[Shard]\nshardname=B\nloginserver=b.example,2593\nshardweb=https://b.example/\n';
   r = await run('', CANNED['http://x/multi.cfg']);
   rows = pickerRows(r.body);
   const actions = walk(r.body, n => n.className === 'card-action');
@@ -223,17 +225,17 @@ function check(name, cond, extra) {
 
   // 11d. autoacct=yes explicitly -> no button even with a urlregister
   CANNED['http://x/multi.cfg'] =
-    '[Shard]\nname=A\nloginserver=a.example,2593\nAutoAcct=yes\n' +
+    '[Shard]\nshardname=A\nloginserver=a.example,2593\nAutoAcct=yes\n' +
     'urlregister=https://a.example/register\n\n' +
-    '[Shard]\nname=B\nloginserver=b.example,2593\n';
+    '[Shard]\nshardname=B\nloginserver=b.example,2593\n';
   r = await run('', CANNED['http://x/multi.cfg']);
   check('picker: autoacct=yes has no Create account button',
     walk(r.body, n => n.className === 'card-action').length === 0);
 
   // 11e. autoacct=no but no urlregister -> nothing to offer, no button
   CANNED['http://x/multi.cfg'] =
-    '[Shard]\nname=A\nloginserver=a.example,2593\nAutoAcct=no\n\n' +
-    '[Shard]\nname=B\nloginserver=b.example,2593\n';
+    '[Shard]\nshardname=A\nloginserver=a.example,2593\nAutoAcct=no\n\n' +
+    '[Shard]\nshardname=B\nloginserver=b.example,2593\n';
   r = await run('', CANNED['http://x/multi.cfg']);
   check('picker: autoacct=no without urlregister -> no button',
     walk(r.body, n => n.className === 'card-action').length === 0);

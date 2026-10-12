@@ -7,52 +7,50 @@
 #define CFG_FIELD(section, name, default, type)
 #endif
 
-CFG_FIELD(shard, name, {}, astr_t)
-// required
-// shard name
+// the [Shard] grammar mirrors the [crossuo] keys (cfg_crossuo.h): a shard
+// entry is directly usable as a crossuo config - shared keys are read by the
+// client, launcher-only keys (description, autoacct, tags) are accepted and
+// ignored by the client's config parser
 
-CFG_FIELD(shard, servertype, {}, astr_t)
+CFG_FIELD(shard, shardname, {}, astr_t)
 // required
-// format:
-//   <RunUO|ServUO|POL|Sphere> <version number|commit hash>
-// server type should contain a well formated server software name and version
-// this is useful for crossuo dev team and bug fixing, so MUST be filled.
+// shard name; names the client's per-shard data directory
 
-CFG_FIELD(shard, language, "English", lang_type)
-// optional, default: English<,French...>
+CFG_FIELD(shard, language, {}, astr_t)
+// optional
+// the default client locale (.loc) to use, e.g. English
 
 CFG_FIELD(shard, description, {}, astr_t)
-// optional
-// format:
-//   <short textual description in server official language>
+// optional, launcher-only
+// short textual description in the shard's official language
 
-CFG_FIELD(shard, url, {}, astr_t)
-// optional
-// website url
+CFG_FIELD(shard, shardweb, {}, astr_t)
+// optional, http(s)
+// shard website
 
-CFG_FIELD(shard, urlforum, {}, astr_t)
-// optional
-// website forum url
+CFG_FIELD(shard, shardcommunity, {}, astr_t)
+// optional, http(s)
+// forum/community page url
 
-CFG_FIELD(shard, urlother, {}, astr_t)
-// optional
+CFG_FIELD(shard, shardother, {}, astr_t)
+// optional, http(s)
 // plain community url, eg. a discord invite
 // format:
 //   <url>
 //   https://discord.gg/INVITE
-// no name prefix anymore: a discord link is detected from the url itself
+// no name prefix: a discord link is detected from the url itself
 // (contains discord.gg/ or discord.com/)
 
-CFG_FIELD(shard, urlregister, {}, astr_t)
-// optional
-// url where to register IF the shard is not auto account creation
-// if empty, it IS considered auto account creation
+CFG_FIELD(shard, shardaccount, {}, astr_t)
+// optional, http(s)
+// url where to register/manage accounts; independent of autoacct: a shard
+// may be autoacct=yes and still link an account page
 
-CFG_FIELD(shard, urlvideo, {}, astr_t)
+CFG_FIELD(shard, shardvideo, {}, astr_t)
 // optional, plain http(s) url — shard video/trailer; drives the client's
-// video link (crossuo.cfg 'shardvideo') when the launcher writes the profile
+// video link (crossuo.cfg 'shardvideo')
 
-CFG_FIELD(shard, installer, {}, astr_t)
+CFG_FIELD(shard, producturl, {}, astr_t)
 // optional
 // data install source: where the client streams/downloads its data from
 // format:
@@ -68,13 +66,13 @@ CFG_FIELD(shard, installer, {}, astr_t)
 //     presented to clients as a generated MythicMFT product (an existing
 //     manifest on disk is served as-is). Web only - the desktop launcher
 //     does not mount local: installers
-// no type prefixes anymore (uo+/xuo+/website+/download+ are gone): the
-//   client deduces the product style from the url content
+// no type prefixes (uo+/xuo+/website+/download+ are gone): the client
+//   deduces the product style from the url content
 //   (--streaming-product, xuocore/vfs_source_aops.cpp vfs_aops_product_url)
 
 CFG_FIELD(shard, loginserver, {}, astr_t)
 // required
-// same as crossuop.cfg, classic loginserver for login.cfg
+// same as crossuo.cfg, classic loginserver for login.cfg
 // format:
 //   <ip>,<port>
 
@@ -82,7 +80,7 @@ CFG_FIELD(shard, clientversion, {}, astr_t)
 // required
 // same as in crossuo.cfg, specify the client version to emulate with crossuo
 
-CFG_FIELD(shard, protocolversion, {}, astr_t)
+CFG_FIELD(shard, protocolclientversion, {}, astr_t)
 // optional
 // same as in crossuo.cfg, specify the network protocol version to force
 
@@ -98,18 +96,16 @@ CFG_FIELD(shard, crypt, "no", bool)
 // if 'yes', uo protocol cryptography will be used
 
 CFG_FIELD(shard, autoacct, "yes", bool)
-// optional, default: yes (assumed when the field is absent)
+// optional, launcher-only, default: yes (assumed when the field is absent)
 // format:
 //   <no|yes>
 // whether the shard creates the game account on first login. With 'no' the
-// clients must offer a way to reach the registration page (urlregister):
+// clients must offer a way to reach the registration page (shardaccount):
 // the desktop launcher's row menu and the web picker's card both grow a
-// "Create account" action. urlregister is INDEPENDENT of this flag now: a
-// shard may be autoacct=yes and still link a page where users manage their
-// accounts.
+// "Create account" action.
 
 CFG_FIELD(shard, tags, "pvp", tag_data)
-// optional, default: pvp
+// optional, launcher-only, default: pvp
 // format:
 //   <pvp|pvm|rp>[,...]
 // tags to use during filtering, will be mostly curated and moderated.

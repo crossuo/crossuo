@@ -15,19 +15,21 @@ struct shard_data
 {
     const char *name;
     const char *loginserver;
+    const char *language; // default client locale to use ("" = client default)
     const char *clienttype;
     const char *clientversion;
     const char *protocolversion; // network protocol version to force ("" = none)
     bool crypt;
-    bool autoacct;           // shard creates the account on first login
-                             // (default true: absent = yes)
-    const char *url;         // website
-    const char *urlregister; // account registration/management page
-    const char *urlvideo;    // video/trailer url ("" = none)
-    astr_t urlother;         // plain community url ("" = none); a discord
-                             // link is detected from the url itself
-                             // (contains discord.gg/ or discord.com/)
-    const char *install_url; // plain data product url ("" = manual install,
+    bool autoacct;      // shard creates the account on first login
+                        // (default true: absent = yes)
+    const char *web;    // website
+    const char *account_page; // account registration/management page
+    const char *video;  // video/trailer url ("" = none)
+    astr_t other;       // plain community url ("" = none); a discord
+                        // link is detected from the url itself
+                        // (contains discord.gg/ or discord.com/)
+    astr_t community;   // forum/community page url ("" = none)
+    const char *product_url; // plain data product url ("" = manual install,
                              // the client falls back to its default)
 };
 

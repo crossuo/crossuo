@@ -31,6 +31,7 @@ CFG_FIELD(crossuo, shardaccount, {}, astr_t)
 CFG_FIELD(crossuo, shardhelp, {}, astr_t)
 CFG_FIELD(crossuo, shardvideo, {}, astr_t)
 CFG_FIELD(crossuo, shardcredits, {}, astr_t)
-CFG_FIELD(crossuo, sharddiscord, {}, astr_t)
+CFG_FIELD(crossuo, shardother, {}, astr_t)
+CFG_FIELD(crossuo, shardcommunity, {}, astr_t)
 
 #undef CFG_FIELD

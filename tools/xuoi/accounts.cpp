@@ -243,19 +243,24 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
     // full manifest file url passes through unchanged (the client dispatches
     // the product style from the content), empty means a manual install: no
     // product url, the client keeps its configured default
-    if (shard.install_url && shard.install_url[0])
-        e.crossuo_producturl = vfs_aops_product_url_canonical(shard.install_url);
+    if (shard.product_url && shard.product_url[0])
+        e.crossuo_producturl = vfs_aops_product_url_canonical(shard.product_url);
 
     // presentation links, only when the shard provides them
-    if (shard.url && shard.url[0])
-        e.crossuo_shardweb = shard.url;
-    if (shard.urlregister && shard.urlregister[0])
-        e.crossuo_shardaccount = shard.urlregister;
-    if (!shard.urlother.empty() && url_is_discord(shard.urlother))
-        e.crossuo_sharddiscord = shard.urlother;
-    if (shard.urlvideo && shard.urlvideo[0])
-        e.crossuo_shardvideo = shard.urlvideo;
+    if (shard.web && shard.web[0])
+        e.crossuo_shardweb = shard.web;
+    if (shard.account_page && shard.account_page[0])
+        e.crossuo_shardaccount = shard.account_page;
+    if (!shard.community.empty())
+        e.crossuo_shardcommunity = shard.community;
+    if (!shard.other.empty())
+        e.crossuo_shardother = shard.other;
+    if (shard.video && shard.video[0])
+        e.crossuo_shardvideo = shard.video;
     // help/credits have no shard.ini source: the client keeps its defaults
+    // the locale is the single default-client-loc knob: forward it as-is
+    if (shard.language && shard.language[0])
+        e.crossuo_language = shard.language;
 }
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
@@ -345,7 +350,8 @@ void account_launch_shard(int shard_index)
     profile.product_url = entry.crossuo_producturl;
     profile.web = entry.crossuo_shardweb;
     profile.account_page = entry.crossuo_shardaccount;
-    profile.discord = entry.crossuo_sharddiscord;
+    profile.other = entry.crossuo_shardother;
+    profile.community = entry.crossuo_shardcommunity;
     profile.video = entry.crossuo_shardvideo;
 
     const auto result = xuol::client_apply_shard(profile);

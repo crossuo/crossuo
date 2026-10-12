@@ -82,7 +82,8 @@ struct shard_profile
     astr_t help;
     astr_t video;
     astr_t credits;
-    astr_t discord;
+    astr_t other;     // plain community url ("" = none)
+    astr_t community; // forum/community page (launcher-facing)
 };
 // applies a shard selection to the running client instead of spawning a new
 // process; see client_apply_profile for the result semantics

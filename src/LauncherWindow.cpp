@@ -297,7 +297,8 @@ apply_result client_apply_shard(const shard_profile &profile)
     shard.help = profile.help;
     shard.video = profile.video;
     shard.credits = profile.credits;
-    shard.discord = profile.discord;
+    shard.other = profile.other;
+    shard.community = profile.community;
     if (ApplyShardProfile(shard))
     {
         return apply_result::applied;

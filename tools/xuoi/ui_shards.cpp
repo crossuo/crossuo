@@ -40,8 +40,8 @@ bool ui_shards_combo(
 static int s_selected = 0;
 static int s_picked = -1;
 
-// menu label for a plain urlother community link
-static const char *urlother_label(const astr_t &url)
+// menu label for a plain shardother community link
+static const char *shardother_label(const astr_t &url)
 {
     return url_is_discord(url) ? "Open Discord" : "Open Link";
 }
@@ -106,20 +106,20 @@ void ui_shards(ui_model &m, bool picker)
                 continue;
         }
         // context menu entries
-        // autoacct (default yes) is the authority on auto-account: urlregister
+        // autoacct (default yes) is the authority on auto-account: shardaccount
         // is now independent - it is a page to reach for account creation OR
         // management, offered whenever it is set
         const bool autoacct = it.shard_autoacct;
-        const bool has_reg = !it.shard_urlregister.empty();
+        const bool has_reg = !it.shard_shardaccount.empty();
         if (select_aac && !autoacct)
             continue;
-        const bool has_url = !it.shard_url.empty() && valid_url(it.shard_url);
-        const bool has_forum = !it.shard_urlforum.empty() && valid_url(it.shard_urlforum);
-        const bool has_other = !it.shard_urlother.empty() && valid_url(it.shard_urlother);
+        const bool has_url = !it.shard_shardweb.empty() && valid_url(it.shard_shardweb);
+        const bool has_forum = !it.shard_shardcommunity.empty() && valid_url(it.shard_shardcommunity);
+        const bool has_other = !it.shard_shardother.empty() && valid_url(it.shard_shardother);
         const bool has_context = has_url || has_reg || has_forum || has_other;
         // others
         const bool has_desc = !it.shard_description.empty();
-        const bool has_lang = !it.shard_language.langs.empty();
+        const bool has_lang = !it.raw_shard_language.empty();
 
         if (i == s_selected)
         {
@@ -148,12 +148,12 @@ void ui_shards(ui_model &m, bool picker)
             ImGui::BeginChild("shard_item", ImVec2(0.0f, item_size), true);
             ImGui::BeginGroup();
             ImGui::PushStyleColor(ImGuiCol_Text, fg);
-            ImGui::Text("%s", it.shard_name.c_str());
+            ImGui::Text("%s", it.shard_shardname.c_str());
             ImGui::PopStyleColor();
             if (has_url)
             {
                 ImGui::SameLine();
-                ImGui::Text("%s", it.shard_url.c_str());
+                ImGui::Text("%s", it.shard_shardweb.c_str());
             }
             if (i == s_selected && has_desc)
                 ImGui::TextWrapped("%s", it.shard_description.c_str());
@@ -182,18 +182,18 @@ void ui_shards(ui_model &m, bool picker)
             if (has_context && ImGui::BeginPopupContextItem("item context menu"))
             {
                 if (has_url && ImGui::MenuItem("Open Website", nullptr, false))
-                    open_url(it.shard_url);
+                    open_url(it.shard_shardweb);
                 // the launcher's "Create account" action follows autoacct: a
                 // non-auto shard needs the registration page; an auto one may
                 // still link a page to MANAGE the account
-                if (has_reg && valid_url(it.shard_urlregister) &&
+                if (has_reg && valid_url(it.shard_shardaccount) &&
                     ImGui::MenuItem(autoacct ? "Manage Account" : "Create Account", nullptr, false))
-                    open_url(it.shard_urlregister);
+                    open_url(it.shard_shardaccount);
                 if (has_forum && ImGui::MenuItem("Open Forum", nullptr, false))
-                    open_url(it.shard_urlforum);
+                    open_url(it.shard_shardcommunity);
                 if (has_other &&
-                    ImGui::MenuItem(urlother_label(it.shard_urlother), nullptr, false))
-                    open_url(it.shard_urlother);
+                    ImGui::MenuItem(shardother_label(it.shard_shardother), nullptr, false))
+                    open_url(it.shard_shardother);
                 // installer is a streaming data product url the client
                 // consumes via Play: no menu action (empty = manual install)
                 // by knowing all our data paths and data version, we can match supported shards

@@ -51,7 +51,8 @@ enum
     MSCC_SHARD_HELP,
     MSCC_SHARD_VIDEO,
     MSCC_SHARD_CREDITS,
-    MSCC_SHARD_DISCORD,
+    MSCC_SHARD_OTHER,
+    MSCC_SHARD_COMMUNITY,
     MSCC_COUNT,
 };
 
@@ -94,7 +95,8 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_SHARD_HELP, "shardhelp" },
     { MSCC_SHARD_VIDEO, "shardvideo" },
     { MSCC_SHARD_CREDITS, "shardcredits" },
-    { MSCC_SHARD_DISCORD, "sharddiscord" },
+    { MSCC_SHARD_OTHER, "shardother" },
+    { MSCC_SHARD_COMMUNITY, "shardcommunity" },
     { MSCC_COUNT, nullptr },
 };
 static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
@@ -441,6 +443,11 @@ bool LoadGlobalConfig()
     while (!file.IsEOF())
     {
         auto strings = file.ReadTokens(false); // Trim remove spaces from paths
+        // section headers are a noop: the grammar is key-based, a file may
+        // carry [crossuo] and/or [Shard] sections (a shards.cfg is directly
+        // usable as a crossuo.cfg) and the keys are read regardless
+        if (!strings.empty() && strings[0][0] == '[')
+            continue;
         if (strings.size() == 1)
         {
             // the text parser drops empty values, so `key=` arrives as a
@@ -468,8 +475,11 @@ bool LoadGlobalConfig()
                 case MSCC_SHARD_CREDITS:
                     g_Config.ShardCredits.clear();
                     break;
-                case MSCC_SHARD_DISCORD:
-                    g_Config.ShardDiscord.clear();
+                case MSCC_SHARD_OTHER:
+                    g_Config.ShardOther.clear();
+                    break;
+                case MSCC_SHARD_COMMUNITY:
+                    g_Config.ShardCommunity.clear();
                     break;
                 default:
                     break;
@@ -627,9 +637,16 @@ bool LoadGlobalConfig()
                     g_Config.ShardCredits = strings[1];
                     break;
                 }
-                case MSCC_SHARD_DISCORD:
+                case MSCC_SHARD_OTHER:
                 {
-                    g_Config.ShardDiscord = strings[1];
+                    g_Config.ShardOther = strings[1];
+                    break;
+                }
+                case MSCC_SHARD_COMMUNITY:
+                {
+                    // launcher-facing presentation link: accepted and stored,
+                    // the client has no surface for it yet (see ShardHelp)
+                    g_Config.ShardCommunity = strings[1];
                     break;
                 }
                 default:
@@ -720,7 +737,7 @@ void SaveGlobalConfig()
     }
 
     // shard presentation fields are only written when they differ from the
-    // white-label defaults (ShardDiscord when non-empty): baking defaults
+    // white-label defaults (ShardOther/ShardCommunity when non-empty): baking defaults
     // into every crossuo.cfg would later fight shard switches driven by
     // launcher profiles, as a stale baked value would win over the default
     // of the newly selected shard
@@ -748,9 +765,13 @@ void SaveGlobalConfig()
     {
         fprintf(cfg, "ShardCredits=%s\n", g_Config.ShardCredits.c_str());
     }
-    if (!g_Config.ShardDiscord.empty())
+    if (!g_Config.ShardOther.empty())
     {
-        fprintf(cfg, "ShardDiscord=%s\n", g_Config.ShardDiscord.c_str());
+        fprintf(cfg, "ShardOther=%s\n", g_Config.ShardOther.c_str());
+    }
+    if (!g_Config.ShardCommunity.empty())
+    {
+        fprintf(cfg, "ShardCommunity=%s\n", g_Config.ShardCommunity.c_str());
     }
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
@@ -894,7 +915,8 @@ bool ApplyShardProfile(const shard_profile &profile)
     g_Config.ShardVideo = !profile.video.empty() ? profile.video : astr_t(XUO_DEFAULT_SHARD_VIDEO);
     g_Config.ShardCredits =
         !profile.credits.empty() ? profile.credits : astr_t(XUO_DEFAULT_SHARD_CREDITS);
-    g_Config.ShardDiscord = profile.discord;
+    g_Config.ShardOther = profile.other;
+    g_Config.ShardCommunity = profile.community;
 
     // an empty product url is not a reset: the launcher always sends a
     // complete profile, and live shard entries without an installer keep

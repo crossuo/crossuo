@@ -502,7 +502,7 @@
       //
       // v1 scope (see shardToArgs): only flags that already exist in
       // src/Main.cpp InitCli are emitted. clientversion, crypt and the
-      // url/urlforum/urlregister/urlother links have NO CLI surface yet, so
+      // the shardweb/shardcommunity/shardaccount/shardother links have no CLI
       // they are deliberately NOT passed - the client keeps its defaults
       // (a crossuo.cfg persisted in IDBFS could carry them later).
       //
@@ -533,7 +533,7 @@
         function parseShardsIni(text, warn) {
           function flush() {
             if (!cur) return;
-            if (cur.name) out.push(cur);
+            if (cur.shardname) out.push(cur);
             else if (warn) warn('[shards] section without name, skipped');
             cur = null;
           }
@@ -561,7 +561,7 @@
         // InitCli): --shard names the per-shard streaming install dir and is
         // sanitized like the desktop (Main.cpp: '/' '\' ' ' -> '_');
         // loginserver "host,port" maps to --host/--port (port only when
-        // numeric - the flag is u32); installer is a plain data product url
+        // numeric - the flag is u32); producturl is a plain data product url
         // passed via --streaming-product (the client deduces the product
         // style from the content, vfs_aops_product_url) - an http(s) url
         // routes through the /stream relay, "local:<name>"/bare-relative
@@ -570,8 +570,8 @@
         // the links stay unparsed - see the block comment above)
         function shardToArgs(shard) {
           var args = [];
-          if (!shard || !shard.name) return args;
-          args.push('--shard=' + String(shard.name).replace(/[/\\ ]/g, '_'));
+          if (!shard || !shard.shardname) return args;
+          args.push('--shard=' + String(shard.shardname).replace(/[/\\ ]/g, '_'));
           var ls = String(shard.loginserver || '').split(',');
           var host = (ls[0] || '').trim();
           var port = (ls[1] || '').trim();
@@ -585,7 +585,7 @@
           // the modern defaults
           var cv = String(shard.clientversion || '').trim();
           if (cv) args.push('--clientversion=' + cv);
-          var pv = String(shard.protocolversion || '').trim();
+          var pv = String(shard.protocolclientversion || '').trim();
           if (pv) args.push('--protocolversion=' + pv);
           var ct = String(shard.clienttype || '').trim();
           if (ct) args.push('--clienttype=' + ct);
@@ -594,18 +594,12 @@
           // the classic ciphers never connects
           var crypt = String(shard.crypt || '').trim().toLowerCase();
           if (crypt) args.push('--crypt=' + (/^(1|yes|true)$/.test(crypt) ? '1' : '0'));
-          var installer = String(shard.installer || '').trim();
-          // tolerate the pre-2.0 published lists until they are republished
-          // (the prefix grammar is gone from the client): `uo+`/`xuo+`
-          // carried a streamable url, keep the remainder; `website+` and
-          // `download+` never did, and the bare `latest` token means "use
-          // the client's default product", which is exactly what an empty
-          // installer already means - manual install, no product flag
-          if (/^(?:website|download)\+/i.test(installer)) installer = '';
-          if (/^(?:(?:uo|xuo)\+)?latest$/i.test(installer)) installer = '';
+          var installer = String(shard.producturl || '').trim();
+          // producturl is a plain url (the uo+/xuo+/website+/download+ prefix
+          // grammar is gone; empty = manual install, no product flag)
           if (installer) {
-            // aops patch servers ("uo+<root>" / "xuo+<root>" installer
-            // prefixes or a bare patch-server root: the client's
+            // aops patch servers (a bare patch-server root:
+            // the client's
             // vfs_aops_product_url accepts root, patchlist or patchcfg urls)
             // cannot be fetched cross-origin from the browser: normalize to
             // the server ROOT and route it through the same-origin /stream
@@ -615,7 +609,7 @@
             // manifest; an aops-normalized --streaming-product would point
             // the plan at <root>patchlist); anything that is not a url
             // passes through unchanged
-            var target = installer.replace(/^(?:uo|xuo)\+/i, '');
+            var target = installer;
             if (/^https?:\/\//i.test(target)) {
               if (!/\/manifest\/?$/i.test(target)) {
                 var root = target.replace(/\/+$/, '').replace(/\/patch(?:list|cfg)$/i, '');
@@ -628,19 +622,19 @@
               // MythicMFT product); leading-'/' values are explicit
               // page-absolute product urls and pass through unchanged. A
               // '..' segment is refused outright - the client would only
-              // 404 on it, but a locked deployment's installer is trusted
+              // 404 on it, but a locked deployment's producturl is trusted
               // input and stays that way
               var mount = target.replace(/^local:/i, '');
               if (mount.charAt(0) === '/') {
                 // an absolute path is a SERVER-SIDE reference
-                // ("Installer=local:/home/shard/client"): xuoproxy mounts it
+                // ("ProductUrl=local:/home/shard/client"): xuoproxy mounts it
                 // and rewrites the served shards.cfg to /data/<mount>/. If
                 // the raw value still reaches this page, shards.cfg was
                 // served by something that cannot rewrite it (an older
                 // proxy, a static server) - the browser can never read a
                 // host path, so skip the product flag rather than fetch a
                 // garbage url
-                console.warn('[shards] installer "' + installer +
+                console.warn('[shards] producturl "' + installer +
                              '" is a host path but was not rewritten by the' +
                              ' proxy (shards.cfg must be served BY' +
                              ' xuoproxy) - no streaming product');
@@ -1022,7 +1016,7 @@
         function resolveShard(key) {
           var want = String(key).toLowerCase();
           for (var i = 0; i < shards.length; i++) {
-            if (String(shards[i].name).toLowerCase() === want) return shards[i];
+            if (String(shards[i].shardname).toLowerCase() === want) return shards[i];
           }
           if (/^\d+$/.test(want)) {
             var n = parseInt(want, 10);
@@ -1076,8 +1070,8 @@
           var item = i >= 0 ? view[i] : null;
           var entry = item ? item.entry : null;
           if (!entry || booted) return;
-          setPageStatus('starting ' + entry.name + '\u2026');
-          if (ui) ui.state.textContent = 'starting ' + entry.name + '\u2026';
+          setPageStatus('starting ' + entry.shardname + '\u2026');
+          if (ui) ui.state.textContent = 'starting ' + entry.shardname + '\u2026';
           bootClient(shardToArgs(entry));
         }
 
@@ -1117,13 +1111,13 @@
               var name = document.createElement('div');
               name.className = 'name';
               // highlighted entries carry a star prefix; name stays raw otherwise
-              name.textContent = (item.featured ? '\u2605 ' : '') + item.entry.name;
+              name.textContent = (item.featured ? '\u2605 ' : '') + item.entry.shardname;
               main.appendChild(name);
               // sub line: the shard's WEB url (a clickable link), not the raw
               // login address - the picker only shows when there is more than
               // one shard, and the address means nothing to the player. Falls
               // back to the loginserver when the shard has no url.
-              var url = String(item.entry.url || '').trim();
+              var url = String(item.entry.shardweb || '').trim();
               var sub = item.entry.loginserver || '';
               if (url) sub = url;
               var tagsLine = item.displayTags
@@ -1157,11 +1151,11 @@
               row.appendChild(main);
               // autoacct (default yes): when a shard does not create the
               // account on first login, offer a Create account button that
-              // opens its registration page. Needs a urlregister to point at.
+              // opens its registration page. Needs a shardaccount to point at.
               var autoacct = item.entry.autoacct;
               var acctOn = !(autoacct !== undefined && autoacct !== null &&
                              /^(no|false|0)$/i.test(String(autoacct).trim()));
-              var reg = String(item.entry.urlregister || '').trim();
+              var reg = String(item.entry.shardaccount || '').trim();
               if (!acctOn && reg && /^https?:\/\//i.test(reg)) {
                 var regBtn = document.createElement('button');
                 regBtn.className = 'card-action';
@@ -1218,8 +1212,8 @@
         function engageLockedShard(list) {
           lockedMode = true;
           shards = list; // resolveShard reads the module-global list
-          if (WEBLOG) console.log('[shards] single-shard lock engaged:', list[0].name);
-          setPageStatus('starting ' + list[0].name + '\u2026');
+          if (WEBLOG) console.log('[shards] single-shard lock engaged:', list[0].shardname);
+          setPageStatus('starting ' + list[0].shardname + '\u2026');
           bootClient(shardToArgs(list[0]));
         }
 
@@ -1240,7 +1234,7 @@
             if (err || !entry)
               console.warn('[shards] ?shard=' + deepLink +
                            (err ? ' unavailable' : ' not found') + ', booting with defaults');
-            setPageStatus('starting ' + (entry ? entry.name : 'client') + '\u2026');
+            setPageStatus('starting ' + (entry ? entry.shardname : 'client') + '\u2026');
             bootClient(entry ? shardToArgs(entry) : []);
           });
         } else {

@@ -49,22 +49,6 @@ bool convert(tag_data &out, const char *raw)
     return true;
 }
 
-struct lang_type
-{
-    std::vector<astr_t> langs;
-};
-
-astr_t as_str(const lang_type &in)
-{
-    return join(in.langs, ',');
-}
-
-bool convert(lang_type &out, const char *raw)
-{
-    convert(out.langs, raw, ',');
-    return true;
-}
-
 }; // namespace shard
 
 bool url_is_discord(const astr_t &url)
@@ -98,7 +82,7 @@ const char *shard_getter(void *data, int idx)
     auto *items = (std::vector<shard::entry> *)data;
     assert(items);
     assert(idx < (int)items->size());
-    return items->at(idx).shard_name.c_str();
+    return items->at(idx).shard_shardname.c_str();
 }
 
 static void load_shard_file(const fs_path &fname, shard::data &data, const char *source = "")
@@ -111,78 +95,12 @@ static void load_shard_file(const fs_path &fname, shard::data &data, const char 
     fs_close(fp);
 }
 
-// case-insensitive `prefix` check against the head of `value`
-static bool starts_with_ci(const astr_t &value, const char *prefix)
-{
-    const astr_t p(prefix);
-    if (value.size() < p.size())
-        return false;
-    astr_t head = value.substr(0, p.size());
-    std::transform(head.begin(), head.end(), head.begin(), ::tolower);
-    return head == p;
-}
-
-// case-insensitive whole-value compare
-static bool equals_ci(const astr_t &value, const char *other)
-{
-    return value.size() == strlen(other) && starts_with_ci(value, other);
-}
-
-// tolerate the pre-2.0 published lists until they are republished (the
-// prefix grammar is gone from the client, which only takes plain urls):
-//   installer: `uo+<url>`/`xuo+<url>` carried a streamable product url, keep
-//     the remainder; `website+`/`download+` never did, clear to a manual
-//     install; the bare `latest` token (e.g. `uo+latest`) means "use the
-//     client's default product", which is exactly what an empty installer
-//     already means, clear it; already-plain urls are kept as-is
-//   urlother: the old `Name+<url>` form keeps only the url, so the discord
-//     sniff (url_is_discord) and the ui link work on both grammars
-static int normalize_legacy_fields(shard::entry &e)
-{
-    int count = 0;
-    if (starts_with_ci(e.shard_installer, "xuo+"))
-    {
-        e.shard_installer.erase(0, 4);
-        ++count;
-    }
-    else if (starts_with_ci(e.shard_installer, "uo+"))
-    {
-        e.shard_installer.erase(0, 3);
-        ++count;
-    }
-    else if (starts_with_ci(e.shard_installer, "website+") || starts_with_ci(e.shard_installer, "download+"))
-    {
-        // store/download links are not streamable product urls
-        e.shard_installer.clear();
-        ++count;
-    }
-    // `latest` is not a url: clearing it keeps clients from building a
-    // garbage --streaming-product=latest / latest/patchlist request
-    if (equals_ci(e.shard_installer, "latest"))
-        e.shard_installer.clear();
-
-    const auto plus = e.shard_urlother.find('+');
-    if (plus != astr_t::npos && plus > 0)
-    {
-        const auto name = e.shard_urlother.substr(0, plus);
-        const auto url = e.shard_urlother.substr(plus + 1);
-        const bool plain_name = std::all_of(name.begin(), name.end(), [](char c) {
-            return ::isalnum((unsigned char)c) || c == ' ';
-        });
-        if (plain_name && (starts_with_ci(url, "http://") || starts_with_ci(url, "https://")))
-        {
-            e.shard_urlother = url;
-            ++count;
-        }
-    }
-    return count;
-}
 
 void load_shards()
 {
     s_shards = shard::data();
     auto custom = shard::default_entry();
-    custom.shard_name = "<custom shard>";
+    custom.shard_shardname = "<custom shard>";
     s_shards.entries.emplace_back(custom);
     fs_path fname;
     if (!s_shards_cfg_override.empty())
@@ -215,13 +133,6 @@ void load_shards()
         load_shard_file(fname, s_shards);
     }
 
-    // the published list may still use the removed prefix grammar
-    int normalized = 0;
-    for (auto &e : s_shards.entries)
-        normalized += normalize_legacy_fields(e);
-    if (normalized > 0)
-        LOG_INFO("normalized %d legacy installer/urlother fields", normalized);
-
     // sort by tags 'highlight', then name alphabetically
     std::sort(
         s_shards.entries.begin() + 1, s_shards.entries.end(), [](const auto &a, const auto &b) {
@@ -229,7 +140,7 @@ void load_shards()
             const auto bh = b.shard_tags.is_highlighted;
             if (ah != bh)
                 return ah && !bh;
-            return a.shard_name < b.shard_name;
+            return a.shard_shardname < b.shard_shardname;
         });
 
     int i = 0;
@@ -270,18 +181,20 @@ shard_data shard_by_id(int id)
 {
     assert(id < (int)s_shards.entries.size());
     const auto &s = s_shards.entries[id];
-    return { s.shard_name.c_str(),
+    return { s.shard_shardname.c_str(),
              s.shard_loginserver.c_str(),
+             s.shard_language.c_str(),
              s.shard_clienttype.c_str(),
              s.shard_clientversion.c_str(),
-             s.shard_protocolversion.c_str(),
+             s.shard_protocolclientversion.c_str(),
              s.shard_crypt,
              s.shard_autoacct,
-             s.shard_url.c_str(),
-             s.shard_urlregister.c_str(),
-             s.shard_urlvideo.c_str(),
-             s.shard_urlother,
-             s.shard_installer.c_str() };
+             s.shard_shardweb.c_str(),
+             s.shard_shardaccount.c_str(),
+             s.shard_shardvideo.c_str(),
+             s.shard_shardother,
+             s.shard_shardcommunity,
+             s.shard_producturl.c_str() };
 }
 
 } // namespace xuol
@@ -352,54 +265,52 @@ int main(int argc, char **argv)
             LOG_ERROR("%s", e.c_str());
 
         auto entry = shard.entries[0];
-        if (entry.shard_name.empty())
+        if (entry.shard_shardname.empty())
         {
-            LOG_ERROR("missing required field 'name'");
-            error = true;
-        }
-        if (entry.shard_servertype.empty())
-        {
-            LOG_ERROR("missing required field 'servertype'");
+            LOG_ERROR("missing required field 'shardname'");
             error = true;
         }
         // optional urls: only validated when non-empty, must be http(s)
-        if (!entry.shard_url.empty() && !valid_url(entry.shard_url))
-        {
-            LOG_ERROR("invalid field 'url', not a http(s) url: '%s'", entry.shard_url.c_str());
-            error = true;
-        }
-        if (!entry.shard_urlforum.empty() && !valid_url(entry.shard_urlforum))
+        if (!entry.shard_shardweb.empty() && !valid_url(entry.shard_shardweb))
         {
             LOG_ERROR(
-                "invalid field 'urlforum', not a http(s) url: '%s'", entry.shard_urlforum.c_str());
+                "invalid field 'shardweb', not a http(s) url: '%s'", entry.shard_shardweb.c_str());
             error = true;
         }
-        if (!entry.shard_urlregister.empty() && !valid_url(entry.shard_urlregister))
+        if (!entry.shard_shardcommunity.empty() && !valid_url(entry.shard_shardcommunity))
         {
             LOG_ERROR(
-                "invalid field 'urlregister', not a http(s) url: '%s'",
-                entry.shard_urlregister.c_str());
+                "invalid field 'shardcommunity', not a http(s) url: '%s'",
+                entry.shard_shardcommunity.c_str());
             error = true;
         }
-        if (!entry.shard_urlvideo.empty() && !valid_url(entry.shard_urlvideo))
+        if (!entry.shard_shardaccount.empty() && !valid_url(entry.shard_shardaccount))
         {
             LOG_ERROR(
-                "invalid field 'urlvideo', not a http(s) url: '%s'", entry.shard_urlvideo.c_str());
+                "invalid field 'shardaccount', not a http(s) url: '%s'",
+                entry.shard_shardaccount.c_str());
             error = true;
         }
-        // installer/urlother are plain urls: empty is fine (manual install /
+        if (!entry.shard_shardvideo.empty() && !valid_url(entry.shard_shardvideo))
+        {
+            LOG_ERROR(
+                "invalid field 'shardvideo', not a http(s) url: '%s'",
+                entry.shard_shardvideo.c_str());
+            error = true;
+        }
+        // producturl/shardother are plain urls: empty is fine (manual install /
         // no community link), a non-empty value must be a http(s) url
-        if (!entry.shard_urlother.empty() && !valid_url(entry.shard_urlother))
+        if (!entry.shard_shardother.empty() && !valid_url(entry.shard_shardother))
         {
             LOG_ERROR(
-                "invalid field 'urlother', not a http(s) url: '%s'", entry.shard_urlother.c_str());
+                "invalid field 'shardother', not a http(s) url: '%s'", entry.shard_shardother.c_str());
             error = true;
         }
-        if (!entry.shard_installer.empty() && !valid_url(entry.shard_installer))
+        if (!entry.shard_producturl.empty() && !valid_url(entry.shard_producturl))
         {
             LOG_ERROR(
-                "invalid field 'installer', not a http(s) url: '%s'",
-                entry.shard_installer.c_str());
+                "invalid field 'producturl', not a http(s) url: '%s'",
+                entry.shard_producturl.c_str());
             error = true;
         }
         if (entry.shard_loginserver.empty())
@@ -435,12 +346,12 @@ int main(int argc, char **argv)
         }
         // autoacct=no without a registration page leaves the user nowhere to
         // go (the desktop menu and the web picker hide their Create-account
-        // action when urlregister is empty) - advisory only, the entry still
+        // action when shardaccount is empty) - advisory only, the entry still
         // loads
-        if (!entry.shard_autoacct && entry.shard_urlregister.empty())
+        if (!entry.shard_autoacct && entry.shard_shardaccount.empty())
         {
             LOG_WARN(
-                "field 'autoacct' is 'no' but no 'urlregister' is set: clients"
+                "field 'autoacct' is 'no' but no 'shardaccount' is set: clients"
                 " have no registration page to offer");
         }
 
@@ -453,7 +364,7 @@ int main(int argc, char **argv)
         s_shards.entries = entries;
         std::sort(
             s_shards.entries.begin(), s_shards.entries.end(), [](const auto &a, const auto &b) {
-                return a.shard_name < b.shard_name;
+                return a.shard_shardname < b.shard_shardname;
             });
 
         auto fp = fopen("shards.cfg", "wb");

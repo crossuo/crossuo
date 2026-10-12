@@ -30,9 +30,9 @@ struct Config
     astr_t ShardHelp = XUO_DEFAULT_SHARD_HELP;
     astr_t ShardVideo = XUO_DEFAULT_SHARD_VIDEO;
     astr_t ShardCredits = XUO_DEFAULT_SHARD_CREDITS;
-    // no white-label default: shards carry discord as a plain community url
-    // (a discord link is detected from the url itself)
-    astr_t ShardDiscord;
+    // no white-label default: shards carry community links as plain urls
+    astr_t ShardOther;
+    astr_t ShardCommunity;
     uint16_t ServerPort = XUO_DEFAULT_SERVER_PORT;
     uint16_t ClientFlag = 0;
     bool SavePassword = true;
@@ -107,13 +107,15 @@ struct shard_profile
     astr_t clienttype;
     bool crypt = false;
     astr_t product_url; // manifest root (trailing /) or full manifest url
-    astr_t web, account_page, help, video, credits, discord; // login-screen links
+    astr_t web, account_page, help, video, credits; // login-screen links
+    astr_t other;     // plain community url ("" = none)
+    astr_t community; // forum/community page (accepted, launcher-facing)
 };
 
 // The single entry point all shard-selection paths go through. The caller
 // provides a COMPLETE shard description: an empty link field resets that
 // link to its white-label default, so switching shards is deterministic
-// (defaults are never empty for web/account/help/video/credits; discord may
+// (defaults are never empty for web/account/help/video/credits; other may
 // be genuinely empty). Sets the shard name, the links, the streaming product
 // url (only when non-empty: shards without an installer keep whatever url
 // was in effect), then delegates identity/credentials to ApplyClientProfile

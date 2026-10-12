@@ -58,11 +58,11 @@
 //! 4. Local data mounts at `/data/<name>/<path>`: a shard owner keeps the
 //!    ORIGINAL client install on the proxy host. Two ways to mount:
 //!    `--data <name>=<dir>` (repeatable - one mount per shard, so hub
-//!    deployments expose many), and shards.cfg entries whose installer
+//!    deployments expose many), and shards.cfg entries whose producturl
 //!    points at a server-side folder, `Installer=local:<path>` (absolute,
 //!    or relative to the dist tree). Those are auto-mounted under a name
 //!    derived from the shard's own Name, and the served shards.cfg carries
-//!    the same-origin product url in the installer field, so any deployment
+//!    the same-origin product url in the producturl field, so any deployment
 //!    exposing local folders needs no flags beyond --dist. A remote CDN url
 //!    keeps working unchanged.
 //!
@@ -230,7 +230,7 @@ async fn main() {
         } else if let Some(v) = value("--data") {
             // repeatable named mount: --data <name>=<dir> serves <dir> at
             // /data/<name>/... (a shard's local install; shards.cfg points
-            // its installer= at the mount name)
+            // its producturl= at the mount name)
             let Some((name, dir)) = v.split_once('=') else {
                 eprintln!("--data expects <name>=<dir>, got: {v}");
                 std::process::exit(2);
@@ -344,7 +344,7 @@ async fn main() {
     {
         let mounts = data_dirs.lock().expect("data mounts");
         if mounts.is_empty() {
-            println!("  data:   no local mounts (--data <name>=<dir>; shards.cfg Installer=local:<path> auto-mounts too)");
+            println!("  data:   no local mounts (--data <name>=<dir>; shards.cfg ProductUrl=local:<path> auto-mounts too)");
         } else {
             let mut names: Vec<_> = mounts.iter().collect();
             names.sort_by(|a, b| a.0.cmp(b.0));
@@ -510,7 +510,7 @@ struct AppState {
     upstream_aops: String,
     upstream_timeout: u64,
     // local data mounts (/data/<name>/...): explicit --data mounts plus the
-    // shards.cfg `Installer=local:<path>` auto-mounts (shared because the
+    // shards.cfg `ProductUrl=local:<path>` auto-mounts (shared because the
     // registry grows lazily when shards.cfg is served or an unknown mount is
     // resolved)
     data_dirs: Arc<Mutex<HashMap<String, PathBuf>>>,
@@ -3792,25 +3792,25 @@ async fn data_blob_window(
 }
 
 // ---------------------------------------------------------------------------
-// shards.cfg integration: `Installer=local:<path>` entries are SERVER-SIDE
+// shards.cfg integration: `ProductUrl=local:<path>` entries are SERVER-SIDE
 // references to folders this proxy can serve. They are mounted under a name
 // derived from the shard's own Name, and the served shards.cfg carries the
-// same-origin product url in the installer field - the shell passes it to the
+// same-origin product url in the producturl field - the shell passes it to the
 // client unchanged and the whole flow stays on this origin.
 // ---------------------------------------------------------------------------
 
 // tolerant [Shard]-section scan mirroring the page's parseShardsIni: returns
-// (shard name, local installer path) pairs
-fn shards_local_installers(text: &str) -> Vec<(String, String)> {
+// (shard name, local product url path) pairs
+fn shards_local_product_urls(text: &str) -> Vec<(String, String)> {
     let mut out: Vec<(String, String)> = Vec::new();
     let mut name: Option<String> = None;
-    let mut installer: Option<String> = None;
-    let flush = |out: &mut Vec<(String, String)>, name: &mut Option<String>, installer: &mut Option<String>| {
-        if let (Some(n), Some(i)) = (name.take(), installer.take()) {
+    let mut product_url: Option<String> = None;
+    let mut flush = |out: &mut Vec<(String, String)>, name: &mut Option<String>, product_url: &mut Option<String>| {
+        if let (Some(n), Some(i)) = (name.take(), product_url.take()) {
             out.push((n, i));
         }
         *name = None;
-        *installer = None;
+        *product_url = None;
     };
     for line in text.lines() {
         let line = line.trim();
@@ -3818,7 +3818,7 @@ fn shards_local_installers(text: &str) -> Vec<(String, String)> {
             continue;
         }
         if line.starts_with('[') {
-            flush(&mut out, &mut name, &mut installer);
+            flush(&mut out, &mut name, &mut product_url);
             continue;
         }
         let Some((key, value)) = line.split_once('=') else {
@@ -3827,16 +3827,16 @@ fn shards_local_installers(text: &str) -> Vec<(String, String)> {
         let key = key.trim().to_ascii_lowercase();
         let value = value.trim();
         match key.as_str() {
-            "name" => name = Some(value.to_string()),
-            "installer" => {
+            "shardname" => name = Some(value.to_string()),
+            "producturl" => {
                 if let Some(path) = value.strip_prefix("local:") {
-                    installer = Some(path.trim().trim_end_matches('/').to_string());
+                    product_url = Some(path.trim().trim_end_matches('/').to_string());
                 }
             }
             _ => {}
         }
     }
-    flush(&mut out, &mut name, &mut installer);
+    flush(&mut out, &mut name, &mut product_url);
     out
 }
 
@@ -3855,14 +3855,14 @@ fn data_sanitize_mount_name(raw: &str) -> String {
     out.trim_matches('_').to_string()
 }
 
-// parse + register the dist shards.cfg's local installers (idempotent, cheap:
+// parse + register the dist shards.cfg's local product urls (idempotent, cheap:
 // one small file read; also self-heals /data requests that arrive before any
 // shards.cfg fetch)
 async fn register_shards_mounts(state: &AppState) {
     let Ok(text) = tokio::fs::read_to_string(state.dist.join("shards.cfg")).await else {
         return;
     };
-    for (shard_name, path) in shards_local_installers(&text) {
+    for (shard_name, path) in shards_local_product_urls(&text) {
         let mut mount = data_sanitize_mount_name(&shard_name);
         if mount.is_empty() {
             mount = format!("data-{:08x}", fnv1a64(path.as_bytes()) as u32);
@@ -3870,7 +3870,7 @@ async fn register_shards_mounts(state: &AppState) {
         let resolved = if std::path::Path::new(&path).is_absolute() {
             PathBuf::from(&path)
         } else {
-            // relative installers live next to the served tree
+            // relative product urls live next to the served tree
             state.dist.join(&path)
         };
         let mut mounts = state.data_dirs.lock().expect("data mounts");
@@ -3898,7 +3898,7 @@ async fn register_shards_mounts(state: &AppState) {
     }
 }
 
-// the served shards.cfg: local installers become the same-origin product url
+// the served shards.cfg: local product urls become the same-origin product url
 // ("/data/<mount>/"), which the shell passes through and the client plans
 // against (the generated product manifest answers at that root's patchlist)
 async fn serve_shards_cfg(state: &AppState, req_headers: &axum::http::HeaderMap) -> Option<Response> {
@@ -3921,10 +3921,10 @@ async fn serve_shards_cfg(state: &AppState, req_headers: &axum::http::HeaderMap)
             name.clear();
         } else if let Some((key, value)) = trimmed.split_once('=') {
             match key.trim().to_ascii_lowercase().as_str() {
-                "name" => name = value.trim().to_string(),
-                "installer" => {
+                "shardname" => name = value.trim().to_string(),
+                "producturl" => {
                     if let Some(path) = value.trim().strip_prefix("local:") {
-                        let eq = line.find('=').expect("installer line has =");
+                        let eq = line.find('=').expect("producturl line has =");
                         out.push_str(&line[..eq + 1]);
                         out.push_str(&mounts(&name, path.trim()));
                         out.push('\n');
