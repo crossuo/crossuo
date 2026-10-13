@@ -184,6 +184,9 @@ shard_data shard_by_id(int id)
     return { s.shard_shardname.c_str(),
              s.shard_loginserver.c_str(),
              s.shard_language.c_str(),
+             s.shard_reportlanguage.c_str(),
+             s.shard_seedoverride.c_str(),
+             s.shard_systemcheckoverride.c_str(),
              s.shard_clienttype.c_str(),
              s.shard_clientversion.c_str(),
              s.shard_protocolclientversion.c_str(),
@@ -236,7 +239,14 @@ int main(int argc, char **argv)
     entries.emplace_back(shard::default_entry());
 
     std::vector<fs_path> configs;
-    fs_path_list(fs_path_from(s_cli["path"].get().string), configs);
+    // fs_path_list only walks directories: a plain file path would be
+    // silently swallowed and the validator would pass without checking
+    // anything - accept both single files and directories
+    const auto seed = fs_path_from(s_cli["path"].get().string);
+    if (fs_path_exists(seed) && !fs_path_is_dir(seed))
+        configs.emplace_back(seed);
+    else
+        fs_path_list(seed, configs);
     bool error = false;
     for (const auto &cfg : configs)
     {
@@ -338,6 +348,65 @@ int main(int argc, char **argv)
             }
             if (!ok)
                 LOG_WARN("field 'loginserver' does not look like host,port: '%s'", ls.c_str());
+        }
+        // byte-list keys, same grammar as crossuo.cfg: "<0xaa> <0xbb> ..."
+        // seedoverride must carry the full 4-byte login seed
+        if (!entry.shard_seedoverride.empty())
+        {
+            bool ok = true;
+            const auto &so = entry.shard_seedoverride;
+            size_t i = 0, count = 0;
+            while (ok && i < so.size())
+            {
+                while (i < so.size() && (so[i] == ' ' || so[i] == '\t'))
+                    ++i;
+                if (i >= so.size())
+                    break;
+                if (i + 3 >= so.size() || so[i] != '0' || (so[i + 1] != 'x' && so[i + 1] != 'X') ||
+                    !isxdigit(so[i + 2]) || !isxdigit(so[i + 3]))
+                {
+                    ok = false;
+                    break;
+                }
+                ++count;
+                i += 4;
+            }
+            if (!ok || count != 4)
+                LOG_ERROR(
+                    "invalid field 'seedoverride', expected 4 bytes like"
+                    " '0x00 0x01 0x48 0xaa': '%s'",
+                    so.c_str());
+            if (!ok || count != 4)
+                error = true;
+        }
+        // systemcheckoverride just needs well-formed bytes, any length
+        if (!entry.shard_systemcheckoverride.empty())
+        {
+            bool ok = true;
+            const auto &sc = entry.shard_systemcheckoverride;
+            size_t i = 0;
+            while (ok && i < sc.size())
+            {
+                while (i < sc.size() && (sc[i] == ' ' || sc[i] == '\t'))
+                    ++i;
+                if (i >= sc.size())
+                    break;
+                if (i + 3 >= sc.size() || sc[i] != '0' || (sc[i + 1] != 'x' && sc[i + 1] != 'X') ||
+                    !isxdigit(sc[i + 2]) || !isxdigit(sc[i + 3]))
+                {
+                    ok = false;
+                    break;
+                }
+                i += 4;
+            }
+            if (!ok)
+            {
+                LOG_ERROR(
+                    "invalid field 'systemcheckoverride', expected bytes like"
+                    " '0x03 0xb1': '%s'",
+                    sc.c_str());
+                error = true;
+            }
         }
         if (entry.shard_clientversion.empty())
         {

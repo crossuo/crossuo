@@ -16,6 +16,9 @@ struct shard_data
     const char *name;
     const char *loginserver;
     const char *language; // default client locale to use ("" = client default)
+    const char *report_language; // language code reported to the server ("" = none)
+    const char *seed_override;   // "<0xaa> <0xbb> <0xcc> <0xdd>" login seed ("" = none)
+    const char *system_check_override; // 0x03 payload bytes ("" = none)
     const char *clienttype;
     const char *clientversion;
     const char *protocolversion; // network protocol version to force ("" = none)

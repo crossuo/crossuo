@@ -126,6 +126,20 @@ static bool InitCli(int argc, char *argv[])
     g_cli["crypt"].type(po::u32).description(
         "force network cryptography (1 = the version-derived cipher,"
         " 0 = plain); mirrors the launcher profile's Crypt option");
+    g_cli["language"].type(po::string).description(
+        "client locale (.loc) to use, e.g. enu - overrides the config file"
+        " (the web shell passes the shard profile's Language)");
+    g_cli["reportlanguage"].type(po::string).description(
+        "language code reported to the server - overrides the config file"
+        " (the web shell passes the shard profile's ReportLanguage)");
+    g_cli["seedoverride"].type(po::string).description(
+        "replaces the IP-derived login seed, 4 bytes like"
+        " '0x00 0x01 0x48 0xaa' (the web shell passes the shard profile's"
+        " SeedOverride)");
+    g_cli["systemcheckoverride"].type(po::string).description(
+        "payload of the client->server 0x03 talk acknowledge, bytes like"
+        " '0x03 0xb1' (the web shell passes the shard profile's"
+        " SystemCheckOverride)");
     g_cli["packet-dump"]
         .description(
             "hex-dump every network packet (client -> server and"
@@ -399,6 +413,27 @@ bool load_config()
     if (g_cli["crypt"].was_set())
     {
         g_Config.UseCrypt = g_cli["crypt"].get().u32 != 0;
+    }
+    // locale/protocol overrides: same shape as the config-file keys
+    // (ApplyLanguageSettings reads LocaleOverride/LocaleOverrideReport after
+    // this point; the byte lists are consumed verbatim at the connection /
+    // 0x03 acknowledge sites) - the web shell has no launcher to write a
+    // crossuo.cfg, so the shard profile rides in on the command line
+    if (g_cli["language"].was_set() && !g_cli["language"].get().string.empty())
+    {
+        g_Config.LocaleOverride = str_upper(g_cli["language"].get().string);
+    }
+    if (g_cli["reportlanguage"].was_set() && !g_cli["reportlanguage"].get().string.empty())
+    {
+        g_Config.LocaleOverrideReport = str_upper(g_cli["reportlanguage"].get().string);
+    }
+    if (g_cli["seedoverride"].was_set())
+    {
+        g_Config.SeedOverride = str_trim(g_cli["seedoverride"].get().string);
+    }
+    if (g_cli["systemcheckoverride"].was_set())
+    {
+        g_Config.SystemCheckOverride = str_trim(g_cli["systemcheckoverride"].get().string);
     }
     if (g_cli["autologin"].was_set())
     {

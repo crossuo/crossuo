@@ -261,6 +261,12 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
     // the locale is the single default-client-loc knob: forward it as-is
     if (shard.language && shard.language[0])
         e.crossuo_language = shard.language;
+    if (shard.report_language && shard.report_language[0])
+        e.crossuo_reportlanguage = shard.report_language;
+    if (shard.seed_override && shard.seed_override[0])
+        e.crossuo_seedoverride = shard.seed_override;
+    if (shard.system_check_override && shard.system_check_override[0])
+        e.crossuo_systemcheckoverride = shard.system_check_override;
 }
 
 #if defined(XUO_LAUNCHER_EMBEDDED)

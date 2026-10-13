@@ -20,6 +20,20 @@ CFG_FIELD(shard, language, {}, astr_t)
 // optional
 // the default client locale (.loc) to use, e.g. English
 
+CFG_FIELD(shard, reportlanguage, {}, astr_t)
+// optional
+// same as crossuo.cfg, the language code reported to the server
+
+CFG_FIELD(shard, seedoverride, {}, astr_t)
+// optional
+// same as crossuo.cfg, replaces the IP-derived login seed
+// format: <0xaa> <0xbb> <0xcc> <0xdd>
+
+CFG_FIELD(shard, systemcheckoverride, {}, astr_t)
+// optional
+// same as crossuo.cfg, payload of the client->server 0x03 talk acknowledge
+// format: <0xaa> <0xbb> ...
+
 CFG_FIELD(shard, description, {}, astr_t)
 // optional, launcher-only
 // short textual description in the shard's official language

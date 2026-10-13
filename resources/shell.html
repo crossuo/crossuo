@@ -501,10 +501,10 @@
       // gesture (the audio block above listens on window in capture phase).
       //
       // v1 scope (see shardToArgs): only flags that already exist in
-      // src/Main.cpp InitCli are emitted. clientversion, crypt and the
-      // the shardweb/shardcommunity/shardaccount/shardother links have no CLI
-      // they are deliberately NOT passed - the client keeps its defaults
-      // (a crossuo.cfg persisted in IDBFS could carry them later).
+      // src/Main.cpp InitCli are emitted. the shardweb/shardcommunity/
+      // shardaccount/shardother links have no CLI: they are deliberately NOT
+      // passed - the client keeps its defaults (a crossuo.cfg persisted in
+      // IDBFS could carry them later).
       //
       // Single-shard lock: a deployment opts in by serving a shards.cfg with
       // EXACTLY ONE entry from its own origin (vendored next to index.html).
@@ -594,6 +594,21 @@
           // the classic ciphers never connects
           var crypt = String(shard.crypt || '').trim().toLowerCase();
           if (crypt) args.push('--crypt=' + (/^(1|yes|true)$/.test(crypt) ? '1' : '0'));
+          // locale overrides: Language selects the client .loc, ReportLanguage
+          // is the code told to the server (client CLI: --language /
+          // --reportlanguage, applied at the config-load stage)
+          var lang = String(shard.language || '').trim();
+          if (lang) args.push('--language=' + lang);
+          var rlang = String(shard.reportlanguage || '').trim();
+          if (rlang) args.push('--reportlanguage=' + rlang);
+          // protocol byte lists ("<0xaa> <0xbb> ..." grammar, validated by
+          // shardchk upstream): SeedOverride replaces the IP-derived login
+          // seed, SystemCheckOverride is the 0x03 talk-acknowledge payload
+          // (client CLI: --seedoverride / --systemcheckoverride)
+          var so = String(shard.seedoverride || '').trim();
+          if (so) args.push('--seedoverride=' + so);
+          var sco = String(shard.systemcheckoverride || '').trim();
+          if (sco) args.push('--systemcheckoverride=' + sco);
           var installer = String(shard.producturl || '').trim();
           // producturl is a plain url (the uo+/xuo+/website+/download+ prefix
           // grammar is gone; empty = manual install, no product flag)
