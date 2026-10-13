@@ -222,8 +222,7 @@ async fn main() {
         String::from("http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files");
     let mut upstream_aops =
         String::from("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo");
-    let data_dirs: Arc<Mutex<HashMap<String, PathBuf>>> =
-        Arc::new(Mutex::new(HashMap::new()));
+    let data_dirs: Arc<Mutex<HashMap<String, PathBuf>>> = Arc::new(Mutex::new(HashMap::new()));
 
     // internet-exposure surface (see admin.rs): all off/loose by default so
     // the loopback dev workflow keeps working unchanged
@@ -343,7 +342,7 @@ async fn main() {
     // as source "cli"). Read before serving starts; a changed shards.cfg
     // needs a restart. Empty result + no --ws-allow = open bridges.
     let mut ws_allow_info: Vec<(String, String, u16)> = Vec::new();
-    if let Ok(text) = std::fs::read_to_string(PathBuf::from(&dist).join("shards.cfg")) {
+    /*if let Ok(text) = std::fs::read_to_string(PathBuf::from(&dist).join("shards.cfg")) {
         for (shard, servers) in shards_login_servers(&text) {
             for (host, port) in servers {
                 ws_allow
@@ -354,7 +353,7 @@ async fn main() {
         }
     } else if ws_allow.is_none() {
         println!("xuoproxy: no shards.cfg in {dist} and no --ws-allow: /ws bridges are OPEN");
-    }
+    }*/
 
     let admin = Arc::new(admin::Admin::new(
         trust_proxy,
@@ -484,8 +483,21 @@ async fn main() {
     if listen_start_public(&listen) && !state.admin.allow_private_upstream {
         println!("  ssrf:   private upstreams DENIED on /stream + /blob u= (dev on loopback, or --allow-private-upstream)");
     }
-    println!("  admin:  {}", if state.admin.admin_token.is_some() { "/stats + /admin/ban|unban|bans (token required)" } else { "disabled (no --admin-token)" });
-    println!("  guard:  rate-limit {} rps (burst {}), trust-proxy {}, auto-ban after {} violations", state.admin.rate_rps, state.admin.rate_burst, state.admin.trust_proxy, state.admin.auto_ban_violations);
+    println!(
+        "  admin:  {}",
+        if state.admin.admin_token.is_some() {
+            "/stats + /admin/ban|unban|bans (token required)"
+        } else {
+            "disabled (no --admin-token)"
+        }
+    );
+    println!(
+        "  guard:  rate-limit {} rps (burst {}), trust-proxy {}, auto-ban after {} violations",
+        state.admin.rate_rps,
+        state.admin.rate_burst,
+        state.admin.trust_proxy,
+        state.admin.auto_ban_violations
+    );
     {
         let mounts = data_dirs.lock().expect("data mounts");
         if mounts.is_empty() {
@@ -522,7 +534,7 @@ fn listen_start_public(listen: &str) -> bool {
     let host = listen.rsplit_once(':').map(|(h, _)| h).unwrap_or(listen);
     match host.parse::<std::net::IpAddr>() {
         Ok(ip) => !ip.is_loopback(), // 0.0.0.0 binds all interfaces: public
-        Err(_) => true, // hostnames: assume public
+        Err(_) => true,              // hostnames: assume public
     }
 }
 
@@ -3073,9 +3085,7 @@ async fn ws_shard(
         )
             .into_response();
     }
-    upgrade.on_upgrade(move |socket| async move {
-        bridge(&state, socket, host, port).await
-    })
+    upgrade.on_upgrade(move |socket| async move { bridge(&state, socket, host, port).await })
 }
 
 async fn bridge(state: &AppState, socket: WebSocket, host: String, port: u16) {
@@ -3172,7 +3182,12 @@ fn data_dir_of(state: &AppState, name: &str) -> Option<PathBuf> {
     {
         return None;
     }
-    state.data_dirs.lock().expect("data mounts").get(name).cloned()
+    state
+        .data_dirs
+        .lock()
+        .expect("data mounts")
+        .get(name)
+        .cloned()
 }
 
 // the client appends cache-busting query tokens to resource references
@@ -3195,7 +3210,10 @@ fn data_strip_client_params(tail: &str) -> &str {
 // the LAST component: the client requests lowercased basenames (the plan
 // lowercases on install) while legacy installs ship "ART.MUL"-style names
 async fn data_resolve(base: &std::path::Path, tail: &str) -> Option<PathBuf> {
-    let comps: Vec<&str> = tail.split('/').filter(|c| !c.is_empty() && *c != ".").collect();
+    let comps: Vec<&str> = tail
+        .split('/')
+        .filter(|c| !c.is_empty() && *c != ".")
+        .collect();
     let last = comps.len().checked_sub(1)?;
     let mut cur = base.to_path_buf();
     for (i, comp) in comps.iter().enumerate() {
@@ -3321,7 +3339,9 @@ const DATA_LANG_STEMS: [&str; 15] = [
     "tooltips.",
     "gt_",
 ];
-const DATA_LANGS: [&str; 8] = [".cht", ".chs", ".deu", ".enu", ".esp", ".fra", ".jpn", ".kor"];
+const DATA_LANGS: [&str; 8] = [
+    ".cht", ".chs", ".deu", ".enu", ".esp", ".fra", ".jpn", ".kor",
+];
 const DATA_NAMES: [&str; 28] = [
     "arttable.cfg",
     "blueprints.tbp",
@@ -3420,7 +3440,11 @@ async fn data_walk(dir: &std::path::Path, rel: &str, out: &mut Vec<DataEntry>, d
         // case-insensitive last-component fallback bridges the difference to
         // the on-disk name
         let lowered = match child_rel.rfind('/') {
-            Some(at) => format!("{}{}", &child_rel[..at + 1], child_rel[at + 1..].to_ascii_lowercase()),
+            Some(at) => format!(
+                "{}{}",
+                &child_rel[..at + 1],
+                child_rel[at + 1..].to_ascii_lowercase()
+            ),
             None => child_rel.to_ascii_lowercase(),
         };
         out.push(DataEntry {
@@ -3619,7 +3643,12 @@ async fn data_build_product(name: &str, base: PathBuf) -> Option<Arc<DataProduct
     let mut seen: HashSet<String> = HashSet::new();
     let mut chosen: Vec<DataEntry> = Vec::new();
     for entry in entries {
-        let basename = entry.rel.rsplit('/').next().unwrap_or(&entry.rel).to_string();
+        let basename = entry
+            .rel
+            .rsplit('/')
+            .next()
+            .unwrap_or(&entry.rel)
+            .to_string();
         if !seen.insert(basename.clone()) {
             if entry.rel == entry.rel.to_lowercase() {
                 if let Some(slot) = chosen
@@ -3726,7 +3755,10 @@ fn data_inline_response(
             header::CACHE_CONTROL,
             cache_control.parse().expect("cache-control"),
         );
-        hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+        hs.insert(
+            header::ACCEPT_RANGES,
+            header::HeaderValue::from_static("bytes"),
+        );
         return res;
     }
     if headers.get(header::RANGE).is_some() {
@@ -3749,7 +3781,10 @@ fn data_inline_response(
         header::CACHE_CONTROL,
         cache_control.parse().expect("cache-control"),
     );
-    hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+    hs.insert(
+        header::ACCEPT_RANGES,
+        header::HeaderValue::from_static("bytes"),
+    );
     res
 }
 
@@ -3785,8 +3820,14 @@ async fn data_big_response(
             len.to_string().parse().expect("content-length"),
         );
         hs.insert(header::ETAG, etag.parse().expect("etag"));
-        hs.insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
-        hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+        hs.insert(
+            header::CACHE_CONTROL,
+            "no-cache".parse().expect("cache-control"),
+        );
+        hs.insert(
+            header::ACCEPT_RANGES,
+            header::HeaderValue::from_static("bytes"),
+        );
         return res;
     };
     let (start, end) = range;
@@ -3826,15 +3867,23 @@ async fn data_big_response(
         let hs = res.headers_mut();
         hs.insert(
             header::CONTENT_RANGE,
-            format!("bytes {start}-{end}/{len}").parse().expect("content-range"),
+            format!("bytes {start}-{end}/{len}")
+                .parse()
+                .expect("content-range"),
         );
         hs.insert(
             header::CONTENT_LENGTH,
             window.to_string().parse().expect("content-length"),
         );
         hs.insert(header::ETAG, etag.parse().expect("etag"));
-        hs.insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
-        hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+        hs.insert(
+            header::CACHE_CONTROL,
+            "no-cache".parse().expect("cache-control"),
+        );
+        hs.insert(
+            header::ACCEPT_RANGES,
+            header::HeaderValue::from_static("bytes"),
+        );
         return res;
     };
     let mut res = (
@@ -3846,11 +3895,19 @@ async fn data_big_response(
     let hs = res.headers_mut();
     hs.insert(
         header::CONTENT_RANGE,
-        format!("bytes {start}-{end}/{len}").parse().expect("content-range"),
+        format!("bytes {start}-{end}/{len}")
+            .parse()
+            .expect("content-range"),
     );
     hs.insert(header::ETAG, etag.parse().expect("etag"));
-    hs.insert(header::CACHE_CONTROL, "no-cache".parse().expect("cache-control"));
-    hs.insert(header::ACCEPT_RANGES, header::HeaderValue::from_static("bytes"));
+    hs.insert(
+        header::CACHE_CONTROL,
+        "no-cache".parse().expect("cache-control"),
+    );
+    hs.insert(
+        header::ACCEPT_RANGES,
+        header::HeaderValue::from_static("bytes"),
+    );
     res
 }
 
@@ -4023,7 +4080,9 @@ fn shards_local_product_urls(text: &str) -> Vec<(String, String)> {
     let mut out: Vec<(String, String)> = Vec::new();
     let mut name: Option<String> = None;
     let mut product_url: Option<String> = None;
-    let mut flush = |out: &mut Vec<(String, String)>, name: &mut Option<String>, product_url: &mut Option<String>| {
+    let mut flush = |out: &mut Vec<(String, String)>,
+                     name: &mut Option<String>,
+                     product_url: &mut Option<String>| {
         if let (Some(n), Some(i)) = (name.take(), product_url.take()) {
             out.push((n, i));
         }
@@ -4161,10 +4220,7 @@ async fn register_shards_mounts(state: &AppState) {
             }
             continue;
         }
-        if mounts
-            .insert(mount.clone(), resolved.clone())
-            .is_none()
-        {
+        if mounts.insert(mount.clone(), resolved.clone()).is_none() {
             println!(
                 "xuoproxy: shards mount '{}' -> {}",
                 mount,
@@ -4177,7 +4233,10 @@ async fn register_shards_mounts(state: &AppState) {
 // the served shards.cfg: local product urls become the same-origin product url
 // ("/data/<mount>/"), which the shell passes through and the client plans
 // against (the generated product manifest answers at that root's patchlist)
-async fn serve_shards_cfg(state: &AppState, req_headers: &axum::http::HeaderMap) -> Option<Response> {
+async fn serve_shards_cfg(
+    state: &AppState,
+    req_headers: &axum::http::HeaderMap,
+) -> Option<Response> {
     let bytes = tokio::fs::read(state.dist.join("shards.cfg")).await.ok()?;
     register_shards_mounts(state).await;
     let text = String::from_utf8_lossy(&bytes).into_owned();
@@ -4235,11 +4294,7 @@ async fn serve_shards_cfg(state: &AppState, req_headers: &axum::http::HeaderMap)
         );
         return Some(not_modified);
     }
-    let mut res = (
-        [(header::CONTENT_TYPE, "text/plain")],
-        body,
-    )
-        .into_response();
+    let mut res = ([(header::CONTENT_TYPE, "text/plain")], body).into_response();
     res.headers_mut()
         .insert(header::ETAG, etag.parse().expect("etag"));
     res.headers_mut().insert(
@@ -4360,14 +4415,8 @@ mod tests {
             ("abc", "0e3976313c03be9e"),
             ("abcd", "b5f4889ce20dd3fa"),
             ("abcde", "026d72de03cd18df"),
-            (
-                "abcdefabcdefabcdefghijkl",
-                "6a87023dbbbddc78",
-            ),
-            (
-                "abcdefabcdefabcdefghijk",
-                "8a49d082b73c25bd",
-            ),
+            ("abcdefabcdefabcdefghijkl", "6a87023dbbbddc78"),
+            ("abcdefabcdefabcdefghijk", "8a49d082b73c25bd"),
             ("0123456789ab", "1065e50af0ec5868"),
             ("0123456789abc", "7351ce56595621ef"),
         ];
