@@ -113,6 +113,7 @@ enum
     CMKC_ITEMP_ROPERTIES_ICON,
     CMKC_OBJECT_HANDLES,
     CMKC_OBJECT_HANDLES_NO_BODIES,
+    CMKC_SHOW_HOUSE_CONTENT,
     CMKC_REDUCE_FPS_UNACTIVE_WINDOW,
     CMKC_HOLD_SHIFT_FOR_CONTEXT_MENUS,
     CMKC_HOLD_SHIFT_FOR_ENABLE_PATHFIND,
@@ -256,6 +257,7 @@ static const ConfigEntry s_Keys[] = {
     { CMKC_ITEMP_ROPERTIES_ICON, "itempropertiesicon" },
     { CMKC_OBJECT_HANDLES, "objecthandles" },
     { CMKC_OBJECT_HANDLES_NO_BODIES, "objecthandlesnobodies" },
+    { CMKC_SHOW_HOUSE_CONTENT, "showhousecontent" },
     { CMKC_REDUCE_FPS_UNACTIVE_WINDOW, "reducefpsunactivewindow" },
     { CMKC_HOLD_SHIFT_FOR_CONTEXT_MENUS, "holdshiftforcontextmenus" },
     { CMKC_HOLD_SHIFT_FOR_ENABLE_PATHFIND, "holdshiftforenablepathfind" },
@@ -472,6 +474,7 @@ void CConfigManager::DefaultPage6()
     m_ItemPropertiesIcon = false;
     ObjectHandles = false;
     ObjectHandlesNoBodies = false;
+    ShowHouseContent = false;
     HoldShiftForContextMenus = false;
     HoldShiftForEnablePathfind = false;
     m_CharacterBackpackStyle = CBS_DEFAULT;
@@ -1289,6 +1292,9 @@ bool CConfigManager::Load(const fs_path &path)
                 case CMKC_OBJECT_HANDLES_NO_BODIES:
                     ObjectHandlesNoBodies = str_to_bool(strings[1]);
                     break;
+                case CMKC_SHOW_HOUSE_CONTENT:
+                    ShowHouseContent = str_to_bool(strings[1]);
+                    break;
                 case CMKC_REDUCE_FPS_UNACTIVE_WINDOW:
                     SetReduceFPSUnactiveWindow(str_to_bool(strings[1]));
                     break;
@@ -1682,6 +1688,7 @@ void CConfigManager::Save(const fs_path &path)
         writer.WriteBool("ItemPropertiesIcon", m_ItemPropertiesIcon);
         writer.WriteBool("ObjectHandles", ObjectHandles);
         writer.WriteBool("ObjectHandlesNoBodies", ObjectHandlesNoBodies);
+        writer.WriteBool("ShowHouseContent", ShowHouseContent);
         writer.WriteBool("ReduceFPSUnactiveWindow", m_ReduceFPSUnactiveWindow);
         writer.WriteBool("HoldShiftForContextMenus", HoldShiftForContextMenus);
         writer.WriteBool("HoldShiftForEnablePathfind", HoldShiftForEnablePathfind);

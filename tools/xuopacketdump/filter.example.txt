@@ -1,0 +1,7 @@
+# xuopacketdump filter config - packet IDs to ignore (denoise).
+# One hex ID per line, or a TOML-style `ignore = [...]` list. # = comment.
+ignore = [
+    0x22,  # Confirm Walk
+    0x73,  # Ping
+    # 0x02,  # Walk Request
+]

@@ -103,6 +103,7 @@ public:
     bool DisableNewTargetSystem = false;
     bool ObjectHandles = false;
     bool ObjectHandlesNoBodies = false;
+    bool ShowHouseContent = false;
     bool HoldShiftForContextMenus = false;
     bool HoldShiftForEnablePathfind = false;
     int GameWindowWidth = 0;

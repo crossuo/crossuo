@@ -140,6 +140,7 @@ protected:
     HANDLER_PACKET(DisplayQuestArrow);
     HANDLER_PACKET(ClientViewRange);
     HANDLER_PACKET(KrriosClientSpecial);
+    HANDLER_PACKET(RazorNegotiate);
     HANDLER_PACKET(AssistVersion);
     HANDLER_PACKET(CharacterListNotification);
     HANDLER_PACKET(ErrorCode);

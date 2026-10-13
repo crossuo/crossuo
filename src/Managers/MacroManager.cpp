@@ -941,7 +941,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 if (g_Config.ClientVersion >= CV_500A)
                 {
                     CPacketUnicodeSpeechRequest(
-                        wstr_from(mos->m_String), st, 3, speechColor, g_Language)
+                        wstr_from(mos->m_String), st, 3, speechColor, g_ServerLanguageReport)
                         .Send();
                 }
                 else

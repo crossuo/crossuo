@@ -17,6 +17,18 @@ struct Config
     astr_t CustomPath;
     astr_t ServerAddress = XUO_DEFAULT_SERVER_ADDRESS;
     astr_t LocaleOverride;
+    // ReportLanguage=: the language code reported to the server on all
+    // communications (g_ServerLanguageReport); overrides the one derived
+    // from the client language when set
+    astr_t LocaleOverrideReport;
+    // SeedOverride=<4 hex bytes>: replaces the IP-derived login seed on the
+    // login connection (e.g. "SeedOverride= 0x00 0x01 0x48 0xaa")
+    astr_t SeedOverride;
+    // SystemCheckOverride=<hex bytes>: payload of the client->server 0x03
+    // system-check reply (PlayUO-detection ack); the client prepends the
+    // 0x03 header and the big-endian size itself, so the field holds only
+    // the bytes after those
+    astr_t SystemCheckOverride;
     // shard name: comes from the launcher profile, the config file, the
     // command line (--shard) or the white-label default, in that order of
     // recency; names the per-shard streaming install directory
@@ -76,7 +88,12 @@ struct Config
 
 bool LoadGlobalConfig();
 void SaveGlobalConfig();
+// parses "<0xaa> <0xbb> ..." style byte lists used by SeedOverride and
+// SystemCheckOverride; returns the number of bytes written (<= max)
+size_t ParseByteList(const astr_t &text, uint8_t *out, size_t max);
 void ApplyClientVersionDefaults();
+void ApplyLanguageSettings();
+uint32_t GetClientFlagMask();
 void ApplyClientVersionOverride(
     const astr_t &client_version, const astr_t &protocol_version, const astr_t &client_type);
 // prints the APPLIED version markers and everything derived from them (after

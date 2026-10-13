@@ -56,8 +56,9 @@ bool CSpeechManager::LoadSpeech()
     {
         CurrentLanguage = &m_LangCodes[0];
         g_Language = str_lower(m_LangCodes[0].Abbreviature);
+        g_ServerLanguageReport = str_upper(g_Language);
     }
-    Info(Client, "selected language: %s", g_Language.c_str());
+    Info(Client, "selected language: %s (%s)", g_Language.c_str(), g_ServerLanguageReport.c_str());
 
     CDataReader reader;
     std::vector<uint8_t> tempData;

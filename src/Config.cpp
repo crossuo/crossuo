@@ -3,6 +3,8 @@
 
 #include "Config.h"
 
+#include "Platform.h"
+
 #include "Globals.h"
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
@@ -10,6 +12,7 @@
 #include <common/logging/logging.h>
 #include <common/fs.h>
 #include <common/str.h>
+#include <sstream>
 #include <common/utils.h>
 #include <xuocore/enumlist.h>
 #include <xuocore/client_info.h>
@@ -44,6 +47,9 @@ enum
     MSCC_USE_VERDATA,
     MSCC_CLIENT_TYPE,
     MSCC_LOCALE_OVERRIDE,
+    MSCC_REPORT_LANGUAGE,
+    MSCC_SEED_OVERRIDE,
+    MSCC_SYSTEM_CHECK_OVERRIDE,
     MSCC_SHARD_NAME,
     MSCC_DATA_PRODUCT_URL,
     MSCC_SHARD_WEB,
@@ -89,6 +95,9 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_USE_VERDATA, "useverdata" },
     { MSCC_CLIENT_TYPE, "clienttype" },
     { MSCC_LOCALE_OVERRIDE, "language" },
+    { MSCC_REPORT_LANGUAGE, "reportlanguage" },
+    { MSCC_SEED_OVERRIDE, "seedoverride" },
+    { MSCC_SYSTEM_CHECK_OVERRIDE, "systemcheckoverride" },
     { MSCC_SHARD_NAME, "shardname" },
     { MSCC_DATA_PRODUCT_URL, "producturl" },
     { MSCC_SHARD_WEB, "shardweb" },
@@ -205,6 +214,15 @@ static const char *GetClientTypeString(uint16_t clientFlag)
             break;
     }
     return "";
+}
+
+uint32_t GetClientFlagMask()
+{
+    if (g_Config.ClientFlag == CF_UNDEFINED || g_Config.ClientFlag > CF_SA)
+    {
+        return 0;
+    }
+    return g_Config.ClientFlag ? (uint32_t(g_Config.ClientFlag) << 1) - 1 : 0;
 }
 
 static const char *GetClientTypeName(CLIENT_FLAG clientFlag)
@@ -426,6 +444,38 @@ static fs_path GetConfigFile()
     return fs_path_from(g_cli["config"].get().string);
 }
 
+void ApplyLanguageSettings()
+{
+    if (g_Config.LocaleOverride.empty())
+    {
+        Platform::SetLanguageFromSystemLocale();
+    }
+    else
+    {
+        g_Language = str_lower(g_Config.LocaleOverride);
+    }
+    g_ServerLanguageReport = !g_Config.LocaleOverrideReport.empty()
+                                 ? str_upper(g_Config.LocaleOverrideReport)
+                                 : str_upper(g_Language);
+}
+
+size_t ParseByteList(const astr_t &text, uint8_t *out, size_t max)
+{
+    std::istringstream stream(text);
+    size_t count = 0;
+    astr_t token;
+    while (count < max && stream >> token)
+    {
+        const auto value = std::stoul(token, nullptr, 16);
+        if (value > 0xFF)
+        {
+            return 0;
+        }
+        out[count++] = uint8_t(value);
+    }
+    return count;
+}
+
 bool LoadGlobalConfig()
 {
     auto cfg = GetConfigFile();
@@ -608,6 +658,21 @@ bool LoadGlobalConfig()
                     g_Config.LocaleOverride = str_upper(strings[1]);
                 }
                 break;
+                case MSCC_REPORT_LANGUAGE:
+                {
+                    g_Config.LocaleOverrideReport = str_upper(strings[1]);
+                }
+                break;
+                case MSCC_SEED_OVERRIDE:
+                {
+                    g_Config.SeedOverride = str_trim(strings[1]);
+                }
+                break;
+                case MSCC_SYSTEM_CHECK_OVERRIDE:
+                {
+                    g_Config.SystemCheckOverride = str_trim(strings[1]);
+                }
+                break;
                 case MSCC_SHARD_NAME:
                 {
                     g_Config.ShardName = strings[1];
@@ -663,6 +728,7 @@ bool LoadGlobalConfig()
     }
 
     ClientVersionFixup(s_Mark.ProtocolVersion);
+    ApplyLanguageSettings();
     return true;
 }
 
@@ -697,6 +763,7 @@ void LogClientVersionInfo()
         GetClientTypeName((CLIENT_FLAG)g_Config.ClientFlag),
         g_Config.ClientFlag);
     Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
+    Info(Client, "\tLanguage: %s (%s)", g_Language.c_str(), g_ServerLanguageReport.c_str());
     Info(Client, "\tUltima Online Path: %s", fs_path_ascii(g_UOPath));
 }
 void SaveGlobalConfig()
@@ -736,6 +803,21 @@ void SaveGlobalConfig()
     if (!g_Config.LocaleOverride.empty())
     {
         fprintf(cfg, "Language=%s\n", g_Config.LocaleOverride.c_str());
+    }
+
+    if (!g_Config.LocaleOverrideReport.empty())
+    {
+        fprintf(cfg, "ReportLanguage=%s\n", g_Config.LocaleOverrideReport.c_str());
+    }
+
+    if (!g_Config.SeedOverride.empty())
+    {
+        fprintf(cfg, "SeedOverride=%s\n", g_Config.SeedOverride.c_str());
+    }
+
+    if (!g_Config.SystemCheckOverride.empty())
+    {
+        fprintf(cfg, "SystemCheckOverride=%s\n", g_Config.SystemCheckOverride.c_str());
     }
 
     if (!g_Config.ShardName.empty())

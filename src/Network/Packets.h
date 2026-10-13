@@ -105,6 +105,18 @@ public:
     CPacketSkillsRequest(uint32_t serial);
 };
 
+class CPacketOpenUOStore : public CPacket
+{
+public:
+    CPacketOpenUOStore();
+};
+
+class CPacketShowPublicHouseContent : public CPacket
+{
+public:
+    CPacketShowPublicHouseContent(bool show);
+};
+
 class CPacketSkillsStatusChangeRequest : public CPacket
 {
 public:

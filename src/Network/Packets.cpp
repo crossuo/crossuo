@@ -104,8 +104,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
 
     WriteUInt8(packetID);
     WriteUInt32BE(0xEDEDEDED);
-    WriteUInt16BE(0xFFFF);
-    WriteUInt16BE(0xFFFF);
+    WriteUInt32BE(0xFFFFFFFF);
     WriteUInt8(0x00);
     WriteString(name, 30, false);
 
@@ -121,15 +120,8 @@ CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
     }
     else
     {
-        //Move(30); //На самом деле, клиент пихает сюда пароль на 30 байт, но по какой-то причине (мб мусор в памяти) - идет то что идет
-        WriteUInt16BE(0x0000); //?
-
-        uint32_t clientFlag = 0;
-        for (int i = 0; i < g_Config.ClientFlag; i++)
-        {
-            clientFlag |= (1 << i);
-        }
-
+        WriteUInt16BE(0x0000);
+        const uint32_t clientFlag = GetClientFlagMask();
         WriteUInt32BE(clientFlag); //clientflag
         WriteUInt32BE(0x00000001); //?
         WriteUInt32BE(0x00000000); //logincount
@@ -148,22 +140,16 @@ CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
     else
     {
         val = (uint8_t)g_CreateCharacterManager.GetRace();
-
         if (g_Config.ProtocolClientVersion < CV_7000)
         {
             val--;
         }
-
         val = (val * 2) + (uint8_t)g_CreateCharacterManager.GetFemale();
     }
-
     WriteUInt8(val); // sex @70 on the legacy frame
-    val = profession->Str;
-    WriteUInt8(val);
-    val = profession->Dex;
-    WriteUInt8(val);
-    val = profession->Int;
-    WriteUInt8(val);
+    WriteUInt8(profession->Str);
+    WriteUInt8(profession->Dex);
+    WriteUInt8(profession->Int);
 
     for (int i = 0; i < skillsCount; i++)
     {
@@ -265,29 +251,20 @@ CPacketDeleteCharacter::CPacketDeleteCharacter(int charIndex)
 CPacketSelectCharacter::CPacketSelectCharacter(int index, const astr_t &name)
     : CPacket(73)
 {
-    int copyLen = (int)name.length();
-
-    if (copyLen > 30)
+    int maxLen = (int)name.length();
+    if (maxLen > 30)
     {
-        copyLen = 30;
+        maxLen = 30;
     }
-
-    memcpy(&g_SelectedCharName[0], name.c_str(), copyLen);
+    memcpy(&g_SelectedCharName[0], name.c_str(), maxLen);
 
     WriteUInt8(0x5D);
     WriteUInt32BE(0xEDEDEDED);
     WriteString(name, 30, false);
     Move(2);
 
-    uint32_t clientFlag = 0;
-
-    for (int i = 0; i < g_Config.ClientFlag; i++)
-    {
-        clientFlag |= (1 << i);
-    }
-
+    const uint32_t clientFlag = GetClientFlagMask();
     WriteUInt32BE(clientFlag);
-
     Move(24);
     WriteUInt32BE(index);
     WriteDataBE(g_ConnectionManager.GetClientIP(), 4);
@@ -347,6 +324,19 @@ CPacketHelpRequest::CPacketHelpRequest()
     : CPacket(258)
 {
     WriteUInt8(0x9B);
+}
+
+CPacketOpenUOStore::CPacketOpenUOStore()
+    : CPacket(1)
+{
+    WriteUInt8(0xFA);
+}
+
+CPacketShowPublicHouseContent::CPacketShowPublicHouseContent(bool show)
+    : CPacket(2)
+{
+    WriteUInt8(0xFB);
+    WriteUInt8(show ? 1 : 0);
 }
 
 CPacketStatusRequest::CPacketStatusRequest(uint32_t serial)
@@ -969,7 +959,7 @@ CPacketPartyInviteRequest::CPacketPartyInviteRequest()
     : CPacket(10)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x000a);
+    WriteUInt16BE(0x000A);
     WriteUInt16BE(0x0006);
     WriteUInt8(0x01);
     WriteUInt32BE(0x00000000);
@@ -979,7 +969,7 @@ CPacketPartyRemoveRequest::CPacketPartyRemoveRequest(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x000a);
+    WriteUInt16BE(0x000A);
     WriteUInt16BE(0x0006);
     WriteUInt8(0x02);
     WriteUInt32BE(serial);
@@ -999,7 +989,7 @@ CPacketPartyAccept::CPacketPartyAccept(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x000a);
+    WriteUInt16BE(0x000A);
     WriteUInt16BE(0x0006);
     WriteUInt8(0x08);
     WriteUInt32BE(serial);
@@ -1009,7 +999,7 @@ CPacketPartyDecline::CPacketPartyDecline(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x000a);
+    WriteUInt16BE(0x000A);
     WriteUInt16BE(0x0006);
     WriteUInt8(0x09);
     WriteUInt32BE(serial);
@@ -1044,8 +1034,8 @@ CPacketGameWindowSize::CPacketGameWindowSize()
     WriteUInt8(0xBF);
     WriteUInt16BE(0x000D);
     WriteUInt16BE(0x0005);
-    WriteUInt32BE(g_ConfigManager.GameWindowWidth);
-    WriteUInt32BE(g_ConfigManager.GameWindowHeight);
+    WriteUInt32BE(g_ConfigManager.GameWindowWidth); // Evaluate if need to make configurable for shards
+    WriteUInt32BE(g_ConfigManager.GameWindowHeight); // Evaluate if need to make configurable for shards
 }
 
 CPacketClientViewRange::CPacketClientViewRange(uint8_t range)
@@ -1204,13 +1194,7 @@ CPacketClientType::CPacketClientType()
     WriteUInt16BE(0x000F);
     WriteUInt8(0x0A);
 
-    uint32_t clientFlag = 0;
-
-    for (int i = 0; i < g_Config.ClientFlag; i++)
-    {
-        clientFlag |= (1 << i);
-    }
-
+    const uint32_t clientFlag = GetClientFlagMask();
     WriteUInt32BE(clientFlag);
 }
 
@@ -1670,16 +1654,16 @@ CPacketWrestlingStun::CPacketWrestlingStun()
     : CPacket(5)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x05);
-    WriteUInt16BE(0x09);
+    WriteUInt16BE(0x0005);
+    WriteUInt16BE(0x0009);
 }
 
 CPacketWrestlingDisarm::CPacketWrestlingDisarm()
     : CPacket(5)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x05);
-    WriteUInt16BE(0x0A);
+    WriteUInt16BE(0x0005);
+    WriteUInt16BE(0x000A);
 }
 
 CPacketTargetObject::CPacketTargetObject(
@@ -1752,8 +1736,8 @@ CPacketCustomHouseDataReq::CPacketCustomHouseDataReq(int serial)
     : CPacket(9)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x09);
-    WriteUInt16BE(0x1E);
+    WriteUInt16BE(0x0009);
+    WriteUInt16BE(0x001E);
     WriteUInt32BE(serial);
 }
 
@@ -1969,8 +1953,8 @@ CPacketMouseMovementRequest::CPacketMouseMovementRequest(int run, uint8_t dir)
     : CPacket(12)
 {
     WriteUInt8(0xBF);
-    WriteUInt16BE(0x0C);
-    WriteUInt16BE(0x33);
+    WriteUInt16BE(0x000C);
+    WriteUInt16BE(0x0033);
     WriteUInt32BE(g_PlayerSerial);
     WriteUInt8(dir);
     WriteUInt8(dir);

@@ -114,6 +114,7 @@ uint32_t g_ShaderDrawMode = 0;
 #endif // #if defined(USE_GL1)
 
 astr_t g_Language = "enu";
+astr_t g_ServerLanguageReport = "ENU";
 
 GAME_STATE g_GameState = GS_MAIN;
 
@@ -199,6 +200,8 @@ SEASON_TYPE g_OldSeason = ST_SUMMER;
 int g_OldSeasonMusic = 0;
 
 uint32_t g_LockedClientFeatures = 0;
+uint64_t g_ServerAssistantFeatures = 0;
+uint32_t g_RazorNegotiateTimer = 0;
 
 bool g_GeneratedMouseDown = false;
 

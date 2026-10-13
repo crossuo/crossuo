@@ -324,7 +324,7 @@ void SendConsoleText(wstr_t text, uint16_t defaultColor)
         return;
     }
 #endif
-    CPacketUnicodeSpeechRequest(text, speechType, 3, sendColor, g_Language).Send();
+    CPacketUnicodeSpeechRequest(text, speechType, 3, sendColor, g_ServerLanguageReport).Send();
 }
 
 CGameConsole::CGameConsole()

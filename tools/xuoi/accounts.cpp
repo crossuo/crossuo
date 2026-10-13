@@ -93,7 +93,7 @@ const char *client_types[] = {
 };
 
 const char *client_types_cfg[] = {
-    "", "t2a", "re", "td", "lbr", "aos", "se", "sa", "ml", "ej",
+    "", "t2a", "re", "td", "lbr", "aos", "se", "sa", //"ml", "ej",
 };
 
 static account::data s_accounts;

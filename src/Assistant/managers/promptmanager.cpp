@@ -10,6 +10,7 @@
 #include "Network/Packets.h" // the raw prompt-reply builders
 #include "../macros/macroexecutor.h"
 #include "../core/world.h"
+#include "../../Globals.h" // g_ServerLanguageReport
 #include <common/str.h>
 
 namespace xuoassist {
@@ -106,7 +107,7 @@ void CPromptManager::Send(astr_t text)
 
         if (IsUnicode)
         {
-            ::CPacketUnicodePromptResponse(Serial, ID, wstr_from(text), "ENU", cancel).Send();
+            ::CPacketUnicodePromptResponse(Serial, ID, wstr_from(text), g_ServerLanguageReport, cancel).Send();
         }
         else
         {

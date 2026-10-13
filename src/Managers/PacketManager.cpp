@@ -405,7 +405,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xFB*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xFC*/ BMSGH(XUO_SAVE_PACKET, "CrossUO messages", PACKET_VARIABLE_SIZE, CrossMessages),
     /*0xFD*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
-    /*0xFE*/ RMSG(XUO_SAVE_PACKET, "Razor Handshake", 0x8),
+    /*0xFE*/ RMSGH(XUO_SAVE_PACKET, "Razor Handshake", 0x8, RazorNegotiate),
     /*0xFF*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE)
 };
 
@@ -416,8 +416,26 @@ static uint8_t s_ackPacket[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0
                                      0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
                                      0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
                                      0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
+
 static void ServerTalkAcknowledge()
 {
+    // SystemCheckOverride holds only the payload bytes
+    uint8_t payload[0x100];
+    const size_t len = ParseByteList(g_Config.SystemCheckOverride, payload, sizeof(payload));
+    Info(Network,
+         "SystemCheckOverride: value=%d chars, parsed=%d bytes",
+         (int)g_Config.SystemCheckOverride.length(),
+         (int)len);
+    if (len > 0)
+    {
+        uint8_t buf[3 + sizeof(payload)];
+        buf[0] = 0x03;
+        buf[1] = uint8_t((len + 2) >> 8);
+        buf[2] = uint8_t(len + 2);
+        memcpy(&buf[3], payload, len);
+        g_Game.Send(buf, int(len + 3));
+        return;
+    }
     g_Game.Send(s_ackPacket, sizeof(s_ackPacket));
 }
 
@@ -1092,7 +1110,7 @@ PACKET_HANDLER(EnterWorld)
 
     if (g_Config.ProtocolClientVersion >= CV_200)
     {
-        CPacketLanguage(g_Language).Send();
+        CPacketLanguage(g_ServerLanguageReport).Send();
     }
 
     g_Game.Click(g_PlayerSerial);
@@ -1114,6 +1132,11 @@ PACKET_HANDLER(EnterWorld)
         {
             g_Game.CreateTextMessageF(3, 0x0037, "Login confirm to %s", server->Name.c_str());
         }
+    }
+
+    if (g_Config.ProtocolClientVersion >= CV_70796)
+    {
+        CPacketShowPublicHouseContent(g_ConfigManager.ShowHouseContent).Send();
     }
 }
 
@@ -2736,7 +2759,6 @@ PACKET_HANDLER(EnableLockedFeatures)
     }
 
     g_ChatEnabled = bool(g_LockedClientFeatures & LFF_T2A);
-    g_Config.ClientFlag = g_LockedClientFeatures;
     uo_update_animation_tables(g_LockedClientFeatures);
 }
 
@@ -4866,47 +4888,65 @@ PACKET_HANDLER(KrriosClientSpecial)
     uint8_t type = ReadUInt8();
     if (type == 0xFE)
     {
-        CPacketRazorAnswer().Send();
+        // reply after the same 5s delay ClassicUO uses for its Razor ACK
+        g_RazorNegotiateTimer = g_Ticks + 5000;
     }
-#if defined(XUO_ASSISTANT)
-    else if (type == 1)
+    else if (type == 0x00)
     {
-        // party member positions (assistant map markers)
-        const int count = int(Size - 4) / 9;
-        for (int i = 0; i < count; i++)
-        {
-            xuoassist::XA_PARTY_MEMBER_INFO info;
-            info.Serial = ReadUInt32BE();
-            info.X = ReadUInt16BE();
-            info.Y = ReadUInt16BE();
-            info.Map = ReadUInt8();
-            xuoassist::g_AssistantEvents->OnPartyMemberInfo(info);
-        }
+        // accepted
+        Info(Network, "KrriosClientSpecial accepted");
     }
-    else if (type == 2)
+    else if (type == 0x01 || type == 0x02)
     {
-        // guild member positions (assistant map markers)
-        const uint8_t locations = ReadUInt8();
+        const bool locations = type == 0x01 ? ReadUInt8() : 0u;
         const int bytesPerEntry = locations != 0u ? 4 + 6 : 4;
         const int count = int(Size - 4) / bytesPerEntry;
         for (int i = 0; i < count; i++)
         {
+            const auto serial = ReadUInt32BE();
+            const auto x = ReadUInt16BE();
+            const auto y = ReadUInt16BE();
+            const auto map = ReadUInt8();
+#if defined(XUO_ASSISTANT)
             xuoassist::XA_GUILD_MEMBER_INFO info;
-            info.Serial = ReadUInt32BE();
-            info.X = ReadUInt16BE();
-            info.Y = ReadUInt16BE();
-            info.Map = ReadUInt8();
+            info.Serial = serial;
+            info.X = x;
+            info.Y = y;
+            info.Map = map;
             xuoassist::g_AssistantEvents->OnGuildMemberInfo(info);
+#endif
         }
     }
-#endif
+    else if (type == 0x03)
+    {
+        // runebook contents
+    }
+    else if (type == 0x04)
+    {
+        // guardline data
+    }
+    else if (type == 0xF0)
+    {
+    }
+}
+
+PACKET_HANDLER(RazorNegotiate)
+{
+    // RunUO/ServUO assistant negotiation: the payload is the server's
+    // disallowed-assistant-features bitmask (high dword first).
+    g_ServerAssistantFeatures = (uint64_t(ReadUInt32BE()) << 32) | ReadUInt32BE();
+    Info(
+        Network,
+        "assistant negotiate: server disallowed features 0x%08x%08x",
+        uint32_t(g_ServerAssistantFeatures >> 32),
+        uint32_t(g_ServerAssistantFeatures));
+    g_RazorNegotiateTimer = g_Ticks + 5000;
 }
 
 PACKET_HANDLER(AssistVersion)
 {
-    uint32_t version = ReadUInt32BE();
-    // CHECK: if this is correct for the use case where ClientVersion != ProtocolClientVersion
-    CPacketAssistVersion(version, g_Config.ProtocolClientVersionString).Send();
+    //uint32_t version = ReadUInt32BE();
+    //CPacketAssistVersion(version, g_Config.ProtocolClientVersionString).Send();
 }
 
 PACKET_HANDLER(CharacterListNotification)

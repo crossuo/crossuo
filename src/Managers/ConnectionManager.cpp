@@ -149,15 +149,24 @@ bool CConnectionManager::Connect(const astr_t &address, int port, uint8_t *gameS
             g_TotalSendSize = 4;
             g_LastPacketTime = g_Ticks;
             g_LastSendTime = g_LastPacketTime;
+
+            uint8_t seedOverride[4];
+            uint8_t *seed = m_Seed;
+            if (ParseByteList(g_Config.SeedOverride, seedOverride, 4) == 4)
+            {
+                seed = seedOverride;
+                Info(Network, "SeedOverride: %s", g_Config.SeedOverride.c_str());
+            }
+
             if (g_Config.ClientVersion < CV_6060)
             {
-                SendIP(m_LoginSocket, m_Seed);
+                SendIP(m_LoginSocket, seed);
             }
             else
             {
                 uint8_t buf = 0xEF;
                 m_LoginSocket.Send(&buf, 1); //0xEF
-                SendIP(m_LoginSocket, m_Seed);
+                SendIP(m_LoginSocket, seed);
                 CDataWriter stream;
 
                 uint32_t major = 0, minor = 0, rev = 0, prot = 0;

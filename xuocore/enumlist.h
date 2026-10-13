@@ -135,7 +135,7 @@ enum CLIENT_VERSION
     CV_70500 = VERSION(7, 0, 50, 0),   // Mastery fixes
     //CV_70600 = VERSION(7, 0, 60, 0), //
     CV_70611 = VERSION(7, 0, 61, 1), // login screen Endless Journey 7.0.61.1
-    //CV_70640 = VERSION(7, 0, 64, 0), // Endless Journey background
+    CV_70640 = VERSION(7, 0, 64, 0),   // Endless Journey background
     CV_70720 = VERSION(7, 0, 72, 0), // Publish 102 Enable Large Bank & Vault Gumps
     CV_70796 = VERSION(7, 0, 79, 6), // Display houses content option
     CV_708111 = VERSION(7, 0, 81, 11),
@@ -187,6 +187,37 @@ enum CLIENT_FLAG
     CF_RESERVED = 0x80,
     CF_3D = 0x100,
     CF_UNDEFINED = 0xFFFF,
+};
+
+// RunUO/ServUO assistant-negotiation bits (0xFE handshake payload): each bit
+// set in the server's mask marks an assistant feature as DISALLOWED on that
+// shard (Razor names, Assistants.Features on the server side)
+enum ASSISTANT_FEATURE
+{
+    ASF_NONE = 0,
+    ASF_FILTER_WEATHER = 1ULL << 0,  // weather filter
+    ASF_FILTER_LIGHT = 1ULL << 1,    // light filter
+    ASF_SMART_TARGET = 1ULL << 2,    // smart last target
+    ASF_RANGED_TARGET = 1ULL << 3,   // range check last target
+    ASF_AUTO_OPEN_DOORS = 1ULL << 4, // automatically open doors
+    ASF_DEQUIP_ON_CAST = 1ULL << 5,  // unequip weapon on spell cast
+    ASF_AUTO_POTION_EQUIP = 1ULL << 6, // un/re-equip weapon on potion use
+    ASF_POISONED_CHECKS = 1ULL << 7, // block heal if poisoned / heal-cure macros
+    ASF_LOOPED_MACROS = 1ULL << 8,   // looping macros, for loops, nested macros
+    ASF_USE_ONCE_AGENT = 1ULL << 9,
+    ASF_RESTOCK_AGENT = 1ULL << 10,
+    ASF_SELL_AGENT = 1ULL << 11,
+    ASF_BUY_AGENT = 1ULL << 12,
+    ASF_POTION_HOTKEYS = 1ULL << 13,
+    ASF_RANDOM_TARGETS = 1ULL << 14,
+    ASF_CLOSEST_TARGETS = 1ULL << 15,
+    ASF_OVERHEAD_HEALTH = 1ULL << 16,
+    // AssistUO-only bits
+    ASF_AUTOLOOT_AGENT = 1ULL << 17,
+    ASF_BONE_CUTTER_AGENT = 1ULL << 18,
+    ASF_JSCRIPT_MACROS = 1ULL << 19,
+    ASF_AUTO_REMOUNT = 1ULL << 20,
+    ASF_ALL = 0xFFFFFFFFFFFFFFFFULL
 };
 
 enum CHARACTER_LIST_FLAG

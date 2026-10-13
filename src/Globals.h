@@ -113,6 +113,7 @@ extern uint32_t g_ShaderDrawMode;
 #endif // #if defined(USE_GL1)
 
 extern astr_t g_Language;
+extern astr_t g_ServerLanguageReport;
 
 extern GAME_STATE g_GameState;
 
@@ -207,6 +208,12 @@ extern SEASON_TYPE g_OldSeason;
 extern int g_OldSeasonMusic;
 
 extern uint32_t g_LockedClientFeatures;
+
+// the assistant-features bitmask from the server's 0xFE negotiation
+// handshake (ASSISTANT_FEATURE bits, set == disallowed on this shard)
+extern uint64_t g_ServerAssistantFeatures;
+// pending Razor-negotiate reply: g_Ticks deadline, 0 when nothing is pending
+extern uint32_t g_RazorNegotiateTimer;
 
 extern bool g_GeneratedMouseDown;
 

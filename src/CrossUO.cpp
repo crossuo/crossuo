@@ -326,14 +326,7 @@ bool CGame::Install()
     Info(Client, "CGame::Install()");
     auto buildStamp = GetBuildDateTimeStamp();
     Info(Client, "CrossUO version is: %s (build %s)", PRODUCT_VERSION_STR, buildStamp.c_str());
-    if (g_Config.LocaleOverride.empty())
-    {
-        Platform::SetLanguageFromSystemLocale();
-    }
-    else
-    {
-        g_Language = str_lower(g_Config.LocaleOverride);
-    }
+    ApplyLanguageSettings();
     fs_path_create(ExeFilePath("screenshots"));
 
     Info(Config, "client config loaded");
@@ -1036,6 +1029,12 @@ void CGame::Process(bool rendering)
             return;
         }
 
+        if (g_RazorNegotiateTimer != 0 && g_Ticks >= g_RazorNegotiateTimer)
+        {
+            g_RazorNegotiateTimer = 0;
+            CPacketRazorAnswer().Send();
+        }
+
 #if USE_PING
         if (!g_DisablePing && g_ConfigManager.CheckPing && g_PingTimer < g_Ticks)
         {
@@ -1705,11 +1704,10 @@ void CGame::LoginComplete(bool reload)
         }
 
         g_GameWindow.SetTitle(title);
+        CPacketOpenChat({}).Send();
         CPacketSkillsRequest(g_PlayerSerial).Send();
         g_UseItemActions.Add(g_PlayerSerial);
 
-        //CPacketOpenChat({}).Send();
-        //CPacketRazorAnswer().Send();
         if (g_Config.ProtocolClientVersion >= CV_306E)
         {
             CPacketClientType().Send();
@@ -1719,6 +1717,8 @@ void CGame::LoginComplete(bool reload)
         {
             CPacketClientViewRange(g_ConfigManager.UpdateRange).Send();
         }
+
+        //CPacketRazorAnswer().Send();
         LoadLocalConfig(g_PacketManager.ConfigSerial, g_Player->GetName());
     }
 }
@@ -5795,6 +5795,9 @@ void CGame::LogOut()
 
     ClearWorld();
 
+    // drop any pending negotiation ACK: it belongs to the dead connection
+    g_RazorNegotiateTimer = 0;
+
     Info(Client, "CGame::LogOut->End");
     InitScreen(GS_MAIN);
 }
@@ -5813,7 +5816,7 @@ void CGame::ConsolePromptSend()
     }
     else if (g_ConsolePrompt == PT_UNICODE)
     {
-        CPacketUnicodePromptResponse(g_GameConsole.GetTextW(), g_Language, cancel).Send();
+        CPacketUnicodePromptResponse(g_GameConsole.GetTextW(), g_ServerLanguageReport, cancel).Send();
 #if defined(XUO_ASSISTANT)
         // the recorded value is
         xuoassist::g_PromptManager.OnPromptSent(str_from(g_GameConsole.GetTextW()), cancel);
@@ -5834,7 +5837,7 @@ void CGame::ConsolePromptCancel()
     }
     else if (g_ConsolePrompt == PT_UNICODE)
     {
-        CPacketUnicodePromptResponse({}, g_Language, true).Send();
+        CPacketUnicodePromptResponse({}, g_ServerLanguageReport, true).Send();
 #if defined(XUO_ASSISTANT)
         // a cancel records an empty answer
         xuoassist::g_PromptManager.OnPromptSent("", true);
