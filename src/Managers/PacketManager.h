@@ -178,6 +178,23 @@ protected:
     HANDLER_PACKET(Pathfinding);
     HANDLER_PACKET(BoatMoving);
 
+    // stubs (handlers registered, bodies intentionally empty)
+    HANDLER_PACKET(Follow);
+    HANDLER_PACKET(ToggleHackMover);
+    HANDLER_PACKET(PopupHelpData);
+    HANDLER_PACKET(UltimaMessenger);
+    HANDLER_PACKET(Semivisible);
+    HANDLER_PACKET(InvalidMapEnable);
+    HANDLER_PACKET(UserServerPing);
+    HANDLER_PACKET(GlobalQueCount);
+    HANDLER_PACKET(ConfigurationFile);
+    HANDLER_PACKET(GenericAOSCommands);
+    HANDLER_PACKET(CharacterTransferLog);
+    HANDLER_PACKET(KREncryptionResponse);
+    HANDLER_PACKET(FreeshardList);
+
+    HANDLER_PACKET(Swing);
+
     //Не обработаны
     /*
 0x15 BMSG("Follow", 0x09),

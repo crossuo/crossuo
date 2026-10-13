@@ -20,6 +20,7 @@
 #include "SkillsManager.h"
 #include "MapManager.h"
 #include "ConnectionManager.h"
+#include "SoundManager.h" // g_SoundManager (stop-music command)
 #include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
@@ -155,7 +156,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x12*/ SMSG(XUO_IGNORE_PACKET, "Perform Action", PACKET_VARIABLE_SIZE),
     /*0x13*/ SMSG(XUO_IGNORE_PACKET, "Client Equip Item", 0x0a),
     /*0x14*/ BMSG(XUO_SAVE_PACKET, "Change tile Z (God client)", 0x06),
-    /*0x15*/ BMSG(XUO_SAVE_PACKET, "Follow", 0x09),
+    /*0x15*/ BMSGH(XUO_SAVE_PACKET, "Follow", 0x09, Follow),
     /*0x16*/ RMSGH(XUO_SAVE_PACKET, "Health status bar update (0x16)", 0x01, NewHealthbarUpdate),
     /*0x17*/
     RMSGH(
@@ -189,7 +190,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x2F*/ RMSG(XUO_SAVE_PACKET, "Combat Notification", 0x0a),
     /*0x30*/ RMSG(XUO_SAVE_PACKET, "Attack ok", 0x05),
     /*0x31*/ RMSG(XUO_SAVE_PACKET, "Attack end", 0x01),
-    /*0x32*/ BMSG(XUO_SAVE_PACKET, "Toggle hack mover (God client)", 0x02),
+    /*0x32*/ BMSGH(XUO_SAVE_PACKET, "Toggle hack mover (God client)", 0x02, ToggleHackMover),
     /*0x33*/ RMSGH(XUO_IGNORE_PACKET, "Pause Control", 0x02, PauseControl),
     /*0x34*/ SMSG(XUO_IGNORE_PACKET, "Status Request", 0x0a),
     /*0x35*/ BMSG(XUO_SAVE_PACKET, "Resource type (God client)", 0x28d),
@@ -326,12 +327,12 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xB4*/ BMSG(XUO_SAVE_PACKET, "Target object list (God client)", PACKET_VARIABLE_SIZE),
     /*0xB5*/ BMSGH(XUO_SAVE_PACKET, "Open Chat Window", 0x40, OpenChat),
     /*0xB6*/ SMSG(XUO_SAVE_PACKET, "Popup Help Request", 0x09),
-    /*0xB7*/ RMSG(XUO_SAVE_PACKET, "Popup Help Data", PACKET_VARIABLE_SIZE),
+    /*0xB7*/ RMSGH(XUO_SAVE_PACKET, "Popup Help Data", PACKET_VARIABLE_SIZE, PopupHelpData),
     /*0xB8*/
     BMSGH(XUO_IGNORE_PACKET, "Character Profile", PACKET_VARIABLE_SIZE, CharacterProfile),
     /*0xB9*/ RMSGH(XUO_SAVE_PACKET, "Enable locked client features", 0x03, EnableLockedFeatures),
     /*0xBA*/ RMSGH(XUO_IGNORE_PACKET, "Display Quest Arrow", 0x06, DisplayQuestArrow),
-    /*0xBB*/ SMSG(XUO_SAVE_PACKET, "Account ID ?", 0x09),
+    /*0xBB*/ BMSGH(XUO_SAVE_PACKET, "Account ID ?", 0x09, UltimaMessenger),
     /*0xBC*/ RMSGH(XUO_IGNORE_PACKET, "Season", 0x03, Season),
     /*0xBD*/ BMSGH(XUO_SAVE_PACKET, "Client Version", PACKET_VARIABLE_SIZE, ClientVersion),
     /*0xBE*/ BMSGH(XUO_SAVE_PACKET, "Assist Version", PACKET_VARIABLE_SIZE, AssistVersion),
@@ -341,32 +342,32 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     RMSGH(XUO_IGNORE_PACKET, "Display cliloc String", PACKET_VARIABLE_SIZE, DisplayClilocString),
     /*0xC2*/ BMSGH(XUO_SAVE_PACKET, "Unicode prompt", PACKET_VARIABLE_SIZE, UnicodePrompt),
     /*0xC3*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
-    /*0xC4*/ UMSG(XUO_SAVE_PACKET, 0x06),
+    /*0xC4*/ RMSGH(XUO_SAVE_PACKET, "Semivisible", 0x06, Semivisible),
     /*0xC5*/ BMSG(XUO_SAVE_PACKET, "Invalid map (God client)", 0xcb),
-    /*0xC6*/ RMSG(XUO_SAVE_PACKET, "Invalid map enable", 0x01),
+    /*0xC6*/ RMSGH(XUO_SAVE_PACKET, "Invalid map enable", 0x01, InvalidMapEnable),
     /*0xC7*/ RMSGH(XUO_IGNORE_PACKET, "Graphical Effect", 0x31, GraphicEffect),
     /*0xC8*/ BMSGH(XUO_SAVE_PACKET, "Client View Range", 0x02, ClientViewRange),
     /*0xC9*/ BMSG(XUO_SAVE_PACKET, "Trip time", 0x06),
-    /*0xCA*/ BMSG(XUO_SAVE_PACKET, "UTrip time", 0x06),
-    /*0xCB*/ UMSG(XUO_SAVE_PACKET, 0x07),
+    /*0xCA*/ BMSGH(XUO_SAVE_PACKET, "UTrip time", 0x06, UserServerPing),
+    /*0xCB*/ RMSGH(XUO_SAVE_PACKET, "Global queue count", 0x07, GlobalQueCount),
     /*0xCC*/
     RMSGH(
         XUO_IGNORE_PACKET, "Localized Text Plus String", PACKET_VARIABLE_SIZE, DisplayClilocString),
     /*0xCD*/ UMSG(XUO_SAVE_PACKET, 0x01),
     /*0xCE*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xCF*/ UMSG(XUO_SAVE_PACKET, 0x4e),
-    /*0xD0*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
+    /*0xD0*/ RMSGH(XUO_SAVE_PACKET, "Configuration file", PACKET_VARIABLE_SIZE, ConfigurationFile),
     /*0xD1*/ RMSGH(XUO_IGNORE_PACKET, "Logout", 0x02, Logout),
     /*0xD2*/ RMSGH(XUO_SAVE_PACKET, "Update Character (New)", 0x19, UpdateCharacter),
     /*0xD3*/ RMSGH(XUO_SAVE_PACKET, "Update Object (New)", PACKET_VARIABLE_SIZE, UpdateObject),
     /*0xD4*/ BMSGH(XUO_IGNORE_PACKET, "Open Book (New)", PACKET_VARIABLE_SIZE, OpenBookNew),
     /*0xD5*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xD6*/ BMSGH(XUO_IGNORE_PACKET, "Mega cliloc", PACKET_VARIABLE_SIZE, MegaCliloc),
-    /*0xD7*/ SMSG(XUO_SAVE_PACKET, "+AoS command", PACKET_VARIABLE_SIZE),
+    /*0xD7*/ RMSGH(XUO_SAVE_PACKET, "+AoS command (server reply)", PACKET_VARIABLE_SIZE, GenericAOSCommands),
     /*0xD8*/ RMSGH(XUO_IGNORE_PACKET, "Custom house", PACKET_VARIABLE_SIZE, CustomHouse),
     /*0xD9*/ SMSG(XUO_SAVE_PACKET, "+Metrics", 0x10c),
     /*0xDA*/ BMSG(XUO_SAVE_PACKET, "Mahjong game command", PACKET_VARIABLE_SIZE),
-    /*0xDB*/ RMSG(XUO_SAVE_PACKET, "Character transfer log", PACKET_VARIABLE_SIZE),
+    /*0xDB*/ RMSGH(XUO_SAVE_PACKET, "Character transfer log", PACKET_VARIABLE_SIZE, CharacterTransferLog),
     /*0xDC*/ RMSGH(XUO_IGNORE_PACKET, "OPL Info Packet", 9, OPLInfo),
     /*0xDD*/
     RMSGH(XUO_IGNORE_PACKET, "Compressed Gump", PACKET_VARIABLE_SIZE, OpenCompressedGump),
@@ -375,7 +376,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xE0*/ SMSG(XUO_SAVE_PACKET, "Bug Report KR", PACKET_VARIABLE_SIZE),
     /*0xE1*/ SMSG(XUO_SAVE_PACKET, "Client Type KR/SA", 0x09),
     /*0xE2*/ RMSGH(XUO_IGNORE_PACKET, "New Character Animation", 0xa, NewCharacterAnimation),
-    /*0xE3*/ RMSG(XUO_SAVE_PACKET, "KR Encryption Responce", 0x4d),
+    /*0xE3*/ RMSGH(XUO_SAVE_PACKET, "KR Encryption Responce", 0x4d, KREncryptionResponse),
     /*0xE4*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xE5*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xE6*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
@@ -391,7 +392,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xF0*/
     BMSGH(XUO_SAVE_PACKET, "Krrios client special", PACKET_VARIABLE_SIZE, KrriosClientSpecial),
     /*0xF1*/
-    SMSG(XUO_SAVE_PACKET, "Client-Server Time Synchronization Request", PACKET_VARIABLE_SIZE),
+    BMSGH(XUO_SAVE_PACKET, "Client-Server Time Synchronization Request", PACKET_VARIABLE_SIZE, FreeshardList),
     /*0xF2*/
     RMSG(XUO_SAVE_PACKET, "Client-Server Time Synchronization Response", PACKET_VARIABLE_SIZE),
     /*0xF3*/ RMSGH(XUO_SAVE_PACKET, "Update Item (SA)", 0x18, UpdateItemSA),
@@ -1547,21 +1548,28 @@ PACKET_HANDLER(CharacterStatus)
 
             if (flag >= 6)
             {
-                g_Player->MaxPhysicalResistance = ReadInt16BE();
-                g_Player->MaxFireResistance = ReadInt16BE();
-                g_Player->MaxColdResistance = ReadInt16BE();
-                g_Player->MaxPoisonResistance = ReadInt16BE();
-                g_Player->MaxEnergyResistance = ReadInt16BE();
-                g_Player->DefenceChance = ReadInt16BE();
-                g_Player->MaxDefenceChance = ReadInt16BE();
-                g_Player->AttackChance = ReadInt16BE();
-                g_Player->WeaponSpeed = ReadInt16BE();
-                g_Player->WeaponDamage = ReadInt16BE();
-                g_Player->LowerRegCost = ReadInt16BE();
-                g_Player->SpellDamage = ReadInt16BE();
-                g_Player->CastRecovery = ReadInt16BE();
-                g_Player->CastSpeed = ReadInt16BE();
-                g_Player->LowerManaCost = ReadInt16BE();
+                // the flag-6 block is not length-prefixed
+                // on the wire, so guard each read against a short frame
+                // instead of consuming whatever trailing bytes remain.
+                const auto readExt = [this]() -> int16_t
+                {
+                    return (Size - Pos() >= 2) ? ReadInt16BE() : 0;
+                };
+                g_Player->MaxPhysicalResistance = readExt();
+                g_Player->MaxFireResistance = readExt();
+                g_Player->MaxColdResistance = readExt();
+                g_Player->MaxPoisonResistance = readExt();
+                g_Player->MaxEnergyResistance = readExt();
+                g_Player->DefenceChance = readExt();
+                g_Player->MaxDefenceChance = readExt();
+                g_Player->AttackChance = readExt();
+                g_Player->WeaponSpeed = readExt();
+                g_Player->WeaponDamage = readExt();
+                g_Player->LowerRegCost = readExt();
+                g_Player->SpellDamage = readExt();
+                g_Player->CastRecovery = readExt();
+                g_Player->CastSpeed = readExt();
+                g_Player->LowerManaCost = readExt();
             }
 
             if (!g_ConnectionScreen.GetCompleted() && g_PacketLoginComplete)
@@ -2024,7 +2032,11 @@ PACKET_HANDLER(UpdateContainedItem)
     const uint32_t serial = ReadUInt32BE();
     const uint16_t graphic = ReadUInt16BE();
     const uint8_t graphicIncrement = ReadUInt8();
-    const uint16_t count = ReadUInt16BE();
+    uint16_t count = ReadUInt16BE();
+    if (count == 0)
+    {
+        count = 1; // a zero amount renders as 1
+    }
     const uint16_t x = ReadUInt16BE();
     const uint16_t y = ReadUInt16BE();
     if (g_Config.ProtocolClientVersion >= CV_6017)
@@ -2087,7 +2099,11 @@ PACKET_HANDLER(UpdateContainedItems)
         const uint32_t serial = ReadUInt32BE();
         const uint16_t graphic = ReadUInt16BE();
         const uint8_t graphicIncrement = ReadUInt8();
-        const uint16_t count = ReadUInt16BE();
+        uint16_t count = ReadUInt16BE();
+        if (count == 0)
+        {
+            count = 1; // a zero amount renders as 1
+        }
         const uint16_t x = ReadUInt16BE();
         const uint16_t y = ReadUInt16BE();
         if (g_Config.ProtocolClientVersion >= CV_6017)
@@ -2137,8 +2153,6 @@ PACKET_HANDLER(UpdateContainedItems)
 				}*/
             }
         }
-
-        // CHECK: https://github.com/andreakarasho/ClassicUO/blob/master/src/Network/PacketHandlers.cs#L1231-L1244
 
         TRACE(
             Network,
@@ -3811,9 +3825,10 @@ PACKET_HANDLER(DenyWalk)
         g_Walker.DenyWalk(sequence, x, y, z);
     }
 
-    g_Player->Direction = direction;
+    g_Player->Direction = direction & 0x87;
 
     g_World->MoveToTop(g_Player);
+    g_Weather.Reset(); // a walk denial cancels server-side weather
 }
 
 PACKET_HANDLER(ConfirmWalk)
@@ -4597,9 +4612,35 @@ PACKET_HANDLER(PlaySoundEffect)
 
 PACKET_HANDLER(PlayMusic)
 {
-    uint16_t index = ReadUInt16BE();
+    uint16_t index;
+    bool stop = false;
+
+    if (Size - Pos() == 2)
+    {
+        // Legacy 3-byte "Play Midi Music" frame (0x6D cmd index);
+        // cmd 0x1F + 0xFF is the stop-music command
+        index = ReadUInt8();
+        if (index == 0x1F)
+        {
+            stop = (ReadUInt8() == 0xFF);
+        }
+        else
+        {
+            Move(1);
+        }
+    }
+    else
+    {
+        index = ReadUInt16BE();
+    }
 
     Info(Network, "play music 0x%04X", index);
+    if (stop)
+    {
+        g_SoundManager.StopMusic();
+        return;
+    }
+
     if (!g_ConfigManager.GetMusic() || !g_GameWindow.IsActive() ||
         g_ConfigManager.GetMusicVolume() < 1)
     {
@@ -4888,7 +4929,7 @@ PACKET_HANDLER(KrriosClientSpecial)
     uint8_t type = ReadUInt8();
     if (type == 0xFE)
     {
-        // reply after the same 5s delay ClassicUO uses for its Razor ACK
+        // reply after 5s delay for Razor ACK
         g_RazorNegotiateTimer = g_Ticks + 5000;
     }
     else if (type == 0x00)
@@ -5380,6 +5421,8 @@ PACKET_HANDLER(Damage)
     {
         int damage = ReadUInt16BE();
 
+        if (damage != 0) // no overhead text for zero damage
+        {
         CTextData *text = new CTextData();
         text->Unicode = false;
         text->Font = 3;
@@ -5410,6 +5453,7 @@ PACKET_HANDLER(Damage)
 
         character->m_DamageTextControl.Add(text);
         text->Timer = g_Ticks + DAMAGE_TEXT_NORMAL_DELAY;
+        }
     }
 }
 
@@ -7767,5 +7811,117 @@ PACKET_HANDLER(BoatMoving)
             0,
             UGOT_ITEM,
             (uint16_t)1);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Registered no-op handlers: packets the client receives but intentionally
+// does nothing with. Registering them keeps them out of the "unhandled" path
+// and documents the wire format.
+// ---------------------------------------------------------------------------
+
+PACKET_HANDLER(Follow) {} // 0x15: follow request ack, no client-side state
+
+PACKET_HANDLER(ToggleHackMover) {} // 0x32: god-client hack mover toggle
+
+PACKET_HANDLER(PopupHelpData) {} // 0xB7: popup help gump data, unused
+
+PACKET_HANDLER(UltimaMessenger) {} // 0xBB: UO Messenger integration, unused
+
+PACKET_HANDLER(Semivisible) {} // 0xC4: god-client semivisible toggle
+
+PACKET_HANDLER(InvalidMapEnable) {} // 0xC6: god-client invalid map enable
+
+PACKET_HANDLER(UserServerPing) {} // 0xCA: UTrip time, unused
+
+PACKET_HANDLER(GlobalQueCount) {} // 0xCB: server global queue count, unused
+
+PACKET_HANDLER(ConfigurationFile) {} // 0xD0: configuration file push, unused
+
+PACKET_HANDLER(GenericAOSCommands) {} // 0xD7: AoS command server reply, unused
+
+PACKET_HANDLER(CharacterTransferLog) {} // 0xDB: character transfer log, unused
+
+PACKET_HANDLER(KREncryptionResponse) {} // 0xE3: KR encryption response, unused
+
+PACKET_HANDLER(FreeshardList) {} // 0xF1: client-server time sync response, unused
+
+// ---------------------------------------------------------------------------
+// 0x2F Swing: turn the player toward the last attacked defender when a swing
+// arrives, war mode is active, the player is not mid-walk and enough time has
+// passed since the last step request.
+// ---------------------------------------------------------------------------
+
+// Hex-grid direction from (x1,y1) toward (x2,y2), UO encoding 0..7
+static uint8_t GetDirectionAB(int x1, int y1, int x2, int y2)
+{
+    const int dx = x1 - x2;
+    const int dy = y1 - y2;
+
+    const int rx = (dx - dy) * 44;
+    const int ry = (dx + dy) * 44;
+
+    const int ax = abs(rx);
+    const int ay = abs(ry);
+
+    if ((ay >> 1) - ax >= 0)
+    {
+        return (ry > 0) ? 7 : 3; // Up(NW) : Down(SE)
+    }
+    if ((ax >> 1) - ay >= 0)
+    {
+        return (rx > 0) ? 5 : 1; // Left(SW) : Right(NE)
+    }
+    if (rx >= 0 && ry >= 0)
+    {
+        return 6; // West
+    }
+    if (rx >= 0 && ry < 0)
+    {
+        return 4; // South
+    }
+    if (rx < 0 && ry < 0)
+    {
+        return 2; // East
+    }
+    return 0; // North
+}
+
+PACKET_HANDLER(Swing)
+{
+    if (g_World == nullptr || g_Player == nullptr)
+    {
+        return;
+    }
+
+    Move(1); // unknown byte
+
+    const uint32_t attacker = ReadUInt32BE();
+    if (attacker != g_PlayerSerial)
+    {
+        return;
+    }
+
+    const uint32_t defender = ReadUInt32BE();
+
+    constexpr int timeTurnToLastTarget = 2000;
+    if (g_LastAttackObject == defender && g_Player->InWarMode() &&
+        g_Walker.LastStepRequestTime + timeTurnToLastTarget < g_Ticks &&
+        g_Walker.StepsCount == 0)
+    {
+        CGameCharacter *enemy = g_World->FindWorldCharacter(defender);
+        if (enemy != nullptr)
+        {
+            uint8_t dir = GetDirectionAB(
+                g_Player->GetX(), g_Player->GetY(), enemy->GetX(), enemy->GetY());
+            int x = g_Player->GetX();
+            int y = g_Player->GetY();
+            char z = g_Player->GetZ();
+
+            if (g_PathFinder.CanWalk(dir, x, y, z) && g_Player->Direction != dir)
+            {
+                g_PathFinder.Walk(false, dir);
+            }
+        }
     }
 }
