@@ -1582,6 +1582,8 @@ dependencies = [
  "axum",
  "flate2",
  "futures-util",
+ "http-body",
+ "http-body-util",
  "regex",
  "reqwest",
  "sha2",

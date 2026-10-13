@@ -92,6 +92,9 @@
 //!          [--manifest-ttl <secs>] [--upstream-timeout <secs>]
 //!          [--manifest-upstream <url>] [--files-upstream <url>]
 //!          [--aops-upstream <url>] [--data <name>=<dir>]...
+//!          [--trust-proxy] [--rate-limit <rps>] [--rate-burst <n>]
+//!          [--banfile <path>] [--admin-token <secret>]
+//!          [--ws-allow <host:port>]... [--allow-private-upstream]
 //! ```
 //!
 //! `--upstream-timeout <secs>` (default 300) bounds how long the proxy waits
@@ -105,11 +108,38 @@
 //! The web client boots against this server out of the box: the build default
 //! `XUO_WEB_PRODUCT_URL` points at `/patch/manifest/...` (proxied), and shard
 //! logins go through `/ws/<host>/<port>`.
+//!
+//! Internet exposure (all off/loose on the default loopback dev bind):
+//!
+//! - `--trust-proxy`: take the client IP from X-Forwarded-For (set by the
+//!   front proxy, e.g. ferron). Without it the peer socket address is used,
+//!   which behind a proxy would rate-limit/ban the proxy's own IP.
+//! - `--rate-limit <rps>` + `--rate-burst <n>`: per-IP token bucket, 429s
+//!   with Retry-After. `--auto-ban-violations <n>` bans repeat offenders.
+//! - `--banfile <path>`: persistent ban list, `<ip[/prefix]> <until> <reason>`
+//!   per line, loaded at startup, rewritten on every runtime ban/unban
+//!   (write-then-rename). Admin API: `POST /admin/ban?ip=&minutes=&reason=`,
+//!   `POST /admin/unban?ip=`, `GET /admin/bans`.
+//! - `--admin-token <secret>`: gates `/stats` and `/admin/*` with a Bearer
+//!   token (or `?token=`); without it they are disabled (404). `/stats` is a
+//!   JSON report: per-lane request/byte counters, status classes, cache
+//!   hit/miss, rate-limit rejections, WS bridge gauges (active/opened/
+//!   closed/failed, bytes up/down, session durations), ban counts and the
+//!   top-10 clients by traffic.
+//! - SSRF: on a public bind, `/stream/<url>` and `/blob/...?u=<abs-url>`
+//!   refuse private/loopback/link-local upstreams (literal or resolved);
+//!   `--allow-private-upstream` restores dev behavior. `/ws/<host>:<port>`
+//!   is gated by `--ws-allow <host:port>` (repeatable) when given; without
+//!   an allowlist on a public bind it stays open and a startup warning is
+//!   printed.
+//! - `/healthz` for frontend health checks.
 
+mod admin;
 mod normalize;
 
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use axum::extract::{ws::WebSocket, DefaultBodyLimit, Path, RawQuery, State, WebSocketUpgrade};
@@ -195,6 +225,17 @@ async fn main() {
     let data_dirs: Arc<Mutex<HashMap<String, PathBuf>>> =
         Arc::new(Mutex::new(HashMap::new()));
 
+    // internet-exposure surface (see admin.rs): all off/loose by default so
+    // the loopback dev workflow keeps working unchanged
+    let mut trust_proxy = false;
+    let mut rate_limit = 0u64;
+    let mut rate_burst = 30u32;
+    let mut auto_ban_violations = 0u32;
+    let mut admin_token: Option<String> = None;
+    let mut allow_private_upstream = false;
+    let mut banfile: Option<PathBuf> = None;
+    let mut ws_allow: Option<HashSet<String>> = None;
+
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
         let mut value = |name: &str| -> Option<String> {
@@ -204,7 +245,25 @@ async fn main() {
                 arg.strip_prefix(&format!("{name}=")).map(str::to_string)
             }
         };
-        if let Some(v) = value("--listen") {
+        if arg == "--help" {
+            println!(
+                "usage: xuoproxy [--listen <addr:port>] [--dist <dir>] [--cache-dir <dir>]\n\
+                  [--cache-ttl <secs>] [--manifest-ttl <secs>] [--no-cache]\n\
+                  [--upstream-timeout <secs>] [--manifest-upstream <url>]\n\
+                  [--files-upstream <url>] [--aops-upstream <url>]\n\
+                  [--data <name>=<dir>]...\n\
+                  internet exposure:\n\
+                  --trust-proxy             honor X-Forwarded-For (behind ferron/nginx)\n\
+                  --rate-limit <rps>        per-IP requests/sec (0 = off)\n\
+                  --rate-burst <n>          per-IP burst above the rate (default 30)\n\
+                  --auto-ban-violations <n> ban IPs after n rate-limit hits (0 = off)\n\
+                  --banfile <path>          persistent ban list (ip[/prefix] until reason)\n\
+                  --admin-token <secret>    enable /stats + /admin (Bearer token)\n\
+                  --ws-allow <host:port>    restrict /ws bridges (repeatable; default open)\n\
+                  --allow-private-upstream  permit /stream,/blob to fetch private addrs"
+            );
+            std::process::exit(0);
+        } else if let Some(v) = value("--listen") {
             listen = v;
         } else if let Some(v) = value("--dist") {
             dist = v;
@@ -253,12 +312,60 @@ async fn main() {
                 eprintln!("--data mount redefined: {name}");
                 std::process::exit(2);
             }
+        } else if arg == "--trust-proxy" {
+            trust_proxy = true;
+        } else if let Some(v) = value("--rate-limit") {
+            rate_limit = v.parse().unwrap_or(0);
+        } else if let Some(v) = value("--rate-burst") {
+            rate_burst = v.parse().unwrap_or(30).max(1);
+        } else if let Some(v) = value("--auto-ban-violations") {
+            auto_ban_violations = v.parse().unwrap_or(0);
+        } else if let Some(v) = value("--admin-token") {
+            admin_token = Some(v);
+        } else if arg == "--allow-private-upstream" {
+            allow_private_upstream = true;
+        } else if let Some(v) = value("--banfile") {
+            banfile = Some(PathBuf::from(v));
+        } else if let Some(v) = value("--ws-allow") {
+            ws_allow
+                .get_or_insert_with(HashSet::new)
+                .insert(v.trim().to_lowercase());
         } else {
             eprintln!("unknown argument: {arg}");
             eprintln!("see --help");
             std::process::exit(2);
         }
     }
+
+    // auto-derive the ws allowlist from the dist shards.cfg: every
+    // LoginServer= address a shard can hand the client becomes bridgeable
+    // (explicit --ws-allow entries are kept as additional entries, shown
+    // as source "cli"). Read before serving starts; a changed shards.cfg
+    // needs a restart. Empty result + no --ws-allow = open bridges.
+    let mut ws_allow_info: Vec<(String, String, u16)> = Vec::new();
+    if let Ok(text) = std::fs::read_to_string(PathBuf::from(&dist).join("shards.cfg")) {
+        for (shard, servers) in shards_login_servers(&text) {
+            for (host, port) in servers {
+                ws_allow
+                    .get_or_insert_with(HashSet::new)
+                    .insert(format!("{host}:{port}"));
+                ws_allow_info.push((shard.clone(), host, port));
+            }
+        }
+    } else if ws_allow.is_none() {
+        println!("xuoproxy: no shards.cfg in {dist} and no --ws-allow: /ws bridges are OPEN");
+    }
+
+    let admin = Arc::new(admin::Admin::new(
+        trust_proxy,
+        rate_limit,
+        rate_burst,
+        auto_ban_violations,
+        admin_token,
+        allow_private_upstream,
+        ws_allow,
+        banfile,
+    ));
 
     let state = AppState {
         dist: PathBuf::from(&dist),
@@ -288,6 +395,7 @@ async fn main() {
             .read_timeout(std::time::Duration::from_secs(upstream_timeout))
             .build()
             .expect("http client"),
+        admin: admin.clone(),
     };
 
     let app = Router::new()
@@ -314,9 +422,24 @@ async fn main() {
         .route("/stream/*url", get(stream_proxy))
         .route("/ws/:host/:port", get(ws_shard))
         .route("/data/:name/*path", get(data_file))
+        .route("/healthz", get(|| async { "ok" }))
+        .route("/stats", get(admin::stats_handler))
+        .route("/admin/bans", get(admin::bans_handler))
+        .route("/admin/ban", axum::routing::post(admin::ban_handler))
+        .route("/admin/unban", axum::routing::post(admin::unban_handler))
         .fallback(static_file)
         .layer(axum::middleware::from_fn(coop_coep))
         .layer(axum::middleware::from_fn(log_requests))
+        // outermost first-served: bans/rate-limit before stats so rejected
+        // requests still count, stats wraps the body so served bytes are real
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            admin::stats_mw,
+        ))
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            admin::guard,
+        ))
         .layer(DefaultBodyLimit::max(512 * 1024 * 1024))
         .with_state(state.clone());
 
@@ -342,6 +465,28 @@ async fn main() {
     println!("  upstream: read-timeout {upstream_timeout}s (idle/read-progress)");
     println!("  bridge: /ws/<host>/<port>");
     {
+        // the effective allowlist, with the shard each entry came from
+        let info = &ws_allow_info;
+        if info.is_empty() {
+            println!("  Allowed: (open - ALL hosts; pass --ws-allow or ship a shards.cfg)");
+        } else {
+            println!("  Allowed:");
+            for (shard, host, port) in info.iter() {
+                println!("  - {shard}: {host}:{port}");
+            }
+        }
+    }
+    if state.admin.ws_allow.is_none() && listen_start_public(&listen) {
+        println!(
+            "    WARNING: bound publicly with NO --ws-allow allowlist; /ws can reach\n             ANY host:port from this machine (TCP SSRF). Restrict it for production."
+        );
+    }
+    if listen_start_public(&listen) && !state.admin.allow_private_upstream {
+        println!("  ssrf:   private upstreams DENIED on /stream + /blob u= (dev on loopback, or --allow-private-upstream)");
+    }
+    println!("  admin:  {}", if state.admin.admin_token.is_some() { "/stats + /admin/ban|unban|bans (token required)" } else { "disabled (no --admin-token)" });
+    println!("  guard:  rate-limit {} rps (burst {}), trust-proxy {}, auto-ban after {} violations", state.admin.rate_rps, state.admin.rate_burst, state.admin.trust_proxy, state.admin.auto_ban_violations);
+    {
         let mounts = data_dirs.lock().expect("data mounts");
         if mounts.is_empty() {
             println!("  data:   no local mounts (--data <name>=<dir>; shards.cfg ProductUrl=local:<path> auto-mounts too)");
@@ -364,7 +509,21 @@ async fn main() {
         manifest_ttl
     );
     let listener = tokio::net::TcpListener::bind(&listen).await.expect("bind");
-    axum::serve(listener, app).await.expect("serve");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await
+    .expect("serve");
+}
+
+// the listener is internet-reachable unless it binds a loopback address
+fn listen_start_public(listen: &str) -> bool {
+    let host = listen.rsplit_once(':').map(|(h, _)| h).unwrap_or(listen);
+    match host.parse::<std::net::IpAddr>() {
+        Ok(ip) => !ip.is_loopback(), // 0.0.0.0 binds all interfaces: public
+        Err(_) => true, // hostnames: assume public
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -515,6 +674,7 @@ struct AppState {
     // resolved)
     data_dirs: Arc<Mutex<HashMap<String, PathBuf>>>,
     http: reqwest::Client,
+    admin: Arc<admin::Admin>,
 }
 
 // reqwest's Display for a body-read failure is just "error decoding
@@ -919,9 +1079,16 @@ fn split_cache_tail(raw: &[u8]) -> Option<(CacheMeta, &[u8])> {
 }
 fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, String, Vec<u8>)> {
     let path = cache_entry(state, url);
-    let raw = std::fs::read(&path).ok()?;
+    let raw = match std::fs::read(&path) {
+        Ok(raw) => raw,
+        Err(_) => {
+            state.admin.stats.cache_miss();
+            return None;
+        }
+    };
 
     if !cache_fresh(state, &path) {
+        state.admin.stats.cache_miss();
         return None;
     }
 
@@ -946,15 +1113,18 @@ fn cache_get(state: &AppState, url: &str) -> Option<(u16, String, String, Vec<u8
         || raw[10] != b'"'
         || raw[10 + etag_len - 1] != b'"'
     {
+        state.admin.stats.cache_miss();
         return None;
     }
     let etag = String::from_utf8_lossy(&raw[10..10 + etag_len]).into_owned();
     let bo = 10 + etag_len;
     if raw.len() < bo + ctype_len {
+        state.admin.stats.cache_miss();
         return None;
     }
     let ctype = String::from_utf8_lossy(&raw[bo..bo + ctype_len]).into_owned();
     let body = raw[bo + ctype_len..].to_vec();
+    state.admin.stats.cache_hit();
     Some((status, ctype, etag, body))
 }
 
@@ -1887,6 +2057,17 @@ async fn blob_window_serve(
     if url.starts_with("/data/") {
         return data_blob_window(&state, &headers, &url, offset, size).await;
     }
+    // absolute upstream urls (the ?u= open form) face the same SSRF gate as
+    // /stream; proxy-relative references resolve through the fixed routes
+    if url.starts_with("http://") || url.starts_with("https://") {
+        if let Err((status, why)) = admin::upstream_url_allowed(&state, &url).await {
+            return (
+                StatusCode::from_u16(status).unwrap_or(StatusCode::FORBIDDEN),
+                why,
+            )
+                .into_response();
+        }
+    }
 
     // usize windows (saturating on 32-bit targets)
     let start = offset.min(usize::MAX as u64) as usize;
@@ -2764,6 +2945,13 @@ async fn stream_proxy(
     if !(url.starts_with("http://") || url.starts_with("https://")) {
         return (StatusCode::BAD_REQUEST, "expected an absolute http(s) url").into_response();
     }
+    if let Err((status, why)) = admin::upstream_url_allowed(&state, &url).await {
+        return (
+            StatusCode::from_u16(status).unwrap_or(StatusCode::FORBIDDEN),
+            why,
+        )
+            .into_response();
+    }
 
     if state.use_cache {
         if let Some((status, ctype, _etag, body)) = cache_get(&state, &url) {
@@ -2870,19 +3058,42 @@ fn percent_decode(text: &str) -> String {
 // /ws/<host>/<port>: WebSocket-to-TCP bridge (shard connections)
 // ---------------------------------------------------------------------------
 
-async fn ws_shard(Path((host, port)): Path<(String, u16)>, upgrade: WebSocketUpgrade) -> Response {
-    upgrade.on_upgrade(move |socket| async move { bridge(socket, host, port).await })
+async fn ws_shard(
+    State(state): State<AppState>,
+    Path((host, port)): Path<(String, u16)>,
+    upgrade: WebSocketUpgrade,
+) -> Response {
+    // TCP-facing SSRF gate: only LoginServer addresses from shards.cfg
+    // (plus explicit --ws-allow entries) may be bridged on a locked server
+    if !state.admin.ws_allowed(&host, port) {
+        state.admin.stats.ws_fail();
+        return (
+            StatusCode::FORBIDDEN,
+            format!("shard {host}:{port} is not on the ws allowlist"),
+        )
+            .into_response();
+    }
+    upgrade.on_upgrade(move |socket| async move {
+        bridge(&state, socket, host, port).await
+    })
 }
 
-async fn bridge(socket: WebSocket, host: String, port: u16) {
+async fn bridge(state: &AppState, socket: WebSocket, host: String, port: u16) {
     let tcp = match tokio::net::TcpStream::connect((host.as_str(), port)).await {
         Ok(tcp) => tcp,
         Err(e) => {
             eprintln!("xuoproxy: ws bridge to {host}:{port} failed: {e}");
+            state.admin.stats.ws_fail();
             return;
         }
     };
+    state.admin.stats.ws_open();
     println!("xuoproxy: ws bridge open -> {host}:{port}");
+    let started = std::time::Instant::now();
+    let up = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
+    let down = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
+    let up_to_shard = up.clone();
+    let down_to_client = down.clone();
 
     let (mut ws_tx, mut ws_rx) = socket.split();
     let (mut tcp_rx, mut tcp_tx) = tokio::io::split(tcp);
@@ -2892,6 +3103,7 @@ async fn bridge(socket: WebSocket, host: String, port: u16) {
         while let Some(Ok(msg)) = ws_rx.next().await {
             match msg {
                 axum::extract::ws::Message::Binary(data) => {
+                    up_to_shard.fetch_add(data.len() as u64, Ordering::Relaxed);
                     if tcp_tx.write_all(&data).await.is_err() {
                         break;
                     }
@@ -2910,6 +3122,7 @@ async fn bridge(socket: WebSocket, host: String, port: u16) {
             match tokio::io::AsyncReadExt::read(&mut tcp_rx, &mut buf).await {
                 Ok(0) | Err(_) => break,
                 Ok(n) => {
+                    down_to_client.fetch_add(n as u64, Ordering::Relaxed);
                     if ws_tx
                         .send(axum::extract::ws::Message::Binary(buf[..n].to_vec()))
                         .await
@@ -2928,6 +3141,11 @@ async fn bridge(socket: WebSocket, host: String, port: u16) {
         _ = to_shard => {},
         _ = to_client => {},
     }
+    state.admin.stats.ws_close(
+        started.elapsed(),
+        up.load(Ordering::Relaxed),
+        down.load(Ordering::Relaxed),
+    );
     println!("xuoproxy: ws bridge closed -> {host}:{port}");
 }
 
@@ -3837,6 +4055,64 @@ fn shards_local_product_urls(text: &str) -> Vec<(String, String)> {
         }
     }
     flush(&mut out, &mut name, &mut product_url);
+    out
+}
+
+// parse the dist shards.cfg's LoginServer= entries: (shard name, [(host, port)]).
+// "host,port" per entry, multiple servers as comma-separated pairs.
+fn shards_login_servers(text: &str) -> Vec<(String, Vec<(String, u16)>)> {
+    let mut out: Vec<(String, Vec<(String, u16)>)> = Vec::new();
+    let mut name: Option<String> = None;
+    let mut servers: Vec<(String, u16)> = Vec::new();
+    let mut flush = |out: &mut Vec<(String, Vec<(String, u16)>)>,
+                     name: &mut Option<String>,
+                     servers: &mut Vec<(String, u16)>| {
+        if let (Some(n), true) = (name.take(), !servers.is_empty()) {
+            out.push((n, std::mem::take(servers)));
+        }
+        *name = None;
+        servers.clear();
+    };
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with(';') || line.starts_with('#') {
+            continue;
+        }
+        if line.starts_with('[') {
+            flush(&mut out, &mut name, &mut servers);
+            continue;
+        }
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
+        let key = key.trim().to_ascii_lowercase();
+        let value = value.trim();
+        match key.as_str() {
+            "shardname" => name = Some(value.to_string()),
+            "loginserver" => {
+                let fields: Vec<&str> = value.split(',').map(str::trim).collect();
+                for pair in fields.chunks(2) {
+                    if pair.len() != 2 {
+                        continue;
+                    }
+                    let (host, port) = (pair[0], pair[1]);
+                    if host.is_empty() {
+                        continue;
+                    }
+                    match port.parse::<u16>() {
+                        Ok(port) => servers.push((host.to_string(), port)),
+                        Err(_) => eprintln!(
+                            "xuoproxy: shards.cfg: bad LoginServer port for '{}' entry '{}'",
+                            name.as_deref().unwrap_or("?"),
+                            value
+                        ),
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    flush(&mut out, &mut name, &mut servers);
     out
 }
 
