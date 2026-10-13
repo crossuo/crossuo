@@ -53,6 +53,7 @@ enum
     MSCC_SHARD_CREDITS,
     MSCC_SHARD_OTHER,
     MSCC_SHARD_COMMUNITY,
+    MSCC_IGNORE_RELAY,
     MSCC_COUNT,
 };
 
@@ -97,6 +98,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_SHARD_CREDITS, "shardcredits" },
     { MSCC_SHARD_OTHER, "shardother" },
     { MSCC_SHARD_COMMUNITY, "shardcommunity" },
+    { MSCC_IGNORE_RELAY, "ignorerelay" },
     { MSCC_COUNT, nullptr },
 };
 static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
@@ -570,6 +572,11 @@ bool LoadGlobalConfig()
                     g_Config.UseCrypt = str_to_bool(strings[1]);
                     break;
                 }
+                case MSCC_IGNORE_RELAY:
+                {
+                    g_Config.IgnoreRelay = str_to_bool(strings[1]);
+                    break;
+                }
                 case MSCC_USE_KEYS:
                 {
                     g_Config.Key1 = str_to_int(strings[1], 16);
@@ -775,6 +782,7 @@ void SaveGlobalConfig()
     }
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
+    fprintf(cfg, "IgnoreRelay=%s\n", (g_Config.IgnoreRelay ? "yes" : "no"));
     if (g_Config.ClientKeysSet)
     {
         fprintf(

@@ -1647,7 +1647,21 @@ void CGame::RelayServer(const char *ip, int port, uint8_t *gameSeed)
 {
     memcpy(&g_GameSeed[0], &gameSeed[0], 4);
     g_ConnectionManager.Init(gameSeed);
-    m_GameServerIP = ip;
+    if (g_Config.IgnoreRelay)
+    {
+        // reuse the address/port the first login connected to
+        astr_t login{};
+        int loginPort = 0;
+        LoadLogin(login, loginPort);
+        m_GameServerIP = login;
+        ip = login.c_str();
+        port = loginPort;
+        Info(Network, "ignoring relay, reconnecting to %s:%d", ip, port);
+    }
+    else
+    {
+        m_GameServerIP = ip;
+    }
 #if USE_PING
     memset(&g_GameServerPingInfo, 0, sizeof(g_GameServerPingInfo));
 #endif // USE_PING

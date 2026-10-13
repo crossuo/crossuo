@@ -41,6 +41,9 @@ struct Config
     bool Asmut = false;
     bool UseVerdata = false;
     bool UseCrypt = false;
+    // IgnoreRelay=yes: bypass the relay (0x8C) redirect and do the second
+    // login on the same address/port as the first login
+    bool IgnoreRelay = false;
 
     // Calculated stuff that are not saved back
     uint16_t Seed = 0x1357;
