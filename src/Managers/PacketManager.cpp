@@ -3003,9 +3003,13 @@ PACKET_HANDLER(ChatMessage)
         case CHATSRV_CHANNEL_MESSAGE_ECHO: // sent to every conference member, including the sender
         {
             // wire: cmd, language(4), then two null-terminated strings:
-            // the speaker and "{Channel} text" (readString skips the
-            // language block itself)
-            const astr_t username = str_from(readString());
+            // the speaker (prefixed with a chat-color digit) and
+            // "{Channel} text" (readString skips the language block itself)
+            astr_t username = str_from(readString());
+            if (!username.empty() && isdigit(username[0]) != 0)
+            {
+                username.erase(0, 1);
+            }
             astr_t text = str_from(readString());
 
             const size_t start = text.find('{');
@@ -3016,6 +3020,10 @@ PACKET_HANDLER(ChatMessage)
                 {
                     text.erase(start, end - start + 1);
                 }
+            }
+            while (!text.empty() && text.front() == ' ')
+            {
+                text.erase(0, 1);
             }
 
             if (!text.empty())
@@ -3030,7 +3038,11 @@ PACKET_HANDLER(ChatMessage)
         case CHATSRV_CHANNEL_EMOTE:
         case CHATSRV_CHANNEL_PRIVATE:
         {
-            const astr_t username = str_from(readString());
+            astr_t username = str_from(readString());
+            if (!username.empty() && isdigit(username[0]) != 0)
+            {
+                username.erase(0, 1);
+            }
             astr_t text = str_from(readString());
 
             // conference speech arrives wrapped in a leading "{...}" style block
@@ -3042,6 +3054,10 @@ PACKET_HANDLER(ChatMessage)
                 {
                     text.erase(start, end - start + 1);
                 }
+            }
+            while (!text.empty() && text.front() == ' ')
+            {
+                text.erase(0, 1);
             }
 
             if (!text.empty())
