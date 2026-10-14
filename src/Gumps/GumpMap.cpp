@@ -8,6 +8,7 @@
 #include "../SelectedObject.h"
 #include "../PressedObject.h"
 #include "../Managers/MouseManager.h"
+#include "../Managers/Waypoints.h"
 #include "../Network/Packets.h"
 #include "../Renderer/RenderAPI.h"
 
@@ -240,6 +241,32 @@ void CGumpMap::GenerateFrame()
     }
 
     CGump::GenerateFrame();
+
+    // Server-sent waypoints (0xE5) for this chart's facet, drawn as small
+    // yellow crosses at the chart texel matching their world position. Since
+    // this runs per-frame, markers appear/disappear without an explicit
+    // redraw request.
+    static float4 s_colorWaypoint = { 1.f, 1.f, 0.f, 1.f };
+    if (EndX != StartX && EndY != StartY)
+    {
+        for (const CWaypoint &waypoint : g_Waypoints.List())
+        {
+            if (waypoint.MapIndex != Facet)
+            {
+                continue;
+            }
+
+            const int drawX = 24 + (((waypoint.X - StartX) * Width) / (EndX - StartX));
+            const int drawY = 31 + (((waypoint.Y - StartY) * Height) / (EndY - StartY));
+
+            RenderAdd_DrawLine(
+                g_renderCmdList,
+                DrawLineCmd{ drawX - 4, drawY, drawX + 4, drawY, s_colorWaypoint });
+            RenderAdd_DrawLine(
+                g_renderCmdList,
+                DrawLineCmd{ drawX, drawY - 4, drawX, drawY + 4, s_colorWaypoint });
+        }
+    }
 
     if (m_DataBox != nullptr)
     {

@@ -120,7 +120,8 @@ void CTradeManager::OnTradeAction(
         }
         default:
         {
-            // SECURE_TRADE_UPDATEGOLD/UPDATELEDGER (and anything newer) carry
+            // FIXME: assistant feature missing
+            // SECURE_TRADE_UPDATE_THEIRS/SECURE_TRADE_UPDATE_MINE (and anything newer) carry
             // no assistant record - the client gump is the only state
             break;
         }

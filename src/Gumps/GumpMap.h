@@ -24,6 +24,9 @@ public:
     int EndY = 0;
     int Width = 0;
     int Height = 0;
+    // facet/map index this chart belongs to (set from 0xF5, or inferred from
+    // the player's facet for the legacy 0x90 packet); used to filter waypoints
+    uint16_t Facet = 0;
     CGUIExternalTexture *m_Texture = nullptr;
     CGUIDataBox *m_DataBox = nullptr;
 
