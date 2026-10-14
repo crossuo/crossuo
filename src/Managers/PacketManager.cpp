@@ -2897,6 +2897,48 @@ static astr_t ChatFormatMessage(astr_t text, const astr_t &arg1, const astr_t &a
     return text;
 }
 
+// Conference speech cleanup + journal delivery. The speaker arrives as
+// <color digit><serial in brackets><name> (e.g. "0<120>test") and the text as
+// "{Channel} text"; log the parsed values so journal output can be checked
+// against the server-side chat log.
+static void DisplayConferenceSpeech(const astr_t &username, astr_t text)
+{
+    astr_t speaker = username;
+    if (!speaker.empty() && isdigit(speaker[0]) != 0)
+    {
+        speaker.erase(0, 1);
+    }
+    const size_t bracketStart = speaker.find('<');
+    const size_t bracketEnd = speaker.find('>');
+    if (bracketStart == 0 && bracketEnd != astr_t::npos)
+    {
+        speaker.erase(0, bracketEnd + 1);
+    }
+
+    const size_t start = text.find('{');
+    if (start != astr_t::npos)
+    {
+        const size_t end = text.find('}', start);
+        if (end != astr_t::npos)
+        {
+            text.erase(start, end - start + 1);
+        }
+    }
+    while (!text.empty() && text.front() == ' ')
+    {
+        text.erase(0, 1);
+    }
+
+    Info(Network, "CHATTEST: speech speaker='%s' text='%s'", speaker.c_str(), text.c_str());
+
+    if (!text.empty())
+    {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "%s: %s", speaker.c_str(), text.c_str());
+        g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, buf);
+    }
+}
+
 PACKET_HANDLER(ChatMessage)
 {
     if (getenv("XUO_CHAT_TEST") != nullptr)
@@ -2909,14 +2951,20 @@ PACKET_HANDLER(ChatMessage)
         return;
     }
 
-    auto readString = [&]() -> wstr_t
+    // The 4-byte language block sits between the command word and the first
+    // string only; follow-up strings in the same command start immediately
+    auto readString = [&](bool skipLanguage) -> wstr_t
     {
-        if (Size - Pos() < 6) // 4-byte skipped block + at least a null terminator
+        const size_t minimum = skipLanguage ? 6 : 2; // skipped block / null terminator
+        if (Size - Pos() < minimum)
         {
             Move(intptr_t(Size - Pos()));
             return {};
         }
-        Move(4);
+        if (skipLanguage)
+        {
+            Move(4);
+        }
         return ReadChatUnicodeString(this);
     };
 
@@ -2926,7 +2974,7 @@ PACKET_HANDLER(ChatMessage)
     {
         case CHATSRV_ADD_CHANNEL: // conference created
         {
-            const astr_t name = str_from(readString());
+            const astr_t name = str_from(readString(true));
             const bool hasPassword = (Size - Pos() >= 2) && ReadUInt16BE() == 0x31;
             g_ChatManager.CurrentChannelName = name;
             g_ChatManager.AddChannel(name, hasPassword);
@@ -2935,7 +2983,7 @@ PACKET_HANDLER(ChatMessage)
         }
         case CHATSRV_REMOVE_CHANNEL: // conference destroyed
         {
-            g_ChatManager.RemoveChannel(str_from(readString()));
+            g_ChatManager.RemoveChannel(str_from(readString(true)));
             g_GumpManager.UpdateContent(0, 0, GT_CHAT);
             break;
         }
@@ -2954,7 +3002,7 @@ PACKET_HANDLER(ChatMessage)
         }
         case CHATSRV_NAME_ACCEPTED: // chat username accepted
         {
-            readString(); // accepted username (unused)
+            readString(true); // accepted username (unused)
             g_ChatManager.ChatStatus = CS_ENABLED;
             CPacketChatJoin(L"General").Send();
             break;
@@ -2966,12 +3014,12 @@ PACKET_HANDLER(ChatMessage)
             {
                 ReadUInt16BE(); // user type (ignored, no user list UI)
             }
-            readString(); // username (ignored)
+            readString(true); // username (ignored)
             break;
         }
         case CHATSRV_REMOVE_USER: // user left the chat
         {
-            readString(); // username (ignored)
+            readString(true); // username (ignored)
             break;
         }
         case CHATSRV_CLEAR_USERS: // clear all players
@@ -2980,7 +3028,7 @@ PACKET_HANDLER(ChatMessage)
         }
         case CHATSRV_JOINED_CHANNEL: // joined a conference
         {
-            const astr_t name = str_from(readString());
+            const astr_t name = str_from(readString(true));
             g_ChatManager.CurrentChannelName = name;
             g_GumpManager.UpdateContent(0, 0, GT_CHAT);
             char buf[256];
@@ -2990,7 +3038,7 @@ PACKET_HANDLER(ChatMessage)
         }
         case CHATSRV_LEFT_CHANNEL: // left a conference
         {
-            const astr_t name = str_from(readString());
+            const astr_t name = str_from(readString(true));
             // we are no longer in any channel: drop the stale label so the
             // conference gump stops showing it after a reopen
             g_ChatManager.CurrentChannelName = {};
@@ -3003,67 +3051,20 @@ PACKET_HANDLER(ChatMessage)
         case CHATSRV_CHANNEL_MESSAGE_ECHO: // sent to every conference member, including the sender
         {
             // wire: cmd, language(4), then two null-terminated strings:
-            // the speaker (prefixed with a chat-color digit) and
-            // "{Channel} text" (readString skips the language block itself)
-            astr_t username = str_from(readString());
-            if (!username.empty() && isdigit(username[0]) != 0)
-            {
-                username.erase(0, 1);
-            }
-            astr_t text = str_from(readString());
-
-            const size_t start = text.find('{');
-            if (start != astr_t::npos)
-            {
-                const size_t end = text.find('}', start);
-                if (end != astr_t::npos)
-                {
-                    text.erase(start, end - start + 1);
-                }
-            }
-            while (!text.empty() && text.front() == ' ')
-            {
-                text.erase(0, 1);
-            }
-
-            if (!text.empty())
-            {
-                char buf[256];
-                snprintf(buf, sizeof(buf), "%s: %s", username.c_str(), text.c_str());
-                g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, buf);
-            }
+            // the speaker and "{Channel} text" (readString skips the
+            // language block itself)
+            const astr_t username = str_from(readString(true));
+            const astr_t text = str_from(readString(false));
+            DisplayConferenceSpeech(username, text);
             break;
         }
         case CHATSRV_CHANNEL_MESSAGE:
         case CHATSRV_CHANNEL_EMOTE:
         case CHATSRV_CHANNEL_PRIVATE:
         {
-            astr_t username = str_from(readString());
-            if (!username.empty() && isdigit(username[0]) != 0)
-            {
-                username.erase(0, 1);
-            }
-            astr_t text = str_from(readString());
-
-            // conference speech arrives wrapped in a leading "{...}" style block
-            const size_t start = text.find('{');
-            if (start != astr_t::npos)
-            {
-                const size_t end = text.find('}', start);
-                if (end != astr_t::npos)
-                {
-                    text.erase(start, end - start + 1);
-                }
-            }
-            while (!text.empty() && text.front() == ' ')
-            {
-                text.erase(0, 1);
-            }
-
-            if (!text.empty())
-            {
-                g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, username + ": " + text);
-            }
+            const astr_t username = str_from(readString(true));
+            const astr_t text = str_from(readString(false));
+            DisplayConferenceSpeech(username, text);
             break;
         }
         default:
@@ -3074,7 +3075,7 @@ PACKET_HANDLER(ChatMessage)
                 const astr_t &msg = g_ChatManager.GetMessage(command - 1);
                 if (!msg.empty())
                 {
-                    const astr_t text = str_from(readString());
+                    const astr_t text = str_from(readString(true));
                     const bool hasSecond = (command - 1 == 0x000A || command - 1 == 0x0017);
                     g_Game.CreateTextMessage(
                         TT_SYSTEM,
