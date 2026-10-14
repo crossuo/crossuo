@@ -32,4 +32,6 @@ bool Splash_IsReady();
 
 // Draws a determinate progress bar under the splash image (clamped to
 // 0..1). Values stick until changed; call before Splash_Render().
+// Native only: the web build ignores it (the browser shell page owns the
+// streamed-install progress there).
 void Splash_SetProgress(float done01);
