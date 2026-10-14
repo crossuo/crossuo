@@ -24,6 +24,8 @@
 #include "ChatManager.h"
 #include "SoundManager.h" // g_SoundManager (stop-music command)
 #include <cstdint>
+#include <algorithm>
+#include <vector>
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
 #include <core/assistantevents.h>   // xuoassist::g_AssistantEvents (journal, JMT_* flags)
@@ -3214,21 +3216,37 @@ PACKET_HANDLER(OpenContainer)
     {
         uint16_t graphic = 0xFFFF;
 
-        if (g_ConfigManager.LargeGumps)
+        // The large container art only ships with the 7.0.6.0+ data
+        if (g_ConfigManager.LargeGumps && g_Config.ProtocolClientVersion >= VERSION(7, 0, 60, 0))
         {
             switch (gumpid)
             {
                 case 0x3E:
                     gumpid = 0X06E9;
                     break;
-                case 0x4a:
-                    gumpid = 0x9CDD;
-                    break;
                 case 0x44:
                     gumpid = 0x9CE3;
                     break;
-                case 0X49:
+                case 0x48:
+                    gumpid = 0x06E8;
+                    break;
+                case 0x49:
                     gumpid = 0x9CDF;
+                    break;
+                case 0x4A:
+                    gumpid = 0x9CDD;
+                    break;
+                case 0x4D:
+                    gumpid = 0x06EA;
+                    break;
+                case 0x4E:
+                    gumpid = 0x06E6;
+                    break;
+                case 0x4F:
+                    gumpid = 0x06E5;
+                    break;
+                case 0x51:
+                    gumpid = 0x06E7;
                     break;
                 default:
                     break;
@@ -7636,21 +7654,48 @@ PACKET_HANDLER(BuyList)
             return;
         }
 
-        bool reverse = (item->GetX() > 1);
-
-        if (reverse)
+        // The vendor map lists its entries in X order: walk a sorted copy of
+        // the linked list so prices land on the right items
+        const bool sortByX = (container->Graphic == 0x2AF8);
+        std::vector<CGameItem *> order;
+        bool reverse = false;
+        if (sortByX)
         {
+            for (CGameItem *it = item; it != nullptr; it = (CGameItem *)it->m_Next)
+            {
+                order.push_back(it);
+            }
+            std::sort(
+                order.begin(),
+                order.end(),
+                [](CGameItem *a, CGameItem *b) { return a->GetX() < b->GetX(); });
+        }
+        else
+        {
+            //skip to last item and read in reverse later
+            reverse = true;
             while (item != nullptr && item->m_Next != nullptr)
             {
                 item = (CGameItem *)item->m_Next;
             }
         }
 
+        size_t orderIndex = 0;
+
         CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
 
         for (int i = 0; i < count; i++)
         {
-            if (item == nullptr)
+            if (sortByX)
+            {
+                if (orderIndex >= order.size())
+                {
+                    Error(Network, "buy item not found");
+                    break;
+                }
+                item = order[orderIndex++];
+            }
+            else if (item == nullptr)
             {
                 Error(Network, "buy item not found");
                 break;
@@ -7661,12 +7706,17 @@ PACKET_HANDLER(BuyList)
             uint8_t nameLen = ReadUInt8();
             auto name = ReadString(nameLen);
 
-            //try int.parse and read cliloc.
+            //try int.parse and read cliloc, formatted with the item's tile
+            //display name and stack amount (e.g. "bandage: 50")
             int clilocNum = 0;
 
             if (Int32TryParse(name, clilocNum))
             {
-                item->SetName(g_ClilocManager.Cliloc(g_Language)->GetA(clilocNum, true));
+                const astr_t tileName = g_Data.m_Static[item->Graphic].Name;
+                const astr_t args = "\t" + tileName + ": \t" + str_from((int)item->Count);
+                const wstr_t displayName =
+                    g_ClilocManager.ParseArgumentsToClilocString(clilocNum, true, wstr_from(args));
+                item->SetName(str_from(displayName));
                 item->NameFromCliloc = true;
             }
             else
@@ -7675,13 +7725,16 @@ PACKET_HANDLER(BuyList)
                 item->NameFromCliloc = false;
             }
 
-            if (reverse)
+            if (!sortByX)
             {
-                item = (CGameItem *)item->m_Prev;
-            }
-            else
-            {
-                item = (CGameItem *)item->m_Next;
+                if (reverse)
+                {
+                    item = (CGameItem *)item->m_Prev;
+                }
+                else
+                {
+                    item = (CGameItem *)item->m_Next;
+                }
             }
         }
 
