@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Gump.h"
+#include "../GUI/GUIText.h"
 #include "../TextEngine/TextContainer.h"
 #include "../TextEngine/EntryText.h"
 #include "../TextEngine/TextRenderer.h"
@@ -23,6 +24,19 @@ public:
     astr_t Text;
 
 private:
+    // Gold ledger labels for the new trade window (client >= 7.0.45.65),
+    // indexed as 0 = my gold, 1 = my platinum, 2 = opponent gold,
+    // 3 = opponent platinum; null on the old trade gump
+    enum
+    {
+        COIN_MY_GOLD,
+        COIN_MY_PLATINUM,
+        COIN_HIS_GOLD,
+        COIN_HIS_PLATINUM,
+        COIN_COUNT
+    };
+    CGUIText *m_CoinLabels[COIN_COUNT] = { nullptr };
+    uint32_t m_CoinValues[COIN_COUNT] = { 0 };
     uint8_t mdbx = 45;
     uint8_t mdby = 70;
     uint8_t odbx = 192;

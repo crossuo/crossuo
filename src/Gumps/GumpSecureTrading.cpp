@@ -92,6 +92,18 @@ void CGumpSecureTrading::PrepareContent()
     {
         WantRedraw = true;
     }
+
+    // Pick up ledger changes from the 0x6F gold-update sub-commands
+    const uint32_t coinValue[COIN_COUNT] = { Gold, Platinum, HisGold, HisPlatinum };
+    for (int i = 0; i < COIN_COUNT; i++)
+    {
+        if (m_CoinLabels[i] != nullptr && m_CoinValues[i] != coinValue[i])
+        {
+            m_CoinValues[i] = coinValue[i];
+            m_CoinLabels[i]->CreateTextureA(9, str_from(uint64_t(coinValue[i])));
+            WantRedraw = true;
+        }
+    }
 }
 
 void CGumpSecureTrading::UpdateContent()
@@ -138,6 +150,18 @@ void CGumpSecureTrading::UpdateContent()
             const int fontWidth = 250 - g_FontManager.GetWidthA(3, Text);
             text = (CGUIText *)Add(new CGUIText(0x0481, fontWidth, 244));
             text->CreateTextureA(3, Text);
+
+            // Gold/platinum ledger readouts for both sides of the trade
+            const int coinX[COIN_COUNT] = { 43, 180, 180, 180 };
+            const int coinY[COIN_COUNT] = { 67, 67, 190, 210 };
+            const uint32_t coinValue[COIN_COUNT] = { Gold, Platinum, HisGold, HisPlatinum };
+            for (int i = 0; i < COIN_COUNT; i++)
+            {
+                m_CoinLabels[i] = (CGUIText *)Add(new CGUIText(0x0481, coinX[i], coinY[i]));
+                m_CoinValues[i] = coinValue[i];
+                m_CoinLabels[i]->CreateTextureA(9, str_from(uint64_t(coinValue[i])));
+            }
+
             mdbx = 40;
             mdby = 110;
             odbx = 192;
