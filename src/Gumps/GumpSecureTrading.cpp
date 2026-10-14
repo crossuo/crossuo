@@ -17,11 +17,15 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
+#include "../GUI/GUIHitBox.h"
+#include "../GUI/GUITextEntry.h"
 #if defined(XUO_ASSISTANT)
 #include <managers/trademanager.h> // xuoassist::g_TradeManager
 #endif
 
 static const int ID_GST_CHECKBOX = 1;
+static const int ID_GST_ENTRY_GOLD = 2;
+static const int ID_GST_ENTRY_PLATINUM = 3;
 
 CGumpSecureTrading::CGumpSecureTrading(uint32_t serial, int x, int y, uint32_t id, uint32_t id2)
     : CGump(GT_TRADE, serial, x, y)
@@ -160,6 +164,18 @@ void CGumpSecureTrading::UpdateContent()
                 m_CoinLabels[i] = (CGUIText *)Add(new CGUIText(0x0481, coinX[i], coinY[i]));
                 m_CoinValues[i] = coinValue[i];
                 m_CoinLabels[i]->CreateTextureA(9, str_from(uint64_t(coinValue[i])));
+            }
+
+            // Offer entry boxes under the opponent ledger: typing an amount
+            // offers it from the player's own holdings
+            const int entryIds[2] = { ID_GST_ENTRY_GOLD, ID_GST_ENTRY_PLATINUM };
+            const int entryY[2] = { 190, 210 };
+            for (int i = 0; i < 2; i++)
+            {
+                Add(new CGUIHitBox(entryIds[i], 43, entryY[i], 100, 20));
+                m_CoinEntries[i] = (CGUITextEntry *)Add(new CGUITextEntry(
+                    entryIds[i], 0x0481, 0x0035, 0x0035, 43, entryY[i], 100, false, 9));
+                m_CoinEntries[i]->m_Entry.SetTextA("0");
             }
 
             mdbx = 40;
@@ -419,5 +435,129 @@ void CGumpSecureTrading::SendTradingResponse(int code)
     if (code == SECURE_TRADE_CLOSE)
     {
         RemoveMark = true;
+    }
+}
+
+// 1e9 gold per platinum: the server converts between the currencies and
+// validates the combined offer against the combined balance
+static const uint64_t PLATINUM_VALUE = 1000000000ull;
+
+void CGumpSecureTrading::UpdateCoinOffer(int index)
+{
+    if (index < 0 || index >= 2 || g_EntryPointer == nullptr ||
+        g_EntryPointer != &m_CoinEntries[index]->m_Entry)
+    {
+        return;
+    }
+
+    const astr_t text = g_EntryPointer->GetTextA();
+    uint32_t value = 0;
+    if (text.empty())
+    {
+        g_EntryPointer->SetTextA("0");
+    }
+    else
+    {
+        // digits only; ignore anything else that may have slipped in
+        for (char c : text)
+        {
+            if (c < '0' || c > '9')
+            {
+                g_EntryPointer->SetTextA("0");
+                value = 0;
+                break;
+            }
+            value = value * 10 + uint32_t(c - '0');
+        }
+    }
+
+    bool changed = false;
+    const uint64_t totalWealth = uint64_t(Gold) + uint64_t(Platinum) * PLATINUM_VALUE;
+    if (index == 0)
+    {
+        const uint64_t platOffered = uint64_t(m_OfferPlatinum) * PLATINUM_VALUE;
+        const uint64_t remaining = totalWealth > platOffered ? totalWealth - platOffered : 0;
+        const uint32_t maxGold = remaining > 0xFFFFFFFFull ? 0xFFFFFFFFu : uint32_t(remaining);
+        if (value > maxGold)
+        {
+            value = maxGold;
+            changed = true;
+        }
+        if (m_OfferGold != value)
+        {
+            changed = true;
+        }
+        m_OfferGold = value;
+    }
+    else
+    {
+        const uint64_t remaining = totalWealth > m_OfferGold ? totalWealth - m_OfferGold : 0;
+        const uint32_t maxPlatinum = uint32_t(remaining / PLATINUM_VALUE);
+        if (value > maxPlatinum)
+        {
+            value = maxPlatinum;
+            changed = true;
+        }
+        if (m_OfferPlatinum != value)
+        {
+            changed = true;
+        }
+        m_OfferPlatinum = value;
+    }
+
+    if (changed)
+    {
+        g_EntryPointer->SetTextA(str_from(uint64_t(value)));
+    }
+
+    CPacketTradeUpdateGold(ID, m_OfferGold, m_OfferPlatinum).Send();
+}
+
+void CGumpSecureTrading::OnTextInput(const TextEvent &ev)
+{
+    const auto ch = EvChar(ev);
+    if (g_EntryPointer != nullptr && ch >= '0' && ch <= '9' &&
+        (g_EntryPointer == &m_CoinEntries[0]->m_Entry ||
+         g_EntryPointer == &m_CoinEntries[1]->m_Entry))
+    {
+        g_EntryPointer->Insert(ch);
+        const int index = (g_EntryPointer == &m_CoinEntries[0]->m_Entry) ? 0 : 1;
+        UpdateCoinOffer(index);
+        WantRedraw = true;
+    }
+}
+
+void CGumpSecureTrading::OnKeyDown(const KeyEvent &ev)
+{
+    const auto key = EvKey(ev);
+    switch (key)
+    {
+        case KEY_RETURN:
+        case KEY_RETURN2:
+        case KEY_BACK:
+        case KEY_DELETE:
+        {
+            if (g_EntryPointer != nullptr &&
+                (g_EntryPointer == &m_CoinEntries[0]->m_Entry ||
+                 g_EntryPointer == &m_CoinEntries[1]->m_Entry))
+            {
+                g_EntryPointer->OnKey(this, key);
+                const int index = (g_EntryPointer == &m_CoinEntries[0]->m_Entry) ? 0 : 1;
+                UpdateCoinOffer(index);
+                WantRedraw = true;
+            }
+            break;
+        }
+        case KEY_HOME:
+        case KEY_END:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        {
+            g_EntryPointer->OnKey(this, key);
+            WantRedraw = true;
+            break;
+        }
+        default:
+            break;
     }
 }

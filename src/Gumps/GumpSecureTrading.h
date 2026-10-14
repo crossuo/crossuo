@@ -5,6 +5,7 @@
 
 #include "Gump.h"
 #include "../GUI/GUIText.h"
+#include "../GUI/GUITextEntry.h"
 #include "../TextEngine/TextContainer.h"
 #include "../TextEngine/EntryText.h"
 #include "../TextEngine/TextRenderer.h"
@@ -37,6 +38,10 @@ private:
     };
     CGUIText *m_CoinLabels[COIN_COUNT] = { nullptr };
     uint32_t m_CoinValues[COIN_COUNT] = { 0 };
+    // Offer entry boxes (0 = gold, 1 = platinum) for the new trade window
+    CGUITextEntry *m_CoinEntries[2] = { nullptr };
+    uint32_t m_OfferGold = 0;
+    uint32_t m_OfferPlatinum = 0;
     uint8_t mdbx = 45;
     uint8_t mdby = 70;
     uint8_t odbx = 192;
@@ -64,4 +69,10 @@ public:
 
     GUMP_BUTTON_EVENT_H override;
     virtual void OnLeftMouseButtonUp() override;
+    virtual void OnTextInput(const TextEvent &ev) override;
+    virtual void OnKeyDown(const KeyEvent &ev) override;
+
+    // Re-read the focused offer entry, clamp it against the player's total
+    // wealth minus the other entry's offer, and notify the server on change
+    void UpdateCoinOffer(int index);
 };

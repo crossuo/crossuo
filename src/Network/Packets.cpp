@@ -802,6 +802,17 @@ CPacketTradeResponse::CPacketTradeResponse(CGumpSecureTrading *gump, int code)
     }
 }
 
+CPacketTradeUpdateGold::CPacketTradeUpdateGold(uint32_t serial, uint32_t gold, uint32_t platinum)
+    : CPacket(17)
+{
+    WriteUInt8(0x6F);
+    WriteUInt16BE(17);
+    WriteUInt8(0x03); // gold ledger update (client -> server)
+    WriteUInt32BE(serial);
+    WriteUInt32BE(gold);
+    WriteUInt32BE(platinum);
+}
+
 CPacketLogoutNotification::CPacketLogoutNotification()
     : CPacket(5)
 {

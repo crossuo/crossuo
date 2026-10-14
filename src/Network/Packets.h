@@ -247,6 +247,14 @@ public:
     CPacketTradeResponse(class CGumpSecureTrading *gump, int code);
 };
 
+// 0x6F gold-ledger offer: sub-command 3 carries the offered gold and
+// platinum pair for the trade identified by serial
+class CPacketTradeUpdateGold : public CPacket
+{
+public:
+    CPacketTradeUpdateGold(uint32_t serial, uint32_t gold, uint32_t platinum);
+};
+
 class CPacketLogoutNotification : public CPacket
 {
 public:
