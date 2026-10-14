@@ -31,6 +31,12 @@ public:
     CGumpSpell *GetTopSpell();
     uint16_t SpellID() const;
     bool Active = false;
+
+    // Runtime registry of spells the server reports as active (0xBF 0x25):
+    // icon gumps read it on creation so a closed/reopened icon keeps its tint
+    static bool IsSpellActive(uint16_t spellID);
+    static void SetSpellActive(uint16_t spellID, bool active);
+    static void ClearActiveSpells();
     CGumpSpell *GetNearSpell(int &x, int &y);
     bool GetSpellGroupOffset(int &x, int &y);
     void UpdateGroup(int x, int y);

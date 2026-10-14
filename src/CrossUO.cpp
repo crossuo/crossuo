@@ -97,6 +97,7 @@
 #include "Managers/OptionsMacroManager.h"
 #include "Managers/PacketManager.h"
 #include "Managers/Waypoints.h"
+#include "Gumps/GumpSpell.h" // active spell registry (world teardown)
 #include "Managers/ProfessionManager.h"
 #include "Managers/ScreenEffectManager.h"
 #include "Managers/SkillGroupManager.h"
@@ -5746,6 +5747,7 @@ void CGame::ClearWorld()
     g_World = nullptr;
     Info(Client, "\tworld removed");
     g_Waypoints.Clear();
+    CGumpSpell::ClearActiveSpells();
 
     g_PopupMenu = nullptr;
 

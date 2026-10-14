@@ -758,6 +758,9 @@ static void ChatTestTick()
         { 13000, 1, 3, nullptr },     // open creation box
         { 15000, 3, 6, "XUOTest" },   // fill + confirm creation box
         { 18000, 1, 2, nullptr },     // leave again
+        { 21000, 1, 0x0100, nullptr }, // select first channel row
+        { 23000, 1, 1, nullptr },      // join
+        { 26000, 4, 0, "XUO chat test message" }, // speak in the conference
         { 0, 0, 0, nullptr },
     };
     static uint32_t base = 0;
@@ -800,6 +803,15 @@ static void ChatTestTick()
                 if (gump != nullptr)
                 {
                     ((CGumpChat *)gump)->DebugCreateChannel(step.name);
+                }
+                break;
+            }
+            case 4:
+            {
+                CGump *gump = g_GumpManager.GetGump(0, 0, GT_CHAT);
+                if (gump != nullptr)
+                {
+                    ((CGumpChat *)gump)->DebugSendMessage(step.name);
                 }
                 break;
             }

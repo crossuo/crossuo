@@ -12,12 +12,15 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ClilocManager.h"
 
+#include <set>
+
 CGumpSpell::CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, short x, short y)
     : CGump(GT_SPELL, serial, x, y)
     , SpellType(type)
 {
     Graphic = graphic;
     BaseSpell = GetSpellByGraphicAndType(Graphic, SpellType);
+    Active = IsSpellActive(SpellID());
     m_Locker.Serial = ID_GS_LOCK_MOVING;
     m_Blender = (CGUIAlphaBlending *)Add(new CGUIAlphaBlending(
         g_ConfigManager.TransparentSpellIcons, g_ConfigManager.GetSpellIconAlpha() / 255.0f));
@@ -37,6 +40,30 @@ CGumpSpell::~CGumpSpell()
 uint16_t CGumpSpell::SpellID() const
 {
     return (BaseSpell != nullptr ? BaseSpell->Id : 0);
+}
+
+static std::set<uint16_t> g_ActiveSpells;
+
+bool CGumpSpell::IsSpellActive(uint16_t spellID)
+{
+    return g_ActiveSpells.find(spellID) != g_ActiveSpells.end();
+}
+
+void CGumpSpell::SetSpellActive(uint16_t spellID, bool active)
+{
+    if (active)
+    {
+        g_ActiveSpells.insert(spellID);
+    }
+    else
+    {
+        g_ActiveSpells.erase(spellID);
+    }
+}
+
+void CGumpSpell::ClearActiveSpells()
+{
+    g_ActiveSpells.clear();
 }
 
 void CGumpSpell::InitToolTip()

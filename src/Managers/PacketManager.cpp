@@ -3000,14 +3000,36 @@ PACKET_HANDLER(ChatMessage)
             g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, buf);
             break;
         }
+        case CHATSRV_CHANNEL_MESSAGE_ECHO: // sent to every conference member, including the sender
+        {
+            // wire: cmd, language(4), then two null-terminated strings:
+            // the speaker and "{Channel} text" (readString skips the
+            // language block itself)
+            const astr_t username = str_from(readString());
+            astr_t text = str_from(readString());
+
+            const size_t start = text.find('{');
+            if (start != astr_t::npos)
+            {
+                const size_t end = text.find('}', start);
+                if (end != astr_t::npos)
+                {
+                    text.erase(start, end - start + 1);
+                }
+            }
+
+            if (!text.empty())
+            {
+                char buf[256];
+                snprintf(buf, sizeof(buf), "%s: %s", username.c_str(), text.c_str());
+                g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, buf);
+            }
+            break;
+        }
         case CHATSRV_CHANNEL_MESSAGE:
         case CHATSRV_CHANNEL_EMOTE:
         case CHATSRV_CHANNEL_PRIVATE:
         {
-            if (Size - Pos() >= 2)
-            {
-                ReadUInt16BE(); // message type (unused)
-            }
             const astr_t username = str_from(readString());
             astr_t text = str_from(readString());
 
@@ -4119,6 +4141,8 @@ PACKET_HANDLER(ExtendedCommand)
                     spell->WantRedraw = true;
                 }
             }
+
+            CGumpSpell::SetSpellActive(spellID, active);
 
             break;
         }

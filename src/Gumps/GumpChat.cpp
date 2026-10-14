@@ -27,7 +27,9 @@ CGumpChat::CGumpChat(int x, int y)
 
 CGumpChat::~CGumpChat()
 {
-    if (g_EntryPointer != nullptr && m_Entry != nullptr && g_EntryPointer == &m_Entry->m_Entry)
+    if (g_EntryPointer != nullptr && ((m_Entry != nullptr && g_EntryPointer == &m_Entry->m_Entry) ||
+                                         (m_MessageEntry != nullptr &&
+                                             g_EntryPointer == &m_MessageEntry->m_Entry)))
     {
         g_EntryPointer = nullptr;
     }
@@ -42,9 +44,16 @@ void CGumpChat::UpdateContent()
         UpdateCreationBoxText();
         g_EntryPointer = nullptr;
     }
+    if (g_EntryPointer != nullptr && m_MessageEntry != nullptr &&
+        g_EntryPointer == &m_MessageEntry->m_Entry)
+    {
+        m_MessageText = m_MessageEntry->m_Entry.GetTextA();
+        g_EntryPointer = nullptr;
+    }
     const bool creationBoxOpen = m_CreationBoxOpen;
     int selected = m_SelectedChannel;
     m_Entry = nullptr;
+    m_MessageEntry = nullptr;
 
     Clear();
 
@@ -113,6 +122,12 @@ void CGumpChat::UpdateContent()
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, label.x, 337));
         text->CreateTextureA(2, label.text);
     }
+
+    //Conference speech input: Enter sends the text to the current channel
+    Add(new CGUIHitBox(ID_GC_MSG_ENTRY, 10, 366, GUMP_WIDTH - 20, 18));
+    m_MessageEntry = (CGUITextEntry *)Add(new CGUITextEntry(
+        ID_GC_MSG_ENTRY, 0, 0, 0, 10, 366, GUMP_WIDTH - 20, false, 0));
+    m_MessageEntry->m_Entry.SetTextA(m_MessageText);
 
     if (creationBoxOpen)
     {
@@ -232,24 +247,74 @@ void CGumpChat::GUMP_BUTTON_EVENT_C
 
 void CGumpChat::OnLeftMouseButtonUp()
 {
-    const bool entryFocused =
-        (g_EntryPointer != nullptr && m_Entry != nullptr && g_EntryPointer == &m_Entry->m_Entry);
+    const bool creationFocused = FocusedEntryIs(ID_GC_CB_ENTRY);
+    const bool messageFocused = FocusedEntryIs(ID_GC_MSG_ENTRY);
 
     CGump::OnLeftMouseButtonUp();
 
     //Release the text entry focus only when the click landed outside of the
     //entry (the base dispatch above is what focuses it on an inside click)
-    if (entryFocused && m_Entry != nullptr && !m_Entry->EntryPointerHere())
+    if (creationFocused && m_Entry != nullptr && !m_Entry->EntryPointerHere())
     {
         UpdateCreationBoxText();
         g_EntryPointer = nullptr;
         WantRedraw = true;
     }
+    else if (messageFocused && m_MessageEntry != nullptr && !m_MessageEntry->EntryPointerHere())
+    {
+        m_MessageText = m_MessageEntry->m_Entry.GetTextA();
+        g_EntryPointer = nullptr;
+        WantRedraw = true;
+    }
+}
+
+bool CGumpChat::FocusedEntryIs(int which) const
+{
+    if (g_EntryPointer == nullptr)
+    {
+        return false;
+    }
+    if (which == ID_GC_CB_ENTRY)
+    {
+        return m_Entry != nullptr && g_EntryPointer == &m_Entry->m_Entry;
+    }
+    return m_MessageEntry != nullptr && g_EntryPointer == &m_MessageEntry->m_Entry;
+}
+
+void CGumpChat::SendCurrentMessage()
+{
+    if (m_MessageEntry == nullptr)
+    {
+        return;
+    }
+
+    const astr_t text = str_trim(m_MessageEntry->m_Entry.GetTextA());
+    if (text.empty())
+    {
+        return;
+    }
+
+    CPacketChatMessage(wstr_from(text)).Send();
+    m_MessageEntry->m_Entry.SetTextA("");
+    m_MessageText = {};
+    WantRedraw = true;
+}
+
+void CGumpChat::DebugSendMessage(const astr_t &text)
+{
+    Info(Client, "CHATTEST: send message '%s'", text.c_str());
+    if (m_MessageEntry != nullptr)
+    {
+        m_MessageEntry->m_Entry.SetTextA(text);
+        SendCurrentMessage();
+    }
 }
 
 void CGumpChat::OnTextInput(const TextEvent &ev)
 {
-    if (g_EntryPointer == nullptr || m_Entry == nullptr || g_EntryPointer != &m_Entry->m_Entry)
+    const bool creationFocused = FocusedEntryIs(ID_GC_CB_ENTRY);
+    const bool messageFocused = FocusedEntryIs(ID_GC_MSG_ENTRY);
+    if (!creationFocused && !messageFocused)
     {
         return;
     }
@@ -264,7 +329,9 @@ void CGumpChat::OnTextInput(const TextEvent &ev)
 
 void CGumpChat::OnKeyDown(const KeyEvent &ev)
 {
-    if (g_EntryPointer == nullptr || m_Entry == nullptr || g_EntryPointer != &m_Entry->m_Entry)
+    const bool creationFocused = FocusedEntryIs(ID_GC_CB_ENTRY);
+    const bool messageFocused = FocusedEntryIs(ID_GC_MSG_ENTRY);
+    if (!creationFocused && !messageFocused)
     {
         return;
     }
@@ -275,7 +342,14 @@ void CGumpChat::OnKeyDown(const KeyEvent &ev)
         case KEY_RETURN:
         case KEY_RETURN2:
         {
-            OnButton(ID_GC_CB_OKAY);
+            if (messageFocused)
+            {
+                SendCurrentMessage();
+            }
+            else
+            {
+                OnButton(ID_GC_CB_OKAY);
+            }
             break;
         }
         case KEY_HOME:

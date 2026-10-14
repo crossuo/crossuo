@@ -17,6 +17,7 @@ private:
     static const int ID_GC_CB_ENTRY = 5;
     static const int ID_GC_CB_OKAY = 6;
     static const int ID_GC_CB_CLOSE = 7;
+    static const int ID_GC_MSG_ENTRY = 8;
 
     //Base serial for the channel row hit boxes (serial = base + row index)
     static const int ID_GC_CHANNEL = 0x0100;
@@ -28,6 +29,11 @@ private:
     bool m_CreationBoxOpen{ false };
     int m_SelectedChannel{ -1 };
     astr_t m_EntryText = {};
+    CGUITextEntry *m_MessageEntry{ nullptr };
+    astr_t m_MessageText = {};
+
+    bool FocusedEntryIs(int which) const;
+    void SendCurrentMessage();
 
     void UpdateCreationBoxText();
 
@@ -45,6 +51,7 @@ public:
     // channel-creation box
     void DebugClick(int id);
     void DebugCreateChannel(const astr_t &name);
+    void DebugSendMessage(const astr_t &name);
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };
