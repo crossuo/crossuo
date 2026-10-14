@@ -123,6 +123,7 @@ protected:
     HANDLER_PACKET(PersonalLightLevel);
     HANDLER_PACKET(LightLevel);
     HANDLER_PACKET(EnableLockedFeatures);
+    HANDLER_PACKET(ChatMessage);
     HANDLER_PACKET(OpenContainer);
     HANDLER_PACKET(UpdateSkills);
     HANDLER_PACKET(ExtendedCommand);

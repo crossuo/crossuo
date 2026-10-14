@@ -65,7 +65,9 @@ EM_JS(void, web_install_alert_shim, (), {
 #include "Managers/ConnectionManager.h"
 #include "Managers/PacketManager.h"
 #include "Network/Packets.h" // CPacketHelpRequest (XUO_AUTO_HELP)
-#include "ScreenshotBuilder.h" // g_ScreenshotBuilder (XUO_AUTO_HELP capture)
+#include "ScreenshotBuilder.h"
+#include "../Gumps/GumpChat.h" // chat test harness
+#include "../Managers/GumpManager.h" // chat test harness gump dispatch
 
 #if defined(main) /* SDL renames main to SDL_main for its win32 CRT shim;
                     the client owns the real main() */
@@ -729,6 +731,84 @@ static void FrameStatsTick()
 // content) can be validated automatically and compared between render paths.
 // Combine with XUO_DUMP_FRAME_DELAY for a command-stream dump and
 // XUO_GUMP_LEGACY to A/B against the framebuffer path.
+// chat test harness (XUO_CHAT_TEST): drives the conference gump with
+// synthetic clicks on a fixed timeline after world entry - select channel,
+// join, leave, create a channel, leave again - logging every step, so the
+// wire exchange can be correlated with the server-side chat log
+static void ChatTestTick()
+{
+    static const bool enabled = getenv("XUO_CHAT_TEST") != nullptr;
+    if (!enabled || g_GameState != GS_GAME)
+    {
+        return;
+    }
+
+    struct Step
+    {
+        uint32_t delay;
+        int action; // 0=done, 1=click, 2=open chat, 3=create channel
+        int id;
+        const char *name;
+    };
+    static const Step steps[] = {
+        { 2000, 2, 0, nullptr },      // open the conference gump
+        { 4000, 1, 0x0100, nullptr }, // select first channel row
+        { 6000, 1, 1, nullptr },      // join
+        { 10000, 1, 2, nullptr },     // leave
+        { 13000, 1, 3, nullptr },     // open creation box
+        { 15000, 3, 6, "XUOTest" },   // fill + confirm creation box
+        { 18000, 1, 2, nullptr },     // leave again
+        { 0, 0, 0, nullptr },
+    };
+    static uint32_t base = 0;
+    static size_t next = 0;
+
+    if (base == 0)
+    {
+        base = g_Ticks;
+        Info(Client, "XUO_CHAT_TEST: timeline started");
+    }
+
+    while (next < (sizeof(steps) / sizeof(steps[0])) - 1 && (g_Ticks - base) >= steps[next].delay)
+    {
+        const Step &step = steps[next];
+        next++;
+        switch (step.action)
+        {
+            case 2:
+            {
+                Info(Client, "CHATTEST: open chat");
+                g_Game.OpenChat();
+                break;
+            }
+            case 1:
+            {
+                CGump *gump = g_GumpManager.GetGump(0, 0, GT_CHAT);
+                if (gump != nullptr)
+                {
+                    ((CGumpChat *)gump)->DebugClick(step.id);
+                }
+                else
+                {
+                    Info(Client, "CHATTEST: conference gump not open for click %d", step.id);
+                }
+                break;
+            }
+            case 3:
+            {
+                CGump *gump = g_GumpManager.GetGump(0, 0, GT_CHAT);
+                if (gump != nullptr)
+                {
+                    ((CGumpChat *)gump)->DebugCreateChannel(step.name);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}
+
 static void AutoHelpTick()
 {
     static const bool enabled = getenv("XUO_AUTO_HELP") != nullptr;
@@ -810,6 +890,7 @@ static bool RunFrame(bool &raised)
     g_PacketManager.SendMegaClilocRequests();
     g_Game.Process(true);
     AutoHelpTick();
+    ChatTestTick();
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
     LauncherWindow_Render();

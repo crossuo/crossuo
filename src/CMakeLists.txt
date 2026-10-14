@@ -108,6 +108,8 @@ set(gumps_src
   Gumps/GumpBuff.cpp
   Gumps/GumpBulletinBoard.cpp
   Gumps/GumpBulletinBoardItem.cpp
+  Gumps/GumpChat.cpp
+  Gumps/GumpChatChooseName.cpp
   Gumps/GumpCombatBook.cpp
   Gumps/GumpConsoleType.cpp
   Gumps/GumpContainer.cpp
@@ -165,6 +167,7 @@ set(managers_src
   Managers/ColorManager.cpp
   Managers/ConfigManager.cpp
   Managers/ConnectionManager.cpp
+  Managers/ChatManager.cpp
   Managers/CorpseManager.cpp
   Managers/CreateCharacterManager.cpp
   Managers/CustomHousesManager.cpp

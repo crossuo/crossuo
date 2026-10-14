@@ -1181,6 +1181,12 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
 
                     break;
                 }
+                case GT_CHAT:
+                {
+                    CloseGump(gump->Serial, gump->ID, gump->GumpType);
+
+                    break;
+                }
                 default:
                 {
                     CloseGump(gump->Serial, gump->ID, gump->GumpType);
@@ -1266,6 +1272,7 @@ bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
                 case GT_BULLETIN_BOARD_ITEM:
                 case GT_GENERIC:
                 case GT_BOOK:
+                case GT_CHAT:
                 {
                     gump->OnKeyDown(ev);
                     result = true;

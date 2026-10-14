@@ -733,3 +733,45 @@ class CPacketMouseMovementRequest : public CPacket
 public:
     CPacketMouseMovementRequest(int run, uint8_t dir);
 };
+
+class CPacketChatCommand : public CPacket
+{
+public:
+    CPacketChatCommand(uint16_t type, const wstr_t &text, const wstr_t &text2 = L"");
+};
+
+class CPacketChatJoin : public CPacketChatCommand
+{
+public:
+    CPacketChatJoin(const wstr_t &name)
+        : CPacketChatCommand(0x0062, name)
+    {
+    }
+};
+
+class CPacketChatCreateChannel : public CPacketChatCommand
+{
+public:
+    CPacketChatCreateChannel(const wstr_t &name)
+        : CPacketChatCommand(0x0063, name)
+    {
+    }
+};
+
+class CPacketChatLeaveChannel : public CPacketChatCommand
+{
+public:
+    CPacketChatLeaveChannel()
+        : CPacketChatCommand(0x0043, L"")
+    {
+    }
+};
+
+class CPacketChatMessage : public CPacketChatCommand
+{
+public:
+    CPacketChatMessage(const wstr_t &msg)
+        : CPacketChatCommand(0x0061, msg)
+    {
+    }
+};

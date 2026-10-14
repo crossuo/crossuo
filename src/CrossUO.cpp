@@ -86,6 +86,7 @@
 #include "Managers/ColorManager.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/ConnectionManager.h"
+#include "Managers/ChatManager.h"
 #include "Managers/CreateCharacterManager.h"
 #include "Managers/EffectManager.h"
 #include "Managers/FontsManager.h"
@@ -123,6 +124,8 @@
 #include "Gumps/GumpBulletinBoard.h"
 #include "Gumps/GumpBulletinBoardItem.h"
 #include "Gumps/GumpCombatBook.h"
+#include "Gumps/GumpChat.h"
+#include "Gumps/GumpChatChooseName.h"
 #include "Gumps/GumpConsoleType.h"
 #include "Gumps/GumpContainer.h"
 #include "Gumps/GumpCustomHouse.h"
@@ -5952,7 +5955,23 @@ void CGame::OpenLogOut()
 
 void CGame::OpenChat()
 {
-    CPacketOpenChat({}).Send();
+    switch (g_ChatManager.ChatStatus)
+    {
+        case CS_ENABLED:
+        {
+            //AddGump deduplicates by type/serial and refocuses an existing one
+            g_GumpManager.AddGump(new CGumpChat(150, 100));
+            break;
+        }
+        case CS_ENABLED_USER_REQUEST:
+        {
+            g_GumpManager.AddGump(new CGumpChatChooseName(250, 100));
+            break;
+        }
+        case CS_DISABLED:
+        default:
+            break;
+    }
 }
 
 void CGame::OpenConfiguration()

@@ -4,6 +4,7 @@
 #include <common/str.h>
 #include <common/utils.h> // checked_cast
 #include "Packets.h"
+#include "../Globals.h" // g_ServerLanguageReport (0xB3 language field)
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../CityList.h"
@@ -1996,4 +1997,85 @@ CPacketMouseMovementRequest::CPacketMouseMovementRequest(int run, uint8_t dir)
     WriteUInt8(dir);
     WriteUInt8(dir);
     WriteUInt8(run);
+}
+
+CPacketChatCommand::CPacketChatCommand(uint16_t type, const wstr_t &text, const wstr_t &text2)
+    : CPacket(0, true) // append-mode writer: writes grow the buffer sequentially
+{
+    // 9 = id(1) + size(2) + language(4) + command(2)
+    size_t size = 9;
+    const bool hasPassword = !text2.empty();
+
+    // Strings inside a 0xB3 frame are never NUL-terminated: the frame ends
+    // right after the last one and servers read the trailing text up to the
+    // packet boundary (an embedded NUL truncates the quoted channel name and
+    // breaks the join/create parse)
+    if (type == CHATCMD_JOIN_CHANNEL)
+    {
+        // marker(2) + name + marker(2) + marker(2), then a bare password
+        // string when one is given
+        size += 2 + text.length() * 2 + 2 + 2;
+        if (hasPassword)
+        {
+            size += text2.length() * 2;
+        }
+    }
+    else if (type == CHATCMD_CREATE_CHANNEL)
+    {
+        // bare name, with the password wrapped in 0x7B...0x7D markers
+        size += text.length() * 2;
+        if (hasPassword)
+        {
+            size += 2 + text2.length() * 2 + 2;
+        }
+    }
+    else if (type == CHATCMD_LEAVE_CHANNEL)
+    {
+        // the command word already counted in the base is the whole body
+    }
+    else if (type == CHATCMD_MESSAGE)
+    {
+        size += text.length() * 2;
+    }
+
+    WriteUInt8(0xB3);
+    WriteUInt16BE((uint16_t)size);
+    WriteDataLE((uint8_t *)g_ServerLanguageReport.c_str(), 4);
+    WriteUInt16BE(type);
+
+    if (type == CHATCMD_JOIN_CHANNEL)
+    {
+        WriteUInt16BE(0x0022);
+        WriteWString(text, text.length(), true, false);
+        WriteUInt16BE(0x0022);
+        WriteUInt16BE(0x0020);
+        if (hasPassword)
+        {
+            WriteWString(text2, text2.length(), true, false);
+        }
+    }
+    else if (type == CHATCMD_CREATE_CHANNEL)
+    {
+        WriteWString(text, text.length(), true, false);
+        if (hasPassword)
+        {
+            WriteUInt16BE(0x007B);
+            WriteWString(text2, text2.length(), true, false);
+            WriteUInt16BE(0x007D);
+        }
+    }
+    else if (type == CHATCMD_LEAVE_CHANNEL)
+    {
+        // the command itself is the whole frame body
+    }
+    else if (type == CHATCMD_MESSAGE)
+    {
+        WriteWString(text, text.length(), true, false);
+    }
+
+    if (getenv("XUO_CHAT_TEST") != nullptr)
+    {
+        Info(Network, "CHATTEST: send 0xB3 type=0x%04X size=%d", type, (int)size);
+        INFO_DUMP(Network, "CHATTEST 0xB3:", &m_Data[0], (int)m_Data.size());
+    }
 }

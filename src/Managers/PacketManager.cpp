@@ -21,6 +21,7 @@
 #include "MapManager.h"
 #include "Waypoints.h"
 #include "ConnectionManager.h"
+#include "ChatManager.h"
 #include "SoundManager.h" // g_SoundManager (stop-music command)
 #include <cstdint>
 #if defined(XUO_ASSISTANT)
@@ -309,8 +310,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xAF*/ RMSGH(XUO_SAVE_PACKET, "Display Death", 0x0d, DisplayDeath),
     /*0xB0*/ RMSGH(XUO_IGNORE_PACKET, "Open Gump", PACKET_VARIABLE_SIZE, OpenGump),
     /*0xB1*/ SMSG(XUO_IGNORE_PACKET, "Gump Choice", PACKET_VARIABLE_SIZE),
-    /*0xB2*/ BMSG(XUO_SAVE_PACKET, "Chat Data", PACKET_VARIABLE_SIZE),
-    /*0xB3*/ RMSG(XUO_SAVE_PACKET, "Chat Text ?", PACKET_VARIABLE_SIZE),
+    /*0xB2*/ RMSGH(XUO_SAVE_PACKET, "Chat Data", PACKET_VARIABLE_SIZE, ChatMessage),
+    /*0xB3*/ BMSG(XUO_SAVE_PACKET, "Chat Command", PACKET_VARIABLE_SIZE),
     /*0xB4*/ BMSG(XUO_SAVE_PACKET, "Target object list (God client)", PACKET_VARIABLE_SIZE),
     /*0xB5*/ BMSGH(XUO_SAVE_PACKET, "Open Chat Window", 0x40, OpenChat),
     /*0xB6*/ SMSG(XUO_SAVE_PACKET, "Popup Help Request", 0x09),
@@ -2851,7 +2852,201 @@ PACKET_HANDLER(EnableLockedFeatures)
     }
 
     g_ChatEnabled = bool(g_LockedClientFeatures & LFF_T2A);
+    g_ChatManager.ChatStatus = g_ChatEnabled ? CS_ENABLED : CS_DISABLED;
     uo_update_animation_tables(g_LockedClientFeatures);
+}
+
+// Reads a null-terminated big-endian unicode string, bounded by the remaining
+// frame bytes (chat frames may arrive truncated from legacy servers)
+static wstr_t ReadChatUnicodeString(CPacketManager *pm)
+{
+    wstr_t result;
+    while (pm->Size - pm->Pos() >= 2)
+    {
+        uint16_t c = pm->ReadUInt16BE();
+        if (c == 0)
+        {
+            break;
+        }
+        result.push_back(wchar_t(c));
+    }
+    return result;
+}
+
+static astr_t ChatFormatMessage(astr_t text, const astr_t &arg1, const astr_t &arg2)
+{
+    if (!arg1.empty())
+    {
+        size_t pos = text.find("%1");
+        if (pos != astr_t::npos)
+        {
+            text.replace(pos, 2, arg1);
+        }
+    }
+
+    if (!arg2.empty())
+    {
+        size_t pos = text.find("%2");
+        if (pos != astr_t::npos)
+        {
+            text.replace(pos, 2, arg2);
+        }
+    }
+    return text;
+}
+
+PACKET_HANDLER(ChatMessage)
+{
+    if (getenv("XUO_CHAT_TEST") != nullptr)
+    {
+        Info(Network, "CHATTEST: recv 0xB2 size=%d remaining=%d", (int)Size, (int)(Size - Pos()));
+        INFO_DUMP(Network, "CHATTEST 0xB2:", Start, (int)Size);
+    }
+    if (Size - Pos() < 2)
+    {
+        return;
+    }
+
+    auto readString = [&]() -> wstr_t
+    {
+        if (Size - Pos() < 6) // 4-byte skipped block + at least a null terminator
+        {
+            Move(intptr_t(Size - Pos()));
+            return {};
+        }
+        Move(4);
+        return ReadChatUnicodeString(this);
+    };
+
+    const uint16_t command = ReadUInt16BE();
+
+    switch (command)
+    {
+        case CHATSRV_ADD_CHANNEL: // conference created
+        {
+            const astr_t name = str_from(readString());
+            const bool hasPassword = (Size - Pos() >= 2) && ReadUInt16BE() == 0x31;
+            g_ChatManager.CurrentChannelName = name;
+            g_ChatManager.AddChannel(name, hasPassword);
+            g_GumpManager.UpdateContent(0, 0, GT_CHAT);
+            break;
+        }
+        case CHATSRV_REMOVE_CHANNEL: // conference destroyed
+        {
+            g_ChatManager.RemoveChannel(str_from(readString()));
+            g_GumpManager.UpdateContent(0, 0, GT_CHAT);
+            break;
+        }
+        case CHATSRV_REQUEST_NAME: // chat enabled, username request pending
+        {
+            g_ChatManager.ChatStatus = CS_ENABLED_USER_REQUEST;
+            break;
+        }
+        case CHATSRV_CLOSE_CHAT: // chat closed
+        {
+            g_ChatManager.Clear();
+            g_ChatManager.CurrentChannelName = {};
+            g_ChatManager.ChatStatus = CS_DISABLED;
+            g_GumpManager.CloseGump(0, 0, GT_CHAT);
+            break;
+        }
+        case CHATSRV_NAME_ACCEPTED: // chat username accepted
+        {
+            readString(); // accepted username (unused)
+            g_ChatManager.ChatStatus = CS_ENABLED;
+            CPacketChatJoin(L"General").Send();
+            break;
+        }
+        case CHATSRV_ADD_USER: // user entered the chat
+        {
+            Move(4);
+            if (Size - Pos() >= 2)
+            {
+                ReadUInt16BE(); // user type (ignored, no user list UI)
+            }
+            readString(); // username (ignored)
+            break;
+        }
+        case CHATSRV_REMOVE_USER: // user left the chat
+        {
+            readString(); // username (ignored)
+            break;
+        }
+        case CHATSRV_CLEAR_USERS: // clear all players
+        {
+            break;
+        }
+        case CHATSRV_JOINED_CHANNEL: // joined a conference
+        {
+            const astr_t name = str_from(readString());
+            g_ChatManager.CurrentChannelName = name;
+            g_GumpManager.UpdateContent(0, 0, GT_CHAT);
+            char buf[256];
+            snprintf(buf, sizeof(buf), "You have joined the %s channel.", name.c_str());
+            g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, buf);
+            break;
+        }
+        case CHATSRV_LEFT_CHANNEL: // left a conference
+        {
+            const astr_t name = str_from(readString());
+            // we are no longer in any channel: drop the stale label so the
+            // conference gump stops showing it after a reopen
+            g_ChatManager.CurrentChannelName = {};
+            g_GumpManager.UpdateContent(0, 0, GT_CHAT);
+            char buf[256];
+            snprintf(buf, sizeof(buf), "You have left the %s channel.", name.c_str());
+            g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, buf);
+            break;
+        }
+        case CHATSRV_CHANNEL_MESSAGE:
+        case CHATSRV_CHANNEL_EMOTE:
+        case CHATSRV_CHANNEL_PRIVATE:
+        {
+            if (Size - Pos() >= 2)
+            {
+                ReadUInt16BE(); // message type (unused)
+            }
+            const astr_t username = str_from(readString());
+            astr_t text = str_from(readString());
+
+            // conference speech arrives wrapped in a leading "{...}" style block
+            const size_t start = text.find('{');
+            if (start != astr_t::npos)
+            {
+                const size_t end = text.find('}', start);
+                if (end != astr_t::npos)
+                {
+                    text.erase(start, end - start + 1);
+                }
+            }
+
+            if (!text.empty())
+            {
+                g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0256, username + ": " + text);
+            }
+            break;
+        }
+        default:
+        {
+            if ((command >= 0x0001 && command <= 0x0024) ||
+                (command >= 0x0028 && command <= 0x002C))
+            {
+                const astr_t &msg = g_ChatManager.GetMessage(command - 1);
+                if (!msg.empty())
+                {
+                    const astr_t text = str_from(readString());
+                    const bool hasSecond = (command - 1 == 0x000A || command - 1 == 0x0017);
+                    g_Game.CreateTextMessage(
+                        TT_SYSTEM,
+                        0,
+                        3,
+                        0x0256,
+                        ChatFormatMessage(msg, text, hasSecond ? text : astr_t()));
+                }
+            }
+            break;
+        }
+    }
 }
 
 PACKET_HANDLER(OpenContainer)
