@@ -131,6 +131,7 @@ set(gumps_src
   Gumps/GumpProperty.cpp
   Gumps/GumpPropertyIcon.cpp
   Gumps/GumpQuestion.cpp
+  Gumps/GumpRaceChange.cpp
   Gumps/GumpRacialAbilitiesBook.cpp
   Gumps/GumpRacialAbility.cpp
   Gumps/GumpScreenCharacterList.cpp

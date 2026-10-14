@@ -80,6 +80,7 @@
 #include "../Gumps/GumpTip.h"
 #include "../Gumps/GumpProfile.h"
 #include "../Gumps/GumpDye.h"
+#include "../Gumps/GumpRaceChange.h"
 #include "../Gumps/GumpGeneric.h"
 #include "../Gumps/GumpMenu.h"
 #include "../Gumps/GumpBuff.h"
@@ -3933,9 +3934,8 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x2A:
         {
-            // Race change offer: gender flag + race id. The client has no
-            // race-change dialog, so the offer is parsed and reported but no
-            // gump is shown (the server sees no response).
+            // Race change offer: gender flag + race id, implicitly targeting
+            // the receiving player. Opens the race change dialog.
             if (Size - Pos() < 2)
             {
                 break;
@@ -3943,11 +3943,20 @@ PACKET_HANDLER(ExtendedCommand)
 
             const bool isFemale = ReadUInt8() != 0u;
             const uint8_t race = ReadUInt8();
-            Warning(
-                Network,
-                "race change offer received (female: %d, race: %d) - not supported",
-                isFemale,
-                race);
+
+            if (race < RT_HUMAN || race > RT_GARGOYLE)
+            {
+                TRACE(Network, "race change offer with invalid race: %d", race);
+                break;
+            }
+
+            CGumpRaceChange *gump = g_GumpRaceChange;
+            if (gump != nullptr)
+            {
+                g_GumpManager.RemoveGump(gump);
+            }
+
+            g_GumpManager.AddGump(new CGumpRaceChange(isFemale, race));
             break;
         }
         case 0x2B:

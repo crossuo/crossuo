@@ -90,6 +90,8 @@ public:
     uint16_t GetBootsGump();
     const uint16_t *GetSkinTonePtr();
     const uint16_t *GetHairColorPtr();
+    int GetSkinToneCount();
+    int GetHairColorCount();
     CC_HAIR_STYLE GetHair(uint8_t pos) const;
     CC_HAIR_STYLE GetBeard(uint8_t pos) const;
 };

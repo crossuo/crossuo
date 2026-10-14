@@ -128,7 +128,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
 
         CProfession *profession = (CProfession *)g_ProfessionManager.Selected;
         WriteUInt8((uint8_t)profession->DescriptionIndex); //profession
-        Move(15);        //?
+        Move(15);                                          //?
     }
 
     CProfession *profession = (CProfession *)g_ProfessionManager.Selected;
@@ -596,7 +596,8 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     int textLinesCount = 0;
     int textLinesLength = 0;
 
-    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr;
+         item = (CBaseGUI *)item->m_Next)
     {
         switch (item->Type)
         {
@@ -636,7 +637,8 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     WriteUInt32BE(code);
     WriteUInt32BE(switchesCount);
 
-    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr;
+         item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_CHECKBOX || item->Type == GOT_RADIO)
         {
@@ -649,7 +651,8 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
 
     WriteUInt32BE(textLinesCount);
 
-    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr;
+         item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXTENTRY)
         {
@@ -734,7 +737,8 @@ CPacketMenuResponse::CPacketMenuResponse(CGump *gump, int code)
     {
         WriteUInt16BE(code);
 
-        for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+        for (CBaseGUI *item = (CBaseGUI *)gump->m_Items; item != nullptr;
+             item = (CBaseGUI *)item->m_Next)
         {
             if (item->Serial == code && item->Type == GOT_MENUOBJECT)
             {
@@ -921,6 +925,20 @@ CPacketDyeDataResponse::CPacketDyeDataResponse(uint32_t serial, uint16_t graphic
     WriteUInt16BE(color);
 }
 
+CPacketRaceChange::CPacketRaceChange(
+    uint16_t skinHue, uint16_t hairStyle, uint16_t hairHue, uint16_t beardStyle, uint16_t beardHue)
+    : CPacket(15)
+{
+    WriteUInt8(0xBF);
+    WriteUInt16BE(0x000F);
+    WriteUInt16BE(0x002A); // subcommand
+    WriteUInt16BE(skinHue);
+    WriteUInt16BE(hairStyle);
+    WriteUInt16BE(hairHue);
+    WriteUInt16BE(beardStyle);
+    WriteUInt16BE(beardHue);
+}
+
 CPacketProfileRequest::CPacketProfileRequest(uint32_t serial)
     : CPacket(8)
 {
@@ -1034,8 +1052,10 @@ CPacketGameWindowSize::CPacketGameWindowSize()
     WriteUInt8(0xBF);
     WriteUInt16BE(0x000D);
     WriteUInt16BE(0x0005);
-    WriteUInt32BE(g_ConfigManager.GameWindowWidth); // Evaluate if need to make configurable for shards
-    WriteUInt32BE(g_ConfigManager.GameWindowHeight); // Evaluate if need to make configurable for shards
+    WriteUInt32BE(
+        g_ConfigManager.GameWindowWidth); // Evaluate if need to make configurable for shards
+    WriteUInt32BE(
+        g_ConfigManager.GameWindowHeight); // Evaluate if need to make configurable for shards
 }
 
 CPacketClientViewRange::CPacketClientViewRange(uint8_t range)
@@ -1488,7 +1508,8 @@ CPacketBuyRequest::CPacketBuyRequest(CGumpShop *gump)
     size_t size = 8;
     int count = 0;
 
-    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr;
+         item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPRESULT)
         {
@@ -1507,7 +1528,8 @@ CPacketBuyRequest::CPacketBuyRequest(CGumpShop *gump)
     {
         WriteUInt8(0x02);
 
-        for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+        for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr;
+             item = (CBaseGUI *)item->m_Next)
         {
             if (item->Type == GOT_SHOPRESULT)
             {
@@ -1529,7 +1551,8 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
     size_t size = 9;
     int count = 0;
 
-    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr;
+         item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPRESULT)
         {
@@ -1545,7 +1568,8 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
     WriteUInt32BE(gump->Serial);
     WriteUInt16BE(count);
 
-    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
+    for (CBaseGUI *item = (CBaseGUI *)gump->m_ItemList[1]->m_Items; item != nullptr;
+         item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPRESULT)
         {
@@ -1557,7 +1581,8 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
 
 // Raw vendor-reply requests (the shop-agent form carries the item list); the
 // write sequences are the ported assistant builders, verbatim.
-CPacketBuyRequest::CPacketBuyRequest(uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list)
+CPacketBuyRequest::CPacketBuyRequest(
+    uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list)
     : CPacket(1)
 {
     auto size = 8 + (list.size() * 7);
@@ -1583,7 +1608,8 @@ CPacketBuyRequest::CPacketBuyRequest(uint32_t serial, const std::vector<std::pai
     }
 }
 
-CPacketSellRequest::CPacketSellRequest(uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list)
+CPacketSellRequest::CPacketSellRequest(
+    uint32_t serial, const std::vector<std::pair<uint32_t, int>> &list)
     : CPacket(1)
 {
     auto count = list.size();

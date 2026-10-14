@@ -1025,7 +1025,8 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
     for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
         if (g_PressedObject.RightGump == gump && !gump->NoProcess && !gump->NoClose &&
-            (gump->CanBeMoved() || gump->GumpType == GT_GENERIC))
+            (gump->CanBeMoved() || gump->GumpType == GT_GENERIC ||
+             gump->GumpType == GT_RACE_CHANGE))
         {
             //gump->OnClose();
             switch (gump->GumpType)
@@ -1096,6 +1097,15 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
                 case GT_TRADE:
                 {
                     ((CGumpSecureTrading *)gump)->SendTradingResponse(1);
+
+                    break;
+                }
+                case GT_RACE_CHANGE:
+                {
+                    //non-movable dialog that must still close on right click;
+                    //CloseGump deletes the gump, its destructor restores the
+                    //borrowed character creation state
+                    CloseGump(gump->Serial, gump->ID, gump->GumpType);
 
                     break;
                 }

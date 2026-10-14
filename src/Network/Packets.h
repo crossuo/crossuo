@@ -231,11 +231,7 @@ public:
     // Raw 0x7D reply form (code/graphic/color written unconditionally, unlike
     // the gump lookup above).
     CPacketMenuResponse(
-        uint32_t serial,
-        uint32_t id,
-        int32_t code,
-        uint16_t graphic,
-        uint16_t color);
+        uint32_t serial, uint32_t id, int32_t code, uint16_t graphic, uint16_t color);
 };
 
 class CPacketGrayMenuResponse : public CPacket
@@ -305,6 +301,17 @@ class CPacketDyeDataResponse : public CPacket
 {
 public:
     CPacketDyeDataResponse(uint32_t serial, uint16_t graphic, uint16_t color);
+};
+
+class CPacketRaceChange : public CPacket
+{
+public:
+    CPacketRaceChange(
+        uint16_t skinHue,
+        uint16_t hairStyle,
+        uint16_t hairHue,
+        uint16_t beardStyle,
+        uint16_t beardHue);
 };
 
 class CPacketProfileRequest : public CPacket

@@ -292,6 +292,24 @@ const uint16_t *CCreateCharacterManager::GetHairColorPtr()
     return ptr[m_Race - 1];
 }
 
+int CCreateCharacterManager::GetSkinToneCount()
+{
+    static const int count[3] = { HUMAN_SKIN_TONE_COUNT,
+                                  ELF_SKIN_TONE_COUNT,
+                                  GARGOYLE_SKIN_TONE_COUNT };
+
+    return count[m_Race - 1];
+}
+
+int CCreateCharacterManager::GetHairColorCount()
+{
+    static const int count[3] = { HUMAN_HAIR_COLOR_COUNT,
+                                  ELF_HAIR_COLOR_COUNT,
+                                  GARGOYLE_HAIR_COLOR_COUNT };
+
+    return count[m_Race - 1];
+}
+
 CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
 {
     if (m_Race == RT_HUMAN)
