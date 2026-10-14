@@ -5939,13 +5939,25 @@ PACKET_HANDLER(SecureTrading)
         xuoassist::g_TradeManager.OnTradeAction(type, serial, id1, id2, {});
 #endif
     }
-    else if (type == SECURE_TRADE_UPDATEGOLD || type == SECURE_TRADE_UPDATELEDGER)
+    else if (type == SECURE_TRADE_UPDATE_THEIRS || type == SECURE_TRADE_UPDATE_MINE)
     {
         gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
         if (gump != nullptr)
         {
-            gump->Gold = ReadUInt32BE();
-            gump->Platinum = ReadUInt32BE();
+            // one gold/platinum pair per packet; the sub-command tells whose
+            // ledger it belongs to (3 = opponent's, 4 = ours)
+            const uint32_t gold = ReadUInt32BE();
+            const uint32_t platinum = ReadUInt32BE();
+            if (type == SECURE_TRADE_UPDATE_THEIRS)
+            {
+                gump->HisGold = gold;
+                gump->HisPlatinum = platinum;
+            }
+            else
+            {
+                gump->Gold = gold;
+                gump->Platinum = platinum;
+            }
         }
     }
 
@@ -6922,6 +6934,10 @@ PACKET_HANDLER(DisplayMap)
 
     CGumpMap *gump = new CGumpMap(serial, gumpid, startX, startY, endX, endY, width, height);
 
+    // the legacy 0x90 packet gives no facet; assume the chart belongs to the
+    // facet the player currently occupies (0xF5 overrides it below)
+    gump->Facet = (g_Player != nullptr ? g_Player->MapIndex : 0);
+
     if (*Start == 0xF5 || g_Config.ProtocolClientVersion >= CV_308Z) //308z или выше?
     {
         uint16_t facet = 0;
@@ -6929,6 +6945,7 @@ PACKET_HANDLER(DisplayMap)
         if (*Start == 0xF5)
         {
             facet = ReadUInt16BE();
+            gump->Facet = facet;
         }
 
         g_MultiMap.LoadFacet(gump, gump->m_Texture, facet);

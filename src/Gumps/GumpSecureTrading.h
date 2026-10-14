@@ -14,6 +14,10 @@ public:
     uint32_t ID2 = 0;
     uint32_t Gold = 0;
     uint32_t Platinum = 0;
+    // 0x6F gold-ledger sub-commands carry a single value pair; sub-command 3
+    // is the opponent's ledger, sub-command 4 is ours (see SecureTrading)
+    uint32_t HisGold = 0;
+    uint32_t HisPlatinum = 0;
     bool StateMine = false;
     bool StateOpponent = false;
     astr_t Text;

@@ -1413,8 +1413,10 @@ enum SECURE_TRADE_TYPE
     SECURE_TRADE_OPEN = 0,
     SECURE_TRADE_CLOSE = 1,
     SECURE_TRADE_CHANGE = 2,
-    SECURE_TRADE_UPDATEGOLD = 3,
-    SECURE_TRADE_UPDATELEDGER = 4
+    // gold ledger updates: 3 = opponent's box, 4 = our box; each carries a
+    // single gold/platinum value pair
+    SECURE_TRADE_UPDATE_THEIRS = 3,
+    SECURE_TRADE_UPDATE_MINE = 4
 };
 
 enum : int32_t
