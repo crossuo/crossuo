@@ -19,23 +19,24 @@
 #include "CorpseManager.h"
 #include "SkillsManager.h"
 #include "MapManager.h"
+#include "Waypoints.h"
 #include "ConnectionManager.h"
 #include "SoundManager.h" // g_SoundManager (stop-music command)
 #include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
-#include <core/assistantevents.h> // xuoassist::g_AssistantEvents (journal, JMT_* flags)
-#include <core/global.h> // xuoassist mirrored state (light, weather, season, status requests)
-#include "../Misc.h" // pack16 (the morph/corpse-graphic in-place 0x78 patches)
-#include <core/assist.h> // xuoassist::g_Assistant (status requests)
+#include <core/assistantevents.h>   // xuoassist::g_AssistantEvents (journal, JMT_* flags)
+#include <core/global.h>    // xuoassist mirrored state (light, weather, season, status requests)
+#include "../Misc.h"        // pack16 (the morph/corpse-graphic in-place 0x78 patches)
+#include <core/assist.h>    // xuoassist::g_Assistant (status requests)
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
-#include <managers/menumanager.h> // xuoassist::g_MenuManager
-#include <managers/trademanager.h> // xuoassist::g_TradeManager
-#include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor (login reset)
-#include <managers/assmap.h> // xuoassist::g_MapSettings (ShowOnLogin)
-#include <managers/guildmanager.h> // xuoassist::g_GuildManager (guild chat speaker names)
-#include <managers/promptmanager.h> // xuoassist::g_PromptManager (macro wait)
-#include <managers/gumpmanager.h> // xuoassist::g_GumpManager
+#include <managers/menumanager.h>        // xuoassist::g_MenuManager
+#include <managers/trademanager.h>       // xuoassist::g_TradeManager
+#include <macros/macroexecutor.h>        // xuoassist::g_MacroExecutor (login reset)
+#include <managers/assmap.h>             // xuoassist::g_MapSettings (ShowOnLogin)
+#include <managers/guildmanager.h>       // xuoassist::g_GuildManager (guild chat speaker names)
+#include <managers/promptmanager.h>      // xuoassist::g_PromptManager (macro wait)
+#include <managers/gumpmanager.h>        // xuoassist::g_GumpManager
 #include <managers/contextmenumanager.h> // xuoassist::g_ContextMenuManager
 #endif
 #include <external/zlib_amalg.h>
@@ -85,6 +86,7 @@
 #include "../Gumps/GumpGrayMenu.h"
 #include "../Gumps/GumpPopupMenu.h"
 #include "../Gumps/GumpSpellbook.h"
+#include "../Gumps/GumpSpell.h"
 #include "../Gumps/GumpPaperdoll.h"
 #include "../Gumps/GumpTextEntryDialog.h"
 #include "../Gumps/GumpBulletinBoard.h"
@@ -105,34 +107,18 @@
 
 CPacketManager g_PacketManager;
 
-#define UMSG(save, size)                                                                           \
-    {                                                                                              \
-        save, "?", size, DIR_BOTH, 0                                                               \
-    }
+#define UMSG(save, size) { save, "?", size, DIR_BOTH, 0 }
 // A message type sent to the server
-#define SMSG(save, name, size)                                                                     \
-    {                                                                                              \
-        save, name, size, DIR_SEND, 0                                                              \
-    }
+#define SMSG(save, name, size) { save, name, size, DIR_SEND, 0 }
 // A message type received from the server
-#define RMSG(save, name, size)                                                                     \
-    {                                                                                              \
-        save, name, size, DIR_RECV, 0                                                              \
-    }
+#define RMSG(save, name, size) { save, name, size, DIR_RECV, 0 }
 // A message type transmitted in both directions
-#define BMSG(save, name, size)                                                                     \
-    {                                                                                              \
-        save, name, size, DIR_BOTH, 0                                                              \
-    }
+#define BMSG(save, name, size) { save, name, size, DIR_BOTH, 0 }
 // Message types that have handler methods
 #define RMSGH(save, name, size, rmethod)                                                           \
-    {                                                                                              \
-        save, name, size, DIR_RECV, &CPacketManager::Handle##rmethod                               \
-    }
+    { save, name, size, DIR_RECV, &CPacketManager::Handle##rmethod }
 #define BMSGH(save, name, size, rmethod)                                                           \
-    {                                                                                              \
-        save, name, size, DIR_BOTH, &CPacketManager::Handle##rmethod                               \
-    }
+    { save, name, size, DIR_BOTH, &CPacketManager::Handle##rmethod }
 
 CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x00*/ SMSG(XUO_SAVE_PACKET, "Create Character", 0x68),
@@ -296,7 +282,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x95*/ BMSGH(XUO_IGNORE_PACKET, "Dye Data", 0x09, DyeData),
     /*0x96*/ BMSG(XUO_SAVE_PACKET, "Game central monitor (God client)", PACKET_VARIABLE_SIZE),
     /*0x97*/ RMSGH(XUO_SAVE_PACKET, "Move Player", 0x02, MovePlayer),
-    /*0x98*/ BMSG(XUO_SAVE_PACKET, "All Names (3D Client Only)", PACKET_VARIABLE_SIZE),
+    /*0x98*/ RMSGH(XUO_SAVE_PACKET, "Update mobile name", PACKET_VARIABLE_SIZE, UpdateName),
     /*0x99*/ BMSGH(XUO_SAVE_PACKET, "Multi Placement", 0x1a, MultiPlacement),
     /*0x9A*/ BMSGH(XUO_SAVE_PACKET, "ASCII Prompt", PACKET_VARIABLE_SIZE, ASCIIPrompt),
     /*0x9B*/ SMSG(XUO_IGNORE_PACKET, "Help Request", 0x102),
@@ -363,11 +349,13 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xD4*/ BMSGH(XUO_IGNORE_PACKET, "Open Book (New)", PACKET_VARIABLE_SIZE, OpenBookNew),
     /*0xD5*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xD6*/ BMSGH(XUO_IGNORE_PACKET, "Mega cliloc", PACKET_VARIABLE_SIZE, MegaCliloc),
-    /*0xD7*/ RMSGH(XUO_SAVE_PACKET, "+AoS command (server reply)", PACKET_VARIABLE_SIZE, GenericAOSCommands),
+    /*0xD7*/
+    RMSGH(XUO_SAVE_PACKET, "+AoS command (server reply)", PACKET_VARIABLE_SIZE, GenericAOSCommands),
     /*0xD8*/ RMSGH(XUO_IGNORE_PACKET, "Custom house", PACKET_VARIABLE_SIZE, CustomHouse),
     /*0xD9*/ SMSG(XUO_SAVE_PACKET, "+Metrics", 0x10c),
     /*0xDA*/ BMSG(XUO_SAVE_PACKET, "Mahjong game command", PACKET_VARIABLE_SIZE),
-    /*0xDB*/ RMSGH(XUO_SAVE_PACKET, "Character transfer log", PACKET_VARIABLE_SIZE, CharacterTransferLog),
+    /*0xDB*/
+    RMSGH(XUO_SAVE_PACKET, "Character transfer log", PACKET_VARIABLE_SIZE, CharacterTransferLog),
     /*0xDC*/ RMSGH(XUO_IGNORE_PACKET, "OPL Info Packet", 9, OPLInfo),
     /*0xDD*/
     RMSGH(XUO_IGNORE_PACKET, "Compressed Gump", PACKET_VARIABLE_SIZE, OpenCompressedGump),
@@ -378,8 +366,8 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xE2*/ RMSGH(XUO_IGNORE_PACKET, "New Character Animation", 0xa, NewCharacterAnimation),
     /*0xE3*/ RMSGH(XUO_SAVE_PACKET, "KR Encryption Responce", 0x4d, KREncryptionResponse),
     /*0xE4*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
-    /*0xE5*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
-    /*0xE6*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
+    /*0xE5*/ RMSGH(XUO_SAVE_PACKET, "Display Waypoint", PACKET_VARIABLE_SIZE, DisplayWaypoint),
+    /*0xE6*/ RMSGH(XUO_SAVE_PACKET, "Remove Waypoint", PACKET_VARIABLE_SIZE, RemoveWaypoint),
     /*0xE7*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xE8*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xE9*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
@@ -392,7 +380,11 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xF0*/
     BMSGH(XUO_SAVE_PACKET, "Krrios client special", PACKET_VARIABLE_SIZE, KrriosClientSpecial),
     /*0xF1*/
-    BMSGH(XUO_SAVE_PACKET, "Client-Server Time Synchronization Request", PACKET_VARIABLE_SIZE, FreeshardList),
+    BMSGH(
+        XUO_SAVE_PACKET,
+        "Client-Server Time Synchronization Request",
+        PACKET_VARIABLE_SIZE,
+        FreeshardList),
     /*0xF2*/
     RMSG(XUO_SAVE_PACKET, "Client-Server Time Synchronization Response", PACKET_VARIABLE_SIZE),
     /*0xF3*/ RMSGH(XUO_SAVE_PACKET, "Update Item (SA)", 0x18, UpdateItemSA),
@@ -405,7 +397,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xFA*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xFB*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xFC*/ BMSGH(XUO_SAVE_PACKET, "CrossUO messages", PACKET_VARIABLE_SIZE, CrossMessages),
-    /*0xFD*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
+    /*0xFD*/ RMSGH(XUO_SAVE_PACKET, "Login Delay", PACKET_VARIABLE_SIZE, LoginDelay),
     /*0xFE*/ RMSGH(XUO_SAVE_PACKET, "Razor Handshake", 0x8, RazorNegotiate),
     /*0xFF*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE)
 };
@@ -423,10 +415,11 @@ static void ServerTalkAcknowledge()
     // SystemCheckOverride holds only the payload bytes
     uint8_t payload[0x100];
     const size_t len = ParseByteList(g_Config.SystemCheckOverride, payload, sizeof(payload));
-    Info(Network,
-         "SystemCheckOverride: value=%d chars, parsed=%d bytes",
-         (int)g_Config.SystemCheckOverride.length(),
-         (int)len);
+    Info(
+        Network,
+        "SystemCheckOverride: value=%d chars, parsed=%d bytes",
+        (int)g_Config.SystemCheckOverride.length(),
+        (int)len);
     if (len > 0)
     {
         uint8_t buf[3 + sizeof(payload)];
@@ -712,8 +705,7 @@ void CPacketManager::OnReadFailed()
     // would bury the denial under the in-game notify gump on GS_GAME_BLOCKED
     // and strand the player: its logout action runs on the game screen,
     // which is not the active screen at the login stages.
-    if (
-        g_GameState == GS_MAIN_CONNECT || g_GameState == GS_SERVER_CONNECT ||
+    if (g_GameState == GS_MAIN_CONNECT || g_GameState == GS_SERVER_CONNECT ||
         g_GameState == GS_GAME_CONNECT || g_GameState == GS_DELETE)
     {
         if (!g_ConnectionScreen.GetConnectionFailed())
@@ -968,7 +960,7 @@ PACKET_HANDLER(ResendCharacterList)
         }
     }
 
-    if (autoLogin && (numSlots != 0))
+    if (autoLogin && (numSlots != 0) && g_Ticks >= g_PacketManager.LoginDelayUntil)
     {
         if (autoPos == -1)
         {
@@ -1002,7 +994,87 @@ PACKET_HANDLER(LoginComplete)
     xuoassist::g_Connected = true;
 #endif
     g_PacketLoginComplete = true;
+    g_PacketManager.LoginDelayUntil = 0;
     g_Game.LoginComplete(false);
+}
+
+PACKET_HANDLER(UpdateName)
+{
+    if (g_World == nullptr)
+    {
+        return;
+    }
+
+    if (Size - Pos() < 64)
+    {
+        return;
+    }
+
+    const uint32_t serial = ReadUInt32BE();
+    const astr_t name = ReadString(60);
+    if (name.empty())
+    {
+        return;
+    }
+
+    CGameObject *obj = g_World->FindWorldObject(serial);
+    if (obj != nullptr)
+    {
+        obj->SetName(name);
+        if (obj->NPC)
+        {
+            obj->GenerateObjectHandlesTexture(wstr_from(name));
+        }
+    }
+}
+
+PACKET_HANDLER(DisplayWaypoint)
+{
+    if (g_World == nullptr)
+    {
+        return;
+    }
+
+    CWaypoint waypoint;
+    waypoint.Serial = ReadUInt32BE();
+    waypoint.X = ReadUInt16BE();
+    waypoint.Y = ReadUInt16BE();
+    waypoint.Z = ReadInt8();
+    waypoint.MapIndex = ReadUInt8();
+    waypoint.Type = ReadUInt16BE();
+    waypoint.IgnoreObject = ReadUInt16BE() != 0;
+    waypoint.Cliloc = ReadUInt32BE();
+    waypoint.Name = ReadWStringLE();
+    if (waypoint.Name.empty() && waypoint.Cliloc != 0u)
+    {
+        waypoint.Name = g_ClilocManager.Cliloc(g_Language)->GetW(waypoint.Cliloc, true);
+    }
+    g_Waypoints.Add(waypoint);
+}
+
+PACKET_HANDLER(RemoveWaypoint)
+{
+    if (g_World == nullptr)
+    {
+        return;
+    }
+
+    g_Waypoints.Remove(ReadUInt32BE());
+}
+
+PACKET_HANDLER(LoginDelay)
+{
+    if (g_GameState == GS_GAME)
+    {
+        return;
+    }
+
+    // The server sends a re-login cooldown in tenths of a minute worth of
+    // seconds: [delay-1..delay] * 10. Park the upper bound as a ticks gate so
+    // the automatic character selection waits the requested interval before
+    // retrying the login sequence.
+    const uint8_t delay = ReadUInt8();
+    g_PacketManager.LoginDelayUntil = g_Ticks + (uint32_t)delay * 10 * 1000;
 }
 
 PACKET_HANDLER(SetTime)
@@ -1372,8 +1444,10 @@ PACKET_HANDLER(UpdatePlayer)
         // every packet carrying a dead-body graphic
         if (!g_Player->IsDead())
         {
-            xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
-            xuoassist::g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
+            xuoassist::g_LastPlayerCorpsePosition =
+                xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
+            xuoassist::g_LastPlayerDeadTimer =
+                g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
         }
     }
 
@@ -1552,9 +1626,7 @@ PACKET_HANDLER(CharacterStatus)
                 // on the wire, so guard each read against a short frame
                 // instead of consuming whatever trailing bytes remain.
                 const auto readExt = [this]() -> int16_t
-                {
-                    return (Size - Pos() >= 2) ? ReadInt16BE() : 0;
-                };
+                { return (Size - Pos() >= 2) ? ReadInt16BE() : 0; };
                 g_Player->MaxPhysicalResistance = readExt();
                 g_Player->MaxFireResistance = readExt();
                 g_Player->MaxColdResistance = readExt();
@@ -1808,8 +1880,10 @@ PACKET_HANDLER(UpdateObject)
             // on every packet carrying a dead-body graphic
             if (!g_Player->IsDead())
             {
-                xuoassist::g_LastPlayerCorpsePosition = xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
-                xuoassist::g_LastPlayerDeadTimer = g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
+                xuoassist::g_LastPlayerCorpsePosition =
+                    xuoassist::CPoint2Di(g_Player->GetX(), g_Player->GetY());
+                xuoassist::g_LastPlayerDeadTimer =
+                    g_Ticks + 300000; // ms: g_Ticks is SDL_GetTicks (Main.cpp), 5 min
             }
         }
 #endif
@@ -2374,13 +2448,16 @@ void CPacketManager::DeleteObject(uint32_t serial)
 
                 if (bbGump != nullptr && bbGump->m_HTMLGump != nullptr)
                 {
-                    for (CBaseGUI *go = (CBaseGUI *)bbGump->m_HTMLGump->m_Items; go != nullptr; go = (CBaseGUI *)go->m_Next)
+                    for (CBaseGUI *go = (CBaseGUI *)bbGump->m_HTMLGump->m_Items; go != nullptr;
+                         go = (CBaseGUI *)go->m_Next)
                     {
                         if (go->Serial == serial)
                         {
                             bbGump->m_HTMLGump->Delete(go);
                             int posY = 0;
-                            for (CBaseGUI *go1 = (CBaseGUI *)bbGump->m_HTMLGump->m_Items; go1 != nullptr; go1 = (CBaseGUI *)go1->m_Next)
+                            for (CBaseGUI *go1 = (CBaseGUI *)bbGump->m_HTMLGump->m_Items;
+                                 go1 != nullptr;
+                                 go1 = (CBaseGUI *)go1->m_Next)
                             {
                                 if (go1->Type == GOT_BB_OBJECT)
                                 {
@@ -2888,7 +2965,8 @@ PACKET_HANDLER(OpenContainer)
 
                 int currentY = 0;
 
-                for (CBaseGUI *shopItem = (CBaseGUI *)htmlGump->m_Items; shopItem != nullptr; shopItem = (CBaseGUI *)shopItem->m_Next)
+                for (CBaseGUI *shopItem = (CBaseGUI *)htmlGump->m_Items; shopItem != nullptr;
+                     shopItem = (CBaseGUI *)shopItem->m_Next)
                 {
                     if (shopItem->Type == GOT_SHOPITEM)
                     {
@@ -3335,7 +3413,7 @@ PACKET_HANDLER(ExtendedCommand)
             uint8_t *end = Start + Size - 4;
             std::vector<SAttrEntry> entries;
             entries.reserve(size_t(end - Ptr) / 6u + 1u); // 6 bytes minimum per entry
-            uint8_t walkCount = 0; // mirror of the per-entry count evolution
+            uint8_t walkCount = 0;                        // mirror of the per-entry count evolution
             while (Ptr < end)
             {
                 if (walkCount != 0 || next == 0xFFFFFFFD || next == 0xFFFFFFFC)
@@ -3559,8 +3637,58 @@ PACKET_HANDLER(ExtendedCommand)
                         break;
                     }
 
-                    if (Size == 19)
+                    // Two layout flavors share this version: a plain dead-flag
+                    // update or an explicit animation request (marked by the
+                    // 0xFF second byte). Peek at the marker first, then fall
+                    // back to the original position to re-parse either form.
+                    const size_t pos = Pos();
+                    const uint8_t _zero = ReadUInt8();
+                    (void)_zero;
+                    const uint8_t type2 = ReadUInt8();
+                    if (type2 == 0xFF)
                     {
+                        if (Size - Pos() < 5)
+                        {
+                            break;
+                        }
+
+                        const uint8_t status = ReadUInt8();
+                        const uint16_t animation = ReadUInt16BE();
+                        const uint16_t frame = ReadUInt16BE();
+                        if (status == 0 && animation == 0 && frame == 0)
+                        {
+                            // Not an animation after all, re-parse as v0
+                            Seek(pos);
+                            bool dead = ReadUInt8() != 0u;
+                            character->SetDead(dead);
+                            break;
+                        }
+
+                        character->SetAnimation(uint8_t(animation), 0, uint8_t(frame));
+                    }
+                    else if (serial == g_PlayerSerial)
+                    {
+                        Seek(pos);
+                        const uint8_t _updateGump = ReadUInt8();
+                        (void)_updateGump;
+                        uint8_t state = ReadUInt8();
+                        g_DrawStatLockers = true;
+
+                        g_Player->LockStr = (state >> 4) & 3;
+                        g_Player->LockDex = (state >> 2) & 3;
+                        g_Player->LockInt = state & 3;
+
+                        CGump *statusbar = g_GumpManager.GetGump(g_PlayerSerial, 0, GT_STATUSBAR);
+
+                        if (statusbar != nullptr && !statusbar->Minimized)
+                        {
+                            statusbar->WantUpdateContent = true;
+                        }
+                    }
+                    else
+                    {
+                        // Plain dead-flag flavor for a non-player character
+                        Seek(pos);
                         bool dead = ReadUInt8() != 0u;
                         character->SetDead(dead);
                     }
@@ -3749,6 +3877,37 @@ PACKET_HANDLER(ExtendedCommand)
 
             break;
         }
+        case 0x25:
+        {
+            // Spell icon activity state: the server reports which spells are
+            // currently being cast so the matching icon gump can be tinted
+            // until the spell finishes
+            if (g_World == nullptr || Size - Pos() < 3)
+            {
+                break;
+            }
+
+            const uint16_t spellID = ReadUInt16BE();
+            const bool active = ReadUInt8() != 0u;
+
+            for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;
+                 gump = (CGump *)gump->m_Next)
+            {
+                if (gump->GumpType != GT_SPELL)
+                {
+                    continue;
+                }
+
+                CGumpSpell *spell = (CGumpSpell *)gump;
+                if (spell->SpellID() == spellID && spell->Active != active)
+                {
+                    spell->Active = active;
+                    spell->WantRedraw = true;
+                }
+            }
+
+            break;
+        }
         case 0x26:
         {
             uint8_t val = ReadUInt8();
@@ -3774,12 +3933,47 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x2A:
         {
-            // TODO: new, identify version introduction
+            // Race change offer: gender flag + race id. The client has no
+            // race-change dialog, so the offer is parsed and reported but no
+            // gump is shown (the server sees no response).
+            if (Size - Pos() < 2)
+            {
+                break;
+            }
+
+            const bool isFemale = ReadUInt8() != 0u;
+            const uint8_t race = ReadUInt8();
+            Warning(
+                Network,
+                "race change offer received (female: %d, race: %d) - not supported",
+                isFemale,
+                race);
             break;
         }
         case 0x2B:
         {
-            // TODO: new, identify version introduction
+            // Server-directed animation replay for a character matched by the
+            // low 16 bits of its serial
+            if (Size - Pos() < 4 || g_World == nullptr)
+            {
+                break;
+            }
+
+            const uint16_t serial = ReadUInt16BE();
+            const uint8_t animID = ReadUInt8();
+            const uint8_t frameCount = ReadUInt8();
+
+            for (auto &entry : g_World->m_Map)
+            {
+                CGameObject *obj = entry.second;
+                if (obj != nullptr && obj->NPC && (obj->Serial & 0xFFFF) == serial)
+                {
+                    CGameCharacter *character = (CGameCharacter *)obj;
+                    character->SetAnimation(animID, 0, frameCount);
+                    break;
+                }
+            }
+
             break;
         }
         default:
@@ -3908,8 +4102,13 @@ PACKET_HANDLER(Target)
 // assistant filters stay in the wire handlers, nothing here re-enters packet
 // processing.
 void CPacketManager::DisplayTalkTextA(
-    uint32_t serial, CGameObject *obj, const astr_t &name, astr_t text, uint16_t color,
-    uint16_t font, uint8_t type)
+    uint32_t serial,
+    CGameObject *obj,
+    const astr_t &name,
+    astr_t text,
+    uint16_t color,
+    uint16_t font,
+    uint8_t type)
 {
     if (font >= g_FontManager.FontCount)
     {
@@ -3959,7 +4158,11 @@ void CPacketManager::DisplayTalkTextA(
 }
 
 void CPacketManager::DisplayTalkTextW(
-    uint32_t serial, CGameObject *obj, const astr_t &name, wstr_t text, uint16_t color,
+    uint32_t serial,
+    CGameObject *obj,
+    const astr_t &name,
+    wstr_t text,
+    uint16_t color,
     uint8_t type)
 {
     Info(Network, "%s: %s", name.c_str(), str_from(text).c_str());
@@ -4215,7 +4418,8 @@ PACKET_HANDLER(UnicodeTalk)
         {
             // the replacement takes the replaced line's place, rendered here
             // with the reprint's speech-font look
-            DisplayTalkTextW(serial, obj, name, wstr_from(replacedText), replacedColor, (uint8_t)type);
+            DisplayTalkTextW(
+                serial, obj, name, wstr_from(replacedText), replacedColor, (uint8_t)type);
             return;
         }
         if (xuoassist::g_AssistantConfig.CheckSpeechInFilter(textA, wireColor))
@@ -5011,8 +5215,7 @@ PACKET_HANDLER(ErrorCode)
     // reason through the shared CST_GAME_LOGIN error table below (same codes
     // 0-6, >7 falls back to 3, as in the 1998 default); its OK button lands
     // on GS_CHARACTER with the socket untouched.
-    if (g_Config.ProtocolClientVersion < CV_200 && g_GameState == GS_GAME_CONNECT &&
-        errorCode == 1)
+    if (g_Config.ProtocolClientVersion < CV_200 && g_GameState == GS_GAME_CONNECT && errorCode == 1)
     {
         g_CharacterList.SetName(g_CharacterList.Selected, "");
         if (g_CharacterList.Count > 0)
@@ -5373,7 +5576,8 @@ PACKET_HANDLER(MegaCliloc)
         if (gump != nullptr)
         {
             CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
-            for (CBaseGUI *shopItem = (CBaseGUI *)htmlGump->m_Items; shopItem != nullptr; shopItem = (CBaseGUI *)shopItem->m_Next)
+            for (CBaseGUI *shopItem = (CBaseGUI *)htmlGump->m_Items; shopItem != nullptr;
+                 shopItem = (CBaseGUI *)shopItem->m_Next)
             {
                 if (shopItem->Type == GOT_SHOPITEM && shopItem->Serial == serial &&
                     ((CGUIShopItem *)shopItem)->NameFromCliloc)
@@ -5388,7 +5592,9 @@ PACKET_HANDLER(MegaCliloc)
                     int delta = si->GetSize().Height - oldHeight;
                     if ((delta != 0) && shopItem->m_Next != nullptr)
                     {
-                        for (CBaseGUI *shopItem2 = (CBaseGUI *)shopItem->m_Next; shopItem2 != nullptr; shopItem2 = (CBaseGUI *)shopItem2->m_Next)
+                        for (CBaseGUI *shopItem2 = (CBaseGUI *)shopItem->m_Next;
+                             shopItem2 != nullptr;
+                             shopItem2 = (CBaseGUI *)shopItem2->m_Next)
                         {
                             if (shopItem2->Type == GOT_SHOPITEM)
                             {
@@ -5423,36 +5629,36 @@ PACKET_HANDLER(Damage)
 
         if (damage != 0) // no overhead text for zero damage
         {
-        CTextData *text = new CTextData();
-        text->Unicode = false;
-        text->Font = 3;
-        text->Serial = serial;
-        text->Color = (serial == g_PlayerSerial ? 0x0034 : 0x0021);
-        text->Type = TT_OBJECT;
-        text->Text = str_from(damage);
-        text->GenerateTexture(0);
-        text->SetX(text->m_TextSprite.Width / 2);
-        int height = text->m_TextSprite.Height;
+            CTextData *text = new CTextData();
+            text->Unicode = false;
+            text->Font = 3;
+            text->Serial = serial;
+            text->Color = (serial == g_PlayerSerial ? 0x0034 : 0x0021);
+            text->Type = TT_OBJECT;
+            text->Text = str_from(damage);
+            text->GenerateTexture(0);
+            text->SetX(text->m_TextSprite.Width / 2);
+            int height = text->m_TextSprite.Height;
 
-        CTextData *head = (CTextData *)character->m_DamageTextControl.Last();
+            CTextData *head = (CTextData *)character->m_DamageTextControl.Last();
 
-        if (head != nullptr)
-        {
-            height += head->GetY();
-
-            if (height > 0)
+            if (head != nullptr)
             {
-                if (height > 100)
+                height += head->GetY();
+
+                if (height > 0)
                 {
-                    height = 0;
+                    if (height > 100)
+                    {
+                        height = 0;
+                    }
+
+                    text->SetY(height);
                 }
-
-                text->SetY(height);
             }
-        }
 
-        character->m_DamageTextControl.Add(text);
-        text->Timer = g_Ticks + DAMAGE_TEXT_NORMAL_DELAY;
+            character->m_DamageTextControl.Add(text);
+            text->Timer = g_Ticks + DAMAGE_TEXT_NORMAL_DELAY;
         }
     }
 }
@@ -5856,8 +6062,8 @@ PACKET_HANDLER(OpenMenu)
                     posY = ((47 - posY) / 2);
                 }
 
-                htmlGump->Add(
-                    new CGUIMenuObject((int)i + 1, entry.Graphic, entry.Color, posX, posY, entry.Name));
+                htmlGump->Add(new CGUIMenuObject(
+                    (int)i + 1, entry.Graphic, entry.Color, posX, posY, entry.Name));
 
                 posX += size.Width;
             }
@@ -6400,7 +6606,8 @@ PACKET_HANDLER(OpenGump)
                         gump->Add(new CGUIShader(&g_ColorizerShader, true));
                     }
                     go = new CGUIGumppic(graphic, x, y);
-                    go->Color = color; // server hue 0 = uncolored; SendColorsToShader indexes hues 1-based (color - 1)
+                    go->Color =
+                        color; // server hue 0 = uncolored; SendColorsToShader indexes hues 1-based (color - 1)
                     go->DrawOnly = true;
                 }
             }
@@ -7272,10 +7479,10 @@ PACKET_HANDLER(SellList)
         return;
     }
 
-    #if defined(XUO_ASSISTANT)
-        // wait-flag for scripts/macros waiting on the shop gump
-        xuoassist::g_ShopReceived = true;
-    #endif
+#if defined(XUO_ASSISTANT)
+    // wait-flag for scripts/macros waiting on the shop gump
+    xuoassist::g_ShopReceived = true;
+#endif
 
     uint32_t serial = ReadUInt32BE();
     CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
@@ -7358,8 +7565,15 @@ PACKET_HANDLER(SellList)
     for (int i = 0; i < (int)entries.size(); i++)
     {
         const SellEntry &entry = entries[i];
-        CGUIShopItem *shopItem = (CGUIShopItem *)htmlGump->Add(
-            new CGUIShopItem(entry.Serial, entry.Graphic, entry.Color, entry.Count, entry.Price, entry.Name, 0, currentY));
+        CGUIShopItem *shopItem = (CGUIShopItem *)htmlGump->Add(new CGUIShopItem(
+            entry.Serial,
+            entry.Graphic,
+            entry.Color,
+            entry.Count,
+            entry.Price,
+            entry.Name,
+            0,
+            currentY));
         shopItem->NameFromCliloc = entry.NameFromCliloc;
 
         if (i == 0)
@@ -7820,31 +8034,57 @@ PACKET_HANDLER(BoatMoving)
 // and documents the wire format.
 // ---------------------------------------------------------------------------
 
-PACKET_HANDLER(Follow) {} // 0x15: follow request ack, no client-side state
+PACKET_HANDLER(Follow)
+{
+} // 0x15: follow request ack, no client-side state
 
-PACKET_HANDLER(ToggleHackMover) {} // 0x32: god-client hack mover toggle
+PACKET_HANDLER(ToggleHackMover)
+{
+} // 0x32: god-client hack mover toggle
 
-PACKET_HANDLER(PopupHelpData) {} // 0xB7: popup help gump data, unused
+PACKET_HANDLER(PopupHelpData)
+{
+} // 0xB7: popup help gump data, unused
 
-PACKET_HANDLER(UltimaMessenger) {} // 0xBB: UO Messenger integration, unused
+PACKET_HANDLER(UltimaMessenger)
+{
+} // 0xBB: UO Messenger integration, unused
 
-PACKET_HANDLER(Semivisible) {} // 0xC4: god-client semivisible toggle
+PACKET_HANDLER(Semivisible)
+{
+} // 0xC4: god-client semivisible toggle
 
-PACKET_HANDLER(InvalidMapEnable) {} // 0xC6: god-client invalid map enable
+PACKET_HANDLER(InvalidMapEnable)
+{
+} // 0xC6: god-client invalid map enable
 
-PACKET_HANDLER(UserServerPing) {} // 0xCA: UTrip time, unused
+PACKET_HANDLER(UserServerPing)
+{
+} // 0xCA: UTrip time, unused
 
-PACKET_HANDLER(GlobalQueCount) {} // 0xCB: server global queue count, unused
+PACKET_HANDLER(GlobalQueCount)
+{
+} // 0xCB: server global queue count, unused
 
-PACKET_HANDLER(ConfigurationFile) {} // 0xD0: configuration file push, unused
+PACKET_HANDLER(ConfigurationFile)
+{
+} // 0xD0: configuration file push, unused
 
-PACKET_HANDLER(GenericAOSCommands) {} // 0xD7: AoS command server reply, unused
+PACKET_HANDLER(GenericAOSCommands)
+{
+} // 0xD7: AoS command server reply, unused
 
-PACKET_HANDLER(CharacterTransferLog) {} // 0xDB: character transfer log, unused
+PACKET_HANDLER(CharacterTransferLog)
+{
+} // 0xDB: character transfer log, unused
 
-PACKET_HANDLER(KREncryptionResponse) {} // 0xE3: KR encryption response, unused
+PACKET_HANDLER(KREncryptionResponse)
+{
+} // 0xE3: KR encryption response, unused
 
-PACKET_HANDLER(FreeshardList) {} // 0xF1: client-server time sync response, unused
+PACKET_HANDLER(FreeshardList)
+{
+} // 0xF1: client-server time sync response, unused
 
 // ---------------------------------------------------------------------------
 // 0x2F Swing: turn the player toward the last attacked defender when a swing
@@ -7906,14 +8146,13 @@ PACKET_HANDLER(Swing)
 
     constexpr int timeTurnToLastTarget = 2000;
     if (g_LastAttackObject == defender && g_Player->InWarMode() &&
-        g_Walker.LastStepRequestTime + timeTurnToLastTarget < g_Ticks &&
-        g_Walker.StepsCount == 0)
+        g_Walker.LastStepRequestTime + timeTurnToLastTarget < g_Ticks && g_Walker.StepsCount == 0)
     {
         CGameCharacter *enemy = g_World->FindWorldCharacter(defender);
         if (enemy != nullptr)
         {
-            uint8_t dir = GetDirectionAB(
-                g_Player->GetX(), g_Player->GetY(), enemy->GetX(), enemy->GetY());
+            uint8_t dir =
+                GetDirectionAB(g_Player->GetX(), g_Player->GetY(), enemy->GetX(), enemy->GetY());
             int x = g_Player->GetX();
             int y = g_Player->GetY();
             char z = g_Player->GetZ();

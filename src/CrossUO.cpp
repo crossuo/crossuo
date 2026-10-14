@@ -95,6 +95,7 @@
 #include "Managers/MouseManager.h"
 #include "Managers/OptionsMacroManager.h"
 #include "Managers/PacketManager.h"
+#include "Managers/Waypoints.h"
 #include "Managers/ProfessionManager.h"
 #include "Managers/ScreenEffectManager.h"
 #include "Managers/SkillGroupManager.h"
@@ -5741,6 +5742,7 @@ void CGame::ClearWorld()
         delete g_World;
     g_World = nullptr;
     Info(Client, "\tworld removed");
+    g_Waypoints.Clear();
 
     g_PopupMenu = nullptr;
 

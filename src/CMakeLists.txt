@@ -177,6 +177,7 @@ set(managers_src
   Managers/ObjectPropertiesManager.cpp
   Managers/OptionsMacroManager.cpp
   Managers/PacketManager.cpp
+  Managers/Waypoints.cpp
   Managers/ProfessionManager.cpp
   Managers/ScreenEffectManager.cpp
   Managers/SkillGroupManager.cpp

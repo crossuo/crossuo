@@ -17,6 +17,7 @@ private:
 protected:
     virtual void CalculateGumpState() override;
     CGUIButton *m_SpellUnlocker = nullptr;
+    CGUIGumppic *m_Icon = nullptr;
 
 public:
     CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, short x, short y);
@@ -28,6 +29,8 @@ public:
     CGumpSpell *m_GroupPrev = nullptr;
 
     CGumpSpell *GetTopSpell();
+    uint16_t SpellID() const;
+    bool Active = false;
     CGumpSpell *GetNearSpell(int &x, int &y);
     bool GetSpellGroupOffset(int &x, int &y);
     void UpdateGroup(int x, int y);

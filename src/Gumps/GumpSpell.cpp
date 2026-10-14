@@ -21,7 +21,7 @@ CGumpSpell::CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, s
     m_Locker.Serial = ID_GS_LOCK_MOVING;
     m_Blender = (CGUIAlphaBlending *)Add(new CGUIAlphaBlending(
         g_ConfigManager.TransparentSpellIcons, g_ConfigManager.GetSpellIconAlpha() / 255.0f));
-    Add(new CGUIGumppic(Graphic, 0, 0));
+    Add(m_Icon = new CGUIGumppic(Graphic, 0, 0));
     m_SpellUnlocker = (CGUIButton *)Add(
         new CGUIButton(ID_GS_BUTTON_REMOVE_FROM_GROUP, 0x082C, 0x082C, 0x082C, 30, 16));
     m_SpellUnlocker->BoundingBoxCheck = true;
@@ -32,6 +32,11 @@ CGumpSpell::CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, s
 CGumpSpell::~CGumpSpell()
 {
     RemoveFromGroup();
+}
+
+uint16_t CGumpSpell::SpellID() const
+{
+    return (BaseSpell != nullptr ? BaseSpell->Id : 0);
 }
 
 void CGumpSpell::InitToolTip()
@@ -60,6 +65,15 @@ void CGumpSpell::PrepareContent()
     if (m_SpellUnlocker->Visible != wantUnlocker)
     {
         m_SpellUnlocker->Visible = wantUnlocker;
+        WantRedraw = true;
+    }
+
+    // A spell reported as casting keeps its icon tinted until the server
+    // reports it as finished
+    const uint16_t wantColor = (Active ? 38 : 0);
+    if (m_Icon->Color != wantColor)
+    {
+        m_Icon->Color = wantColor;
         WantRedraw = true;
     }
 }

@@ -65,6 +65,9 @@ public:
     void ConfigureClientVersion(uint32_t newClientVersion);
     astr_t AutoLoginNames = "";
     uint32_t ConfigSerial = 0;
+    // Ticks until which a server-requested login cooldown (0xFD) blocks the
+    // automatic character selection
+    uint32_t LoginDelayUntil = 0;
 
 private:
     ProtectedSection m_Mutex;
@@ -87,6 +90,10 @@ protected:
     HANDLER_PACKET(CharacterList);
     HANDLER_PACKET(ResendCharacterList);
     HANDLER_PACKET(LoginComplete);
+    HANDLER_PACKET(UpdateName);
+    HANDLER_PACKET(DisplayWaypoint);
+    HANDLER_PACKET(RemoveWaypoint);
+    HANDLER_PACKET(LoginDelay);
     HANDLER_PACKET(SetTime);
     HANDLER_PACKET(EnterWorld);
     HANDLER_PACKET(UpdateHitpoints);
@@ -231,10 +238,19 @@ public:
     // assistant filters, no packet re-entry — used by the handlers themselves
     // and by the assistant to display its own prints and replace reprints.
     void DisplayTalkTextA(
-        uint32_t serial, CGameObject *obj, const astr_t &name, astr_t text, uint16_t color,
-        uint16_t font, uint8_t type);
+        uint32_t serial,
+        CGameObject *obj,
+        const astr_t &name,
+        astr_t text,
+        uint16_t color,
+        uint16_t font,
+        uint8_t type);
     void DisplayTalkTextW(
-        uint32_t serial, CGameObject *obj, const astr_t &name, wstr_t text, uint16_t color,
+        uint32_t serial,
+        CGameObject *obj,
+        const astr_t &name,
+        wstr_t text,
+        uint16_t color,
         uint8_t type);
 
     // The apply-cores of the state handlers below, verbatim: the client
@@ -242,10 +258,10 @@ public:
     // assistant's own state calls come here directly, which is what its
     // former injected packets did (the recv tap ran ahead of the gates).
     // The wire-only pieces (assistant mirrors, filters) stay in the handlers.
-    void SetLightLevel(uint8_t level);                       // 0x4F
-    void SetWeather(uint8_t type, uint8_t count, uint8_t temperature); // 0x65
-    void SetSeason(uint8_t season, uint8_t music);           // 0xBC
-    void DeleteObject(uint32_t serial);                      // 0x1D
+    void SetLightLevel(uint8_t level);                                                       // 0x4F
+    void SetWeather(uint8_t type, uint8_t count, uint8_t temperature);                       // 0x65
+    void SetSeason(uint8_t season, uint8_t music);                                           // 0xBC
+    void DeleteObject(uint32_t serial);                                                      // 0x1D
     void PlaySoundEffect(uint16_t index, uint16_t volume, uint16_t xCoord, uint16_t yCoord); // 0x54
     void DisplayQuestArrow(bool enabled, uint16_t x, uint16_t y); // 0xBA (both layouts)
 };

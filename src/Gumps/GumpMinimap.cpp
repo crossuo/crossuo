@@ -8,6 +8,7 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/MapManager.h"
+#include "../Managers/Waypoints.h"
 #include "../Managers/UOFileReader.h"
 #include "../GameObjects/GameItem.h"
 #include "../GameObjects/MapBlock.h"
@@ -294,7 +295,8 @@ void CGumpMinimap::UpdateContent()
     m_DataBox->Add(new CGUIExternalTexture(&m_Sprite, false, 0, 0));
     if (m_Count < 6)
     {
-        for (CGameObject *go = (CGameObject *)g_World->m_Items; go != nullptr; go = (CGameObject *)go->m_Next)
+        for (CGameObject *go = (CGameObject *)g_World->m_Items; go != nullptr;
+             go = (CGameObject *)go->m_Next)
         {
             if (go->Container != 0xFFFFFFFF || ((CGameItem *)go)->MultiBody)
             {
@@ -318,6 +320,27 @@ void CGumpMinimap::UpdateContent()
             }
         }
         m_DataBox->Add(new CGUIColoredPolygone(0, 0, gumpCenterX, gumpCenterY, 2, 2, 0xFFFFFFFF));
+
+        // Server-sent waypoints (0xE5), drawn as bright markers on the facet
+        // the player is currently in
+        for (const CWaypoint &waypoint : g_Waypoints.List())
+        {
+            if (waypoint.MapIndex != g_Player->MapIndex)
+            {
+                continue;
+            }
+
+            const int wx = waypoint.X - playerX;
+            const int wy = waypoint.Y - playerY;
+            m_DataBox->Add(new CGUIColoredPolygone(
+                0,
+                0,
+                gumpCenterX + wx - wy,
+                gumpCenterY + wx + wy,
+                4,
+                4,
+                0xFF00FFFF)); // yellow (ABGR)
+        }
     }
 }
 
