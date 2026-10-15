@@ -151,12 +151,11 @@ void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd)
         RenderBatch_Flush(state);
     }
 
-    const bool colored = (cmd.color != g_ColorInvalid);
-    const uint32_t col = colored ?
-        (((uint32_t)(cmd.color[0] * 255) << 0) | ((uint32_t)(cmd.color[1] * 255) << 8) |
-         ((uint32_t)(cmd.color[2] * 255) << 16) |
-         ((uint32_t)(cmd.color[3] * 255) << 24)) :
-        0xffffffff;
+    const auto &colRef = RenderState_ResolveColor(cmd.color, state);
+    const uint32_t col =
+        (((uint32_t)(colRef[0] * 255) << 0) | ((uint32_t)(colRef[1] * 255) << 8) |
+         ((uint32_t)(colRef[2] * 255) << 16) |
+         ((uint32_t)(colRef[3] * 255) << 24));
 
     // clang-format off
     const float uvs[8] = {
@@ -203,11 +202,10 @@ void RenderBatch_AddUntexturedQuad(RenderState *state, const DrawUntexturedQuadC
     s_key = key;
     s_pending = true;
 
-    const bool colored = (cmd.color != g_ColorInvalid);
-    const uint32_t col = colored ?
-        (uint32_t(cmd.color[0] * 255.f) | (uint32_t(cmd.color[1] * 255.f) << 8) |
-         (uint32_t(cmd.color[2] * 255.f) << 16) | (uint32_t(cmd.color[3] * 255.f) << 24)) :
-        0xffffffff;
+    const auto &colRef = RenderState_ResolveColor(cmd.color, state);
+    const uint32_t col =
+        (uint32_t(colRef[0] * 255.f) | (uint32_t(colRef[1] * 255.f) << 8) |
+         (uint32_t(colRef[2] * 255.f) << 16) | (uint32_t(colRef[3] * 255.f) << 24));
 
     // clang-format off
     const float zeroUVs[8] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };

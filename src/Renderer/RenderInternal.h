@@ -34,6 +34,15 @@ inline bool f32eq(float a, float b)
     return ba == bb;
 }
 
+// A draw command without a per-command color (g_ColorInvalid) must fall back
+// to the cmd-list state color set by a preceding SetColor command - falling
+// back to opaque white instead ignores alpha effects like CGUIChecktrans and
+// GUIAlphaBlending (transparent gump backgrounds)
+inline const float4 &RenderState_ResolveColor(const float4 &cmdColor, const RenderState *state)
+{
+    return (cmdColor != g_ColorInvalid) ? cmdColor : state->color;
+}
+
 // External variable declarations for shared renderer state
 extern bool g_rendererDebugForceStateReset;
 extern uint32_t g_drawVAO;

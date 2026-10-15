@@ -140,12 +140,12 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     };
     // clang-format on
     const auto &vb = cmd.mirrored ? v_mirrored : v;
-    const bool colored = (cmd.color != g_ColorInvalid);
-    const uint32_t col = colored ?
-        (((uint32_t)(cmd.color[0] * 255) << 0) |
-         ((uint32_t)(cmd.color[1] * 255) << 8) |
-         ((uint32_t)(cmd.color[2] * 255) << 16) |
-         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff; // BUG with light - g_LightBuffer.Draw
+    const auto &colRef = RenderState_ResolveColor(cmd.color, state);
+    const uint32_t col =
+        (((uint32_t)(colRef[0] * 255) << 0) |
+         ((uint32_t)(colRef[1] * 255) << 8) |
+         ((uint32_t)(colRef[2] * 255) << 16) |
+         ((uint32_t)(colRef[3] * 255) << 24));
 
     const GenericVertex data[] = {
         { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, cmd.layer },
@@ -204,12 +204,12 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     };
     // clang-format on
     const auto &vb = cmd.mirrored ? v_mirrored : v;
-    const bool colored = (cmd.color != g_ColorInvalid);
-    const uint32_t col = colored ?
-        (((uint32_t)(cmd.color[0] * 255) << 0) |
-         ((uint32_t)(cmd.color[1] * 255) << 8) |
-         ((uint32_t)(cmd.color[2] * 255) << 16) |
-         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
+    const auto &colRef = RenderState_ResolveColor(cmd.color, state);
+    const uint32_t col =
+        (((uint32_t)(colRef[0] * 255) << 0) |
+         ((uint32_t)(colRef[1] * 255) << 8) |
+         ((uint32_t)(colRef[2] * 255) << 16) |
+         ((uint32_t)(colRef[3] * 255) << 24));
 
     const GenericVertex data[] = {
         { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, NO_LAYER },
@@ -547,12 +547,12 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
 bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    const bool colored = (cmd.color != g_ColorInvalid);
-    const uint32_t col = colored ?
-        (uint32_t(cmd.color[0] * 255.f) |
-         (uint32_t(cmd.color[1] * 255.f) << 8) |
-         (uint32_t(cmd.color[2] * 255.f) << 16) |
-         (uint32_t(cmd.color[3] * 255.f) << 24)) : 0xffffffff;
+    const auto &colRef = RenderState_ResolveColor(cmd.color, state);
+    const uint32_t col =
+        (uint32_t(colRef[0] * 255.f) |
+         (uint32_t(colRef[1] * 255.f) << 8) |
+         (uint32_t(colRef[2] * 255.f) << 16) |
+         (uint32_t(colRef[3] * 255.f) << 24));
 
     const GenericVertex data[] = {
         { { 0.0f, float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
@@ -589,12 +589,12 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
         BlendFactor::BlendFactor_OneMinusSrcAlpha,
         BlendEquation::BlendEquation_Add);
 
-    const bool colored = (cmd.color != g_ColorInvalid);
-    const uint32_t col = colored ?
-        (((uint32_t)(cmd.color[0] * 255) << 0) |
-         ((uint32_t)(cmd.color[1] * 255) << 8) |
-         ((uint32_t)(cmd.color[2] * 255) << 16) |
-         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
+    const auto &colRef = RenderState_ResolveColor(cmd.color, state);
+    const uint32_t col =
+        (((uint32_t)(colRef[0] * 255) << 0) |
+         ((uint32_t)(colRef[1] * 255) << 8) |
+         ((uint32_t)(colRef[2] * 255) << 16) |
+         ((uint32_t)(colRef[3] * 255) << 24));
 
     const GenericVertex data[] = {
         { { float(cmd.x0), float(cmd.y0) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },

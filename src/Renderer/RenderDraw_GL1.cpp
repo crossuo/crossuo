@@ -26,15 +26,16 @@ static bool s_viewFlippedY = false;
 // Fixed-function approximation of the colorizer shader: the UO hue palettes
 // are brightness ramps of a single hue, so tinting by the average palette
 // entry reproduces the palette lookup closely enough without shaders.
-static void RenderDrawGL1_ApplyColor(const float4 &cmdColor)
+static void RenderDrawGL1_ApplyColor(const float4 &cmdColor, const RenderState *state)
 {
+    const float4 &resolved = RenderState_ResolveColor(cmdColor, state);
     float r = 1.f, g = 1.f, b = 1.f, a = 1.f;
-    if (cmdColor != g_ColorInvalid)
+    if (resolved != g_ColorInvalid)
     {
-        r = cmdColor[0];
-        g = cmdColor[1];
-        b = cmdColor[2];
-        a = cmdColor[3];
+        r = resolved[0];
+        g = resolved[1];
+        b = resolved[2];
+        a = resolved[3];
     }
 
     switch (s_currentDrawMode)
@@ -152,7 +153,7 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
-    RenderDrawGL1_ApplyColor(cmd.color);
+    RenderDrawGL1_ApplyColor(cmd.color, state);
 
     static const bool trace = getenv("XUO_GL1_TRACE") != nullptr;
     if (trace)
@@ -212,7 +213,7 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
 {
     ScopedPerfMarker(__FUNCTION__);
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
-    RenderDrawGL1_ApplyColor(cmd.color);
+    RenderDrawGL1_ApplyColor(cmd.color, state);
 
     const float translateY = (float)(cmd.y - (int)cmd.height);
     const float width = (float)cmd.width;
@@ -244,7 +245,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 {
     ScopedPerfMarker(__FUNCTION__);
     static const auto s_sittingCharacterOffset = 8.0f;
-    RenderDrawGL1_ApplyColor(g_ColorWhite);
+    RenderDrawGL1_ApplyColor(g_ColorWhite, state);
     const auto x = (GLfloat)cmd.x;
     const auto y = (GLfloat)cmd.y;
     const float width = (float)cmd.width;
@@ -370,7 +371,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
     s_currentDrawMode = cmd.drawMode;
-    RenderDrawGL1_ApplyColor(g_ColorWhite);
+    RenderDrawGL1_ApplyColor(g_ColorWhite, state);
 
     glTranslatef(translateX, translateY, 0.0f);
 
@@ -506,7 +507,7 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     const int y = cmd.y;
     const int width = (int)cmd.width;
     const int height = (int)cmd.height;
-    RenderDrawGL1_ApplyColor(cmd.color);
+    RenderDrawGL1_ApplyColor(cmd.color, state);
     glDisable(GL_TEXTURE_2D);
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
@@ -528,14 +529,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
 bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    float r = 1.f, g = 1.f, b = 1.f, a = 1.f;
-    if (cmd.color != g_ColorInvalid)
-    {
-        r = cmd.color[0];
-        g = cmd.color[1];
-        b = cmd.color[2];
-        a = cmd.color[3];
-    }
+    const float4 &lineColor = RenderState_ResolveColor(cmd.color, state);
+    float r = lineColor[0], g = lineColor[1], b = lineColor[2], a = lineColor[3];
     glColor4f(r, g, b, a);
 
     glDisable(GL_TEXTURE_2D);

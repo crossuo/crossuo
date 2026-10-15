@@ -66,8 +66,8 @@ EM_JS(void, web_install_alert_shim, (), {
 #include "Managers/PacketManager.h"
 #include "Network/Packets.h" // CPacketHelpRequest (XUO_AUTO_HELP)
 #include "ScreenshotBuilder.h"
-#include "../Gumps/GumpChat.h" // chat test harness
-#include "../Managers/GumpManager.h" // chat test harness gump dispatch
+#include "Gumps/GumpChat.h" // chat test harness
+#include "Managers/GumpManager.h" // chat test harness gump dispatch
 
 #if defined(main) /* SDL renames main to SDL_main for its win32 CRT shim;
                     the client owns the real main() */
