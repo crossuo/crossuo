@@ -576,7 +576,6 @@ XA_CONFIG_OPTION_GETTER(
 XA_CONFIG_OPTION_GETTER(Autostart, EnabledFeatureAutostart(), CLBI_AUTOSTART)
 XA_CONFIG_OPTION_GETTER(
     IgnoreStaminaCheck, EnabledFeatureIgnoreStaminaCheck(), CLBI_IGNORE_STAMINA_CHECK)
-XA_CONFIG_OPTION_GETTER(MinimizeToTray, EnabledFeatureMinimizeToTray(), CLBI_MINIMIZE_TO_TRAY)
 XA_CONFIG_OPTION_GETTER(SoundEcho, EnabledFeatureSoundEcho(), CLBI_SOUND_ECHO)
 XA_CONFIG_OPTION_GETTER(AnimationEcho, EnabledFeatureAnimationEcho(), CLBI_ANIMATION_ECHO)
 XA_CONFIG_OPTION_GETTER(EffectEcho, EnabledFeatureEffectEcho(), CLBI_EFFECT_ECHO)
@@ -619,7 +618,7 @@ void CAssistantConfig::UpdateFeatures()
         XAEF_RECURSE_CONTAINERS_SEARCH,
         XAEF_AUTOSTART,
         XAEF_IGNORE_STAMINA_CHECK,
-        XAEF_MINIMIZE_TO_TRAY,
+        0, //Minimize to tray (no tray implementation)
         XAEF_SOUND_ECHO,
         XAEF_ANIMATION_ECHO,
         XAEF_EFFECT_ECHO,

@@ -47,7 +47,8 @@ const XA_OPTION_ROW s_Options[] = {
     { "Recurse containers search", CLBI_RECURSE_CONTAINERS_SEARCH },
     { "Autostart", CLBI_AUTOSTART },
     { "Ignore stamina check", CLBI_IGNORE_STAMINA_CHECK },
-    { "Minimize to tray", CLBI_MINIMIZE_TO_TRAY },
+    // "Minimize to tray" (CLBI_MINIMIZE_TO_TRAY) hidden: the assistant has no
+    // tray implementation; the enum bit stays - it is persisted in saved INIs.
     { "Sound echo", CLBI_SOUND_ECHO },
     { "Animation echo", CLBI_ANIMATION_ECHO },
     { "Effect echo", CLBI_EFFECT_ECHO },

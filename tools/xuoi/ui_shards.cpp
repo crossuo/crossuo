@@ -223,16 +223,14 @@ void ui_shards(ui_model &m, bool picker)
     }
     else
     {
-        // footer: a hint for the selected shard on the left, the launch
-        // action on the right (the picker has its own Pick/Cancel footer)
+        // footer: the launch action, right-aligned next to the shard list
+        // (the picker has its own Pick/Cancel footer)
         const bool can_play = s_selected > 0 && s_selected < (int)s_shards.entries.size() &&
                               !s_shards.entries[s_selected].shard_loginserver.empty();
-        ImGui::NewLine();
-        if (can_play)
-            ImGui::TextDisabled("Login: %s", s_shards.entries[s_selected].shard_loginserver.c_str());
-        ImGui::SameLine(m.area.x - 160.0f);
+        constexpr float play_width = 120.0f;
         ImGui::BeginDisabled(!can_play);
-        if (ImGui::Button("Play"))
+        ImGui::SameLine(m.area.x - play_width);
+        if (ImGui::Button("Play", ImVec2(play_width, 0)))
         {
             LOG_TRACE("launch shard: %d", s_selected);
             account_launch_shard(s_selected);

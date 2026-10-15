@@ -322,7 +322,6 @@ public:
     bool RecurseContainersSearch() const;
     bool Autostart() const;
     bool IgnoreStaminaCheck() const;
-    bool MinimizeToTray() const;
     bool StayOnTop() const;
     bool SoundEcho() const;
     bool AnimationEcho() const;

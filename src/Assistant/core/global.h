@@ -159,10 +159,6 @@ inline bool EnabledFeatureShopAgent()
 {
     return (g_EnabledFeature & XAEF_SHOP_AGENT);
 }
-inline bool EnabledFeatureMinimizeToTray()
-{
-    return (g_EnabledFeature & XAEF_MINIMIZE_TO_TRAY);
-}
 inline bool EnabledFeatureSoundEcho()
 {
     return (g_EnabledFeature & XAEF_SOUND_ECHO);
