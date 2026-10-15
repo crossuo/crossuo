@@ -1187,6 +1187,19 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
 
                     break;
                 }
+                case GT_RESOURCETRACKER:
+                {
+                    // right click over a tracked counter erases it; over an
+                    // empty cell it closes the tracker
+                    if (((CGumpResourceTracker *)gump)->RightClickErase())
+                    {
+                        break;
+                    }
+
+                    CloseGump(gump->Serial, gump->ID, gump->GumpType);
+
+                    break;
+                }
                 default:
                 {
                     CloseGump(gump->Serial, gump->ID, gump->GumpType);

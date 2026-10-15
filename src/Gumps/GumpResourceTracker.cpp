@@ -8,6 +8,7 @@
 #include "GumpResourceTracker.h"
 #include "../Spells.h"
 #include "../Managers/GumpManager.h"
+#include "../GUI/GUIColoredPolygone.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
@@ -157,6 +158,13 @@ void CGumpResourceTracker::PrepareContent()
     {
         DrawDebug = false;
     }
+
+    // while reordering the overlays follow the mouse: rebuild so the
+    // picked/target highlights track the hovered cell
+    if (m_ReorderIndex != -1)
+    {
+        WantUpdateContent = true;
+    }
 }
 
 void CGumpResourceTracker::UpdateContent()
@@ -164,6 +172,44 @@ void CGumpResourceTracker::UpdateContent()
     m_DataBox->Clear();
     UpdateItems();
     UpdateCounters();
+    UpdateReorderOverlays();
+}
+
+// reorder visual feedback: the picked cell glows yellow, the hovered cell
+// glows cyan when it is a valid drop target
+void CGumpResourceTracker::UpdateReorderOverlays()
+{
+    if (m_ReorderIndex == -1)
+    {
+        return;
+    }
+
+    const int pickedCol = m_ReorderIndex % Cols;
+    const int pickedRow = m_ReorderIndex / Cols;
+    m_DataBox->Add(new CGUIColoredPolygone(
+        0,
+        0,
+        5 + pickedCol * TRACKER_BOX_SIZE,
+        5 + pickedRow * TRACKER_BOX_SIZE,
+        TRACKER_BOX_SIZE - 5,
+        TRACKER_BOX_SIZE - 5,
+        0x5000FFFF)); // yellow
+
+    const int target = CurrRow * Cols + CurrCol;
+    if (target != m_ReorderIndex && CurrCol != -1 && CurrRow != -1 && target >= 0 &&
+        target < (int)s_Items.size())
+    {
+        const int targetCol = target % Cols;
+        const int targetRow = target / Cols;
+        m_DataBox->Add(new CGUIColoredPolygone(
+            0,
+            0,
+            5 + targetCol * TRACKER_BOX_SIZE,
+            5 + targetRow * TRACKER_BOX_SIZE,
+            TRACKER_BOX_SIZE - 5,
+            TRACKER_BOX_SIZE - 5,
+            0x5000FF00)); // cyan
+    }
 }
 
 void CGumpResourceTracker::Draw()
@@ -181,12 +227,23 @@ void CGumpResourceTracker::Draw()
         g_FontManager.DrawA(3, dbf, 0x35, GetX(), GetY() - 70);
     }
     CGump::Draw();
+
+    // reorder feedback: the picked counter's tile follows the mouse and a
+    // hint explains the pending placement
+    if (m_ReorderIndex != -1 && m_ReorderIndex < (int)s_Items.size())
+    {
+        const auto &item = s_Items[m_ReorderIndex];
+        bool doubleDraw = false;
+        const auto stackedGraphic = get_stack_graphic(item.Graphic, 999, doubleDraw);
+        g_Game.DrawStaticArt(
+            stackedGraphic, item.Color, g_MouseManager.Position.X, g_MouseManager.Position.Y);
+        g_FontManager.DrawA(
+            3, "Moving counter - click a slot to place it", 0x35, GetX(), GetY() - 20);
+    }
 }
 
 void CGumpResourceTracker::UpdateCounters()
 {
-    const bool abbreviated = g_ConfigManager.ResourceTrackerAbbreviatedAmount;
-
     // sync the flash tracking vectors with the item list
     s_LastCounts.resize(s_Items.size(), -1);
     s_ChangeTicks.resize(s_Items.size(), 0);
@@ -390,6 +447,9 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
             WantUpdateContent = true;
         }
         m_ReorderIndex = -1;
+        // release the reorder overlays: without this kick the last built
+        // frame keeps showing the yellow highlight after the drop
+        WantUpdateContent = true;
         return;
     }
 
@@ -400,6 +460,12 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
         if (index >= 0 && index < (int)s_Items.size() && g_PressedObject.LeftGump == this)
         {
             m_ReorderIndex = index;
+        }
+        else if (m_ReorderIndex != -1)
+        {
+            // clicked while holding but not on a grid cell: cancel the pickup
+            m_ReorderIndex = -1;
+            WantUpdateContent = true;
         }
         return;
     }
@@ -441,15 +507,12 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
     HasItemInGump = false;
 }
 
-bool CGumpResourceTracker::OnLeftMouseButtonDoubleClick()
+// right click on a tracked counter removes it; returns whether the click was
+// consumed (false lets the gump manager close the tracker)
+bool CGumpResourceTracker::RightClickErase()
 {
-    if (g_PressedObject.LeftObject == nullptr)
-    {
-        return false;
-    }
-
-    const auto index = CurrRow * Cols + CurrCol;
-    if (index >= s_Items.size())
+    const int index = CurrRow * Cols + CurrCol;
+    if (index < 0 || index >= (int)s_Items.size())
     {
         return false;
     }

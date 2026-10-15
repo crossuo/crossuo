@@ -37,6 +37,7 @@ private:
     void UpdateGrid();
     void UpdateItems();
     void UpdateCounters();
+    void UpdateReorderOverlays();
     void UpdateCountersVisual();
     int CountItemBackPack(uint16_t graphic);
     astr_t FormatCount(int count) const;
@@ -53,7 +54,9 @@ public:
     virtual void PrepareContent() override;
     virtual void UpdateContent() override;
     virtual void OnLeftMouseButtonUp() override;
-    virtual bool OnLeftMouseButtonDoubleClick() override;
+    // right click on a tracked counter removes it; returns whether the click
+    // was consumed (false lets the gump manager close the tracker)
+    bool RightClickErase();
 
     GUMP_RESIZE_START_EVENT_H override;
     GUMP_RESIZE_EVENT_H override;
