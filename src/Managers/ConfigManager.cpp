@@ -169,6 +169,7 @@ enum
     CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC,
     CMKC_DRAW_STATUS_FOR_HUMANOIDS,
     CMKC_LARGEGUMPS,
+    CMKC_RESOURCE_TRACKER_ABBREVIATED,
 
     CMKC_COUNT
 };
@@ -313,6 +314,7 @@ static const ConfigEntry s_Keys[] = {
     { CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC, "cancelnewtargetsystemonshiftesc" },
     { CMKC_DRAW_STATUS_FOR_HUMANOIDS, "drawstatusforhumanoids" },
     { CMKC_LARGEGUMPS, "largegumps" },
+    { CMKC_RESOURCE_TRACKER_ABBREVIATED, "resourcetrackerabbreviatedamount" },
     { CMKC_COUNT, nullptr },
 };
 
@@ -518,6 +520,7 @@ void CConfigManager::DefaultPage9()
     SkillReport = 1;
     SpeechFont = 0;
     LargeGumps = false;
+    ResourceTrackerAbbreviatedAmount = false;
 }
 
 void CConfigManager::UpdateFeatures()
@@ -1413,6 +1416,9 @@ bool CConfigManager::Load(const fs_path &path)
                 case CMKC_LARGEGUMPS:
                     LargeGumps = str_to_bool(strings[1]);
                     break;
+                case CMKC_RESOURCE_TRACKER_ABBREVIATED:
+                    ResourceTrackerAbbreviatedAmount = str_to_bool(strings[1]);
+                    break;
                 //No page
                 case CMKC_GAME_WINDOW_X:
                     GameWindowX = str_to_int(strings[1]);
@@ -1734,6 +1740,7 @@ void CConfigManager::Save(const fs_path &path)
         writer.WriteInt("SkillReport", SkillReport);
         writer.WriteInt("SpeechFont", SpeechFont);
         writer.WriteBool("LargeGumps", LargeGumps);
+        writer.WriteBool("ResourceTrackerAbbreviatedAmount", ResourceTrackerAbbreviatedAmount);
 
         //No page
         writer.WriteInt("GameWindowX", GameWindowX);

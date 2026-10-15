@@ -25,6 +25,8 @@ void CQuestArrow::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
 
+    m_ScreenX = -1;
+    m_ScreenY = -1;
     if (Enabled)
     {
         int dir = g_MouseManager.GetFacing(g_Player->GetX(), g_Player->GetY(), X, Y, 0);
@@ -32,6 +34,8 @@ void CQuestArrow::Draw()
         uint16_t gumpID = m_Gump + ((dir + 1) % 8);
 
         CSize size = g_Game.GetGumpDimension(gumpID);
+        m_Width = size.Width;
+        m_Height = size.Height;
 
         int gox = X - g_Player->GetX();
         int goy = Y - g_Player->GetY();
@@ -57,6 +61,10 @@ void CQuestArrow::Draw()
             y = g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - size.Height;
         }
 
+        // remember the clamped screen rect so the arrow can be clicked
+        m_ScreenX = x;
+        m_ScreenY = y;
+
         if (Timer < g_Ticks)
         {
             if (Timer + 120 < g_Ticks)
@@ -73,4 +81,14 @@ void CQuestArrow::Draw()
             g_Game.DrawGump(gumpID, 0, x, y);
         }
     }
+}
+
+bool CQuestArrow::Contains(int x, int y) const
+{
+    if (!Enabled || m_ScreenX == -1)
+    {
+        return false;
+    }
+    return (
+        x >= m_ScreenX && x < m_ScreenX + m_Width && y >= m_ScreenY && y < m_ScreenY + m_Height);
 }

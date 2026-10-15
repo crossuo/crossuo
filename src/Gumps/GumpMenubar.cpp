@@ -3,6 +3,8 @@
 
 #include "GumpMenubar.h"
 #include "../CrossUO.h"
+#include "../Config.h"
+#include <vector>
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
 #include "../Managers/ClilocManager.h"
@@ -23,6 +25,7 @@ enum
     ID_GMB_CHAT,
     ID_GMB_HELP,
     ID_GMB_WORLD_MAP,
+    ID_GMB_STORE,
     ID_GMB_INFO,
 
     ID_GMB_COUNT,
@@ -51,54 +54,72 @@ CGumpMenubar::CGumpMenubar(short x, short y)
         largeWidth = spr2->Width;
     }
 
-    static const int textPosTable[8][5] = { { 0x098B, 30, 32, smallWidth, ID_GMB_MAP },
-                                            { 0x098D, 93, 96, largeWidth, ID_GMB_PAPERDOLL },
-                                            { 0x098D, 201, 204, largeWidth, ID_GMB_INVENTORY },
-                                            { 0x098D, 309, 312, largeWidth, ID_GMB_JOURNAL },
-                                            { 0x098B, 417, 422, smallWidth, ID_GMB_CHAT },
-                                            { 0x098B, 480, 482, smallWidth, ID_GMB_HELP },
-                                            { 0x098D, 543, 546, largeWidth, ID_GMB_WORLD_MAP },
-                                            { 0x098B, 651, 654, smallWidth, ID_GMB_INFO } };
+    // the bar is sized from the entries: each button uses its tile art width
+    // and the entries are laid out left to right (the reference computes the
+    // background width the same way)
+    const bool hasUOStore = (g_Config.ProtocolClientVersion >= VERSION(7, 0, 64, 0));
 
-    static const wstr_t text[8] = {
-        g_ClilocManager.Cliloc(g_Language)->GetW(3000430, false, "Map"),
-        g_ClilocManager.Cliloc(g_Language)->GetW(3002133, false, "Paperdoll"),
-        g_ClilocManager.Cliloc(g_Language)->GetW(3000431, false, "Inventory"),
-        g_ClilocManager.Cliloc(g_Language)->GetW(3002135, false, "Journal"),
-        L"Chat",
-        g_ClilocManager.Cliloc(g_Language)->GetW(3000134, false, "Help"),
-        L"World Map",
-        L"< ? >"
+    struct MenuEntry
+    {
+        uint16_t art;
+        int artWidth;
+        int id;
+        wstr_t text;
     };
 
-    Add(new CGUIResizepic(0, 0x13BE, 0, 0, 718, 27));
-    Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A4, 0x15A4, 0x15A4, 5, 3));
-    for (int i = 0; i < 8; i++)
+    std::vector<MenuEntry> entries = {
+        { 0x098B,
+          smallWidth,
+          ID_GMB_MAP,
+          g_ClilocManager.Cliloc(g_Language)->GetW(3000430, false, "Map") },
+        { 0x098D,
+          largeWidth,
+          ID_GMB_PAPERDOLL,
+          g_ClilocManager.Cliloc(g_Language)->GetW(3002133, false, "Paperdoll") },
+        { 0x098D,
+          largeWidth,
+          ID_GMB_INVENTORY,
+          g_ClilocManager.Cliloc(g_Language)->GetW(3000431, false, "Inventory") },
+        { 0x098D,
+          largeWidth,
+          ID_GMB_JOURNAL,
+          g_ClilocManager.Cliloc(g_Language)->GetW(3002135, false, "Journal") },
+        { 0x098B, smallWidth, ID_GMB_CHAT, L"Chat" },
+        { 0x098B,
+          smallWidth,
+          ID_GMB_HELP,
+          g_ClilocManager.Cliloc(g_Language)->GetW(3000134, false, "Help") },
+        { 0x098D, largeWidth, ID_GMB_WORLD_MAP, L"World Map" },
+    };
+    if (hasUOStore)
     {
-        Add(new CGUIButton(
-            textPosTable[i][4],
-            textPosTable[i][0],
-            textPosTable[i][0],
-            textPosTable[i][0],
-            textPosTable[i][1],
-            1));
-
-        CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
-            textPosTable[i][4],
-            0,
-            0x0036,
-            0x0036,
-            textPosTable[i][2],
-            2,
-            textPosTable[i][3],
-            true,
-            1,
-            TS_CENTER));
-        entry->m_Entry.SetTextW(text[i]);
-        entry->CheckOnSerial = true;
-        entry->ReadOnly = true;
-        entry->FocusedOffsetY = 2;
+        entries.push_back(
+            { 0x098D,
+              largeWidth,
+              ID_GMB_STORE,
+              g_ClilocManager.Cliloc(g_Language)->GetW(1158008, false, "Store") });
     }
+    entries.push_back({ 0x098B, smallWidth, ID_GMB_INFO, L"< ? >" });
+
+    CGUIResizepic *background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x13BE, 0, 0, 718, 27));
+    Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A4, 0x15A4, 0x15A4, 5, 3));
+
+    int startX = 30;
+    for (const MenuEntry &entry : entries)
+    {
+        Add(new CGUIButton(entry.id, entry.art, entry.art, entry.art, startX, 1));
+
+        CGUITextEntry *textEntry = (CGUITextEntry *)Add(new CGUITextEntry(
+            entry.id, 0, 0x0036, 0x0036, startX + 2, 2, entry.artWidth, true, 1, TS_CENTER));
+        textEntry->m_Entry.SetTextW(entry.text);
+        textEntry->CheckOnSerial = true;
+        textEntry->ReadOnly = true;
+        textEntry->FocusedOffsetY = 2;
+
+        startX += entry.artWidth + 1;
+    }
+
+    background->Width = startX + 1;
 }
 
 CGumpMenubar::~CGumpMenubar()
@@ -166,6 +187,11 @@ void CGumpMenubar::InitToolTip()
                 g_ToolTip.Set(L"Open CrossUO's world map gump");
                 break;
             }
+            case ID_GMB_STORE:
+            {
+                g_ToolTip.Set(L"Open the UO store");
+                break;
+            }
             case ID_GMB_INFO:
             {
                 g_ToolTip.Set(L"(Not implemented)");
@@ -228,6 +254,14 @@ void CGumpMenubar::GUMP_BUTTON_EVENT_C
         case ID_GMB_WORLD_MAP:
         {
             g_Game.OpenWorldMap();
+            break;
+        }
+        case ID_GMB_STORE:
+        {
+            if (g_Config.ProtocolClientVersion >= VERSION(7, 0, 64, 0))
+            {
+                CPacketOpenUOStore().Send();
+            }
             break;
         }
         case ID_GMB_INFO:

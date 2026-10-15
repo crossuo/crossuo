@@ -37,7 +37,11 @@ private:
     void UpdateGrid();
     void UpdateItems();
     void UpdateCounters();
+    void UpdateCountersVisual();
     int CountItemBackPack(uint16_t graphic);
+    astr_t FormatCount(int count) const;
+    // reorder: click a filled cell to pick it up, click another to move it
+    int m_ReorderIndex = -1;
 
 public:
     CGumpResourceTracker(int x, int y, int w = 0, int h = 0);

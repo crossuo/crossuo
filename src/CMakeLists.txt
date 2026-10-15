@@ -128,6 +128,7 @@ set(gumps_src
   Gumps/GumpOptions.cpp
   Gumps/GumpPaperdoll.cpp
   Gumps/GumpPartyManifest.cpp
+  Gumps/GumpPartyInvite.cpp
   Gumps/GumpPopupMenu.cpp
   Gumps/GumpProfile.cpp
   Gumps/GumpProperty.cpp

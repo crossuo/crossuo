@@ -330,7 +330,8 @@ enum GUMP_TYPE
     GT_NOTIFY,                // Message gump (blocking) 100%
     GT_BOOK,                  // Gump books 10%
     GT_TIP,                   // Tip window 90%
-    GT_PARTY_MANIFEST,        // Party manifesto gump 100%
+    GT_PARTY_MANIFEST,
+    GT_PARTY_INVITE,        // Party manifesto gump 100%
     GT_MAIL,                  // Gump mail 0%
     GT_PROFILE,               // Profile gump 100%
     GT_MENUBAR,               // Gump menu bar 90%

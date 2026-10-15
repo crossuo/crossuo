@@ -10,6 +10,7 @@
 #include "../Managers/GumpManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/FontsManager.h"
+#include "../Managers/ConfigManager.h"
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Target.h"
@@ -31,6 +32,15 @@ static std::vector<TrackedItem> s_Items;
 static int s_Width = TRACKER_WIDTH;
 static int s_Height = TRACKER_HEIGHT;
 static const int VERSION = 1;
+
+// change-flash state per tracked item (parallel to s_Items): the count text
+// flashes ice-light on gain / fire-light on loss for 5 seconds
+static std::vector<int> s_LastCounts;
+static std::vector<uint32_t> s_ChangeTicks;
+static std::vector<int8_t> s_ChangeDirection; // 1 up, -1 down
+static constexpr uint32_t FLASH_DURATION = 5000;
+static constexpr uint16_t FLASH_UP_HUE = 1165;   // icelight
+static constexpr uint16_t FLASH_DOWN_HUE = 1166; // firelight
 
 struct ItemOffset
 {
@@ -175,6 +185,14 @@ void CGumpResourceTracker::Draw()
 
 void CGumpResourceTracker::UpdateCounters()
 {
+    const bool abbreviated = g_ConfigManager.ResourceTrackerAbbreviatedAmount;
+
+    // sync the flash tracking vectors with the item list
+    s_LastCounts.resize(s_Items.size(), -1);
+    s_ChangeTicks.resize(s_Items.size(), 0);
+    s_ChangeDirection.resize(s_Items.size(), 0);
+
+    bool flashActive = false;
     for (uint8_t row = 0; row < Rows; row++)
     {
         for (uint8_t col = 0; col < Cols; col++)
@@ -185,26 +203,54 @@ void CGumpResourceTracker::UpdateCounters()
 
             const auto item = s_Items[index];
             const auto count = CountItemBackPack(item.Graphic);
-            CGUIText *txt = new CGUIText(
-                0x44,
-                (col * TRACKER_BOX_SIZE) + 5,
-                (row * TRACKER_BOX_SIZE) + TRACKER_BOX_SIZE - 15);
+
+            uint16_t color = 0x44; // green
             if (count <= 20 && count > 10)
             {
-                txt->Color = 0x99; // yellow
+                color = 0x99; // yellow
             }
             else if (count <= 10)
             {
-                txt->Color = 0x26; // red
+                color = 0x26; // red
             }
-            else
+
+            // change flash: ice-light on gain / fire-light on loss for 5s
+            if (index < (int)s_LastCounts.size() && s_LastCounts[index] != -1 &&
+                s_LastCounts[index] != count && s_ChangeTicks[index] == 0)
             {
-                txt->Color = 0x44; // green
+                s_ChangeTicks[index] = g_Ticks;
+                s_ChangeDirection[index] = (count > s_LastCounts[index]) ? 1 : -1;
             }
-            txt->CreateTextureA(9, str_from(count), TRACKER_BOX_SIZE, TS_CENTER);
+            s_LastCounts[index] = count;
+
+            if (s_ChangeTicks[index] != 0)
+            {
+                if (g_Ticks - s_ChangeTicks[index] < FLASH_DURATION)
+                {
+                    color = (s_ChangeDirection[index] > 0) ? FLASH_UP_HUE : FLASH_DOWN_HUE;
+                    flashActive = true;
+                }
+                else
+                {
+                    s_ChangeTicks[index] = 0;
+                    s_ChangeDirection[index] = 0;
+                }
+            }
+
+            CGUIText *txt = new CGUIText(
+                color,
+                (col * TRACKER_BOX_SIZE) + 5,
+                (row * TRACKER_BOX_SIZE) + TRACKER_BOX_SIZE - 15);
+            txt->CreateTextureA(9, FormatCount(count), TRACKER_BOX_SIZE, TS_CENTER);
             m_DataBox->Add(txt);
             WantRedraw = true;
         }
+    }
+
+    // keep rebuilding while a flash is running so it can expire cleanly
+    if (flashActive)
+    {
+        WantUpdateContent = true;
     }
 }
 
@@ -253,6 +299,29 @@ void CGumpResourceTracker::UpdateGrid()
             m_DataBox->Add(new CGUILine(0, r, TRACKER_BOX_SIZE * Cols, r, color));
         }
     }
+}
+
+astr_t CGumpResourceTracker::FormatCount(int count) const
+{
+    if (g_ConfigManager.ResourceTrackerAbbreviatedAmount)
+    {
+        // abbreviated amounts: 1500 -> 1k, 12000 -> 12k, 2500000 -> 2m
+        char buf[32] = { 0 };
+        if (abs(count) >= 1000000)
+        {
+            snprintf(buf, sizeof(buf), "%dm", count / 1000000);
+        }
+        else if (abs(count) >= 1000)
+        {
+            snprintf(buf, sizeof(buf), "%dk", count / 1000);
+        }
+        else
+        {
+            snprintf(buf, sizeof(buf), "%d", count);
+        }
+        return astr_t(buf);
+    }
+    return str_from(count);
 }
 
 int CGumpResourceTracker::CountItemBackPack(uint16_t graphic)
@@ -306,8 +375,32 @@ void CGumpResourceTracker::UpdateSize()
 void CGumpResourceTracker::OnLeftMouseButtonUp()
 {
     CGump::OnLeftMouseButtonUp();
+
+    // reorder pass: click a filled cell to pick its counter up, then click
+    // another cell to move it there (click the same cell to cancel)
+    if (!g_ObjectInHand.Enabled && m_ReorderIndex != -1)
+    {
+        const int target = CurrRow * Cols + CurrCol;
+        if (target != m_ReorderIndex && CurrCol != -1 && CurrRow != -1 && target >= 0 &&
+            target < (int)s_Items.size())
+        {
+            const TrackedItem moved = s_Items[m_ReorderIndex];
+            s_Items.erase(s_Items.begin() + m_ReorderIndex);
+            s_Items.insert(s_Items.begin() + std::min<size_t>(target, s_Items.size()), moved);
+            WantUpdateContent = true;
+        }
+        m_ReorderIndex = -1;
+        return;
+    }
+
     if (!HasItemInGump || s_Items.size() >= MAX_ITEMS)
     {
+        // no item in hand: start a reorder when the pressed cell is filled
+        const int index = CurrRow * Cols + CurrCol;
+        if (index >= 0 && index < (int)s_Items.size() && g_PressedObject.LeftGump == this)
+        {
+            m_ReorderIndex = index;
+        }
         return;
     }
 
@@ -327,9 +420,8 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
     }
 
     const TrackedItem item = { graphic, color };
-    const auto cond = [&item](auto x) {
-        return x.Graphic == item.Graphic && x.Color == item.Color;
-    };
+    const auto cond = [&item](auto x)
+    { return x.Graphic == item.Graphic && x.Color == item.Color; };
     const auto it = std::find_if(s_Items.begin(), s_Items.end(), cond);
     if (it != s_Items.end())
     {

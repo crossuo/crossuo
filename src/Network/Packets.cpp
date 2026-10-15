@@ -1281,6 +1281,15 @@ CPacketPing::CPacketPing(uint8_t index)
     WriteUInt8(index);
 }
 
+CPacketQuestArrowClick::CPacketQuestArrowClick(bool rightClick)
+    : CPacket(6)
+{
+    WriteUInt8(0xBF);
+    WriteUInt16BE(0x0006);
+    WriteUInt16BE(0x0007);
+    WriteUInt8(rightClick ? 0x01 : 0x00);
+}
+
 CPacketQueryGuildPosition::CPacketQueryGuildPosition()
     : CPacket(5)
 {

@@ -8,6 +8,7 @@
 #include "Network/Packets.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/GumpManager.h"
+#include "../Gumps/GumpPartyInvite.h"
 #include "Managers/MouseManager.h"
 #include "GameObjects/GameWorld.h"
 #include "GameObjects/GameCharacter.h"
@@ -296,7 +297,15 @@ void CParty::ParsePacketData(CDataReader &reader)
                 }
             }
 #endif
-            // TODO: Party Invite Gump?
+            else
+            {
+                // invite dialog: accept sends 0xBF 0x06 0x08, decline 0x09
+                CGump *gump = g_GumpManager.GetGump(Inviter, 0, GT_PARTY_INVITE);
+                if (gump == nullptr)
+                {
+                    g_GumpManager.AddGump(new CGumpPartyInvite(Inviter));
+                }
+            }
             break;
         }
         default:

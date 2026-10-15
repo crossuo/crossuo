@@ -2304,6 +2304,12 @@ void CGameScreen::OnLeftMouseButtonUp()
         return;
     }
 #endif
+    if (g_QuestArrow.Enabled &&
+        g_QuestArrow.Contains(g_MouseManager.Position.X, g_MouseManager.Position.Y))
+    {
+        CPacketQuestArrowClick(false).Send(); // left click advances the quest
+        return;
+    }
     if (g_PressedObject.LeftGump == &m_GameScreenGump)
     {
         m_GameScreenGump.OnLeftMouseButtonUp();
@@ -2631,6 +2637,13 @@ void CGameScreen::OnRightMouseButtonUp()
         return;
     }
 #endif
+    if (g_QuestArrow.Enabled &&
+        g_QuestArrow.Contains(g_MouseManager.Position.X, g_MouseManager.Position.Y))
+    {
+        CPacketQuestArrowClick(true).Send(); // right click cancels the quest
+        return;
+    }
+
     if (g_PressedObject.RightGump != nullptr)
     {
         g_GumpManager.OnRightMouseButtonUp(false);

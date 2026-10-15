@@ -426,6 +426,13 @@ public:
     CPacketPing(uint8_t index);
 };
 
+// 0xBF 0x07 quest arrow click (left = advance, right = cancel)
+class CPacketQuestArrowClick : public CPacket
+{
+public:
+    CPacketQuestArrowClick(bool rightClick);
+};
+
 // 0xF0 KR-era position queries (guild / party world map tracking)
 class CPacketQueryGuildPosition : public CPacket
 {
