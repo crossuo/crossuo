@@ -988,7 +988,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             {
                 Color = 0x014C;
             }
-            else if (obj->Notoriety != NT_INVULNERABLE && obj->YellowHits() && !obj->NPC)
+            else if (obj->Notoriety != NT_INVULNERABLE && obj->YellowHits())
             {
                 Color = 0x0030;
             }

@@ -407,7 +407,7 @@ void CConfigManager::DefaultPage2()
     TransparentSpellIcons = false;
     m_SpellIconAlpha = 0x7F;
     m_OldStyleStatusbar = false;
-    m_ApplyStateColorOnCharacters = false;
+    m_ApplyStateColorOnCharacters = true;
     m_OriginalPartyStatusbar = false;
     m_ChangeFieldsGraphic = false;
     m_PaperdollSlots = true;
