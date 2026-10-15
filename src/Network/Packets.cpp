@@ -1274,6 +1274,60 @@ CPacketAssistVersion::CPacketAssistVersion(uint32_t version, const astr_t &clien
     WriteString(clientVersion, clientVersion.length());
 }
 
+CPacketPing::CPacketPing(uint8_t index)
+    : CPacket(2) // the 0x73 table length is 2: id + index, no padding
+{
+    WriteUInt8(0x73);
+    WriteUInt8(index);
+}
+
+CPacketQueryGuildPosition::CPacketQueryGuildPosition()
+    : CPacket(5)
+{
+    WriteUInt8(0xF0);
+    WriteUInt16BE(0x0005);
+    WriteUInt8(0x01); // guild query
+    WriteUInt8(0x01); // enable
+}
+
+CPacketQueryPartyPosition::CPacketQueryPartyPosition()
+    : CPacket(4)
+{
+    WriteUInt8(0xF0);
+    WriteUInt16BE(0x0004);
+    WriteUInt8(0x00); // party query
+}
+
+CPacketEquipMacro::CPacketEquipMacro(const std::vector<uint32_t> &serials)
+    : CPacket(1)
+{
+    size_t size = 5 + (serials.size() * 4);
+    Resize(size, true);
+
+    WriteUInt8(0xEC);
+    WriteUInt16BE((uint16_t)size);
+    WriteUInt8((uint8_t)serials.size());
+    for (uint32_t serial : serials)
+    {
+        WriteUInt32BE(serial);
+    }
+}
+
+CPacketUnequipMacro::CPacketUnequipMacro(const std::vector<uint16_t> &layers)
+    : CPacket(1)
+{
+    size_t size = 5 + (layers.size() * 2);
+    Resize(size, true);
+
+    WriteUInt8(0xED);
+    WriteUInt16BE((uint16_t)size);
+    WriteUInt8((uint8_t)layers.size());
+    for (uint16_t layer : layers)
+    {
+        WriteUInt16BE(layer);
+    }
+}
+
 CPacketRazorAnswer::CPacketRazorAnswer()
     : CPacket(4)
 {

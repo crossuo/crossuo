@@ -1010,10 +1010,44 @@ void CGame::Process(bool rendering)
 
     g_MouseManager.Update();
 
+    static uint8_t s_PingIndex = 0;
+    static uint32_t s_NextConfiguredPing = 0;
+
     if (g_GameState >= GS_CHARACTER && (g_LastSendTime + SEND_TIMEOUT_DELAY) < g_Ticks)
     {
-        uint8_t ping[2] = { 0x73, 0 };
-        Send(ping, 2);
+        CPacketPing(s_PingIndex++).Send();
+    }
+    else if (g_GameState >= GS_GAME && g_Config.SendPing && s_NextConfiguredPing < g_Ticks)
+    {
+        // optional periodic keepalive (SendPing=yes): the classic client
+        // pings every second; the server echoes the packet back
+        CPacketPing(s_PingIndex++).Send();
+        s_NextConfiguredPing = g_Ticks + 1000;
+    }
+
+    // KR party position query: keep out-of-range party members on the map
+    if (g_GameState >= GS_GAME && s_NextConfiguredPing < g_Ticks && g_Party.Leader != 0)
+    {
+        bool memberOutOfRange = false;
+        for (const CPartyObject &member : g_Party.Member)
+        {
+            if (member.Serial == 0u || member.Serial == g_PlayerSerial)
+            {
+                continue;
+            }
+            CGameCharacter *mob = g_World->FindWorldCharacter(member.Serial);
+            if (mob == nullptr)
+            {
+                memberOutOfRange = true;
+                break;
+            }
+        }
+
+        if (memberOutOfRange)
+        {
+            CPacketQueryPartyPosition().Send();
+            s_NextConfiguredPing = g_Ticks + 1000;
+        }
     }
 
     const bool oldCtrl = g_CtrlPressed;

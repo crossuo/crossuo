@@ -419,6 +419,40 @@ public:
     CPacketAssistVersion(uint32_t version, const astr_t &clientVersion);
 };
 
+// 0x73 keepalive ping with a cycling index (the server echoes it back)
+class CPacketPing : public CPacket
+{
+public:
+    CPacketPing(uint8_t index);
+};
+
+// 0xF0 KR-era position queries (guild / party world map tracking)
+class CPacketQueryGuildPosition : public CPacket
+{
+public:
+    CPacketQueryGuildPosition();
+};
+
+class CPacketQueryPartyPosition : public CPacket
+{
+public:
+    CPacketQueryPartyPosition();
+};
+
+// 0xEC/0xED KR equip/unequip macros (equips from backpack by serial /
+// unequips by layer; ServUO-family servers handle both)
+class CPacketEquipMacro : public CPacket
+{
+public:
+    CPacketEquipMacro(const std::vector<uint32_t> &serials);
+};
+
+class CPacketUnequipMacro : public CPacket
+{
+public:
+    CPacketUnequipMacro(const std::vector<uint16_t> &layers);
+};
+
 class CPacketRazorAnswer : public CPacket
 {
 public:

@@ -60,6 +60,7 @@ enum
     MSCC_SHARD_OTHER,
     MSCC_SHARD_COMMUNITY,
     MSCC_IGNORE_RELAY,
+    MSCC_SEND_PING,
     MSCC_COUNT,
 };
 
@@ -108,6 +109,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_SHARD_OTHER, "shardother" },
     { MSCC_SHARD_COMMUNITY, "shardcommunity" },
     { MSCC_IGNORE_RELAY, "ignorerelay" },
+    { MSCC_SEND_PING, "sendping" },
     { MSCC_COUNT, nullptr },
 };
 static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
@@ -625,6 +627,11 @@ bool LoadGlobalConfig()
                 case MSCC_IGNORE_RELAY:
                 {
                     g_Config.IgnoreRelay = str_to_bool(strings[1]);
+                    break;
+                }
+                case MSCC_SEND_PING:
+                {
+                    g_Config.SendPing = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_USE_KEYS:

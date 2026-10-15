@@ -1784,6 +1784,10 @@ void CGameScreen::PreRender()
         if ((g_DeathScreenTimer != 0u) && g_ScreenEffectManager.UseSunrise())
         {
             SmoothScreenAction = 0;
+            // the classic client dismisses the death screen with a 0x2C
+            // "become ghost" response (ignored by RunUO-family servers,
+            // meaningful elsewhere)
+            CPacketResurrectChoice(2).Send();
         }
 
         g_DeathScreenTimer = 0;

@@ -56,6 +56,9 @@ struct Config
     // IgnoreRelay=yes: bypass the relay (0x8C) redirect and do the second
     // login on the same address/port as the first login
     bool IgnoreRelay = false;
+    // SendPing=yes: periodically send the 0x73 keepalive ping in-game
+    // (the classic client does this every second; off by default)
+    bool SendPing = false;
 
     // Calculated stuff that are not saved back
     uint16_t Seed = 0x1357;
