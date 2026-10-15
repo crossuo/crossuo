@@ -318,7 +318,8 @@ CPacketChangeWarmode::CPacketChangeWarmode(uint8_t state)
 {
     WriteUInt8(0x72);
     WriteUInt8(state);
-    WriteUInt16BE(0x0032);
+    WriteUInt8(0x32);
+    WriteUInt8(0x00);
 }
 
 CPacketHelpRequest::CPacketHelpRequest()
@@ -571,10 +572,45 @@ CPacketOpenDoor::CPacketOpenDoor()
 CPacketOpenSpellbook::CPacketOpenSpellbook(SPELLBOOK_TYPE type)
     : CPacket(6)
 {
+    // the wire carries the protocol book type (0 magery, 1 necro, 2 chivalry,
+    // 4 bushido, 5 ninjitsu, 6 spellweaving, 7 mysticism, 8 mastery) - the
+    // internal enum has no bushido gap and must not be offset
+    // internal enum: 0 magery, 1 necromancy, 2 chivalry, 3 bushido,
+    // 4 ninjitsu, 5 spellweaving, 6 mastery, 7 mysticism
+    uint8_t bookType = 0;
+    switch (type)
+    {
+        case ST_NECROMANCY:
+            bookType = 1;
+            break;
+        case ST_CHIVALRY:
+            bookType = 2;
+            break;
+        case ST_BUSHIDO:
+            bookType = 4;
+            break;
+        case ST_NINJITSU:
+            bookType = 5;
+            break;
+        case ST_SPELLWEAVING:
+            bookType = 6;
+            break;
+        case ST_MASTERY:
+            bookType = 8;
+            break;
+        case ST_MYSTICISM:
+            bookType = 7;
+            break;
+        case ST_MAGERY:
+        default:
+            bookType = 0;
+            break;
+    }
+
     WriteUInt8(0x12);
     WriteUInt16BE(0x0006);
     WriteUInt8(0x43);
-    WriteUInt8(type + 30);
+    WriteUInt8(bookType);
 }
 
 CPacketEmoteAction::CPacketEmoteAction(const char *action)
@@ -617,7 +653,12 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
                 CGUITextEntry *gte = (CGUITextEntry *)item;
 
                 textLinesCount++;
-                textLinesLength += ((int)gte->m_Entry.Length() * 2);
+                size_t capped = gte->m_Entry.Length();
+                if (capped > MAX_TEXTENTRY_LENGTH)
+                {
+                    capped = MAX_TEXTENTRY_LENGTH;
+                }
+                textLinesLength += ((int)capped * 2);
 
                 break;
             }
@@ -685,7 +726,12 @@ CPacketGumpResponse::CPacketGumpResponse(
 
     for (const std::pair<uint16_t, astr_t> &line : textLines)
     {
-        textLinesLength += (int)line.second.length() * 2;
+        size_t capped = line.second.length();
+        if (capped > MAX_TEXTENTRY_LENGTH)
+        {
+            capped = MAX_TEXTENTRY_LENGTH;
+        }
+        textLinesLength += (int)capped * 2;
     }
 
     int size = 19 + (switchesCount * 4) + 4 + ((textLinesCount * 4) + textLinesLength);
@@ -708,6 +754,11 @@ CPacketGumpResponse::CPacketGumpResponse(
     for (const std::pair<uint16_t, astr_t> &line : textLines)
     {
         wstr_t wline = wstr_from(line.second);
+        size_t capped = wline.length();
+        if (capped > MAX_TEXTENTRY_LENGTH)
+        {
+            wline.resize(MAX_TEXTENTRY_LENGTH);
+        }
 
         WriteUInt16BE(line.first);
         WriteUInt16BE((uint16_t)wline.length());
@@ -747,6 +798,22 @@ CPacketMenuResponse::CPacketMenuResponse(CGump *gump, int code)
                 WriteUInt16BE(item->Color);
 
                 break;
+            }
+
+            // TODO: verify and confirm
+            if (item->Type == GOT_HTMLGUMP)
+            {
+                for (CBaseGUI *sub = (CBaseGUI *)((CGUIHTMLGump *)item)->m_Items; sub != nullptr;
+                     sub = (CBaseGUI *)sub->m_Next)
+                {
+                    if (sub->Serial == code && sub->Type == GOT_MENUOBJECT)
+                    {
+                        WriteUInt16BE(sub->Graphic);
+                        WriteUInt16BE(sub->Color);
+
+                        break;
+                    }
+                }
             }
         }
     }
@@ -839,8 +906,8 @@ CPacketTextEntryDialogResponse::CPacketTextEntryDialogResponse(
     WriteUInt8(0xAC);
     WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
+    WriteUInt8(gump->ParentID);
     WriteUInt8(gump->ButtonID);
-    WriteUInt8(0);
     WriteUInt8(code ? 0x01 : 0x00);
 
     WriteUInt16BE((uint16_t)len + 1);
@@ -853,7 +920,7 @@ CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, const astr_t &newNam
 {
     WriteUInt8(0x75);
     WriteUInt32BE(serial);
-    WriteString(newName, newName.length(), false);
+    WriteString(newName, 30, false); // truncated to the fixed field
 }
 
 CPacketTipRequest::CPacketTipRequest(uint16_t id, uint8_t flag)
@@ -1038,14 +1105,17 @@ CPacketPartyDecline::CPacketPartyDecline(uint32_t serial)
 CPacketPartyMessage::CPacketPartyMessage(const wchar_t *text, size_t len, uint32_t serial)
     : CPacket(1)
 {
-    size_t size = 10 + (len * 2) + 2;
+    // the reference terminates the unicode text (2 NUL bytes):
+    // private = 12 + len*2, party-wide = 8 + len*2
+    const bool isPrivate = (serial != 0u);
+    const size_t size = (isPrivate ? 12 : 8) + (len * 2);
     Resize(size, true);
 
     WriteUInt8(0xBF);
     WriteUInt16BE((uint16_t)size);
     WriteUInt16BE(0x0006);
 
-    if (serial != 0u) //Private message to member
+    if (isPrivate) //Private message to member
     {
         WriteUInt8(0x03);
         WriteUInt32BE(serial);
@@ -1055,7 +1125,7 @@ CPacketPartyMessage::CPacketPartyMessage(const wchar_t *text, size_t len, uint32
         WriteUInt8(0x04);
     }
 
-    WriteWString(text, len, true, false);
+    WriteWString(text, len, true, true);
 }
 
 CPacketGameWindowSize::CPacketGameWindowSize()
@@ -1113,14 +1183,20 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     uint32_t serial, uint32_t replySerial, const astr_t &subject, const astr_t &message)
     : CPacket(1)
 {
+    // the reference normalizes windows line endings before splitting lines
+    astr_t body = message;
+    for (size_t pos = body.find("\r\n"); pos != astr_t::npos; pos = body.find("\r\n"))
+    {
+        body.erase(pos, 1);
+    }
     const auto subjectLen = subject.size();
-    const auto msgLen = message.size();
+    const auto msgLen = body.size();
     auto size = 14 + subjectLen + 1;
     int len = 0;
     int lines = 1;
     for (size_t i = 0; i < msgLen; i++)
     {
-        if (message[i] == '\n')
+        if (body[i] == '\n')
         {
             len++;
             size += len + 1;
@@ -1207,15 +1283,13 @@ CPacketRazorAnswer::CPacketRazorAnswer()
 }
 
 CPacketLanguage::CPacketLanguage(const astr_t &lang)
-    : CPacket(1)
+    : CPacket(9)
 {
-    size_t size = 5 + lang.length() + 1;
-    Resize(size, true);
-
     WriteUInt8(0xBF);
     WriteUInt16BE(0x0009);
     WriteUInt16BE(0x000B);
-    WriteString(lang, lang.length(), false);
+    WriteString(lang, 3, false); // fixed 3-byte field, truncated/padded
+    WriteUInt8(0x00);
 }
 
 CPacketClientType::CPacketClientType()
@@ -1296,7 +1370,7 @@ CPacketQuestMenuRequest::CPacketQuestMenuRequest()
     WriteUInt16BE(0x000A);
     WriteUInt32BE(g_PlayerSerial);
     WriteUInt16BE(0x0032);
-    WriteUInt8(0x0A);
+    WriteUInt8(0x00);
 }
 
 CPacketEquipLastWeapon::CPacketEquipLastWeapon()
@@ -1322,13 +1396,14 @@ CPacketVirtueRequest::CPacketVirtueRequest(int buttonID)
 }
 
 CPacketInvokeVirtueRequest::CPacketInvokeVirtueRequest(uint8_t id)
-    : CPacket(6)
+    : CPacket(5)
 {
+    // the wire carries the virtue index as an ASCII digit ('1'..'8');
+    // callers pass 0x1F + index
     WriteUInt8(0x12);
-    WriteUInt16BE(0x0006);
+    WriteUInt16BE(0x0005);
     WriteUInt8(0xF4);
-    WriteUInt8(id);
-    WriteUInt8(0x00);
+    WriteUInt8('0' + (id - 0x1F) + 1);
 }
 
 CPacketMegaClilocRequestOld::CPacketMegaClilocRequestOld(int serial)
@@ -1345,9 +1420,9 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(std::vector<uint32_t> &list)
 {
     size_t len = list.size();
 
-    if (len > 50)
+    if (len > 15)
     {
-        len = 50;
+        len = 15;
     }
 
     size_t size = 3 + (len * 4);
@@ -1361,9 +1436,9 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(std::vector<uint32_t> &list)
         WriteUInt32BE(list[i]);
     }
 
-    if ((int)list.size() > 50)
+    if ((int)list.size() > 15)
     {
-        list.erase(list.begin(), list.begin() + 50);
+        list.erase(list.begin(), list.begin() + 15);
     }
     else
     {
@@ -1382,18 +1457,20 @@ CPacketChangeStatLockStateRequest::CPacketChangeStatLockStateRequest(uint8_t sta
 }
 
 CPacketBookHeaderChangeOld::CPacketBookHeaderChangeOld(CGumpBook *gump)
-    : CPacket(99)
+    : CPacket(101)
 {
-    // FIXME: PACKET: check if this should be ASCII or UTF8
     auto title = wstr_to_utf8(gump->m_EntryTitle->m_Entry.GetTextW());
     auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.GetTextW());
 
-    WriteUInt8(0xD4);
+    // old protocol: 0x93, serial, writable flag 0x01, reserved word, then
+    // zero-padded fixed fields (title 60, author 30)
+    WriteUInt8(0x93);
     WriteUInt32BE(gump->Serial);
-    WriteUInt16BE((uint16_t)0x0000); //flags
-    WriteUInt16BE((uint16_t)gump->PageCount);
-    WriteString(gump->m_EntryTitle->m_Entry.GetTextA(), 60);
-    WriteString(gump->m_EntryAuthor->m_Entry.GetTextA(), 30);
+    WriteUInt8(0x00);
+    WriteUInt8(0x01);
+    WriteUInt16BE(0x0000);
+    WriteString(title, 60, false);
+    WriteString(author, 30, false);
 }
 
 CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump)
@@ -1404,14 +1481,15 @@ CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump)
     auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.GetTextW());
     auto titlelen = (uint16_t)title.length();
     auto authorlen = (uint16_t)author.length();
-    size_t size = 16 + title.length() + author.length();
+    size_t size = 15 + title.length() + author.length();
     Resize(size, true);
 
     WriteUInt8(0xD4);
     WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
-    WriteUInt16BE((uint16_t)0x0000); //flags
-    WriteUInt16BE((uint16_t)gump->PageCount);
+    WriteUInt8(0x00); // flags
+    WriteUInt8(0x00); // single-page book
+    WriteUInt16BE(0x0000);
     WriteUInt16BE(titlelen);
     if (titlelen != 0u)
     {
@@ -1451,7 +1529,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
         // FIXME: PACKET: check if this should be ASCII or UTF8
         auto data = wstr_to_utf8(textEntry.GetTextW());
         size_t len = data.length();
-        size_t size = 9 + 4 + 1;
+        size_t size = 9 + 4 + 2; // line data + the reference's trailing NUL
 
         if (len != 0u)
         {
@@ -1497,6 +1575,9 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
 
                 *Ptr++ = ch;
             }
+
+            // the reference always terminates the page data with one more NUL
+            *Ptr++ = 0;
 
             *Ptr = 0;
         }
