@@ -6088,6 +6088,7 @@ void CGame::OpenCombatBookGump()
     }
 
     g_GumpManager.AddGump(new CGumpCombatBook(x, y));
+    g_Game.PlaySoundEffect(0x0055);
 }
 
 void CGame::OpenRacialAbilitiesBookGump()
@@ -6110,6 +6111,7 @@ void CGame::OpenRacialAbilitiesBookGump()
     }
 
     g_GumpManager.AddGump(new CGumpRacialAbilitiesBook(x, y));
+    g_Game.PlaySoundEffect(0x0055);
 }
 
 void CGame::StartReconnect()
