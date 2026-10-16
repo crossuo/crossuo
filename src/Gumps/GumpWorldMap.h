@@ -68,6 +68,7 @@ private:
     CGUICheckbox *m_Checkbox = nullptr;
     CGUIScissor *m_Scissor = nullptr;
     CGUIWorldMapTexture *m_MapData = nullptr;
+    CGUIText *m_NameText = nullptr;
     CGUIComboBox *m_ComboboxScale = nullptr;
     CGUIComboBox *m_ComboboxMap = nullptr;
 

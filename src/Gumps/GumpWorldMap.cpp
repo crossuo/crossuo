@@ -51,6 +51,14 @@ CGumpWorldMap::CGumpWorldMap(short x, short y)
 
     m_MapData = (CGUIWorldMapTexture *)Add(new CGUIWorldMapTexture(8, 31));
     m_MapData->Serial = ID_GWM_MAP;
+
+    // player name label over the map marker (drawn after the map texture, so
+    // element order keeps it on top; position updated per frame)
+    m_NameText = (CGUIText *)Add(new CGUIText(0x0044, 0, 0));
+    if (g_Player != nullptr)
+    {
+        m_NameText->CreateTextureA(3, g_Player->GetName());
+    }
     int map = GetCurrentMap();
     m_MapData->Index = map;
 
@@ -553,8 +561,15 @@ void CGumpWorldMap::GenerateFrame()
 {
     CGump::GenerateFrame();
 
-    //Player drawing
-    if (!Minimized && g_CurrentMap == GetCurrentMap())
+    //Player drawing: keep the map centered while linked, and position the
+    // name label element (the element pass below draws it scissored)
+    const bool playerBlock =
+        (!Minimized && g_CurrentMap == GetCurrentMap() && g_Player != nullptr &&
+         m_MapData != nullptr && m_NameText != nullptr);
+    int mapX = 0;
+    int mapY = 0;
+
+    if (playerBlock)
     {
         int width = 0;
         int height = 0;
@@ -563,22 +578,42 @@ void CGumpWorldMap::GenerateFrame()
 
         GetScaledDimensions(width, height, playerX, playerY);
 
-        m_Scissor->Draw(false);
+        if (m_LinkWithPlayer)
+        {
+            // keep the map centered on the player while the link is active
+            // (the map texture is drawn at (8, 31) inside the gump)
+            int offsetX = (Width / 2) - 8 - playerX;
+            int offsetY = ((Height - 30) / 2) - 31 - playerY;
+            FixOffsets(offsetX, offsetY, Width, Height);
+            OffsetX = m_MapData->OffsetX = offsetX;
+            OffsetY = m_MapData->OffsetY = offsetY;
+        }
 
+        mapX = m_MapData->OffsetX + 8 + playerX;
+        mapY = m_MapData->OffsetY + 31 + playerY;
+
+        m_NameText->SetX(mapX - (m_NameText->m_Texture.Width / 2));
+        m_NameText->SetY(mapY - 24);
+    }
+
+    CGump::GenerateFrame();
+
+    if (playerBlock)
+    {
+        // player marker: round pip (two overlapping quads), black rim over a
+        // white core so it reads on any terrain; drawn after the element pass
+        // so it sits on top of the map texture (the map scissor is already
+        // active from the element pass)
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorBlack });
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList, DrawUntexturedQuadCmd{ mapX - 4, mapY - 1, 12, 6 });
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList, DrawUntexturedQuadCmd{ mapX - 1, mapY - 4, 6, 12 });
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DrawUntexturedQuad(
-            g_renderCmdList,
-            DrawUntexturedQuadCmd{
-                m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2 });
+            g_renderCmdList, DrawUntexturedQuadCmd{ mapX - 2, mapY - 0, 8, 4 });
         RenderAdd_DrawUntexturedQuad(
-            g_renderCmdList,
-            DrawUntexturedQuadCmd{
-                m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16 });
-        RenderAdd_DrawCircle(
-            g_renderCmdList,
-            DrawCircleCmd{
-                m_MapData->OffsetX + playerX + 8, m_MapData->OffsetY + playerY + 31, 3.f });
-        Render_PopScissor();
+            g_renderCmdList, DrawUntexturedQuadCmd{ mapX - 0, mapY - 2, 4, 8 });
     }
 }
 
@@ -671,6 +706,11 @@ void CGumpWorldMap::OnLeftMouseButtonDown()
 
     if (g_PressedObject.LeftObject == m_MapData)
     {
+        if (m_LinkWithPlayer && g_CurrentMap == GetCurrentMap())
+        {
+            // dragging the map breaks the link (and re-enables map panning)
+            SetLinkWithPlayer(false);
+        }
         if (!m_LinkWithPlayer || g_CurrentMap != GetCurrentMap())
         {
             m_MapData->MoveOnDrag = false;
