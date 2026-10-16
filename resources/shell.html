@@ -326,6 +326,18 @@
         window.addEventListener('keydown', function (e) {
           if (e.key === 'Tab') e.preventDefault();
         }, true);
+        // capture Ctrl/Meta combos before the browser acts on them (Ctrl+S,
+        // Ctrl+F, Meta+R, ...): SDL's emscripten backend cannot reliably
+        // preventDefault them because text-input mode (login fields) makes it
+        // skip prevention for regular keydowns. Clipboard combos pass through
+        // so copy/paste keeps working in the game's text fields; browser
+        // reserved keys (Cmd+T/W/N) are not preventable at all
+        window.addEventListener('keydown', function (e) {
+          if (!(e.ctrlKey || e.metaKey || e.altKey)) return;
+          var k = (e.key || '').toLowerCase();
+          if (k === 'c' || k === 'v' || k === 'x') return;
+          e.preventDefault();
+        }, true);
         ctx.onstatechange = publishState;
         function bindRing(sab) {
           if (audio.ring) return;
