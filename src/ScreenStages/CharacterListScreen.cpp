@@ -6,6 +6,7 @@
 #include "MainScreen.h"
 #include "../CrossUO.h"
 #include "../Globals.h"
+#include "../Managers/ConnectionManager.h"
 #include "../Network/Packets.h"
 #include "../ServerList.h"
 #include "../GameWindow.h"
@@ -95,6 +96,11 @@ void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
     }
     else if (action == CCharacterListScreen::Connect)
     {
+        // Back to the shard-selection screen: the login connection from the
+        // current session is still up, and CGame::Connect() early-returns
+        // when the socket is live (handshake-protection), so drop it here
+        // to force a fresh login exchange that re-sends the server list.
+        g_ConnectionManager.Disconnect();
         g_Game.Connect();
     }
     else if (action == CCharacterListScreen::SelectCharacter)
