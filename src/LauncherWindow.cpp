@@ -299,12 +299,19 @@ apply_result client_apply_shard(const shard_profile &profile)
     shard.credits = profile.credits;
     shard.other = profile.other;
     shard.community = profile.community;
-    if (ApplyShardProfile(shard))
-    {
-        return apply_result::applied;
-    }
-    // the shard was persisted to crossuo.cfg, but the running client state
-    // does not allow a safe live application (in game or connected)
+    shard.seed_override = profile.seed_override;
+    shard.system_check_override = profile.system_check_override;
+    shard.language = profile.language;
+    shard.report_language = profile.report_language;
+    //a shard switch is a restart-class change: the shard profile carries the
+    //client version/type/crypt/data identity, which cannot be safely
+    //re-fixed-up on a running session (and a live address-only swap does not
+    //reliably retarget an in-flight login state). Always report needs_restart
+    //so the caller latches a client reload; ApplyShardProfile persisted the
+    //new shard already - to the default crossuo.cfg when the client was
+    //started with --config - and the relaunched client (restart args drop
+    //--config) boots straight into it
+    ApplyShardProfile(shard);
     return apply_result::needs_restart;
 }
 
@@ -317,8 +324,27 @@ void client_set_restart_args(int argc, char **argv)
 void client_request_restart()
 {
     std::vector<char *> args;
+    bool drop_next = false;
     for (int i = 0; i < s_argc && s_argv && s_argv[i]; i++)
     {
+        //the profile that came in via -c/--config is a read-only input: the
+        //shard change that triggered this restart was persisted to the
+        //default crossuo.cfg (see SaveGlobalConfig), so the relaunched client
+        //must boot from the default file or it would reload the old shard
+        if (drop_next)
+        {
+            drop_next = false;
+            continue;
+        }
+        if (strcmp(s_argv[i], "-c") == 0 || strcmp(s_argv[i], "--config") == 0)
+        {
+            //both "--config <path>" and "--config=<path>" forms
+            if (!strchr(s_argv[i], '='))
+            {
+                drop_next = true;
+            }
+            continue;
+        }
         args.push_back(s_argv[i]);
     }
     if (args.empty() || !s_argv)

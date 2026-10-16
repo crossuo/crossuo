@@ -359,6 +359,10 @@ void account_launch_shard(int shard_index)
     profile.other = entry.crossuo_shardother;
     profile.community = entry.crossuo_shardcommunity;
     profile.video = entry.crossuo_shardvideo;
+    profile.seed_override = entry.crossuo_seedoverride;
+    profile.system_check_override = entry.crossuo_systemcheckoverride;
+    profile.language = entry.crossuo_language;
+    profile.report_language = entry.crossuo_reportlanguage;
 
     const auto result = xuol::client_apply_shard(profile);
     // needs_restart already latched the reload, which the app frame performs;

@@ -2015,9 +2015,9 @@ void AnimDrawFrame(
                         const uint8_t b = (uint8_t)((rgb >> 16) & 0xFF);
                         if (r == g && b == g)
                         {
-                            const uint16_t h = (uint16_t)(hue - 1);
-                            c = g_FileManager.m_Hues[h / 8]
-                                    .Entries[h % 8]
+                            const uint16_t hh = (uint16_t)(hue - 1);
+                            c = g_FileManager.m_Hues[hh / 8]
+                                    .Entries[hh % 8]
                                     .ColorTable[(c >> 10) & 0x1F] |
                                 (c & 0x8000); // keep the alpha bit
                         }

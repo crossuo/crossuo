@@ -429,6 +429,14 @@ void ApplyClientVersionOverride(
     ClientVersionFixup(protocol_overridden || s_Mark.ProtocolVersion);
 }
 
+static fs_path GetDefaultConfigFile()
+{
+    const auto local_exe = ExeFilePath(CROSSUO_CONFIG);
+    if (fs_path_exists(local_exe))
+        return local_exe;
+    return FilePath(CROSSUO_CONFIG);
+}
+
 // priority order looking for a config file:
 // 1. command line -c/--config option
 // 2. crossuo.cfg on the side with executable
@@ -437,10 +445,7 @@ static fs_path GetConfigFile()
 {
     if (!g_cli["config"].was_set())
     {
-        const auto local_exe = ExeFilePath(CROSSUO_CONFIG);
-        if (fs_path_exists(local_exe))
-            return local_exe;
-        return FilePath(CROSSUO_CONFIG);
+        return GetDefaultConfigFile();
     }
 
     return fs_path_from(g_cli["config"].get().string);
@@ -773,10 +778,27 @@ void LogClientVersionInfo()
     Info(Client, "\tLanguage: %s (%s)", g_Language.c_str(), g_ServerLanguageReport.c_str());
     Info(Client, "\tUltima Online Path: %s", fs_path_ascii(g_UOPath));
 }
-void SaveGlobalConfig()
+void SaveGlobalConfig(bool launcher_apply)
 {
-    Info(Config, "saving global config to: %s", fs_path_ascii(GetConfigFile()));
-    FILE *cfg = fs_open(GetConfigFile(), FS_WRITE);
+    //a config passed via -c/--config (e.g. a launcher profile) is a normal
+    //read-write config for session saves, EXCEPT once the config changed
+    //live via the embedded launcher: from that point on the session state is
+    //launcher-driven and must never be written back into the profile file -
+    //it lands on the default crossuo.cfg instead (this includes the shutdown
+    //save: without the latch it would re-persist the launcher-picked shard
+    //into the profile, overwriting it). A restart without --config picks the
+    //default file up
+    static bool s_launcher_changed_config = false;
+    if (launcher_apply)
+    {
+        s_launcher_changed_config = true;
+    }
+    auto cfgPath = (g_cli["config"].was_set() && s_launcher_changed_config)
+                       ? GetDefaultConfigFile()
+                       : GetConfigFile();
+
+    Info(Config, "saving global config to: %s", fs_path_ascii(cfgPath));
+    FILE *cfg = fs_open(cfgPath, FS_WRITE);
     if (cfg == nullptr)
     {
         return;
@@ -968,8 +990,10 @@ bool ApplyClientProfile(
 
     ClientVersionFixup(s_Mark.ProtocolVersion);
 
-    // 2] persist it, keeping the active configuration file in sync
-    SaveGlobalConfig();
+    // 2] persist it, keeping the active configuration file in sync - as a
+    // launcher apply it must not rewrite a --config profile: it lands on the
+    // default crossuo.cfg instead (see SaveGlobalConfig)
+    SaveGlobalConfig(true);
 
     // 3] apply live, when the client state allows it
     if (!can_apply_live)
@@ -1014,6 +1038,14 @@ bool ApplyShardProfile(const shard_profile &profile)
         !profile.credits.empty() ? profile.credits : astr_t(XUO_DEFAULT_SHARD_CREDITS);
     g_Config.ShardOther = profile.other;
     g_Config.ShardCommunity = profile.community;
+
+    // shard-specific protocol overrides: a shard switch is deterministic, so
+    // an empty value clears the override (a shard that needs one always
+    // provides it in its profile) - same contract as the link resets above
+    g_Config.SeedOverride = str_trim(profile.seed_override);
+    g_Config.SystemCheckOverride = str_trim(profile.system_check_override);
+    g_Config.LocaleOverride = str_trim(profile.language);
+    g_Config.LocaleOverrideReport = str_trim(profile.report_language);
 
     // an empty product url is not a reset: the launcher always sends a
     // complete profile, and live shard entries without an installer keep

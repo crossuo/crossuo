@@ -84,6 +84,10 @@ struct shard_profile
     astr_t credits;
     astr_t other;     // plain community url ("" = none)
     astr_t community; // forum/community page (launcher-facing)
+    astr_t seed_override;         // "0xaa 0xbb 0xcc 0xdd" login seed ("" = none)
+    astr_t system_check_override; // 0x03 payload bytes ("" = none)
+    astr_t language;              // client locale (.loc), "" = keep default
+    astr_t report_language;       // report locale, "" = keep default
 };
 // applies a shard selection to the running client instead of spawning a new
 // process; see client_apply_profile for the result semantics

@@ -5,6 +5,9 @@
 
 #include "Misc.h"
 
+#include "Config.h"
+#include "revision.h"
+
 #include <common/logging/logging.h>
 // no STR_IMPLEMENTATION here: the game links xuocore (mft.cpp), which already
 // provides the str implementations - two copies broke the shared lib link
@@ -31,4 +34,14 @@ int CalculatePercents(int max, int current, int maxValue)
     }
 
     return max;
+}
+
+astr_t ClientWindowTitle()
+{
+    astr_t title = CLIENT_TITLE;
+    if (!g_Config.ShardName.empty())
+    {
+        title += " [" + g_Config.ShardName + "]";
+    }
+    return title;
 }

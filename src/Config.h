@@ -90,7 +90,14 @@ struct Config
 };
 
 bool LoadGlobalConfig();
-void SaveGlobalConfig();
+// launcher_apply: the change came from the embedded launcher's live apply -
+// a profile file passed via -c/--config is never overwritten by launcher
+// changes: the snapshot lands on the default crossuo.cfg instead (which a
+// restart without --config picks up), and the latch is sticky: every later
+// save in that session (shutdown included) keeps targeting the default file.
+// Plain session saves (shutdown, etc.) write the active config file,
+// --config included, as long as no launcher apply happened
+void SaveGlobalConfig(bool launcher_apply = false);
 // parses "<0xaa> <0xbb> ..." style byte lists used by SeedOverride and
 // SystemCheckOverride; returns the number of bytes written (<= max)
 size_t ParseByteList(const astr_t &text, uint8_t *out, size_t max);
@@ -133,6 +140,10 @@ struct shard_profile
     astr_t web, account_page, help, video, credits; // login-screen links
     astr_t other;     // plain community url ("" = none)
     astr_t community; // forum/community page (accepted, launcher-facing)
+    astr_t seed_override;           // "0xaa 0xbb 0xcc 0xdd" login seed ("" = none)
+    astr_t system_check_override;   // 0x03 payload bytes ("" = none)
+    astr_t language;                // client locale (.loc), "" = keep default
+    astr_t report_language;         // report locale, "" = keep default
 };
 
 // The single entry point all shard-selection paths go through. The caller

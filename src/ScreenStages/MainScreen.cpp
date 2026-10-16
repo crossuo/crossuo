@@ -8,6 +8,7 @@
 #include <common/utils.h>
 #include <cstdlib>
 #include "revision.h"
+#include "../Misc.h"
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"
@@ -74,7 +75,7 @@ void CMainScreen::Init()
     g_GlobalScale = 1.0;
     Load();
     Reset();
-    g_GameWindow.SetTitle(CLIENT_TITLE);
+    g_GameWindow.SetTitle(ClientWindowTitle());
     g_GumpManager.RedrawAll();
 
     // Focus the account field by default. Only jump to the password field

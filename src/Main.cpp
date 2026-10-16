@@ -1086,7 +1086,7 @@ int main(int argc, char **argv)
 #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
         gfx_render_list_init();
 #endif // #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
-        if (!g_GameWindow.Create(CLIENT_TITLE, false, 640, 480))
+        if (!g_GameWindow.Create(ClientWindowTitle().c_str(), false, 640, 480))
         {
             const char *errMsg =
                 "Failed to create CrossUO client window. May be caused by a missing configuration file.";

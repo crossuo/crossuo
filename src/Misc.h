@@ -60,3 +60,6 @@ inline void pack16(uint8_t *buf, uint16_t x)
     buf[0] = x >> 8;
     buf[1] = x & 0xff;
 }
+
+// window title including the active shard: "Ultima Online v... (hash) [shard]"
+astr_t ClientWindowTitle();
