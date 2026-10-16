@@ -416,10 +416,59 @@ void CGumpScreenSelectTown::GUMP_BUTTON_EVENT_C
     { //< button
         g_SelectTownScreen.CreateSmoothAction(CSelectTownScreen::ID_SMOOTH_STS_GO_SCREEN_CHARACTER);
     }
-    else if (serial == ID_STS_ARROW_NEXT || serial >= ID_STS_TOWN)
+    else if (serial == ID_STS_ARROW_NEXT)
     { //> button
         g_SelectTownScreen.CreateSmoothAction(
             CSelectTownScreen::ID_SMOOTH_STS_GO_SCREEN_GAME_CONNECT);
+    }
+    else if (serial >= ID_STS_TOWN)
+    {
+        //town marker click: select the town and refresh the description,
+        //the user still has to press the next arrow to advance
+        int index = serial - ID_STS_TOWN;
+
+        CCityItem *city = g_Config.ClientVersion >= CV_70130 ?
+                              g_CityList.GetCity((uint32_t)index) :
+                              g_CityList.GetCity((uint32_t)index + 1);
+
+        if (city != nullptr && g_SelectTownScreen.m_City != city)
+        {
+            g_SelectTownScreen.m_City = city;
+
+            auto description = city->m_City.Description;
+
+            if (city->IsNewCity())
+            {
+                description =
+                    g_ClilocManager.Cliloc(g_Language)->GetW(((CCityItemNew *)city)->Cliloc);
+            }
+
+            g_FontManager.SetUseHTML(true);
+
+            if (m_Description != nullptr)
+            {
+                m_Description->CreateTextureW(1, description, 30, 150);
+            }
+
+            g_FontManager.SetUseHTML(false);
+
+            if (m_HTMLGump != nullptr)
+            {
+                m_HTMLGump->ResetDataOffset();
+                m_HTMLGump->CalculateDataSize();
+            }
+
+            for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr;
+                 item = (CBaseGUI *)item->m_Next)
+            {
+                if (item->Type == GOT_TEXTENTRY)
+                {
+                    ((CGUITextEntry *)item)->Focused = (item->Serial == serial);
+                }
+            }
+
+            WantRedraw = true;
+        }
     }
 }
 
