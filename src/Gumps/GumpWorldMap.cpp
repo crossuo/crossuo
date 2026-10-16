@@ -322,7 +322,7 @@ void CGumpWorldMap::LoadMap(int map)
         return;
     }
 
-    if (g_MapTexture[map].Texture == 0)
+    if (g_MapTexture[map].Texture == RENDER_TEXTUREHANDLE_INVALID)
     {
         uint32_t worldCrc = 0;
 
@@ -626,7 +626,7 @@ void CGumpWorldMap::PrepareContent()
             CurrentOffsetY = 0;
         }
 
-        FixOffsets(CurrentOffsetY, CurrentOffsetY, Width, Height);
+        FixOffsets(CurrentOffsetX, CurrentOffsetY, Width, Height);
 
         if (OffsetX != CurrentOffsetX || OffsetY != CurrentOffsetY)
         {
@@ -740,12 +740,12 @@ void CGumpWorldMap::GUMP_COMBOBOX_SELECTION_EVENT_C
         }
 
         TRACE(Renderer, "g_MapTexture[mapTest].Texture = %i", g_MapTexture[mapTest].Texture);
-        if (g_MapTexture[mapTest].Texture == 0)
+        if (g_MapTexture[mapTest].Texture == RENDER_TEXTUREHANDLE_INVALID)
         {
             LoadMap(mapTest);
         }
 
-        if (g_MapTexture[mapTest].Texture != 0)
+        if (g_MapTexture[mapTest].Texture != RENDER_TEXTUREHANDLE_INVALID)
         {
             if (mapTest != m_Map)
             {

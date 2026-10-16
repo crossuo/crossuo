@@ -20,7 +20,7 @@ CGUIWorldMapTexture::~CGUIWorldMapTexture()
 void CGUIWorldMapTexture::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    if (g_MapTexture[Index].Texture != 0)
+    if (g_MapTexture[Index].Texture != RENDER_TEXTUREHANDLE_INVALID)
     {
         auto cmd = DrawQuadCmd{ g_MapTexture[Index].Texture,
                                 m_X + OffsetX,

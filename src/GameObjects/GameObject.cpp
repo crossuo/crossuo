@@ -110,7 +110,7 @@ void CGameObject::SetName(const astr_t &newName)
 
 void CGameObject::DrawObjectHandlesTexture()
 {
-    if (m_TextureObjectHandles.Texture == 0)
+    if (m_TextureObjectHandles.Texture == RENDER_TEXTUREHANDLE_INVALID)
     {
         if (NPC)
         {
