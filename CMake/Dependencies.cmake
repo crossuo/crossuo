@@ -72,6 +72,16 @@ macro(xuo_dependency DEP_NAME DEP_PATH DEP_PREFIX)
       "${CMAKE_BINARY_DIR}/deps/${DEP_PATH}"
       "${CMAKE_BINARY_DIR}/deps/${DEP_PATH}/lib"
       CACHE INTERNAL "deps" FORCE)
+    # ld64 (macOS) warns about -L paths that do not exist; the deps place
+    # their archives elsewhere (full paths on the link line), so only keep
+    # the directories that materialized
+    set(_existing_dirs "")
+    foreach(_dir ${${DEP_PREFIX}_LIBRARY_DIRS})
+      if(EXISTS "${_dir}")
+        list(APPEND _existing_dirs "${_dir}")
+      endif()
+    endforeach()
+    set(${DEP_PREFIX}_LIBRARY_DIRS "${_existing_dirs}")
   endif()
 
   include_directories(BEFORE SYSTEM ${${DEP_PREFIX}_INCLUDE_DIRS})

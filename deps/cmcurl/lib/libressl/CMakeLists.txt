@@ -65,7 +65,11 @@ if(WIN32 OR (CMAKE_SYSTEM_NAME MATCHES "MINGW"))
 	add_definitions(-D_GNU_SOURCE)
 	add_definitions(-D_POSIX)
 	add_definitions(-D_POSIX_SOURCE)
-	add_definitions(-D__USE_MINGW_ANSI_STDIO)
+	# llvm-mingw's stdio.h already provides C99 printf semantics and its
+	# static-inline snprintf clashes with the redefinition this triggers
+	if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
+		add_definitions(-D__USE_MINGW_ANSI_STDIO)
+	endif()
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")

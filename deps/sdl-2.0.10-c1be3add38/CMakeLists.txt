@@ -657,7 +657,12 @@ if(ASSEMBLY)
       endif()
     endif()
 
-    check_include_file("immintrin.h" HAVE_IMMINTRIN_H)
+    # only meaningful on x86; probing it on ARM with x86 include dirs on the
+    # path (e.g. -idirafter /usr/include) makes SDL_cpuinfo.h pull x86
+    # intrinsics headers that the ARM toolchain cannot provide
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64|i[3-6]86|AMD64)")
+      check_include_file("immintrin.h" HAVE_IMMINTRIN_H)
+    endif()
 
     if(ALTIVEC)
       set(CMAKE_REQUIRED_FLAGS "-maltivec")

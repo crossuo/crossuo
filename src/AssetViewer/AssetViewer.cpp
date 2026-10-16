@@ -2563,7 +2563,9 @@ struct SoundTabState
     int Selected = -1;
     SoundHandle Playing = SOUND_NULL; // owned preview stream (FreeSound'd)
     int PlayingId = -1;
-    std::string Status; // last export/play feedback line
+    // (X11 leaks `#define Status int` through SDL_syswm.h; spelling it out
+    // keeps this header-safe wherever it is included from)
+    std::string StatusText; // last export/play feedback line
 };
 
 SoundTabState &SoundState()
@@ -2671,13 +2673,13 @@ void SoundPlay(uint16_t id)
     SoundStopPreview();
     if (!SoundAvailable(id))
     {
-        st.Status = "No sound data for this id";
+        st.StatusText = "No sound data for this id";
         return;
     }
     SoundHandle handle = g_SoundManager.LoadSoundEffect(g_Index.m_Sound[id]);
     if (handle == SOUND_NULL)
     {
-        st.Status = "Failed to decode the sound block";
+        st.StatusText = "Failed to decode the sound block";
         return;
     }
     // one preview at a time: the previous stream was stopped above, this one
@@ -2685,7 +2687,7 @@ void SoundPlay(uint16_t id)
     g_SoundManager.PlaySoundEffect(handle, g_SoundManager.GetVolumeValue());
     st.Playing = handle;
     st.PlayingId = id;
-    st.Status.clear();
+    st.StatusText.clear();
 }
 
 void WavAppendU16(std::string &out, uint16_t v)
@@ -2804,9 +2806,9 @@ void DrawSoundTab()
     }
     ImGui::SameLine();
     ImGui::TextDisabled("%zu sounds", st.Filtered.size());
-    if (!st.Status.empty())
+    if (!st.StatusText.empty())
     {
-        ImGui::TextDisabled("%s", st.Status.c_str());
+        ImGui::TextDisabled("%s", st.StatusText.c_str());
     }
 
     const float detailW = 320.0f;
@@ -2978,7 +2980,7 @@ void DrawSoundTab()
     {
         std::string error;
         const std::string path = SoundExportWav(id, error);
-        st.Status = !path.empty()  ? "Exported " + path :
+        st.StatusText = !path.empty()  ? "Exported " + path :
                     !error.empty() ? error :
                                      std::string("Export failed");
     }
@@ -3287,7 +3289,7 @@ struct MultiTabState
     bool Truncated = false; // extents clamped to MULTI_CANVAS_MAX
     float Zoom = 1.0f;
     bool Fit = true;    // zoom-to-fit the preview pane (slider used when off)
-    std::string Status; // last export result
+    std::string StatusText; // last export result
 };
 
 MultiTabState &MultisState()
@@ -3740,16 +3742,16 @@ void DrawMultisTab()
         char name[64];
         snprintf(name, sizeof(name), "multi_%u_preview.png", st.Selected);
         const std::string path = AssetGrid_ExportPngFile(name, st.Canvas, st.CanvasW, st.CanvasH);
-        st.Status = path.empty() ? "Export failed" : "Exported " + path;
+        st.StatusText = path.empty() ? "Export failed" : "Exported " + path;
     }
     ImGui::SameLine();
     if (ImGui::Button("Export CSV"))
     {
         MultiExportCsv(st, st.Selected);
     }
-    if (!st.Status.empty())
+    if (!st.StatusText.empty())
     {
-        ImGui::TextDisabled("%s", st.Status.c_str());
+        ImGui::TextDisabled("%s", st.StatusText.c_str());
     }
     if (st.Truncated)
     {

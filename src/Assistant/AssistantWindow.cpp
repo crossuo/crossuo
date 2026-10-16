@@ -29,6 +29,10 @@
 #include "Globals.h"        // g_GameState, g_Ticks
 #include "Wisp/WispWindow.h" // Wisp::g_WispWindow
 
+// X11 (pulled in by SDL_syswm.h on Linux) defines `Status` as a macro, which
+// collides with ImGui's ImTextureData::Status member below
+#undef Status
+
 // The assistant wraps the game window and the game GL context: it never creates
 // a window or a GL context of its own. Popped-out platform windows are created,
 // rendered and destroyed by the ImGui SDL2 backend inside ui_draw.

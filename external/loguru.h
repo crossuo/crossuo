@@ -623,6 +623,7 @@ namespace loguru
 	Text errno_as_text()
 	{
 		char buff[256];
+		(void)buff; // silence unused-variable when strerror() is used below
 	#if defined(__GLIBC__) && defined(_GNU_SOURCE)
 		// GNU Version
 		return Text(strdup(strerror_r(errno, buff, sizeof(buff))));
@@ -673,6 +674,7 @@ namespace loguru
 		#elif LOGURU_PTHREADS
 			char old_thread_name[16] = {0};
 			auto this_thread = pthread_self();
+			(void)this_thread; // may be unused when pthread_getname_np is absent
 			#if defined(__APPLE__) || defined(__linux__)
 				pthread_getname_np(this_thread, old_thread_name, sizeof(old_thread_name));
 			#endif

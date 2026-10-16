@@ -41,7 +41,7 @@ public:
     void AddChannel(const astr_t &name, bool hasPassword);
     void RemoveChannel(const astr_t &name);
     void Clear();
-    static const astr_t &GetMessage(int index);
+    static const astr_t &GetConferenceMessage(int index);
 };
 
 extern CChatManager g_ChatManager;

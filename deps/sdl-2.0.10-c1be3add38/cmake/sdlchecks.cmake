@@ -767,15 +767,8 @@ macro(CheckOpenGLESX11)
     if(HAVE_VIDEO_OPENGL_EGL)
         set(SDL_VIDEO_OPENGL_EGL 1)
     endif()
-    check_c_source_compiles("
-      #include <GLES/gl.h>
-      #include <GLES/glext.h>
-      int main (int argc, char** argv) {}" HAVE_VIDEO_OPENGLES_V1)
-    if(HAVE_VIDEO_OPENGLES_V1)
-        set(HAVE_VIDEO_OPENGLES TRUE)
-        set(SDL_VIDEO_OPENGL_ES 1)
-        set(SDL_VIDEO_RENDER_OGL_ES 1)
-    endif()
+    # crossuo never uses GLES1, and its headers conflict with GL on Linux
+    # 32 bits (SDL_video.c includes both when both are detected) - skip V1
     check_c_source_compiles("
       #include <GLES2/gl2.h>
       #include <GLES2/gl2ext.h>

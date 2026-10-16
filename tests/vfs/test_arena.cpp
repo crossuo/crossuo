@@ -524,7 +524,19 @@ VFS_TEST(subset_plan_roundtrip_and_v2_compat)
     // pinned to the current plan serialization version on purpose: bumping it
     // should consciously update this test (old plans rebuild via the reject)
     const uint32_t stale_version = 5 - 1;
-    memcpy(legacy.data() + sizeof(uint32_t), &stale_version, sizeof(stale_version));
+    /* gcc-12 -Wstringop-overflow misfires here: it claims the vector is a
+       region of size 0 despite the copy from `bytes` above */
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+    for (size_t i = 0; i < sizeof(uint32_t); ++i)
+    {
+        legacy[sizeof(uint32_t) + i] = uint8_t(stale_version >> (8 * i));
+    }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
     TEST_CHECK(!vfs_plan_deserialize(legacy.data(), legacy.size(), decoded));
 }
 

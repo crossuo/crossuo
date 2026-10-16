@@ -126,7 +126,13 @@ void *__cdecl _alloca(size_t);
 
 #if defined(__clang__) || defined(__GNUC__)
 #define process_pure __attribute__((pure))
+#if defined(_WIN32)
+/* mingw: weak header definitions duplicate across TUs and the static
+   linker rejects the resulting COMDAT sections; internal linkage instead */
+#define process_weak static __inline
+#else
 #define process_weak __attribute__((weak))
+#endif
 #elif defined(_WIN32)
 #define process_pure
 #define process_weak __inline

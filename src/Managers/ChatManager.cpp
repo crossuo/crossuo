@@ -80,7 +80,7 @@ void CChatManager::Clear()
     CurrentChannelName = {};
 }
 
-const astr_t &CChatManager::GetMessage(int index)
+const astr_t &CChatManager::GetConferenceMessage(int index)
 {
     static const astr_t empty;
     if (index < 0 || index >= (int)(sizeof(g_ChatMessages) / sizeof(g_ChatMessages[0])))

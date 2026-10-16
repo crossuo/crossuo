@@ -3072,7 +3072,7 @@ PACKET_HANDLER(ChatMessage)
             if ((command >= 0x0001 && command <= 0x0024) ||
                 (command >= 0x0028 && command <= 0x002C))
             {
-                const astr_t &msg = g_ChatManager.GetMessage(command - 1);
+                const astr_t &msg = g_ChatManager.GetConferenceMessage(command - 1);
                 if (!msg.empty())
                 {
                     const astr_t text = str_from(readString(true));

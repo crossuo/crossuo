@@ -61,12 +61,14 @@ float s_progress01 = 0.0f;
 bool s_progressValid = false;
 #endif
 
+#if !defined(XUO_EMSC)
 bool Splash_CreateSolidTexture(uint8_t r, uint8_t g, uint8_t b, texture_handle_t *out)
 {
     uint8_t pixels[4] = { r, g, b, 0xff };
     *out = Render_CreateTexture2D(1, 1, TextureGPUFormat_RGBA4, pixels, TextureFormat_Unsigned_RGBA8);
     return *out != RENDER_TEXTUREHANDLE_INVALID;
 }
+#endif
 
 // Decodes the embedded PNG into s_image: 32bpp in the byte order
 // Render_CreateTexture2D expects for TextureFormat_Unsigned_RGBA8, which

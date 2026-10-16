@@ -972,6 +972,34 @@ FS_PRIVATE bool fs_copy(const fs_path &from, const fs_path &to)
                COPYFILE_ALL | COPYFILE_NOFOLLOW_DST) == 0;
 #elif defined(_WIN32)
     return CopyFileA(fs_path_ascii(from), fs_path_ascii(to), FALSE) ? true : false;
+#else
+    // generic fallback (e.g. wasm): plain stdio copy
+    FILE *input = fopen(fs_path_ascii(from), "rb");
+    if (input == nullptr)
+        return false;
+    FILE *output = fopen(fs_path_ascii(to), "wb");
+    if (output == nullptr)
+    {
+        fclose(input);
+        return false;
+    }
+    char buffer[65536];
+    size_t bytes;
+    bool ok = true;
+    while ((bytes = fread(buffer, 1, sizeof(buffer), input)) != 0)
+    {
+        if (fwrite(buffer, 1, bytes, output) != bytes)
+        {
+            ok = false;
+            break;
+        }
+    }
+    if (ferror(input))
+        ok = false;
+    fclose(input);
+    if (fclose(output) != 0)
+        ok = false;
+    return ok;
 #endif
 }
 

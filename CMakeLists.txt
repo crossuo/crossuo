@@ -144,6 +144,18 @@ elseif (OPENGL_FOUND)
     message(STATUS "Building with GL3 renderer")
   endif()
   set(GL_LIBRARIES ${OPENGL_LIBRARIES})
+  if (CMAKE_SYSROOT AND UNIX AND NOT APPLE)
+    # the cross sysroot's libGL.so references libXext.so.6, which some
+    # sysroots only ship a few levels deep: add the sysroot lib dirs to the
+    # link search path so the static linker resolves the dependency without
+    # warnings (rpath-link is not consulted for sysrooted shared libs by
+    # some binutils versions, but -L is)
+    foreach(_gl_dir "${CMAKE_SYSROOT}/usr/lib" "${CMAKE_SYSROOT}/usr/lib64")
+      if (IS_DIRECTORY "${_gl_dir}")
+        list(APPEND GL_LIBRARIES "${_gl_dir}")
+      endif()
+    endforeach()
+  endif()
   if (XUO_STATIC_BINARY AND NOT MSVC)
     # fully static client: Mesa has no static archive, so restore dynamic
     # resolution from the GL stack onward (flipped back to static at the end of
@@ -160,8 +172,44 @@ elseif (GLESv2_FOUND)
   # Passed without a value to match gfx.h's empty '#define USE_GLES' (a -1
   # value would trigger a macro redefinition warning in every gfx.h user).
   compile_definitions(USE_GLES)
+  # the checked-in SDL_config.h enables immintrin.h unconditionally; on GLES2
+  # (ARM) builds the x86 intrinsics header is not available - SDL_cpuinfo.h
+  # handles its absence via this disable flag
+  compile_definitions(SDL_DISABLE_IMMINTRIN_H=1)
   set(USE_GLES2 1)
-  set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR})
+  # libglvnd's libGLESv2 is a stub over libGLdispatch: both must be linked.
+  # musl-built GLES2 (the alpine sysroot) is standalone: it needs the alpine
+  # mesa-glapi instead, and no GLdispatch - only search GLdispatch when the
+  # GLESv2 came from the (glibc) container prefixes
+  if(GLESv2_LIBRARY_DIR MATCHES "^/opt/alpine-gles")
+    set(GLdispatch_LIBRARY "")
+    find_library(glapi_LIBRARY
+        NAMES glapi
+        HINTS /opt/alpine-gles/usr/lib
+        NO_CMAKE_FIND_ROOT_PATH)
+    set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR} ${glapi_LIBRARY})
+    if(XUO_STATIC_BINARY)
+        list(APPEND GL_LIBRARIES
+            "-Wl,-rpath-link,/opt/alpine-gles/usr/lib"
+            "-Wl,-rpath-link,/opt/alpine-gles/lib")
+    endif()
+  else()
+    find_library(GLdispatch_LIBRARY
+        NAMES GLdispatch
+        HINTS
+            /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
+            /usr/lib/arm-linux-gnueabihf
+            /usr/lib/aarch64-linux-gnu
+            /usr/lib/i386-linux-gnu
+            /usr/lib
+        NO_CMAKE_FIND_ROOT_PATH)
+    set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR} ${GLdispatch_LIBRARY})
+  endif()
+  if (XUO_STATIC_BINARY AND NOT MSVC)
+    # fully static client: GLES2 has no static archive, so restore dynamic
+    # resolution from the GL stack onward (same as the GL3 path above)
+    set(GL_LIBRARIES "-Wl,-Bdynamic" ${GL_LIBRARIES})
+  endif()
   message(STATUS "Building with GLES2 renderer")
 endif()
 
@@ -278,6 +326,20 @@ configure_file(
   COPYONLY
 )
 include_directories("${PROJECT_BINARY_DIR}/")
+
+if (GLESv2_FOUND)
+  # the cross containers may not ship GLES2/EGL headers in their sysroot;
+  # the container's own ones (found by CMake/FindGLESv2.cmake) then apply.
+  # include_directories(/usr/include) is dropped as an implicit sysroot
+  # include, so force it with -idirafter instead
+  add_compile_options(-idirafter "${GLES2_INCLUDE_ROOT}")
+endif()
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(armv[0-9]|arm)$")
+  # 32-bit ARM has no native 64-bit atomics (quickjs, vfs_trap): route the
+  # compiler runtime through libatomic for every target defined below
+  link_libraries(atomic)
+endif()
 
 add_subdirectory(external)
 add_subdirectory(common)

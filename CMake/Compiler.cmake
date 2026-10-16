@@ -55,6 +55,11 @@ else()
       # size_t conversions are understood (safe with static linking)
       compile_definitions(__USE_MINGW_ANSI_STDIO=1)
     endif()
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(i[3-6]86)$" AND NOT XUO_EMSC)
+      # soloud (external/ass.h) enables its SSE intrinsics path on any x86;
+      # the i386 baseline compiles none of it without explicit -msse
+      add_compile_options(-msse)
+    endif()
   endif()
 
   # these are the only we want to really always disable

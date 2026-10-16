@@ -57,6 +57,11 @@
 #endif /* __clang__ */
 #elif defined(__MINGW64_VERSION_MAJOR)
 #include <intrin.h>
+/* llvm-mingw on ARM64: NEON is baseline (__ARM_NEON is defined) but this
+   branch skips the arm_neon.h include below - audio converters use it */
+#  if defined(__aarch64__) && !defined(SDL_DISABLE_ARM_NEON_H)
+#    include <arm_neon.h>
+#  endif
 #else
 /* altivec.h redefining bool causes a number of problems, see bugs 3993 and 4392, so you need to explicitly define SDL_ENABLE_ALTIVEC_H to have it included. */
 #if defined(HAVE_ALTIVEC_H) && defined(__ALTIVEC__) && !defined(__APPLE_ALTIVEC__) && defined(SDL_ENABLE_ALTIVEC_H)

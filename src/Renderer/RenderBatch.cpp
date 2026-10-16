@@ -47,7 +47,7 @@ struct alignas(4) RenderBatchKey
 // 6 triangle-list vertices at flush time only when the batch actually merges)
 enum class BatchKind : uint8_t
 {
-    None,
+    NoBatch,
     Quads,
     LandTiles,
 };
@@ -59,7 +59,7 @@ bool s_pending = false;
 static bool g_batchLog = getenv("XUO_BATCH_LOG") != nullptr;
 static float s_layerMin = 1e9f;
 static float s_layerMax = -1e9f;
-static BatchKind s_kind = BatchKind::None;
+static BatchKind s_kind = BatchKind::NoBatch;
 
 RenderBatchKey MakeKey(RenderState *state, texture_handle_t texture)
 {
@@ -550,7 +550,7 @@ void RenderBatch_Flush(RenderState *state)
 
     s_quadCount = 0;
     s_pending = false;
-    s_kind = BatchKind::None;
+    s_kind = BatchKind::NoBatch;
 }
 
 #endif

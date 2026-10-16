@@ -162,8 +162,8 @@ static void push_event(EventKind kind, unsigned int name)
 // ---------------------------------------------------------------------------
 
 #if defined(USE_GL3W)
-typedef void (*PFN_TRACKED_GEN)(GLsizei, GLuint *);
-typedef void (*PFN_TRACKED_DELETE)(GLsizei, const GLuint *);
+typedef void (APIENTRY *PFN_TRACKED_GEN)(GLsizei, GLuint *);
+typedef void (APIENTRY *PFN_TRACKED_DELETE)(GLsizei, const GLuint *);
 
 static PFN_TRACKED_GEN s_real_gen = nullptr;
 static PFN_TRACKED_DELETE s_real_delete = nullptr;

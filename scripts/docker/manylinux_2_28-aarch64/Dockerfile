@@ -21,6 +21,7 @@ RUN dnf install -y cpio curl grep \
          curl -s "$BASE/$repo/aarch64/os/Packages/" -o "/tmp/list-$repo"; \
        done \
     && PKGS="libglvnd libglvnd-opengl libglvnd-glx mesa-libGL libX11 libxcb libXau libXdmcp libXcursor \
+             libXext libX11 libxcb \
              libXfixes libXrandr libXi libXinerama libXScrnSaver libXxf86vm \
              alsa-lib zlib \
              libglvnd-devel xorg-x11-proto-devel libX11-devel libXcursor-devel \
@@ -40,5 +41,14 @@ RUN dnf install -y cpio curl grep \
          rpm2cpio "$r" | cpio -idm --quiet -D "$SYSROOT"; \
        done \
     && rm -rf /tmp/rpms /tmp/list-* \
+    && for libdir in "$SYSROOT/usr/lib64" "$SYSROOT/usr/lib"; do \
+         cd "$libdir"; \
+         for so in libX*.so libxcb.so libGL.so; do \
+           { [ -e "$so" ] || [ -L "$so" ]; } || continue; \
+           base="${so%.so}"; \
+           { [ -e "$base.so.6" ] || [ -L "$base.so.6" ]; } || ln -s "$so" "$base.so.6"; \
+         done; \
+       done \
     && ls "$SYSROOT/usr/include/GL/gl.h" "$SYSROOT/usr/include/X11/Xlib.h" \
-          "$SYSROOT/usr/lib64/libGL.so" "$SYSROOT/usr/lib64/libz.a"
+          "$SYSROOT/usr/lib64/libGL.so" "$SYSROOT/usr/lib64/libz.a" \
+          "$SYSROOT/usr/lib/libXext.so.6"

@@ -341,7 +341,7 @@ async fn main() {
     // (explicit --ws-allow entries are kept as additional entries, shown
     // as source "cli"). Read before serving starts; a changed shards.cfg
     // needs a restart. Empty result + no --ws-allow = open bridges.
-    let mut ws_allow_info: Vec<(String, String, u16)> = Vec::new();
+    let ws_allow_info: Vec<(String, String, u16)> = Vec::new();
     /*if let Ok(text) = std::fs::read_to_string(PathBuf::from(&dist).join("shards.cfg")) {
         for (shard, servers) in shards_login_servers(&text) {
             for (host, port) in servers {
@@ -4080,7 +4080,7 @@ fn shards_local_product_urls(text: &str) -> Vec<(String, String)> {
     let mut out: Vec<(String, String)> = Vec::new();
     let mut name: Option<String> = None;
     let mut product_url: Option<String> = None;
-    let mut flush = |out: &mut Vec<(String, String)>,
+    let flush = |out: &mut Vec<(String, String)>,
                      name: &mut Option<String>,
                      product_url: &mut Option<String>| {
         if let (Some(n), Some(i)) = (name.take(), product_url.take()) {
@@ -4119,11 +4119,13 @@ fn shards_local_product_urls(text: &str) -> Vec<(String, String)> {
 
 // parse the dist shards.cfg's LoginServer= entries: (shard name, [(host, port)]).
 // "host,port" per entry, multiple servers as comma-separated pairs.
+// (currently unused: the shards.cfg auto-allowlist call site is disabled)
+#[allow(dead_code)]
 fn shards_login_servers(text: &str) -> Vec<(String, Vec<(String, u16)>)> {
     let mut out: Vec<(String, Vec<(String, u16)>)> = Vec::new();
     let mut name: Option<String> = None;
     let mut servers: Vec<(String, u16)> = Vec::new();
-    let mut flush = |out: &mut Vec<(String, Vec<(String, u16)>)>,
+    let flush = |out: &mut Vec<(String, Vec<(String, u16)>)>,
                      name: &mut Option<String>,
                      servers: &mut Vec<(String, u16)>| {
         if let (Some(n), true) = (name.take(), !servers.is_empty()) {

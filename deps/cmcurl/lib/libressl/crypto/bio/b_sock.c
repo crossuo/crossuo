@@ -23,6 +23,8 @@
 /* mingw-w64 declares gai_strerrorA/W but provides no implementation and
  * windows does not export it; supply the ANSI one for the diagnostics */
 #undef gai_strerror
+#include <stdio.h> /* snprintf: declare before use (C99 static inline in
+                      newer mingw headers rejects the implicit declaration) */
 char *gai_strerrorA(int);
 char *gai_strerrorA(int e)
 {

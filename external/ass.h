@@ -568,6 +568,12 @@ DRMP3_API void drmp3_free(void* p, const drmp3_allocation_callbacks* pAllocation
 #ifndef dr_mp3_c
 #define dr_mp3_c
 
+/* gcc-12's -Wstringop-overflow misfires on the inlined scalefactor writes
+   below ("region of size 0"): the bound is provably fine at runtime */
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 12
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h> /* For INT_MAX */

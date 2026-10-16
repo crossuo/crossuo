@@ -10,12 +10,21 @@
 
 // workers have no alert(); route error dialogs to the log instead of dying
 // with an uncaught ReferenceError
+// (the EM_JS macro machinery emits file-scope variables without prior
+// declarations - clang's -Wmissing-variable-declarations flags that)
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-variable-declarations"
+#endif
 EM_JS(void, web_install_alert_shim, (), {
     if (typeof globalThis.alert !== 'function')
     {
         globalThis.alert = function (msg) { console.warn('alert:', msg); };
     }
 });
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 // Web file topology (PROXY_TO_PTHREAD): every C-level file operation from
 // the pthread worker is served by the MAIN browser thread's filesystem
@@ -1102,13 +1111,21 @@ int main(int argc, char **argv)
 
     g_Game.ProcessCommandLine();
     g_GameWindow.Raise();
+#if !defined(XUO_EMSC)
     auto ret = Run();
     SDL_Quit();
     str_terminate();
 #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
     gfx_render_list_destroy();
 #endif // #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
-#if !defined(XUO_EMSC)
     return ret;
+#else
+    Run();
+    SDL_Quit();
+    str_terminate();
+#if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
+    gfx_render_list_destroy();
+#endif
+    return EXIT_SUCCESS; // the browser keeps the loop alive; main never returns
 #endif
 }

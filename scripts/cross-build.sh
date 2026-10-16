@@ -101,12 +101,12 @@ command -v "$DOCKER" >/dev/null || { echo "error: $DOCKER not found in PATH" >&2
 target_image() {
   case "$1" in
     linux-x64)        echo "${XUO_IMAGE:-crossuo/manylinux2014}";;
-    linux-x86)        echo "${XUO_IMAGE:-dockcross/linux-x86}";;
+    linux-x86)        echo "${XUO_IMAGE:-crossuo/linux-x86-deps}";;
     linux-arm64)      echo "${XUO_IMAGE:-crossuo/manylinux_2_28-aarch64}";;
-    linux-armv7)      echo "${XUO_IMAGE:-dockcross/linux-armv7}";;
+    linux-armv7)      echo "${XUO_IMAGE:-crossuo/linux-armv7-deps}";;
     linux-musl-x64)   echo "${XUO_IMAGE:-crossuo/alpine-musl}";;
-    linux-musl-arm64) echo "${XUO_IMAGE:-dockcross/linux-arm64-musl}";;
-    linux-musl-armv7) echo "${XUO_IMAGE:-dockcross/linux-armv7l-musl}";;
+    linux-musl-arm64) echo "${XUO_IMAGE:-crossuo/linux-musl-arm64-deps}";;
+    linux-musl-armv7) echo "${XUO_IMAGE:-crossuo/linux-musl-armv7-deps}";;
     windows-x64)      echo "${XUO_IMAGE:-dockcross/windows-static-x64}";;
     windows-x86)      echo "${XUO_IMAGE:-dockcross/windows-static-x86}";;
     windows-arm64)    echo "${XUO_IMAGE:-dockcross/windows-arm64}";;
@@ -159,10 +159,50 @@ _dockcross_wrapper() {
   if [[ ! -x "$wrapper" ]]; then
     mkdir -p .dockcross-cache
     echo ">> bootstrapping dockcross wrapper for $image"
-    $DOCKER run --rm ${DOCKCROSS_ARGS:-} "$image" > "$wrapper"
+    # derived images (the *-deps layers) inherit the base image's baked-in
+    # DEFAULT_DOCKCROSS_IMAGE, which would make the wrapper run the base
+    # again - rewrite it so the wrapper invokes the image it was generated
+    # from
+    $DOCKER run --rm ${DOCKCROSS_ARGS:-} "$image" \
+      | sed -e "s|^DEFAULT_DOCKCROSS_IMAGE=.*|DEFAULT_DOCKCROSS_IMAGE=$image|" > "$wrapper"
     chmod +x "$wrapper"
   fi
   echo "$wrapper"
+}
+
+# plain dockcross images lack the cross X11/OpenGL/EGL dev packages the
+# vendored SDL2 needs; the deps images layer them on (scripts/docker/linux-deps)
+target_deps() {
+  case "$1" in
+    linux-x86)        echo "dockcross/linux-x86 i386";;
+    linux-armv7)      echo "dockcross/linux-armv7 armhf armhf";;
+    linux-musl-arm64) echo "dockcross/linux-arm64-musl arm64 arm64 aarch64";;
+    linux-musl-armv7) echo "dockcross/linux-armv7l-musl armhf armhf armv7";;
+    *) return 1;;
+  esac
+}
+
+ensure_deps_image() {
+  local target="$1" image; image=$(target_image "$target")
+  $DOCKER image inspect "$image" >/dev/null 2>&1 && return 0
+  local deps arch ports repo="" alpine="" linkdir="" linkname=""
+  read -r deps arch ports alpine <<< "$(target_deps "$target")"
+  # i386 packages live in the main archive, not ports
+  [[ "$arch" == "i386" ]] && repo="--build-arg PORTS_REPO=http://archive.ubuntu.com/ubuntu"
+  # static-musl targets cannot link glibc GL libs: fetch musl ones instead
+  [[ -n "$alpine" ]] && alpine="--build-arg ALPINE_ARCH=$alpine"
+  # the manylinux aarch64 sysroot lacks the versioned libXext.so.6 that its
+  # libGL.so records as DT_NEEDED: pull a glibc-built one from Debian arm64
+  if [[ "$target" == linux-arm64 ]]; then
+    linkname="--build-arg DEB_ARM64_LIBXEXT=https://deb.debian.org/debian/dists/bookworm/main/binary-arm64 --build-arg SYSROOT_COPY_DST=/usr/xcc/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot/usr/lib64"
+  fi
+  echo ">> building deps image $image (from $deps, arch $arch)"
+  $DOCKER build -t "$image" \
+    --build-arg FROM_IMAGE="$deps" \
+    --build-arg DPKG_ARCH="$arch" \
+    --build-arg PORTS_ARCH="$ports" \
+    $repo $alpine $linkdir $linkname \
+    scripts/docker/linux-deps
 }
 
 ensure_local_image() {
@@ -249,7 +289,9 @@ cmake_args() {
     # static zlib - only libGL.so.1 + core glibc remain dynamic
     args+=(-DXUO_STATIC_CXX_RUNTIME=On -DVIDEO_WAYLAND=OFF -DZLIB_LIBRARY=/usr/lib64/libz.a)
   elif [[ "$target" == linux-arm64 ]]; then
-    # same portable recipe; zlib comes from the aarch64 cross sysroot
+    # same portable recipe; zlib comes from the aarch64 cross sysroot. The
+    # sysroot libGL's libXext.so.6 dependency is handled in CMakeLists
+    # (rpath-link of the sysroot lib dirs)
     args+=(-DXUO_STATIC_CXX_RUNTIME=On -DVIDEO_WAYLAND=OFF -DZLIB_LIBRARY=/usr/xcc/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot/usr/lib64/libz.a)
   elif [[ "$target" == windows-* ]]; then
     # MinGW cross builds: SDL's DIRECTX backend requires the DirectX SDK
@@ -276,8 +318,10 @@ build_target() {
   local target="$1"
   local image; image=$(target_image "$target")
 
+  if target_deps "$target" >/dev/null 2>&1; then ensure_deps_image "$target"; fi
   case "$image" in
-    crossuo/*) ensure_local_image "$image" "scripts/docker/${image#crossuo/}";;
+    crossuo/*)
+      [[ "$image" == *-deps ]] || ensure_local_image "$image" "scripts/docker/${image#crossuo/}";;
   esac
 
   if [[ "$CLEAN" == 1 ]]; then rm -rf "build/$target" "dist/$target"; fi

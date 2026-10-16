@@ -991,7 +991,9 @@ RenderState Render_DefaultState()
 // ---------------------------------------------------------------------------
 
 static const int ART_ARRAY_LAYER_SIZE = 256; // sprites up to 256x256 fit
+#if !defined(XUO_EMSC)
 static const int ART_ARRAY_INITIAL_LAYERS = 1024;
+#endif
 static const int ART_ARRAY_MAX_LAYERS = 4096;
 
 static uint32_t s_artArrayTexture = 0;

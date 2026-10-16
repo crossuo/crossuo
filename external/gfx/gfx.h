@@ -75,10 +75,13 @@
     #endif
     #define IMGUI_IMPL_OPENGL_ES2
     //#define IMGUI_IMPL_OPENGL_ES3
-    #if defined(XUO_EMSC)
-    // webgl2 (-sUSE_WEBGL2=1): GLES3 entry points the GLES2 headers omit,
-    // plus the desktop constants the renderer uses (GL_BGRA etc. are
+    #if defined(XUO_EMSC) || defined(__arm__) || defined(__aarch64__)
+    // webgl2 / native GLES2 devices: GLES3 entry points the GLES2 headers
+    // omit, plus the desktop constants the renderer uses (GL_BGRA etc. are
     // compile-time shims - check runtime support when touching those paths)
+    #ifndef GL_TEXTURE_2D_ARRAY
+        #define GL_TEXTURE_2D_ARRAY 0x8C1A
+    #endif
     #ifndef GL_MAX_ARRAY_TEXTURE_LAYERS
         #define GL_MAX_ARRAY_TEXTURE_LAYERS 0x88FF
     #endif
