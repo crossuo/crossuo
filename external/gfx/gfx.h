@@ -253,6 +253,8 @@ static inline int gfx_gl_validation_enabled()
 struct GenericVertex
 {
     float pos[2];
+    float z;          // isometric depth key for the world pass (0 elsewhere);
+                      // read together with pos as a 3-component vertex attrib
     float uv[2];
     unsigned int col;
     float normal[3];  // Normal vector for 3D rendering (default [0,0,1] for 2D)

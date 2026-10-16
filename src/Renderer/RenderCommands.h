@@ -123,6 +123,8 @@ struct DrawQuadCmd
     float4 color = g_ColorInvalid;
     bool mirrored = false;
     float layer = -1.f; // >= 0: texture is a texture array, index into it
+    float depth = 0.f;  // world-pass isometric depth key (stamped from
+                        // g_WorldObjectDepth by RenderAdd_DrawQuad)
 };
 
 struct DrawCharacterSittingCmd
@@ -137,6 +139,7 @@ struct DrawCharacterSittingCmd
     float h6mod = 0.f;
     float h9mod = 0.f;
     bool mirror = false;
+    float depth = 0.f; // world-pass isometric depth key
 };
 
 struct DrawLandTileCmd
@@ -158,6 +161,7 @@ struct DrawLandTileCmd
                          // (texture is then ignored by the draw/batch paths)
     float u = 1.0f;      // uv scale of the tile inside the array layer
     float v = 1.0f;
+    float depth = 0.f;   // world-pass isometric depth key
 };
 
 struct DrawShadowCmd
@@ -170,6 +174,7 @@ struct DrawShadowCmd
     uint32_t height = 0;
     bool mirror = false;
     bool keepBlend = false;
+    float depth = 0.f; // world-pass isometric depth key
 };
 
 struct DrawCircleCmd
@@ -214,6 +219,7 @@ struct DrawRotatedQuadCmd
     float v = 1.f;
     float4 color = g_ColorInvalid;
     bool mirrored = false;
+    float depth = 0.f; // world-pass isometric depth key
 };
 
 struct AlphaTestCmd

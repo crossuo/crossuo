@@ -39,6 +39,7 @@
 #include "../Managers/MacroManager.h"
 #include "../Managers/ObjectPropertiesManager.h"
 #include "../Managers/ScreenEffectManager.h"
+#include "../GameObjects/GameEffectMoving.h"
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/MapBlock.h"
 #include "../GameObjects/GamePlayer.h"
@@ -1378,10 +1379,24 @@ void CGameScreen::DrawGameWindow(bool render)
 #endif
         SCOPED_GL_DEBUG_MARKER_LABEL("GameScreen");
         m_HitsStack.clear();
-        // two passes: all ground tiles first (they never occlude anything and
-        // become contiguous in the command stream, which lets the renderer
-        // merge them into a few draw calls), then statics/characters in the
-        // original isometric order
+        // world pass: LEQUAL depth with a per-vertex isometric depth key
+        // ((x+y) tile distance from the player + a small z term, closer =
+        // smaller) resolves overlaps between land and tall statics while the
+        // land-first batch merging stays valid
+        // explicit func: EnableDepthState only calls glEnable, and GL's
+        // glDepthFunc default is LESS - equal depths (clothing over the body
+        // quads drawn just before) would fail the test
+        RenderAdd_SetDepth(
+            g_renderCmdList, DepthStateCmd{ DepthFunc::DepthFunc_LessOrEqual });
+        // the depth buffer was cleared with the frame, but overlays drawn
+        // before this point (death screen) may have written stale values
+        RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Depth });
+        const float worldDepthRef =
+            (g_Player != nullptr) ? float(g_Player->GetX() + g_Player->GetY()) : 0.0f;
+        // two passes: all ground tiles first (the depth buffer keeps the
+        // ground-under-objects order, and contiguous land tiles merge into a
+        // few draw calls), then statics/characters in the original isometric
+        // order
         for (int pass = 0; pass < 2; pass++)
         for (int i = 0; i < m_RenderListCount; i++)
         {
@@ -1400,7 +1415,85 @@ void CGameScreen::DrawGameWindow(bool render)
 
                 int x = obj->DrawX;
                 int y = obj->DrawY;
+                // depth key: a bigger key is closer to the camera, and the
+                // ortho projection inverts z, so closer objects land at
+                // smaller window-z and win under LEQUAL; the tile-sum
+                // dominates across diagonals, the priority term orders
+                // objects within the same diagonal
+                int dx = obj->GetX();
+                int dy = obj->GetY();
+                float priorityZ = float(obj->PriorityZ);
+                // moving objects count towards their destination diagonal so
+                // the tiles stepped into do not cover the feet mid-step
+                if (obj->IsGameObject() && ((CGameObject *)obj)->NPC)
+                {
+                    CGameCharacter *gc = (CGameCharacter *)obj;
+                    const int ox = gc->OffsetX;
+                    const int oy = gc->OffsetY;
+                    if (ox > 0 && oy == 0) // Northeast
+                    {
+                        dx++;
+                    }
+                    else if (ox > 0 && oy > 0) // East
+                    {
+                        priorityZ += (gc->OffsetZ > 0) ? gc->OffsetZ : 0;
+                        dx++;
+                    }
+                    else if (ox == 0 && oy > 0) // Southeast
+                    {
+                        dx++;
+                        dy++;
+                    }
+                    else if (ox < 0 && oy > 0) // South
+                    {
+                        priorityZ += (gc->OffsetZ > 0) ? gc->OffsetZ : 0;
+                        dy++;
+                    }
+                    else if (ox < 0 && oy == 0) // Southwest
+                    {
+                        dy++;
+                    }
+                }
+                else if (obj->RenderType == ROT_EFFECT)
+                {
+                    // moving spell effects keep screen-space offsets like
+                    // walkers. only EF_MOVING effects are
+                    // actually CGameEffectMoving - plain effects would be an
+                    // out-of-bounds read of the Offset fields
+                    if (((CGameEffect *)obj)->EffectType == EF_MOVING)
+                    {
+                        CGameEffectMoving *fx = (CGameEffectMoving *)obj;
+                        const int ox = fx->OffsetX;
+                        const int oy = fx->OffsetY;
+                        if (ox > 0 && oy == 0) // Northeast
+                        {
+                            dx++;
+                        }
+                        else if (ox > 0 && oy > 0) // East
+                        {
+                            priorityZ += (fx->OffsetZ > 0) ? fx->OffsetZ : 0;
+                            dx++;
+                        }
+                        else if (ox == 0 && oy > 0) // Southeast
+                        {
+                            dx++;
+                            dy++;
+                        }
+                        else if (ox < 0 && oy > 0) // South
+                        {
+                            priorityZ += (fx->OffsetZ > 0) ? fx->OffsetZ : 0;
+                            dy++;
+                        }
+                        else if (ox < 0 && oy == 0) // Southwest
+                        {
+                            dy++;
+                        }
+                    }
+                }
+                g_WorldObjectDepth = (float(dx + dy) - worldDepthRef) +
+                                     (127.0f + priorityZ) * 0.01f;
                 obj->Draw(x, y);
+                g_WorldObjectDepth = 0.0f;
                 if (pass == 0)
                 {
                     continue; // overlays (health bars) belong to the object pass
@@ -1863,14 +1956,16 @@ void CGameScreen::Render()
     m_LightCount = 0;
 
     const auto windowSize = g_GameWindow.GetSize();
+    // near/far wide enough for the world pass isometric depth key
+    // (tile distance from the player stays within a few hundred units)
     auto viewParams = SetViewParamsCmd{ g_RenderBounds.GameWindowPosX,
                                         g_RenderBounds.GameWindowPosY,
                                         g_RenderBounds.GameWindowWidth,
                                         g_RenderBounds.GameWindowHeight,
                                         windowSize.Width,
                                         windowSize.Height,
-                                        -150,
-                                        150,
+                                        -1024,
+                                        1024,
                                         float(g_GlobalScale) };
     RenderAdd_SetViewParams(g_renderCmdList, viewParams);
 

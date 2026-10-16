@@ -94,7 +94,8 @@ static void AppendStripQuad(
     uint32_t col,
     const float *verts4,
     const float *uv4,
-    float layer)
+    float layer,
+    float depth)
 {
     if (s_quadCount >= MAX_BATCH_QUADS)
     {
@@ -107,6 +108,7 @@ static void AppendStripQuad(
     {
         out[i].pos[0] = mtX + x + verts4[i * 2 + 0];
         out[i].pos[1] = mtY + y + verts4[i * 2 + 1];
+        out[i].z = depth;
         out[i].uv[0] = uv4[i * 2 + 0];
         out[i].uv[1] = uv4[i * 2 + 1];
         out[i].col = col;
@@ -130,9 +132,9 @@ static void AppendStripQuad(
 
 void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd)
 {
-    // land tiles and quads never overlap (ground vs objects), so the two
-    // pending slots accumulate independently and flush on real state changes
-    // only - no cross-kind flush here or in AddLandTile
+    // the depth buffer (world pass enables it) - not the pending slots - now
+    // keeps ground-under-objects order, so land/quads accumulate independently
+    // and flush on real state changes only
     // array-placed sprites key on the shared array texture so they merge
     // with each other; the per-sprite handle is irrelevant
     const texture_handle_t batchTexture =
@@ -189,7 +191,8 @@ void RenderBatch_AddQuad(RenderState *state, const DrawQuadCmd &cmd)
         col,
         cmd.mirrored ? vMirrored : v,
         uvs,
-        cmd.layer);
+        cmd.layer,
+        cmd.depth);
 }
 
 void RenderBatch_AddUntexturedQuad(RenderState *state, const DrawUntexturedQuadCmd &cmd)
@@ -228,7 +231,8 @@ void RenderBatch_AddUntexturedQuad(RenderState *state, const DrawUntexturedQuadC
         col,
         v,
         zeroUVs,
-        -1.0f);
+        -1.0f,
+        0.0f);
 }
 
 void RenderBatch_AddLandTile(RenderState *state, const DrawLandTileCmd &cmd)
@@ -273,6 +277,7 @@ void RenderBatch_AddLandTile(RenderState *state, const DrawLandTileCmd &cmd)
     {
         out[i].pos[0] = tx + v[i][0];
         out[i].pos[1] = ty + v[i][1];
+        out[i].z = cmd.depth;
         out[i].uv[0] = uv[i][0];
         out[i].uv[1] = uv[i][1];
         out[i].col = col;

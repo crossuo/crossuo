@@ -6,6 +6,9 @@
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
 #include "Renderer/RenderBatch.h"
+#include "../Globals.h" // g_WorldObjectDepth
+
+#define STAMP_WORLD_DEPTH(cmd) (cmd).depth = g_WorldObjectDepth
 
 bool RenderAdd_SetTexture(RenderCmdList *cmdList, const SetTextureCmd &cmd)
 {
@@ -31,8 +34,10 @@ bool RenderAdd_SetFrameBuffer(RenderCmdList *cmdList, const SetFrameBufferCmd &c
     return true;
 }
 
-bool RenderAdd_DrawQuad(RenderCmdList *cmdList, const DrawQuadCmd &cmd)
+bool RenderAdd_DrawQuad(RenderCmdList *cmdList, const DrawQuadCmd &cmdIn)
 {
+    DrawQuadCmd cmd = cmdIn;
+    STAMP_WORLD_DEPTH(cmd);
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
     if (!cmdList->immediateMode)
     {
@@ -47,8 +52,10 @@ bool RenderAdd_DrawQuad(RenderCmdList *cmdList, const DrawQuadCmd &cmd)
     return true;
 }
 
-bool RenderAdd_DrawRotatedQuad(RenderCmdList *cmdList, const DrawRotatedQuadCmd &cmd)
+bool RenderAdd_DrawRotatedQuad(RenderCmdList *cmdList, const DrawRotatedQuadCmd &cmdIn)
 {
+    DrawRotatedQuadCmd cmd = cmdIn;
+    STAMP_WORLD_DEPTH(cmd);
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
     if (!cmdList->immediateMode)
     {
@@ -59,8 +66,10 @@ bool RenderAdd_DrawRotatedQuad(RenderCmdList *cmdList, const DrawRotatedQuadCmd 
     return true;
 }
 
-bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, const DrawCharacterSittingCmd &cmd)
+bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, const DrawCharacterSittingCmd &cmdIn)
 {
+    DrawCharacterSittingCmd cmd = cmdIn;
+    STAMP_WORLD_DEPTH(cmd);
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
     if (!cmdList->immediateMode)
     {
@@ -71,8 +80,10 @@ bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, const DrawCharacterS
     return true;
 }
 
-bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, const DrawLandTileCmd &cmd)
+bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, const DrawLandTileCmd &cmdIn)
 {
+    DrawLandTileCmd cmd = cmdIn;
+    STAMP_WORLD_DEPTH(cmd);
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
     if (!cmdList->immediateMode)
     {
@@ -87,8 +98,10 @@ bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, const DrawLandTileCmd &cmd)
     return true;
 }
 
-bool RenderAdd_DrawShadow(RenderCmdList *cmdList, const DrawShadowCmd &cmd)
+bool RenderAdd_DrawShadow(RenderCmdList *cmdList, const DrawShadowCmd &cmdIn)
 {
+    DrawShadowCmd cmd = cmdIn;
+    STAMP_WORLD_DEPTH(cmd);
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
     if (!cmdList->immediateMode)
     {

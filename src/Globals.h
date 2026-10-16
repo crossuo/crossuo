@@ -154,6 +154,10 @@ extern uint8_t g_GameSeed[4];
 
 extern uint16_t g_OutOfRangeColor;
 
+// isometric depth key of the world object being drawn; stamped into world
+// sprite commands by the RenderAdd_Draw* wrappers, 0 everywhere else
+extern float g_WorldObjectDepth;
+
 extern bool g_NoDrawRoof;
 
 extern char g_MaxGroundZ;

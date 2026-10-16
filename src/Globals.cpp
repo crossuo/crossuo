@@ -158,6 +158,7 @@ bool g_PaperdollBooks = false;
 uint8_t g_GameSeed[4] = { 0 };
 
 uint16_t g_OutOfRangeColor = 0;
+float g_WorldObjectDepth = 0.0f;
 char g_MaxGroundZ = 0;
 bool g_NoDrawRoof = false;
 char g_FoliageIndex = 0;

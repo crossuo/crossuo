@@ -11,7 +11,7 @@ static_assert(SDM_CHECKTRANS_BASE == 100, "the checktrans base is hardcoded in g
 
 static const char *g_vShader =
     GL_SHADER_HEADER
-    GL_SHADER_ATTRIBUTE(0) "vec2 inPos;\n"
+    GL_SHADER_ATTRIBUTE(0) "vec3 inPos;\n"
     GL_SHADER_ATTRIBUTE(1) "vec2 inUV;\n"
     GL_SHADER_ATTRIBUTE(2) "vec4 inColor;\n"
     GL_SHADER_ATTRIBUTE(3) "vec3 inNormal;\n"
@@ -28,7 +28,7 @@ static const char *g_vShader =
     "    vColor = inColor;\n"
     "    vNormal = inNormal;\n"
     "    vLayer = inLayer;\n"
-    "    gl_Position = uProjectionView * uModel * vec4(inPos, 0.0, 1.0);\n"
+    "    gl_Position = uProjectionView * uModel * vec4(inPos, 1.0);\n"
     "}";
 
 static const char *g_pShader =

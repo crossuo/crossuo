@@ -148,10 +148,10 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
          ((uint32_t)(colRef[3] * 255) << 24));
 
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, cmd.layer },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY, cmd.layer },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY, cmd.layer },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY, cmd.layer },
+        { { vb[0], vb[1] }, cmd.depth, { uv[0], uv[1] }, col, NORMAL_IDENTITY, cmd.layer },
+        { { vb[2], vb[3] }, cmd.depth, { uv[2], uv[3] }, col, NORMAL_IDENTITY, cmd.layer },
+        { { vb[4], vb[5] }, cmd.depth, { uv[4], uv[5] }, col, NORMAL_IDENTITY, cmd.layer },
+        { { vb[6], vb[7] }, cmd.depth, { uv[6], uv[7] }, col, NORMAL_IDENTITY, cmd.layer },
     };
 
     glm::mat4 model(1.0f);
@@ -212,10 +212,10 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
          ((uint32_t)(colRef[3] * 255) << 24));
 
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[0], vb[1] }, cmd.depth, { uv[0], uv[1] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[2], vb[3] }, cmd.depth, { uv[2], uv[3] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[4], vb[5] }, cmd.depth, { uv[4], uv[5] }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { vb[6], vb[7] }, cmd.depth, { uv[6], uv[7] }, col, NORMAL_IDENTITY, NO_LAYER },
     };
 
     glm::mat4 model(1.0f);
@@ -261,64 +261,64 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { width, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { 0.0f, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { width, 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { 0.0f, 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { width, h03 }, cmd.depth, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { 0.0f, h03 }, cmd.depth, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { width, 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { widthOffset, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { widthOffset, h06 }, cmd.depth, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, cmd.depth, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { widthOffset, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { widthOffset, h09 }, cmd.depth, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, cmd.depth, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
         }
     }
     else
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { widthOffset, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { widthOffset, 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, cmd.depth, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { widthOffset, h03 }, cmd.depth, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { 0.0f, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { width, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { 0.0f, h06 }, cmd.depth, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { width, h06 }, cmd.depth, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY, NO_LAYER };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-                vertices[vertexCount++] = { { width, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+                vertices[vertexCount++] = { { width, 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
             }
-            vertices[vertexCount++] = { { 0.0f, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-            vertices[vertexCount++] = { { width, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { 0.0f, h09 }, cmd.depth, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+            vertices[vertexCount++] = { { width, h09 }, cmd.depth, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
         }
     }
 
@@ -359,7 +359,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     GenericVertex vertices[4] = {
         // Vertex 0: Bottom-left
         {
-            {22.0f, (float)-rc.x},           // pos
+            {22.0f, (float)-rc.x}, cmd.depth,           // pos
             {0.0f, 0.0f},                    // uv
             col,
             {
@@ -371,7 +371,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         },
         // Vertex 1: Top-left
         {
-            {0.0f, (float)(22 - rc.y)},      // pos
+            {0.0f, (float)(22 - rc.y)}, cmd.depth,      // pos
             {0.0f, cmd.v},                   // uv
             col,
             {
@@ -383,7 +383,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         },
         // Vertex 2: Bottom-right
         {
-            {44.0f, (float)(22 - rc.h)},      // pos
+            {44.0f, (float)(22 - rc.h)}, cmd.depth,      // pos
             {cmd.u, 0.0f},                   // uv
             col,
             {
@@ -395,7 +395,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         },
         // Vertex 3: Top-right
         {
-            {22.0f, (float)(44 - rc.w)},      // pos
+            {22.0f, (float)(44 - rc.w)}, cmd.depth,      // pos
             {cmd.u, cmd.v},                  // uv
             col,
             {
@@ -453,17 +453,17 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 
     if (cmd.mirror)
     {
-        data[0] = { { width, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-        data[1] = { { 0.0f, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-        data[2] = { { width * (ratio + 1.0f), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-        data[3] = { { width * ratio, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[0] = { { width, height }, cmd.depth, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[1] = { { 0.0f, height }, cmd.depth, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[2] = { { width * (ratio + 1.0f), 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[3] = { { width * ratio, 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
     }
     else
     {
-        data[0] = { { 0.0f, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-        data[1] = { { width, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-        data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
-        data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[0] = { { 0.0f, height }, cmd.depth, { 0.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[1] = { { width, height }, cmd.depth, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[2] = { { width * ratio, 0.0f }, cmd.depth, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
+        data[3] = { { width * (ratio + 1.0f), 0.0f }, cmd.depth, { 1.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER };
     }
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
@@ -519,13 +519,13 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     const uint32_t edgeColor = cmd.gradientMode != 0 ? 0x00000000 : centerColor;
 
     // Center vertex
-    vertices[0] = { { 0.0f, 0.0f }, { 0.5f, 0.5f }, centerColor, NORMAL_IDENTITY, NO_LAYER };
+    vertices[0] = { { 0.0f, 0.0f }, 0.0f, { 0.5f, 0.5f }, centerColor, NORMAL_IDENTITY, NO_LAYER };
 
     // Perimeter vertices
     for (int i = 0; i <= 360; i++)
     {
         float a = (i / 180.0f) * pi;
-        vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, { 0.5f, 0.5f }, edgeColor, NORMAL_IDENTITY, NO_LAYER };
+        vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, 0.0f, { 0.5f, 0.5f }, edgeColor, NORMAL_IDENTITY, NO_LAYER };
     }
 
     glm::mat4 model(1.0f);
@@ -555,10 +555,10 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
          (uint32_t(colRef[3] * 255.f) << 24));
 
     const GenericVertex data[] = {
-        { { 0.0f, float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { float(cmd.width), float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { float(cmd.width), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { 0.0f, float(cmd.height) }, 0.0f, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { float(cmd.width), float(cmd.height) }, 0.0f, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { 0.0f, 0.0f }, 0.0f, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { float(cmd.width), 0.0f }, 0.0f, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
     };
 
     glm::mat4 model(1.0f);
@@ -597,8 +597,8 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
          ((uint32_t)(colRef[3] * 255) << 24));
 
     const GenericVertex data[] = {
-        { { float(cmd.x0), float(cmd.y0) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
-        { { float(cmd.x1), float(cmd.y1) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { float(cmd.x0), float(cmd.y0) }, 0.0f, { 0.0f, 0.0f }, col, NORMAL_IDENTITY, NO_LAYER },
+        { { float(cmd.x1), float(cmd.y1) }, 0.0f, { 1.0f, 1.0f }, col, NORMAL_IDENTITY, NO_LAYER },
     };
 
     glm::mat4 model(1.0f);

@@ -317,10 +317,10 @@ bool Render_Init(SDL_Window *window)
 
     // clang-format off
     const GenericVertex data[] = {
-        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
-        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
-        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
-        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
+        { { -1.0f, -1.0f }, 0.0f, { 0.0f, 0.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
+        { { -1.0f,  1.0f }, 0.0f, { 0.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
+        { {  1.0f,  1.0f }, 0.0f, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
+        { {  1.0f, -1.0f }, 0.0f, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
     };
     const unsigned int idx[] = { 0, 1, 2, 3 };
 #if !defined(USE_GLES2)
@@ -337,7 +337,7 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glEnableVertexAttribArray(_inUV));
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
+    GL_CHECK(glVertexAttribPointer(_inPos, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
     GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
     GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, normal)));
@@ -483,7 +483,7 @@ size_t Render_UploadVertices(const void *data, size_t size)
 void Render_BindVertexRange(size_t byteOffset)
 {
     GL_CHECK(glVertexAttribPointer(
-        _inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, pos))));
+        _inPos, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, pos))));
     GL_CHECK(glVertexAttribPointer(
         _inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid *)(byteOffset + OFFSETOF(GenericVertex, uv))));
     GL_CHECK(glVertexAttribPointer(
@@ -527,7 +527,7 @@ bool Render_InitVertexBuffers()
 
     // Set up vertex attributes for unified GenericVertex format
     GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
+    GL_CHECK(glVertexAttribPointer(_inPos, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
     GL_CHECK(glEnableVertexAttribArray(_inUV));
     GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
     GL_CHECK(glEnableVertexAttribArray(_inColor));

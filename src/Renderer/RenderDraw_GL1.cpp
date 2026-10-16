@@ -182,24 +182,24 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     if (cmd.mirrored)
     {
         glTexCoord2f(0.0f, drawCountY);
-        glVertex2i((int)cmd.width, (int)cmd.height);
+        glVertex3f((int)cmd.width, (int)cmd.height, cmd.depth);
         glTexCoord2f(drawCountX, drawCountY);
-        glVertex2i(0, (int)cmd.height);
+        glVertex3f(0, (int)cmd.height, cmd.depth);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2i((int)cmd.width, 0);
+        glVertex3f((int)cmd.width, 0, cmd.depth);
         glTexCoord2f(drawCountX, 0.0f);
-        glVertex2i(0, 0);
+        glVertex3f(0, 0, cmd.depth);
     }
     else
     {
         glTexCoord2f(0.0f, drawCountY);
-        glVertex2i(0, (int)cmd.height);
+        glVertex3f(0, (int)cmd.height, cmd.depth);
         glTexCoord2f(drawCountX, drawCountY);
-        glVertex2i((int)cmd.width, (int)cmd.height);
+        glVertex3f((int)cmd.width, (int)cmd.height, cmd.depth);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2i(0, 0);
+        glVertex3f(0, 0, cmd.depth);
         glTexCoord2f(drawCountX, 0.0f);
-        glVertex2i((int)cmd.width, 0);
+        glVertex3f((int)cmd.width, 0, cmd.depth);
     }
     glEnd();
 
@@ -225,13 +225,13 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
 
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(0.0f, cmd.v);
-    glVertex2f(0.0f, height);
+    glVertex3f(0.0f, height, cmd.depth);
     glTexCoord2f(cmd.u, cmd.v);
-    glVertex2f(width, height);
+    glVertex3f(width, height, cmd.depth);
     glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, cmd.depth);
     glTexCoord2f(cmd.u, 0.0f);
-    glVertex2f(width, 0.0f);
+    glVertex3f(width, 0.0f, cmd.depth);
     glEnd();
 
     glRotatef(cmd.angle, 0.0f, 0.0f, -1.0f);
@@ -266,13 +266,13 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         if (cmd.h3mod != 0.0f)
         {
             glTexCoord2f(0.0f, 0.0f);
-            glVertex2f(width, 0);
+            glVertex3f(width, 0, cmd.depth);
             glTexCoord2f(1.0f, 0.0f);
-            glVertex2f(0, 0);
+            glVertex3f(0, 0, cmd.depth);
             glTexCoord2f(0.0f, cmd.h3mod);
-            glVertex2f(width, h03);
+            glVertex3f(width, h03, cmd.depth);
             glTexCoord2f(1.0f, cmd.h3mod);
-            glVertex2f(0, h03);
+            glVertex3f(0, h03, cmd.depth);
         }
 
         if (cmd.h6mod != 0.0f)
@@ -280,15 +280,15 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
             if (cmd.h3mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(width, 0);
+                glVertex3f(width, 0, cmd.depth);
                 glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(0, 0);
+                glVertex3f(0, 0, cmd.depth);
             }
 
             glTexCoord2f(0.0f, cmd.h6mod);
-            glVertex2f(widthOffset, h06);
+            glVertex3f(widthOffset, h06, cmd.depth);
             glTexCoord2f(1.0f, cmd.h6mod);
-            glVertex2f(s_sittingCharacterOffset, h06);
+            glVertex3f(s_sittingCharacterOffset, h06, cmd.depth);
         }
 
         if (cmd.h9mod != 0.0f)
@@ -296,15 +296,15 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
             if (cmd.h6mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(widthOffset, 0);
+                glVertex3f(widthOffset, 0, cmd.depth);
                 glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(s_sittingCharacterOffset, 0);
+                glVertex3f(s_sittingCharacterOffset, 0, cmd.depth);
             }
 
             glTexCoord2f(0.0f, 1.0f);
-            glVertex2f(widthOffset, h09);
+            glVertex3f(widthOffset, h09, cmd.depth);
             glTexCoord2f(1.0f, 1.0f);
-            glVertex2f(s_sittingCharacterOffset, h09);
+            glVertex3f(s_sittingCharacterOffset, h09, cmd.depth);
         }
     }
     else
@@ -312,13 +312,13 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         if (cmd.h3mod != 0.0f)
         {
             glTexCoord2f(0.0f, 0.0f);
-            glVertex2f(s_sittingCharacterOffset, 0);
+            glVertex3f(s_sittingCharacterOffset, 0, cmd.depth);
             glTexCoord2f(1.0f, 0.0f);
-            glVertex2f(widthOffset, 0);
+            glVertex3f(widthOffset, 0, cmd.depth);
             glTexCoord2f(0.0f, cmd.h3mod);
-            glVertex2f(s_sittingCharacterOffset, h03);
+            glVertex3f(s_sittingCharacterOffset, h03, cmd.depth);
             glTexCoord2f(1.0f, cmd.h3mod);
-            glVertex2f(widthOffset, h03);
+            glVertex3f(widthOffset, h03, cmd.depth);
         }
 
         if (cmd.h6mod != 0.0f)
@@ -326,15 +326,15 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
             if (cmd.h3mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(s_sittingCharacterOffset, 0);
+                glVertex3f(s_sittingCharacterOffset, 0, cmd.depth);
                 glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(width + s_sittingCharacterOffset, 0);
+                glVertex3f(width + s_sittingCharacterOffset, 0, cmd.depth);
             }
 
             glTexCoord2f(0.0f, cmd.h6mod);
-            glVertex2f(0, h06);
+            glVertex3f(0, h06, cmd.depth);
             glTexCoord2f(1.0f, cmd.h6mod);
-            glVertex2f(width, h06);
+            glVertex3f(width, h06, cmd.depth);
         }
 
         if (cmd.h9mod != 0.0f)
@@ -342,15 +342,15 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
             if (cmd.h6mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(0, 0);
+                glVertex3f(0, 0, cmd.depth);
                 glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(width, 0);
+                glVertex3f(width, 0, cmd.depth);
             }
 
             glTexCoord2f(0.0f, 1.0f);
-            glVertex2f(0, h09);
+            glVertex3f(0, h09, cmd.depth);
             glTexCoord2f(1.0f, 1.0f);
-            glVertex2f(width, h09);
+            glVertex3f(width, h09, cmd.depth);
         }
     }
 
@@ -378,19 +378,19 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     glBegin(GL_TRIANGLE_STRIP);
     glNormal3f(cmd.normals[0][0], cmd.normals[0][1], cmd.normals[0][2]);
     glTexCoord2i(0, 0);
-    glVertex2i(22, -rc.x); //^
+    glVertex3f(22, -rc.x, cmd.depth); //^
 
     glNormal3f(cmd.normals[3][0], cmd.normals[3][1], cmd.normals[3][2]);
     glTexCoord2i(0, 1);
-    glVertex2i(0, 22 - rc.y); //<
+    glVertex3f(0, 22 - rc.y, cmd.depth); //<
 
     glNormal3f(cmd.normals[1][0], cmd.normals[1][1], cmd.normals[1][2]);
     glTexCoord2i(1, 0);
-    glVertex2i(44, 22 - rc.h); //>
+    glVertex3f(44, 22 - rc.h, cmd.depth); //>
 
     glNormal3f(cmd.normals[2][0], cmd.normals[2][1], cmd.normals[2][2]);
     glTexCoord2i(1, 1);
-    glVertex2i(22, 44 - rc.w); //v
+    glVertex3f(22, 44 - rc.w, cmd.depth); //v
     glEnd();
 
     glTranslatef(-translateX, -translateY, 0.0f);
@@ -428,24 +428,24 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *)
     if (cmd.mirror)
     {
         glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(width, height);
+        glVertex3f(width, height, cmd.depth);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(0.0f, height);
+        glVertex3f(0.0f, height, cmd.depth);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(width * (ratio + 1.0f), 0.0f);
+        glVertex3f(width * (ratio + 1.0f), 0.0f, cmd.depth);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(width * ratio, 0.0f);
+        glVertex3f(width * ratio, 0.0f, cmd.depth);
     }
     else
     {
         glTexCoord2f(0.0f, 1.0f);
-        glVertex2f(0.0f, height);
+        glVertex3f(0.0f, height, cmd.depth);
         glTexCoord2f(1.0f, 1.0f);
-        glVertex2f(width, height);
+        glVertex3f(width, height, cmd.depth);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(width * ratio, 0.0f);
+        glVertex3f(width * ratio, 0.0f, cmd.depth);
         glTexCoord2f(1.0f, 0.0f);
-        glVertex2f(width * (ratio + 1.0f), 0.0f);
+        glVertex3f(width * (ratio + 1.0f), 0.0f, cmd.depth);
     }
     glEnd();
 
