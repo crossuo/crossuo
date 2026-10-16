@@ -280,10 +280,8 @@ bool load_config()
         params.background_sweep = !g_cli["streaming-no-sweep"].was_set();
         if (g_cli["streaming-product"].was_set())
         {
-            // aops roots normalize to their patchlist; official urls pass
-            // through unchanged (the plan build dispatches on content)
-            params.product_url =
-                vfs_aops_product_url(g_cli["streaming-product"].get().string);
+            // the product url is the full path to the manifest file
+            params.product_url = g_cli["streaming-product"].get().string;
         }
         else if (g_Config.DataProductUrlSet && !g_Config.DataProductUrl.empty())
         {

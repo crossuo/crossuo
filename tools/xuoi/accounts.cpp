@@ -237,14 +237,11 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
     e.crossuo_autologin = false;
 
     // data install source: where the client streams/downloads its data from;
-    // a plain url becomes the streaming product: write the canonical aops
-    // patchlist url (the launcher links xuocore, and the canonicalization is
-    // idempotent - the client re-normalizes at the point of use anyway). A
-    // full manifest file url passes through unchanged (the client dispatches
-    // the product style from the content), empty means a manual install: no
-    // product url, the client keeps its configured default
+    // the streaming product is the full path to the manifest file: write the
+    // url as provided (the client fetches exactly this url), empty means a
+    // manual install: no product url, the client keeps its configured default
     if (shard.product_url && shard.product_url[0])
-        e.crossuo_producturl = vfs_aops_product_url_canonical(shard.product_url);
+        e.crossuo_producturl = shard.product_url;
 
     // presentation links, only when the shard provides them
     if (shard.web && shard.web[0])

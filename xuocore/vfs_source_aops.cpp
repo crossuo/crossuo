@@ -345,37 +345,6 @@ bool vfs_aops_parse_patchcfg(
 // plan build
 // ---------------------------------------------------------------------------
 
-astr_t vfs_aops_product_url(const astr_t &root_or_url)
-{
-    astr_t url = root_or_url;
-    while (!url.empty() && url.back() == '/')
-        url.pop_back();
-    static const char *const leaves[] = { "/patchlist", "/patchcfg" };
-    for (const char *leaf : leaves)
-    {
-        const size_t len = strlen(leaf);
-        if (url.size() > len && url.compare(url.size() - len, len, leaf) == 0)
-        {
-            url.resize(url.size() - len);
-            break;
-        }
-    }
-    url += "/patchlist";
-    return url;
-}
-
-astr_t vfs_aops_product_url_canonical(const astr_t &root_or_url)
-{
-    // a leaf with an extension names a file (a full manifest url: the mythic
-    // "uo-legacyrelease.prod", a "prod.xml", ...): pass it through. Anything
-    // else is a bare root (trailing /, .../patchlist, .../patchcfg): normalize
-    const astr_t &url = root_or_url;
-    const size_t slash = url.find_last_of('/');
-    if (slash != astr_t::npos && url.find('.', slash) != astr_t::npos)
-        return url;
-    return vfs_aops_product_url(url);
-}
-
 uint64_t vfs_aops_serial(const uint8_t *data, size_t size)
 {
     // the codebase's content hash (lookup3): the serial is only ever

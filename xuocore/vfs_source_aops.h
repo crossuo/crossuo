@@ -37,16 +37,6 @@ struct vfs_aops_config
 bool vfs_aops_sniff_patchlist(const uint8_t *data, size_t size);
 bool vfs_aops_sniff_patchcfg(const uint8_t *data, size_t size);
 
-// the aops "root" (e.g. "https://uniteuo.com/fc") derives the product
-// (patchlist) url; accepts the root, the patchlist url or the patchcfg url
-astr_t vfs_aops_product_url(const astr_t &root_or_url);
-
-// vfs_aops_product_url, but only bare roots are rewritten: a full manifest
-// file url (its leaf carries an extension: "uo-legacyrelease.prod",
-// "prod.xml") passes through unchanged - the manifest format is dispatched
-// on content, never on the file name. Idempotent.
-astr_t vfs_aops_product_url_canonical(const astr_t &root_or_url);
-
 // the product serial: a 64-bit content hash of the patchlist bytes (the
 // plan's drift fingerprint, same value vfs_product_serial reports)
 uint64_t vfs_aops_serial(const uint8_t *data, size_t size);

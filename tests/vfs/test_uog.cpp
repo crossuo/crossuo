@@ -437,8 +437,8 @@ VFS_TEST(uog_dispatch_build)
     TEST_CHECK(!aops_plan.files[0].is_uop);
 }
 
-// the boot ladder: a bare product root (no leaf, no trailing /) ladders
-// onto /Manifest.json; the cached second boot requests nothing
+// the boot fetch: the product url is the full manifest path, fetched exactly
+// as configured; the cached second boot requests nothing
 VFS_TEST(uog_boot_fetch_ladder)
 {
     test_vfs_shutdown guard;
@@ -461,27 +461,26 @@ VFS_TEST(uog_boot_fetch_ladder)
     params.enabled = true;
     params.install_dir = fs_path_join(root, "install");
     params.blobs_dir = fs_path_join(root, "blobs");
-    params.product_url = test_server_url(srv, ""); // the bare root
+    params.product_url = test_server_url(srv, "/Manifest.json"); // the full manifest path
     vfs_set_params(params);
 
-    // the ladder probes in order: the bare root (a 404), then
-    // /Manifest.json wins; /patchlist must never be requested
+    // one request: the manifest url as given, no candidate probing
     const uint64_t root_hits = test_server_hits(srv, "/");
     const uint64_t manifest_hits = test_server_hits(srv, "/Manifest.json");
     const uint64_t patchlist_hits = test_server_hits(srv, "/patchlist");
-    TEST_CHECK_MSG(vfs_boot(nullptr), "the bare-root boot must ladder onto Manifest.json");
+    TEST_CHECK_MSG(vfs_boot(nullptr), "the manifest-url boot must succeed");
     vfs_boot_wait(); // headless: also converge the background sweep
     TEST_CHECK_MSG(
-        test_server_hits(srv, "/") == root_hits + 1,
-        "the ladder must try the url as given first");
-    TEST_CHECK_MSG(
         test_server_hits(srv, "/Manifest.json") == manifest_hits + 1,
-        "exactly one /Manifest.json request must win the ladder");
+        "exactly one /Manifest.json request must be made");
+    TEST_CHECK_MSG(
+        test_server_hits(srv, "/") == root_hits,
+        "no probing of the bare root may happen");
     TEST_CHECK_MSG(
         test_server_hits(srv, "/patchlist") == patchlist_hits,
-        "the ladder must stop at Manifest.json");
+        "no probing of /patchlist may happen");
 
-    // the plan is the uog plan, its repo derives from the won candidate,
+    // the plan is the uog plan, its repo derives from the manifest url,
     // and the on-demand data file converged to the exact bytes
     VfsPlan plan;
     TEST_CHECK(vfs_plan_ensure(plan));
@@ -513,16 +512,13 @@ VFS_TEST(uog_boot_fetch_ladder)
         test_server_hits(srv, "/Manifest.json") == manifest_hits + 1,
         "the cached boot must not re-request Manifest.json");
 
-    // a bare root with a path: canonical rewrites it onto /patchlist before
-    // the ladder (the dot-bearing 127.0.0.1 root above skips that rewrite),
-    // so this exercises the de-leafed rung: .../client/patchlist (404) then
-    // .../client/Manifest.json wins, and the dup patchlist never re-fires
+    // a manifest url with a path is fetched as-is: the blob tail resolves
+    // against the manifest's directory (.../client/)
     const auto client_dir = fs_path_join(root, "client");
     TEST_CHECK(fs_path_create(client_dir));
     const std::vector<uint8_t> map_payload(2048, 0xAB);
     TEST_CHECK(test_write_file(fs_path_join(client_dir, "map0.mul"), map_payload));
-    TEST_CHECK(test_write_file(
-        fs_path_join(client_dir, "Manifest.json"),
+    TEST_CHECK(test_write_file(fs_path_join(client_dir, "Manifest.json"),
         test_uog_bytes(
             "{\"FileList\":[{\"FileName\":\"\\\\map0.mul\",\"FileSize\":2048,"
             "\"LastWrite\":\"2025-10-28T20:41:01.8507375Z\","
@@ -532,12 +528,11 @@ VFS_TEST(uog_boot_fetch_ladder)
     client_params.enabled = true;
     client_params.install_dir = fs_path_join(root, "install_client");
     client_params.blobs_dir = fs_path_join(root, "blobs_client");
-    client_params.product_url = test_server_url(srv, "/client"); // the pathed bare root
+    client_params.product_url = test_server_url(srv, "/client/Manifest.json");
     vfs_set_params(client_params);
     const uint64_t client_patchlist_hits = test_server_hits(srv, "/client/patchlist");
     const uint64_t client_manifest_hits = test_server_hits(srv, "/client/Manifest.json");
-    TEST_CHECK_MSG(
-        vfs_boot(nullptr), "the pathed bare-root boot must ladder onto client/Manifest.json");
+    TEST_CHECK_MSG(vfs_boot(nullptr), "the pathed manifest-url boot must succeed");
     vfs_boot_wait();
     VfsPlan client_plan;
     TEST_CHECK(vfs_plan_ensure(client_plan));
@@ -547,11 +542,11 @@ VFS_TEST(uog_boot_fetch_ladder)
         client_plan.files.size());
     TEST_CHECK_STR(client_plan.file_repo, test_server_url(srv, "/client/"));
     TEST_CHECK_MSG(
-        test_server_hits(srv, "/client/patchlist") == client_patchlist_hits + 1,
-        "the rewritten patchlist root must be tried exactly once");
+        test_server_hits(srv, "/client/patchlist") == client_patchlist_hits,
+        "no probing of /client/patchlist may happen");
     TEST_CHECK_MSG(
         test_server_hits(srv, "/client/Manifest.json") == client_manifest_hits + 1,
-        "the de-leafed Manifest.json rung must win");
+        "exactly one /client/Manifest.json request must be made");
     vfs_shutdown();
     test_server_stop(srv);
 }

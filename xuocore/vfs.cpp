@@ -3066,122 +3066,14 @@ static bool vfs_boot_product_fetch()
         LOG_ERROR("vfs: offline and no product manifest: %s", fs_path_ascii(s_params.product_file));
         return false;
     }
-    // launcher profiles carry bare aops roots ("https://host/pov") while the
-    // mythic layout carries the full manifest file url: normalize once at the
-    // point of use, after the cache checks above (the blob-store product_file
-    // path stays untouched). Only bare roots are rewritten (idempotent:
-    // strips a trailing /, strips a /patchlist|/patchcfg leaf, appends
-    // /patchlist); full manifest file urls and the empty case pass through.
-    if (!s_params.product_url.empty())
-        s_params.product_url = vfs_aops_product_url_canonical(s_params.product_url);
-    // One url is not always enough: the launcher appends the mythic default
-    // file name to profile roots with a trailing / ("https://host/pov/"
-    // becomes ".../pov/uo-legacyrelease.prod"), which poisons a bare aops
-    // root - the leaf's extension makes the canonical helper treat it as a
-    // full manifest url. Fetch+sniff an ordered candidate ladder instead,
-    // most likely first, deduped (capped at four; one request each):
-    //   1. the url as given (mythic full urls, canonical patchlist urls)
-    //   2. the auto-appended-filename signature: the de-leafed root's
-    //      patchlist (".../pov/uo-legacyrelease.prod" -> ".../pov/patchlist")
-    //   3. any remaining bare root: ".../Manifest.json" (the uog cdn form:
-    //      a bare "https://host/Client" bootstraps its json manifest - the
-    //      /patchlist root canonical rewrote above is de-leafed again so
-    //      the rung still fires for it)
-    //   4. any remaining bare root: ".../patchlist" (trailing /s stripped)
-    // The first candidate that sniffs as a manifest (an aops patchlist, a
-    // uog json manifest or a MythicMFT product file) wins and becomes
-    // s_params.product_url: the downstream derivations (manifest repo, blob
-    // tails) are built from it. One request per candidate and the ladder
-    // stops at the first sniffed manifest, so aops roots pay at most one
-    // extra 404/html request for the uog candidate.
-    astr_t candidates[4];
-    size_t candidate_count = 0;
-    candidates[candidate_count++] = s_params.product_url;
-    {
-        // "/uo-legacyrelease.prod": the launcher's auto-appended mythic
-        // default file name (profile roots with a trailing /)
-        static const char *const default_leaf = "/" VFS_PRODUCT_FILE_DEFAULT;
-        const size_t default_len = strlen(default_leaf);
-        astr_t root = s_params.product_url;
-        if (
-            root.size() > default_len &&
-            root.compare(root.size() - default_len, default_len, default_leaf) == 0)
-        {
-            root.resize(root.size() - default_len);
-            root += "/patchlist";
-            candidates[candidate_count++] = root;
-        }
-        astr_t bare = s_params.product_url;
-        while (!bare.empty() && bare.back() == '/')
-            bare.pop_back();
-        // canonical rewrote a bare root onto /patchlist above (and a profile
-        // may carry the leaf itself): strip the aops leaves again so the uog
-        // rung below reaches the same root - ".../Client/patchlist" boots
-        // ".../Client/Manifest.json"
-        static const char *const aops_leaves[] = { "/patchlist", "/patchcfg" };
-        for (const char *leaf : aops_leaves)
-        {
-            const size_t leaf_len = strlen(leaf);
-            if (
-                bare.size() > leaf_len &&
-                bare.compare(bare.size() - leaf_len, leaf_len, leaf) == 0)
-            {
-                bare.resize(bare.size() - leaf_len);
-                break;
-            }
-        }
-        // idempotence: a url that already carries a patch leaf stays put,
-        // never ".../patchlist/patchlist"; the uog leaf joins for the same
-        // reason (no ".../Manifest.json/patchlist" candidates)
-        static const char *const rooted_leaves[] = { "/patchlist", "/patchcfg", "/Manifest.json" };
-        bool rooted = false;
-        for (const char *leaf : rooted_leaves)
-        {
-            const size_t leaf_len = strlen(leaf);
-            if (
-                bare.size() > leaf_len && bare.compare(bare.size() - leaf_len, leaf_len, leaf) == 0)
-            {
-                rooted = true;
-                break;
-            }
-        }
-        if (!rooted && !bare.empty())
-        {
-            candidates[candidate_count++] = bare + "/Manifest.json";
-            const astr_t patchlist = bare + "/patchlist";
-            if (patchlist != candidates[0]) // the rewritten bare root: already candidate 0
-                candidates[candidate_count++] = patchlist;
-        }
-    }
+    // the product url is the full path to the manifest file; no candidate
+    // search, no root rewriting: fetch exactly what was configured
+    LOG_INFO("fetching product manifest: %s", s_params.product_url.c_str());
     std::vector<uint8_t> data;
-    bool unrecognized = false;
-    for (size_t i = 0; i < candidate_count && data.empty(); ++i)
+    if (!http_get_binary(s_params.product_url.c_str(), data))
     {
-        LOG_INFO("fetching product manifest: %s", candidates[i].c_str());
-        std::vector<uint8_t> attempt;
-        if (!http_get_binary(candidates[i].c_str(), attempt))
-            continue;
-        if (
-            vfs_aops_sniff_patchlist(attempt.data(), attempt.size()) ||
-            vfs_uog_sniff_manifest(attempt.data(), attempt.size()) ||
-            (attempt.size() >= 9 && memcmp(attempt.data(), "<MythicMFT", 9) == 0))
-        {
-            s_params.product_url = candidates[i];
-            data = std::move(attempt);
-            LOG_INFO("product manifest recognized at %s", candidates[i].c_str());
-        }
-        else
-        {
-            unrecognized = true;
-        }
-    }
-    if (unrecognized && data.empty())
-    {
-        // every fetch came back as neither manifest format (a site landing
-        // page, or the profile's auto-appended file name shadowing the real
-        // patchlist with no ladder candidate reaching it)
-        const astr_t &last = candidates[candidate_count - 1];
-        LOG_WARN("vfs: %s is not a product manifest either", last.c_str());
+        data.clear();
+        LOG_WARN("vfs: could not download the product manifest");
     }
     if (!data.empty() && !fs_path_empty(s_params.blobs_dir))
     {
@@ -3189,10 +3081,6 @@ static bool vfs_boot_product_fetch()
         if (vfs_file_write_atomic(fs_path_ascii(s_params.product_file), data))
             return true;
         LOG_ERROR("vfs: could not store the product manifest");
-    }
-    else
-    {
-        LOG_WARN("vfs: could not download the product manifest");
     }
     if (fs_path_exists(s_params.product_file))
     {
