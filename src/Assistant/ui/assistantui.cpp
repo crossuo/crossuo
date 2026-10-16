@@ -24,6 +24,7 @@
 #include "../core/dressagent.h"
 #include "../core/shopagent.h"
 #include "../core/global.h"
+#include "../../AssetViewer/AssetViewer.h" // AssetViewer_Toggle (the Assets button)
 #include "../managers/displaymanager.h"
 #include "../macros/macroexecutor.h"
 #include "../script/commandqueue.h"
@@ -519,8 +520,10 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     static bool journalOpen = true;
     ImGui::Checkbox("Journal", &journalOpen);
     ImGui::SameLine();
-    ImGui::TextDisabled(
-        "The ToggleAssistant game macro (Options -> Macros) shows/hides the assistant.");
+    if (ImGui::Button("Assets"))
+    {
+        AssetViewer_Toggle();
+    }
     ImGui::Separator();
 
     // content: tabs on the left/top, journal pane below, status bar pinned last.

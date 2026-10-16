@@ -48,6 +48,7 @@ EM_JS(void, web_install_alert_shim, (), {
 #include "LauncherWindow.h"
 #if defined(XUO_ASSISTANT)
 #include "AssistantWindow.h"
+#include "AssetViewer.h" // AssetViewer_Shutdown (frees the viewer's cached textures)
 #endif
 #if defined(XUO_LAUNCHER_EMBEDDED)
 #include "xuol_app.h"
@@ -968,6 +969,9 @@ static int Run()
 #endif
 #if defined(XUO_ASSISTANT)
     AssistantWindow_Shutdown();
+    // after the assistant shutdown: the ImGui context is gone, so this only
+    // releases the viewer's CPU-side texture pixels
+    AssetViewer_Shutdown();
 #endif
     return EXIT_SUCCESS;
 }

@@ -290,6 +290,7 @@ include_directories(${XUO_DIR})
 # crossuo target further below)
 if (XUO_ASSISTANT_ENABLED)
   add_subdirectory(Assistant)
+  add_subdirectory(AssetViewer)
 endif()
 
 set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${renderer_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
@@ -364,6 +365,12 @@ if(XUO_ASSISTANT_ENABLED)
   # create_resource (see src/Assistant/CMakeLists.txt); nothing is copied
   # next to the executable - the client ships as a single file
   target_include_directories(crossuo PUBLIC ${XUOASSIST_INCLUDE})
+  # the in-client asset viewer shares the assistant's ImGui frame pipeline and
+  # is linked/built under the same conditions (its window is submitted from
+  # AssistantWindow_DrawOverlay)
+  add_dependencies(crossuo ${XUOASSETVIEWER_PROJECT})
+  target_link_libraries(crossuo PUBLIC ${XUOASSETVIEWER_PROJECT})
+  target_include_directories(crossuo PUBLIC ${XUOASSETVIEWER_INCLUDE})
   # Link guard: the assistant is part of this shared lib,
   # and a scriptgump declaration that never got a definition used to slip
   # through as an undefined symbol that aborted the client on the first

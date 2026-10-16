@@ -22,6 +22,7 @@
 #include "Managers/MouseManager.h" // g_MouseManager (game cursor draw geometry)
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
 #include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
+#include "../AssetViewer/AssetViewer.h" // AssetViewer_Draw (the viewer shares this frame)
 #include "core/global.h"    // g_Connected (xuoassist)
 #include "core/hotkeys.h"   // the hotkey engine
 #include "macros/macroexecutor.h" // g_MacroExecutor.Reset (disconnect reset)
@@ -555,6 +556,9 @@ void AssistantWindow_DrawOverlay()
         SDL_ShowCursor(overAssistantPopOut ? SDL_ENABLE : SDL_DISABLE);
     }
     xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
+    // the asset viewer submits its window into this same ImGui frame, after
+    // the assistant shell (its own top-level window; a no-op while hidden)
+    AssetViewer_Draw();
     // the on-top UO cursor: after every assistant window submission (the
     // foreground list draws above windows anyway), before ui_draw renders the
     // frame; only while visible (see assistant_cursor_draw)
