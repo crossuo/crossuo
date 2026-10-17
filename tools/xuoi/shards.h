@@ -19,6 +19,8 @@ struct shard_data
     const char *report_language; // language code reported to the server ("" = none)
     const char *seed_override;   // "<0xaa> <0xbb> <0xcc> <0xdd>" login seed ("" = none)
     const char *system_check_override; // 0x03 payload bytes ("" = none)
+    bool assistant; // Assistant=no forbids the client assistant on this shard
+                    // (default yes: absent key from the shard ini = yes)
     const char *clienttype;
     const char *clientversion;
     const char *protocolversion; // network protocol version to force ("" = none)

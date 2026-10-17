@@ -264,6 +264,9 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
         e.crossuo_seedoverride = shard.seed_override;
     if (shard.system_check_override && shard.system_check_override[0])
         e.crossuo_systemcheckoverride = shard.system_check_override;
+    // only a shard that explicitly disables the assistant writes the key:
+    // a shard without an Assistant entry keeps the client's own crossuo.cfg
+    // value (the assistant is a client-local preference, not shard data)
 }
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
@@ -358,6 +361,10 @@ void account_launch_shard(int shard_index)
     profile.video = entry.crossuo_shardvideo;
     profile.seed_override = entry.crossuo_seedoverride;
     profile.system_check_override = entry.crossuo_systemcheckoverride;
+    // "" = the profile does not constrain the assistant (keep the client's
+    // own value); "no" forbids it (a profile-level Assistant=yes is treated
+    // as unconstrained: it is the default everywhere)
+    profile.assistant = entry.crossuo_assistant ? "" : "no";
     profile.language = entry.crossuo_language;
     profile.report_language = entry.crossuo_reportlanguage;
 

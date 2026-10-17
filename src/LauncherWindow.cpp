@@ -301,6 +301,7 @@ apply_result client_apply_shard(const shard_profile &profile)
     shard.community = profile.community;
     shard.seed_override = profile.seed_override;
     shard.system_check_override = profile.system_check_override;
+    shard.assistant = profile.assistant;
     shard.language = profile.language;
     shard.report_language = profile.report_language;
     //a shard switch is a restart-class change: the shard profile carries the

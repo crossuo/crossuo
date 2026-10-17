@@ -34,6 +34,12 @@ CFG_FIELD(shard, systemcheckoverride, {}, astr_t)
 // same as crossuo.cfg, payload of the client->server 0x03 talk acknowledge
 // format: <0xaa> <0xbb> ...
 
+CFG_FIELD(shard, assistant, "yes", bool)
+// optional, default: yes (assumed when the field is absent)
+// format:
+//   <no|yes>
+// same as crossuo.cfg; 'no' forbids the client from launching its assistant
+// on this shard
 CFG_FIELD(shard, description, {}, astr_t)
 // optional, launcher-only
 // short textual description in the shard's official language

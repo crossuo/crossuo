@@ -59,6 +59,11 @@ struct Config
     // SendPing=yes: periodically send the 0x73 keepalive ping in-game
     // (the classic client does this every second; off by default)
     bool SendPing = false;
+    // Assistant=yes: allow the in-client X:UO Assist host to initialize.
+    // Assistant=no keeps the assistant from ever being launched: it hides the
+    // Assistant entry from the macro editor and the menubar button. Defaults
+    // to yes when the key is missing from crossuo.cfg
+    bool AssistantEnabled = true;
 
     // Calculated stuff that are not saved back
     uint16_t Seed = 0x1357;
@@ -142,6 +147,10 @@ struct shard_profile
     astr_t community; // forum/community page (accepted, launcher-facing)
     astr_t seed_override;           // "0xaa 0xbb 0xcc 0xdd" login seed ("" = none)
     astr_t system_check_override;   // 0x03 payload bytes ("" = none)
+    // assistant constraint: "" = keep the client's own Assistant= value,
+    // "no" = forbid launching the assistant on this shard ("yes" is never
+    // sent: it is the default everywhere)
+    astr_t assistant;
     astr_t language;                // client locale (.loc), "" = keep default
     astr_t report_language;         // report locale, "" = keep default
 };

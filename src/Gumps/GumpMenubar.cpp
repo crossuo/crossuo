@@ -11,6 +11,7 @@
 #include "../Network/Packets.h"
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordHelpRequest (macro tap)
+#include "../Assistant/AssistantWindow.h" // AssistantWindow_Toggle (the assistant button)
 #endif
 
 enum
@@ -27,6 +28,9 @@ enum
     ID_GMB_WORLD_MAP,
     ID_GMB_STORE,
     ID_GMB_INFO,
+#if defined(XUO_ASSISTANT)
+    ID_GMB_ASSISTANT,
+#endif
 
     ID_GMB_COUNT,
 };
@@ -99,6 +103,12 @@ CGumpMenubar::CGumpMenubar(short x, short y)
               ID_GMB_STORE,
               g_ClilocManager.Cliloc(g_Language)->GetW(1158008, false, "Store") });
     }
+#if defined(XUO_ASSISTANT)
+    if (g_Config.AssistantEnabled)
+    {
+        entries.push_back({ 0x098B, smallWidth, ID_GMB_ASSISTANT, L"Assistant" });
+    }
+#endif
     entries.push_back({ 0x098B, smallWidth, ID_GMB_INFO, L"< ? >" });
 
     CGUIResizepic *background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x13BE, 0, 0, 718, 27));
@@ -197,6 +207,13 @@ void CGumpMenubar::InitToolTip()
                 g_ToolTip.Set(L"(Not implemented)");
                 break;
             }
+#if defined(XUO_ASSISTANT)
+            case ID_GMB_ASSISTANT:
+            {
+                g_ToolTip.Set(L"Toggle the assistant window");
+                break;
+            }
+#endif
             default:
                 break;
         }
@@ -268,6 +285,13 @@ void CGumpMenubar::GUMP_BUTTON_EVENT_C
         {
             break;
         }
+#if defined(XUO_ASSISTANT)
+        case ID_GMB_ASSISTANT:
+        {
+            AssistantWindow_Toggle();
+            break;
+        }
+#endif
         default:
             break;
     }

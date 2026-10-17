@@ -86,6 +86,10 @@ struct shard_profile
     astr_t community; // forum/community page (launcher-facing)
     astr_t seed_override;         // "0xaa 0xbb 0xcc 0xdd" login seed ("" = none)
     astr_t system_check_override; // 0x03 payload bytes ("" = none)
+    // assistant constraint: "" = keep the client's own Assistant= value,
+    // "no" = forbid launching the assistant ("yes" is never sent: it is the
+    // default everywhere)
+    astr_t assistant;
     astr_t language;              // client locale (.loc), "" = keep default
     astr_t report_language;       // report locale, "" = keep default
 };

@@ -28,6 +28,7 @@
 #include "macros/macroexecutor.h" // g_MacroExecutor.Reset (disconnect reset)
 #include "Globals.h"        // g_GameState, g_Ticks
 #include "Wisp/WispWindow.h" // Wisp::g_WispWindow
+#include "../Config.h"      // g_Config.AssistantEnabled (the Assistant= crossuo.cfg key)
 
 // X11 (pulled in by SDL_syswm.h on Linux) defines `Status` as a macro, which
 // collides with ImGui's ImTextureData::Status member below
@@ -51,6 +52,14 @@ static char s_iniFile[512] = {};
 static bool at_game_stage()
 {
     return g_GameState == GS_GAME || g_GameState == GS_GAME_BLOCKED;
+}
+
+// the Assistant= crossuo.cfg key ("no") forbids launching the assistant at
+// all: every lazy-init path (overlay draw, the ToggleAssistant macro) checks
+// here first and never brings the ImGui host up
+static bool assistant_enabled()
+{
+    return g_Config.AssistantEnabled;
 }
 
 // --- UO cursor overlay mirror -----------------------------------------------
@@ -409,6 +418,16 @@ static bool init()
 
 bool AssistantWindow_Show(bool show)
 {
+    if (!assistant_enabled())
+    {
+        static bool warned = false;
+        if (!warned)
+        {
+            warned = true;
+            Error(Assistant, "assistant disabled");
+        }
+        return false;
+    }
     if (!at_game_stage())
         return false;
     if (!s_initialized && !init())
@@ -529,6 +548,8 @@ void AssistantWindow_DrawOverlay()
 {
     if (!at_game_stage())
         return; // never draws outside the game stage (FrameTick owns shutdown)
+    if (!assistant_enabled())
+        return;
     if (!s_initialized && !init())
         return;
 

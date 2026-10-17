@@ -200,7 +200,10 @@ bool CMouseManager::GetCursorDrawRect(
     }
     if (y != nullptr)
     {
-        *y = Position.Y + m_CursorOffset[1][index] + spr->Width - 6;
+        *y = Position.Y + m_CursorOffset[1][index];
+#if !defined(XUO_EMSC)
+        *y +=  + spr->Width - 6; // hack
+#endif
     }
     if (w != nullptr)
     {

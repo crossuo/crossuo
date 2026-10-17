@@ -187,6 +187,7 @@ shard_data shard_by_id(int id)
              s.shard_reportlanguage.c_str(),
              s.shard_seedoverride.c_str(),
              s.shard_systemcheckoverride.c_str(),
+             s.shard_assistant,
              s.shard_clienttype.c_str(),
              s.shard_clientversion.c_str(),
              s.shard_protocolclientversion.c_str(),

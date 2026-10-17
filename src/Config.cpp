@@ -61,6 +61,7 @@ enum
     MSCC_SHARD_COMMUNITY,
     MSCC_IGNORE_RELAY,
     MSCC_SEND_PING,
+    MSCC_ASSISTANT,
     MSCC_COUNT,
 };
 
@@ -110,6 +111,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_SHARD_COMMUNITY, "shardcommunity" },
     { MSCC_IGNORE_RELAY, "ignorerelay" },
     { MSCC_SEND_PING, "sendping" },
+    { MSCC_ASSISTANT, "assistant" },
     { MSCC_COUNT, nullptr },
 };
 static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
@@ -639,6 +641,11 @@ bool LoadGlobalConfig()
                     g_Config.SendPing = str_to_bool(strings[1]);
                     break;
                 }
+                case MSCC_ASSISTANT:
+                {
+                    g_Config.AssistantEnabled = str_to_bool(strings[1]);
+                    break;
+                }
                 case MSCC_USE_KEYS:
                 {
                     g_Config.Key1 = str_to_int(strings[1], 16);
@@ -894,6 +901,10 @@ void SaveGlobalConfig(bool launcher_apply)
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
     fprintf(cfg, "IgnoreRelay=%s\n", (g_Config.IgnoreRelay ? "yes" : "no"));
+    if (!g_Config.AssistantEnabled)
+    {
+        fprintf(cfg, "Assistant=no\n");
+    }
     if (g_Config.ClientKeysSet)
     {
         fprintf(
@@ -1044,6 +1055,13 @@ bool ApplyShardProfile(const shard_profile &profile)
     // provides it in its profile) - same contract as the link resets above
     g_Config.SeedOverride = str_trim(profile.seed_override);
     g_Config.SystemCheckOverride = str_trim(profile.system_check_override);
+    // the assistant is a client-local preference: only an explicit shard-level
+    // constraint ("no") forces it off; an unconstrained profile keeps whatever
+    // the client's crossuo.cfg currently says
+    if (!str_trim(profile.assistant).empty())
+    {
+        g_Config.AssistantEnabled = str_to_bool(str_trim(profile.assistant));
+    }
     g_Config.LocaleOverride = str_trim(profile.language);
     g_Config.LocaleOverrideReport = str_trim(profile.report_language);
 

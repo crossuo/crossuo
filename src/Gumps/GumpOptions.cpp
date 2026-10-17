@@ -1964,12 +1964,15 @@ void CGumpOptions::RedrawMacroData()
 
             for (int i = 0; i < countof(s_MacroActionName); i++)
             {
-#if !defined(XUO_ASSISTANT)
+#if defined(XUO_ASSISTANT)
+                const bool assistant_hidden = !g_Config.AssistantEnabled;
+#else
                 // the assistant toggle action does not exist in this build;
                 // a macro saved with its code stays harmless (no-op executor)
-                if (i == MC_ASSISTANT)
-                    continue;
+                const bool assistant_hidden = true;
 #endif
+                if (i == MC_ASSISTANT && assistant_hidden)
+                    continue;
                 combobox->Add(new CGUIComboboxText(0x0386, 1, s_MacroActionName[i]));
             }
 

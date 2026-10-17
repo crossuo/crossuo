@@ -24,6 +24,7 @@ CFG_FIELD(crossuo, language, {}, astr_t)
 CFG_FIELD(crossuo, reportlanguage, {}, astr_t)
 CFG_FIELD(crossuo, seedoverride, {}, astr_t)
 CFG_FIELD(crossuo, systemcheckoverride, {}, astr_t)
+CFG_FIELD(crossuo, assistant, "yes", bool)
 CFG_FIELD(crossuo, shardname, {}, astr_t)
 // shard presentation links: written by the launcher's shard picker only when
 // the shard provides them (an explicit empty value would clear the client
