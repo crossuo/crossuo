@@ -3975,6 +3975,15 @@ void CGame::LoadShaders()
 
 void CGame::LoadClientStartupConfig()
 {
+    // the window callback runs this before Main applies the config manager
+    // defaults (they land in LoadStartupConfig, per character): the login
+    // screen music still needs them (enabled flag + volume) right here
+    static bool configDefaultsApplied = false;
+    if (!configDefaultsApplied)
+    {
+        configDefaultsApplied = true;
+        g_ConfigManager.Init();
+    }
     if (!g_ConfigManager.Load(FilePath("options.cfg")))
     {
         // DEPRECATE: 1.0.6
@@ -4014,9 +4023,9 @@ void CGame::PlayMusic(int index, bool warmode)
         return;
     }
 
-    if (g_Config.ClientVersion >= CV_306E)
+    CIndexMusic &mp3Info = g_Index.m_MP3[index];
+    if (!mp3Info.FilePath.empty())
     {
-        CIndexMusic &mp3Info = g_Index.m_MP3[index];
         g_SoundManager.PlayMP3(mp3Info.FilePath.c_str(), index, mp3Info.Loop, warmode);
     }
     else

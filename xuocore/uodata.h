@@ -751,6 +751,10 @@ uint32_t uo_get_group_offset(
         graphic); // CalculateLowGroupOffset, CalculateHighGroupOffset, CalculatePeopleGroupOffset
 void uo_update_animation_tables(uint32_t lockedFlags);
 bool uo_animation_exists(uint16_t graphic, uint8_t group);
+
+// classic installs have no Music/Digital/Config.txt: map the classic track
+// table onto the mp3 index when music/<name>.mp3 files exist
+void uo_classic_music_fallback();
 void uo_animation_dump(const char *file);
 
 typedef std::unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;

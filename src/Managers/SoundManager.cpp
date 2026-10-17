@@ -278,6 +278,21 @@ void CSoundManager::Free()
 
 void CSoundManager::Update()
 {
+    // XUO_MUSIC_TEST: prove the music voice is producing output
+    if (getenv("XUO_MUSIC_TEST") != nullptr && s_Music[0] != 0)
+    {
+        static uint32_t s_nextProbe = 0;
+        if (g_Ticks > s_nextProbe)
+        {
+            s_nextProbe = g_Ticks + 1000;
+            Info(
+                Client,
+                "music test: index=%u voice=%u volume=%.3f",
+                CurrentMusicIndex,
+                s_Music[0],
+                s_backend.getOverallVolume(s_Music[0]));
+        }
+    }
 #if defined(XUO_EMSC)
     // pump SoLoud's mixer into the web audio ring - only while the page has
     // unlocked the context AND it is running: before the unlock gesture the
@@ -472,10 +487,14 @@ void CSoundManager::PlayMP3(const char *fileName, int index, bool loop, bool war
 
     if (!musicLoaded)
     {
-        s_MusicStream[cur].load(fileName);
+        if (s_MusicStream[cur].load(fileName) != 0)
+        {
+            Warning(Client, "music load failed: %s", fileName);
+        }
     }
     s_MusicStream[cur].setLooping(loop);
     s_Music[cur] = s_backend.play(s_MusicStream[cur], 0, 0);
+    Info(Client, "playing music: %s (handle %u)", fileName, s_Music[cur]);
     s_backend.fadeVolume(s_Music[cur], VOLUME_FACTOR, 2);
     s_backend.fadeVolume(s_Music[old], 0, 2);
 

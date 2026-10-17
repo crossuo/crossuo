@@ -753,6 +753,9 @@ bool CFileManager::Load()
     PatchFiles();
     Info(Data, "replacing indexes");
     IndexReplaces();
+    // classic installs gate IndexReplaces behind CV_305D: the music fallback
+    // (digital tracks named after the classic table) must run for them too
+    uo_classic_music_fallback();
 
     LoadAnimations();
 
@@ -4503,6 +4506,71 @@ void CFileManager::PatchFiles()
 
 // FIXME: there is some issue here - looks like this does not work correctly
 // need further investigation
+void uo_classic_music_fallback()
+{
+// installs without Music/Digital/Config.txt (classic shards like uo1998)
+// ship the digital tracks beside the midis under music/ using the classic
+// track names: map the same table so old clients play the mp3s too
+static const struct
+{
+    const char *name;
+    bool loop;
+}
+classicMusic[] = {
+    { "oldult01.mid", true },  { "create1.mid", false },  { "dragflit.mid", false },
+    { "oldult02.mid", true },  { "oldult03.mid", true },  { "oldult04.mid", true },
+    { "oldult05.mid", true },  { "oldult06.mid", true },  { "stones2.mid", true },
+    { "britain1.mid", true },  { "britain2.mid", true },  { "bucsden.mid", true },
+    { "jhelom.mid", false },   { "lbcastle.mid", false }, { "linelle.mid", false },
+    { "magincia.mid", true },  { "minoc.mid", true },     { "ocllo.mid", true },
+    { "samlethe.mid", false }, { "serpents.mid", true },  { "skarabra.mid", true },
+    { "trinsic.mid", true },   { "vesper.mid", true },    { "wind.mid", true },
+    { "yew.mid", true },       { "cave01.mid", false },   { "dungeon9.mid", false },
+    { "forest_a.mid", false }, { "intown01.mid", false }, { "jungle_a.mid", false },
+    { "mountn_a.mid", false }, { "plains_a.mid", false }, { "sailing.mid", false },
+    { "swamp_a.mid", false },  { "tavern01.mid", false }, { "tavern02.mid", false },
+    { "tavern03.mid", false }, { "tavern04.mid", false }, { "combat1.mid", false },
+    { "combat2.mid", false },  { "combat3.mid", false },  { "approach.mid", false },
+    { "death.mid", false },    { "victory.mid", false },  { "btcastle.mid", false },
+    { "nujelm.mid", true },    { "dungeon2.mid", false }, { "cove.mid", true },
+    { "moonglow.mid", true },  { "oldult02.mid", false }, { "serpents.mid", true },
+    { "oldult04.mid", false }, { "dragflit.mid", false }, { "create1.mid", false },
+    { "approach.mid", false }, { "combat3.mid", false },  { "jungle_a.mid", false },
+};
+int count = sizeof(classicMusic) / sizeof(classicMusic[0]);
+if (count > MAX_MUSIC_DATA_INDEX_COUNT)
+{
+    count = MAX_MUSIC_DATA_INDEX_COUNT;
+}
+int digitalCount = 0;
+int classicCount = 0;
+for (int i = 0; i < MAX_MUSIC_DATA_INDEX_COUNT; i++)
+{
+    if (!g_Index.m_MP3[i].FilePath.empty())
+    {
+        digitalCount++;
+    }
+}
+for (int i = 0; i < count; i++)
+{
+    CIndexMusic &mp3 = g_Index.m_MP3[i];
+    if (!mp3.FilePath.empty())
+    {
+        continue;
+    }
+    astr_t name = "music/";
+    name += classicMusic[i].name;
+    name = name.substr(0, name.size() - 3) + "mp3";
+    if (fs_path_exists(UOFilePath(name.c_str())))
+    {
+        mp3.FilePath = fs_path_str(UOFilePath(name.c_str()));
+        mp3.Loop = classicMusic[i].loop;
+        classicCount++;
+    }
+    }
+    Info(Data, "music tracks: %d from config, %d classic mp3s", digitalCount, classicCount);
+}
+
 void CFileManager::IndexReplaces()
 {
     if (s_ClientVersion < CV_305D)
@@ -4761,6 +4829,7 @@ void CFileManager::IndexReplaces()
             }
         }
     }
+
 }
 
 bool uo_animation_exists(uint16_t graphic, uint8_t group)
