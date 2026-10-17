@@ -410,7 +410,7 @@ async fn main() {
     // as source "cli"). Read before serving starts; a changed shards.cfg
     // needs a restart. Empty result + no --ws-allow = open bridges.
     let ws_allow_info: Vec<(String, String, u16)> = Vec::new();
-    /*if let Ok(text) = std::fs::read_to_string(PathBuf::from(&root).join("shards.cfg")) {
+    if let Ok(text) = std::fs::read_to_string(PathBuf::from(&root).join("shards.cfg")) {
         for (shard, servers) in shards_login_servers(&text) {
             for (host, port) in servers {
                 ws_allow
@@ -421,7 +421,7 @@ async fn main() {
         }
     } else if ws_allow.is_none() {
         println!("xuoproxy: no shards.cfg in {root} and no --ws-allow: /ws bridges are OPEN");
-    }*/
+    }
 
     let admin = Arc::new(admin::Admin::new(
         trust_proxy,
