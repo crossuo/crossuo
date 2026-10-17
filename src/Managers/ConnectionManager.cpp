@@ -164,13 +164,21 @@ bool CConnectionManager::Connect(const astr_t &address, int port, uint8_t *gameS
             }
             else
             {
-                uint8_t buf = 0xEF;
-                m_LoginSocket.Send(&buf, 1); //0xEF
-                SendIP(m_LoginSocket, seed);
-                CDataWriter stream;
+                // ONE send: the 0xEF opcode, the seed and the client version
+                // must reach the server in a single segment. ServUO's
+                // Listener::ValidateSequence peeks the first 4 bytes and then
+                // blocking-reads the remaining 17 of the 21-byte handshake -
+                // fragmented writes (each its own TCP segment over the web
+                // WebSocket bridge) can race that second read with fewer
+                // bytes available than expected, failing the validation and
+                // resetting the connection before the login is ever sent.
+                uint8_t handshake[21];
+                handshake[0] = 0xEF;
+                memcpy(handshake + 1, seed, 4);
 
                 uint32_t major = 0, minor = 0, rev = 0, prot = 0;
                 GetClientVersion(&major, &minor, &rev, &prot);
+                CDataWriter stream;
                 stream.WriteUInt32BE(major);
                 stream.WriteUInt32BE(minor);
                 stream.WriteUInt32BE(rev);
@@ -179,9 +187,10 @@ bool CConnectionManager::Connect(const astr_t &address, int port, uint8_t *gameS
                     prot = 0;
                 }
                 stream.WriteUInt32BE(prot);
+                memcpy(handshake + 5, stream.DataPtr(), 16);
 
                 g_TotalSendSize = 21;
-                m_LoginSocket.Send(stream.Data()); // Client version, 16 bytes
+                m_LoginSocket.Send(handshake, 21);
             }
         }
         else

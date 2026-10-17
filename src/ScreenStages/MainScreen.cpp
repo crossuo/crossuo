@@ -115,7 +115,11 @@ void CMainScreen::Init()
         SetAccounting(g_Config.CliLogin, g_Config.CliPassword);
     }
 
-    if (TestAutoLogin())
+    // an auto-connect without an account name hands the shard an empty 0x80:
+    // many servers just drop that connection (no error packet), dead-ending
+    // the boot at "connection lost". Stay on the login screen instead - the
+    // user types the credentials and presses connect normally
+    if (TestAutoLogin() && !g_MainScreen.m_Account->GetTextA().empty())
     {
         CreateSmoothAction(ID_SMOOTH_MS_CONNECT);
     }
