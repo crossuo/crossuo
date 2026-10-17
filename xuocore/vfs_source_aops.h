@@ -37,6 +37,15 @@ struct vfs_aops_config
 bool vfs_aops_sniff_patchlist(const uint8_t *data, size_t size);
 bool vfs_aops_sniff_patchcfg(const uint8_t *data, size_t size);
 
+// the product manifest url for an aops-style product url: a bare root
+// (trailing /, .../patchlist, .../patchcfg) normalizes onto .../patchlist;
+// a full manifest file url (a dot after the last /: the mythic
+// "uo-legacyrelease.prod", a "prod.xml", ...) passes through unchanged.
+// Idempotent. The web flow still passes bare roots (shell.html routes aops
+// servers through /stream/<root>/ and data mounts as /data/<mount>/, and
+// xuoproxy serves both at <root>patchlist), so the fetch site normalizes.
+astr_t vfs_aops_product_url_canonical(const astr_t &root_or_url);
+
 // the product serial: a 64-bit content hash of the patchlist bytes (the
 // plan's drift fingerprint, same value vfs_product_serial reports)
 uint64_t vfs_aops_serial(const uint8_t *data, size_t size);

@@ -548,6 +548,35 @@ VFS_TEST(uog_boot_fetch_ladder)
         test_server_hits(srv, "/client/Manifest.json") == client_manifest_hits + 1,
         "exactly one /client/Manifest.json request must be made");
     vfs_shutdown();
+
+    // a bare root (no manifest leaf: the web flow's /stream/<root>/ and
+    // /data/<mount>/ forms) normalizes onto <root>patchlist at the point of
+    // use - one request, no candidate probing (the proxy serves the product
+    // at that url in both of those lanes)
+    const auto bare_dir = fs_path_join(root, "bare");
+    TEST_CHECK(fs_path_create(bare_dir));
+    TEST_CHECK(test_write_file(
+        fs_path_join(bare_dir, "patchlist"),
+        test_uog_bytes(test_uog_server_manifest(654).c_str())));
+    vfs_params bare_params;
+    bare_params.enabled = true;
+    bare_params.install_dir = fs_path_join(root, "install_bare");
+    bare_params.blobs_dir = fs_path_join(root, "blobs_bare");
+    bare_params.product_url = test_server_url(srv, "/bare/"); // the bare root
+    vfs_set_params(bare_params);
+    const uint64_t bare_patchlist_hits = test_server_hits(srv, "/bare/patchlist");
+    TEST_CHECK_MSG(vfs_boot(nullptr), "the bare-root boot must normalize onto patchlist");
+    vfs_boot_wait();
+    VfsPlan bare_plan;
+    TEST_CHECK(vfs_plan_ensure(bare_plan));
+    TEST_CHECK_MSG(
+        bare_plan.files.size() == 1 && bare_plan.files[0].name == "cliloc.enu",
+        "got %zu files",
+        bare_plan.files.size());
+    TEST_CHECK_MSG(
+        test_server_hits(srv, "/bare/patchlist") == bare_patchlist_hits + 1,
+        "exactly one /bare/patchlist request must be made");
+    vfs_shutdown();
     test_server_stop(srv);
 }
 

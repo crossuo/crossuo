@@ -625,22 +625,42 @@
           // producturl is a plain url (the uo+/xuo+/website+/download+ prefix
           // grammar is gone; empty = manual install, no product flag)
           if (installer) {
-            // aops patch servers (a bare patch-server root:
-            // the client's
-            // vfs_aops_product_url accepts root, patchlist or patchcfg urls)
-            // cannot be fetched cross-origin from the browser: normalize to
-            // the server ROOT and route it through the same-origin /stream
-            // proxy (the proxy rewrites the patchcfg's repo urls back to
-            // /stream). A MythicMFT manifest root keeps the client's own
-            // default product lanes (the proxy mirrors the official
-            // manifest; an aops-normalized --streaming-product would point
-            // the plan at <root>patchlist); anything that is not a url
-            // passes through unchanged
+            // url product sources cannot be fetched cross-origin from the
+            // browser. A MythicMFT manifest root - or a full manifest file
+            // url under a /manifest/ directory - keeps the client's own
+            // default product lanes: the proxy mirrors the official
+            // manifest on /patch/manifest and rewrites the prod's absolute
+            // repo urls same-origin (the /stream lane passes the raw prod
+            // through, and the browser could never fetch its absolute
+            // cross-origin manifestrepos). Anything else routes through the
+            // same-origin /stream proxy: the /stream lane decodes its whole
+            // remainder once into the upstream url, so the encoded part
+            // must be the url's directory (trailing slash literal) and the
+            // manifest leaf stays a literal path segment. A bare aops root
+            // keeps the trailing / - the client normalizes the root onto
+            // <root>patchlist and the proxy rewrites the patchcfg's repo
+            // urls back to /stream. Anything that is not a url passes
+            // through unchanged
             var target = installer;
             if (/^https?:\/\//i.test(target)) {
-              if (!/\/manifest\/?$/i.test(target)) {
-                var root = target.replace(/\/+$/, '').replace(/\/patch(?:list|cfg)$/i, '');
-                args.push('--streaming-product=/stream/' + encodeURIComponent(root) + '/');
+              var path = target.replace(/\/+$/, '');
+              var at = path.toLowerCase().lastIndexOf('/manifest');
+              var isManifestTree =
+                at >= 0 &&
+                (at + 9 === path.length || path.charAt(at + 9) === '/');
+              if (!isManifestTree) {
+                var slash = path.lastIndexOf('/');
+                var bare = slash >= 0 && path.indexOf('.', slash) === -1;
+                if (bare) {
+                  path = path.replace(/\/patch(?:list|cfg)$/i, '');
+                  args.push('--streaming-product=/stream/' + encodeURIComponent(path) + '/');
+                } else {
+                  // encode the directory only: the leaf stays a literal
+                  // segment so the client sees a full manifest file url
+                  args.push(
+                    '--streaming-product=/stream/' + encodeURIComponent(path.slice(0, slash)) +
+                    path.slice(slash));
+                }
               }
             } else if (target.charAt(0) !== '/') {
               // deployment-local data mount (xuoproxy --data <name>=<dir>):

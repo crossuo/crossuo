@@ -316,7 +316,14 @@ int main(int argc, char **argv)
                 "invalid field 'shardother', not a http(s) url: '%s'", entry.shard_shardother.c_str());
             error = true;
         }
-        if (!entry.shard_producturl.empty() && !valid_url(entry.shard_producturl))
+        // producturl additionally accepts a deployment-local reference
+        // ("local:<path>"): xuoproxy mounts the folder server-side and
+        // rewrites the served shards.cfg entry to a same-origin
+        // /data/<mount>/ product url (shell.html passes it through)
+        const bool product_local = entry.shard_producturl.rfind("local:", 0) == 0;
+        if (
+            !entry.shard_producturl.empty() && !product_local &&
+            !valid_url(entry.shard_producturl))
         {
             LOG_ERROR(
                 "invalid field 'producturl', not a http(s) url: '%s'",

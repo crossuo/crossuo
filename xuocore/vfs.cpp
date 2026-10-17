@@ -3066,8 +3066,12 @@ static bool vfs_boot_product_fetch()
         LOG_ERROR("vfs: offline and no product manifest: %s", fs_path_ascii(s_params.product_file));
         return false;
     }
-    // the product url is the full path to the manifest file; no candidate
-    // search, no root rewriting: fetch exactly what was configured
+    // the product url may still be a bare aops root (the web flow routes
+    // aops servers through /stream/<root>/ and data mounts as /data/<mount>/,
+    // and the proxy serves both at <root>patchlist): normalize once here - a
+    // full manifest file url passes through unchanged, no candidate probing
+    if (!s_params.product_url.empty())
+        s_params.product_url = vfs_aops_product_url_canonical(s_params.product_url);
     LOG_INFO("fetching product manifest: %s", s_params.product_url.c_str());
     std::vector<uint8_t> data;
     if (!http_get_binary(s_params.product_url.c_str(), data))

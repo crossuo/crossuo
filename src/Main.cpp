@@ -289,7 +289,9 @@ bool load_config()
         params.background_sweep = !g_cli["streaming-no-sweep"].was_set();
         if (g_cli["streaming-product"].was_set())
         {
-            // the product url is the full path to the manifest file
+            // the product url as given: a full manifest file url, or a bare
+            // root (the web flow's /stream/<root>/, /data/<mount>/) that
+            // vfs normalizes onto <root>patchlist at the point of use
             params.product_url = g_cli["streaming-product"].get().string;
         }
         else if (g_Config.DataProductUrlSet && !g_Config.DataProductUrl.empty())
@@ -966,6 +968,13 @@ static int Run()
         &raised,
         0,
         1);
+    // rAF pacing in a worker is quantized: a frame that misses its 1/60s
+    // slot is pushed to the NEXT slot, so any frame cost over ~18.7ms
+    // locks the cadence at 33.3ms (~30fps). Switch to setTimeout(0)
+    // pacing: the loop then runs as fast as frames complete (browser
+    // clamps nested timers to ~4ms), still implicitly capped by WebGL
+    // present throttling.
+    emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 0);
 #else
     while (!RunFrame(raised))
     {
