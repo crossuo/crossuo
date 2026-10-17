@@ -5,6 +5,7 @@
 #if defined(XUO_EMSC)
 #include <xuocore/vfs_fetch.h> // vfs_fetch_idle (web streaming settle)
 #include <SDL_timer.h>
+#include <emscripten.h> // MAIN_THREAD_EM_ASM (desktop save notify)
 // the EM_JS definition (src/Main.cpp) has C linkage; a function-scope
 // declaration is not allowed to specify linkage, so it lives here
 #endif
@@ -1025,6 +1026,22 @@ void CGame::Process(bool rendering)
         s_NextConfiguredPing = g_Ticks + 1000;
     }
 
+#if defined(XUO_EMSC)
+    // web autosave: the page can vanish at any moment (tab close / mobile
+    // safari eviction) and idbfs transactions opened during pagehide are
+    // not guaranteed to commit - so the logout-time SaveLocalConfig is
+    // precisely the write most likely to be lost. Rewrite desktop.txt on a
+    // slow cadence (each save also fires __xuoDesktopSaved, which mirrors
+    // it synchronously into localStorage) so the persisted copy is at
+    // worst this many seconds stale.
+    static uint32_t s_NextDesktopAutosave = 0;
+    if (g_GameState >= GS_GAME && g_ConfigLoaded && s_NextDesktopAutosave < g_Ticks)
+    {
+        SaveLocalConfig(g_PacketManager.ConfigSerial);
+        s_NextDesktopAutosave = g_Ticks + 60000;
+    }
+#endif
+
     // KR party position query: keep out-of-range party members on the map
     if (g_GameState >= GS_GAME && s_NextConfiguredPing < g_Ticks && g_Party.Leader != 0)
     {
@@ -1409,6 +1426,14 @@ void CGame::SaveLocalConfig(int serial)
             }
         }
     }
+
+#if defined(XUO_EMSC)
+    // web: the page owns persistence (resources/shell.html). Tell it the
+    // desktop file just changed so it mirrors it into localStorage right
+    // away - the synchronous mirror is the durable copy that survives tab
+    // close, the idbfs tick is the bulk fallback
+    MAIN_THREAD_EM_ASM({ if (globalThis.__xuoDesktopSaved) globalThis.__xuoDesktopSaved(); });
+#endif
 }
 
 void CGame::ClearUnusedTextures()

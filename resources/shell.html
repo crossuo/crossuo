@@ -415,6 +415,55 @@
         var PERSIST_TREES = ['/data/crossuo', '/screenshots'];
         var PERSIST_MAX_FILE = 8 * 1024 * 1024;
         var PERSIST_MS = 30000;
+        // localStorage mirror of the desktop settings tree
+        // (desktop/<account>/<shard>/0x<serial>/desktop.txt - the native
+        // per-folder layout, so the key already encodes shard+character).
+        // Why: the idbfs writes above are async IndexedDB transactions, and
+        // transactions opened during pagehide/visibilitychange(hidden) are
+        // not guaranteed to commit (Safari aborts them outright, Chrome and
+        // Firefox race them) - and the most recent desktop.txt save happens
+        // exactly at logout/tab close, so the freshest copy was the one that
+        // kept going missing. localStorage.setItem is synchronous and
+        // completes before unload on every browser; tens of kB per character
+        // is far inside the ~5MB origin quota. localStorage is the durable
+        // fast path, idbfs stays as the bulk fallback.
+        var LS_PREFIX = 'xuo-desktop:';
+        var DESKTOP_ROOT = '/data/crossuo/desktop';
+        function lsWrite(path) {
+          var u8, s = '', CHUNK = 0x8000;
+          try { u8 = FS.readFile(path); } catch (e) { return; }
+          for (var i = 0; i < u8.length; i += CHUNK)
+            s += String.fromCharCode.apply(null, u8.subarray(i, i + CHUNK));
+          try { localStorage.setItem(LS_PREFIX + path, btoa(s)); } catch (e) { /* quota/private mode */ }
+        }
+        function persistDesktopLS() {
+          function walk(path) {
+            var names;
+            try { names = FS.readdir(path); } catch (e) { return; }
+            names.forEach(function (name) {
+              if (name === '.' || name === '..') return;
+              var full = path + '/' + name, st;
+              try { st = FS.stat(full); } catch (e) { return; }
+              if (FS.isDir(st.mode)) walk(full);
+              else if (st.size <= PERSIST_MAX_FILE) lsWrite(full);
+            });
+          }
+          walk(DESKTOP_ROOT);
+        }
+        function restoreDesktopLS() {
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k.indexOf(LS_PREFIX) !== 0) continue;
+            var path = k.slice(LS_PREFIX.length), v, u8, j;
+            try { v = atob(localStorage.getItem(k)); } catch (e) { continue; }
+            u8 = new Uint8Array(v.length);
+            for (j = 0; j < v.length; j++) u8[j] = v.charCodeAt(j);
+            try {
+              FS.mkdirTree(path.slice(0, path.lastIndexOf('/')));
+              FS.writeFile(path, u8);
+            } catch (e) { /* keep going */ }
+          }
+        }
         var dirs = [];
         var files = [];
         // tree walk: emit the directory entries too - a file without its
@@ -447,6 +496,9 @@
           var t0 = performance.now();
           FS.syncfs(true, function (err) {
             if (err) console.error('[idb][main] restore failed:', err);
+            // localStorage mirror goes in AFTER the idbfs restore so the
+            // (fresher, synchronous) copy wins wherever both exist
+            try { restoreDesktopLS(); } catch (e) { /* non-fatal */ }
             if (!WEBLOG) return;
             console.log('[idb][main] restore done in ' + (performance.now() - t0).toFixed(0) + 'ms' +
                         (err ? ' (FAILED)' : ''));
@@ -454,6 +506,7 @@
         }
         function persistTick() {
           if (typeof FS === 'undefined' || typeof IDBFS === 'undefined') return;
+          persistDesktopLS();
           dirs.length = 0;
           files.length = 0;
           PERSIST_FILES.forEach(function (p) {
@@ -486,8 +539,12 @@
           });
         }
         function flushSoon() {
+          try { persistDesktopLS(); } catch (e) { /* synchronous, survives unload */ }
           try { persistTick(); } catch (e) { /* best effort */ }
         }
+        // the client (SaveLocalConfig) fires this on every desktop.txt write
+        // so the mirror is current immediately, not just on the slow tick
+        globalThis.__xuoDesktopSaved = persistDesktopLS;
         (function whenReady() {
           if (typeof FS === 'undefined' || typeof IDBFS === 'undefined' || !FS.mounts) {
             return setTimeout(whenReady, 25);
