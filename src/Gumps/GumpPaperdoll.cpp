@@ -501,7 +501,7 @@ void CGumpPaperdoll::UpdateContent()
     g_ColorizerShader.Enable();
     //if (obj->IsHuman())
     {
-        bool useSlots = g_ConfigManager.GetPaperdollSlots();
+        bool useSlots = g_Config.ClientVersion > CV_200 ? g_ConfigManager.GetPaperdollSlots() : false;
         static const int maxPaperdollSlots = 6;
         CGameItem *slotObjects[maxPaperdollSlots] = { 0 };
         for (int i = 0; i < m_LayerCount; i++)
