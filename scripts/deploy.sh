@@ -47,18 +47,20 @@ expected_binary() {
   esac
 }
 
-# Regenerate dist/wasm/shards.cfg from the shards depot via the shared
+# Regenerate dist/wasm/html/shards.cfg from the shards depot via the shared
 # scripts/wasm-shards-fetch.sh, which fetches whatever is missing first
 # (clones crossuo/shards when there is no local depot, builds a native host
 # shardchk when none exists - the CI and fresh-machine path).
 # Non-fatal: the wasm deploy must not fail on this.
 regenerate_wasm_shards() {
-  ./scripts/wasm-shards-fetch.sh "dist/wasm" || true
+  mkdir -p dist/wasm/html
+  ./scripts/wasm-shards-fetch.sh "dist/wasm/html" || true
 }
 
 # Build xuoproxy in release (native host binary) and ship it inside dist/wasm
-# so the deployed folder is directly servable:
-#   dist/wasm/xuoproxy --listen 127.0.0.1:8080 --dist dist/wasm
+# beside the html/ folder the wasm build produces, so the deployed folder is
+# directly servable:
+#   dist/wasm/xuoproxy --listen 127.0.0.1:8080 --root html
 build_xuoproxy() {
   if ! command -v cargo >/dev/null 2>&1; then
     echo ">> deploy: cargo not found - cannot build xuoproxy" >&2

@@ -2,7 +2,7 @@
 //!
 //! One process, three jobs:
 //!
-//! 1. Static hosting of the wasm build (default `dist/wasm`) with the
+//! 1. Static hosting of the wasm build (default `html/`) with the
 //!    `Cross-Origin-Opener-Policy` / `Cross-Origin-Embedder-Policy` headers
 //!    the pthread runtime requires (SharedArrayBuffer).
 //!
@@ -21,18 +21,19 @@
 //!    rejects a mismatch with the path hash.
 //!
 //!    Content freshness: a disk-cached body is only as current as its last
-//!    upstream check, so manifest-flavored entries (the MythicMFT product /
-//!    sub-manifests on /patch/manifest, aops patchlists and patchcfgs on
-//!    /stream and the generic route) are never served blind. Every request -
-//!    throttled by `--manifest-ttl <secs>` (default 0 = check every request;
-//!    manifests are KBs and upstreams are CDNs) - revalidates the entry with
-//!    a conditional GET (If-None-Match / If-Modified-Since built from the
-//!    upstream validators captured at cache time, persisted in a small
-//!    metadata tail on the cache entry; tail-less entries = no validators,
-//!    treated as fresh, so old caches keep working). Upstream 304 -> the
-//!    cached (rewritten) body serves; upstream 200 -> the body re-normalizes,
-//!    re-caches and - when it actually changed - the content entries the OLD
-//!    body referenced are invalidated so changed data re-fetches fresh.
+//!    upstream check, so manifest-flavored entries (the MythicMFT product
+//!    uo-legacyrelease.prod / sub-manifests on /patch/manifest,
+//!    aops patchlists and patchcfgs on /stream and the generic route) are
+//!    never served blind. Every request - throttled by `--manifest-ttl <secs>`
+//!    (default 0 = check every request; manifests are KBs and upstreams are
+//!    CDNs) - revalidates the entry with a conditional GET (If-None-Match /
+//!    If-Modified-Since built from the upstream validators captured at cache
+//!    time, persisted in a small metadata tail on the cache entry; tail-less
+//!    entries = no validators, treated as fresh, so old caches keep working).
+//!    Upstream 304 -> the cached (rewritten) body serves; upstream 200 -> the
+//!    body re-normalizes, re-caches and - when it actually changed - the
+//!    content entries the OLD body referenced are invalidated so changed data
+//!    re-fetches fresh.
 //!
 //!    Browser cache busting: every rewritten resource url carries a version
 //!    token, `...?v=<token>` (per-entry manifest attrs when available, the
@@ -60,15 +61,15 @@
 //!    `--data <name>=<dir>` (repeatable - one mount per shard, so hub
 //!    deployments expose many), and shards.cfg entries whose producturl
 //!    points at a server-side folder, `Installer=local:<path>` (absolute,
-//!    or relative to the dist tree). Those are auto-mounted under a name
+//!    or relative to the root tree). Those are auto-mounted under a name
 //!    derived from the shard's own Name, and the served shards.cfg carries
 //!    the same-origin product url in the producturl field, so any deployment
-//!    exposing local folders needs no flags beyond --dist. A remote CDN url
+//!    exposing local folders needs no flags beyond --root. A remote CDN url
 //!    keeps working unchanged.
 //!
 //!    A mount speaks MythicMFT: when the folder has no manifest on disk, the
 //!    proxy SYNTHESIZES a MYP product for it - a generated product manifest
-//!    (served at the `<root>patchlist` url the client always requests, and
+//!    (served at the `<root>manifest` url the client always requests, and
 //!    dispatched on content like the official one), one generated
 //!    `base/pkg.mft` sub-manifest listing the walk of the folder (the same
 //!    UO-data file filter the client applies), and loose-file blobs at
@@ -87,7 +88,7 @@
 //!
 //! Usage:
 //! ```text
-//! xuoproxy [--listen 127.0.0.1:8777] [--dist dist/wasm]
+//! xuoproxy [--listen 127.0.0.1:8777] [--root html/]
 //!          [--cache-dir xuoproxy-cache] [--cache-ttl <secs>] [--no-cache]
 //!          [--manifest-ttl <secs>] [--upstream-timeout <secs>]
 //!          [--manifest-upstream <url>] [--files-upstream <url>]
@@ -147,6 +148,7 @@ use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::Router;
+use clap::Parser;
 use futures_util::{SinkExt, StreamExt};
 use sha2::{Digest, Sha256};
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
@@ -183,13 +185,13 @@ fn normalized_sizes() -> &'static Mutex<HashMap<String, u64>> {
 // configuration
 // ---------------------------------------------------------------------------
 
-// reserved config surface (covers the --dist/--cache-dir startup knobs); the
+// reserved config surface (covers the --root/--cache-dir startup knobs); the
 // running server carries its settings in AppState
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 struct Config {
     listen: String,
-    dist: PathBuf,
+    root: PathBuf,
     cache_dir: PathBuf,
     cache_ttl: u64, // seconds; 0 = entries never expire
     // seconds between upstream freshness checks for manifest entries;
@@ -205,144 +207,210 @@ struct Config {
 // entry
 // ---------------------------------------------------------------------------
 
+#[derive(clap::Parser)]
+#[command(
+    name = "xuoproxy",
+    about = "caching proxy in front of the UO patch CDN, the web client and local data mounts"
+)]
+struct Cli {
+    /// address:port to listen on
+    #[arg(long, default_value = "127.0.0.1:8777")]
+    listen: String,
+
+    /// web client (wasm) root tree to serve
+    #[arg(long, default_value = "html/")]
+    root: String,
+
+    /// on-disk cache directory for fetched upstream content
+    #[arg(long, default_value = "xuoproxy-cache")]
+    cache_dir: String,
+
+    /// seconds an immutable cached entry stays fresh (0 = forever)
+    #[arg(long, default_value_t = 0)]
+    cache_ttl: u64,
+
+    /// seconds between upstream freshness checks for manifest entries
+    /// (0 = revalidate on every request)
+    #[arg(long, default_value_t = 0)]
+    manifest_ttl: u64,
+
+    /// seconds of upstream read inactivity (no body progress) before a
+    /// fetch is aborted (clamped to >= 1)
+    #[arg(long, default_value_t = 300)]
+    upstream_timeout: u64,
+
+    /// serve nothing from the on-disk cache (upstream only)
+    #[arg(long)]
+    no_cache: bool,
+
+    /// upstream manifest repo base url
+    #[arg(
+        long,
+        default_value = "http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest"
+    )]
+    manifest_upstream: String,
+
+    /// upstream file repo base url
+    #[arg(
+        long,
+        default_value = "http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files"
+    )]
+    files_upstream: String,
+
+    /// upstream aops (patchlist/patchcfg) base url
+    #[arg(long, default_value = "https://uniteuo.com/")]
+    aops_upstream: String,
+
+    /// named data mount: NAME=DIR serves DIR at /data/NAME/... (repeatable);
+    /// a bare DIR is the source folder for --generate-product
+    #[arg(long = "data", value_name = "NAME=DIR|DIR")]
+    data: Vec<String>,
+
+    /// build an unpacked MYP product folder (uo-legacyrelease.prod,
+    /// base/pkg.mft, base/unpacked/<name hash>) from a --data folder and
+    /// exit; host DIR on any static web server
+    #[arg(long, value_name = "DIR", help_heading = "Product generation")]
+    generate_product: Option<String>,
+
+    /// filerepo/manifestrepo url prefix baked into the generated product;
+    /// set it to the web path the folder will be served at
+    #[arg(
+        long,
+        value_name = "PATH",
+        default_value = "/data/uodata/",
+        help_heading = "Product generation"
+    )]
+    generate_url: String,
+
+    /// honor X-Forwarded-For (behind ferron/nginx)
+    #[arg(long, help_heading = "Internet exposure")]
+    trust_proxy: bool,
+
+    /// per-IP requests/sec (0 = off)
+    #[arg(long, default_value_t = 0, help_heading = "Internet exposure")]
+    rate_limit: u64,
+
+    /// per-IP burst above the rate
+    #[arg(long, default_value_t = 30, help_heading = "Internet exposure")]
+    rate_burst: u32,
+
+    /// ban IPs after N rate-limit hits (0 = off)
+    #[arg(long, default_value_t = 0, help_heading = "Internet exposure")]
+    auto_ban_violations: u32,
+
+    /// persistent ban list (ip[/prefix] until reason)
+    #[arg(long, value_name = "PATH", help_heading = "Internet exposure")]
+    banfile: Option<PathBuf>,
+
+    /// enable /stats + /admin (Bearer token)
+    #[arg(long, value_name = "SECRET", help_heading = "Internet exposure")]
+    admin_token: Option<String>,
+
+    /// restrict /ws bridges to host:port (repeatable; default open)
+    #[arg(long, value_name = "HOST:PORT", help_heading = "Internet exposure")]
+    ws_allow: Vec<String>,
+
+    /// permit /stream,/blob to fetch private addresses
+    #[arg(long, help_heading = "Internet exposure")]
+    allow_private_upstream: bool,
+}
+
 #[tokio::main]
 async fn main() {
-    let mut listen = String::from("127.0.0.1:8777");
-    let mut dist = String::from("dist/wasm");
-    let mut cache_dir = String::from("xuoproxy-cache");
-    let mut cache_ttl = 0u64;
-    let mut manifest_ttl = 0u64;
-    // seconds of upstream read inactivity (no body progress) before a fetch
-    // is aborted - see the http client construction below
-    let mut upstream_timeout = 300u64;
-    let mut use_cache = true;
-    let mut upstream_manifest =
-        String::from("http://patch.uo.broadsword.com/uopatch-sa/legacyrelease/uo/manifest");
-    let mut upstream_files =
-        String::from("http://patch.ak-cdn.eamythic.com/uopatch-sa/250/legacyrelease/uo/files");
-    let mut upstream_aops =
-        String::from("http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo");
+    let cli = Cli::parse();
+
+    let listen = cli.listen;
+    let root = cli.root;
+    let cache_dir = cli.cache_dir;
+    let cache_ttl = cli.cache_ttl;
+    let manifest_ttl = cli.manifest_ttl;
+    // clamp to >= 1s: 0 would disable reqwest's read timeout entirely,
+    // turning the footgun into stuck upstreams that hang a request (and its
+    // log line) forever
+    let upstream_timeout = cli.upstream_timeout.max(1);
+    let use_cache = !cli.no_cache;
+    let upstream_manifest = cli.manifest_upstream;
+    let upstream_files = cli.files_upstream;
+    let upstream_aops = cli.aops_upstream;
     let data_dirs: Arc<Mutex<HashMap<String, PathBuf>>> = Arc::new(Mutex::new(HashMap::new()));
 
-    // internet-exposure surface (see admin.rs): all off/loose by default so
-    // the loopback dev workflow keeps working unchanged
-    let mut trust_proxy = false;
-    let mut rate_limit = 0u64;
-    let mut rate_burst = 30u32;
-    let mut auto_ban_violations = 0u32;
-    let mut admin_token: Option<String> = None;
-    let mut allow_private_upstream = false;
-    let mut banfile: Option<PathBuf> = None;
-    let mut ws_allow: Option<HashSet<String>> = None;
-
-    let mut args = std::env::args().skip(1);
-    while let Some(arg) = args.next() {
-        let mut value = |name: &str| -> Option<String> {
-            if arg == name {
-                args.next()
-            } else {
-                arg.strip_prefix(&format!("{name}=")).map(str::to_string)
-            }
+    let trust_proxy = cli.trust_proxy;
+    let rate_limit = cli.rate_limit;
+    let rate_burst = cli.rate_burst.max(1);
+    let auto_ban_violations = cli.auto_ban_violations;
+    let admin_token = cli.admin_token;
+    let allow_private_upstream = cli.allow_private_upstream;
+    let banfile = cli.banfile;
+    let ws_allow: Option<HashSet<String>> = if cli.ws_allow.is_empty() {
+        None
+    } else {
+        Some(
+            cli.ws_allow
+                .iter()
+                .map(|v| v.trim().to_lowercase())
+                .collect(),
+        )
+    };
+    let generate_product = cli.generate_product;
+    let generate_url = cli.generate_url;
+    // repeatable named mount: --data <name>=<dir> serves <dir> at
+    // /data/<name>/... (a shard's local install; shards.cfg points its
+    // producturl= at the mount name); a bare <dir> is only meaningful with
+    // --generate-product
+    let mut generate_source: Option<PathBuf> = None;
+    for data in &cli.data {
+        let Some((name, dir)) = data.split_once('=') else {
+            generate_source = Some(PathBuf::from(data.trim()));
+            continue;
         };
-        if arg == "--help" {
-            println!(
-                "usage: xuoproxy [--listen <addr:port>] [--dist <dir>] [--cache-dir <dir>]\n\
-                  [--cache-ttl <secs>] [--manifest-ttl <secs>] [--no-cache]\n\
-                  [--upstream-timeout <secs>] [--manifest-upstream <url>]\n\
-                  [--files-upstream <url>] [--aops-upstream <url>]\n\
-                  [--data <name>=<dir>]...\n\
-                  internet exposure:\n\
-                  --trust-proxy             honor X-Forwarded-For (behind ferron/nginx)\n\
-                  --rate-limit <rps>        per-IP requests/sec (0 = off)\n\
-                  --rate-burst <n>          per-IP burst above the rate (default 30)\n\
-                  --auto-ban-violations <n> ban IPs after n rate-limit hits (0 = off)\n\
-                  --banfile <path>          persistent ban list (ip[/prefix] until reason)\n\
-                  --admin-token <secret>    enable /stats + /admin (Bearer token)\n\
-                  --ws-allow <host:port>    restrict /ws bridges (repeatable; default open)\n\
-                  --allow-private-upstream  permit /stream,/blob to fetch private addrs"
-            );
-            std::process::exit(0);
-        } else if let Some(v) = value("--listen") {
-            listen = v;
-        } else if let Some(v) = value("--dist") {
-            dist = v;
-        } else if let Some(v) = value("--cache-dir") {
-            cache_dir = v;
-        } else if let Some(v) = value("--cache-ttl") {
-            cache_ttl = v.parse().unwrap_or(0);
-        } else if let Some(v) = value("--manifest-ttl") {
-            manifest_ttl = v.parse().unwrap_or(0);
-        } else if let Some(v) = value("--upstream-timeout") {
-            // clamp to >= 1s: 0 would disable reqwest's read timeout
-            // entirely, turning the footgun into stuck upstreams that hang
-            // a request (and its log line) forever
-            upstream_timeout = v.parse().unwrap_or(300).max(1);
-        } else if arg == "--no-cache" {
-            use_cache = false;
-        } else if let Some(v) = value("--manifest-upstream") {
-            upstream_manifest = v;
-        } else if let Some(v) = value("--files-upstream") {
-            upstream_files = v;
-        } else if let Some(v) = value("--aops-upstream") {
-            upstream_aops = v;
-        } else if let Some(v) = value("--data") {
-            // repeatable named mount: --data <name>=<dir> serves <dir> at
-            // /data/<name>/... (a shard's local install; shards.cfg points
-            // its producturl= at the mount name)
-            let Some((name, dir)) = v.split_once('=') else {
-                eprintln!("--data expects <name>=<dir>, got: {v}");
-                std::process::exit(2);
-            };
-            let name = name.trim();
-            if name.is_empty()
-                || !name
-                    .bytes()
-                    .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
-            {
-                eprintln!("--data mount name must be [A-Za-z0-9_-]+, got: {name}");
-                std::process::exit(2);
-            }
-            if data_dirs
-                .lock()
-                .expect("data mounts")
-                .insert(name.to_string(), PathBuf::from(dir.trim()))
-                .is_some()
-            {
-                eprintln!("--data mount redefined: {name}");
-                std::process::exit(2);
-            }
-        } else if arg == "--trust-proxy" {
-            trust_proxy = true;
-        } else if let Some(v) = value("--rate-limit") {
-            rate_limit = v.parse().unwrap_or(0);
-        } else if let Some(v) = value("--rate-burst") {
-            rate_burst = v.parse().unwrap_or(30).max(1);
-        } else if let Some(v) = value("--auto-ban-violations") {
-            auto_ban_violations = v.parse().unwrap_or(0);
-        } else if let Some(v) = value("--admin-token") {
-            admin_token = Some(v);
-        } else if arg == "--allow-private-upstream" {
-            allow_private_upstream = true;
-        } else if let Some(v) = value("--banfile") {
-            banfile = Some(PathBuf::from(v));
-        } else if let Some(v) = value("--ws-allow") {
-            ws_allow
-                .get_or_insert_with(HashSet::new)
-                .insert(v.trim().to_lowercase());
-        } else {
-            eprintln!("unknown argument: {arg}");
-            eprintln!("see --help");
+        let name = name.trim();
+        if name.is_empty()
+            || !name
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+        {
+            eprintln!("--data mount name must be [A-Za-z0-9_-]+, got: {name}");
+            std::process::exit(2);
+        }
+        if data_dirs
+            .lock()
+            .expect("data mounts")
+            .insert(name.to_string(), PathBuf::from(dir.trim()))
+            .is_some()
+        {
+            eprintln!("--data mount redefined: {name}");
             std::process::exit(2);
         }
     }
 
-    // auto-derive the ws allowlist from the dist shards.cfg: every
+    // --generate-product: offline mode - build the product folder and exit,
+    // before any server state (binds, cache) is set up
+    if let Some(out_dir) = generate_product {
+        let Some(src) = generate_source else {
+            eprintln!("--generate-product needs a source folder: --data <dir>");
+            std::process::exit(2);
+        };
+        match generate_product_folder(&src, std::path::Path::new(&out_dir), &generate_url).await {
+            Ok((serial, files)) => {
+                println!(
+                    "xuoproxy: product written to {out_dir} (serial {serial:016x}, {files} files, repo url {generate_url})"
+                );
+            }
+            Err(e) => {
+                eprintln!("xuoproxy: --generate-product failed: {e}");
+                std::process::exit(1);
+            }
+        }
+        std::process::exit(0);
+    }
+
+    // auto-derive the ws allowlist from the root shards.cfg: every
     // LoginServer= address a shard can hand the client becomes bridgeable
     // (explicit --ws-allow entries are kept as additional entries, shown
     // as source "cli"). Read before serving starts; a changed shards.cfg
     // needs a restart. Empty result + no --ws-allow = open bridges.
     let ws_allow_info: Vec<(String, String, u16)> = Vec::new();
-    /*if let Ok(text) = std::fs::read_to_string(PathBuf::from(&dist).join("shards.cfg")) {
+    /*if let Ok(text) = std::fs::read_to_string(PathBuf::from(&root).join("shards.cfg")) {
         for (shard, servers) in shards_login_servers(&text) {
             for (host, port) in servers {
                 ws_allow
@@ -352,7 +420,7 @@ async fn main() {
             }
         }
     } else if ws_allow.is_none() {
-        println!("xuoproxy: no shards.cfg in {dist} and no --ws-allow: /ws bridges are OPEN");
+        println!("xuoproxy: no shards.cfg in {root} and no --ws-allow: /ws bridges are OPEN");
     }*/
 
     let admin = Arc::new(admin::Admin::new(
@@ -367,7 +435,7 @@ async fn main() {
     ));
 
     let state = AppState {
-        dist: PathBuf::from(&dist),
+        root: PathBuf::from(&root),
         cache_dir: PathBuf::from(&cache_dir),
         cache_ttl,
         manifest_ttl,
@@ -456,7 +524,7 @@ async fn main() {
     }
 
     println!("xuoproxy listening on http://{listen}");
-    println!("  static: {dist}");
+    println!("  static: {root}");
     println!(
         "  proxy:  /patch/manifest|files|eamythic + /stream/<url> + /blob/[<hash>/]<off>/<len> (cache: {})",
         cache_dir
@@ -671,7 +739,7 @@ async fn warm_uop_transfers(state: &AppState) {
 
 #[derive(Clone)]
 struct AppState {
-    dist: PathBuf,
+    root: PathBuf,
     cache_dir: PathBuf,
     cache_ttl: u64,
     manifest_ttl: u64,
@@ -3633,7 +3701,7 @@ fn data_listing_serial(entries: &[DataEntry]) -> u64 {
     hash
 }
 
-async fn data_build_product(name: &str, base: PathBuf) -> Option<Arc<DataProduct>> {
+async fn data_build_product(repo_url: &str, base: PathBuf) -> Option<Arc<DataProduct>> {
     let mut entries: Vec<DataEntry> = Vec::new();
     data_walk(&base, "", &mut entries, 0).await;
     entries.sort_by(|a, b| a.rel.cmp(&b.rel));
@@ -3698,7 +3766,7 @@ async fn data_build_product(name: &str, base: PathBuf) -> Option<Arc<DataProduct
     );
     let pkg_len = pkg.len();
     let product = format!(
-        "<MythicMFT>\r\n    <product serial=\"{serial}\" launchfile=\"client.exe\">\r\n        <manifestrepos>\r\n            <repo url=\"/data/{name}/\" />\r\n        </manifestrepos>\r\n        <filerepos>\r\n            <repo url=\"/data/{name}/\" />\r\n        </filerepos>\r\n        <stages>\r\n            <stage name=\"main\" priority=\"10\" verifyunpacked=\"0\">\r\n                <completion />\r\n                <packages>\r\n                    <package name=\"base\" rpath=\"base\" priority=\"0\">\r\n                        <manifest n=\"pkg.mft\" ul=\"{pkg_len:x}\" ct=\"0\" cl=\"{pkg_len:x}\" t=\"{max_mtime:x}\" rh=\"0\" />\r\n                    </package>\r\n                </packages>\r\n            </stage>\r\n        </stages>\r\n    </product>\r\n</MythicMFT>\r\n"
+        "<MythicMFT>\r\n    <product serial=\"{serial}\" launchfile=\"client.exe\">\r\n        <manifestrepos>\r\n            <repo url=\"{repo_url}\" />\r\n        </manifestrepos>\r\n        <filerepos>\r\n            <repo url=\"{repo_url}\" />\r\n        </filerepos>\r\n        <stages>\r\n            <stage name=\"main\" priority=\"10\" verifyunpacked=\"0\">\r\n                <completion />\r\n                <packages>\r\n                    <package name=\"base\" rpath=\"base\" priority=\"0\">\r\n                        <manifest n=\"pkg.mft\" ul=\"{pkg_len:x}\" ct=\"0\" cl=\"{pkg_len:x}\" t=\"{max_mtime:x}\" rh=\"0\" />\r\n                    </package>\r\n                </packages>\r\n            </stage>\r\n        </stages>\r\n    </product>\r\n</MythicMFT>\r\n"
     );
     Some(Arc::new(DataProduct {
         serial,
@@ -3708,10 +3776,50 @@ async fn data_build_product(name: &str, base: PathBuf) -> Option<Arc<DataProduct
     }))
 }
 
+// --generate-product: write the generated product out as a plain folder that
+// any static web server can host: uo-legacyrelease.prod (product manifest),
+// base/pkg.mft (sub-manifest) and base/unpacked/<name hash> (the loose blobs,
+// hardlinked when the output lands on the same filesystem, copied otherwise).
+// The repo url prefix is baked into both manifests, so it must match the web
+// path the folder is served from (--generate-url).
+async fn generate_product_folder(
+    src: &std::path::Path,
+    out: &std::path::Path,
+    repo_url: &str,
+) -> Result<(u64, usize), String> {
+    let product = data_build_product(repo_url, src.to_path_buf())
+        .await
+        .ok_or_else(|| format!("no files found under {}", src.display()))?;
+    let unpacked = out.join("base").join("unpacked");
+    tokio::fs::create_dir_all(&unpacked)
+        .await
+        .map_err(|e| format!("create {}: {e}", unpacked.display()))?;
+    tokio::fs::write(out.join("uo-legacyrelease.prod"), &product.product)
+        .await
+        .map_err(|e| format!("write uo-legacyrelease.prod: {e}"))?;
+    tokio::fs::write(out.join("base").join("pkg.mft"), &product.pkg)
+        .await
+        .map_err(|e| format!("write base/pkg.mft: {e}"))?;
+    let mut count = 0usize;
+    for (hash, real) in &product.blobs {
+        let dest = unpacked.join(hash);
+        let _ = tokio::fs::remove_file(&dest).await;
+        if tokio::fs::hard_link(real, &dest).await.is_err() {
+            // different filesystem (or hardlinks unsupported): fall back to a
+            // full copy
+            tokio::fs::copy(real, &dest)
+                .await
+                .map_err(|e| format!("copy {} -> {}: {e}", real.display(), dest.display()))?;
+        }
+        count += 1;
+    }
+    Ok((product.serial, count))
+}
+
 // the mount's cached product, rebuilt when the listing fingerprint changes
 async fn data_product(state: &AppState, name: &str) -> Option<Arc<DataProduct>> {
     let base = data_dir_of(state, name)?;
-    let fresh = data_build_product(name, base).await?;
+    let fresh = data_build_product(&format!("/data/{name}/"), base).await?;
     let mut cache = data_products().lock().expect("data products");
     match cache.get(name) {
         Some(cached) if cached.serial == fresh.serial => Some(cached.clone()),
@@ -3959,8 +4067,8 @@ async fn data_file(
     // generated product lanes (a raw install folder presents as a MythicMFT
     // product; see the DataProduct notes)
     match tail {
-        "patchlist" => {
-            // the product ladder fetches "<root>patchlist" and sniffs the
+        "patchlist" | "uo-legacyrelease.prod" => {
+            // the product ladder fetches "<root><manifest>" and sniffs the
             // content: a MythicMFT product file plans through the official
             // manifest path
             let Some(product) = data_product(&state, &name).await else {
@@ -4081,8 +4189,8 @@ fn shards_local_product_urls(text: &str) -> Vec<(String, String)> {
     let mut name: Option<String> = None;
     let mut product_url: Option<String> = None;
     let flush = |out: &mut Vec<(String, String)>,
-                     name: &mut Option<String>,
-                     product_url: &mut Option<String>| {
+                 name: &mut Option<String>,
+                 product_url: &mut Option<String>| {
         if let (Some(n), Some(i)) = (name.take(), product_url.take()) {
             out.push((n, i));
         }
@@ -4117,7 +4225,7 @@ fn shards_local_product_urls(text: &str) -> Vec<(String, String)> {
     out
 }
 
-// parse the dist shards.cfg's LoginServer= entries: (shard name, [(host, port)]).
+// parse the root shards.cfg's LoginServer= entries: (shard name, [(host, port)]).
 // "host,port" per entry, multiple servers as comma-separated pairs.
 // (currently unused: the shards.cfg auto-allowlist call site is disabled)
 #[allow(dead_code)]
@@ -4126,8 +4234,8 @@ fn shards_login_servers(text: &str) -> Vec<(String, Vec<(String, u16)>)> {
     let mut name: Option<String> = None;
     let mut servers: Vec<(String, u16)> = Vec::new();
     let flush = |out: &mut Vec<(String, Vec<(String, u16)>)>,
-                     name: &mut Option<String>,
-                     servers: &mut Vec<(String, u16)>| {
+                 name: &mut Option<String>,
+                 servers: &mut Vec<(String, u16)>| {
         if let (Some(n), true) = (name.take(), !servers.is_empty()) {
             out.push((n, std::mem::take(servers)));
         }
@@ -4192,11 +4300,11 @@ fn data_sanitize_mount_name(raw: &str) -> String {
     out.trim_matches('_').to_string()
 }
 
-// parse + register the dist shards.cfg's local product urls (idempotent, cheap:
+// parse + register the root shards.cfg's local product urls (idempotent, cheap:
 // one small file read; also self-heals /data requests that arrive before any
 // shards.cfg fetch)
 async fn register_shards_mounts(state: &AppState) {
-    let Ok(text) = tokio::fs::read_to_string(state.dist.join("shards.cfg")).await else {
+    let Ok(text) = tokio::fs::read_to_string(state.root.join("shards.cfg")).await else {
         return;
     };
     for (shard_name, path) in shards_local_product_urls(&text) {
@@ -4208,7 +4316,7 @@ async fn register_shards_mounts(state: &AppState) {
             PathBuf::from(&path)
         } else {
             // relative product urls live next to the served tree
-            state.dist.join(&path)
+            state.root.join(&path)
         };
         let mut mounts = state.data_dirs.lock().expect("data mounts");
         if let Some(existing) = mounts.get(&mount) {
@@ -4234,12 +4342,12 @@ async fn register_shards_mounts(state: &AppState) {
 
 // the served shards.cfg: local product urls become the same-origin product url
 // ("/data/<mount>/"), which the shell passes through and the client plans
-// against (the generated product manifest answers at that root's patchlist)
+// against (the generated product manifest answers at that root)
 async fn serve_shards_cfg(
     state: &AppState,
     req_headers: &axum::http::HeaderMap,
 ) -> Option<Response> {
-    let bytes = tokio::fs::read(state.dist.join("shards.cfg")).await.ok()?;
+    let bytes = tokio::fs::read(state.root.join("shards.cfg")).await.ok()?;
     register_shards_mounts(state).await;
     let text = String::from_utf8_lossy(&bytes).into_owned();
     let mounts = |shard: &str, path: &str| -> String {
@@ -4329,11 +4437,11 @@ async fn static_file(
         }
     }
 
-    let full = state.dist.join(rel.trim_start_matches('/'));
+    let full = state.root.join(rel.trim_start_matches('/'));
     match tokio::fs::read(&full).await {
         Ok(bytes) => {
             let mime = mime_of(&full);
-            // the dist artifacts share filenames across builds (crossuo.js /
+            // the root artifacts share filenames across builds (crossuo.js /
             // crossuo.wasm are NOT content-addressed): any long-lived cache
             // eventually pairs an old artifact with a new one and the wasm
             // link fails ("import object field ... is not a Function").

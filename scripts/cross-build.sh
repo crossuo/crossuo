@@ -378,22 +378,26 @@ package_target() {
       fi
       ;;
     wasm)
-      cp "$b"/src/crossuo.js "$b"/src/crossuo.wasm "$out/" 2>/dev/null || true
-      [[ -f "$b/src/crossuo.data" ]] && cp "$b/src/crossuo.data" "$out/"
-      [[ -f "$b/src/crossuo.worker.js" ]] && cp "$b/src/crossuo.worker.js" "$out/"
-      cp resources/shell.html "$out/index.html"
+      # web client files land in <out>/html/, so the deployment folder can
+      # carry the proxy binary beside them (deploy.sh drops xuoproxy into
+      # <out>/): serve with xuoproxy --dist dist/wasm/html
+      mkdir -p "$out/html"
+      cp "$b"/src/crossuo.js "$b"/src/crossuo.wasm "$out/html/" 2>/dev/null || true
+      [[ -f "$b/src/crossuo.data" ]] && cp "$b/src/crossuo.data" "$out/html/"
+      [[ -f "$b/src/crossuo.worker.js" ]] && cp "$b/src/crossuo.worker.js" "$out/html/"
+      cp resources/shell.html "$out/html/index.html"
       # Regenerate the shard list so a direct wasm build ships a fresh
       # shards.cfg (the zip below must include it). The fetch variant
       # clones crossuo/shards and builds a host shardchk when missing, so
       # this works on fresh machines/CI too. Non-fatal by design.
-      if ! ./scripts/wasm-shards-fetch.sh "$out"; then
+      if ! ./scripts/wasm-shards-fetch.sh "$out/html"; then
         echo ">> [$target] warning: shards.cfg regeneration failed - continuing"
       fi
       if command -v zip >/dev/null; then
         (cd "$out" && zip -qry "../$name.zip" .)
         echo ">> [$target] packaged dist/$name.zip"
       fi
-      echo ">> [$target] serve with: tools/xuoproxy/target/release/xuoproxy --listen 127.0.0.1:8080 --dist dist/$target"
+      echo ">> [$target] serve with: tools/xuoproxy/target/release/xuoproxy --listen 127.0.0.1:8080 --dist dist/$target/html"
   esac
 }
 
