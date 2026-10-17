@@ -35,7 +35,7 @@ enum
 };
 
 CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
-    : CGumpBaseScroll(GT_SKILLS, 0, 0x1F40, height, x, y, true, 0, true, 15)
+    : CGumpBaseScroll(GT_SKILLS, 0, g_Config.ClientVersion <= CV_200 ? 0x0820 : 0x1F40, height, x, y, true, 0, true, 15)
 {
     m_Locker.Serial = ID_GS_LOCK_MOVING;
 
@@ -55,33 +55,40 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
     Add(new CGUIGumppic(0x0839, 0, 0));
 
     Add(new CGUIPage(2));
-    Add(new CGUIGumppic(0x0834, 82, 34)); //Skills text gump
+    const int titlePosX = g_Config.ClientVersion > CV_200 ? 82 : 120;
+    Add(new CGUIGumppic(0x0834, titlePosX, 34)); //Skills text gump
 
-    CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 180, 33));
-    text->CreateTextureA(1, "Show:   Real    Cap");
+    if (g_Config.ClientVersion > CV_200)
+    {
+        CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 180, 33));
+        text->CreateTextureA(1, "Show:   Real    Cap");
 
-    m_CheckboxShowReal =
-        (CGUICheckbox *)Add(new CGUICheckbox(ID_GS_SHOW_REAL, 0x0938, 0x0939, 0x0938, 226, 34));
-    m_CheckboxShowReal->Checked = m_ShowReal;
-    m_CheckboxShowCap =
-        (CGUICheckbox *)Add(new CGUICheckbox(ID_GS_SHOW_CAP, 0x0938, 0x0939, 0x0938, 280, 34));
-    m_CheckboxShowCap->Checked = m_ShowCap;
+        m_CheckboxShowReal =
+            (CGUICheckbox *)Add(new CGUICheckbox(ID_GS_SHOW_REAL, 0x0938, 0x0939, 0x0938, 226, 34));
+        m_CheckboxShowReal->Checked = m_ShowReal;
+        m_CheckboxShowCap =
+            (CGUICheckbox *)Add(new CGUICheckbox(ID_GS_SHOW_CAP, 0x0938, 0x0939, 0x0938, 280, 34));
+        m_CheckboxShowCap->Checked = m_ShowCap;
+    }
 
     Add(new CGUIGumppic(0x082B, 30, 60));                                        //Top line
     m_BottomLine = (CGUIGumppic *)Add(new CGUIGumppic(0x082B, 31, Height - 48)); //Bottom line
     m_Comment = (CGUIGumppic *)Add(new CGUIGumppic(0x0836, 30, Height - 35)); //Skills comment gump
+
+    const int newGroupPosX = g_Config.ClientVersion > CV_200 ? 60 : 180;
     m_CreateGroup = (CGUIButton *)Add(new CGUIButton(
-        ID_GS_BUTTON_NEW_GROUP, 0x083A, 0x083A, 0x083A, 60, Height - 3)); //New Group gump
+        ID_GS_BUTTON_NEW_GROUP, 0x083A, 0x083A, 0x083A, newGroupPosX, Height - 3)); //New Group gump
 
-    m_SkillSum = (CGUIText *)Add(new CGUIText(0x0065, 235, Height - 6));
-    UpdateSkillsSum();
+    if (g_Config.ClientVersion > CV_200)
+    {
+        m_SkillSum = (CGUIText *)Add(new CGUIText(0x0065, 235, Height - 6));
+        UpdateSkillsSum();
+    }
 
-    //Если игрок присутствует
     if (g_Player != nullptr)
     {
         int currentIndex = 0;
         int currentY = 0;
-
         for (CSkillGroupObject *group = (CSkillGroupObject *)g_SkillGroupManager.m_Groups; group != nullptr; group = (CSkillGroupObject *)group->m_Next)
         {
             CGUISkillGroup *skillGroup = (CGUISkillGroup *)m_HTMLGump->Add(new CGUISkillGroup(
@@ -93,13 +100,11 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
             skillGroup->SetMinimized(true);
 
             int count = group->Count;
-
             for (int i = 0; i < count; i++)
             {
-                uint8_t index = group->GetItem(i); //Получаем индекс скилла по порядковому номеру
-
+                uint8_t index = group->GetItem(i);
                 if (index < g_SkillsManager.Count)
-                { //Он валиден
+                {
                     skillGroup->Add(new CGUISkillItem(
                         ID_GS_SKILL + index,
                         ID_GS_SKILL_BUTTON + index,
@@ -111,7 +116,6 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
             }
 
             currentY += 19;
-
             if (!skillGroup->GetMinimized())
             {
                 currentY += count * 17;
@@ -197,7 +201,11 @@ void CGumpSkills::UpdateHeight()
     m_BottomLine->SetY(Height - 48); //Bottom line
     m_Comment->SetY(Height - 35);    //Skills comment gump
     m_CreateGroup->SetY(Height - 3); //New Group gump
-    m_SkillSum->SetY(Height - 6);
+
+    if (g_Config.ClientVersion > CV_200)
+    {
+        m_SkillSum->SetY(Height - 6);
+    }
 }
 
 void CGumpSkills::UpdateGroupPositions()
@@ -311,9 +319,12 @@ void CGumpSkills::UpdateSkillValues()
 
 void CGumpSkills::UpdateSkillsSum()
 {
-    char str[20] = { 0 };
-    sprintf_s(str, "%.1f", g_SkillsManager.SkillsTotal);
-    m_SkillSum->CreateTextureA(3, str);
+    if (g_Config.ClientVersion > CV_200)
+    {
+        char str[20] = { 0 };
+        sprintf_s(str, "%.1f", g_SkillsManager.SkillsTotal);
+        m_SkillSum->CreateTextureA(3, str);
+    }
 }
 
 void CGumpSkills::Init()
@@ -722,14 +733,12 @@ void CGumpSkills::GUMP_CHECKBOX_EVENT_C
 void CGumpSkills::GUMP_TEXT_ENTRY_EVENT_C
 {
     CGUISkillGroup *group = GetSkillGroup(serial - ID_GS_GROUP);
-
     if (group != nullptr)
     {
         if (group->m_Name->Focused)
         {
             int x = g_MouseManager.Position.X - group->GetX();
             int y = g_MouseManager.Position.Y - group->GetY();
-
             group->m_Name->OnClick(this, x, y);
         }
         else
@@ -746,10 +755,8 @@ bool CGumpSkills::OnLeftMouseButtonDoubleClick()
         Minimized = false;
         Page = 2;
         WantRedraw = true;
-
         return true;
     }
-
     return false;
 }
 
@@ -778,7 +785,6 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
             int index = 0;
             CSkillGroupObject *groupItem = g_SkillGroupManager.m_Groups;
             CGUISkillGroup *first = nullptr;
-
             for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
             {
                 if (item->Type == GOT_SKILLGROUP)
@@ -800,7 +806,6 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
                                 first->Clear();
                                 groupItem = g_SkillGroupManager.m_Groups;
                                 int count = groupItem->Count;
-
                                 for (int i = 0; i < count; i++)
                                 {
                                     uint8_t itemIndex = groupItem->GetItem(i);
@@ -816,9 +821,7 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
                                     }
                                 }
                             }
-
                             UpdateGroupPositions();
-
                             m_HTMLGump->CalculateDataSize();
                         }
                         WantRedraw = true;

@@ -86,20 +86,15 @@ void CGUIScrollBackground::Draw(bool checktrans)
     }
 
     th[0]->Draw(m_X, m_Y, checktrans); //Top scroll
-
     int currentY = th[0]->Height;
     int height = Height - th[3]->Height;
-
     int bodyX = m_X + OffsetX;
-
     bool exit = false;
-
     while (!exit)
     {
         for (int i = 1; i < 3; i++)
         {
             int deltaHeight = height - currentY;
-
             if (deltaHeight < th[i]->Height)
             {
                 if (deltaHeight > 0)
@@ -117,7 +112,6 @@ void CGUIScrollBackground::Draw(bool checktrans)
             currentY += th[i]->Height;
         }
     }
-
     th[3]->Draw(m_X + BottomOffsetX, m_Y + Height - th[3]->Height, checktrans); //Bottom scroll
 }
 

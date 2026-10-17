@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpJournal.h"
+#include "../Config.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
 #include "../TextEngine/TextData.h"
@@ -39,7 +40,7 @@ CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
     }
 
     Add(new CGUIPage(1));
-    Add(new CGUIGumppic(0x0830, 0, 0));
+    Add(new CGUIGumppic(0x0830, 0, 0)); // minimized gump
 
     Add(new CGUIPage(2));
     Add(new CGUIGumppic(0x082A, 111, 32));                                       //Journal text gump
@@ -51,23 +52,25 @@ CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
     m_TextLocker->BoundingBoxCheck = true;
     m_TextLocker->Visible = false;
 
-    m_CheckboxShowSystem = (CGUICheckbox *)Add(
-        new CGUICheckbox(ID_GJ_SHOW_SYSTEM, 0x00D2, 0x00D3, 0x00D2, 40, Height - 5));
-    m_CheckboxShowSystem->Checked = g_JournalShowSystem;
-    m_CheckboxShowObjects = (CGUICheckbox *)Add(
-        new CGUICheckbox(ID_GJ_SHOW_OBJECTS, 0x00D2, 0x00D3, 0x00D2, 126, Height - 5));
-    m_CheckboxShowObjects->Checked = g_JournalShowObjects;
-    m_CheckboxShowClient = (CGUICheckbox *)Add(
-        new CGUICheckbox(ID_GJ_SHOW_CLIENT, 0x00D2, 0x00D3, 0x00D2, 210, Height - 5));
-    m_CheckboxShowClient->Checked = g_JournalShowClient;
+    if (g_Config.ClientVersion > CV_200)
+    {
+        m_CheckboxShowSystem = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_GJ_SHOW_SYSTEM, 0x00D2, 0x00D3, 0x00D2, 40, Height - 5));
+        m_CheckboxShowSystem->Checked = g_JournalShowSystem;
+        m_CheckboxShowObjects = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_GJ_SHOW_OBJECTS, 0x00D2, 0x00D3, 0x00D2, 126, Height - 5));
+        m_CheckboxShowObjects->Checked = g_JournalShowObjects;
+        m_CheckboxShowClient = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_GJ_SHOW_CLIENT, 0x00D2, 0x00D3, 0x00D2, 210, Height - 5));
+        m_CheckboxShowClient->Checked = g_JournalShowClient;
 
-    m_TextShowSystem = (CGUIText *)Add(new CGUIText(0x0386, 63, Height - 2));
-    m_TextShowSystem->CreateTextureA(1, "System");
-    m_TextShowObjects = (CGUIText *)Add(new CGUIText(0x0386, 149, Height - 2));
-    m_TextShowObjects->CreateTextureA(1, "Objects");
-    m_TextShowClient = (CGUIText *)Add(new CGUIText(0x0386, 233, Height - 2));
-    m_TextShowClient->CreateTextureA(1, "Client");
-
+        m_TextShowSystem = (CGUIText *)Add(new CGUIText(0x0386, 63, Height - 2));
+        m_TextShowSystem->CreateTextureA(1, "System");
+        m_TextShowObjects = (CGUIText *)Add(new CGUIText(0x0386, 149, Height - 2));
+        m_TextShowObjects->CreateTextureA(1, "Objects");
+        m_TextShowClient = (CGUIText *)Add(new CGUIText(0x0386, 233, Height - 2));
+        m_TextShowClient->CreateTextureA(1, "Client");
+    }
     for (CTextData *item = (CTextData *)g_Journal.m_Items; item != nullptr; item = (CTextData *)item->m_Next)
     AddText(item);
 }
@@ -134,16 +137,18 @@ void CGumpJournal::UpdateHeight()
     CGumpBaseScroll::UpdateHeight();
 
     m_BottomLine->SetY(Height - 26); //Bottom line
-
     m_TextLocker->SetY(Height - 27);
 
-    m_CheckboxShowSystem->SetY(Height - 5);
-    m_CheckboxShowObjects->SetY(Height - 5);
-    m_CheckboxShowClient->SetY(Height - 5);
+    if (g_Config.ClientVersion > CV_200)
+    {
+        m_CheckboxShowSystem->SetY(Height - 5);
+        m_CheckboxShowObjects->SetY(Height - 5);
+        m_CheckboxShowClient->SetY(Height - 5);
 
-    m_TextShowSystem->SetY(Height - 2);
-    m_TextShowObjects->SetY(Height - 2);
-    m_TextShowClient->SetY(Height - 2);
+        m_TextShowSystem->SetY(Height - 2);
+        m_TextShowObjects->SetY(Height - 2);
+        m_TextShowClient->SetY(Height - 2);
+    }
 
     if (!m_TextLocker->Visible)
     {
@@ -154,15 +159,12 @@ void CGumpJournal::UpdateHeight()
 int CGumpJournal::RecalculateHeight()
 {
     int height = 0;
-
     for (CBaseGUI *item = (CBaseGUI *)m_HTMLGump->m_Items; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_TEXT)
         {
             item->SetY(height);
-
             bool visible = true;
-
             if (item->Graphic == TT_SYSTEM)
             {
                 visible = g_JournalShowSystem;
@@ -177,7 +179,6 @@ int CGumpJournal::RecalculateHeight()
             }
 
             item->Visible = visible;
-
             if (visible)
             {
                 height += ((CGUIText *)item)->m_Texture.Height;
@@ -213,7 +214,6 @@ void CGumpJournal::AddText(CTextData *obj)
     }
 
     m_HTMLGump->CalculateDataSize();
-
     if (!m_TextLocker->Visible)
     {
         m_HTMLGump->m_Slider->Value = m_HTMLGump->m_Slider->MaxValue;
@@ -230,7 +230,6 @@ void CGumpJournal::DeleteText(CTextData *obj)
             m_HTMLGump->Delete(item);
             m_HTMLGump->CalculateDataSize();
             RecalculateHeight();
-
             break;
         }
     }
@@ -262,7 +261,6 @@ void CGumpJournal::GUMP_CHECKBOX_EVENT_C
         g_JournalShowSystem = !g_JournalShowSystem;
         RecalculateHeight();
         m_HTMLGump->CalculateDataSize();
-
         if (!m_TextLocker->Visible)
         {
             m_HTMLGump->m_Slider->Value = m_HTMLGump->m_Slider->MaxValue;
@@ -274,7 +272,6 @@ void CGumpJournal::GUMP_CHECKBOX_EVENT_C
         g_JournalShowObjects = !g_JournalShowObjects;
         RecalculateHeight();
         m_HTMLGump->CalculateDataSize();
-
         if (!m_TextLocker->Visible)
         {
             m_HTMLGump->m_Slider->Value = m_HTMLGump->m_Slider->MaxValue;
@@ -286,7 +283,6 @@ void CGumpJournal::GUMP_CHECKBOX_EVENT_C
         g_JournalShowClient = !g_JournalShowClient;
         RecalculateHeight();
         m_HTMLGump->CalculateDataSize();
-
         if (!m_TextLocker->Visible)
         {
             m_HTMLGump->m_Slider->Value = m_HTMLGump->m_Slider->MaxValue;
@@ -302,9 +298,7 @@ bool CGumpJournal::OnLeftMouseButtonDoubleClick()
         Minimized = false;
         WantRedraw = true;
         Page = 2;
-
         return true;
     }
-
     return false;
 }

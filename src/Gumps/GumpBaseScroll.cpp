@@ -27,7 +27,7 @@ CGumpBaseScroll::CGumpBaseScroll(
     int offsetY = 0;
     if (haveMinimizer)
     {
-        auto spr = g_Game.ExecuteGump(0x082D);
+        auto spr = g_Game.ExecuteGump(0x082D); // minimize button
         if (spr != nullptr)
         {
             offsetY = spr->Height - 3;
@@ -46,7 +46,7 @@ CGumpBaseScroll::CGumpBaseScroll(
     }
     else
     {
-        m_Minimizer->SetX(170);
+        m_Minimizer->SetX(g_Config.ClientVersion <= CV_200 ? 137 : 170);
     }
 
     int heightDecBonus = ScissorOffsetHeight;
@@ -56,12 +56,14 @@ CGumpBaseScroll::CGumpBaseScroll(
         heightDecBonus += 16;
     }
 
+
+    const int scrollPosX = rect.Size.Width - (g_Config.ClientVersion <= CV_200 ? 16 : 0);
     m_HTMLGump = (CGUIHTMLGump *)Add(new CGUIHTMLGump(
         ID_GBS_HTMLGUMP,
         0,
         rect.Position.X,
         offsetY + rect.Position.Y + ScrollerOffsetY,
-        rect.Size.Width,
+        scrollPosX,
         rect.Size.Height - ScrollerOffsetY - heightDecBonus,
         false,
         true));
@@ -101,7 +103,7 @@ CGumpBaseScroll::CGumpBaseScroll(
     }
     else
     {
-        m_Resizer->SetX(170);
+        m_Resizer->SetX(g_Config.ClientVersion <= CV_200 ? 137 : 170);
     }
 }
 

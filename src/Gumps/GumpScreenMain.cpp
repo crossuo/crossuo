@@ -280,9 +280,11 @@ void CGumpScreenMain::UpdateContent()
         g_MainScreen.m_SavePassword->SetTextParameters(
             9, "Save Password", 0x0386, STP_RIGHT_CENTER);
 
+#if !defined(XUO_EMSC)
         g_MainScreen.m_AutoLogin = (CGUICheckbox *)Add(
             new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 183, 417));
         g_MainScreen.m_AutoLogin->SetTextParameters(9, "Auto Login", 0x0386, STP_RIGHT_CENTER);
+#endif
 
         text = (CGUIText *)Add(new CGUIText(0x034E, 286, 455));
         text->CreateTextureA(9, astr_t("UO Version " + g_Config.ClientVersionString + "."));
@@ -333,9 +335,11 @@ void CGumpScreenMain::UpdateContent()
             new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 328, 417));
         g_MainScreen.m_SavePassword->SetTextParameters(9, "Save Password", 0x802, STP_RIGHT_CENTER);
 
+#if !defined(XUO_EMSC)
         g_MainScreen.m_AutoLogin = (CGUICheckbox *)Add(
             new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 183, 417));
         g_MainScreen.m_AutoLogin->SetTextParameters(9, "Auto Login", 0x802, STP_RIGHT_CENTER);
+#endif
 
         text = (CGUIText *)Add(new CGUIText(0x802, 235, 440));
         text->CreateTextureA(9, astr_t("UO Version " + g_Config.ClientVersionString + "."));

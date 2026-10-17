@@ -29,13 +29,10 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
         }
 
         m_Status = skill->LockStatus;
-
         uint16_t graphic = GetStatusButtonGraphic();
         m_ButtonStatus = new CGUIButton(statusSerial, graphic, graphic, graphic, 251, 0);
         m_ButtonStatus->BoundingBoxCheck = true;
-
         g_FontManager.GenerateA(9, m_NameText, skill->Name, 0x0288);
-
         CreateValueText();
     }
 }
@@ -83,10 +80,8 @@ uint16_t CGUISkillItem::GetStatusButtonGraphic()
 void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 {
     CSkill *skill = g_SkillsManager.Get(Index);
-
     if (skill != nullptr)
     {
-        //Значение скилла (учитывая выбранный флаг отображения)
         float val = skill->BaseValue;
         if (showReal)
         {
@@ -99,7 +94,6 @@ void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 
         char sbf[10] = { 0 };
         sprintf_s(sbf, "%.1f", val);
-
         g_FontManager.GenerateA(9, m_ValueText, sbf, 0x0288);
     }
 }
@@ -156,7 +150,8 @@ void CGUISkillItem::Draw(bool checktrans)
 
     m_ButtonStatus->Draw(checktrans);
 
-    m_ValueText.Draw(250 - m_ValueText.Width, 0);
+    const int valPosX = g_Config.ClientVersion > CV_200 ? 250 : 220;
+    m_ValueText.Draw(valPosX - m_ValueText.Width, 0);
 
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
