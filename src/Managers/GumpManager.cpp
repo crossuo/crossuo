@@ -10,6 +10,7 @@
 #include "OptionsMacroManager.h"
 #include "MouseManager.h"
 #include <xuocore/mappedfile.h>
+#include <xuocore/text_parser.h>
 #include "../Point.h"
 #include "../CrossUO.h"
 #include "../Party.h"
@@ -1317,289 +1318,240 @@ bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
     return result;
 }
 
-static const int VERSION = 3;
-
 void CGumpManager::Load(const fs_path &path)
 {
-    CMappedFile file;
-
     bool paperdollRequested = false;
     bool menubarFound = false;
     bool bufficonWindowFound = false;
     bool minimizedConsoleType = false;
     bool showFullTextConsoleType = false;
-    if (file.Load(path) && file.Size != 0)
+
+    if (fs_path_exists(path))
     {
-        const auto version = file.ReadUInt8();
-        // absolute seeks go through the logical cursor (platform-neutral)
-        const size_t oldPos = file.Pos();
-        uint16_t count = 0;
-        uint16_t spellGroupsCount = 0;
-        if (version != 0)
-        {
-            file.Seek(file.Size - 8);
-            spellGroupsCount = file.ReadInt16LE();
-            count = file.ReadInt16LE();
-        }
-        else
-        {
-            file.Seek(file.Size - 6);
-            count = file.ReadInt16LE();
-        }
-        file.Seek(oldPos);
+        TextFileParser file(path, " =", "#;", "\"");
 
-        // custom static blob data
-        if (version == 3)
-        {
-            const auto blobMarker = file.ReadUInt32LE();
-            if (blobMarker == 0x33221100)
-            {
-                const auto blobType = file.ReadUInt8();
-                if (blobType == 0x01) // some gump extra data
-                {
-                    const auto gumpType = (GUMP_TYPE)file.ReadUInt8();
-                    switch (gumpType)
-                    {
-                        case GT_RESOURCETRACKER:
-                        {
-                            ResourceTracker_LoadStaticContents(file);
-                        }
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
-
+        int spellGroupMembers = 0;
+        CGumpSpell *topSpell = nullptr;
         bool menubarLoaded = false;
-        for (int i = 0; i < count; i++)
+
+        while (!file.IsEOF())
         {
-            CGump *gump = nullptr;
-            size_t next = file.Pos();
-            uint8_t size = file.ReadUInt8();
-            next += size;
-
-            const auto gumpType = (GUMP_TYPE)file.ReadUInt8();
-            const auto gumpX = file.ReadUInt16LE();
-            const auto gumpY = file.ReadUInt16LE();
-            const auto gumpMinimized = file.ReadUInt8();
-            const auto gumpMinimizedX = file.ReadUInt16LE();
-            const auto gumpMinimizedY = file.ReadUInt16LE();
-            const auto gumpLockMoving = file.ReadUInt8();
-            switch ((GUMP_TYPE)gumpType)
+            auto v = file.ReadTokens();
+            if (v.empty())
             {
-                case GT_PAPERDOLL:
-                {
-                    gump = new CGumpPaperdoll(g_PlayerSerial, gumpX, gumpY, gumpMinimized != 0u);
-                    g_Game.PaperdollReq(g_PlayerSerial);
-                    paperdollRequested = true;
-                    break;
-                }
-                case GT_STATUSBAR:
-                {
-                    gump = new CGumpStatusbar(g_PlayerSerial, gumpX, gumpY, gumpMinimized != 0u);
-                    break;
-                }
-                case GT_MINIMAP:
-                {
-                    gump = new CGumpMinimap(gumpX, gumpY, gumpMinimized != 0u);
-                    break;
-                }
-                case GT_SKILLS:
-                {
-                    gump = new CGumpSkills(gumpX, gumpY, gumpMinimized != 0u, file.ReadInt16LE());
-                    gump->Visible = false;
-                    g_SkillsManager.SkillsRequested = true;
-                    CPacketSkillsRequest(g_PlayerSerial).Send();
-                    break;
-                }
-                case GT_JOURNAL:
-                {
-                    gump = new CGumpJournal(gumpX, gumpY, gumpMinimized != 0u, file.ReadInt16LE());
-                    break;
-                }
-                case GT_RESOURCETRACKER:
-                {
-                    gump = new CGumpResourceTracker(gumpX, gumpY);
-                    break;
-                }
-                case GT_WORLD_MAP:
-                {
-                    /*CGumpWorldMap *wmg = new CGumpWorldMap(gumpX, gumpY);
-					gump = wmg;
-					wmg->Called = g_ConfigManager.AutoDisplayWorldMap;
+                continue;
+            }
 
-					wmg->Minimized = gumpMinimized;
+            const astr_t &key = v[0];
 
-					if (gumpMinimized)
-						wmg->Page = 1;
-					else
-						wmg->Page = 2;
-
-					wmg->Map = file.ReadUInt8();
-					wmg->Scale = file.ReadUInt8();
-					wmg->LinkWithPlayer = file.ReadUInt8();
-
-					wmg->Width = file.ReadInt16LE();
-					wmg->Height = file.ReadInt16LE();
-
-					wmg->OffsetX = file.ReadInt16LE();
-					wmg->OffsetY = file.ReadInt16LE();
-
-					wmg->UpdateSize();*/
-
-                    break;
-                }
-                case GT_MENUBAR:
+            // fields may be comma packed or space separated
+            if (key == "Gump" && v.size() >= 2)
+            {
+                const auto fields = TextFields(v);
+                if (fields.size() < 7)
                 {
-                    if (!g_ConfigManager.DisableMenubar)
+                    continue;
+                }
+
+                CGump *gump = nullptr;
+                const auto gumpType = (GUMP_TYPE)str_to_int(fields[0]);
+                const auto gumpX = (uint16_t)str_to_int(fields[1]);
+                const auto gumpY = (uint16_t)str_to_int(fields[2]);
+                const auto gumpMinimized = str_to_int(fields[3]);
+                const auto gumpMinimizedX = (uint16_t)str_to_int(fields[4]);
+                const auto gumpMinimizedY = (uint16_t)str_to_int(fields[5]);
+                const auto gumpLockMoving = str_to_int(fields[6]);
+                auto extra = [&fields](size_t idx) -> astr_t
+                {
+                    return idx < fields.size() ? fields[idx] : astr_t("0");
+                };
+
+                switch (gumpType)
+                {
+                    case GT_PAPERDOLL:
                     {
-                        menubarFound = true;
-                        gump = new CGumpMenubar(gumpX, gumpY);
-                        ((CGumpMenubar *)gump)->SetOpened(gumpMinimized != 0u);
+                        gump = new CGumpPaperdoll(g_PlayerSerial, gumpX, gumpY, gumpMinimized != 0);
+                        g_Game.PaperdollReq(g_PlayerSerial);
+                        paperdollRequested = true;
+                        break;
                     }
-
-                    break;
-                }
-                case GT_BUFF:
-                {
-                    bufficonWindowFound = true;
-                    gump = new CGumpBuff(gumpX, gumpY);
-                    gump->Graphic = file.ReadUInt16LE();
-                    break;
-                }
-                case GT_ABILITY:
-                {
-                    gump = new CGumpAbility(file.ReadUInt32LE(), gumpX, gumpY);
-                    break;
-                }
-                case GT_PROPERTY_ICON:
-                {
-                    gump = new CGumpPropertyIcon(gumpX, gumpY);
-                    break;
-                }
-                case GT_COMBAT_BOOK:
-                {
-                    gump = new CGumpCombatBook(gumpX, gumpY);
-                    gump->Minimized = (gumpMinimized != 0u);
-                    break;
-                }
-                case GT_CONTAINER:
-                case GT_SPELLBOOK:
-                case GT_SPELL:
-                {
-                    uint32_t serial = file.ReadUInt32LE();
-                    if (gumpType == GT_SPELL)
+                    case GT_STATUSBAR:
                     {
-                        uint16_t graphic = file.ReadUInt16LE();
-                        SPELLBOOK_TYPE spellType = ST_MAGERY;
-                        if (size > 18)
+                        gump = new CGumpStatusbar(g_PlayerSerial, gumpX, gumpY, gumpMinimized != 0);
+                        break;
+                    }
+                    case GT_MINIMAP:
+                    {
+                        gump = new CGumpMinimap(gumpX, gumpY, gumpMinimized != 0);
+                        break;
+                    }
+                    case GT_SKILLS:
+                    {
+                        gump = new CGumpSkills(
+                            gumpX, gumpY, gumpMinimized != 0, str_to_int(extra(7)));
+                        gump->Visible = false;
+                        g_SkillsManager.SkillsRequested = true;
+                        CPacketSkillsRequest(g_PlayerSerial).Send();
+                        break;
+                    }
+                    case GT_JOURNAL:
+                    {
+                        gump = new CGumpJournal(
+                            gumpX, gumpY, gumpMinimized != 0, str_to_int(extra(7)));
+                        break;
+                    }
+                    case GT_RESOURCETRACKER:
+                    {
+                        gump = new CGumpResourceTracker(gumpX, gumpY);
+                        break;
+                    }
+                    case GT_MENUBAR:
+                    {
+                        if (!g_ConfigManager.DisableMenubar && g_Config.ClientVersion >= CV_500A)
                         {
-                            spellType = (SPELLBOOK_TYPE)file.ReadUInt8();
+                            menubarFound = true;
+                            gump = new CGumpMenubar(gumpX, gumpY);
+                            ((CGumpMenubar *)gump)->SetOpened(gumpMinimized != 0);
                         }
-                        gump = new CGumpSpell(serial, spellType, graphic, gumpX, gumpY);
+
+                        break;
                     }
-                    else
+                    case GT_BUFF:
                     {
+                        bufficonWindowFound = true;
+                        gump = new CGumpBuff(gumpX, gumpY);
+                        gump->Graphic = (uint16_t)str_to_int(extra(7));
+                        break;
+                    }
+                    case GT_ABILITY:
+                    {
+                        gump = new CGumpAbility(TextToUInt(extra(7)), gumpX, gumpY);
+                        break;
+                    }
+                    case GT_PROPERTY_ICON:
+                    {
+                        gump = new CGumpPropertyIcon(gumpX, gumpY);
+                        break;
+                    }
+                    case GT_COMBAT_BOOK:
+                    {
+                        gump = new CGumpCombatBook(gumpX, gumpY);
+                        gump->Minimized = (gumpMinimized != 0);
+                        break;
+                    }
+                    case GT_CONTAINER:
+                    case GT_SPELLBOOK:
+                    {
+                        const uint32_t serial = TextToUInt(extra(7));
                         g_ContainerStack.push_back(CContainerStackItem(
                             serial,
                             gumpX,
                             gumpY,
                             gumpMinimizedX,
                             gumpMinimizedY,
-                            gumpMinimized != 0u,
-                            gumpLockMoving != 0u));
+                            gumpMinimized != 0,
+                            gumpLockMoving != 0));
 
                         g_UseItemActions.Add(serial);
-                        //g_Game. DoubleClick(serial);
+                        break;
                     }
-
-                    break;
-                }
-                case GT_CONSOLE_TYPE:
-                {
-                    minimizedConsoleType = (gumpMinimized != 0u);
-                    showFullTextConsoleType = (file.ReadUInt8() != 0u);
-                    break;
-                }
-                case GT_SKILL:
-                {
-                    uint32_t serial = file.ReadUInt32LE();
-                    gump = new CGumpSkill(serial, gumpX, gumpY);
-                    break;
-                }
-                case GT_RACIAL_ABILITIES_BOOK:
-                {
-                    gump = new CGumpRacialAbilitiesBook(gumpX, gumpY);
-                    gump->Minimized = (gumpMinimized != 0u);
-                    break;
-                }
-                case GT_RACIAL_ABILITY:
-                {
-                    uint32_t serial = file.ReadUInt32LE();
-                    gump = new CGumpRacialAbility(serial, gumpX, gumpY);
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            if (gump != nullptr)
-            {
-                if (gumpType == GT_MENUBAR)
-                {
-                    if (menubarLoaded)
+                    case GT_SPELL:
                     {
-                        delete gump;
-                        continue;
+                        const uint32_t serial = TextToUInt(extra(7));
+                        const uint16_t graphic = (uint16_t)str_to_int(extra(8));
+                        const SPELLBOOK_TYPE spellType = (SPELLBOOK_TYPE)str_to_int(extra(9));
+                        gump = new CGumpSpell(serial, spellType, graphic, gumpX, gumpY);
+                        break;
+                    }
+                    case GT_CONSOLE_TYPE:
+                    {
+                        minimizedConsoleType = (gumpMinimized != 0);
+                        showFullTextConsoleType = (str_to_int(extra(7)) != 0);
+                        break;
+                    }
+                    case GT_SKILL:
+                    {
+                        gump = new CGumpSkill(TextToUInt(extra(7)), gumpX, gumpY);
+                        break;
+                    }
+                    case GT_RACIAL_ABILITIES_BOOK:
+                    {
+                        gump = new CGumpRacialAbilitiesBook(gumpX, gumpY);
+                        gump->Minimized = (gumpMinimized != 0);
+                        break;
+                    }
+                    case GT_RACIAL_ABILITY:
+                    {
+                        gump = new CGumpRacialAbility(TextToUInt(extra(7)), gumpX, gumpY);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+                if (gump != nullptr)
+                {
+                    if (gumpType == GT_MENUBAR)
+                    {
+                        if (menubarLoaded)
+                        {
+                            delete gump;
+                            continue;
+                        }
+
+                        menubarLoaded = true;
                     }
 
-                    menubarLoaded = true;
+                    gump->MinimizedX = gumpMinimizedX;
+                    gump->MinimizedY = gumpMinimizedY;
+                    gump->LockMoving = (gumpLockMoving != 0);
+                    // nudge fully negative positions back into view; no upper
+                    // bound - off-screen right/bottom is left where it was
+                    if (gump->GetX() < 0)
+                    {
+                        gump->SetX(0);
+                    }
+                    if (gump->GetY() < 0)
+                    {
+                        gump->SetY(0);
+                    }
+                    if (gump->MinimizedX < 0)
+                    {
+                        gump->MinimizedX = 0;
+                    }
+                    if (gump->MinimizedY < 0)
+                    {
+                        gump->MinimizedY = 0;
+                    }
+                    AddGump(gump);
+                    gump->WantUpdateContent = true;
                 }
-
-                gump->MinimizedX = gumpMinimizedX;
-                gump->MinimizedY = gumpMinimizedY;
-                gump->LockMoving = (gumpLockMoving != 0u);
-                //gump->FixCoordinates();
-                AddGump(gump);
-                gump->WantUpdateContent = true;
             }
-
-            file.Seek(next);
-        }
-
-        for (int i = 0; i < spellGroupsCount; i++)
-        {
-            CGumpSpell *topSpell = nullptr;
-            uint16_t spellsCount = file.ReadUInt16LE();
-            for (int j = 0; j < spellsCount; j++)
+            else if (key == "SpellGroup" && v.size() >= 2)
             {
-                size_t next = file.Pos();
-                uint8_t size = file.ReadUInt8();
-                next += size;
-
-                const auto _gumpType = (GUMP_TYPE)file.ReadUInt8();
-                (void)_gumpType;
-                uint16_t gumpX = file.ReadUInt16LE();
-                uint16_t gumpY = file.ReadUInt16LE();
-                file.Move(5); //Minimized state, x, y
-                uint8_t gumpLockMoving = file.ReadUInt8();
-
-                uint32_t serial = file.ReadUInt32LE();
-                uint16_t graphic = file.ReadUInt16LE();
-
-                SPELLBOOK_TYPE spellType = ST_MAGERY;
-
-                if (size > 18)
+                spellGroupMembers = str_to_int(v[1]);
+                topSpell = nullptr;
+            }
+            else if (key == "Spell" && spellGroupMembers > 0 && v.size() >= 2)
+            {
+                spellGroupMembers--;
+                const auto fields = TextFields(v);
+                if (fields.size() < 10)
                 {
-                    spellType = (SPELLBOOK_TYPE)file.ReadUInt8();
+                    continue;
                 }
 
-                CGumpSpell *spell = new CGumpSpell(serial, spellType, graphic, gumpX, gumpY);
-                spell->LockMoving = (gumpLockMoving != 0u);
+                const auto spellX = (uint16_t)str_to_int(fields[1]);
+                const auto spellY = (uint16_t)str_to_int(fields[2]);
+                const uint8_t gumpLockMoving = (uint8_t)str_to_int(fields[6]);
+                const uint32_t serial = TextToUInt(fields[7]);
+                const uint16_t graphic = (uint16_t)str_to_int(fields[8]);
+                const SPELLBOOK_TYPE spellType = (SPELLBOOK_TYPE)str_to_int(fields[9]);
+
+                CGumpSpell *spell = new CGumpSpell(serial, spellType, graphic, spellX, spellY);
+                spell->LockMoving = (gumpLockMoving != 0);
 
                 AddGump(spell);
-                assert(spell != nullptr && "AddGump should not delete obj here");
                 if (topSpell == nullptr)
                 {
                     topSpell = spell;
@@ -1610,16 +1562,31 @@ void CGumpManager::Load(const fs_path &path)
                 }
 
                 spell->WantUpdateContent = true;
-                file.Seek(next);
+            }
+            else if (key == "Size" && v.size() >= 2)
+            {
+                auto size = TextSplit(v[1], ',');
+                if (size.size() >= 2)
+                {
+                    ResourceTracker_SetStaticSize(str_to_int(size[0]), str_to_int(size[1]));
+                }
+            }
+            else if (key == "TrackerItem" && v.size() >= 2)
+            {
+                auto f = TextSplit(v[1], ',');
+                if (f.size() >= 2)
+                {
+                    ResourceTracker_AddStaticItem(
+                        (uint16_t)str_to_int(f[0]), (uint16_t)str_to_int(f[1]));
+                }
             }
         }
 
-        file.Unload();
     }
     else
     {
-        if (!g_ConfigManager.DisableMenubar && (g_ConfigManager.GameWindowX == 0) &&
-            (g_ConfigManager.GameWindowY == 0))
+        const bool menuBarEnabled = g_Config.ClientVersion >= CV_500A && !g_ConfigManager.DisableMenubar;
+        if (menuBarEnabled && (g_ConfigManager.GameWindowX == 0) && (g_ConfigManager.GameWindowY == 0))
         {
             g_ConfigManager.GameWindowY = 40;
         }
@@ -1670,12 +1637,11 @@ void CGumpManager::Load(const fs_path &path)
                     false));
 
                 g_UseItemActions.Add(backpack->Serial);
-                //g_Game. DoubleClick(backpack->Serial);
             }
         }
     }
 
-    if (!g_ConfigManager.DisableMenubar && !menubarFound)
+    if (g_Config.ClientVersion >= CV_500A && !g_ConfigManager.DisableMenubar && !menubarFound)
     {
         CGumpMenubar *mbg = new CGumpMenubar(0, 0);
         mbg->SetOpened(true);
@@ -1709,43 +1675,16 @@ void CGumpManager::Load(const fs_path &path)
     AddGump(new CGumpConsoleType(minimizedConsoleType, showFullTextConsoleType));
 }
 
-void CGumpManager::SaveDefaultGumpProperties(Wisp::CBinaryFileWriter &writer, CGump *gump, int size)
+static astr_t GumpBaseLine(GUMP_TYPE type, int x, int y, bool minimized, int minX, int minY, bool lockMoving)
 {
-    writer.WriteInt8(size);
-    writer.WriteInt8(gump->GumpType);
-    writer.WriteUInt16LE(gump->GetX());
-    writer.WriteUInt16LE(gump->GetY());
+    return "Gump=" + str_from((int)type) + "," + str_from(x) + "," + str_from(y) + "," +
+           str_from((int)minimized) + "," + str_from(minX) + "," + str_from(minY) + "," +
+           str_from((int)lockMoving);
+}
 
-    if (gump->GumpType == GT_MENUBAR)
-    {
-        writer.WriteInt8(static_cast<char>(((CGumpMenubar *)gump)->GetOpened()));
-    }
-    else
-    { //buff
-        writer.WriteInt8(static_cast<char>(gump->Minimized));
-    }
-
-    writer.WriteUInt16LE(gump->MinimizedX);
-    writer.WriteUInt16LE(gump->MinimizedY);
-    writer.WriteInt8(static_cast<char>(gump->LockMoving));
-};
-
-void CGumpManager::Save(const fs_path &path)
+void CGumpManager::Save(TextFileWriter &writer)
 {
-    Wisp::CBinaryFileWriter writer;
-
-    writer.Open(path);
-    writer.WriteInt8(VERSION); // version
-    writer.WriteBuffer();
-    uint16_t count = 0;
-
-    // custom blob static data
-    {
-        writer.WriteUInt32LE(0x33221100); // blobMarker
-        writer.WriteUInt8(0x01);          // some gump extra data
-        writer.WriteUInt8(GT_RESOURCETRACKER);
-        ResourceTracker_SaveStaticContents(writer);
-    }
+    writer.WriteRaw("[gumps]");
 
     std::vector<CGump *> containerList;
     std::vector<CGump *> spellInGroupList;
@@ -1763,63 +1702,63 @@ void CGumpManager::Save(const fs_path &path)
             case GT_MINIMAP:
             case GT_SKILLS:
             case GT_JOURNAL:
-            case GT_WORLD_MAP:
             case GT_RESOURCETRACKER:
             case GT_PROPERTY_ICON:
+            case GT_MENUBAR:
+            case GT_BUFF:
+            case GT_ABILITY:
+            case GT_COMBAT_BOOK:
+            case GT_CONSOLE_TYPE:
+            case GT_SKILL:
+            case GT_RACIAL_ABILITIES_BOOK:
+            case GT_RACIAL_ABILITY:
             {
-                uint8_t size = 12;
-                if (gump->GumpType == GT_JOURNAL)
+                // the menubar stores its Opened state (an unopened menubar is
+                // a collapsed icon, not a hidden gump); everything else stores
+                // Minimized
+                const bool stateFlag = gump->GumpType == GT_MENUBAR
+                    ? (bool)((CGumpMenubar *)gump)->GetOpened()
+                    : gump->Minimized;
+
+                astr_t line = GumpBaseLine(
+                    gump->GumpType,
+                    gump->GetX(),
+                    gump->GetY(),
+                    stateFlag,
+                    gump->MinimizedX,
+                    gump->MinimizedY,
+                    gump->LockMoving);
+
+                switch (gump->GumpType)
                 {
-                    size += 2;
-                }
-                else if (gump->GumpType == GT_SKILLS)
-                {
-                    size += 2;
-                }
-                else if (gump->GumpType == GT_WORLD_MAP)
-                {
-                    size += 11;
+                    case GT_JOURNAL:
+                        line += "," + str_from(((CGumpJournal *)gump)->Height);
+                        break;
+                    case GT_SKILLS:
+                        line += "," + str_from(((CGumpSkills *)gump)->Height);
+                        break;
+                    case GT_BUFF:
+                        line += "," + str_from((int)gump->Graphic);
+                        break;
+                    case GT_ABILITY:
+                    case GT_SKILL:
+                    case GT_RACIAL_ABILITY:
+                    {
+                        char serial[16] = { 0 };
+                        snprintf(serial, sizeof(serial), "%u", gump->Serial);
+                        line += ",";
+                        line += serial;
+                        break;
+                    }
+                    case GT_CONSOLE_TYPE:
+                        line += "," +
+                                str_from((int)((CGumpConsoleType *)gump)->GetShowFullText());
+                        break;
+                    default:
+                        break;
                 }
 
-                SaveDefaultGumpProperties(writer, gump, size);
-                if (gump->GumpType == GT_JOURNAL)
-                {
-                    writer.WriteUInt16LE(((CGumpJournal *)gump)->Height);
-                }
-                else if (gump->GumpType == GT_SKILLS)
-                {
-                    writer.WriteUInt16LE(((CGumpSkills *)gump)->Height);
-                }
-                else if (gump->GumpType == GT_WORLD_MAP)
-                {
-                    CGumpWorldMap *wmg = (CGumpWorldMap *)gump;
-                    writer.WriteUInt8(wmg->GetMap());
-                    writer.WriteUInt8(wmg->GetScale());
-                    writer.WriteUInt8(static_cast<uint8_t>(wmg->GetLinkWithPlayer()));
-                    writer.WriteInt16LE(wmg->Width);
-                    writer.WriteInt16LE(wmg->Height);
-                    writer.WriteInt16LE(wmg->OffsetX);
-                    writer.WriteInt16LE(wmg->OffsetY);
-                }
-                writer.WriteBuffer();
-                count++;
-                break;
-            }
-            case GT_MENUBAR:
-            case GT_COMBAT_BOOK:
-            case GT_RACIAL_ABILITIES_BOOK:
-            {
-                SaveDefaultGumpProperties(writer, gump, 12);
-                writer.WriteBuffer();
-                count++;
-                break;
-            }
-            case GT_BUFF:
-            {
-                SaveDefaultGumpProperties(writer, gump, 14);
-                writer.WriteUInt16LE(gump->Graphic);
-                writer.WriteBuffer();
-                count++;
+                writer.WriteRaw(line);
                 break;
             }
             case GT_CONTAINER:
@@ -1849,36 +1788,17 @@ void CGumpManager::Save(const fs_path &path)
                     break;
                 }
 
-                SaveDefaultGumpProperties(writer, gump, 19);
-                writer.WriteUInt32LE(gump->Serial);
-                writer.WriteUInt16LE(gump->Graphic);
-                writer.WriteUInt8(((CGumpSpell *)gump)->SpellType);
-                writer.WriteBuffer();
-                count++;
-                break;
-            }
-            case GT_CONSOLE_TYPE:
-            {
-                SaveDefaultGumpProperties(writer, gump, 13);
-
-                writer.WriteUInt8(
-                    static_cast<uint8_t>(((CGumpConsoleType *)gump)->GetShowFullText()));
-
-                writer.WriteBuffer();
-                count++;
-                break;
-            }
-            case GT_SKILL:
-            case GT_ABILITY:
-            case GT_RACIAL_ABILITY:
-            {
-                SaveDefaultGumpProperties(writer, gump, 16);
-
-                writer.WriteUInt32LE(gump->Serial);
-                writer.WriteBuffer();
-
-                count++;
-
+                writer.WriteRaw(
+                    GumpBaseLine(
+                        gump->GumpType,
+                        gump->GetX(),
+                        gump->GetY(),
+                        gump->Minimized,
+                        gump->MinimizedX,
+                        gump->MinimizedY,
+                        gump->LockMoving) +
+                    "," + std::to_string(gump->Serial) + "," + str_from((int)gump->Graphic) +
+                    "," + str_from((int)((CGumpSpell *)gump)->SpellType));
                 break;
             }
             default:
@@ -1898,10 +1818,16 @@ void CGumpManager::Save(const fs_path &path)
             CGump *gump = *it;
             if (gump->Serial == containerSerial)
             {
-                SaveDefaultGumpProperties(writer, gump, 16);
-                writer.WriteUInt32LE(gump->Serial);
-                writer.WriteBuffer();
-                count++;
+                writer.WriteRaw(
+                    GumpBaseLine(
+                        gump->GumpType,
+                        gump->GetX(),
+                        gump->GetY(),
+                        gump->Minimized,
+                        gump->MinimizedX,
+                        gump->MinimizedY,
+                        gump->LockMoving) +
+                    "," + std::to_string(gump->Serial));
                 it = containerList.erase(it);
                 break;
             }
@@ -1911,7 +1837,8 @@ void CGumpManager::Save(const fs_path &path)
         CGameObject *owner = g_World->FindWorldObject(containerSerial);
         if (owner != nullptr)
         {
-            for (CGameItem *item = (CGameItem *)owner->m_Items; item != nullptr; item = (CGameItem *)item->m_Next)
+            for (CGameItem *item = (CGameItem *)owner->m_Items; item != nullptr;
+                 item = (CGameItem *)item->m_Next)
             {
                 if (item->Opened)
                 {
@@ -1921,56 +1848,43 @@ void CGumpManager::Save(const fs_path &path)
         }
     }
 
-    int spellGroupsCount = 0;
-    if (static_cast<unsigned int>(!spellInGroupList.empty()) != 0u)
+    // spell groups: one "SpellGroup=<memberCount>" line followed by the
+    // member "Spell=..." lines, in group order
+    while (!spellInGroupList.empty())
     {
-        std::vector<CGump *> spellGroups;
-        while (static_cast<unsigned int>(!spellInGroupList.empty()) != 0)
+        CGumpSpell *topSpell = ((CGumpSpell *)spellInGroupList[0])->GetTopSpell();
+
+        int spellsCount = 0;
+        for (auto spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
         {
-            CGumpSpell *spell = (CGumpSpell *)spellInGroupList[0];
-            CGumpSpell *topSpell = spell->GetTopSpell();
-            spellGroups.push_back(topSpell);
-            spellGroupsCount++;
-            for (spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
-            {
-                for (std::vector<CGump *>::iterator it = spellInGroupList.begin();
-                     it != spellInGroupList.end();
-                     ++it)
-                {
-                    if (*it == spell)
-                    {
-                        spellInGroupList.erase(it);
-                        break;
-                    }
-                }
-            }
+            spellsCount++;
         }
 
-        for (int i = 0; i < spellGroupsCount; i++)
+        writer.WriteRaw("SpellGroup=" + str_from(spellsCount));
+        for (auto spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
         {
-            int spellsCount = 0;
-            for (auto spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
-                 spell = spell->m_GroupNext)
-            {
-                spellsCount++;
-            }
+            writer.WriteRaw(
+                GumpBaseLine(
+                    GT_SPELL,
+                    spell->GetX(),
+                    spell->GetY(),
+                    spell->Minimized,
+                    spell->MinimizedX,
+                    spell->MinimizedY,
+                    spell->LockMoving) +
+                "," + std::to_string(spell->Serial) + "," + str_from((int)spell->Graphic) +
+                "," + str_from((int)spell->SpellType));
 
-            writer.WriteInt16LE(spellsCount);
-            for (auto spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
-                 spell = spell->m_GroupNext)
+            for (auto it = spellInGroupList.begin(); it != spellInGroupList.end(); ++it)
             {
-                SaveDefaultGumpProperties(writer, spell, 19);
-                writer.WriteUInt32LE(spell->Serial);
-                writer.WriteUInt16LE(spell->Graphic);
-                writer.WriteUInt8(spell->SpellType);
-                writer.WriteBuffer();
+                if (*it == spell)
+                {
+                    spellInGroupList.erase(it);
+                    break;
+                }
             }
         }
     }
 
-    writer.WriteInt16LE(spellGroupsCount);
-    writer.WriteInt16LE(count);
-    writer.WriteUInt32LE(0); //EOF
-    writer.WriteBuffer();
-    writer.Close();
+    ResourceTracker_SaveStaticContents(writer);
 }

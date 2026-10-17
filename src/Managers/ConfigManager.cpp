@@ -1521,6 +1521,13 @@ bool CConfigManager::Load(const fs_path &path)
         if (zoomed)
         {
             g_GameScreen.SetMaximized(true);
+            // GameScreen::Init already ran by the time the desktop file is
+            // loaded (LoginComplete -> LoadLocalConfig), so the flag alone
+            // would never be consumed; maximize directly when in game.
+            if (g_GameState >= GS_GAME)
+            {
+                g_GameWindow.MaximizeWindow();
+            }
             // FIXME this should be deferred until there's something to draw
             // and set once at the beginning of the renderer frame, where there's
             // a command list
@@ -1551,59 +1558,31 @@ bool CConfigManager::Load(const fs_path &path)
     else
     {
         g_GameScreen.SetMaximized(true);
+        if (g_GameState >= GS_GAME)
+        {
+            g_GameWindow.MaximizeWindow();
+        }
     }
 
     return true;
 }
-
-struct TextFileWriter
-{
-    FILE *m_File{ nullptr };
-
-    TextFileWriter(const fs_path &path) { m_File = fs_open(path, FS_WRITE); }
-
-    ~TextFileWriter() { Close(); }
-
-    bool Opened() { return (m_File != nullptr); };
-    void Close()
-    {
-        if (m_File != nullptr)
-        {
-            fs_close(m_File);
-            m_File = nullptr;
-        }
-    }
-
-    void WriteString(const astr_t &key, const astr_t &value)
-    {
-        if (m_File != nullptr)
-        {
-            fputs(astr_t(key + "=" + value + "\n").c_str(), m_File);
-        }
-    }
-
-    void WriteInt(const astr_t &key, int value)
-    {
-        if (m_File != nullptr)
-        {
-            fputs(astr_t(key + "=" + str_from(value) + "\n").c_str(), m_File);
-        }
-    }
-
-    void WriteBool(const astr_t &key, bool value)
-    {
-        if (m_File != nullptr)
-        {
-            fputs(astr_t(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
-        }
-    }
-};
 
 void CConfigManager::Save(const fs_path &path)
 {
     TextFileWriter writer(path);
     if (writer.Opened())
     {
+        SaveSection(writer);
+        writer.Close();
+    }
+}
+
+void CConfigManager::SaveSection(TextFileWriter &writer)
+{
+    if (writer.Opened())
+    {
+        writer.WriteRaw("[options]");
+
         //Page 1
         writer.WriteBool("Sound", m_Sound);
         writer.WriteInt("SoundVolume", m_SoundVolume);
@@ -1761,7 +1740,5 @@ void CConfigManager::Save(const fs_path &path)
 
         writer.WriteString("LastServer", g_ServerList.LastServerName);
         writer.WriteString("LastCharacter", g_CharacterList.LastCharacterName);
-
-        writer.Close();
     }
 }

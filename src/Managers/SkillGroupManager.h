@@ -4,6 +4,7 @@
 #pragma once
 
 #include <common/fs.h>
+#include "Utility/TextFileWriter.h"
 
 class CSkillGroupObject;
 
@@ -31,7 +32,7 @@ public:
     void Add(CSkillGroupObject *group);
     bool Remove(CSkillGroupObject *group);
     bool Load(const fs_path &path);
-    void Save(const fs_path &path);
+    void Save(TextFileWriter &writer);
 };
 
 extern CSkillGroupManager g_SkillGroupManager;

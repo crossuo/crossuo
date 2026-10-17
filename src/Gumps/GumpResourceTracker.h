@@ -3,15 +3,15 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Gump.h"
-#include "../Wisp/WispBinaryFileWriter.h" // Wisp::CBinaryFileWriter
-#include <xuocore/mappedfile.h> // CMappedFile
+#include "../Utility/TextFileWriter.h"
 
 #define TRACKER_BOX_SIZE (60)
 #define TRACKER_WIDTH ((8 * TRACKER_BOX_SIZE) + 5)
 #define TRACKER_HEIGHT (TRACKER_BOX_SIZE + 5)
 
-void ResourceTracker_LoadStaticContents(CMappedFile &reader);
-void ResourceTracker_SaveStaticContents(Wisp::CBinaryFileWriter &writer);
+void ResourceTracker_SetStaticSize(int w, int h);
+void ResourceTracker_AddStaticItem(uint16_t graphic, uint16_t color);
+void ResourceTracker_SaveStaticContents(TextFileWriter &writer);
 
 struct TrackedItem
 {

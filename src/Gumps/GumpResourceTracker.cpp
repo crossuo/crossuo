@@ -32,7 +32,6 @@ static constexpr int MAX_ITEMS = 58; // do not make this bigger or will break gu
 static std::vector<TrackedItem> s_Items;
 static int s_Width = TRACKER_WIDTH;
 static int s_Height = TRACKER_HEIGHT;
-static const int VERSION = 1;
 
 // change-flash state per tracked item (parallel to s_Items): the count text
 // flashes ice-light on gain / fire-light on loss for 5 seconds
@@ -73,37 +72,27 @@ static int getXOffset(uint16_t graphic)
     return 0;
 }
 
-void ResourceTracker_LoadStaticContents(CMappedFile &reader)
+void ResourceTracker_SetStaticSize(int w, int h)
 {
     s_Items.clear();
-    s_Width = reader.ReadUInt16LE();
-    s_Height = reader.ReadUInt16LE();
-    const auto version = reader.ReadUInt8();
-    if (version != VERSION)
-    {
-        return;
-    }
-    const uint8_t itemCount = reader.ReadUInt8();
-    for (int itemIdx = 0; itemIdx < itemCount; itemIdx++)
-    {
-        const auto graphic = reader.ReadUInt16LE();
-        const auto color = reader.ReadUInt16LE();
-        s_Items.push_back({ graphic, color });
-    }
+    s_Width = w;
+    s_Height = h;
+}
+
+void ResourceTracker_AddStaticItem(uint16_t graphic, uint16_t color)
+{
+    s_Items.push_back({ graphic, color });
     g_GumpManager.UpdateContent(0, 0, GT_RESOURCETRACKER);
 }
 
-void ResourceTracker_SaveStaticContents(Wisp::CBinaryFileWriter &writer)
+void ResourceTracker_SaveStaticContents(TextFileWriter &writer)
 {
-    writer.WriteUInt16LE(s_Width);
-    writer.WriteUInt16LE(s_Height);
-    writer.WriteUInt8(VERSION);
-    writer.WriteUInt8(uint8_t(s_Items.size()));
-    for (int itemIdx = 0; itemIdx < s_Items.size(); itemIdx++)
+    writer.WriteRaw("[resource-tracker]");
+    writer.WriteRaw("Size=" + str_from(s_Width) + "," + str_from(s_Height));
+    for (const auto &item : s_Items)
     {
-        const auto item = s_Items[itemIdx];
-        writer.WriteUInt16LE(item.Graphic);
-        writer.WriteUInt16LE(item.Color);
+        writer.WriteRaw(
+            "TrackerItem=" + str_from((int)item.Graphic) + "," + str_from((int)item.Color));
     }
 
     s_Width = TRACKER_WIDTH;

@@ -9,7 +9,6 @@
 #include <xuocore/enumlist.h>
 #include "Wisp.h"
 
-struct CMappedFile;
 
 extern const char *s_MacroAction[MSC_TOTAL_COUNT];
 extern const char *s_MacroActionName[MC_COUNT];
@@ -44,9 +43,7 @@ public:
     CMacro(Keycode key, bool alt, bool ctrl, bool shift);
     virtual ~CMacro() = default;
     void ChangeObject(CMacroObject *source, CMacroObject *obj);
-    void Save(Wisp::CBinaryFileWriter &writer);
     CMacro *GetCopy();
-    static CMacro *Load(CMappedFile &file);
     static CMacro *CreateBlankMacro();
     static CMacroObject *CreateMacro(const MACRO_CODE &code);
     static void GetBoundByCode(const MACRO_CODE &code, int &count, int &offset);

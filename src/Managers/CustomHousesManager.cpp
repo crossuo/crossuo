@@ -3,6 +3,9 @@
 
 #include "CustomHousesManager.h"
 #include <xuocore/mappedfile.h>
+#include <xuocore/text_parser.h>
+#include <common/str.h>
+#include <string>
 #include "../Wisp/WispBinaryFileWriter.h" // Wisp::CBinaryFileWriter
 #include "../Gumps/GumpCustomHouse.h"
 #include "../GameObjects/GameItem.h"
@@ -72,77 +75,68 @@ void CustomHousesManager::Load(const fs_path &path)
 {
     Clear();
 
-    CMappedFile file;
-
-    if (file.Load(path) && (file.Size != 0u))
+    if (!fs_path_exists(path))
     {
-        const uint8_t _version = file.ReadUInt8();
-        (void)_version;
+        return;
+    }
 
-        int count = file.ReadInt32LE();
+    TextFileParser file(path, " =", "#;", "\"");
 
-        for (int i = 0; i < count; i++)
+    CCustomHouse *house = nullptr;
+    while (!file.IsEOF())
+    {
+        auto v = file.ReadTokens();
+        if (v.empty())
         {
-            uint32_t serial = file.ReadUInt32LE();
+            continue;
+        }
 
+        if (v[0] == "House" && v.size() >= 2)
+        {
+            auto f = TextSplit(v[1], ',');
+            if (f.size() < 2)
+            {
+                continue;
+            }
+            const uint32_t serial = TextToUInt(f[0]);
+            const uint32_t revision = TextToUInt(f[1]);
             if (serial == 0u)
             {
-                break;
+                house = nullptr;
+                continue;
             }
 
-            uint32_t revision = file.ReadUInt32LE();
-            int itemsCount = file.ReadInt32LE();
-
-            CCustomHouse *house = Get(serial);
-
+            house = Get(serial);
             Info(Client, "load house from cache file: 0x%08X 0x%08X", serial, revision);
             if (house == nullptr)
             {
                 house = new CCustomHouse(serial, revision);
-                g_CustomHousesManager.Add(house);
+                Add(house);
             }
             else
             {
                 house->Revision = revision;
             }
-
-            for (int j = 0; j < itemsCount; j++)
+        }
+        else if (v[0] == "HouseItem" && house != nullptr && v.size() >= 2)
+        {
+            auto f = TextSplit(v[1], ',');
+            if (f.size() >= 4)
             {
-                uint16_t graphic = file.ReadUInt16LE();
-                char x = file.ReadInt8();
-                char y = file.ReadInt8();
-                char z = file.ReadInt8();
-
-                house->m_Items.push_back(CBuildObject(graphic, x, y, z));
+                house->m_Items.push_back(
+                    CBuildObject(
+                        (uint16_t)str_to_int(f[0]),
+                        (char)str_to_int(f[1]),
+                        (char)str_to_int(f[2]),
+                        (char)str_to_int(f[3])));
             }
         }
-
-        file.Unload();
     }
 }
 
-void CustomHousesManager::Save(const fs_path &path)
+void CustomHousesManager::Save(TextFileWriter &writer)
 {
-    Wisp::CBinaryFileWriter writer;
-
-    writer.Open(path);
-
-    writer.WriteInt8(1); //version
-    writer.WriteBuffer();
-
-    int count = 0;
-
-    for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
-    {
-        CCustomHouse *house = it->second;
-        if (house != nullptr && (static_cast<unsigned int>(!house->m_Items.empty()) != 0u))
-        {
-            count++;
-        }
-    }
-
-    writer.WriteInt32LE(count);
-    writer.WriteBuffer();
+    writer.WriteRaw("[custom-houses]");
 
     for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
     {
@@ -152,23 +146,14 @@ void CustomHousesManager::Save(const fs_path &path)
             continue;
         }
 
-        writer.WriteUInt32LE(house->Serial);
-        writer.WriteUInt32LE(house->Revision);
-        writer.WriteInt32LE((uint32_t)house->m_Items.size());
-        writer.WriteBuffer();
+        writer.WriteRaw(
+            "House=" + std::to_string(house->Serial) + "," + std::to_string(house->Revision));
 
         for (const CBuildObject &item : house->m_Items)
         {
-            writer.WriteUInt16LE(item.Graphic);
-            writer.WriteInt8(item.X);
-            writer.WriteInt8(item.Y);
-            writer.WriteInt8(item.Z);
-            writer.WriteBuffer();
+            writer.WriteRaw(
+                "HouseItem=" + str_from((int)item.Graphic) + "," + str_from((int)item.X) + "," +
+                str_from((int)item.Y) + "," + str_from((int)item.Z));
         }
     }
-
-    writer.WriteUInt32LE(0); //EOF
-    writer.WriteBuffer();
-
-    writer.Close();
 }

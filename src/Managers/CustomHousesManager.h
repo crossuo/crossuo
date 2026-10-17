@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <common/fs.h>
 #include <xuocore/mappedfile.h>
+#include "Utility/TextFileWriter.h"
 
 class CGameItem;
 class CMultiObject;
@@ -64,7 +65,7 @@ public:
     void Add(CCustomHouse *house);
 
     void Load(const fs_path &path);
-    void Save(const fs_path &path);
+    void Save(TextFileWriter &writer);
 };
 
 extern CustomHousesManager g_CustomHousesManager;

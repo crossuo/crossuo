@@ -7,6 +7,7 @@
 #include "../BaseQueue.h"
 #include "../Platform.h" // Keycode
 #include "../Globals.h"  // MACRO_RETURN_CODE
+#include "Utility/TextFileWriter.h"
 
 class CMacroObject;
 
@@ -29,8 +30,8 @@ public:
 
     class CMacro *FindMacro(Keycode key, bool alt, bool ctrl, bool shift);
     bool Convert(const fs_path &path);
-    bool Load(const fs_path &path, const fs_path &originalPath);
-    void Save(const fs_path &path);
+    bool Load(const fs_path &path);
+    void Save(TextFileWriter &writer);
     void LoadFromOptions();
     void ChangePointer(CMacroObject *macro);
     void Execute();

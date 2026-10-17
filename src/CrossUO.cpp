@@ -1257,14 +1257,7 @@ void CGame::LoadStartupConfig(int serial)
         sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(FilePath("%s/%s", buf, "options.cfg")))
-    {
-        // DEPRECATE: 1.0.6
-        if (!g_ConfigManager.Load(ExeFilePath("%s/%s", buf, "options.cfg")))
-        {
-            g_ConfigManager.Load(UOFilePath("%s/%s", buf, "options.cfg"));
-        }
-    }
+    g_ConfigManager.Load(FilePath("%s/%s", buf, "desktop.txt"));
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
     if (!g_ConfigManager.GetSound())
@@ -1310,69 +1303,24 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
         sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(FilePath("%s/%s", buf, "options.cfg")))
+    const auto desktopFile = FilePath("%s/%s", buf, "desktop.txt");
+    if (!g_ConfigManager.Load(desktopFile))
     {
-        // DEPRECATE: 1.0.6
-        if (!g_ConfigManager.Load(ExeFilePath("%s/%s", buf, "options.cfg")))
+        // first run on this character: apply defaults and expand in game
+        g_ConfigManager.Init();
+        if (g_GameState >= GS_GAME)
         {
-            g_ConfigManager.Init();
-            if (g_GameState >= GS_GAME)
-            {
-                g_GameWindow.MaximizeWindow();
-            }
+            g_GameWindow.MaximizeWindow();
         }
     }
-
-    if (!g_SkillGroupManager.Load(FilePath("skills.xuo")))
+    g_SkillGroupManager.Load(desktopFile);
+    if (!g_MacroManager.Load(desktopFile))
     {
-        // DEPRECATE: 1.0.6
-        if (!g_SkillGroupManager.Load(ExeFilePath("skills.xuo")))
-        {
-            g_SkillGroupManager.Load(ExeFilePath("skills.cuo"));
-        }
+        // first run on this character: seed from the UO install's macros.txt
+        g_MacroManager.Convert(UOFilePath("macros.txt"));
     }
-
-    auto macros_xuo1 = FilePath("%s/%s", buf, "macros.xuo");
-    // DEPRECATE: 1.0.6
-    auto macros_xuo2 = ExeFilePath("%s/%s", buf, "macros.xuo");
-    auto macros_cuo = ExeFilePath("%s/%s", buf, "macros.cuo");
-    auto macros_xuo = fs_path_exists(macros_xuo1) ? macros_xuo1 : macros_xuo2;
-    auto macros_data = fs_path_exists(macros_xuo) ? macros_xuo : macros_cuo;
-    if (!g_MacroManager.Load(macros_data, UOFilePath("macros.txt")))
-    {
-        char buf2[FS_MAX_PATH] = { 0 };
-        if (server != nullptr)
-        {
-            sprintf_s(
-                buf2,
-                "desktop/%s/%s/%s",
-                acct.c_str(),
-                FixServerName(server->Name).c_str(),
-                characterName.c_str());
-        }
-        else
-        {
-            sprintf_s(buf2, "desktop/%s/%s", acct.c_str(), characterName.c_str());
-        }
-    }
-
-    const auto gumps_xuo1 = FilePath("%s/%s", buf, "gumps.xuo");
-    // DEPRECATE: 1.0.6
-    const auto gumps_xuo2 = ExeFilePath("%s/%s", buf, "gumps.xuo");
-    const auto gumps_cuo = ExeFilePath("%s/%s", buf, "gumps.cuo");
-    const auto gumps_xuo = fs_path_exists(gumps_xuo1) ? gumps_xuo1 : gumps_xuo2;
-    const auto gumps_data = fs_path_exists(gumps_xuo) ? gumps_xuo : gumps_cuo;
-    g_GumpManager.Load(gumps_data);
-
-    const auto customhouses_xuo1 = FilePath("%s/%s", buf, "customhouses.xuo");
-    // DEPRECATE: 1.0.6
-    const auto customhouses_xuo2 = ExeFilePath("%s/%s", buf, "customhouses.xuo");
-    const auto customhouses_cuo = ExeFilePath("%s/%s", buf, "customhouses.cuo");
-    const auto customhouses_xuo =
-        fs_path_exists(customhouses_xuo1) ? customhouses_xuo1 : customhouses_xuo2;
-    const auto customhouses_data =
-        fs_path_exists(customhouses_xuo) ? customhouses_xuo : customhouses_cuo;
-    g_CustomHousesManager.Load(customhouses_data);
+    g_GumpManager.Load(desktopFile);
+    g_CustomHousesManager.Load(desktopFile);
 
     if (g_ConfigManager.OffsetInterfaceWindows)
     {
@@ -1410,14 +1358,12 @@ void CGame::SaveLocalConfig(int serial)
     auto path = FilePath("desktop");
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
 
     path = fs_path_join(path, g_MainScreen.m_Account->GetTextA());
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
     CServer *server = g_ServerList.GetSelectedServer();
@@ -1427,16 +1373,13 @@ void CGame::SaveLocalConfig(int serial)
     }
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
     char serbuf[64] = { 0 };
     sprintf_s(serbuf, "0x%08X", g_PlayerSerial);
-    fs_path root = path;
     path = fs_path_join(path, serbuf);
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
     else
@@ -1444,31 +1387,28 @@ void CGame::SaveLocalConfig(int serial)
         Info(Client, "SaveLocalConfig using path: %s", fs_path_ascii(path));
     }
 
-    Info(Client, "managers:saving");
-    g_ConfigManager.Save(fs_path_join(path, "options.cfg"));
-    g_SkillGroupManager.Save(fs_path_join(path, "skills.xuo"));
-    g_MacroManager.Save(fs_path_join(path, "macros.xuo"));
-    g_GumpManager.Save(fs_path_join(path, "gumps.xuo"));
-    g_CustomHousesManager.Save(fs_path_join(path, "customhouses.xuo"));
-
-    if (g_Player != nullptr)
+    TextFileWriter writer(fs_path_join(path, "desktop.txt"));
+    if (writer.Opened())
     {
-        Info(Client, "player exists");
-        Info(Client, "name len: %zd", g_Player->GetName().length());
-        path = fs_path_join(root, astr_t(serbuf) + "_" + g_Player->GetName() + ".xuo");
-        if (!fs_path_exists(path))
-        {
-            Info(Client, "file saving");
-            FILE *file = fs_open(path, FS_WRITE); // "wb"
+        g_ConfigManager.SaveSection(writer);
+        g_SkillGroupManager.Save(writer);
+        g_MacroManager.Save(writer);
+        g_GumpManager.Save(writer);
+        g_CustomHousesManager.Save(writer);
 
-            Info(Client, "file closing");
-            if (file != nullptr)
+        // clean up the legacy per-file binary/ini saves this file replaces
+        static const char *legacy[] = { "options.cfg",    "skills.xuo",     "macros.xuo",
+                                        "gumps.xuo",      "customhouses.xuo", "skills.cuo",
+                                        "macros.cuo",     "gumps.cuo",      "customhouses.cuo" };
+        for (const char *name : legacy)
+        {
+            auto legacyPath = fs_path_join(path, name);
+            if (fs_path_exists(legacyPath))
             {
-                fs_close(file);
+                fs_del(legacyPath);
             }
         }
     }
-    Info(Client, "SaveLocalConfig end");
 }
 
 void CGame::ClearUnusedTextures()
@@ -3984,14 +3924,7 @@ void CGame::LoadClientStartupConfig()
         configDefaultsApplied = true;
         g_ConfigManager.Init();
     }
-    if (!g_ConfigManager.Load(FilePath("options.cfg")))
-    {
-        // DEPRECATE: 1.0.6
-        if (!g_ConfigManager.Load(ExeFilePath("options.cfg")))
-        {
-            g_ConfigManager.Load(UOFilePath("options.cfg"));
-        }
-    }
+    g_ConfigManager.Load(FilePath("options.cfg"));
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
     if (g_ConfigManager.GetMusic())

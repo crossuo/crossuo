@@ -10,6 +10,7 @@
 #include "../SkillGroup.h"
 #include "../Gumps/GumpNotify.h"
 #include "../ScreenStages/GameBlockedScreen.h"
+#include <xuocore/text_parser.h>
 
 CSkillGroupManager g_SkillGroupManager;
 
@@ -273,109 +274,77 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 
 bool CSkillGroupManager::Load(const fs_path &path)
 {
-    bool result = false;
-
     Clear();
 
-    CMappedFile file;
-
-    if (file.Load(path))
-    {
-        const uint8_t _version = file.ReadUInt8();
-        (void)_version;
-
-        short count = file.ReadUInt16LE();
-
-        for (int i = 0; i < count; i++)
-        {
-            // logical cursor hops (platform-neutral: Pos/Seek wrap the mapped
-            // pointer on native and the windowed cursor on web)
-            size_t next = file.Pos();
-            short size = file.ReadUInt16LE();
-            next += size;
-
-            CSkillGroupObject *group = new CSkillGroupObject();
-
-            short length = file.ReadUInt16LE();
-            auto str = file.ReadString(length);
-            group->Name = str;
-
-            short skills = file.ReadUInt16LE();
-
-            for (int j = 0; j < skills; j++)
-            {
-                uint8_t skill = file.ReadUInt8();
-
-                if (skill != 0xFF)
-                {
-                    group->Add(skill);
-                }
-            }
-
-            group->Sort();
-
-            Add(group);
-
-            file.Seek(next);
-        }
-
-        file.Unload();
-
-        result = true;
-    }
-    else
+    if (!fs_path_exists(path))
     {
         MakeDefault();
+        return false;
     }
 
-    return result;
+    TextFileParser file(path, " =", "#;", "\"");
+
+    CSkillGroupObject *group = nullptr;
+    bool found = false;
+    while (!file.IsEOF())
+    {
+        auto v = file.ReadTokens();
+        if (v.empty())
+        {
+            continue;
+        }
+
+        if (v[0] == "Group" && v.size() >= 2)
+        {
+            group = new CSkillGroupObject();
+            group->Name = TextUnquote(v[1]);
+            Add(group);
+            found = true;
+        }
+        else if (v[0] == "Skills" && group != nullptr && v.size() >= 2)
+        {
+            for (const auto &part : TextSplit(v[1], ','))
+            {
+                const int skill = str_to_int(part);
+                if (skill >= 0 && skill != 0xFF)
+                {
+                    group->Add((uint8_t)skill);
+                }
+            }
+            group->Sort();
+            group = nullptr;
+        }
+    }
+
+    if (!found)
+    {
+        MakeDefault();
+        return false;
+    }
+
+    return true;
 }
 
-void CSkillGroupManager::Save(const fs_path &path)
+void CSkillGroupManager::Save(TextFileWriter &writer)
 {
-    Wisp::CBinaryFileWriter writer;
+    writer.WriteRaw("[skill-groups]");
 
-    writer.Open(path);
-
-    writer.WriteUInt8(0); //version
-
-    Count = 0;
     CSkillGroupObject *group = m_Groups;
     while (group != nullptr)
     {
-        Count++;
-        group = group->m_Next;
-    }
+        writer.WriteStringQuoted("Group", group->Name);
 
-    writer.WriteUInt16LE(Count); //Count
-
-    group = m_Groups;
-
-    for (int i = 0; i < Count; i++)
-    {
-        auto str = group->Name;
-        size_t len = str.length() + 1;
-
-        short size = (short)len + 2 + 2 + 2 + group->Count;
-        writer.WriteUInt16LE(size); //Block size
-
-        writer.WriteUInt16LE((short)len); //Name length
-        writer.WriteString(str, 0u);      //Name
-
-        short count = group->Count;
-
-        writer.WriteUInt16LE(count); //Skills count
-
-        for (int j = 0; j < count; j++)
+        astr_t skills;
+        for (int j = 0; j < group->Count; j++)
         {
-            uint8_t skill = group->GetItem(j);
-            writer.WriteUInt8(skill); //Skill
+            if (j != 0)
+            {
+                skills += ",";
+            }
+            skills += str_from((int)group->GetItem(j));
         }
-
-        writer.WriteBuffer();
+        writer.WriteString("Skills", skills);
 
         group = group->m_Next;
     }
-
-    writer.Close();
 }

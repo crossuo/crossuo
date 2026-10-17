@@ -6,6 +6,7 @@
 #include <xuocore/enumlist.h>
 #include <common/fs.h>
 #include "Constants.h"
+#include "../Utility/TextFileWriter.h"
 #include "Globals.h"
 
 class CConfigManager
@@ -249,6 +250,8 @@ public:
 
     bool Load(const fs_path &path);
     void Save(const fs_path &path);
+    //!Append the [options] section to an already open desktop file writer.
+    void SaveSection(TextFileWriter &writer);
 };
 
 extern CConfigManager g_ConfigManager;

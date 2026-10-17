@@ -7,7 +7,7 @@
 #include <xuocore/enumlist.h>
 #include "../Platform.h"
 #include "../BaseQueue.h"
-#include "../Wisp.h"
+#include "../Utility/TextFileWriter.h"
 
 class CGump;
 
@@ -15,7 +15,6 @@ class CGumpManager : public CBaseQueue
 {
 private:
     int GetNonpartyStatusbarsCount();
-    void SaveDefaultGumpProperties(Wisp::CBinaryFileWriter &writer, CGump *gump, int size);
 
 public:
     CGumpManager()
@@ -56,7 +55,7 @@ public:
     void OnMidMouseButtonScroll(bool up, bool blocked);
     void OnDragging(bool blocked);
     void Load(const fs_path &path);
-    void Save(const fs_path &path);
+    void Save(TextFileWriter &writer);
     virtual bool OnTextInput(const TextEvent &ev, bool blocked);
     virtual bool OnKeyDown(const KeyEvent &ev, bool blocked);
 };

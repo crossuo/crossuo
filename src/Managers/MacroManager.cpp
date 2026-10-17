@@ -214,6 +214,9 @@ Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<astr_t> &strings
     return key;
 }
 
+
+// Seed macros from the UO install's macros.txt (first run on a character,
+// no [macros] section in the desktop file yet).
 bool CMacroManager::Convert(const fs_path &path)
 {
     TextFileParser file(path, "", "", "");
@@ -247,7 +250,6 @@ bool CMacroManager::Convert(const fs_path &path)
             continue;
         }
 
-        //TPRINT("Key: %s [alt=%i ctrl=%i shift=%i]", strings[0].c_str(), str_to_int(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION]));
         bool macroAdded = false;
         CMacro *macro = new CMacro(
             ConvertStringToKeyCode(strings),
@@ -343,49 +345,105 @@ bool CMacroManager::Convert(const fs_path &path)
     return fs_path_exists(path);
 }
 
-bool CMacroManager::Load(const fs_path &path, const fs_path &originalPath)
+bool CMacroManager::Load(const fs_path &path)
 {
-    bool result = false;
     Clear();
-    CMappedFile file;
-    if (file.Load(path) && (file.Size != 0u))
+
+    if (!fs_path_exists(path))
     {
-        const uint8_t _version = file.ReadUInt8();
-        (void)_version;
-        const auto count = file.ReadInt16LE();
-        for (int i = 0; i < count; i++)
+        return false;
+    }
+
+    TextFileParser file(path, " =", "#;", "\"");
+
+    CMacro *current = nullptr;
+    bool found = false;
+    while (!file.IsEOF())
+    {
+        auto v = file.ReadTokens();
+        if (v.empty())
         {
-            Add(CMacro::Load(file));
+            continue;
         }
-        result = true;
+
+        // values are comma packed (the parser yields one token after '='):
+        // Macro=<key,alt,ctrl,shift> / Action=<code,sub> / ActionStr=<code,sub> "<string>"
+        if (v[0] == "Macro" && v.size() >= 2)
+        {
+            auto f = TextFields(v);
+            if (f.size() >= 4)
+            {
+                current = new CMacro(
+                    (Keycode)str_to_int(f[0]),
+                    str_to_int(f[1]) != 0,
+                    str_to_int(f[2]) != 0,
+                    str_to_int(f[3]) != 0);
+                Add(current);
+                found = true;
+            }
+        }
+        else if (current != nullptr && v[0] == "Action" && v.size() >= 2)
+        {
+            auto f = TextFields(v);
+            if (f.size() >= 2)
+            {
+                current->Add(
+                    new CMacroObject((MACRO_CODE)str_to_int(f[0]), (MACRO_SUB_CODE)str_to_int(f[1])));
+            }
+        }
+        else if (current != nullptr && v[0] == "ActionStr" && v.size() >= 2)
+        {
+            // ActionStr=<code,sub> "<string>": the string is the token holding
+            // the quote (it keeps its spaces); anything before it is numeric
+            astr_t str;
+            auto f = TextFields(v);
+            for (size_t i = 1; i < v.size(); i++)
+            {
+                if (v[i].find('"') != astr_t::npos)
+                {
+                    str = TextUnquote(v[i]);
+                    break;
+                }
+            }
+            if (f.size() >= 2)
+            {
+                current->Add(new CMacroObjectString(
+                    (MACRO_CODE)str_to_int(f[0]), (MACRO_SUB_CODE)str_to_int(f[1]), str));
+            }
+        }
     }
-    else
-    {
-        result = Convert(originalPath);
-    }
-    file.Unload();
-    return result;
+
+    return found;
 }
 
-void CMacroManager::Save(const fs_path &path)
+void CMacroManager::Save(TextFileWriter &writer)
 {
-    Wisp::CBinaryFileWriter writer;
-    writer.Open(path);
-
-    writer.WriteUInt8(0); //version
-
-    short count = GetItemsCount();
-
-    writer.WriteInt16LE(count);
-    writer.WriteBuffer();
+    writer.WriteRaw("[macros]");
 
     for (CMacro *obj = (CMacro *)m_Items; obj != nullptr; obj = (CMacro *)obj->m_Next)
-    obj->Save(writer);
+    {
+        writer.WriteRaw(
+            "Macro=" + str_from((int)obj->Key) + "," + str_from((int)obj->Alt) + "," +
+            str_from((int)obj->Ctrl) + "," + str_from((int)obj->Shift));
 
-    writer.WriteUInt32LE(0); //EOF
-    writer.WriteBuffer();
-
-    writer.Close();
+        for (CMacroObject *action = (CMacroObject *)obj->m_Items; action != nullptr;
+             action = (CMacroObject *)action->m_Next)
+        {
+            if (action->HaveString())
+            {
+                writer.WriteRaw(
+                    "ActionStr=" + str_from((int)action->Code) + "," +
+                    str_from((int)action->SubCode) + " \"" +
+                    ((CMacroObjectString *)action)->m_String + "\"");
+            }
+            else
+            {
+                writer.WriteString(
+                    "Action",
+                    str_from((int)action->Code) + "," + str_from((int)action->SubCode));
+            }
+        }
+    }
 }
 
 CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
