@@ -251,6 +251,15 @@ int main(int argc, char **argv)
     bool error = false;
     for (const auto &cfg : configs)
     {
+        // '.disabled' files are deliberately offline shards: they are not
+        // served and not expected to validate (dead urls, stale hosts), so
+        // skip them instead of failing the run
+        const std::string path = fs_path_ascii(cfg);
+        if (path.size() > 9 && path.compare(path.size() - 9, 9, ".disabled") == 0)
+        {
+            LOG_INFO("skipping disabled shard '%s'", path.c_str());
+            continue;
+        }
         shard::data shard;
         shard.ignore_empty_on_save = true;
 

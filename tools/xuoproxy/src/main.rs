@@ -139,6 +139,7 @@ mod admin;
 mod normalize;
 
 use std::collections::{HashMap, HashSet};
+use std::net::ToSocketAddrs;
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -341,7 +342,7 @@ async fn main() {
     let admin_token = cli.admin_token;
     let allow_private_upstream = cli.allow_private_upstream;
     let banfile = cli.banfile;
-    let ws_allow: Option<HashSet<String>> = if cli.ws_allow.is_empty() {
+    let mut ws_allow: Option<HashSet<String>> = if cli.ws_allow.is_empty() {
         None
     } else {
         Some(
@@ -409,7 +410,7 @@ async fn main() {
     // (explicit --ws-allow entries are kept as additional entries, shown
     // as source "cli"). Read before serving starts; a changed shards.cfg
     // needs a restart. Empty result + no --ws-allow = open bridges.
-    let ws_allow_info: Vec<(String, String, u16)> = Vec::new();
+    let mut ws_allow_info: Vec<(String, String, u16)> = Vec::new();
     if let Ok(text) = std::fs::read_to_string(PathBuf::from(&root).join("shards.cfg")) {
         for (shard, servers) in shards_login_servers(&text) {
             for (host, port) in servers {
@@ -421,6 +422,38 @@ async fn main() {
         }
     } else if ws_allow.is_none() {
         println!("xuoproxy: no shards.cfg in {root} and no --ws-allow: /ws bridges are OPEN");
+    }
+
+    // shards commonly redirect the client at the game server as a bare IP
+    // inside the 0xA8/0x8C relay reply even when shards.cfg only lists dns
+    // names: pre-resolve every dns entry in the allowlist and allow the IP
+    // forms too, or the reconnect would be refused by ws_allowed(). the
+    // resolved IPs are added bare (no port): the allowlist matches a
+    // host-only key against any port, mirroring how the dns names
+    // themselves behave (a "host:port" entry also allows every port on
+    // host). done once at startup (blocking std resolution, before serving
+    // starts); like shards.cfg itself, a changed dns answer needs a
+    // restart. IP-literal entries resolve to themselves and are no-ops.
+    if let Some(set) = ws_allow.as_mut() {
+        let mut resolved: Vec<(String, String, u16)> = Vec::new(); // (ip, source, port)
+        for entry in set.iter() {
+            let Ok(addrs) = entry.to_socket_addrs() else {
+                eprintln!("xuoproxy: ws-allow: cannot resolve \"{entry}\" (kept as-is)");
+                continue;
+            };
+            for addr in addrs {
+                let ip = addr.ip().to_string();
+                let port = addr.port();
+                if !set.contains(&ip) {
+                    resolved.push((ip, entry.clone(), port));
+                }
+            }
+        }
+        for (ip, source, port) in &resolved {
+            set.insert(ip.clone());
+            ws_allow_info.push(("dns".to_string(), ip.clone(), *port));
+            println!("xuoproxy: ws-allow: resolved {source} -> {ip} (any port, first seen :{port})");
+        }
     }
 
     let admin = Arc::new(admin::Admin::new(
@@ -3022,6 +3055,7 @@ async fn stream_proxy(
     // browser-facing ?v= token (possibly traveling inside the encoded url)
     // never reaches the upstream url or the disk-cache key.
     let url = strip_version_param(&percent_decode(&url));
+    let url = repair_scheme_slash(&url);
     if !(url.starts_with("http://") || url.starts_with("https://")) {
         return (StatusCode::BAD_REQUEST, "expected an absolute http(s) url").into_response();
     }
@@ -3114,6 +3148,22 @@ async fn stream_proxy(
 fn respond_plain(status: u16, ctype: &str, body: Vec<u8>) -> Response {
     let status = StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     (status, [(header::CONTENT_TYPE, ctype.to_string())], body).into_response()
+}
+
+// Reverse proxies in front of xuoproxy (Ferron's url sanitizer, nginx
+// merge_slashes, ...) normalize the request path and collapse the `//` of the
+// embedded upstream scheme (`/stream/https://host/...` arrives as
+// `/stream/https:/host/...`). Re-insert the missing slash before validation,
+// so the proxy works without touching the front-end config.
+fn repair_scheme_slash(url: &str) -> String {
+    for scheme in ["https:/", "http:/"] {
+        if let Some(rest) = url.strip_prefix(scheme) {
+            if !rest.starts_with('/') {
+                return format!("{}/{}", scheme, rest);
+            }
+        }
+    }
+    url.to_string()
 }
 
 fn percent_decode(text: &str) -> String {

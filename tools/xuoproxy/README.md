@@ -217,7 +217,6 @@ What players get:
 
 Notes for the single-shard case:
 
-- The ShardName is important and used to route the requests, eg. /data/<shardname>/
 - `--rate-burst 2000` is deliberate: a cold boot fires ~1700 blob window
   GETs up front.
 - Restart xuoproxy after editing shards.cfg — the ws allowlist is fixed at

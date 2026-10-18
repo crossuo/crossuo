@@ -341,7 +341,11 @@ build_target() {
 package_target() {
   local target="$1"
   local b="build/$target" out="dist/$target"
-  local ver; ver=$(git describe --always --dirty 2>/dev/null || echo dev)
+  local ver
+  # prefer a tag when HEAD sits exactly on one (releases package as
+  # crossuo-<target>-2.0.0); fall back to the short-hash describe
+  ver=$(git describe --tags --exact-match --dirty 2>/dev/null) ||
+    ver=$(git describe --always --dirty 2>/dev/null) || ver=dev
   local name="crossuo-$target-$ver"
 
   rm -rf "$out"; mkdir -p "$out"

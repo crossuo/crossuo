@@ -63,3 +63,9 @@ inline void pack16(uint8_t *buf, uint16_t x)
 
 // window title including the active shard: "Ultima Online v... (hash) [shard]"
 astr_t ClientWindowTitle();
+
+// filesystem/web-safe form of a shard name: characters that are invalid or
+// risky in paths (and in urls when the name ends up in one) become '_'.
+// The raw name stays in g_Config.ShardName for display (window/page title);
+// only derived filesystem paths go through this
+astr_t SanitizeShardName(const astr_t &name);

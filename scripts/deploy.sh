@@ -43,7 +43,9 @@ expected_binary() {
     linux-*) echo "crossuo";;
     windows-*) echo "crossuo.exe";;
     macos-*) echo "CrossUO.app/Contents/MacOS/crossuo";;
-    wasm) echo "crossuo.wasm";;
+    # the web target has no native binary: the wasm bundle lands in html/
+    # (cross-build.sh), and the client payload crossuo.wasm lives there too
+    wasm) echo "html/crossuo.wasm";;
   esac
 }
 
@@ -55,6 +57,43 @@ expected_binary() {
 regenerate_wasm_shards() {
   mkdir -p dist/wasm/html
   ./scripts/wasm-shards-fetch.sh "dist/wasm/html" || true
+}
+
+# The wasm zip is produced by cross-build.sh BEFORE deploy.sh builds the
+# proxy, so it never contains xuoproxy: refresh it in place (zip update mode
+# only adds what is missing) so the archive carries the full deployment
+# layout - xuoproxy + html/ (index.html, crossuo.js/wasm, shards.cfg)
+refresh_wasm_zip() {
+  local pkg
+  pkg="$(ls dist/crossuo-wasm-*.zip 2>/dev/null | head -n1)"
+  if [[ -z "$pkg" ]]; then
+    echo ">> deploy: wasm: no crossuo-wasm-*.zip to refresh (zip not built?)" >&2
+    return 1
+  fi
+  if [[ ! -x dist/wasm/xuoproxy ]]; then
+    echo ">> deploy: wasm: dist/wasm/xuoproxy missing - cannot refresh $pkg" >&2
+    return 1
+  fi
+  if ! command -v zip >/dev/null; then
+    echo ">> deploy: wasm: zip(1) not found - $pkg will NOT contain xuoproxy" >&2
+    return 1
+  fi
+  echo ">> deploy: wasm: adding xuoproxy to $(basename "$pkg")"
+  # note the ../: we cd into dist/wasm, the archive lives in dist/
+  if ! (cd dist/wasm && zip -qry "../$(basename "$pkg")" xuoproxy); then
+    echo ">> deploy: wasm: zip refresh failed" >&2
+    return 1
+  fi
+  # self-check: the archive must now carry the full deployment layout
+  if command -v unzip >/dev/null; then
+    for m in xuoproxy html/index.html html/crossuo.wasm html/crossuo.js html/shards.cfg; do
+      if ! unzip -l "$pkg" "$m" >/dev/null 2>&1; then
+        echo ">> deploy: wasm: $(basename "$pkg") is missing $m after refresh" >&2
+        return 1
+      fi
+    done
+  fi
+  echo ">> deploy: wasm: package refreshed ($(basename "$pkg"), $(du -h "$pkg" | cut -f1))"
 }
 
 # Build xuoproxy in release (native host binary) and ship it inside dist/wasm
@@ -86,6 +125,9 @@ for t in "${TARGETS[@]}"; do
   if [[ "$t" == "wasm" ]]; then
     regenerate_wasm_shards
     build_xuoproxy || proxy_failed=1
+    # the proxy is built after the zip was made: fold it in (and make the
+    # archive match the deployed folder, xuoproxy + html/*)
+    refresh_wasm_zip || proxy_failed=1
   fi
 done
 
@@ -115,11 +157,31 @@ for t in "${TARGETS[@]}"; do
   fi
   printf "%-18s %-12s %s\n" "$t" "$b" "$p"
   if [[ "$t" == "wasm" ]]; then
-    if [[ -f dist/wasm/xuoproxy ]]; then
-      printf "%-18s %-12s %s\n" "" "proxy: ok ($(du -h dist/wasm/xuoproxy | cut -f1))" ""
-    else
-      printf "%-18s %-12s %s\n" "" "proxy: MISSING" ""
-      rc=1
+    # wasm-exclusive specifics: the deployment folder must be directly
+    # servable - the proxy binary plus the full html/ payload
+    for f in xuoproxy html/index.html html/crossuo.wasm html/crossuo.js html/shards.cfg; do
+      if [[ -f "dist/wasm/$f" ]]; then
+        printf "%-18s %-12s %s\n" "" "$f: ok ($(du -h "dist/wasm/$f" | cut -f1))" ""
+      else
+        printf "%-18s %-12s %s\n" "" "$f: MISSING" ""
+        rc=1
+      fi
+    done
+    # and the package must carry the same layout (proxy at the archive
+    # root, client payload under html/) - only checkable with unzip
+    if [[ -n "$pkg" ]] && command -v unzip >/dev/null; then
+      local_missing=0
+      for m in xuoproxy html/index.html html/crossuo.wasm html/crossuo.js html/shards.cfg; do
+        if ! unzip -l "$pkg" "$m" >/dev/null 2>&1; then
+          printf "%-18s %-12s %s\n" "" "zip: missing $m" ""
+          local_missing=1
+        fi
+      done
+      if [[ $local_missing -eq 0 ]]; then
+        printf "%-18s %-12s %s\n" "" "zip: contents ok" ""
+      else
+        rc=1
+      fi
     fi
   fi
 done

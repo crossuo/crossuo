@@ -31,7 +31,8 @@ struct Config
     astr_t SystemCheckOverride;
     // shard name: comes from the launcher profile, the config file, the
     // command line (--shard) or the white-label default, in that order of
-    // recency; names the per-shard streaming install directory
+    // recency; kept verbatim for display (window/page title) - derived
+    // filesystem paths must run it through SanitizeShardName()
     astr_t ShardName = XUO_DEFAULT_SHARD_NAME;
     // shard presentation + data-product fields: like ShardName they come
     // from the shard profile (launcher pick / crossuo.cfg keys below) and

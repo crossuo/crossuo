@@ -627,10 +627,12 @@
         }
 
         // chosen shard -> client args. ONLY existing flags (src/Main.cpp
-        // InitCli): --shard names the per-shard streaming install dir and is
-        // sanitized like the desktop (Main.cpp: '/' '\' ' ' -> '_');
-        // loginserver "host,port" maps to --host/--port (port only when
-        // numeric - the flag is u32); producturl is a plain data product url
+        // InitCli): --shard carries the raw name - the client sanitizes it
+        // itself when deriving the per-shard streaming install dir
+        // (SanitizeShardName, src/Misc.cpp), keeping it verbatim for the
+        // window/page title; loginserver "host,port" maps to --host/--port
+        // (port only when numeric - the flag is u32); producturl is a plain
+        // data product url
         // passed via --streaming-product (the client deduces the product
         // style from the content, vfs_aops_product_url) - an http(s) url
         // routes through the /stream relay, "local:<name>"/bare-relative
@@ -640,7 +642,11 @@
         function shardToArgs(shard) {
           var args = [];
           if (!shard || !shard.shardname) return args;
-          args.push('--shard=' + String(shard.shardname).replace(/[/\\ ]/g, '_'));
+          args.push('--shard=' + String(shard.shardname));
+          // NOTE: the raw name is passed on purpose: the client derives the
+          // per-shard install dir via SanitizeShardName() (src/Misc.cpp), but
+          // the window/page title must show the name as the shard spells it
+          // ("UO Realms: ..." etc), not the sanitized form
           var ls = String(shard.loginserver || '').split(',');
           var host = (ls[0] || '').trim();
           var port = (ls[1] || '').trim();

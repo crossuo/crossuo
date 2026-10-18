@@ -365,12 +365,7 @@ bool load_config()
             // the streaming install is per-shard: the shard name (launcher
             // profile, config file, command line or the white-label default)
             // names the directory, so installs do not mix between shards
-            astr_t shard = g_Config.ShardName;
-            std::replace(shard.begin(), shard.end(), '/', '_');
-            std::replace(shard.begin(), shard.end(), '\\', '_');
-            std::replace(shard.begin(), shard.end(), ' ', '_');
-            if (shard.empty())
-                shard = XUO_DEFAULT_SHARD_NAME;
+            astr_t shard = SanitizeShardName(g_Config.ShardName);
             dir = fs_path_ascii(FilePath(shard.c_str()));
         }
 #if defined(XUO_EMSC)
