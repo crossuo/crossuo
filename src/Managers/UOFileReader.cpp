@@ -309,12 +309,47 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
     }
     uint16_t *P = (uint16_t *)artBlock->data();
 #else
+    // native: io.Address must land inside the backing mapped file (art.mul or
+    // artLegacyMUL.uop). A corrupt/streamed idx entry bakes a wild pointer:
+    // dereferencing it segfaults outside every vfs trap range (unrecoverable,
+    // the trap handler re-raises foreign faults). Degrade to a missing sprite.
+    {
+        const auto inMapping = [](const CMappedFile &file, const CIndexObject &obj)
+        {
+            const auto *addr = reinterpret_cast<const uint8_t *>(obj.Address);
+            return file.Start != nullptr && addr >= file.Start &&
+                   (addr - file.Start) + obj.DataSize <= file.Size;
+        };
+        if (
+            !inMapping(g_FileManager.m_ArtMul, io) &&
+            !inMapping(g_FileManager.m_ArtLegacyMUL, io))
+        {
+            Warning(
+                Data,
+                "UOFileReader::GetArtPixels art %u block out of range "
+                "(addr %llx, size %u, art [%p..%p], uop [%p..%p])",
+                id,
+                (unsigned long long)io.Address,
+                io.DataSize,
+                (const void *)g_FileManager.m_ArtMul.Start,
+                (const void *)(g_FileManager.m_ArtMul.Start + g_FileManager.m_ArtMul.Size),
+                (const void *)g_FileManager.m_ArtLegacyMUL.Start,
+                (const void *)(g_FileManager.m_ArtLegacyMUL.Start +
+                               g_FileManager.m_ArtLegacyMUL.Size));
+            return {};
+        }
+    }
     uint16_t *P = (uint16_t *)io.Address;
 #endif
     uint16_t color = io.Color;
     std::vector<uint16_t> pixels;
     if (!run) //raw tile
     {
+        if (io.DataSize < 44 * 22 * 2)
+        {
+            Warning(Data, "UOFileReader::GetArtPixels land block %i too small", id);
+            return pixels;
+        }
         width = 44;
         height = 44;
         pixels.resize(44 * 44, 0);
@@ -421,6 +456,21 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             ptr++;
             uint16_t *lineOffsets = ptr;
             uint8_t *dataStart = (uint8_t *)ptr + (height * 2);
+            const uint8_t *blockStart = (uint8_t *)io.Address;
+            const uint8_t *blockEnd = blockStart + io.DataSize;
+            auto readOutOfBounds = [&blockStart, &blockEnd](const void *p, size_t size)
+            {
+                return p < blockStart || (const uint8_t *)p + size > blockEnd;
+            };
+            if (readOutOfBounds(dataStart, 2))
+            {
+                Warning(
+                    Data,
+                    "UOFileReader::ReadArt art block %i truncated (data size: %u)",
+                    id,
+                    io.DataSize);
+                return pixels;
+            }
             int X = 0;
             int Y = 0;
             uint16_t XOffs = 0;
@@ -437,16 +487,44 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                 return pixels;
             }
 
+            auto lineOffsetOutOfBounds =
+                [&lineOffsets, &dataStart, &readOutOfBounds](int y)
+            {
+                return readOutOfBounds(&lineOffsets[y], 2) ||
+                       readOutOfBounds(dataStart + (lineOffsets[y] * 2), 4);
+            };
+            if (lineOffsetOutOfBounds(0))
+            {
+                Warning(
+                    Data,
+                    "UOFileReader::ReadArt art block %i line offset out of bounds",
+                    id);
+                pixels.clear();
+                return pixels;
+            }
             ptr = (uint16_t *)(dataStart + (lineOffsets[0] * 2));
             while (Y < height)
             {
+                if (readOutOfBounds(ptr, 4))
+                {
+                    Warning(Data, "UOFileReader::ReadArt art block %i run out of bounds", id);
+                    pixels.clear();
+                    return pixels;
+                }
                 XOffs = *ptr;
                 ptr++;
                 Run = *ptr;
                 ptr++;
-                if (XOffs + Run >= 2048)
+                if (XOffs + Run >= 2048 || X + XOffs + Run > width ||
+                    readOutOfBounds(ptr, Run * 2))
                 {
-                    Warning(Data, "UOFileReader::ReadArt bad offset:%i, %i", XOffs, Run);
+                    Warning(
+                        Data,
+                        "UOFileReader::ReadArt bad offset:%i, %i (x:%i, width:%i)",
+                        XOffs,
+                        Run,
+                        X,
+                        width);
                     pixels.clear();
                     return pixels;
                 }
@@ -473,7 +551,19 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                 {
                     X = 0;
                     Y++;
-                    ptr = (uint16_t *)(dataStart + (lineOffsets[Y] * 2));
+                    if (Y < height)
+                    {
+                        if (lineOffsetOutOfBounds(Y))
+                        {
+                            Warning(
+                                Data,
+                                "UOFileReader::ReadArt art block %i line offset out of bounds",
+                                id);
+                            pixels.clear();
+                            return pixels;
+                        }
+                        ptr = (uint16_t *)(dataStart + (lineOffsets[Y] * 2));
+                    }
                 }
             }
 

@@ -727,10 +727,14 @@ static void CalculateHigh(
 
 uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
 {
-    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     if (graphic == 0)
     {
         graphic = GetGraphicForAnimation();
+    }
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    {
+        Warning(Client, "animation graphic out of range: 0x%04X", graphic);
+        return AG_INVALID;
     }
 
 #if USE_NEW_ANIM_CODE
@@ -1307,6 +1311,11 @@ uint16_t CGameCharacter::GetGraphicForAnimation()
     }
 
     assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    {
+        Warning(Client, "animation graphic out of range: 0x%04X", graphic);
+        return 0;
+    }
     return graphic;
 }
 

@@ -141,7 +141,7 @@ enum CLIENT_VERSION
     CV_708111 = VERSION(7, 0, 81, 11),
     CV_701040 = VERSION(7, 0, 104, 0), // 7.0.104.0 packets 0xD5 (v1), 0xFD
     CV_701170 = VERSION(7, 0, 117, 0), // 7.0.117.0 packets 0xD5 (v3)
-    CV_LATEST = CV_708111, // demise compatible at the moment
+    CV_LATEST = CV_701170,
 };
 
 enum CONNECTION_SCREEN_TYPE
