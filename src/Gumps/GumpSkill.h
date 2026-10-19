@@ -12,7 +12,7 @@ private:
 
 public:
     CGumpSkill(int serial, int x, int y);
-    virtual ~CGumpSkill();
+    virtual ~CGumpSkill() = default;
 
     GUMP_BUTTON_EVENT_H override;
 

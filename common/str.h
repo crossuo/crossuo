@@ -25,6 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <external/miniconv.h>
 #include <string.h>
+#include <stdint.h>
 #include <locale>
 #include <codecvt>
 #include <assert.h>
@@ -174,15 +175,31 @@ astr_t wstr_to_utf8(const wstr_t &aWstr)
         result.resize(size); // result[size] = 0;
     }
 #else
-    mbstate_t state{};
     astr_t result{};
-    auto p = aWstr.data();
-    const auto size = wcsrtombs(nullptr, &p, 0, &state);
-    if (size > 0)
+    result.reserve(aWstr.size());
+    for (wchar_t wc : aWstr)
     {
-        result.resize(size + 1);
-        wcsrtombs(&result[0], &p, size, &state);
-        result.resize(size);
+        const auto ucs = static_cast<uint32_t>(wc);
+        if (ucs < 0x80)
+            result.push_back(static_cast<char>(ucs));
+        else if (ucs < 0x800)
+        {
+            result.push_back(static_cast<char>(0xC0 | (ucs >> 6)));
+            result.push_back(static_cast<char>(0x80 | (ucs & 0x3F)));
+        }
+        else if (ucs < 0x10000)
+        {
+            result.push_back(static_cast<char>(0xE0 | (ucs >> 12)));
+            result.push_back(static_cast<char>(0x80 | ((ucs >> 6) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (ucs & 0x3F)));
+        }
+        else
+        {
+            result.push_back(static_cast<char>(0xF0 | (ucs >> 18)));
+            result.push_back(static_cast<char>(0x80 | ((ucs >> 12) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | ((ucs >> 6) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (ucs & 0x3F)));
+        }
     }
 #endif
 
@@ -201,22 +218,53 @@ wstr_t wstr_from_utf8(const astr_t &aStr)
         result.resize(size); // result[size] = 0;
     }
 #else
-    mbstate_t state{};
     wstr_t result{};
-    auto p = aStr.data();
-
-    const size_t size = mbsrtowcs(nullptr, &p, 0, &state);
-    if (size == -1)
+    result.reserve(aStr.size());
+    const auto *p = reinterpret_cast<const uint8_t *>(aStr.data());
+    const auto *const end = p + aStr.size();
+    bool failed = false;
+    while (p < end)
+    {
+        uint32_t ucs   = 0;
+        unsigned extra = 0;
+        if (*p < 0x80)
+        {
+            ucs   = *p++;
+        }
+        else if ((*p & 0xE0) == 0xC0)
+        {
+            ucs   = *p++ & 0x1F;
+            extra = 1;
+        }
+        else if ((*p & 0xF0) == 0xE0)
+        {
+            ucs   = *p++ & 0x0F;
+            extra = 2;
+        }
+        else if ((*p & 0xF8) == 0xF0)
+        {
+            ucs   = *p++ & 0x07;
+            extra = 3;
+        }
+        else
+        {
+            failed = true;
+            break;
+        }
+        while (extra-- && p < end && (*p & 0xC0) == 0x80)
+            ucs = (ucs << 6) | (*p++ & 0x3F);
+        if (extra != (unsigned)-1)
+        {
+            failed = true; // truncated sequence
+            break;
+        }
+        result.push_back(static_cast<wchar_t>(ucs));
+    }
+    if (failed)
     {
         Warning(Client, "wstr_from_utf8 Failed: %s", aStr.c_str());
         INFO_DUMP(Client, "wstr_from_utf8 Failed:", (uint8_t *)aStr.data(), aStr.size());
         return wstr_from(aStr);
-    }
-
-    if (size > 0)
-    {
-        result.resize(size);
-        mbsrtowcs(&result[0], &p, size, &state);
     }
 #endif
 
@@ -225,9 +273,7 @@ wstr_t wstr_from_utf8(const astr_t &aStr)
 
 wstr_t wstr_from_utf8_input(const astr_t &aStr)
 {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> convert;
-    const std::wstring result = convert.from_bytes(aStr);
-    return result;
+    return wstr_from_utf8(aStr);
 }
 
 astr_t str_from(const utf8_t &str)

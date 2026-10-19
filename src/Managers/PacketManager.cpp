@@ -1902,14 +1902,12 @@ PACKET_HANDLER(UpdateObject)
                 g_Player->StealthSteps = 0;
             }
 #endif
-            bool updateStatusbar = (g_Player->GetFlags() != flags);
-
+            const bool updateStatusbar = (g_Player->GetFlags() != flags);
             oldDead = g_Player->IsDead();
             g_Player->Graphic = graphic;
             g_Player->OnGraphicChange(1000);
             g_Player->Color = g_ColorManager.FixColor(color);
             g_Player->SetFlags(flags);
-
             if (updateStatusbar)
             {
                 g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
@@ -1923,14 +1921,12 @@ PACKET_HANDLER(UpdateObject)
     }
 
     CGameObject *obj = g_World->FindWorldObject(serial);
-
     if (obj == nullptr)
     {
         return;
     }
 
     obj->ClearNotOpenedItems();
-
     if (obj->NPC)
     {
 #if defined(XUO_ASSISTANT)
@@ -1953,7 +1949,6 @@ PACKET_HANDLER(UpdateObject)
     }
 
     uint32_t itemSerial = ReadUInt32BE();
-
     while (itemSerial != 0 && !IsEOF())
     {
         uint16_t itemGraphic = ReadUInt16BE();
@@ -1980,19 +1975,14 @@ PACKET_HANDLER(UpdateObject)
 #endif
 
         CGameItem *item = g_World->GetWorldItem(itemSerial);
-
         item->MapIndex = g_CurrentMap;
-
         item->Graphic = itemGraphic;
         item->Color = g_ColorManager.FixColor(itemColor);
 
         g_World->PutEquipment(item, obj, layer);
         item->OnGraphicChange();
-
-        Info(Network, "\t0x%08X:%04X [%d] %04X", item->Serial, item->Graphic, layer, item->Color);
-
+        TRACE(Network, "\t0x%08X:%04X [%d] %04X", item->Serial, item->Graphic, layer, item->Color);
         g_World->MoveToTop(item);
-
         itemSerial = ReadUInt32BE();
     }
 
@@ -2011,7 +2001,6 @@ PACKET_HANDLER(UpdateObject)
         }
 
         g_GumpManager.UpdateContent(serial, 0, GT_PAPERDOLL);
-
         g_Player->UpdateAbilities();
     }
 }
@@ -3388,7 +3377,7 @@ PACKET_HANDLER(UpdateSkills)
     uint8_t type = ReadUInt8();
     bool haveCap = (((type != 0u) && type <= 0x03) || type == 0xDF);
     bool isSingleUpdate = (type == 0xFF || type == 0xDF);
-    Info(Network, "skill update type %i (cap=%d)", type, haveCap);
+    TRACE(Network, "skill update type %i (cap=%d)", type, haveCap);
 
     if (type == 0xFE)
     {
@@ -3552,7 +3541,7 @@ PACKET_HANDLER(UpdateSkills)
         gump->UpdateSkillsSum();
     }
 
-    Info(Network, "skill(s) updated");
+    TRACE(Network, "skill(s) updated");
 }
 
 PACKET_HANDLER(ExtendedCommand)
@@ -7037,13 +7026,11 @@ PACKET_HANDLER(OpenCompressedGump)
     if (cLen < 1)
     {
         Info(Network, "CLen=%lu - server sent bad compressed gump data", cLen);
-
         return;
     }
     if ((int)(28 + cLen) > Size)
     {
         Info(Network, "server sent bad compressed gump data");
-
         return;
     }
 
@@ -7064,8 +7051,7 @@ PACKET_HANDLER(OpenCompressedGump)
         return;
     }
 
-    Info(Network, "layout gump data decompressed");
-
+    TRACE(Network, "layout gump data decompressed");
     Move(cLen);
 
     uint32_t linesCount = ReadUInt32BE(); //Text lines count
@@ -7079,7 +7065,7 @@ PACKET_HANDLER(OpenCompressedGump)
         dTLen = ReadUInt32BE(); //Decompressed lines length
 
         gumpDecText.resize(dTLen);
-        Info(Network, "decompressing text gump data");
+        TRACE(Network, "decompressing text gump data");
 
         z_err = uncompress(&gumpDecText[0], &dTLen, Ptr, cTLen);
         if (z_err != Z_OK)
@@ -7088,9 +7074,9 @@ PACKET_HANDLER(OpenCompressedGump)
             return;
         }
 
-        Info(Network, "text gump data decompressed");
-        Info(Network, "gump text lines:");
-        Info(Network, "\tlinesCount=%d, cTLen=%d, dTLen=%lu", linesCount, cTLen, dTLen);
+        TRACE(Network, "text gump data decompressed");
+        TRACE(Network, "gump text lines:");
+        TRACE(Network, "\tlinesCount=%d, cTLen=%d, dTLen=%lu", linesCount, cTLen, dTLen);
     }
 
     int newsize = 21 + dLen + 2 + dTLen;
@@ -7116,12 +7102,10 @@ PACKET_HANDLER(OpenCompressedGump)
         newbuf[newsize - 1] = 0x00;
     }
 
-    Info(Network, "gump decompressed. newsize=%d", newsize);
-
+    TRACE(Network, "gump decompressed. newsize=%d", newsize);
     Size = newsize;
     Start = newbuf;
     End = Start + Size;
-
     OnPacket();
 }
 
