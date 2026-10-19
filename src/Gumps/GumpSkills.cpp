@@ -359,8 +359,36 @@ void CGumpSkills::CalculateGumpState()
 void CGumpSkills::PrepareContent()
 {
     uint32_t serial = g_PressedObject.LeftSerial;
+    const bool draggingSkillRow = g_PressedObject.LeftGump == this &&
+                                  serial >= ID_GS_SKILL && serial < ID_GS_SKILL_STATE;
 
-    if (g_PressedObject.LeftGump == this && serial >= ID_GS_SKILL && serial < ID_GS_SKILL_STATE)
+    // live drag-out preview: as soon as the cursor leaves the list with a
+    // skill row pressed, the skill gump appears and follows the cursor until
+    // release (dropped back inside the list it is removed, dropped outside it
+    // stays where dropped)
+    if (draggingSkillRow)
+    {
+        if (m_DragSkill == nullptr && g_SelectedObject.Gump != this)
+        {
+            const CPoint2Di pos = g_MouseManager.Position;
+            m_DragSkill =
+                new CGumpSkill(g_PressedObject.LeftSerial - ID_GS_SKILL, pos.X - 70, pos.Y - 10);
+            m_DragSkill->SkipNextUse = true; // the same release must not use the skill
+            g_GumpManager.AddGump(m_DragSkill);
+        }
+        else if (m_DragSkill != nullptr)
+        {
+            const CPoint2Di pos = g_MouseManager.Position;
+            m_DragSkill->SetX(pos.X - 70);
+            m_DragSkill->SetY(pos.Y - 10);
+        }
+    }
+    else if (m_DragSkill != nullptr)
+    {
+        m_DragSkill = nullptr; // released somewhere else: the gump stays
+    }
+
+    if (draggingSkillRow)
     {
         int y = g_MouseManager.Position.Y;
         int testY = m_Y + m_HTMLGump->GetY();
@@ -590,7 +618,17 @@ void CGumpSkills::OnLeftMouseButtonUp()
     {
         WantRedraw = true;
 
-        if (g_SelectedObject.Gump != this)
+        if (m_DragSkill != nullptr)
+        {
+            // the preview was spawned: dropped back inside the list it is
+            // removed, dropped outside it stays where it follows the cursor
+            if (g_SelectedObject.Gump == this)
+            {
+                m_DragSkill->RemoveMark = true;
+            }
+            m_DragSkill = nullptr;
+        }
+        else if (g_SelectedObject.Gump != this)
         {
             CPoint2Di pos = g_MouseManager.Position;
 

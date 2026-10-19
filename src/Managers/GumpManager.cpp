@@ -780,6 +780,10 @@ void CGumpManager::OnLeftMouseButtonDown(bool blocked)
             {
                 ((CGumpSpell *)gump)->UpdateGroup(0, 0);
             }
+            else if (gump->GumpType == GT_SKILL && ((CGumpSkill *)gump)->InGroup())
+            {
+                ((CGumpSkill *)gump)->UpdateGroup(0, 0);
+            }
             else
             {
                 MoveToBack(gump);
@@ -901,6 +905,35 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
                         }
                     }
                 }
+                else if (gump->GumpType == GT_SKILL)
+                {
+                    CGumpSkill *skillGump = (CGumpSkill *)gump;
+
+                    gump->SetX(gump->GetX() + offset.X);
+                    gump->SetY(gump->GetY() + offset.Y);
+
+                    gump->FixCoordinates();
+
+                    if (skillGump->InGroup())
+                    {
+                        skillGump->UpdateGroup(offset.X, offset.Y);
+                    }
+                    else
+                    {
+                        int testX = g_MouseManager.Position.X;
+                        int testY = g_MouseManager.Position.Y;
+
+                        CGumpSkill *nearSkill = skillGump->GetNearSkill(testX, testY);
+
+                        if (nearSkill != nullptr)
+                        {
+                            gump->SetX(testX);
+                            gump->SetY(testY);
+
+                            nearSkill->AddSkill(skillGump);
+                        }
+                    }
+                }
                 else if (gump->Minimized && gump->GumpType != GT_MINIMAP)
                 {
                     gump->MinimizedX = gump->MinimizedX + offset.X;
@@ -1001,6 +1034,10 @@ void CGumpManager::OnRightMouseButtonDown(bool blocked)
             else if (gump->GumpType == GT_SPELL && ((CGumpSpell *)gump)->InGroup())
             {
                 ((CGumpSpell *)gump)->UpdateGroup(0, 0);
+            }
+            else if (gump->GumpType == GT_SKILL && ((CGumpSkill *)gump)->InGroup())
+            {
+                ((CGumpSkill *)gump)->UpdateGroup(0, 0);
             }
             else
             {
@@ -1332,6 +1369,8 @@ void CGumpManager::Load(const fs_path &path)
 
         int spellGroupMembers = 0;
         CGumpSpell *topSpell = nullptr;
+        int skillGroupMembers = 0;
+        CGumpSkill *topSkill = nullptr;
         bool menubarLoaded = false;
 
         while (!file.IsEOF())
@@ -1563,6 +1602,40 @@ void CGumpManager::Load(const fs_path &path)
 
                 spell->WantUpdateContent = true;
             }
+            else if (key == "SkillGroup" && v.size() >= 2)
+            {
+                skillGroupMembers = str_to_int(v[1]);
+                topSkill = nullptr;
+            }
+            else if (key == "Skill" && skillGroupMembers > 0 && v.size() >= 2)
+            {
+                // layout mirrors the Spell member line: x,y at 1/2, lock at 6,
+                // serial at 7
+                skillGroupMembers--;
+                const auto fields = TextFields(v);
+                if (fields.size() < 8)
+                {
+                    continue;
+                }
+
+                const auto skillX = (uint16_t)str_to_int(fields[1]);
+                const auto skillY = (uint16_t)str_to_int(fields[2]);
+                const uint8_t skillLockMoving = (uint8_t)str_to_int(fields[6]);
+                const uint32_t serial = TextToUInt(fields[7]);
+
+                CGumpSkill *skill = new CGumpSkill(serial, skillX, skillY);
+                skill->LockMoving = (skillLockMoving != 0);
+
+                AddGump(skill);
+                if (topSkill == nullptr)
+                {
+                    topSkill = skill;
+                }
+                else
+                {
+                    topSkill->AddSkill(skill);
+                }
+            }
             else if (key == "Size" && v.size() >= 2)
             {
                 auto size = TextSplit(v[1], ',');
@@ -1688,8 +1761,15 @@ void CGumpManager::Save(TextFileWriter &writer)
 
     std::vector<CGump *> containerList;
     std::vector<CGump *> spellInGroupList;
+    std::vector<CGump *> skillInGroupList;
     for (CGump *gump = (CGump *)m_Items; gump != nullptr; gump = (CGump *)gump->m_Next)
     {
+        // grouped skill gumps persist as SkillGroup blocks below, not as
+        // individual generic lines
+        if (gump->GumpType == GT_SKILL && ((CGumpSkill *)gump)->InGroup())
+        {
+            skillInGroupList.push_back(gump);
+        }
         switch (gump->GumpType)
         {
             case GT_PAPERDOLL:
@@ -1713,6 +1793,10 @@ void CGumpManager::Save(TextFileWriter &writer)
             case GT_RACIAL_ABILITIES_BOOK:
             case GT_RACIAL_ABILITY:
             {
+                if (gump->GumpType == GT_SKILL && ((CGumpSkill *)gump)->InGroup())
+                {
+                    break; // already collected into skillInGroupList
+                }
                 // the menubar stores its Opened state (an unopened menubar is
                 // a collapsed icon, not a hidden gump); everything else stores
                 // Minimized
@@ -1741,7 +1825,6 @@ void CGumpManager::Save(TextFileWriter &writer)
                         line += "," + str_from((int)gump->Graphic);
                         break;
                     case GT_ABILITY:
-                    case GT_SKILL:
                     case GT_RACIAL_ABILITY:
                     {
                         char serial[16] = { 0 };
@@ -1863,23 +1946,53 @@ void CGumpManager::Save(TextFileWriter &writer)
         writer.WriteRaw("SpellGroup=" + str_from(spellsCount));
         for (auto spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
         {
+            // member lines carry an explicit "Spell" key: the loader only
+            // regroups lines keyed "Spell" (plain "Gump=" lines load as
+            // ungrouped icons). TextFields drops the key token, so the
+            // payload repeats the gump type first - the reader reads x,y at
+            // 1/2, lock at 6, serial/graphic/type at 7/8/9
             writer.WriteRaw(
-                GumpBaseLine(
-                    GT_SPELL,
-                    spell->GetX(),
-                    spell->GetY(),
-                    spell->Minimized,
-                    spell->MinimizedX,
-                    spell->MinimizedY,
-                    spell->LockMoving) +
-                "," + std::to_string(spell->Serial) + "," + str_from((int)spell->Graphic) +
-                "," + str_from((int)spell->SpellType));
+                "Spell=" + str_from((int)GT_SPELL) + "," + str_from(spell->GetX()) + "," +
+                str_from(spell->GetY()) + ",0,0,0," + str_from((int)spell->LockMoving) + "," +
+                std::to_string(spell->Serial) + "," + str_from((int)spell->Graphic) + "," +
+                str_from((int)spell->SpellType));
 
             for (auto it = spellInGroupList.begin(); it != spellInGroupList.end(); ++it)
             {
                 if (*it == spell)
                 {
                     spellInGroupList.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+
+    // skill groups: one "SkillGroup=<memberCount>" line followed by the member
+    // "Skill=..." lines, in group order (same field layout the loader reads)
+    while (!skillInGroupList.empty())
+    {
+        CGumpSkill *topSkill = ((CGumpSkill *)skillInGroupList[0])->GetTopSkill();
+
+        int skillsCount = 0;
+        for (auto skill = topSkill; skill != nullptr; skill = skill->m_GroupNext)
+        {
+            skillsCount++;
+        }
+
+        writer.WriteRaw("SkillGroup=" + str_from(skillsCount));
+        for (auto skill = topSkill; skill != nullptr; skill = skill->m_GroupNext)
+        {
+            writer.WriteRaw(
+                "Skill=" + str_from((int)GT_SKILL) + "," + str_from(skill->GetX()) + "," +
+                str_from(skill->GetY()) + ",0,0,0," + str_from((int)skill->LockMoving) + "," +
+                std::to_string(skill->Serial));
+
+            for (auto it = skillInGroupList.begin(); it != skillInGroupList.end(); ++it)
+            {
+                if (*it == skill)
+                {
+                    skillInGroupList.erase(it);
                     break;
                 }
             }

@@ -6,11 +6,18 @@
 #include "GumpBaseScroll.h"
 #include "../Platform.h"
 
+class CGumpSkill;
+
 class CGumpSkills : public CGumpBaseScroll
 {
 private:
     bool m_ShowReal = false;
     bool m_ShowCap = false;
+
+    // the live skill gump spawned while a skill row is dragged out of the
+    // list (nulled on release: dropped outside it stays, dropped back inside
+    // the list it is removed)
+    CGumpSkill *m_DragSkill = nullptr;
 
     class CSkillGroupObject *GetGroupUnderCursor(int &index);
 
