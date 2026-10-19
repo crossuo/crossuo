@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -696,7 +697,11 @@ bool vfs_fetch_batch(
     while (done < pending && !s_stop)
     {
         lock.lock();
-        s_cv_done.wait(lock, [&jobs, &done] {
+        // timed wait: the caller's progress callback doubles as the splash
+        // repaint tick (native boots render on the splash's progress bar) -
+        // per-asset settles alone leave multi-second silent gaps and the
+        // splash looks frozen/flickering
+        s_cv_done.wait_for(lock, std::chrono::milliseconds(100), [&jobs, &done] {
             if (s_stop)
                 return true;
             size_t settled = 0;
@@ -707,6 +712,7 @@ bool vfs_fetch_batch(
         });
         if (s_stop)
             break; // shutdown: abandon the rest, the store keeps what landed
+        bool advanced = false;
         for (size_t i = 0; i < jobs.size(); ++i)
         {
             const auto &job = jobs[i];
@@ -714,6 +720,7 @@ bool vfs_fetch_batch(
             {
                 reported[i] = true;
                 ++done;
+                advanced = true;
                 if (job->state == vfs_fetch_failed)
                     ++failed;
                 if (progress)
@@ -721,6 +728,10 @@ bool vfs_fetch_batch(
             }
         }
         lock.unlock();
+        // heartbeat between settles: same ratio, empty label (callers render
+        // from it; the boot logger skips the empty-label ticks)
+        if (progress && !advanced)
+            progress(float(done) / float(pending), "");
     }
     return failed == 0;
 }

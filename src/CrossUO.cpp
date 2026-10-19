@@ -342,7 +342,14 @@ bool CGame::Install()
 
     Info(Client, "loading files");
     if (vfs_enabled() && !vfs_boot([](float done01, const char *label) {
-            Info(Client, "streaming: %3d%% (%s)", int(done01 * 100.0f), label);
+            static float lastLogged = -1.0f;
+            if (label && *label && done01 != lastLogged)
+            {
+                Info(Client, "streaming: %3d%% (%s)", int(done01 * 100.0f), label);
+                lastLogged = done01;
+            }
+            Splash_SetProgress(done01);
+            Splash_RenderAndPumpEvents(); // pump: keeps the splash repainting
         }))
     {
         const auto errMsg =

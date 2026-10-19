@@ -65,6 +65,15 @@ bool s_progressValid = false;
 bool Splash_CreateSolidTexture(uint8_t r, uint8_t g, uint8_t b, texture_handle_t *out)
 {
     uint8_t pixels[4] = { r, g, b, 0xff };
+#if defined(USE_GL)
+    // desktop GL samples this format as A,R,G,B (see DecodeCoverPng) - rotate
+    // one byte, or the bar colors come out channel-swapped (blue/magenta)
+    const uint8_t a = pixels[3];
+    pixels[3] = pixels[2];
+    pixels[2] = pixels[1];
+    pixels[1] = pixels[0];
+    pixels[0] = a;
+#endif
     *out = Render_CreateTexture2D(1, 1, TextureGPUFormat_RGBA4, pixels, TextureFormat_Unsigned_RGBA8);
     return *out != RENDER_TEXTUREHANDLE_INVALID;
 }
@@ -154,8 +163,8 @@ bool Splash_Init()
     s_image.pixels = nullptr;
 
 #if !defined(XUO_EMSC)
-    if (!Splash_CreateSolidTexture(24, 24, 28, &s_barBack) ||
-        !Splash_CreateSolidTexture(32, 160, 255, &s_barFill))
+    if (!Splash_CreateSolidTexture(26, 18, 12, &s_barBack) ||
+        !Splash_CreateSolidTexture(206, 166, 104, &s_barFill))
     {
         Warning(Client, "splash: could not create the progress bar textures");
     }
