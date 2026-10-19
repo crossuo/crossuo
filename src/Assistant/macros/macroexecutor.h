@@ -52,6 +52,9 @@ public:
     int PlayingIndex() const { return m_PlayingIndex; }
     bool IsRecording() const { return m_Recording; }
     int RecordingIndex() const { return m_RecordingIndex; }
+    // the live capture: TabMacros renders the actions list from this while a
+    // recording is open (the actions land in m_Items only at RecordStop)
+    const vector<CMacro *> &RecordBuffer() const { return m_RecordBuffer; }
 
     // The record halves: the UI calls RecordStart on the selected macro,
     // the observation taps append, and
@@ -183,6 +186,7 @@ private:
     vector<uint32_t> m_DressList;    // MT_SET_DRESS / MT_DRESS queue (serials)
     vector<CMacro *> m_RecordBuffer; // the open recording
     int m_SuspendDepth{ 0 };         // RecordingSuspension scopes in flight
+    uint32_t m_LastRecordTick{ 0 };  // double-fire coalescing window anchor
 };
 
 extern CMacroExecutor g_MacroExecutor;

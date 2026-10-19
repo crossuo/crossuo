@@ -234,7 +234,15 @@ struct CMacroEntry
     astr_t Name{ "" };
     vector<CMacro *> m_Items;
 
+    CMacroEntry() = default;
     ~CMacroEntry();
+    // owning raw pointers: copying would hand the same CMacro objects to two
+    // owners (the vector's reallocation copies then destroy the originals,
+    // deleting every action of every macro); move-only value type
+    CMacroEntry(const CMacroEntry &) = delete;
+    CMacroEntry &operator=(const CMacroEntry &) = delete;
+    CMacroEntry(CMacroEntry &&other) noexcept;
+    CMacroEntry &operator=(CMacroEntry &&other) noexcept;
 };
 
 class CAssistantConfig

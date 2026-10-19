@@ -64,6 +64,28 @@ CMacroEntry::~CMacroEntry()
     m_Items.clear();
 }
 
+CMacroEntry::CMacroEntry(CMacroEntry &&other) noexcept
+    : Name(std::move(other.Name))
+    , m_Items(std::move(other.m_Items))
+{
+    other.m_Items.clear();
+}
+
+CMacroEntry &CMacroEntry::operator=(CMacroEntry &&other) noexcept
+{
+    if (this != &other)
+    {
+        for (CMacro *macro : m_Items)
+        {
+            delete macro;
+        }
+        Name = std::move(other.Name);
+        m_Items = std::move(other.m_Items);
+        other.m_Items.clear();
+    }
+    return *this;
+}
+
 CAssistantConfig::CAssistantConfig()
 {
     memset(&m_Options[0], 0, sizeof(m_Options));
@@ -1946,7 +1968,7 @@ bool CAssistantConfig::LoadMacros()
                 entry.m_Items.push_back(action);
             }
         }
-        m_Macros.push_back(entry);
+        m_Macros.push_back(std::move(entry));
     }
 
     return true;

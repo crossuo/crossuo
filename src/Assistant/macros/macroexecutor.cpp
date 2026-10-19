@@ -326,6 +326,17 @@ void CMacroExecutor::Record(CMacro *macro)
         delete macro;
         return;
     }
+    // coalesce double-fire duplicates: gump icons act on every mouse-up
+    // (CGumpSkill::OnLeftMouseButtonUp and friends), so a double-click on a
+    // skill/spell/ability icon performs the action twice ~100-200ms apart -
+    // user intent is one use, identical action inside the window is dropped
+    if (!m_RecordBuffer.empty() && g_Ticks - m_LastRecordTick < 300 &&
+        m_RecordBuffer.back()->GetText() == macro->GetText())
+    {
+        delete macro;
+        return;
+    }
+    m_LastRecordTick = g_Ticks;
     m_RecordBuffer.push_back(macro);
 }
 

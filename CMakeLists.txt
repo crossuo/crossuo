@@ -67,6 +67,14 @@ if (NOT CMAKE_BUILD_TYPE)
       "Build type (Release/Debug/RelWithDebInfo/MinSizeRel)" FORCE)
 endif()
 
+# ImGui debug tools (the id-conflict error checker, the "developer mode"
+# assert/error window, the demo window) are a developer aid: end users must
+# never see them. Global (not per-target): the macros change inline code in
+# imgui's headers, so every TU including imgui.h must agree (ODR).
+if (CMAKE_BUILD_TYPE MATCHES "Release|RelWithDebInfo|MinSizeRel")
+  add_compile_definitions(IMGUI_DISABLE_DEBUG_TOOLS IMGUI_DISABLE_DEMO_WINDOWS)
+endif()
+
 if (NOT RENDER_GLES2 AND NOT RENDER_GL1 AND NOT RENDER_GL3)
   if (XUO_EMSC)
     # the browser only offers WebGL: GLES2 renderer

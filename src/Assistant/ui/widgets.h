@@ -8,6 +8,7 @@
 
 #include <external/gfx/imgui/imgui.h>
 #include <stdint.h>
+#include <algorithm> // std::rotate (list drag & drop reorder)
 
 #include <common/fs.h> // fs_path (IconAssetPath)
 
@@ -228,10 +229,18 @@ bool NameList(
     };
     view.Move = [](void *c, int from, int to)
     {
+        // rotate instead of erase+insert: the row type is move-only (owning
+        // list), and this lands the row at the same index the old
+        // erase(from)/insert(to>from ? to-1 : to) pair did
         vector<T> *v = ((XA_NAMED_LIST_CTX<T> *)c)->Items;
-        const T item = (*v)[from];
-        v->erase(v->begin() + from);
-        v->insert(v->begin() + (to > from ? to - 1 : to), item);
+        if (to > from)
+        {
+            std::rotate(v->begin() + from, v->begin() + from + 1, v->begin() + to);
+        }
+        else
+        {
+            std::rotate(v->begin() + to, v->begin() + from, v->begin() + from + 1);
+        }
     };
     view.Check = checkColumn
         ? [](void *c, int index) -> bool *

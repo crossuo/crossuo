@@ -122,7 +122,7 @@ void TabMacros_Draw()
     {
         CMacroEntry entry;
         entry.Name = free_macro_name();
-        macros.push_back(entry);
+        macros.push_back(std::move(entry));
         s_SelectedMacro = (int)macros.size() - 1;
         invalidate_action_texts();
         save_macros();
@@ -217,7 +217,26 @@ void TabMacros_Draw()
 
     // --- the actions list (lw_MacroActions) ---------------------------------
     ImGui::TextUnformatted("Macro actions list:");
-    if (s_SelectedMacro != s_ActionTextsMacro ||
+    // while THIS macro is recording, the list mirrors the live capture buffer
+    // (the actions move into m_Items only at RecordStop); the rebuild fires on
+    // every new capture so the list grows as actions arrive
+    const bool recordingThis =
+        recording && g_MacroExecutor.RecordingIndex() == s_SelectedMacro;
+    if (recordingThis)
+    {
+        if (g_MacroExecutor.RecordBuffer().size() != s_ActionTextsCount)
+        {
+            s_ActionTexts.clear();
+            for (const CMacro *action : g_MacroExecutor.RecordBuffer())
+            {
+                s_ActionTexts.push_back(action->GetText());
+            }
+            s_ActionTextsCount = g_MacroExecutor.RecordBuffer().size();
+            s_ActionTextsMacro = s_SelectedMacro;
+        }
+    }
+    else if (
+        s_SelectedMacro != s_ActionTextsMacro ||
         (s_SelectedMacro >= 0 && s_SelectedMacro < (int)macros.size() &&
          macros[s_SelectedMacro].m_Items.size() != s_ActionTextsCount))
     {
@@ -225,9 +244,14 @@ void TabMacros_Draw()
     }
     if (ImGui::BeginListBox("##macro_actions", ImVec2(-1.0f, 150.0f)))
     {
-        for (const astr_t &text : s_ActionTexts)
+        // repeated actions record identical texts (walking casts the same
+        // line every step): the row id comes from the index, never the label,
+        // so identical rows do not collide in the id space
+        for (size_t i = 0; i < s_ActionTexts.size(); i++)
         {
-            ImGui::Selectable(text.c_str(), false, ImGuiSelectableFlags_Disabled);
+            ImGui::PushID((int)(1000 + i));
+            ImGui::Selectable(s_ActionTexts[i].c_str(), false, ImGuiSelectableFlags_Disabled);
+            ImGui::PopID();
         }
         ImGui::EndListBox();
     }
