@@ -132,13 +132,13 @@ CGumpSkill *CGumpSkill::GetNearSkill(int &x, int &y)
     {
         if (gump != this && gump->GumpType == GT_SKILL)
         {
-            CGumpSkill *near = (CGumpSkill *)gump;
-            const int gx = near->GetX();
-            const int gy = near->GetY();
+            CGumpSkill *skillGump = (CGumpSkill *)gump;
+            const int gx = skillGump->GetX();
+            const int gy = skillGump->GetY();
             const int candidates[4][2] = {
-                { gx + near->m_Width, gy },   // right of it
+                { gx + skillGump->m_Width, gy },   // right of it
                 { gx - m_Width, gy },         // left of it
-                { gx, gy + near->m_Height },  // below it
+                { gx, gy + skillGump->m_Height },  // below it
                 { gx, gy - m_Height },        // above it
             };
             for (const auto &c : candidates)
@@ -148,7 +148,7 @@ CGumpSkill *CGumpSkill::GetNearSkill(int &x, int &y)
                 {
                     x = c[0];
                     y = c[1];
-                    return near;
+                    return skillGump;
                 }
             }
         }
