@@ -62,7 +62,10 @@ void CGumpNotify::Process()
 {
     if (Variant == ID_GN_STATE_LOGOUT)
     {
-        g_GameScreen.CreateSmoothAction(CGameScreen::ID_SMOOTH_GS_LOGOUT);
+        // process directly: this dialog shows while the BLOCKED screen is
+        // active (disconnect), and a deferred action parked on the game
+        // screen would never run - its render pass is not running
+        g_GameScreen.ProcessSmoothAction(CGameScreen::ID_SMOOTH_GS_LOGOUT);
     }
     else if (Variant == ID_GN_STATE_NOTIFICATION)
     {

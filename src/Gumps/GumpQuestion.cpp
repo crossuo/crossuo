@@ -43,7 +43,10 @@ void CGumpQuestion::GUMP_BUTTON_EVENT_C
     {
         if (Variant == ID_GQ_STATE_QUIT)
         {
-            g_GameScreen.CreateSmoothAction(CGameScreen::ID_SMOOTH_GS_LOGOUT);
+            // direct processing: the quit prompt immediately switches to the
+            // BLOCKED screen, so a deferred action parked on the game screen
+            // would never run
+            g_GameScreen.ProcessSmoothAction(CGameScreen::ID_SMOOTH_GS_LOGOUT);
         }
         else if (Variant == ID_GQ_STATE_ATTACK_REQUEST)
         {
