@@ -1807,11 +1807,12 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
 
 // native FileIndex -> legacy MUL animation file name, mirroring
 // CFileManager's own loads exactly: LoadCommon maps index 0 ("anim.mul") and
-// the load loop only loads "anim%i.mul" for i > 1 (anim2-anim5; the product
+// the load loop only loads "anim%i.mul" for i > 1 (anim2-anim10; the product
 // has no anim1.mul and the bodyconv pass never routes to FileIndex 1)
 #if defined(XUO_EMSC)
-static const char *const ANIM_MUL_STREAM_NAMES[6] = {
-    "anim.mul", nullptr, "anim2.mul", "anim3.mul", "anim4.mul", "anim5.mul",
+static const char *const ANIM_MUL_STREAM_NAMES[11] = {
+    "anim.mul",  nullptr,     "anim2.mul",  "anim3.mul",  "anim4.mul",  "anim5.mul",
+    "anim6.mul", "anim7.mul", "anim8.mul",  "anim9.mul",  "anim10.mul",
 };
 
 static const char *anim_mul_stream_name(int fileIndex)
@@ -3706,62 +3707,60 @@ static void load_bodyconv(CFileManager *mgr)
             int animFile = 1;
             uint16_t realAnimId = -1;
             char mountedHeightOffset = 0;
-            #if defined(XUO_EMSC)
-            if (anim[0] != -1 && g_FileManager.m_AnimIdx[2].Loaded() && g_FileManager.IsMulFileOpen(2))
-#else
-            if (anim[0] != -1 && mgr->m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
-#endif
+            for (int slot = 0; slot < 8; slot++)
             {
-                animFile = 2;
-                realAnimId = anim[0];
-                if (index == 192 || index == 793) // 0x00C0 || 0x0319
+                const int fileIdx = slot + 2;
+                int candidate = -1;
+                if (slot < 4)
+                {
+                    candidate = anim[slot];
+                }
+                else if (strings.size() >= size_t(2 + slot))
+                {
+                    candidate = str_to_int(strings[1 + slot]);
+                }
+                if (candidate == -1)
+                {
+                    continue;
+                }
+#if defined(XUO_EMSC)
+                const bool fileOpen = g_FileManager.m_AnimIdx[fileIdx].Loaded() &&
+                                      g_FileManager.IsMulFileOpen(fileIdx);
+#else
+                const bool fileOpen =
+                    mgr->m_AddressIdx[fileIdx] != 0 && g_FileManager.IsMulFileOpen(fileIdx);
+#endif
+                if (!fileOpen)
+                {
+                    continue;
+                }
+                animFile = fileIdx;
+                realAnimId = uint16_t(candidate);
+                if (animFile == 2 && (index == 192 || index == 793)) // 0x00C0 || 0x0319
                 {
                     mountedHeightOffset = -9;
                 }
-            }
-#if defined(XUO_EMSC)
-            else if (anim[1] != -1 && g_FileManager.m_AnimIdx[3].Loaded() && g_FileManager.IsMulFileOpen(3))
-#else
-            else if (anim[1] != -1 && mgr->m_AddressIdx[3] != 0 && g_FileManager.IsMulFileOpen(3))
-#endif
-            {
-                animFile = 3;
-                realAnimId = anim[1];
-                if (index == 1401) // 0x0579
+                else if (animFile == 3 && index == 1401) // 0x0579
                 {
                     mountedHeightOffset = 9;
                 }
-            }
-#if defined(XUO_EMSC)
-            else if (anim[2] != -1 && g_FileManager.m_AnimIdx[4].Loaded() && g_FileManager.IsMulFileOpen(4))
-#else
-            else if (anim[2] != -1 && mgr->m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
-#endif
-            {
-                animFile = 4;
-                realAnimId = anim[2];
-            }
-#if defined(XUO_EMSC)
-            else if (anim[3] != -1 && g_FileManager.m_AnimIdx[5].Loaded() && g_FileManager.IsMulFileOpen(5))
-#else
-            else if (anim[3] != -1 && mgr->m_AddressIdx[5] != 0 && g_FileManager.IsMulFileOpen(5))
-#endif
-            {
-                animFile = 5;
-                realAnimId = anim[3];
-                switch (index)
+                else if (animFile == 5)
                 {
-                    case 192: // 0x00C0
-                    case 277: // 0x0115
-                        mountedHeightOffset = 0;
-                        break;
-                    case 1069: // 0x042D
-                        mountedHeightOffset = 3;
-                        break;
-                    default:
-                        mountedHeightOffset = -9;
-                        break;
+                    switch (index)
+                    {
+                        case 192: // 0x00C0
+                        case 277: // 0x0115
+                            mountedHeightOffset = 0;
+                            break;
+                        case 1069: // 0x042D
+                            mountedHeightOffset = 3;
+                            break;
+                        default:
+                            mountedHeightOffset = -9;
+                            break;
+                    }
                 }
+                break;
             }
             DBG_ANIM_ID(index, "\treal anim is %d is in animFile %d", realAnimId, animFile);
             if (animFile > 1 && realAnimId != 0xFFFF)

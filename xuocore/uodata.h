@@ -568,7 +568,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     int TexturesDataCount = 0;
 
     // Idx
-    CMappedFile m_AnimIdx[6];
+    CMappedFile m_AnimIdx[11];
     CMappedFile m_ArtIdx;
     CMappedFile m_GumpIdx;
     CMappedFile m_LightIdx;
@@ -579,7 +579,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     CMappedFile m_TextureIdx;
 
     // Mul
-    CMappedFile m_AnimMul[6];
+    CMappedFile m_AnimMul[11];
     CMappedFile m_AnimdataMul;
     CMappedFile m_ArtMul;
     CMappedFile m_HuesMul;
@@ -623,8 +623,8 @@ struct CFileManager : public CDataReader // FIXME: not needed
     CMappedFile m_StaDif[6];
 
     // Animation Frames
-    size_t m_AddressIdx[6];
-    size_t m_SizeIdx[6];
+    size_t m_AddressIdx[11];
+    size_t m_SizeIdx[11];
     std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2]; // FIXME: map
 
     bool Load();
