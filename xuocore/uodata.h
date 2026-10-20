@@ -481,27 +481,33 @@ inline static uint16_t uo_get_graphic_replacement(
 inline static bool uo_find_body_replacement(uint16_t &outGraphic, bool isParent = false)
 {
     assert(outGraphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+    if (outGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    {
+        return false;
+    }
     const auto &anim = g_Index.m_Anim[outGraphic];
     const bool uop = anim.IsUOP && (isParent || !anim.IsValidMUL);
     if (uop)
     {
         return false;
     }
-    uint16_t newGraphic = anim.Graphic;
-    do
+    uint16_t graphic = outGraphic;
+    // walk the whole body replacement chain; bound the hops so a cyclic
+    // body.def entry cannot spin forever
+    for (int hops = 0; hops < 0x100; hops++)
     {
-        const auto conv = uo_has_body_conversion(anim);
-        if (conv)
+        if (uo_has_body_conversion(g_Index.m_Anim[graphic]))
         {
             break;
         }
-        const auto &newAnim = g_Index.m_Anim[newGraphic];
-        if (outGraphic != newGraphic)
+        const uint16_t next = g_Index.m_Anim[graphic].Graphic;
+        if (next == graphic)
         {
-            outGraphic = newGraphic;
-            newGraphic = newAnim.Graphic;
+            break;
         }
-    } while (outGraphic != newGraphic);
+        graphic = next;
+    }
+    outGraphic = graphic;
     return true;
 }
 /*
