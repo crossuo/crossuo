@@ -2899,9 +2899,36 @@ CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16
     SetData(scratchBuffer.data(), scratchSize);
 
     const auto framesData = UopReadAnimationFramesData();
-    const int frameCount = checked_cast<uint8_t>(framesData.size() / 5);
-    direction.FrameCount = frameCount;
-    int dirFrameStartIdx = frameCount * anim.Direction;
+
+    // packs list frames as sequential FrameIds that may skip slots (sparse
+    // frame ids); synthesize empty entries for the gaps so the per-direction
+    // split below stays aligned with what the standard client computes
+    std::vector<UopAnimationFrame> ordered;
+    ordered.reserve(framesData.size() + 16);
+    int lastFrameId = 1;
+    for (const auto &fd : framesData)
+    {
+        while (int(fd.FrameId) - lastFrameId > 1)
+        {
+            lastFrameId += 1;
+            UopAnimationFrame gap; // null DataStart == empty frame
+            gap.FrameId = uint16_t(lastFrameId);
+            ordered.push_back(gap);
+        }
+        ordered.push_back(fd);
+        lastFrameId = fd.FrameId;
+    }
+
+    const int maxFrameCount = int(ordered.size());
+    const int type = g_Index.m_Anim[anim.Graphic].Type;
+    int frameCount = (maxFrameCount + MAX_MOBILE_DIRECTIONS / 2) / MAX_MOBILE_DIRECTIONS;
+    if (type == AGT_EQUIPMENT)
+    {
+        // equipment animations always expose at least 10 frames
+        frameCount = std::max(10, frameCount);
+    }
+    frameCount = std::max(1, std::min(frameCount, 0xFF));
+    direction.FrameCount = uint8_t(frameCount);
 
     if (uo_animation_get(anim) != nullptr)
     {
@@ -2916,9 +2943,18 @@ CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16
     // missing frame
     const uint8_t *scratchBegin = scratchBuffer.data();
     const uint8_t *scratchEnd = scratchBegin + scratchSize;
-    for (int i = 0; i < frameCount; i++)
+    for (const auto &frameData : ordered)
     {
-        UopAnimationFrame frameData = framesData[i + dirFrameStartIdx];
+        const int frameDirection = (int(frameData.FrameId) - 1) / frameCount;
+        if (frameDirection < anim.Direction)
+        {
+            continue;
+        }
+        if (frameDirection > anim.Direction)
+        {
+            break;
+        }
+        const int i = (int(frameData.FrameId) - 1) % frameCount;
         if (frameData.DataStart == nullptr)
         {
             continue;
