@@ -64,28 +64,37 @@ regenerate_wasm_shards() {
 # only adds what is missing) so the archive carries the full deployment
 # layout - xuoproxy + html/ (index.html, crossuo.js/wasm, shards.cfg)
 refresh_wasm_zip() {
-  local pkg
-  pkg="$(ls dist/crossuo-wasm-*.zip 2>/dev/null | head -n1)"
+  local pkg zippkg targz
+  zippkg="$(ls dist/crossuo-wasm-*.zip 2>/dev/null | head -n1)"
+  targz="$(ls dist/crossuo-wasm-*.tar.gz 2>/dev/null | head -n1)"
+  pkg="${zippkg:-$targz}"
   if [[ -z "$pkg" ]]; then
-    echo ">> deploy: wasm: no crossuo-wasm-*.zip to refresh (zip not built?)" >&2
+    echo ">> deploy: wasm: no crossuo-wasm-*.zip|tar.gz to refresh (package not built?)" >&2
     return 1
   fi
   if [[ ! -x dist/wasm/xuoproxy ]]; then
     echo ">> deploy: wasm: dist/wasm/xuoproxy missing - cannot refresh $pkg" >&2
     return 1
   fi
-  if ! command -v zip >/dev/null; then
-    echo ">> deploy: wasm: zip(1) not found - $pkg will NOT contain xuoproxy" >&2
-    return 1
-  fi
   echo ">> deploy: wasm: adding xuoproxy to $(basename "$pkg")"
-  # note the ../: we cd into dist/wasm, the archive lives in dist/
-  if ! (cd dist/wasm && zip -qry "../$(basename "$pkg")" xuoproxy); then
-    echo ">> deploy: wasm: zip refresh failed" >&2
-    return 1
+  if [[ -n "$zippkg" ]]; then
+    if ! command -v zip >/dev/null; then
+      echo ">> deploy: wasm: zip(1) not found - $pkg will NOT contain xuoproxy" >&2
+      return 1
+    fi
+    # note the ../: we cd into dist/wasm, the archive lives in dist/
+    if ! (cd dist/wasm && zip -qry "../$(basename "$pkg")" xuoproxy); then
+      echo ">> deploy: wasm: zip refresh failed" >&2
+      return 1
+    fi
+  else
+    if ! (cd dist/wasm && tar -rf "../$(basename "$pkg")" xuoproxy); then
+      echo ">> deploy: wasm: tar refresh failed" >&2
+      return 1
+    fi
   fi
   # self-check: the archive must now carry the full deployment layout
-  if command -v unzip >/dev/null; then
+  if [[ -n "$zippkg" ]] && command -v unzip >/dev/null; then
     for m in xuoproxy html/index.html html/crossuo.wasm html/crossuo.js html/shards.cfg; do
       if ! unzip -l "$pkg" "$m" >/dev/null 2>&1; then
         echo ">> deploy: wasm: $(basename "$pkg") is missing $m after refresh" >&2

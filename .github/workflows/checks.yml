@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# checks - fast code hygiene on every push/PR. Real builds and releases live
+# in deploy.yml (cross-compiled matrix + publish).
+
+name: checks
+
+on: [push, pull_request]
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    - name: prepare
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format-7
+        clang-format --version
+    - name: clang-format
+      run: ${GITHUB_WORKSPACE}/.github/code-checks.sh

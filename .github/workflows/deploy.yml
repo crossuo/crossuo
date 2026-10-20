@@ -21,7 +21,9 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  # never cancel a tag publish mid-release; superseded master pushes are fine
+  # to cancel, so this is decided dynamically below (tag pushes don't cancel)
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 permissions:
   contents: write
@@ -61,7 +63,7 @@ jobs:
           mkdir -p scripts/docker/macos/sdk
           curl -L --fail --retry 3 \
             -o scripts/docker/macos/sdk/MacOSX15.1.sdk.tar.xz \
-            https://github.com/joseluisq/macosx-sdks/releases/latest/download/MacOSX15.1.sdk.tar.xz
+            https://github.com/joseluisq/macosx-sdks/releases/download/v2024-11-17/MacOSX15.1.sdk.tar.xz
 
       # deploy.sh builds xuoproxy (release) into dist/wasm for the wasm target
       - name: rust toolchain
@@ -84,8 +86,9 @@ jobs:
   release:
     name: release
     needs: build
-    # manual dispatch builds and archives artifacts only; master/tags publish
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    # publish even when some matrix targets failed: gather whatever made it,
+    # never publish an empty release
+    if: always() && !cancelled() && needs.build.result != 'skipped' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -106,6 +109,14 @@ jobs:
           find artifacts -maxdepth 1 -type f -name 'crossuo-*' -exec cp {} release/ \;
           ver="$(git describe --always --dirty 2>/dev/null || echo dev)"
           cp artifacts/wasm/xuoproxy "release/xuoproxy-${ver}-linux-x64"
+          count=$(find release -type f | wc -l)
+          if [[ "$count" -eq 0 ]]; then
+            echo "::error::no release files collected - every target build failed"
+            exit 1
+          fi
+          if ! ls release/crossuo-* >/dev/null 2>&1; then
+            echo "::warning::no target packages collected - only aux files present"
+          fi
           ls -lh release/
 
       - name: release tag
@@ -113,6 +124,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: release/*
+          fail_on_unmatched_files: true
 
       - name: release latest
         if: github.ref == 'refs/heads/master'
@@ -121,3 +133,4 @@ jobs:
           tag_name: latest
           prerelease: true
           files: release/*
+          fail_on_unmatched_files: true

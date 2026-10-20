@@ -400,6 +400,9 @@ package_target() {
       if command -v zip >/dev/null; then
         (cd "$out" && zip -qry "../$name.zip" .)
         echo ">> [$target] packaged dist/$name.zip"
+      else
+        tar -czf "dist/$name.tar.gz" -C dist "$(basename "$out")"
+        echo ">> [$target] packaged dist/$name.tar.gz (zip(1) not found)"
       fi
       echo ">> [$target] serve with: tools/xuoproxy/target/release/xuoproxy --listen 127.0.0.1:8080 --dist dist/$target/html"
   esac
