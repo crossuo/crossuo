@@ -243,8 +243,19 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
 uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool third)
 {
     assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
-    const auto flags = g_Index.m_Anim[graphic].Flags;
-    switch (g_Index.m_Anim[graphic].Type)
+    auto flags = g_Index.m_Anim[graphic].Flags;
+    auto type = g_Index.m_Anim[graphic].Type;
+    // low-group offset flags decide which group table the death groups come
+    // from, regardless of the body's mobtype classification
+    if (flags & AF_CALCULATE_OFFSET_BY_LOW_GROUP)
+    {
+        type = AGT_ANIMAL;
+    }
+    else if (flags & AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED)
+    {
+        type = AGT_MONSTER;
+    }
+    switch (type)
     {
         case AGT_ANIMAL:
         {

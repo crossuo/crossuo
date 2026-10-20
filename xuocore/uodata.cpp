@@ -3041,11 +3041,21 @@ CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16
     Move(PALETTE_SIZE);
 
     uint8_t *dataStart = Ptr;
-    const uint32_t frameCount = ReadUInt32LE();
+    uint32_t frameCount = ReadUInt32LE();
+    // the count and its offset table come from the file: bound both against
+    // the block data before indexing them, and clamp the stored per-direction
+    // count to what the frame array can hold
+    const size_t maxFrameCount = size_t(End - dataStart - 4) / sizeof(uint32_t);
+    if (frameCount > maxFrameCount)
+    {
+        frameCount = uint32_t(maxFrameCount);
+    }
+    frameCount = std::min<uint32_t>(frameCount, 0xFF);
     uint32_t *frameOffset = (uint32_t *)Ptr;
+    Ptr += frameCount * sizeof(uint32_t);
     //uint16_t color = g_Index.m_Anim[graphic].Color;
 
-    direction.FrameCount = frameCount;
+    direction.FrameCount = uint8_t(frameCount);
     if (uo_animation_get(anim) != nullptr)
     {
         return true;
