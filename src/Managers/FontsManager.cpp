@@ -1104,9 +1104,36 @@ int CFontsManager::CalculateCaretPosW(
     return pos;
 }
 
+// the unifont glyph tables cover only the BMP: non-BMP code points (emoji
+// and other astral characters, decodable since the UTF-8 text path stopped
+// discarding multi-byte sequences) would index far past the table - map them
+// to '?' so every table lookup stays in bounds
+static wstr_t FontSafeText(const wstr_t &str)
+{
+    for (wchar_t c : str)
+    {
+        if ((uint32_t)c > 0xFFFF)
+        {
+            wstr_t out = str;
+            for (wchar_t &cc : out)
+            {
+                if ((uint32_t)c > 0xFFFF)
+                {
+                    cc = L'?';
+                }
+            }
+            return out;
+        }
+    }
+    return str;
+}
+
 int CFontsManager::GetWidthW(uint8_t font, const wstr_t &str)
 {
-    if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
+    // non-BMP characters cannot render: clamp before any table lookup
+    const wstr_t strSafe = FontSafeText(str);
+
+    if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || strSafe.empty())
     {
         return 0;
     }
@@ -1114,7 +1141,7 @@ int CFontsManager::GetWidthW(uint8_t font, const wstr_t &str)
     auto table = (uint32_t *)m_UnicodeFontAddress[font];
     int textLength = 0;
     int maxTextLength = 0;
-    for (const auto &c : str)
+    for (const auto &c : strSafe)
     {
         uint32_t &offset = table[c];
         if ((offset != 0u) && offset != 0xFFFFFFFF)
@@ -1220,7 +1247,10 @@ int CFontsManager::GetHeightW(PMULTILINES_FONT_INFO info)
 
 wstr_t CFontsManager::GetTextByWidthW(uint8_t font, const wstr_t &str, int width, bool isCropped)
 {
-    if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
+    // non-BMP characters cannot render: clamp before any table lookup
+    const wstr_t strSafe = FontSafeText(str);
+
+    if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || strSafe.empty())
     {
         return wstr_t({});
     }
@@ -1240,7 +1270,7 @@ wstr_t CFontsManager::GetTextByWidthW(uint8_t font, const wstr_t &str, int width
     int textLength = 0;
     wstr_t result = {};
 
-    for (const auto &c : str)
+    for (const auto &c : strSafe)
     {
         uint32_t offset = table[c];
         char charWidth = 0;
@@ -2193,6 +2223,9 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
 PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     uint8_t font, const wstr_t &str, TEXT_ALIGN_TYPE align, uint16_t flags, int width)
 {
+    // non-BMP characters cannot render: clamp before any table lookup
+    const wstr_t strSafe = FontSafeText(str);
+
     m_WebLinkColor = 0xFF0000FF;
     m_VisitedWebLinkColor = 0x0000FFFF;
     m_BackgroundColor = 0;
@@ -2208,7 +2241,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
 
     if (m_UseHTML)
     {
-        return GetInfoHTML(font, str, align, flags, width);
+        return GetInfoHTML(font, strSafe, align, flags, width);
     }
 
     uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
@@ -2238,10 +2271,10 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     uint32_t lastspace_charcolor = 0xFFFFFFFF;
     uint32_t lastspace_current_charcolor = 0xFFFFFFFF;
 
-    const auto len = (int)str.size();
+    const auto len = (int)strSafe.size();
     for (int i = 0; i < len; i++)
     {
-        auto si = str[i];
+        auto si = strSafe[i];
         if (si == L'\r' || si == L'\n')
         {
             if (isFixed || isCropped)
@@ -2376,7 +2409,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
 
                 charcolor = lastspace_charcolor;
                 current_charcolor = lastspace_current_charcolor;
-                si = str[i];
+                si = strSafe[i];
 
                 if (ptr->Width == 0)
                 {
@@ -2446,7 +2479,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     ptr->Width += readWidth;
     ptr->CharCount += charCount;
 
-    if ((readWidth == 0) && (len != 0) && (str[len - 1] == L'\n' || str[len - 1] == L'\r'))
+    if ((readWidth == 0) && (len != 0) && (strSafe[len - 1] == L'\n' || strSafe[len - 1] == L'\r'))
     {
         ptr->Width = 1;
         ptr->MaxHeight = 14;
@@ -2465,25 +2498,28 @@ bool CFontsManager::GenerateW(
     TEXT_ALIGN_TYPE align,
     uint16_t flags)
 {
+    // non-BMP characters cannot render: clamp before any table lookup
+    const wstr_t strSafe = FontSafeText(str);
+
     if (((flags & UOFONT_FIXED) != 0) || ((flags & UOFONT_CROPPED) != 0))
     {
         th.Clear();
 
-        if ((width == 0) || str.empty())
+        if ((width == 0) || strSafe.empty())
         {
             return false;
         }
 
-        int realWidth = GetWidthW(font, str);
+        int realWidth = GetWidthW(font, strSafe);
 
         if (realWidth > width)
         {
-            auto newstr = GetTextByWidthW(font, str, width, (flags & UOFONT_CROPPED) != 0);
+            auto newstr = GetTextByWidthW(font, strSafe, width, (flags & UOFONT_CROPPED) != 0);
             return GenerateWBase(font, th, newstr, color, cell, width, align, flags);
         }
     }
 
-    return GenerateWBase(font, th, str, color, cell, width, align, flags);
+    return GenerateWBase(font, th, strSafe, color, cell, width, align, flags);
 }
 
 std::vector<uint32_t> CFontsManager::GeneratePixelsW(
@@ -3031,7 +3067,10 @@ bool CFontsManager::GenerateWBase(
     TEXT_ALIGN_TYPE align,
     uint16_t flags)
 {
-    auto pixels = GeneratePixelsW(font, th, str, color, cell, width, align, flags);
+    // non-BMP characters cannot render: clamp before any table lookup
+    const wstr_t strSafe = FontSafeText(str);
+
+    auto pixels = GeneratePixelsW(font, th, strSafe, color, cell, width, align, flags);
     bool result = false;
     if (!pixels.empty())
     {

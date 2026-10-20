@@ -378,8 +378,12 @@ public:
     // --- scripts options (TabScripts LoadConfig/SaveConfig) -----------------
     bool SortScripts() const { return m_SortScripts; }
     void SetSortScripts(bool value) { m_SortScripts = value; }
-    const astr_t &ScriptFilePath() const { return m_ScriptFilePath; }
-    void SetScriptFilePath(const astr_t &path) { m_ScriptFilePath = path; }
+    // The loaded-scripts list (Options.ini [scripts] loadedscript0..N) is
+    // owned at runtime by g_LoadedScripts (script/scriptlist.h); these are the
+    // persisted values read/written around it.
+    const vector<astr_t> &LoadedScriptPaths() const { return m_LoadedScripts; }
+    const astr_t &ScriptLastDir() const { return m_ScriptLastDir; }
+    void SetScriptLastDir(const astr_t &dir) { m_ScriptLastDir = dir; }
 
     // Was TabMain::UpdateFeatures: clears the user's checklist choices for
     // options whose server feature flag is not enabled (the CLBI->XAEF
@@ -462,7 +466,8 @@ public:
     astr_t m_CommandPrefix{ "_" };
 
     bool m_SortScripts{ false };
-    astr_t m_ScriptFilePath{ "" };
+    vector<astr_t> m_LoadedScripts;
+    astr_t m_ScriptLastDir{ "" };
 
     vector<CTypeEntry> m_Types;
     vector<CObjectEntry> m_Objects;

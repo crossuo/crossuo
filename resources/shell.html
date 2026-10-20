@@ -412,7 +412,7 @@
       (function () {
         var MOUNT = '/data';
         var PERSIST_FILES = ['/crossuo.cfg', '/crossuo.log', '/xuoassist.ini'];
-        var PERSIST_TREES = ['/data/crossuo', '/screenshots'];
+        var PERSIST_TREES = ['/data/crossuo', '/screenshots', '/data/scripts'];
         var PERSIST_MAX_FILE = 8 * 1024 * 1024;
         var PERSIST_MS = 30000;
         // localStorage mirror of the desktop settings tree
@@ -545,6 +545,84 @@
         // the client (SaveLocalConfig) fires this on every desktop.txt write
         // so the mirror is current immediately, not just on the slow tick
         globalThis.__xuoDesktopSaved = persistDesktopLS;
+        // Script picker (the assistant's Scripts tab Load button). The client
+        // runs on the pthread worker and cannot reach the DOM or this FS, so
+        // it calls __xuoScriptPick (MAIN_THREAD_EM_ASM) and polls the shared
+        // heap afterwards: s_PickStatus/s_PickPaths from
+        // xuo_script_pick_addrs (ui/scriptpicker.cpp). Chosen files are
+        // imported into /data/scripts - the one tree that survives a reload -
+        // and persisted right away (the 30 s tick would lose them on a fast
+        // close). Paths are newline-separated absolute FS paths.
+        var SCRIPT_DIR = '/data/scripts';
+        function scriptSafeName(name) {
+          name = String(name || '').replace(/^.*[\\/]/, '').replace(/[^\w.\-]+/g, '_');
+          if (!name || name === '.' || name === '..') return 'script.js';
+          return name;
+        }
+        function scriptStore(name, data) {
+          try { FS.mkdirTree(SCRIPT_DIR); } catch (e) { /* exists */ }
+          var path = SCRIPT_DIR + '/' + name, dot = name.lastIndexOf('.'),
+              stem = dot > 0 ? name.slice(0, dot) : name,
+              ext = dot > 0 ? name.slice(dot) : '';
+          for (var n = 2; ; n++) {
+            try {
+              FS.stat(path);
+              path = SCRIPT_DIR + '/' + stem + ' (' + n + ')' + ext;
+            } catch (e) {
+              break; // free
+            }
+          }
+          FS.writeFile(path, new Uint8Array(data));
+          return path;
+        }
+        globalThis.__xuoScriptPick = function () {
+          // the picker addresses live in the shared heap
+          var addrs = typeof Module._xuo_script_pick_addrs === 'function' ?
+              Module._xuo_script_pick_addrs() : 0;
+          if (!addrs) return;
+          var HEAP = Module.HEAPU8;
+          // s_PickStatus is 4 bytes; s_PickPaths starts right after it
+          var input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.js,.txt,text/javascript,application/javascript';
+          input.multiple = true;
+          input.style.display = 'none';
+          document.body.appendChild(input);
+          function done(paths) {
+            try { input.remove(); } catch (e) { /* ignore */ }
+            var text = paths.join('\n');
+            var bytes = new TextEncoder().encode(text);
+            var room = 4095;
+            if (bytes.length > room) bytes = bytes.slice(0, room);
+            HEAP.set(bytes, addrs + 4);
+            HEAP[addrs + 4 + bytes.length] = 0;
+            Module.HEAPU32[addrs / 4] = 1; // status: done; the worker polls this
+            try { persistTick(); } catch (e) { /* best effort */ }
+          }
+          input.onchange = function () {
+            var files = Array.prototype.slice.call(input.files || []);
+            if (!files.length) { done([]); return; }
+            var paths = [], pending = files.length;
+            files.forEach(function (file, index) {
+              var reader = new FileReader();
+              reader.onload = function () {
+                try { paths[index] = scriptStore(scriptSafeName(file.name), reader.result); }
+                catch (e) { console.error('[assist] import failed:', e); }
+                if (--pending === 0) done(paths.filter(function (p) { return p; }));
+              };
+              reader.onerror = function () {
+                if (--pending === 0) done(paths.filter(function (p) { return p; }));
+              };
+              reader.readAsArrayBuffer(file);
+            });
+          };
+          // Cancelling the browser dialog fires no event. The worker then
+          // keeps polling status 0, which only means "Load is ignored until
+          // the cancelled pick resolves" - pressing another Load re-arms the
+          // request (scriptpicker.cpp overwrites status with a fresh 0 and
+          // opens a new input).
+          input.click();
+        };
         (function whenReady() {
           if (typeof FS === 'undefined' || typeof IDBFS === 'undefined' || !FS.mounts) {
             return setTimeout(whenReady, 25);

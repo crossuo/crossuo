@@ -58,6 +58,10 @@ public:
     CTextCommandManager &operator=(const CTextCommandManager &) = delete;
 
     static void InitCommands();
+    // Builds the table on first use and refreshes the enabled flags
+    // (InitCommands + UpdateCommands; both idempotent). DoCommand and
+    // RunCommand call it, so no consumer depends on initializer order.
+    void EnsureCommands();
 
     void DoCommand(const astr_t &text);
 
@@ -67,6 +71,14 @@ public:
     bool RunCommand(const astr_t &name, const COMMAND_ARGS &args);
 
     void UpdateCommands();
+
+    // Diagnostics/tests: the number of registered text commands (the table
+    // is built lazily by EnsureCommands; 0 would mean script commands such as
+    // `useobject` cannot resolve).
+    static size_t CommandCount();
+    // Diagnostics/tests: is `name` a registered command (case-insensitive,
+    // RunCommand's own lookup key)?
+    bool HasCommand(const astr_t &name);
 
     HANDLER_COMMAND(info);
     HANDLER_COMMAND(infotile);

@@ -22,6 +22,7 @@ set(XUOASSIST_SRCS
   "ui/hotkeysform.cpp"
   "ui/tabhotkeys.cpp"
   "ui/tabmacros.cpp"
+  "ui/macroscriptgen.cpp"
   "core/dressagent.cpp"
   "core/shopagent.cpp"
   "ui/tabdress.cpp"
@@ -34,12 +35,15 @@ set(XUOASSIST_SRCS
   "script/engine.cpp"
   "script/apiscript.cpp"
   "script/scriptfile.cpp"
+  "script/scriptlist.cpp"
   "script/scriptgump.cpp"
   "script/scriptstate.cpp"
   "script/scripthandle.cpp"
   "ui/scriptmenu.cpp"
   "ui/editor.cpp"
   "ui/scripteditor.cpp"
+  "ui/editors.cpp"
+  "ui/scriptpicker.cpp"
   "ui/tabscripts.cpp"
   "managers/assmap.cpp"
   "managers/mapsettings.cpp"
@@ -124,6 +128,7 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     script/commandqueue.cpp
     script/journal.cpp
     script/scriptfile.cpp
+    script/scriptlist.cpp
     script/scriptgump.cpp
     script/scriptstate.cpp
     # the config module (the INI reader/writer + the crash-safe save helper;
@@ -140,6 +145,13 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     # the assistant tokenizer (core/textconv.cpp; the tokenizer parity suite
     # exercises ParseTextTokens - the old CTextParser's line-scoped replacement)
     core/textconv.cpp
+    # The REAL text-command table (registration + RunCommand lookup), compiled
+    # WITHOUT XUO_ASSISTANT_HARNESS so it sees the real world headers. Its
+    # handlers are registered but never invoked by the test (g_World is null,
+    # so they early-return); the link needs their client symbols stubbed,
+    # which harnessstubs.cpp does. This covers the "Unknown command:
+    # useobject" regression: nothing ever populated the table.
+    core/textcommandmanager.cpp
     # the stb-style common/fs.h implementation for this standalone link (the
     # main build gets it from xuocore/common.cpp, which is not linked here)
     script/test/fsimpl.cpp
@@ -155,8 +167,16 @@ if(XUO_ASSISTANT_SCRIPT_TESTS)
     script/quickjs/libregexp.c
     script/quickjs/libunicode.c
     script/quickjs/quickjs.c
+    # the engine + handle lifecycle (the run/terminate suite drives the real
+    # CScriptHandle flow: thread, QuickJS runtime, interrupt-based terminate)
+    script/engine.cpp
+    script/scripthandle.cpp
   )
   target_compile_definitions(xuoassist-script-test PRIVATE XUO_ASSISTANT=1 XUO_ASSISTANT_HARNESS=1)
+  # the real text-command table must see the real world headers (the harness
+  # define globally swaps in the stand-ins)
+  set_source_files_properties(core/textcommandmanager.cpp PROPERTIES
+    COMPILE_OPTIONS "-UXUO_ASSISTANT_HARNESS")
   set_source_files_properties(
     script/quickjs/dtoa.c
     script/quickjs/libregexp.c

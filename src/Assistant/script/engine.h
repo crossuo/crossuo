@@ -31,6 +31,7 @@ class CScriptEngine
 public:
     bool Paused = false;
     bool Terminated = false;
+    bool InterruptLogged = false; // one interrupt line per engine instance
     astr_t Name = "";
 
     CScriptEngine();
@@ -40,6 +41,7 @@ public:
     CScriptEngine &operator=(const CScriptEngine &) = delete;
 
     bool IsValid() const { return m_Context != nullptr; }
+    JSContext *Context() const { return m_Context; }
 
     // Registers the runtime API (Player/Client/TextWindow/SelectedTile
     // objects, the sentinel globals, ScriptName). Called by the ctor; kept
@@ -52,6 +54,7 @@ public:
     // g_Assistant.ScriptError).
     bool Evaluate(const astr_t &text);
     bool CallFunction(const astr_t &functionName, const vector<astr_t> &args);
+    bool HasFunction(const astr_t &functionName);
 
     // Interrupt plumbing (the worker thread and the manager set/read these).
     void RequestTerminate();

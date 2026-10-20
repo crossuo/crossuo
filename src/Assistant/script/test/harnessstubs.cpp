@@ -13,11 +13,13 @@
 #define XUO_ASSISTANT 1
 #define XUO_ASSISTANT_HARNESS 1
 
+#include <atomic>
 #include <cctype> // tolower (the str_lower stub below)
 
 #include "../../core/global.h"
 #include "../../core/world.h" // the worldstubs.h stand-ins (disconnected)
 #include "../../core/assist.h"
+#include "../../core/assistantevents.h" // g_AssistantEvents stand-in
 #include "../../core/dressagent.h"
 #include "../../core/shopagent.h"
 #include "Target.h" // the shared target cursor (the harness stubs it below)
@@ -34,6 +36,7 @@
 #include "../../macros/macroexecutor.h"
 #include "../../managers/contextmenumanager.h"
 #include "../../managers/displaymanager.h"
+#include "../../xuocore/vfs.h" // vfs surface stubbed below
 #include "../../managers/gumpmanager.h"
 #include "Party.h" // the client party record (Contains is stubbed below)
 #include "../../managers/menumanager.h"
@@ -290,11 +293,10 @@ void CSpellManager::Cast(const astr_t &) {}
 void CSpellManager::CastIndex(int) {}
 void CSpellManager::TargetCast(const astr_t &, const uint32_t &) {}
 
-CTextCommandManager g_TextCommandManager;
-bool CTextCommandManager::RunCommand(const astr_t &, const vector<astr_t> &) { return false; }
-uint16_t CTextCommandManager::GetFindFlags(const astr_t &) { return 0; }
-uint8_t CTextCommandManager::GetJournalFlags(const astr_t &) { return 0; }
-uint8_t CTextCommandManager::GetSkillsFlags(const astr_t &) { return 0; }
+// CTextCommandManager is the REAL implementation here (core/textcommandmanager.cpp,
+// compiled without XUO_ASSISTANT_HARNESS): RunCommand is how Client.* calls
+// reach the client, and an empty/stubbed table is exactly the "Unknown
+// command: useobject" bug the harness now guards against.
 
 bool g_Connected = false;
 uint64_t g_EnabledCommands = 0;
@@ -337,6 +339,26 @@ uint32_t g_LastAttackObject = 0;
 uint32_t g_PlayerSerial = 0;
 CSkillsManager g_SkillsManager;
 
+// the streamed-install VFS is a client-link concern: the harness runs
+// disconnected on plain files, so the vfs surface stubs to disabled no-ops
+bool vfs_enabled()
+{
+    return false;
+}
+
+bool vfs_map_file(const fs_path &, unsigned char *&out, unsigned long &size)
+{
+    out = nullptr;
+    size = 0;
+    return false;
+}
+
+void vfs_unmap_file(unsigned char *, unsigned long) {}
+
+// apiscript's display commands touch the manager's recompiler; the harness
+// has no display data to recompile
+void xuoassist::CDisplayManager::RecompileData(const astr_t &) {}
+
 // world stand-in out-of-line bodies (global namespace)
 CGameObject *CGameWorld::FindWorldObject(uint32_t) { return nullptr; }
 CGameItem *CGameWorld::FindWorldItem(uint32_t) { return nullptr; }
@@ -352,6 +374,7 @@ int xuoassist::Distance(int x1, int y1, int x2, int y2)
     return distx > disty ? distx : disty;
 }
 
+
 namespace xuoassist {
 
 CAssistant g_Assistant;
@@ -360,6 +383,92 @@ void CAssistant::LogOut() const {}
 // --- client-side pieces the executor references ------------------------------
 int Actions_NewTargetSystemSerial() { return 0; }
 
+// The REAL text-command table (core/textcommandmanager.cpp, compiled without
+// XUO_ASSISTANT_HARNESS) registers its handlers and needs their client entry
+// points. None of them runs here: g_World is null for every command the
+// handlers gate on, and the table test only checks registration + lookup.
+void CAssistant::ClientPrintDebugLevel1(const astr_t &, const uint16_t &) const {}
+void CAssistant::DumpObjectInfo(CGameObject *) const {}
+void CAssistant::DumpTileInfo(const uint16_t &, const short &, const short &, const char &) const {}
+void CAssistant::GetStatus(const uint32_t &) const {}
+void CAssistant::Click(const uint32_t &) const {}
+void CAssistant::Attack(const uint32_t &) const {}
+void CAssistant::MoveItem(const CGameItem *) const {}
+void CAssistant::Track(const bool &, short, short) const {}
+void CAssistant::HandleTargetInfo(uint8_t *) const {}
+void CAssistant::HandleTargetInfoTile(uint8_t *) const {}
+void CAssistant::HandleTargetDressBag(uint8_t *) const {}
+void CAssistant::HandleTargetHide(uint8_t *) const {}
+void CAssistant::HandleTargetDrop(uint8_t *) const {}
+
+
+// the inert events consumer: LoadScript/Play report through it (the real
+// default instance lives in assistantevents.cpp, which the harness does not
+// link); its OnClientPrint is a log line, everything else keeps the base
+class CHarnessEvents : public CAssistantEvents
+{
+public:
+    void OnClientPrint(const astr_t &text, uint16_t color) override
+    {
+        (void)color;
+        printf("assist: %s\n", text.c_str());
+    }
+};
+static CHarnessEvents s_HarnessEvents;
+CAssistantEvents *g_AssistantEvents = &s_HarnessEvents;
+// the two virtuals that carry client state (the base file is not linked)
+void CAssistantEvents::OnClientPrint(const astr_t &text, uint16_t color)
+{
+    OnJournalMessage(CJournalMessage(0xFFFFFFFF, color, text));
+}
+void CAssistantEvents::OnMapData(uint16_t x, uint16_t y)
+{
+    (void)x;
+    (void)y;
+}
+
+// ui/ pieces LoadScript touches (editors.cpp is not linked here)
+bool Editors_Open(const astr_t &) { return false; }
+void AssistantUI_MarkOptionsDirty() {}
+
+} // namespace xuoassist
+
+// the client packet/skill senders the remaining text-command handlers call.
+// The harness uses STAND-IN classes for CGame/CPacketManager (worldstubs.h),
+// so these cannot be defined as members; they are provided at symbol level
+// under the exact mangled names the real table's handlers reference. They are
+// never executed (g_World is null for every handler that could reach them).
+#define XA_STUB_MEMBER(mangled, ...)                                                               \
+    extern "C" void mangled(...) __attribute__((weak));                                            \
+    extern "C" void mangled(...) {}
+XA_STUB_MEMBER(_ZN5CGame13ChangeWarmodeEh, unsigned char)
+XA_STUB_MEMBER(_ZN14CPacketManager12DeleteObjectEj, unsigned int)
+XA_STUB_MEMBER(_ZN14CPacketManager15PlaySoundEffectEtttt, unsigned short, unsigned short,
+    unsigned short, unsigned short)
+XA_STUB_MEMBER(_ZN14CPacketManager13SetLightLevelEh, unsigned char)
+XA_STUB_MEMBER(_ZN14CPacketManager9SetSeasonEhh, unsigned char, unsigned char)
+XA_STUB_MEMBER(_ZN14CPacketManager10SetWeatherEhhh, unsigned char, unsigned char,
+    unsigned char)
+XA_STUB_MEMBER(_ZN18CPacketHelpRequestC1Ev, void *)
+XA_STUB_MEMBER(_ZN13CPacketResendC1Ev, void *)
+XA_STUB_MEMBER(_ZN18CPacketEmoteActionC1EPKc, const char *)
+XA_STUB_MEMBER(_ZN14CSkillsManager3UseERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE,
+    const void *)
+XA_STUB_MEMBER(_ZN9xuoassist12CMenuManager8InfoMenuERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE,
+    const void *)
+#undef XA_STUB_MEMBER
+
+namespace xuoassist {
+// the assistant filter/morph globals the remaining handlers write
+uint8_t g_LightLevel = 0;
+SEASON_DATA g_Season{};
+WEATHER_DATA g_Weather{};
+uint16_t g_MorphGraphic = 0;
+uint16_t g_OriginalGraphic = 0;
+uint32_t g_Backpack = 0;
+MOVITEM_DATA g_MoveItemData{};
+// the ignore-list text command's reset (registered, never executed here)
+void IgnoreReset() {}
 } // namespace xuoassist
 
 CPathFinder::CPathFinder() {}
@@ -500,8 +609,6 @@ astr_t xuoassist::GraphicToText(const uint16_t &value)
 }
 
 namespace xuoassist {
-void ScriptManager_LoadScriptFile(const astr_t &) {}
-void ScriptManager_Terminate(const astr_t &, const astr_t &) {}
-bool ScriptManager_Running(const astr_t &) { return false; }
-void ScriptManager_Exec(const astr_t &, bool, const vector<astr_t> &) {}
+// ScriptManager_* free functions come from the real scripthandle.cpp now
+// (linked for the run/terminate lifecycle suite)
 } // namespace xuoassist

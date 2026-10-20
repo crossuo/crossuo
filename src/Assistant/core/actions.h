@@ -13,12 +13,14 @@
 //    - the skill/spell list events feed "Last" + skill/spell names into the
 //      cast/use-skill action lists through AssistantUI events.
 //
-// Script entries (HT_SCRIPT) keep their stored name; the action handler is
-// inert (scripts run from the Scripts tab and the text-command pipeline). The
-// external-code entries run through the text-command pipeline when the text
-// starts with the configured command prefix (the same DoCommand call the
-// typed "_cmd" speech intercept uses, see AssistantSpeechIntercept in
-// core/assist.cpp); anything else is inert with a UI tooltip.
+// Script entries (HT_SCRIPT) bind a LOADED SCRIPT: the action list is the
+// Scripts tab's list and ScriptOrMacroName stores the script's file path (the
+// combo shows the file name). The handler resolves the path against the list
+// and runs the file (core/hotkeys.cpp). The external-code entries run through
+// the text-command pipeline when the text starts with the configured command
+// prefix (the same DoCommand call the typed "_cmd" speech intercept uses, see
+// AssistantSpeechIntercept in core/assist.cpp); anything else is inert with a
+// UI tooltip.
 
 #pragma once
 
@@ -37,8 +39,11 @@ uint32_t Actions_TypeCount();
 // and skill lists follow the (currently producer-less) Actions_SetSpellList /
 // Actions_SetSkillList feeds, the macro list follows g_AssistantConfig.Macros().
 int Actions_ActionCount(uint32_t type);
-// Writes into a caller buffer (draw paths build no strings).
+// Writes into a caller buffer (draw paths build no strings): the combo LABEL.
 void Actions_ActionName(uint32_t type, int action, char *out, size_t size);
+// The value to STORE for an action (HT_SCRIPT stores the script path; every
+// other type stores the label).
+void Actions_ActionValue(uint32_t type, int action, char *out, size_t size);
 
 // The Data column text (UpdateHotkeyData, hotkeysform.cpp:899). Writes into a
 // caller buffer; empty result means the "Blank hotkey" placeholder.

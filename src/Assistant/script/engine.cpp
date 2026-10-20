@@ -55,17 +55,27 @@ void script_error(const astr_t &title, const astr_t &text)
 // jobs: flip to "terminate" when the manager asked, and periodically pause
 // the script (a tight JS loop never reaches an API call, so the QuickJS
 // handler gives a hard preemption point).
+// QuickJS contract: return non-zero when the JS code must be interrupted
+// (zero keeps it running) - the returns below are the interrupted/continue
+// pair, not stop/go
 int ScriptInterruptHandler(JSRuntime *rt, void *opaque)
 {
     auto *engine = (CScriptEngine *)opaque;
     if (engine == nullptr)
     {
-        return 1;
+        return 0;
     }
-
     if (engine->TerminateRequested())
     {
-        return 0; // stop execution with a pending "interrupted" exception
+        // one line per interrupted script: names the victim so a stray
+        // terminate request is traceable (the handle flag vs the engine flag)
+        if (!engine->InterruptLogged)
+        {
+            engine->InterruptLogged = true;
+            Info(Assistant, "script '%s' interrupted (terminate requested)",
+                 engine->Name.c_str());
+        }
+        return 1; // stop execution with a pending "interrupted" exception
     }
 
     while (engine->PauseFlag() && !engine->TerminateRequested())
@@ -76,10 +86,10 @@ int ScriptInterruptHandler(JSRuntime *rt, void *opaque)
 
     if (engine->TerminateRequested())
     {
-        return 0;
+        return 1;
     }
 
-    return 1;
+    return 0;
 }
 
 } // namespace
@@ -118,6 +128,10 @@ bool CScriptEngine::Setup(const astr_t &scriptName)
         return false;
     }
     Name = scriptName;
+    // the context opaque is the engine instance: every host native and the
+    // pause/terminate sleep loops read it back (a null opaque made Wait's
+    // terminate check a no-op, so a terminated script slept out its delays)
+    JS_SetContextOpaque(m_Context, this);
     Script_RegisterAPI(m_Context, scriptName); // apiscript.cpp
     return true;
 }
@@ -141,6 +155,20 @@ bool CScriptEngine::Evaluate(const astr_t &text)
         script_error("Evaluate script error!", "Line: " + line + "\n" + message);
     }
     JS_FreeValue(m_Context, result);
+    return ok;
+}
+
+bool CScriptEngine::HasFunction(const astr_t &functionName)
+{
+    if (m_Context == nullptr)
+    {
+        return false;
+    }
+    JSValue global = JS_GetGlobalObject(m_Context);
+    JSValue func = JS_GetPropertyStr(m_Context, global, functionName.c_str());
+    const bool ok = !JS_IsUndefined(func) && JS_IsFunction(m_Context, func);
+    JS_FreeValue(m_Context, func);
+    JS_FreeValue(m_Context, global);
     return ok;
 }
 

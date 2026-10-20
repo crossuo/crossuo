@@ -62,9 +62,6 @@ void AssistantUI_RecompileDisplayTitle();
 // GL names the backend teardown reclaimed while the context was alive.
 void AssistantUI_AfterImGuiShutdown();
 
-// The script editor window visibility (the Scripts tab "Open editor" button
-// flips it; the shell draws the window while the assistant is visible).
-extern bool g_AssistantScriptEditorOpen;
 
 // --- secondary windows ----------------------------------------------------------
 // The Map window + its settings form (ui/mapwindow.cpp), the Object Inspector

@@ -23,8 +23,11 @@
 #include "../commandqueue.h"
 #include "../journal.h"
 #include "../scriptfile.h"
+#include "../../core/textcommandmanager.h" // the Client.* text-command table
+#include "../scriptlist.h"
 #include "../scriptgump.h"
 #include "../scriptstate.h"
+#include "../scripthandle.h" // the run/terminate lifecycle suite
 
 #include "../../config/configio.h" // AtomicFileWrite + CIniFile (the config/save primitives)
 #include "../../config/assistantconfig.h" // the Options/Hotkeys INI round trips
@@ -623,7 +626,7 @@ int main()
         CHECK(mkd != nullptr);
         if (mkd != nullptr)
         {
-            CAssistantConfig::SetRootPathOverride(mkd);
+            CAssistantConfig::SetRootPathOverride(fs_path_from(mkd));
 
             // --- Options.ini: every main/display/hotkeys/scripts field ---
             {
@@ -653,7 +656,11 @@ int main()
                 saved.m_PassHotkeys = true;
                 saved.m_CommandPrefix = "-";
                 saved.m_SortScripts = true;
-                saved.m_ScriptFilePath = ""; // explicit empty round trip
+                saved.m_ScriptLastDir = "/tmp/scripts";
+                // the writer persists the LIVE list (g_LoadedScripts): seed it
+                g_LoadedScripts.Clear();
+                g_LoadedScripts.Add("scripts/a.js", 11u);
+                g_LoadedScripts.Add("/tmp/scripts/b.js", 22u);
 
                 saved.SaveMainOptions();
 
@@ -681,8 +688,54 @@ int main()
                 ok = ok && loaded.m_DisplayEnabled;
                 ok = ok && loaded.m_DisplayTitleData == "UO - {name} (& more) <test> 'q'";
                 ok = ok && loaded.m_PassHotkeys && loaded.m_CommandPrefix == "-";
-                ok = ok && loaded.m_SortScripts && loaded.m_ScriptFilePath.empty();
+                ok = ok && loaded.m_SortScripts;
+                ok = ok && loaded.m_ScriptLastDir == "/tmp/scripts";
+                // the loaded-scripts list round trips in order (the writer
+                // emits loadedscripts=<count> + loadedscript<i>)
+                ok = ok && loaded.m_LoadedScripts.size() == 2;
+                if (ok)
+                {
+                    ok = loaded.m_LoadedScripts[0] == "scripts/a.js" &&
+                         loaded.m_LoadedScripts[1] == "/tmp/scripts/b.js";
+                }
                 CHECK(ok);
+                g_LoadedScripts.Clear();
+            }
+
+            // --- the loaded-scripts list: restore from the persisted paths ---
+            {
+                // the restore drains the pending paths on the first draw and
+                // marks a missing file instead of dropping the entry
+                char dir2[] = "/tmp/xuoassist_scripts_XXXXXX";
+                const char *mkd2 = mkdtemp(dir2);
+                CHECK(mkd2 != nullptr);
+                const astr_t present = astr_t(dir2) + "/present.js";
+                const astr_t missing = astr_t(dir2) + "/missing.js";
+                FILE *f = fopen(present.c_str(), "wb");
+                CHECK(f != nullptr);
+                if (f != nullptr)
+                {
+                    fputs("Client.Info('hi');\n", f);
+                    fclose(f);
+                }
+                g_LoadedScripts.Clear();
+                g_LoadedScripts.SetPendingRestore({ present, missing });
+                g_LoadedScripts.DrainPendingRestore();
+                CHECK(g_LoadedScripts.Scripts().size() == 2);
+                const CLoadedScript *first = g_LoadedScripts.Find(ScriptList_NormalizePath(present));
+                const CLoadedScript *second = g_LoadedScripts.Find(ScriptList_NormalizePath(missing));
+                CHECK(first != nullptr && first->bExists && first->ContentHash != 0);
+                CHECK(second != nullptr && !second->bExists);
+                // dedupe through the normalized key (./a/../a is the same file)
+                const size_t before = g_LoadedScripts.Scripts().size();
+                g_LoadedScripts.Add(astr_t(dir2) + "/./present.js", 0u);
+                CHECK(g_LoadedScripts.Scripts().size() == before);
+                // display name + save bookkeeping
+                CHECK(ScriptList_DisplayName(present) == "present.js");
+                g_LoadedScripts.NotifySaved(first->Key, "Client.Info('hi');\n");
+                CHECK(g_LoadedScripts.Find(first->Key)->ContentHash ==
+                      ScriptList_ContentHash("Client.Info('hi');\n"));
+                g_LoadedScripts.Clear();
             }
 
             // --- Hotkeys.ini: three records, all fields, order preserved ---
@@ -879,6 +932,205 @@ int main()
         CHECK(ParseTextTokens("\"abc", " ", "", "\"\"''").size() == 1);
 
         printf("textconv: tokenizer parity ok\n");
+    }
+
+    // --- the script text-command table (Client.UseObject etc.) -------------
+    // Every Client.* script call is marshaled as a text command executed by
+    // CTextCommandManager::RunCommand. The table was never populated (nothing
+    // called InitCommands), so ALL of them answered "Unknown command:
+    // useobject" - the regression this covers. core/textcommandmanager.cpp is
+    // linked for real (not stubbed) exactly for this test.
+    {
+        // nothing has consumed the table yet in the harness: this is the
+        // state the client was in (0 = the "Unknown command" bug)
+        const size_t before = CTextCommandManager::CommandCount();
+        g_TextCommandManager.EnsureCommands();
+        const size_t count = CTextCommandManager::CommandCount();
+        printf("commands: %u before EnsureCommands, %u after\n", (unsigned)before,
+            (unsigned)count);
+        CHECK(count > 30); // the COMMAND() rows in textcommandmanager.cpp
+        CHECK(CTextCommandManager::CommandCount() == count); // idempotent
+        // the exact call Client.UseObject marshals
+        CHECK(g_TextCommandManager.HasCommand("useobject"));
+        CHECK(g_TextCommandManager.HasCommand("UseObject")); // case-insensitive
+        printf("commands: %d registered (useobject included)\n", (int)count);
+    }
+
+    // --- forced stop: every tight-loop shape must terminate ----------------
+    // "Stop" has to work at ANY moment for ANY script: a JS-only loop is
+    // preempted by the QuickJS interrupt handler, a loop hammering the host
+    // API must not starve it either.
+    {
+        CScriptManager &manager = *ScriptManager_Get();
+        std::atomic<bool> draining{ true };
+        std::thread drainThread([&draining]() {
+            while (draining.load())
+            {
+                ScriptQueue_Drain();
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            }
+        });
+        struct LoopCase
+        {
+            const char *path;
+            const char *source;
+        };
+        const LoopCase cases[] = {
+            { "stop_a.js", "while (true) {}" },
+            { "stop_b.js", "for (;;) {}" },
+            { "stop_c.js", "var x = 0; while (1) { x = x + 1; }" },
+            { "stop_d.js", "function f() { while (true) {} } f();" },
+            { "stop_e.js", "while (true) { Client.Info('spam'); }" },
+            { "stop_f.js", "for (var i = 0; ; i++) { var s = 'x'.repeat(10); }" },
+            // native-getter loop: no mutation, only queued reads (the Player.*
+            // getters are native FUNCTIONS: reading the property is pure JS,
+            // calling it is the queued read)
+            { "stop_g.js", "while (true) { var n = Player.Name(); var s = Player.Serial(); }" },
+            // getter + mutation mix
+            { "stop_h.js", "while (true) { Client.Wait(0); Player.Hits; }" },
+            // a stopped script must not keep executing its body
+            // a stopped script must stop PRINTING too: the counter freezes
+            { "stop_i.js", "while (true) { Client.Info('STOPCOUNT'); }" },
+            // a script must not be able to SWALLOW a Stop: the error is
+            // uncatchable, so neither loop can continue after the catch
+            { "stop_j.js",
+                "while (true) { try { Client.Info('x'); } catch (e) {} }" },
+            { "stop_k.js",
+                "try { while (true) { Client.Info('x'); } } catch (e) {} "
+                "while (true) { Client.Info('x'); }" },
+        };
+        for (const LoopCase &loopCase : cases)
+        {
+            manager.RunFile(loopCase.path, loopCase.source);
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            CHECK(manager.RunningFile(loopCase.path));
+            // sanity for the API-driven cases: the loop really is pushing
+            // commands (a pure-JS loop never queues, so it has nothing to
+            // check here - the drained check below still applies)
+            const bool apiDriven = std::string(loopCase.path) == "stop_e.js" ||
+                                   std::string(loopCase.path) == "stop_g.js" ||
+                                   std::string(loopCase.path) == "stop_h.js" ||
+                                   std::string(loopCase.path) == "stop_i.js";
+            bool pumping = false;
+            for (int i = 0; i < 50 && apiDriven && !pumping; i++)
+            {
+                pumping = ScriptQueue_Pending() > 0;
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+            if (apiDriven)
+            {
+                CHECK(pumping);
+            }
+            manager.TerminateFile(loopCase.path);
+            bool stopped = false;
+            for (int i = 0; i < 300 && !stopped; i++) // up to 3 s
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                stopped = !manager.RunningFile(loopCase.path);
+            }
+            // the script body must not run another iteration after the Stop:
+            // it is gone from the running set AND it stopped enqueueing
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            const bool stillStopped = !manager.RunningFile(loopCase.path);
+            const bool drained = ScriptQueue_Pending() == 0;
+            printf("stop: %-10s '%.38s' %s (pending after stop: %u)\n", loopCase.path,
+                loopCase.source, stopped && stillStopped && drained ? "ok" : "FAILED",
+                ScriptQueue_Pending());
+            CHECK(stopped);
+            CHECK(stillStopped);
+            CHECK(drained);
+            manager.Tick();
+        }
+        draining = false;
+        drainThread.join();
+    }
+
+    // --- run/terminate lifecycle (the real CScriptHandle flow) -------------
+    // a top-level loop script starts, runs, survives a mid-flight terminate
+    // request by exiting with "interrupted", and leaves the manager's list
+    {
+        CScriptManager &manager = *ScriptManager_Get();
+
+        // the queued-command drain: Wait/Gump/etc exec calls resolve only
+        // when the queue is drained (the client drains per frame; the
+        // harness owns its own drain thread here)
+        std::atomic<bool> draining{ true };
+        std::thread drainThread([&draining]() {
+            while (draining.load())
+            {
+                ScriptQueue_Drain();
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            }
+        });
+        struct DrainStop
+        {
+            std::atomic<bool> &flag;
+            std::thread &thread;
+            ~DrainStop()
+            {
+                flag = false;
+                thread.join();
+            }
+        } drainStop{ draining, drainThread };
+
+        // pure JS tight loop: only the interrupt handler can stop this. The
+        // body is TOP-LEVEL: a script is its file, and only a function named
+        // after the file is invoked (a top-level loop runs during Evaluate)
+        manager.RunFile("loop.js", "while (true) {}");
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        CHECK(manager.RunningFile("loop.js"));
+        manager.TerminateFile("loop.js");
+        bool stoppedPure = false;
+        for (int i = 0; i < 100 && !stoppedPure; i++)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            stoppedPure = !manager.RunningFile("loop.js");
+        }
+        CHECK(stoppedPure);
+        if (!stoppedPure)
+        {
+            asm volatile("int3"); // debugger stop: dump all threads here
+        }
+        printf("lifecycle: pure JS loop terminate ok\n");
+
+        // host-call loop: Wait spends most time in native sleeps. The loop
+        // must be TOP-LEVEL and the body inlined on the SAME line or in a
+        // plain block: the RBE 'm_Waiting' path only polls
+        // TerminateRequested between statements.
+        manager.RunFile("waiter.js", "for (;;) { Client.Wait('100ms'); }");
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        CHECK(manager.RunningFile("waiter.js"));
+
+        manager.TerminateFile("waiter.js");
+
+        bool stopped = false;
+        for (int i = 0; i < 100 && !stopped; i++) // up to 2s
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            stopped = !manager.RunningFile("waiter.js");
+            if (i == 50 && !stopped)
+            {
+                Info(Assistant, "lifecycle: still running");
+                for (CScriptHandle *handle : manager.Handles())
+                {
+                    Info(Assistant, "lifecycle:   handle '%s' state=%d", handle->Path().c_str(),
+                         (int)handle->State());
+                }
+            }
+        }
+        CHECK(stopped);
+
+        manager.Tick(); // the finished handle leaves the manager's list
+        bool listed = false;
+        for (CScriptHandle *handle : manager.Handles())
+        {
+            if (handle->Name() == "selftest")
+            {
+                listed = true;
+            }
+        }
+        CHECK(!listed);
+        printf("lifecycle: run/terminate ok\n");
     }
 
     if (failures == 0)

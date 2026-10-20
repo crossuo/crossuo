@@ -94,6 +94,7 @@ void CTextCommandManager::DoCommand(const astr_t &text)
     // Tokenized line by line, one command per line; '#' comments and the
     // quote pairs are the command grammar.
     size_t pos = 0;
+    EnsureCommands();
 
     while (pos < text.length())
     {
@@ -144,6 +145,11 @@ bool CTextCommandManager::RunCommand(const astr_t &name, const COMMAND_ARGS &arg
     {
         return false;
     }
+    // the table is populated by InitCommands() and gated by UpdateCommands();
+    // both are cheap and idempotent, and this is the script runtime's entry
+    // point (a script command must never depend on the shell having called
+    // them first)
+    EnsureCommands();
 
     COMMANDS_MAP::iterator command = m_Commands.find(str_lower(name));
 
@@ -164,6 +170,29 @@ bool CTextCommandManager::RunCommand(const astr_t &name, const COMMAND_ARGS &arg
 
     g_Assistant.ClientPrint("This command is disabled!");
     return false;
+}
+
+size_t CTextCommandManager::CommandCount()
+{
+    return m_Commands.size();
+}
+
+bool CTextCommandManager::HasCommand(const astr_t &name)
+{
+    EnsureCommands();
+    return m_Commands.find(str_lower(name)) != m_Commands.end();
+}
+
+void CTextCommandManager::EnsureCommands()
+{
+    // the command map is a static table built once from the COMMAND() rows;
+    // the initializer order across translation units is not guaranteed, so
+    // the first consumer builds it explicitly
+    if (m_Commands.empty())
+    {
+        InitCommands();
+    }
+    UpdateCommands();
 }
 
 void CTextCommandManager::UpdateCommands()

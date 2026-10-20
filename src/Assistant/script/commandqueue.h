@@ -185,7 +185,26 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command);
 // down. Returns with Result* filled and ResultDropped set when the value
 // must be treated as "no data" (timeout/shutdown). The command record stays
 // caller-owned: the caller reads the results and deletes it afterwards.
-void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs = 2000);
+//
+// FORCED STOP: script threads install a cancel flag (the engine's terminate
+// poll, see ScriptQueue_SetCancelCheck) for the duration of their run. The
+// wait polls it every few ms, so a Stop request aborts an in-flight call
+// immediately - it does not have to wait for a script thread that is
+// hammering the API in a loop: without this, a native call never reaches the
+// QuickJS interrupt handler between two statements.
+// Returns false when the wait was aborted by the cancel check (results are
+// marked dropped).
+bool ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs = 2000);
+
+// The per-thread forced-stop hook (nullptr = never cancels), installed by the
+// script worker around its run:
+//   Check  - polled before the push and every few ms while waiting (cheap and
+//            thread-safe: the engine's TerminateRequested reads atomics).
+//   Abort  - called once when a wait was aborted, so the caller can raise the
+//            "interrupted" error on its JS context and unwind normally.
+using ScriptCancelCheck = bool (*)(void *opaque);
+using ScriptAbortNotify = void (*)(void *opaque);
+void ScriptQueue_SetCancelHook(ScriptCancelCheck check, ScriptAbortNotify abort, void *opaque);
 
 // The main-thread drain: executes every pending command in order. Called
 // once per frame from AssistantUI_Tick (before the agent ticks). Draining is
@@ -204,6 +223,10 @@ void ScriptQueue_Reset();
 // Queue capacity (drop-oldest beyond this). The default covers interactive
 // scripts many times over; the drop policy is the flood protection.
 uint32_t ScriptQueue_Capacity();
+
+// Pending entries (diagnostics/tests: a live script loop keeps the queue
+// non-empty, a stopped one leaves it to drain).
+uint32_t ScriptQueue_Pending();
 void ScriptQueue_SetCapacity(uint32_t entries);
 
 // Journal-side flood throttle state (used by Client.Print): returns true when

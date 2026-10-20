@@ -14,6 +14,7 @@
 #include <common/str.h> // wstr_from
 
 #include "../core/assist.h"
+#include "../script/scriptlist.h"
 #include "../macros/macro.h"
 #include "../managers/displaymanager.h"
 #include "Party.h" // ::g_Party (party membership for the friends option)
@@ -513,11 +514,40 @@ void CAssistantConfig::LoadMainOptions()
     {
         m_SortScripts = ini.GetBool("scripts", "sortscripts", false);
     }
-    if (ini.Has("scripts", "scriptfile"))
+    // The loaded-scripts list: loadedscript0..N (the writer's form); a single
+    // legacy `loadedscripts=a|b` line is accepted too
+    m_LoadedScripts.clear();
+    if (ini.Has("scripts", "loadedscripts"))
     {
-        // The script path element
-        m_ScriptFilePath = ini.Get("scripts", "scriptfile");
+        // loadedscripts is the count the writer emitted: an indexed set alone
+        // cannot tell a shrinking list from the previous file's tail
+        const int count = ini.GetInt("scripts", "loadedscripts", 0);
+        for (int i = 0; i < count; i++)
+        {
+            const astr_t path = ini.Get("scripts", astr_t("loadedscript") + str_from(i));
+            if (!path.empty())
+            {
+                m_LoadedScripts.push_back(path);
+            }
+        }
     }
+    if (m_LoadedScripts.empty() && ini.Has("scripts", "scriptfile"))
+    {
+        // one-time migration: the shared "current script" path becomes the
+        // first loaded script (existing installs keep their file)
+        const astr_t legacy = ini.Get("scripts", "scriptfile");
+        if (!legacy.empty())
+        {
+            m_LoadedScripts.push_back(legacy);
+        }
+    }
+    if (ini.Has("scripts", "lastdir"))
+    {
+        m_ScriptLastDir = ini.Get("scripts", "lastdir");
+    }
+    // the UI restores the list on its first draw (the config loads before the
+    // assistant window exists; scriptlist.h owns the existence checks)
+    g_LoadedScripts.SetPendingRestore(m_LoadedScripts);
 }
 
 void CAssistantConfig::SaveMainOptions()
@@ -565,7 +595,21 @@ void CAssistantConfig::SaveMainOptions()
 
     // TabScripts::SaveConfig
     ini.SetBool("scripts", "sortscripts", m_SortScripts);
-    ini.Set("scripts", "scriptfile", m_ScriptFilePath);
+    // the loaded-scripts list lives in g_LoadedScripts at runtime
+    {
+        // the writer persists the LIVE list; loadedscripts records how many
+        // entries there are (an indexed set alone cannot tell a shrinking
+        // list from the previous file's tail, and the parser always wrote the
+        // whole document back)
+        const vector<CLoadedScript> &scripts = g_LoadedScripts.Scripts();
+        int index = 0;
+        for (const CLoadedScript &script : scripts)
+        {
+            ini.Set("scripts", astr_t("loadedscript") + str_from(index++), script.Path);
+        }
+        ini.SetInt("scripts", "loadedscripts", index);
+    }
+    ini.Set("scripts", "lastdir", m_ScriptLastDir);
 
     ini.Save(fs_path_join(GetProfilePath(), "Options.ini"));
 }

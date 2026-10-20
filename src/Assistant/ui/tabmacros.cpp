@@ -21,6 +21,8 @@
 #include "../core/global.h"
 #include "../macros/macro.h"
 #include "../macros/macroexecutor.h"
+#include "editors.h" // Editors_OpenUntitled
+#include "macroscriptgen.h"
 
 namespace xuoassist {
 
@@ -189,12 +191,19 @@ void TabMacros_Draw()
     }
     ImGui::SameLine();
 
-    // pb_ToScript stays disabled (the script engine is script-module only)
-    ImGui::BeginDisabled(true);
-    ImGui::Button("To script");
+    // pb_ToScript: render the selected macro as a script into the editor
+    const bool canConvert = !recording && s_SelectedMacro >= 0 &&
+                            s_SelectedMacro < (int)macros.size() &&
+                            !macros[s_SelectedMacro].m_Items.empty();
+    ImGui::BeginDisabled(!canConvert);
+    if (ImGui::Button("To script"))
+    {
+        Editors_OpenUntitled(macros[s_SelectedMacro].Name,
+            MacroToScript(macros[s_SelectedMacro].m_Items, macros[s_SelectedMacro].Name));
+    }
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
     {
-        ImGui::SetTooltip("Not available.");
+        ImGui::SetTooltip("Generates a script from this macro and opens the editor.");
     }
     ImGui::EndDisabled();
     ImGui::SameLine();

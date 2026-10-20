@@ -39,4 +39,10 @@ void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName);
 // script-value lineNumber/toString pair).
 void Script_FormatException(JSContext *ctx, astr_t &line, astr_t &message);
 
+// Raises the uncatchable "interrupted" error on the engine's context: the
+// forced-stop path (Stop pressed while the script sits in a native call). The
+// error matches what the QuickJS interrupt handler raises, so the script
+// unwinds the same way an interrupt would.
+void Script_ReportInterrupted(CScriptEngine *engine);
+
 } // namespace xuoassist

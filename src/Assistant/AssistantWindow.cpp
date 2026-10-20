@@ -18,6 +18,7 @@
 #include <xuocore/enumlist.h>
 #include <xuocore/uodata.h> // ExeFilePath
 #include <vector>
+#include "core/textcommandmanager.h" // g_TextCommandManager (Client.* table init)
 #include "Renderer/RenderTexture.h" // CRenderTexture (the cursor mirror source)
 #include "Managers/MouseManager.h" // g_MouseManager (game cursor draw geometry)
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
@@ -26,6 +27,8 @@
 #include "core/global.h"    // g_Connected (xuoassist)
 #include "core/hotkeys.h"   // the hotkey engine
 #include "macros/macroexecutor.h" // g_MacroExecutor.Reset (disconnect reset)
+#include "script/scripthandle.h" // ScriptManager (stop self-test)
+#include "core/world.h"          // g_World/g_Player (stop self-test gate)
 #include "Globals.h"        // g_GameState, g_Ticks
 #include "Wisp/WispWindow.h" // Wisp::g_WispWindow
 #include "../Config.h"      // g_Config.AssistantEnabled (the Assistant= crossuo.cfg key)
@@ -409,6 +412,12 @@ static bool init()
     s_initialized = true;
     s_sessionStartTicks = g_Ticks;
     xuoassist::AssistantUI_Init(); // journal pane events consumer
+    // the script runtime's text-command table (Client.* calls): build it now
+    // and say so - a script command must never answer "Unknown command"
+    // because nothing had populated the table yet
+    xuoassist::g_TextCommandManager.EnsureCommands();
+    Info(Assistant, "text commands registered: %d",
+        (int)xuoassist::CTextCommandManager::CommandCount());
     // icon atlas lifecycle is bound to the ImGui context: registered after it
     // exists, released after it is destroyed (see AssistantWindow_Shutdown)
     xuoassist::Icons_Init();
@@ -463,9 +472,57 @@ bool AssistantWindow_Toggle()
 
 void AssistantWindow_FrameTick()
 {
+
     // per-frame assistant logic that must run while visible or not
     if (s_initialized)
         xuoassist::AssistantUI_Tick(); // auto-reconnect countdown (was TabMain::m_ReconnectTimer)
+
+#if defined(XUO_ASSISTANT)
+    // Forced-stop self-test (XUO_SCRIPT_TEST=1, needs a world: run with
+    // XUO_AUTO_LOGIN): starts an API-hammering loop and a pure-JS loop, stops
+    // both after 2 s and logs whether each one left the running set. The tight
+    // loops are the shapes the QuickJS interrupt handler alone cannot stop.
+    if (s_initialized && getenv("XUO_SCRIPT_TEST") != nullptr && g_World != nullptr)
+    {
+        static int s_Phase = 0;
+        static uint32_t s_Next = 0;
+        if (s_Phase == 0)
+        {
+            s_Phase = 1;
+            Info(Assistant, "selftest: starting two tight loops");
+            // the forced-stop shape: a tight loop that never returns to JS
+            // bytecode long enough for the interrupt handler (it hammers the
+            // queued API instead), plus a plain JS loop as the second victim
+            xuoassist::ScriptManager_Get()->RunFile("selftest.js",
+                "while (true) { Client.Wait('1s'); }");
+            xuoassist::ScriptManager_Get()->RunFile("selftest2.js", "while (true) {}");
+        }
+        else if (s_Phase == 1 && g_Ticks >= s_Next)
+        {
+            s_Next = g_Ticks + 2000;
+            s_Phase = 2;
+        }
+        else if (s_Phase == 2 && g_Ticks >= s_Next)
+        {
+            Info(Assistant,
+                 "selftest: stopping (api loop running=%d, js loop running=%d)",
+                 xuoassist::ScriptManager_RunningFile("selftest.js") ? 1 : 0,
+                 xuoassist::ScriptManager_RunningFile("selftest2.js") ? 1 : 0);
+            xuoassist::ScriptManager_TerminateFile("selftest.js");
+            xuoassist::ScriptManager_TerminateFile("selftest2.js");
+            s_Phase = 3;
+            s_Next = g_Ticks + 2000;
+        }
+        else if (s_Phase == 3 && g_Ticks >= s_Next)
+        {
+            Info(Assistant,
+                 "selftest: after stop (api loop running=%d, js loop running=%d)",
+                 xuoassist::ScriptManager_RunningFile("selftest.js") ? 1 : 0,
+                 xuoassist::ScriptManager_RunningFile("selftest2.js") ? 1 : 0);
+            s_Phase = 4;
+        }
+    }
+#endif
 
     // disconnect stage-gate: when the client leaves the in-game stage the assistant
     // drops its connected flag and resets its own state; running here instead

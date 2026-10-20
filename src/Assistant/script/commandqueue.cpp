@@ -34,6 +34,11 @@ struct QUEUE_NODE
 };
 
 std::mutex s_QueueMutex;
+// the per-thread forced-stop hook (see ScriptQueue_SetCancelCheck): installed
+// by the script worker around its run, never by the main thread
+thread_local ScriptCancelCheck s_CancelCheck = nullptr;
+thread_local ScriptAbortNotify s_CancelAbort = nullptr;
+thread_local void *s_CancelOpaque = nullptr;
 std::deque<QUEUE_NODE *> s_Queue;     // pending, drain-executes in order
 std::deque<QUEUE_NODE *> s_Retired;   // completed, waiting Ack/Abandoned
 uint32_t s_Capacity = DEFAULT_CAPACITY;
@@ -113,11 +118,25 @@ void reclaim_locked()
 
 } // namespace
 
-void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs)
+void ScriptQueue_SetCancelHook(ScriptCancelCheck check, ScriptAbortNotify abort, void *opaque)
+{
+    s_CancelCheck = check;
+    s_CancelAbort = abort;
+    s_CancelOpaque = opaque;
+}
+
+bool ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs)
 {
     if (command == nullptr)
     {
-        return;
+        return false;
+    }
+    // a stop request that arrived before the call: never enqueue at all, so a
+    // stopped script cannot keep mutating the world one command at a time
+    if (s_CancelCheck != nullptr && s_CancelCheck(s_CancelOpaque))
+    {
+        command->ResultDropped = true;
+        return false;
     }
     command->ResultDropped = false;
     {
@@ -149,24 +168,45 @@ void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs)
         // still solely ours - delete it and fail fast with a dropped result
         delete node;
         command->ResultDropped = true;
-        return;
+        return false;
     }
 
     bool completed = false;
+    bool cancelled = false;
     {
         std::unique_lock<std::mutex> lock(node->Mtx);
         // The timeout keeps a deadlocked main thread from hanging the script
         // forever; the script then sees Dropped and its Wait()/call returns
         // "no data".
-        completed = node->Cv.wait_for(
-            lock, std::chrono::milliseconds(timeoutMs), [&] { return node->Done; });
+        if (s_CancelCheck == nullptr)
+        {
+            completed = node->Cv.wait_for(
+                lock, std::chrono::milliseconds(timeoutMs), [&] { return node->Done; });
+        }
+        else
+        {
+            // short slices so a forced stop aborts an in-flight call promptly
+            constexpr uint32_t SLICE_MS = 10;
+            uint32_t waited = 0;
+            while (!node->Done && waited < timeoutMs)
+            {
+                if (s_CancelCheck(s_CancelOpaque))
+                {
+                    cancelled = true;
+                    break;
+                }
+                node->Cv.wait_for(lock, std::chrono::milliseconds(SLICE_MS));
+                waited += SLICE_MS;
+            }
+            completed = node->Done;
+        }
         if (completed)
         {
             node->Ack = true; // last node access; the drain may reclaim now
         }
         else
         {
-            node->Abandoned = true; // last node access in the timeout path
+            node->Abandoned = true; // last node access in the abort path
         }
     }
 
@@ -188,7 +228,13 @@ void ScriptQueue_Exec(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs)
                 break;
             }
         }
+        if (cancelled && s_CancelAbort != nullptr)
+        {
+            s_CancelAbort(s_CancelOpaque); // raise on the JS context
+        }
+        return !cancelled;
     }
+    return true;
 }
 
 void ScriptQueue_Drain()
@@ -237,6 +283,12 @@ void ScriptQueue_Shutdown()
         s_Retired.push_back(victim);
     }
     reclaim_locked();
+}
+
+uint32_t ScriptQueue_Pending()
+{
+    std::lock_guard<std::mutex> lock(s_QueueMutex);
+    return (uint32_t)s_Queue.size();
 }
 
 uint32_t ScriptQueue_Capacity()

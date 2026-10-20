@@ -3,14 +3,13 @@
 
 #pragma once
 
-// The Scripts tab: the script file path row + browse/reload, the
-// running-scripts list (one CScriptHandle per row: pause/terminate per row +
-// the shared buttons), the running-actions start combo, sort checkbox,
-// script-examples link and the editor opener.
+// The Scripts tab: the loaded-scripts list (Load imports a file through the
+// native picker, double-click opens an editor, Play/Pause/Stop run the file)
+// plus the shared toolbar actions and the sort option. The list persists with
+// the profile ([scripts] loadedscript0..N) and is restored on the next start.
 
 namespace xuoassist {
 
 void TabScripts_Draw();
 
 } // namespace xuoassist
-

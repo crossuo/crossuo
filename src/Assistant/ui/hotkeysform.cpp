@@ -68,11 +68,22 @@ void select_row(int row)
     s_SelectedAction = (int)entry.Action;
     if (entry.Type == HT_PLAY_MACRO || entry.Type == HT_SCRIPT)
     {
-        // match the stored name against the action list
+        // match the stored value against the action list (a script entry
+        // stores the script's path; older profiles stored the function name,
+        // which the label match below still catches for same-named files)
         s_SelectedAction = -1;
-        char name[128];
+        char name[512];
         const int count = Actions_ActionCount(entry.Type);
         for (int i = count - 1; i >= 0; i--)
+        {
+            Actions_ActionValue(entry.Type, i, name, sizeof(name));
+            if (name == entry.ScriptOrMacroName)
+            {
+                s_SelectedAction = i;
+                break;
+            }
+        }
+        for (int i = count - 1; s_SelectedAction < 0 && i >= 0; i--)
         {
             Actions_ActionName(entry.Type, i, name, sizeof(name));
             if (name == entry.ScriptOrMacroName)
@@ -100,8 +111,8 @@ void commit_action_selection()
     CHotkeyEntry &entry = g_AssistantConfig.m_Hotkeys[s_SelectedRow];
     if (entry.Type == HT_PLAY_MACRO || entry.Type == HT_SCRIPT)
     {
-        char name[128] = { 0 };
-        Actions_ActionName(entry.Type, s_SelectedAction, name, sizeof(name));
+        char name[512] = { 0 };
+        Actions_ActionValue(entry.Type, s_SelectedAction, name, sizeof(name));
         if (name[0] != '\0')
         {
             entry.ScriptOrMacroName = name;

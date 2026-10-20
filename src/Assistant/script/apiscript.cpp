@@ -23,6 +23,7 @@
 #include "scriptfile.h"
 #include "scriptgump.h"
 #include "scriptstate.h"
+#include "scriptlist.h"
 #include "scripthandle.h"
 
 #define LOGGER_MODULE Assistant
@@ -41,7 +42,10 @@ extern "C" {
 
 #include "../config/assistantconfig.h"
 #include "../core/actions.h"
+#include "../ui/assistantui.h" // AssistantUI_MarkOptionsDirty (LoadScript import)
+#include "../ui/editors.h" // Editors_Open (LoadScript import)
 #include "../core/assist.h"
+#include "../core/assistantevents.h" // g_AssistantEvents (LoadScript import failure)
 #include "../core/dressagent.h"
 #include "../core/textcommandmanager.h"
 #include "../managers/spellmanager.h"
@@ -141,11 +145,21 @@ XA_SCRIPT_COMMAND *sc_make(XA_SCRIPT_COMMAND_TAG tag)
     return command;
 }
 
+// A queued wait from a native. Returns false when a forced Stop aborted it:
+// the queue's abort hook has already raised the uncatchable "interrupted"
+// error on this thread's JS context, so a native that checks the return and
+// returns JS_EXCEPTION unwinds the script immediately. The record reads as
+// dropped ("no data"), which every native already handles while unwinding.
+bool sc_exec_wait(XA_SCRIPT_COMMAND *command, uint32_t timeoutMs = 2000)
+{
+    return ScriptQueue_Exec(command, timeoutMs);
+}
+
 // Allocates, queues and waits; the caller reads Result* and deletes.
 XA_SCRIPT_COMMAND *sc_exec(XA_SCRIPT_COMMAND_TAG tag)
 {
     auto *command = sc_make(tag);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     return command;
 }
 
@@ -264,36 +278,93 @@ vector<astr_t> arg_list(JSContext *ctx, JSValueConst *argv, int argc, int index)
     return list;
 }
 
-// The pause gate: the engine calls PauseWaiting() after nearly every
-// marshaled call.
-// QuickJS' interrupt handler covers pauses INSIDE js loops; this covers the
-// between-calls ones.
-void pause_gate(JSContext *ctx)
+// --- forced stop at every native boundary -------------------------------------
+//
+// QuickJS' interrupt handler only runs BETWEEN BYTECODE INSTRUCTIONS, and a
+// native call (Client.Info, Player.x, ...) never polls it: a script like
+// `while (true) { Client.Info('x'); }` spends its life inside JS -> C -> JS
+// transitions and the interrupt is never reached, so Stop had no effect.
+// Every marshaled call now starts and ends with abort_point(), which is the
+// one place a pending terminate/pause is honored from native code.
+
+// The stop error, from native code: same shape the QuickJS interrupt handler
+// raises (JS_ThrowInterrupted) - an uncatchable InternalError("interrupted"),
+// so the script unwinds exactly like an interrupt and a script cannot swallow
+// a Stop with try/catch.
+void raise_interrupted(JSContext *ctx)
+{
+    if (ctx == nullptr)
+    {
+        return;
+    }
+    JS_ThrowInternalError(ctx, "interrupted");
+    JS_SetUncatchableError(ctx, JS_GetException(ctx));
+}
+
+// Returns false when the script must stop (the error has been raised).
+bool abort_point(JSContext *ctx, CScriptEngine *engine)
+{
+    if (engine == nullptr)
+    {
+        return true;
+    }
+    if (!engine->TerminateRequested())
+    {
+        return true;
+    }
+    if (!engine->InterruptLogged)
+    {
+        engine->InterruptLogged = true;
+        Info(Assistant, "script '%s' interrupted (terminate requested)", engine->Name.c_str());
+    }
+    raise_interrupted(ctx);
+    return false;
+}
+
+// The pause gate + abort point: the engine calls PauseWaiting() after nearly
+// every marshaled call. QuickJS' interrupt handler covers pauses INSIDE js
+// loops; this covers the between-calls ones, and is the terminate check a
+// native-heavy loop relies on.
+bool pause_gate(JSContext *ctx)
 {
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     if (engine == nullptr)
     {
-        return;
+        return true;
     }
     // the live pause flag (the same one the JS interrupt handler polls);
     // the public Paused member is never written - SetPaused wires the flag
-    while (engine->PauseFlag() && !engine->Terminated)
+    while (engine->PauseFlag() && !engine->TerminateRequested())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+    return !engine->TerminateRequested();
 }
 
 // [Q] the generic marshaled mutation: command name + pre-split args executed
 // by CTextCommandManager::RunCommand on the main thread (the same handler
 // body the chat command runs, incl. config gating + sentinel resolution).
-void run_command(JSContext *ctx, const char *name, const vector<astr_t> &args = {})
+// Returns false when the script was stopped (the caller must propagate
+// JS_EXCEPTION).
+bool run_command(JSContext *ctx, const char *name, const vector<astr_t> &args = {})
 {
+    CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
+    if (!pause_gate(ctx))
+    {
+        return abort_point(ctx, engine);
+    }
     auto *command = sc_make(SC_TEXT_CMD);
     command->TextA = name;
     command->ListA = args;
-    ScriptQueue_Exec(command);
+    const bool executed = sc_exec_wait(command);
     delete command;
-    pause_gate(ctx);
+    if (!executed)
+    {
+        // the wait aborted on a Stop request: unwind now instead of running
+        // the rest of the loop body
+        return abort_point(ctx, engine);
+    }
+    return pause_gate(ctx);
 }
 
 astr_t int_to_text(int value)
@@ -603,7 +674,11 @@ JSValue obj_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *ar
     auto *command = sc_make(SC_OBJECT_GET);
     command->SubTag = magic;
     command->SerialA = data->Serial;
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     JSValue result = field_to_js(ctx, command, magic);
     delete command;
     return result;
@@ -653,7 +728,10 @@ JSValue obj_action(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
         return JS_EXCEPTION;
     }
     const char *name = magic == 0 ? "click" : magic == 1 ? "useobject" : "requestname";
-    run_command(ctx, name, { CAssistant::SerialToText(data->Serial) });
+    if (!run_command(ctx, name, { CAssistant::SerialToText(data->Serial) }))
+    {
+        return JS_EXCEPTION; // stopped
+    }
     return JS_UNDEFINED;
 }
 
@@ -677,7 +755,13 @@ JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     const int step = 10;
-    while (delay > 0 && engine != nullptr && !engine->Terminated)
+    // The checks must be LIVE: JS_SetInterruptHandler only fires inside JS
+    // execution, and this loop runs in native code, so a terminated script
+    // would sleep out its whole delay before the next JS statement noticed.
+    // TerminateRequested() polls the engine flag AND the owning handle's
+    // external flag (Terminate sets only the latter mid-run); the public
+    // Terminated member is never written.
+    while (delay > 0 && engine != nullptr && !engine->TerminateRequested())
     {
         if (engine->PauseFlag())
         {
@@ -686,6 +770,15 @@ JSValue jsn_wait(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(step));
         delay -= step;
+    }
+    if (engine != nullptr && engine->TerminateRequested())
+    {
+        // the JS interrupt only fires between bytecode instructions: a script
+        // that spends its life in Wait would never observe the terminate, so
+        // raise the same uncatchable "interrupted" error from here
+        JS_ThrowInternalError(ctx, "interrupted");
+        JS_SetUncatchableError(ctx, JS_GetException(ctx));
+        return JS_EXCEPTION;
     }
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -759,7 +852,10 @@ JSValue jsn_simple(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, i
             args.push_back(arg_text(ctx, argv, argc, i, ""));
         }
     }
-    run_command(ctx, SIMPLE_COMMAND_NAMES[magic], args);
+    if (!run_command(ctx, SIMPLE_COMMAND_NAMES[magic], args))
+    {
+        return JS_EXCEPTION; // stopped: unwind instead of running the body
+    }
     return JS_UNDEFINED;
 }
 
@@ -780,19 +876,22 @@ JSValue jsn_cast(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
             command->TextA = arg_text(ctx, argv, argc, 0, "");
         }
         command->TextB = target;
-        ScriptQueue_Exec(command);
+        sc_exec_wait(command);
         delete command;
     }
     else if (JS_IsNumber(argv[0]))
     {
         auto *command = sc_make(SC_CAST);
         command->IntA = arg_int(ctx, argv, argc, 0, 0); // raw-index path (CSpellManager::CastIndex)
-        ScriptQueue_Exec(command);
+        sc_exec_wait(command);
         delete command;
     }
     else
     {
-        run_command(ctx, "cast", { arg_text(ctx, argv, argc, 0, "") });
+        if (!run_command(ctx, "cast", { arg_text(ctx, argv, argc, 0, "") }))
+        {
+            return JS_EXCEPTION; // stopped
+        }
     }
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -814,7 +913,7 @@ JSValue jsn_useskill(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
         command->TextA = arg_text(ctx, argv, argc, 0, "");
     }
     command->TextB = target;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -834,7 +933,7 @@ JSValue jsn_skillvalue(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
         command->TextA = arg_text(ctx, argv, argc, 0, "");
     }
     command->TextB = arg_text(ctx, argv, argc, 1, "real");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const int value = result_int(command);
     pause_gate(ctx);
     return JS_NewInt32(ctx, value);
@@ -856,7 +955,7 @@ JSValue jsn_print(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
         command->TextA = "0xFFFF";
         command->TextB = arg_text(ctx, argv, argc, 0, "");
     }
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     return JS_UNDEFINED;
 }
@@ -869,7 +968,7 @@ JSValue jsn_charprint(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->TextA = arg_text(ctx, argv, argc, 0, "self");
     command->TextB = arg_text(ctx, argv, argc, 2, "");
     command->UshortA = (uint16_t)strtoul(arg_text(ctx, argv, argc, 1, "0xFFFF").c_str(), nullptr, 16);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     return JS_UNDEFINED;
 }
@@ -891,7 +990,7 @@ JSValue jsn_say(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int 
     auto *command = sc_make(SC_SAY);
     command->SubTag = magic;
     command->TextB = text;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -904,7 +1003,7 @@ JSValue jsn_renamemount(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
     command->IntA = 100; // executor switch: rename mount
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->TextB = arg_text(ctx, argv, argc, 1, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -933,21 +1032,30 @@ JSValue jsn_onoff(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, in
             args.push_back(arg_text(ctx, argv, argc, i, ""));
         }
     }
-    run_command(ctx, NAMES[magic], args);
+    if (!run_command(ctx, NAMES[magic], args))
+    {
+        return JS_EXCEPTION; // stopped
+    }
     return JS_UNDEFINED;
 }
 
 // [Q] Sound(id) - HCOMMAND(sound).
 JSValue jsn_sound(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    run_command(ctx, "sound", { int_to_text(arg_int(ctx, argv, argc, 0, 0)) });
+    if (!run_command(ctx, "sound", { int_to_text(arg_int(ctx, argv, argc, 0, 0)) }))
+    {
+        return JS_EXCEPTION; // stopped
+    }
     return JS_UNDEFINED;
 }
 
 // [Q] Morph([graphic]) - HCOMMAND(morph).
 JSValue jsn_morph(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
-    run_command(ctx, "morph", argc > 0 ? vector<astr_t>{ arg_text(ctx, argv, argc, 0, "") } : vector<astr_t>());
+    if (!run_command(ctx, "morph", argc > 0 ? vector<astr_t>{ arg_text(ctx, argv, argc, 0, "") } : vector<astr_t>()))
+    {
+        return JS_EXCEPTION; // stopped
+    }
     return JS_UNDEFINED;
 }
 
@@ -964,7 +1072,7 @@ JSValue jsn_usetype(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     command->TextB = arg_text(ctx, argv, argc, 3, ""); // flags (use) | extra
     command->BoolA =
         arg_bool(ctx, argv, argc, 4, g_AssistantConfig.RecurseContainersSearch()); // recurse
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const bool found = result_bool(command);
     pause_gate(ctx);
     return JS_NewBool(ctx, found);
@@ -985,7 +1093,7 @@ JSValue jsn_find(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     command->TextD = arg_text(ctx, argv, argc, 5, "");        // notoriety
     command->BoolA =
         arg_bool(ctx, argv, argc, 6, g_AssistantConfig.RecurseContainersSearch()); // recurse
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     vector<astr_t> list = result_list(command);
     pause_gate(ctx);
 
@@ -1012,7 +1120,7 @@ JSValue jsn_count(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     command->TextA = arg_text(ctx, argv, argc, 2, "self");
     command->TextC = arg_text(ctx, argv, argc, 3, "finddistance");
     command->BoolA = arg_bool(ctx, argv, argc, 4, g_AssistantConfig.RecurseContainersSearch());
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const int value = result_int(command);
     pause_gate(ctx);
     return JS_NewInt32(ctx, value);
@@ -1023,7 +1131,7 @@ JSValue jsn_findobject(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
 {
     auto *command = sc_make(SC_FIND_OBJECT);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const uint32_t serial = result_serial(command);
     pause_gate(ctx);
     return serial != 0 ? new_game_object(ctx, serial) : JS_NULL;
@@ -1042,7 +1150,7 @@ JSValue jsn_getdistance(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
     {
         command->TextA = arg_text(ctx, argv, argc, 0, "");
     }
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const int value = result_int(command, 100500);
     pause_gate(ctx);
     return JS_NewInt32(ctx, value);
@@ -1055,7 +1163,7 @@ JSValue jsn_objatlayer(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     auto *command = sc_make(SC_OBJ_AT_LAYER);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->TextB = arg_text(ctx, argv, argc, 1, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const uint32_t serial = result_serial(command);
     pause_gate(ctx);
     return serial != 0 ? new_game_object(ctx, serial) : JS_NULL;
@@ -1090,7 +1198,7 @@ JSValue jsn_hook(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     command->IntB = arg_int(ctx, argv, argc, 5, 0);
     command->IntC = arg_int(ctx, argv, argc, 6, 0);
     command->BoolA = arg_bool(ctx, argv, argc, 7, false); // relative (tile)
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1101,7 +1209,7 @@ JSValue jsn_hook(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
 JSValue jsn_cancelwaittarget(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_CANCEL_WAIT_TARGET);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1117,7 +1225,7 @@ JSValue jsn_waitmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     auto *command = sc_make(SC_WAIT_MENU);
     command->TextA = arg_text(ctx, argv, argc, 0, ""); // prompt
     command->TextB = arg_text(ctx, argv, argc, 1, ""); // choice
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1129,7 +1237,7 @@ JSValue jsn_canceltarget(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = 205;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1140,7 +1248,7 @@ JSValue jsn_cancelwaitmenu(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_WAIT_MENU);
     command->BoolA = true; // cancel
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1153,7 +1261,11 @@ JSValue jsn_menucount(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_MENU_INFO);
     command->SubTag = 0;
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     return JS_NewInt32(ctx, result_int(command));
 }
 
@@ -1162,7 +1274,7 @@ JSValue jsn_getmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     auto *command = sc_make(SC_MENU_INFO);
     command->SubTag = 1;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     CMenu *menu =
         command->ResultDropped ? nullptr : (CMenu *)command->PointerA;
     delete command;
@@ -1182,7 +1294,7 @@ JSValue jsn_selectmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     auto *command = sc_make(SC_MENU_SELECT);
     command->TextA = arg_text(ctx, argv, argc, 0, ""); // menu name
     command->TextB = arg_text(ctx, argv, argc, 1, ""); // item name
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     // result_bool owns the command: it copies the value out, deletes the
     // command, and returns it. The explicit delete that used to follow here
     // double-freed the already-freed pointer (gcc -Wuse-after-free).
@@ -1196,7 +1308,7 @@ JSValue jsn_closemenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     auto *command = sc_make(SC_MENU_SELECT);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->BoolA = true; // close: empty item name (SendChoiceIfMenuExists(""))
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1215,7 +1327,11 @@ JSValue jsn_injournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->IntA = 0;                                    // startTime
     command->IntB = 0;                                    // endTime
     command->BoolA = argc >= 5 && arg_bool(ctx, argv, argc, 5, false); // consume
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     CJournalMessage *message =
         command->ResultDropped ? nullptr : (CJournalMessage *)command->PointerA;
     delete command;
@@ -1241,7 +1357,7 @@ JSValue jsn_waitjournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     while ((endTime == 0u) || g_Ticks < endTime)
     {
-        if (engine != nullptr && engine->Terminated)
+        if (engine != nullptr && engine->TerminateRequested())
         {
             return JS_NULL;
         }
@@ -1252,7 +1368,11 @@ JSValue jsn_waitjournal(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
         command->TextD = colorText;
         command->IntA = (int)startTime;
         command->IntB = (int)endTime;
-        ScriptQueue_Exec(command);
+        if (!sc_exec_wait(command))
+        {
+            delete command;
+            return JS_EXCEPTION;
+        }
         CJournalMessage *message =
             command->ResultDropped ? nullptr : (CJournalMessage *)command->PointerA;
         delete command;
@@ -1279,7 +1399,11 @@ JSValue jsn_journalline(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
     command->SubTag = magic;
     command->IntA = arg_int(ctx, argv, argc, 0, 0);
     command->BoolA = arg_bool(ctx, argv, argc, 1, false); // consume (remove)
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     if (command->ResultDropped || command->PointerA == nullptr)
     {
         delete command;
@@ -1298,7 +1422,11 @@ JSValue jsn_journalcount(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_JOURNAL_INFO);
     command->SubTag = 3; // count
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     return JS_NewInt32(ctx, result_int(command));
 }
 
@@ -1308,7 +1436,7 @@ JSValue jsn_objectexists(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     auto *command = sc_make(SC_OBJECT_GET);
     command->SerialA = CAssistant::TextToSerial(arg_text(ctx, argv, argc, 0, ""));
     command->SubTag = OF_BOOL_EXISTS;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     return JS_NewBool(ctx, result_bool(command));
 }
 
@@ -1319,7 +1447,7 @@ JSValue jsn_getserialtext(JSContext *ctx, JSValueConst, int argc, JSValueConst *
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = magic; // 400 serial / 401 graphic / 402 container
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     return JS_NewStringLen(
         ctx, command->ResultText.c_str(), command->ResultText.size());
 }
@@ -1382,7 +1510,7 @@ JSValue jsn_move(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     command->SerialA = (uint32_t)arg_int(ctx, argv, argc, 2, 0);
     command->UshortA = (uint16_t)arg_int(ctx, argv, argc, 3, 0);
     command->BoolA = arg_bool(ctx, argv, argc, magic == 1 ? 1 : 4, false); // Step's run flag
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const bool value = result_bool(command);
     pause_gate(ctx);
     return JS_NewBool(ctx, value);
@@ -1393,7 +1521,7 @@ JSValue jsn_stopwalking(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = 204; // executor switch: stop walking
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1408,7 +1536,7 @@ JSValue jsn_dress(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, in
     command->SubTag = magic;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->TextB = arg_text(ctx, argv, argc, 1, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1444,19 +1572,22 @@ JSValue jsn_moveitem(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv,
         }
     }
     static const char *const NAMES[] = { "moveitem", "drop", "drophere" };
-    run_command(ctx, NAMES[magic], args);
+    if (!run_command(ctx, NAMES[magic], args))
+    {
+        return JS_EXCEPTION; // stopped
+    }
     return JS_UNDEFINED;
 }
 
-// [Q] LoadScript(path) - CFileEngine::LoadScript read the file into the
-// editor (the tab's LoadScript). The buffer write MUST happen on the main
-// thread (the worker only marshals: SC_EDITOR_LOAD executes
-// ScriptManager_LoadScriptFile in the drain and the worker just waits).
+// [Q] LoadScript(path) - imports the file into the Scripts tab list and opens
+// its editor. The list/editor state MUST change on the main thread (the
+// worker only marshals: SC_EDITOR_LOAD executes the import in the drain and
+// the worker just waits).
 JSValue jsn_loadscript(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
 {
     auto *command = sc_make(SC_EDITOR_LOAD);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1471,7 +1602,7 @@ JSValue jsn_exec(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->BoolA = arg_bool(ctx, argv, argc, 1, false);
     command->ListA = arg_list(ctx, argv, argc, 2);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1486,7 +1617,7 @@ JSValue jsn_scriptrunning(JSContext *ctx, JSValueConst, int argc, JSValueConst *
     auto *command = sc_make(SC_TERMINATE_SCRIPT);
     command->SubTag = 1; // executor switch: running?
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const bool value = result_bool(command);
     return JS_NewBool(ctx, value);
 }
@@ -1546,7 +1677,7 @@ JSValue jsn_lastserial(JSContext *ctx, JSValueConst, int, JSValueConst *, int ma
 {
     auto *command = sc_make(SC_TARGET_SYSTEM_SERIAL);
     command->SubTag = magic; // 0=lasttarget 1=lastattack 2=target system serial
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     const uint32_t serial = result_serial(command);
     return JS_NewStringLen(ctx, CAssistant::SerialToText(serial).c_str(),
         CAssistant::SerialToText(serial).size());
@@ -1557,7 +1688,11 @@ JSValue jsn_lastpos(JSContext *ctx, JSValueConst, int, JSValueConst *, int magic
 {
     auto *command = sc_make(SC_LAST_TARGET_POS);
     command->SubTag = magic;
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     if (command->ResultDropped)
     {
         delete command;
@@ -1577,7 +1712,7 @@ JSValue jsn_buffexists(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
 {
     auto *command = sc_make(SC_BUFF_EXISTS);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     return JS_NewBool(ctx, result_bool(command));
 }
 
@@ -1627,7 +1762,7 @@ JSValue jsn_waitfor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     bool armed = false; // the caller-side marker: the first call clears the
     while (true)        // flag, later calls only read it (the reset+poll)
     {
-        if (engine != nullptr && engine->Terminated)
+        if (engine != nullptr && engine->TerminateRequested())
         {
             delete command;
             return JS_FALSE; // terminate beats the wait (plan rule)
@@ -1728,7 +1863,7 @@ JSValue jsn_waitgump(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
         {
             auto *command = sc_make(SC_GUMP_HOOK_ARM);
             serialize_gumphook(command, hook);
-            ScriptQueue_Exec(command);
+            sc_exec_wait(command);
             delete command;
         }
     }
@@ -1740,7 +1875,7 @@ JSValue jsn_cancelwaitgump(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_GUMP_HOOK_ARM);
     command->BoolA = true; // ClearHooks
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1750,7 +1885,11 @@ JSValue jsn_gumpcount(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_GUMP_INFO);
     command->SubTag = 0;
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     return JS_NewInt32(ctx, result_int(command));
 }
 
@@ -1760,7 +1899,7 @@ JSValue jsn_infogump(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv,
     auto *command = sc_make(SC_GUMP_INFO);
     command->SubTag = magic;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -1784,7 +1923,11 @@ JSValue jsn_getgump(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
         command->SubTag = 1; // by index; -1 = last (GetLastGump rode the same path)
         command->IntA = arg_int(ctx, argv, argc, 0, -1);
     }
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     GumpData *gump = command->ResultDropped ? nullptr : (GumpData *)command->PointerA;
     delete command;
     pause_gate(ctx);
@@ -1980,7 +2123,7 @@ JSValue gump_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
             serialize_gumphook(command, hook);
         }
     }
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     // result_bool owns the command: it copies the value out, deletes the
     // command, and returns it. The explicit delete that used to follow here
     // double-freed the already-freed pointer (gcc -Wuse-after-free).
@@ -2083,7 +2226,7 @@ JSValue menu_select(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst
     auto *command = sc_make(SC_MENU_SELECT);
     command->TextA = menu->Name;
     command->TextB = itemName;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     // result_bool owns the command: it copies the value out, deletes the
     // command, and returns it. The explicit delete that used to follow here
     // double-freed the already-freed pointer (gcc -Wuse-after-free).
@@ -2102,7 +2245,7 @@ JSValue menu_close(JSContext *ctx, JSValueConst thisVal, int, JSValueConst *)
     auto *command = sc_make(SC_MENU_SELECT);
     command->TextA = menu->Name;
     command->BoolA = true; // close
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2117,7 +2260,7 @@ JSValue jsn_waitprompt(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     command->TextB = arg_text(ctx, argv, argc, 1, "0");      // serial
     const astr_t type = arg_text(ctx, argv, argc, 2, "all"); // all|ascii|unicode
     command->IntA = type == "ascii" ? PT_ASCII : (type == "unicode" ? PT_UNICODE : PT_NONE);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2127,7 +2270,7 @@ JSValue jsn_cancelwaitprompt(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_PROMPT_HOOK);
     command->BoolA = true; // ClearHooks
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2137,7 +2280,7 @@ JSValue jsn_promptinfo(JSContext *ctx, JSValueConst, int, JSValueConst *, int ma
 {
     auto *command = sc_make(SC_PROMPT_INFO);
     command->SubTag = magic; // 0 = exists, 1 = serial, 2 = id
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     if (magic == 0)
     {
         return JS_NewBool(ctx, result_bool(command));
@@ -2150,7 +2293,7 @@ JSValue jsn_sendprompt(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
 {
     auto *command = sc_make(SC_PROMPT_SEND);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2174,7 +2317,7 @@ JSValue jsn_tradeinfo(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
         }
         command->IntA = lowered == "right" ? 1 : atoi(container.c_str());
     }
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     if (magic == 0)
     {
         return JS_NewInt32(ctx, result_int(command));
@@ -2193,7 +2336,7 @@ JSValue jsn_tradecmd(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv,
     command->SubTag = magic; // 0 = check, 1 = close
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->BoolA = arg_bool(ctx, argv, argc, 1, false);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2208,12 +2351,12 @@ JSValue jsn_shop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, int
     command->TextA = arg_text(ctx, argv, argc, 0, "");               // shop list
     command->TextB = argc >= 2 ? arg_text(ctx, argv, argc, 1, "") : astr_t(); // vendor
     command->BoolA = magic == 0;                                     // buy
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
 
     // the loop polls IsShopping every 10 ms; the terminate check ends the
     // wait for a terminated script.
-    while (engine == nullptr || !engine->Terminated)
+    while (engine == nullptr || !engine->TerminateRequested())
     {
         auto *state = sc_make(SC_SHOP_STATE);
         ScriptQueue_Exec(state);
@@ -2238,7 +2381,7 @@ JSValue jsn_contextmenu(JSContext *ctx, JSValueConst, int argc, JSValueConst *ar
     command->SubTag = magic;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->IntA = arg_int(ctx, argv, argc, 1, 0);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2257,7 +2400,7 @@ JSValue jsn_timer(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, in
     }
     command->TextA = name;
     command->IntA = arg_int(ctx, argv, argc, 1, 0);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     if (magic == 0)
     {
         return JS_NewBool(ctx, result_bool(command));
@@ -2277,7 +2420,7 @@ JSValue jsn_globalset(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     auto *command = sc_make(SC_GLOBAL_SET);
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->TextB = arg_text(ctx, argv, argc, 1, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2287,7 +2430,7 @@ JSValue jsn_globalclear(JSContext *ctx, JSValueConst, int, JSValueConst *)
 {
     auto *command = sc_make(SC_GLOBAL_SET);
     command->SubTag = 1; // clear
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2339,12 +2482,12 @@ JSValue macro_play(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst 
     auto *command = sc_make(SC_CLIENT_MACRO);
     command->ListA = macro->Actions;
     command->ListB = macro->SubActions;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
 
     CScriptEngine *engine = (CScriptEngine *)JS_GetContextOpaque(ctx);
     const uint32_t deadline = g_Ticks + delay;
-    while (wait && (engine == nullptr || !engine->Terminated) && g_Ticks < deadline)
+    while (wait && (engine == nullptr || !engine->TerminateRequested()) && g_Ticks < deadline)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         pause_gate(ctx);
@@ -2494,7 +2637,7 @@ JSValue jsn_selectedtile(JSContext *ctx, JSValueConst, int, JSValueConst *, int 
 {
     auto *command = sc_make(SC_SELECTED_TILE);
     command->SubTag = magic;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     switch (magic)
     {
         case ST_GRAPHIC:
@@ -2538,7 +2681,7 @@ JSValue textwindow_op(JSContext *ctx, int op, JSValueConst *argv, int argc, int 
     {
         command->IntB = arg_int(ctx, argv, argc, 1, 0);
     }
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2576,7 +2719,7 @@ JSValue jsn_globalget(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     auto *command = sc_make(SC_GLOBAL_SET);
     command->SubTag = 2; // get
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     return JS_NewStringLen(
         ctx, command->ResultText.c_str(), command->ResultText.size());
 }
@@ -2588,7 +2731,7 @@ JSValue jsn_bandage(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv)
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = 101; // executor switch: bandage
     command->TextA = arg_text(ctx, argv, argc, 0, "self");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2600,7 +2743,11 @@ JSValue jsn_optionget(JSContext *ctx, JSValueConst, int, JSValueConst *, int mag
 {
     auto *command = sc_make(SC_OPTIONS_GET);
     command->SubTag = magic;
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     return JS_NewInt32(ctx, result_int(command));
 }
 
@@ -2611,7 +2758,7 @@ JSValue jsn_optionset(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->IntA = 300; // executor switch: option set
     command->IntB = magic;
     command->IntC = arg_int(ctx, argv, argc, 0, 0);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2628,7 +2775,11 @@ JSValue jsn_findfriendenemy(JSContext *ctx, JSValueConst, int argc, JSValueConst
     command->SubTag = 4 + magic; // 4 = friend scan, 5 = enemy scan
     command->TextA = arg_text(ctx, argv, argc, 0, "fast");
     command->TextB = arg_text(ctx, argv, argc, 1, "finddistance");
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     astr_t text = command->ResultDropped ? astr_t() : command->ResultText;
     delete command;
     pause_gate(ctx);
@@ -2641,7 +2792,7 @@ JSValue jsn_friendinfo(JSContext *ctx, JSValueConst, int, JSValueConst *, int ma
 {
     auto *command = sc_make(SC_FRIEND_INFO);
     command->SubTag = magic;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     if (magic == 0 || magic == 2) // the list getters -> astr_t arrays
     {
         JSValue array = JS_NewArray(ctx);
@@ -2671,7 +2822,7 @@ JSValue jsn_friendcmd(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->SubTag = magic;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
     command->TextB = arg_text(ctx, argv, argc, 1, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2692,7 +2843,11 @@ JSValue jsn_hotkeys(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv, 
     {
         command->TextA = arg_text(ctx, argv, argc, 0, "");
     }
-    ScriptQueue_Exec(command);
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
     bool result = command->ResultBool;
     delete command;
     pause_gate(ctx);
@@ -2707,7 +2862,7 @@ JSValue jsn_useability(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = 310;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2719,7 +2874,7 @@ JSValue jsn_wrestling(JSContext *ctx, JSValueConst, int, JSValueConst *, int mag
 {
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = 311 + magic;
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2732,7 +2887,7 @@ JSValue jsn_invokevirtue(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = 313;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2746,7 +2901,7 @@ JSValue jsn_viewrange(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = argc >= 1 ? 302 : 301;
     command->IntB = arg_int(ctx, argv, argc, 0, 0);
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     int value = command->ResultInt;
     delete command;
     pause_gate(ctx);
@@ -2761,7 +2916,7 @@ JSValue jsn_setpvpcaller(JSContext *ctx, JSValueConst, int argc, JSValueConst *a
     auto *command = sc_make(SC_CLIENT_CMD);
     command->IntA = 303;
     command->TextA = arg_text(ctx, argv, argc, 0, "");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2776,7 +2931,7 @@ JSValue jsn_fontcolor(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     command->IntA = 330 + magic;
     command->BoolA = arg_bool(ctx, argv, argc, 0, false);
     command->TextA = arg_text(ctx, argv, argc, 1, "0x02B2");
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     bool state = command->ResultBool;
     astr_t text = command->ResultDropped ? astr_t() : command->ResultText;
     delete command;
@@ -2804,7 +2959,7 @@ JSValue jsn_windowop(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv,
     command->IntB = arg_int(ctx, argv, argc, 1, 0);
     command->IntC = arg_int(ctx, argv, argc, 2, 0);
     command->BoolA = arg_bool(ctx, argv, argc, 3, true); // minimized
-    ScriptQueue_Exec(command);
+    sc_exec_wait(command);
     delete command;
     pause_gate(ctx);
     return JS_UNDEFINED;
@@ -2893,11 +3048,23 @@ namespace {
 #define OBJ_FIELD_DEF(name, field) JS_CFUNC_MAGIC_DEF(name, 0, obj_get, field)
 #define PLAYER_FIELD_DEF(name, field) JS_CFUNC_MAGIC_DEF(name, 0, player_get, field)
 
+// [G] the Player.* getter. Unlike the GameObject methods these are NOT
+// methods on an instance (Player is a plain object of functions and
+// `Player.Name` reads a FUNCTION, not a value), so the native queues the
+// read directly with the player sentinel serial instead of going through
+// obj_get's `this` unwrap (which would fail and return JS_EXCEPTION).
 JSValue player_get(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv, int magic)
 {
-    // Player getters share the object-getter drain; the executor forces the
-    // serial to g_PlayerSerial (CPlayerObject read g_Player directly).
-    return obj_get(ctx, thisVal, argc, argv, magic);
+    auto *command = sc_make(SC_PLAYER_GET);
+    command->SubTag = magic;
+    if (!sc_exec_wait(command))
+    {
+        delete command;
+        return JS_EXCEPTION;
+    }
+    JSValue result = field_to_js(ctx, command, magic);
+    delete command;
+    return result;
 }
 
 const JSCFunctionListEntry GAMEOBJECT_PROTOTYPE[] = {
@@ -3447,6 +3614,20 @@ const JSCFunctionListEntry CLIENTMACRO_PROTOTYPE[] = {
 } // namespace <appended natives>
 } // namespace <natives>
 
+void Script_ReportInterrupted(CScriptEngine *engine)
+{
+    if (engine == nullptr)
+    {
+        return;
+    }
+    if (!engine->InterruptLogged)
+    {
+        engine->InterruptLogged = true;
+        Info(Assistant, "script '%s' interrupted (terminate requested)", engine->Name.c_str());
+    }
+    raise_interrupted(engine->Context());
+}
+
 void Script_FormatException(JSContext *ctx, astr_t &line, astr_t &message)
 {
     // the lineNumber/toString pair: quickjs-ng carries the line
@@ -3876,9 +4057,21 @@ void ScriptCommand_Execute(XA_SCRIPT_COMMAND *command)
         }
         case SC_EDITOR_LOAD:
         {
-            // the editor buffer is main-thread state: the file is read here,
-            // never on the script worker (jsn_loadscript marshals this)
-            ScriptManager_LoadScriptFile(command->TextA);
+            // the loaded-scripts list and the editor documents are main-thread
+            // state: the import happens here, never on the script worker
+            // (jsn_loadscript marshals this). LoadScript(path) imports the
+            // file into the Scripts tab list and opens its editor.
+            astr_t text;
+            if (!ScriptList_ReadFile(command->TextA, text))
+            {
+                g_AssistantEvents->OnClientPrint("Cannot open: " + command->TextA);
+                break;
+            }
+            const astr_t key =
+                g_LoadedScripts.Add(command->TextA, ScriptList_ContentHash(text));
+            (void)key;
+            Editors_Open(command->TextA);
+            AssistantUI_MarkOptionsDirty();
             break;
         }
         case SC_TEXT_CMD:

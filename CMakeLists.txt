@@ -282,7 +282,9 @@ else()
   # closure (updateMemoryViews runs on the worker; the page-side module copy
   # never assigns them, so the page has no TypedArray to read through)
   add_link_options(-sEXPORTED_RUNTIME_METHODS=HEAPU64)
-  add_link_options(-sEXPORTED_FUNCTIONS=_main,_vfs_web_progress_addrs)
+  # _xuo_script_pick_addrs: the assistant's file picker bridge (the page
+  # reads the status/paths pair out of the shared heap, resources/shell.html)
+  add_link_options(-sEXPORTED_FUNCTIONS=_main,_vfs_web_progress_addrs,_xuo_script_pick_addrs)
   # web builds stream from their own origin by default (the browser blocks
   # cross-origin fetches without CORS headers); override per build with
   # -DXUO_WEB_PRODUCT_URL=<url>

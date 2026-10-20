@@ -4,7 +4,10 @@
 #pragma once
 
 // The per-script worker thread + the script manager: one worker thread per
-// script joined through the finished signal.
+// script file, identified by the normalized path (scriptlist.h). A script is
+// its file: the worker evaluates the whole body top-level and calls a
+// function named after the file when the body declares one (the historical
+// shape, and what the macro converter emits).
 
 #include "../core/global.h"
 
@@ -29,13 +32,18 @@ enum XA_SCRIPT_STATE
 class CScriptHandle
 {
 public:
-    CScriptHandle(const astr_t &functionName, const vector<astr_t> &args, const astr_t &scriptBody);
+    // `path` is the script file's identity (the normalized loaded-scripts key,
+    // scriptlist.h): Play/Pause/Stop address it and the manager never starts
+    // the same file twice.
+    CScriptHandle(const astr_t &path, const vector<astr_t> &args, const astr_t &scriptBody);
     ~CScriptHandle();
 
     CScriptHandle(const CScriptHandle &) = delete;
     CScriptHandle &operator=(const CScriptHandle &) = delete;
 
-    const astr_t &Name() const { return m_FunctionName; }
+    const astr_t &Path() const { return m_Path; }
+    // The script-name the runtime sees (ScriptName): the file name.
+    const astr_t &Name() const { return m_Name; }
     XA_SCRIPT_STATE State() const { return (XA_SCRIPT_STATE)m_State.load(); }
 
     bool GetPaused() const { return m_Paused; }
@@ -50,7 +58,8 @@ public:
 private:
     void RunEngine(); // the CScriptHandle::RunEngine port
 
-    astr_t m_FunctionName;
+    astr_t m_Path;
+    astr_t m_Name;
     vector<astr_t> m_Args;
     astr_t m_Text;
 
@@ -68,15 +77,23 @@ public:
     CScriptManager() = default;
     CScriptManager(const CScriptManager &) = delete;
     CScriptManager &operator=(const CScriptManager &) = delete;
-    // Runs `functionName` from `scriptBody` as its own thread. Returns the
-    // handle or nullptr when the concurrent cap (16) is hit.
-    CScriptHandle *Run(const astr_t &functionName, const astr_t &scriptBody,
+    // Runs `path`'s body as its own thread (whole-file top-level). An already
+    // running/paused handle for the same path is returned instead of starting
+    // a second one. Returns nullptr when the concurrent cap (16) is hit.
+    CScriptHandle *RunFile(const astr_t &path, const astr_t &scriptBody,
         const vector<astr_t> &args = vector<astr_t>());
 
     void Tick(); // drops finished handles (the slot_RemoveRunningScriptItem flow)
     void StopAll(uint32_t joinTimeoutMs = 2000);
 
-    bool Running(const astr_t &functionName) const;
+    bool RunningFile(const astr_t &path) const;
+    bool PausedFile(const astr_t &path) const;
+    void TerminateFile(const astr_t &path);
+    bool TogglePauseFile(const astr_t &path);
+    // Any handle whose ScriptName equals `name` (the Exec/Terminate script
+    // API compatibility surface).
+    bool RunningName(const astr_t &name) const;
+    void TerminateName(const astr_t &name);
     const vector<CScriptHandle *> &Handles() const { return m_Handles; }
 
 private:
@@ -87,24 +104,21 @@ constexpr int SCRIPT_MAX_CONCURRENT = 16;
 
 // The manager singleton (the tab + the API terminate/exec hooks use these).
 CScriptManager *ScriptManager_Get();
+// The Scripts tab Play button / hotkey run: fresh file bytes, whole-file
+// top-level, one instance per file.
+CScriptHandle *ScriptManager_PlayFile(const astr_t &path);
+bool ScriptManager_PausedFile(const astr_t &path);
+bool ScriptManager_TogglePauseFile(const astr_t &path);
+void ScriptManager_TerminateFile(const astr_t &path);
+bool ScriptManager_RunningFile(const astr_t &path);
+// Name-keyed forms (Exec/Terminate script APIs, the `terminate` text command):
+// they match the running handles' ScriptName (the file name).
 void ScriptManager_Terminate(const astr_t &functionName, const astr_t &functionsSave);
 bool ScriptManager_Running(const astr_t &functionName);
-void ScriptManager_Exec(const astr_t &functionName, bool once, const vector<astr_t> &args);
-// The tab's LoadScript(path) / editor reload path. MAIN THREAD ONLY: script
-// workers reach it marshaled through the queue (SC_EDITOR_LOAD) so the shared
-// buffer write never races a frame.
-void ScriptManager_LoadScriptFile(const astr_t &path);
-// The editor text bridge (the tab and the editor window share one buffer,
-// like g_ScriptEditorDialog did).
-astr_t &ScriptEditor_Text();
-astr_t ScriptEditor_Path();
-void ScriptEditor_SetPath(const astr_t &path);
-// Replaces the shared buffer on the caller's behalf AND bumps the buffer
-// generation (the editor re-splits on the change: the stale-buffer fix).
-void ScriptEditor_SetText(const astr_t &text);
-// The buffer-generation token: every external buffer replace bumps it; the
-// editor widget compares and forces a re-split when it moved.
-uint32_t ScriptEditor_Generation();
-vector<astr_t> ScriptEditor_FunctionList(); // the `function NAME(` parse
+void ScriptManager_Exec(const astr_t &scriptName, bool once, const vector<astr_t> &args);
+
+// The `function NAME(` scan over a script text (the editor statusbar counts
+// them; Exec resolves a name across the loaded scripts with it).
+vector<astr_t> Script_AnalyzeFunctions(const astr_t &text);
 
 } // namespace xuoassist

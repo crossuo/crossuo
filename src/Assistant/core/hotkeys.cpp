@@ -20,7 +20,8 @@
 #include "actions.h"
 #include "assistantevents.h"
 #include "../macros/macroexecutor.h"
-#include "../script/scripthandle.h" // ScriptManager_Get/ScriptEditor_Text (the Scripts-tab Run path)
+#include "../script/scriptlist.h" // g_LoadedScripts (HT_SCRIPT resolves a loaded script)
+#include "../script/scripthandle.h" // ScriptManager_PlayFile/RunningFile (the Scripts-tab Play path)
 #include "world.h"
 
 namespace xuoassist {
@@ -236,6 +237,33 @@ void HotkeyFormatText(uint32_t key, uint8_t modifiers, char *out, size_t size)
 }
 
 namespace {
+
+// A script hotkey stores a loaded script's path (or, from older profiles, its
+// file name): find the entry it means.
+const CLoadedScript *resolve_script(const astr_t &stored)
+{
+    if (stored.empty())
+    {
+        return nullptr;
+    }
+    const vector<CLoadedScript> &scripts = g_LoadedScripts.Scripts();
+    const astr_t key = ScriptList_NormalizePath(stored);
+    for (const CLoadedScript &script : scripts)
+    {
+        if (script.Key == key || script.Path == stored)
+        {
+            return &script;
+        }
+    }
+    for (const CLoadedScript &script : scripts)
+    {
+        if (ScriptList_DisplayName(script.Path) == stored)
+        {
+            return &script;
+        }
+    }
+    return nullptr;
+}
 
 // Platform::IsKeypad (the SDL path): the keypad identity of
 // a key event (the Windows native-modifier bit 24).
@@ -493,32 +521,22 @@ bool CHotkeys::MatchAndUse(uint32_t key, uint8_t modifiers)
                     break;
                 case HT_SCRIPT:
                 {
-                    // the Scripts-tab Start path: the binding names a function
-                    // of the shared editor buffer (the hotkeys form picks the
-                    // name from the same function list)
-                    const vector<astr_t> functions = ScriptEditor_FunctionList();
-                    const astr_t &name = entry.ScriptOrMacroName;
-                    bool known = false;
-                    for (const astr_t &function : functions)
+                    // a script binding names a LOADED SCRIPT (a file), never a
+                    // function: resolve the stored path/key, with the file
+                    // name accepted for entries written by older versions
+                    const CLoadedScript *script = resolve_script(entry.ScriptOrMacroName);
+                    if (script == nullptr)
                     {
-                        if (function == name)
-                        {
-                            known = true;
-                            break;
-                        }
-                    }
-                    if (!known)
-                    {
-                        g_AssistantEvents->OnClientPrint("Script not found: " + name);
+                        g_AssistantEvents->OnClientPrint(
+                            "Script not found: " + entry.ScriptOrMacroName);
                         break;
                     }
-                    // "Run one script": skip when the function is already
-                    // running (the original canRun check)
-                    if (entry.RunningMode && ScriptManager_Running(name))
+                    // "Run one script": skip when the file is already running
+                    if (entry.RunningMode && ScriptManager_RunningFile(script->Key))
                     {
                         break;
                     }
-                    ScriptManager_Get()->Run(name, ScriptEditor_Text());
+                    ScriptManager_PlayFile(script->Path);
                     break;
                 }
                 case HT_EXTERNAL_CODE:

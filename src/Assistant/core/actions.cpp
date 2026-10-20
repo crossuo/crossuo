@@ -14,6 +14,7 @@
 #include <common/logging/logging.h>
 
 #include "../config/assistantconfig.h"
+#include "../script/scriptlist.h" // g_LoadedScripts (the HT_SCRIPT action list)
 #include "assist.h"
 #include "assistantevents.h"
 #include "global.h"
@@ -142,6 +143,11 @@ int Actions_ActionCount(uint32_t type)
     {
         return (int)g_AssistantConfig.Macros().size(); // UpdateMacroList
     }
+    if (type == HT_SCRIPT)
+    {
+        // a script hotkey binds a LOADED SCRIPT (the Scripts tab list)
+        return (int)g_LoadedScripts.Scripts().size();
+    }
     const vector<astr_t> &list = dynamic_list(type);
     if (!list.empty())
     {
@@ -173,6 +179,17 @@ void Actions_ActionName(uint32_t type, int action, char *out, size_t size)
         }
         return;
     }
+    if (type == HT_SCRIPT)
+    {
+        // the label is the file name; the STORED value is the full path
+        // (Actions_ActionValue), so two same-named scripts stay distinct
+        const vector<CLoadedScript> &scripts = g_LoadedScripts.Scripts();
+        if (action >= 0 && action < (int)scripts.size())
+        {
+            snprintf(out, size, "%s", ScriptList_DisplayName(scripts[action].Path).c_str());
+        }
+        return;
+    }
     const vector<astr_t> &list = dynamic_list(type);
     if (!list.empty())
     {
@@ -193,6 +210,25 @@ void Actions_ActionName(uint32_t type, int action, char *out, size_t size)
             return;
         }
     }
+}
+
+void Actions_ActionValue(uint32_t type, int action, char *out, size_t size)
+{
+    if (size == 0)
+    {
+        return;
+    }
+    out[0] = '\0';
+    if (type == HT_SCRIPT)
+    {
+        const vector<CLoadedScript> &scripts = g_LoadedScripts.Scripts();
+        if (action >= 0 && action < (int)scripts.size())
+        {
+            snprintf(out, size, "%s", scripts[action].Path.c_str());
+        }
+        return;
+    }
+    Actions_ActionName(type, action, out, size);
 }
 
 // --- the Data column (UpdateHotkeyData) --------------------------------------
@@ -222,7 +258,9 @@ void Actions_FormatDataText(const CHotkeyEntry &entry, char *out, size_t size)
         case HT_SCRIPT:
             if (!entry.ScriptOrMacroName.empty())
             {
-                snprintf(name, sizeof(name), "Script: %s", entry.ScriptOrMacroName.c_str());
+                // the stored value is the path; the column shows the file name
+                snprintf(name, sizeof(name), "Script: %s",
+                    ScriptList_DisplayName(entry.ScriptOrMacroName).c_str());
             }
             break;
         case HT_EXTERNAL_CODE:

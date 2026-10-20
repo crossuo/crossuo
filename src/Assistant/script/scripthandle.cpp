@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-// See scripthandle.h. The thread body is the CScriptHandle::process +
-// RunEngine port: build the engine, evaluate, call
-// the function, report errors through g_Assistant.ScriptError, remove the
-// running row on the way out.
+// See scripthandle.h. The thread body is the CScriptEngine flow: build the
+// engine, evaluate the whole file (a script IS its file: top-level code is the
+// script), report errors through g_Assistant.ScriptError; finished rows leave
+// the manager on Tick.
 
 #include "scripthandle.h"
+#include "apiscript.h" // Script_ReportInterrupted (the forced-stop error)
+#include "commandqueue.h" // ScriptQueue_SetCancelHook (the forced-stop hook)
 #include "engine.h"
+#include "scriptlist.h"
 
 #include "../core/assist.h"
+#include "../core/assistantevents.h" // g_AssistantEvents (Script not found)
 
 #define LOGGER_MODULE Assistant
 
@@ -20,51 +24,13 @@
 
 namespace xuoassist {
 
-// --- the shared editor buffer --------------------------------------------------
-
-namespace {
-astr_t s_EditorText;
-astr_t s_EditorPath;
-// The buffer-generation token: bumped by every external buffer replace
-// (SetText/LoadScript); TextEditor_Draw re-splits when it moves. Without it
-// the editor only re-split on the buffer POINTER changing - which never
-// happens for the shared astr_t - so Open/New/Reload left stale lines and an
-// edit rejoined the OLD content over the new file (data loss on save).
-uint32_t s_EditorGeneration = 0;
-} // namespace
-
-astr_t &ScriptEditor_Text()
-{
-    return s_EditorText;
-}
-
-void ScriptEditor_SetText(const astr_t &text)
-{
-    s_EditorText = text;
-    s_EditorGeneration++;
-}
-
-uint32_t ScriptEditor_Generation()
-{
-    return s_EditorGeneration;
-}
-
-astr_t ScriptEditor_Path()
-{
-    return s_EditorPath;
-}
-
-void ScriptEditor_SetPath(const astr_t &path)
-{
-    s_EditorPath = path;
-}
+// --- the function scan ---------------------------------------------------------
 
 // The GetFunctionList port (scripteditordialog.cpp): scan for
-// `function NAME(` declarations, trimmed; the tab's start-combo feeds on it.
-vector<astr_t> ScriptEditor_FunctionList()
+// `function NAME(` declarations, trimmed.
+vector<astr_t> Script_AnalyzeFunctions(const astr_t &text)
 {
     vector<astr_t> list;
-    const astr_t &text = s_EditorText;
     size_t pos = 0;
     while ((pos = text.find("function", pos)) != astr_t::npos)
     {
@@ -96,9 +62,29 @@ vector<astr_t> ScriptEditor_FunctionList()
 
 // --- CScriptHandle ------------------------------------------------------------
 
+namespace {
+
+// The queue's cancel hook on the worker thread: the engine flag OR the owning
+// handle's terminate flag (Terminate sets the latter first).
+bool engine_cancelled(void *opaque)
+{
+    auto *engine = (CScriptEngine *)opaque;
+    return engine == nullptr || engine->TerminateRequested();
+}
+
+// The aborted-wait notification: raise the uncatchable "interrupted" error on
+// this script's context (apiscript.cpp owns the error shape).
+void engine_abort(void *opaque)
+{
+    Script_ReportInterrupted((CScriptEngine *)opaque);
+}
+
+} // namespace
+
 CScriptHandle::CScriptHandle(
-    const astr_t &functionName, const vector<astr_t> &args, const astr_t &scriptBody)
-    : m_FunctionName(functionName)
+    const astr_t &path, const vector<astr_t> &args, const astr_t &scriptBody)
+    : m_Path(path)
+    , m_Name(ScriptList_DisplayName(path))
     , m_Args(args)
     , m_Text(scriptBody)
 {
@@ -122,6 +108,7 @@ void CScriptHandle::SetPaused(bool value)
 
 void CScriptHandle::Terminate()
 {
+    Info(Assistant, "script terminate requested: %s\n", m_Path.c_str());
     // Set the handle flag FIRST: a worker that has not assigned m_Engine yet
     // still honors it as its first action (and the engine picks it up through
     // the wired external flag). The engine-level interrupt below stays the
@@ -131,6 +118,10 @@ void CScriptHandle::Terminate()
     if (engine != nullptr)
     {
         engine->RequestTerminate();
+        // a paused script must fall out of its pause loops too: the handle
+        // cleared m_Paused, but the live engine flag gates the host-side
+        // sleeps (PauseGate/Wait) independently
+        engine->SetPausedFlag(false);
     }
     m_Paused = 0;
 }
@@ -154,7 +145,7 @@ void CScriptHandle::Join(uint32_t timeoutMs)
             m_State = SS_ZOMBIE;
             m_Thread.detach(); // never hang the client on a stuck script
             Info(Assistant, "script thread '%s' did not stop within %u ms; detached",
-                m_FunctionName.c_str(), timeoutMs);
+                m_Path.c_str(), timeoutMs);
             return;
         }
     }
@@ -167,6 +158,8 @@ void CScriptHandle::Join(uint32_t timeoutMs)
 void CScriptHandle::Start()
 {
     CScriptHandle *self = this;
+    // a bigger stack for the worker: the engine object lives on it and
+    // QuickJS' exception unwinding is stack-hungry under load
     m_Thread = std::thread([self]() {
         self->RunEngine();
     });
@@ -189,7 +182,11 @@ void CScriptHandle::RunEngine()
     // the handle flag doubles as the engine's external terminate: the
     // interrupt handler and the pause/sleep paths poll TerminateRequested()
     engine.SetExternalTerminateFlag(&m_TerminatePending);
-    if (!engine.Setup(m_FunctionName))
+    // Forced stop: every queued call this thread makes polls the same flag
+    // while it waits, so Stop aborts an in-flight call even from a script
+    // that never returns to bytecode (a native-call loop).
+    ScriptQueue_SetCancelHook(engine_cancelled, engine_abort, &engine);
+    if (!engine.Setup(m_Name))
     {
         m_State = SS_FAILED;
         m_Engine = nullptr;
@@ -200,11 +197,18 @@ void CScriptHandle::RunEngine()
     {
         m_State = SS_FAILED;
     }
-    else if (!m_FunctionName.empty() && !engine.CallFunction(m_FunctionName, m_Args))
+    else if (engine.HasFunction(m_Name))
     {
-        m_State = SS_FAILED;
+        // a script file is a top-level script, but the historical shape
+        // (and the converted macros) declare `function <file name>()`: call
+        // it. Everything else has already run during Evaluate.
+        if (!engine.CallFunction(m_Name, m_Args))
+        {
+            m_State = SS_FAILED;
+        }
     }
 
+    ScriptQueue_SetCancelHook(nullptr, nullptr, nullptr);
     m_Engine = nullptr;
     if (m_State != SS_FAILED)
     {
@@ -220,9 +224,38 @@ CScriptManager *ScriptManager_Get()
     return &manager;
 }
 
-CScriptHandle *CScriptManager::Run(
-    const astr_t &functionName, const astr_t &scriptBody, const vector<astr_t> &args)
+CScriptHandle *CScriptManager::RunFile(
+    const astr_t &path, const astr_t &scriptBody, const vector<astr_t> &args)
 {
+    // one instance per file: an already running/paused script is returned
+    // as-is (the Play button never stacks a second copy of the same file).
+    // The key is normalized here so Play, the API and hand-built paths all
+    // address the same file.
+    const astr_t key = ScriptList_NormalizePath(path);
+    for (size_t i = 0; i < m_Handles.size();)
+    {
+        CScriptHandle *handle = m_Handles[i];
+        const XA_SCRIPT_STATE state = handle->State();
+        if (handle->Path() == key &&
+            (state == SS_FINISHED || state == SS_FAILED || state == SS_ZOMBIE))
+        {
+            // a finished run of this file still waiting for Tick: drop it now
+            // so a re-Play between two ticks is not mistaken for a live run
+            delete handle;
+            m_Handles.erase(m_Handles.begin() + i);
+            continue;
+        }
+        i++;
+    }
+    for (CScriptHandle *handle : m_Handles)
+    {
+        const XA_SCRIPT_STATE state = handle->State();
+        if (handle->Path() == key && (state == SS_RUNNING || state == SS_PAUSED))
+        {
+            return handle;
+        }
+    }
+
     if ((int)m_Handles.size() >= SCRIPT_MAX_CONCURRENT)
     {
         g_Assistant.ClientPrint("Too many running scripts (max " +
@@ -230,7 +263,7 @@ CScriptHandle *CScriptManager::Run(
         return nullptr;
     }
 
-    auto *handle = new CScriptHandle(functionName, args, scriptBody);
+    auto *handle = new CScriptHandle(key, args, scriptBody);
     m_Handles.push_back(handle);
     handle->Start();
     return handle;
@@ -265,12 +298,13 @@ void CScriptManager::StopAll(uint32_t joinTimeoutMs)
     // finished handles are collected by Tick; zombies stay visible
 }
 
-bool CScriptManager::Running(const astr_t &functionName) const
+bool CScriptManager::RunningFile(const astr_t &path) const
 {
+    const astr_t key = ScriptList_NormalizePath(path);
     for (const CScriptHandle *handle : m_Handles)
     {
-        if (handle->Name() == functionName &&
-            (handle->State() == SS_RUNNING || handle->State() == SS_PAUSED))
+        const XA_SCRIPT_STATE state = handle->State();
+        if (handle->Path() == key && (state == SS_RUNNING || state == SS_PAUSED))
         {
             return true;
         }
@@ -278,11 +312,114 @@ bool CScriptManager::Running(const astr_t &functionName) const
     return false;
 }
 
-// --- the API/tab entry points ---------------------------------------------------
+bool CScriptManager::PausedFile(const astr_t &path) const
+{
+    const astr_t key = ScriptList_NormalizePath(path);
+    for (const CScriptHandle *handle : m_Handles)
+    {
+        if (handle->Path() == key && handle->State() == SS_PAUSED)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void CScriptManager::TerminateFile(const astr_t &path)
+{
+    const astr_t key = ScriptList_NormalizePath(path);
+    for (CScriptHandle *handle : m_Handles)
+    {
+        if (handle->Path() == key)
+        {
+            handle->Terminate();
+        }
+    }
+}
+
+bool CScriptManager::TogglePauseFile(const astr_t &path)
+{
+    const astr_t key = ScriptList_NormalizePath(path);
+    bool any = false;
+    for (CScriptHandle *handle : m_Handles)
+    {
+        const XA_SCRIPT_STATE state = handle->State();
+        if (handle->Path() == key && (state == SS_RUNNING || state == SS_PAUSED))
+        {
+            handle->SetPaused(!handle->GetPaused());
+            any = true;
+        }
+    }
+    return any;
+}
+
+bool CScriptManager::RunningName(const astr_t &name) const
+{
+    for (const CScriptHandle *handle : m_Handles)
+    {
+        const XA_SCRIPT_STATE state = handle->State();
+        if (handle->Name() == name && (state == SS_RUNNING || state == SS_PAUSED))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void CScriptManager::TerminateName(const astr_t &name)
+{
+    for (CScriptHandle *handle : m_Handles)
+    {
+        if (handle->Name() == name)
+        {
+            handle->Terminate();
+        }
+    }
+}
+
+// --- the tab/hotkey entry points -----------------------------------------------------------------
+
+CScriptHandle *ScriptManager_PlayFile(const astr_t &path)
+{
+    // a script IS its file: Play runs the file's CURRENT bytes from disk (an
+    // open editor's unsaved changes do not participate - the tab tooltip
+    // says so), whole file top-level
+    astr_t text;
+    if (!ScriptList_ReadFile(path, text))
+    {
+        g_AssistantEvents->OnClientPrint("Script not found: " + path);
+        return nullptr;
+    }
+    return ScriptManager_Get()->RunFile(path, text);
+}
+
+bool ScriptManager_PausedFile(const astr_t &path)
+{
+    return ScriptManager_Get()->PausedFile(path);
+}
+
+bool ScriptManager_TogglePauseFile(const astr_t &path)
+{
+    return ScriptManager_Get()->TogglePauseFile(path);
+}
+
+void ScriptManager_TerminateFile(const astr_t &path)
+{
+    ScriptManager_Get()->TerminateFile(path);
+}
+
+bool ScriptManager_RunningFile(const astr_t &path)
+{
+    return ScriptManager_Get()->RunningFile(path);
+}
+
+// --- name-keyed compatibility surface ------------------------------------------------------------
 
 void ScriptManager_Terminate(const astr_t &functionName, const astr_t &functionsSave)
 {
-    // the "all"/save-list semantics of TabScripts::TerminateScript
+    // the "all"/save-list semantics of the original TerminateScript; handles
+    // are keyed by file now, so the match goes through the ScriptName (the
+    // file name the runtime sees)
     CScriptManager *manager = ScriptManager_Get();
     if (str_lower(functionName) == "all")
     {
@@ -313,48 +450,40 @@ void ScriptManager_Terminate(const astr_t &functionName, const astr_t &functions
         return;
     }
 
-    for (CScriptHandle *handle : manager->Handles())
-    {
-        if (handle->Name() == functionName)
-        {
-            handle->Terminate();
-        }
-    }
+    manager->TerminateName(functionName);
+    manager->TerminateFile(functionName); // also accept a loaded-scripts key
 }
 
 bool ScriptManager_Running(const astr_t &functionName)
 {
-    return ScriptManager_Get()->Running(functionName);
+    return ScriptManager_Get()->RunningName(functionName);
 }
 
-void ScriptManager_Exec(const astr_t &functionName, bool once, const vector<astr_t> &args)
+void ScriptManager_Exec(const astr_t &scriptName, bool once, const vector<astr_t> &args)
 {
-    if (once && ScriptManager_Running(functionName))
+    if (once && ScriptManager_Running(scriptName))
     {
         return;
     }
-    // run the named function of the current editor text
-    ScriptManager_Get()->Run(functionName, ScriptEditor_Text(), args);
-}
-
-void ScriptManager_LoadScriptFile(const astr_t &path)
-{
-    // load the script file into the editor buffer
-    FILE *file = fopen(path.c_str(), "rb");
-    if (file == nullptr)
+    // Exec starts another script by name: resolve it among the loaded
+    // scripts (the file whose body declares it), else treat the argument as
+    // a path
+    const vector<CLoadedScript> &scripts = g_LoadedScripts.Scripts();
+    for (const CLoadedScript &script : scripts)
     {
-        return;
+        astr_t text;
+        if (!ScriptList_ReadFile(script.Path, text))
+        {
+            continue;
+        }
+        const vector<astr_t> functions = Script_AnalyzeFunctions(text);
+        if (std::find(functions.begin(), functions.end(), scriptName) != functions.end())
+        {
+            ScriptManager_Get()->RunFile(script.Key, text, args);
+            return;
+        }
     }
-    astr_t text;
-    char buffer[4096];
-    size_t read = 0;
-    while ((read = fread(buffer, 1, sizeof(buffer), file)) > 0)
-    {
-        text.append(buffer, read);
-    }
-    fclose(file);
-    ScriptEditor_SetText(text); // bumps the editor buffer generation
-    s_EditorPath = path;
+    ScriptManager_PlayFile(scriptName);
 }
 
 } // namespace xuoassist

@@ -15,6 +15,10 @@
 
 namespace xuoassist {
 
+// Re-splits the widget's line buffer from `buffer` after an external replace
+// (the document keeps its astr_t; only the contents changed).
+void TextEditor_SyncBuffer(const char *id, astr_t *buffer);
+
 // Draws the editor; returns true when the buffer was modified this frame.
 // size 0 = fill the remaining window space. lineOffset/gotoRequest let the
 // owner (scripteditor) drive GoToLine.

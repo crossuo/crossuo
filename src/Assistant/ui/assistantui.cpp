@@ -32,7 +32,8 @@
 #include "../script/scriptgump.h" // the script text window draw
 #include "../script/scripthandle.h"
 #include "CrossUO.h" // ::g_Game (StartReconnect)
-#include "scripteditor.h"
+#include "editors.h"
+#include "../script/scriptlist.h" // g_LoadedScripts (Autostart entry)
 #include "tabscripts.h"
 #include "mapwindow.h"
 #include "inspector.h"
@@ -47,7 +48,6 @@ namespace xuoassist {
 // the script editor window flag (declared in assistantui.h inside this
 // namespace - keep the definition in it too, or the compiler warns about a
 // missing matching extern declaration)
-bool g_AssistantScriptEditorOpen = false;
 
 // --- shell state -------------------------------------------------------------
 
@@ -309,8 +309,18 @@ void AssistantUI_Tick()
     if (s_AutostartAt != 0u && g_Ticks >= s_AutostartAt)
     {
         s_AutostartAt = 0;
-        // runs the editor buffer as the "Autostart" script
-        ScriptManager_Get()->Run("Autostart", ScriptEditor_Text());
+        // runs the loaded script named Autoload.js (the Scripts tab list's
+        // autostart entry), else nothing: there is no shared editor buffer
+        // anymore and silently running an arbitrary file would surprise
+        const vector<CLoadedScript> &scripts = g_LoadedScripts.Scripts();
+        for (const CLoadedScript &script : scripts)
+        {
+            if (ScriptList_DisplayName(script.Path) == "Autoload.js")
+            {
+                ScriptManager_PlayFile(script.Path);
+                break;
+            }
+        }
     }
     // the script runtime first: the marshaled commands must run on the main
     // thread before anything else consumes game state this frame (plan:
@@ -343,14 +353,14 @@ void AssistantUI_Shutdown()
 {
     // disarm a pending Autostart run
     s_AutostartAt = 0;
-    // the scripts stop first (bounded join; never hang the client), then the
-    // queue is shut down so late pushes fail fast (
-    ScriptManager_Get()->StopAll(2000);
+    // the queue closes FIRST: its shutdown completes (and wakes) every queued
+    // command waiter, so scripts blocked in a pending call fall through
+    // immediately instead of outliving the join timeout and being detached
+    // into teardown
     ScriptQueue_Shutdown();
-    // one more brief join pass: with pushes failing fast the stragglers fall
-    // through their pending calls and become joinable (zombie-eligible ones
-    // were detached by the first pass; this catches threads that only needed
-    // the queue closed)
+    ScriptManager_Get()->StopAll(2000);
+    // one more brief join pass: stragglers that only needed their pending
+    // call dropped become joinable here
     ScriptManager_Get()->StopAll(250);
     // disarm any from-target request armed before shutdown (CancelPendingFrom
     // Targets): otherwise the stale g_TargetHandler would swallow the first
@@ -612,9 +622,9 @@ void AssistantUI_Draw(bool *open, uint32_t sessionStartTicks)
     // forms): separate ImGui windows gated by this draw call, i.e. by the
     // AssistantWindow visibility like everything else
     TabHotkeys_DrawControlForms();
-    // the script editor window (ScriptEditorDialog): one shared buffer with
-    // the script runtime; drawn only while open
-    ScriptEditorWindow_Draw(&g_AssistantScriptEditorOpen);
+    // the script editors: one window per open document (the Scripts tab
+    // double-click opens them, Save As closes/rebinds them)
+    Editors_Draw();
     // the shopping progress popup: agent-owned window drawn next to the other
     // always-on UI so it survives leaving the Shop sub-tab (still only while
     // the assistant window is drawn; the popup itself early-outs when the

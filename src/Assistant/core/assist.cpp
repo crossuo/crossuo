@@ -198,6 +198,13 @@ astr_t CAssistant::BoolToText(const bool &value)
 
 void CAssistant::ClientPrint(const astr_t &text, const uint16_t &color) const
 {
+    // prints render through the client text pipeline: once the world is torn
+    // down (shutdown order clears the world before the assistant saves) the
+    // pipeline is gone - drop the print instead of crashing in it
+    if (g_World == nullptr)
+    {
+        return;
+    }
     g_PacketManager.DisplayTalkTextW(
         0xFFFFFFFF, nullptr, "X:UO Assist", wstr_from(text), color, ST_NORMAL);
 

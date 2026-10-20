@@ -4,7 +4,6 @@
 // The editor implementation. Palette mapping:
 
 #include "editor.h"
-#include "../script/scripthandle.h" // ScriptEditor_Generation (buffer token)
 
 #define LOGGER_MODULE Assistant
 
@@ -195,7 +194,6 @@ void tokenize_line(const astr_t &line, vector<TOKEN_RUN> &runs)
 struct EDITOR_STATE
 {
     astr_t *Buffer{ nullptr };
-    uint32_t BufferGeneration{ 0 }; // the shared-buffer token (stale-resplit fix)
     vector<astr_t> LineBuffer;
     int CursorLine{ 0 };
     int CursorCol{ 0 };
@@ -376,16 +374,13 @@ EDITOR_STATE *editor_state(ImGuiID id, astr_t *buffer)
 {
     static std::unordered_map<ImGuiID, EDITOR_STATE> states;
     EDITOR_STATE &state = states[id];
-    // Re-split on the buffer POINTER changing (a different owning astr_t) or
-    // on the shared-buffer GENERATION moving (Open/New/Reload/LoadScript
-    // replace the contents of the same astr_t object - the pointer never
-    // changes, so without the token the widget kept drawing stale lines and
-    // an edit cannot rejoin the saved content over a changed file).
-    const uint32_t generation = ScriptEditor_Generation();
-    if (state.Buffer != buffer || state.BufferGeneration != generation)
+    // Re-split when the buffer POINTER changes: every editor document owns
+    // its own stable astr_t (ui/editors.cpp), so a different pointer means a
+    // different document. External buffer replaces inside one document
+    // (Reload from disk) go through TextEditor_SyncBuffer.
+    if (state.Buffer != buffer)
     {
         state.Buffer = buffer;
-        state.BufferGeneration = generation;
         state.split_buffer(*buffer);
         state.CursorLine = 0;
         state.CursorCol = 0;
@@ -396,6 +391,19 @@ EDITOR_STATE *editor_state(ImGuiID id, astr_t *buffer)
 EDITOR_STATE *s_ActiveEditor = nullptr;
 
 } // namespace
+
+void TextEditor_SyncBuffer(const char *id, astr_t *buffer)
+{
+    // an external replace inside the SAME document (Reload from disk, a
+    // script's LoadScript): re-split now so the next draw shows the new text
+    // instead of the stale line buffer
+    EDITOR_STATE *state = editor_state(ImGui::GetID(id), buffer);
+    state->split_buffer(*buffer);
+    state->CursorLine = 0;
+    state->CursorCol = 0;
+    state->AnchorLine = -1;
+    state->Modified = false;
+}
 
 bool TextEditor_Draw(
     const char *id, astr_t *buffer, float height, int gotoLine, bool *gotoPending)
