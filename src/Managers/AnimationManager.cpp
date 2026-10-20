@@ -785,6 +785,10 @@ void CAnimationManager::Draw(
 
 void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y)
 {
+    if (m_Sitting <= 0 || size_t(m_Sitting) > countof(SITTING_INFO))
+    {
+        return;
+    }
     const SITTING_INFO_DATA &data = SITTING_INFO[m_Sitting - 1];
     auto dir = Anim.Direction;
     switch (dir)
@@ -1137,9 +1141,12 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     {
         DrawEquippedLayers(false, obj, drawX, drawY, mirror, layerDir, frameIndex, lightOffset);
 
-        const SITTING_INFO_DATA &sittingData = SITTING_INFO[m_Sitting - 1];
+        const bool validSitting =
+            (m_Sitting > 0) && (size_t(m_Sitting) <= countof(SITTING_INFO));
+        const SITTING_INFO_DATA &sittingData =
+            SITTING_INFO[validSitting ? m_Sitting - 1 : 0];
 
-        if ((m_Sitting != 0) && Anim.Direction == 3 && sittingData.DrawBack &&
+        if (validSitting && Anim.Direction == 3 && sittingData.DrawBack &&
             obj->FindLayer(OL_CLOAK) == nullptr)
         {
             for (CRenderWorldObject *ro = obj->m_PrevXY; ro != nullptr; ro = ro->m_PrevXY)
