@@ -1393,7 +1393,7 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
             else
             {
                 auto &group = anim->Groups[seq->Group];
-                for (int k = replaceIdx; k < 5; ++k)
+                for (int k = 0; k < MAX_MOBILE_DIRECTIONS; ++k)
                 {
                     group.Direction[k].FrameCount = seq->FrameCount;
                 }
