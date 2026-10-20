@@ -3673,6 +3673,56 @@ void Script_FormatException(JSContext *ctx, astr_t &line, astr_t &message)
     JS_FreeValue(ctx, exception);
 }
 
+const vector<XA_API_COMPLETION> &ScriptAPI_CompletionList()
+{
+    static vector<XA_API_COMPLETION> list;
+    if (!list.empty())
+    {
+        return list;
+    }
+    auto addTable = [&](const char *scope, const JSCFunctionListEntry *table, size_t count) {
+        for (size_t i = 0; i < count; i++)
+        {
+            const JSCFunctionListEntry &entry = table[i];
+            if (entry.def_type == JS_DEF_CFUNC)
+            {
+                list.push_back({ scope, entry.name, entry.u.func.length, true });
+            }
+            else if (entry.def_type == JS_DEF_CGETSET || entry.def_type == JS_DEF_CGETSET_MAGIC)
+            {
+                list.push_back({ scope, entry.name, -1, false });
+            }
+        }
+    };
+    addTable("Client", CLIENT_FUNCS, count_of(CLIENT_FUNCS));
+    addTable("Player", PLAYER_FUNCS, count_of(PLAYER_FUNCS));
+    addTable("TextWindow", TEXTWINDOW_FUNCS, count_of(TEXTWINDOW_FUNCS));
+    addTable("SelectedTile", SELECTEDTILE_FUNCS, count_of(SELECTEDTILE_FUNCS));
+    addTable("GameObject", GAMEOBJECT_PROTOTYPE, count_of(GAMEOBJECT_PROTOTYPE));
+    addTable("JournalEntry", JOURNAL_PROTOTYPE, count_of(JOURNAL_PROTOTYPE));
+    addTable("Gump", GUMP_PROTOTYPE, count_of(GUMP_PROTOTYPE));
+    addTable("Menu", MENU_PROTOTYPE, count_of(MENU_PROTOTYPE));
+    addTable("GumpHook", GUMPHOOK_PROTOTYPE, count_of(GUMPHOOK_PROTOTYPE));
+    addTable("ClientMacro", CLIENTMACRO_PROTOTYPE, count_of(CLIENTMACRO_PROTOTYPE));
+    addTable("File", FILE_PROTOTYPE, count_of(FILE_PROTOTYPE));
+
+    // the global identifiers: the API objects themselves, the sentinel serial
+    // aliases (plain strings resolved by the API) and ScriptName
+    static const char *const OBJECTS[] = { "Client", "Player", "TextWindow", "SelectedTile" };
+    for (const char *name : OBJECTS)
+    {
+        list.push_back({ "", name, -1, false });
+    }
+    static const char *const SENTINELS[] = { "self", "ground", "lastcorpse", "lasttarget",
+        "lasttile", "backpack", "lastcontainer", "lastattack", "laststatus", "lastobject" };
+    for (const char *name : SENTINELS)
+    {
+        list.push_back({ "", name, -1, false });
+    }
+    list.push_back({ "", "ScriptName", -1, false });
+    return list;
+}
+
 void Script_RegisterAPI(JSContext *ctx, const astr_t &scriptName)
 {
     JSRuntime *runtime = JS_GetRuntime(ctx);

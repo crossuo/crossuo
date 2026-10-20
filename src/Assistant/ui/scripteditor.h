@@ -19,7 +19,7 @@ namespace xuoassist {
 void ScriptEditorWindow_DrawDoc(CEditorDoc *doc, bool *open);
 
 // Re-splits the document's editor widget after an external text replace
-// (Reload from disk). `id` is the widget ID the window draws with.
-void ScriptEditor_SyncDocument(const char *id, astr_t *buffer);
+// (Reload from disk).
+void ScriptEditor_SyncDocument(astr_t *buffer);
 
 } // namespace xuoassist

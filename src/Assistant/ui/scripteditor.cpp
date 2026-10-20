@@ -55,9 +55,9 @@ void save_as(CEditorDoc *doc, const astr_t &suggested)
 
 } // namespace
 
-void ScriptEditor_SyncDocument(const char *id, astr_t *buffer)
+void ScriptEditor_SyncDocument(astr_t *buffer)
 {
-    TextEditor_SyncBuffer(id, buffer);
+    TextEditor_SyncBuffer(buffer);
 }
 
 void ScriptEditorWindow_DrawDoc(CEditorDoc *doc, bool *open)

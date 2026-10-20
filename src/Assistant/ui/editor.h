@@ -3,11 +3,23 @@
 
 #pragma once
 
-// The script text editor widget: line buffer, tokenizer highlighting
-// (.Method dark-magenta, keywords dark-blue, globals dark-yellow, numbers/
-// 0x-hex blue, strings dark-green, // comments gray), line-number gutter,
-// current-line highlight, a snapshot undo stack and the Find/Replace/GoToLine
-// popups.
+// The script text editor widget: a single-purpose JS code editor.
+// - fast hand-written JS tokenizer (no regex): keywords, the assistant API
+//   objects, member calls, sentinels, strings with escapes, template
+//   literals, numbers, line and block comments (/* */ carries across lines),
+//   all per-line cached;
+// - auto-completion fed by the real script API surface
+//   (ScriptAPI_CompletionList): members after `Client.`-style scopes,
+//   global identifiers while typing, Ctrl+Space to force; mouse and keyboard
+//   driven, inserts Name() with the caret between the parens;
+// - mouse: click places the caret, drag selects, shift+click extends,
+//   double-click selects a word, triple-click a line, IBeam cursor;
+// - editing: multi-line clipboard (Ctrl+C/X/V), select all, redo,
+//   auto-indent on Enter, snapshot undo, line-number gutter, Find/Replace/
+//   GoToLine popups.
+//
+// Widget state is keyed by the owning buffer pointer (every document owns a
+// stable astr_t), so SyncBuffer/release work from any window scope.
 
 #include "../core/global.h"
 
@@ -17,7 +29,10 @@ namespace xuoassist {
 
 // Re-splits the widget's line buffer from `buffer` after an external replace
 // (the document keeps its astr_t; only the contents changed).
-void TextEditor_SyncBuffer(const char *id, astr_t *buffer);
+void TextEditor_SyncBuffer(astr_t *buffer);
+
+// Drops the widget state for `buffer` (the document is going away).
+void TextEditor_ReleaseState(astr_t *buffer);
 
 // Draws the editor; returns true when the buffer was modified this frame.
 // size 0 = fill the remaining window space. lineOffset/gotoRequest let the

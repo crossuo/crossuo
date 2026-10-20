@@ -14,6 +14,7 @@
 #include <external/gfx/imgui/imgui.h>
 
 #include "assistantui.h" // AssistantUI_MarkOptionsDirty
+#include "editor.h"
 #include "scripteditor.h"
 #include "../script/scriptlist.h"
 
@@ -39,6 +40,7 @@ astr_t next_untitled_name(astr_t baseName)
 
 void erase_doc(size_t index)
 {
+    TextEditor_ReleaseState(&s_Docs[index]->Text); // the astr_t is going away
     delete s_Docs[index];
     s_Docs.erase(s_Docs.begin() + index);
 }
@@ -104,6 +106,7 @@ void Editors_CloseAll()
 {
     for (CEditorDoc *doc : s_Docs)
     {
+        TextEditor_ReleaseState(&doc->Text);
         delete doc;
     }
     s_Docs.clear();
@@ -162,7 +165,7 @@ void Editors_ResyncWidget(CEditorDoc *doc)
     {
         return;
     }
-    ScriptEditor_SyncDocument(doc->Key.c_str(), &doc->Text);
+    ScriptEditor_SyncDocument(&doc->Text);
 }
 
 void Editors_Draw()
