@@ -749,27 +749,43 @@ bool CFileManager::Load()
 
     if (!m_AnimdataMul.Size)
     {
-        Fatal(
-            Data, "Failed to load Ultima Online(tm) data files.", "could not load 'animdata.mul'");
-        return false;
+        // the client tolerates a missing animdata.mul: it boots with a
+        // pre-zeroed table (every record's unknown byte preset); the
+        // animation frame timings just fall back to defaults
+        Warning(Data, "could not load 'animdata.mul' - using a zeroed anim data table");
     }
 
 #if defined(XUO_EMSC)
     // web: the file is not mapped - read the table through the windowed
     // reader (one large read, direct pread into the destination)
-    g_Data.m_Anim.resize(m_AnimdataMul.Size);
-    if (m_AnimdataMul.FileBacked)
+    if (m_AnimdataMul.Size != 0)
     {
-        m_AnimdataMul.Seek(0);
-        m_AnimdataMul.ReadDataLE(&g_Data.m_Anim[0], m_AnimdataMul.Size);
+        g_Data.m_Anim.resize(m_AnimdataMul.Size);
+        if (m_AnimdataMul.FileBacked)
+        {
+            m_AnimdataMul.Seek(0);
+            m_AnimdataMul.ReadDataLE(&g_Data.m_Anim[0], m_AnimdataMul.Size);
+        }
+        else
+        {
+            memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+        }
     }
     else
     {
-        memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+        // zeroed fallback table (0x10000 records, the client's preset size)
+        g_Data.m_Anim.resize(0x10000);
     }
 #else
-    g_Data.m_Anim.resize(m_AnimdataMul.Size);
-    memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+    if (m_AnimdataMul.Size != 0)
+    {
+        g_Data.m_Anim.resize(m_AnimdataMul.Size);
+        memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+    }
+    else
+    {
+        g_Data.m_Anim.resize(0x10000);
+    }
 #endif
     LoadTiledata();
     LoadIndexFiles();
@@ -861,8 +877,7 @@ bool CFileManager::LoadCommon()
 #endif
     if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
     {
-        Warning(Data, "file load: required file missing/failed (line 43)");
-        return false;
+        Warning(Data, "file load: animdata.mul missing/failed (line 43) - tolerated");
     }
     if (!m_HuesMul.Load(UOFilePath("hues.mul")))
     {
@@ -1190,8 +1205,7 @@ bool CFileManager::LoadWithUop()
     // subset - the anim*.mul exclusion only covers the legacy animation set)
     if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
     {
-        Warning(Data, "LoadWithUop: required pack/mul missing (line 6)");
-        return false;
+        Warning(Data, "LoadWithUop: animdata.mul missing (line 6) - tolerated");
     }
 
     /* Эти файлы не используются самой последней версией клиента 7.0.52.2
@@ -3424,8 +3438,10 @@ static void load_mobtype()
         const auto strings = mobtypesParser.ReadTokens();
         if (strings.size() >= 3)
         {
+            // body 0 cannot be a mobile: the client accepts only
+            // (u32)(body - 1) < 0x7FF, entries for 0 are skipped entirely
             const uint16_t index = str_to_int(strings[0]);
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            if (index == 0 || index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 DBG_ANIM("\tdetected invalid entry in mobtypes.txt: %d", index);
                 continue;
@@ -3436,14 +3452,22 @@ static void load_mobtype()
             const auto number = strtoul(("0x" + strings[2]).c_str(), &endP, 16);
             DBG_ANIM_ID(
                 index, "\tentry type: %s with: 0x%04x | AF_FOUND", entryType.c_str(), (int)number);
-            for (int i = 0; i < countof(typeNames); i++)
+            // the group type is matched on the first character only and
+            // case-insensitively ('m' 's' 'a' 'h' 'e'); a misspelled but
+            // recognizable name like "humann" is accepted. No match means the
+            // whole entry is skipped - neither the type nor the flags land.
+            if (!entryType.empty())
             {
-                if (entryType == typeNames[i])
+                const char first = entryType[0];
+                for (int i = 0; i < countof(typeNames); i++)
                 {
-                    DBG_ANIM_BLOCK(dbgEntryFound = true);
-                    g_Index.m_Anim[index].Type = ANIMATION_GROUPS_TYPE(i);
-                    g_Index.m_Anim[index].Flags = ANIMATION_FLAGS(AF_FOUND | number);
-                    break;
+                    if (first == typeNames[i][0])
+                    {
+                        DBG_ANIM_BLOCK(dbgEntryFound = true);
+                        g_Index.m_Anim[index].Type = ANIMATION_GROUPS_TYPE(i);
+                        g_Index.m_Anim[index].Flags = ANIMATION_FLAGS(AF_FOUND | number);
+                        break;
+                    }
                 }
             }
         }
