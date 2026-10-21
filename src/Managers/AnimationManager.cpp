@@ -262,19 +262,19 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool
     {
         type = AGT_MONSTER;
     }
-    // the client does not condition the death animation on the run state:
-    // it picks randomly between the two death groups, unless the body is
-    // flagged to always use the second one when hit while running
-    const bool fixedSecond = (flags & AF_USE_2_IF_HITTED_WHILE_RUNNING) != 0;
     switch (type)
     {
         case AGT_ANIMAL:
         {
-            if (fixedSecond)
+            if (flags & AF_USE_2_IF_HITTED_WHILE_RUNNING || flags & AF_CAN_FLYING)
             {
-                return LAG_DIE_2;
+                return 2;
             }
-            return LAG_DIE_1 + uint8_t(RandomInt(2));
+            if (flags & AF_USE_UOP_ANIMATION)
+            {
+                return running ? 3 : 2;
+            }
+            return running ? LAG_DIE_2 : LAG_DIE_1;
         }
         case AGT_SEA_MONSTER:
         {
@@ -288,12 +288,12 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool
             {
                 return running ? 3 : 2;
             }
-            return fixedSecond ? HAG_DIE_2 : HAG_DIE_1 + uint8_t(RandomInt(2));
+            return running ? HAG_DIE_2 : HAG_DIE_1;
         }
         case AGT_HUMAN:
         case AGT_EQUIPMENT:
         {
-            return fixedSecond ? PAG_DIE_2 : PAG_DIE_1 + uint8_t(RandomInt(2));
+            return running ? PAG_DIE_2 : PAG_DIE_1;
         }
         case AGT_UNKNOWN:
         default:
