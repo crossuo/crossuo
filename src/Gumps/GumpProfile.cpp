@@ -5,6 +5,7 @@
 #include "../TextEngine/GameConsole.h"
 #include "../Managers/ConfigManager.h"
 #include "../Network/Packets.h"
+#include <cstdint>
 
 CGumpProfile::CGumpProfile(
     uint32_t serial,

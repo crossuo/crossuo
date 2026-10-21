@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include <external/gfx/gfx.h>
+#include <cstdlib>
 #include <xuocore/enumlist.h>
 #include "RenderTexture.h"
 #include "RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "common/logging/logging.h"
 
 CRenderTexture::~CRenderTexture()
 {

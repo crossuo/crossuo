@@ -5,6 +5,7 @@
 #include "../CrossUO.h"
 #include "../Sprite.h"
 #include "../Managers/MouseManager.h"
+#include <cstdint>
 
 CGUIVirtueGump::CGUIVirtueGump(uint16_t graphic, int x, int y)
     : CGUIDrawObject(GOT_VIRTUE_GUMP, graphic, graphic, 0, x, y)

@@ -2,11 +2,11 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include "CorpseManager.h"
-#include "../CrossUO.h"
 #include "../Globals.h"
 #include "../GameObjects/GameItem.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../GameObjects/GameWorld.h"
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <core/assist.h> // xuoassist::g_Assistant (DoubleClick wraps the recording suspension)
 #endif

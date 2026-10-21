@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include "ContainerStack.h"
+#include <deque>
 
 std::deque<CContainerStackItem> g_ContainerStack;
 uint32_t g_CheckContainerStackTimer = 0;

@@ -4,6 +4,7 @@
 #include "GUIHitBox.h"
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
+#include "GUI/GUIPolygonal.h"
 
 CGUIHitBox::CGUIHitBox(int serial, int x, int y, int width, int height, bool callOnMouseUp)
     : CGUIPolygonal(GOT_HITBOX, x, y, width, height, callOnMouseUp)

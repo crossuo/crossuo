@@ -2,14 +2,12 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpChatChooseName.h"
-#include "../CrossUO.h"
 #include "../PressedObject.h"
-#include "../Managers/FontsManager.h"
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
 #include "../GUI/GUIHitBox.h"
 #include "../GUI/GUIText.h"
-#include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CGumpChatChooseName::CGumpChatChooseName(int x, int y)
     : CGump(GT_CHAT_CHOOSE_NAME, 0, x, y)

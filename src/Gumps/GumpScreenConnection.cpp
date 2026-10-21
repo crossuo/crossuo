@@ -4,10 +4,10 @@
 #include "GumpScreenConnection.h"
 #include "../CharacterList.h"
 #include "../Config.h"
-#include "../Network/Connection.h"
 #include "../Managers/ClilocManager.h"
 #include "../ScreenStages/ConnectionScreen.h"
 #include "../Globals.h" // g_Language
+#include "Gumps/Gump.h"
 
 CGumpScreenConnection::CGumpScreenConnection()
     : CGump(GT_NONE, 0, 0, 0)

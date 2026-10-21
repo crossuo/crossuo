@@ -2,14 +2,16 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "ConnectionManager.h"
+#include "Network/Connection.h"
 #include "PacketManager.h"
-#include <SDL_stdinc.h>
+#include <cstdint>
 #include <xuocore/mappedfile.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ScreenStages/ConnectionScreen.h"
 #include "../ScreenStages/GameBlockedScreen.h"
 #include "../Crypt/CryptEntry.h"
+#include "Sockets.h"
 
 CConnectionManager g_ConnectionManager;
 

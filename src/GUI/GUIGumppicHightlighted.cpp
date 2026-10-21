@@ -6,7 +6,7 @@
 #include "../Gumps/Gump.h"
 #include "../Managers/ColorManager.h"
 #include "../Renderer/RenderAPI.h"
-#include "../Globals.h" // g_ShaderDrawMode
+#include <cstdint>
 
 CGUIGumppicHightlighted::CGUIGumppicHightlighted(
     int serial, uint16_t graphic, uint16_t color, uint16_t selectedColor, int x, int y)

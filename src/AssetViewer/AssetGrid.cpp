@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "AssetGrid.h"
+#include <string>
 
 #if defined(XUO_ASSISTANT)
 
@@ -15,7 +16,6 @@
 
 #include <xuocore/uodata.h> // g_Index, g_Data, g_FileManager
 
-#include "../Managers/ColorManager.h" // g_ColorManager (radar/hue tables)
 
 #include "../Managers/UOFileReader.h" // g_UOFileReader::GetArtPixels
 

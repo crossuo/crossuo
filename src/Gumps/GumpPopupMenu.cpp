@@ -9,6 +9,7 @@
 #include "../Managers/IntlocManager.h"
 #include "../Network/Packets.h"
 #include "../Globals.h" // g_Language, CONTEXT_MENU_FONT
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordWaitContextMenu (macro tap)
 #endif

@@ -6,6 +6,7 @@
 #include "../Sprite.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUITilepicScaled::CGUITilepicScaled(
     uint16_t graphic, uint16_t color, int x, int y, int width, int height)

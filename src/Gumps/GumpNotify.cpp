@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include <cstdint>
 #include <utility>
 
 #include "GumpNotify.h"
 #include "../TextEngine/GameConsole.h"
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/GameScreen.h"
+#include "Platform.h"
 
 CGumpNotify::CGumpNotify(short x, short y, uint8_t variant, short width, short height, astr_t text)
     : CGump(GT_NOTIFY, 0, x, y)

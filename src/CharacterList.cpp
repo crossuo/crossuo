@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "CharacterList.h"
+#include <cstdint>
 
 CCharacterList g_CharacterList;
 static astr_t s_invalid;

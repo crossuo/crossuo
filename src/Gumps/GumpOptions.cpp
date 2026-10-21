@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpOptions.h"
-#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Renderer/RenderCircleOfTransparency.h" // g_CircleOfTransparency
+#include "Globals.h"
 #include "GumpSelectColor.h"
 #include "GumpSelectFont.h"
 #include "GumpMenubar.h"
@@ -21,7 +21,9 @@
 #include "../Managers/OptionsMacroManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Network/Packets.h"
+#include <SDL_keyboard.h>
 #include <common/utils.h> // countof
+#include <cstdint>
 
 #define KeyName(x) SDL_GetKeyName(x)
 

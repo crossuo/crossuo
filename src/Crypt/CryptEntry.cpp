@@ -3,10 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#include "../SDL_wrapper.h"
 #include "CryptEntry.h"
-#include "../Misc.h"
 #include <common/fs.h>
+#include <cstdint>
 #include <xuocore/enumlist.h>
 #include "../Config.h"
 #include "LoginCrypt.h"

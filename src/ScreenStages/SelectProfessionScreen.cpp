@@ -2,16 +2,16 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "SelectProfessionScreen.h"
+#include "Config.h"
 #include "ConnectionScreen.h"
 #include "CreateCharacterScreen.h"
-#include "../ToolTip.h"
 #include "../CrossUO.h"
 #include "../GameWindow.h"
-#include "../Globals.h" // g_EntryPointer
 #include "../Profession.h"
 #include "../Managers/CreateCharacterManager.h"
 #include "../Managers/ProfessionManager.h"
 #include "../Managers/ScreenEffectManager.h"
+#include "xuocore/enumlist.h"
 
 CSelectProfessionScreen g_SelectProfessionScreen;
 

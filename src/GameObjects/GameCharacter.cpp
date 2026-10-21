@@ -2,8 +2,10 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <SDL_timer.h>
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <common/utils.h>
+#include "Constants.h"
 #include "GameItem.h"
 #include "../CrossUO.h"
 #include "../TargetGump.h"
@@ -21,6 +23,7 @@
 #include "../TextEngine/TextData.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Utility/PerfMarker.h"
+#include "GameObjects/GameObject.h"
 
 #define USE_NEW_ANIM_CODE 1
 

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Danny Angelo Carminati Grein
 
 #include "../Renderer/RenderAPI.h"
+#include "Renderer/RenderTypes.h"
 
 #include <float.h>
 

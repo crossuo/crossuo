@@ -2,12 +2,13 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include "CustomHousesManager.h"
-#include <xuocore/mappedfile.h>
+#include <cstdint>
 #include <xuocore/text_parser.h>
 #include <common/str.h>
 #include <string>
 #include "../Gumps/GumpCustomHouse.h"
 #include "../GameObjects/GameItem.h"
+#include "Utility/TextFileWriter.h"
 
 CustomHousesManager g_CustomHousesManager;
 

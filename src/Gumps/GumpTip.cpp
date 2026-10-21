@@ -3,6 +3,7 @@
 
 #include "GumpTip.h"
 #include "../Network/Packets.h"
+#include <cstdint>
 
 enum
 {

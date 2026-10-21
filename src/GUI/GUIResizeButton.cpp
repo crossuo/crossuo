@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIResizeButton.h"
+#include <cstdint>
 
 CGUIResizeButton::CGUIResizeButton(
     int serial, uint16_t graphic, uint16_t graphicSelected, uint16_t graphicPressed, int x, int y)

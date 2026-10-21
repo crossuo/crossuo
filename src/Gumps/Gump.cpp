@@ -3,6 +3,7 @@
 
 #include "Gump.h"
 #include <algorithm> // std::max
+#include <cstdlib>
 #include "../CrossUO.h"
 #include "../Point.h"
 #include "../PressedObject.h"
@@ -17,6 +18,7 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "Globals.h"
 
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;

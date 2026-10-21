@@ -7,6 +7,7 @@
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
 #include "../Globals.h" // g_Ability
+#include "xuocore/enumlist.h"
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordCombatAbility (macro tap)
 #endif

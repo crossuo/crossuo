@@ -3,6 +3,7 @@
 
 #include "CreateCharacterScreen.h"
 #include "ConnectionScreen.h"
+#include "ScreenStages/BaseScreen.h"
 #include "SelectProfessionScreen.h"
 #include "../Config.h"
 #include "../CrossUO.h"
@@ -11,6 +12,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/ScreenEffectManager.h"
 #include "../Managers/CreateCharacterManager.h"
+#include "xuocore/enumlist.h"
 
 CCreateCharacterScreen g_CreateCharacterScreen;
 

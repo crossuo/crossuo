@@ -1,9 +1,11 @@
 ﻿// SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2017 Hotride
 
+#include <cassert>
 #include <common/str.h>
 #include "IntlocManager.h"
 #include "ClilocManager.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 
 // FourCC tags stored big-endian in the intloc files (matches what gcc's

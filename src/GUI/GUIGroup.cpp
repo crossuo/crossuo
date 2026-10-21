@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIGroup.h"
+#include "GUI/BaseGUI.h"
 
 CGUIGroup::CGUIGroup(int index)
     : CBaseGUI(GOT_GROUP, 0, 0, 0, 0, 0)

@@ -4,6 +4,7 @@
 #include "TextData.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/FontsManager.h"
+#include "xuocore/enumlist.h"
 
 CTextData::CTextData(CTextData *obj)
     : Unicode(obj->Unicode)

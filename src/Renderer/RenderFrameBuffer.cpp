@@ -5,6 +5,7 @@
 #include "../GameWindow.h"
 #include "RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "Renderer/RenderTypes.h"
 
 frame_buffer_t CRenderFrameBuffer::m_OldFrameBuffer;
 

@@ -5,6 +5,7 @@
 #include "PressedObject.h"
 #include "SelectedObject.h"
 #include "ClickObject.h"
+#include <cstdint>
 
 CRenderObject::CRenderObject(int serial, uint16_t graphic, uint16_t color, short x, short y)
     : Serial(serial)

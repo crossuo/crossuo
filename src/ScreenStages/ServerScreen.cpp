@@ -8,6 +8,7 @@
 #include "../ServerList.h"
 #include "../GameWindow.h"
 #include "../Managers/ScreenEffectManager.h"
+#include "ScreenStages/BaseScreen.h"
 
 CServerScreen g_ServerScreen;
 

@@ -4,6 +4,7 @@
 #include "GUIGenericText.h"
 #include "../Config.h"
 #include "../Globals.h" // UOFONT_*
+#include <cstdint>
 
 void CGUIGenericText::Create(const wstr_t &str)
 {

@@ -6,6 +6,7 @@
 #include "../Managers/ClilocManager.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
+#include "Gumps/Gump.h"
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordToggleGargoyleFlying (macro tap)
 #endif

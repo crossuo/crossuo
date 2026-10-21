@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include <cstdint>
 #include <utility>
 
 #include "GumpTextEntryDialog.h"
@@ -9,6 +10,7 @@
 #include "../Managers/GumpManager.h"
 #include "../ScreenStages/GameBlockedScreen.h"
 #include "../Network/Packets.h"
+#include "Platform.h"
 
 CGumpTextEntryDialog::CGumpTextEntryDialog(
     uint32_t serial,

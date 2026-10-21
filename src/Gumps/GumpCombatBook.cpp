@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpCombatBook.h"
+#include "Globals.h"
 #include "GumpAbility.h"
+#include <vector>
 #include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../CrossUO.h"
@@ -14,6 +16,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/GumpManager.h"
 #include "../Managers/ClilocManager.h"
+#include "xuocore/enumlist.h"
 
 CGumpCombatBook::CGumpCombatBook(int x, int y)
     : CGump(GT_COMBAT_BOOK, 0, x, y)

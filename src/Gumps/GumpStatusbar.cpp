@@ -6,6 +6,7 @@
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include <SDL_rect.h>
 #include <common/utils.h> // countof
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <xuocore/vfs.h>
 #include "../Config.h"
@@ -25,6 +26,7 @@
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
+#include "Platform.h"
 
 int CGumpStatusbar::m_StatusbarDefaultWidth = 154;
 int CGumpStatusbar::m_StatusbarDefaultHeight = 59;

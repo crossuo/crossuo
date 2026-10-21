@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpScreenCreateCharacter.h"
+#include "GUI/GUIGumppicTiled.h"
 #include "Gump1998ScrollChoice.h"
 #include "../GUI/GUIShader.h"
 #include "../GUI/GUIButton.h"
@@ -9,15 +10,13 @@
 #include "../Config.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
-#include "../GameWindow.h"
 #include "../Managers/CreateCharacterManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ColorManager.h"
-#include "../Managers/SkillsManager.h"
-#include "../Managers/ProfessionManager.h"
-#include "../Profession.h"
 #include "../ScreenStages/CreateCharacterScreen.h"
+#include "xuocore/enumlist.h"
 #include <common/str.h>
+#include <cstdint>
 
 enum
 {

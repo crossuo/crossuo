@@ -6,6 +6,7 @@
 #include "../Sprite.h"
 #include "../Managers/MouseManager.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUIGumppicTiled::CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, int height)
     : CGUIDrawObject(GOT_GUMPPICTILED, 0, graphic, 0, x, y)

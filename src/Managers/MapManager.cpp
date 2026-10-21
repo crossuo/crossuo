@@ -4,8 +4,10 @@
 #include <algorithm>
 #include "MapManager.h"
 #include <SDL_timer.h> // Init's wall-clock load budget (g_Ticks is frame-cached)
+#include "Globals.h"
 #include "GumpManager.h"
 #include <common/checksum.h>
+#include <cstring>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Gumps/GumpMinimap.h"
@@ -13,6 +15,7 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../GameObjects/LandObject.h"
 #include "../GameObjects/StaticObject.h"
+#include "xuocore/enumlist.h"
 
 CMapManager g_MapManager;
 

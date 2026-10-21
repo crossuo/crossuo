@@ -7,8 +7,9 @@
 
 #include "Config.h"
 #include "revision.h"
+#include "white_label.h"
 
-#include <common/logging/logging.h>
+#include <SDL_thread.h>
 #include <cstring>
 #include <cctype>
 // no STR_IMPLEMENTATION here: the game links xuocore (mft.cpp), which already

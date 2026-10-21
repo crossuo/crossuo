@@ -4,6 +4,7 @@
 #include "GUIAlphaBlending.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "GUI/BaseGUI.h"
 
 CGUIAlphaBlending::CGUIAlphaBlending(bool enabled, float alpha)
     : CBaseGUI(GOT_BLENDING, 0, 0, 0, 0, 0)

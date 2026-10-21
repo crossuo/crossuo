@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <cstdint>
 #include "GumpScreenServer.h"
 #include "../Config.h"
 #include "../ToolTip.h"
@@ -10,6 +11,7 @@
 #include "../Managers/ClilocManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/ServerScreen.h"
+#include "xuocore/enumlist.h"
 
 enum
 {

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpScreenMain.h"
+#include "TextEngine/EntryText.h"
 #include "revision.h"
 #include "../Config.h"
 #include "../ToolTip.h"
@@ -10,6 +11,7 @@
 #include "../ScreenStages/MainScreen.h"
 #include "../GUI/GUIColoredPolygone.h"
 #include "../LauncherWindow.h"
+#include "xuocore/enumlist.h"
 
 enum
 {

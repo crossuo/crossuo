@@ -2,10 +2,12 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "EffectManager.h"
+#include "GameObjects/GameEffectDrag.h"
 #include "MapManager.h"
 #include "../CrossUO.h"
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GameEffectMoving.h"
+#include "xuocore/enumlist.h"
 
 CEffectManager g_EffectManager;
 

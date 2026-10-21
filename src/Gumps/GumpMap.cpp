@@ -3,6 +3,7 @@
 
 #include <cmath> // atan, sin, cos
 #include <SDL_rect.h>
+#include <cstdint>
 #include "GumpMap.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
@@ -11,6 +12,7 @@
 #include "../Managers/Waypoints.h"
 #include "../Network/Packets.h"
 #include "../Renderer/RenderAPI.h"
+#include "xuocore/enumlist.h"
 
 #define XUO_M_PI 3.14159265358979323846264338327950288
 

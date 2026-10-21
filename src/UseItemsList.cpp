@@ -4,6 +4,7 @@
 #include "CrossUO.h"
 #include "UseItemsList.h"
 #include "GameObjects/GameWorld.h"
+#include "Globals.h"
 
 CUseItemActions g_UseItemActions;
 

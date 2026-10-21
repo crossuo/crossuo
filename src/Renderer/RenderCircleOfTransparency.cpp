@@ -2,10 +2,11 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <cmath> // sqrt
+#include <vector>
 #include "RenderCircleOfTransparency.h"
-#include "../Managers/ConfigManager.h"
 #include "RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "Renderer/Debug/OGLDebugMarker.h"
 
 CRenderCircleOfTransparency g_CircleOfTransparency;
 

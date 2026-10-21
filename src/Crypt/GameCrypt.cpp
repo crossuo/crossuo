@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "GameCrypt.h"
+#include <cstdint>
 #include <string.h>
 #include <assert.h>
 

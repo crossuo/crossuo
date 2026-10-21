@@ -4,7 +4,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Macro.h"
-#include <xuocore/mappedfile.h>
+#include "xuocore/enumlist.h"
 #include <common/utils.h> // countof
 
 #define MODKEY_ALT 0x0100

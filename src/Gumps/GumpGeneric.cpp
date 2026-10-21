@@ -9,6 +9,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../Network/Packets.h"
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <managers/gumpmanager.h> // xuoassist::g_GumpManager (gump-choice tap)
 #endif

@@ -3,6 +3,7 @@
 
 #include "CityManager.h"
 #include "ClilocManager.h"
+#include <cstddef>
 #include <xuocore/uodata.h>
 #include <xuocore/mappedfile.h>
 #include <common/str.h>

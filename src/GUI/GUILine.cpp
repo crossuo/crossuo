@@ -5,6 +5,7 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 #include "../Globals.h" // ToColor*
+#include "GUI/BaseGUI.h"
 
 CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygoneColor)
     : CBaseGUI(GOT_LINE, 0, 0, 0, startX, startY)

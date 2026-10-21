@@ -3,11 +3,13 @@
 
 #include "SoundManager.h"
 #include "ConfigManager.h"
+#include <cassert>
 #include <xuocore/uodata.h>
 #include <xuocore/vfs.h> // vfs_music_stream_bytes (music data lane)
 #include <common/utils.h>
 #include "../CrossUO.h"
 #include "../GameWindow.h"
+#include "common/logging/logging.h"
 #include <unordered_map>
 
 #ifndef ASS_IMPLEMENTATION
@@ -23,7 +25,6 @@
 // worker crash on Module.SDL2.audioContext)
 #define WITH_NULL
 #endif
-#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <vector>

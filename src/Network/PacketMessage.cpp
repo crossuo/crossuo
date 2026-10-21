@@ -3,6 +3,7 @@
 
 #include "PacketMessage.h"
 #include "../Misc.h" // PACKET_VARIABLE_SIZE
+#include <cstdint>
 
 CPacketMessage::CPacketMessage(bool bigEndian)
     : BigEndian(bigEndian)

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIHTMLHitBox.h"
+#include "GUI/GUIHitBox.h"
 #include "GUIHTMLGump.h"
 
 CGUIHTMLHitBox::CGUIHTMLHitBox(

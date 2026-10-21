@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIHTMLResizepic.h"
+#include "GUI/GUIResizepic.h"
 #include "GUIHTMLGump.h"
+#include <cstdint>
 
 CGUIHTMLResizepic::CGUIHTMLResizepic(
     class CGUIHTMLGump *htmlGump, int serial, uint16_t graphic, int x, int y, int width, int height)

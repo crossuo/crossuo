@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpScreenGame.h"
+#include "GUI/GUIButton.h"
 #include "GumpConsoleType.h"
 #include "GumpOptions.h"
 #include "../Weather.h"
@@ -16,6 +17,7 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../Network/Packets.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CGumpScreenGame::CGumpScreenGame()
     : CGump(GT_NONE, 0, 0, 0)

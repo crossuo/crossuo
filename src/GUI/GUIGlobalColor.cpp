@@ -4,6 +4,7 @@
 #include "GUIGlobalColor.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "GUI/BaseGUI.h"
 
 CGUIGlobalColor::CGUIGlobalColor(bool enabled, float r, float g, float b, float a)
     : CBaseGUI(GOT_GLOBAL_COLOR, 0, 0, 0, 0, 0)

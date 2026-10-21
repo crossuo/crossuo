@@ -2,13 +2,14 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "ToolTip.h"
+#include "Globals.h"
 #include "SelectedObject.h"
 #include "Managers/FontsManager.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/MouseManager.h"
 #include "Managers/ClilocManager.h"
-#include "Renderer/RenderAPI.h"
 #include "Utility/PerfMarker.h"
+#include <cstdint>
 
 CToolTip g_ToolTip;
 

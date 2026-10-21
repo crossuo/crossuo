@@ -3,12 +3,14 @@
 
 #include <common/str.h>
 #include <common/utils.h> // countof
+#include <cstdint>
 #include "GumpConsoleType.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../TextEngine/GameConsole.h"
+#include "xuocore/enumlist.h"
 
 CGumpConsoleType *g_GumpConsoleType = nullptr;
 

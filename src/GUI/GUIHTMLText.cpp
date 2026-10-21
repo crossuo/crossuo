@@ -5,6 +5,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUIHTMLText::CGUIHTMLText(
     int index,

@@ -4,6 +4,7 @@
 #include "GUIScissor.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "GUI/GUIPolygonal.h"
 
 CGUIScissor::CGUIScissor(bool enabled, int baseX, int baseY, int x, int y, int width, int height)
     : CGUIPolygonal(GOT_SCISSOR, x, y, width, height)

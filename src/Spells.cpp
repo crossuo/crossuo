@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
+#include <cstdint>
 #include <vector>
 #include <algorithm> // std::min
 #include <cmath>     // ceilf
 #include <assert.h>
 #include "Spells.h"
 #include "Config.h"
+#include "xuocore/enumlist.h"
 
 static std::vector<Spell> s_Spells;
 static std::vector<SpellBook> s_SpellBooks;

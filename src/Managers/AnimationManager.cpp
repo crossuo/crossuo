@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include <cassert>
 #include <common/utils.h>
 #include "../Misc.h" // RandomInt
 #include <common/str.h>
+#include <cstdint>
 #include <unordered_set>
 #include "AnimationManager.h"
+#include "Globals.h"
 #include "MouseManager.h"
 #include "ConfigManager.h"
 #include "ColorManager.h"
 #include "CorpseManager.h"
+#include <vector>
 #include <xuocore/uodata.h>
-#include <xuocore/vfs.h>
 #include "../Target.h"
 #include "../Constants.h"
-#include "../Config.h"
 #include "../CrossUO.h"
 #include "../TargetGump.h"
 #include "../SelectedObject.h"
@@ -24,6 +26,7 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 #include "../Managers/FontsManager.h"
+#include "xuocore/enumlist.h"
 
 CAnimationManager g_AnimationManager;
 

@@ -6,6 +6,7 @@
 #include "../CharacterList.h"
 #include "../Managers/ScreenEffectManager.h"
 #include "../Network/Packets.h"
+#include "ScreenStages/BaseScreen.h"
 
 CConnectionScreen g_ConnectionScreen;
 

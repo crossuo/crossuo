@@ -8,6 +8,7 @@
 #include "../Managers/EffectManager.h"
 #include "../Managers/MapManager.h"
 #include "../GameObjects/GamePlayer.h"
+#include "Globals.h"
 
 CGameEffectMoving::CGameEffectMoving()
 = default;

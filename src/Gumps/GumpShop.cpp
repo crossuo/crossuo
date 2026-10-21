@@ -11,6 +11,7 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (shop agent replay flag)
 #endif

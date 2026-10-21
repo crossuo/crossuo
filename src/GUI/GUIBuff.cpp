@@ -6,6 +6,7 @@
 #include "../Sprite.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUIBuff::CGUIBuff(uint16_t graphic, int timer, const wstr_t &text)
     : CGUIDrawObject(GOT_BUFF, 0, graphic, 0, 0, 0)

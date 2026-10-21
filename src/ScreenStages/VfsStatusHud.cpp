@@ -10,6 +10,7 @@
 
 #include "VfsStatusHud.h"
 
+#include <cstdint>
 #include <stdio.h>
 #include <string.h>
 

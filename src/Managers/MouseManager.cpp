@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include <SDL_stdinc.h>
 #include <cmath> // hypotf
 #include <SDL_mouse.h>
+#include <cstdint>
 #include "../GameWindow.h" // g_WispWindow (until the window merge)
 #include "MouseManager.h"
 #include "ColorManager.h"
+#include "Globals.h"
 #include "MapManager.h"
 #include "ConfigManager.h"
 #include "CustomHousesManager.h"
@@ -22,6 +25,7 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CMouseManager g_MouseManager;
 

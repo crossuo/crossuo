@@ -8,6 +8,7 @@
 #include "../Managers/ColorManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CGUIDrawObject::CGUIDrawObject(
     GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)

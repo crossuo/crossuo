@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "AssetDecode.h"
+#include <cstdint>
 
 #if defined(XUO_ASSISTANT)
 
 #include <string.h>
 
-#include <memory>
 
 #include <xuocore/uodata.h> // g_Index, g_FileManager
 

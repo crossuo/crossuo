@@ -19,6 +19,7 @@
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../GUI/GUIHitBox.h"
 #include "../GUI/GUITextEntry.h"
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <managers/trademanager.h> // xuoassist::g_TradeManager
 #endif

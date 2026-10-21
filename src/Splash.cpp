@@ -3,11 +3,13 @@
 
 #include "Splash.h"
 
-#include "SDL_wrapper.h"
+#include "Renderer/RenderTypes.h"
 #include "Renderer/RenderAPI.h"
 #include "GameWindow.h"
 
+#include <SDL_video.h>
 #include <common/logging/logging.h>
+#include <cstdint>
 
 // stb_image decodes the embedded cover; its implementation is instantiated
 // here (the splash TU is always built, unlike the assistant that only uses

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "FastWalk.h"
+#include <cstdint>
 
 void CFastWalkStack::SetValue(int index, int value)
 {

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Platform.h"
+#include <cstring>
 
 #if defined(XUO_EMSC)
 #include <emscripten.h>

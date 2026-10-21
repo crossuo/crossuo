@@ -8,6 +8,7 @@
 #include "../SelectedObject.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
+#include "xuocore/enumlist.h"
 
 CGumpBuff::CGumpBuff(short x, short y)
     : CGump(GT_BUFF, 0, x, y)

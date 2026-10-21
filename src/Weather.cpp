@@ -2,13 +2,17 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <cmath> // atan2f, powf, sinf, cosf, deg2radf
+#include <cstdint>
 #include "Globals.h"
 #include "Weather.h"
 #include "Managers/ConfigManager.h"
 #include "Misc.h"
+#include "Renderer/Debug/OGLDebugMarker.h"
 #include "Renderer/RenderAPI.h"
+#include "Renderer/RenderCommands.h"
 #include "Utility/PerfMarker.h"
 #include "ScreenStages/GameScreen.h"
+#include "WeatherEffect.h"
 
 CWeather g_Weather;
 

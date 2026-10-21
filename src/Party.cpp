@@ -4,7 +4,9 @@
 #include "Party.h"
 #include "CrossUO.h"
 #include <common/str.h>
+#include <cstdio>
 #include <xuocore/mappedfile.h>
+#include "Globals.h"
 #include "Network/Packets.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/GumpManager.h"
@@ -13,6 +15,7 @@
 #include "GameObjects/GameWorld.h"
 #include "GameObjects/GameCharacter.h"
 #include "Gumps/GumpStatusbar.h"
+#include "xuocore/enumlist.h"
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (invitation rules)
 #include <core/assistantevents.h>   // xuoassist::g_AssistantEvents (party chat journal)

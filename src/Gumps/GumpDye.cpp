@@ -4,6 +4,7 @@
 #include "GumpDye.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Network/Packets.h"
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (font color capture)
 #endif

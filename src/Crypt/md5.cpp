@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include <memory.h>
 #include <string.h>
 #include "md5.h"
 

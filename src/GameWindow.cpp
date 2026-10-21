@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include <SDL_keycode.h>
 #include <SDL_timer.h>
+#include <SDL_version.h>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
-#include <cstring>
 #include <common/utils.h> // countof
-#include <external/gfx/gfx.h> // win_gfx_context_attrbutes
+#include "Renderer/RenderAPI.h"
 #include "icon_client.h"
+#include "xuocore/enumlist.h"
 
 #if defined(XUO_EMSC)
 #include <emscripten.h>
@@ -17,7 +20,6 @@
 
 #include "GameWindow.h"
 #include "CrossUO.h"
-#include "ServerList.h"
 #include "PressedObject.h"
 #include "SelectedObject.h"
 #include "ScreenshotBuilder.h"
@@ -28,14 +30,9 @@
 #include "Managers/SoundManager.h"
 #include "Managers/GumpManager.h"
 #include "TextEngine/EntryText.h"
-#include "Managers/PacketManager.h"
-#include "Managers/ConnectionManager.h"
 #include "Managers/MouseManager.h"
-#include "Network/Packets.h"
 #include "ScreenStages/MainScreen.h"
-#include "ScreenStages/ServerScreen.h"
 #include "Gumps/Gump.h"
-#include "Walker/PathFinder.h"
 #include "Splash.h"
 
 

@@ -4,11 +4,13 @@
 #include "GumpMenubar.h"
 #include "../CrossUO.h"
 #include "../Config.h"
+#include <cstdint>
 #include <vector>
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
 #include "../Managers/ClilocManager.h"
 #include "../Network/Packets.h"
+#include "xuocore/enumlist.h"
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordHelpRequest (macro tap)
 #include "../Assistant/AssistantWindow.h" // AssistantWindow_Toggle (the assistant button)

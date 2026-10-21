@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpMinimap.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <xuocore/vfs.h>
 #include "../CrossUO.h"
@@ -13,6 +14,7 @@
 #include "../GameObjects/GameItem.h"
 #include "../GameObjects/MapBlock.h"
 #include "../GameObjects/GamePlayer.h"
+#include "Gumps/Gump.h"
 
 CGumpMinimap::CGumpMinimap(short x, short y, bool minimized)
     : CGump(GT_MINIMAP, 0, x, y)

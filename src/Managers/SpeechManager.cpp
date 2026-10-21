@@ -2,13 +2,14 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "SpeechManager.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <common/logging/logging.h>
 #include <common/str.h>
 #include <vector>
 #include "../Config.h"
-#include "../Misc.h"
 #include "../Globals.h" // g_Language
+#include "xuocore/mappedfile.h"
 
 CSpeechManager g_SpeechManager;
 

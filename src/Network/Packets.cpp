@@ -4,6 +4,7 @@
 #include "../Misc.h"
 #include <common/str.h>
 #include <common/utils.h> // checked_cast
+#include <cstddef>
 #include "Packets.h"
 #include "../Globals.h" // g_ServerLanguageReport (0xB3 language field)
 #include "../Config.h"
@@ -27,6 +28,7 @@
 #include "../Gumps/GumpBook.h"
 #include "../Gumps/GumpTextEntryDialog.h"
 #include "../Gumps/GumpSecureTrading.h"
+#include "xuocore/mappedfile.h"
 
 CPacket::CPacket(size_t size, bool autoResize)
     : CDataWriter(size, autoResize)

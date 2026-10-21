@@ -8,6 +8,7 @@
 #include "../Managers/GumpManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Gumps/GumpNotify.h"
+#include "ScreenStages/BaseScreen.h"
 
 CGameBlockedScreen g_GameBlockedScreen;
 

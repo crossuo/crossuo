@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "TextRenderer.h"
+#include "ImageBounds.h"
 #include "TextData.h"
 #include "../SelectedObject.h"
 #include "../Managers/ColorManager.h"
@@ -10,6 +11,7 @@
 #include "../GameObjects/GameWorld.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "TextEngine/RenderTextObject.h"
 
 CTextRenderer g_WorldTextRenderer;
 

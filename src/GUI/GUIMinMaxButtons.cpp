@@ -7,6 +7,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include <cstdint>
 
 CGUIMinMaxButtons::CGUIMinMaxButtons(
     int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value)

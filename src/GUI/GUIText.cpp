@@ -5,6 +5,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUIText::CGUIText(uint16_t color, int x, int y)
     : CBaseGUI(GOT_TEXT, 0, 0, color, x, y)

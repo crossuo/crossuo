@@ -6,11 +6,13 @@
 #include <common/str.h>
 #include "FontsManager.h"
 #include "ColorManager.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
 #include "../CrossUO.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderBatch.h"
+#include "xuocore/mappedfile.h"
 
 CFontsManager g_FontManager;
 

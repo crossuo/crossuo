@@ -3,6 +3,7 @@
 
 #include "MapObject.h"
 #include "../Globals.h" // g_LandObjectsCount, g_StaticsObjectsCount
+#include "xuocore/enumlist.h"
 
 CMapObject::CMapObject(
     RENDER_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, short x, short y, char z)

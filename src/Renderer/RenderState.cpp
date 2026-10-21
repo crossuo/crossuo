@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
+#include "glm/ext/matrix_float4x4.hpp"
 #if defined(USE_GL3) || defined(USE_GLES)
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
@@ -9,7 +10,6 @@
 #include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <assert.h>

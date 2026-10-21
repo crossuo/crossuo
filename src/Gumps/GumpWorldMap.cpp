@@ -3,16 +3,18 @@
 
 #include "../GameWindow.h" // GetDisplaySize
 #include "GumpWorldMap.h"
+#include <cstdint>
 #include <external/zlib_amalg.h> // crc32 (whole-file running checksum)
+#include <vector>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../PressedObject.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/MapManager.h"
 #include "../Managers/MouseManager.h"
-#include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Renderer/RenderAPI.h"
+#include "xuocore/enumlist.h"
 
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };
 

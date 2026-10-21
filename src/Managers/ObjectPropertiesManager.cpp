@@ -3,6 +3,7 @@
 
 #include "ObjectPropertiesManager.h"
 #include "ConfigManager.h"
+#include "GameObjects/GameObject.h"
 #include "GumpManager.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
@@ -10,6 +11,7 @@
 #include "../Gumps/GumpPropertyIcon.h"
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GameCharacter.h"
+#include "xuocore/enumlist.h"
 
 CObjectPropertiesManager g_ObjectPropertiesManager;
 

@@ -5,6 +5,7 @@
 #include "../ToolTip.h"
 #include "../Managers/MouseManager.h"
 #include "../Globals.h" // g_Ticks
+#include "Platform.h"
 
 CGumpProperty::CGumpProperty(const wstr_t &text)
     : CGump(GT_PROPERTY, 0, 0, 0)

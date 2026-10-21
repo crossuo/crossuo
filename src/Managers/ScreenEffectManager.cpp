@@ -5,6 +5,7 @@
 #include "../GameWindow.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CScreenEffectManager g_ScreenEffectManager;
 

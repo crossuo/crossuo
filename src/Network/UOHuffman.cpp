@@ -4,6 +4,7 @@
 // clang-format off
 
 #include "UOHuffman.h"
+#include <cstdint>
 
 int CDecompressingCopier::tree[] = {
     /*   0*/ 1,    2,

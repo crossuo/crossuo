@@ -3,12 +3,13 @@
 
 #include "Config.h"
 
+#include "Constants.h"
 #include "Platform.h"
 
 #include "Globals.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
-#include <xuocore/vfs.h>
 #include <common/logging/logging.h>
 #include <common/fs.h>
 #include <common/str.h>
@@ -16,11 +17,11 @@
 #include <common/utils.h>
 #include <xuocore/enumlist.h>
 #include <xuocore/client_info.h>
-#include "Crypt/CryptEntry.h"
 #include "Managers/PacketManager.h"
 #include "Managers/ConnectionManager.h"
 #include "ScreenStages/BaseScreen.h"
 #include "ScreenStages/MainScreen.h"
+#include "white_label.h"
 
 #include <external/popts.h>
 extern po::parser g_cli;

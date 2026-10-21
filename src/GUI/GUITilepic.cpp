@@ -4,11 +4,13 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "GUITilepic.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Sprite.h"
 #include "../Point.h"
 #include "../Utility/PerfMarker.h"
+#include "GUI/GUIDrawObject.h"
 
 CGUITilepic::CGUITilepic(uint16_t graphic, uint16_t color, int x, int y, bool doubleDraw)
     : CGUIDrawObject(GOT_TILEPIC, 0, graphic, color, x, y)

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpSkills.h"
+#include "Config.h"
 #include "GumpSkill.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
@@ -16,6 +17,7 @@
 #include "../Managers/SkillsManager.h"
 #include "../Managers/SkillGroupManager.h"
 #include "../Network/Packets.h"
+#include "Gumps/GumpBaseScroll.h"
 #if defined(XUO_ASSISTANT)
 #include <core/assistantevents.h> // xuoassist::g_AssistantEvents (skill-lock echo)
 #endif

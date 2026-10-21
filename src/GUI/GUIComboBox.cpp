@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIComboBox.h"
+#include "GUI/BaseGUI.h"
 #include "GUIText.h"
 #include "GUIScissor.h"
 #include "../Point.h"
@@ -11,6 +12,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUIComboBox::CGUIComboBox(
     int serial,

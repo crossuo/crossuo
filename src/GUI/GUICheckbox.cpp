@@ -8,6 +8,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUICheckbox::CGUICheckbox(
     int serial, uint16_t graphic, uint16_t graphicChecked, uint16_t graphicDisabled, int x, int y)

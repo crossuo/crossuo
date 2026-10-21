@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpRacialAbilitiesBook.h"
+#include "Globals.h"
 #include "GumpRacialAbility.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
@@ -13,6 +14,7 @@
 #include "../Managers/ClilocManager.h"
 #include "../Managers/GumpManager.h"
 #include "../GameObjects/GamePlayer.h"
+#include "xuocore/enumlist.h"
 
 CGumpRacialAbilitiesBook::CGumpRacialAbilitiesBook(int x, int y)
     : CGump(GT_RACIAL_ABILITIES_BOOK, 0, x, y)

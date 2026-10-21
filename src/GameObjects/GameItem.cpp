@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GameItem.h"
+#include "Constants.h"
 #include "CustomHouseMultiObject.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <algorithm>
 #include "../Config.h"
@@ -21,6 +23,7 @@
 #include "../Gumps/GumpCustomHouse.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CGameItem::CGameItem(int serial)
     : CGameObject(serial)

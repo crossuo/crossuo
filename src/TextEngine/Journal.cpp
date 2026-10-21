@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "Journal.h"
+#include "BaseQueue.h"
 #include "TextData.h"
 #include "../Managers/GumpManager.h"
 #include "../Gumps/GumpJournal.h"
+#include "xuocore/enumlist.h"
 
 CJournal g_Journal(150);
 

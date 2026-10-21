@@ -2,9 +2,10 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIHTMLButton.h"
+#include "GUI/GUIButton.h"
 #include "GUIHTMLGump.h"
 #include "../Renderer/RenderAPI.h"
-#include "../Globals.h" // g_ShaderDrawMode
+#include <cstdint>
 
 CGUIHTMLButton::CGUIHTMLButton(
     CGUIHTMLGump *htmlGump,

@@ -3,6 +3,7 @@
 
 #include "Connection.h"
 #include <common/logging/logging.h>
+#include <cstdint>
 #include "PacketMessage.h"
 #include "../Sockets.h"
 #include "../Crypt/CryptEntry.h"

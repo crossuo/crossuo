@@ -5,6 +5,7 @@
 #include "Sprite.h"
 #include "Managers/MouseManager.h"
 #include "Renderer/RenderAPI.h"
+#include <cstdint>
 
 void CSprite::LoadSprite16(int width, int height, uint16_t *pixels, bool skipHitMask)
 {

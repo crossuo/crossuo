@@ -7,6 +7,7 @@
 #include "../Renderer/RenderTexture.h" // g_MapTexture full type
 #include "../Utility/PerfMarker.h"
 #include "../Globals.h" // g_MapTexture
+#include "GUI/BaseGUI.h"
 
 CGUIWorldMapTexture::CGUIWorldMapTexture(int x, int y)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)

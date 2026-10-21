@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUITilepicHightlighted.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
@@ -9,6 +10,7 @@
 #include "../Gumps/Gump.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "GUI/GUITilepic.h"
 
 CGUITilepicHightlighted::CGUITilepicHightlighted(
     int serial,

@@ -6,6 +6,7 @@
 #include "../Party.h"
 #include "../TextEngine/GameConsole.h"
 #include "../Network/Packets.h"
+#include <cstdint>
 
 enum
 {

@@ -4,10 +4,12 @@
 #include "BaseScreen.h"
 #include "../SelectedObject.h"
 #include "../Managers/MouseManager.h"
+#include "Managers/FontsManager.h"
 #include "VfsStatusHud.h"
 #include "../Managers/ScreenEffectManager.h"
 #include "ScreenshotBuilder.h"
 #include "../Renderer/RenderAPI.h"
+#include <cstdint>
 
 CBaseScreen *g_CurrentScreen = nullptr;
 

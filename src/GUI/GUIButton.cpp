@@ -5,6 +5,7 @@
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
+#include <cstdint>
 
 CGUIButton::CGUIButton(
     int serial, uint16_t graphic, uint16_t graphicSelected, uint16_t graphicPressed, int x, int y)

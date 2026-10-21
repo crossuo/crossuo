@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUISkillGroup.h"
+#include "GUI/BaseGUI.h"
 #include "GUIButton.h"
 #include "GUITextEntry.h"
 #include "GUISkillItem.h"
@@ -11,6 +12,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CGUISkillGroup::CGUISkillGroup(
     int serial, int minimizeSerial, CSkillGroupObject *group, int x, int y)

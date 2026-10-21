@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2020 Jean-Martin Miljours
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
+#include <vector>
 #include <xuocore/uodata.h>
-#include <common/utils.h> // countof
 #include <algorithm>      // std::min, std::max
 #include "GumpResourceTracker.h"
 #include "../Spells.h"
@@ -14,13 +14,13 @@
 #include "../Managers/ConfigManager.h"
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GamePlayer.h"
-#include "../Target.h"
 #include "../PressedObject.h"
 #include "../SelectedObject.h"
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../CrossUO.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
+#include "xuocore/enumlist.h"
 
 static constexpr int GRID_SIZE = 20;
 static constexpr int MAX_WIDTH = GRID_SIZE * TRACKER_BOX_SIZE;

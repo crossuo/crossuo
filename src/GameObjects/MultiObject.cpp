@@ -2,13 +2,14 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "MultiObject.h"
-#include "CustomHouseMultiObject.h"
+#include "Constants.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
 #include "../Managers/CustomHousesManager.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CMultiObject::CMultiObject(uint16_t graphic, short x, short y, char z, int flags)
     : CRenderStaticObject(ROT_MULTI_OBJECT, 0, graphic, 0, x, y, z)

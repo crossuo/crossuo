@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpSelectColor.h"
+#include "GUI/GUIGumppic.h"
 #include "GumpOptions.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/GumpManager.h"
+#include <cstdint>
 
 CGumpSelectColor::CGumpSelectColor(uint32_t serial, short x, short y, SELECT_COLOR_GUMP_STATE state)
     : CGump(GT_SELECT_COLOR, serial, x, y)

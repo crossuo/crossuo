@@ -5,26 +5,31 @@
 
 #include "PacketManager.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
+#include "Globals.h"
 #include "GumpManager.h"
 #include "ConfigManager.h"
 #include "CustomHousesManager.h"
 #include "ClilocManager.h"
-#include "MacroManager.h"
+#include "Network/PacketMessage.h"
 #include "ObjectPropertiesManager.h"
 #include "ColorManager.h"
 #include "FontsManager.h"
 #include "AnimationManager.h"
 #include "EffectManager.h"
+#include "Platform.h"
 #include "ScreenEffectManager.h"
 #include "CorpseManager.h"
 #include "SkillsManager.h"
 #include "MapManager.h"
+#include "Walker/WalkData.h"
 #include "Waypoints.h"
 #include "ConnectionManager.h"
 #include "ChatManager.h"
 #include "SoundManager.h" // g_SoundManager (stop-music command)
+#include <cstddef>
 #include <cstdint>
 #include <algorithm>
+#include <cstring>
 #include <vector>
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
@@ -35,8 +40,6 @@
 #include <core/shopagent.h> // xuoassist::g_ShopAgent (buy-list agent)
 #include <managers/menumanager.h>        // xuoassist::g_MenuManager
 #include <managers/trademanager.h>       // xuoassist::g_TradeManager
-#include <macros/macroexecutor.h>        // xuoassist::g_MacroExecutor (login reset)
-#include <managers/assmap.h>             // xuoassist::g_MapSettings (ShowOnLogin)
 #include <managers/guildmanager.h>       // xuoassist::g_GuildManager (guild chat speaker names)
 #include <managers/promptmanager.h>      // xuoassist::g_PromptManager (macro wait)
 #include <managers/gumpmanager.h>        // xuoassist::g_GumpManager
@@ -44,16 +47,13 @@
 #endif
 #include <external/zlib_amalg.h>
 #include <common/str.h>
-#include <common/utils.h>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
 #include "revision.h"
 #include "../MultiMap.h"
 #include "../Point.h"
-#include "../Sockets.h"
 #include "../Config.h"
 #include "../CrossUO.h"
-#include "../Macro.h"
 #include "../CityList.h"
 #include "../ToolTip.h"
 #include "../Target.h"
@@ -74,9 +74,7 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../GameObjects/GameEffectMoving.h"
 #include "../Gumps/Gump.h"
-#include "../Gumps/GumpAbility.h"
 #include "../Gumps/GumpSecureTrading.h"
-#include "../Gumps/GumpStatusbar.h"
 #include "../Gumps/GumpShop.h"
 #include "../Gumps/GumpBook.h"
 #include "../Gumps/GumpMap.h"

@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpBook.h"
+#include <cassert>
 #include <common/utils.h>
+#include <cstdint>
 #include "../CrossUO.h"
 #include "../PressedObject.h"
 #include "../ClickObject.h"
@@ -11,6 +13,7 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Network/Packets.h"
+#include "xuocore/enumlist.h"
 
 enum
 {

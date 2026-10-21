@@ -3,6 +3,7 @@
 
 #include "GumpScreenCharacterList.h"
 #include <SDL_timer.h>
+#include <cstdint>
 #include "../Config.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
@@ -10,6 +11,7 @@
 #include "../Managers/ClilocManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/CharacterListScreen.h"
+#include "xuocore/enumlist.h"
 
 enum
 {

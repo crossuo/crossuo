@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include <algorithm>
+#include <cstdint>
 #include "SkillsManager.h"
 #include "../Globals.h"
 #include "../CrossUO.h" // ::g_Game (the client send bridge)
@@ -12,7 +13,6 @@
 #include <common/logging/logging.h>
 #include <common/str.h>
 #include <xuocore/uodata.h>
-#include <xuocore/mulstruct.h>
 
 CSkillsManager g_SkillsManager;
 

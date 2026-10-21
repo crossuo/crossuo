@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <cstring>
 #include "Profession.h"
 #include "Managers/FontsManager.h"
 

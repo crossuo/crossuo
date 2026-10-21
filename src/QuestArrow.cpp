@@ -2,14 +2,15 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "QuestArrow.h"
+#include "Globals.h"
 #include "Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "CrossUO.h"
 #include "Point.h"
 #include "Managers/MouseManager.h"
-#include "ScreenStages/MainScreen.h"
 #include "ScreenStages/GameScreen.h"
 #include "GameObjects/GamePlayer.h"
 #include "Utility/PerfMarker.h"
+#include <cstdint>
 
 CQuestArrow g_QuestArrow;
 

@@ -13,6 +13,7 @@
 #include "../Managers/ClilocManager.h"
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GamePlayer.h"
+#include <cstdint>
 
 CGumpTargetSystem::CGumpTargetSystem(uint32_t serial, short x, short y)
     : CGump(GT_TARGET_SYSTEM, serial, x, y)

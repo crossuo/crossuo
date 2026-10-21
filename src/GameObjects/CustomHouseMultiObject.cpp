@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include "CustomHouseMultiObject.h"
+#include <cstdint>
 
 CCustomHouseMultiObject::CCustomHouseMultiObject(
     uint16_t graphic, uint16_t color, short x, short y, char z, int flags)

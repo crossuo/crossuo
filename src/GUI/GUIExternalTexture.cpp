@@ -9,6 +9,7 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderTexture.h" // g_AuraTexture full type
 #include "../Utility/PerfMarker.h"
+#include "GUI/BaseGUI.h"
 
 CGUIExternalTexture::CGUIExternalTexture(
     CSprite *sprite, bool deleteTextureOnDestroy, int x, int y, int drawWidth, int drawHeight)

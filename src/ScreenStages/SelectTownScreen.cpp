@@ -9,6 +9,7 @@
 #include "../GameWindow.h"
 #include "../Managers/ScreenEffectManager.h"
 #include "../Network/Packets.h"
+#include "ScreenStages/BaseScreen.h"
 
 CSelectTownScreen g_SelectTownScreen;
 

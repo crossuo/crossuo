@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
+#include "ScreenStages/BaseScreen.h"
 #define LOGGER_MODULE Client
 
 #include "LauncherWindow.h"
@@ -8,7 +9,6 @@
 #if defined(XUO_LAUNCHER_EMBEDDED)
 
 #include <external/gfx/gfx.h>
-#include <external/gfx/ui.h>
 #include <external/process.h>
 #include <common/logging/logging.h>
 #include <xuocore/common.h>

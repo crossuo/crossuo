@@ -4,9 +4,10 @@
 #include "MultiMap.h"
 #include "Gumps/GumpMap.h"
 #include "Managers/ColorManager.h"
+#include <cassert>
 #include <common/logging/logging.h>
+#include <vector>
 #include <xuocore/uodata.h>
-#include <xuocore/vfs.h>
 
 CMultiMap g_MultiMap;
 

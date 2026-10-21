@@ -5,6 +5,7 @@
 #include "GumpBaseScroll.h"
 #include "../CrossUO.h"
 #include "../Managers/MouseManager.h"
+#include "xuocore/enumlist.h"
 
 CGumpBaseScroll::CGumpBaseScroll(
     GUMP_TYPE type,

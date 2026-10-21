@@ -5,11 +5,12 @@
 #include "GumpManager.h"
 #include "SkillsManager.h"
 #include "ConfigManager.h"
-#include <xuocore/mappedfile.h>
+#include <cstdint>
 #include "../CrossUO.h"
 #include "../SkillGroup.h"
 #include "../Gumps/GumpNotify.h"
 #include "../ScreenStages/GameBlockedScreen.h"
+#include "xuocore/enumlist.h"
 #include <xuocore/text_parser.h>
 
 CSkillGroupManager g_SkillGroupManager;

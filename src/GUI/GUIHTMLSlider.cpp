@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIHTMLSlider.h"
+#include "GUI/GUISlider.h"
 #include "GUIHTMLGump.h"
+#include <cstdint>
 
 CGUIHTMLSlider::CGUIHTMLSlider(
     CGUIHTMLGump *htmlGump,

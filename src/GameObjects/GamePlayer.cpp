@@ -3,10 +3,11 @@
 
 #include "GamePlayer.h"
 #include "GameItem.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
-#include "../CrossUO.h"
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
+#include "GameObjects/GameCharacter.h"
 
 CPlayer *g_Player = nullptr;
 

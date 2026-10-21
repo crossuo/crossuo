@@ -2,13 +2,12 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Sockets.h"
+#include <bits/types/struct_timeval.h>
 #include <cassert>
-#include <common/logging/logging.h>
 #include <common/str.h>
+#include <cstdint>
 #include <string.h>
-#include <algorithm>
-#include <vector>
-#include <string>
+#include <sys/select.h>
 
 #define SOCKET_LOG(...)
 #define SOCKET_DUMP(...)
@@ -247,7 +246,6 @@ void tcp_close(tcp_socket socket)
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <fcntl.h>
 typedef int SOCKET;
 #define INVALID_SOCKET (-1)
 #define closesocket close

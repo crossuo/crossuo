@@ -6,6 +6,7 @@
 #include "../Sprite.h"
 #include "../Point.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUIButtonTileart::CGUIButtonTileart(
     int serial,

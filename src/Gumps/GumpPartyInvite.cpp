@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 
 #include "GumpPartyInvite.h"
-#include "../CrossUO.h"
 #include "../GameWindow.h"
 #include "../GameObjects/GameWorld.h"
 #include "../Party.h"
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
 #include "../GUI/GUIAlphaBlending.h"
-#include "../GUI/GUIButton.h"
 #include "../GUI/GUIHitBox.h"
 #include "../GUI/GUIText.h"
 #include "../Managers/FontsManager.h"
+#include <cstdint>
 
 CGumpPartyInvite::CGumpPartyInvite(uint32_t inviter)
     : CGump(GT_PARTY_INVITE, inviter, 0, 0)

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "GumpSpellbook.h"
+#include "Globals.h"
 #include "GumpSpell.h"
 #include "../Config.h"
 #include "../ToolTip.h"
@@ -15,6 +16,7 @@
 #include "../Managers/GumpManager.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../GameObjects/GameWorld.h"
+#include <cstdint>
 
 constexpr uint16_t nameColor = 0x0288;
 constexpr uint16_t powerColor = 0x0386;

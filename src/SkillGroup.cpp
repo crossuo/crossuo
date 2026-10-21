@@ -3,6 +3,7 @@
 
 #include "SkillGroup.h"
 #include "Managers/SkillsManager.h"
+#include <cstring>
 
 CSkillGroupObject::CSkillGroupObject()
 {

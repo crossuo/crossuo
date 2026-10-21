@@ -6,6 +6,7 @@
 #include "GameWindow.h"
 #include "Sprite.h"
 #include "Managers/ConfigManager.h"
+#include <vector>
 
 std::vector<ContainerDefinition> g_Container;
 static ContainerPosition s_ContainerPos;

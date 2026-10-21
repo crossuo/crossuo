@@ -4,8 +4,10 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "GameWorld.h"
+#include "Constants.h"
 #include "ObjectOnCursor.h"
 #include "GamePlayer.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Party.h"
@@ -21,6 +23,7 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../Gumps/GumpContainer.h"
 #include "../Walker/Walker.h"
+#include "xuocore/enumlist.h"
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (corpse auto-open)
 #include <core/global.h> // xuoassist::g_LastCorpseObject (the last-corpse tracking)

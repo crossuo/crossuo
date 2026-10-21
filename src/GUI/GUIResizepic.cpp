@@ -5,6 +5,7 @@
 #include "../CrossUO.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include <cstdint>
 
 CGUIResizepic::CGUIResizepic(int serial, uint16_t graphic, int x, int y, int width, int height)
     : CGUIPolygonal(GOT_RESIZEPIC, x, y, width, height)

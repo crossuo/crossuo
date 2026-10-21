@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpPaperdoll.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../CrossUO.h"
@@ -17,6 +18,7 @@
 #include "../Managers/UOFileReader.h"
 #include "../GameObjects/GameItem.h"
 #include "../GameObjects/GameWorld.h"
+#include "xuocore/enumlist.h"
 #if defined(XUO_ASSISTANT)
 #include <managers/gumpmanager.h> // xuoassist::g_GumpManager (gump-choice tap)
 #endif

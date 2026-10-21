@@ -3,11 +3,13 @@
 
 #include "GameEffect.h"
 #include "GameEffectMoving.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Managers/EffectManager.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "RenderWorldObject.h"
 
 CGameEffect::CGameEffect()
     : CRenderWorldObject(ROT_EFFECT, 0, 0, 0, 0, 0, 0)

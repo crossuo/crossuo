@@ -4,6 +4,7 @@
 #include "GumpQuestion.h"
 #include "../CrossUO.h"
 #include "../ScreenStages/GameScreen.h"
+#include <cstdint>
 
 CGumpQuestion::CGumpQuestion(uint32_t serial, short x, short y, uint8_t variant)
     : CGump(GT_QUESTION, serial, x, y)

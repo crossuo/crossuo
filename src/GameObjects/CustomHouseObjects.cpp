@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include "CustomHouseObjects.h"
+#include <cstring>
 #include <stdio.h> // sscanf
 
 bool CCustomHouseObjectWall::Parse(const char *text)

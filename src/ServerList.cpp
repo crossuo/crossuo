@@ -6,6 +6,7 @@
 #include "CrossUO.h"
 #include "ScreenStages/MainScreen.h"
 #include "ScreenStages/ServerScreen.h"
+#include <cstdint>
 #include <xuocore/mappedfile.h>
 
 CServerList g_ServerList;

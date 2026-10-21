@@ -2,10 +2,13 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <algorithm>
+#include <cassert>
 #include <common/str.h>
 #include "ClilocManager.h"
+#include <map>
 #include <xuocore/uodata.h>
 #include "../Globals.h" // g_Language
+#include "common/logging/logging.h"
 
 CClilocManager g_ClilocManager;
 

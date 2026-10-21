@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "RenderStaticObject.h"
+#include "GameObjects/MapObject.h"
 #include "GamePlayer.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <xuocore/mulstruct.h>
 #include "../Managers/ConfigManager.h"
@@ -13,6 +15,7 @@
 #include "../TextEngine/TextData.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CRenderStaticObject::CRenderStaticObject(
     RENDER_OBJECT_TYPE renderType,

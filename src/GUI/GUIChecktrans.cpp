@@ -5,6 +5,7 @@
 #include "GUIChecktrans.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "GUI/GUIPolygonal.h"
 
 CGUIChecktrans::CGUIChecktrans(int x, int y, int width, int height)
     : CGUIPolygonal(GOT_CHECKTRANS, x, y, width, height)

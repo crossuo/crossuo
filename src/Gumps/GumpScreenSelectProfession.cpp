@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <vector>
 #include "GumpScreenSelectProfession.h"
+#include "GUI/GUIButton.h"
 #include "Gump1998ScrollChoice.h"
 #include "../Config.h"
 #include "../ToolTip.h"
@@ -17,6 +19,7 @@
 #include "../Managers/ProfessionManager.h"
 #include "../ScreenStages/SelectProfessionScreen.h"
 #include "../ScreenStages/CreateCharacterScreen.h"
+#include "xuocore/enumlist.h"
 
 enum
 {

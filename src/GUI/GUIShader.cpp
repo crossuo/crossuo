@@ -4,6 +4,7 @@
 #include "GUIShader.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderShader.h"
+#include "GUI/BaseGUI.h"
 
 CGUIShader::CGUIShader(CRenderShader *shader, bool enabled)
     : CBaseGUI(GOT_SHADER, 0, 0, 0, 0, 0)

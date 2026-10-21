@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Danny Angelo Carminati Grein
 
 #include "RenderBatch.h"
+#include "Renderer/RenderTypes.h"
 #if defined(USE_GL3) || defined(USE_GLES)
 
 #include "RenderAPI.h"
@@ -9,7 +10,6 @@
 #include "RenderInternal.h"
 #include "RenderCommands.h"
 #include <external/gfx/gfx.h>
-#include <glm/glm.hpp>
 #include <stdio.h> // fprintf (XUO_BATCH_LOG)
 #include <stdlib.h> // getenv
 #include <string.h> // memcmp

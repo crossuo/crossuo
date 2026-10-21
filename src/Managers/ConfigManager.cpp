@@ -4,9 +4,12 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "ConfigManager.h"
+#include "Globals.h"
 #include "GumpManager.h"
+#include "Renderer/RenderCommands.h"
 #include "SoundManager.h"
 #include "ObjectPropertiesManager.h"
+#include <cstdint>
 #include <xuocore/text_parser.h>
 #include <common/fs.h>
 #include <common/str.h>
@@ -28,8 +31,8 @@
 #include "../Network/Packets.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../Renderer/RenderAPI.h"
-#include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../Renderer/RenderCircleOfTransparency.h" // g_CircleOfTransparency
+#include "xuocore/enumlist.h"
 
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;

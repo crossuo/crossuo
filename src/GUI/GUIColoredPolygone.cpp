@@ -7,6 +7,7 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 #include "../Globals.h" // g_GumpSelectedElement, ToColor*
+#include <cstdint>
 
 CGUIColoredPolygone::CGUIColoredPolygone(
     int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor)

@@ -3,11 +3,15 @@
 
 #include "ScreenshotBuilder.h"
 #include "GameWindow.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <time.h>
 #include "CrossUO.h"
+#include "Globals.h"
 #include "Managers/ConfigManager.h"
+#include "Platform.h"
 #include "Renderer/RenderAPI.h"
+#include "Renderer/RenderCommands.h"
 
 #define STBIWDEF static inline
 #define STB_IMAGE_WRITE_STATIC

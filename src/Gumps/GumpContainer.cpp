@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpContainer.h"
+#include "GUI/BaseGUI.h"
 #include "GumpDrag.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
@@ -21,6 +22,7 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
+#include <cstdint>
 
 const uint32_t CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint32_t CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;

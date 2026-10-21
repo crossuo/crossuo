@@ -2,12 +2,14 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <cstdio>
 #include "GameConsole.h"
 #include "../CrossUO.h"
 #include "../Party.h"
 #include "../GameWindow.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
+#include "xuocore/enumlist.h"
 #if defined(XUO_ASSISTANT)
 #include <core/assist.h> // xuoassist::AssistantSpeechIntercept (speech taps)
 #endif

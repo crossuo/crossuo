@@ -12,6 +12,7 @@
 #include "../GameWindow.h"
 #include "../CharacterList.h"
 #include "../Managers/ScreenEffectManager.h"
+#include "ScreenStages/BaseScreen.h"
 
 CCharacterListScreen g_CharacterListScreen;
 

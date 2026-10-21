@@ -10,6 +10,7 @@
 #include "../Gumps/Gump.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include <cstdint>
 
 CGUISlider::CGUISlider(
     int serial,

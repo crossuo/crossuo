@@ -8,6 +8,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
 #include "../Gumps/GumpMenu.h"
+#include <cstdint>
 
 CGUIMenuObject::CGUIMenuObject(
     int serial, uint16_t graphic, uint16_t color, int x, int y, const astr_t &text)

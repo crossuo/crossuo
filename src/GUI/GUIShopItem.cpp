@@ -3,6 +3,7 @@
 
 #include "GUIShopItem.h"
 #include <SDL_timer.h>
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Managers/AnimationManager.h"
@@ -11,6 +12,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "GUI/BaseGUI.h"
 
 CGUIShopItem::CGUIShopItem(
     int serial,

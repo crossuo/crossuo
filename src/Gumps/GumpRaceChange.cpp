@@ -9,7 +9,7 @@
 #include "../Network/Packets.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader
 #include "../SelectedObject.h"        // g_SelectedObject
-#include <xuocore/uodata.h>           // g_Data, uo_get_equipconv
+#include <cstdint>
 
 CGumpRaceChange *g_GumpRaceChange = nullptr;
 

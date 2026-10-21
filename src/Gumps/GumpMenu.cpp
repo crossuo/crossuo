@@ -5,6 +5,7 @@
 #include "../PressedObject.h"
 #include "../Network/Packets.h"
 #include "../Globals.h" // UOFONT_*, g_GumpPressed
+#include <cstdint>
 #if defined(XUO_ASSISTANT)
 #include <managers/menumanager.h> // xuoassist::g_MenuManager (menu-choice tap)
 #endif

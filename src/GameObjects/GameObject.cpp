@@ -7,6 +7,7 @@
 #include "GameEffect.h"
 #include "GameCharacter.h"
 #include <SDL_timer.h>
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include <common/str.h>
 #include "../Config.h"
@@ -24,6 +25,7 @@
 #include "../Managers/ColorManager.h"
 #include "../TextEngine/TextData.h"
 #include "../Renderer/RenderAPI.h"
+#include "Globals.h"
 
 static int s_objectHandleOffsetY = 25;
 static int s_bodyHandleOffsetY = 15;

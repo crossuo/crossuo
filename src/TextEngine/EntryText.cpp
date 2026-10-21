@@ -3,12 +3,14 @@
 
 #include <SDL_clipboard.h>
 #include <common/str.h>
+#include <cstdint>
 #include "EntryText.h"
 #include "../TextEngine/GameConsole.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/GumpManager.h"
 #include "../Gumps/Gump.h"
+#include "Globals.h"
 
 CEntryText *g_EntryPointer = nullptr;
 

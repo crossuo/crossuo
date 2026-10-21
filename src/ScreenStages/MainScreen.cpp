@@ -6,7 +6,9 @@
 #include "MainScreen.h"
 #include "BaseScreen.h"
 #include <common/utils.h>
+#include <cstdint>
 #include <cstdlib>
+#include "Renderer/RenderAPI.h"
 #include "revision.h"
 #include "../Misc.h"
 #include "../Config.h"
@@ -18,8 +20,8 @@
 #include "../Managers/ScreenEffectManager.h"
 #include "../Managers/AnimationManager.h"
 #include "../Managers/GumpManager.h"
-#include "../GUI/GUITextEntry.h"
 #include "../TextEngine/EntryText.h"
+#include "xuocore/enumlist.h"
 
 CMainScreen g_MainScreen;
 

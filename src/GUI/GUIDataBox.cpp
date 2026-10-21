@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIDataBox.h"
+#include "GUI/GUIPolygonal.h"
 
 CGUIDataBox::CGUIDataBox()
     : CGUIPolygonal(GOT_DATABOX, 0, 0, 0, 0)

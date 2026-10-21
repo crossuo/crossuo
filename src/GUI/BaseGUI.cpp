@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "BaseGUI.h"
+#include "xuocore/enumlist.h"
 
 CBaseGUI::CBaseGUI(
     GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)

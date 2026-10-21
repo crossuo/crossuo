@@ -2,19 +2,18 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpScreenSelectTown.h"
+#include "GUI/GUIGumppicTiled.h"
 #include "Gump1998ScrollChoice.h"
 #include "../Config.h"
 #include "../CityList.h"
 #include "../Misc.h" // CalculatePercents
 #include "../ServerList.h"
 #include "../Managers/ClilocManager.h"
-#include "../Managers/CreateCharacterManager.h"
 #include "../GUI/GUIButton.h"
-#include "../GUI/GUIShader.h"
-#include "../Renderer/RenderShader.h" // g_ColorizerShader
 #include "../Managers/FontsManager.h"
 #include "../ScreenStages/SelectTownScreen.h"
 #include "../Globals.h"     // g_Language, g_MapSize, UOFONT_*
+#include "Gumps/Gump.h"
 #include <xuocore/uodata.h> // g_MapSize
 #include <common/str.h>
 

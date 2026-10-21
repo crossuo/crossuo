@@ -3,6 +3,7 @@
 
 #include "CityList.h"
 #include "Managers/CityManager.h"
+#include <cstddef>
 #include <xuocore/mappedfile.h>
 #include <xuocore/uodata.h>
 #include <common/utils.h> // countof

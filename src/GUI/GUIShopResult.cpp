@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIShopResult.h"
+#include "GUI/BaseGUI.h"
 #include "GUIMinMaxButtons.h"
 #include "GUIShopItem.h"
 #include "../CrossUO.h"
@@ -10,6 +11,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "xuocore/enumlist.h"
 
 CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     : CBaseGUI(GOT_SHOPRESULT, shopItem->Serial, shopItem->Graphic, shopItem->Color, x, y)

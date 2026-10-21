@@ -3,6 +3,7 @@
 
 #include "CreateCharacterManager.h"
 #include "../CrossUO.h"
+#include <cstdint>
 
 CCreateCharacterManager g_CreateCharacterManager;
 

@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <vector>
 #include "GumpChat.h"
-#include "../CrossUO.h"
 #include "../PressedObject.h"
 #include "../Managers/ChatManager.h"
 #include "../Managers/FontsManager.h"
@@ -15,10 +15,9 @@
 #include "../GUI/GUIHTMLGump.h"
 #include "../GUI/GUIHTMLHitBox.h"
 #include "../GUI/GUIHTMLText.h"
-#include "../GUI/GUIPolygonal.h"
 #include "../GUI/GUIResizepic.h"
 #include "../GUI/GUIText.h"
-#include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CGumpChat::CGumpChat(int x, int y)
     : CGump(GT_CHAT, 0, x, y)

@@ -2,12 +2,15 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <cstdint>
 #include "GumpBulletinBoard.h"
+#include "GUI/GUIGumppic.h"
 #include "GumpBulletinBoardItem.h"
 #include "../PressedObject.h"
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
+#include "xuocore/enumlist.h"
 
 enum
 {

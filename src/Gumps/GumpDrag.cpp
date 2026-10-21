@@ -8,6 +8,7 @@
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../TextEngine/GameConsole.h"
+#include <cstdint>
 
 enum
 {

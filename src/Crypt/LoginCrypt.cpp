@@ -4,8 +4,8 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "LoginCrypt.h"
-#include "../Misc.h"
 #include <common/fs.h>
+#include <cstring>
 #include "../Config.h"
 
 CLoginCrypt g_LoginCrypt;

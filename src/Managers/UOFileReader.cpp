@@ -2,8 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <algorithm>
-#include <memory>
+#include <cstdint>
 #include "UOFileReader.h"
+#include <vector>
 #include <xuocore/vfs.h>
 #include "ColorManager.h"
 #include <common/logging/logging.h>
@@ -11,6 +12,7 @@
 #include "../CrossUO.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"
+#include "xuocore/mulstruct.h"
 
 UOFileReader g_UOFileReader;
 

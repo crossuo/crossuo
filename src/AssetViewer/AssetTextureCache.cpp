@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #include "AssetTextureCache.h"
+#include "external/gfx/imgui/imgui.h"
 
 #if defined(XUO_ASSISTANT)
 
-#include <functional>
 #include <string.h>
 #include <vector>
 
-#include <xuocore/uodata.h> // g_FileManager (hue palettes)
 
 #include "../Managers/ColorManager.h" // g_ColorManager
 

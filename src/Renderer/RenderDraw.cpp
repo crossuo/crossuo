@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
+#include "Renderer/RenderCommands.h"
 #if defined(USE_GL3) || defined(USE_GLES)
 #include "../Renderer/RenderAPI.h"
-#include <xuocore/enumlist.h>
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "Debug/RenderDebug.h"
@@ -14,9 +14,6 @@
 // its SetDrawMode command. Without the reset, a colored draw (text, hued
 // sprite) leaves the shader mode active and every later uncolored draw (gump
 // decorations, frames) is rendered through the stale palette.
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
 #include <assert.h>
 #include <stdio.h>  // fprintf (XUO_SCISSOR_CHECK)
 #include <stdlib.h> // getenv

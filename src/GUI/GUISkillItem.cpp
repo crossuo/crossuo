@@ -3,6 +3,7 @@
 
 #include "GUISkillItem.h"
 #include "../Platform.h"
+#include "GUI/BaseGUI.h"
 #include "GUIButton.h"
 #include "../CrossUO.h"
 #include "../PressedObject.h"
@@ -11,6 +12,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 
 CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y)
     : CBaseGUI(GOT_SKILLITEM, serial, 0, 0, x, y)

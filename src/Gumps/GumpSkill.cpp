@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/str.h>
+#include <cstdint>
 #include "GumpSkill.h"
 #include "../CrossUO.h"
 #include "../PressedObject.h"
@@ -10,6 +11,7 @@
 #include "../Managers/GumpManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/SkillsManager.h"
+#include "xuocore/enumlist.h"
 
 CGumpSkill::CGumpSkill(int serial, int x, int y)
     : CGump(GT_SKILL, serial, x, y)

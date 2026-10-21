@@ -4,6 +4,7 @@
 #include "Walker.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
+#include <cstdint>
 
 CWalker g_Walker;
 

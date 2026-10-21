@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "Waypoints.h"
+#include <cstdint>
 
 CWaypoints g_Waypoints;
 

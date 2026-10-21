@@ -3,14 +3,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
+#include "Globals.h"
 #include "Config.h"
+#include "Constants.h"
 #include "Target.h"
 #include "Point.h"
 #include "Renderer/RenderTexture.h"  // CRenderTexture globals defined below
 #include "Renderer/RenderFrameBuffer.h"
 #include "GameObjects/GameWorld.h"
 #include "GameObjects/GameCharacter.h"
+#include "xuocore/enumlist.h"
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 

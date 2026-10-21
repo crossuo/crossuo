@@ -4,6 +4,7 @@
 #include "GumpSelectFont.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
+#include <cstdint>
 
 static const int ID_GSF_FONTS = 1;
 

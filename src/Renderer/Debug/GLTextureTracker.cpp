@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Danny Angelo Carminati Grein
 
 #include "GLTextureTracker.h"
+#include <cstdint>
 
 #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 

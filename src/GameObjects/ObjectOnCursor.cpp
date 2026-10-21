@@ -5,8 +5,7 @@
 
 #include "ObjectOnCursor.h"
 #include "GameObject.h"
-#include "Globals.h" // IsStackable
-#include <xuocore/mulstruct.h>
+#include <cstdint>
 
 CObjectOnCursor g_ObjectInHand;
 

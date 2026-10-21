@@ -8,6 +8,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Utility/PerfMarker.h"
+#include "GUI/BaseGUI.h"
 
 CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const wstr_t &text)
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)

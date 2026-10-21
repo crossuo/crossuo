@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#include <algorithm>
+#include "white_label.h"
+#include <iostream>
 #include <time.h>
 #if defined(XUO_EMSC)
 #include <SDL_timer.h>
@@ -49,7 +50,6 @@ EM_JS(void, web_install_alert_shim, (), {
 #include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
 #include "Config.h"
 #include "revision.h"
-#include "Constants.h" // CPU_USAGE_DELAY
 #include "Globals.h" // g_Ticks
 #include "Misc.h" // g_MainThread
 #include "CrossUO.h"
@@ -63,12 +63,10 @@ EM_JS(void, web_install_alert_shim, (), {
 #include "xuol_app.h"
 #include "shards.h" // xuol_set_shards_cfg
 #endif
-#include "SDL_wrapper.h"
 #include <external/popts.h>
 #include <xuocore/client_info.h>
 #include <xuocore/uodata.h>
 #include <xuocore/vfs.h>
-#include <xuocore/vfs_source_aops.h>
 #include <common/logging/logging.h>
 #include "Managers/ConfigManager.h"
 #include "Managers/ConnectionManager.h"

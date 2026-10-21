@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "ChatManager.h"
+#include <cstddef>
 
 CChatManager g_ChatManager;
 

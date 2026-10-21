@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "ColorManager.h"
+#include <cstdint>
 #include <xuocore/uodata.h>
 #include "../Renderer/RenderAPI.h"
 #include "../Globals.h" // ToColor*, g_ShaderColorTableInUse, SPECTRAL_COLOR_FLAG
+#include "Constants.h"
 
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"

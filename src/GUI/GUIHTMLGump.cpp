@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIHTMLGump.h"
+#include "GUI/GUIPolygonal.h"
 #include "GUIHTMLResizepic.h"
 #include "GUIHTMLHitBox.h"
 #include "GUIHTMLSlider.h"
@@ -10,6 +11,7 @@
 #include "../CrossUO.h"
 #include "../Point.h"
 #include "../Managers/MouseManager.h"
+#include <cstdint>
 
 CGUIHTMLGump::CGUIHTMLGump(
     int serial,

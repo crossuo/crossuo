@@ -8,6 +8,7 @@
 #include "../TextEngine/TextData.h"
 #include "../TextEngine/Journal.h"
 #include "../Globals.h" // g_JournalShowObjects, g_JournalShowSystem, UOFONT_*
+#include "Gumps/GumpBaseScroll.h"
 
 enum
 {

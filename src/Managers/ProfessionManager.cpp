@@ -3,8 +3,10 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "ProfessionManager.h"
+#include "Globals.h"
 #include "SkillsManager.h"
 #include "ClilocManager.h"
+#include <vector>
 #include <xuocore/mappedfile.h>
 #include <xuocore/text_parser.h>
 #include <common/str.h>
@@ -13,6 +15,7 @@
 #include <xuocore/uodata.h>
 #include "../Profession.h"
 #include "../GameWindow.h"
+#include "xuocore/enumlist.h"
 
 CProfessionManager g_ProfessionManager;
 

@@ -4,6 +4,7 @@
 #include "GUIComboboxText.h"
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
+#include <cstdint>
 
 CGUIComboboxText::CGUIComboboxText(
     uint16_t color,

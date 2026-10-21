@@ -2,9 +2,12 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "RenderWorldObject.h"
+#include "Constants.h"
 #include "GameObjects/MapBlock.h"
 #include "Managers/ConfigManager.h"
+#include "RenderObject.h"
 #include "ScreenStages/GameScreen.h"
+#include "xuocore/enumlist.h"
 
 CRenderWorldObject::CRenderWorldObject(
     RENDER_OBJECT_TYPE renderType,

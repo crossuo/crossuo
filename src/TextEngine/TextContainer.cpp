@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "TextContainer.h"
+#include "BaseQueue.h"
 #include "TextData.h"
 #include "Globals.h" // g_Ticks
 

@@ -4,12 +4,13 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "GumpManager.h"
+#include "Config.h"
 #include "ConfigManager.h"
+#include "Globals.h"
 #include "SkillsManager.h"
-#include "MacroManager.h"
 #include "OptionsMacroManager.h"
 #include "MouseManager.h"
-#include <xuocore/mappedfile.h>
+#include <cstdint>
 #include <xuocore/text_parser.h>
 #include "../Point.h"
 #include "../CrossUO.h"
@@ -48,9 +49,9 @@
 #include "../Gumps/GumpOptions.h"
 #include "../Gumps/GumpMenu.h"
 #include "../Gumps/GumpGeneric.h"
-#include "../Gumps/GumpSpellbook.h"
 #include "../Network/Packets.h"
 #include "../Utility/PerfMarker.h"
+#include "xuocore/enumlist.h"
 #if defined(XUO_ASSISTANT)
 #	include <managers/menumanager.h>
 #endif // xuoassist::g_MenuManager (the menu-replay tap)
