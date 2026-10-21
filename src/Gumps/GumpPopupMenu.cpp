@@ -41,7 +41,7 @@ CGumpPopupMenu::~CGumpPopupMenu()
     g_PopupMenu = nullptr;
 }
 
-void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
+void CGumpPopupMenu::Parse(CPacketManager &reader)
 {
     uint16_t mode = reader.ReadUInt16BE();
     bool isNewClilocs = (mode >= 2);

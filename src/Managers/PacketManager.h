@@ -6,7 +6,10 @@
 #include <stdint.h>
 #include <common/str.h>
 #include <unordered_map>
-#include "../Wisp.h" // REMOVE
+#include <xuocore/mappedfile.h>
+#include <deque>
+#include <vector>
+#include "../Platform.h" // ProtectedSection (SDL_mutex *)
 
 class CPacketManager;
 class CGameObject;
@@ -59,7 +62,7 @@ struct HTMLGumpDataInfo
 
 #define HANDLER_PACKET(name) void Handle##name()
 
-class CPacketManager : public Wisp::CPacketReader
+class CPacketManager : public CDataReader
 {
 public:
     void ConfigureClientVersion(uint32_t newClientVersion);
@@ -79,9 +82,12 @@ private:
     bool AutoLoginNameExists(const astr_t &name);
     void AddHTMLGumps(class CGump *gump, std::vector<HTMLGumpDataInfo> &list);
 
+public:
+    void Read(class CSocket *connection);
+
 protected:
-    virtual void OnPacket();
-    virtual void OnReadFailed();
+    void OnPacket();
+    void OnReadFailed();
 
     HANDLER_PACKET(LoginError);
     HANDLER_PACKET(ServerList);
@@ -222,7 +228,13 @@ public:
     CPacketManager();
     virtual ~CPacketManager();
 
-    virtual int GetPacketSize(const std::vector<uint8_t> &packet, int &offsetToSize);
+    static int GetPacketSize(const std::vector<uint8_t> &packet, int &offsetToSize);
+
+private:
+    static const int MaxPacketStackSize = 5;
+
+public:
+    std::deque<std::vector<uint8_t>> m_PacketsStack;
     CPacketInfo &GetInfo(uint8_t buf) const { return m_Packets[buf]; }
     void SendMegaClilocRequests();
     void AddMegaClilocRequest(int serial);

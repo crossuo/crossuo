@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Gump.h"
-#include "../Wisp/WispPacketReader.h" // Wisp::CPacketReader
+#include "../Managers/PacketManager.h" // CPacketManager
 
 class CGumpPopupMenu : public CGump
 {
@@ -17,7 +17,7 @@ public:
     virtual void PrepareContent() override;
 
     static const int ID_GPM_MAXIMIZE = 0xDEADBEEF;
-    static void Parse(Wisp::CPacketReader &reader);
+    static void Parse(CPacketManager &reader);
 
     GUMP_BUTTON_EVENT_H override;
 };

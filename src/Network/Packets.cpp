@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include "../Misc.h"
 #include <common/str.h>
 #include <common/utils.h> // checked_cast
 #include "Packets.h"

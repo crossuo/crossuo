@@ -1,43 +1,17 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
-// SPDX-License-Identifier: AGPL-3.0-or-later
-// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-#include "WispPacketReader.h"
-#include "WispPacketMessage.h"
-#include "../Misc.h"
+#include "PacketMessage.h"
+#include "../Misc.h" // PACKET_VARIABLE_SIZE
 
-namespace Wisp
-{
 CPacketMessage::CPacketMessage(bool bigEndian)
     : BigEndian(bigEndian)
 {
 }
 
-CPacketMessage::CPacketMessage(uint8_t *data, int dataSize, bool bigEndian)
-    : BigEndian(bigEndian)
-{
-    m_Data.resize(dataSize);
-    memcpy(&m_Data[0], &data[0], dataSize);
-}
-
-CPacketMessage::CPacketMessage(const std::vector<uint8_t> &data, bool bigEndian)
-    : BigEndian(bigEndian)
-    , m_Data(data)
-{
-}
-
-CPacketMessage::~CPacketMessage()
-{
-    m_Data.clear();
-}
-
 void CPacketMessage::Append(uint8_t *data, int dataSize)
 {
-    std::vector<uint8_t> buf(dataSize);
-    memcpy(&buf[0], &data[0], dataSize);
-
-    m_Data.insert(m_Data.end(), buf.begin(), buf.end());
+    m_Data.insert(m_Data.end(), data, data + dataSize);
 }
 
 void CPacketMessage::Append(const std::vector<uint8_t> &data)
@@ -45,7 +19,8 @@ void CPacketMessage::Append(const std::vector<uint8_t> &data)
     m_Data.insert(m_Data.end(), data.begin(), data.end());
 }
 
-std::vector<uint8_t> CPacketMessage::Read(CPacketReader *reader, int &dataOffset)
+std::vector<uint8_t>
+CPacketMessage::Read(int (*packetSize)(const std::vector<uint8_t> &packet, int &offsetToSize), int &dataOffset)
 {
     std::vector<uint8_t> result;
 
@@ -55,7 +30,7 @@ std::vector<uint8_t> CPacketMessage::Read(CPacketReader *reader, int &dataOffset
     }
 
     int offsetToSize = 0;
-    int wantSize = reader->GetPacketSize(m_Data, offsetToSize);
+    int wantSize = packetSize(m_Data, offsetToSize);
 
     if (wantSize == PACKET_VARIABLE_SIZE)
     {
@@ -93,5 +68,3 @@ std::vector<uint8_t> CPacketMessage::Read(CPacketReader *reader, int &dataOffset
 
     return result;
 }
-
-}; // namespace Wisp

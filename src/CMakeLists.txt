@@ -2,10 +2,7 @@
 # SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 set(wisp_src
-  Wisp/WispConnection.cpp
-  Wisp/WispPacketReader.cpp
   Wisp/WispWindow.cpp
-  Wisp/WispPacketMessage.cpp
 )
 
 set(gameobjects_src
@@ -191,6 +188,7 @@ set(managers_src
 
 set(network_src
   Network/Connection.cpp
+  Network/PacketMessage.cpp
   Network/Packets.cpp
   Network/UOHuffman.cpp
 )

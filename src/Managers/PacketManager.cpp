@@ -8463,3 +8463,38 @@ PACKET_HANDLER(Swing)
         }
     }
 }
+
+void CPacketManager::Read(class CSocket *connection)
+{
+    if (connection->ReadyRead())
+    {
+        if (!connection->Read())
+        {
+            OnReadFailed();
+            return;
+        }
+
+        CPacketMessage *parser = connection->m_MessageParser;
+
+        while (true)
+        {
+            int offset = 0;
+            std::vector<uint8_t> packet = parser->Read(GetPacketSize, offset);
+
+            if (packet.empty())
+            {
+                break;
+            }
+
+            m_PacketsStack.push_back(packet);
+
+            if ((int)m_PacketsStack.size() > MaxPacketStackSize)
+            {
+                m_PacketsStack.pop_front();
+            }
+
+            SetData((uint8_t *)&packet[0], packet.size(), offset);
+            OnPacket();
+        }
+    }
+}
