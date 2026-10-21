@@ -2064,16 +2064,16 @@ CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t act
         {
             if ((mode % 2) != 0)
             {
-                return 21;
+                return 8;
             }
-            return 22;
+            return 12;
         }
 
         if ((mode % 2) != 0)
         {
-            return 8;
+            return 21;
         }
-        return 12;
+        return 22;
     }
     if ((mode % 2) != 0)
     {
@@ -2189,6 +2189,14 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
+    // only human/equipment bodies emote on this action, and only unmounted;
+    // bodies with no mobtypes entry are treated as human (the client defaults
+    // absent entries to the human group table)
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    if ((ia.Flags & AF_FOUND) && ia.Type != AGT_HUMAN && ia.Type != AGT_EQUIPMENT)
+    {
+        return 0xff;
+    }
     if (obj->IsMounted())
     {
         return 0xff;
