@@ -299,9 +299,21 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
     }
     else if (g_FileManager.m_ArtMul.FileBacked && g_FileManager.m_ArtMul.Loaded())
     {
-        artBlock = std::make_shared<std::vector<uint8_t>>(io.DataSize, 0);
+        // client-era idx entries can understate the block size (the original
+        // decoder over-read within the mapping - cursor 0x2073 is a known
+        // case); window the read up to the file end (capped) so those blocks
+        // still decode
+        size_t want = io.DataSize;
+        const auto fileOff = (size_t)io.Address;
+        if (g_FileManager.m_ArtMul.Size > fileOff)
+        {
+            want = std::max<size_t>(
+                want,
+                std::min<size_t>(g_FileManager.m_ArtMul.Size - fileOff, 512 * 1024));
+        }
+        artBlock = std::make_shared<std::vector<uint8_t>>(want, 0);
         g_FileManager.m_ArtMul.Seek(io.Address);
-        g_FileManager.m_ArtMul.ReadDataLE(artBlock->data(), io.DataSize);
+        g_FileManager.m_ArtMul.ReadDataLE(artBlock->data(), want);
     }
     else
     {
@@ -456,8 +468,32 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             ptr++;
             uint16_t *lineOffsets = ptr;
             uint8_t *dataStart = (uint8_t *)ptr + (height * 2);
-            const uint8_t *blockStart = (uint8_t *)io.Address;
+#if defined(XUO_EMSC)
+            // web: io.Address is a file offset, the block lives in the
+            // fetched window - bounds are the window itself
+            const uint8_t *blockStart = artBlock->data();
+            const uint8_t *blockEnd = artBlock->data() + artBlock->size();
+#else
+            const uint8_t *blockStart = (const uint8_t *)io.Address;
+            // client-era idx entries can understate the block size; the
+            // original decoder silently over-read within the mapping. Clamp
+            // the readable range to the containing file instead of trusting
+            // the (possibly wrong) index size - still bounded, never faults
             const uint8_t *blockEnd = blockStart + io.DataSize;
+            const CMappedFile *artFiles[] = {
+                (const CMappedFile *)&g_FileManager.m_ArtMul,
+                (const CMappedFile *)&g_FileManager.m_ArtLegacyMUL
+            };
+            for (const CMappedFile *f : artFiles)
+            {
+                const auto *addr = (const uint8_t *)io.Address;
+                if (f->Start != nullptr && addr >= f->Start && addr < f->Start + f->Size)
+                {
+                    blockEnd = std::max(
+                        blockEnd, (const uint8_t *)f->Start + f->Size);
+                }
+            }
+#endif
             auto readOutOfBounds = [&blockStart, &blockEnd](const void *p, size_t size)
             {
                 return p < blockStart || (const uint8_t *)p + size > blockEnd;
