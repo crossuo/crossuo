@@ -10,9 +10,13 @@
 enum
 {
     FASTLOGIN_TIMER_ID = 1,
+    TOUCH_HOLD_TIMER_ID = 2,
 };
 
 void GetDisplaySize(int *x, int *y);
+
+// device reports touch input; XUO_EMSC only (false elsewhere)
+bool WebIsTouchDevice();
 
 #define PUSH_EVENT(id, data1, data2)                                                               \
     CGameWindow::PushEvent(id, (void *)(uintptr_t)(data1), (void *)(uintptr_t)(data2))
@@ -70,6 +74,9 @@ public:
     void OnMidMouseButtonUp();
     bool OnMidMouseButtonDoubleClick();
     void OnMidMouseButtonScroll(bool up);
+    bool OnTouchFinger(const SDL_TouchFingerEvent &ev);
+    void OnTouchHoldTimer();
+    void TouchTryConvertHold();
     void OnDragging();
     void OnActivate();
     void OnDeactivate();

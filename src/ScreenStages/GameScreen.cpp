@@ -2798,7 +2798,7 @@ void CGameScreen::OnMidMouseButtonScroll(bool up)
     {
         g_GumpManager.OnMidMouseButtonScroll(up, false);
     }
-    else if (g_ConfigManager.GetUseScaling())
+    else if (g_ConfigManager.GetUseScaling() || WebIsTouchDevice())
     {
         int gameWindowPosX = g_ConfigManager.GameWindowX - 4;
         int gameWindowPosY = g_ConfigManager.GameWindowY - 4;

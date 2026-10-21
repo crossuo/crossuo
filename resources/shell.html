@@ -2,11 +2,17 @@
 <html lang="en-us">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- pinch zoom is the mobile game zoom: the browser scales the page
+         (canvas included). No maximum-scale/user-scalable - they would block
+         it. Single-finger gestures stay blocked (see touch handlers below) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>CrossUO (web)</title>
     <style>
-      html, body { margin: 0; padding: 0; background: #101014; color: #cfd2dc;
-                   font-family: system-ui, sans-serif; height: 100%; }
+      html, body { margin: 0; padding: 0; background: black; color: #cfd2dc;
+                   font-family: system-ui, sans-serif; height: 100%;
+                   /* touch devices: never let the browser own the page
+                      gestures (pull-to-refresh, pinch zoom, scroll bounce) */
+                   overscroll-behavior: none; }
       #wrap { display: flex; flex-direction: column; align-items: center;
               justify-content: center;
               /* safe center: keep the loading layout centered while it fits,
@@ -31,7 +37,30 @@
          impact), never a border (1px border would turn the 1x1 probe
          into a 3x3 bounding box and shrink the window to it) */
       canvas.crossuo { image-rendering: pixelated; background: #000;
-                       outline: 1px solid #2a2c36; outline-offset: -1px; }
+                       outline: 0px solid black; outline-offset: -1px;
+                       /* all canvas touches belong to the game (the client
+                          gesture layer takes it from here) */
+                       touch-action: none;
+                       user-select: none; -webkit-user-select: none;
+                       -webkit-touch-callout: none; }
+      /* touch devices: the canvas IS the screen - no frame, no page chrome,
+         fill the visual viewport edge to edge.
+         Chrome tablets: the 100%-height chain + flex 'safe center' resolve
+         against the LARGER layout viewport (dynamic URL bar), while the
+         canvas is sized to innerHeight - centering shows page background
+         around the canvas like a border. Anchor to the top edge instead:
+         innerHeight always matches the TOP of the visual viewport; dvh
+         tracks the dynamic viewport so the wrap never exceeds it. Horizontal
+         centering is kept (width mismatch is rare). */
+      html.web-touch { overflow: hidden; }
+      html.web-touch body { overflow: hidden; }
+      html.web-touch #wrap { height: 100dvh;
+                             justify-content: flex-start; }
+      /* the browser owns two-finger pinch (page zoom = the game zoom);
+         everything else stays blocked. pinch-zoom forbids pan/double-tap
+         zoom, and the JS handlers below only consume single-finger events */
+      html.web-touch canvas.crossuo { outline: none;
+                                      touch-action: pinch-zoom; }
       #status { margin-top: 8px; font-size: 13px; opacity: .8; }
       #log { margin-top: 8px; font-size: 11px; opacity: .6; white-space: pre;
              height: 4em; overflow: hidden; }
@@ -121,9 +150,88 @@
       // pthread builds run the runtime before the glue reads this object, so
       // create it up front and attach every handler to the same instance
       var Module = window.Module || {};
+      // client-side diagnostics channel: the wasm client posts one-line
+      // events (touch gestures, size changes) through here; they land in the
+      // serving proxy's log (/client-log)
+      Module.clientLog = function (line) {
+        try { fetch('client-log', { method: 'POST', body: String(line).slice(0, 500) }); }
+        catch (e) { /* diagnostics must never break the page */ }
+      };
       // ?log=1 gate - page-global: the audio and idbfs blocks below live
       // outside the boot IIFE and share it
       var WEBLOG = new URLSearchParams(window.location.search).get('log') === '1';
+      // touch capable device? detected once here (page side), used to block
+      // browser gesture takeover and mirrored on the documentElement so the
+      // client could query it; the client re-derives the same flag itself
+      var WEB_TOUCH_DEVICE = (navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
+      if (WEB_TOUCH_DEVICE) {
+        document.documentElement.classList.add('web-touch');
+        // Block ALL browser touch gestures page-wide, not just on the canvas:
+        // the SDL emscripten backend only preventDefaults some touch events,
+        // and a swipe starting on any page pixel must never reach the browser
+        // (pull-to-refresh on a downward swipe kills the game). Only the
+        // pre-boot shard picker keeps native touch behavior (scrolling).
+        // preventDefault on touchstart stops scroll/pinch/pull-to-refresh
+        // before they are claimable; the client still sees its own
+        // emscripten-registered handlers run (listener order is independent).
+        var webTouchBlock = function (e) {
+          if (e.target && e.target.closest && e.target.closest('#shardPicker')) {
+            return;
+          }
+          // multi-finger sequences go to the browser (pinch zoom); only
+          // single-finger touches are consumed (pull-to-refresh, scroll)
+          if (e.touches && e.touches.length !== 1) {
+            return;
+          }
+          e.preventDefault();
+        };
+        ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(function (evName) {
+          document.addEventListener(evName, webTouchBlock, { passive: false });
+        });
+      }
+      // device diagnostics: touch devices (or ?debug=1) POST one-line layout
+      // snapshots to the serving proxy (xuoproxy /client-log) so a broken
+      // mobile layout (tiny/mis-sized canvas, viewport quirks) can be
+      // diagnosed from the SERVER log without any access to the device
+      var WEB_DEBUG = new URLSearchParams(window.location.search).get('debug') === '1';
+      if (WEB_TOUCH_DEVICE || WEB_DEBUG) {
+        var diagT0 = Date.now();
+        var diagSeq = 0;
+        var diagLast = 0;
+        var diagSend = function (why) {
+          try {
+            var c = document.getElementById('canvas');
+            var r = c.getBoundingClientRect();
+            var w = document.getElementById('wrap');
+            var vv = window.visualViewport;
+            var line = [
+              'v=1', 'n=' + (diagSeq++), 'why=' + why,
+              't=' + Math.floor((Date.now() - diagT0) / 1000) + 's',
+              'inner=' + window.innerWidth + 'x' + window.innerHeight,
+              'dpr=' + window.devicePixelRatio,
+              vv ? ('vv=' + Math.round(vv.width) + 'x' + Math.round(vv.height) +
+                    '@' + Math.round(vv.offsetTop)) : '',
+              'buf=' + c.width + 'x' + c.height,
+              'css=' + Math.round(r.width) + 'x' + Math.round(r.height) +
+                    '+' + Math.round(r.x) + '+' + Math.round(r.y),
+              'wrap=' + (w ? w.clientWidth + 'x' + w.clientHeight : '?'),
+              'style=' + (c.getAttribute('style') || '-')
+            ].join(' ');
+            fetch('client-log', { method: 'POST', body: line });
+          } catch (e) { /* never break the page over diagnostics */ }
+        };
+        diagSend('load');
+        window.addEventListener('resize', function () {
+          var now = Date.now();
+          if (now - diagLast > 500) { diagLast = now; diagSend('resize'); }
+        });
+        window.addEventListener('orientationchange', function () { diagSend('orientation'); });
+        var diagTicks = 0;
+        var diagTimer = setInterval(function () {
+          diagSend('poll');
+          if (++diagTicks >= 30) clearInterval(diagTimer);
+        }, 2000);
+      }
       // NOTE: Module.preRun does NOT run on the page in PROXY_TO_PTHREAD
       // builds (the boot sequence that consumes it executes on the pthread
       // worker) - everything that must happen on the page lives in the

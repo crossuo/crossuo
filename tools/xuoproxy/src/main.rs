@@ -138,6 +138,15 @@
 mod admin;
 mod normalize;
 
+// device diagnostics channel: the web shell POSTs one-line layout snapshots
+// (canvas buffer/css sizes, viewport, dpr) so a broken mobile layout can be
+// diagnosed from the server log without any access to the device itself
+async fn client_log(body: String) -> &'static str
+{
+    println!("[client-log] {}", body.replace('\n', " "));
+    "ok"
+}
+
 use std::collections::{HashMap, HashSet};
 use std::net::ToSocketAddrs;
 use std::path::PathBuf;
@@ -523,6 +532,7 @@ async fn main() {
         .route("/ws/:host/:port", get(ws_shard))
         .route("/data/:name/*path", get(data_file))
         .route("/healthz", get(|| async { "ok" }))
+        .route("/client-log", axum::routing::post(client_log))
         .route("/stats", get(admin::stats_handler))
         .route("/admin/bans", get(admin::bans_handler))
         .route("/admin/ban", axum::routing::post(admin::ban_handler))
