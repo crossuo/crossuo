@@ -637,14 +637,18 @@ bool CFileManager::Load()
     Info(Data, "load trace: LoadCommon -> %d", common_ok ? 1 : 0);
     r &= common_ok;
 
-    for (int i = 0; i < countof(m_AnimMul); i++)
+    // legacy animation files anim2-anim10 (no anim1.mul exists; index 1 is
+    // intentionally unused by the bodyconv routing)
+    for (int i = 2; i < countof(m_AnimMul); i++)
     {
-        if (i > 1)
-        {
-            m_AnimIdx[i].Load(UOFilePath("anim%i.idx", i));
-            m_AnimMul[i].Load(UOFilePath("anim%i.mul", i));
-        }
+        m_AnimIdx[i].Load(UOFilePath("anim%i.idx", i));
+        m_AnimMul[i].Load(UOFilePath("anim%i.mul", i));
+    }
 
+    // map/statics/dif files exist for maps 0-5 only; these arrays are sized
+    // for the map count and must not ride the animation file loop
+    for (int i = 0; i < countof(m_MapMul); i++)
+    {
         if (useUop)
         {
             char uopMapName[64];
