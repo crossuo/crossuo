@@ -1243,10 +1243,14 @@ void CFileManager::Unload()
 
     m_LangcodeIff.Unload();
 
-    for (int i = 0; i < countof(m_AnimMul); i++)
+    for (int i = 0; i < countof(m_AnimIdx); i++)
     {
         m_AnimIdx[i].Unload();
         m_AnimMul[i].Unload();
+    }
+
+    for (int i = 0; i < countof(m_MapUOP); i++)
+    {
         m_MapUOP[i].Unload();
         m_MapXUOP[i].Unload();
         m_MapMul[i].Unload();
