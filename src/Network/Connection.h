@@ -10,12 +10,6 @@ class CSocket : public Wisp::CConnection
 {
 public:
     bool GameSocket = false;
-    bool UseProxy = false;
-    astr_t ProxyAddress = "";
-    uint16_t ProxyPort = 0;
-    bool ProxySocks5 = false;
-    astr_t ProxyAccount = "";
-    astr_t ProxyPassword = "";
 
 private:
     CDecompressingCopier m_Decompressor;

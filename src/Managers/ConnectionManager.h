@@ -7,48 +7,6 @@
 
 class CConnectionManager
 {
-protected:
-    bool m_UseProxy = false;
-
-public:
-    bool GetUseProxy() { return m_UseProxy; };
-    void SetUseProxy(bool val);
-
-protected:
-    astr_t m_ProxyAddress = "";
-
-public:
-    astr_t GetProxyAddress() { return m_ProxyAddress; };
-    void SetProxyAddress(const astr_t &val);
-
-protected:
-    int m_ProxyPort = 0;
-
-public:
-    int GetProxyPort() { return m_ProxyPort; };
-    void SetProxyPort(int val);
-
-protected:
-    bool m_ProxySocks5 = false;
-
-public:
-    bool GetProxySocks5() { return m_ProxySocks5; };
-    void SetProxySocks5(bool val);
-
-protected:
-    astr_t m_ProxyAccount = "";
-
-public:
-    astr_t GetProxyAccount() { return m_ProxyAccount; };
-    void SetProxyAccount(const astr_t &val);
-
-protected:
-    astr_t m_ProxyPassword = "";
-
-public:
-    astr_t GetProxyPassword() { return m_ProxyPassword; };
-    void SetProxyPassword(const astr_t &val);
-
 private:
     CSocket m_LoginSocket{ CSocket(false) };
     CSocket m_GameSocket{ CSocket(true) };

@@ -30,48 +30,6 @@ CConnectionManager::~CConnectionManager()
     }
 }
 
-void CConnectionManager::SetUseProxy(bool val)
-{
-    m_UseProxy = val;
-    m_LoginSocket.UseProxy = val;
-    m_GameSocket.UseProxy = val;
-}
-
-void CConnectionManager::SetProxyAddress(const astr_t &val)
-{
-    m_ProxyAddress = val;
-    m_LoginSocket.ProxyAddress = val;
-    m_GameSocket.ProxyAddress = val;
-}
-
-void CConnectionManager::SetProxyPort(int val)
-{
-    m_ProxyPort = val;
-    m_LoginSocket.ProxyPort = val;
-    m_GameSocket.ProxyPort = val;
-}
-
-void CConnectionManager::SetProxySocks5(bool val)
-{
-    m_ProxySocks5 = val;
-    m_LoginSocket.ProxySocks5 = val;
-    m_GameSocket.ProxySocks5 = val;
-}
-
-void CConnectionManager::SetProxyAccount(const astr_t &val)
-{
-    m_ProxyAccount = val;
-    m_LoginSocket.ProxyAccount = val;
-    m_GameSocket.ProxyAccount = val;
-}
-
-void CConnectionManager::SetProxyPassword(const astr_t &val)
-{
-    m_ProxyPassword = val;
-    m_LoginSocket.ProxyPassword = val;
-    m_GameSocket.ProxyPassword = val;
-}
-
 void CConnectionManager::Init()
 {
     if (m_LoginSocket.Connected)

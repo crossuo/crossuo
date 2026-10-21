@@ -285,24 +285,6 @@ void CGame::ProcessCommandLine()
         m_OverrideServerPort = g_cli["port"].get().u32;
     }
 
-    if (g_cli["proxy-host"].was_set() && g_cli["proxy-port"].was_set())
-    {
-        g_ConnectionManager.SetUseProxy(true);
-        g_ConnectionManager.SetProxyAddress(g_cli["proxy-host"].get().string);
-        g_ConnectionManager.SetProxyPort(g_cli["proxy-port"].get().u32);
-    }
-
-    if (g_cli["proxy-user"].was_set())
-    {
-        g_ConnectionManager.SetProxySocks5(true);
-        g_ConnectionManager.SetProxyAccount(g_cli["proxy-user"].get().string);
-    }
-
-    if (g_cli["proxy-password"].was_set())
-    {
-        g_ConnectionManager.SetProxyPassword(g_cli["proxy-password"].get().string);
-    }
-
     if (g_cli["login"].was_set())
     {
         auto l = g_cli["login"].get().string;

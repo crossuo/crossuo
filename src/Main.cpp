@@ -159,12 +159,6 @@ static bool InitCli(int argc, char *argv[])
             " censored (SAFE_DEBUG_DUMP); also raises the log verbosity the"
             " dump needs");
 
-    g_cli["proxy-host"]
-        .type(po::string)
-        .description("Use proxy, host address. Requires 'proxy-port'");
-    g_cli["proxy-port"].type(po::u32).description("Proxy port to use with 'proxy-host'");
-    g_cli["proxy-user"].type(po::string).description("Proxy user");
-    g_cli["proxy-password"].type(po::string).description("Proxy password");
     g_cli["indirect-rendering"].description("uses indirect rendering pipeline");
     g_cli["quiet"]
         .abbreviation('q')
