@@ -165,7 +165,39 @@ void CGameWorld::ProcessAnimation()
                                 fc = gc->AnimationFrameCount;
                             }
 
-                            if (gc->AnimationDirection) //forward
+                            if (gc->AnimationPingPong)
+                            {
+                                // ping-pong: walk the frames back and forth; each
+                                // completed traversal is one cycle of the repeat
+                                // count. The pre-incremented frameIndex above does
+                                // not apply here - the stored frame is the cursor.
+                                frameIndex = obj->AnimIndex;
+                                if (gc->AnimationDirection) // forward leg
+                                {
+                                    frameIndex++;
+                                    if (frameIndex >= fc)
+                                    {
+                                        frameIndex = fc - 2;
+                                        gc->AnimationDirection = false;
+                                        gc->AnimationRepeatMode--;
+                                    }
+                                }
+                                else // backward leg
+                                {
+                                    frameIndex--;
+                                    if (frameIndex < 0)
+                                    {
+                                        frameIndex = 1;
+                                        gc->AnimationDirection = true;
+                                        gc->AnimationRepeatMode--;
+                                    }
+                                }
+                                if (fc < 2 || gc->AnimationRepeatMode == 0)
+                                {
+                                    gc->SetAnimation(0xFF);
+                                }
+                            }
+                            else if (gc->AnimationDirection) //forward
                             {
                                 if (frameIndex >= fc)
                                 {

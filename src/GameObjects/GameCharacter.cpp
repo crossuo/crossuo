@@ -449,19 +449,22 @@ void CGameCharacter::OnGraphicChange(int direction)
 void CGameCharacter::SetAnimation(
     uint8_t id,
     uint8_t interval,
-    uint8_t frameCount,
-    uint8_t repeatCount,
+    uint16_t frameCount,
+    uint16_t repeatCount,
     bool repeat,
-    bool frameDirection)
+    bool frameDirection,
+    bool pingPong)
 {
     AnimationGroup = id;
-    AnimIndex = 0;
     AnimationInterval = interval;
     AnimationFrameCount = frameCount;
     AnimationRepeatMode = repeatCount;
     AnimationRepeat = repeat;
     AnimationDirection = frameDirection;
+    AnimationPingPong = pingPong;
     AnimationFromServer = false;
+    // a ping-pong play starts from the last frame and walks backwards
+    AnimIndex = pingPong && frameCount != 0 ? uint8_t(frameCount - 1) : 0;
 
     LastAnimationChangeTime = g_Ticks;
     TimeToRandomFidget = g_Ticks + RANDOM_FIDGET_ANIMATION_DELAY;
@@ -474,6 +477,7 @@ void CGameCharacter::ResetAnimationGroup(uint8_t val)
     AnimationRepeat = false;
     AnimationRepeatMode = 0;
     AnimationDirection = false;
+    AnimationPingPong = false;
     AnimationFromServer = false;
 
     AnimationGroup = val;

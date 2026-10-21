@@ -25,11 +25,12 @@ public:
     uint8_t Notoriety = 0;
     bool CanChangeName = false;
     uint8_t AnimationInterval = 0;
-    uint8_t AnimationFrameCount = 0;
-    uint8_t AnimationRepeatMode = 1;
+    uint16_t AnimationFrameCount = 0;
+    uint16_t AnimationRepeatMode = 1;
     uint8_t AnimationGroup = AG_INVALID;
     bool AnimationRepeat = false;
     bool AnimationDirection = false;
+    bool AnimationPingPong = false;
     bool AnimationFromServer = false;
     uint32_t LastStepSoundTime = 0;
     uint32_t TimeToRandomFidget = 0;
@@ -68,10 +69,11 @@ public:
     void SetAnimation(
         uint8_t id,
         uint8_t interval = 0,
-        uint8_t frameCount = 0,
-        uint8_t repeatCount = 0,
+        uint16_t frameCount = 0,
+        uint16_t repeatCount = 0,
         bool repeat = false,
-        bool frameDirection = false);
+        bool frameDirection = false,
+        bool pingPong = false);
 
     uint16_t GetGraphicForAnimation();
     uint8_t GetGroupForAnimation(uint16_t graphic, bool isParent);

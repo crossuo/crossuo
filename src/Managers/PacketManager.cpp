@@ -5291,8 +5291,8 @@ PACKET_HANDLER(CharacterAnimation)
 
     const auto serial = ReadUInt32BE();
     const auto action = ReadUInt16BE();
-    const auto frameCount = checked_cast<uint8_t>(ReadUInt16BE());
-    const auto repeatMode = checked_cast<uint8_t>(ReadUInt16BE());
+    const auto frameCount = ReadUInt16BE();
+    const auto repeatMode = ReadUInt16BE();
     const bool forward = (ReadUInt8() == 0); // true - forward, false - backward
     const bool repeat = (ReadUInt8() != 0);
     const uint8_t delay = ReadUInt8();
@@ -5323,9 +5323,13 @@ PACKET_HANDLER(CharacterAnimation)
     auto *obj = g_World->FindWorldCharacter(serial);
     if (obj != nullptr)
     {
-        const auto group = g_AnimationManager.GetReplacedObjectAnimation(obj, action);
-        obj->SetAnimation(group, delay, frameCount, repeatMode, repeat, forward);
-        obj->AnimationFromServer = true;
+        // the client refuses to animate characters held in a container
+        if (obj->Container == 0)
+        {
+            const auto group = g_AnimationManager.GetReplacedObjectAnimation(obj, action);
+            obj->SetAnimation(group, delay, frameCount, repeatMode, repeat, forward, repeat);
+            obj->AnimationFromServer = true;
+        }
     }
 }
 
