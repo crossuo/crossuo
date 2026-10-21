@@ -604,6 +604,24 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 #endif
 }
 
+// FileIndex -> legacy MUL animation file name, mirroring
+// CFileManager's own loads exactly: LoadCommon maps index 0 ("anim.mul") and
+// the load loop only loads "anim%i.mul" for i > 1 (anim2-anim10; the product
+// has no anim1.mul and the bodyconv pass never routes to FileIndex 1)
+static const char *const ANIM_MUL_FILE_NAMES[11] = {
+    "anim.mul",  nullptr,     "anim2.mul",  "anim3.mul",  "anim4.mul",  "anim5.mul",
+    "anim6.mul", "anim7.mul", "anim8.mul",  "anim9.mul",  "anim10.mul",
+};
+
+#if defined(XUO_EMSC)
+static const char *anim_mul_file_name(int fileIndex)
+{
+    return fileIndex >= 0 && fileIndex < int(countof(ANIM_MUL_FILE_NAMES))
+               ? ANIM_MUL_FILE_NAMES[fileIndex]
+               : nullptr;
+}
+#endif
+
 bool CFileManager::Load()
 {
     DBG_ANIM("Animation debugging tracing enabled");
@@ -637,12 +655,22 @@ bool CFileManager::Load()
     Info(Data, "load trace: LoadCommon -> %d", common_ok ? 1 : 0);
     r &= common_ok;
 
-    // legacy animation files anim2-anim10 (no anim1.mul exists; index 1 is
-    // intentionally unused by the bodyconv routing)
-    for (int i = 2; i < countof(m_AnimMul); i++)
+    // legacy animation files anim2-anim10: the ANIM_MUL_FILE_NAMES table is
+    // the single authority for this file set (index 0 loads in LoadCommon
+    // and index 1 is intentionally unused); the web build keys its stream
+    // registry by the same names
+    static_assert(
+        countof(m_AnimMul) == countof(ANIM_MUL_FILE_NAMES) &&
+            countof(m_AnimIdx) == countof(ANIM_MUL_FILE_NAMES),
+        "animation file arrays and name table disagree");
+    for (int i = 1; i < countof(m_AnimMul); i++)
     {
+        if (ANIM_MUL_FILE_NAMES[i] == nullptr)
+        {
+            continue;
+        }
         m_AnimIdx[i].Load(UOFilePath("anim%i.idx", i));
-        m_AnimMul[i].Load(UOFilePath("anim%i.mul", i));
+        m_AnimMul[i].Load(UOFilePath("%s", ANIM_MUL_FILE_NAMES[i]));
     }
 
     // map/statics/dif files exist for maps 0-5 only; these arrays are sized
@@ -1809,23 +1837,6 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
     return true;
 }
 
-// native FileIndex -> legacy MUL animation file name, mirroring
-// CFileManager's own loads exactly: LoadCommon maps index 0 ("anim.mul") and
-// the load loop only loads "anim%i.mul" for i > 1 (anim2-anim10; the product
-// has no anim1.mul and the bodyconv pass never routes to FileIndex 1)
-#if defined(XUO_EMSC)
-static const char *const ANIM_MUL_STREAM_NAMES[11] = {
-    "anim.mul",  nullptr,     "anim2.mul",  "anim3.mul",  "anim4.mul",  "anim5.mul",
-    "anim6.mul", "anim7.mul", "anim8.mul",  "anim9.mul",  "anim10.mul",
-};
-
-static const char *anim_mul_stream_name(int fileIndex)
-{
-    return fileIndex >= 0 && fileIndex < int(countof(ANIM_MUL_STREAM_NAMES))
-               ? ANIM_MUL_STREAM_NAMES[fileIndex]
-               : nullptr;
-}
-#endif
 
 bool CFileManager::IsMulFileOpen(int idx) const
 {
