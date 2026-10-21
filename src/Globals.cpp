@@ -14,11 +14,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#if USE_PING
-#include "Utility/PingThread.h"
-PING_INFO_DATA g_GameServerPingInfo = {};
-uint32_t g_PingTimer = 0;
-#endif // USE_PING
 
 uint32_t g_Ping = 0; // From packet 0x73
 astr_t g_PingString; // Debug Info

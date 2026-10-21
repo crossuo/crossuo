@@ -162,10 +162,6 @@ enum
     CMKC_LAST_SERVER,
     CMKC_LAST_CHARACTER,
     CMKC_CHARACTER_BACKPACK_STYLE,
-#if USE_PING
-    CMKC_CHECK_PING,
-    CMKC_PING_TIMER,
-#endif // USE_PING
     CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC,
     CMKC_DRAW_STATUS_FOR_HUMANOIDS,
     CMKC_LARGEGUMPS,
@@ -307,10 +303,6 @@ static const ConfigEntry s_Keys[] = {
     { CMKC_LAST_SERVER, "lastserver" },
     { CMKC_LAST_CHARACTER, "lastcharacter" },
     { CMKC_CHARACTER_BACKPACK_STYLE, "characterbackpackstyle" },
-#if USE_PING
-    { CMKC_CHECK_PING, "checkping" },
-    { CMKC_PING_TIMER, "pingtimer" },
-#endif // USE_PING
     { CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC, "cancelnewtargetsystemonshiftesc" },
     { CMKC_DRAW_STATUS_FOR_HUMANOIDS, "drawstatusforhumanoids" },
     { CMKC_LARGEGUMPS, "largegumps" },
@@ -424,10 +416,6 @@ void CConfigManager::DefaultPage2()
     HighlightTargetByType = true;
     AutoDisplayWorldMap = false;
     DisableMacroInChat = false;
-#if USE_PING
-    CheckPing = true;
-    m_PingTimer = 10;
-#endif // USE_PING
     CancelNewTargetSystemOnShiftEsc = false;
     DrawStatusForHumanoids = true;
 }
@@ -889,13 +877,6 @@ void CConfigManager::SetNoDrawRoofs(bool val)
     }
 }
 
-#if USE_PING
-void CConfigManager::SetPingTimer(uint8_t val)
-{
-    m_PingTimer = std::max(std::min(val, uint8_t(120)), uint8_t(10));
-    g_PingTimer = 0;
-}
-#endif // USE_PING
 
 void CConfigManager::SetItemPropertiesMode(uint8_t val)
 {
@@ -1176,14 +1157,6 @@ bool CConfigManager::Load(const fs_path &path)
                 case CMKC_DISABLE_MACRO_IN_CHAT:
                     DisableMacroInChat = str_to_bool(strings[1]);
                     break;
-#if USE_PING
-                case CMKC_CHECK_PING:
-                    CheckPing = str_to_bool(strings[1]);
-                    break;
-                case CMKC_PING_TIMER:
-                    SetPingTimer(str_to_int(strings[1]));
-                    break;
-#endif // USE_PING
                 case CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC:
                     CancelNewTargetSystemOnShiftEsc = str_to_bool(strings[1]);
                     break;
@@ -1627,10 +1600,6 @@ void CConfigManager::SaveSection(TextFileWriter &writer)
         writer.WriteBool("HighlightTargetByType", HighlightTargetByType);
         writer.WriteBool("AutoDisplayWorldMap", AutoDisplayWorldMap);
         writer.WriteBool("DisableMacroInChat", DisableMacroInChat);
-#if USE_PING
-        writer.WriteBool("CheckPing", CheckPing);
-        writer.WriteInt("PingTimer", m_PingTimer);
-#endif // USE_PING
         writer.WriteBool("CancelNewTargetSystemOnShiftEsc", CancelNewTargetSystemOnShiftEsc);
         writer.WriteBool("DrawStatusForHumanoids", DrawStatusForHumanoids);
         writer.WriteBool("AlwaysDisplayHumanoidsName", AlwaysDisplayHumanoidsName);

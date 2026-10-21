@@ -46,9 +46,6 @@
 #include "RenderWorldObject.h"
 #include "Splash.h"
 
-#if USE_PING
-#include "Utility/PingThread.h"
-#endif // USE_PING
 
 #include "Crypt/CryptEntry.h"
 #include <common/checksum.h>
@@ -1098,14 +1095,6 @@ void CGame::Process(bool rendering)
             CPacketRazorAnswer().Send();
         }
 
-#if USE_PING
-        if (!g_DisablePing && g_ConfigManager.CheckPing && g_PingTimer < g_Ticks)
-        {
-            CPingThread *pingThread = new CPingThread(0xFFFFFFFF, m_GameServerIP, 10);
-            pingThread->Run();
-            g_PingTimer = g_Ticks + (g_ConfigManager.PingTimer * 1000);
-        }
-#endif // USE_PING
 
         g_UseItemActions.Process();
         g_ShowGumpLocker = g_ConfigManager.LockGumpsMoving && g_AltPressed && g_CtrlPressed;
@@ -1672,9 +1661,6 @@ void CGame::RelayServer(const char *ip, int port, uint8_t *gameSeed)
     {
         m_GameServerIP = ip;
     }
-#if USE_PING
-    memset(&g_GameServerPingInfo, 0, sizeof(g_GameServerPingInfo));
-#endif // USE_PING
     if (g_ConnectionManager.Connect(ip, port, gameSeed))
     {
         g_ConnectionScreen.SetConnected(true);

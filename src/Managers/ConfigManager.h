@@ -64,10 +64,6 @@ public:
     bool DisableMacroInChat = false;
     bool AutoOpenDoors = true;
     bool AlwaysDisplayHumanoidsName = false;
-#if USE_PING
-    bool CheckPing = true;
-    uint8_t PingTimer = 10;
-#endif // USE_PING
     bool CancelNewTargetSystemOnShiftEsc = false;
     bool DrawStatusForHumanoids = true;
 

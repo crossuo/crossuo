@@ -253,21 +253,6 @@ typedef int SOCKET;
 #define closesocket close
 #endif
 
-uint16_t icmp_checksum(const uint16_t *addr, int count)
-{
-    long sum = 0;
-    while (count > 1)
-    {
-        sum += *addr++;
-        count -= 2;
-    }
-    if (count > 0)
-        sum += *reinterpret_cast<const uint8_t *>(addr);
-    while (sum >> 16)
-        sum = (sum & 0xffff) + (sum >> 16);
-    return static_cast<uint16_t>(~sum);
-}
-
 template<class T>
 SOCKET socket_fd(T socket)
 {

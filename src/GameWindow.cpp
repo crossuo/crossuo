@@ -25,9 +25,6 @@
 #include "Walker/PathFinder.h"
 #include "Splash.h"
 
-#if USE_PING
-#include "Utility/PingThread.h"
-#endif // USE_PING
 
 CGameWindow g_GameWindow;
 
@@ -367,52 +364,6 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 {
     switch (ev.code)
     {
-#if USE_PING
-        case CPingThread::MessageID:
-        {
-            PING_INFO_DATA *info = (PING_INFO_DATA *)ev.data1;
-            if (info != nullptr)
-            {
-                if (info->ServerID == 0xFFFFFFFF)
-                {
-                    memcpy(&g_GameServerPingInfo, info, sizeof(g_GameServerPingInfo));
-                    char ping[50] = { 0 };
-                    sprintf_s(
-                        ping,
-                        "ping(min:%i max:%i avg:%i lost:%i) ",
-                        g_GameServerPingInfo.Min,
-                        g_GameServerPingInfo.Max,
-                        g_GameServerPingInfo.Average,
-                        g_GameServerPingInfo.Lost);
-                    g_PingString = ping;
-                }
-                else
-                {
-                    CServer *server = g_ServerList.GetServer(info->ServerID);
-                    if (server != nullptr)
-                    {
-                        if (info->Min < 9999)
-                        {
-                            server->Ping = info->Average;
-                            server->PacketsLoss = info->Lost;
-                            g_ServerScreen.UpdateContent();
-                        }
-                    }
-                }
-
-                Info(
-                    Client,
-                    "Ping info: id:%i min:%i max:%i average:%i lost:%i",
-                    info->ServerID,
-                    info->Min,
-                    info->Max,
-                    info->Average,
-                    info->Lost);
-                delete info;
-            }
-        }
-        break;
-#endif // USE_PING
 
         case CGameWindow::MessageID:
         {

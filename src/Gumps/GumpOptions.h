@@ -38,9 +38,6 @@ private:
     CGUISlider *m_SliderCircleTransparency{ nullptr };
     CGUISlider *m_SliderInformSkills{ nullptr };
 
-#if USE_PING
-    CGUISlider *m_SliderPingTimer{ nullptr };
-#endif // USE_PING
 
     CGUIColoredPolygone *m_ColorTooltipText{ nullptr };
 

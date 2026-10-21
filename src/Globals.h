@@ -413,10 +413,6 @@ inline bool IsStairRight(int64_t flags)
     return (flags & 0x80000000) != 0;
 }
 
-#if USE_PING
-extern struct PING_INFO_DATA g_GameServerPingInfo;
-extern uint32_t g_PingTimer;
-#endif // USE_PING
 
 extern uint32_t g_Ping;     // From packet 0x73
 extern astr_t g_PingString; // Debug Info
