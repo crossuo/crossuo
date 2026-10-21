@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <common/utils.h>
+#include "../Misc.h" // RandomInt
 #include <common/str.h>
 #include <unordered_set>
 #include "AnimationManager.h"

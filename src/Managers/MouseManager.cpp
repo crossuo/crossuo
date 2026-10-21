@@ -610,7 +610,7 @@ void CMouseManager::Update()
     // only follow the mouse while it hovers our own window; other windows in
     // the process (like the embedded launcher) have their own mouse handling,
     // and their coordinates would otherwise move the game cursor around
-    if (Wisp::g_WispWindow != nullptr && SDL_GetMouseFocus() != Wisp::g_WispWindow->m_window)
+    if (g_GameWindow.m_window != nullptr && SDL_GetMouseFocus() != g_GameWindow.m_window)
     {
         Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
         return;

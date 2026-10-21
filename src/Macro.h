@@ -5,9 +5,11 @@
 
 #pragma once
 
+#include "Platform.h"
+#include <common/str.h>
+
 #include "BaseQueue.h"
 #include <xuocore/enumlist.h>
-#include "Wisp.h"
 
 
 extern const char *s_MacroAction[MSC_TOTAL_COUNT];

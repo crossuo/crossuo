@@ -13,7 +13,7 @@
 
 #include <common/logging/logging.h>
 
-#include <Wisp/WispWindow.h> // Wisp::g_WispWindow (the display caption)
+#include "../../GameWindow.h" // g_GameWindow (the display caption)
 
 #include "assistanteventsui.h"
 #include "widgets.h"
@@ -118,9 +118,9 @@ void apply_display_title()
     if (title != s_LastWindowTitle)
     {
         s_LastWindowTitle = title;
-        if (Wisp::g_WispWindow != nullptr)
+        if (g_GameWindow.m_window != nullptr)
         {
-            Wisp::g_WispWindow->SetTitle(title);
+            g_GameWindow.SetTitle(title);
         }
     }
 }
@@ -290,9 +290,9 @@ void AssistantUI_RecompileDisplayTitle()
 void AssistantUI_RequestClientClose()
 {
     // CWindow::Destroy pushes the SDL_QUIT that runs the normal shutdown path
-    if (Wisp::g_WispWindow != nullptr)
+    if (g_GameWindow.m_window != nullptr)
     {
-        Wisp::g_WispWindow->Destroy();
+        g_GameWindow.Destroy();
     }
 }
 

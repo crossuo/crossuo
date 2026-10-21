@@ -30,7 +30,7 @@
 #include "script/scripthandle.h" // ScriptManager (stop self-test)
 #include "core/world.h"          // g_World/g_Player (stop self-test gate)
 #include "Globals.h"        // g_GameState, g_Ticks
-#include "Wisp/WispWindow.h" // Wisp::g_WispWindow
+#include "../GameWindow.h" // g_GameWindow
 #include "../Config.h"      // g_Config.AssistantEnabled (the Assistant= crossuo.cfg key)
 
 // X11 (pulled in by SDL_syswm.h on Linux) defines `Status` as a macro, which
@@ -346,7 +346,7 @@ static bool init()
     // ToggleAssistant game macro (AssistantWindow_Toggle); both run on the
     // main thread with the game GL context current at the in-game stage
     SDL_Window *window =
-        Wisp::g_WispWindow != nullptr ? Wisp::g_WispWindow->m_window : nullptr;
+        g_GameWindow.m_window != nullptr ? g_GameWindow.m_window : nullptr;
     SDL_GLContext context = SDL_GL_GetCurrentContext();
 #if defined(XUO_EMSC)
     // SDL does not track the WebGL context: the renderer binds it directly on

@@ -5,7 +5,6 @@
 
 #include "Macro.h"
 #include <xuocore/mappedfile.h>
-#include "Wisp.h"
 #include <common/utils.h> // countof
 
 #define MODKEY_ALT 0x0100

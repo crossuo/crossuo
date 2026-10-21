@@ -1410,7 +1410,7 @@ void Render_GL1EndDraw()
     ScopedPerfMarker(__FUNCTION__);
     GL_CALL(glDisable(GL_ALPHA_TEST));
 #if !defined(XUO_EMSC)
-    GL_CALL(SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window));
+    GL_CALL(SDL_GL_SwapWindow(g_GameWindow.m_window));
 #endif
 }
 

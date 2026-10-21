@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include "../Wisp/WispWindow.h" // GetDisplaySize
+#include "../GameWindow.h" // GetDisplaySize
 #include "../Misc.h"
 #include "GumpBaseScroll.h"
 #include "../CrossUO.h"

@@ -5,7 +5,7 @@
 
 #include "SDL_wrapper.h"
 #include "Renderer/RenderAPI.h"
-#include "Wisp/WispWindow.h"
+#include "GameWindow.h"
 
 #include <common/logging/logging.h>
 
@@ -212,7 +212,7 @@ void Splash_Render()
 
     int windowWidth = 0;
     int windowHeight = 0;
-    SDL_GetWindowSize(Wisp::g_WispWindow->m_window, &windowWidth, &windowHeight);
+    SDL_GetWindowSize(g_GameWindow.m_window, &windowWidth, &windowHeight);
     if (windowWidth <= 0 || windowHeight <= 0)
     {
         return;
@@ -276,7 +276,7 @@ void Splash_RenderAndPumpEvents()
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0)
     {
-        if (Wisp::g_WispWindow->OnWindowProc(event))
+        if (g_GameWindow.OnWindowProc(event))
         {
             // a quit request was queued: let the main loop handle it
             SDL_PushEvent(&event);

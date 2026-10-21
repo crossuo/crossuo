@@ -11,7 +11,6 @@
 #include "../CrossUO.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderBatch.h"
-#include "../Wisp.h" // REMOVE
 
 CFontsManager g_FontManager;
 

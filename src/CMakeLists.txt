@@ -1,10 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-set(wisp_src
-  Wisp/WispWindow.cpp
-)
-
 set(gameobjects_src
   GameObjects/CustomHouseMultiObject.cpp
   GameObjects/GameEffect.cpp
@@ -287,7 +283,7 @@ if (XUO_ASSISTANT_ENABLED)
   add_subdirectory(AssetViewer)
 endif()
 
-set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${renderer_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
+set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${renderer_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src})
 file(GLOB XUO_HDRS ${XUO_DIR}/**/*.h)
 
 set(XUO_FILES ${XUO_SRCS} ${XUO_HDRS})

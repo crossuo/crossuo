@@ -4,6 +4,7 @@
 #define UO_RENDER_LIST_SORT 1
 #define UO_CHECKERBOARD_SEQUENCE_RENDER_LIST 1
 
+#include "../Misc.h" // RandomInt
 #include <algorithm>
 #include <SDL_rect.h>
 #include <climits> // INT_MAX

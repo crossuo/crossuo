@@ -887,7 +887,7 @@ static bool RunFrame(bool &raised)
         if (AssistantWindow_ProcessEvent(event))
             continue;
 #endif
-        quit = Wisp::g_WispWindow->OnWindowProc(event);
+        quit = g_GameWindow.OnWindowProc(event);
         if (quit)
         {
             break;
