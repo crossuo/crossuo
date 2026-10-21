@@ -1276,6 +1276,15 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
         }
     }
 #endif
+    // the client masks and clamps the resolved group before drawing: an
+    // out-of-range group (custom mobs with stray high groups) falls back to
+    // the standing group with the frame cursor reset
+    result &= 0x7F;
+    if (result > 0x22)
+    {
+        result = 0;
+        AnimIndex = 0;
+    }
     return result;
 }
 
