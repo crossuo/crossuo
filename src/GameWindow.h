@@ -77,6 +77,8 @@ public:
     bool OnTouchFinger(const SDL_TouchFingerEvent &ev);
     void OnTouchHoldTimer();
     void TouchTryConvertHold();
+    void PollWebKeyboard();
+    bool IsWebKeyboardFocused() const;
     void OnDragging();
     void OnActivate();
     void OnDeactivate();

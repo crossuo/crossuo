@@ -898,6 +898,7 @@ static bool RunFrame(bool &raised)
     g_Ticks = SDL_GetTicks();
     g_ConnectionManager.Recv();
     g_PacketManager.SendMegaClilocRequests();
+    g_GameWindow.PollWebKeyboard();
     g_Game.Process(true);
     AutoHelpTick();
     ChatTestTick();

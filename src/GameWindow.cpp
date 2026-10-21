@@ -4,6 +4,7 @@
 #include <SDL_timer.h>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <common/utils.h> // countof
 #include <external/gfx/gfx.h> // win_gfx_context_attrbutes
 #include "icon_client.h"
@@ -26,6 +27,7 @@
 #include "Managers/ScreenEffectManager.h"
 #include "Managers/SoundManager.h"
 #include "Managers/GumpManager.h"
+#include "TextEngine/EntryText.h"
 #include "Managers/PacketManager.h"
 #include "Managers/ConnectionManager.h"
 #include "Managers/MouseManager.h"
@@ -679,6 +681,133 @@ void CGameWindow::TouchTryConvertHold()
         g_ConfigManager.GameWindowHeight, g_MouseManager.Position.X, g_MouseManager.Position.Y);
 }
 
+// ---------------------------------------------------------------------------
+// phone keyboard bridge: mobile browsers only raise the virtual keyboard for
+// a focused <input>, so the page owns a hidden one. The client raises it
+// when a text entry gains focus (g_EntryPointer) and drains the queued
+// input events (packed by the page's Module.kbdTake) once per frame,
+// re-emitting them as regular SDL events so every screen/gump keeps its
+// desktop text handling.
+//
+// The browser's own copy of each key event is kept inert by the page (the
+// hidden input stops keydown/keypress/keyup from bubbling), and the bridge
+// drops anything that still arrives while a text entry has focus - so a
+// key reaches the game exactly once. The page never uses a key event as a
+// keystroke: repeats and deletions come from the input events, which carry
+// the string and the backspaces separately (and with repeats).
+// ---------------------------------------------------------------------------
+static bool s_webKbdFocused = false;
+
+static void ReportWebKeyEvent()
+{
+#if defined(XUO_EMSC)
+    MAIN_THREAD_EM_ASM({ if (Module.kbdKeyEvent) Module.kbdKeyEvent(); });
+#endif
+}
+
+bool CGameWindow::IsWebKeyboardFocused() const
+{
+    return s_webKbdFocused;
+}
+
+#if defined(XUO_EMSC)
+static void PushWebKey(SDL_Keycode sym, SDL_Scancode sc)
+{
+    const Uint32 wid = SDL_GetWindowID(g_GameWindow.m_window);
+    SDL_Event down;
+    SDL_zero(down);
+    down.type = SDL_KEYDOWN;
+    down.key.windowID = wid;
+    down.key.state = SDL_PRESSED;
+    down.key.keysym.sym = sym;
+    down.key.keysym.scancode = sc;
+    // the bridge carries no modifier state of its own; the game derives
+    // ctrl/shift/alt from SDL_GetModState each frame
+    down.key.keysym.mod = KMOD_NONE;
+    down.key.repeat = 0;
+    SDL_Event up = down;
+    up.type = SDL_KEYUP;
+    up.key.state = SDL_RELEASED;
+    SDL_PushEvent(&down);
+    SDL_PushEvent(&up);
+}
+#endif
+
+void CGameWindow::PollWebKeyboard()
+{
+#if defined(XUO_EMSC)
+    const bool focus = g_EntryPointer != nullptr;
+    if (focus != s_webKbdFocused)
+    {
+        s_webKbdFocused = focus;
+        MAIN_THREAD_EM_ASM(
+            { if (Module.phoneKeyboard) Module.phoneKeyboard($0); }, focus ? 1 : 0);
+    }
+
+    // pop the queued events (numbers) one by one through the main-thread
+    // proxy: -1 backspace, -2 enter, otherwise a UTF-16 code unit of text
+    for (int i = 0; i < 32; i++)
+    {
+        const int ev = MAIN_THREAD_EM_ASM_INT(
+            {
+                var v = Module.kbdTake ? Module.kbdTake() : null;
+                return v === null || v === undefined ? -3 : v;
+            });
+        if (ev == -3)
+        {
+            break;
+        }
+        const Uint32 wid = SDL_GetWindowID(m_window);
+        if (ev < 0)
+        {
+            const SDL_Keycode sym = ev == -1 ? SDLK_BACKSPACE : SDLK_RETURN;
+            const SDL_Scancode sc = ev == -1 ? SDL_SCANCODE_BACKSPACE : SDL_SCANCODE_RETURN;
+            PushWebKey(sym, sc);
+            // return is the one key whose action runs on the character, not
+            // the key: gump text entries (GumpGeneric, GumpProfile, ...) only
+            // submit from OnTextInput. Backspace is handled by the key alone
+            // (CEntryText::OnKey); a '\b' text char would delete a second
+            // character on top of it.
+            if (ev == -2)
+            {
+                SDL_Event te;
+                SDL_zero(te);
+                te.type = SDL_TEXTINPUT;
+                te.text.windowID = wid;
+                te.text.text[0] = '\r';
+                SDL_PushEvent(&te);
+            }
+            continue;
+        }
+        // UTF-16 code unit -> UTF-8 TEXTINPUT event (surrogate pairs arrive
+        // as two events; the entry inserts them as two chars, acceptable)
+        uint8_t utf8[4] = { 0, 0, 0, 0 };
+        int len = 0;
+        if (ev < 0x80)
+        {
+            utf8[len++] = (uint8_t)ev;
+        }
+        else if (ev < 0x800)
+        {
+            utf8[len++] = (uint8_t)(0xC0 | (ev >> 6));
+            utf8[len++] = (uint8_t)(0x80 | (ev & 0x3F));
+        }
+        else
+        {
+            utf8[len++] = (uint8_t)(0xE0 | (ev >> 12));
+            utf8[len++] = (uint8_t)(0x80 | ((ev >> 6) & 0x3F));
+            utf8[len++] = (uint8_t)(0x80 | (ev & 0x3F));
+        }
+        SDL_Event te;
+        SDL_zero(te);
+        te.type = SDL_TEXTINPUT;
+        te.text.windowID = wid;
+        memcpy(te.text.text, utf8, len);
+        SDL_PushEvent(&te);
+    }
+#endif
+}
+
 void CGameWindow::OnTouchHoldTimer()
 {
     RemoveTimer(TOUCH_HOLD_TIMER_ID);
@@ -1290,6 +1419,17 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
+        // the page queues one input event per keystroke and nothing else, so
+        // this browser key event corresponds to an event the bridge already
+        // (or is about to) re-emit: count it and keep it inert while a text
+        // entry has focus
+        if (s_webKbdFocused &&
+            (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP || ev.type == SDL_TEXTINPUT))
+        {
+            ReportWebKeyEvent();
+            break;
+        }
+
         case SDL_QUIT:
         {
             OnDestroy();
@@ -1299,12 +1439,25 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
 
         case SDL_KEYDOWN:
         {
+            // while a text entry is focused the virtual keyboard's keys
+            // reach the game exactly once, through the bridge queue; the
+            // browser's own keydown copy must not be replayed here
+            if (s_webKbdFocused)
+            {
+                break;
+            }
             OnKeyDown(ev.key);
         }
         break;
 
         case SDL_KEYUP:
         {
+            // a keyup whose keydown went through the bridge must not reach
+            // screens that never saw the press
+            if (s_webKbdFocused)
+            {
+                break;
+            }
             OnKeyUp(ev.key);
         }
         break;

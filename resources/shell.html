@@ -157,6 +157,154 @@
         try { fetch('client-log', { method: 'POST', body: String(line).slice(0, 500) }); }
         catch (e) { /* diagnostics must never break the page */ }
       };
+      // phone keyboard bridge: mobile browsers only raise the virtual
+      // keyboard for a focused <input>. The client asks for it when a text
+      // entry gains focus (Module.phoneKeyboard) and drains the queued
+      // events every frame (Module.kbdTake, one number per call).
+      // events queue on the page Module as NUMBERS (one UTF-16 code unit per
+      // text char; -1 = backspace, -2 = enter) and the client pops them with
+      // cheap main-thread proxy calls each frame. Numbers only: the client
+      // cannot receive strings/objects through the proxy.
+      Module.kbdQueue = [];
+      Module.kbdTake = function () {
+        return Module.kbdQueue.length ? Module.kbdQueue.shift() : null;
+      };
+      var kbdSend = function (ev) {
+        if (ev.t === 'B') {
+          Module.kbdQueue.push(-1);
+        } else if (ev.t === 'R') {
+          Module.kbdQueue.push(-2);
+        } else if (ev.t === 'T') {
+          var s = ev.s || '';
+          for (var i = 0; i < s.length; i++) {
+            Module.kbdQueue.push(s.charCodeAt(i));
+          }
+        }
+        if (Module.kbdQueue.length > 128) {
+          Module.kbdQueue.splice(0, Module.kbdQueue.length - 128);
+        }
+      };
+      // the hidden input sits inside the window: its own key events would
+      // otherwise reach SDL on top of the queue. They are counted here (the
+      // page uses them to tell which mirror characters were fetched) and
+      // never turned into keystrokes - the input events carry everything.
+      Module.kbdKeyEvents = 0;
+      Module.kbdKeyEvent = function () { Module.kbdKeyEvents++; };
+      var kbdFetched = 0; // mirror characters already shipped to the queue
+      var kbdInput = document.createElement('input');
+      kbdInput.setAttribute('autocomplete', 'off');
+      kbdInput.setAttribute('autocorrect', 'off');
+      kbdInput.setAttribute('autocapitalize', 'off');
+      kbdInput.setAttribute('spellcheck', 'false');
+      kbdInput.style.cssText =
+        'position:fixed;left:50%;bottom:0;width:3em;height:1.2em;' +
+        'opacity:0.01;border:none;padding:0;background:transparent;' +
+        'color:transparent;z-index:0;';
+      document.body.appendChild(kbdInput);
+      var kbdMirror = '';
+      var kbdWanted = false;
+      var kbdTryFocus = function () {
+        if (kbdWanted && document.activeElement !== kbdInput) {
+          try { kbdInput.focus({ preventScroll: true }); } catch (e) { /* retry */ }
+        }
+      };
+      // the page client fetches each character as it is typed; anything
+      // still mirrored here was typed but never fetched (no frame ran in
+      // between) - hand it over before the buffer is dropped, otherwise the
+      // last keystroke is lost when the keyboard is dismissed
+      var kbdFlush = function () {
+        var v = kbdInput.value;
+        for (var i = kbdFetched; i < v.length; i++) {
+          Module.kbdQueue.push(v.charCodeAt(i));
+        }
+        kbdFetched = 0;
+        kbdMirror = '';
+        kbdInput.value = '';
+      };
+      Module.phoneKeyboard = function (show) {
+        kbdWanted = show;
+        try {
+          if (show) {
+            kbdTryFocus();
+          } else {
+            kbdFlush();
+            kbdInput.blur();
+          }
+        } catch (e) { /* keyboard is best-effort */ }
+      };
+      // mobile browsers only open the keyboard when focus() runs inside a
+      // user gesture; the client's first request happens before any gesture
+      // (entries start focused), so retry on every interaction until the
+      // input actually takes focus. Bubbling phase: the game handles the
+      // same gesture further down and a capture-phase listener would take
+      // the listener object (and the user gesture) it attaches.
+      ['mousedown', 'touchstart', 'click'].forEach(function (evName) {
+        document.addEventListener(evName, kbdTryFocus);
+      });
+      // when the user dismisses the keyboard (back button) or it closes on a
+      // field switch, the hidden input STAYS focused and the retry above
+      // would never fire again - detect the keyboard-close (visual viewport
+      // back to full height) and blur, so the next tap re-raises it
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', function () {
+          var open = window.visualViewport.height < window.innerHeight * 0.75;
+          if (!open && kbdWanted && document.activeElement === kbdInput) {
+            kbdFlush();
+            kbdInput.blur();
+          }
+        });
+      }
+      var kbdQueueLen = 0; // diagnostics only
+      Module.kbdEvents = {
+        push: function (ev) { kbdSend(ev); kbdQueueLen++; }
+      };
+      kbdInput.addEventListener('input', function () {
+        // caret is always at the end (nothing moves it): value diff vs the
+        // mirror yields appended text (autocorrect may insert several
+        // characters at once) or removed characters (backspace)
+        var v = kbdInput.value;
+        var common = 0;
+        while (common < v.length && common < kbdMirror.length &&
+               v[common] === kbdMirror[common]) {
+          common++;
+        }
+        for (var i = kbdMirror.length - 1; i >= common; i--) {
+          Module.kbdEvents.push({ t: 'B' });
+          if (i >= kbdFetched) {
+            kbdFetched--; // deleted before the game ever saw it
+          }
+        }
+        kbdFetched += v.length - common;
+        if (v.length > common) {
+          Module.kbdEvents.push({ t: 'T', s: v.slice(common) });
+        }
+        kbdMirror = v;
+
+      });
+      kbdInput.addEventListener('keydown', function (e) {
+        // the browser's own key events must not reach SDL on top of the
+        // input events queued above: stopping them here keeps a single code
+        // path (the queue) for every character
+        e.stopPropagation();
+        if (e.key === 'Enter') {
+          Module.kbdEvents.push({ t: 'R' });
+          kbdInput.value = '';
+          kbdMirror = '';
+          kbdFetched = 0;
+          e.preventDefault();
+        } else if (e.key === 'Backspace') {
+          // an empty field fires no input event: the deletion is the key's,
+          // held keys repeat it
+          if (kbdInput.value === '') {
+            Module.kbdEvents.push({ t: 'B' });
+          }
+          e.preventDefault();
+        }
+      });
+      // keypress and keyup are not cancelled by the keydown above; they are
+      // the browser's drive of SDL, never the game's
+      kbdInput.addEventListener('keypress', function (e) { e.stopPropagation(); });
+      kbdInput.addEventListener('keyup', function (e) { e.stopPropagation(); });
       // ?log=1 gate - page-global: the audio and idbfs blocks below live
       // outside the boot IIFE and share it
       var WEBLOG = new URLSearchParams(window.location.search).get('log') === '1';
