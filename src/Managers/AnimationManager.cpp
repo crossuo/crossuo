@@ -2930,3 +2930,176 @@ uint8_t CAnimationManager::CorrectAnimationGroupServer(
     LABEL_190(flags, v13);
     return uint8_t(v13);
 }
+
+// mount layer item graphic -> body graphic (the client's hardcoded table,
+// 0x3E90..0x3EE4 with a horse fallback for unknown ids inside the range)
+uint16_t MountItemId_ToBodyGraphic(uint16_t itemGraphic)
+{
+    switch (itemGraphic)
+    {
+        case 0x3E90: return 0x114;
+        case 0x3E91: return 0x115;
+        case 0x3E92: return 0x11C;
+        case 0x3E94: return 0x0F3;
+        case 0x3E95: return 0x0A9;
+        case 0x3E97: return 0x0C3;
+        case 0x3E98: return 0x0C2;
+        case 0x3E9A: return 0x0C1;
+        case 0x3E9B: // both map to the same body in the client
+        case 0x3E9D: return 0x0C0;
+        case 0x3E9C: return 0x0BF;
+        case 0x3E9E: return 0x0BE;
+        case 0x3EA0: return 0x0E2;
+        case 0x3EA1: return 0x0E4;
+        case 0x3EA2: return 0x0CC;
+        case 0x3EA3: return 0x0D2;
+        case 0x3EA4: return 0x0DA;
+        case 0x3EA5: return 0x0DB;
+        case 0x3EA6: return 0x0DC;
+        case 0x3EA7: return 0x074;
+        case 0x3EA8: return 0x075;
+        case 0x3EA9: return 0x072;
+        case 0x3EAA: return 0x073;
+        case 0x3EAB: return 0x00AA;
+        case 0x3EAC: return 0x00AB;
+        case 0x3EAD: return 0x0084;
+        case 0x3EAF: return 0x0078;
+        case 0x3EB0: return 0x0079;
+        case 0x3EB1: return 0x0077;
+        case 0x3EB2: return 0x0076;
+        case 0x3EB3: return 0x0090;
+        case 0x3EB4: return 0x007A;
+        case 0x3EB5: return 0x00B1;
+        case 0x3EB6: return 0x00B2;
+        case 0x3EB7: return 0x00B3;
+        case 0x3EB8: return 0x00BC;
+        case 0x3EBA: return 0x00BB;
+        case 0x3EBB: return 0x0319;
+        case 0x3EBC: return 0x0317;
+        case 0x3EBD: return 0x031A;
+        case 0x3EBE: return 799;
+        case 0x3EC5: return 0x0D5;
+        case 0x3EC6: return 0x01B0;
+        case 0x3EC7: return 0x04E6;
+        case 0x3EC8: return 0x04E7;
+        case 0x3EC9: return 0x042D;
+        case 0x3ECA: return 0x0579;
+        case 0x3ECB: return 0x057F;
+        case 0x3ECC: return 0x0582;
+        case 0x3ECD: return 0x0580;
+        case 0x3ECE: return 0x059A;
+        case 0x3ECF: return 0x05A0;
+        case 0x3ED0: return 0x05A1;
+        case 0x3ED1: return 0x05E6;
+        case 0x3ED2: return 0x05F6;
+        case 0x3ED3: return 0x05F7;
+        case 0x3ED4: return 0x060A;
+        case 0x3ED5: return 0x060B;
+        case 0x3ED6: return 0x060C;
+        case 0x3ED7: return 0x060D;
+        case 0x3ED8: return 0x060F;
+        case 0x3ED9: return 0x0610;
+        case 0x3EDA: return 0x0590; // out of numeric order in the client too
+        case 0x3EDB: return 0x0611;
+        case 0x3EDC: return 0x0666;
+        case 0x3EDD: return 0x0581;
+        case 0x3EDE: return 0x0673;
+        case 0x3EDF: return 0x0674;
+        case 0x3EE0: return 0x0675;
+        case 0x3EE1: return 0x0678;
+        case 0x3EE2: return 0x0679;
+        case 0x3EE4: return 0x06C1;
+        default:
+            break;
+    }
+    if (IN_RANGE(itemGraphic, 0x3E90, 0x3EE4))
+    {
+        return 0xC8; // horse
+    }
+    return itemGraphic; // custom mounts: the raw item graphic stays
+}
+
+// membership set of the client's mount body validity test: the table bodies
+// plus two contiguous ranges and the plain horse
+bool MountBodyGraphic_IsValid(uint16_t bodyGraphic)
+{
+    if (bodyGraphic == 0xC8 || IN_RANGE(bodyGraphic, 0x031A, 0x042C) ||
+        IN_RANGE(bodyGraphic, 0x04E7, 0x0578))
+    {
+        return true;
+    }
+    switch (bodyGraphic)
+    {
+        case 0x072:
+        case 0x073:
+        case 0x074:
+        case 0x075:
+        case 0x076:
+        case 0x077:
+        case 0x078:
+        case 0x079:
+        case 0x07A:
+        case 0x084:
+        case 0x090:
+        case 0x0A9:
+        case 0x0AA:
+        case 0x0AB:
+        case 0x0B1:
+        case 0x0B2:
+        case 0x0B3:
+        case 0x0BB:
+        case 0x0BC:
+        case 0x0BE:
+        case 0x0BF:
+        case 0x0C0:
+        case 0x0C1:
+        case 0x0C2:
+        case 0x0C3:
+        case 0x0CC:
+        case 0x0D2:
+        case 0x0D5:
+        case 0x0DA:
+        case 0x0DB:
+        case 0x0DC:
+        case 0x0E2:
+        case 0x0E4:
+        case 0x0F3:
+        case 0x114:
+        case 0x115:
+        case 0x11C:
+        case 0x1B0:
+        case 0x317:
+        case 0x319:
+        case 0x42D:
+        case 0x4E6:
+        case 0x579:
+        case 0x57F:
+        case 0x580:
+        case 0x581:
+        case 0x582:
+        case 0x590:
+        case 0x59A:
+        case 0x5A0:
+        case 0x5A1:
+        case 0x5E6:
+        case 0x5F6:
+        case 0x5F7:
+        case 0x60A:
+        case 0x60B:
+        case 0x60C:
+        case 0x60D:
+        case 0x60F:
+        case 0x610:
+        case 0x611:
+        case 0x666:
+        case 0x673:
+        case 0x674:
+        case 0x675:
+        case 0x678:
+        case 0x679:
+        case 0x6C1:
+            return true;
+        default:
+            return false;
+    }
+}

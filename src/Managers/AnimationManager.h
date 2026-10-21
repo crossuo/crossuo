@@ -142,3 +142,10 @@ public:
 };
 
 extern CAnimationManager g_AnimationManager;
+// mount layer item <-> body conversion (the client's hardcoded mount tables):
+// item graphics in the client mount range resolve to a body graphic (unknown
+// ids in range fall back to the horse body); outside the range the raw item
+// graphic passes through for custom mounts
+uint16_t MountItemId_ToBodyGraphic(uint16_t itemGraphic);
+bool MountBodyGraphic_IsValid(uint16_t bodyGraphic);
+
