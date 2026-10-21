@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include "WispWindow.h"
+#include "../Managers/MouseManager.h" // g_MouseManager
 #include "../SDL_wrapper.h"
 #include <common/utils.h> // countof
 #include <external/gfx/gfx.h> // win_gfx_context_attrbutes
@@ -448,8 +449,8 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
         case SDL_MOUSEMOTION:
         {
-            Wisp::g_WispMouse->Update();
-            if (Wisp::g_WispMouse->Dragging)
+            g_MouseManager.Update();
+            if (g_MouseManager.Dragging)
             {
                 OnDragging();
             }
@@ -458,7 +459,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
         case SDL_MOUSEWHEEL:
         {
-            Wisp::g_WispMouse->Update();
+            g_MouseManager.Update();
 
             const bool isUp = ev.wheel.y < 0;
             OnMidMouseButtonScroll(isUp);
@@ -479,7 +480,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
         case SDL_MOUSEBUTTONUP:
         case SDL_MOUSEBUTTONDOWN:
         {
-            Wisp::g_WispMouse->Update();
+            g_MouseManager.Update();
             const bool isDown = ev.type == SDL_MOUSEBUTTONDOWN;
             auto &mouse = ev.button;
             switch (mouse.button)
@@ -487,60 +488,59 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                 case SDL_BUTTON_LEFT:
                     if (isDown)
                     {
-                        Wisp::g_WispMouse->Capture();
-                        Wisp::g_WispMouse->LeftButtonPressed = true;
-                        Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
-                        Wisp::g_WispMouse->CancelDoubleClick = false;
+                        g_MouseManager.Capture();
+                        g_MouseManager.LeftButtonPressed = true;
+                        g_MouseManager.LeftDropPosition = g_MouseManager.Position;
+                        g_MouseManager.CancelDoubleClick = false;
                         uint32_t ticks = SDL_GetTicks();
-                        if (Wisp::g_WispMouse->LastLeftButtonClickTimer +
-                                Wisp::g_WispMouse->DoubleClickDelay >=
+                        if (g_MouseManager.LastLeftButtonClickTimer +
+                                g_MouseManager.DoubleClickDelay >=
                             ticks)
                         {
-                            Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
+                            g_MouseManager.LastLeftButtonClickTimer = 0;
                             if (!OnLeftMouseButtonDoubleClick())
                             {
                                 OnLeftMouseButtonDown();
                             }
                             else
                             {
-                                Wisp::g_WispMouse->LastLeftButtonClickTimer = 0xFFFFFFFF;
+                                g_MouseManager.LastLeftButtonClickTimer = 0xFFFFFFFF;
                             }
                             break;
                         }
 
                         OnLeftMouseButtonDown();
 
-                        if (Wisp::g_WispMouse->CancelDoubleClick)
+                        if (g_MouseManager.CancelDoubleClick)
                         {
-                            Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
+                            g_MouseManager.LastLeftButtonClickTimer = 0;
                         }
                         else
                         {
-                            Wisp::g_WispMouse->LastLeftButtonClickTimer = ticks;
+                            g_MouseManager.LastLeftButtonClickTimer = ticks;
                         }
                         break;
                     }
                     else
                     {
-                        if (Wisp::g_WispMouse->LastLeftButtonClickTimer != 0xFFFFFFFF)
+                        if (g_MouseManager.LastLeftButtonClickTimer != 0xFFFFFFFF)
                         {
                             OnLeftMouseButtonUp();
                         }
-                        Wisp::g_WispMouse->LeftButtonPressed = false;
-                        Wisp::g_WispMouse->Release();
+                        g_MouseManager.LeftButtonPressed = false;
+                        g_MouseManager.Release();
                     }
                     break;
 
                 case SDL_BUTTON_MIDDLE:
                     if (isDown)
                     {
-                        Wisp::g_WispMouse->Capture();
-                        Wisp::g_WispMouse->MidButtonPressed = true;
-                        Wisp::g_WispMouse->MidDropPosition = Wisp::g_WispMouse->Position;
-                        Wisp::g_WispMouse->CancelDoubleClick = false;
+                        g_MouseManager.Capture();
+                        g_MouseManager.MidButtonPressed = true;
+                        g_MouseManager.CancelDoubleClick = false;
                         uint32_t ticks = SDL_GetTicks();
-                        if (Wisp::g_WispMouse->LastMidButtonClickTimer +
-                                Wisp::g_WispMouse->DoubleClickDelay >=
+                        if (g_MouseManager.LastMidButtonClickTimer +
+                                g_MouseManager.DoubleClickDelay >=
                             ticks)
                         {
                             if (!OnMidMouseButtonDoubleClick())
@@ -548,72 +548,71 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                                 OnMidMouseButtonDown();
                             }
 
-                            Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
+                            g_MouseManager.LastMidButtonClickTimer = 0;
                             break;
                         }
 
                         OnMidMouseButtonDown();
 
-                        if (Wisp::g_WispMouse->CancelDoubleClick)
+                        if (g_MouseManager.CancelDoubleClick)
                         {
-                            Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
+                            g_MouseManager.LastMidButtonClickTimer = 0;
                         }
                         else
                         {
-                            Wisp::g_WispMouse->LastMidButtonClickTimer = ticks;
+                            g_MouseManager.LastMidButtonClickTimer = ticks;
                         }
                     }
                     else
                     {
                         OnMidMouseButtonUp();
-                        Wisp::g_WispMouse->MidButtonPressed = false;
-                        Wisp::g_WispMouse->Release();
+                        g_MouseManager.MidButtonPressed = false;
+                        g_MouseManager.Release();
                     }
                     break;
 
                 case SDL_BUTTON_RIGHT:
                     if (isDown)
                     {
-                        Wisp::g_WispMouse->Capture();
-                        Wisp::g_WispMouse->RightButtonPressed = true;
-                        Wisp::g_WispMouse->RightDropPosition = Wisp::g_WispMouse->Position;
-                        Wisp::g_WispMouse->CancelDoubleClick = false;
+                        g_MouseManager.Capture();
+                        g_MouseManager.RightButtonPressed = true;
+                        g_MouseManager.CancelDoubleClick = false;
                         uint32_t ticks = SDL_GetTicks();
-                        if (Wisp::g_WispMouse->LastRightButtonClickTimer +
-                                Wisp::g_WispMouse->DoubleClickDelay >=
+                        if (g_MouseManager.LastRightButtonClickTimer +
+                                g_MouseManager.DoubleClickDelay >=
                             ticks)
                         {
-                            Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
+                            g_MouseManager.LastRightButtonClickTimer = 0;
                             if (!OnRightMouseButtonDoubleClick())
                             {
                                 OnRightMouseButtonDown();
                             }
                             else
                             {
-                                Wisp::g_WispMouse->LastRightButtonClickTimer = 0xFFFFFFFF;
+                                g_MouseManager.LastRightButtonClickTimer = 0xFFFFFFFF;
                             }
                             break;
                         }
 
                         OnRightMouseButtonDown();
 
-                        if (Wisp::g_WispMouse->CancelDoubleClick)
+                        if (g_MouseManager.CancelDoubleClick)
                         {
-                            Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
+                            g_MouseManager.LastRightButtonClickTimer = 0;
                         }
                         else
                         {
-                            Wisp::g_WispMouse->LastRightButtonClickTimer = ticks;
+                            g_MouseManager.LastRightButtonClickTimer = ticks;
                         }
                     }
                     else
                     {
-                        if (Wisp::g_WispMouse->LastRightButtonClickTimer != 0xFFFFFFFF)
+                        if (g_MouseManager.LastRightButtonClickTimer != 0xFFFFFFFF)
                         {
                             OnRightMouseButtonUp();
                         }
-                        Wisp::g_WispMouse->RightButtonPressed = false;
-                        Wisp::g_WispMouse->Release();
+                        g_MouseManager.RightButtonPressed = false;
+                        g_MouseManager.Release();
                     }
                     break;
 

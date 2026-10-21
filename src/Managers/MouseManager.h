@@ -1,27 +1,47 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #pragma once
 
-#include "Wisp.h"
+#include "../Globals.h"
+#include "../Point.h"
+#include <stdint.h>
 
 struct CRenderTexture;
 
 extern uint16_t g_CursorData[2][16];
 
-class CMouseManager : public Wisp::CMouse
+class CMouseManager
 {
+public:
+    CPoint2Di RealPosition = CPoint2Di();
+    CPoint2Di Position = CPoint2Di();
+    CPoint2Di LeftDropPosition = CPoint2Di();
+
+    bool LeftButtonPressed = false;
+    bool RightButtonPressed = false;
+    bool MidButtonPressed = false;
+    bool Dragging = false;
+    int DoubleClickDelay = 350;
+    bool CancelDoubleClick = false;
+
+    uint32_t LastLeftButtonClickTimer = 0;
+    uint32_t LastRightButtonClickTimer = 0;
+    uint32_t LastMidButtonClickTimer = 0;
+
 private:
     int m_CursorOffset[2][16];
     bool m_Hidden = false;
 
 public:
-    CMouseManager()
-        : Wisp::CMouse()
-    {
-        memset(&m_CursorOffset[0][0], 0, sizeof(m_CursorOffset));
-    }
+    CMouseManager() { memset(&m_CursorOffset[0][0], 0, sizeof(m_CursorOffset)); }
     ~CMouseManager() {}
+
+    void Update();
+    void Release() const;
+    void Capture() const;
+
+    CPoint2Di LeftDroppedOffset();
 
     void Hide(bool hide = true) { m_Hidden = hide; };
     bool LoadCursorTextures();

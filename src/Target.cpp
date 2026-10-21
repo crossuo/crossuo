@@ -3,6 +3,7 @@
 
 #include "Target.h"
 #include "Config.h"
+#include "Misc.h"
 #include "CrossUO.h"
 #include "Multi.h"
 #include <xuocore/uodata.h>

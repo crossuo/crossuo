@@ -96,7 +96,7 @@ void CGameWindow::EmulateOnLeftMouseButtonDown()
         g_PressedObject.InitLeft(g_SelectedObject);
         if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
         {
-            Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
+            g_MouseManager.LeftDropPosition = g_MouseManager.Position;
             g_CurrentScreen->OnLeftMouseButtonDown();
         }
     }

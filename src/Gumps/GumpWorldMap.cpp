@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include "../Wisp/WispWindow.h" // GetDisplaySize
 #include "GumpWorldMap.h"
 #include <external/zlib_amalg.h> // crc32 (whole-file running checksum)
 #include <xuocore/uodata.h>

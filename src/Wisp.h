@@ -9,7 +9,6 @@
 #include "Point.h"
 #include "Misc.h"
 #include "Wisp/WispConnection.h"
-#include "Wisp/WispMouse.h"
 #include "Wisp/WispPacketMessage.h"
 #include "Wisp/WispPacketReader.h"
 #include "Wisp/WispWindow.h"

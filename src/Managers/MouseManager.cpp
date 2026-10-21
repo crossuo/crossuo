@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <cmath> // hypotf
+#include <SDL_mouse.h>
+#include "../GameWindow.h" // g_WispWindow (until the window merge)
 #include "MouseManager.h"
 #include "ColorManager.h"
 #include "MapManager.h"
@@ -601,4 +603,45 @@ void CMouseManager::Draw(uint16_t id)
             }
         }
     }
+}
+
+void CMouseManager::Update()
+{
+    // only follow the mouse while it hovers our own window; other windows in
+    // the process (like the embedded launcher) have their own mouse handling,
+    // and their coordinates would otherwise move the game cursor around
+    if (Wisp::g_WispWindow != nullptr && SDL_GetMouseFocus() != Wisp::g_WispWindow->m_window)
+    {
+        Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
+        return;
+    }
+    SDL_GetMouseState(&Position.X, &Position.Y);
+    Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
+    RealPosition = Position;
+}
+
+void CMouseManager::Release() const
+{
+    if (!(LeftButtonPressed || RightButtonPressed || MidButtonPressed))
+    {
+        SDL_CaptureMouse(SDL_FALSE);
+    }
+}
+
+void CMouseManager::Capture() const
+{
+    SDL_CaptureMouse(SDL_TRUE);
+}
+
+CPoint2Di CMouseManager::LeftDroppedOffset()
+{
+    CPoint2Di position;
+
+    if (LeftButtonPressed)
+    {
+        position.X = RealPosition.X - LeftDropPosition.X;
+        position.Y = RealPosition.Y - LeftDropPosition.Y;
+    }
+
+    return position;
 }

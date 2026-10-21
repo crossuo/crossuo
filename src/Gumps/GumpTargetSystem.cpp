@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
+#include "../Misc.h"
 #include "GumpTargetSystem.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 #include "../CrossUO.h"

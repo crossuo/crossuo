@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUISkillItem.h"
+#include "../Platform.h"
 #include "GUIButton.h"
 #include "../CrossUO.h"
 #include "../PressedObject.h"
