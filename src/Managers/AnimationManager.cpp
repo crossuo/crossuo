@@ -1423,7 +1423,10 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     uint8_t animIndex = obj->AnimIndex;
     const uint16_t graphic = g_AnimationManager.ConvertBodyIfNeeded(obj->GetGraphicForAnimation());
     Anim.Group = GetDieGroupIndex(graphic, obj->UsedLayer != 0);
-    Draw(obj, x, y, mirror, animIndex); //Draw animation
+    if (obj->Count <= 1999) // large amounts skip body frame resolution
+    {
+        Draw(obj, x, y, mirror, animIndex); //Draw animation
+    }
     DrawEquippedLayers(false, obj, x, y, mirror, Anim.Direction, animIndex, 0);
 }
 
@@ -1527,6 +1530,20 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     if (frame.Width == 0 && frame.Height == 0 && frame.CenterX == 0 && frame.CenterY == 0)
     {
         frame.Height = isMounted ? 100 : 60;
+    }
+    if (isCorpse)
+    {
+        // corpse draw fixups: a mirrored direction folds the center into the
+        // width, and a non-negative vertical center extends the sprite
+        // downward instead of shifting it
+        if (mirror)
+        {
+            frame.CenterX = frame.Width - frame.CenterX;
+        }
+        if (frame.CenterY >= 0)
+        {
+            frame.Height += frame.CenterY;
+        }
     }
     return frame;
 }
@@ -1917,7 +1934,8 @@ bool CAnimationManager::IsReplacedObjectAnimation(uint8_t anim, uint16_t v13) co
 }
 
 uint8_t
-CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t action, uint8_t mode)
+CAnimationManager::GetObjectNewAnimationType_0(
+    CGameCharacter *obj, uint16_t action, uint8_t mode, uint16_t *outFrameCount)
 {
     if (action <= 10)
     {
@@ -1950,9 +1968,18 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
         }
         else if (type == AGT_SEA_MONSTER)
         {
+            // sea creature attacks carry their own frame counts
             if ((mode % 2) != 0)
             {
+                if (outFrameCount != nullptr)
+                {
+                    *outFrameCount = 20;
+                }
                 return 6;
+            }
+            if (outFrameCount != nullptr)
+            {
+                *outFrameCount = 15;
             }
             return 5;
         }
@@ -1984,11 +2011,6 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 6:
                     return 12;
                 case 7:
-                    if (obj->IsGargoyle() && obj->IsFlying() &&
-                        uo_animation_exists(obj->Graphic, 72))
-                    {
-                        return 72;
-                    }
                     return 13;
                 case 8:
                     return 14;
@@ -1999,15 +2021,7 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 5:
                     return 10;
                 default:
-                    if (obj->IsGargoyle() && obj->IsFlying() &&
-                        uo_animation_exists(obj->Graphic, 71))
-                    {
-                        return 71;
-                    }
-                    else if (uo_animation_exists(obj->Graphic, 31))
-                    {
-                        return 31;
-                    }
+                    return 31;
             }
         }
 
@@ -2029,7 +2043,9 @@ uint8_t
 CAnimationManager::GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
@@ -2054,7 +2070,9 @@ uint8_t
 CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
@@ -2092,7 +2110,9 @@ uint8_t
 CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
@@ -2102,10 +2122,6 @@ CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t act
     {
         if (type > AGT_ANIMAL)
         {
-            if (obj->IsGargoyle() && obj->IsFlying() && uo_animation_exists(obj->Graphic, 77))
-            {
-                return 77;
-            }
             if (obj->IsMounted())
             {
                 return 0xff;
@@ -2121,7 +2137,9 @@ uint8_t
 CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
@@ -2166,7 +2184,9 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
@@ -2226,7 +2246,9 @@ uint8_t
 CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
@@ -2256,41 +2278,31 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
 
-    if (type != AGT_MONSTER)
+    // the gargoyle fly-over group is played only for monster-table bodies
+    // when the gargoyle fly client feature is enabled (the StygianAbyss
+    // feature bit of the locked-features packet)
+    if (type == AGT_MONSTER && (g_LockedClientFeatures & LFF_SA) != 0)
     {
-        if (obj->IsGargoyle())
-        {
-            if (obj->IsFlying())
-            {
-                if (action == 0)
-                {
-                    return 60;
-                }
-            }
-            else
-            {
-                if (action == 0)
-                {
-                    return 61;
-                }
-            }
-        }
-        return 0xff;
+        return 20;
     }
-    return 20;
+    return 0xff;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-    ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
+    // bodies absent from mobtypes classify as human (the client's absent
+    // entry default), not monster
+    ANIMATION_GROUPS_TYPE type = AGT_HUMAN;
     if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
@@ -2309,17 +2321,9 @@ CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t ac
             {
                 case 1:
                 case 2:
-                    if (obj->IsGargoyle() && obj->IsFlying())
-                    {
-                        return 76;
-                    }
                     return 17;
                 default:
                     break;
-            }
-            if (obj->IsGargoyle() && obj->IsFlying())
-            {
-                return 75;
             }
             return 16;
         }
@@ -2329,13 +2333,13 @@ CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t ac
 }
 
 uint8_t CAnimationManager::GetObjectNewAnimation(
-    CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode)
+    CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode, uint16_t *outFrameCount)
 {
     assert(obj->Graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     switch (type)
     {
         case 0:
-            return GetObjectNewAnimationType_0(obj, action, mode);
+            return GetObjectNewAnimationType_0(obj, action, mode, outFrameCount);
         case 1:
         case 2:
             return GetObjectNewAnimationType_1_2(obj, action, mode);

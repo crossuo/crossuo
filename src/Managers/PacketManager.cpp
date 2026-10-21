@@ -5323,11 +5323,12 @@ PACKET_HANDLER(CharacterAnimation)
     auto *obj = g_World->FindWorldCharacter(serial);
     if (obj != nullptr)
     {
-        // the client refuses to animate characters held in a container
+        // the client refuses to animate characters held in a container;
+        // the requested action plays raw here - anim.def group replaces are
+        // applied later, during group resolution
         if (obj->Container == 0)
         {
-            const auto group = g_AnimationManager.GetReplacedObjectAnimation(obj, action);
-            obj->SetAnimation(group, delay, frameCount, repeatMode, repeat, forward, repeat);
+            obj->SetAnimation(uint8_t(action), delay, frameCount, repeatMode, repeat, forward, repeat);
             obj->AnimationFromServer = true;
         }
     }
@@ -5350,14 +5351,11 @@ PACKET_HANDLER(NewCharacterAnimation)
     const uint16_t type = ReadUInt16BE();
     const uint16_t action = ReadUInt16BE();
     const uint8_t mode = ReadUInt8();
-    const uint8_t group = g_AnimationManager.GetObjectNewAnimation(obj, type, action, mode);
-    obj->SetAnimation(group);
-    obj->AnimationRepeatMode = 1;
-    obj->AnimationDirection = true;
-    if ((type == 1 || type == 2) && obj->Graphic == 0x0015)
-    {
-        obj->AnimationRepeat = true;
-    }
+    uint16_t frameCount = 0;
+    const auto group = g_AnimationManager.GetObjectNewAnimation(obj, type, action, mode, &frameCount);
+    // the bow loop on the training dummy is a ping-pong play, not a repeat
+    const bool pingPong = (type == 1 || type == 2) && obj->Graphic == 0x0015;
+    obj->SetAnimation(group, 0, frameCount, 1, false, true, pingPong);
     obj->AnimationFromServer = true;
 }
 

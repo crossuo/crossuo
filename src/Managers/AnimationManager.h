@@ -83,7 +83,8 @@ private:
     uint16_t m_CharacterLayerGraphic[25];
     uint16_t m_CharacterLayerAnimID[25];
 
-    uint8_t GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_0(
+        CGameCharacter *obj, uint16_t action, uint8_t mode, uint16_t *outFrameCount = nullptr);
     uint8_t GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode);
     uint8_t GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode);
     uint8_t GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode);
@@ -134,7 +135,8 @@ public:
     uint8_t GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index);
 
     uint8_t
-    GetObjectNewAnimation(CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode);
+    GetObjectNewAnimation(
+        CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode, uint16_t *outFrameCount = nullptr);
 
     void GarbageCollect();
     void ClearUnusedAnimations(uint32_t ticks = ~0);
