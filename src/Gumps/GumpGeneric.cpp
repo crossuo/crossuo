@@ -21,8 +21,7 @@ CGumpGeneric::CGumpGeneric(uint32_t serial, short x, short y, uint32_t id)
 }
 
 CGumpGeneric::~CGumpGeneric()
-{
-}
+= default;
 
 void CGumpGeneric::InitToolTip()
 {

@@ -21,7 +21,7 @@ public:
         : CBaseQueue()
     {
     }
-    virtual ~CGumpManager() override {}
+    virtual ~CGumpManager() override = default;
 
     void AddGump(CGump *obj);
     CGump *UpdateContent(uint32_t serial, int id, const GUMP_TYPE &type);

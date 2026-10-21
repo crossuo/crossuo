@@ -19,7 +19,7 @@ public:
     CTargetGump();
     ~CTargetGump();
 
-    void Draw();
+    void Draw() const;
 };
 
 class CNewTargetSystem
@@ -40,7 +40,7 @@ public:
     CNewTargetSystem();
     ~CNewTargetSystem();
 
-    void Draw();
+    void Draw() const;
 };
 
 extern CTargetGump g_TargetGump;

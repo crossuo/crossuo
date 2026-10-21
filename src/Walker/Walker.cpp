@@ -8,8 +8,7 @@
 CWalker g_Walker;
 
 CWalker::CWalker()
-{
-}
+= default;
 
 void CWalker::Reset()
 {

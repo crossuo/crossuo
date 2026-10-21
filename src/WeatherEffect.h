@@ -18,5 +18,5 @@ public:
     float SpeedMagnitude = 0.0f;
 
     CWeatherEffect();
-    virtual ~CWeatherEffect() {}
+    virtual ~CWeatherEffect() = default;
 };

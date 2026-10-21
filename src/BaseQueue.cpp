@@ -75,7 +75,7 @@ void CBaseQueue::Delete(int index)
     Delete(Get(index));
 }
 
-int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
+int CBaseQueue::GetItemIndex(CBaseQueueItem *item) const
 {
     int index = 0;
     for (CBaseQueueItem *current = (CBaseQueueItem *)m_Items; current != nullptr; current = (CBaseQueueItem *)current->m_Next)
@@ -89,7 +89,7 @@ int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
     return -1;
 }
 
-int CBaseQueue::GetItemsCount()
+int CBaseQueue::GetItemsCount() const
 {
     int count = 0;
     for (CBaseQueueItem *current = (CBaseQueueItem *)m_Items; current != nullptr; current = (CBaseQueueItem *)current->m_Next)
@@ -99,7 +99,7 @@ int CBaseQueue::GetItemsCount()
     return count;
 }
 
-CBaseQueueItem *CBaseQueue::Get(int index)
+CBaseQueueItem *CBaseQueue::Get(int index) const
 {
     CBaseQueueItem *item = m_Items;
     for (; item != nullptr && (index != 0); item = item->m_Next, index--)
@@ -251,7 +251,7 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
     return result;
 }
 
-CBaseQueueItem *CBaseQueue::Last()
+CBaseQueueItem *CBaseQueue::Last() const
 {
     CBaseQueueItem *last = m_Items;
     while (last != nullptr && last->m_Next != nullptr)

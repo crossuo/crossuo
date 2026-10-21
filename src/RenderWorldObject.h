@@ -15,7 +15,7 @@ protected:
     char m_Z = 0;
 
 public:
-    char GetZ() { return m_Z; };
+    char GetZ() const { return m_Z; };
     void SetZ(char val);
     short PriorityZ = 0;
     RENDER_OBJECT_TYPE RenderType = ROT_GAME_OBJECT;
@@ -39,7 +39,7 @@ public:
     uint8_t m_DrawTextureColor[4];
 
     bool ProcessAlpha(int maxAlpha);
-    bool RemovedFromRender();
+    bool RemovedFromRender() const;
     virtual void AddText(CTextData *td) {}
     virtual bool TextCanBeTransparent(CRenderTextObject *text) { return false; }
     virtual bool TranparentTest(int playerZ) { return false; }

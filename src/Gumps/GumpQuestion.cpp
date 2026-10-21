@@ -30,8 +30,7 @@ CGumpQuestion::CGumpQuestion(uint32_t serial, short x, short y, uint8_t variant)
 }
 
 CGumpQuestion::~CGumpQuestion()
-{
-}
+= default;
 
 void CGumpQuestion::GUMP_BUTTON_EVENT_C
 {

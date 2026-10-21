@@ -173,8 +173,7 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
 }
 
 CGumpPaperdoll::~CGumpPaperdoll()
-{
-}
+= default;
 
 void CGumpPaperdoll::CalculateGumpState()
 {
@@ -549,7 +548,7 @@ void CGumpPaperdoll::UpdateContent()
                 }
 
                 uint16_t id = equipment->AnimID;
-                const auto conv = uo_get_equipconv(bodyIter, id);
+                const auto *const conv = uo_get_equipconv(bodyIter, id);
                 if (conv != nullptr)
                 {
                     id = conv->Gump;
@@ -578,7 +577,7 @@ void CGumpPaperdoll::UpdateContent()
                 if (equipment == nullptr)
                 {
                     uint16_t id = g_ObjectInHand.TiledataPtr->AnimID;
-                    const auto conv = uo_get_equipconv(bodyIter, id);
+                    const auto *const conv = uo_get_equipconv(bodyIter, id);
                     if (conv != nullptr)
                     {
                         id = conv->Gump;
@@ -615,7 +614,7 @@ void CGumpPaperdoll::UpdateContent()
                 {
                     uint32_t slotSerial = ID_GP_ITEMS + slotEquipment->Layer;
                     CIndexObjectStatic &sio = g_Index.m_Static[slotEquipment->Graphic];
-                    auto spr = (CSprite *)sio.UserData;
+                    auto *spr = (CSprite *)sio.UserData;
                     if (spr == nullptr)
                     {
                         spr = g_Game.ExecuteStaticArt(slotEquipment->Graphic);
@@ -687,7 +686,7 @@ void CGumpPaperdoll::UpdateContent()
                             }
                         }
 
-                        auto ext = new CGUIExternalTexture(
+                        auto *ext = new CGUIExternalTexture(
                             spr, true, tileX, tileY, wantImageWidth, wantImageHeight);
                         m_DataBox->Add(ext);
                         ext->DrawOnly = true;

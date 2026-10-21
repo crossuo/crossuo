@@ -13,14 +13,14 @@ protected:
     int m_StyleSelection = 0;
 
 public:
-    int GetStyleSelection() { return m_StyleSelection; };
+    int GetStyleSelection() const { return m_StyleSelection; };
     void SetStyleSelection(int val);
 
 protected:
     int m_ColorSelection = 0;
 
 public:
-    int GetColorSelection() { return m_ColorSelection; };
+    int GetColorSelection() const { return m_ColorSelection; };
     void SetColorSelection(int val);
     astr_t Name;
 

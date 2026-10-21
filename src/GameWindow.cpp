@@ -47,8 +47,7 @@ CGameWindow::CGameWindow()
 }
 
 CGameWindow::~CGameWindow()
-{
-}
+= default;
 
 void CGameWindow::SetRenderTimerDelay(int delay)
 {
@@ -115,7 +114,7 @@ void CGameWindow::EmulateOnLeftMouseButtonDown()
     }
 }
 
-int CGameWindow::GetRenderDelay()
+int CGameWindow::GetRenderDelay() const
 {
     return m_iRenderDelay;
 }
@@ -1078,7 +1077,7 @@ void CGameWindow::SetMaxSize(int width, int height)
     m_MaxSize.Height = height;
 }
 
-void CGameWindow::MaximizeWindow()
+void CGameWindow::MaximizeWindow() const
 {
 #if defined(XUO_EMSC)
     // native maximizes into the desktop; on web the desktop is the browser
@@ -1131,7 +1130,7 @@ void CGameWindow::SetSize(const CSize &size)
 #endif
 }
 
-void CGameWindow::SetPositionSize(int x, int y, int width, int height)
+void CGameWindow::SetPositionSize(int x, int y, int width, int height) const
 {
 #if SDL_VERSION_ATLEAST(2, 0, 5)
     int borderH;
@@ -1144,7 +1143,7 @@ void CGameWindow::SetPositionSize(int x, int y, int width, int height)
     SDL_SetWindowSize(m_window, width, height);
 }
 
-void CGameWindow::GetPositionSize(int *x, int *y, int *width, int *height)
+void CGameWindow::GetPositionSize(int *x, int *y, int *width, int *height) const
 {
 #if SDL_VERSION_ATLEAST(2, 0, 5)
     int borderH;
@@ -1293,7 +1292,7 @@ bool CGameWindow::Create(const char *title, bool showCursor, int width, int heig
     return OnCreate();
 }
 
-void CGameWindow::Destroy()
+void CGameWindow::Destroy() const
 {
     if (m_window != nullptr)
     {

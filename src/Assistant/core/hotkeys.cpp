@@ -661,7 +661,7 @@ void CHotkeys::ResolveDuplicate(int answer)
     m_PendingTargetRow = -1;
 }
 
-void CHotkeys::ApplyPending()
+void CHotkeys::ApplyPending() const
 {
     vector<CHotkeyEntry> &hotkeys = g_AssistantConfig.m_Hotkeys;
     if (m_PendingTargetRow < 0 || m_PendingTargetRow >= (int)hotkeys.size())

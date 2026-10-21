@@ -40,7 +40,7 @@ public:
         uint8_t font, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0, int width = 0);
 
     int GetLinesCountW(
-        uint8_t font, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0, int width = 0);
+        uint8_t font, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0, int width = 0) const;
 
     virtual bool Insert(char16_t ch, CGump *gump = nullptr);
     void Remove(bool left, CGump *gump = nullptr);
@@ -65,8 +65,8 @@ public:
     void OnKey(CGump *gump, Keycode key);
     int Pos() const { return m_Position; }
     size_t Length() const { return WText.length(); }
-    astr_t CheckMaxWidthA(uint8_t font, astr_t str);
-    wstr_t CheckMaxWidthW(uint8_t font, wstr_t str);
+    astr_t CheckMaxWidthA(uint8_t font, astr_t str) const;
+    wstr_t CheckMaxWidthW(uint8_t font, wstr_t str) const;
     void FixMaxWidthA(uint8_t font);
     void FixMaxWidthW(uint8_t font);
 

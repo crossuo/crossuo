@@ -12,13 +12,12 @@ CGUIVirtueGump::CGUIVirtueGump(uint16_t graphic, int x, int y)
 }
 
 CGUIVirtueGump::~CGUIVirtueGump()
-{
-}
+= default;
 
 bool CGUIVirtueGump::Select()
 {
     bool select = false;
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         const int x = g_MouseManager.Position.X - m_X;

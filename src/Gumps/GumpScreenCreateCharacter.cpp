@@ -82,8 +82,7 @@ CGumpScreenCreateCharacter::CGumpScreenCreateCharacter()
 }
 
 CGumpScreenCreateCharacter::~CGumpScreenCreateCharacter()
-{
-}
+= default;
 
 void CGumpScreenCreateCharacter::UpdateContent()
 {

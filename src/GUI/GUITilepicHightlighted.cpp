@@ -27,8 +27,7 @@ CGUITilepicHightlighted::CGUITilepicHightlighted(
 }
 
 CGUITilepicHightlighted::~CGUITilepicHightlighted()
-{
-}
+= default;
 
 void CGUITilepicHightlighted::SetShaderMode()
 {
@@ -55,7 +54,7 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    auto spr = g_Game.ExecuteStaticArt(Graphic);
+    auto *spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)
     {
         SetShaderMode();
@@ -69,7 +68,7 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
 
 bool CGUITilepicHightlighted::Select()
 {
-    auto spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
+    auto *spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
     if (spr != nullptr)
     {
         int count = 1 + static_cast<int>(DoubleDraw);

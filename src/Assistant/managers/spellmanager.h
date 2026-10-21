@@ -30,7 +30,7 @@ public:
 
     void Insert(const astr_t &name, const int &index);
 
-    int Find(astr_t name) const;
+    int Find(const astr_t& name) const;
 
     void Cast(const astr_t &name);
 
@@ -39,7 +39,7 @@ public:
     // uses do not record themselves
     void CastIndex(int index);
 
-    void TargetCast(const astr_t &name, const uint32_t &serial);
+    void TargetCast(const astr_t &name, const uint32_t &serial) const;
 };
 
 extern CSpellManager g_SpellManager;

@@ -544,7 +544,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
                 reader.Move(clilocsCount * 4);
             }
 
-            auto mo = new CMultiObject(graphic, x + offsetX, y + offsetY, z + (char)offsetZ, 2);
+            auto *mo = new CMultiObject(graphic, x + offsetX, y + offsetY, z + (char)offsetZ, 2);
             g_MapManager.AddRender(mo);
             AddMultiObject(mo);
         }

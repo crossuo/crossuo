@@ -15,8 +15,7 @@ CGameEffect::CGameEffect()
 }
 
 CGameEffect::~CGameEffect()
-{
-}
+= default;
 
 void CGameEffect::Draw(int x, int y)
 {
@@ -136,7 +135,7 @@ uint16_t CGameEffect::GetCurrentGraphic()
     return Graphic + Increment;
 }
 
-void CGameEffect::ApplyRenderMode()
+void CGameEffect::ApplyRenderMode() const
 {
     SCOPED_GL_DEBUG_MARKER();
     switch (RenderMode)
@@ -186,7 +185,7 @@ void CGameEffect::ApplyRenderMode()
     }
 }
 
-void CGameEffect::RemoveRenderMode()
+void CGameEffect::RemoveRenderMode() const
 {
     switch (RenderMode)
     {

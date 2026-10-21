@@ -14,8 +14,7 @@ CJournal::CJournal(int maxSize)
 }
 
 CJournal::~CJournal()
-{
-}
+= default;
 
 void CJournal::Clear()
 {

@@ -22,7 +22,7 @@ class CMainScreen : public CBaseScreen
 private:
     CGumpScreenMain m_MainGump;
 
-    void Load();
+    void Load() const;
 
 public:
     enum
@@ -40,8 +40,8 @@ public:
     CMainScreen();
     virtual ~CMainScreen() override;
 
-    void SetAccounting(const astr_t &account, const astr_t &password);
-    void Paste();
+    void SetAccounting(const astr_t &account, const astr_t &password) const;
+    void Paste() const;
     virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
     virtual void Init() override;
 
@@ -49,7 +49,7 @@ public:
     virtual void OnKeyDown(const KeyEvent &ev) override;
     virtual void DebugScreen() override;
 
-    void Save();
+    void Save() const;
     void Reset() const;
 };
 

@@ -56,7 +56,7 @@ public:
 private:
     // shared 0xA8/0x81 tail: auto-select the last server or open the
     // shard-select screen
-    void PostParse(uint16_t numServers);
+    void PostParse(uint16_t numServers) const;
 };
 
 extern CServerList g_ServerList;

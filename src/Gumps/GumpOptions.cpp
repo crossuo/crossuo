@@ -216,8 +216,7 @@ CGumpOptions::CGumpOptions(short x, short y)
 }
 
 CGumpOptions::~CGumpOptions()
-{
-}
+= default;
 
 void CGumpOptions::CalculateGumpState()
 {

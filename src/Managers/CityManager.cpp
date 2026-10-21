@@ -18,12 +18,10 @@ CCity::CCity(const astr_t &name, const wstr_t &description)
 }
 
 CCity::~CCity()
-{
-}
+= default;
 
 CCityManager::CCityManager()
-{
-}
+= default;
 
 void CCityManager::Init()
 {

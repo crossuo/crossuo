@@ -27,7 +27,7 @@ void CObjectOnCursor::Clear()
     UpdatedInWorld = false;
 }
 
-uint16_t CObjectOnCursor::GetDrawGraphic(bool &doubleDraw)
+uint16_t CObjectOnCursor::GetDrawGraphic(bool &doubleDraw) const
 {
     return get_stack_graphic(Graphic, Count, doubleDraw);
 }

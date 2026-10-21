@@ -8,12 +8,10 @@
 COptionsMacroManager g_OptionsMacroManager;
 
 COptionsMacroManager::COptionsMacroManager()
-{
-}
+= default;
 
 COptionsMacroManager::~COptionsMacroManager()
-{
-}
+= default;
 
 void COptionsMacroManager::LoadFromMacro()
 {

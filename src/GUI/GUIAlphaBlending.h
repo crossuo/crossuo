@@ -10,6 +10,6 @@ struct CGUIAlphaBlending : public CBaseGUI
     bool Enabled = false;
     float Alpha = 0.0f;
     CGUIAlphaBlending(bool enabled, float alpha);
-    virtual ~CGUIAlphaBlending() override{};
+    virtual ~CGUIAlphaBlending() override= default;
     virtual void Draw(bool checktrans = false) override;
 };

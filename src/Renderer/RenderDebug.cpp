@@ -562,7 +562,7 @@ void RenderDraw_FlushStateDebug(FlushStateCmd *, RenderState *)
 
 void RenderDraw_SetTextureDebug(SetTextureCmd *cmd, RenderState *)
 {
-    auto typeAsStr = TextureTypeAsString(cmd->type);
+    const auto *typeAsStr = TextureTypeAsString(cmd->type);
     DumpInfo("SetTextureCmd: texture: %d - type: %s", cmd->texture, typeAsStr);
 }
 
@@ -628,7 +628,7 @@ void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
         cmd->uniform_type >= ShaderUniformType::ShaderUniformType_FixedFirst &&
         cmd->uniform_type <= ShaderUniformType::ShaderUniformType_FixedLast);
 
-    auto typeAsStr = ShaderUniformTypeAsString(cmd->uniform_type);
+    const auto *typeAsStr = ShaderUniformTypeAsString(cmd->uniform_type);
     char valueAsStr[64] = "<invalid>";
     ShaderUniformValueAsString(
         cmd->uniform_type, &cmd->value.data[0], valueAsStr, countof(valueAsStr));
@@ -650,7 +650,7 @@ void RenderDraw_ShaderLargeUniformDebug(ShaderLargeUniformCmd *cmd, RenderState 
         cmd->uniform_type >= ShaderUniformType::ShaderUniformType_VariableFirst &&
         cmd->uniform_type <= ShaderUniformType::ShaderUniformType_VariableLast);
 
-    auto typeAsStr = ShaderUniformTypeAsString(cmd->uniform_type);
+    const auto *typeAsStr = ShaderUniformTypeAsString(cmd->uniform_type);
     char valueAsStr[64] = "<invalid>";
     assert(cmd->count == 1); // TODO
     ShaderUniformValueAsString(cmd->uniform_type, cmd->value, valueAsStr, countof(valueAsStr));

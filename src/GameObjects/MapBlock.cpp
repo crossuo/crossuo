@@ -127,7 +127,7 @@ void CMapBlock::CreateLandTextureRect()
                 int tileY = obj->GetY();
                 char tileZ1 = obj->GetZ();
 
-                auto spr = g_Game.ExecuteTexture(obj->Graphic);
+                auto *spr = g_Game.ExecuteTexture(obj->Graphic);
                 if (obj->IsStretched || spr == nullptr ||
                     !TestStretched(tileX, tileY, tileZ1, map, true))
                 {

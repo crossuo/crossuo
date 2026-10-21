@@ -14,8 +14,7 @@ CGUIScissor::CGUIScissor(bool enabled, int baseX, int baseY, int x, int y, int w
 }
 
 CGUIScissor::~CGUIScissor()
-{
-}
+= default;
 
 void CGUIScissor::PushGumpLocal(int x, int y, int width, int height)
 {

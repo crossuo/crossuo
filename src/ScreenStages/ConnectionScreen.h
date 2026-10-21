@@ -13,28 +13,28 @@ protected:
     bool m_ConnectionFailed = false;
 
 public:
-    bool GetConnectionFailed() { return m_ConnectionFailed; };
+    bool GetConnectionFailed() const { return m_ConnectionFailed; };
     void SetConnectionFailed(bool val);
 
 protected:
     bool m_Connected = false;
 
 public:
-    bool GetConnected() { return m_Connected; };
+    bool GetConnected() const { return m_Connected; };
     void SetConnected(bool val);
 
 protected:
     bool m_Completed = false;
 
 public:
-    bool GetCompleted() { return m_Completed; };
+    bool GetCompleted() const { return m_Completed; };
     void SetCompleted(bool val);
 
 protected:
     int m_ErrorCode = 0;
 
 public:
-    int GetErrorCode() { return m_ErrorCode; };
+    int GetErrorCode() const { return m_ErrorCode; };
     void SetErrorCode(int val);
 
 protected:

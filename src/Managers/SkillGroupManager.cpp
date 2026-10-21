@@ -15,12 +15,10 @@
 CSkillGroupManager g_SkillGroupManager;
 
 CSkillGroupManager::CSkillGroupManager()
-{
-}
+= default;
 
 CSkillGroupManager::~CSkillGroupManager()
-{
-}
+= default;
 
 void CSkillGroupManager::MakeDefault()
 {
@@ -325,7 +323,7 @@ bool CSkillGroupManager::Load(const fs_path &path)
     return true;
 }
 
-void CSkillGroupManager::Save(TextFileWriter &writer)
+void CSkillGroupManager::Save(TextFileWriter &writer) const
 {
     writer.WriteRaw("[skill-groups]");
 

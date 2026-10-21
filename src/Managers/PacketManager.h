@@ -79,7 +79,7 @@ private:
     std::unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
     std::vector<uint32_t> m_MegaClilocRequests;
 
-    bool AutoLoginNameExists(const astr_t &name);
+    bool AutoLoginNameExists(const astr_t &name) const;
     void AddHTMLGumps(class CGump *gump, std::vector<HTMLGumpDataInfo> &list);
 
 public:

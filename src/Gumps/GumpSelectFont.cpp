@@ -14,8 +14,7 @@ CGumpSelectFont::CGumpSelectFont(uint32_t serial, short x, short y, SELECT_FONT_
 }
 
 CGumpSelectFont::~CGumpSelectFont()
-{
-}
+= default;
 
 void CGumpSelectFont::UpdateContent()
 {

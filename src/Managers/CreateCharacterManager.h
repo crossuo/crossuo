@@ -19,7 +19,7 @@ protected:
     bool m_Female = false;
 
 public:
-    bool GetFemale() { return m_Female; };
+    bool GetFemale() const { return m_Female; };
     void SetFemale(bool female);
 
 protected:

@@ -10,8 +10,7 @@
 CEffectManager g_EffectManager;
 
 CEffectManager::CEffectManager()
-{
-}
+= default;
 
 void CEffectManager::AddEffect(CGameEffect *effect)
 {

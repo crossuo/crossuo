@@ -14,7 +14,7 @@ protected:
     int m_SkillSelection = 0;
 
 public:
-    int GetSkillSelection() { return m_SkillSelection; };
+    int GetSkillSelection() const { return m_SkillSelection; };
     void SetSkillSelection(int val);
 
 private:

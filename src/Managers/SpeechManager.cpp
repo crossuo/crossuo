@@ -30,8 +30,7 @@ CSpeechItem::CSpeechItem(uint16_t code, const wstr_t &data)
 }
 
 CSpeechManager::CSpeechManager()
-{
-}
+= default;
 
 CSpeechManager::~CSpeechManager()
 {
@@ -65,7 +64,7 @@ bool CSpeechManager::LoadSpeech()
     bool isUOP = false;
     if (g_FileManager.m_MainMisc.Loaded())
     {
-        auto block = g_FileManager.m_MainMisc.GetAsset(Asset::CommandsTranslate);
+        const auto *block = g_FileManager.m_MainMisc.GetAsset(Asset::CommandsTranslate);
         //0x0891F809004D8081); // FIXME: find the string for this hash
         if (block != nullptr)
         {

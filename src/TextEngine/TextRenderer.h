@@ -22,9 +22,9 @@ public:
 
     CRenderTextObject *m_TextItems{ nullptr };
     CRenderTextObject *m_DrawPointer{ nullptr };
-    CRenderTextObject *AddText(CRenderTextObject *obj);
+    CRenderTextObject *AddText(CRenderTextObject *obj) const;
 
-    void ToTop(CRenderTextObject *obj);
+    void ToTop(CRenderTextObject *obj) const;
     void AddRect(const CTextImageBounds &rect) { m_TextRect.push_back(rect); }
     void ClearRect() { m_TextRect.clear(); }
     bool InRect(CTextData *text, CRenderWorldObject *rwo);

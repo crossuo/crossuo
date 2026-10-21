@@ -261,7 +261,7 @@ public:
     static fs_path GetGlobalConfigPath();
     static fs_path GetConfigPath();
     fs_path GetProfilePath() const;
-    void EnsureDirectories(); // mkdir Config/, GlobalConfig/, profile/
+    void EnsureDirectories() const; // mkdir Config/, GlobalConfig/, profile/
 
     // --- profiles ----------------------------------------------------------
     const vector<astr_t> &GetProfiles() const { return m_Profiles; }
@@ -422,8 +422,8 @@ public:
     bool CheckSoundInFilter(const uint16_t &index) const;
 
     // --- distance / delay text helpers -----------------------------------------
-    int DistanceFromText(astr_t text);
-    int DelayFromText(astr_t text);
+    int DistanceFromText(astr_t text) const;
+    int DelayFromText(astr_t text) const;
 
     // --- display items / groups -------------------------------------------------
     DisplayInfo GetCustomDisplayItemByName(const astr_t &name) const;

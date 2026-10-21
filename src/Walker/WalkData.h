@@ -15,7 +15,7 @@ public:
     uint16_t Graphic = 0;
     uint8_t Flags = 0;
 
-    CWalkData() {}
+    CWalkData() = default;
     CWalkData(short x, short y, char z, uint8_t direction, uint16_t graphic, uint8_t flags)
         : X(x)
         , Y(y)
@@ -25,8 +25,8 @@ public:
         , Flags(flags)
     {
     }
-    ~CWalkData() {}
+    ~CWalkData() = default;
 
-    bool Run() { return (Direction & 0x80) != 0; } // FIXME
-    void GetOffset(float &x, float &y, float &steps);
+    bool Run() const { return (Direction & 0x80) != 0; } // FIXME
+    void GetOffset(float &x, float &y, float &steps) const;
 };

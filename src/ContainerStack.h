@@ -25,7 +25,7 @@ public:
         short minimizedY,
         bool minimized,
         bool lockMoving);
-    ~CContainerStackItem() {}
+    ~CContainerStackItem() = default;
 };
 
 extern std::deque<CContainerStackItem> g_ContainerStack;

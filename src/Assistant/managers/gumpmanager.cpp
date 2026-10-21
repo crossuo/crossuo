@@ -53,9 +53,9 @@ static uint32_t to_uint(const astr_t &text) { return (uint32_t)strtoul(text.c_st
 
 CGumpManager g_GumpManager;
 
-CGumpManager::CGumpManager() {}
+CGumpManager::CGumpManager() = default;
 
-CGumpManager::~CGumpManager() {}
+CGumpManager::~CGumpManager() = default;
 
 int CGumpManager::GetGumpCount()
 {

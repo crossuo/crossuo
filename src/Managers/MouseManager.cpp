@@ -186,7 +186,7 @@ bool CMouseManager::GetCursorDrawRect(
         return false;
     }
 
-    auto spr = g_Game.ExecuteStaticArt(id);
+    auto *spr = g_Game.ExecuteStaticArt(id);
     if (spr == nullptr || spr->Texture == nullptr)
     {
         return false;
@@ -280,7 +280,7 @@ bool CMouseManager::LoadCursorTextures()
         for (int j = 0; j < 16; j++)
         {
             uint16_t id = g_CursorData[i][j];
-            auto spr = g_Game.ExecuteStaticArt(id);
+            auto *spr = g_Game.ExecuteStaticArt(id);
             if (i == 0)
             {
                 if (spr != nullptr)
@@ -482,7 +482,7 @@ void CMouseManager::Draw(uint16_t id)
             {
                 ohGraphic -= GAME_FIGURE_GUMP_OFFSET;
 
-                auto to = g_Game.ExecuteGump(ohGraphic);
+                auto *to = g_Game.ExecuteGump(ohGraphic);
                 if (to != nullptr)
                 {
                     SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawGump");
@@ -524,7 +524,7 @@ void CMouseManager::Draw(uint16_t id)
         }
     }
 
-    auto spr = g_Game.ExecuteStaticArt(id);
+    auto *spr = g_Game.ExecuteStaticArt(id);
     if (spr != nullptr && spr->Texture)
     {
         uint16_t color = 0;
@@ -633,7 +633,7 @@ void CMouseManager::Capture() const
     SDL_CaptureMouse(SDL_TRUE);
 }
 
-CPoint2Di CMouseManager::LeftDroppedOffset()
+CPoint2Di CMouseManager::LeftDroppedOffset() const
 {
     CPoint2Di position;
 

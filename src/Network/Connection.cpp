@@ -119,7 +119,7 @@ bool CSocket::Read(int maxSize)
     return false;
 }
 
-int CSocket::Send(uint8_t *data, int size)
+int CSocket::Send(uint8_t *data, int size) const
 {
     if (!Connected || m_Socket == nullptr)
     {

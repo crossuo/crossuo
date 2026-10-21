@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include "WalkData.h"
 
-void CWalkData::GetOffset(float &x, float &y, float &steps)
+void CWalkData::GetOffset(float &x, float &y, float &steps) const
 {
     float step_NESW_D = 44.0f / steps; //NW NE SW SE
     float step_NESW = 22.0f / steps;   //N E S W

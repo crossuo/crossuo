@@ -15,8 +15,7 @@ CGUIButton::CGUIButton(
 }
 
 CGUIButton::~CGUIButton()
-{
-}
+= default;
 
 void CGUIButton::PrepareTextures()
 {

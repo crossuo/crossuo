@@ -17,8 +17,7 @@ CGumpScreenConnection::CGumpScreenConnection()
 }
 
 CGumpScreenConnection::~CGumpScreenConnection()
-{
-}
+= default;
 
 // the 1.25.32 art set lacks the modern dialog buttons (0x0481..0x0483 and
 // 0x047E..0x0480 do not exist in its GUMPART.MUL - the button renders as

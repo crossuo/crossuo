@@ -210,7 +210,7 @@ void CGump::FixCoordinates()
     }
 }
 
-bool CGump::CanBeMoved()
+bool CGump::CanBeMoved() const
 {
     bool result = true;
 

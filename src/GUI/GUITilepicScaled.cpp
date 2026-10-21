@@ -14,14 +14,13 @@ CGUITilepicScaled::CGUITilepicScaled(
 }
 
 CGUITilepicScaled::~CGUITilepicScaled()
-{
-}
+= default;
 
 void CGUITilepicScaled::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    auto spr = g_Game.ExecuteStaticArt(Graphic);
+    auto *spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)
     {
         SetShaderMode();

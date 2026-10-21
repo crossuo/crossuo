@@ -37,8 +37,7 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
 }
 
 CGumpTextEntryDialog::~CGumpTextEntryDialog()
-{
-}
+= default;
 
 void CGumpTextEntryDialog::PrepareContent()
 {

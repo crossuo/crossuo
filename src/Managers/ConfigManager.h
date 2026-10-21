@@ -146,84 +146,84 @@ public:
 
 public:
     CConfigManager();
-    ~CConfigManager() {}
+    ~CConfigManager() = default;
 
-    bool GetSound() { return m_Sound; };
+    bool GetSound() const { return m_Sound; };
     void SetSound(bool val);
 
-    bool GetMusic() { return m_Music; };
+    bool GetMusic() const { return m_Music; };
     void SetMusic(bool val);
 
-    uint8_t GetSoundVolume() { return m_SoundVolume; };
+    uint8_t GetSoundVolume() const { return m_SoundVolume; };
     void SetSoundVolume(uint8_t val);
 
-    uint8_t GetMusicVolume() { return m_MusicVolume; };
+    uint8_t GetMusicVolume() const { return m_MusicVolume; };
     void SetMusicVolume(uint8_t val);
 
-    int GetClientFPS() { return m_ClientFPS; };
+    int GetClientFPS() const { return m_ClientFPS; };
     void SetClientFPS(int val);
 
-    bool GetUseScaling() { return m_UseScaling; };
+    bool GetUseScaling() const { return m_UseScaling; };
     void SetUseScaling(bool val);
 
-    uint8_t GetDrawStatusState() { return m_DrawStatusState; };
+    uint8_t GetDrawStatusState() const { return m_DrawStatusState; };
     void SetDrawStatusState(uint8_t val);
 
-    bool GetDrawStumps() { return m_DrawStumps; };
+    bool GetDrawStumps() const { return m_DrawStumps; };
     void SetDrawStumps(bool val);
 
-    bool GetMarkingCaves() { return m_MarkingCaves; };
+    bool GetMarkingCaves() const { return m_MarkingCaves; };
     void SetMarkingCaves(bool val);
 
-    bool GetNoVegetation() { return m_NoVegetation; };
+    bool GetNoVegetation() const { return m_NoVegetation; };
     void SetNoVegetation(bool val);
 
-    bool GetNoAnimateFields() { return m_NoAnimateFields; };
+    bool GetNoAnimateFields() const { return m_NoAnimateFields; };
     void SetNoAnimateFields(bool val);
 
-    bool GetReduceFPSUnactiveWindow() { return m_ReduceFPSUnactiveWindow; };
+    bool GetReduceFPSUnactiveWindow() const { return m_ReduceFPSUnactiveWindow; };
     void SetReduceFPSUnactiveWindow(bool val);
 
-    bool GetConsoleNeedEnter() { return m_ConsoleNeedEnter; };
+    bool GetConsoleNeedEnter() const { return m_ConsoleNeedEnter; };
     void SetConsoleNeedEnter(bool val);
 
-    uint8_t GetSpellIconAlpha() { return m_SpellIconAlpha; };
+    uint8_t GetSpellIconAlpha() const { return m_SpellIconAlpha; };
     void SetSpellIconAlpha(uint8_t val);
 
-    bool GetOldStyleStatusbar() { return m_OldStyleStatusbar; };
+    bool GetOldStyleStatusbar() const { return m_OldStyleStatusbar; };
     void SetOldStyleStatusbar(bool val);
 
-    bool GetOriginalPartyStatusbar() { return m_OriginalPartyStatusbar; };
+    bool GetOriginalPartyStatusbar() const { return m_OriginalPartyStatusbar; };
     void SetOriginalPartyStatusbar(bool val);
 
-    bool GetApplyStateColorOnCharacters() { return m_ApplyStateColorOnCharacters; };
+    bool GetApplyStateColorOnCharacters() const { return m_ApplyStateColorOnCharacters; };
     void SetApplyStateColorOnCharacters(bool val);
 
-    bool GetChangeFieldsGraphic() { return m_ChangeFieldsGraphic; };
+    bool GetChangeFieldsGraphic() const { return m_ChangeFieldsGraphic; };
     void SetChangeFieldsGraphic(bool val);
 
-    bool GetPaperdollSlots() { return m_PaperdollSlots; };
+    bool GetPaperdollSlots() const { return m_PaperdollSlots; };
     void SetPaperdollSlots(bool val);
 
-    uint8_t GetDrawAuraState() { return m_DrawAuraState; };
+    uint8_t GetDrawAuraState() const { return m_DrawAuraState; };
     void SetDrawAuraState(uint8_t val);
 
-    bool GetScaleImagesInPaperdollSlots() { return m_ScaleImagesInPaperdollSlots; };
+    bool GetScaleImagesInPaperdollSlots() const { return m_ScaleImagesInPaperdollSlots; };
     void SetScaleImagesInPaperdollSlots(bool val);
 
-    bool GetUseGlobalMapLayer() { return m_UseGlobalMapLayer; };
+    bool GetUseGlobalMapLayer() const { return m_UseGlobalMapLayer; };
     void SetUseGlobalMapLayer(bool val);
 
-    bool GetNoDrawRoofs() { return m_NoDrawRoofs; };
+    bool GetNoDrawRoofs() const { return m_NoDrawRoofs; };
     void SetNoDrawRoofs(bool val);
 
-    bool GetItemPropertiesIcon() { return m_ItemPropertiesIcon; };
+    bool GetItemPropertiesIcon() const { return m_ItemPropertiesIcon; };
     void SetItemPropertiesIcon(bool val);
 
-    uint8_t GetItemPropertiesMode() { return m_ItemPropertiesMode; };
+    uint8_t GetItemPropertiesMode() const { return m_ItemPropertiesMode; };
     void SetItemPropertiesMode(uint8_t val);
 
-    uint8_t GetCharacterBackpackStyle() { return m_CharacterBackpackStyle; };
+    uint8_t GetCharacterBackpackStyle() const { return m_CharacterBackpackStyle; };
     void SetCharacterBackpackStyle(uint8_t val);
 
     void Init();
@@ -241,7 +241,7 @@ public:
     // no page 10
 
     void UpdateFeatures();
-    uint16_t GetColorByNotoriety(uint8_t notoriety);
+    uint16_t GetColorByNotoriety(uint8_t notoriety) const;
     int GetConfigKeyCode(const astr_t &key);
 
     bool Load(const fs_path &path);

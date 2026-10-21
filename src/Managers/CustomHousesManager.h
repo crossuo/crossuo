@@ -20,7 +20,7 @@ public:
     char Y = 0;
     char Z = 0;
 
-    CBuildObject() {}
+    CBuildObject() = default;
     CBuildObject(uint16_t graphic, char x, char y, char z)
         : Graphic(graphic)
         , X(x)
@@ -28,7 +28,7 @@ public:
         , Z(z)
     {
     }
-    ~CBuildObject() {}
+    ~CBuildObject() = default;
 };
 
 class CCustomHouse
@@ -37,13 +37,13 @@ public:
     uint32_t Serial = 0;
     uint32_t Revision = 0;
 
-    CCustomHouse() {}
+    CCustomHouse() = default;
     CCustomHouse(int serial, int revision)
         : Serial(serial)
         , Revision(revision)
     {
     }
-    ~CCustomHouse() {}
+    ~CCustomHouse() = default;
 
     std::vector<CBuildObject> m_Items;
 
@@ -55,7 +55,7 @@ class CustomHousesManager : public CDataReader
     std::unordered_map<uint32_t, CCustomHouse *> m_Items;
 
 public:
-    CustomHousesManager() {}
+    CustomHousesManager() = default;
     ~CustomHousesManager();
 
     void Clear();

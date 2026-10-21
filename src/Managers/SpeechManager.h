@@ -16,7 +16,7 @@ public:
     astr_t Language;
     astr_t Country;
 
-    CLangCode() {}
+    CLangCode() = default;
     CLangCode(const astr_t &abbreviature, int code, const astr_t &language, const astr_t &country)
         : Code(code)
         , Unknown(0)
@@ -25,7 +25,7 @@ public:
         , Country(country)
     {
     }
-    virtual ~CLangCode() {}
+    virtual ~CLangCode() = default;
 };
 
 class CSpeechItem
@@ -37,9 +37,9 @@ public:
     bool CheckStart = false;
     bool CheckEnd = false;
 
-    CSpeechItem() {}
+    CSpeechItem() = default;
     CSpeechItem(uint16_t code, const wstr_t &data);
-    virtual ~CSpeechItem() {}
+    virtual ~CSpeechItem() = default;
 };
 
 class CSpeechManager

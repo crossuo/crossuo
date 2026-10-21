@@ -531,7 +531,7 @@ void CGumpManager::SecureTradeCheck(uint32_t id, bool state)
 {
     // the send (and the trade-record tap) lives in
     // CGumpSecureTrading::SendTradingResponse
-    auto gump = (CGumpSecureTrading *)UpdateGump(id, 0, GT_TRADE);
+    auto *gump = (CGumpSecureTrading *)UpdateGump(id, 0, GT_TRADE);
     if (gump != nullptr)
     {
         gump->StateMine = state;
@@ -542,7 +542,7 @@ void CGumpManager::SecureTradeCheck(uint32_t id, bool state)
 void CGumpManager::SecureTradeClose(uint32_t id)
 {
     // SendTradingResponse also marks the gump for removal on the close code
-    auto gump = (CGumpSecureTrading *)GetGump(id, 0, GT_TRADE);
+    auto *gump = (CGumpSecureTrading *)GetGump(id, 0, GT_TRADE);
     if (gump != nullptr)
     {
         gump->SendTradingResponse(1);
@@ -1938,13 +1938,13 @@ void CGumpManager::Save(TextFileWriter &writer)
         CGumpSpell *topSpell = ((CGumpSpell *)spellInGroupList[0])->GetTopSpell();
 
         int spellsCount = 0;
-        for (auto spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
+        for (auto *spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
         {
             spellsCount++;
         }
 
         writer.WriteRaw("SpellGroup=" + str_from(spellsCount));
-        for (auto spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
+        for (auto *spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
         {
             // member lines carry an explicit "Spell" key: the loader only
             // regroups lines keyed "Spell" (plain "Gump=" lines load as
@@ -1975,13 +1975,13 @@ void CGumpManager::Save(TextFileWriter &writer)
         CGumpSkill *topSkill = ((CGumpSkill *)skillInGroupList[0])->GetTopSkill();
 
         int skillsCount = 0;
-        for (auto skill = topSkill; skill != nullptr; skill = skill->m_GroupNext)
+        for (auto *skill = topSkill; skill != nullptr; skill = skill->m_GroupNext)
         {
             skillsCount++;
         }
 
         writer.WriteRaw("SkillGroup=" + str_from(skillsCount));
-        for (auto skill = topSkill; skill != nullptr; skill = skill->m_GroupNext)
+        for (auto *skill = topSkill; skill != nullptr; skill = skill->m_GroupNext)
         {
             writer.WriteRaw(
                 "Skill=" + str_from((int)GT_SKILL) + "," + str_from(skill->GetX()) + "," +

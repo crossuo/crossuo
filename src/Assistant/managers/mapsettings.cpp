@@ -132,7 +132,7 @@ void CMapSettings::Load()
     load_bool(ini, "other_sho_name", &OtherShowName);
 }
 
-void CMapSettings::Save()
+void CMapSettings::Save() const
 {
     CIniFile ini;
 

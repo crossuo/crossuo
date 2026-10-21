@@ -43,7 +43,7 @@ void CGUIShopItem::UpdateOffsets()
 {
     if (Serial >= 0x40000000)
     {
-        auto spr = g_Game.ExecuteStaticArt(Graphic);
+        auto *spr = g_Game.ExecuteStaticArt(Graphic);
         if (spr != nullptr)
         {
             m_MaxOffset = spr->Height;
@@ -175,7 +175,7 @@ void CGUIShopItem::Draw(bool checktrans)
 
     if (Serial >= 0x40000000)
     {
-        auto spr = g_Game.ExecuteStaticArt(Graphic);
+        auto *spr = g_Game.ExecuteStaticArt(Graphic);
         if (spr != nullptr && spr->Texture != nullptr)
         {
             th = spr->Texture;
@@ -185,7 +185,7 @@ void CGUIShopItem::Draw(bool checktrans)
     else
     {
         const uint8_t group = g_AnimationManager.GetStandingGroupForGraphic(Graphic);
-        const auto anim = g_AnimationManager.ExecuteAnimation({ Graphic, group, 1 }, g_Ticks);
+        auto *const anim = g_AnimationManager.ExecuteAnimation({ Graphic, group, 1 }, g_Ticks);
         if (anim != nullptr && anim->FrameCount != 0)
         {
             assert(anim->Frames[0].UserData);
@@ -207,7 +207,7 @@ void CGUIShopItem::Draw(bool checktrans)
     }
 
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
-    auto spr = g_Game.ExecuteGump(0x0039);
+    auto *spr = g_Game.ExecuteGump(0x0039);
     if (spr != nullptr && spr->Texture != nullptr)
     {
         spr->Texture->Draw(2, m_MaxOffset, checktrans);

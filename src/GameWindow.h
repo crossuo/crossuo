@@ -34,12 +34,12 @@ public:
     bool OnWindowProc(SDL_Event &ev);
     CSize GetSize() { return m_Size; };
     void SetSize(const CSize &size);
-    void GetPositionSize(int *x, int *y, int *width, int *height);
-    void SetPositionSize(int x, int y, int width, int height);
-    void MaximizeWindow();
+    void GetPositionSize(int *x, int *y, int *width, int *height) const;
+    void SetPositionSize(int x, int y, int width, int height) const;
+    void MaximizeWindow() const;
 
     bool Create(const char *title, bool showCursor = false, int width = 800, int height = 600);
-    void Destroy();
+    void Destroy() const;
 
     static uint32_t PushEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);
 
@@ -57,7 +57,7 @@ public:
 
     void SetRenderTimerDelay(int delay);
     void EmulateOnLeftMouseButtonDown();
-    int GetRenderDelay();
+    int GetRenderDelay() const;
     void SetWindowResizable(bool windowResizable) const;
     void RestoreWindow() const;
 

@@ -14,7 +14,7 @@ protected:
     bool m_Minimized = false;
 
 public:
-    bool GetMinimized() { return m_Minimized; };
+    bool GetMinimized() const { return m_Minimized; };
     void SetMinimized(bool val);
 
 public:

@@ -18,8 +18,7 @@ CSelectTownScreen::CSelectTownScreen()
 }
 
 CSelectTownScreen::~CSelectTownScreen()
-{
-}
+= default;
 
 void CSelectTownScreen::Init()
 {

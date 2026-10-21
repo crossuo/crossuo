@@ -8,8 +8,7 @@
 namespace xuoassist {
 
 CGumpItem::CGumpItem()
-{
-}
+= default;
 
 CGumpItem::CGumpItem(const GUMP_ITEM_TYPE &type, const astr_t &command)
     : Type(type)
@@ -18,8 +17,7 @@ CGumpItem::CGumpItem(const GUMP_ITEM_TYPE &type, const astr_t &command)
 }
 
 CGumpItem::~CGumpItem()
-{
-}
+= default;
 
 void CGumpItem::RestoreCommand(const vector<astr_t> &list)
 {

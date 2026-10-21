@@ -36,8 +36,7 @@ CGumpCombatBook::CGumpCombatBook(int x, int y)
 }
 
 CGumpCombatBook::~CGumpCombatBook()
-{
-}
+= default;
 
 std::vector<uint16_t> CGumpCombatBook::GetItemsList(uint8_t index)
 {

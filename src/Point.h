@@ -19,7 +19,7 @@ public:
     CSize(const CSize &size);
     CSize &operator=(const CSize &size) = default;
 
-    virtual ~CSize() {}
+    virtual ~CSize() = default;
 
     virtual void Reset()
     {
@@ -41,7 +41,7 @@ public:
     CPoint2Di(const CPoint2Df &point);
     CPoint2Di &operator=(const CPoint2Di &point) = default;
 
-    virtual ~CPoint2Di() {}
+    virtual ~CPoint2Di() = default;
 
     virtual void Reset()
     {
@@ -62,7 +62,7 @@ public:
     CRect(const CPoint2Di &position, int width, int height);
     CRect(const CPoint2Di &position, const CSize &size);
 
-    virtual ~CRect() {}
+    virtual ~CRect() = default;
 
     virtual void Reset()
     {
@@ -84,7 +84,7 @@ public:
     CPoint3Di(const CPoint2Df &point);
     CPoint3Di(const CPoint3Df &point);
 
-    virtual ~CPoint3Di() override {}
+    virtual ~CPoint3Di() override = default;
 
     virtual void Reset() override
     {
@@ -105,7 +105,7 @@ public:
     CPoint2Df(const CPoint2Di &point);
     CPoint2Df(const CPoint2Df &point);
 
-    virtual ~CPoint2Df() {}
+    virtual ~CPoint2Df() = default;
 
     virtual void Reset()
     {
@@ -127,7 +127,7 @@ public:
     CPoint3Df(const CPoint2Df &point);
     CPoint3Df(const CPoint3Df &point);
 
-    virtual ~CPoint3Df() override {}
+    virtual ~CPoint3Df() override = default;
 
     virtual void Reset() override
     {

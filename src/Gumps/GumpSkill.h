@@ -43,7 +43,7 @@ public:
     void UpdateGroup(int x, int y);
     void AddSkill(CGumpSkill *skill);
     void RemoveFromGroup();
-    bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
+    bool InGroup() const { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
     virtual void InitToolTip() override;
     GUMP_BUTTON_EVENT_H override;

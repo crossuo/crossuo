@@ -80,7 +80,7 @@ struct TextFileWriter
 
     ~TextFileWriter() { Close(); }
 
-    bool Opened() { return (m_File != nullptr); };
+    bool Opened() const { return (m_File != nullptr); };
     void Close()
     {
         if (m_File != nullptr)
@@ -90,7 +90,7 @@ struct TextFileWriter
         }
     }
 
-    void WriteRaw(const astr_t &line)
+    void WriteRaw(const astr_t &line) const
     {
         if (m_File != nullptr)
         {

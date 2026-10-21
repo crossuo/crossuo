@@ -11,5 +11,4 @@ CCustomHouseMultiObject::CCustomHouseMultiObject(
 }
 
 CCustomHouseMultiObject::~CCustomHouseMultiObject()
-{
-}
+= default;

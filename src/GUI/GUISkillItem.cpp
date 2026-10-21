@@ -62,7 +62,7 @@ void CGUISkillItem::SetStatus(uint8_t val)
     m_ButtonStatus->GraphicPressed = graphic;
 }
 
-uint16_t CGUISkillItem::GetStatusButtonGraphic()
+uint16_t CGUISkillItem::GetStatusButtonGraphic() const
 {
     uint16_t graphic = 0x0984; //Up
 

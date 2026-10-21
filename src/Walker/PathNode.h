@@ -28,7 +28,7 @@ public:
         , m_Object(object)
     {
     }
-    virtual ~CPathObject() {}
+    virtual ~CPathObject() = default;
 
     class CRenderWorldObject *m_Object;
 };

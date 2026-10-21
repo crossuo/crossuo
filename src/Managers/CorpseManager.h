@@ -15,7 +15,7 @@ public:
     uint8_t Direction = 0;
     bool Running = false;
 
-    CCorpse() {}
+    CCorpse() = default;
     CCorpse(int corpseSerial, int objectSerial, uint8_t direction, bool running)
         : CorpseSerial(corpseSerial)
         , ObjectSerial(objectSerial)
@@ -23,7 +23,7 @@ public:
         , Running(running)
     {
     }
-    ~CCorpse() {}
+    ~CCorpse() = default;
 };
 
 // A corpse waiting to be opened when the player comes within reach
@@ -32,13 +32,13 @@ struct CCorpseToOpen
     uint32_t Serial = 0;
     uint32_t Timer = 0; // g_Ticks stamp at which the entry expires
 
-    CCorpseToOpen() {}
+    CCorpseToOpen() = default;
     CCorpseToOpen(int serial, int timer)
         : Serial(serial)
         , Timer(timer)
     {
     }
-    ~CCorpseToOpen() {}
+    ~CCorpseToOpen() = default;
 };
 
 class CCorpseManager
@@ -48,8 +48,8 @@ private:
     std::deque<CCorpseToOpen> m_AutoOpenList;
 
 public:
-    CCorpseManager() {}
-    ~CCorpseManager() {}
+    CCorpseManager() = default;
+    ~CCorpseManager() = default;
 
     void Add(const CCorpse &corpse);
     void Remove(int corpseSerial, int objectSerial);

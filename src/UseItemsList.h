@@ -11,8 +11,8 @@ private:
     std::deque<uint32_t> m_List;
 
 public:
-    CUseItemActions() {}
-    ~CUseItemActions() {}
+    CUseItemActions() = default;
+    ~CUseItemActions() = default;
 
     void Add(int serial);
 

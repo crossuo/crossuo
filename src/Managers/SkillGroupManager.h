@@ -32,7 +32,7 @@ public:
     void Add(CSkillGroupObject *group);
     bool Remove(CSkillGroupObject *group);
     bool Load(const fs_path &path);
-    void Save(TextFileWriter &writer);
+    void Save(TextFileWriter &writer) const;
 };
 
 extern CSkillGroupManager g_SkillGroupManager;

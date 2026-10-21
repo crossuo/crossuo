@@ -27,8 +27,7 @@ CGumpGrayMenu::CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y)
 }
 
 CGumpGrayMenu::~CGumpGrayMenu()
-{
-}
+= default;
 
 void CGumpGrayMenu::GUMP_BUTTON_EVENT_C
 {

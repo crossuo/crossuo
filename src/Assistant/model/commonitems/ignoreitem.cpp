@@ -8,8 +8,7 @@
 namespace xuoassist {
 
 CIgnoreItem::CIgnoreItem()
-{
-}
+= default;
 
 CIgnoreItem::CIgnoreItem(const astr_t &serial, const astr_t &graphic, const astr_t &color)
     : CFindItem(graphic, color)
@@ -18,8 +17,7 @@ CIgnoreItem::CIgnoreItem(const astr_t &serial, const astr_t &graphic, const astr
 }
 
 CIgnoreItem::~CIgnoreItem()
-{
-}
+= default;
 
 bool CIgnoreItem::Found(const uint32_t &serial, const uint16_t &graphic, const uint16_t &color) const
 {

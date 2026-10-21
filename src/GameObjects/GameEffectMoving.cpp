@@ -10,12 +10,10 @@
 #include "../GameObjects/GamePlayer.h"
 
 CGameEffectMoving::CGameEffectMoving()
-{
-}
+= default;
 
 CGameEffectMoving::~CGameEffectMoving()
-{
-}
+= default;
 
 void CGameEffectMoving::Update(CGameObject *parent)
 {

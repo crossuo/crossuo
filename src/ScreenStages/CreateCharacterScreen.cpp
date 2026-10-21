@@ -20,8 +20,7 @@ CCreateCharacterScreen::CCreateCharacterScreen()
 }
 
 CCreateCharacterScreen::~CCreateCharacterScreen()
-{
-}
+= default;
 
 void CCreateCharacterScreen::SetStyleSelection(int val)
 {

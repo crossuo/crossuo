@@ -28,8 +28,7 @@ CGumpScreenGame::CGumpScreenGame()
 }
 
 CGumpScreenGame::~CGumpScreenGame()
-{
-}
+= default;
 
 void CGumpScreenGame::UpdateContent()
 {

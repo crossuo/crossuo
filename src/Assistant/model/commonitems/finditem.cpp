@@ -26,8 +26,7 @@ static astr_t qtrimmed(const astr_t &str)
 }
 
 CFindItem::CFindItem()
-{
-}
+= default;
 
 CFindItem::CFindItem(const astr_t &graphic, const astr_t &color)
     : Graphic(graphic)
@@ -38,8 +37,7 @@ CFindItem::CFindItem(const astr_t &graphic, const astr_t &color)
 }
 
 CFindItem::~CFindItem()
-{
-}
+= default;
 
 void CFindItem::OnChangeGraphic(const astr_t &val)
 {

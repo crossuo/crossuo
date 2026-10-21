@@ -243,7 +243,7 @@ void CGumpSecureTrading::UpdateContent()
             TRACE(Client, " - Item %08x Name: %s", item->Serial, item->GetName().c_str());
             bool doubleDraw = false;
             const uint16_t graphic = item->GetDrawGraphic(doubleDraw);
-            auto dataObject =
+            auto *dataObject =
                 (CGUITilepicHightlighted *)m_MyDataBox->Add(new CGUITilepicHightlighted(
                     item->Serial,
                     graphic,
@@ -274,7 +274,7 @@ void CGumpSecureTrading::UpdateContent()
             TRACE(Client, " - Item %08x Name: %s", item->Serial, item->GetName().c_str());
             bool doubleDraw = false;
             const uint16_t graphic = item->GetDrawGraphic(doubleDraw);
-            auto dataObject =
+            auto *dataObject =
                 (CGUITilepicHightlighted *)m_OpponentDataBox->Add(new CGUITilepicHightlighted(
                     item->Serial,
                     graphic,
@@ -383,7 +383,7 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
 
                 bool doubleDraw = false;
                 uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
-                auto spr = g_Game.ExecuteStaticArt(graphic);
+                auto *spr = g_Game.ExecuteStaticArt(graphic);
                 if (spr != nullptr)
                 {
                     x -= (spr->Width / 2);

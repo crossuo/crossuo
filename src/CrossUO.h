@@ -66,7 +66,7 @@ public:
 
     void Process(bool rendering = false);
     void LoadStartupConfig(int serial);
-    void LoadLocalConfig(int serial, astr_t characterName);
+    void LoadLocalConfig(int serial, const astr_t& characterName);
     void SaveLocalConfig(int serial);
 
     bool InTileFilter(uint16_t graphic);
@@ -175,7 +175,7 @@ public:
     void OpenDoor();
     void EmoteAction(const char *action);
     void AllNames();
-    void LoadLogin(astr_t &login, int &port);
+    void LoadLogin(astr_t &login, int &port) const;
     void GoToWebLink(const astr_t &url);
     void RemoveRangedObjects();
     void ClearWorld();

@@ -14,12 +14,10 @@
 CQuestArrow g_QuestArrow;
 
 CQuestArrow::CQuestArrow()
-{
-}
+= default;
 
 CQuestArrow::~CQuestArrow()
-{
-}
+= default;
 
 void CQuestArrow::Draw()
 {

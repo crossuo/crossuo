@@ -19,10 +19,10 @@ struct CDataReader;
 class CTargetHook
 {
 public:
-    CTargetHook() {}
+    CTargetHook() = default;
     explicit CTargetHook(const uint32_t &serial);
     CTargetHook(const astr_t &tile, const int &x, const int &y, const int &z, const bool &relative);
-    ~CTargetHook() {}
+    ~CTargetHook() = default;
 
     bool TargetOnObject{ true };
     uint32_t Serial{ 0 };
@@ -75,7 +75,7 @@ private:
 
 public:
     CTarget();
-    ~CTarget() {}
+    ~CTarget() = default;
 
     void SetLastTargetObject(int serial);
     // Parses a cursor reply (0x6C / 0x99). Returns false when the reply was

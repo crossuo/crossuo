@@ -40,7 +40,7 @@ protected:
     int CalculateMinMaxZ(
         int &minZ, int &maxZ, int newX, int newY, int currentZ, int newDirection, int stepState);
 
-    bool CreateItemsList(std::vector<CPathObject> &list, int x, int y, int stepState);
+    bool CreateItemsList(std::vector<CPathObject> &list, int x, int y, int stepState) const;
 
     CPoint2Di m_StartPoint{ CPoint2Di() };
     CPoint2Di m_EndPoint{ CPoint2Di() };
@@ -56,7 +56,7 @@ protected:
     int m_PointIndex{ 0 };
     int m_PathSize{ 0 };
 
-    int GetGoalDistCost(const CPoint2Di &p, int cost);
+    int GetGoalDistCost(const CPoint2Di &p, int cost) const;
     bool DoesNotExistOnOpenList(int x, int y, int z);
     bool DoesNotExistOnClosedList(int x, int y, int z);
 

@@ -103,7 +103,7 @@ void CRenderWorldObject::RemoveRender()
     m_PrevXY = nullptr;
 }
 
-bool CRenderWorldObject::RemovedFromRender()
+bool CRenderWorldObject::RemovedFromRender() const
 {
     return m_NextXY == nullptr && m_PrevXY == nullptr;
 }

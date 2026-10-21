@@ -4,8 +4,7 @@
 #include "PathNode.h"
 
 CPathNode::CPathNode()
-{
-}
+= default;
 
 CPathNode::~CPathNode()
 {

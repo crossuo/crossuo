@@ -38,8 +38,7 @@ CGUIHTMLSlider::CGUIHTMLSlider(
 }
 
 CGUIHTMLSlider::~CGUIHTMLSlider()
-{
-}
+= default;
 
 void CGUIHTMLSlider::CalculateOffset()
 {

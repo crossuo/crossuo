@@ -109,7 +109,7 @@ public:
     virtual bool CanBeDisplayed() { return true; }
 
     void FixCoordinates();
-    bool CanBeMoved();
+    bool CanBeMoved() const;
     void DrawLocker();
     bool SelectLocker();
     bool TestLockerClick();

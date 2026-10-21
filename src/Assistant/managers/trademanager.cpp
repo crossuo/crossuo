@@ -11,7 +11,7 @@
 namespace xuoassist {
 
 CTradeManager g_TradeManager;
-CTradeManager::CTradeManager() {}
+CTradeManager::CTradeManager() = default;
 CTradeManager::~CTradeManager()
 {
     m_List.clear();

@@ -313,7 +313,7 @@ void CGumpResourceTracker::UpdateItems()
             bool doubleDraw = false;
             const auto stackedGraphic = get_stack_graphic(item.Graphic, 999, doubleDraw);
             const auto &sio = g_Index.m_Static[stackedGraphic];
-            auto spr = (CSprite *)sio.UserData;
+            auto *spr = (CSprite *)sio.UserData;
             if (spr != nullptr)
             {
                 const auto doubleOffset = doubleDraw ? -5 : 0;
@@ -458,7 +458,7 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
         return;
     }
 
-    const auto container = g_World->FindWorldObject(g_ObjectInHand.Container);
+    auto *const container = g_World->FindWorldObject(g_ObjectInHand.Container);
     if (container == nullptr)
     {
         return;

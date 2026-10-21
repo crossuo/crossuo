@@ -28,7 +28,7 @@ CGumpBaseScroll::CGumpBaseScroll(
     int offsetY = 0;
     if (haveMinimizer)
     {
-        auto spr = g_Game.ExecuteGump(0x082D); // minimize button
+        auto *spr = g_Game.ExecuteGump(0x082D); // minimize button
         if (spr != nullptr)
         {
             offsetY = spr->Height - 3;
@@ -109,8 +109,7 @@ CGumpBaseScroll::CGumpBaseScroll(
 }
 
 CGumpBaseScroll::~CGumpBaseScroll()
-{
-}
+= default;
 
 void CGumpBaseScroll::UpdateHeight()
 {
@@ -129,7 +128,7 @@ void CGumpBaseScroll::UpdateHeight()
     }
 
     int offsetY = 0;
-    auto spr = g_Game.ExecuteGump(0x082D);
+    auto *spr = g_Game.ExecuteGump(0x082D);
     if (spr != nullptr && m_Minimizer->Visible)
     {
         offsetY = spr->Height - 3;

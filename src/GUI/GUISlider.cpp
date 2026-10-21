@@ -59,7 +59,7 @@ void CGUISlider::UpdateText()
                 Font, Text, str_from(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
-        auto spr = g_Game.ExecuteGump(Graphic);
+        auto *spr = g_Game.ExecuteGump(Graphic);
         if (spr != nullptr)
         {
             int textX = m_X;
@@ -164,7 +164,7 @@ void CGUISlider::UpdateText()
 CSize CGUISlider::GetSize()
 {
     CSize size;
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         if (Vertical)
@@ -218,7 +218,7 @@ void CGUISlider::OnClick(int x, int y)
 {
     int length = Length;
     const int maxValue = MaxValue - MinValue;
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         length -= (Vertical ? (spr->Height / 2) : spr->Width);
@@ -243,7 +243,7 @@ void CGUISlider::CalculateOffset()
     int value = Value - MinValue;
     int maxValue = MaxValue - MinValue;
     int length = Length;
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         length -= (Vertical ? spr->Height : spr->Width);
@@ -343,7 +343,7 @@ void CGUISlider::Draw(bool checktrans)
             CRenderTexture *th[3] = { nullptr };
             for (int i = 0; i < 3; i++)
             {
-                auto spr = g_Game.ExecuteGump(BackgroundGraphic + (int)i);
+                auto *spr = g_Game.ExecuteGump(BackgroundGraphic + (int)i);
                 if (spr == nullptr || spr->Texture == nullptr)
                 {
                     return;
@@ -376,7 +376,7 @@ void CGUISlider::Draw(bool checktrans)
         }
         else
         {
-            auto spr = g_Game.ExecuteGump(BackgroundGraphic);
+            auto *spr = g_Game.ExecuteGump(BackgroundGraphic);
             if (spr != nullptr && spr->Texture != nullptr)
             {
                 if (Vertical)
@@ -391,7 +391,7 @@ void CGUISlider::Draw(bool checktrans)
         }
     }
 
-    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    auto *spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr && spr->Texture != nullptr)
     {
         if (Vertical)
@@ -412,7 +412,7 @@ void CGUISlider::Draw(bool checktrans)
 
 bool CGUISlider::Select()
 {
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         int buttonX = m_X;

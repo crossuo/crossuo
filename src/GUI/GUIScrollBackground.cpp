@@ -76,7 +76,7 @@ void CGUIScrollBackground::Draw(bool checktrans)
 
     for (int i = 0; i < 4; i++)
     {
-        auto spr = g_Game.ExecuteGump(Graphic + (int)i);
+        auto *spr = g_Game.ExecuteGump(Graphic + (int)i);
         if (spr == nullptr)
         {
             return;

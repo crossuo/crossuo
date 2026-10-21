@@ -11,8 +11,7 @@
 CServerList g_ServerList;
 
 CServer::CServer()
-{
-}
+= default;
 
 CServer::CServer(
     uint16_t index,
@@ -31,12 +30,10 @@ CServer::CServer(
 }
 
 CServer::~CServer()
-{
-}
+= default;
 
 CServerList::CServerList()
-{
-}
+= default;
 
 CServerList::~CServerList()
 {
@@ -82,7 +79,7 @@ void CServerList::ParsePacket(CDataReader &reader)
     PostParse(numServers);
 }
 
-void CServerList::PostParse(uint16_t numServers)
+void CServerList::PostParse(uint16_t numServers) const
 {
     // the auto-login decision comes from the config (g_Config.AutoLogin,
     // set by --autologin): the checkbox mirror is populated from the CLI in

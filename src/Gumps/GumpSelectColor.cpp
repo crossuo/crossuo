@@ -13,8 +13,7 @@ CGumpSelectColor::CGumpSelectColor(uint32_t serial, short x, short y, SELECT_COL
 }
 
 CGumpSelectColor::~CGumpSelectColor()
-{
-}
+= default;
 
 void CGumpSelectColor::UpdateContent()
 {

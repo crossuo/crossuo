@@ -12,8 +12,7 @@ CGUIHitBox::CGUIHitBox(int serial, int x, int y, int width, int height, bool cal
 }
 
 CGUIHitBox::~CGUIHitBox()
-{
-}
+= default;
 
 void CGUIHitBox::OnMouseEnter()
 {

@@ -49,8 +49,7 @@ CGumpScreenMain::CGumpScreenMain()
 }
 
 CGumpScreenMain::~CGumpScreenMain()
-{
-}
+= default;
 
 void CGumpScreenMain::PrepareContent()
 {

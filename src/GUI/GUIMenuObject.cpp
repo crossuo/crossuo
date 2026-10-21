@@ -19,8 +19,7 @@ CGUIMenuObject::CGUIMenuObject(
 }
 
 CGUIMenuObject::~CGUIMenuObject()
-{
-}
+= default;
 
 bool CGUIMenuObject::Select()
 {

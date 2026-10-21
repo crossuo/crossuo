@@ -19,8 +19,7 @@ CGumpRacialAbility::CGumpRacialAbility(int serial, int x, int y)
 }
 
 CGumpRacialAbility::~CGumpRacialAbility()
-{
-}
+= default;
 
 void CGumpRacialAbility::InitToolTip()
 {

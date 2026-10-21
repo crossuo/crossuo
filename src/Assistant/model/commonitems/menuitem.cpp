@@ -8,8 +8,7 @@
 namespace xuoassist {
 
 CMenuItem::CMenuItem()
-{
-}
+= default;
 
 CMenuItem::CMenuItem(const uint32_t &id, const uint16_t &graphic, const uint16_t &color, const astr_t &name)
     : ID(id)
@@ -20,7 +19,6 @@ CMenuItem::CMenuItem(const uint32_t &id, const uint16_t &graphic, const uint16_t
 }
 
 CMenuItem::~CMenuItem()
-{
-}
+= default;
 
 } // namespace xuoassist

@@ -72,11 +72,9 @@
 #define T64 (T_MASK ^ 0x14792c6e)
 
 MD5Crypt::MD5Crypt()
-{
-}
+= default;
 MD5Crypt::~MD5Crypt()
-{
-}
+= default;
 
 void MD5Crypt::Init(unsigned char *data, unsigned int size)
 {

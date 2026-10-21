@@ -890,7 +890,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
         }
         default:
         {
-            auto hand2 = FindLayer(OL_2_HAND);
+            auto *hand2 = FindLayer(OL_2_HAND);
             if (!isWalking)
             {
                 if (result == AG_INVALID)
@@ -932,7 +932,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                     else
                     {
                         uint16_t handAnimIDs[2] = { 0 };
-                        const auto hand1 = FindLayer(OL_1_HAND);
+                        auto *const hand1 = FindLayer(OL_1_HAND);
                         if (hand1 != nullptr)
                         {
                             handAnimIDs[0] = hand1->AnimID;

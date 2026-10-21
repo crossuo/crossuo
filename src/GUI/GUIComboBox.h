@@ -18,7 +18,7 @@ protected:
     int m_ShowItemsCount = 0;
 
 public:
-    int GetShowItemsCount() { return m_ShowItemsCount; };
+    int GetShowItemsCount() const { return m_ShowItemsCount; };
     void SetShowItemsCount(int val);
 
     //! Width in the collapsed state (used only for the Resizepic)

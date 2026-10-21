@@ -24,14 +24,12 @@
 CPathFinder g_PathFinder;
 
 CPathFinder::CPathFinder()
-{
-}
+= default;
 
 CPathFinder::~CPathFinder()
-{
-}
+= default;
 
-bool CPathFinder::CreateItemsList(std::vector<CPathObject> &list, int x, int y, int stepState)
+bool CPathFinder::CreateItemsList(std::vector<CPathObject> &list, int x, int y, int stepState) const
 {
     int blockX = x / 8;
     int blockY = y / 8;
@@ -107,7 +105,7 @@ bool CPathFinder::CreateItemsList(std::vector<CPathObject> &list, int x, int y, 
             MulStaticTile2 *tileInfo = obj->StaticGroupObjectPtr()->GetStaticData();
             if (obj->IsGameObject())
             {
-                auto go = (CGameObject *)obj;
+                auto *go = (CGameObject *)obj;
                 if (go->NPC)
                 {
                     CGameCharacter *gc = (CGameCharacter *)obj;
@@ -798,7 +796,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     return true;
 }
 
-int CPathFinder::GetGoalDistCost(const CPoint2Di &p, int cost)
+int CPathFinder::GetGoalDistCost(const CPoint2Di &p, int cost) const
 {
     return (abs(m_EndPoint.X - p.X) + abs(m_EndPoint.Y - p.Y)) * cost;
 }

@@ -80,7 +80,7 @@ CMacro::CMacro(Keycode key, bool alt, bool ctrl, bool shift)
 
 CMacro *CMacro::CreateBlankMacro()
 {
-    auto obj = new CMacro(0, false, false, false);
+    auto *obj = new CMacro(0, false, false, false);
     obj->Add(new CMacroObject(MC_NONE, MSC_NONE));
     return obj;
 }
@@ -139,7 +139,7 @@ CMacro *CMacro::GetCopy()
 {
     CMacro *macro = new CMacro(Key, Alt, Ctrl, Shift);
     MACRO_CODE oldCode = MC_NONE;
-    for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
+    for (auto *obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         if (obj->HaveString())
         {

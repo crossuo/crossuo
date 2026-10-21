@@ -39,7 +39,7 @@ CGUIComboBox::CGUIComboBox(
     m_WorkHeight = m_ShowItemsCount * 15;
     if (CompositeBackground)
     {
-        auto spr = g_Game.ExecuteGump(OpenGraphic);
+        auto *spr = g_Game.ExecuteGump(OpenGraphic);
         if (spr != nullptr)
         {
             m_ArrowX = spr->Width - 24;

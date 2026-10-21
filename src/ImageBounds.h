@@ -17,7 +17,7 @@ public:
     CImageBounds(int x, int y, int width, int height);
     virtual ~CImageBounds();
 
-    bool InRect(const CImageBounds &ib);
+    bool InRect(const CImageBounds &ib) const;
 };
 
 class CTextImageBounds : public CImageBounds

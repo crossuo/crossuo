@@ -130,7 +130,7 @@ fs_path CAssistantConfig::GetProfilePath() const
     return fs_path_join(GetConfigPath(), ProfileName);
 }
 
-void CAssistantConfig::EnsureDirectories()
+void CAssistantConfig::EnsureDirectories() const
 {
     fs_path_create(GetConfigPath());
     fs_path_create(GetGlobalConfigPath());
@@ -1038,7 +1038,7 @@ bool CAssistantConfig::CheckSoundInFilter(const uint16_t &index) const
 
 // --- distance / delay helpers ------------------------------------------------------
 
-int CAssistantConfig::DistanceFromText(astr_t text)
+int CAssistantConfig::DistanceFromText(astr_t text) const
 {
     // Was AssistForm::DistanceFromText.
     text = to_lower(text);
@@ -1062,7 +1062,7 @@ int CAssistantConfig::DistanceFromText(astr_t text)
     return result;
 }
 
-int CAssistantConfig::DelayFromText(astr_t text)
+int CAssistantConfig::DelayFromText(astr_t text) const
 {
     // Was AssistForm::DelayFromText.
     text = to_lower(text);

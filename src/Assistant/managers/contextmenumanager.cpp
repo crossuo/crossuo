@@ -13,7 +13,7 @@ namespace xuoassist {
 
 CContextMenuManager g_ContextMenuManager;
 
-CContextMenuManager::CContextMenuManager() {}
+CContextMenuManager::CContextMenuManager() = default;
 
 void CContextMenuManager::SetHook(const uint32_t &id, const uint32_t &index)
 {

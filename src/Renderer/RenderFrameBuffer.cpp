@@ -9,8 +9,7 @@
 frame_buffer_t CRenderFrameBuffer::m_OldFrameBuffer;
 
 CRenderFrameBuffer::CRenderFrameBuffer()
-{
-}
+= default;
 
 CRenderFrameBuffer::~CRenderFrameBuffer()
 {
@@ -73,13 +72,13 @@ void CRenderFrameBuffer::Release()
     RenderAdd_SetViewParams(g_renderCmdList, viewParams);
 }
 
-bool CRenderFrameBuffer::Ready(int width, int height)
+bool CRenderFrameBuffer::Ready(int width, int height) const
 {
     assert(width >= 0 && height >= 0);
     return (m_Ready && m_Width == uint32_t(width) && m_Height == uint32_t(height));
 }
 
-bool CRenderFrameBuffer::ReadyMinSize(int width, int height)
+bool CRenderFrameBuffer::ReadyMinSize(int width, int height) const
 {
     assert(width >= 0 && height >= 0);
     return (m_Ready && m_Width >= uint32_t(width) && m_Height >= uint32_t(height));

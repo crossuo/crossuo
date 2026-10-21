@@ -20,8 +20,7 @@ float SinOscillate(float freq, int range, uint32_t current_tick)
 }
 
 CWeather::CWeather()
-{
-}
+= default;
 
 void CWeather::Reset()
 {

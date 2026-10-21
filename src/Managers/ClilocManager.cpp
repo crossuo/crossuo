@@ -164,7 +164,7 @@ CCliloc *CClilocManager::Cliloc(const astr_t &lang)
         }
     }
 
-    auto obj = (CCliloc *)Add(new CCliloc(language));
+    auto *obj = (CCliloc *)Add(new CCliloc(language));
     if (!obj->Loaded)
     {
         return Cliloc("enu");

@@ -102,10 +102,9 @@ CGumpWorldMap::CGumpWorldMap(short x, short y)
 }
 
 CGumpWorldMap::~CGumpWorldMap()
-{
-}
+= default;
 
-int CGumpWorldMap::GetCurrentMap()
+int CGumpWorldMap::GetCurrentMap() const
 {
     int map = m_Map;
 
@@ -172,7 +171,7 @@ void CGumpWorldMap::CalculateGumpState()
     }
 }
 
-void CGumpWorldMap::GetCurrentCenter(int &x, int &y, int &mouseX, int &mouseY)
+void CGumpWorldMap::GetCurrentCenter(int &x, int &y, int &mouseX, int &mouseY) const
 {
     x = -OffsetX + mouseX;
     y = -OffsetY + mouseY;
@@ -321,7 +320,7 @@ static uint32_t crc32_checksum_filebacked(CMappedFile &file)
     return uint32_t(crc);
 }
 
-void CGumpWorldMap::LoadMap(int map)
+void CGumpWorldMap::LoadMap(int map) const
 {
     if (!Called || (!g_FileManager.m_MapUOP[map].Loaded() && !g_FileManager.m_MapMul[map].Loaded()) ||
         // the statics files may be plan-streamable rather than mapped (web);

@@ -149,12 +149,10 @@ const uint16_t CCreateCharacterManager::m_GargoyleHairColor[GARGOYLE_HAIR_COLOR_
 // clang-format on
 
 CCreateCharacterManager::CCreateCharacterManager()
-{
-}
+= default;
 
 CCreateCharacterManager::~CCreateCharacterManager()
-{
-}
+= default;
 
 void CCreateCharacterManager::SetFemale(bool female)
 {

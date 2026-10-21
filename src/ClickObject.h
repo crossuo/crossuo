@@ -17,8 +17,8 @@ public:
     uint32_t Page = 0;
     CRenderObject *Object = nullptr;
     CGump *Gump = nullptr;
-    CClickObject() {}
-    ~CClickObject() {}
+    CClickObject() = default;
+    ~CClickObject() = default;
 
     void Clear(CRenderObject *obj);
     void Clear();

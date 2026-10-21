@@ -17,8 +17,7 @@ CGameBlockedScreen::CGameBlockedScreen()
 }
 
 CGameBlockedScreen::~CGameBlockedScreen()
-{
-}
+= default;
 
 void CGameBlockedScreen::Init()
 {

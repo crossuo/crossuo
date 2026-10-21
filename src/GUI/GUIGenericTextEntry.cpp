@@ -25,5 +25,4 @@ CGUIGenericTextEntry::CGUIGenericTextEntry(
 }
 
 CGUIGenericTextEntry::~CGUIGenericTextEntry()
-{
-}
+= default;

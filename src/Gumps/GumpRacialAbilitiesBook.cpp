@@ -21,8 +21,7 @@ CGumpRacialAbilitiesBook::CGumpRacialAbilitiesBook(int x, int y)
 }
 
 CGumpRacialAbilitiesBook::~CGumpRacialAbilitiesBook()
-{
-}
+= default;
 
 void CGumpRacialAbilitiesBook::InitToolTip()
 {

@@ -129,8 +129,7 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
 }
 
 CGumpSkills::~CGumpSkills()
-{
-}
+= default;
 
 void CGumpSkills::InitToolTip()
 {

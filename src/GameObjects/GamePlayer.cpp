@@ -17,8 +17,7 @@ CPlayer::CPlayer(int serial)
 }
 
 CPlayer::~CPlayer()
-{
-}
+= default;
 
 void CPlayer::CloseBank()
 {

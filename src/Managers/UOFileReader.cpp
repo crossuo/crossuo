@@ -272,7 +272,7 @@ CSprite *UOFileReader::ReadGump(CIndexObject &io)
     {
         return nullptr;
     }
-    auto spr = new CSprite();
+    auto *spr = new CSprite();
     spr->LoadSprite16(io.Width, io.Height, pixels.data());
     return spr;
 }
@@ -730,7 +730,7 @@ CSprite *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
         }
     }
 
-    auto spr = new CSprite();
+    auto *spr = new CSprite();
     spr->ImageOffsetX = minX;
     spr->ImageOffsetY = minY;
     spr->ImageWidth = maxX - minX;
@@ -806,7 +806,7 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
     }
 
     const bool skipHitMask = true;
-    auto spr = new CSprite();
+    auto *spr = new CSprite();
     spr->LoadSprite16(w, h, pixels.data(), skipHitMask);
     return spr;
 }
@@ -847,7 +847,7 @@ CSprite *UOFileReader::ReadLight(CIndexObject &io)
     }
 
     const bool skipHitMask = true;
-    auto spr = new CSprite();
+    auto *spr = new CSprite();
     spr->LoadSprite16(io.Width, io.Height, pixels.data(), skipHitMask);
     return spr;
 }

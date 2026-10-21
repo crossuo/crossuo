@@ -25,7 +25,7 @@ CTextData::~CTextData()
     Owner = nullptr;
 }
 
-bool CTextData::CanBeDrawedInJournalGump()
+bool CTextData::CanBeDrawedInJournalGump() const
 {
     bool result = true;
 

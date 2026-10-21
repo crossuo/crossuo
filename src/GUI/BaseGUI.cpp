@@ -11,5 +11,4 @@ CBaseGUI::CBaseGUI(
 }
 
 CBaseGUI::~CBaseGUI()
-{
-}
+= default;

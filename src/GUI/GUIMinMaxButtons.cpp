@@ -37,7 +37,7 @@ void CGUIMinMaxButtons::UpdateText()
                 Font, Text, str_from(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
-        auto spr = g_Game.ExecuteGump(Graphic);
+        auto *spr = g_Game.ExecuteGump(Graphic);
         if (spr != nullptr)
         {
             int textX = m_X;
@@ -206,7 +206,7 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
     RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
     for (int i = 0; i < 2; i++)
     {
-        auto spr = g_Game.ExecuteGump(Graphic + (int)i);
+        auto *spr = g_Game.ExecuteGump(Graphic + (int)i);
         if (spr != nullptr && spr->Texture != nullptr)
         {
             spr->Texture->Draw(m_X + ((int)i * 18), m_Y, checktrans);

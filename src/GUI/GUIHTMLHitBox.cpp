@@ -12,8 +12,7 @@ CGUIHTMLHitBox::CGUIHTMLHitBox(
 }
 
 CGUIHTMLHitBox::~CGUIHTMLHitBox()
-{
-}
+= default;
 
 void CGUIHTMLHitBox::Scroll(bool up, int delay)
 {

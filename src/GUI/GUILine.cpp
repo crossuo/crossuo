@@ -23,8 +23,7 @@ CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygon
 }
 
 CGUILine::~CGUILine()
-{
-}
+= default;
 
 void CGUILine::Draw(bool checktrans)
 {

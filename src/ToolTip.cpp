@@ -13,8 +13,7 @@
 CToolTip g_ToolTip;
 
 CToolTip::CToolTip()
-{
-}
+= default;
 
 CToolTip::~CToolTip()
 {

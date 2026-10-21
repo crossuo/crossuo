@@ -14,8 +14,7 @@
 CConnectionManager g_ConnectionManager;
 
 CConnectionManager::CConnectionManager()
-{
-}
+= default;
 
 CConnectionManager::~CConnectionManager()
 {

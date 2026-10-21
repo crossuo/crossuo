@@ -18,7 +18,7 @@ private:
 
 public:
     CLoginCrypt();
-    ~CLoginCrypt() {}
+    ~CLoginCrypt() = default;
 
     void Init(uint8_t ps[4]);
     void Encrypt(const uint8_t *in, uint8_t *out, int size);

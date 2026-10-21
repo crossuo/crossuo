@@ -40,7 +40,7 @@ public:
     void AddStatusbar(CGumpStatusbar *bar);
     void RemoveFromGroup();
 
-    bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
+    bool InGroup() const { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
     virtual void InitToolTip() override;
     virtual void PrepareContent() override;

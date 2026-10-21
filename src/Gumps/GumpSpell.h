@@ -42,7 +42,7 @@ public:
     void UpdateGroup(int x, int y);
     void AddSpell(CGumpSpell *spell);
     void RemoveFromGroup();
-    bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
+    bool InGroup() const { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
     virtual void InitToolTip() override;
     virtual void PrepareContent() override;

@@ -17,10 +17,10 @@ public:
     wstr_t Name = {};
     wstr_t Data = {};
 
-    CObjectProperty() {}
+    CObjectProperty() = default;
     CObjectProperty(int serial, int revision, const wstr_t &name, const wstr_t &data);
-    bool Empty();
-    wstr_t CreateTextData(bool extended);
+    bool Empty() const;
+    wstr_t CreateTextData(bool extended) const;
 };
 
 using ObjectPropertyMap = std::map<uint32_t, CObjectProperty>;
@@ -34,7 +34,7 @@ private:
     CRenderObject *m_Object = nullptr;
 
 public:
-    CObjectPropertiesManager() {}
+    CObjectPropertiesManager() = default;
     virtual ~CObjectPropertiesManager();
 
     void Reset();

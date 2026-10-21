@@ -16,13 +16,12 @@ CGUIDrawObject::CGUIDrawObject(
 }
 
 CGUIDrawObject::~CGUIDrawObject()
-{
-}
+= default;
 
 CSize CGUIDrawObject::GetSize()
 {
     CSize size;
-    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    auto *spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr)
     {
         size.Width = spr->Width;
@@ -54,7 +53,7 @@ void CGUIDrawObject::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    auto *spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
@@ -78,7 +77,7 @@ void CGUIDrawObject::Draw(bool checktrans)
 
 bool CGUIDrawObject::Select()
 {
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         return spr->Select(m_X, m_Y, !BoundingBoxCheck);

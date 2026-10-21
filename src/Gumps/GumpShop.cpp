@@ -144,8 +144,7 @@ CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
 }
 
 CGumpShop::~CGumpShop()
-{
-}
+= default;
 
 void CGumpShop::SendList()
 {

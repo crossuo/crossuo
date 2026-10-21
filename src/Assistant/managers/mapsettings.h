@@ -77,7 +77,7 @@ public:
 
     void Copy(const CMapSettings &settings);
     void Load();  // GlobalConfig/Map.ini
-    void Save();
+    void Save() const;
 
     // pointer accessors for the settings form (ui/mapsettings.cpp binds the
     // working copy's fields through these)

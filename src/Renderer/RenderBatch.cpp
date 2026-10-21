@@ -333,7 +333,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         }
         case RenderCommandType::Cmd_BlendState:
         {
-            auto blend = ((const BlendStateCmd *)cmd);
+            const auto *blend = ((const BlendStateCmd *)cmd);
             if (blend->src != s_key.blend.src || blend->dst != s_key.blend.dst ||
                 blend->equation != s_key.blend.equation || !s_key.blend.enabled)
             {
@@ -351,7 +351,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         }
         case RenderCommandType::Cmd_AlphaTest:
         {
-            auto alpha = ((const AlphaTestCmd *)cmd);
+            const auto *alpha = ((const AlphaTestCmd *)cmd);
             if (!s_key.alphaTest.enabled || alpha->func != s_key.alphaTest.func ||
                 !f32eq(alpha->ref, s_key.alphaTest.alphaRef))
             {
@@ -369,7 +369,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         }
         case RenderCommandType::Cmd_SetCircleTrans:
         {
-            auto circle = ((const SetCircleTransCmd *)cmd);
+            const auto *circle = ((const SetCircleTransCmd *)cmd);
             if (!f32eq(circle->x, s_key.circleTrans[0]) || !f32eq(circle->y, s_key.circleTrans[1]) ||
                 !f32eq(circle->radius, s_key.circleTrans[2]))
             {
@@ -379,7 +379,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         }
         case RenderCommandType::Cmd_SetColorPalette:
         {
-            auto palette = ((const SetColorPaletteCmd *)cmd)->palette;
+            const auto *palette = ((const SetColorPaletteCmd *)cmd)->palette;
             if (memcmp(palette, state->currentColors, sizeof(state->currentColors)) != 0)
             {
                 RenderBatch_Flush(state);
@@ -388,7 +388,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         }
         case RenderCommandType::Cmd_SetScissor:
         {
-            auto scissor = ((const SetScissorCmd *)cmd);
+            const auto *scissor = ((const SetScissorCmd *)cmd);
             if (!s_key.scissor.enabled || scissor->x != s_key.scissor.x ||
                 scissor->y != s_key.scissor.y || scissor->width != s_key.scissor.width ||
                 scissor->height != s_key.scissor.height)
@@ -434,7 +434,7 @@ void RenderBatch_OnCommand(RenderState *state, RenderCommandType type, const voi
         // restores the full-window view) keeps it alive
         case RenderCommandType::Cmd_SetViewParams:
         {
-            auto vp = (const SetViewParamsCmd *)cmd;
+            const auto *vp = (const SetViewParamsCmd *)cmd;
             const int right = vp->scene_x + vp->scene_width;
             const int bottom = vp->window_height - (vp->scene_y + vp->scene_height);
             const auto &k = s_key.viewport;

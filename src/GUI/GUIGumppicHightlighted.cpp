@@ -16,8 +16,7 @@ CGUIGumppicHightlighted::CGUIGumppicHightlighted(
 }
 
 CGUIGumppicHightlighted::~CGUIGumppicHightlighted()
-{
-}
+= default;
 
 void CGUIGumppicHightlighted::SetShaderMode()
 {

@@ -13,7 +13,7 @@ public:
     CGumpMenubar(short x, short y);
     virtual ~CGumpMenubar() override;
 
-    bool GetOpened() { return m_Opened; };
+    bool GetOpened() const { return m_Opened; };
     void SetOpened(bool val);
 
     virtual bool CanBeDisplayed() override { return false; }

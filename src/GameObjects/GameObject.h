@@ -115,23 +115,23 @@ public:
     // aka IsMouseControl
     inline bool IsDrivingBoat() const
     {
-        const auto it = (CGameObject *)FindLayer(OL_MOUNT);
+        auto *const it = (CGameObject *)FindLayer(OL_MOUNT);
         return (it && it->Graphic == 0x3E96);
     }
 
     inline bool IsMounted() const
     {
-        const auto it = (CGameObject *)FindLayer(OL_MOUNT);
+        auto *const it = (CGameObject *)FindLayer(OL_MOUNT);
         return (it && it->GetGraphicForAnimation() != 0xffff && !IsDrivingBoat());
     }
 
-    bool YellowHits() { return (m_Flags & 0x08) != 0; }
-    bool IgnoreCharacters() { return (m_Flags & 0x10) != 0; }
+    bool YellowHits() const { return (m_Flags & 0x08) != 0; }
+    bool IgnoreCharacters() const { return (m_Flags & 0x10) != 0; }
     bool Locked() { return (!(m_Flags & 0x20) && m_TiledataPtr->Weight > 90); }
-    bool InWarMode() { return (m_Flags & 0x40) != 0; }
-    bool Hidden() { return (m_Flags & 0x80) != 0; }
+    bool InWarMode() const { return (m_Flags & 0x40) != 0; }
+    bool Hidden() const { return (m_Flags & 0x80) != 0; }
 
-    bool Caller();
+    bool Caller() const;
     virtual bool IsHuman() const { return false; }
     virtual bool IsPlayer() { return false; }
     static int IsGold(uint16_t graphic);

@@ -15,8 +15,7 @@ CCityItem::CCityItem()
 }
 
 CCityItem::~CCityItem()
-{
-}
+= default;
 
 void CCityItem::InitCity()
 {
@@ -29,12 +28,10 @@ CCityItemNew::CCityItemNew()
 }
 
 CCityItemNew::~CCityItemNew()
-{
-}
+= default;
 
 CCityList::CCityList()
-{
-}
+= default;
 
 CCityList::~CCityList()
 {

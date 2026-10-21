@@ -14,8 +14,8 @@ public:
     //!Flag mask to enable/disable objects (in some expansions)
     int FeatureMask = 0;
 
-    CCustomHouseObject() {}
-    virtual ~CCustomHouseObject() {}
+    CCustomHouseObject() = default;
+    virtual ~CCustomHouseObject() = default;
     virtual bool Parse(const char *text) { return false; }
 };
 
@@ -77,7 +77,7 @@ public:
         memset(&m_WindowGraphics[0], 0, sizeof(m_WindowGraphics));
     }
 
-    virtual ~CCustomHouseObjectWall() override {}
+    virtual ~CCustomHouseObjectWall() override = default;
     virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
@@ -91,8 +91,8 @@ class CCustomHouseObjectWallCategory
 public:
     int Index = 0;
 
-    CCustomHouseObjectWallCategory() {}
-    virtual ~CCustomHouseObjectWallCategory() {}
+    CCustomHouseObjectWallCategory() = default;
+    virtual ~CCustomHouseObjectWallCategory() = default;
 
     std::vector<CCustomHouseObjectWall> m_Items;
 };
@@ -154,7 +154,7 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectFloor() override {}
+    virtual ~CCustomHouseObjectFloor() override = default;
     virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
@@ -195,7 +195,7 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectDoor() override {}
+    virtual ~CCustomHouseObjectDoor() override = default;
     virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
@@ -242,7 +242,7 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectMisc() override {}
+    virtual ~CCustomHouseObjectMisc() override = default;
     virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
@@ -255,8 +255,8 @@ class CCustomHouseObjectMiscCategory
 public:
     int Index = 0;
 
-    CCustomHouseObjectMiscCategory() {}
-    virtual ~CCustomHouseObjectMiscCategory() {}
+    CCustomHouseObjectMiscCategory() = default;
+    virtual ~CCustomHouseObjectMiscCategory() = default;
 
     std::vector<CCustomHouseObjectMisc> m_Items;
 };
@@ -309,7 +309,7 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectStair() override {}
+    virtual ~CCustomHouseObjectStair() override = default;
     virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
@@ -374,7 +374,7 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectTeleport() override {}
+    virtual ~CCustomHouseObjectTeleport() override = default;
     virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
@@ -423,7 +423,7 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectRoof() override {}
+    virtual ~CCustomHouseObjectRoof() override = default;
     virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
@@ -436,8 +436,8 @@ class CCustomHouseObjectRoofCategory
 public:
     int Index = 0;
 
-    CCustomHouseObjectRoofCategory() {}
-    virtual ~CCustomHouseObjectRoofCategory() {}
+    CCustomHouseObjectRoofCategory() = default;
+    virtual ~CCustomHouseObjectRoofCategory() = default;
 
     //!Roof objects list
     std::vector<CCustomHouseObjectRoof> m_Items;
@@ -495,7 +495,7 @@ public:
     int FeatureMask = 0;
 
     CCustomHouseObjectPlaceInfo() { memset(&m_Graphics[0], 0, sizeof(m_Graphics)); }
-    virtual ~CCustomHouseObjectPlaceInfo() {}
+    virtual ~CCustomHouseObjectPlaceInfo() = default;
     bool Parse(const char *text);
     int Contains(uint16_t graphic) const;
 

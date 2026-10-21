@@ -8,8 +8,7 @@
 namespace xuoassist {
 
 CTradeWindow::CTradeWindow()
-{
-}
+= default;
 
 CTradeWindow::CTradeWindow(const uint32_t &serial, const uint32_t &id1, const uint32_t &id2, const astr_t &name)
     : Serial(serial)
@@ -20,7 +19,6 @@ CTradeWindow::CTradeWindow(const uint32_t &serial, const uint32_t &id1, const ui
 }
 
 CTradeWindow::~CTradeWindow()
-{
-}
+= default;
 
 } // namespace xuoassist

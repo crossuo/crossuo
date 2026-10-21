@@ -16,7 +16,7 @@
 
 CSkillsManager g_SkillsManager;
 
-CSkill::CSkill(bool haveButton, astr_t name)
+CSkill::CSkill(bool haveButton, const astr_t& name)
     : Button(haveButton)
 {
     if (name.length() != 0u)

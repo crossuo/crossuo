@@ -32,8 +32,7 @@ CGUIHTMLGump::CGUIHTMLGump(
 }
 
 CGUIHTMLGump::~CGUIHTMLGump()
-{
-}
+= default;
 
 void CGUIHTMLGump::PrepareTextures()
 {
@@ -87,7 +86,7 @@ void CGUIHTMLGump::Initalize(bool menu)
 
         if (HaveScrollbar)
         {
-            auto spr = g_Game.ExecuteGump(0x00FE);
+            auto *spr = g_Game.ExecuteGump(0x00FE);
             if (spr != nullptr)
             {
                 offsetWidth -= spr->Width;
@@ -100,7 +99,7 @@ void CGUIHTMLGump::Initalize(bool menu)
         m_ButtonUp = new CGUIHTMLButton(this, Serial, 0x00FA, 0x00FA, 0x00FA, offsetWidth, 0);
         m_ButtonUp->Visible = HaveScrollbar;
 
-        auto sprDown = g_Game.ExecuteGump(0x00FC);
+        auto *sprDown = g_Game.ExecuteGump(0x00FC);
         int sliderHeight = Height;
         if (sprDown != nullptr)
         {
@@ -112,7 +111,7 @@ void CGUIHTMLGump::Initalize(bool menu)
         m_ButtonDown->Color = 1;
         m_ButtonDown->Visible = HaveScrollbar;
 
-        auto sprUp = g_Game.ExecuteGump(0x00FA);
+        auto *sprUp = g_Game.ExecuteGump(0x00FA);
         int sliderStartY = 0;
         if (sprUp != nullptr)
         {
@@ -152,7 +151,7 @@ void CGUIHTMLGump::UpdateHeight(int height)
 {
     Height = height;
     m_Background->Height = height;
-    auto sprDown = g_Game.ExecuteGump(m_ButtonDown->Graphic);
+    auto *sprDown = g_Game.ExecuteGump(m_ButtonDown->Graphic);
     int sliderHeight = height;
     if (sprDown != nullptr)
     {
@@ -160,7 +159,7 @@ void CGUIHTMLGump::UpdateHeight(int height)
     }
     m_ButtonDown->SetY(sliderHeight);
 
-    auto sprUp = g_Game.ExecuteGump(m_ButtonUp->Graphic);
+    auto *sprUp = g_Game.ExecuteGump(m_ButtonUp->Graphic);
     int sliderStartY = 0;
     if (sprUp != nullptr)
     {

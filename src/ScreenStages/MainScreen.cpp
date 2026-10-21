@@ -153,7 +153,7 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
     }
 }
 
-void CMainScreen::SetAccounting(const astr_t &account, const astr_t &password)
+void CMainScreen::SetAccounting(const astr_t &account, const astr_t &password) const
 {
     if (DebugRenderScreen())
     {
@@ -172,7 +172,7 @@ void CMainScreen::SetAccounting(const astr_t &account, const astr_t &password)
     }
 }
 
-void CMainScreen::Paste()
+void CMainScreen::Paste() const
 {
     if (DebugRenderScreen())
     {
@@ -291,7 +291,7 @@ void CMainScreen::DebugScreen()
 #endif
 }
 
-void CMainScreen::Load()
+void CMainScreen::Load() const
 {
     if (DebugRenderScreen())
     {
@@ -330,7 +330,7 @@ void CMainScreen::Load()
     }
 }
 
-void CMainScreen::Save()
+void CMainScreen::Save() const
 {
     if (DebugRenderScreen())
     {

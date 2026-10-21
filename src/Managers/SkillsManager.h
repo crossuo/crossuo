@@ -19,7 +19,7 @@ struct CSkill
     uint8_t LockStatus = 0; // skill lock: 0 = up, 1 = down, 2 = locked
 
     CSkill() = default;
-    CSkill(bool haveButton, astr_t name);
+    CSkill(bool haveButton, const astr_t& name);
     ~CSkill() = default;
 };
 

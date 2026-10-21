@@ -40,6 +40,6 @@ public:
 
     bool Read(int maxSize = 0x1000);
 
-    int Send(uint8_t *data, int size);
+    int Send(uint8_t *data, int size) const;
     int Send(const std::vector<uint8_t> &data);
 };

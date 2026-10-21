@@ -268,7 +268,7 @@ void CGumpMinimap::PrepareContent()
 void CGumpMinimap::UpdateContent()
 {
     uint16_t graphic = 0x1393 - (int)Minimized;
-    auto spr = g_Game.ExecuteGump(graphic);
+    auto *spr = g_Game.ExecuteGump(graphic);
     if (spr == nullptr)
     {
         return;

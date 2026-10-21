@@ -6,8 +6,7 @@
 #include "Point.h"
 
 CSize::CSize()
-{
-}
+= default;
 
 CSize::CSize(int width, int height)
     : Width(width)
@@ -15,15 +14,10 @@ CSize::CSize(int width, int height)
 {
 }
 
-CSize::CSize(const CSize &size)
-    : Width(size.Width)
-    , Height(size.Height)
-{
-}
+CSize::CSize(const CSize &size) = default;
 
 CPoint2Di::CPoint2Di()
-{
-}
+= default;
 
 CPoint2Di::CPoint2Di(int x, int y)
     : X(x)
@@ -37,11 +31,7 @@ CPoint2Di::CPoint2Di(float x, float y)
 {
 }
 
-CPoint2Di::CPoint2Di(const CPoint2Di &point)
-    : X(point.X)
-    , Y(point.Y)
-{
-}
+CPoint2Di::CPoint2Di(const CPoint2Di &point) = default;
 
 CPoint2Di::CPoint2Di(const CPoint2Df &point)
     : X((int)point.X)
@@ -50,8 +40,7 @@ CPoint2Di::CPoint2Di(const CPoint2Df &point)
 }
 
 CRect::CRect()
-{
-}
+= default;
 
 CRect::CRect(int x, int y, int width, int height)
     : Position(x, y)
@@ -99,11 +88,7 @@ CPoint3Di::CPoint3Di(const CPoint2Di &point)
 {
 }
 
-CPoint3Di::CPoint3Di(const CPoint3Di &point)
-    : CPoint2Di(point)
-    , Z(point.Z)
-{
-}
+CPoint3Di::CPoint3Di(const CPoint3Di &point) = default;
 
 CPoint3Di::CPoint3Di(const CPoint2Df &point)
     : CPoint2Di(point)
@@ -117,8 +102,7 @@ CPoint3Di::CPoint3Di(const CPoint3Df &point)
 }
 
 CPoint2Df::CPoint2Df()
-{
-}
+= default;
 
 CPoint2Df::CPoint2Df(int x, int y)
     : X((float)x)
@@ -138,11 +122,7 @@ CPoint2Df::CPoint2Df(const CPoint2Di &point)
 {
 }
 
-CPoint2Df::CPoint2Df(const CPoint2Df &point)
-    : X(point.X)
-    , Y(point.Y)
-{
-}
+CPoint2Df::CPoint2Df(const CPoint2Df &point) = default;
 
 CPoint3Df::CPoint3Df()
     : CPoint2Df()
@@ -177,8 +157,4 @@ CPoint3Df::CPoint3Df(const CPoint2Df &point)
 {
 }
 
-CPoint3Df::CPoint3Df(const CPoint3Df &point)
-    : CPoint2Df(point)
-    , Z(point.Z)
-{
-}
+CPoint3Df::CPoint3Df(const CPoint3Df &point) = default;

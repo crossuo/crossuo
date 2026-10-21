@@ -142,7 +142,7 @@ int CEntryText::GetLinesCountA(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t fla
     return count;
 }
 
-int CEntryText::GetLinesCountW(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t flags, int width)
+int CEntryText::GetLinesCountW(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t flags, int width) const
 {
     if (width == 0)
     {
@@ -248,7 +248,7 @@ void CEntryText::Clear()
 
 void CEntryText::Paste()
 {
-    auto chBuffer = SDL_GetClipboardText();
+    auto *chBuffer = SDL_GetClipboardText();
     if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
     {
         auto str = g_EntryPointer->GetTextW() + wstr_from(chBuffer);
@@ -344,7 +344,7 @@ void CEntryText::SetTextW(const wstr_t &text)
     }
 }
 
-astr_t CEntryText::CheckMaxWidthA(uint8_t font, astr_t str)
+astr_t CEntryText::CheckMaxWidthA(uint8_t font, astr_t str) const
 {
     if (MaxWidth > 0)
     {
@@ -361,7 +361,7 @@ astr_t CEntryText::CheckMaxWidthA(uint8_t font, astr_t str)
     return str;
 }
 
-wstr_t CEntryText::CheckMaxWidthW(uint8_t font, wstr_t str)
+wstr_t CEntryText::CheckMaxWidthW(uint8_t font, wstr_t str) const
 {
     if (MaxWidth > 0)
     {

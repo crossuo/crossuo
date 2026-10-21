@@ -50,8 +50,7 @@ CGumpTip::CGumpTip(uint32_t serial, short x, short y, const astr_t &str, bool up
 }
 
 CGumpTip::~CGumpTip()
-{
-}
+= default;
 
 void CGumpTip::UpdateHeight()
 {

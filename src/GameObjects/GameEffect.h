@@ -29,8 +29,8 @@ public:
     virtual void Draw(int x, int y) override;
     uint16_t GetCurrentGraphic();
     uint16_t CalculateCurrentGraphic();
-    void ApplyRenderMode();
-    void RemoveRenderMode();
+    void ApplyRenderMode() const;
+    void RemoveRenderMode() const;
     bool IsEffectObject() override { return true; }
     virtual void Update(class CGameObject *parent);
 };

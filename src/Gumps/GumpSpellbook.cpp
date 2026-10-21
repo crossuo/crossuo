@@ -209,7 +209,7 @@ void CGumpSpellbook::InitToolTip()
         {
             const int spellIndex = serial - ID_GSB_SPELL_SERIAL;
             assert(spellIndex < book.SpellCount);
-            const auto spell = book.Spells[spellIndex];
+            const auto *const spell = book.Spells[spellIndex];
             g_ToolTip.Set(
                 g_ClilocManager.Cliloc(g_Language)->GetW(spell->DescriptionCliloc, true), 150);
         }
@@ -229,7 +229,7 @@ void CGumpSpellbook::PrepareContent()
             const int serial = g_PressedObject.LeftSerial;
             const int spellIndex = serial - ID_GSB_SPELL_SERIAL;
             assert(spellIndex < book.SpellCount);
-            const auto spell = book.Spells[spellIndex];
+            const auto *const spell = book.Spells[spellIndex];
             g_GumpManager.AddGump(new CGumpSpell(
                 serial,
                 spell->Type,
@@ -264,7 +264,7 @@ void CGumpSpellbook::PrepareContent()
                     }
 
                     assert(book.Spells[spellIndex]);
-                    const auto spell = book.Spells[spellIndex];
+                    const auto *const spell = book.Spells[spellIndex];
                     if (spell->Id == g_LastSpellIndex)
                     {
                         wantVisible = true;
@@ -297,7 +297,7 @@ void CGumpSpellbook::PrepareContent()
                 }
 
                 assert(book.Spells[spellIndex]);
-                const auto spell = book.Spells[spellIndex];
+                const auto *const spell = book.Spells[spellIndex];
                 if (page == Page || page == (Page + 1))
                 {
                     if (spell->Id == g_LastSpellIndex)
@@ -340,7 +340,7 @@ astr_t CGumpSpellbook::GetSpellRequries(int spellIndex, int &y) const
 {
     char buf[100];
     const auto book = GetSpellbook(BookType);
-    const auto spell = book.Spells[spellIndex];
+    const auto *const spell = book.Spells[spellIndex];
     if (spell->TithingCost)
     {
         y = 148;
@@ -467,15 +467,15 @@ void CGumpSpellbook::UpdateContent()
                 continue;
 
             assert(spellIndex < book.SpellCount && book.Spells[spellIndex]);
-            const auto spell = book.Spells[spellIndex];
+            const auto *const spell = book.Spells[spellIndex];
             astr_t name = spell->Name;
             if (name == "Arcane Empowerment")
                 name = "Arcane Empowe...";
             else if (name == "Enchanted Summoning")
                 name = "Enchanted Summo..";
             const int serial = ID_GSB_SPELL_SERIAL + spellIndex;
-            auto box = (CGUIHitBox *)Add(new CGUIHitBox(serial, contentX, 52 + y, 100, 16, true));
-            auto entry = (CGUITextEntry *)Add(
+            auto *box = (CGUIHitBox *)Add(new CGUIHitBox(serial, contentX, 52 + y, 100, 16, true));
+            auto *entry = (CGUITextEntry *)Add(
                 new CGUITextEntry(serial, nameColor, 0, 0, contentX, 52 + y, 0, false, 9));
             entry->m_Entry.SetTextA(name);
             entry->CheckOnSerial = true;
@@ -495,7 +495,7 @@ void CGumpSpellbook::UpdateContent()
         }
 
         assert(book.Spells[spellIndex]);
-        auto baseSpell = book.Spells[spellIndex];
+        const auto *baseSpell = book.Spells[spellIndex];
         SpellPage[spellIndex] = spellPage++;
 
         int iconX = 56;
@@ -513,7 +513,7 @@ void CGumpSpellbook::UpdateContent()
         Add(new CGUIPage(page));
         page++;
 
-        auto spellName = baseSpell->Name;
+        const auto *spellName = baseSpell->Name;
         //g_ClilocManager.Cliloc(g_Language)->GetA(baseSpell->NameCliloc, true);
         CGUIText *text = nullptr;
         if (book.Type == ST_MAGERY || book.Type == ST_MASTERY)
@@ -545,7 +545,7 @@ void CGumpSpellbook::UpdateContent()
             }
         }
 
-        auto icon = (CGUIGumppic *)Add(new CGUIGumppic(baseSpell->BookIconGraphic, iconX, 40));
+        auto *icon = (CGUIGumppic *)Add(new CGUIGumppic(baseSpell->BookIconGraphic, iconX, 40));
         icon->Serial = iconSerial;
         if (baseSpell->Reagents != nullptr)
         {
@@ -697,7 +697,7 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
         {
             const int spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_SERIAL;
             const auto book = GetSpellbook(BookType);
-            const auto spell = book.Spells[spellIndex];
+            const auto *const spell = book.Spells[spellIndex];
             if (g_Config.ClientVersion < CV_308Z)
             {
                 g_Game.CastSpellFromBook(spell->Id, Serial);

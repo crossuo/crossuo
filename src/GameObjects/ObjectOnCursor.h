@@ -29,7 +29,7 @@ struct CObjectOnCursor
     bool Dropped = false;
 
     void Clear();
-    uint16_t GetDrawGraphic(bool &doubleDraw);
+    uint16_t GetDrawGraphic(bool &doubleDraw) const;
 };
 
 extern CObjectOnCursor g_ObjectInHand;

@@ -11,8 +11,8 @@
 namespace xuoassist {
 
 CSpellManager g_SpellManager;
-CSpellManager::CSpellManager() {}
-CSpellManager::~CSpellManager() {}
+CSpellManager::CSpellManager() = default;
+CSpellManager::~CSpellManager() = default;
 
 void CSpellManager::Insert(const astr_t &name, const int &index)
 {
@@ -20,7 +20,7 @@ void CSpellManager::Insert(const astr_t &name, const int &index)
     m_Spells.insert(std::make_pair(str_from(index), index));
 }
 
-int CSpellManager::Find(astr_t name) const
+int CSpellManager::Find(const astr_t& name) const
 {
     if (name == "last" || name == "lastspell")
     {
@@ -60,7 +60,7 @@ void CSpellManager::CastIndex(int index)
     g_Game.CastSpell(index);
 }
 
-void CSpellManager::TargetCast(const astr_t &name, const uint32_t &serial)
+void CSpellManager::TargetCast(const astr_t &name, const uint32_t &serial) const
 {
     int index = Find(str_lower(name));
 

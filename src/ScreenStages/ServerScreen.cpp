@@ -17,8 +17,7 @@ CServerScreen::CServerScreen()
 }
 
 CServerScreen::~CServerScreen()
-{
-}
+= default;
 
 void CServerScreen::Init()
 {

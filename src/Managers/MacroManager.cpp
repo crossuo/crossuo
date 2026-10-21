@@ -1041,7 +1041,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             if (g_EntryPointer != nullptr)
             {
-                auto chBuffer = SDL_GetClipboardText();
+                auto *chBuffer = SDL_GetClipboardText();
                 if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
                 {
                     auto str = g_EntryPointer->GetTextW() + wstr_from(chBuffer);

@@ -85,8 +85,7 @@ CGameScreen::CGameScreen()
 }
 
 CGameScreen::~CGameScreen()
-{
-}
+= default;
 
 void CGameScreen::Init()
 {
@@ -908,7 +907,7 @@ void CGameScreen::AddTileToRenderList(
 
             if (foliageCanBeChecked)
             {
-                auto spr = g_Game.ExecuteStaticArt(obj->Graphic);
+                auto *spr = g_Game.ExecuteStaticArt(obj->Graphic);
                 if (spr != nullptr)
                 {
                     CImageBounds fib(
@@ -3062,7 +3061,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
         g_GameConsole.ChangeConsoleMessage(false);
     }
 
-    auto macro = g_MacroManager.FindMacro(key, altPressed, ctrlPressed, shiftPressed);
+    auto *macro = g_MacroManager.FindMacro(key, altPressed, ctrlPressed, shiftPressed);
     const bool canExecuteMacro =
         !(g_ConfigManager.DisableMacroInChat && g_EntryPointer == &g_GameConsole &&
           g_GameConsole.InChat());

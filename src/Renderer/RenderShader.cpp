@@ -173,7 +173,7 @@ CRenderShader::~CRenderShader()
     m_TexturePointer = 0;
 }
 
-void CRenderShader::Enable()
+void CRenderShader::Enable() const
 {
     bool result = false;
 #if defined(USE_GL1)

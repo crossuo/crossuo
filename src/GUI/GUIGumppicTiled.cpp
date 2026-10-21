@@ -18,7 +18,7 @@ void CGUIGumppicTiled::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)
     {
         SetShaderMode();
@@ -35,7 +35,7 @@ bool CGUIGumppicTiled::Select()
         return false;
     }
 
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         int width = Width;

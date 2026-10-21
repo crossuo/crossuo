@@ -56,7 +56,7 @@ void CGUICheckbox::UpdateTextPosition()
     int textX = m_X;
     int textY = m_Y;
 
-    auto spr = g_Game.ExecuteGump(Graphic);
+    auto *spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
         switch (TextPosition)

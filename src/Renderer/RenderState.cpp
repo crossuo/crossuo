@@ -615,7 +615,7 @@ bool RenderState_SetShaderLargeUniform(
     {
         case ShaderUniformType::ShaderUniformType_Float1V:
         {
-            auto typedValue = (GLfloat *)value;
+            auto *typedValue = (GLfloat *)value;
             GL_CHECK(glUniform1fv(location, count, typedValue));
             break;
         }

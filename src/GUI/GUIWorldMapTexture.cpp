@@ -14,8 +14,7 @@ CGUIWorldMapTexture::CGUIWorldMapTexture(int x, int y)
 }
 
 CGUIWorldMapTexture::~CGUIWorldMapTexture()
-{
-}
+= default;
 
 void CGUIWorldMapTexture::Draw(bool checktrans)
 {

@@ -21,12 +21,12 @@ CObjectProperty::CObjectProperty(int serial, int revision, const wstr_t &name, c
 {
 }
 
-bool CObjectProperty::Empty()
+bool CObjectProperty::Empty() const
 {
     return ((Name.length() == 0u) && (Data.length() == 0u));
 }
 
-wstr_t CObjectProperty::CreateTextData(bool extended)
+wstr_t CObjectProperty::CreateTextData(bool extended) const
 {
     CGameObject *obj = g_World->FindWorldObject(Serial);
     bool coloredStartFont = false;

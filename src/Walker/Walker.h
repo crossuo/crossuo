@@ -20,8 +20,8 @@ public:
     uint16_t Y = 0;
     uint8_t Z = 0;
 
-    CStepInfo() {}
-    ~CStepInfo() {}
+    CStepInfo() = default;
+    ~CStepInfo() = default;
 };
 
 class CWalker
@@ -39,7 +39,7 @@ public:
     uint16_t NewPlayerZ = 0;
 
     CWalker();
-    ~CWalker() {}
+    ~CWalker() = default;
 
     CStepInfo m_Step[MAX_STEPS_COUNT];
 

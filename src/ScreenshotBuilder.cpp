@@ -46,8 +46,7 @@ CScreenshotBuilder::CScreenshotBuilder()
 }
 
 CScreenshotBuilder::~CScreenshotBuilder()
-{
-}
+= default;
 
 void CScreenshotBuilder::SaveScreen()
 {
@@ -74,7 +73,7 @@ void CScreenshotBuilder::WritePixelsToDisk()
     astr_t filename = buf;
 
     int result = 0;
-    auto data = (void *)&m_Pixels[0];
+    auto *data = (void *)&m_Pixels[0];
     for (uint32_t &i : m_Pixels)
     {
         i |= 0xFF000000;

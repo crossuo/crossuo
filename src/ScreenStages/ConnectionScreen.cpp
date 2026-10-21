@@ -15,8 +15,7 @@ CConnectionScreen::CConnectionScreen()
 }
 
 CConnectionScreen::~CConnectionScreen()
-{
-}
+= default;
 
 void CConnectionScreen::Init()
 {

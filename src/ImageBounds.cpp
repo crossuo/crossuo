@@ -15,10 +15,9 @@ CImageBounds::CImageBounds(int x, int y, int width, int height)
 }
 
 CImageBounds::~CImageBounds()
-{
-}
+= default;
 
-bool CImageBounds::InRect(const CImageBounds &ib)
+bool CImageBounds::InRect(const CImageBounds &ib) const
 {
     bool inRect = false;
 

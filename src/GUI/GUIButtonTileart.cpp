@@ -27,15 +27,14 @@ CGUIButtonTileart::CGUIButtonTileart(
 }
 
 CGUIButtonTileart::~CGUIButtonTileart()
-{
-}
+= default;
 
 CSize CGUIButtonTileart::GetSize()
 {
     CSize gumpSize = CGUIDrawObject::GetSize();
     CSize tileSize;
 
-    auto spr = g_Game.ExecuteStaticArt(TileGraphic);
+    auto *spr = g_Game.ExecuteStaticArt(TileGraphic);
     if (spr != nullptr)
     {
         tileSize.Width = spr->Width;
@@ -80,7 +79,7 @@ void CGUIButtonTileart::Draw(bool checktrans)
     ScopedPerfMarker(__FUNCTION__);
 
     CGUIDrawObject::Draw(checktrans);
-    auto spr = g_Game.ExecuteStaticArt(TileGraphic);
+    auto *spr = g_Game.ExecuteStaticArt(TileGraphic);
     if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
@@ -94,7 +93,7 @@ bool CGUIButtonTileart::Select()
     {
         return true;
     }
-    auto spr = g_Game.ExecuteStaticArt(TileGraphic);
+    auto *spr = g_Game.ExecuteStaticArt(TileGraphic);
     if (spr != nullptr)
     {
         return spr->Select(m_X, m_Y, !BoundingBoxCheck);

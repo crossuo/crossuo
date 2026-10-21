@@ -17,8 +17,7 @@ CGUIColoredPolygone::CGUIColoredPolygone(
 }
 
 CGUIColoredPolygone::~CGUIColoredPolygone()
-{
-}
+= default;
 
 void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 {

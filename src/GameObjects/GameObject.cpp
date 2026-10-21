@@ -613,7 +613,7 @@ CGameItem *CGameObject::FindLayer(int layer) const
     return nullptr;
 }
 
-bool CGameObject::Caller()
+bool CGameObject::Caller() const
 {
     if (g_Config.ClientVersion >= CV_7000)
     {

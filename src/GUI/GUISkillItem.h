@@ -16,14 +16,14 @@ protected:
 private:
     CTextSprite m_NameText;
     CTextSprite m_ValueText;
-    uint16_t GetStatusButtonGraphic();
+    uint16_t GetStatusButtonGraphic() const;
 
 public:
     int Index = 0;
     CGUIButton *m_ButtonUse = nullptr;
     CGUIButton *m_ButtonStatus = nullptr;
 
-    uint8_t GetStatus() { return m_Status; };
+    uint8_t GetStatus() const { return m_Status; };
     void SetStatus(uint8_t val);
 
     void CreateValueText(bool showReal = false, bool showCap = false);

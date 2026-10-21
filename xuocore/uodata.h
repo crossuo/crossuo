@@ -367,7 +367,7 @@ inline AnimationDirFrames *uo_animation_get(uint16_t graphic, uint8_t group, uin
 inline AnimationDirFrames *uo_animation_create(AnimationId animId)
 {
     assert(uo_animation_get(animId) == nullptr);
-    auto animation = new AnimationDirFrames();
+    auto *animation = new AnimationDirFrames();
     assert(animation != nullptr);
     const auto graphic = uint16_t((animId >> 16) & 0xffff);
     const auto group = uint8_t((animId >> 8) & 0xff);
@@ -393,7 +393,7 @@ inline void uo_animation_destroy(AnimationId animId, DeleteUserData pDeleter)
     if (it == g_Index.m_Animations.end())
         return;
 
-    auto dir = it->second;
+    auto *dir = it->second;
     g_Index.m_Animations.erase(it);
 
     if (dir->Frames)

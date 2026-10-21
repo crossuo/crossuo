@@ -24,7 +24,7 @@ std::map<astr_t, uint16_t> s_Buffs;
 
 // The original BuffExists body trimmed + lowered the script argument (the port
 // lowers at store time, so only the lookup needs it here).
-astr_t buff_key(astr_t name)
+astr_t buff_key(const astr_t& name)
 {
     // leading/trailing space trim
     size_t begin = name.find_first_not_of(" \t\r\n");

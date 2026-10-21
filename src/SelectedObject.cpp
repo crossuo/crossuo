@@ -8,12 +8,10 @@ CSelectedObject g_SelectedObject;
 CSelectedObject g_LastSelectedObject;
 
 CSelectedObject::CSelectedObject()
-{
-}
+= default;
 
 CSelectedObject::~CSelectedObject()
-{
-}
+= default;
 
 void CSelectedObject::Clear()
 {

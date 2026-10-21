@@ -180,7 +180,7 @@ extern po::parser g_cli;
 
 struct CFileWriter
 {
-    CFileWriter() {}
+    CFileWriter() = default;
     ~CFileWriter() { Close(); }
 
     void Close()
@@ -204,7 +204,7 @@ struct CFileWriter
         FileName = filePath;
     }
 
-    void Print(const char *format, ...)
+    void Print(const char *format, ...) const
     {
         if (m_File == nullptr)
         {
@@ -225,12 +225,10 @@ struct CFileWriter
 CGame g_Game;
 
 CGame::CGame()
-{
-}
+= default;
 
 CGame::~CGame()
-{
-}
+= default;
 
 astr_t CGame::DecodeArgumentString(const char *text, int length)
 {
@@ -563,7 +561,7 @@ void ValidateSpriteIsDeleted(T (&arr)[SIZE])
 void DestroySprite(CIndexObject *obj)
 {
     static const bool artArrayLog = getenv("XUO_ART_ARRAY_LOG") != nullptr;
-    auto spr = (CSprite *)obj->UserData;
+    auto *spr = (CSprite *)obj->UserData;
     if (spr != nullptr)
     {
         if (spr->Texture && artArrayLog)
@@ -1276,7 +1274,7 @@ astr_t CGame::FixServerName(astr_t name)
     return name;
 }
 
-void CGame::LoadLocalConfig(int serial, astr_t characterName)
+void CGame::LoadLocalConfig(int serial, const astr_t& characterName)
 {
     if (g_ConfigLoaded)
     {
@@ -3185,7 +3183,7 @@ bool CGame::IsVegetation(uint16_t graphic)
     return (m_StaticTilesFilterFlags[graphic] & STFF_VEGETATION) != 0;
 }
 
-void CGame::LoadLogin(astr_t &login, int &port)
+void CGame::LoadLogin(astr_t &login, int &port) const
 {
     login = m_OverrideServerAddress;
     port = m_OverrideServerPort;
@@ -3762,7 +3760,7 @@ void CGame::CreateObjectHandlesBackground()
     uint16_t gumpID[9] = { 0 };
     for (int i = 0; i < 9; i++)
     {
-        auto pth = ExecuteGump(0x24EA + (uint16_t)i);
+        auto *pth = ExecuteGump(0x24EA + (uint16_t)i);
         if (pth == nullptr)
         {
             Error(Client, "failed to create Object Handles background data");
@@ -4141,7 +4139,7 @@ CSprite *CGame::ExecuteStaticArt(uint16_t id)
         io.UserData = g_UOFileReader.ReadArt(id, io, true);
         if (io.UserData != nullptr)
         {
-            auto spr = (CSprite *)io.UserData;
+            auto *spr = (CSprite *)io.UserData;
             io.Width = ((spr->Width / 2) + 1);
             io.Height = spr->Height - 20;
             m_UsedStaticList.push_back(&g_Index.m_Static[id]);
@@ -4223,7 +4221,7 @@ bool CGame::ExecuteGumpPart(uint16_t id, int count)
 void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 {
     SCOPED_GL_DEBUG_MARKER();
-    auto spr = ExecuteGump(id);
+    auto *spr = ExecuteGump(id);
     if (spr != nullptr)
     {
         if (!g_GrayedPixels && (color != 0u))
@@ -4246,7 +4244,7 @@ void CGame::DrawGump(
     uint16_t id, uint16_t color, int x, int y, int width, int height, bool partialHue)
 {
     SCOPED_GL_DEBUG_MARKER();
-    auto spr = ExecuteGump(id);
+    auto *spr = ExecuteGump(id);
     if (spr != nullptr)
     {
         if (!g_GrayedPixels && (color != 0u))
@@ -4270,14 +4268,14 @@ static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int
     CRenderTexture *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
-        auto spr = g_Game.ExecuteGump(id + (uint16_t)i);
+        auto *spr = g_Game.ExecuteGump(id + (uint16_t)i);
         if (spr == nullptr)
         {
             return;
         }
 
         assert(spr->Texture != nullptr);
-        auto pth = spr->Texture;
+        auto *pth = spr->Texture;
         if (i == 4)
         {
             th[8] = pth;
@@ -4442,7 +4440,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 {
     SCOPED_GL_DEBUG_MARKER();
     uint16_t id = land->Graphic;
-    auto spr = ExecuteTexture(id);
+    auto *spr = ExecuteTexture(id);
     if (spr == nullptr)
     {
         DrawLandArt(id, color, x, y);
@@ -4509,7 +4507,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 {
     SCOPED_GL_DEBUG_MARKER();
-    auto spr = ExecuteLandArt(id);
+    auto *spr = ExecuteLandArt(id);
     if (spr != nullptr)
     {
         if (g_OutOfRangeColor != 0u)
@@ -4558,7 +4556,7 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     SCOPED_GL_DEBUG_MARKER();
-    auto spr = ExecuteStaticArt(id);
+    auto *spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
@@ -4615,7 +4613,7 @@ void CGame::DrawStaticArtAnimated(uint16_t id, uint16_t color, int x, int y, boo
 void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
     SCOPED_GL_DEBUG_MARKER();
-    auto spr = ExecuteStaticArt(id);
+    auto *spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
@@ -4644,7 +4642,7 @@ void CGame::DrawStaticArtAnimatedRotated(uint16_t id, uint16_t color, int x, int
 void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     SCOPED_GL_DEBUG_MARKER();
-    auto spr = ExecuteStaticArt(id);
+    auto *spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
@@ -4679,7 +4677,7 @@ void CGame::DrawStaticArtInContainer(
     uint16_t id, uint16_t color, int x, int y, bool selection, bool onMouse)
 {
     SCOPED_GL_DEBUG_MARKER();
-    auto spr = ExecuteStaticArt(id);
+    auto *spr = ExecuteStaticArt(id);
     if (spr != nullptr)
     {
         if (onMouse)
@@ -4711,7 +4709,7 @@ void CGame::DrawStaticArtInContainer(
 void CGame::DrawLight(LIGHT_DATA &light)
 {
     SCOPED_GL_DEBUG_MARKER_LABEL("Light Source");
-    auto spr = ExecuteLight(light.ID);
+    auto *spr = ExecuteLight(light.ID);
     if (spr != nullptr)
     {
         auto uniformValue = SDM_NO_COLOR;
@@ -4738,7 +4736,7 @@ bool CGame::PolygonePixelsInXY(int x, int y, int width, int height)
 
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 {
-    auto spr = (CSprite *)g_Index.m_Gump[id].UserData;
+    auto *spr = (CSprite *)g_Index.m_Gump[id].UserData;
     if (spr != nullptr)
     {
         return spr->Select(x, y);
@@ -4748,7 +4746,7 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 {
-    auto spr = (CSprite *)g_Index.m_Gump[id].UserData;
+    auto *spr = (CSprite *)g_Index.m_Gump[id].UserData;
     if (spr == nullptr)
     {
         return false;
@@ -4806,7 +4804,7 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
     CSprite *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
-        auto pth = (CSprite *)g_Index.m_Gump[id + i].UserData;
+        auto *pth = (CSprite *)g_Index.m_Gump[id + i].UserData;
         if (pth == nullptr)
         {
             return false;
@@ -4954,7 +4952,7 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
 bool CGame::StaticPixelsInXY(uint16_t id, int x, int y)
 {
     CIndexObject &io = g_Index.m_Static[id];
-    auto spr = (CSprite *)io.UserData;
+    auto *spr = (CSprite *)io.UserData;
     if (spr != nullptr)
     {
         return spr->Select(x - io.Width, y - io.Height);
@@ -4969,7 +4967,7 @@ bool CGame::StaticPixelsInXYAnimated(uint16_t id, int x, int y)
 
 bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 {
-    auto spr = (CSprite *)g_Index.m_Static[id].UserData;
+    auto *spr = (CSprite *)g_Index.m_Static[id].UserData;
     if (spr != nullptr)
     {
         return spr->Select(x, y);
@@ -4979,7 +4977,7 @@ bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 
 bool CGame::LandPixelsInXY(uint16_t id, int x, int y)
 {
-    auto spr = (CSprite *)g_Index.m_Land[id].UserData;
+    auto *spr = (CSprite *)g_Index.m_Land[id].UserData;
     if (spr != nullptr)
     {
         return spr->Select(x - 22, y - 22);
@@ -5854,7 +5852,7 @@ uint16_t CGame::GetLightColor(uint16_t id)
 
 CSize CGame::GetStaticArtDimension(uint16_t id)
 {
-    auto spr = ExecuteStaticArt(id);
+    auto *spr = ExecuteStaticArt(id);
     if (spr != nullptr)
     {
         return CSize(spr->Width, spr->Height);
@@ -5864,7 +5862,7 @@ CSize CGame::GetStaticArtDimension(uint16_t id)
 
 CSize CGame::GetGumpDimension(uint16_t id)
 {
-    auto spr = ExecuteGump(id);
+    auto *spr = ExecuteGump(id);
     if (spr != nullptr)
     {
         return CSize(spr->Width, spr->Height);

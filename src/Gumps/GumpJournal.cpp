@@ -76,8 +76,7 @@ CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
 }
 
 CGumpJournal::~CGumpJournal()
-{
-}
+= default;
 
 void CGumpJournal::InitToolTip()
 {

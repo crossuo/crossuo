@@ -13,7 +13,7 @@ private:
 
 public:
     CFastWalkStack() { memset(m_Keys, 0, sizeof(m_Keys)); }
-    ~CFastWalkStack() {}
+    ~CFastWalkStack() = default;
 
     void SetValue(int index, int value);
     void AddValue(int value);

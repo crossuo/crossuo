@@ -42,8 +42,7 @@ CSelectProfessionScreen::CSelectProfessionScreen()
 }
 
 CSelectProfessionScreen::~CSelectProfessionScreen()
-{
-}
+= default;
 
 void CSelectProfessionScreen::SetSkillSelection(int val)
 {

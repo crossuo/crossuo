@@ -328,8 +328,7 @@ static uint32_t GetConfigKey(const astr_t &key)
 } // namespace cmkc
 
 CConfigManager::CConfigManager()
-{
-}
+= default;
 
 void CConfigManager::Init()
 {
@@ -946,7 +945,7 @@ void CConfigManager::SetCharacterBackpackStyle(uint8_t val)
     }
 }
 
-uint16_t CConfigManager::GetColorByNotoriety(uint8_t notoriety)
+uint16_t CConfigManager::GetColorByNotoriety(uint8_t notoriety) const
 {
     uint16_t color = 0;
     switch ((NOTORIETY_TYPE)notoriety)

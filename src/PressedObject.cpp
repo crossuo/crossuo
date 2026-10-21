@@ -8,12 +8,10 @@
 CPressedObject g_PressedObject;
 
 CPressedObject::CPressedObject()
-{
-}
+= default;
 
 CPressedObject::~CPressedObject()
-{
-}
+= default;
 
 void CPressedObject::Init(const CPressedObject &obj)
 {
@@ -121,7 +119,7 @@ void CPressedObject::InitMid(const CSelectedObject &obj)
     MidSerial = (MidObject != nullptr ? obj.Serial : 0);
 }
 
-bool CPressedObject::TestMoveOnDrag()
+bool CPressedObject::TestMoveOnDrag() const
 {
     return (LeftObject != nullptr && LeftObject->IsGUI() && ((CBaseGUI *)LeftObject)->MoveOnDrag);
 }

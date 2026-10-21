@@ -27,7 +27,7 @@ ContainerPosition ContainerNextPosition(uint16_t gumpID)
     const int defaultPos = 40;
     const int incrementStep = 20;
     const int incrementMaxWidth = 800;
-    const auto spr = g_Game.ExecuteGump(gumpID);
+    auto *const spr = g_Game.ExecuteGump(gumpID);
     if (spr != nullptr)
     {
         if (!g_ConfigManager.OffsetInterfaceWindows)

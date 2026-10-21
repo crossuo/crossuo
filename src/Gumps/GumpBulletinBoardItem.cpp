@@ -200,8 +200,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
 }
 
 CGumpBulletinBoardItem::~CGumpBulletinBoardItem()
-{
-}
+= default;
 
 void CGumpBulletinBoardItem::UpdateHeight()
 {

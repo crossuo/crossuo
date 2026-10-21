@@ -27,8 +27,7 @@ CProfessionManager::CProfessionManager()
 }
 
 CProfessionManager::~CProfessionManager()
-{
-}
+= default;
 
 int CProfessionManager::GetKeyCode(const astr_t &key)
 {

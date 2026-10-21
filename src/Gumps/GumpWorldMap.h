@@ -15,21 +15,21 @@ protected:
     int m_Scale = 2;
 
 public:
-    int GetScale() { return m_Scale; };
+    int GetScale() const { return m_Scale; };
     void SetScale(int val);
 
 protected:
     int m_Map = 0;
 
 public:
-    int GetMap() { return m_Map; };
+    int GetMap() const { return m_Map; };
     void SetMap(int val);
 
 protected:
     bool m_LinkWithPlayer = true;
 
 public:
-    bool GetLinkWithPlayer() { return m_LinkWithPlayer; };
+    bool GetLinkWithPlayer() const { return m_LinkWithPlayer; };
     void SetLinkWithPlayer(bool val);
     int OffsetX = 0;
     int OffsetY = 0;
@@ -55,11 +55,11 @@ private:
 
     void FixOffsets(int &offsetX, int &offsetY, int &width, int &height);
     void GetScaledDimensions(int &width, int &height, int &playerX, int &playerY);
-    void GetCurrentCenter(int &x, int &y, int &mouseX, int &mouseY);
+    void GetCurrentCenter(int &x, int &y, int &mouseX, int &mouseY) const;
     void ScaleOffsets(int newScale, int mouseX, int mouseY);
-    void LoadMap(int map);
+    void LoadMap(int map) const;
 
-    int GetCurrentMap();
+    int GetCurrentMap() const;
 
     CGUIButton *m_Minimizer = nullptr;
     CGUIResizepic *m_Background = nullptr;

@@ -23,8 +23,7 @@ CGumpBuff::CGumpBuff(short x, short y)
 }
 
 CGumpBuff::~CGumpBuff()
-{
-}
+= default;
 
 bool CGumpBuff::CanBeDisplayed()
 {

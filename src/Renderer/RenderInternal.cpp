@@ -131,7 +131,7 @@ bool Render_Init(SDL_Window *window)
     g_render.context = (SDL_GLContext)(uintptr_t)wctx;
 #else
     win_gfx_context_attrbutes(true);
-    auto context = SDL_GL_GetCurrentContext();
+    auto *context = SDL_GL_GetCurrentContext();
     if (!context)
     {
         win_gfx_context_attrbutes(true);
@@ -600,7 +600,7 @@ bool Render_CreateShaderPipeline(
         {
             GLint logLength;
             GL_CHECK(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength));
-            auto compileLog = (GLchar *)malloc(logLength * sizeof(GLchar));
+            auto *compileLog = (GLchar *)malloc(logLength * sizeof(GLchar));
             assert(compileLog);
             glGetShaderInfoLog(shader, logLength, nullptr, compileLog);
             Error(Renderer, "shader compilation error, compile log:\n%s", compileLog);
@@ -618,7 +618,7 @@ bool Render_CreateShaderPipeline(
         {
             GLint logLength;
             GL_CHECK(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength));
-            auto programLog = (GLchar *)malloc(logLength * sizeof(GLchar));
+            auto *programLog = (GLchar *)malloc(logLength * sizeof(GLchar));
             assert(programLog);
             glGetProgramInfoLog(program, logLength, nullptr, programLog);
             Error(Renderer, "program log:\n%s", programLog);
@@ -961,7 +961,7 @@ bool Render_AppendCmdType(
     static_assert(sizeof(type) == sizeof(uint8_t), "command type id is assumed to be byte sized");
     if (cmdList->remainingSize >= sizeof(type) + cmdSize)
     {
-        auto ptr = cmdList->data + cmdList->size - cmdList->remainingSize;
+        auto *ptr = cmdList->data + cmdList->size - cmdList->remainingSize;
         *ptr = (uint8_t)type;
         ptr++;
 

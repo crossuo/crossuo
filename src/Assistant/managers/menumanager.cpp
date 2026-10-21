@@ -21,8 +21,8 @@
 namespace xuoassist {
 
 CMenuManager g_MenuManager;
-CMenuManager::CMenuManager() {}
-CMenuManager::~CMenuManager() {}
+CMenuManager::CMenuManager() = default;
+CMenuManager::~CMenuManager() = default;
 
 int CMenuManager::GetMenuCount()
 {

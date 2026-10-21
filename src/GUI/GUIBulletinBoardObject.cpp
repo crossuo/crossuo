@@ -39,7 +39,7 @@ void CGUIBulletinBoardObject::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    auto spr = g_Game.ExecuteGump(0x1523);
+    auto *spr = g_Game.ExecuteGump(0x1523);
     if (spr != nullptr && spr->Texture != nullptr)
     {
         spr->Texture->Draw(m_X, m_Y, checktrans);

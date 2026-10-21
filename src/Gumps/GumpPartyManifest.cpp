@@ -30,8 +30,7 @@ CGumpPartyManifest::CGumpPartyManifest(uint32_t serial, short x, short y, bool c
 }
 
 CGumpPartyManifest::~CGumpPartyManifest()
-{
-}
+= default;
 
 void CGumpPartyManifest::UpdateContent()
 {

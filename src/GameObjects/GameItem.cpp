@@ -505,7 +505,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
             if (flags == 0u)
             {
-                auto mo = new CMultiObject(graphic, m_X + x, m_Y + y, m_Z + z, 1);
+                auto *mo = new CMultiObject(graphic, m_X + x, m_Y + y, m_Z + z, 1);
                 mo->m_DrawTextureColor[3] = alpha;
                 g_MapManager.AddRender(mo);
                 AddMultiObject(mo);

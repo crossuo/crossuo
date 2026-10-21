@@ -10,5 +10,4 @@ CMulti::CMulti(short x, short y)
 }
 
 CMulti::~CMulti()
-{
-}
+= default;

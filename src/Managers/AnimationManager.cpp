@@ -29,14 +29,14 @@ CAnimationManager g_AnimationManager;
 
 void *LoadSpritePixels(int width, int height, uint16_t *pixels)
 {
-    auto spr = new CSprite();
+    auto *spr = new CSprite();
     spr->LoadSprite16(width, height, pixels);
     return spr;
 }
 
 void DeleteSprite(void *ptr)
 {
-    auto spr = (CSprite *)ptr;
+    auto *spr = (CSprite *)ptr;
     delete spr;
 }
 
@@ -384,7 +384,7 @@ AnimationDirFrames *CAnimationManager::ExecuteAnimation(AnimationState anim, uin
 {
     Anim = anim;
     AnimationRefreshStub(anim); // drop a healed placeholder frame set
-    auto animation = uo_animation_get(anim);
+    auto *animation = uo_animation_get(anim);
     if (animation == nullptr)
     {
         if (g_FileManager.LoadAnimation(Anim, LoadSpritePixels))
@@ -452,7 +452,7 @@ bool CAnimationManager::TestPixels(
         return false;
     }
 
-    const auto anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
+    auto *const anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
     if (!anim)
     {
         //Info(Data, "Test: couldn't get animation: 0x%04x", id);
@@ -477,7 +477,7 @@ bool CAnimationManager::TestPixels(
     }
 
     auto &frame = anim->Frames[frameIndex];
-    auto spr = (CSprite *)frame.UserData;
+    auto *spr = (CSprite *)frame.UserData;
 
     if (!spr)
     {
@@ -529,7 +529,7 @@ void CAnimationManager::Draw(
     }
 
     assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
-    const auto anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
+    auto *const anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
     if (!anim)
     {
         //Info(Data, "Draw: couldn't get animation: 0x%04x", id);
@@ -554,7 +554,7 @@ void CAnimationManager::Draw(
     }
 
     auto &frame = anim->Frames[frameIndex];
-    auto spr = (CSprite *)frame.UserData;
+    auto *spr = (CSprite *)frame.UserData;
     if (!spr) //spr->Texture == 0)
     {
         return;
@@ -574,7 +574,7 @@ void CAnimationManager::Draw(
     if (isShadow)
     {
         SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Shadow");
-        auto tex = spr->Texture;
+        auto *tex = spr->Texture;
         RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_SHADOW});
         RenderAdd_DrawShadow(
             g_renderCmdList,
@@ -1195,11 +1195,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         const auto id = obj->GetGraphicForAnimation();
         const auto group = Anim.Group;
         const auto dir = Anim.Direction;
-        const auto animation = ExecuteAnimation({ id, group, dir }, g_Ticks);
+        auto *const animation = ExecuteAnimation({ id, group, dir }, g_Ticks);
         if (animation != nullptr && animation->Frames != nullptr)
         {
             auto &frame = animation->Frames[0];
-            auto spr = (CSprite *)frame.UserData;
+            auto *spr = (CSprite *)frame.UserData;
             assert(spr);
 
             int frameWidth = spr->Width;
@@ -1478,7 +1478,7 @@ CAnimationManager::GetAnimationDimensions(uint8_t frameIndex, AnimationState ani
 {
     AnimationFrameInfo result = {};
     const auto animId = AnimId(anim);
-    const auto animation = uo_animation_get(animId);
+    auto *const animation = uo_animation_get(animId);
     if (animation == nullptr)
         return result;
 
@@ -1497,7 +1497,7 @@ CAnimationManager::GetAnimationDimensions(uint8_t frameIndex, AnimationState ani
         if (animation->Frames != nullptr)
         {
             auto &frame = animation->Frames[frameIndex];
-            auto spr = (CSprite *)frame.UserData;
+            auto *spr = (CSprite *)frame.UserData;
             if (spr)
             {
                 result.Width = spr->Width;
@@ -1708,7 +1708,7 @@ bool CAnimationManager::DrawEquippedLayers(
         for (auto i = list.begin(); i != list.end() && !result; ++i)
         {
             uint16_t id = (*i)->AnimID;
-            const auto conv = uo_get_equipconv(bodyGraphic, id);
+            const auto *const conv = uo_get_equipconv(bodyGraphic, id);
             if (conv != nullptr)
             {
                 id = conv->Graphic;
@@ -1723,7 +1723,7 @@ bool CAnimationManager::DrawEquippedLayers(
             CGameItem *item = *i;
             uint16_t id = item->AnimID;
             uint16_t convColor = 0;
-            const auto conv = uo_get_equipconv(bodyGraphic, id);
+            const auto *const conv = uo_get_equipconv(bodyGraphic, id);
             if (conv != nullptr)
             {
                 id = conv->Graphic;
@@ -1893,7 +1893,7 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
     return result;
 }
 
-uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index)
+uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index) const
 {
     auto getReplaceGroup = [](const auto &list, uint16_t animIndex) -> uint8_t {
         for (const auto &item : list)

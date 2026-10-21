@@ -447,7 +447,7 @@ CPacketManager::~CPacketManager()
     RELEASE_MUTEX(m_Mutex);
 }
 
-bool CPacketManager::AutoLoginNameExists(const astr_t &name)
+bool CPacketManager::AutoLoginNameExists(const astr_t &name) const
 {
     if (AutoLoginNames.length() == 0)
     {

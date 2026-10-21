@@ -6,12 +6,10 @@
 #include "Managers/FontsManager.h"
 
 CBaseProfession::CBaseProfession()
-{
-}
+= default;
 
 CBaseProfession::~CBaseProfession()
-{
-}
+= default;
 
 bool CBaseProfession::AddDescription(int desc, const astr_t &name, const char *val)
 {
@@ -53,8 +51,7 @@ CProfessionCategory::CProfessionCategory()
 }
 
 CProfessionCategory::~CProfessionCategory()
-{
-}
+= default;
 
 void CProfessionCategory::AddChildren(const astr_t &child)
 {
@@ -69,5 +66,4 @@ CProfession::CProfession()
 }
 
 CProfession::~CProfession()
-{
-}
+= default;

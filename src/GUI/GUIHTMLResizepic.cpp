@@ -12,8 +12,7 @@ CGUIHTMLResizepic::CGUIHTMLResizepic(
 }
 
 CGUIHTMLResizepic::~CGUIHTMLResizepic()
-{
-}
+= default;
 
 void CGUIHTMLResizepic::Scroll(bool up, int delay)
 {

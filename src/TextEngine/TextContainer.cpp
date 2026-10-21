@@ -13,8 +13,7 @@ CTextContainer::CTextContainer(int maxSize)
 }
 
 CTextContainer::~CTextContainer()
-{
-}
+= default;
 
 void CTextContainer::Clear()
 {

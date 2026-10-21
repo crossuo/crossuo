@@ -12,7 +12,7 @@ class CStaticObject : public CRenderStaticObject
 
 public:
     CStaticObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z);
-    virtual ~CStaticObject() override {}
+    virtual ~CStaticObject() override = default;
 
     virtual void UpdateGraphicBySeason() override;
 

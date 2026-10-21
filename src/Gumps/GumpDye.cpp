@@ -17,8 +17,7 @@ CGumpDye::CGumpDye(uint32_t serial, int16_t x, int16_t y, uint16_t graphic)
 }
 
 CGumpDye::~CGumpDye()
-{
-}
+= default;
 
 uint16_t CGumpDye::GetCurrentColor()
 {

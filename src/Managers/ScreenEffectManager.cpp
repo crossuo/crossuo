@@ -9,12 +9,10 @@
 CScreenEffectManager g_ScreenEffectManager;
 
 CScreenEffectManager::CScreenEffectManager()
-{
-}
+= default;
 
 CScreenEffectManager::~CScreenEffectManager()
-{
-}
+= default;
 
 int CScreenEffectManager::Process()
 {

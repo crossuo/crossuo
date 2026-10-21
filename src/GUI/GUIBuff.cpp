@@ -15,14 +15,13 @@ CGUIBuff::CGUIBuff(uint16_t graphic, int timer, const wstr_t &text)
 }
 
 CGUIBuff::~CGUIBuff()
-{
-}
+= default;
 
 void CGUIBuff::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    auto *spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr && spr->Texture)
     {
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, Alpha / 255.f } });

@@ -43,8 +43,8 @@ CGumpMenubar::CGumpMenubar(short x, short y)
     Add(new CGUIResizepic(0, 0x13BE, 0, 0, 30, 27));
     Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A1, 0x15A1, 0x15A1, 5, 3));
     Add(new CGUIPage(2));
-    auto spr1 = g_Game.ExecuteGump(0x098B);
-    auto spr2 = g_Game.ExecuteGump(0x098D);
+    auto *spr1 = g_Game.ExecuteGump(0x098B);
+    auto *spr2 = g_Game.ExecuteGump(0x098D);
 
     int smallWidth = 50;
     if (spr1 != nullptr)
@@ -133,8 +133,7 @@ CGumpMenubar::CGumpMenubar(short x, short y)
 }
 
 CGumpMenubar::~CGumpMenubar()
-{
-}
+= default;
 
 void CGumpMenubar::SetOpened(bool val)
 {

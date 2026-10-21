@@ -23,7 +23,7 @@ CTextRenderer::~CTextRenderer()
     m_TextItems = nullptr;
 }
 
-CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
+CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj) const
 {
     if (obj != nullptr)
     {
@@ -52,7 +52,7 @@ CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
     return obj;
 }
 
-void CTextRenderer::ToTop(CRenderTextObject *obj)
+void CTextRenderer::ToTop(CRenderTextObject *obj) const
 {
     obj->UnlinkDraw();
 

@@ -20,8 +20,7 @@ CGUIHTMLButton::CGUIHTMLButton(
 }
 
 CGUIHTMLButton::~CGUIHTMLButton()
-{
-}
+= default;
 
 void CGUIHTMLButton::SetShaderMode()
 {

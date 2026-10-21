@@ -9,18 +9,9 @@
 namespace xuoassist {
 
 CJournalMessage::CJournalMessage()
-{
-}
+= default;
 
-CJournalMessage::CJournalMessage(const CJournalMessage &msg)
-    : Serial(msg.Serial)
-    , Timer(msg.Timer)
-    , Color(msg.Color)
-    , Text(msg.Text)
-    , Flags(msg.Flags)
-    , FindTextID(msg.FindTextID)
-{
-}
+CJournalMessage::CJournalMessage(const CJournalMessage &msg) = default;
 
 CJournalMessage::CJournalMessage(const uint32_t &serial, const uint16_t &color, const astr_t &text)
     : Serial(serial)
@@ -32,7 +23,6 @@ CJournalMessage::CJournalMessage(const uint32_t &serial, const uint16_t &color, 
 }
 
 CJournalMessage::~CJournalMessage()
-{
-}
+= default;
 
 } // namespace xuoassist

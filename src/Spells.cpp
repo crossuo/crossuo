@@ -33,7 +33,7 @@ const Spell *GetSpellByOffsetAndType(int offset, SPELLBOOK_TYPE spellType)
 {
     const auto book = GetSpellbook(spellType);
     assert(offset < book.SpellCount);
-    const auto spell = book.Spells[offset];
+    const auto *const spell = book.Spells[offset];
     return spell;
 }
 
@@ -42,7 +42,7 @@ const Spell *GetSpellByGraphicAndType(uint16_t graphic, SPELLBOOK_TYPE spellType
     const auto book = GetSpellbook(spellType);
     for (int s = 0; s < book.SpellCount; s++)
     {
-        const auto spell = book.Spells[s];
+        const auto *const spell = book.Spells[s];
         if (spell->SpellIconGraphic == graphic)
             return spell;
     }

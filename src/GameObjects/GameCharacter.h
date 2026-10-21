@@ -78,7 +78,7 @@ public:
     uint16_t GetGraphicForAnimation() override;
     uint8_t GetGroupForAnimation(uint16_t graphic, bool isParent);
     void GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation);
-    bool Staying() { return AnimationGroup == AG_INVALID && m_Steps.empty(); }
+    bool Staying() const { return AnimationGroup == AG_INVALID && m_Steps.empty(); }
     bool TestStepNoChangeDirection(uint8_t group);
     virtual bool Walking() { return (LastStepTime > (uint32_t)(g_Ticks - WALKING_DELAY)); }
     virtual bool NoIterateAnimIndex()

@@ -249,7 +249,7 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
-    int GetHeightW(PMULTILINES_FONT_INFO info);
+    int GetHeightW(PMULTILINES_FONT_INFO info) const;
 
     wstr_t GetTextByWidthW(uint8_t font, const wstr_t &str, int width, bool isCropped);
 

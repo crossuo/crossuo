@@ -27,6 +27,8 @@
 #include <common/logging/logging.h>
 #include <stdlib.h>
 
+#include <utility>
+
 namespace xuoassist {
 
 CAssistant g_Assistant;
@@ -151,12 +153,12 @@ uint32_t CAssistant::TextToUInt(const astr_t &text)
 
 uint32_t CAssistant::TextToSerial(astr_t text)
 {
-    return ::xuoassist::TextToSerial(str_lower(text));
+    return ::xuoassist::TextToSerial(str_lower(std::move(text)));
 }
 
 uint16_t CAssistant::TextToGraphic(astr_t text)
 {
-    return ::xuoassist::TextToGraphic(str_lower(text));
+    return ::xuoassist::TextToGraphic(str_lower(std::move(text)));
 }
 
 int CAssistant::TextToLayer(astr_t text)

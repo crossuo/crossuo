@@ -17,8 +17,7 @@ CBaseScreen::CBaseScreen(CGump &gump)
 }
 
 CBaseScreen::~CBaseScreen()
-{
-}
+= default;
 
 void CBaseScreen::Init()
 {

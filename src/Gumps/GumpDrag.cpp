@@ -26,8 +26,7 @@ CGumpDrag::CGumpDrag(uint32_t serial, short x, short y)
 }
 
 CGumpDrag::~CGumpDrag()
-{
-}
+= default;
 
 void CGumpDrag::UpdateContent()
 {

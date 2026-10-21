@@ -32,8 +32,7 @@ CGUIComboboxText::CGUIComboboxText(
 }
 
 CGUIComboboxText::~CGUIComboboxText()
-{
-}
+= default;
 
 void CGUIComboboxText::OnMouseEnter()
 {

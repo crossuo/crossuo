@@ -47,8 +47,7 @@ CGumpScreenServer::CGumpScreenServer()
 }
 
 CGumpScreenServer::~CGumpScreenServer()
-{
-}
+= default;
 
 void CGumpScreenServer::UpdateContent()
 {

@@ -28,7 +28,7 @@ public:
 
     void Init();
     void Init(uint8_t *gameSeed);
-    bool Connected() { return (m_LoginSocket.Connected || m_GameSocket.Connected); }
+    bool Connected() const { return (m_LoginSocket.Connected || m_GameSocket.Connected); }
     bool Connect(const astr_t &address, int port, uint8_t *gameSeed);
     void Disconnect();
     void Recv();

@@ -228,7 +228,7 @@ CPoint2Di CFontsManager::GetCaretPosA(
         width = GetWidthA(font, str);
     }
 
-    auto info = GetInfoA(font, str, align, flags, width);
+    auto *info = GetInfoA(font, str, align, flags, width);
     if (info == nullptr)
     {
         return p;
@@ -299,7 +299,7 @@ int CFontsManager::CalculateCaretPosA(
         return (int)str.length();
     }
 
-    auto info = GetInfoA(font, str, align, flags, width);
+    auto *info = GetInfoA(font, str, align, flags, width);
     if (info == nullptr)
     {
         return 0;
@@ -385,7 +385,7 @@ int CFontsManager::GetWidthExA(
         return 0;
     }
 
-    auto info = GetInfoA(font, str, align, flags, maxWidth);
+    auto *info = GetInfoA(font, str, align, flags, maxWidth);
     int textWidth = 0;
     while (info != nullptr)
     {
@@ -417,7 +417,7 @@ int CFontsManager::GetHeightA(
         width = GetWidthA(font, str);
     }
 
-    auto info = GetInfoA(font, str, align, flags, width);
+    auto *info = GetInfoA(font, str, align, flags, width);
     int textHeight = 0;
     while (info != nullptr)
     {
@@ -782,7 +782,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
         return pData;
     }
 
-    auto info = GetInfoA(font, str, align, flags, width);
+    auto *info = GetInfoA(font, str, align, flags, width);
     if (info == nullptr)
     {
         return pData;
@@ -956,7 +956,7 @@ CPoint2Di CFontsManager::GetCaretPosW(
         width = GetWidthW(font, str);
     }
 
-    auto info = GetInfoW(font, str, align, flags, width);
+    auto *info = GetInfoW(font, str, align, flags, width);
     if (info == nullptr)
     {
         return p;
@@ -1032,7 +1032,7 @@ int CFontsManager::CalculateCaretPosW(
         return (int)str.length();
     }
 
-    auto info = GetInfoW(font, str, align, flags, width);
+    auto *info = GetInfoW(font, str, align, flags, width);
     if (info == nullptr)
     {
         return 0;
@@ -1137,7 +1137,7 @@ int CFontsManager::GetWidthW(uint8_t font, const wstr_t &str)
         return 0;
     }
 
-    auto table = (uint32_t *)m_UnicodeFontAddress[font];
+    auto *table = (uint32_t *)m_UnicodeFontAddress[font];
     int textLength = 0;
     int maxTextLength = 0;
     for (const auto &c : strSafe)
@@ -1170,7 +1170,7 @@ int CFontsManager::GetWidthExW(
         return 0;
     }
 
-    auto info = GetInfoW(font, str, align, flags, maxWidth);
+    auto *info = GetInfoW(font, str, align, flags, maxWidth);
     int textWidth = 0;
     while (info != nullptr)
     {
@@ -1201,7 +1201,7 @@ int CFontsManager::GetHeightW(
         width = GetWidthW(font, str);
     }
 
-    auto info = GetInfoW(font, str, align, flags, width);
+    auto *info = GetInfoW(font, str, align, flags, width);
     int textHeight = 0;
     while (info != nullptr)
     {
@@ -1225,7 +1225,7 @@ int CFontsManager::GetHeightW(
     return textHeight;
 }
 
-int CFontsManager::GetHeightW(PMULTILINES_FONT_INFO info)
+int CFontsManager::GetHeightW(PMULTILINES_FONT_INFO info) const
 {
     int textHeight = 0;
 
@@ -2553,7 +2553,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
         }
     }
 
-    auto info = GetInfoW(font, str, align, flags, width);
+    auto *info = GetInfoW(font, str, align, flags, width);
     if (info == nullptr)
     {
         return pData;
@@ -2563,7 +2563,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     {
         while (info != nullptr)
         {
-            auto ptr = info->m_Next;
+            auto *ptr = info->m_Next;
             info->Data.clear();
             delete info;
             info = ptr;
@@ -2584,7 +2584,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
 
     if (oldWidth == 0 && RecalculateWidthByInfo)
     {
-        auto ptr = info;
+        auto *ptr = info;
         width = 0;
 
         while (ptr != nullptr)
@@ -2603,7 +2603,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     {
         while (info != nullptr)
         {
-            auto ptr = info;
+            auto *ptr = info;
             info = info->m_Next;
             ptr->Data.clear();
             delete ptr;
@@ -2615,7 +2615,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     const int blocksize = height * width;
     pData.resize(blocksize, 0);
 
-    auto table = (uint32_t *)m_UnicodeFontAddress[font];
+    auto *table = (uint32_t *)m_UnicodeFontAddress[font];
     int lineOffsY = 1 + m_TopMargin;
     PMULTILINES_FONT_INFO ptr = info;
     uint32_t datacolor = 0;

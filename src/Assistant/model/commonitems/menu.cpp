@@ -8,8 +8,7 @@
 namespace xuoassist {
 
 CMenu::CMenu()
-{
-}
+= default;
 
 CMenu::CMenu(const uint32_t &serial, const uint16_t &id, const astr_t &name, const bool &grayMenu)
     : Serial(serial)
@@ -20,7 +19,6 @@ CMenu::CMenu(const uint32_t &serial, const uint16_t &id, const astr_t &name, con
 }
 
 CMenu::~CMenu()
-{
-}
+= default;
 
 } // namespace xuoassist

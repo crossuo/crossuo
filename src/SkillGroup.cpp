@@ -10,8 +10,7 @@ CSkillGroupObject::CSkillGroupObject()
 }
 
 CSkillGroupObject::~CSkillGroupObject()
-{
-}
+= default;
 
 uint8_t CSkillGroupObject::GetItem(intptr_t index)
 {

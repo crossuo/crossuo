@@ -76,8 +76,7 @@ CGumpScreenSelectTown::CGumpScreenSelectTown()
 }
 
 CGumpScreenSelectTown::~CGumpScreenSelectTown()
-{
-}
+= default;
 
 void CGumpScreenSelectTown::UpdateContent()
 {

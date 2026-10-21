@@ -37,7 +37,7 @@ public:
     void InitRight(const CSelectedObject &obj);
     void InitMid(CRenderObject *obj, CGump *gump = nullptr);
     void InitMid(const CSelectedObject &obj);
-    bool TestMoveOnDrag();
+    bool TestMoveOnDrag() const;
 };
 
 extern CPressedObject g_PressedObject;

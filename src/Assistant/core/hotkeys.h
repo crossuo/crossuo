@@ -242,7 +242,7 @@ private:
     // (key, modifiers) to `row` (or defers to the popup); saves on mutation.
     void CommitKeyToRow(int row, uint32_t key, uint8_t modifiers);
     // Apply the pending assignment after ResolveDuplicate.
-    void ApplyPending();
+    void ApplyPending() const;
 
     bool m_Capturing{ false };
     uint32_t m_CaptureKey{ 0 };

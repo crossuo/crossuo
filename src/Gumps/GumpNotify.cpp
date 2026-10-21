@@ -27,8 +27,7 @@ CGumpNotify::CGumpNotify(short x, short y, uint8_t variant, short width, short h
 }
 
 CGumpNotify::~CGumpNotify()
-{
-}
+= default;
 
 void CGumpNotify::GUMP_BUTTON_EVENT_C
 {

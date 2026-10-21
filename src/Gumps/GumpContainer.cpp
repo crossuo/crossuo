@@ -65,8 +65,7 @@ CGumpContainer::CGumpContainer(uint32_t serial, uint32_t id, short x, short y)
 }
 
 CGumpContainer::~CGumpContainer()
-{
-}
+= default;
 
 void CGumpContainer::UpdateItemCoordinates(CGameObject *item)
 {
@@ -423,7 +422,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
         const auto &c = g_Container[Graphic];
         bool doubleDraw = false;
         uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
-        auto spr = g_Game.ExecuteStaticArt(graphic);
+        auto *spr = g_Game.ExecuteStaticArt(graphic);
         if (IsGameBoard)
         {
             spr = g_Game.ExecuteGump(graphic - GAME_FIGURE_GUMP_OFFSET);

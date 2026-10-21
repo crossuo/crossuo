@@ -19,7 +19,7 @@ CGUITilepic::CGUITilepic(uint16_t graphic, uint16_t color, int x, int y, bool do
 CSize CGUITilepic::GetSize()
 {
     CSize size;
-    auto spr = g_Game.ExecuteStaticArt(Graphic);
+    auto *spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr)
     {
         size.Width = spr->Width;
@@ -36,7 +36,7 @@ void CGUITilepic::PrepareTextures()
 void CGUITilepic::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    auto spr = g_Game.ExecuteStaticArt(Graphic);
+    auto *spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
@@ -56,7 +56,7 @@ void CGUITilepic::Draw(bool checktrans)
 
 bool CGUITilepic::Select()
 {
-    auto spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
+    auto *spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
     if (spr != nullptr)
     {
         return spr->Select(m_X, m_Y, !BoundingBoxCheck);

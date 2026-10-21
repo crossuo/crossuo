@@ -28,8 +28,7 @@ CGumpAbility::CGumpAbility(int serial, int x, int y)
 }
 
 CGumpAbility::~CGumpAbility()
-{
-}
+= default;
 
 void CGumpAbility::InitToolTip()
 {

@@ -11,5 +11,4 @@ CGUIRadio::CGUIRadio(
 }
 
 CGUIRadio::~CGUIRadio()
-{
-}
+= default;

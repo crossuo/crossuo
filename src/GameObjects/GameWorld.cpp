@@ -51,7 +51,7 @@ CGameWorld::~CGameWorld()
     m_Items = nullptr;
 }
 
-void CGameWorld::ResetObjectHandlesState()
+void CGameWorld::ResetObjectHandlesState() const
 {
     for (CGameObject *obj = (CGameObject *)m_Items; obj != nullptr; obj = (CGameObject *)obj->m_Next) { obj->ClosedObjectHandle = false; }
 }
@@ -148,7 +148,7 @@ void CGameWorld::ProcessAnimation()
                 int currentDelay = delay;
                 if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
-                    const auto anim =
+                    auto *const anim =
                         g_AnimationManager.ExecuteAnimation({ graphic, group, dir }, g_Ticks);
                     if (anim != nullptr)
                     {
@@ -293,7 +293,7 @@ void CGameWorld::ProcessAnimation()
                 {
                     const auto group =
                         g_AnimationManager.GetDieGroupIndex(graphic, gi->UsedLayer != 0);
-                    const auto anim =
+                    auto *const anim =
                         g_AnimationManager.ExecuteAnimation({ graphic, group, dir }, g_Ticks);
                     if (anim != nullptr)
                     {

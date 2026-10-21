@@ -25,7 +25,7 @@ struct CRenderShader
 #endif
     int m_Type = 1;
     bool Init(const char *vertexShaderData, const char *fragmentShaderData, int type);
-    void Enable();
+    void Enable() const;
     void Disable();
     void Pause();
     void Resume();

@@ -11,5 +11,4 @@ CGUIResizeButton::CGUIResizeButton(
 }
 
 CGUIResizeButton::~CGUIResizeButton()
-{
-}
+= default;

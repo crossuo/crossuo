@@ -132,7 +132,7 @@ public:
     struct DRAW_FRAME_INFORMATION
     CollectFrameInformation(class CGameObject *gameObject, bool checkLayers = true);
 
-    uint8_t GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index);
+    uint8_t GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index) const;
 
     uint8_t
     GetObjectNewAnimation(

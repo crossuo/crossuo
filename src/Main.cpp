@@ -538,7 +538,7 @@ bool load_config()
 
     if (config_exists)
     {
-        const auto uopath = fs_path_ascii(g_UOPath);
+        const auto *const uopath = fs_path_ascii(g_UOPath);
         bool valid_client = uopath && uopath[0] && fs_path_exists(g_UOPath);
         if (!valid_client)
         {
@@ -643,7 +643,7 @@ bool load_config()
     // and UOFilePath() reads a stale/empty path, so CFileManager::Load() runs
     // the mul fallback against the wrong directory and fails. Do it here, once
     // g_UOPath and the (possibly auto-detected) client version are final.
-    const auto uopath = fs_path_ascii(g_UOPath);
+    const auto *const uopath = fs_path_ascii(g_UOPath);
     if (uopath && uopath[0] && fs_path_exists(g_UOPath))
     {
         uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);

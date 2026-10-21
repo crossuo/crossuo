@@ -16,8 +16,7 @@ CGUIGlobalColor::CGUIGlobalColor(bool enabled, float r, float g, float b, float 
 }
 
 CGUIGlobalColor::~CGUIGlobalColor()
-{
-}
+= default;
 
 void CGUIGlobalColor::Draw(bool checktrans)
 {

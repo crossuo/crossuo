@@ -7,12 +7,10 @@
 #include "Globals.h"
 
 CGameEffectDrag::CGameEffectDrag()
-{
-}
+= default;
 
 CGameEffectDrag::~CGameEffectDrag()
-{
-}
+= default;
 
 void CGameEffectDrag::Update(CGameObject *parent)
 {

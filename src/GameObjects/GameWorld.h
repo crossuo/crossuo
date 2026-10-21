@@ -24,7 +24,7 @@ public:
     WORLD_MAP m_Map;
     CGameObject *m_Items = nullptr;
 
-    void ResetObjectHandlesState();
+    void ResetObjectHandlesState() const;
     void ProcessAnimation();
     void ProcessFootstepsSound(int ticks, CGameCharacter *gc);
     void SetPlayer(uint32_t serial);

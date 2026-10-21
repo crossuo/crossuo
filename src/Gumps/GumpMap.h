@@ -41,7 +41,7 @@ public:
         int height);
     virtual ~CGumpMap() override;
 
-    int GetPlotState() { return m_PlotState; };
+    int GetPlotState() const { return m_PlotState; };
     void SetPlotState(int val);
 
     virtual void PrepareContent() override;

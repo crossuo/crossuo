@@ -35,13 +35,13 @@ private:
 
 public:
     CMouseManager() { memset(&m_CursorOffset[0][0], 0, sizeof(m_CursorOffset)); }
-    ~CMouseManager() {}
+    ~CMouseManager() = default;
 
     void Update();
     void Release() const;
     void Capture() const;
 
-    CPoint2Di LeftDroppedOffset();
+    CPoint2Di LeftDroppedOffset() const;
 
     void Hide(bool hide = true) { m_Hidden = hide; };
     bool LoadCursorTextures();

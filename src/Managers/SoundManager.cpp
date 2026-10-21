@@ -164,8 +164,8 @@ static uint8_t *CreateWaveFile(CIndexSound &is)
         return nullptr;
     }
     size_t dataSize = blockSize - sizeof(SOUND_BLOCK);
-    auto waveSound = (uint8_t *)malloc(dataSize + sizeof(WaveHeader));
-    auto waveHeader = reinterpret_cast<WaveHeader *>(waveSound);
+    auto *waveSound = (uint8_t *)malloc(dataSize + sizeof(WaveHeader));
+    auto *waveHeader = reinterpret_cast<WaveHeader *>(waveSound);
 
     strcpy(waveHeader->chunkId, "RIFF");
     strcpy(waveHeader->format, "WAVE");
@@ -183,15 +183,14 @@ static uint8_t *CreateWaveFile(CIndexSound &is)
     waveHeader->dataSize = uint32_t(dataSize);
 
     is.Delay = uint32_t((dataSize - 16) / 88.2f);
-    auto sndDataPtr = blockData + sizeof(SOUND_BLOCK);
+    const auto *sndDataPtr = blockData + sizeof(SOUND_BLOCK);
     memcpy(waveSound + sizeof(WaveHeader), sndDataPtr + 16, dataSize - 16);
 
     return waveSound;
 }
 
 CSoundManager::CSoundManager()
-{
-}
+= default;
 
 CSoundManager::~CSoundManager()
 {
@@ -276,7 +275,7 @@ void CSoundManager::Free()
     s_backend.deinit();
 }
 
-void CSoundManager::Update()
+void CSoundManager::Update() const
 {
     // XUO_MUSIC_TEST: prove the music voice is producing output
     if (getenv("XUO_MUSIC_TEST") != nullptr && s_Music[0] != 0)
@@ -402,7 +401,7 @@ SoundHandle CSoundManager::LoadSoundEffect(CIndexSound &is)
         is.m_WaveFile = CreateWaveFile(is);
     }
     size_t waveFileSize = is.DataSize - sizeof(SOUND_BLOCK) + sizeof(WaveHeader);
-    auto stream = getSound(is.m_WaveFile, waveFileSize - 16);
+    auto *stream = getSound(is.m_WaveFile, waveFileSize - 16);
     if (stream == SOUND_NULL)
     {
         Warning(Client, "creating sound voice: %s", GetErrorDescription());

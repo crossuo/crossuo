@@ -16,7 +16,7 @@
 namespace xuoassist {
 
 CPromptManager g_PromptManager;
-CPromptManager::CPromptManager() {}
+CPromptManager::CPromptManager() = default;
 
 void CPromptManager::AddHook(const CPrompt &prompt)
 {

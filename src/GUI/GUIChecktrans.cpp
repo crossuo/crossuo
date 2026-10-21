@@ -12,8 +12,7 @@ CGUIChecktrans::CGUIChecktrans(int x, int y, int width, int height)
 }
 
 CGUIChecktrans::~CGUIChecktrans()
-{
-}
+= default;
 
 void CGUIChecktrans::Draw(bool checktrans)
 {

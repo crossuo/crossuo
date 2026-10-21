@@ -13,14 +13,12 @@ CTargetGump g_AttackTargetGump;
 CNewTargetSystem g_NewTargetSystem;
 
 CTargetGump::CTargetGump()
-{
-}
+= default;
 
 CTargetGump::~CTargetGump()
-{
-}
+= default;
 
-void CTargetGump::Draw()
+void CTargetGump::Draw() const
 {
     ScopedPerfMarker(__FUNCTION__);
 
@@ -36,14 +34,12 @@ void CTargetGump::Draw()
 }
 
 CNewTargetSystem::CNewTargetSystem()
-{
-}
+= default;
 
 CNewTargetSystem::~CNewTargetSystem()
-{
-}
+= default;
 
-void CNewTargetSystem::Draw()
+void CNewTargetSystem::Draw() const
 {
     ScopedPerfMarker(__FUNCTION__);
 
