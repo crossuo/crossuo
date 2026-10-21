@@ -2856,7 +2856,9 @@ void CFileManager::UopReadAnimationFrameInfo(
     AnimationFrameInfo &result,
     AnimationDirection &direction,
     const UopFileEntry *block,
-    bool isCorpse)
+    bool isCorpse,
+    const AnimationState &anim,
+    uint8_t frameIndex)
 {
     if (block == nullptr || block->Hash == 0)
     {
@@ -2883,9 +2885,25 @@ void CFileManager::UopReadAnimationFrameInfo(
     }
     // FIXME: CFileManager SHOULD not be a DataReader! In fact, no class need to be. Clean up!
     SetData(scratchBuffer.data(), scratchSize);
-    const auto _header = UopReadAnimationHeader();
-    (void)_header;
-    auto frame = UopReadAnimationFrame(); // read only first frame to get image dimensions
+    const auto header = UopReadAnimationHeader();
+    // frame records carry their (group, frame) ids: search for the requested
+    // one (dimensions are per record) and fall back to the first record when
+    // the pack has no entry for it
+    UopAnimationFrame frame = UopReadAnimationFrame();
+    // frame ids are 1-based and sequential across the stored directions
+    const uint32_t perDirection =
+        header.FrameCount != 0 ? header.FrameCount / MAX_MOBILE_DIRECTIONS : 0;
+    const uint16_t wantFrameId =
+        uint16_t(perDirection != 0 ? anim.Direction * perDirection + frameIndex + 1 : 1);
+    for (uint32_t i = 1; i < header.FrameCount; i++)
+    {
+        auto candidate = UopReadAnimationFrame();
+        if (candidate.FrameId == wantFrameId)
+        {
+            frame = candidate;
+            break;
+        }
+    }
     Ptr = frame.DataStart + frame.PixelDataOffset + PALETTE_SIZE;
     // corrupt/truncated block hardening: validate before dereferencing (a
     // garbage offset used to trap the heap here)
@@ -2896,6 +2914,11 @@ void CFileManager::UopReadAnimationFrameInfo(
         return;
     }
     auto frameInfo = (AnimationFrameInfo *)Ptr;
+    // the client refuses zero-sized frames outright (silent no-draw)
+    if (frameInfo->Width == 0 || frameInfo->Height == 0)
+    {
+        return;
+    }
     result = *frameInfo;
     Move(sizeof(AnimationFrameInfo));
 }
@@ -3219,7 +3242,8 @@ void CFileManager::LoadAnimationFrameInfo(
             return;
         }
     }
-    UopReadAnimationFrameInfo(result, direction, uo_animation_group_get(anim), isCorpse);
+    UopReadAnimationFrameInfo(
+        result, direction, uo_animation_group_get(anim), isCorpse, anim, frameIndex);
 #else
     if (direction.Size != 0)
     {
@@ -3228,7 +3252,7 @@ void CFileManager::LoadAnimationFrameInfo(
     else
     {
         auto file = uo_animation_group_get(anim);
-        UopReadAnimationFrameInfo(result, direction, file, isCorpse);
+        UopReadAnimationFrameInfo(result, direction, file, isCorpse, anim, frameIndex);
     }
 #endif
 }
@@ -3494,7 +3518,11 @@ static void load_animations(CFileManager *mgr)
         IndexAnimation &index = g_Index.m_Anim[i];
         if (index.Type == AGT_UNKNOWN)
         {
-            index.Type = uo_type_by_graphic(i);
+            // bodies with no mobtypes entry use the human group table, like
+            // the client does (the graphic-range heuristic only applies to
+            // other callers of uo_type_by_graphic, e.g. bodyconv for old
+            // client versions)
+            index.Type = AGT_HUMAN;
         }
         index.Graphic = (int)i;
         index.CorpseGraphic = i;
@@ -3657,9 +3685,14 @@ static void load_verdata(CFileManager *mgr)
 
 static void load_animdef(CFileManager *mgr)
 {
+    // the client resolves group replaces from all four tables, keyed on the
+    // body's mobtypes group type: anim1.def animal, anim2.def human,
+    // anim3.def bodies absent from mobtypes, anim4.def monster
     TextFileParser animParser[] = {
-        TextFileParser(UOFilePath("Anim1.def"), " \t", "#;//", "{}"), // AG_LOW
-        TextFileParser(UOFilePath("Anim2.def"), " \t", "#;//", "{}"), // AG_PEOPLE
+        TextFileParser(UOFilePath("Anim1.def"), " \t", "#;//", "{}"), // animal
+        TextFileParser(UOFilePath("Anim2.def"), " \t", "#;//", "{}"), // human
+        TextFileParser(UOFilePath("Anim3.def"), " \t", "#;//", "{}"), // absent
+        TextFileParser(UOFilePath("Anim4.def"), " \t", "#;//", "{}"), // monster
     };
     for (int i = 0; i < countof(animParser); i++)
     {

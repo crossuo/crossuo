@@ -760,6 +760,47 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
     }
 
     uint8_t result = AnimationGroup;
+    // anim.def group replace, applied during group resolution like the
+    // client does: the table is picked by the body's mobtypes group type
+    // (animal/human/absent/monster) and a replaced group discards the
+    // packet's frame index (auto frame)
+    if (AnimationFromServer && AnimationGroup != AG_INVALID)
+    {
+        int defIndex = -1;
+        if (!(animData.Flags & AF_FOUND))
+        {
+            defIndex = 2; // anim3.def: bodies absent from mobtypes
+        }
+        else
+        {
+            switch (type)
+            {
+                case AGT_ANIMAL:
+                    defIndex = 0;
+                    break;
+                case AGT_HUMAN:
+                case AGT_EQUIPMENT:
+                    defIndex = 1;
+                    break;
+                default:
+                    defIndex = 3; // monster and sea monster
+                    break;
+            }
+        }
+        if (defIndex >= 0)
+        {
+            const auto &list = g_FileManager.m_GroupReplaces[defIndex];
+            for (const auto &item : list)
+            {
+                if (item.first == result)
+                {
+                    result = item.second == 0xff ? uint8_t(0) : item.second;
+                    AnimIndex = 0; // auto frame
+                    break;
+                }
+            }
+        }
+    }
     bool isWalking = Walking();
     bool isRun = (Direction & 0x80) != 0;
     if (!m_Steps.empty())

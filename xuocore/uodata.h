@@ -631,7 +631,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     // Animation Frames
     size_t m_AddressIdx[11];
     size_t m_SizeIdx[11];
-    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2]; // FIXME: map
+    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[4]; // FIXME: map
 
     bool Load();
     void Unload();
@@ -712,7 +712,9 @@ private:
         AnimationFrameInfo &result,
         AnimationDirection &direction,
         const UopFileEntry *block,
-        bool isCorpse);
+        bool isCorpse,
+        const AnimationState &anim = {},
+        uint8_t frameIndex = 0);
     bool UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     void MulReadAnimationFrameInfo(
         AnimationFrameInfo &result,
