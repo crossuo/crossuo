@@ -64,7 +64,6 @@ EM_JS(void, web_install_alert_shim, (), {
 #include "shards.h" // xuol_set_shards_cfg
 #endif
 #include "SDL_wrapper.h"
-#include "Wisp/WispThread.h"
 #include <external/popts.h>
 #include <xuocore/client_info.h>
 #include <xuocore/uodata.h>
@@ -1049,7 +1048,7 @@ int main(int argc, char **argv)
 
     str_init();
     Info(Client, "initializing application");
-    g_MainThread = Wisp::CThread::GetCurrentThreadId();
+    g_MainThread = SDL_ThreadID();
     g_ExePath = fs_path_current();
     g_UOPath = fs_path_current();
 

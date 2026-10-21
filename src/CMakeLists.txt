@@ -5,7 +5,6 @@ set(wisp_src
   Wisp/WispConnection.cpp
   Wisp/WispMouse.cpp
   Wisp/WispPacketReader.cpp
-  Wisp/WispThread.cpp
   Wisp/WispWindow.cpp
   Wisp/WispPacketMessage.cpp
 )

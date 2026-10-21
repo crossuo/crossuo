@@ -12,7 +12,6 @@
 #include "Wisp/WispMouse.h"
 #include "Wisp/WispPacketMessage.h"
 #include "Wisp/WispPacketReader.h"
-#include "Wisp/WispThread.h"
 #include "Wisp/WispWindow.h"
 
 #endif // WISP_H
