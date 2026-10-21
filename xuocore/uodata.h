@@ -132,7 +132,7 @@ struct CIndexObjectLand : public CIndexObject
     bool AllBlack = false;
 
     CIndexObjectLand() = default;
-    virtual ~CIndexObjectLand() = default;
+    virtual ~CIndexObjectLand() override = default;
 };
 
 struct CIndexObjectStatic : public CIndexObject
@@ -145,7 +145,7 @@ struct CIndexObjectStatic : public CIndexObject
     bool IsFiled = false;
 
     CIndexObjectStatic() = default;
-    virtual ~CIndexObjectStatic() = default;
+    virtual ~CIndexObjectStatic() override = default;
 };
 
 struct CIndexSound : public CIndexObject
@@ -157,7 +157,7 @@ struct CIndexSound : public CIndexObject
     uint64_t UopHash = 0;
 
     CIndexSound() = default;
-    virtual ~CIndexSound() = default;
+    virtual ~CIndexSound() override = default;
 };
 
 struct CIndexMulti : public CIndexObject
@@ -167,7 +167,7 @@ struct CIndexMulti : public CIndexObject
     virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
 
     CIndexMulti() = default;
-    virtual ~CIndexMulti() = default;
+    virtual ~CIndexMulti() override = default;
 };
 
 struct CIndexGump : public CIndexObject
@@ -175,7 +175,7 @@ struct CIndexGump : public CIndexObject
     virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
 
     CIndexGump() = default;
-    virtual ~CIndexGump() = default;
+    virtual ~CIndexGump() override = default;
 };
 
 struct CIndexLight : public CIndexObject
@@ -183,7 +183,7 @@ struct CIndexLight : public CIndexObject
     virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
 
     CIndexLight() = default;
-    virtual ~CIndexLight() = default;
+    virtual ~CIndexLight() override = default;
 };
 
 struct CIndexMusic

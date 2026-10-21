@@ -20,5 +20,5 @@ struct CGUIGenericText : public CGUIText
     {
     }
 
-    virtual ~CGUIGenericText() = default;
+    virtual ~CGUIGenericText() override = default;
 };

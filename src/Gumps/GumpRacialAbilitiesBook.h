@@ -33,7 +33,7 @@ private:
 
 public:
     CGumpRacialAbilitiesBook(int x, int y);
-    virtual ~CGumpRacialAbilitiesBook();
+    virtual ~CGumpRacialAbilitiesBook() override;
 
     virtual void DelayedClick(CRenderObject *obj) override;
 

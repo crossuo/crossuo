@@ -31,23 +31,23 @@ protected:
 
 public:
     CGameItem(int serial = 0);
-    virtual ~CGameItem();
+    virtual ~CGameItem() override;
 
     void CalculateFieldColor();
     CMulti *GetMulti();
     void ClearMultiItems();
-    virtual void Draw(int x, int y);
-    virtual void Select(int x, int y);
+    virtual void Draw(int x, int y) override;
+    virtual void Select(int x, int y) override;
     void ClearCustomHouseMultis(int state);
 
     CMultiObject *
     AddMulti(uint16_t graphic, uint16_t color, char x, char y, char z, bool isCustomHouseMulti);
 
-    void OnGraphicChange(int direction = 0);
-    uint16_t GetGraphicForAnimation();
-    virtual bool IsInternal() { return ((m_TiledataPtr->Flags & 0x00010000) && !IsCorpse()); }
+    void OnGraphicChange(int direction = 0) override;
+    uint16_t GetGraphicForAnimation() override;
+    virtual bool IsInternal() override { return ((m_TiledataPtr->Flags & 0x00010000) && !IsCorpse()); }
 
-    bool IsHuman() const
+    bool IsHuman() const override
     {
         return (
             IsCorpse() && (IN_RANGE(Count, 0x0192, 0x0193) || /*dead h_male, h_female*/

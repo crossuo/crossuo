@@ -16,7 +16,7 @@ protected:
 
 public:
     CGumpMenu(uint32_t serial, uint32_t id, short x, short y);
-    virtual ~CGumpMenu();
+    virtual ~CGumpMenu() override;
 
     static const int ID_GM_HTMLGUMP = 1000;
 

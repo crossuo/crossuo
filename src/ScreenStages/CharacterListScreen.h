@@ -23,7 +23,7 @@ public:
     };
 
     CCharacterListScreen();
-    virtual ~CCharacterListScreen() = default;
+    virtual ~CCharacterListScreen() override = default;
     virtual void Init() override;
     virtual void PrepareContent() override;
     virtual void ProcessSmoothAction(uint8_t action = 0xff) override;

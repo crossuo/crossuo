@@ -21,7 +21,7 @@ class CGUIGlobalColor : public CBaseGUI
 
 public:
     CGUIGlobalColor(bool enabled, float r, float g, float b, float a);
-    virtual ~CGUIGlobalColor();
+    virtual ~CGUIGlobalColor() override;
 
-    virtual void Draw(bool checktrans = false);
+    virtual void Draw(bool checktrans = false) override;
 };

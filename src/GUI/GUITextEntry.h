@@ -91,16 +91,16 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t textFlags = 0,
         int maxLength = 0);
-    virtual ~CGUITextEntry();
+    virtual ~CGUITextEntry() override;
 
     //The class object for text input
     class CEntryText m_Entry;
 
-    virtual void PrepareTextures();
+    virtual void PrepareTextures() override;
 
-    virtual bool EntryPointerHere();
+    virtual bool EntryPointerHere() override;
 
-    virtual CSize GetSize();
+    virtual CSize GetSize() override;
 
     //Set global OGL color before drawing text
     void SetGlobalColor(bool use, int color, int selected, int focused);
@@ -108,9 +108,9 @@ public:
     //Pressing the component
     void OnClick(CGump *gump, int x, int y);
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

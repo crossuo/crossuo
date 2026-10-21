@@ -25,9 +25,9 @@ struct CTextData : public CRenderTextObject
 
     CTextData() = default;
     CTextData(CTextData *obj);
-    virtual ~CTextData();
+    virtual ~CTextData() override;
 
-    virtual bool IsText() { return true; }
+    virtual bool IsText() override { return true; }
     bool CanBeDrawedInJournalGump();
     void GenerateTexture(
         int maxWidth,

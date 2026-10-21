@@ -12,7 +12,7 @@ private:
 
 public:
     CGumpSelectFont(uint32_t serial, short x, short y, SELECT_FONT_GUMP_STATE state);
-    virtual ~CGumpSelectFont();
+    virtual ~CGumpSelectFont() override;
     virtual void UpdateContent() override;
     GUMP_RADIO_EVENT_H override;
 };

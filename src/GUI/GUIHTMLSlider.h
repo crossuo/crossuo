@@ -26,7 +26,7 @@ public:
         int minValue,
         int maxValue,
         int value);
-    virtual ~CGUIHTMLSlider();
-    virtual void CalculateOffset();
-    virtual bool IsControlHTML() { return true; }
+    virtual ~CGUIHTMLSlider() override;
+    virtual void CalculateOffset() override;
+    virtual bool IsControlHTML() override { return true; }
 };

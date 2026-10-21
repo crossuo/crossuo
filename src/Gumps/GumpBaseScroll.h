@@ -40,7 +40,7 @@ public:
         int scrollerOffsetY = 0,
         bool haveBackgroundLines = false,
         int scissorOffsetHeight = 0);
-    virtual ~CGumpBaseScroll();
+    virtual ~CGumpBaseScroll() override;
 
     GUMP_RESIZE_START_EVENT_H override;
     GUMP_RESIZE_EVENT_H override;

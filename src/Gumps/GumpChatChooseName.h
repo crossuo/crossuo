@@ -18,7 +18,7 @@ private:
 
 public:
     CGumpChatChooseName(int x, int y);
-    virtual ~CGumpChatChooseName();
+    virtual ~CGumpChatChooseName() override;
 
     virtual void UpdateContent() override;
     virtual void OnLeftMouseButtonUp() override;

@@ -11,7 +11,7 @@ class CGumpMenubar : public CGump
 
 public:
     CGumpMenubar(short x, short y);
-    virtual ~CGumpMenubar();
+    virtual ~CGumpMenubar() override;
 
     bool GetOpened() { return m_Opened; };
     void SetOpened(bool val);

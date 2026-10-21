@@ -33,7 +33,7 @@ public:
     bool Changed = true;
 
     CRenderObject(int serial, uint16_t graphic, uint16_t color, short x, short y);
-    virtual ~CRenderObject();
+    virtual ~CRenderObject() override;
     virtual void PrepareTextures() {}
     virtual void OnMouseEnter() {}
     virtual void OnMouseExit() {}

@@ -17,7 +17,7 @@ private:
 
 public:
     CGumpTargetSystem(uint32_t serial, short x, short y);
-    virtual ~CGumpTargetSystem();
+    virtual ~CGumpTargetSystem() override;
 
     virtual bool CanBeDisplayed() override;
 

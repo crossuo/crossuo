@@ -24,13 +24,13 @@ public:
     uint32_t LastChangeFrameTime = 0;
 
     CGameEffect();
-    virtual ~CGameEffect();
+    virtual ~CGameEffect() override;
 
-    virtual void Draw(int x, int y);
+    virtual void Draw(int x, int y) override;
     uint16_t GetCurrentGraphic();
     uint16_t CalculateCurrentGraphic();
     void ApplyRenderMode();
     void RemoveRenderMode();
-    bool IsEffectObject() { return true; }
+    bool IsEffectObject() override { return true; }
     virtual void Update(class CGameObject *parent);
 };

@@ -19,8 +19,8 @@ public:
         int y,
         int width,
         int height);
-    virtual ~CGUIHTMLResizepic();
+    virtual ~CGUIHTMLResizepic() override;
 
     void Scroll(bool up, int delay);
-    virtual bool IsControlHTML() { return true; }
+    virtual bool IsControlHTML() override { return true; }
 };

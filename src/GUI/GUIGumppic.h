@@ -9,5 +9,5 @@ class CGUIGumppic : public CGUIDrawObject
 {
 public:
     CGUIGumppic(uint16_t graphic, int x, int y);
-    virtual ~CGUIGumppic();
+    virtual ~CGUIGumppic() override;
 };

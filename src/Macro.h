@@ -22,7 +22,7 @@ public:
     MACRO_SUB_CODE SubCode = MSC_NONE;
     char HasSubMenu = 0;
     CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode);
-    virtual ~CMacroObject() = default;
+    virtual ~CMacroObject() override = default;
     virtual bool HaveString() { return false; }
 };
 
@@ -31,8 +31,8 @@ class CMacroObjectString : public CMacroObject
 public:
     astr_t m_String;
     CMacroObjectString(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const astr_t &str);
-    virtual ~CMacroObjectString() = default;
-    virtual bool HaveString() { return true; }
+    virtual ~CMacroObjectString() override = default;
+    virtual bool HaveString() override { return true; }
 };
 
 class CMacro : public CBaseQueueItem
@@ -43,7 +43,7 @@ public:
     bool Ctrl = false;
     bool Shift = false;
     CMacro(Keycode key, bool alt, bool ctrl, bool shift);
-    virtual ~CMacro() = default;
+    virtual ~CMacro() override = default;
     void ChangeObject(CMacroObject *source, CMacroObject *obj);
     CMacro *GetCopy();
     static CMacro *CreateBlankMacro();

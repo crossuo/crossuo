@@ -23,7 +23,7 @@ protected:
 
 public:
     CGumpJournal(short x, short y, bool minimized, int height);
-    virtual ~CGumpJournal();
+    virtual ~CGumpJournal() override;
 
     void AddText(CTextData *obj);
     void DeleteText(CTextData *obj);

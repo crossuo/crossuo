@@ -17,7 +17,7 @@ public:
 
     CIgnoreItem();
     CIgnoreItem(const astr_t &serial, const astr_t &graphic, const astr_t &color);
-    virtual ~CIgnoreItem();
+    virtual ~CIgnoreItem() override;
 
     bool Found(const uint32_t &serial, const uint16_t &graphic, const uint16_t &color) const;
 };

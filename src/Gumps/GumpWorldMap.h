@@ -77,7 +77,7 @@ protected:
 
 public:
     CGumpWorldMap(short x, short y);
-    virtual ~CGumpWorldMap();
+    virtual ~CGumpWorldMap() override;
 
     void UpdateSize();
 

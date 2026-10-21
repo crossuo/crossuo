@@ -26,15 +26,15 @@ public:
     SDL_Rect m_Rect;
     CVector m_Normals[4];
 
-    virtual void UpdateGraphicBySeason();
+    virtual void UpdateGraphicBySeason() override;
     int CalculateCurrentAverageZ(int direction);
-    virtual void Draw(int x, int y);
-    virtual void Select(int x, int y);
-    bool IsLandObject() { return true; }
+    virtual void Draw(int x, int y) override;
+    virtual void Select(int x, int y) override;
+    bool IsLandObject() override { return true; }
     void UpdateZ(int zTop, int zRight, int zBottom);
     bool Ignored()
     {
         return (Graphic == 2 || Graphic == 0x1DB || (Graphic >= 0x1AE && Graphic <= 0x1B5));
     }
-    virtual CLandObject *LandObjectPtr() { return this; }
+    virtual CLandObject *LandObjectPtr() override { return this; }
 };

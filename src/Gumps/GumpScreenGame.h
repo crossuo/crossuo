@@ -12,7 +12,7 @@ private:
 
 public:
     CGumpScreenGame();
-    virtual ~CGumpScreenGame();
+    virtual ~CGumpScreenGame() override;
 
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;

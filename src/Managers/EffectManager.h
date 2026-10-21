@@ -12,7 +12,7 @@ class CEffectManager : public CBaseQueue
 {
 public:
     CEffectManager();
-    virtual ~CEffectManager() {}
+    virtual ~CEffectManager() override {}
 
     void AddEffect(CGameEffect *effect);
     void RemoveEffect(CGameEffect *effect);

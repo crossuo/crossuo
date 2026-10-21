@@ -22,7 +22,7 @@ public:
 
 public:
     CGumpSkill(int serial, int x, int y);
-    virtual ~CGumpSkill();
+    virtual ~CGumpSkill() override;
 
     // the gump's drawn box: skill gumps vary in height with the skill name
     // texture (and the width is the resizepic width), so the group snapping

@@ -52,10 +52,10 @@ public:
         int minValue,
         int maxValue,
         int value);
-    virtual ~CGUISlider();
+    virtual ~CGUISlider() override;
 
-    virtual bool IsPressedOuthit() { return true; }
-    virtual CSize GetSize();
+    virtual bool IsPressedOuthit() override { return true; }
+    virtual CSize GetSize() override;
     virtual void OnScroll(bool up, int delay);
     virtual void OnClick(int x, int y);
     void UpdateText();
@@ -69,10 +69,10 @@ public:
         int textWidth = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t textFlags = 0);
-    virtual void PrepareTextures();
-    virtual uint16_t GetDrawGraphic();
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void PrepareTextures() override;
+    virtual uint16_t GetDrawGraphic() override;
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

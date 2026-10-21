@@ -12,8 +12,8 @@ class CGUIGumppicHightlighted : public CGUIDrawObject
 public:
     CGUIGumppicHightlighted(
         int serial, uint16_t graphic, uint16_t color, uint16_t electedColor, int x, int y);
-    virtual ~CGUIGumppicHightlighted();
-    virtual void SetShaderMode();
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual ~CGUIGumppicHightlighted() override;
+    virtual void SetShaderMode() override;
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

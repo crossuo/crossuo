@@ -12,10 +12,10 @@ class CGUIMenuObject : public CGUITilepic
 
 public:
     CGUIMenuObject(int serial, uint16_t graphic, uint16_t color, int x, int y, const astr_t &text);
-    virtual ~CGUIMenuObject();
+    virtual ~CGUIMenuObject() override;
 
-    virtual bool Select();
+    virtual bool Select() override;
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

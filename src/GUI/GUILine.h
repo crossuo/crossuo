@@ -27,7 +27,7 @@ class CGUILine : public CBaseGUI
 
 public:
     CGUILine(int x, int y, int targetX, int targetY, int polygoneColor);
-    virtual ~CGUILine();
+    virtual ~CGUILine() override;
 
-    virtual void Draw(bool checktrans = false);
+    virtual void Draw(bool checktrans = false) override;
 };

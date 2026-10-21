@@ -60,18 +60,18 @@ protected:
 
 public:
     CGameObject(int serial = 0);
-    virtual ~CGameObject();
+    virtual ~CGameObject() override;
 
     DRAW_FRAME_INFORMATION m_FrameInfo;
     std::vector<class CGameItem *> m_DrawLayeredObjects;
 
-    virtual void AddText(CTextData *msg);
+    virtual void AddText(CTextData *msg) override;
     void GenerateObjectHandlesTexture(wstr_t text);
     void DrawObjectHandlesTexture();
     void SelectObjectHandlesTexture();
     virtual uint16_t GetGraphicForAnimation();
     virtual void OnGraphicChange(int direction = 0) {}
-    virtual bool TranparentTest(int playerZ) { return false; }
+    virtual bool TranparentTest(int playerZ) override { return false; }
     void DrawEffects(int x, int y);
     void UpdateEffects();
     void AddEffect(class CGameEffect *effect);
@@ -79,7 +79,7 @@ public:
     void AddObject(CGameObject *obj);
     void AddItem(CGameObject *obj);
     void Reject(CGameObject *obj);
-    void Clear();
+    void Clear() override;
     void ClearUnequipped();
     void ClearNotOpenedItems();
 
@@ -136,7 +136,7 @@ public:
     virtual bool IsPlayer() { return false; }
     static int IsGold(uint16_t graphic);
     uint16_t GetDrawGraphic(bool &doubleDraw);
-    bool IsGameObject() const { return true; }
+    bool IsGameObject() const override { return true; }
     bool IsCorpse() const { return (Graphic == 0x2006); }
     CGameObject *GetTopObject();
     CGameItem *FindLayer(int layer) const;

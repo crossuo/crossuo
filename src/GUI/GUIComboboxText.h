@@ -23,8 +23,8 @@ public:
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
-    virtual ~CGUIComboboxText();
+    virtual ~CGUIComboboxText() override;
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

@@ -15,5 +15,5 @@ public:
         uint16_t graphicDisabled,
         int x,
         int y);
-    virtual ~CGUIRadio();
+    virtual ~CGUIRadio() override;
 };

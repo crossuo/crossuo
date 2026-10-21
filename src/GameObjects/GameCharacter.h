@@ -51,19 +51,19 @@ protected:
 
 public:
     CGameCharacter(int serial);
-    virtual ~CGameCharacter();
+    virtual ~CGameCharacter() override;
 
     CTextContainer m_DamageTextControl{ CTextContainer(10) };
     std::deque<CWalkData> m_Steps;
     CTextSprite m_HitsTexture;
 
-    virtual void UpdateTextCoordinates();
+    virtual void UpdateTextCoordinates() override;
     void UpdateHitsTexture(uint8_t hits);
     void ProcessGargoyleAnims(uint8_t &group);
     int IsSitting();
-    virtual void Draw(int x, int y);
-    virtual void Select(int x, int y);
-    void OnGraphicChange(int direction = 0);
+    virtual void Draw(int x, int y) override;
+    virtual void Select(int x, int y) override;
+    void OnGraphicChange(int direction = 0) override;
     void ResetAnimationGroup(uint8_t val);
     void SetRandomFidgetAnimation();
     void SetAnimation(
@@ -75,7 +75,7 @@ public:
         bool frameDirection = false,
         bool pingPong = false);
 
-    uint16_t GetGraphicForAnimation();
+    uint16_t GetGraphicForAnimation() override;
     uint8_t GetGroupForAnimation(uint16_t graphic, bool isParent);
     void GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation);
     bool Staying() { return AnimationGroup == AG_INVALID && m_Steps.empty(); }
@@ -88,7 +88,7 @@ public:
 
     void UpdateAnimationInfo_ProcessSteps(uint8_t &dir, bool canChange = false);
 
-    bool IsHuman() const
+    bool IsHuman() const override
     {
         return (
             IN_RANGE(Graphic, 0x0190, 0x0193) || /*h_male,h_female*/
@@ -121,7 +121,7 @@ public:
                m_Dead;
     }
 
-    virtual CGameCharacter *GameCharacterPtr() { return this; }
-    virtual CGameItem *FindSecureTradeBox();
+    virtual CGameCharacter *GameCharacterPtr() override { return this; }
+    virtual CGameItem *FindSecureTradeBox() override;
     void SetDead(bool &dead);
 };

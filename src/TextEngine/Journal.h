@@ -15,10 +15,10 @@ class CJournal : public CBaseQueue
 
 public:
     CJournal(int maxSize);
-    ~CJournal();
+    ~CJournal() override;
 
     void Add(CTextData *obj);
-    virtual void Clear();
+    virtual void Clear() override;
 };
 
 extern CJournal g_Journal;

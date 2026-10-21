@@ -15,7 +15,7 @@ class CGumpTip : public CGumpBaseScroll
 
 public:
     CGumpTip(uint32_t serial, short x, short y, const astr_t &str, bool updates);
-    virtual ~CGumpTip();
+    virtual ~CGumpTip() override;
 
     void SendTipRequest(uint8_t flag);
 

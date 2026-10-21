@@ -18,5 +18,5 @@ public:
         short y,
         char z);
 
-    virtual ~CMapObject();
+    virtual ~CMapObject() override;
 };

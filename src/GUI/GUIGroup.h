@@ -12,5 +12,5 @@ public:
     int Index = 0;
 
     CGUIGroup(int index);
-    virtual ~CGUIGroup();
+    virtual ~CGUIGroup() override;
 };

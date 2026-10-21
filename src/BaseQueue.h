@@ -31,7 +31,7 @@ public:
 class CBaseQueueItem : public CBaseQueue
 {
 public:
-    virtual ~CBaseQueueItem();
+    virtual ~CBaseQueueItem() override;
     CBaseQueueItem *m_Next = nullptr;
     CBaseQueueItem *m_Prev = nullptr;
 };

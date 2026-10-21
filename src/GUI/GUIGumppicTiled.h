@@ -15,5 +15,5 @@ struct CGUIGumppicTiled : public CGUIDrawObject
     virtual bool Select() override;
 
     CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, int height);
-    virtual ~CGUIGumppicTiled() = default;
+    virtual ~CGUIGumppicTiled() override = default;
 };

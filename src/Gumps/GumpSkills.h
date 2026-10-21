@@ -38,7 +38,7 @@ protected:
 
 public:
     CGumpSkills(short x, short y, bool minimized, int height);
-    virtual ~CGumpSkills();
+    virtual ~CGumpSkills() override;
 
     void UpdateGroupText();
 

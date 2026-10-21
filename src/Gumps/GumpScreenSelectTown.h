@@ -32,7 +32,7 @@ private:
 
 public:
     CGumpScreenSelectTown();
-    virtual ~CGumpScreenSelectTown();
+    virtual ~CGumpScreenSelectTown() override;
 
     virtual void UpdateContent() override;
 

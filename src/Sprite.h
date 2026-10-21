@@ -67,7 +67,7 @@ struct CTextSprite : public CSprite
     virtual uint16_t WebLinkUnderMouse(int x, int y) { return 0; }
 
     CTextSprite() = default;
-    virtual ~CTextSprite() { Clear(); };
+    virtual ~CTextSprite() override { Clear(); };
 };
 
 struct CHTMLText : public CTextSprite
@@ -80,5 +80,5 @@ struct CHTMLText : public CTextSprite
     virtual void AddWebLink(WEB_LINK_RECT &wl) override { m_WebLinkRect.push_back(wl); }
 
     CHTMLText() = default;
-    virtual ~CHTMLText() { m_WebLinkRect.clear(); }
+    virtual ~CHTMLText() override { m_WebLinkRect.clear(); }
 };

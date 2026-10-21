@@ -118,7 +118,7 @@ private:
 
 public:
     CGameScreen();
-    virtual ~CGameScreen();
+    virtual ~CGameScreen() override;
 
     static const uint8_t ID_SMOOTH_GS_LOGOUT = 1;
 

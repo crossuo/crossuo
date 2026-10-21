@@ -43,7 +43,7 @@ public:
 
 public:
     CBaseGUI(GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y);
-    virtual ~CBaseGUI();
+    virtual ~CBaseGUI() override;
 
     // Identify the g_EntryPointer field in this component
     virtual bool EntryPointerHere() { return false; }
@@ -65,7 +65,7 @@ public:
     virtual CSize GetSize() { return CSize(); }
 
     // This is a user interface component.
-    virtual bool IsGUI() { return true; }
+    virtual bool IsGUI() override { return true; }
 
     // This is the HTMLGump component
     virtual bool IsHTMLGump() { return false; }
@@ -87,5 +87,5 @@ struct CGUIPage : public CBaseGUI
     {
     }
 
-    virtual ~CGUIPage() = default;
+    virtual ~CGUIPage() override = default;
 };

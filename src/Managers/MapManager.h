@@ -25,7 +25,7 @@ protected:
 
 public:
     CMapManager() = default;
-    virtual ~CMapManager();
+    virtual ~CMapManager() override;
 
     int m_MapPatchCount[MAX_MAPS_COUNT];
     int m_StaticPatchCount[MAX_MAPS_COUNT];

@@ -19,7 +19,7 @@ public:
     CMappedFile m_File;
 
     CCliloc(const astr_t &lang);
-    virtual ~CCliloc();
+    virtual ~CCliloc() override;
     astr_t GetA(int id, bool toCamelCase = false, const char *default_value = nullptr);
     wstr_t GetW(int id, bool toCamelCase = false, const char *default_value = nullptr);
 };
@@ -32,7 +32,7 @@ class CClilocManager : public CBaseQueue
 
 public:
     CClilocManager() = default;
-    virtual ~CClilocManager();
+    virtual ~CClilocManager() override;
     CCliloc *Cliloc(const astr_t &lang);
     wstr_t ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstr_t args);
     wstr_t ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstr_t args);

@@ -43,7 +43,7 @@ private:
 
 public:
     CProfessionManager();
-    virtual ~CProfessionManager();
+    virtual ~CProfessionManager() override;
 
     CBaseProfession *Selected;
 

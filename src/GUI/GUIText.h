@@ -11,11 +11,11 @@ class CGUIText : public CBaseGUI
 {
 public:
     CGUIText(uint16_t color, int x, int y);
-    virtual ~CGUIText();
+    virtual ~CGUIText() override;
 
     CTextSprite m_Texture;
 
-    virtual CSize GetSize() { return CSize(m_Texture.Width, m_Texture.Height); }
+    virtual CSize GetSize() override { return CSize(m_Texture.Width, m_Texture.Height); }
 
     void CreateTextureA(
         uint8_t font,
@@ -32,6 +32,6 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

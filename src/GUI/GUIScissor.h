@@ -27,9 +27,9 @@ public:
         int y = 0,
         int width = 0,
         int height = 0);
-    virtual ~CGUIScissor();
+    virtual ~CGUIScissor() override;
 
-    virtual void Draw(bool checktrans = false);
+    virtual void Draw(bool checktrans = false) override;
 
     //!Push a scissor box authored in the current gump's local coordinates,
     //!translating it into whatever space the gump pass draws items in (the

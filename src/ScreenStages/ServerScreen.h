@@ -17,7 +17,7 @@ private:
 
 public:
     CServerScreen();
-    virtual ~CServerScreen();
+    virtual ~CServerScreen() override;
 
     static const uint8_t ID_SMOOTH_SS_QUIT = 1;
     static const uint8_t ID_SMOOTH_SS_SELECT_SERVER = 2;

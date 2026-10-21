@@ -11,8 +11,8 @@ class CGUIChecktrans : public CGUIPolygonal
 {
 public:
     CGUIChecktrans(int x, int y, int width, int height);
-    virtual ~CGUIChecktrans();
+    virtual ~CGUIChecktrans() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select() { return false; }
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override { return false; }
 };

@@ -12,7 +12,7 @@ class CGumpPopupMenu : public CGump
 
 public:
     CGumpPopupMenu(uint32_t serial, short x, short y);
-    virtual ~CGumpPopupMenu();
+    virtual ~CGumpPopupMenu() override;
 
     virtual void PrepareContent() override;
 

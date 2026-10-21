@@ -15,7 +15,7 @@ public:
     };
 
     CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y);
-    virtual ~CGumpGrayMenu();
+    virtual ~CGumpGrayMenu() override;
 
     void SendMenuResponse(int index);
 

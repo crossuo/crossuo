@@ -22,7 +22,7 @@ private:
 
 public:
     CSelectProfessionScreen();
-    virtual ~CSelectProfessionScreen();
+    virtual ~CSelectProfessionScreen() override;
 
     static const uint8_t ID_SMOOTH_SPS_QUIT = 1;
     static const uint8_t ID_SMOOTH_SPS_GO_SCREEN_CHARACTER = 2;

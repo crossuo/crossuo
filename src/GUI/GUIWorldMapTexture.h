@@ -15,7 +15,7 @@ public:
     int OffsetY = 0;
 
     CGUIWorldMapTexture(int x, int y);
-    virtual ~CGUIWorldMapTexture();
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual ~CGUIWorldMapTexture() override;
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

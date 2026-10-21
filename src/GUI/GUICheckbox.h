@@ -48,7 +48,7 @@ public:
         uint16_t graphicDisabled,
         int x,
         int y);
-    virtual ~CGUICheckbox();
+    virtual ~CGUICheckbox() override;
 
     //! Set the text
     void SetTextParameters(
@@ -68,12 +68,12 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t textFlags = 0);
 
-    virtual void PrepareTextures();
-    virtual uint16_t GetDrawGraphic();
+    virtual void PrepareTextures() override;
+    virtual uint16_t GetDrawGraphic() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

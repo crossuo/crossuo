@@ -15,6 +15,6 @@ public:
         uint16_t graphicPressed,
         int x,
         int y);
-    virtual ~CGUIResizeButton();
-    virtual bool IsPressedOuthit() { return true; }
+    virtual ~CGUIResizeButton() override;
+    virtual bool IsPressedOuthit() override { return true; }
 };

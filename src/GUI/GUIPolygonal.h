@@ -16,5 +16,5 @@ struct CGUIPolygonal : public CBaseGUI
 
     CGUIPolygonal(
         GUMP_OBJECT_TYPE type, int x, int y, int width, int height, bool callOnMouseUp = false);
-    virtual ~CGUIPolygonal() = default;
+    virtual ~CGUIPolygonal() override = default;
 };

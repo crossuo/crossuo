@@ -9,7 +9,7 @@ class COptionsMacroManager : public CBaseQueue
 {
 public:
     COptionsMacroManager();
-    virtual ~COptionsMacroManager();
+    virtual ~COptionsMacroManager() override;
     void LoadFromMacro();
 };
 

@@ -15,7 +15,7 @@ private:
 
 public:
     CGumpDrag(uint32_t serial, short x, short y);
-    virtual ~CGumpDrag();
+    virtual ~CGumpDrag() override;
 
     virtual void UpdateContent() override;
 

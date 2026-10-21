@@ -77,8 +77,8 @@ public:
         memset(&m_WindowGraphics[0], 0, sizeof(m_WindowGraphics));
     }
 
-    virtual ~CCustomHouseObjectWall() {}
-    virtual bool Parse(const char *text);
+    virtual ~CCustomHouseObjectWall() override {}
+    virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
     static const int GRAPHICS_COUNT = 8;
@@ -154,8 +154,8 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectFloor() {}
-    virtual bool Parse(const char *text);
+    virtual ~CCustomHouseObjectFloor() override {}
+    virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
     static const int GRAPHICS_COUNT = 16;
@@ -195,8 +195,8 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectDoor() {}
-    virtual bool Parse(const char *text);
+    virtual ~CCustomHouseObjectDoor() override {}
+    virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
     static const int GRAPHICS_COUNT = 8;
@@ -242,8 +242,8 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectMisc() {}
-    virtual bool Parse(const char *text);
+    virtual ~CCustomHouseObjectMisc() override {}
+    virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
     static const int GRAPHICS_COUNT = 8;
@@ -309,8 +309,8 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectStair() {}
-    virtual bool Parse(const char *text);
+    virtual ~CCustomHouseObjectStair() override {}
+    virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
     static const int GRAPHICS_COUNT = 9;
@@ -374,8 +374,8 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectTeleport() {}
-    virtual bool Parse(const char *text);
+    virtual ~CCustomHouseObjectTeleport() override {}
+    virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
     static const int GRAPHICS_COUNT = 16;
@@ -423,8 +423,8 @@ public:
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    virtual ~CCustomHouseObjectRoof() {}
-    virtual bool Parse(const char *text);
+    virtual ~CCustomHouseObjectRoof() override {}
+    virtual bool Parse(const char *text) override;
     int Contains(uint16_t graphic) const;
 
     static const int GRAPHICS_COUNT = 16;

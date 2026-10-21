@@ -10,6 +10,6 @@ struct CGUIShader : public CBaseGUI
 {
     CRenderShader *m_Shader = nullptr;
     CGUIShader(CRenderShader *shader, bool enabled);
-    virtual ~CGUIShader() = default;
-    virtual void Draw(bool checktrans = false);
+    virtual ~CGUIShader() override = default;
+    virtual void Draw(bool checktrans = false) override;
 };

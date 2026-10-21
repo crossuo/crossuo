@@ -8,7 +8,7 @@
 struct CGumpScreenCharacterList : public CGump
 {
     CGumpScreenCharacterList();
-    virtual ~CGumpScreenCharacterList() = default;
+    virtual ~CGumpScreenCharacterList() override = default;
 
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;

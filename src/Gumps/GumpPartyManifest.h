@@ -12,7 +12,7 @@ private:
 
 public:
     CGumpPartyManifest(uint32_t serial, short x, short y, bool canLoot);
-    virtual ~CGumpPartyManifest();
+    virtual ~CGumpPartyManifest() override;
 
     virtual void UpdateContent() override;
 

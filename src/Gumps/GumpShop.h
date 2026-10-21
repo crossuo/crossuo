@@ -15,7 +15,7 @@ public:
     bool IsBuyGump = false;
 
     CGumpShop(uint32_t serial, bool isBuyGump, short x, short y);
-    virtual ~CGumpShop();
+    virtual ~CGumpShop() override;
 
     CGUIHTMLGump *m_ItemList[2];
     CGUIText *m_TotalPriceText{ nullptr };

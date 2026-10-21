@@ -8,7 +8,7 @@
 struct CGUIDataBox : public CGUIPolygonal
 {
     CGUIDataBox();
-    virtual ~CGUIDataBox() = default;
+    virtual ~CGUIDataBox() override = default;
     virtual void PrepareTextures() override;
     virtual bool EntryPointerHere() override;
     virtual bool Select() override { return true; }

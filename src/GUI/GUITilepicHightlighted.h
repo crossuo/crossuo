@@ -19,13 +19,13 @@ public:
         int x,
         int y,
         bool doubleDraw);
-    virtual ~CGUITilepicHightlighted();
+    virtual ~CGUITilepicHightlighted() override;
 
-    virtual void SetShaderMode();
+    virtual void SetShaderMode() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

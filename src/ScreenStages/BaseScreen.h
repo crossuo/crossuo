@@ -20,7 +20,7 @@ protected:
 
 public:
     CBaseScreen(CGump &gump);
-    virtual ~CBaseScreen();
+    virtual ~CBaseScreen() override;
 
     virtual void PrepareContent() { m_Gump.PrepareContent(); }
     virtual void UpdateContent() { m_Gump.UpdateContent(); }

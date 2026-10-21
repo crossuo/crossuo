@@ -34,7 +34,7 @@ public:
         int maxLength,
         astr_t text,
         astr_t description);
-    virtual ~CGumpTextEntryDialog();
+    virtual ~CGumpTextEntryDialog() override;
 
     void SendTextEntryDialogResponse(bool mode);
 

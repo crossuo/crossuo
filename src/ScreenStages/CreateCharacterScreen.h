@@ -29,7 +29,7 @@ private:
 
 public:
     CCreateCharacterScreen();
-    virtual ~CCreateCharacterScreen();
+    virtual ~CCreateCharacterScreen() override;
 
     static const uint8_t ID_SMOOTH_CCS_QUIT = 1;
     static const uint8_t ID_SMOOTH_CCS_GO_SCREEN_CHARACTER = 2;

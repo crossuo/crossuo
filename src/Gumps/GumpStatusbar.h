@@ -24,7 +24,7 @@ protected:
 
 public:
     CGumpStatusbar(uint32_t serial, short x, short y, bool minimized);
-    virtual ~CGumpStatusbar();
+    virtual ~CGumpStatusbar() override;
 
     const int ID_GSB_LOCK_MOVING = 10;
 

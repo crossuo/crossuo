@@ -33,15 +33,15 @@ public:
         const astr_t &name,
         int x,
         int y);
-    virtual ~CGUIShopItem();
+    virtual ~CGUIShopItem() override;
 
     void OnClick();
     void CreateNameText();
     void UpdateOffsets();
     void CreateCountText(int lostCount);
-    virtual CSize GetSize() { return CSize(200, m_MaxOffset + 20); }
-    virtual void PrepareTextures();
-    virtual void SetShaderMode();
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual CSize GetSize() override { return CSize(200, m_MaxOffset + 20); }
+    virtual void PrepareTextures() override;
+    virtual void SetShaderMode() override;
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

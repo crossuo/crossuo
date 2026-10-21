@@ -23,12 +23,12 @@ public:
         uint16_t tileColor,
         int tileX,
         int tileY);
-    virtual ~CGUIButtonTileart();
+    virtual ~CGUIButtonTileart() override;
 
-    virtual CSize GetSize();
+    virtual CSize GetSize() override;
 
-    virtual void PrepareTextures();
+    virtual void PrepareTextures() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

@@ -46,7 +46,7 @@ private:
 
 public:
     CGumpResourceTracker(int x, int y, int w = 0, int h = 0);
-    virtual ~CGumpResourceTracker() = default;
+    virtual ~CGumpResourceTracker() override = default;
     uint16_t Rows = 0;
     uint16_t Cols = 0;
 

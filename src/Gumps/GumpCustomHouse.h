@@ -174,7 +174,7 @@ protected:
 
 public:
     CGumpCustomHouse(int serial, int x, int y);
-    virtual ~CGumpCustomHouse();
+    virtual ~CGumpCustomHouse() override;
 
     virtual void UpdateContent() override;
 

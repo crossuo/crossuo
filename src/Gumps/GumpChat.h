@@ -39,7 +39,7 @@ private:
 
 public:
     CGumpChat(int x, int y);
-    virtual ~CGumpChat();
+    virtual ~CGumpChat() override;
 
     virtual void UpdateContent() override;
     virtual void OnLeftMouseButtonUp() override;

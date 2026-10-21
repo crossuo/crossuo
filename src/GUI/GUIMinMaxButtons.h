@@ -70,11 +70,11 @@ private:
 public:
     CGUIMinMaxButtons(
         int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value);
-    virtual ~CGUIMinMaxButtons();
+    virtual ~CGUIMinMaxButtons() override;
 
-    virtual bool IsPressedOuthit() { return true; }
+    virtual bool IsPressedOuthit() override { return true; }
 
-    virtual CSize GetSize() { return CSize(36, 18); }
+    virtual CSize GetSize() override { return CSize(36, 18); }
 
     // Scroll
     virtual void Scroll(int delay);
@@ -96,8 +96,8 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t textFlags = 0);
 
-    virtual void PrepareTextures();
+    virtual void PrepareTextures() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

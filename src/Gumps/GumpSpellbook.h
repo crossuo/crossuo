@@ -28,7 +28,7 @@ private:
 
 public:
     CGumpSpellbook(uint32_t serial, int x, int y);
-    virtual ~CGumpSpellbook() = default;
+    virtual ~CGumpSpellbook() override = default;
 
     void UpdateGraphic(uint16_t parentGraphic);
     void ChangePage(int newPage);

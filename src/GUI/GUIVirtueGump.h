@@ -9,6 +9,6 @@ class CGUIVirtueGump : public CGUIDrawObject
 {
 public:
     CGUIVirtueGump(uint16_t graphic, int x, int y);
-    virtual ~CGUIVirtueGump();
-    virtual bool Select();
+    virtual ~CGUIVirtueGump() override;
+    virtual bool Select() override;
 };

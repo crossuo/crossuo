@@ -9,7 +9,7 @@ class CGumpBulletinBoard : public CGump
 {
 public:
     CGumpBulletinBoard(uint32_t serial, short x, short y, const astr_t &name);
-    virtual ~CGumpBulletinBoard();
+    virtual ~CGumpBulletinBoard() override;
 
     CGUIHTMLGump *m_HTMLGump{ nullptr };
 

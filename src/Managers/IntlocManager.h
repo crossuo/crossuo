@@ -17,7 +17,7 @@ public:
     CMappedFile m_File;
 
     CIntloc(int fileIndex, const astr_t &lang);
-    virtual ~CIntloc();
+    virtual ~CIntloc() override;
     wstr_t Get(int id, bool toCamelCase = false);
 };
 
@@ -27,7 +27,7 @@ class CIntlocManager : public CBaseQueue
 
 public:
     CIntlocManager() = default;
-    virtual ~CIntlocManager() = default;
+    virtual ~CIntlocManager() override = default;
     wstr_t Intloc(const astr_t &lang, uint32_t clilocID, bool isNewCliloc) const;
 };
 

@@ -38,7 +38,7 @@ public:
 
 public:
     CMainScreen();
-    virtual ~CMainScreen();
+    virtual ~CMainScreen() override;
 
     void SetAccounting(const astr_t &account, const astr_t &password);
     void Paste();

@@ -27,7 +27,7 @@ public:
 
     CGumpBook(
         uint32_t serial, int16_t x, int16_t y, uint16_t pageCount, bool writable, bool unicode);
-    virtual ~CGumpBook();
+    virtual ~CGumpBook() override;
 
     virtual void PasteClipboardData(wstr_t &data) override;
 

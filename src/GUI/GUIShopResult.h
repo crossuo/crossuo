@@ -18,12 +18,12 @@ private:
 
 public:
     CGUIShopResult(class CGUIShopItem *shopItem, int x, int y);
-    virtual ~CGUIShopResult();
+    virtual ~CGUIShopResult() override;
 
     class CGUIMinMaxButtons *m_MinMaxButtons{ nullptr };
     CBaseGUI *SelectedItem();
-    virtual CSize GetSize() { return CSize(200, m_NameText.Height); }
-    virtual void PrepareTextures();
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual CSize GetSize() override { return CSize(200, m_NameText.Height); }
+    virtual void PrepareTextures() override;
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

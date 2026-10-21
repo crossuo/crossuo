@@ -20,7 +20,7 @@ public:
     int DescriptionIndex = 0;
 
     CBaseProfession();
-    virtual ~CBaseProfession();
+    virtual ~CBaseProfession() override;
 
     bool AddDescription(int desc, const astr_t &name, const char *val);
 };
@@ -31,7 +31,7 @@ public:
     astr_t Childrens = "|";
 
     CProfessionCategory();
-    virtual ~CProfessionCategory();
+    virtual ~CProfessionCategory() override;
 
     void AddChildren(const astr_t &child);
 };
@@ -49,7 +49,7 @@ private:
 
 public:
     CProfession();
-    virtual ~CProfession();
+    virtual ~CProfession() override;
 
     void SetSkillIndex(int index, uint8_t val)
     {

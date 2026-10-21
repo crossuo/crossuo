@@ -56,7 +56,7 @@ private:
 
 public:
     CConnectionScreen();
-    ~CConnectionScreen();
+    ~CConnectionScreen() override;
 
     static const uint8_t ID_SMOOTH_CS_GO_SCREEN_MAIN = 1;
     static const uint8_t ID_SMOOTH_CS_GO_SCREEN_CHARACTER = 2;

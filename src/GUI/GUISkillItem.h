@@ -28,13 +28,13 @@ public:
 
     void CreateValueText(bool showReal = false, bool showCap = false);
 
-    virtual CSize GetSize() { return CSize(255, 17); }
-    virtual void PrepareTextures();
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual CSize GetSize() override { return CSize(255, 17); }
+    virtual void PrepareTextures() override;
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 
     CBaseGUI *SelectedItem();
 
     CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y);
-    virtual ~CGUISkillItem();
+    virtual ~CGUISkillItem() override;
 };

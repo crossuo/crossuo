@@ -10,11 +10,11 @@
 struct CGUITilepic : public CGUIDrawObject
 {
     CGUITilepic(uint16_t graphic, uint16_t color, int x, int y, bool doubleDraw = false);
-    virtual ~CGUITilepic() = default;
-    virtual CSize GetSize();
-    virtual void PrepareTextures();
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual ~CGUITilepic() override = default;
+    virtual CSize GetSize() override;
+    virtual void PrepareTextures() override;
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 
 private:
     bool DoubleDraw = false;

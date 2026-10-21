@@ -9,6 +9,6 @@ class CCustomHouseMultiObject : public CMultiObject
 {
 public:
     CCustomHouseMultiObject(uint16_t graphic, uint16_t color, short x, short y, char z, int flags);
-    virtual ~CCustomHouseMultiObject();
-    virtual bool IsCustomHouseMulti() { return true; }
+    virtual ~CCustomHouseMultiObject() override;
+    virtual bool IsCustomHouseMulti() override { return true; }
 };

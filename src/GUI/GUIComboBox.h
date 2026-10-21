@@ -81,7 +81,7 @@ public:
         int width,
         int showItemsCount,
         bool showMaximizedCenter);
-    virtual ~CGUIComboBox();
+    virtual ~CGUIComboBox() override;
 
     //! Set the text
     void SetText(class CGUIText *text) { Text = text; }
@@ -89,12 +89,12 @@ public:
     //! Recalculate the width
     void RecalculateWidth();
 
-    virtual CSize GetSize();
+    virtual CSize GetSize() override;
 
-    virtual void PrepareTextures();
+    virtual void PrepareTextures() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 
     //! Get a reference to the selected list item (or to this object)
     CBaseGUI *SelectedItem();

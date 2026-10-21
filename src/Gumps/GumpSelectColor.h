@@ -24,7 +24,7 @@ protected:
 
 public:
     CGumpSelectColor(uint32_t serial, short x, short y, SELECT_COLOR_GUMP_STATE state);
-    virtual ~CGumpSelectColor();
+    virtual ~CGumpSelectColor() override;
 
     virtual void UpdateContent() override;
 

@@ -9,7 +9,7 @@ class CGumpScreenServer : public CGump
 {
 public:
     CGumpScreenServer();
-    virtual ~CGumpScreenServer();
+    virtual ~CGumpScreenServer() override;
 
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;

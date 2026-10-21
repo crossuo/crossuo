@@ -14,7 +14,7 @@ protected:
 
 public:
     CGumpConsoleType(bool minimized, bool showFullText);
-    virtual ~CGumpConsoleType();
+    virtual ~CGumpConsoleType() override;
 
     virtual bool CanBeDisplayed() override;
     virtual void UpdateContent() override;

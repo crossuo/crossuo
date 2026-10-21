@@ -32,9 +32,9 @@ public:
     uint32_t Cliloc = 0;
 
     CCityItemNew();
-    virtual ~CCityItemNew();
+    virtual ~CCityItemNew() override;
 
-    bool IsNewCity() { return true; }
+    bool IsNewCity() override { return true; }
 };
 
 class CCityList

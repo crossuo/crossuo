@@ -57,7 +57,7 @@ protected:
 
 public:
     CGumpSecureTrading(uint32_t serial, int x, int y, uint32_t id, uint32_t id2);
-    virtual ~CGumpSecureTrading() = default;
+    virtual ~CGumpSecureTrading() override = default;
 
     void SendTradingResponse(int code);
     CTextRenderer *GetTextRenderer() override { return &m_TextRenderer; }

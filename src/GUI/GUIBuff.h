@@ -16,6 +16,6 @@ public:
     uint8_t Alpha = 0xFF;
 
     CGUIBuff(uint16_t graphic, int timer, const wstr_t &text);
-    virtual ~CGUIBuff();
-    virtual void Draw(bool checktrans = false);
+    virtual ~CGUIBuff() override;
+    virtual void Draw(bool checktrans = false) override;
 };

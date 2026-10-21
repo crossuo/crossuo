@@ -34,7 +34,7 @@ public:
         int x,
         int y,
         char z);
-    virtual ~CRenderWorldObject();
+    virtual ~CRenderWorldObject() override;
 
     uint8_t m_DrawTextureColor[4];
 
@@ -91,7 +91,7 @@ public:
     virtual bool IsDoor() { return false; }
     virtual bool IsStairBack() { return false; }
     virtual bool IsStairRight() { return false; }
-    virtual bool IsWorldObject() { return true; }
+    virtual bool IsWorldObject() override { return true; }
     virtual bool IsStaticGroupObject() { return false; }
     virtual bool IsLandObject() { return false; }
     virtual bool IsStaticObject() { return false; }
@@ -100,6 +100,6 @@ public:
     virtual class CRenderStaticObject *StaticGroupObjectPtr() { return nullptr; }
     virtual class CLandObject *LandObjectPtr() { return nullptr; }
     virtual class CGameCharacter *GameCharacterPtr() { return nullptr; }
-    virtual void UpdateRealDrawCoordinates();
-    virtual void UpdateDrawCoordinates();
+    virtual void UpdateRealDrawCoordinates() override;
+    virtual void UpdateDrawCoordinates() override;
 };

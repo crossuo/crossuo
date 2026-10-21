@@ -11,7 +11,7 @@ public:
     bool Transparent = false;
 
     CRenderTextObject();
-    virtual ~CRenderTextObject();
+    virtual ~CRenderTextObject() override;
 
     CRenderTextObject *m_NextDraw{ nullptr };
     CRenderTextObject *m_PrevDraw{ nullptr };

@@ -16,6 +16,6 @@ public:
     uint8_t MoveDelay = 20;
 
     CGameEffectDrag();
-    virtual ~CGameEffectDrag();
-    virtual void Update(CGameObject *parent);
+    virtual ~CGameEffectDrag() override;
+    virtual void Update(CGameObject *parent) override;
 };

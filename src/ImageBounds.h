@@ -25,7 +25,7 @@ class CTextImageBounds : public CImageBounds
 public:
     CTextImageBounds(int x, int y, int width, int height, CRenderTextObject *text);
     CTextImageBounds(CTextData *text);
-    virtual ~CTextImageBounds();
+    virtual ~CTextImageBounds() override;
 
     CRenderTextObject *Text{ nullptr };
 };

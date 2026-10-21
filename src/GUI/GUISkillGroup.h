@@ -19,7 +19,7 @@ public:
 
 public:
     CGUISkillGroup(int serial, int minimizeSerial, class CSkillGroupObject *group, int x, int y);
-    virtual ~CGUISkillGroup();
+    virtual ~CGUISkillGroup() override;
 
     //! Control components
     CGUIButton *m_Minimizer{ nullptr };
@@ -27,14 +27,14 @@ public:
 
     void UpdateDataPositions();
 
-    virtual CSize GetSize();
+    virtual CSize GetSize() override;
 
-    virtual void PrepareTextures();
+    virtual void PrepareTextures() override;
 
-    virtual bool EntryPointerHere();
+    virtual bool EntryPointerHere() override;
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 
     //! Get a pointer to the selected component, or to this object
     CBaseGUI *SelectedItem();

@@ -33,7 +33,7 @@ private:
 
 public:
     CMapBlock(int index);
-    virtual ~CMapBlock();
+    virtual ~CMapBlock() override;
 
     // Block data
     CMapObject *Block[8][8];

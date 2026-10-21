@@ -24,7 +24,7 @@ public:
     static const int ID_GP_ITEMS = 20;
 
     CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized);
-    virtual ~CGumpPaperdoll();
+    virtual ~CGumpPaperdoll() override;
 
     bool CanLift = false;
     CGUIButton *m_ButtonWarmode = nullptr;

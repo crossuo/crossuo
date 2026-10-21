@@ -59,7 +59,7 @@ protected:
 
 public:
     CGumpScreenSelectProfession();
-    virtual ~CGumpScreenSelectProfession();
+    virtual ~CGumpScreenSelectProfession() override;
 
     virtual void UpdateContent() override;
     virtual void PrepareContent() override;

@@ -28,13 +28,13 @@ public:
 
     CGUIColoredPolygone(
         int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor);
-    virtual ~CGUIColoredPolygone();
+    virtual ~CGUIColoredPolygone() override;
 
     //! Update the color
     void UpdateColor(uint16_t color, int polygoneColor);
 
-    virtual void Draw(bool checktrans = false);
+    virtual void Draw(bool checktrans = false) override;
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

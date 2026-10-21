@@ -41,7 +41,7 @@ protected:
 
 public:
     CGumpRaceChange(bool isFemale, uint8_t race);
-    virtual ~CGumpRaceChange();
+    virtual ~CGumpRaceChange() override;
 
     virtual void UpdateContent() override;
 

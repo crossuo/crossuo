@@ -46,7 +46,7 @@ private:
 
 public:
     CGumpScreenCreateCharacter();
-    virtual ~CGumpScreenCreateCharacter();
+    virtual ~CGumpScreenCreateCharacter() override;
 
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;

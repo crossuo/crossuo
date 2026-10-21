@@ -24,7 +24,7 @@ protected:
 
 public:
     CGumpContainer(uint32_t serial, uint32_t id, short x, short y);
-    virtual ~CGumpContainer();
+    virtual ~CGumpContainer() override;
 
     static const uint32_t ID_GC_LOCK_MOVING;
     static const uint32_t ID_GC_MINIMIZE;

@@ -28,13 +28,13 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t textFlags = 0,
         int htmlStartColor = 0xFFFFFFFF);
-    virtual ~CGUIHTMLText();
+    virtual ~CGUIHTMLText() override;
 
     CHTMLText m_Sprite;
 
-    virtual CSize GetSize() { return CSize(m_Sprite.Width, m_Sprite.Height); }
+    virtual CSize GetSize() override { return CSize(m_Sprite.Width, m_Sprite.Height); }
     void Create(bool backgroundCanBeColored);
 
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

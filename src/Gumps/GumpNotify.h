@@ -20,7 +20,7 @@ private:
 
 public:
     CGumpNotify(short x, short y, uint8_t variant, short width, short height, astr_t text);
-    virtual ~CGumpNotify();
+    virtual ~CGumpNotify() override;
 
     static const int ID_GN_STATE_LOGOUT = 1;
     static const int ID_GN_STATE_NOTIFICATION = 2;

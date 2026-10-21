@@ -12,7 +12,7 @@ public:
     uint32_t MasterGump = 0;
 
     CGumpGeneric(uint32_t serial, short x, short y, uint32_t id);
-    virtual ~CGumpGeneric();
+    virtual ~CGumpGeneric() override;
 
     void AddText(
         int index,

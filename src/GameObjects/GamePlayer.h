@@ -56,15 +56,15 @@ public:
     int StealthSteps = 0;
 
     CPlayer(int serial);
-    virtual ~CPlayer();
+    virtual ~CPlayer() override;
 
     CFastWalkStack m_FastWalkStack;
 
     void CloseBank();
     class CGameItem *FindBandage();
-    bool IsPlayer() { return true; }
-    virtual bool Walking() { return (LastStepTime > (uint32_t)(g_Ticks - PLAYER_WALKING_DELAY)); }
-    virtual bool NoIterateAnimIndex() { return false; }
+    bool IsPlayer() override { return true; }
+    virtual bool Walking() override { return (LastStepTime > (uint32_t)(g_Ticks - PLAYER_WALKING_DELAY)); }
+    virtual bool NoIterateAnimIndex() override { return false; }
     void UpdateAbilities();
 };
 

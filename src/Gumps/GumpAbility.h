@@ -15,7 +15,7 @@ private:
 
 public:
     CGumpAbility(int serial, int x, int y);
-    virtual ~CGumpAbility();
+    virtual ~CGumpAbility() override;
 
     static void OnAbilityUse(int index);
 

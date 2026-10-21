@@ -33,7 +33,7 @@ public:
         int height,
         bool haveBackground,
         bool haveScrollbar);
-    virtual ~CGUIHTMLGump();
+    virtual ~CGUIHTMLGump() override;
 
     CGUIHTMLResizepic *m_Background{ nullptr };
     CGUIHTMLButton *m_ButtonUp{ nullptr };
@@ -47,9 +47,9 @@ public:
     void UpdateHeight(int height);
     void ResetDataOffset();
     void CalculateDataSize();
-    virtual void PrepareTextures();
-    virtual bool EntryPointerHere();
-    virtual bool Select();
+    virtual void PrepareTextures() override;
+    virtual bool EntryPointerHere() override;
+    virtual bool Select() override;
     virtual void Scroll(bool up, int delay);
-    virtual bool IsHTMLGump() { return true; }
+    virtual bool IsHTMLGump() override { return true; }
 };

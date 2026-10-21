@@ -13,7 +13,7 @@ private:
 
 public:
     CGumpDye(uint32_t serial, int16_t x, int16_t y, uint16_t graphic);
-    virtual ~CGumpDye();
+    virtual ~CGumpDye() override;
 
     virtual void UpdateContent() override;
     virtual void OnSelectColor(uint16_t color) override;

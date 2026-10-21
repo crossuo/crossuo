@@ -29,7 +29,7 @@ public:
         const wstr_t &subject,
         const wstr_t &dataTime,
         const wstr_t &data);
-    virtual ~CGumpBulletinBoardItem();
+    virtual ~CGumpBulletinBoardItem() override;
 
     CGUITextEntry *m_EntrySubject{ nullptr };
     CGUITextEntry *m_Entry{ nullptr };

@@ -11,7 +11,7 @@ class CGumpScreenMain : public CGump
 
 public:
     CGumpScreenMain();
-    virtual ~CGumpScreenMain();
+    virtual ~CGumpScreenMain() override;
 
     CEntryText *m_PasswordFake{ nullptr };
 

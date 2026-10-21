@@ -13,5 +13,5 @@ public:
 
     CGUIGenericTextEntry(
         int serial, int index, uint16_t color, int x, int y, int maxWidth = 0, int maxLength = 0);
-    virtual ~CGUIGenericTextEntry();
+    virtual ~CGUIGenericTextEntry() override;
 };

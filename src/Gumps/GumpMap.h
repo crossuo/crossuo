@@ -39,7 +39,7 @@ public:
         int endY,
         int width,
         int height);
-    virtual ~CGumpMap();
+    virtual ~CGumpMap() override;
 
     int GetPlotState() { return m_PlotState; };
     void SetPlotState(int val);

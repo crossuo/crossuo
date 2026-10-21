@@ -28,5 +28,5 @@ public:
     virtual bool OnLeftMouseButtonDoubleClick() override;
 
     CGumpPropertyIcon(int x, int y);
-    virtual ~CGumpPropertyIcon() = default;
+    virtual ~CGumpPropertyIcon() override = default;
 };

@@ -27,11 +27,11 @@ public:
         uint16_t graphicPressed,
         int x,
         int y);
-    virtual ~CGUIButton();
+    virtual ~CGUIButton() override;
 
-    virtual void PrepareTextures();
-    virtual uint16_t GetDrawGraphic();
+    virtual void PrepareTextures() override;
+    virtual uint16_t GetDrawGraphic() override;
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

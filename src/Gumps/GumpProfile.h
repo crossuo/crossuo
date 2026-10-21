@@ -26,7 +26,7 @@ public:
         const wstr_t &topText,
         const wstr_t &bottomText,
         const wstr_t &dataText);
-    virtual ~CGumpProfile();
+    virtual ~CGumpProfile() override;
 
     GUMP_BUTTON_EVENT_H override;
 

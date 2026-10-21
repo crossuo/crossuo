@@ -16,11 +16,11 @@ public:
     int Size = 0;
 
     CTextContainer(int maxSize);
-    ~CTextContainer();
+    ~CTextContainer() override;
 
     void Add(CTextData *obj);
     void Delete(CTextData *obj);
-    virtual void Clear();
+    virtual void Clear() override;
     void DrawSystemChat(int x, int y, int height);
 };
 

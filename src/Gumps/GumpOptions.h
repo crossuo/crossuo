@@ -87,7 +87,7 @@ protected:
 
 public:
     CGumpOptions(short x, short y);
-    virtual ~CGumpOptions();
+    virtual ~CGumpOptions() override;
 
     CGUITextEntry *m_GameWindowWidth{ nullptr };
     CGUITextEntry *m_GameWindowHeight{ nullptr };

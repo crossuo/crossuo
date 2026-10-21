@@ -36,7 +36,7 @@ protected:
 
 public:
     CGumpMinimap(short x, short y, bool minimized);
-    virtual ~CGumpMinimap();
+    virtual ~CGumpMinimap() override;
 
     virtual void PrepareContent() override;
 

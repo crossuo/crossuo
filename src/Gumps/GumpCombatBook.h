@@ -30,7 +30,7 @@ public:
     static const astr_t m_AbilityName[MAX_ABILITIES_COUNT];
 
     CGumpCombatBook(int x, int y);
-    virtual ~CGumpCombatBook();
+    virtual ~CGumpCombatBook() override;
 
     static std::vector<uint16_t> GetItemsList(uint8_t index);
 

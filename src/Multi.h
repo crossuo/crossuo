@@ -16,5 +16,5 @@ public:
     short MaxY = 0;
 
     CMulti(short x, short y);
-    virtual ~CMulti();
+    virtual ~CMulti() override;
 };

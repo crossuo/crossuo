@@ -14,6 +14,6 @@ public:
     int OffsetZ = 0;
 
     CGameEffectMoving();
-    virtual ~CGameEffectMoving();
-    virtual void Update(CGameObject *parent);
+    virtual ~CGameEffectMoving() override;
+    virtual void Update(CGameObject *parent) override;
 };

@@ -15,7 +15,7 @@ private:
 
 public:
     CSelectTownScreen();
-    ~CSelectTownScreen();
+    ~CSelectTownScreen() override;
 
     static const uint8_t ID_SMOOTH_STS_QUIT = 1;
     static const uint8_t ID_SMOOTH_STS_GO_SCREEN_CHARACTER = 2;

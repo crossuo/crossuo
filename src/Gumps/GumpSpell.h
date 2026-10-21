@@ -21,7 +21,7 @@ protected:
 
 public:
     CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, short x, short y);
-    virtual ~CGumpSpell();
+    virtual ~CGumpSpell() override;
 
     SPELLBOOK_TYPE SpellType = ST_MAGERY;
     CGUIAlphaBlending *m_Blender = nullptr;

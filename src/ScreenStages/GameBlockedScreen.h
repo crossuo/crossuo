@@ -13,7 +13,7 @@ public:
     CGump m_GameBlockedScreenGump;
 
     CGameBlockedScreen();
-    ~CGameBlockedScreen();
+    ~CGameBlockedScreen() override;
 
     virtual void Init() override;
     virtual void Render() override;

@@ -18,5 +18,5 @@ public:
     virtual CRenderObject *Select() override { return nullptr; }
 
     CGumpProperty(const wstr_t &text);
-    virtual ~CGumpProperty() = default;
+    virtual ~CGumpProperty() override = default;
 };

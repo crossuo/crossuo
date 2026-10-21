@@ -26,7 +26,7 @@ private:
 
 public:
     CMacroManager() = default;
-    virtual ~CMacroManager() = default;
+    virtual ~CMacroManager() override = default;
 
     class CMacro *FindMacro(Keycode key, bool alt, bool ctrl, bool shift);
     bool Convert(const fs_path &path);

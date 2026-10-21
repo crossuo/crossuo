@@ -28,7 +28,7 @@ private:
 
 public:
     CGumpBuff(short x, short y);
-    virtual ~CGumpBuff();
+    virtual ~CGumpBuff() override;
 
     virtual bool CanBeDisplayed() override;
 

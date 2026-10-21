@@ -12,7 +12,7 @@ private:
 
 public:
     CGumpRacialAbility(int serial, int x, int y);
-    virtual ~CGumpRacialAbility();
+    virtual ~CGumpRacialAbility() override;
 
     static void OnAbilityUse(uint16_t index);
 

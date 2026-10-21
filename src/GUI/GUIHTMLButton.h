@@ -20,12 +20,12 @@ public:
         uint16_t graphicPressed,
         int x,
         int y);
-    virtual ~CGUIHTMLButton();
+    virtual ~CGUIHTMLButton() override;
 
-    virtual void SetShaderMode();
+    virtual void SetShaderMode() override;
 
     //! Scroll handling
     void Scroll(bool up, int delay);
 
-    virtual bool IsControlHTML() { return true; }
+    virtual bool IsControlHTML() override { return true; }
 };

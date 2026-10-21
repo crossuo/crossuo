@@ -19,8 +19,8 @@ public:
         int width,
         int height,
         bool callOnMouseUp = false);
-    virtual ~CGUIHTMLHitBox();
+    virtual ~CGUIHTMLHitBox() override;
 
     void Scroll(bool up, int delay);
-    virtual bool IsControlHTML() { return true; }
+    virtual bool IsControlHTML() override { return true; }
 };

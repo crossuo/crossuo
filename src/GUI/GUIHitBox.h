@@ -12,8 +12,8 @@ public:
     int ToPage = -1;
 
     CGUIHitBox(int serial, int x, int y, int width, int height, bool callOnMouseUp = false);
-    virtual ~CGUIHitBox();
+    virtual ~CGUIHitBox() override;
 
-    virtual void OnMouseEnter();
-    virtual void OnMouseExit();
+    virtual void OnMouseEnter() override;
+    virtual void OnMouseExit() override;
 };

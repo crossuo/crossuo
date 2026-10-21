@@ -20,12 +20,12 @@ public:
         int y,
         int drawWidth = 0,
         int drawHeight = 0);
-    virtual ~CGUIExternalTexture();
+    virtual ~CGUIExternalTexture() override;
 
     CSprite *m_Sprite = nullptr;
-    virtual CSize GetSize();
+    virtual CSize GetSize() override;
 
-    virtual void SetShaderMode();
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual void SetShaderMode() override;
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
 };

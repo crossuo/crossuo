@@ -25,6 +25,10 @@ public:
     }
 
     virtual void operator()(char *dest, const char *src, int &dest_size, intptr_t &src_size);
+
+    // virtual because the class has a virtual interface; held by value, so
+    // this only costs the vdtor pointer on polymorphic use
+    virtual ~CDecompressingCopier() = default;
 };
 
 #endif

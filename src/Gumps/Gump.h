@@ -71,7 +71,7 @@ protected:
 public:
     CGump();
     CGump(GUMP_TYPE type, uint32_t serial, int x, int y);
-    virtual ~CGump();
+    virtual ~CGump() override;
 
     virtual void PasteClipboardData(wstr_t &data);
     static void ProcessListing();

@@ -14,7 +14,7 @@ private:
 
 public:
     CGumpPartyInvite(uint32_t inviter);
-    virtual ~CGumpPartyInvite() = default;
+    virtual ~CGumpPartyInvite() override = default;
 
     GUMP_BUTTON_EVENT_H override;
 };

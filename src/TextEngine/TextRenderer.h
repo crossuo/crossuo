@@ -18,7 +18,7 @@ private:
 
 public:
     CTextRenderer();
-    virtual ~CTextRenderer();
+    virtual ~CTextRenderer() override;
 
     CRenderTextObject *m_TextItems{ nullptr };
     CRenderTextObject *m_DrawPointer{ nullptr };

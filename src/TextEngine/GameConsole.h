@@ -37,7 +37,7 @@ private:
 
 public:
     CGameConsole();
-    virtual ~CGameConsole();
+    virtual ~CGameConsole() override;
 
     void DrawW(
         uint8_t font,

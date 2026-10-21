@@ -84,9 +84,9 @@ public:
     CPoint3Di(const CPoint2Df &point);
     CPoint3Di(const CPoint3Df &point);
 
-    virtual ~CPoint3Di() {}
+    virtual ~CPoint3Di() override {}
 
-    virtual void Reset()
+    virtual void Reset() override
     {
         CPoint2Di::Reset();
         Z = 0;
@@ -127,9 +127,9 @@ public:
     CPoint3Df(const CPoint2Df &point);
     CPoint3Df(const CPoint3Df &point);
 
-    virtual ~CPoint3Df() {}
+    virtual ~CPoint3Df() override {}
 
-    virtual void Reset()
+    virtual void Reset() override
     {
         CPoint2Df::Reset();
         Z = 0.0f;
