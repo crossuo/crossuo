@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "../GameWindow.h" // GetDisplaySize
-#include "../Misc.h"
 #include "GumpBaseScroll.h"
 #include "../CrossUO.h"
 #include "../Managers/MouseManager.h"

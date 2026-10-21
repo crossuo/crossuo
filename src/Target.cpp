@@ -29,14 +29,14 @@ CTarget g_Target;
 
 CTarget::CTarget()
 {
-    //Чистимся
+    // Zero the state
     memset(m_Data, 0, sizeof(m_Data));
     memset(m_LastData, 0, sizeof(m_LastData));
 }
 
 void CTarget::Reset()
 {
-    //Чистимся
+    // Zero the state
     memset(m_Data, 0, sizeof(m_Data));
     memset(m_LastData, 0, sizeof(m_LastData));
 
@@ -116,10 +116,10 @@ bool CTarget::SetData(CDataReader &reader)
     }
 #endif
 
-    //Копируем буффер
+    // Copy the buffer
     memcpy(&m_Data[0], reader.Start, reader.Size);
 
-    //И устанавливаем соответствующие значения
+    // And set the corresponding fields
     Type = reader.ReadUInt8();
     CursorID = reader.ReadUInt32BE();
     CursorType = reader.ReadUInt8();
@@ -166,17 +166,17 @@ bool CTarget::SetMultiData(CDataReader &reader)
     }
 #endif
 
-    //Устанавливаем соответствующие значения
+    // Set the corresponding fields
     Type = 1;
     CursorType = 0;
     Targeting = true;
     CursorID = reader.ReadUInt32BE(1);
 
-    //Копируем буффер
+    // Copy the buffer
     memset(&m_Data[0], 0, 19);
     m_Data[0] = 0x6C;
-    m_Data[1] = 1;                           //Таргет на ландшафт
-    memcpy(m_Data + 2, reader.Start + 2, 4); //Копируем ID курсора (ID дида)
+    m_Data[1] = 1;                           // Terrain target
+    memcpy(m_Data + 2, reader.Start + 2, 4); // Copy the cursor ID
 
     reader.ResetPtr();
     reader.Move(18);
@@ -278,10 +278,10 @@ void CTarget::SendTargetObject(int serial)
 {
     if (!Targeting)
     {
-        return; //Если в клиенте нет таргета - выход
+        return; // No active target cursor in the client - bail out
     }
 
-    //Пишем серийник объекта, на который ткнули прицелом, остальное - затираем
+    // Write the serial of the targeted object, clear the rest
     pack32(m_Data + 7, serial);
     m_Data[1] = 0;
 
@@ -305,7 +305,7 @@ void CTarget::SendTargetObject(int serial)
     {
         g_LastTargetObject = serial;
 
-        //Скопируем для LastTarget
+        // Copy for LastTarget
         memcpy(m_LastData, m_Data, sizeof(m_Data));
 
         if (obj != nullptr && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
@@ -321,12 +321,12 @@ void CTarget::SendTargetTile(uint16_t tileID, short x, short y, char z)
 {
     if (!Targeting)
     {
-        return; //Если в клиенте нет таргета - выход
+        return; // No active target cursor in the client - bail out
     }
 
     m_Data[1] = 1;
 
-    //Пишем координаты и индекс тайла, на который ткнули, остальное трем
+    // Write the coordinates and the tile index that was clicked, clear the rest
     pack32(m_Data + 7, 0);
     pack16(m_Data + 11, x);
     pack16(m_Data + 13, y);
@@ -336,7 +336,7 @@ void CTarget::SendTargetTile(uint16_t tileID, short x, short y, char z)
     pack16(m_Data + 15, (short)z);
     pack16(m_Data + 17, tileID);
 
-    //Скопируем для LastTarget
+    // Copy for LastTarget
     memcpy(m_LastData, m_Data, sizeof(m_Data));
 
     SendTarget();
@@ -346,10 +346,10 @@ void CTarget::SendCancelTarget()
 {
     if (!Targeting)
     {
-        return; //Если в клиенте нет таргета - выход
+        return; // No active target cursor in the client - bail out
     }
 
-    //Уходят только нули
+    // Serial is zeroed, the flags word carries the cancel marker (0xFFFFFFFF)
     pack32(m_Data + 7, 0);
     pack32(m_Data + 11, 0xFFFFFFFF);
     pack32(m_Data + 15, 0);
@@ -370,10 +370,10 @@ void CTarget::SendLastTarget()
 {
     if (!Targeting)
     {
-        return; //Если в клиенте нет таргета - выход
+        return; // No active target cursor in the client - bail out
     }
 
-    //Восстановим пакет последнего актуального таргета
+    // Restore the last-target packet
     memcpy(m_Data, m_LastData, sizeof(m_Data));
     m_Data[0] = 0x6C;
     m_Data[1] = Type;
@@ -615,7 +615,7 @@ void CTarget::AddMultiObject(CMultiObject *obj)
                 }
             }
 
-            //Если пришли сюда - что-то пошло не так
+            // If we got here, something went wrong
         }
         else
         {

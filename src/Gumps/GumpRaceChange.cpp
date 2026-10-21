@@ -2,18 +2,14 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpRaceChange.h"
-#include "../Globals.h"
 #include "../GUI/GUIComboBox.h"
 #include "../GUI/GUIComboboxText.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/CreateCharacterManager.h"
-#include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader
-#include "../CrossUO.h"               // g_Game
 #include "../SelectedObject.h"        // g_SelectedObject
 #include <xuocore/uodata.h>           // g_Data, uo_get_equipconv
-#include "../Constants.h"             // MALE_GUMP_OFFSET / FEMALE_GUMP_OFFSET
 
 CGumpRaceChange *g_GumpRaceChange = nullptr;
 

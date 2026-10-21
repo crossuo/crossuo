@@ -5,7 +5,6 @@
 #include "GumpConsoleType.h"
 #include "GumpOptions.h"
 #include "../Weather.h"
-#include "../Config.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
 #include "../PressedObject.h"
@@ -126,7 +125,7 @@ void CGumpScreenGame::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    //Рамка игрового окна
+    // Game window frame
     g_Game.DrawGump(
         0x0A8D,
         0,

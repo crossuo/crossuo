@@ -8,7 +8,7 @@
 class CGUIGroup : public CBaseGUI
 {
 public:
-    //!Индекс группы. 0 - эквивалентно EndGroup
+    //! Group index. 0 is equivalent to EndGroup
     int Index = 0;
 
     CGUIGroup(int index);

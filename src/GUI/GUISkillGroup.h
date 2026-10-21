@@ -9,7 +9,7 @@ class CGUITextEntry;
 
 class CGUISkillGroup : public CBaseGUI
 {
-    //!Свернута или развернута группа
+    //! Whether the group is collapsed or expanded
 protected:
     bool m_Minimized = false;
 
@@ -21,7 +21,7 @@ public:
     CGUISkillGroup(int serial, int minimizeSerial, class CSkillGroupObject *group, int x, int y);
     virtual ~CGUISkillGroup();
 
-    //!Компоненты управления
+    //! Control components
     CGUIButton *m_Minimizer{ nullptr };
     CGUITextEntry *m_Name{ nullptr };
 
@@ -36,6 +36,6 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 
-    //!Получить ссылку на выбранную компоненту или на себя
+    //! Get a pointer to the selected component, or to this object
     CBaseGUI *SelectedItem();
 };

@@ -2153,7 +2153,7 @@ void CGameScreen::Render()
 
                 int tz = selRwo->GetZ();
 
-                //Если это тайл текстуры
+                // If this is a texture tile
                 if (land != nullptr && land->IsStretched)
                 {
                     tz = (char)land->Serial;
@@ -2280,9 +2280,9 @@ void CGameScreen::SelectObject()
             }
         }
 
-        if (g_SelectedObject.Object == nullptr) //Если ничего не выбралось - пройдемся по объектам
+        if (g_SelectedObject.Object == nullptr) // If nothing was selected, walk the objects
         {
-            //Если курсор мыши в игровом окне - просканируем его
+            // If the mouse cursor is inside the game window, scan it
             if (g_MouseManager.Position.X < g_RenderBounds.GameWindowPosX ||
                 g_MouseManager.Position.Y < g_RenderBounds.GameWindowPosY ||
                 g_MouseManager.Position.X >

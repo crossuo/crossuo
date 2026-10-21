@@ -205,7 +205,7 @@ void CGameItem::Draw(int x, int y)
         }
 
         if (IsCorpse())
-        { //Трупик
+        { // A corpse
             g_AnimationManager.DrawCorpse(this, x, y - 3);
         }
         else
@@ -311,7 +311,7 @@ void CGameItem::Select(int x, int y)
             return;
         }
 
-        if (IsCorpse()) //Трупик
+        if (IsCorpse()) // A corpse
         {
             if (g_AnimationManager.CorpsePixelsInXY(this, x, y - 3))
             {
@@ -645,7 +645,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
                 }
             }
 
-            //Если пришли сюда - что-то пошло не так
+            // If we got here, something went wrong
         }
         else
         {
@@ -686,7 +686,7 @@ CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
 {
     CGameItem *item = nullptr;
 
-    if (color == 0xFFFF) //Поиск по минимальному цвету
+    if (color == 0xFFFF) // Search by the minimum hue
     {
         uint16_t minColor = 0xFFFF;
         for (CGameItem *obj = (CGameItem *)m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
@@ -712,7 +712,7 @@ CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
             }
         }
     }
-    else //стандартный поиск
+    else // standard search
     {
         for (CGameItem *obj = (CGameItem *)m_Items; obj != nullptr; obj = (CGameItem *)obj->m_Next)
         {

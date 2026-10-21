@@ -495,14 +495,14 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
     if (g_SelectProfessionScreen.GetSkillSelection() == 0)
     {
-        //!Используем обработку HTML-тэгов при создании текстуры текста
+        //! Enable HTML-tag processing when creating the text texture
         g_FontManager.SetUseHTML(true);
 
         CGUIText *text = new CGUIText(0, 3, 3);
         text->CreateTextureW(1, obj->Description, 30, 195);
         htmlGump->Add(text);
 
-        //!Выключаем обработку HTML-тэгов
+        //! Disable HTML-tag processing
         g_FontManager.SetUseHTML(false);
     }
     else

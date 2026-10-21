@@ -8,7 +8,7 @@
 class CGUIGenericTextEntry : public CGUITextEntry
 {
 public:
-    //!Индекс текста
+    //! Text index
     uint32_t TextID = 0;
 
     CGUIGenericTextEntry(

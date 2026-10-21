@@ -7,22 +7,22 @@
 
 class CGUILine : public CBaseGUI
 {
-    //!Целевая координата по оси X
+    //! Target X coordinate
     int TargetX = 0;
 
-    //!Целевая координата по оси Y
+    //! Target Y coordinate
     int TargetY = 0;
 
-    //!R-компонента цвета
+    //! R color component
     uint8_t ColorR = 0;
 
-    //!G-компонента цвета
+    //! G color component
     uint8_t ColorG = 0;
 
-    //!B-компонента цвета
+    //! B color component
     uint8_t ColorB = 0;
 
-    //!Значение альфа-канала
+    //! Alpha value
     uint8_t ColorA = 0;
 
 public:

@@ -329,7 +329,7 @@ void CGumpSkills::UpdateSkillsSum()
 
 void CGumpSkills::Init()
 {
-    //Свернем все доступные группы
+    // Collapse all available groups
     for (CSkillGroupObject *group = (CSkillGroupObject *)g_SkillGroupManager.m_Groups; group != nullptr; group = (CSkillGroupObject *)group->m_Next)
     group->Maximized = false;
 }
@@ -503,17 +503,17 @@ CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
 {
     index = 0;
 
-    //Получить группу под курсором
+    // Get the group under the cursor
     int mouseY = g_MouseManager.Position.Y;
 
     //mouse.X -= m_X + m_HTMLGump->GetX();
     mouseY -= m_Y + m_HTMLGump->GetY();
 
-    //Если вышли за пределы гампа по оси X
+    // If we left the gump bounds on the X axis
     //if (mouse.X < 0 || mouse.X > m_HTMLGump->Width)
     //	return nullptr; //Exit from bounds on X
 
-    //Если назодимся в пределах гампа по оси Y
+    // If we are within the gump bounds on the Y axis
     if (mouseY >= 0 && mouseY < m_HTMLGump->Height) //Bounds of Y
     {
         int drawY = m_HTMLGump->DataOffset.Y - m_HTMLGump->CurrentOffset.Y;
@@ -542,7 +542,7 @@ CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
         }
     }
 
-    //Ничего не нашлось
+    // Nothing was found
     return nullptr;
 }
 
@@ -640,7 +640,7 @@ void CGumpSkills::OnLeftMouseButtonUp()
 
 void CGumpSkills::GUMP_BUTTON_EVENT_C
 {
-    if (serial == ID_GBS_BUTTON_MINIMIZE) //Сворачиваем гамп
+    if (serial == ID_GBS_BUTTON_MINIMIZE) // Minimize the gump
     {
         Minimized = true;
         Page = 1;
@@ -650,7 +650,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
     {
         LockMoving = !LockMoving;
     }
-    else if (serial == ID_GS_BUTTON_NEW_GROUP) //Создание новой группы
+    else if (serial == ID_GS_BUTTON_NEW_GROUP) // Create a new group
     {
         CSkillGroupObject *group = new CSkillGroupObject();
         group->Name = "New Group";
@@ -662,9 +662,9 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
 
         UpdateGroupPositions();
     }
-    else if (serial >= ID_GS_GROUP_MINIMIZE) //Операции со скиллами
+    else if (serial >= ID_GS_GROUP_MINIMIZE) // Skill operations
     {
-        if (serial >= ID_GS_SKILL_STATE) //Изменение статуса
+        if (serial >= ID_GS_SKILL_STATE) // Change the status
         {
             int index = serial - ID_GS_SKILL_STATE;
 
@@ -709,7 +709,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
                 }
             }
         }
-        else if (serial >= ID_GS_SKILL_BUTTON) //Выбор кнопки для использования скилла
+        else if (serial >= ID_GS_SKILL_BUTTON) // Pick the button that uses the skill
         {
             int index = serial - ID_GS_SKILL_BUTTON;
 
@@ -720,7 +720,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
 
             g_Game.UseSkill(index);
         }
-        else if (serial >= ID_GS_GROUP_MINIMIZE) //Скрыть/раскрыть группу
+        else if (serial >= ID_GS_GROUP_MINIMIZE) // Collapse or expand the group
         {
             int index = serial - ID_GS_GROUP_MINIMIZE;
             int currentIndex = 0;
@@ -752,14 +752,14 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
 
 void CGumpSkills::GUMP_CHECKBOX_EVENT_C
 {
-    if (serial == ID_GS_SHOW_REAL) //Показать реальное значение
+    if (serial == ID_GS_SHOW_REAL) // Show the real value
     {
         m_ShowReal = state;
         m_ShowCap = false;
         m_CheckboxShowCap->Checked = false;
         UpdateSkillValues();
     }
-    else if (serial == ID_GS_SHOW_CAP) //Показать доступный предел прокачки
+    else if (serial == ID_GS_SHOW_CAP) // Show the skill cap
     {
         m_ShowCap = state;
         m_ShowReal = false;
@@ -788,7 +788,7 @@ void CGumpSkills::GUMP_TEXT_ENTRY_EVENT_C
 
 bool CGumpSkills::OnLeftMouseButtonDoubleClick()
 {
-    if (Minimized) //При даблклике по мини-гампу - раскрываем его
+    if (Minimized) // A double click on the mini-gump expands it
     {
         Minimized = false;
         Page = 2;

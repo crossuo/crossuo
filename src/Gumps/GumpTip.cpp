@@ -99,9 +99,9 @@ bool CGumpTip::OnLeftMouseButtonDoubleClick()
 
 void CGumpTip::SendTipRequest(uint8_t flag)
 {
-    //Отправляем запрос диалога Tip/Updates
+    // Send the Tip/Updates dialog request
     CPacketTipRequest((uint16_t)Serial, flag).Send();
 
-    //Удаляем использованный гамп
+    // Remove the consumed gump
     RemoveMark = true;
 }

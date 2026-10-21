@@ -4003,16 +4003,16 @@ void CGumpOptions::ApplyPageChanges()
     {
         case 1: //Sound and Music
         {
-            //Меняем громкость звука эффектам и текущим эффектам
+            // Change the sound-effects volume and the volume of the current effects
             g_ConfigManager.SetSoundVolume(g_OptionsConfig.GetSoundVolume());
 
-            //Меняем громкость звука музыке и текущей музыке
+            // Change the music volume and the volume of the current music
             g_ConfigManager.SetMusicVolume(g_OptionsConfig.GetMusicVolume());
 
-            //Выключаем звук эффектов.
+            // Turn the sound effects off.
             g_ConfigManager.SetSound(g_OptionsConfig.GetSound());
 
-            //Выключаем звук музыки.
+            // Turn the music off.
             g_ConfigManager.SetMusic(g_OptionsConfig.GetMusic());
 
             g_ConfigManager.FootstepsSound = g_OptionsConfig.FootstepsSound;

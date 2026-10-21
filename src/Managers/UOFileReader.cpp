@@ -604,7 +604,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             }
 
             if ((id >= 0x2053 && id <= 0x2062) ||
-                (id >= 0x206A && id <= 0x2079)) //Убираем рамку (если это курсор мышки)
+                (id >= 0x206A && id <= 0x2079)) // remove the border (these are mouse cursor gumps)
             {
                 for (int i = 0; i < width; i++)
                 {

@@ -25,26 +25,26 @@ public:
     bool Loaded = false;
 
 private:
-    //Получить Z координату ландшафта
+    // Get the land Z coordinate
     char GetLandZ(int x, int y, int map);
 
-    //Проверить объект ландшафта на "растягиваемость" при рендере
+    // Check whether the land tile can be stretched at render time
     bool TestStretched(int x, int y, char z, int map, bool recurse);
 
 public:
     CMapBlock(int index);
     virtual ~CMapBlock();
 
-    //Данные блока
+    // Block data
     CMapObject *Block[8][8];
 
-    //Добавить объект
+    // Add an object
     CMapObject *AddObject(CMapObject *obj, int x, int y);
 
-    //Получить указатель на объект ландшафта
+    // Get a pointer to the land object
     CLandObject *GetLand(int x, int y);
 
-    //Добавить объект в очередь рендера
+    // Add the object to the render queue
     void AddRender(CRenderWorldObject *item, int x, int y);
 
     // web streaming: objects AddRender deferred while the block had no
@@ -53,13 +53,13 @@ public:
     // m_Next list). LoadBlock flushes these once the terrain exists.
     std::vector<class CRenderWorldObject *> PendingRender;
 
-    //Получить начало очереди рендера
+    // Get the head of the render queue
     CRenderWorldObject *GetRender(int x, int y);
 
-    //Получить цвет точки для радара
+    // Get the radar pixel color
     uint16_t GetRadarColor(int x, int y);
 
-    //Сконструировать вершины текстур ландшафта
+    // Build the land texture vertices
     void CreateLandTextureRect();
 
     bool HasNoExternalData();

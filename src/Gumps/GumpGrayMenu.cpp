@@ -51,7 +51,7 @@ void CGumpGrayMenu::GUMP_BUTTON_EVENT_C
             }
         }
 
-        //Ничего не выбрали
+        // Nothing was selected
         g_Game.CreateTextMessage(
             TT_SYSTEM, 0xFFFFFFFF, 3, 0x0021, "You must choose the section of menu.");
     }
@@ -59,13 +59,13 @@ void CGumpGrayMenu::GUMP_BUTTON_EVENT_C
 
 void CGumpGrayMenu::SendMenuResponse(int index)
 {
-    //Ответ на меню
+    // Reply to the menu
     CPacketGrayMenuResponse(this, index).Send();
 #if defined(XUO_ASSISTANT)
     // the gray-menu answer reports to the same assistant menu manager
     xuoassist::g_MenuManager.OnMenuChoiceSent(Serial, ID, index);
 #endif
 
-    //Удаляем использованный гамп
+    // Remove the consumed gump
     RemoveMark = true;
 }

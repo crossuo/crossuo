@@ -858,12 +858,12 @@ CPacketTradeResponse::CPacketTradeResponse(CGumpSecureTrading *gump, int code)
     WriteUInt8(0x6F);
     WriteUInt16BE(17);
 
-    if (code == 1) //Закрываем окно
+    if (code == 1) // Close the window
     {
         WriteUInt8(0x01);
         WriteUInt32BE(gump->ID);
     }
-    else if (code == 2) //Ткнули на чекбокс
+    else if (code == 2) // A checkbox was clicked
     {
         WriteUInt8(0x02);
         WriteUInt32BE(gump->ID);

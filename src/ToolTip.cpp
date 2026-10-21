@@ -77,7 +77,7 @@ void CToolTip::Set(const wstr_t &str, int maxWidth)
     Use = !(Timer > g_Ticks);
     CRenderObject *object = g_SelectedObject.Object;
     if (object == m_Object || object == nullptr)
-    { //Уже забиндено или нет объекта для бинда
+    { // Already bound, or no object to bind
         return;
     }
 

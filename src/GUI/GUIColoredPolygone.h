@@ -8,29 +8,29 @@
 class CGUIColoredPolygone : public CGUIPolygonal
 {
 public:
-    //!R-компонента цвета
+    //! R color component
     uint8_t ColorR = 0;
 
-    //!G-компонента цвета
+    //! G color component
     uint8_t ColorG = 0;
 
-    //!B-компонента цвета
+    //! B color component
     uint8_t ColorB = 0;
 
-    //!Значение альфа-канала
+    //! Alpha value
     uint8_t ColorA = 0;
 
-    //!Отрисовывать ли белую точку
+    //! Whether to draw the white dot
     bool DrawDot = false;
 
-    //!Флаг выбора текущей компоненты
+    //! Selection flag of the current component
     bool Focused = false;
 
     CGUIColoredPolygone(
         int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor);
     virtual ~CGUIColoredPolygone();
 
-    //!Обновить цвет
+    //! Update the color
     void UpdateColor(uint16_t color, int polygoneColor);
 
     virtual void Draw(bool checktrans = false);

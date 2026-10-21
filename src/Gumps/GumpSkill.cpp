@@ -7,7 +7,6 @@
 #include "../PressedObject.h"
 #include "../SelectedObject.h"
 #include "../ToolTip.h"
-#include "../Managers/ClilocManager.h"
 #include "../Managers/GumpManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/SkillsManager.h"

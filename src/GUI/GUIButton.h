@@ -8,16 +8,16 @@
 class CGUIButton : public CGUIDrawObject
 {
 public:
-    //!ИД картинки для состояния, когда мышка находится над кнопкой
+    //! Picture ID for the mouse-hover state
     uint16_t GraphicSelected = 0;
 
-    //!ИД картинки для зажатого состояния
+    //! Picture ID for the pressed state
     uint16_t GraphicPressed = 0;
 
-    //!Индекс страницы, если указан -1 то используется событие OnButton для гампа с идентификатором кнопки, если отличное значение - переход на страницу без вызова события
+    //! Page index: -1 fires the gump's OnButton event with the button's ID; any other value switches pages without firing the event
     int ToPage = -1;
 
-    //!Флаг обработки зажатого состояния кнопки каждую итерацию рендера
+    //! Whether to process the button's pressed state on every render iteration
     bool ProcessPressedState = false;
 
     CGUIButton(

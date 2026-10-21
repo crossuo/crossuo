@@ -586,7 +586,7 @@ void CGumpManager::RemoveRangedGumps()
                 {
                     if (g_World->FindWorldObject(gump->Serial) == nullptr)
                     {
-                        RemoveGump(gump); //Или CloseGump() ?
+                        RemoveGump(gump); // Or CloseGump()?
                     }
                     break;
                 }

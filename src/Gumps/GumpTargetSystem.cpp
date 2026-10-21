@@ -33,7 +33,7 @@ bool CGumpTargetSystem::CanBeDisplayed()
 
 void CGumpTargetSystem::PrepareContent()
 {
-    //Если гамп захватили и (может быть) двигают
+    // The gump was captured and is (maybe) being dragged
     /*if (g_Target.IsTargeting())
 	{
 		if (g_GumpMovingOffsetX &&)
@@ -61,7 +61,7 @@ void CGumpTargetSystem::UpdateContent()
 
     if (obj != nullptr)
     {
-        //Вычисляем цвет статусбара
+        // Compute the statusbar color
         uint16_t color = 0;
         CGameCharacter *character = nullptr;
 
@@ -83,7 +83,7 @@ void CGumpTargetSystem::UpdateContent()
             m_DataBox->Add(new CGUIShader(&g_ColorizerShader, true));
         }
 
-        //Гамп статус бара
+        // The statusbar gump
         CGUIGumppic *gumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x0804, 0, 0));
         gumppic->Color = color;
 
@@ -127,11 +127,11 @@ void CGumpTargetSystem::UpdateContent()
             }
         }
     }
-    else //Серенький статус
+    else // The gray statusbar
     {
         m_DataBox->Add(new CGUIShader(&g_ColorizerShader, true));
 
-        //Гамп статус бара
+        // The statusbar gump
         CGUIGumppic *gumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x0804, 0, 0));
         gumppic->Color = 0x0386;
 
@@ -155,7 +155,7 @@ void CGumpTargetSystem::OnLeftMouseDown()
 
     if (g_PressedObject.LeftSerial == 0u)
     {
-        //Проверим, может быть есть таргет, который нужно повесить на данного чара
+        // Check whether there is a pending target cursor to attach to this character
         if (g_Target.IsTargeting())
         {
             g_Target.SendTargetObject(g_NewTargetSystem.Serial);
@@ -193,12 +193,12 @@ bool CGumpTargetSystem::OnLeftMouseButtonDoubleClick()
         {
             if (serial < 0x40000000)
             {
-                g_Game.Attack(serial); //Если в вармоде - атакуем
+                g_Game.Attack(serial); // Attack when in war mode
             }
         }
         else
         {
-            g_Game.DoubleClick(serial); //Или используем предмет
+            g_Game.DoubleClick(serial); // Or use the item
         }
 
         return true;

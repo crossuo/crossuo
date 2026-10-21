@@ -63,7 +63,7 @@ CGumpScreenSelectTown::CGumpScreenSelectTown()
     NoMove = true;
     NoClose = true;
 
-    //!Список точек для отображения кнопок городов
+    //! List of points used to place the town buttons
     m_TownButtonText.push_back(CPoint2Di(105, 130));
     m_TownButtonText.push_back(CPoint2Di(245, 90));
     m_TownButtonText.push_back(CPoint2Di(165, 200));
@@ -104,7 +104,7 @@ void CGumpScreenSelectTown::UpdateContent()
 
     if (city->IsNewCity())
     {
-        //!Получаем строку клилока с описанием города
+        //! Get the cliloc string describing the town
         description = g_ClilocManager.Cliloc(g_Language)->GetW(((CCityItemNew *)city)->Cliloc);
         map = ((CCityItemNew *)city)->MapIndex;
     }
@@ -136,13 +136,13 @@ void CGumpScreenSelectTown::UpdateContent()
     m_HTMLGump = (CGUIHTMLGump *)Add(
         new CGUIHTMLGump(ID_STS_HTML_GUMP, 0x0BB8, 452, 60, 175, 367, true, true));
 
-    //!Используем обработку HTML-тэгов при создании текстуры текста
+    //! Enable HTML-tag processing when creating the text texture
     g_FontManager.SetUseHTML(true);
 
     m_Description = (CGUIText *)m_HTMLGump->Add(new CGUIText(0, 3, 3));
     m_Description->CreateTextureW(1, description, 30, 150);
 
-    //!Выключаем обработку HTML-тэгов
+    //! Disable HTML-tag processing
     g_FontManager.SetUseHTML(false);
 
     m_HTMLGump->CalculateDataSize();

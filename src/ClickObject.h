@@ -26,4 +26,4 @@ public:
     void Init(CRenderObject *obj, CGump *gump = nullptr);
 };
 
-extern CClickObject g_ClickObject; //Ссылка на объект клика
+extern CClickObject g_ClickObject; // Reference to the clicked object

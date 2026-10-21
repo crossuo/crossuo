@@ -11,28 +11,28 @@
 class CGUICheckbox : public CGUIDrawObject
 {
 public:
-    //!ИД картинки в нажатом состоянии
+    //! Picture ID in the pressed state
     uint16_t GraphicChecked = 0;
 
-    //!ИД картинки в выбранном состоянии
+    //! Picture ID in the checked state
     uint16_t GraphicSelected = 0;
 
-    //!ИД картинки в отключенном состоянии
+    //! Picture ID in the disabled state
     uint16_t GraphicDisabled = 0;
 
-    //!Состояние компоненты
+    //! Component state
     bool Checked = false;
 
-    //!Позиция текста
+    //! Text position
     SLIDER_TEXT_POSITION TextPosition = STP_RIGHT;
 
-    //!Координата текста по оси X
+    //! Text X coordinate
     int TextX = 0;
 
-    //!Координата текста по оси Y
+    //! Text Y coordinate
     int TextY = 0;
 
-    //!Стандартное смещение текста
+    //! Default text offset
     int DefaultTextOffset = 2;
 
 protected:
@@ -50,7 +50,7 @@ public:
         int y);
     virtual ~CGUICheckbox();
 
-    //!Установить текст
+    //! Set the text
     void SetTextParameters(
         uint8_t font,
         const wstr_t &text,

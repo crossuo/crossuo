@@ -8,7 +8,7 @@
 class CGUIHTMLButton : public CGUIButton
 {
 private:
-    //!Ссылка на гамп-родитель
+    //! Reference to the parent gump
     class CGUIHTMLGump *m_HTMLGump{ nullptr };
 
 public:
@@ -24,7 +24,7 @@ public:
 
     virtual void SetShaderMode();
 
-    //!Обработка прокрутки
+    //! Scroll handling
     void Scroll(bool up, int delay);
 
     virtual bool IsControlHTML() { return true; }

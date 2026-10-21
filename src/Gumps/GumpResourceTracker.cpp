@@ -20,7 +20,6 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../CrossUO.h"
 #include "../Utility/PerfMarker.h"
-#include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
 
 static constexpr int GRID_SIZE = 20;

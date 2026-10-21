@@ -9,62 +9,62 @@
 class CGUIMinMaxButtons : public CBaseGUI
 {
 public:
-    //!Минимальное значение
+    //! Minimum value
     int MinValue = 0;
 
-    //!Максимальное значение
+    //! Maximum value
     int MaxValue = 0;
 
-    //!Текущее значение
+    //! Current value
     int Value = 0;
 
-    //!Имеет текст
+    //! Has text
     bool HaveText = false;
 
-    //!Позиция текста
+    //! Text position
     SLIDER_TEXT_POSITION TextPosition = STP_RIGHT;
 
-    //!Шрифт текста
+    //! Text font
     uint8_t Font = 0;
 
-    //!Цвет текста
+    //! Text color
     uint16_t TextColor = 0;
 
-    //!Юникод текст
+    //! Unicode text
     bool Unicode = true;
 
-    //!Ширина текста
+    //! Text width
     int TextWidth = 0;
 
-    //!Ориентация текста
+    //! Text orientation
     TEXT_ALIGN_TYPE Align = TS_LEFT;
 
-    //!Флаги текста
+    //! Text flags
     uint16_t TextFlags = 0;
 
-    //!Координата текста по оси X
+    //! Text X coordinate
     int TextX = 0;
 
-    //!Координата текста по оси Y
+    //! Text Y coordinate
     int TextY = 0;
 
-    //!Базовый шаг смещения
+    //! Base offset step
     int BaseScrollStep = 1;
 
-    //!Текущий шаг смещения
+    //! Current offset step
     int ScrollStep = 1;
 
-    //!Время последней итерации прокрутки
+    //! Time of the last scroll iteration
     uint32_t LastScrollTime = 0;
 
-    //!Стандартное смещение текста
+    //! Default text offset
     int DefaultTextOffset = 2;
 
 private:
-    //!Текстура текста
+    //! Text texture
     CTextSprite Text;
 
-    //!Метод прокрутки (NoScroll/Max/Min)
+    //! Scroll method (NoScroll/Max/Min)
     int m_ScrollMode{ 0 };
 
 public:
@@ -76,16 +76,16 @@ public:
 
     virtual CSize GetSize() { return CSize(36, 18); }
 
-    //Прокрутка
+    // Scroll
     virtual void Scroll(int delay);
 
-    //Нажатие
+    // Press
     virtual void OnClick();
 
-    //!Обновить текст
+    //! Update the text
     void UpdateText();
 
-    //!Установить параметры текста
+    //! Set the text parameters
     void SetTextParameters(
         bool haveText,
         SLIDER_TEXT_POSITION textPosition,

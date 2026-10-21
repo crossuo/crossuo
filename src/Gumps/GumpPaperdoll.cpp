@@ -922,7 +922,7 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
         return;
     }
 
-    //Что-то в руке
+    // Something in hand
     if (((serial == 0u) || serial >= ID_GP_ITEMS) && g_ObjectInHand.Enabled)
     {
         int layer = serial - ID_GP_ITEMS;
@@ -936,7 +936,7 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
 
         if (canWear && container != nullptr)
         {
-            if (layer == OL_BACKPACK) //Ткнули на пак
+            if (layer == OL_BACKPACK) // The pack was clicked
             {
                 CGameItem *equipment = container->FindLayer(layer);
 
@@ -959,11 +959,11 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
                     return;
                 }
             }
-            else if (IsWearable(g_ObjectInHand.TiledataPtr->Flags)) //Можно одевать
+            else if (IsWearable(g_ObjectInHand.TiledataPtr->Flags)) // Wearable
             {
                 CGameItem *equipment = container->FindLayer(g_ObjectInHand.TiledataPtr->Layer);
 
-                if (equipment == nullptr) //На этом слое ничего нет
+                if (equipment == nullptr) // Nothing on this layer
                 {
                     if (Serial != g_PlayerSerial)
                     {

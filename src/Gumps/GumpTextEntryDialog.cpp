@@ -172,12 +172,12 @@ void CGumpTextEntryDialog::OnKeyDown(const KeyEvent &ev)
 void CGumpTextEntryDialog::SendTextEntryDialogResponse(bool mode)
 {
     if (!RemoveMark &&
-        m_Entry != nullptr) //Непредвиденная ошибка при отсутствии поля ввода текста в гампе
+        m_Entry != nullptr) // Unexpected error: the gump has no text-entry field
     {
-        //Отправляем ответ на ентри диалог
+        // Send the reply to the dialog's text entry
         CPacketTextEntryDialogResponse(this, &m_Entry->m_Entry, mode).Send();
     }
 
-    //Удаляем использованный гамп
+    // Remove the consumed gump
     RemoveMark = true;
 }

@@ -619,7 +619,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
         walkTime = TURN_DELAY_FAST;
     }
 
-    if ((oldDirection & 7) == (direction & 7)) //Повернуты куда надо
+    if ((oldDirection & 7) == (direction & 7)) // Already facing the right way
     {
         uint8_t newDir = direction;
         int newX = x;
@@ -759,7 +759,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     static int lastDelta = 0;
     static int lastStepTime = 0;
 
-    //Высчитываем актуальную дельту с помощью разници во времени между прошлым и текущим шагом.
+    // Compute the current delta from the time difference between the previous and the current step.
     int nowDelta = 0;
 
     if (lastDir == direction && lastMount == onMount && lastRun == run)

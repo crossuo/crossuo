@@ -9,14 +9,14 @@ class CGump;
 
 class CGUIScissor : public CGUIPolygonal
 {
-    //!Координата компоненты по оси X контейнера, в котором находится элемент, относительно начала гампа
+    //! X coordinate of the component inside the container the element lives in, relative to the gump origin
     int BaseX = 0;
 
-    //!Координата компоненты по оси Y контейнера, в котором находится элемент, относительно начала гампа
+    //! Y coordinate of the component inside the container the element lives in, relative to the gump origin
     int BaseY = 0;
 
 public:
-    //!Гамп-родитель
+    //! Parent gump
     CGump *GumpParent = nullptr;
 
     CGUIScissor(

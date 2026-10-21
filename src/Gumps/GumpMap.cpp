@@ -177,7 +177,7 @@ void CGumpMap::PrepareContent()
             serial++;
         }
 
-        //Если окошко захвачено для перемещения - вычислим оффсеты
+        // If the window is captured for dragging, compute the offsets
         if (g_PressedObject.LeftGump == this && g_PressedObject.LeftObject != nullptr &&
             (m_PlotState != 0))
         {

@@ -139,7 +139,7 @@ void CGumpGeneric::AddText(
 
 void CGumpGeneric::SendGumpResponse(int index)
 {
-    //Ответ на гамп
+    // Reply to the gump
     CPacketGumpResponse(this, index).Send();
 #if defined(XUO_ASSISTANT)
     // the recorded id is the
@@ -148,7 +148,7 @@ void CGumpGeneric::SendGumpResponse(int index)
         Serial, (MasterGump != 0u) ? MasterGump : ID, index);
 #endif
 
-    //Удаляем использованный гамп
+    // Remove the consumed gump
     RemoveMark = true;
 }
 
@@ -172,7 +172,7 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
     if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI() &&
         ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_VIRTUE_GUMP)
     {
-        //Ответ на гамп
+        // Reply to the gump
         CPacketVirtueGumpResponse(this, g_PressedObject.LeftSerial).Send();
 #if defined(XUO_ASSISTANT)
         // the virtue answer reports to the assistant gump manager
@@ -180,7 +180,7 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
             Serial, 0x000001CD, g_PressedObject.LeftSerial);
 #endif
 
-        //Удаляем использованный гамп
+        // Remove the consumed gump
         RemoveMark = true;
 
         return true;

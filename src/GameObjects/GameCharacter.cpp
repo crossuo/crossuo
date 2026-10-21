@@ -67,7 +67,7 @@ CGameCharacter::CGameCharacter(int serial)
 
 CGameCharacter::~CGameCharacter()
 {
-    //!Чистим память
+    //! Free the memory
     m_Steps.clear();
 
     m_HitsTexture.Clear();
@@ -80,18 +80,18 @@ CGameCharacter::~CGameCharacter()
     }
     else
     {
-        //!Если стянут статусбар - обновим его
+        //! If a statusbar is pulled up for this character, update it
         g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     }
 
-    //!Если стянут статусбар таргет системы - обновим его
+    //! If a target-system statusbar is pulled up for this character, update it
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
 
     if (!IsPlayer())
     {
         g_GumpManager.CloseGump(serial, 0, GT_PAPERDOLL);
     }
-    //Чистим если находился в пати.
+    // Clean up if the character was in a party.
     if (g_Party.Contains(serial))
     {
         for (int i = 0; i < 10; i++)
@@ -1154,7 +1154,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
             AnimIndex = 0;
         }
 
-        //!Глюченный дельфин на всех клиентах
+        //! Buggy dolphin on all clients (the graphic index is shifted by one)
         if (graphic == 151)
         {
             result++;

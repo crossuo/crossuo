@@ -1208,7 +1208,7 @@ bool CFileManager::LoadWithUop()
         Warning(Data, "LoadWithUop: animdata.mul missing (line 6) - tolerated");
     }
 
-    /* Эти файлы не используются самой последней версией клиента 7.0.52.2
+    /* These files are not used by the latest client version, 7.0.52.2
 	if (!m_tileart.Load(UOFilePath("tileart.uop")))
 	Warning(Data, "LoadWithUop: required pack/mul missing (line 7)");
 	return false;

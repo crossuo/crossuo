@@ -3,7 +3,6 @@
 
 #include "Gump.h"
 #include <algorithm> // std::max
-#include <cstdlib>   // XUO_GUMP_LEGACY
 #include "../CrossUO.h"
 #include "../Point.h"
 #include "../PressedObject.h"

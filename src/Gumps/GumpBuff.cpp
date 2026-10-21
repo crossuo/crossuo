@@ -412,7 +412,7 @@ void CGumpBuff::UpdateContent()
         }
     }
 
-    //Выключение прозрачности в задницу очереди
+    // Disable transparency and move the gump to the back of the queue
     if (gui != nullptr)
     {
         MoveToBack(gui);

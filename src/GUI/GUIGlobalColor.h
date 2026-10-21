@@ -7,16 +7,16 @@
 
 class CGUIGlobalColor : public CBaseGUI
 {
-    //!R компонента цвета
+    //! R color component
     float R = 0.0f;
 
-    //!G компонента цвета
+    //! G color component
     float G = 0.0f;
 
-    //!B компонента цвета
+    //! B color component
     float B = 0.0f;
 
-    //!A компонента цвета
+    //! A color component
     float A = 0.0f;
 
 public:

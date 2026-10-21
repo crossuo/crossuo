@@ -137,12 +137,12 @@ void CSkillsManager::Use(const astr_t &name)
 
 bool CSkillsManager::CompareName(const astr_t &str1, const astr_t &str2)
 {
-    //Вычисляем минимальную длину строки для сравнения
+    // Compute the minimum string length to compare
     const auto len = (int)std::min(str1.length(), str2.length());
 
     bool result = false;
 
-    //Пройдемся по всем символам этой строки, сравнивая их друг с другом
+    // Walk every character of the string, comparing them pairwise
     for (int i = 0; i < len; i++)
     {
         char c1 = str1.at(i);
@@ -158,7 +158,7 @@ bool CSkillsManager::CompareName(const astr_t &str1, const astr_t &str2)
         }
     }
 
-    //Вернем что получилось
+    // Return the result
     return result;
 }
 
@@ -167,28 +167,28 @@ void CSkillsManager::Sort()
     m_SortedTable.resize(Count, 0xFF);
     std::vector<uint8_t> bufTable(Count, 0xFF);
 
-    //Установим первый элемент нулем и количество обработанных навыков - 1
+    // Set the first element to zero and the processed-skill count to 1
     int parsed = 1;
     bufTable[0] = 0;
 
-    //Пройдемся по всем нвыкам (кроме первого)
+    // Walk all skills (except the first)
     for (uint32_t i = 1; i < Count; i++)
     {
-        //Пройдемся по обработанным
+        // Walk the processed entries
         for (int j = 0; j < parsed; j++)
         {
-            //Если можно вставить в текущую позицию -
+            // If it can be inserted at the current position:
             if (CompareName(m_Skills[bufTable[j]].Name, m_Skills[i].Name))
             {
-                //Запомним индекс навыка
+                // Remember the skill index
                 uint8_t buf = bufTable[j];
-                //Перезапишем
+                // Overwrite it
                 bufTable[j] = (uint8_t)i;
 
-                //К следующему навыку
+                // Move to the next skill
                 j++;
 
-                //Посмотрим остальные обработанные и перезапишем индекс при необходимости
+                // Walk the remaining processed entries, shifting indexes as needed
                 for (; j < parsed; j++)
                 {
                     uint8_t ptr = bufTable[j];
@@ -196,10 +196,10 @@ void CSkillsManager::Sort()
                     buf = ptr;
                 }
 
-                //Запишем индекс в текущий обработанный
+                // Write the index into the current processed entry
                 bufTable[parsed] = buf;
 
-                //Увеличиваем счетчик
+                // Increment the counter
                 parsed++;
 
                 break;

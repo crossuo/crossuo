@@ -13,24 +13,24 @@ public:
     CVector(double x = 0, double y = 0, double z = 0);
     ~CVector(){};
 
-    //Копирование векторов
+    // Copying vectors
     void Link(const CVector &v);
 
-    //Изменение координат
+    // Changing coordinates
     void Link(double x, double y, double z);
 
-    //Складывание векторов
+    // Adding vectors
     void Add(const CVector &v);
 
-    //Складывание координат
+    // Adding coordinates
     void Add(double x, double y, double z);
 
-    //Слияние векторов
+    // Merging vectors
     void Merge(const CVector &v);
 
-    //Слияние координат
+    // Merging coordinates
     void Merge(double x, double y, double z);
 
-    //Нормализация
+    // Normalization
     void Normalize();
 };

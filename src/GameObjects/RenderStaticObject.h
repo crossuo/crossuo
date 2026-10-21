@@ -21,7 +21,7 @@ public:
     uint16_t RenderColor = 0;
 
 protected:
-    //Указатель на структуру данных тайлдаты
+    // Pointer to the tiledata structure
     MulStaticTile2 *m_TiledataPtr{ nullptr };
 
 public:
@@ -35,37 +35,37 @@ public:
         char z);
     virtual ~CRenderStaticObject();
 
-    CTextContainer *m_TextControl{ nullptr }; //Ссылка на контейнер для текста
+    CTextContainer *m_TextControl{ nullptr }; // Reference to the text container
 
     virtual void UpdateTextCoordinates();
     virtual void FixTextCoordinates();
 
     static bool IsNoDrawTile(uint16_t graphic);
 
-    //Отрисовать объект
+    // Draw the object
     virtual void Draw(int x, int y);
 
-    //Выбрать объект
+    // Select the object
     virtual void Select(int x, int y);
 
-    //Добавить текст в контейнер
+    // Add text to the container
     virtual void AddText(CTextData *msg);
 
-    //Проверка прозрачности (для круга прозрачности)
+    // Transparency check (for the circle of transparency)
     virtual bool TranparentTest(int playerZPlus5);
 
-    //Проверка, может ли текст быть прозрачным
+    // Check whether the text can be transparent
     bool TextCanBeTransparent(CRenderTextObject *text);
 
     MulStaticTile2 *GetStaticData() { return m_TiledataPtr; }
 
-    //Получить высоту объекта (по данным из тайлдаты)
+    // Get the object height (from the tiledata)
     uint8_t GetStaticHeight() { return m_TiledataPtr->Height; }
 
-    //Получить индекс света
+    // Get the light index
     uint16_t GetLightID() { return m_TiledataPtr->Layer /*LightIndex*/; } //m_TiledataPtr->Layer
 
-    //Стандартные состояния по флагам из тайлдаты (вердаты)
+    // Standard states derived from the tiledata (verdata) flags
     bool IsBackground() { return (m_TiledataPtr->Flags & 0x00000001) != 0; }
     bool IsWeapon() { return (m_TiledataPtr->Flags & 0x00000002) != 0; }
     bool IsTransparent() { return (m_TiledataPtr->Flags & 0x00000004) != 0; }
@@ -111,7 +111,7 @@ public:
     // PlayOnce = 0x80,
     // MultiMovable = 0x0100,
 
-    //Это объект группы объектов статики
+    // This object groups static objects
     bool IsStaticGroupObject() { return true; }
 
     virtual CRenderStaticObject *StaticGroupObjectPtr() { return this; }

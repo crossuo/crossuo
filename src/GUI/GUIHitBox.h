@@ -8,7 +8,7 @@
 class CGUIHitBox : public CGUIPolygonal
 {
 public:
-    //!Индекс страницы для перемещения (если используется, по фукнционалу CGUIButton)
+    //! Page index to move to (when used, functionally like CGUIButton)
     int ToPage = -1;
 
     CGUIHitBox(int serial, int x, int y, int width, int height, bool callOnMouseUp = false);

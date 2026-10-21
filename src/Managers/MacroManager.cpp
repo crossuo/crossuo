@@ -1396,7 +1396,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         case MC_BANDAGE_SELF:
         case MC_BANDAGE_TARGET:
         {
-            //На самом деле с 5.0.4a
+            // The real client gate is 5.0.4a
             if (g_Config.ClientVersion < CV_5020)
             {
                 if (WaitingBandageTarget)

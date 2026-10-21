@@ -209,7 +209,7 @@ protected:
 
     HANDLER_PACKET(Swing);
 
-    //Не обработаны
+    // Unhandled
     /*
 0x15 BMSG("Follow", 0x09),
 0x2F RMSG("Combat Notification", 0x0a),

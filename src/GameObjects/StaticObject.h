@@ -7,7 +7,7 @@
 
 class CStaticObject : public CRenderStaticObject
 {
-    //Оригинальный индекс картинки
+    // Original picture index
     uint16_t OriginalGraphic = 0;
 
 public:
@@ -16,12 +16,12 @@ public:
 
     virtual void UpdateGraphicBySeason();
 
-    //Отрисовать объект
+    // Draw the object
     virtual void Draw(int x, int y);
 
-    //Выбрать объект
+    // Select the object
     virtual void Select(int x, int y);
 
-    //Это объект статики
+    // This is a static object
     bool IsStaticObject() { return true; }
 };

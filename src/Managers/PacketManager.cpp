@@ -1824,7 +1824,7 @@ PACKET_HANDLER(UpdateItemSA)
             unknown2);
     }
     else if (*Start == 0xF7)
-    { //из пакета 0xF7 для игрока определенная обработка
+    { // packet 0xF7 routes the player to dedicated handling
         g_World->UpdatePlayer(
             serial, graphic, graphicIncrement, color, flags, x, y, 0 /*serverID*/, direction, z);
     }
@@ -5171,7 +5171,7 @@ PACKET_HANDLER(DragAnimation)
 
     uint8_t speed = 5;
 
-    if ((sourceSerial == 0u) || (destSerial == 0u)) //Игрок/НПС кладет предмет в контейнер
+    if ((sourceSerial == 0u) || (destSerial == 0u)) // A player or NPC puts an item into a container
     {
         effect = new CGameEffectMoving();
         effect->EffectType = EF_MOVING;
@@ -5179,7 +5179,7 @@ PACKET_HANDLER(DragAnimation)
 
         ((CGameEffectMoving *)effect)->MoveDelay = 20 / speed;
     }
-    else //Предмет взяли из контейнера
+    else // The item was taken out of the container
     {
         effect = new CGameEffectDrag();
         effect->EffectType = EF_DRAG;
@@ -6338,7 +6338,7 @@ PACKET_HANDLER(OpenMenu)
         htmlGump->Add(new CGUIShader(&g_ColorizerShader, false));
         htmlGump->CalculateDataSize();
         gump->m_TextObject = (CGUIText *)gump->Add(new CGUIText(0x0386, 42, 105));
-        //gump->m_TextObject->CreateTextureA(1, name, 200, TS_LEFT, UOFONT_FIXED); //На данный момнт создавать нечего
+        //gump->m_TextObject->CreateTextureA(1, name, 200, TS_LEFT, UOFONT_FIXED); // Nothing to create at the moment
         g_GumpManager.AddGump(gump);
     }
     else //gray menu
@@ -7178,7 +7178,7 @@ PACKET_HANDLER(DisplayMap)
     // facet the player currently occupies (0xF5 overrides it below)
     gump->Facet = (g_Player != nullptr ? g_Player->MapIndex : 0);
 
-    if (*Start == 0xF5 || g_Config.ProtocolClientVersion >= CV_308Z) //308z или выше?
+    if (*Start == 0xF5 || g_Config.ProtocolClientVersion >= CV_308Z) // 308z or higher?
     {
         uint16_t facet = 0;
 

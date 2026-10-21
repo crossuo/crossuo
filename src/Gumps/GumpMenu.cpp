@@ -65,13 +65,13 @@ bool CGumpMenu::OnLeftMouseButtonDoubleClick()
 
 void CGumpMenu::SendMenuResponse(int index)
 {
-    //Ответ на меню
+    // Reply to the menu
     CPacketMenuResponse(this, index).Send();
 #if defined(XUO_ASSISTANT)
     // the menu-choice report to the assistant menu manager
     xuoassist::g_MenuManager.OnMenuChoiceSent(Serial, ID, index);
 #endif
 
-    //Удаляем использованный гамп
+    // Remove the consumed gump
     RemoveMark = true;
 }

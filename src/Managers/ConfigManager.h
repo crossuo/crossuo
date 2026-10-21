@@ -228,17 +228,17 @@ public:
 
     void Init();
 
-    //!Проставление значений по-умолчанию
+    //! Set the default values
     void DefaultPage1();
     void DefaultPage2();
     void DefaultPage3();
     void DefaultPage4();
-    //5 нету
+    // no page 5
     void DefaultPage6();
     void DefaultPage7();
     void DefaultPage8();
     void DefaultPage9();
-    //10 нету
+    // no page 10
 
     void UpdateFeatures();
     uint16_t GetColorByNotoriety(uint8_t notoriety);

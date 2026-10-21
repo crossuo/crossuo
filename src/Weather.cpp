@@ -95,7 +95,7 @@ void CWeather::Draw(int x, int y)
 
     uint32_t passed = g_Ticks - LastTick;
 
-    if (passed > 7000) // если времени слишком много прошло со старой симуляции
+    if (passed > 7000) // if too much time has passed since the previous simulation tick
     {
         LastTick = g_Ticks;
         passed = 25;
@@ -107,7 +107,7 @@ void CWeather::Draw(int x, int y)
     {
         if (WindTimer == 0u)
         {
-            windChanged = true; //Для установки стартовых значений снежинок
+            windChanged = true; // to set the initial values of the snowflakes
         }
 
         WindTimer = g_Ticks + (RandomIntMinMax(7, 13) * 1000);
@@ -210,9 +210,9 @@ void CWeather::Draw(int x, int y)
 
                 if (windChanged)
                 {
-                    // вычисление угла скорости в градусах
+                    // compute the velocity angle in degrees
                     effect->SpeedAngle = rad2degf(atan2f(effect->SpeedX, effect->SpeedY));
-                    // числинное значение скорости
+                    // the numeric magnitude of the speed
                     effect->SpeedMagnitude =
                         sqrtf(powf(effect->SpeedX, 2) + powf(effect->SpeedY, 2));
                 }
@@ -220,14 +220,14 @@ void CWeather::Draw(int x, int y)
                 float speed_angle = effect->SpeedAngle;
                 float speed_magnitude = effect->SpeedMagnitude;
 
-                // коэффицент скейлирования (используеться для рандомизации скорости снега)
+                // scaling coefficient (used to randomize the snow speed)
                 speed_magnitude += effect->ScaleRatio;
 
-                // тут движение УГЛА силы по синусоиде, ID() снежинки добавляется для смещения фазы
-                // хотя там можно заюзать любое постоянное число, например, порядковый номер снежинки
+                // the force ANGLE oscillates on a sine wave; the snowflake's ID() offsets the phase
+                // any constant would do here, e.g. the snowflake's ordinal number
                 speed_angle += SinOscillate(0.4f, 20, g_Ticks + effect->ID);
 
-                // обратная проекция на оси X, Y из угла и (скалярного) значения
+                // back-project onto the X/Y axes from the angle and the (scalar) magnitude
                 effect->SpeedX = speed_magnitude * sinf(deg2radf(speed_angle));
                 effect->SpeedY = speed_magnitude * cosf(deg2radf(speed_angle));
 

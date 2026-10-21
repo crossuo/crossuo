@@ -7,13 +7,13 @@
 
 class CGUIComboBox : public CBaseGUI
 {
-    //!ИД картинки в развернутом состоянии
+    //! Picture ID in the expanded state
     uint16_t OpenGraphic = 0;
 
-    //!Флаг составного фона, если включено - используются повторяющиеся картинки (5 штук) m_OpenGraphic, в выключенном состоянии выводит Resizepic из m_OpenGraphic
+    //! Compound-background flag: when set, five repeated m_OpenGraphic tiles are drawn; when clear, a Resizepic built from m_OpenGraphic
     bool CompositeBackground = false;
 
-    //!Количество отображаемых строк в открытом списке
+    //! Number of visible rows in the open list
 protected:
     int m_ShowItemsCount = 0;
 
@@ -21,53 +21,53 @@ public:
     int GetShowItemsCount() { return m_ShowItemsCount; };
     void SetShowItemsCount(int val);
 
-    //!Ширина в свернутом состоянии (только для отрисовки Resizepic)
+    //! Width in the collapsed state (used only for the Resizepic)
     int Width = 0;
 
-    //!Ширина в развернутом состоянии (только для отрисовки Resizepic)
+    //! Width in the expanded state (used only for the Resizepic)
     int OpenedWidth = 0;
 
-    //!Стартовый индекс для отображения в развернутом состоянии
+    //! Start index to display in the expanded state
     int StartIndex = 0;
 
-    //!Текущий выбранный индекс
+    //! Currently selected index
     int SelectedIndex = -1;
 
-    //!Направление скроллинга (вычисляется в Select())
+    //! Scrolling direction (computed in Select())
     int ListingDirection = 0;
 
-    //!Таймер скроллинга
+    //! Scrolling timer
     uint32_t ListingTimer = 0;
 
-    //!Центрировать развернутое состояние по оси Y
+    //! Center the expanded state on the Y axis
     bool ShowMaximizedCenter = false;
 
-    //!Смещение текста для отображения
+    //! Text offset for display
     int TextOffsetY = 0;
 
 private:
-    //!Получить указатель на первый объект отображения
+    //! Get a pointer to the first display object
     CBaseGUI *SkipToStart();
 
-    //!Позиция стрелки вниз (в свернутом состоянии)
+    //! Down-arrow position (collapsed state)
     int m_MinimizedArrowX{ 0 };
 
-    //!Позиция стрелки вниз
+    //! Down-arrow position
     int m_ArrowX{ 0 };
 
-    //!Смещение по оси Y
+    //! Y offset
     int m_OffsetY{ 0 };
 
-    //!Шаг по оси Y
+    //! Y step
     int m_StepY{ 0 };
 
-    //!Рабочая ширина
+    //! Working width
     int m_WorkWidth{ 0 };
 
-    //!Рабочая высота
+    //! Working height
     int m_WorkHeight{ 0 };
 
-    //!Выводимый в свернутом состоянии текст
+    //! Text shown in the collapsed state
     class CGUIText *Text{ nullptr };
 
 public:
@@ -83,10 +83,10 @@ public:
         bool showMaximizedCenter);
     virtual ~CGUIComboBox();
 
-    //!Установить текст
+    //! Set the text
     void SetText(class CGUIText *text) { Text = text; }
 
-    //!Пересчитать ширину
+    //! Recalculate the width
     void RecalculateWidth();
 
     virtual CSize GetSize();
@@ -96,9 +96,9 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 
-    //!Получить ссылку на выбранный элемент списка (или на самого себя)
+    //! Get a reference to the selected list item (or to this object)
     CBaseGUI *SelectedItem();
 
-    //!Получить индекс выбранного элемента, -1 если ничего не выбрано
+    //! Get the selected item's index, -1 if nothing is selected
     int IsSelectedItem();
 };

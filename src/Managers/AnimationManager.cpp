@@ -674,7 +674,7 @@ void CAnimationManager::Draw(
             if (!obj->NPC)
             {
                 float itemsEndY = (float)(y + spr->Height);
-                //Определяем соотношение верхней части текстуры, до перелома.
+                // Compute the upper part's ratio, up to the waist break.
                 if (y >= m_StartCharacterWaistY)
                 {
                     h3mod = 0;
@@ -693,7 +693,7 @@ void CAnimationManager::Draw(
                     }
                 }
 
-                //Определяем соотношение средней части, где идет деформация с растягиванием по Х.
+                // Compute the middle part's ratio, where the deformation stretches along X.
                 if (m_StartCharacterWaistY >= itemsEndY || y >= m_StartCharacterKneesY)
                 {
                     h6mod = 0;
@@ -725,7 +725,7 @@ void CAnimationManager::Draw(
                     }
                 }
 
-                //Определяем соотношение нижней части, она смещена на 8 Х.
+                // Compute the lower part's ratio; it is offset by 8 in X.
                 if (itemsEndY <= m_StartCharacterKneesY)
                 {
                     h9mod = 0;
@@ -1160,7 +1160,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             {
                 if ((ro->Graphic & 0x3FFF) == sittingData.Graphic)
                 {
-                    //оффсеты для ножниц
+                    // scissor-test offsets
                     int xOffset = mirror ? -20 : 0;
                     int yOffset = -70;
 
