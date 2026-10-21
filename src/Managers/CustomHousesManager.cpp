@@ -6,7 +6,6 @@
 #include <xuocore/text_parser.h>
 #include <common/str.h>
 #include <string>
-#include "../Wisp/WispBinaryFileWriter.h" // Wisp::CBinaryFileWriter
 #include "../Gumps/GumpCustomHouse.h"
 #include "../GameObjects/GameItem.h"
 

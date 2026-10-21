@@ -7,7 +7,6 @@ set(wisp_src
   Wisp/WispPacketReader.cpp
   Wisp/WispThread.cpp
   Wisp/WispWindow.cpp
-  Wisp/WispBinaryFileWriter.cpp
   Wisp/WispPacketMessage.cpp
 )
 
