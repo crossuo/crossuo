@@ -1867,7 +1867,7 @@ bool CFileManager::IsMulFileOpen(int idx) const
     // carries them as streamable (native checks the mapped image here)
     if (idx >= 2)
     {
-        const char *name = anim_mul_stream_name(idx);
+        const char *name = anim_mul_file_name(idx);
         return name != nullptr && vfs_stream_file_available(name);
     }
 #endif
@@ -1885,7 +1885,7 @@ uint8_t *CFileManager::MulReadAnimationData(const AnimationDirection &direction)
     // once the streamed file is complete; null (the same "no data" the
     // mapped guard below yields) while it is cold or still streaming.
     uint8_t *result = nullptr;
-    if (const char *name = anim_mul_stream_name(direction.FileIndex))
+    if (const char *name = anim_mul_file_name(direction.FileIndex))
     {
         const uint8_t *window =
             vfs_stream_file_read(name, size_t(direction.Address), direction.Size);
