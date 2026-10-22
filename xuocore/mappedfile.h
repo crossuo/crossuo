@@ -188,7 +188,7 @@ struct CDataReader
 #endif
     // window pointer valid for the next `need` bytes at the cursor (null
     // when the span leaves the file); the cursor does not move
-    const uint8_t *WindowPtr(size_t need) const
+    const uint8_t *WindowPtr(size_t need)
     {
 #if defined(XUO_EMSC)
         if (FileBacked)
@@ -199,7 +199,7 @@ struct CDataReader
         return (Ptr != nullptr && size_t(End - Ptr) >= need) ? Ptr : nullptr;
     }
     // single byte peek at the cursor (0 past the end)
-    uint8_t WindowByte() const
+    uint8_t WindowByte()
     {
 #if defined(XUO_EMSC)
         if (FileBacked)
@@ -293,7 +293,7 @@ struct CDataReader
 #endif
         Ptr = Start;
     }
-    bool IsEOF() const
+    bool IsEOF()
     {
 #if defined(XUO_EMSC)
         if (FileBacked)

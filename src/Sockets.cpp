@@ -2,12 +2,10 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Sockets.h"
-#include <sys/time.h> // struct timeval (public header; glibc-internal bits/ is not portable)
 #include <cassert>
 #include <common/str.h>
 #include <cstdint>
 #include <string.h>
-#include <sys/select.h>
 
 #define SOCKET_LOG(...)
 #define SOCKET_DUMP(...)
