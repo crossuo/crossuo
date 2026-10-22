@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
-#include "external/gfx/GL/glcorearb.h"
 #if defined(USE_GL3) || defined(USE_GLES)
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/GLTextureTracker.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
 #include <assert.h>
