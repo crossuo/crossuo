@@ -291,7 +291,7 @@ CSpellManager::~CSpellManager() {}
 CSpellManager g_SpellManager;
 void CSpellManager::Cast(const astr_t &) {}
 void CSpellManager::CastIndex(int) {}
-void CSpellManager::TargetCast(const astr_t &, const uint32_t &) {}
+void CSpellManager::TargetCast(const astr_t &, const uint32_t &) const {}
 
 // CTextCommandManager is the REAL implementation here (core/textcommandmanager.cpp,
 // compiled without XUO_ASSISTANT_HARNESS): RunCommand is how Client.* calls
