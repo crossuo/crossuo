@@ -862,6 +862,13 @@ static void AutoHelpTick()
 #endif
 
 // one frame of the client loop; returns true when the client wants to quit
+#if defined(XUO_EMSC)
+// the phone keyboard bridge is web-only
+#define XUO_POLL_WEB_KEYBOARD() g_GameWindow.PollWebKeyboard()
+#else
+#define XUO_POLL_WEB_KEYBOARD() ((void)0)
+#endif
+
 static bool RunFrame(bool &raised)
 {
     bool quit = false;
@@ -896,7 +903,7 @@ static bool RunFrame(bool &raised)
     g_Ticks = SDL_GetTicks();
     g_ConnectionManager.Recv();
     g_PacketManager.SendMegaClilocRequests();
-    g_GameWindow.PollWebKeyboard();
+    XUO_POLL_WEB_KEYBOARD();
     g_Game.Process(true);
     AutoHelpTick();
     ChatTestTick();

@@ -3,6 +3,7 @@
 
 #include "GumpMenubar.h"
 #include "../CrossUO.h"
+#include "../GameWindow.h"
 #include "../Config.h"
 #include <cstdint>
 #include <vector>
@@ -40,7 +41,18 @@ enum
 CGumpMenubar::CGumpMenubar(short x, short y)
     : CGump(GT_MENUBAR, 0, x, y)
 {
-    Page = 2;
+    RebuildLayout();
+}
+
+// builds the whole content: page 1 is the minimized stub, page 2 the bar
+// itself. Web mobile lays the entries over as many lines as the canvas is
+// wide, so rotation re-runs this through UpdateContent
+void CGumpMenubar::RebuildLayout()
+{
+    const int page = Page;
+    Clear();
+    Page = page;
+
     Add(new CGUIPage(1));
     Add(new CGUIResizepic(0, 0x13BE, 0, 0, 30, 27));
     Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A1, 0x15A1, 0x15A1, 5, 3));
@@ -111,27 +123,89 @@ CGumpMenubar::CGumpMenubar(short x, short y)
         entries.push_back({ 0x098B, smallWidth, ID_GMB_ASSISTANT, L"Assistant" });
     }
 #endif
-    entries.push_back({ 0x098B, smallWidth, ID_GMB_INFO, L"< ? >" });
+    //entries.push_back({ 0x098B, smallWidth, ID_GMB_INFO, L"< ? >" });
 
-    CGUIResizepic *background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x13BE, 0, 0, 718, 27));
-    Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A4, 0x15A4, 0x15A4, 5, 3));
+    // web mobile only: entries wrap over as many 27px lines as the canvas
+    // needs when one line would be wider than it (the bar is unreadable
+    // otherwise); everywhere else - including web on a desktop, even with
+    // a touchscreen - the single row is kept as authored
+    int rowWidth = 0;
+#if defined(XUO_EMSC)
+    if (WebIsMobile())
+    {
+        rowWidth = g_GameWindow.GetSize().Width;
+        m_BuiltCanvasWidth = rowWidth;
+    }
+#else
+    (void)rowWidth;
+#endif
 
+    struct PlacedEntry
+    {
+        const MenuEntry *entry;
+        int x;
+        int y;
+    };
+
+    std::vector<PlacedEntry> placed;
     int startX = 30;
+    int startY = 0;
+    int rowEnd = startX;
+
     for (const MenuEntry &entry : entries)
     {
-        Add(new CGUIButton(entry.id, entry.art, entry.art, entry.art, startX, 1));
+        if (rowWidth > 0 && startX > 30 && startX + entry.artWidth + 1 > rowWidth)
+        {
+            startX = 30;
+            startY += 27;
+        }
+
+        placed.push_back({ &entry, startX, startY });
+        startX += entry.artWidth + 1;
+
+        if (startX > rowEnd)
+        {
+            rowEnd = startX;
+        }
+    }
+
+    Add(new CGUIResizepic(0, 0x13BE, 0, 0, rowEnd + 1, 27 + startY));
+    Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A4, 0x15A4, 0x15A4, 5, 3));
+
+    for (const PlacedEntry &placedEntry : placed)
+    {
+        const MenuEntry &entry = *placedEntry.entry;
+        Add(new CGUIButton(
+            entry.id, entry.art, entry.art, entry.art, placedEntry.x, 1 + placedEntry.y));
 
         CGUITextEntry *textEntry = (CGUITextEntry *)Add(new CGUITextEntry(
-            entry.id, 0, 0x0036, 0x0036, startX + 2, 2, entry.artWidth, true, 1, TS_CENTER));
+            entry.id,
+            0,
+            0x0036,
+            0x0036,
+            placedEntry.x + 2,
+            2 + placedEntry.y,
+            entry.artWidth,
+            true,
+            1,
+            TS_CENTER));
         textEntry->m_Entry.SetTextW(entry.text);
         textEntry->CheckOnSerial = true;
         textEntry->ReadOnly = true;
         textEntry->FocusedOffsetY = 2;
-
-        startX += entry.artWidth + 1;
     }
+}
 
-    background->Width = startX + 1;
+void CGumpMenubar::UpdateContent()
+{
+#if defined(XUO_EMSC)
+    if (WebIsMobile() && g_GameWindow.GetSize().Width != m_BuiltCanvasWidth)
+    {
+        // the canvas followed the rotated viewport: relayout
+        RebuildLayout();
+        WantRedraw = true;
+    }
+#endif
 }
 
 CGumpMenubar::~CGumpMenubar()
@@ -203,11 +277,11 @@ void CGumpMenubar::InitToolTip()
                 g_ToolTip.Set(L"Open the UO store");
                 break;
             }
-            case ID_GMB_INFO:
+            /*case ID_GMB_INFO:
             {
                 g_ToolTip.Set(L"(Not implemented)");
                 break;
-            }
+            }*/
 #if defined(XUO_ASSISTANT)
             case ID_GMB_ASSISTANT:
             {

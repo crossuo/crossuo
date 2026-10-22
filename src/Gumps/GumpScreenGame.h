@@ -10,6 +10,13 @@ class CGumpScreenGame : public CGump
 private:
     static const int ID_GS_RESIZE = 1;
 
+    // canvas size the portrait fit last ran for
+    int m_LastCanvasWidth = 0;
+    int m_LastCanvasHeight = 0;
+
+    void FitCanvas();
+    void ClampToDisplay(int &x, int &y, int &w, int &h);
+
 public:
     CGumpScreenGame();
     virtual ~CGumpScreenGame() override;

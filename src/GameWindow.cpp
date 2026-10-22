@@ -95,6 +95,8 @@ void CGameWindow::OnResize()
         SetViewParamsCmd{
             0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
     g_GumpManager.RedrawAll();
+    // the menubar wraps over as many lines as the (rotated) canvas needs
+    g_GumpManager.UpdateContent(0, 0, GT_MENUBAR);
 }
 
 void CGameWindow::EmulateOnLeftMouseButtonDown()
@@ -413,6 +415,11 @@ bool WebIsTouchDevice()
 {
     return false;
 }
+
+bool WebIsMobile()
+{
+    return false;
+}
 #endif
 
 // client-side diagnostics: post one-line events to the serving proxy's
@@ -445,6 +452,32 @@ static void TouchPost(const char *line)
 // window); MaximizeWindow (CGameScreen::Init, on entering the world) flips
 // the canvas to track the viewport, like a native window filling the screen
 static bool s_webFillViewport = false;
+
+bool WebIsFillViewport()
+{
+    return s_webFillViewport;
+}
+
+// web on a phone/tablet, not web on a desktop (even a touchscreen laptop):
+// the PRIMARY pointer is coarse (a finger). Cached: the input hardware does
+// not change during a session and this is queried per frame
+bool WebIsMobile()
+{
+    static int s_mobile = -1;
+    if (s_mobile < 0)
+    {
+        s_mobile = MAIN_THREAD_EM_ASM_INT(
+            {
+                return (navigator.maxTouchPoints > 0 || 'ontouchstart' in window) &&
+                               window.matchMedia &&
+                               window.matchMedia('(pointer: coarse)').matches
+                           ? 1
+                           : 0;
+            });
+        Info(Client, "Web mobile device: %s", s_mobile != 0 ? "yes" : "no");
+    }
+    return s_mobile != 0;
+}
 
 static CSize web_viewport_size()
 {
@@ -509,6 +542,12 @@ static WebTouchFinger s_touchFingers[WEB_TOUCH_MAX_FINGERS];
 static int s_touchCount = 0;
 // primary finger = the one driving the mouse cursor
 static bool s_touchPrimaryValid = false;
+// finger-down position/state of the swipe-back that erases a character
+static float s_touchKbdSwipeX = 0.0f;
+static float s_touchKbdSwipeY = 0.0f;
+static bool s_touchKbdSwipeArmed = false;
+static bool s_touchKbdSwipeDone = false;
+static const float WEB_TOUCH_KBD_SWIPE_MIN = 40.0f;
 static SDL_FingerID s_touchPrimary = 0;
 static bool s_touchRightHold = false;
 static float s_touchTravel = 0.0f;
@@ -679,27 +718,36 @@ void CGameWindow::TouchTryConvertHold()
 
 // ---------------------------------------------------------------------------
 // phone keyboard bridge: mobile browsers only raise the virtual keyboard for
-// a focused <input>, so the page owns a hidden one. The client raises it
-// when a text entry gains focus (g_EntryPointer) and drains the queued
-// input events (packed by the page's Module.kbdTake) once per frame,
-// re-emitting them as regular SDL events so every screen/gump keeps its
-// desktop text handling.
+// a focused form control, so the page makes the CANVAS the text control
+// (contenteditable): its keys land inside the game's own input path and the
+// client keeps handling them like any other keyboard. The page queues the
+// deletions it sees in the canvas edit (on-screen erase keys do not promise
+// a key event), and the client drains them once per frame through
+// Module.kbdTake, re-emitting them as regular SDL events.
 //
-// The browser's own copy of each key event is kept inert by the page (the
-// hidden input stops keydown/keypress/keyup from bubbling), and the bridge
-// drops anything that still arrives while a text entry has focus - so a
-// key reaches the game exactly once. The page never uses a key event as a
-// keystroke: repeats and deletions come from the input events, which carry
-// the string and the backspaces separately (and with repeats).
+// Android never reports a browser keydown for delete, and other keyboards
+// only offer the erase key: the failed text entries also take a swipe back
+// over the game window (see OnTouchFinger), and the window shows a delete
+// key while a text entry has focus.
 // ---------------------------------------------------------------------------
 static bool s_webKbdFocused = false;
 
-static void ReportWebKeyEvent()
-{
+// called once per frame, before the queue is drained: the page recovers the
+// editable canvas when the browser dropped it (some browsers close the
+// keyboard on a layout change without any event)
 #if defined(XUO_EMSC)
-    MAIN_THREAD_EM_ASM({ if (Module.kbdKeyEvent) Module.kbdKeyEvent(); });
-#endif
+static void WebSyncCanvas()
+{
+    MAIN_THREAD_EM_ASM({ if (Module.kbdSync) Module.kbdSync(); });
 }
+
+static void WebDropCanvasText()
+{
+    // kbdClear (shell.html) empties the canvas text; no empty character
+    // constant here - the C preprocessor tokenizes EM_ASM code and rejects ''
+    MAIN_THREAD_EM_ASM({ if (Module.kbdClear) Module.kbdClear(); });
+}
+#endif
 
 bool CGameWindow::IsWebKeyboardFocused() const
 {
@@ -732,6 +780,13 @@ static void PushWebKey(SDL_Keycode sym, SDL_Scancode sc)
 void CGameWindow::PollWebKeyboard()
 {
 #if defined(XUO_EMSC)
+    if (SDL_IsTextInputActive() != SDL_TRUE)
+    {
+        // the keyboard is not up: nothing typed can be pending, and a stale
+        // canvas buffer must not leak into the next entry
+        WebDropCanvasText();
+    }
+
     const bool focus = g_EntryPointer != nullptr;
     if (focus != s_webKbdFocused)
     {
@@ -739,6 +794,7 @@ void CGameWindow::PollWebKeyboard()
         MAIN_THREAD_EM_ASM(
             { if (Module.phoneKeyboard) Module.phoneKeyboard($0); }, focus ? 1 : 0);
     }
+    WebSyncCanvas();
 
     // pop the queued events (numbers) one by one through the main-thread
     // proxy: -1 backspace, -2 enter, otherwise a UTF-16 code unit of text
@@ -870,6 +926,10 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
                 // primary finger down: SDL synthesizes cursor motion + the
                 // left press (tap/drag); the hold timer may convert the
                 // press into a right press-hold later
+                s_touchKbdSwipeArmed = g_EntryPointer != nullptr;
+                s_touchKbdSwipeX = x;
+                s_touchKbdSwipeY = y;
+                s_touchKbdSwipeDone = false;
                 s_touchPrimaryValid = true;
                 s_touchPrimary = ev.fingerId;
                 isPrimary = true;
@@ -878,16 +938,17 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
                 s_touchDownTicks = SDL_GetTicks();
                 s_touchHoldArmed = true;
 #if defined(XUO_EMSC)
-                if (s_webFillViewport &&
+                if (s_webFillViewport && WebIsMobile() &&
                     (g_ConfigManager.GameWindowX != 0 || g_ConfigManager.GameWindowY != 0 ||
                      g_ConfigManager.GameWindowWidth != m_Size.Width ||
                      g_ConfigManager.GameWindowHeight != m_Size.Height))
                 {
-                    // the saved per-account config can restore a stale game
-                    // window rect after the maximize sync (config loads at
-                    // login complete, after GameScreen::Init maximized);
-                    // re-sync at interaction time so zoom/movement/walking
-                    // gates always match the maximized canvas
+                    // web mobile only: the saved per-account config can
+                    // restore a stale game window rect after the maximize
+                    // sync (config loads at login complete, after
+                    // GameScreen::Init maximized); re-sync at interaction
+                    // time so zoom/movement/walking gates always match the
+                    // maximized canvas
                     g_ConfigManager.GameWindowX = 0;
                     g_ConfigManager.GameWindowY = 0;
                     g_ConfigManager.GameWindowWidth = m_Size.Width;
@@ -930,6 +991,37 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
             {
                 s_touchTravel += moved;
                 s_touchRecentDrift = s_touchRecentDrift * 0.6f + moved;
+
+                // a swipe to the left erases one character: the game cursor
+                // trails the typed text, so a right-to-left swipe reads as a
+                // delete on every on-screen keyboard
+                if (s_touchKbdSwipeArmed && !s_touchKbdSwipeDone &&
+                    x - s_touchKbdSwipeX < -WEB_TOUCH_KBD_SWIPE_MIN &&
+                    std::fabs(y - s_touchKbdSwipeY) < WEB_TOUCH_KBD_SWIPE_MIN)
+                {
+                    s_touchKbdSwipeDone = true;
+                    s_touchHoldArmed = false;
+                    RemoveTimer(TOUCH_HOLD_TIMER_ID);
+                    if (g_MouseManager.LeftButtonPressed)
+                    {
+                        // never leave the synthesized press as a drag
+                        TouchSynthButton(SDL_BUTTON_LEFT, false, (int)x, (int)y);
+                    }
+                    TOUCH_LOG("gesture: swipe back -> erase");
+#if defined(XUO_EMSC)
+                    // the focused entry handles it; buttons act on their
+                    // own key, so the key goes to the entry alone (the gump
+                    // manager would otherwise read it as a hotkey)
+                    if (g_EntryPointer != nullptr)
+                    {
+                        g_EntryPointer->OnKey(nullptr, KEY_BACK);
+                    }
+                    else if (g_GameState == GS_GAME)
+                    {
+                        PushWebKey(SDLK_BACKSPACE, SDL_SCANCODE_BACKSPACE);
+                    }
+#endif
+                }
                 if (s_touchHoldArmed && s_touchRecentDrift < WEB_TOUCH_MOVE_SLOP)
                 {
                     // finger essentially still with the hold time already
@@ -994,6 +1086,10 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
             const bool wasPrimary = isPrimary || s_touchCount == 1;
             finger->active = false;
             s_touchCount--;
+            if (isPrimary || s_touchCount == 0)
+            {
+                s_touchKbdSwipeArmed = false;
+            }
 
             if (s_touchCount == 0)
             {
@@ -1107,12 +1203,14 @@ void CGameWindow::SetSize(const CSize &size)
     SDL_SetWindowSize(m_window, size.Width, size.Height);
     m_Size = size;
 #if defined(XUO_EMSC)
-    if (s_webFillViewport)
+    if (s_webFillViewport && WebIsMobile())
     {
-        // the maximized canvas IS the game window: the world render and the
-        // hit tests (zoom, movement, walking all gate on this rect) must
-        // track it - the saved per-account rect can never match the dynamic
-        // mobile viewport
+        // web MOBILE: the maximized canvas IS the game window: the world
+        // render and the hit tests (zoom, movement, walking all gate on
+        // this rect) must track it - the saved per-account rect can never
+        // match the dynamic mobile viewport. Web DESKTOP behaves like
+        // native: the canvas is the (maximized) window, the game window
+        // rect inside it stays the configured one, frame and resizer alive
         g_ConfigManager.GameWindowX = 0;
         g_ConfigManager.GameWindowY = 0;
         g_ConfigManager.GameWindowWidth = size.Width;
@@ -1129,6 +1227,27 @@ void CGameWindow::SetSize(const CSize &size)
 
 void CGameWindow::SetPositionSize(int x, int y, int width, int height) const
 {
+#if defined(XUO_EMSC)
+    // the web "window" is the whole page: a saved native window rect
+    // (zoomed=0 + RealX/Y/W/H from an earlier session or another device)
+    // must never shrink the canvas - it has no window manager to restore
+    // it, and the viewport tracker stays off until the next maximize. Fill
+    // the viewport instead, exactly like the zoomed path
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    g_GameWindow.MaximizeWindow();
+    // the caller (config load) re-asserts the render viewport with the STALE
+    // saved rect right after this returns; when the canvas was already
+    // viewport-sized no SDL resize event fires to correct it, so set the
+    // view to the actual canvas here
+    const CSize size = g_GameWindow.GetSize();
+    RenderAdd_SetViewParams(
+        g_renderCmdList,
+        SetViewParamsCmd{ 0, 0, size.Width, size.Height, size.Width, size.Height, -150, 150 });
+    return;
+#endif
 #if SDL_VERSION_ATLEAST(2, 0, 5)
     int borderH;
     SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
@@ -1415,17 +1534,6 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
-        // the page queues one input event per keystroke and nothing else, so
-        // this browser key event corresponds to an event the bridge already
-        // (or is about to) re-emit: count it and keep it inert while a text
-        // entry has focus
-        if (s_webKbdFocused &&
-            (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP || ev.type == SDL_TEXTINPUT))
-        {
-            ReportWebKeyEvent();
-            break;
-        }
-
         case SDL_QUIT:
         {
             OnDestroy();
@@ -1435,25 +1543,12 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
 
         case SDL_KEYDOWN:
         {
-            // while a text entry is focused the virtual keyboard's keys
-            // reach the game exactly once, through the bridge queue; the
-            // browser's own keydown copy must not be replayed here
-            if (s_webKbdFocused)
-            {
-                break;
-            }
             OnKeyDown(ev.key);
         }
         break;
 
         case SDL_KEYUP:
         {
-            // a keyup whose keydown went through the bridge must not reach
-            // screens that never saw the press
-            if (s_webKbdFocused)
-            {
-                break;
-            }
             OnKeyUp(ev.key);
         }
         break;

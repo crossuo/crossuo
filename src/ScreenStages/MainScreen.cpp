@@ -143,6 +143,15 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
 
     if (action == ID_SMOOTH_MS_CONNECT)
     {
+#if defined(XUO_EMSC)
+        // the browser never runs Uninstall (the tab just closes), so the
+        // login state - the save-password choice and the credentials it
+        // covers - must be persisted HERE, at the moment they were
+        // confirmed; the page's idbfs tick picks /crossuo.cfg up (it is
+        // whitelisted). Native keeps saving at quit
+        g_MainScreen.Save();
+        SaveGlobalConfig();
+#endif
         g_Game.Connect();
     }
     else if (action == ID_SMOOTH_MS_QUIT)

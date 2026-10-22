@@ -17,6 +17,8 @@ void GetDisplaySize(int *x, int *y);
 
 // device reports touch input; XUO_EMSC only (false elsewhere)
 bool WebIsTouchDevice();
+bool WebIsFillViewport();
+bool WebIsMobile();
 
 #define PUSH_EVENT(id, data1, data2)                                                               \
     CGameWindow::PushEvent(id, (void *)(uintptr_t)(data1), (void *)(uintptr_t)(data2))
