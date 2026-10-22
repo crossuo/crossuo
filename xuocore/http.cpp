@@ -281,33 +281,6 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
     return data;
 }
 
-// HEAD probe for the body cap: returns the advertised Content-Length (-1
-// when the request fails or the server sends no usable length). No body
-// travels (a HEAD response has none), so nothing reaches the byte
-// accounting inside http_xhr_get - that path stays GET-only by construction.
-static long http_xhr_head_length(const char *url)
-{
-    return (long)EM_ASM_INT(
-    {
-        try
-        {
-            const x = new XMLHttpRequest();
-            x.open('HEAD', UTF8ToString($0), false); // sync: allowed on workers
-            x.timeout = 60000;
-            x.send(null);
-            if (x.status !== 200)
-                return -1;
-            const cl = x.getResponseHeader('Content-Length');
-            const n = cl === null ? NaN : parseInt(cl, 10);
-            return isFinite(n) ? n : -1;
-        }
-        catch (e)
-        {
-            return -1;
-        }
-    }, url);
-}
-
 void http_init()
 {
 }
@@ -341,20 +314,13 @@ bool http_get(const char *url, const char *agent, size_t body_cap, http_response
     // exceeds the cap is a failure, not a fallback trigger - the chunked
     // path enforces the very same cap on the assembled size, so
     // re-downloading everything through it can only fail again, one full
-    // extra transfer later. The cap is therefore enforced PRE-transfer
-    // through a HEAD whenever the server advertises a Content-Length (no
-    // body moves); the post-download check below remains the final
-    // authority for servers that don't.
-    if (body_cap)
-    {
-        const long advertised = http_xhr_head_length(url);
-        if (advertised >= 0 && uint64_t(advertised) > uint64_t(body_cap))
-        {
-            LOG_ERROR(
-                "resource exceeds the body cap (%ld > %zu): %s", advertised, body_cap, url);
-            return false;
-        }
-    }
+    // extra transfer later. The cap is enforced POST-download: a sync XHR
+    // has buffered the whole body in JS memory before any client-side check
+    // could abort it anyway, and the historical PRE-transfer HEAD probe was
+    // an UNCACHED round-trip per blob (browsers do not store HEAD
+    // responses), doubling the request count of every warm boot for a
+    // condition (a blob over 512 MB) the content-addressed store cannot
+    // produce.
     long status = 0;
     {
         size_t len = 0;
