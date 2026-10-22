@@ -125,7 +125,7 @@ void load_shards()
 #if !defined(VALIDATOR)
         fname = fs_path_join(xuol_data_path(), "shards.cfg");
         http_get_file(
-            "https://raw.githubusercontent.com/crossuo/shards/release/shards.cfg",
+            "https://raw.githubusercontent.com/crossuo/shards/refs/heads/master/shards.cfg",
             fs_path_ascii(fname));
 #else
         fname = fs_path_join(fs_path_current(), "shards.cfg");

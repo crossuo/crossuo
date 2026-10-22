@@ -1584,7 +1584,7 @@
           // same-origin first (deployments may vendor shards.cfg next to
           // index.html), then the curated list on GitHub (CORS-enabled)
           return ['shards.cfg',
-                  'https://raw.githubusercontent.com/crossuo/shards/release/shards.cfg'];
+                  'https://raw.githubusercontent.com/crossuo/shards/refs/heads/master/shards.cfg'];
         }
 
         function fetchText(url, cb) {
