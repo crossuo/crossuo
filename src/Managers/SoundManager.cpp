@@ -29,6 +29,10 @@
 #include <cstring>
 #include <vector>
 #include <cstdio>
+// math.h must be included (and its guard armed) before ass.h: the vendor
+// header is designed to be dropped inside a namespace and includes math.h
+// there, which breaks against modern libstdc++ headers
+#include <math.h>
 namespace ass
 {
 #include <external/ass.h>

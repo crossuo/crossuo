@@ -4,6 +4,8 @@
 #pragma once
 #include <stdint.h>
 
+#include "RenderTypes.h" // texture_handle_t, TextureType, frame_buffer_t, float3
+
 enum RenderCommandType : uint8_t
 {
     Cmd_DrawQuad = 0,

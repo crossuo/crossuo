@@ -14,6 +14,7 @@
 // its SetDrawMode command. Without the reset, a colored draw (text, hued
 // sprite) leaves the shader mode active and every later uncolored draw (gump
 // decorations, frames) is rendered through the stale palette.
+#include <glm/gtc/matrix_transform.hpp> // glm::translate / glm::rotate
 #include <assert.h>
 #include <stdio.h>  // fprintf (XUO_SCISSOR_CHECK)
 #include <stdlib.h> // getenv
