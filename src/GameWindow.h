@@ -36,7 +36,7 @@ public:
     void SetSize(const CSize &size);
     void GetPositionSize(int *x, int *y, int *width, int *height) const;
     void SetPositionSize(int x, int y, int width, int height) const;
-    void MaximizeWindow() const;
+    void MaximizeWindow();
 
     bool Create(const char *title, bool showCursor = false, int width = 800, int height = 600);
     void Destroy() const;

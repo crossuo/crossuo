@@ -1074,7 +1074,7 @@ void CGameWindow::SetMaxSize(int width, int height)
     m_MaxSize.Height = height;
 }
 
-void CGameWindow::MaximizeWindow() const
+void CGameWindow::MaximizeWindow()
 {
 #if defined(XUO_EMSC)
     // native maximizes into the desktop; on web the desktop is the browser

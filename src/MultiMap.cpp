@@ -8,6 +8,7 @@
 #include <common/logging/logging.h>
 #include <vector>
 #include <xuocore/uodata.h>
+#include <xuocore/vfs.h> // vfs_stream_file_available / vfs_stream_file_ensure (web facet lane)
 
 CMultiMap g_MultiMap;
 
