@@ -771,6 +771,11 @@
         function persistTick() {
           if (typeof FS === 'undefined' || typeof IDBFS === 'undefined') return;
           persistDesktopLS();
+          // the blob cache follows the same slow tick (best effort, never
+          // on the boot path); it only copies files the session fetched
+          if (Module.opfsPersist) {
+            Module.opfsPersist().catch(function () { /* cache is best effort */ });
+          }
           dirs.length = 0;
           files.length = 0;
           PERSIST_FILES.forEach(function (p) {
@@ -809,6 +814,175 @@
         // the client (SaveLocalConfig) fires this on every desktop.txt write
         // so the mirror is current immediately, not just on the slow tick
         globalThis.__xuoDesktopSaved = persistDesktopLS;
+
+        // -----------------------------------------------------------------
+        // OPFS blob cache: the cross-boot store for the streamed install's
+        // blobs. The blob store is a MEMFS tree (/install/<shard>/cache/
+        // blobs) mirroring the remote URL tree; its files are content-
+        // addressed (immutable URLs), so a plain copy cache is always
+        // correct. Persisting them means a warm boot finds the blobs on
+        // disk instead of re-issuing one cached XHR per file.
+        //
+        // Why OPFS and not IDBFS: IDBFS serializes whole trees through async
+        // transactions (the slow path the earlier attempts hit), while OPFS
+        // exposes real files with sync access handles for workers. Writing
+        // costs one async copy per blob; reading costs one file read.
+        //
+        // Nothing here can lose data: a missing, short or half-written entry
+        // is just a cache miss and the client re-fetches it. The restore is
+        // time sliced so a huge cache can never stall a boot.
+        var OPFS_INSTALL_ROOT = '/install';
+        var OPFS_BLOB_SUBDIR = 'cache/blobs';
+        var OPFS_RESTORE_MS = 1500; // max boot delay spent pre-loading
+        var opfsRoot = null;
+        function opfsSupported() {
+          return !!(navigator.storage && navigator.storage.getDirectory);
+        }
+        function opfsInit() {
+          if (!opfsSupported()) {
+            if (WEBLOG) console.log('[opfs] unavailable: blobs come from the http cache');
+            return Promise.resolve(false);
+          }
+          return navigator.storage.getDirectory()
+            .then(function (root) { opfsRoot = root; return true; })
+            .catch(function (e) {
+              if (WEBLOG) console.log('[opfs] getDirectory failed: ' + e);
+              return false;
+            });
+        }
+        // copies MEMFS blobs into the cache; anything outside the blob store
+        // is ignored. A write interrupted by a crash leaves a short file,
+        // which the client's size check treats as a miss.
+        function opfsPutTree(shard, roots) {
+          if (!opfsRoot) return Promise.resolve(0);
+          var written = 0;
+          function walk(dir, fsPath) {
+            return (async function () {
+              var names;
+              try { names = FS.readdir(fsPath); } catch (e) { return; }
+              for (var i = 0; i < names.length; ++i) {
+                var name = names[i];
+                if (name === '.' || name === '..') continue;
+                var full = fsPath + '/' + name, st;
+                try { st = FS.stat(full); } catch (e) { continue; }
+                if (FS.isDir(st.mode)) {
+                  var sub = await dir.getDirectoryHandle(name, { create: true });
+                  await walk(sub, full);
+                } else if (st.size > 0 && st.size <= PERSIST_MAX_FILE) {
+                  try {
+                    var h = await dir.getFileHandle(name, { create: true });
+                    var w = await h.createWritable();
+                    await w.write(FS.readFile(full));
+                    await w.close();
+                    written++;
+                  } catch (e) { /* leave it to the next tick */ }
+                }
+              }
+            })();
+          }
+          var chain = Promise.resolve();
+          roots.forEach(function (root) {
+            chain = chain.then(function () {
+              var rel = root.indexOf(OPFS_BLOB_SUBDIR);
+              if (rel < 0) return;
+              var sub = (shard + '/' + root.slice(rel)).split('/');
+              return (async function () {
+                var d = opfsRoot;
+                for (var i = 0; i < sub.length; ++i) {
+                  d = await d.getDirectoryHandle(sub[i], { create: true });
+                }
+                var parentFs = root.replace(/\/[^/]*$/, '');
+                await walk(d, root);
+              })().catch(function () { /* cache is best effort */ });
+            });
+          });
+          return chain.then(function () { return written; });
+        }
+        // restores the cached blobs of a shard into MEMFS before the client
+        // boots; the time slice bounds the boot delay and the client fetches
+        // whatever did not make it
+        // the C side sanitizes the shard for the install dir; the page needs
+        // the same name to address the cache (Misc.cpp SanitizeShardName)
+        function opfsShardName(name) {
+          var s = String(name || '').replace(/[\/\\:*?"<>|\x00-\x1f]/g, '_')
+                                   .replace(/[ ._]+$/, '');
+          return s || 'crossuo';
+        }
+        function opfsRestore(shard) {
+          if (!opfsRoot) return Promise.resolve(0);
+          var t0 = performance.now(), restored = 0;
+          function restoreInto(dir, fsPath) {
+            return (async function () {
+              for await (var entry of dir.entries()) {
+                if (performance.now() - t0 > OPFS_RESTORE_MS) return;
+                var name = entry[0], h = entry[1], full = fsPath + '/' + name;
+                if (h.kind === 'directory') {
+                  try { FS.mkdirTree(full); } catch (e) { /* exists */ }
+                  await restoreInto(h, full);
+                } else if (h.kind === 'file') {
+                  try {
+                    var u8 = new Uint8Array(await (await h.getFile()).arrayBuffer());
+                    try { FS.mkdirTree(fsPath); } catch (e) { /* exists */ }
+                    FS.writeFile(full, u8);
+                    restored++;
+                  } catch (e) { /* miss: fetched on demand */ }
+                }
+              }
+            })();
+          }
+          return (async function () {
+            var d = opfsRoot;
+            var parts = [shard, 'cache', 'blobs'];
+            for (var i = 0; i < parts.length; ++i) {
+              try {
+                d = await d.getDirectoryHandle(parts[i], { create: false });
+              } catch (e) {
+                if (WEBLOG) console.log('[opfs] nothing cached for ' + shard);
+                return 0;
+              }
+            }
+            var fsDir = OPFS_INSTALL_ROOT + '/' + shard + '/' + OPFS_BLOB_SUBDIR;
+            try { FS.mkdirTree(fsDir); } catch (e) { /* exists */ }
+            await restoreInto(d, fsDir);
+            if (WEBLOG) {
+              console.log('[opfs] restored ' + restored + ' blobs in ' +
+                          (performance.now() - t0).toFixed(0) + 'ms');
+            }
+            return restored;
+          })();
+        }
+        // boot-facing: warm the cache into MEMFS before crossuo.js runs, for
+        // the shard about to boot. Resolves even without OPFS support, and
+        // never rejects - the boot must not depend on the cache
+        Module.opfsBootPrepare = function (shardName) {
+          var shard = opfsShardName(shardName);
+          return opfsInit()
+            .then(function (ok) { return ok ? opfsRestore(shard) : 0; })
+            .catch(function () { return 0; });
+        };
+        // persist tick companion: copy the blobs the session fetched into
+        // the cache. Runs on the slow tick and on the unload flush, a bounded
+        // slice at a time so it never competes with the game. The shard is
+        // learned from the install tree actually present (the client creates
+        // /install/<shard>/cache/blobs as it streams).
+        Module.opfsPersist = function () {
+          if (!opfsRoot) return Promise.resolve(0);
+          var shards = [];
+          try { shards = FS.readdir(OPFS_INSTALL_ROOT).filter(function (n) { return n !== '.' && n !== '..'; }); }
+          catch (e) { return Promise.resolve(0); }
+          var chain = Promise.resolve(), written = 0;
+          shards.forEach(function (shard) {
+            chain = chain.then(function () {
+              var root = OPFS_INSTALL_ROOT + '/' + shard + '/' + OPFS_BLOB_SUBDIR;
+              try { if (!FS.isDir(FS.stat(root).mode)) return; } catch (e) { return; }
+              return opfsPutTree(shard, [root]).then(function (n) { written += n; });
+            });
+          });
+          return chain.then(function () {
+            if (WEBLOG && written) console.log('[opfs] cached ' + written + ' blobs');
+            return written;
+          });
+        };
         // Script picker (the assistant's Scripts tab Load button). The client
         // runs on the pthread worker and cannot reach the DOM or this FS, so
         // it calls __xuoScriptPick (MAIN_THREAD_EM_ASM) and polls the shared
@@ -1374,10 +1548,24 @@
           // Module.arguments must be FINAL before the glue runs (consumed
           // once at runtime init)
           Module.arguments = buildClientArgs(extraArgs);
-          var s = document.createElement('script');
-          s.src = 'crossuo.js';
-          s.async = true;
-          document.body.appendChild(s);
+          // warm the OPFS blob cache into MEMFS first: the client then finds
+          // the blobs on disk instead of issuing one cached XHR per file.
+          // Bounded (OPFS_RESTORE_MS) and failure-proof - a miss is just a
+          // cache miss, the fetch path takes over
+          var shardName = '';
+          for (var i = 0; i < Module.arguments.length; ++i) {
+            var a = String(Module.arguments[i]);
+            if (a.indexOf('--shard=') === 0) shardName = a.slice(8);
+          }
+          var startRuntime = function () {
+            var s = document.createElement('script');
+            s.src = 'crossuo.js';
+            s.async = true;
+            document.body.appendChild(s);
+          };
+          var prepare = (Module.opfsBootPrepare ? Module.opfsBootPrepare(shardName)
+                                                : Promise.resolve(0));
+          prepare.then(startRuntime, startRuntime); // the cache never blocks a boot
         }
 
         function setPageStatus(text) {
