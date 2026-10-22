@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Config.h"
+#include "Misc.h"
 
 #include "Constants.h"
 #include "Platform.h"
@@ -434,6 +435,19 @@ void ApplyClientVersionOverride(
 
 static fs_path GetDefaultConfigFile()
 {
+#if defined(XUO_EMSC)
+    // web: the config is per shard - each shard keeps its own saved
+    // account/password instead of sharing the root crossuo.cfg (the shard
+    // picker passes --shard; sessions without one fall through to the
+    // shared root file, matching the previous behavior). The file lives
+    // under FilePath() = /data/crossuo, the page-persisted tree, so the
+    // idbfs whitelist picks it up with no shell changes
+    if (g_cli["shard"].was_set() && !g_cli["shard"].get().string.empty())
+    {
+        const astr_t shard = SanitizeShardName(g_cli["shard"].get().string);
+        return FilePath((astr_t("crossuo-") + shard + ".cfg").c_str());
+    }
+#endif
     const auto local_exe = ExeFilePath(CROSSUO_CONFIG);
     if (fs_path_exists(local_exe))
         return local_exe;
@@ -581,9 +595,16 @@ bool LoadGlobalConfig()
                 break;
                 case MSCC_CUSTOM_PATH:
                 {
+#if defined(XUO_EMSC)
+                    // web: data always comes from the streaming install; a
+                    // CustomPath here is a stale VFS path baked by an
+                    // earlier session (or a native config) and must not
+                    // disable streaming
+#else
                     g_UOPath = fs_path_from(strings[1]);
                     fs_case_insensitive_init(g_UOPath);
                     g_Config.CustomPathSet = true;
+#endif
                 }
                 break;
                 case MSCC_ACTID:
@@ -917,10 +938,16 @@ void SaveGlobalConfig(bool launcher_apply)
             g_Config.Seed);
     }
 
+#if !defined(XUO_EMSC)
     if (!fs_path_equal(g_UOPath, g_ExePath))
     {
         fprintf(cfg, "CustomPath=%s\n", fs_path_ascii(g_UOPath));
     }
+#endif
+    // web: g_UOPath is the streaming VFS root of THIS session - it differs
+    // from g_ExePath by construction and baking it as a CustomPath would
+    // flip the next boot's streaming decision off (no local install exists
+    // to fall back to)
 
     if (!g_Config.ServerAddress.empty())
     {

@@ -470,8 +470,15 @@ bool load_config()
     //  4] otherwise (no config file, or a config without a data path):
     //     stream automatically - the streamed install replaces the
     //     launcher-driven setup
+#if defined(XUO_EMSC)
+    // web: the streamed install is the ONLY data source - a config file
+    // (e.g. /crossuo.cfg persisted with the login credentials) must never
+    // disable it, whatever it carries
+    const bool streaming = true;
+#else
     const bool streaming = g_cli["streaming"].was_set() || custom_path_is_streamed ||
                            !(config_exists && g_Config.CustomPathSet);
+#endif
     if (streaming)
     {
         auto params = streaming_params();
