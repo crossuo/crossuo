@@ -175,8 +175,8 @@ impl Lane {
             Lane::Files
         } else if path.starts_with("/patch/eamythic/") {
             Lane::Eamythic
-        } else if path.starts_with("/blob/") {
-            Lane::Blob
+        } else if path.starts_with("/blob/") || path.starts_with("/bundle/") {
+            Lane::Blob // both serve blob bytes; one lane keeps the stats shape
         } else if path.starts_with("/stream/") {
             Lane::Stream
         } else if path.starts_with("/data/") {

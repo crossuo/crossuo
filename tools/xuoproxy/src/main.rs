@@ -528,6 +528,7 @@ async fn main() {
         )
         .route("/blob/:hash/:offset/:size", get(blob_window))
         .route("/blob/:offset/:size", get(blob_window_open))
+        .route("/bundle/:spec", get(bundle))
         .route("/stream/*url", get(stream_proxy))
         .route("/ws/:host/:port", get(ws_shard))
         .route("/data/:name/*path", get(data_file))
@@ -2127,6 +2128,160 @@ async fn blob_window_open(
             .into_response();
     };
     blob_window_serve(state, headers, url, offset, size).await
+}
+
+// ---------------------------------------------------------------------------
+// bundle: many small blobs in ONE immutable response.
+//
+// The web client streams its install as one GET per file; even fully cached
+// those requests dominate a warm boot (browser cache lookup + XHR + memcpy
+// each). A bundle concatenates a group of blobs so a boot can replace dozens
+// of requests with one cache hit. The spec is the group, the ?m= list its
+// ordered members (proxy-relative resource references, decoded ONE level so
+// they match the blob route's scheme - their own u= is percent-encoded):
+//
+//   /bundle/<group>?m=<ref1>&m=<ref2>&...
+//
+// Layout: [u32 LE count][per member: u32 LE len][member bytes...]. Members
+// are the exact bytes /patch/files and /blob serve (normalized), so the
+// client can hand a slice straight to its blob store.
+//
+// The members fully determine the response and their bytes are immutable
+// (content-addressed blobs), so the immutable cache-control is honest; the
+// <count>-<key> spec path is a stable name the client derives from the same
+// list (the key is not verified - the member list is authoritative). A
+// member that cannot be produced is a 502 for the whole bundle - the client
+// then falls back to its normal per-file fetch, never to partial bytes.
+// ---------------------------------------------------------------------------
+fn bundle_members(spec: &str, query: Option<&str>) -> Option<Vec<String>> {
+    let mut members = Vec::new();
+    if let Some(q) = query {
+        for kv in q.split('&') {
+            let value = kv.strip_prefix("m=")?;
+            if value.is_empty() {
+                continue;
+            }
+            members.push(percent_decode(value));
+        }
+    }
+    if members.is_empty() {
+        return None;
+    }
+    // sanity: the spec names how many members the bundle holds
+    let count: usize = spec.split_once('-').map(|(n, _)| n).unwrap_or(spec).parse().ok()?;
+    if count != members.len() {
+        return None;
+    }
+    if members.len() > 512 {
+        return None; // one response, keep it bounded
+    }
+    for m in &members {
+        // only resources this deployment can serve (no arbitrary upstream):
+        // a bare path taken from a manifest, never an absolute url
+        if !m.starts_with('/') || m.starts_with("//") {
+            return None;
+        }
+    }
+    Some(members)
+}
+
+// one member's bytes, or None when this server cannot produce it. Members
+// resolve through the same reference scheme as /blob: a configured base
+// (upstream files/manifests - exactly what the files route proxies, so
+// inherently allowed) or a /data mount. A RAW absolute url (the /stream
+// lane form) is refused: bundling must not widen fetchable hosts.
+async fn bundle_bytes(state: &AppState, reference: &str) -> Option<Vec<u8>> {
+    let url = resolve_resource_url(state, reference)?;
+    if url.starts_with("http://") || url.starts_with("https://") {
+        // only the configured upstream bases (never an arbitrary host)
+        let from_files = state.upstream_files.ends_with('/') || url.starts_with(&format!("{}/", state.upstream_files.trim_end_matches('/')));
+        let known_base = url.starts_with(state.upstream_files.as_str())
+            || url.starts_with(state.upstream_manifest.as_str())
+            || url.starts_with(state.upstream_aops.as_str())
+            || from_files;
+        if !known_base {
+            return None;
+        }
+    }
+    if let Some((_ctype, body)) = cached_file(state, &url) {
+        return Some(body);
+    }
+    // cold: fetch + normalize into the cache exactly like the file route
+    if url.starts_with(state.upstream_files.as_str()) {
+        let tail = url.strip_prefix(state.upstream_files.as_str())?.to_string();
+        fetch_normalized_blob(state, &url, &tail).await.ok()?;
+        return cached_file(state, &url).map(|(_, body)| body);
+    }
+    None // manifests/data members are not bundle material
+}
+
+async fn bundle(
+    State(state): State<AppState>,
+    Path(spec): Path<String>,
+    RawQuery(query): RawQuery,
+    headers: HeaderMap,
+) -> Response {
+    let Some(members) = bundle_members(&spec, query.as_deref()) else {
+        return (StatusCode::BAD_REQUEST, "bad bundle spec").into_response();
+    };
+    // the client budgets ~4MB per request; the server cap stays an order
+    // above it so budget changes never turn bundles into 413s, while a
+    // hostile member list still cannot assemble an unbounded response
+    const BUNDLE_MAX_BYTES: usize = 64 * 1024 * 1024;
+    let mut parts: Vec<Vec<u8>> = Vec::with_capacity(members.len());
+    let mut total = 4usize;
+    for m in &members {
+        match bundle_bytes(&state, m).await {
+            Some(body) => {
+                total += 4 + body.len();
+                if total > BUNDLE_MAX_BYTES {
+                    return (
+                        StatusCode::PAYLOAD_TOO_LARGE,
+                        "bundle exceeds the server size cap",
+                    )
+                        .into_response();
+                }
+                parts.push(body);
+            }
+            None => {
+                return (
+                    StatusCode::BAD_GATEWAY,
+                    format!("bundle member unavailable: {m}"),
+                )
+                    .into_response()
+            }
+        }
+    }
+    let mut body = Vec::with_capacity(total);
+    body.extend_from_slice(&(parts.len() as u32).to_le_bytes());
+    for p in &parts {
+        body.extend_from_slice(&(p.len() as u32).to_le_bytes());
+        body.extend_from_slice(p);
+    }
+    // the spec is content-derived, so the response is immutable; the etag
+    // travels from the members' own etags so a spec reused for changed
+    // content (a rebuilt upstream with the same names) still revalidates
+    let mut etag_src = String::with_capacity(spec.len() + 64);
+    etag_src.push_str(&spec);
+    for m in &members {
+        etag_src.push('|');
+        etag_src.push_str(m);
+        etag_src.push('|');
+        if let Some(url) = resolve_resource_url(&state, m) {
+            if let Some((_, _, etag, _)) = cache_get(&state, &url) {
+                etag_src.push_str(&etag);
+            }
+        }
+    }
+    let etag = format!("\"{}\"", short_token(etag_src.as_bytes()));
+    cacheable_response(
+        StatusCode::OK,
+        "application/octet-stream",
+        body,
+        &headers,
+        &etag,
+        CACHE_IMMUTABLE,
+    )
 }
 
 // the shared u=<...> query parameter, still percent-encoded (RawQuery is raw)
@@ -4599,5 +4754,28 @@ mod tests {
     #[test]
     fn blob_name_uses_lowercase_name() {
         assert_eq!(super::data_blob_name("art.mul"), "f52ecc510653c443");
+    }
+
+    #[test]
+    fn bundle_spec_parses_and_validates() {
+        use super::bundle_members;
+        // count must match the member list, members must be proxy-relative
+        let q = "m=%2Fpatch%2Ffiles%2Fa&m=%2Fpatch%2Ffiles%2Fb";
+        let members = bundle_members("2-abcdef", Some(q)).expect("valid spec");
+        assert_eq!(members, vec!["/patch/files/a", "/patch/files/b"]);
+        // wrong count: rejected
+        assert!(bundle_members("3-abcdef", Some(q)).is_none());
+        // absolute urls and protocol-relative: never bundle material
+        assert!(bundle_members("1-x", Some("m=http%3A%2F%2Fevil%2Fa")).is_none());
+        assert!(bundle_members("1-x", Some("m=%2F%2Fevil%2Fa")).is_none());
+        // no members: rejected
+        assert!(bundle_members("0-x", Some("")).is_none());
+        assert!(bundle_members("1-x", None).is_none());
+        // bounded: a huge member list is refused outright
+        let mut big = String::from("m=%2Fa");
+        for _ in 0..600 {
+            big.push_str("&m=%2Fa");
+        }
+        assert!(bundle_members("601-x", Some(&big)).is_none());
     }
 }
