@@ -60,6 +60,8 @@ struct vfs_fetch_stats
     uint64_t bytes = 0;    // body bytes received
     uint64_t retries = 0;  // retry attempts scheduled
     uint64_t failures = 0; // requests given up after the last attempt
+    uint64_t bundles = 0;  // bundle transfers performed (each carries several blobs)
+    uint64_t bundled = 0;  // blobs delivered inside a successful bundle
     int32_t inflight = 0;  // requests currently queued or running
 };
 
@@ -114,6 +116,32 @@ bool vfs_fetch_batch(
     int priority,
     bool manifest,
     void (*progress)(float done01, const char *tail));
+
+// Request bundling (web/immutable servers only). One GET carrying many small
+// blobs: the server answers [u32 count][per member: u32 len][bytes...] for a
+// content-addressed URL derived from the member list. The engine collects
+// queued whole-blob jobs, packs the eligible ones into one request per
+// worker, and writes the members straight into the blob store - the
+// per-request cost (cache lookup, XHR, copy) is paid once per bundle
+// instead of once per file.
+//
+// `bundle_url` is the server prefix (e.g. "https://cdn/bundle") and
+// `member_prefix` the string every candidate tail must start with - the URL
+// the transport fetches is built from those and the member list, so the
+// caller decides which resources the server can actually fold. Manifest
+// traffic and stream chunks never bundle.
+struct vfs_fetch_bundle_params
+{
+    astr_t url;           // server prefix, no trailing slash required
+    astr_t member_ref;    // turns a tail into a server-resolvable reference
+                          // (e.g. "/patch/files"): each member travels as
+                          // member_ref + tail, percent-encoded
+    astr_t member_prefix; // tails eligible for bundling ("" = all)
+    uint32_t max_members = 24;       // per request
+    uint64_t max_bytes = 4ull << 20; // per request, by expected sizes
+};
+void vfs_fetch_set_bundle(const vfs_fetch_bundle_params &params);
+void vfs_fetch_clear_bundle();
 
 // fire-and-forget enqueue (arena demand path): queues the
 // blob download at `priority` and returns immediately - the consumer heals

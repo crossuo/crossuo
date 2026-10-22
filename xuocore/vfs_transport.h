@@ -82,6 +82,33 @@ struct vfs_transport
     // aborts its async fetches here.
     virtual void cancel() { (void)0; }
 
+    // optional request bundling: the engine calls this before a plain
+    // whole-blob GET so a transport backed by a bundling server can fold
+    // many small requests into one. `ok` means the answer was parsed and
+    // every member body reached the sink, in order; the engine writes them
+    // to the store. `status` carries 204 when the server supports bundling
+    // but chose to carry nothing. `max_bytes` bounds the whole answer. The
+    // default never intercepts (status 0), which is exactly the per-file
+    // behavior.
+    virtual vfs_transport_result fetch_bundled(
+        const char *url,
+        const char *tail,
+        uint64_t max_bytes,
+        vfs_transport_sink sink,
+        void *sink_context,
+        uint32_t timeout_ms,
+        bool manifest)
+    {
+        (void)url;
+        (void)tail;
+        (void)max_bytes;
+        (void)sink;
+        (void)sink_context;
+        (void)timeout_ms;
+        (void)manifest;
+        return vfs_transport_result(); // unsupported: the engine does plain GETs
+    }
+
     virtual ~vfs_transport() = default;
 };
 

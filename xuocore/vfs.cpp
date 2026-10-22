@@ -3125,6 +3125,48 @@ static void vfs_purge_cached_manifests()
 // offline from the store. On a drift the new plan is diffed against the
 // persisted one and the per-asset changes are returned so boot
 // can reset exactly what changed after its state load. Sets the fetch
+// the repos also decide bundling eligibility: bundle requests go to the
+// proxy serving the file repo, and every member travels as a reference the
+// proxy can resolve (member_ref + tail, e.g. "/patch/files/<tail>").
+//
+// The file repo is ABSOLUTE on test deployments (http://host/blobs/) but
+// PROXY-RELATIVE on the real web client ("/patch/files" - the serving proxy
+// rewrites the manifest links same-origin), so both forms derive the bundle
+// endpoint and the member reference prefix:
+//   http://host/blobs/  ->  url http://host/bundle, ref /blobs
+//   /patch/files        ->  url /bundle,           ref /patch/files
+static void vfs_apply_bundle_config(const astr_t &file_repo)
+{
+#if defined(XUO_EMSC)
+    vfs_fetch_bundle_params bundle;
+    astr_t ref;
+    const size_t scheme = file_repo.find("://");
+    if (scheme != astr_t::npos)
+    {
+        const size_t host_end = file_repo.find('/', scheme + 3);
+        if (host_end == astr_t::npos)
+            return; // "http://host" with no path: nothing to join tails to
+        bundle.url = file_repo.substr(0, host_end) + "/bundle";
+        ref = file_repo.substr(host_end);
+    }
+    else
+    {
+        if (file_repo.empty() || file_repo[0] != '/')
+            return; // not a URL form the bundling server answers to
+        bundle.url = "/bundle"; // same-origin proxy route
+        ref = file_repo;
+    }
+    if (!ref.empty() && ref.back() == '/')
+        ref.pop_back();
+    if (ref.empty())
+        return; // repo at the host root: references need a path to hang from
+    bundle.member_ref = ref;
+    vfs_fetch_set_bundle(bundle);
+#else
+    (void)file_repo;
+#endif
+}
+
 // engine's repos either way.
 static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, bool *out_drifted)
 {
@@ -3157,6 +3199,7 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
             s_plan_loaded = true;
             LOG_DEBUG("plan loaded: %s", fs_path_ascii(plan_path));
             vfs_fetch_set_repos(persisted.manifest_repo.c_str(), persisted.file_repo.c_str());
+            vfs_apply_bundle_config(persisted.file_repo);
             out_plan = persisted;
             return true;
         }
@@ -3203,6 +3246,7 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
         s_plan = persisted;
         s_plan_loaded = true;
         vfs_fetch_set_repos(persisted.manifest_repo.c_str(), persisted.file_repo.c_str());
+        vfs_apply_bundle_config(persisted.file_repo);
         out_plan = persisted;
         if (out_drifted)
             *out_drifted = false; // nothing was diffed or applied
@@ -3228,6 +3272,7 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
     s_plan = rebuilt;
     s_plan_loaded = true;
     vfs_fetch_set_repos(rebuilt.manifest_repo.c_str(), rebuilt.file_repo.c_str());
+    vfs_apply_bundle_config(rebuilt.file_repo);
     out_plan = rebuilt;
     return true;
 }

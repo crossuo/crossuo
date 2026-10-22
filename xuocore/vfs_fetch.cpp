@@ -62,6 +62,23 @@ struct vfs_fetch_job
     uint8_t state = vfs_fetch_queued;
     bool stream = false;       // stream-file chunk step (web lane)
     int64_t runnable_at = 0;   // steady ms: pacing gate (stream chunks)
+    // bundle membership: the slot this job rides (-1: a plain job) and
+    // whether it waits for the riding worker to settle it. bundle_spent
+    // marks the one-time bundle retry: a member whose bundle failed is
+    // re-queued as a plain job exactly once, never gathered again
+    bool bundle_wait = false;
+    int bundle_slot = -1;
+    bool bundle_spent = false;
+    // the riding job of a bundle: owns the sweep-lane slot the gather took
+    // (cleared by its own completion, which is also the only place the
+    // decrement happens - a requeued ride settles its accounting once)
+    bool bundled_ride = false;
+    // set by settle on a failed bundle's RIDER: its worker is still
+    // executing, so the completion must keep to the accounting and leave
+    // the freshly requeued job alone. A dedicated flag because the shared
+    // job's `state` legitimately reads queued while running (only the
+    // s_queue copy carries the running mark in this engine)
+    bool bundle_requeued = false;
 };
 
 struct vfs_fetch_worker
@@ -71,6 +88,24 @@ struct vfs_fetch_worker
 
 static std::mutex s_mutex;
 static std::condition_variable s_cv_jobs; // wakes workers (queue/backpressure/stop)
+
+// request bundling (see vfs_fetch_bundle_params): empty url = disabled
+static vfs_fetch_bundle_params s_bundle;
+// one bundle in flight carries its members; keyed by slot index
+struct vfs_fetch_bundle_slot
+{
+    astr_t key;                 // content address of the member list
+    std::vector<astr_t> tails;  // members, in answer order
+    uint8_t state = 0;          // 0 queued/running, 1 done, 2 failed
+};
+static std::vector<vfs_fetch_bundle_slot> s_bundles;
+// copy of s_bundle.max_bytes for the worker (set under the same lock)
+static uint64_t s_bundle_max_bytes = 4ull << 20;
+// consecutive bundle refusals (transport cannot bundle / 404): after
+// BUNDLE_REFUSAL_MAX the engine stops trying for the rest of the session -
+// every gather wave would otherwise pay one dead request forever
+static uint32_t s_bundle_refusals = 0;
+static const uint32_t BUNDLE_REFUSAL_MAX = 3;
 static std::condition_variable s_cv_done; // wakes waiters on job completion
 static std::vector<vfs_fetch_job> s_queue;
 static std::map<astr_t, std::shared_ptr<vfs_fetch_job>> s_active; // dedup by tail
@@ -154,6 +189,16 @@ static bool vfs_fetch_body_sink(void *context, const uint8_t *data, size_t size)
     return true;
 }
 
+// bundle sink: one call per member body (the transport knows the framing);
+// the engine writes them in order once the whole answer arrived
+static bool vfs_fetch_bundle_sink(void *context, const uint8_t *data, size_t size)
+{
+    auto *bodies = static_cast<std::vector<std::vector<uint8_t>> *>(context);
+    bodies->emplace_back(data, data + size);
+    (void)size;
+    return true;
+}
+
 // GET + retries: transient failures back off, 404 is definitive,
 // 429 honors Retry-After. Returns true with `body` filled on success.
 // `cap` aborts transfers beyond it (0: size unknown up front); the exact-size
@@ -230,6 +275,268 @@ static void vfs_fetch_store_purge(const char *tail)
 }
 
 // ---------------------------------------------------------------------------
+// request bundling: batch the queued small blobs into one GET
+// ---------------------------------------------------------------------------
+
+// FNV-1a: the member list -> the bundle's content address (stable across
+// sessions; only ever compared to the same computation)
+static astr_t vfs_bundle_key(const std::vector<astr_t> &tails)
+{
+    uint64_t h = 0xcbf29ce484222325ull;
+    for (const auto &t : tails)
+    {
+        for (unsigned char c : t)
+        {
+            h ^= c;
+            h *= 0x100000001b3ull;
+        }
+        h ^= 0x1f; // separator
+        h *= 0x100000001b3ull;
+    }
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%016llx", (unsigned long long)h);
+    return astr_t(buf);
+}
+
+// the url the transport fetches for a member list: <url>/<count>-<key>?m=...
+// Each member value is member_ref + tail - a reference the SERVER can
+// resolve (e.g. "/patch/files/<tail>"), percent-encoded as one query value
+static astr_t vfs_bundle_url_locked(const std::vector<astr_t> &tails, const astr_t &key)
+{
+    astr_t url = s_bundle.url + "/" + std::to_string(tails.size()) + "-" + key + "?m=";
+    for (size_t i = 0; i < tails.size(); ++i)
+    {
+        if (i != 0)
+            url += "&m=";
+        const astr_t ref =
+            (!s_bundle.member_ref.empty() && s_bundle.member_ref.back() == '/')
+                ? s_bundle.member_ref + tails[i]
+                : s_bundle.member_ref + "/" + tails[i];
+        // percent-encode the path separators: each member is its own query
+        // value, decoded once by the server (blob_query_url -> percent_decode)
+        for (unsigned char c : ref)
+        {
+            if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
+                url += char(c);
+            else
+            {
+                char enc[4];
+                snprintf(enc, sizeof(enc), "%%%02X", c);
+                url += enc;
+            }
+        }
+    }
+    return url;
+}
+
+// called with s_mutex held: fold the queued whole-blob jobs into one bundle
+// when the configured limits allow it. The first member's job is the one the
+// worker rides (its state flips to running); the rest wait on the slot and
+// are marked done by the completing worker AFTER the members are on disk.
+static bool vfs_bundle_gather_locked(std::shared_ptr<vfs_fetch_job> *ride)
+{
+    if (s_bundle.url.empty() || s_bundle_refusals >= BUNDLE_REFUSAL_MAX)
+        return false;
+    std::vector<astr_t> tails;
+    std::vector<std::shared_ptr<vfs_fetch_job>> jobs;
+    uint64_t bytes = 0;
+    for (auto &job : s_queue)
+    {
+        if (job.state != vfs_fetch_queued || job.stream || job.manifest)
+            continue;
+        // a member whose bundle already failed rides the plain path only
+        if (job.bundle_spent)
+            continue;
+        // unknown sizes cannot be budgeted against max_bytes
+        if (job.expected == 0)
+            continue;
+        if (!s_bundle.member_prefix.empty() &&
+            job.tail.compare(0, s_bundle.member_prefix.size(), s_bundle.member_prefix) != 0)
+            continue;
+        if (tails.size() >= s_bundle.max_members)
+            break;
+        if (!tails.empty() && bytes + job.expected > s_bundle.max_bytes)
+            break;
+        bytes += job.expected;
+        tails.push_back(job.tail);
+        jobs.push_back(s_active[job.tail]);
+    }
+    if (tails.empty())
+        return false;
+    // one member is a plain GET (and one job per worker already covers it)
+    if (tails.size() < 2)
+        return false;
+
+    vfs_fetch_bundle_slot slot;
+    slot.key = vfs_bundle_key(tails);
+    slot.tails = tails;
+    s_bundles.push_back(slot);
+    const int index = int(s_bundles.size()) - 1;
+    for (size_t i = 0; i < jobs.size(); ++i)
+    {
+        auto &job = *jobs[i];
+        job.state = vfs_fetch_running;
+        job.bundle_slot = index;
+        job.bundle_wait = i != 0;
+        job.bundled_ride = i == 0;
+    }
+    for (auto &q : s_queue)
+    {
+        // the copies carry the running mark exactly like pop does: the
+        // worker wait predicate must not see them runnable again, and the
+        // settle erase/requeue predicates match on running copies
+        if (q.state != vfs_fetch_queued)
+            continue;
+        for (const auto &tail : tails)
+        {
+            if (q.tail == tail)
+            {
+                q.state = vfs_fetch_running;
+                break;
+            }
+        }
+    }
+    *ride = jobs[0];
+    LOG_DEBUG(
+        "fetch: bundling %zu members (%llu bytes) as %s",
+        tails.size(),
+        (unsigned long long)bytes,
+        vfs_bundle_url_locked(tails, slot.key).c_str());
+    return true;
+}
+
+// called with s_mutex held: settle every member of a finished bundle. On
+// success the members are on disk (the riding worker wrote them) and each
+// waiter is done. On failure each member is re-queued ONCE as a plain job
+// (bundle_spent keeps it out of any later bundle) - the demand retry ladder
+// lives in vfs_fetch_http, which the bundle path bypasses, so this requeue
+// IS the retry. A member that fails its plain requeue settles failed like
+// any plain job. s_queue entries are erased here as well: only the riding
+// job's own completion would otherwise remove them.
+static void vfs_bundle_settle_locked(int index, bool ok)
+{
+    if (index < 0 || index >= int(s_bundles.size()))
+        return;
+    auto &slot = s_bundles[index];
+    slot.state = ok ? 1 : 2;
+    if (ok)
+        s_stats.bundled++;
+    for (const auto &tail : slot.tails)
+    {
+        auto it = s_active.find(tail);
+        if (it == s_active.end())
+            continue;
+        auto &job = *it->second;
+        if (!ok)
+        {
+            // EVERY member rides again as a plain job, the rider included:
+            // its worker is still executing, so the rider is flagged for its
+            // completion (which must keep to the accounting and leave the
+            // freshly requeued job alone)
+            const bool was_rider = !job.bundle_wait;
+            job.bundle_slot = -1;
+            job.bundle_wait = false;
+            job.bundle_spent = true;
+            job.bundle_requeued = was_rider;
+            job.state = vfs_fetch_queued;
+            for (auto &q : s_queue)
+            {
+                if (q.tail == tail && q.state == vfs_fetch_running)
+                {
+                    q.state = vfs_fetch_queued;
+                    q.bundle_slot = -1;
+                    q.bundle_wait = false;
+                    q.bundle_spent = true;
+                    break;
+                }
+            }
+            continue;
+        }
+        if (!job.bundle_wait)
+            continue; // the riding job's own completion settles it
+        {
+            // counted as in flight at enqueue: settle exactly once here
+            s_buffered -= job.expected ? job.expected : VFS_FETCH_SIZE_GUESS;
+            s_stats.inflight--;
+            job.state = vfs_fetch_done;
+            job.bundle_slot = -1;
+            job.bundle_wait = false;
+            s_queue.erase(std::remove_if(
+                              s_queue.begin(),
+                              s_queue.end(),
+                              [&tail](const vfs_fetch_job &q) {
+                                  return q.tail == tail && q.state == vfs_fetch_running;
+                              }),
+                          s_queue.end());
+            s_active.erase(it);
+        }
+    }
+    if (!ok)
+        s_cv_jobs.notify_all(); // the requeued members are runnable now
+    // the slot index is never reused: a late worker may still hold it
+}
+
+// one bundle transfer on a worker: build the url from the slot, let the
+// transport deliver each member, write them to the store, settle the jobs.
+// `bytes_out` receives the delivered member bytes (stats). A refusal
+// (transport cannot bundle / 404) counts toward the adaptive disable: after
+// BUNDLE_REFUSAL_MAX consecutive ones the engine stops gathering for the
+// session - a bundle-less server must not cost one dead request per wave.
+static bool vfs_fetch_bundle_run(const vfs_fetch_job &job, uint64_t *bytes_out)
+{
+    astr_t url;
+    std::vector<std::vector<uint8_t>> bodies;
+    std::vector<astr_t> tails;
+    int slot_index = -1;
+    {
+        std::unique_lock<std::mutex> lock(s_mutex);
+        if (job.bundle_slot < 0 || job.bundle_slot >= int(s_bundles.size()))
+            return false;
+        auto &slot = s_bundles[job.bundle_slot];
+        tails = slot.tails;
+        slot_index = job.bundle_slot;
+        url = vfs_bundle_url_locked(slot.tails, slot.key);
+    }
+    const vfs_transport_result res = vfs_transport_active()->fetch_bundled(
+        url.c_str(),
+        job.tail.c_str(),
+        s_bundle_max_bytes,
+        vfs_fetch_bundle_sink,
+        &bodies,
+        0,
+        false);
+    bool ok = res.ok && bodies.size() == tails.size();
+    if (ok)
+    {
+        for (size_t i = 0; i < tails.size() && ok; ++i)
+            ok = vfs_fetch_store_write(tails[i].c_str(), bodies[i]);
+    }
+    {
+        std::unique_lock<std::mutex> lock(s_mutex);
+        if (res.status != 0)
+            s_stats.bundles++; // one served bundle request (either outcome)
+        if (ok)
+        {
+            s_bundle_refusals = 0;
+        }
+        else if (res.status == 0 || res.status == 404)
+        {
+            if (++s_bundle_refusals >= BUNDLE_REFUSAL_MAX && !s_bundle.url.empty())
+            {
+                s_bundle.url.clear();
+                LOG_INFO("fetch: bundling refused %u times, disabled for the session", s_bundle_refusals);
+            }
+        }
+        vfs_bundle_settle_locked(slot_index, ok);
+    }
+    if (ok && bytes_out)
+        *bytes_out = res.bytes;
+    if (!ok)
+        LOG_WARN("bundle failed (%zu members, status %ld): %s", tails.size(), res.status, url.c_str());
+    return ok;
+}
+
+// ---------------------------------------------------------------------------
 // worker pool
 // ---------------------------------------------------------------------------
 
@@ -239,6 +546,12 @@ static bool vfs_fetch_pop(std::shared_ptr<vfs_fetch_job> *out)
     // sweep job only runs inside the sweep lane (s_sweep_cap): when the
     // lane is full the sweep is skipped for demand and background work,
     // which is exactly the render-critical precedence the lane exists for
+    // a bundle of queued small blobs is one job for the lane accounting
+    if (vfs_bundle_gather_locked(out))
+    {
+        ++s_sweep_running; // rides a lane slot (never demand-preempting)
+        return true;
+    }
     auto best = s_queue.end();
     for (auto it = s_queue.begin(); it != s_queue.end(); ++it)
     {
@@ -322,6 +635,7 @@ static void vfs_fetch_worker_run(size_t index)
 
         int stream_again_ms = -1;
         std::vector<uint8_t> body;
+        uint64_t bundle_bytes = 0;
         bool ok = false;
         if (job->stream)
         {
@@ -350,63 +664,96 @@ static void vfs_fetch_worker_run(size_t index)
 #else
                 const uint64_t cap = job->expected;
 #endif
-                ok = vfs_fetch_http(
-                    url.c_str(), job->tail.c_str(), cap, job->manifest, &body, job->tail.c_str());
-                if (ok && job->expected && body.size() != job->expected)
+                if (job->bundle_slot >= 0)
                 {
-#if defined(XUO_EMSC)
-                    // normalized (plain) transfers legitimately differ from the
-                    // manifest's compressed size; only a truncated transfer is
-                    // a failure
-                    if (body.size() < job->expected)
+                    // a bundle: the run writes every member (including this
+                    // tail) to the store itself - the shared size check and
+                    // store write below MUST NOT run for it (the rider's
+                    // `body` is empty by design, the check would purge the
+                    // member the run just wrote)
+                    ok = vfs_fetch_bundle_run(*job, &bundle_bytes);
+                }
+                else
+                {
+                    ok = vfs_fetch_http(
+                        url.c_str(),
+                        job->tail.c_str(),
+                        cap,
+                        job->manifest,
+                        &body,
+                        job->tail.c_str());
+                    if (ok && job->expected && body.size() != job->expected)
                     {
-                        LOG_WARN("size mismatch (truncated): %s", job->tail.c_str());
+#if defined(XUO_EMSC)
+                        // normalized (plain) transfers legitimately differ from
+                        // the manifest's compressed size; only a truncated
+                        // transfer is a failure
+                        if (body.size() < job->expected)
+                        {
+                            LOG_WARN("size mismatch (truncated): %s", job->tail.c_str());
+                            vfs_fetch_store_purge(job->tail.c_str());
+                            ok = false;
+                        }
+                        else
+                        {
+                            LOG_INFO(
+                                "size accepted (normalized): %s (%zu bytes)",
+                                job->tail.c_str(),
+                                body.size());
+                        }
+#else
+                        LOG_WARN(
+                            "size mismatch: %s (got %zu, expected %" PRIu64 ")",
+                            job->tail.c_str(),
+                            body.size(),
+                            job->expected);
                         vfs_fetch_store_purge(job->tail.c_str());
                         ok = false;
-                    }
-                    else
-                    {
-                        LOG_INFO(
-                            "size accepted (normalized): %s (%zu bytes)",
-                            job->tail.c_str(),
-                            body.size());
-                    }
-#else
-                    LOG_WARN(
-                        "size mismatch: %s (got %zu, expected %" PRIu64 ")",
-                        job->tail.c_str(),
-                        body.size(),
-                        job->expected);
-                    vfs_fetch_store_purge(job->tail.c_str());
-                    ok = false;
 #endif
+                    }
+                    if (ok)
+                        ok = vfs_fetch_store_write(job->tail.c_str(), body);
                 }
-                if (ok)
-                    ok = vfs_fetch_store_write(job->tail.c_str(), body);
             }
         }
 
         {
             std::unique_lock<std::mutex> lock(s_mutex);
+            // a settle-requeued bundle ride is back in the queue as a plain
+            // job: its accounting completes HERE, but there is nothing to
+            // fail or erase (settle owns the requeue). The flag - never the
+            // job state, which legitimately reads queued while running
+            const bool requeued = job->bundle_requeued;
+            job->bundle_requeued = false;
             s_stats.inflight--;
             s_stats.requests++;
-            s_stats.bytes += body.size();
+            s_stats.bytes += body.size() + bundle_bytes;
             s_buffered -= job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
             if (job->stream)
                 --s_stream_running; // the chunk lane frees for the next step
+            else if (job->bundled_ride)
+            {
+                // mirrors the gather's lane take, exactly once: the flag
+                // clears here so a requeued ride never decrements twice
+                --s_sweep_running;
+                job->bundled_ride = false;
+            }
             else if (job->priority >= VFS_FETCH_PRIO_SWEEP)
                 --s_sweep_running; // the lane slot frees for the next sweep
-            job->state = ok ? vfs_fetch_done : vfs_fetch_failed;
-            if (!ok)
-                s_stats.failures++;
-            s_queue.erase(std::remove_if(
-                              s_queue.begin(),
-                              s_queue.end(),
-                              [&job](const vfs_fetch_job &q) {
-                                  return q.tail == job->tail && q.state == vfs_fetch_running;
-                              }),
-                          s_queue.end());
-            s_active.erase(job->tail);
+            if (!requeued)
+            {
+                job->state = ok ? vfs_fetch_done : vfs_fetch_failed;
+                if (!ok)
+                    s_stats.failures++;
+                s_queue.erase(std::remove_if(
+                                  s_queue.begin(),
+                                  s_queue.end(),
+                                  [&job](const vfs_fetch_job &q) {
+                                      return q.tail == job->tail && q.state == vfs_fetch_running;
+                                  }),
+                              s_queue.end());
+                s_active.erase(job->tail);
+            }
             if (job->stream && stream_again_ms >= 0)
             {
                 // keep the file's chunk loop alive: re-queue at the stream
@@ -554,6 +901,27 @@ void vfs_fetch_set_repos(const char *manifest_repo, const char *file_repo)
     std::unique_lock<std::mutex> lock(s_mutex);
     s_manifest_repo = manifest_repo ? manifest_repo : "";
     s_file_repo = file_repo ? file_repo : "";
+}
+
+void vfs_fetch_set_bundle(const vfs_fetch_bundle_params &params)
+{
+    std::unique_lock<std::mutex> lock(s_mutex);
+    s_bundle = params;
+    if (!s_bundle.url.empty() && s_bundle.url.back() == '/')
+        s_bundle.url.pop_back();
+    s_bundle_max_bytes = s_bundle.max_bytes ? s_bundle.max_bytes : (4ull << 20);
+    LOG_INFO(
+        "fetch: bundling %s (prefix '%s', max %u members, %llu bytes)",
+        s_bundle.url.empty() ? "disabled" : "enabled",
+        s_bundle.member_prefix.c_str(),
+        s_bundle.max_members,
+        (unsigned long long)s_bundle.max_bytes);
+}
+
+void vfs_fetch_clear_bundle()
+{
+    std::unique_lock<std::mutex> lock(s_mutex);
+    s_bundle = vfs_fetch_bundle_params();
 }
 
 void vfs_fetch_set_store(const fs_path &blobs_dir)

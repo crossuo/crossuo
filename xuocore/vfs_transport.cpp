@@ -120,6 +120,71 @@ public:
         }
         return result;
     }
+
+#if defined(XUO_EMSC)
+    // one GET carrying many members: the server answers
+    //   [u32 LE count][per member: u32 LE len][bytes...]
+    // The engine writes the members to the store itself, so every member is
+    // handed to the sink in order; `ok` only says the framing parsed.
+    vfs_transport_result fetch_bundled(
+        const char *url,
+        const char *tail,
+        uint64_t max_bytes,
+        vfs_transport_sink sink,
+        void *sink_context,
+        uint32_t timeout_ms,
+        bool manifest) override
+    {
+        (void)tail;
+        (void)timeout_ms;
+        (void)manifest;
+        http_response reply;
+        // the cap bounds the whole answer, not one blob
+        if (!http_get(url, VUOI_AGENT_NAME, size_t(max_bytes + (64ull << 20)), &reply))
+            return {};
+        vfs_transport_result result;
+        result.status = reply.status;
+        result.retry_after = reply.retry_after;
+        if (reply.status == 204)
+            return result; // supported, nothing to bundle: the jobs stay plain GETs
+        if (reply.status != 200)
+        {
+            LOG_WARN("bundle GET %s: status %ld", url, reply.status);
+            return result;
+        }
+        const auto &body = reply.body;
+        if (body.size() < 4)
+            return result;
+        const uint32_t count =
+            uint32_t(body[0]) | (uint32_t(body[1]) << 8) | (uint32_t(body[2]) << 16) |
+            (uint32_t(body[3]) << 24);
+        size_t at = 4;
+        uint64_t delivered = 0;
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            if (at + 4 > body.size())
+            {
+                LOG_WARN("bundle %s: truncated member header", url);
+                return result;
+            }
+            const uint32_t len = uint32_t(body[at]) | (uint32_t(body[at + 1]) << 8) |
+                                 (uint32_t(body[at + 2]) << 16) | (uint32_t(body[at + 3]) << 24);
+            at += 4;
+            if (at + len > body.size())
+            {
+                LOG_WARN("bundle %s: truncated member %u", url, i);
+                return result;
+            }
+            if (!sink(sink_context, body.data() + at, len))
+                return result;
+            at += len;
+            delivered += len;
+        }
+        result.ok = true;
+        result.bytes = delivered;
+        return result;
+    }
+#endif
 };
 
 transport_http s_default;

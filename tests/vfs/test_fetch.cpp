@@ -39,6 +39,7 @@
 #include <xuocore/uop.h>
 #include <xuocore/vfs.h>
 #include <xuocore/vfs_fetch.h>
+#include <xuocore/vfs_transport.h>
 #include <xuocore/vfs_source_aops.h>
 #include <common/checksum.h>
 #include <xuocore/uop.h>
@@ -427,6 +428,177 @@ VFS_TEST(fetch_body_cap_aborts_oversized)
     TEST_CHECK_MSG(
         !fs_path_exists(fs_path_join(prod.root, "fetch-blobs", tail)),
         "an aborted body must not land in the store");
+    vfs_fetch_stop();
+    test_server_stop(srv);
+}
+
+// fake transport for the bundling test: speaks the bundle framing the web
+// transport speaks, and counts how many requests each shape cost
+struct bundle_test_transport : vfs_transport
+{
+    astr_t repo;
+    fs_path store;  // destination (the engine writes here)
+    fs_path source; // fixture blobs the server "serves"
+    std::atomic<uint64_t> gets{ 0 };
+    std::atomic<uint64_t> bundles{ 0 };
+
+    vfs_transport_result fetch(
+        const char *url,
+        const char *tail,
+        uint64_t,
+        vfs_transport_sink sink,
+        void *sink_context,
+        uint32_t,
+        bool) override
+    {
+        gets++;
+        vfs_transport_result r;
+        std::vector<uint8_t> body;
+        // the file the test wrote lives under prod.blobs; the store is the
+        // destination, so serve from the test product through the url
+        const astr_t u = url ? url : "";
+        const auto slash = u.find("/blobs/");
+        if (slash == astr_t::npos)
+            return r;
+        const astr_t rel = u.substr(slash + 7);
+        if (!test_read_file(fs_path_join(source, rel), body))
+            return r; // the fixture does not have it
+        r.ok = sink(sink_context, body.data(), body.size());
+        r.status = 200;
+        r.bytes = body.size();
+        return r;
+    }
+
+    vfs_transport_result fetch_bundled(
+        const char *url,
+        const char *,
+        uint64_t,
+        vfs_transport_sink sink,
+        void *sink_context,
+        uint32_t,
+        bool) override
+    {
+        bundles++;
+        vfs_transport_result r;
+        const astr_t u = url ? url : "";
+        // members arrive as ?m=<pct-encoded tail>
+        std::vector<astr_t> members;
+        size_t at = u.find("?m=");
+        while (at != astr_t::npos)
+        {
+            at += 3;
+            const size_t end = u.find("&m=", at);
+            astr_t enc = u.substr(at, end == astr_t::npos ? astr_t::npos : end - at);
+            astr_t dec;
+            for (size_t i = 0; i < enc.size(); ++i)
+            {
+                if (enc[i] == '%' && i + 2 < enc.size())
+                {
+                    dec += char(std::stoi(enc.substr(i + 1, 2), nullptr, 16));
+                    i += 2;
+                }
+                else
+                    dec += enc[i];
+            }
+            // the engine sends server-resolvable references (<member_ref> +
+            // tail), the fake resolves them against its own repo root
+            const size_t rel = dec.find("/blobs/");
+            if (rel == astr_t::npos)
+                return r;
+            members.push_back(dec.substr(rel + 7));
+            at = end;
+        }
+        if (members.empty())
+            return r;
+        std::vector<uint8_t> out;
+        const uint32_t n = uint32_t(members.size());
+        out.insert(out.end(), {(uint8_t)(n), (uint8_t)(n >> 8), (uint8_t)(n >> 16), (uint8_t)(n >> 24)});
+        std::vector<std::vector<uint8_t>> bodies;
+        for (const auto &m : members)
+        {
+            std::vector<uint8_t> body;
+            if (!test_read_file(fs_path_join(source, m), body))
+                return r; // not served: the engine settles it as failed
+            const uint32_t len = uint32_t(body.size());
+            out.insert(out.end(), {(uint8_t)(len), (uint8_t)(len >> 8), (uint8_t)(len >> 16), (uint8_t)(len >> 24)});
+            out.insert(out.end(), body.begin(), body.end());
+            bodies.push_back(std::move(body));
+        }
+        r.ok = sink(sink_context, out.data(), out.size());
+        r.status = 200;
+        return r;
+    }
+};
+
+// installs the fake transport for the test's lifetime
+struct bundle_transport_guard
+{
+    vfs_transport *prev;
+    explicit bundle_transport_guard(vfs_transport *t) { prev = vfs_transport_set(t); }
+    ~bundle_transport_guard() { vfs_transport_set(prev); }
+};
+
+VFS_TEST(fetch_bundles_small_blobs)
+{
+    test_vfs_shutdown guard;
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "fetch_bundle"));
+
+    test_server srv;
+    TEST_CHECK(test_server_start(srv, prod.root, false));
+
+    fetch_log_mute mute;
+    http_init(); // engine-level use: this test owns its curl globals
+    vfs_fetch_params fetch_params;
+    fetch_params.workers = 1;
+    TEST_CHECK(vfs_fetch_start(fetch_params));
+    const auto store = fs_path_join(prod.root, "fetch-blobs");
+    vfs_fetch_set_store(store);
+    const auto repo = test_server_url(srv, "/blobs/");
+    vfs_fetch_set_repos(repo.c_str(), repo.c_str());
+
+    // a transport that answers bundles and plain GETs the same way (the
+    // real one is the web XHR transport; the seam is what is tested here)
+    bundle_test_transport transport;
+    transport.repo = repo;
+    transport.store = store;
+    transport.source = prod.blobs;
+    bundle_transport_guard swap(&transport);
+
+    vfs_fetch_bundle_params bundle;
+    bundle.url = test_server_url(srv, "/bundle");
+    bundle.member_ref = "/blobs"; // same root the repos hang from
+    bundle.max_members = 8;
+    vfs_fetch_set_bundle(bundle);
+
+    // three small blobs, fetched concurrently: the engine must fold them
+    std::vector<astr_t> tails;
+    std::vector<uint64_t> sizes;
+    for (size_t i = 0; i < 3; ++i)
+    {
+        const astr_t tail = test_loose_tail(("bundle" + std::to_string(i) + ".mul").c_str());
+        std::vector<uint8_t> body(100 + i, uint8_t(0x40 + i));
+        TEST_CHECK(test_write_file(fs_path_join(prod.blobs, tail), body));
+        tails.push_back(tail);
+        sizes.push_back(body.size());
+    }
+    // all in flight at once: the batch enqueues them together
+    std::thread runner([&] { vfs_fetch_batch(tails, sizes, VFS_FETCH_PRIO_BG, false, nullptr); });
+    runner.join();
+
+    TEST_CHECK_MSG(
+        transport.bundles >= 1,
+        "no bundle was used (%llu plain gets, %llu bundles)",
+        (unsigned long long)transport.gets,
+        (unsigned long long)transport.bundles);
+    for (size_t i = 0; i < tails.size(); ++i)
+    {
+        std::vector<uint8_t> stored;
+        TEST_CHECK_MSG(
+            test_read_file(fs_path_join(store, tails[i]), stored), "missing blob: %s", tails[i].c_str());
+        TEST_CHECK_MSG(stored.size() == sizes[i], "bundle member size mismatch: %s", tails[i].c_str());
+    }
+    vfs_fetch_clear_bundle();
     vfs_fetch_stop();
     test_server_stop(srv);
 }
