@@ -3,9 +3,11 @@
 
 #include "Sockets.h"
 #include <cassert>
+#include <common/logging/logging.h> // Client log category (web transport)
 #include <common/str.h>
 #include <cstdint>
 #include <string.h>
+#include <vector> // ws_context receive buffer (web transport)
 
 #define SOCKET_LOG(...)
 #define SOCKET_DUMP(...)
