@@ -345,12 +345,12 @@
           document.addEventListener(evName, webTouchBlock, { passive: false });
         });
       }
-      // device diagnostics: touch devices (or ?debug=1) POST one-line layout
+      // device diagnostics: ?debug=1 POSTs one-line layout snapshots to the
       // snapshots to the serving proxy (xuoproxy /client-log) so a broken
       // mobile layout (tiny/mis-sized canvas, viewport quirks) can be
       // diagnosed from the SERVER log without any access to the device
       var WEB_DEBUG = new URLSearchParams(window.location.search).get('debug') === '1';
-      if (WEB_TOUCH_DEVICE || WEB_DEBUG) {
+      if (WEB_DEBUG) {
         var diagT0 = Date.now();
         var diagSeq = 0;
         var diagLast = 0;
