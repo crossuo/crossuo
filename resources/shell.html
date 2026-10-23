@@ -836,6 +836,17 @@
         var OPFS_RESTORE_MS = 1500; // max boot delay spent pre-loading
         var opfsRoot = null;
         function opfsSupported() {
+          // mobile tabs run a far tighter memory budget: restoring the cache
+          // materializes every cached blob in MEMFS up front, which OOMs the
+          // tab right after loading (the exact failure the blob store's
+          // session-wipe design exists to avoid). Mobile keeps the http
+          // cache path; the discriminator mirrors the client's WebIsMobile
+          // (coarse primary pointer + touch hardware)
+          if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches &&
+              (navigator.maxTouchPoints > 0 || 'ontouchstart' in window)) {
+            if (WEBLOG) console.log('[opfs] mobile device: cache disabled (memory budget)');
+            return false;
+          }
           return !!(navigator.storage && navigator.storage.getDirectory);
         }
         function opfsInit() {
