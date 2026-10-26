@@ -32,7 +32,13 @@ build_dir="build/shardchk-host"
 # ---------------------------------------------------------------------------
 # 1. depot
 # ---------------------------------------------------------------------------
-if [[ -d "$depot/shards" ]]; then
+has_depot_shards() {
+  # legacy layout: per-shard cfg files in <depot>/shards (validated and
+  # aggregated by wasm-shards.sh); current upstream layout: a single
+  # aggregated shards.cfg at the depot root (served as-is)
+  [[ -d "$depot/shards" || -f "$depot/shards.cfg" ]]
+}
+if has_depot_shards; then
   if git -C "$depot" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     if ! GIT_TERMINAL_PROMPT=0 git -C "$depot" pull --ff-only --quiet; then
       echo ">> [shards] warning: depot update failed - using existing $depot" >&2
@@ -45,8 +51,8 @@ else
     exit 1
   fi
 fi
-if [[ ! -d "$depot/shards" ]]; then
-  echo ">> [shards] error: no $depot/shards after fetch" >&2
+if ! has_depot_shards; then
+  echo ">> [shards] error: no $depot/shards or $depot/shards.cfg after fetch" >&2
   exit 1
 fi
 export XUO_SHARDS_DEPOT="$depot"
@@ -57,8 +63,12 @@ export XUO_SHARDS_DEPOT="$depot"
 # wasm-shards.sh accepts any build/<dir>/tools/xuoi/shardchk that is runnable
 # and newer than the shard schema sources; a trusted XUO_SHARDCHK override
 # skips this whole section.
+# the aggregated depot layout needs no shardchk at all: wasm-shards.sh
+# serves the file as-is, so skip the whole native host build
 override="${XUO_SHARDCHK:-}"
-if [[ -z "$override" || ! -x "$override" ]]; then
+if [[ -f "$depot/shards.cfg" && ! -d "$depot/shards" ]]; then
+  :
+elif [[ -z "$override" || ! -x "$override" ]]; then
   host_bin="$ROOT/$build_dir/tools/xuoi/shardchk"
   srcs=("$ROOT/tools/xuoi/shards.cpp" "$ROOT/tools/xuoi/cfg_shard.h")
   fresh=1

@@ -51,7 +51,7 @@ jobs:
           - macos-x64
           - macos-arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -62,8 +62,8 @@ jobs:
         run: |
           mkdir -p scripts/docker/macos/sdk
           curl -L --fail --retry 3 \
-            -o scripts/docker/macos/sdk/MacOSX15.1.sdk.tar.xz \
-            https://github.com/joseluisq/macosx-sdks/releases/download/v2024-11-17/MacOSX15.1.sdk.tar.xz
+            -o scripts/docker/macos/sdk/MacOSX15.5.sdk.tar.xz \
+            https://github.com/joseluisq/macosx-sdks/releases/download/15.5/MacOSX15.5.sdk.tar.xz
 
       # deploy.sh builds xuoproxy (release) into dist/wasm for the wasm target
       - name: rust toolchain
@@ -74,7 +74,7 @@ jobs:
         run: ./scripts/deploy.sh "${{ matrix.target }}"
 
       - name: upload dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dist-${{ matrix.target }}
           path: |
@@ -92,11 +92,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true

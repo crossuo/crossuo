@@ -31,6 +31,18 @@ dist="${1:-dist/wasm}"
 
 depot="${XUO_SHARDS_DEPOT:-$ROOT/../shards}"
 if [[ ! -d "$depot/shards" ]]; then
+  # current upstream depot layout: a single aggregated shards.cfg at the
+  # depot root (crossuo/shards dropped the per-shard files) - serve it
+  # as-is; no shardchk validation or aggregation is possible or needed
+  if [[ -f "$depot/shards.cfg" ]]; then
+    mkdir -p "$dist"
+    if cp "$depot/shards.cfg" "$dist/shards.cfg"; then
+      echo ">> [shards] installed prebuilt $depot/shards.cfg into $dist/"
+      exit 0
+    fi
+    echo ">> [shards] failed to copy $depot/shards.cfg into $dist/" >&2
+    exit 1
+  fi
   echo ">> [shards] depot not found at $depot/shards - skipping shards.cfg generation"
   exit 0
 fi
