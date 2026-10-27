@@ -85,6 +85,9 @@ struct vfs_journal
 bool vfs_journal_open(vfs_journal &journal, const fs_path &path);
 bool vfs_journal_close(vfs_journal &journal);
 bool vfs_journal_mark(vfs_journal &journal, const vfs_journal_record &record);
+// one explicit durable barrier for a batch of marks written flush-only (the
+// caller lowered journal.durable around a bulk loop)
+bool vfs_journal_durable_sync(vfs_journal &journal);
 // replays every record appended to the journal (or across truncation: partial
 // trailing lines are ignored)
 bool vfs_journal_replay(const fs_path &path, std::vector<vfs_journal_record> &out);

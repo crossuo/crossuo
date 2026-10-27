@@ -455,8 +455,11 @@ static void vfs_bundle_settle_locked(int index, bool ok)
         if (!job.bundle_wait)
             continue; // the riding job's own completion settles it
         {
-            // counted as in flight at enqueue: settle exactly once here
-            s_buffered -= job.expected ? job.expected : VFS_FETCH_SIZE_GUESS;
+            // counted as in flight at enqueue: settle exactly once here.
+            // s_buffered is NOT decremented: the engine only adds a popped
+            // job's expected (the rider's) to s_buffered - the waiters were
+            // never added, so subtracting them here underflows the backpressure
+            // counter and parks the whole pool once it wraps
             s_stats.inflight--;
             job.state = vfs_fetch_done;
             job.bundle_slot = -1;
@@ -725,9 +728,16 @@ static void vfs_fetch_worker_run(size_t index)
             // job state, which legitimately reads queued while running
             const bool requeued = job->bundle_requeued;
             job->bundle_requeued = false;
-            s_stats.inflight--;
-            s_stats.requests++;
-            s_stats.bytes += body.size() + bundle_bytes;
+            // the requeued-ride completion (this one) must NOT spend the job's
+            // own accounting: the plain re-execution that follows is the real
+            // completion (its pop re-adds s_buffered). Counting both drains
+            // s_stats.inflight past zero and vfs_fetch_idle never fires again
+            if (!requeued)
+            {
+                s_stats.inflight--;
+                s_stats.requests++;
+                s_stats.bytes += body.size() + bundle_bytes;
+            }
             s_buffered -= job->expected ? job->expected : VFS_FETCH_SIZE_GUESS;
             if (job->stream)
                 --s_stream_running; // the chunk lane frees for the next step

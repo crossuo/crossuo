@@ -847,7 +847,7 @@
             if (WEBLOG) console.log('[opfs] mobile device: cache disabled (memory budget)');
             return false;
           }
-          return !!(navigator.storage && navigator.storage.getDirectory);
+          return false;//!!(navigator.storage && navigator.storage.getDirectory);
         }
         function opfsInit() {
           if (!opfsSupported()) {
@@ -1595,7 +1595,7 @@
           // same-origin first (deployments may vendor shards.cfg next to
           // index.html), then the curated list on GitHub (CORS-enabled)
           return ['shards.cfg',
-                  'https://raw.githubusercontent.com/crossuo/shards/refs/heads/master/shards.cfg'];
+                  'https://raw.githubusercontent.com/crossuo/shards/master/shards.cfg'];
         }
 
         function fetchText(url, cb) {

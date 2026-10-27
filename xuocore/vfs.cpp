@@ -3298,6 +3298,22 @@ static void vfs_boot_apply_diff(const VfsPlan &plan, const vfs_plan_diff_result 
     vfs_store_params store_params;
     store_params.blobs_dir = s_params.blobs_dir;
     store_params.install_dir = s_params.install_dir;
+    // an update can reset tens of thousands of assets: the per-mark durable
+    // fsync (the journal's boot-critical default) would issue one fsync per
+    // asset here - minutes of frozen splash on a large diff. The resets only
+    // need to be durable before the boot proceeds past the diff: mark
+    // flush-only, then one durable sync when the loop is done
+    struct journal_durability
+    {
+        vfs_journal &j;
+        bool saved;
+        journal_durability(vfs_journal &journal) : j(journal), saved(j.durable) { j.durable = false; }
+        ~journal_durability()
+        {
+            j.durable = saved;
+            vfs_journal_durable_sync(j); // the batch becomes durable here
+        }
+    } durability(s_journal);
     store_params.state_dir = s_params.state_dir;
     for (const auto &item : diff.changed)
     {
@@ -4227,6 +4243,16 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
             vfs_boot_apply_diff(plan, diff);
         else if (drifted)
             LOG_INFO("update: drifted plan, no differences");
+        // boot-fetch marks run flush-only: with the journal still in its
+        // boot-critical default, every fetched asset would pay one journal
+        // fsync before its completion is reported - minutes of pure fsync on
+        // an update pulling tens of thousands of assets (the splash sits
+        // through all of it). The folds are the durability barrier: chunk,
+        // convergence and tier folds write the state bytes and a durable
+        // journal mark, so a crash loses at most one fold window - and the
+        // next boot's reconcile re-derives truth from the on-disk store
+        // regardless of what the journal claims
+        s_journal.durable = false;
         // the on-disk files are the source of truth for the sparse pipeline;
         // arena mode keeps no files (its state is granule residency) -
         // residency is the boot's own

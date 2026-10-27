@@ -340,6 +340,13 @@ bool vfs_journal_mark(vfs_journal &journal, const vfs_journal_record &record)
     return vfs_journal_sync(journal.handle, journal.durable);
 }
 
+bool vfs_journal_durable_sync(vfs_journal &journal)
+{
+    if (journal.handle == nullptr)
+        return false;
+    return vfs_journal_sync(journal.handle, true);
+}
+
 bool vfs_journal_replay(const fs_path &path, std::vector<vfs_journal_record> &out)
 {
     out.clear();
