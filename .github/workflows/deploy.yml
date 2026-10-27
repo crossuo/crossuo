@@ -57,13 +57,15 @@ jobs:
 
       # the crossuo/macos image (osxcross) requires a SDK tarball in
       # scripts/docker/macos/sdk/ before it can be built - see the Dockerfile
+      # NOTE: SDK 12.3 is the newest version osxcross' bundled clang accepts
+      # here (15.x libc++ headers fail the toolchain sanity check)
       - name: fetch macOS SDK
         if: startsWith(matrix.target, 'macos-')
         run: |
           mkdir -p scripts/docker/macos/sdk
           curl -L --fail --retry 3 \
-            -o scripts/docker/macos/sdk/MacOSX15.5.sdk.tar.xz \
-            https://github.com/joseluisq/macosx-sdks/releases/download/15.5/MacOSX15.5.sdk.tar.xz
+            -o scripts/docker/macos/sdk/MacOSX12.3.sdk.tar.xz \
+            https://github.com/joseluisq/macosx-sdks/releases/download/12.3/MacOSX12.3.sdk.tar.xz
 
       # deploy.sh builds xuoproxy (release) into dist/wasm for the wasm target
       - name: rust toolchain
@@ -107,7 +109,7 @@ jobs:
         run: |
           mkdir -p release
           find artifacts -maxdepth 1 -type f -name 'crossuo-*' -exec cp {} release/ \;
-          ver="$(git describe --always --dirty 2>/dev/null || echo dev)"
+          ver="$(git describe --tags --match 'v*' --abbrev=7 2>/dev/null || echo dev)"
           cp artifacts/wasm/xuoproxy "release/xuoproxy-${ver}-linux-x64"
           count=$(find release -type f | wc -l)
           if [[ "$count" -eq 0 ]]; then
