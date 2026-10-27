@@ -343,10 +343,12 @@ package_target() {
   local target="$1"
   local b="build/$target" out="dist/$target"
   local ver
-  # prefer a tag when HEAD sits exactly on one (releases package as
-  # crossuo-<target>-2.0.0); fall back to the short-hash describe
-  ver=$(git describe --tags --exact-match --dirty 2>/dev/null) ||
-    ver=$(git describe --always --dirty 2>/dev/null) || ver=dev
+  # use a version tag only when HEAD sits exactly on one (releases package
+  # as crossuo-<target>-v2.0.0); non-release builds use the commit hash
+  ver=$(git describe --tags --match 'v*' --exact-match --dirty 2>/dev/null)
+  if [[ -z "$ver" ]]; then
+    ver=$(git rev-parse --short HEAD 2>/dev/null) || ver=dev
+  fi
   local name="crossuo-$target-$ver"
 
   rm -rf "$out"; mkdir -p "$out"

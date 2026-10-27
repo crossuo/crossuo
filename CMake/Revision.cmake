@@ -23,8 +23,9 @@ if(GIT_FOUND)
   EXECUTE_PROCESS(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
       OUTPUT_VARIABLE XUO_WC_REVISION
       OUTPUT_STRIP_TRAILING_WHITESPACE)
-  # defines XUO_WC_DESCRIBE
-  EXECUTE_PROCESS(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${GIT_EXECUTABLE} describe --always --long --dirty
+  # defines XUO_WC_DESCRIBE: only version tags (v*) are referenced; for
+  # non-release builds the --always fallback yields the short commit hash
+  EXECUTE_PROCESS(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${GIT_EXECUTABLE} describe --always --long --dirty --match v*
       OUTPUT_VARIABLE XUO_WC_DESCRIBE
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
