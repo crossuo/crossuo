@@ -158,7 +158,8 @@ _dockcross_wrapper() {
   local wrapper=".dockcross-cache/${image//\//_}"
   if [[ ! -x "$wrapper" ]]; then
     mkdir -p .dockcross-cache
-    echo ">> bootstrapping dockcross wrapper for $image"
+    # stderr only: this function's stdout is command-substituted by callers
+    echo ">> bootstrapping dockcross wrapper for $image" >&2
     # derived images (the *-deps layers) inherit the base image's baked-in
     # DEFAULT_DOCKCROSS_IMAGE, which would make the wrapper run the base
     # again - rewrite it so the wrapper invokes the image it was generated
