@@ -345,7 +345,7 @@ package_target() {
   local ver
   # use a version tag only when HEAD sits exactly on one (releases package
   # as crossuo-<target>-v2.0.0); non-release builds use the commit hash
-  ver=$(git describe --tags --match 'v*' --exact-match --dirty 2>/dev/null)
+  ver=$(git describe --tags --match 'v*' --exact-match --dirty 2>/dev/null || true)
   if [[ -z "$ver" ]]; then
     ver=$(git rev-parse --short HEAD 2>/dev/null) || ver=dev
   fi
