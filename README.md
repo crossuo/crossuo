@@ -11,12 +11,9 @@ Current supported platforms:
 - Windows 7+
 - Linux
 - MacOSX
-- WEB
+- Web/Wasm
 
-And x63, aarch64 and i386 architectures.
-
-> Note for Linux users wanting to use X:UO Assist, Qt5 with multimedia and script support is required:
-> `sudo apt install qtmultimedia5-dev qtscript5-dev`
+And x64, aarch64 and i386 architectures.
 
 ### Downloading
 
