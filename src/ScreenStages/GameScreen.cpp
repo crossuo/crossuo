@@ -2270,6 +2270,26 @@ void CGameScreen::SelectObject()
     }
     else if (m_GameScreenGump.Select() == nullptr)
     {
+        CPoint2Di oldMouse = g_MouseManager.Position;
+
+        if (g_ConfigManager.GetUseScaling() && oldScale != 1.0f)
+        {
+            const float scale = oldScale;
+            const float px = (float)g_RenderBounds.GameWindowPosX;
+            const float py = (float)g_RenderBounds.GameWindowPosY;
+            const float pw = (float)g_RenderBounds.GameWindowWidth;
+            const float ph = (float)g_RenderBounds.GameWindowHeight;
+            const float left = px + pw * (1.0f - scale);
+            const float right = (px + pw) * scale;
+            const float top = py + ph * (1.0f - scale);
+            const float bottom = (py + ph) * scale;
+
+            g_MouseManager.Position.X =
+                (int)(left + (oldMouse.X - px) * (right - left) / pw);
+            g_MouseManager.Position.Y =
+                (int)(top + (oldMouse.Y - py) * (bottom - top) / ph);
+        }
+
         if (g_DeathScreenTimer == 0u)
         {
             DrawGameWindowText(false);
@@ -2281,55 +2301,22 @@ void CGameScreen::SelectObject()
 
         if (g_SelectedObject.Object == nullptr) // If nothing was selected, walk the objects
         {
-            // If the mouse cursor is inside the game window, scan it
-            if (g_MouseManager.Position.X < g_RenderBounds.GameWindowPosX ||
-                g_MouseManager.Position.Y < g_RenderBounds.GameWindowPosY ||
-                g_MouseManager.Position.X >
-                    (g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth) ||
-                g_MouseManager.Position.Y >
-                    (g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight))
+            // If the raw mouse cursor is inside the game window, scan it
+            if (oldMouse.X < g_RenderBounds.GameWindowPosX ||
+                oldMouse.Y < g_RenderBounds.GameWindowPosY ||
+                oldMouse.X > (g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth) ||
+                oldMouse.Y > (g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight))
             {
                 // do nothing
             }
             else
             {
                 g_GlobalScale = oldScale;
-                CPoint2Di oldMouse = g_MouseManager.Position;
-
-                //g_MouseManager.Position = CPoint2Di((int)((oldMouse.X - (g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX, (int)((oldMouse.Y - (g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY);
-
-                //g_MouseManager.Position = CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
-
-                //int mouseX = (int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale);
-                // int mouseY = (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale);
-
-                /*g_MouseManager.Position = CPoint2Di
-                (
-                    //(int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX)
-                    mouseX
-                    ,
-                    //(int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY)
-                    mouseY
-                );*/
-
-                /*const auto left = (float)g_RenderBounds.GameWindowPosX;
-                const auto right = (float)(g_RenderBounds.GameWindowWidth + left);
-                const auto top = (float)g_RenderBounds.GameWindowPosY;
-                const auto bottom = (float)(g_RenderBounds.GameWindowHeight + top);
-
-                const auto newRight = right * g_GlobalScale;
-                const auto newBottom = bottom * g_GlobalScale;
-
-                g_RenderBounds.GameWindowScaledOffsetX = (int)((left * g_GlobalScale) - (newRight - right));
-                g_RenderBounds.GameWindowScaledOffsetY = (int)((top * g_GlobalScale) - (newBottom - bottom));
-
-                g_RenderBounds.GameWindowScaledWidth = (int)(newRight - g_RenderBounds.GameWindowScaledOffsetX);
-                g_RenderBounds.GameWindowScaledHeight = (int)(newBottom - g_RenderBounds.GameWindowScaledOffsetY);*/
-
                 DrawGameWindow(false);
-                g_MouseManager.Position = oldMouse;
             }
         }
+
+        g_MouseManager.Position = oldMouse;
     }
 
     g_GlobalScale = oldScale;

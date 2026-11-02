@@ -1178,7 +1178,7 @@ void CGumpOptions::DrawPage2()
         new CGUICheckbox(ID_GO_P2_ENABLE_SCALING, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetUseScaling();
     checkbox->SetTextParameters(
-        0, L"Use scaling in game window (BETA VERSION!!!)", g_OptionsTextColor);
+        0, L"Use scaling in game window (mouse scroll)", g_OptionsTextColor);
     y += h;
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P2_REMOVE_TEXT_WITH_BLENDING, 0x00D2, 0x00D3, 0x00D2, 0, y));
