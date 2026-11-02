@@ -352,7 +352,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xD5*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xD6*/ BMSGH(XUO_IGNORE_PACKET, "Mega cliloc", PACKET_VARIABLE_SIZE, MegaCliloc),
     /*0xD7*/
-    RMSGH(XUO_SAVE_PACKET, "+AoS command (server reply)", PACKET_VARIABLE_SIZE, GenericAOSCommands),
+    BMSGH(XUO_SAVE_PACKET, "+AoS command", PACKET_VARIABLE_SIZE, GenericAOSCommands),
     /*0xD8*/ RMSGH(XUO_IGNORE_PACKET, "Custom house", PACKET_VARIABLE_SIZE, CustomHouse),
     /*0xD9*/ SMSG(XUO_SAVE_PACKET, "+Metrics", 0x10c),
     /*0xDA*/ BMSG(XUO_SAVE_PACKET, "Mahjong game command", PACKET_VARIABLE_SIZE),
