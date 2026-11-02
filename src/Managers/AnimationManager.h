@@ -64,7 +64,8 @@ private:
         uint8_t &frameIndex,
         uint16_t graphic = 0,
         bool isShadow = false,
-        uint16_t convColor = 0);
+        uint16_t convColor = 0,
+        int mountOffsetY = 0);
     void DrawIntoFrameBuffer(class CGameCharacter *obj, int x, int y);
 
     bool DrawEquippedLayers(

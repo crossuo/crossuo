@@ -179,26 +179,28 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     const float drawCountY = cmd.v;
 
     glBegin(GL_TRIANGLE_STRIP);
+    const float vTop = cmd.v0;
+    const float vBottom = cmd.v0 + drawCountY;
     if (cmd.mirrored)
     {
-        glTexCoord2f(0.0f, drawCountY);
+        glTexCoord2f(0.0f, vBottom);
         glVertex3f((int)cmd.width, (int)cmd.height, cmd.depth);
-        glTexCoord2f(drawCountX, drawCountY);
+        glTexCoord2f(drawCountX, vBottom);
         glVertex3f(0, (int)cmd.height, cmd.depth);
-        glTexCoord2f(0.0f, 0.0f);
+        glTexCoord2f(0.0f, vTop);
         glVertex3f((int)cmd.width, 0, cmd.depth);
-        glTexCoord2f(drawCountX, 0.0f);
+        glTexCoord2f(drawCountX, vTop);
         glVertex3f(0, 0, cmd.depth);
     }
     else
     {
-        glTexCoord2f(0.0f, drawCountY);
+        glTexCoord2f(0.0f, vBottom);
         glVertex3f(0, (int)cmd.height, cmd.depth);
-        glTexCoord2f(drawCountX, drawCountY);
+        glTexCoord2f(drawCountX, vBottom);
         glVertex3f((int)cmd.width, (int)cmd.height, cmd.depth);
-        glTexCoord2f(0.0f, 0.0f);
+        glTexCoord2f(0.0f, vTop);
         glVertex3f(0, 0, cmd.depth);
-        glTexCoord2f(drawCountX, 0.0f);
+        glTexCoord2f(drawCountX, vTop);
         glVertex3f((int)cmd.width, 0, cmd.depth);
     }
     glEnd();

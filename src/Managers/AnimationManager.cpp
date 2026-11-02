@@ -517,7 +517,8 @@ void CAnimationManager::Draw(
     uint8_t &frameIndex,
     uint16_t graphic,
     bool isShadow,
-    uint16_t convColor)
+    uint16_t convColor,
+    int mountOffsetY)
 {
     ScopedPerfMarker(__FUNCTION__);
     SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw");
@@ -573,6 +574,8 @@ void CAnimationManager::Draw(
     }
 
     y -= spr->Height + frame.CenterY;
+    // every animated band is drawn relative to it, and it is restored before returning (see the sliced draw below)
+    const float baseDepth = g_WorldObjectDepth;
     auto sdmNoColor = true;
     if (isShadow)
     {
@@ -756,22 +759,74 @@ void CAnimationManager::Draw(
                                                 h6mod,
                                                 h9mod,
                                                 mirror };
+            // seated characters are drawn one diagonal nearer than the anchor, like the sliced standing bands
+            g_WorldObjectDepth = baseDepth + 1.0f;
             RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
         }
         else
         {
             SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Mirrored");
+            // The frame is drawn as horizontal depth bands. This shared path
+            // covers characters, mounts, corpse items (DrawCorpse) and their
+            // equipped layers (DrawEquippedLayers) - each layer bands over the
+            // same anchor depth, so corpse gear stays aligned with the body.
+            // Band offsets are spread 0.99..1.99 relative to the anchor (see
+            // the band loop below for the exact constraint window); a uniform
+            // per-band jump would push tall frames far past the window and
+            // draw them over characters standing in front (playtest).
+            // mountOffsetY shrinks the band height for mounted riders so the
+            // rider slices above the mount. Unmounted frames are ALWAYS a
+            // single band: the deeper (+3, +5, ...) bands of a tall frame
+            // would outrank a player standing on the front diagonal (+2) and
+            // draw over them.
+            int bandHeight = (int)spr->Height;
+            if (mountOffsetY > 0)
+            {
+                bandHeight = (int)spr->Height + frame.CenterY - mountOffsetY;
+            }
+            if (bandHeight > (int)spr->Height)
+            {
+                bandHeight = (int)spr->Height;
+            }
+            if (bandHeight < 1)
+            {
+                bandHeight = 1;
+            }
 
-            auto textureCmd = DrawQuadCmd{ spr->Texture->Texture,
-                                           x,
-                                           y,
-                                           spr->Texture->Width,
-                                           spr->Texture->Height,
-                                           1.f,
-                                           1.f,
-                                           g_ColorWhite,
-                                           mirror };
-            RenderAdd_DrawQuad(g_renderCmdList, textureCmd);
+            const float invHeight = 1.0f / (float)spr->Height;
+            int remains = (int)spr->Height;
+            // bands progress from 0.99 (top/rear of the sprite) up to 1.99
+            // (bottom/forward part):
+            // - > 0.98: beats side-diagonal ground (the corpse's right/left
+            //   flanks draw over adjacent ground)
+            // - < 1.0 top band: a character standing on a side diagonal (NE/E
+            //   quadrant of the sprite) wins by 0.01
+            // - > 1.99 bottom band: the forward-lying body draws over
+            //   front-diagonal ground
+            // - < 2.01 every band: a character on the front diagonal wins
+            const int bandCount = (remains + bandHeight - 1) / bandHeight;
+            const float bandStep =
+                (bandCount > 1) ? 1.0f / (float)(bandCount - 1) : 0.0f;
+            uint32_t bandTop = 0;
+            for (int band = 0; remains > 0; band++)
+            {
+                const int bandSize = (bandHeight < remains) ? bandHeight : remains;
+                g_WorldObjectDepth = baseDepth + 0.99f + (float)band * bandStep;
+                DrawQuadCmd textureCmd{ spr->Texture->Texture,
+                                        x,
+                                        y + (int)bandTop,
+                                        spr->Texture->Width,
+                                        (uint32_t)bandSize,
+                                        1.f,
+                                        (float)bandSize * invHeight,
+                                        g_ColorWhite,
+                                        mirror };
+                textureCmd.v0 = (float)bandTop * invHeight;
+                RenderAdd_DrawQuad(g_renderCmdList, textureCmd);
+                bandTop += (uint32_t)bandSize;
+                remains -= bandSize;
+            }
+            g_WorldObjectDepth = baseDepth;
         }
 
         if (spectralColor)
@@ -1078,9 +1133,9 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     Anim.Group = animGroup;
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
-
+    // vertical mount offset: shrinks the rider's slice band height so the rider bands above the mount
+    int mountOffsetY = 0;
     int lightOffset = 20;
-
     if (obj->IsHuman() && goi != nullptr && !obj->IsDrivingBoat()) //Draw mount
     {
         m_Sitting = 0;
@@ -1091,6 +1146,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (mountID < MAX_ANIMATIONS_DATA_INDEX_COUNT)
         {
             mountedHeightOffset = g_Index.m_Anim[mountID].MountedHeightOffset;
+            mountOffsetY = mountedHeightOffset;
         }
 
         if (drawShadow)
@@ -1137,7 +1193,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     Anim.Group = animGroup;
 
-    Draw(obj, drawX, drawY, mirror, frameIndex); //Draw character
+    Draw(obj, drawX, drawY, mirror, frameIndex, 0, false, 0, mountOffsetY); //Draw character
     if (g_DeveloperMode == DM_DEBUGGING)
     {
         char buf[100] = { 0 };
@@ -1594,7 +1650,6 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         FRAME_OUTPUT_INFO info = {};
 
         CGameItem *goi = obj->FindLayer(OL_MOUNT);
-
         if (goi != nullptr) //Check mount
         {
             uint16_t mountID = goi->GetGraphicForAnimation();

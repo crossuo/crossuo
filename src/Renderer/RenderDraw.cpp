@@ -119,10 +119,10 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     ScopedPerfMarker(__FUNCTION__);
     // clang-format off
     const float uv[] = {
-         0.0f, cmd.v,
-        cmd.u, cmd.v,
-         0.0f, 0.0f,
-        cmd.u, 0.0f,
+         0.0f, cmd.v0 + cmd.v,
+        cmd.u, cmd.v0 + cmd.v,
+         0.0f, cmd.v0,
+        cmd.u, cmd.v0,
     };
     const float v[] = {
         0.0f, float(cmd.height),

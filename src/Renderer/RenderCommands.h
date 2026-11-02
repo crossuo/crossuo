@@ -127,6 +127,8 @@ struct DrawQuadCmd
     float layer = -1.f; // >= 0: texture is a texture array, index into it
     float depth = 0.f;  // world-pass isometric depth key (stamped from
                         // g_WorldObjectDepth by RenderAdd_DrawQuad)
+    float v0 = 0.f;     // uv top offset in [0,1] - v spans [v0, v0+v]; used by
+                        // the sliced animation bands (issue #285)
 };
 
 struct DrawCharacterSittingCmd
