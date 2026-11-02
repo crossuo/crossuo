@@ -39,6 +39,14 @@ bool http_get_range(
     http_response *out,
     int64_t *out_total = nullptr);
 
+// web only: stamps every subsequent proxied (slash-rooted) resource url with
+// `?v=<token>` at the http_xhr_get chokepoint. The token is the product
+// serial (a hash of the patchlist bytes): the proxy strips it before cache
+// keys/upstream, but the browser caches per full url - so it is the
+// content-version key that keeps `Cache-Control: immutable` honest and
+// separates shards sharing one origin. 0 disables stamping (native: no-op).
+void http_web_cache_token_set(uint64_t token);
+
 // ---------------------------------------------------------------------------
 // web download accounting (wasm): the emscripten XHR transport counts every
 // successful (HTTP 200/206) response body it delivers into one process-wide

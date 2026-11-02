@@ -50,6 +50,10 @@ struct vfs_params
     // without hole protection - pointer reads of holes return the sparse
     // file's zeros; ensure/pre-resolve paths still fetch on demand
     bool traps = true;
+    // disable request bundling (--streaming-no-bundle): every whole-blob
+    // fetch goes out as its own GET. Diagnostic escape hatch for the
+    // bundle transport
+    bool no_bundle = false;
     uint32_t workers = 0; // download workers; 0: default (cpu-1, cap 8)
     fs_path blobs_dir;    // local blob store root (mirrors the remote URL tree)
     fs_path install_dir;  // materialized game files

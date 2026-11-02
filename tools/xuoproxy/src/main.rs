@@ -2157,7 +2157,11 @@ fn bundle_members(spec: &str, query: Option<&str>) -> Option<Vec<String>> {
     let mut members = Vec::new();
     if let Some(q) = query {
         for kv in q.split('&') {
-            let value = kv.strip_prefix("m=")?;
+            // tolerate extra browser-facing params (e.g. the client's ?v=
+            // cache-buster): only m= members define the bundle
+            let Some(value) = kv.strip_prefix("m=") else {
+                continue;
+            };
             if value.is_empty() {
                 continue;
             }

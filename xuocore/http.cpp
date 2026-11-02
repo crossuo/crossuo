@@ -178,6 +178,64 @@ static std::string http_dedupe_url(const char *url)
     return key;
 }
 
+// content-version token stamped onto every proxied resource url:
+// `?v=<16 hex>`. The proxy strips it before deriving cache keys or upstream
+// urls, so it is browser-cache-identity ONLY - and that is the point: the
+// web persistence layer is the browser http cache, which the proxy serves
+// with `Cache-Control: immutable`. A url without a content token therefore
+// caches FOREVER per url: a shard republishing a file at the same url (or
+// two shards exposing the same relpath through one hub proxy) would keep
+// serving stale bytes silently - the windows even pass the X-Blob-Total
+// length check. The product serial (a lookup3 of the patchlist bytes)
+// changes exactly when the shard's data set changes, so keying browser
+// entries on it is CAS-at-the-browser: same serial + same url = same bytes,
+// different serial = fresh fetch, different shards never collide.
+// 0 = unset (no stamping; token-less legacy behavior).
+static std::atomic<uint64_t> s_web_cache_token(0);
+
+void http_web_cache_token_set(uint64_t token)
+{
+    s_web_cache_token.store(token, std::memory_order_relaxed);
+}
+
+static bool http_url_has_version_token(const char *url)
+{
+    std::string lower(url);
+    for (auto &c : lower)
+    {
+        if (c >= 'A' && c <= 'Z')
+            c = char(c - 'A' + 'a');
+    }
+    return lower.find("?v=") != std::string::npos ||
+           lower.find("&v=") != std::string::npos ||
+           lower.find("%3fv%3d") != std::string::npos;
+}
+
+// the request url with the boot's version token appended (proxy-relative
+// references only: absolute urls reach whatever host the manifest named,
+// where a stray query parameter is not guaranteed to be ignored). Urls that
+// already carry a token (the proxy's rewritten manifests stamp per-entry
+// tokens) pass through untouched.
+//
+// CACHE_GENERATION salts the token: bumping it rotates every browser cache
+// key at once. The first poison incident (frozen wrong bytes under stable
+// keys - a stale/garbled entry served deterministically forever afterwards)
+// is only curable by key rotation, and any future transport bug that writes
+// one bad entry needs the same one-deploy cure. Salt + serial = the key.
+#define CACHE_GENERATION 2
+static std::string http_url_version_stamped(const char *url)
+{
+    uint64_t token = s_web_cache_token.load(std::memory_order_relaxed);
+    if (token == 0 || url[0] != '/' || http_url_has_version_token(url))
+        return std::string(url);
+    char hex[32];
+    snprintf(hex, sizeof(hex), "%016llx%02x", (unsigned long long)token, CACHE_GENERATION);
+    std::string out(url);
+    out += strchr(url, '?') ? "&v=" : "?v=";
+    out += hex;
+    return out;
+}
+
 // single blocking GET; returns the malloc'd body (free() it). status
 // receives the HTTP code; total receives the resource size from
 // Content-Range (-1 when the header is absent).
@@ -188,6 +246,8 @@ static uint8_t *http_xhr_get(const char *url, const char *range, long *status,
     *len = 0;
     if (total)
         *total = -1;
+    const std::string stamped_url = http_url_version_stamped(url);
+    url = stamped_url.c_str();
     uint8_t *data = (uint8_t *)EM_ASM_PTR(
     {
         const url = UTF8ToString($0);
@@ -933,5 +993,10 @@ void vfs_web_bytes_expect(uint64_t bytes)
 uint32_t vfs_web_progress_addrs(void)
 {
     return 0;
+}
+
+void http_web_cache_token_set(uint64_t token)
+{
+    (void)token; // native curl fetches carry no browser cache identity
 }
 #endif // #if defined(XUO_EMSC)

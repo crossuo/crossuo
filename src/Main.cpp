@@ -179,6 +179,9 @@ static bool InitCli(int argc, char *argv[])
         "streaming: disable the continuous background download of the"
         " on-demand tiers (T2/T3) - assets fetch only when the game uses"
         " them (on demand) or an update wave touched them");
+    g_cli["streaming-no-bundle"].description(
+        "streaming: disable request bundling - every whole-blob fetch is"
+        " its own GET (diagnostic escape hatch for the bundle transport)");
     g_cli["streaming-product"].type(po::string).description(
         "streaming: product manifest url or file (the official patch"
         " server by default) - an aops patch server root like"
@@ -278,6 +281,7 @@ bool load_config()
         params.offline = g_cli["streaming-offline"].was_set();
         params.update_check = !g_cli["streaming-no-update"].was_set();
         params.background_sweep = !g_cli["streaming-no-sweep"].was_set();
+        params.no_bundle = g_cli["streaming-no-bundle"].was_set();
         if (g_cli["streaming-product"].was_set())
         {
             // the product url as given: a full manifest file url, or a bare

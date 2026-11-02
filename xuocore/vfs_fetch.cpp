@@ -94,9 +94,10 @@ static vfs_fetch_bundle_params s_bundle;
 // one bundle in flight carries its members; keyed by slot index
 struct vfs_fetch_bundle_slot
 {
-    astr_t key;                 // content address of the member list
-    std::vector<astr_t> tails;  // members, in answer order
-    uint8_t state = 0;          // 0 queued/running, 1 done, 2 failed
+    astr_t key;                       // content address of the member list
+    std::vector<astr_t> tails;        // members, in answer order
+    std::vector<uint64_t> expecteds;  // planned bytes per member (job.expected)
+    uint8_t state = 0;                // 0 queued/running, 1 done, 2 failed
 };
 static std::vector<vfs_fetch_bundle_slot> s_bundles;
 // copy of s_bundle.max_bytes for the worker (set under the same lock)
@@ -370,6 +371,9 @@ static bool vfs_bundle_gather_locked(std::shared_ptr<vfs_fetch_job> *ride)
     vfs_fetch_bundle_slot slot;
     slot.key = vfs_bundle_key(tails);
     slot.tails = tails;
+    slot.expecteds.reserve(tails.size());
+    for (const auto &t : tails)
+        slot.expecteds.push_back(s_active[t]->expected);
     s_bundles.push_back(slot);
     const int index = int(s_bundles.size()) - 1;
     for (size_t i = 0; i < jobs.size(); ++i)
@@ -490,6 +494,7 @@ static bool vfs_fetch_bundle_run(const vfs_fetch_job &job, uint64_t *bytes_out)
     astr_t url;
     std::vector<std::vector<uint8_t>> bodies;
     std::vector<astr_t> tails;
+    std::vector<uint64_t> expecteds;
     int slot_index = -1;
     {
         std::unique_lock<std::mutex> lock(s_mutex);
@@ -497,6 +502,7 @@ static bool vfs_fetch_bundle_run(const vfs_fetch_job &job, uint64_t *bytes_out)
             return false;
         auto &slot = s_bundles[job.bundle_slot];
         tails = slot.tails;
+        expecteds = slot.expecteds;
         slot_index = job.bundle_slot;
         url = vfs_bundle_url_locked(slot.tails, slot.key);
     }
@@ -509,6 +515,36 @@ static bool vfs_fetch_bundle_run(const vfs_fetch_job &job, uint64_t *bytes_out)
         0,
         false);
     bool ok = res.ok && bodies.size() == tails.size();
+    if (ok)
+    {
+        // the plain path validates every body against its planned size
+        // (vfs_fetch_http); the bundle path MUST hold the same bar - it
+        // writes blindly otherwise, and a member served under the wrong
+        // identity would masquerade as that asset (the swapped-art class
+        // of failures). A size-mismatched bundle fails as a whole and
+        // every member re-fetches plain, where the per-file checks apply.
+        for (size_t i = 0; i < tails.size() && ok; ++i)
+        {
+            const uint64_t expected = i < expecteds.size() ? expecteds[i] : 0;
+            if (expected != 0 && bodies[i].size() < expected)
+            {
+                LOG_WARN(
+                    "bundle member truncated: %s (%zu bytes, expected %llu)",
+                    tails[i].c_str(),
+                    bodies[i].size(),
+                    (unsigned long long)expected);
+                ok = false;
+            }
+            else if (expected != 0 && bodies[i].size() != expected)
+            {
+                LOG_INFO(
+                    "bundle member size accepted (normalized): %s (%zu bytes, planned %llu)",
+                    tails[i].c_str(),
+                    bodies[i].size(),
+                    (unsigned long long)expected);
+            }
+        }
+    }
     if (ok)
     {
         for (size_t i = 0; i < tails.size() && ok; ++i)

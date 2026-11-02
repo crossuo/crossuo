@@ -3138,6 +3138,8 @@ static void vfs_purge_cached_manifests()
 static void vfs_apply_bundle_config(const astr_t &file_repo)
 {
 #if defined(XUO_EMSC)
+    if (s_params.no_bundle)
+        return;
     vfs_fetch_bundle_params bundle;
     astr_t ref;
     const size_t scheme = file_repo.find("://");
@@ -4176,6 +4178,11 @@ bool vfs_boot(void (*progress)(float done01, const char *label))
         vfs_fetch_stop();
         return false;
     }
+    // CAS the browser cache on the product serial (http.h): every url the
+    // client fetches from here on carries ?v=<serial>, so a shard data
+    // change (or a second shard sharing this origin) can never be answered
+    // from a stale `immutable` browser entry under the same key
+    http_web_cache_token_set(plan.product_serial);
     vfs_manifest_assign_tiers(plan);
 
     // granule store: the params-selected backend, created BEFORE the
