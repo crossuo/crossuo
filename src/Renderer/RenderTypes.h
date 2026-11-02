@@ -357,6 +357,9 @@ struct RenderCmdList
     uint32_t size = 0;
     uint32_t remainingSize = 0;
     bool immediateMode = false;
+    // owned allocation for growth; null while using an externally provided
+    // buffer
+    void *allocated = nullptr;
 
     RenderCmdList(void *data_, uint32_t size_, RenderState state_, bool immediateMode_)
         : state(state_)

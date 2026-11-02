@@ -227,7 +227,7 @@ void gfx_render_list_init()
         return;
     }
 
-    static const uint32_t s_renderCmdListSize = 512 * 1024;
+    static const uint32_t s_renderCmdListSize = 1024 * 1024; // 1MB
     s_renderCmdListData = malloc(s_renderCmdListSize);
     assert(s_renderCmdListData);
 
@@ -238,17 +238,20 @@ void gfx_render_list_init()
 #endif // #if defined(USE_GL1)
     static RenderCmdList s_renderCmdList(
         s_renderCmdListData, s_renderCmdListSize, Render_DefaultState(), immediateMode);
+    s_renderCmdList.allocated = s_renderCmdListData;
     g_renderCmdList = &s_renderCmdList;
 }
 
 void gfx_render_list_destroy()
 {
-    if (s_renderCmdListData)
+    if (g_renderCmdList != nullptr)
     {
-        free(s_renderCmdListData);
+        // the command list may have grown past the initial buffer during
+        // rendering; allocated always points at the live allocation
+        free(g_renderCmdList->allocated);
+        g_renderCmdList = nullptr;
         s_renderCmdListData = nullptr;
     }
-    g_renderCmdList = nullptr;
 }
 #endif // #if defined(USE_GL3) || defined(USE_GLES) || defined(USE_GL1)
 

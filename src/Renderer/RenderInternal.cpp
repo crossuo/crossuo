@@ -930,22 +930,54 @@ bool Render_DestroyTexture(texture_handle_t texture)
     return false;
 }
 
+// Doubles the command list storage until it can hold requiredSize bytes,
+// preserving the already recorded commands. Returns false on allocation
+// failure. cmdList->allocated owns the buffer once grown.
+static bool Render_GrowCmdList(RenderCmdList *cmdList, uint32_t requiredSize)
+{
+    uint32_t newSize = cmdList->size;
+    while (newSize < requiredSize)
+    {
+        newSize *= 2;
+    }
+
+    void *newData = malloc(newSize);
+    if (newData == nullptr)
+    {
+        return false;
+    }
+
+    const uint32_t usedSize = cmdList->size - cmdList->remainingSize;
+    memcpy(newData, cmdList->data, usedSize);
+
+    if (cmdList->allocated != nullptr)
+    {
+        free(cmdList->allocated);
+    }
+
+    cmdList->allocated = newData;
+    cmdList->data = (char *)newData;
+    cmdList->size = newSize;
+    cmdList->remainingSize = newSize - usedSize;
+    return true;
+}
+
 bool Render_AppendCmd(RenderCmdList *cmdList, const void *cmd, uint32_t cmdSize)
 {
     assert(cmdList);
     assert(cmd);
     assert(cmdSize);
 
-    if (cmdList->remainingSize >= cmdSize)
+    if (cmdList->remainingSize < cmdSize && !Render_GrowCmdList(cmdList, cmdSize))
     {
-        memcpy(cmdList->data + cmdList->size - cmdList->remainingSize, cmd, cmdSize);
-        cmdList->remainingSize -= cmdSize;
-        return true;
+        Error(
+            Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
+        return false;
     }
 
-    Error(
-        Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
-    return false;
+    memcpy(cmdList->data + cmdList->size - cmdList->remainingSize, cmd, cmdSize);
+    cmdList->remainingSize -= cmdSize;
+    return true;
 }
 
 bool Render_AppendCmdType(
@@ -959,20 +991,21 @@ bool Render_AppendCmdType(
     }
 #endif
     static_assert(sizeof(type) == sizeof(uint8_t), "command type id is assumed to be byte sized");
-    if (cmdList->remainingSize >= sizeof(type) + cmdSize)
+    if (cmdList->remainingSize < sizeof(type) + cmdSize &&
+        !Render_GrowCmdList(cmdList, sizeof(type) + cmdSize))
     {
-        auto *ptr = cmdList->data + cmdList->size - cmdList->remainingSize;
-        *ptr = (uint8_t)type;
-        ptr++;
-
-        memcpy(ptr, cmd, cmdSize);
-        cmdList->remainingSize -= sizeof(type) + cmdSize;
-        return true;
+        Error(
+            Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
+        return false;
     }
 
-    Error(
-        Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
-    return false;
+    auto *ptr = cmdList->data + cmdList->size - cmdList->remainingSize;
+    *ptr = (uint8_t)type;
+    ptr++;
+
+    memcpy(ptr, cmd, cmdSize);
+    cmdList->remainingSize -= sizeof(type) + cmdSize;
+    return true;
 }
 
 RenderState Render_DefaultState()
