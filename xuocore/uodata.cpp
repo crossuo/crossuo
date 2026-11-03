@@ -3518,11 +3518,12 @@ static void load_animations(CFileManager *mgr)
         IndexAnimation &index = g_Index.m_Anim[i];
         if (index.Type == AGT_UNKNOWN)
         {
-            // bodies with no mobtypes entry use the human group table, like
-            // the client does (the graphic-range heuristic only applies to
-            // other callers of uo_type_by_graphic, e.g. bodyconv for old
-            // client versions)
-            index.Type = AGT_HUMAN;
+            // bodies with no mobtypes entry keep the graphic-range heuristic:
+            // the classic MUL layout is range-based (low/high/people tables in
+            // ANIM.IDX), so this type decides where the body's blocks live,
+            // unlike the client's runtime group-type lookup (which answers
+            // human for absent bodies but never computes file offsets)
+            index.Type = uo_type_by_graphic(i);
         }
         index.Graphic = (int)i;
         index.CorpseGraphic = i;
