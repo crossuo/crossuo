@@ -12,7 +12,7 @@ edition = "2024"
 [dependencies]
 twox-hash = "2.1.4"
 walkdir = "2.3.1"
-zip = "8.6"
+zip = "9.0"
 structopt = "0.3.8"
 serde_derive = "1.0.104"
 serde = { version = "1.0", features = ["derive"] }
