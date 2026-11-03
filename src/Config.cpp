@@ -375,7 +375,7 @@ static void ClientVersionFixup(bool overrideProtocolVersion)
         g_MaxViewRange = MAX_VIEW_RANGE_OLD;
     }
 
-    g_PacketManager.ConfigureClientVersion(g_Config.ClientVersion);
+    g_PacketManager.ConfigureClientVersion(g_Config.ProtocolClientVersion);
 
     if (!s_Mark.ClientFlag)
     {

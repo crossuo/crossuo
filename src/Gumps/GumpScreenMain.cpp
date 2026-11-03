@@ -274,7 +274,7 @@ void CGumpScreenMain::UpdateContent()
         m_Arrow =
             (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x15A4, 0x15A5, 0x15A6, 610, 445));
 #if defined(XUO_LAUNCHER_EMBEDDED)
-        Add(new CGUIButton(ID_MS_LAUNCHER, 0x08D1, 0x08D1, 0x08D1, 590, 430));
+        Add(new CGUIButton(ID_MS_LAUNCHER, 0x08D1, 0x08D1, 0x08D1, 40, 430));
 #endif
         g_MainScreen.m_SavePassword = (CGUICheckbox *)Add(
             new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 328, 417));

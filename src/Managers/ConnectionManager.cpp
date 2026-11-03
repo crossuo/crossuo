@@ -72,22 +72,22 @@ static void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, ui
 {
     if (major)
     {
-        *major = (g_Config.ClientVersion >> 24) & 0xff;
+        *major = (g_Config.ProtocolClientVersion >> 24) & 0xff;
     }
 
     if (minor)
     {
-        *minor = (g_Config.ClientVersion >> 16) & 0xff;
+        *minor = (g_Config.ProtocolClientVersion >> 16) & 0xff;
     }
 
     if (rev)
     {
-        *rev = (g_Config.ClientVersion >> 8) & 0xff;
+        *rev = (g_Config.ProtocolClientVersion >> 8) & 0xff;
     }
 
     if (proto)
     {
-        *proto = (g_Config.ClientVersion & 0xff);
+        *proto = (g_Config.ProtocolClientVersion & 0xff);
     }
 }
 
@@ -117,7 +117,7 @@ bool CConnectionManager::Connect(const astr_t &address, int port, uint8_t *gameS
                 Info(Network, "SeedOverride: %s", g_Config.SeedOverride.c_str());
             }
 
-            if (g_Config.ClientVersion < CV_6060)
+            if (g_Config.ProtocolClientVersion < CV_6060)
             {
                 SendIP(m_LoginSocket, seed);
             }

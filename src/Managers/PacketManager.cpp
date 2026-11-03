@@ -758,7 +758,8 @@ void CPacketManager::OnPacket()
     g_LastPacketTime = ticks;
     if (info.Direction != DIR_RECV && info.Direction != DIR_BOTH)
     {
-        Info(Network, "message direction invalid: 0x%02X", *Start);
+        Info(Network, "message direction invalid: 0x%02X (size=%zd)", *Start, Size);
+        //INFO_DUMP(Network, "INVALID-DIR RECV:", Start, (int)Size);
     }
     else
     {
