@@ -70,6 +70,18 @@
 
 extern bool g_var_DisableRenderGame;
 
+// PR #218 follow-up: big assets whose sprite reaches into the game view must
+// keep rendering even when their anchor tile sits outside the window. The
+// render range is widened by these tile margins and AddTileToRenderList then
+// culls precisely against each object's real frame rectangle, so the extra
+// tiles never make it into the draw list - no rendering cost regression.
+constexpr int CULL_MARGIN_TILES_X = 8;  // ~176px: covers sprite half-widths
+constexpr int CULL_MARGIN_TILES_Y = 12; // ~264px: covers tall sprite heights
+// anchor pre-reject margin (px) for objects whose frame is not queried here
+// (land tiles, characters, effects); larger than any of their sprites
+constexpr int CULL_SPRITE_MARGIN = 256;
+constexpr int CULL_LAND_MARGIN = 24; // land diamond half-extent + slack
+
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
 
@@ -681,7 +693,14 @@ void CGameScreen::AddTileToRenderList(
         int drawX = obj->DrawX;
         int drawY = obj->DrawY;
 
-        if (drawX < g_RenderBounds.MinPixelsX || drawX > g_RenderBounds.MaxPixelsX)
+        // cheap anchor pre-reject; statics/multis get an exact frame-rect
+        // test below. breaking on the right side is safe: within a tile's
+        // object chain drawX varies by less than the margin
+        if (drawX < g_RenderBounds.MinPixelsX - CULL_SPRITE_MARGIN)
+        {
+            continue;
+        }
+        if (drawX > g_RenderBounds.MaxPixelsX + CULL_SPRITE_MARGIN)
         {
             break;
         }
@@ -689,6 +708,10 @@ void CGameScreen::AddTileToRenderList(
         bool aphaChanged = false;
 
         int z = obj->GetZ();
+
+        // pure statics/multis are culled exactly against their frame rect
+        // below; land, game objects and effects use the margin fallback
+        bool isTileStatic = false;
 #if UO_RENDER_LIST_SORT == 1
         int maxObjectZ = obj->PriorityZ;
 
@@ -738,6 +761,39 @@ void CGameScreen::AddTileToRenderList(
             }
         }
 
+        // exact cull for pure statics and multis against the real frame rect:
+        // keep anything whose sprite overlaps the window, drop anything whose
+        // sprite does not - pop-in fixed without accepting every offscreen
+        // object (the cost that killed the original PR #218). Game objects
+        // (items, NPCs) draw via the animation manager with unreliable
+        // RenderGraphic semantics here, so they use the margin branch below
+        isTileStatic = (rso != nullptr && (obj->RenderType == ROT_STATIC_OBJECT ||
+                                           obj->RenderType == ROT_MULTI_OBJECT));
+        if (isTileStatic)
+        {
+            // multis draw via DrawStaticArt (no anim offset), statics via
+            // DrawStaticArtAnimated (id + anim offset) - mirror that here
+            const uint16_t frameId = (obj->RenderType == ROT_MULTI_OBJECT)
+                                         ? rso->RenderGraphic
+                                         : uint16_t(rso->RenderGraphic +
+                                                    g_Index.m_Static[rso->RenderGraphic].Offset);
+            auto *spr = g_Game.ExecuteStaticArt(frameId);
+            if (spr == nullptr)
+            {
+                continue; // nodraw tile
+            }
+            const CIndexObject &io = g_Index.m_Static[frameId];
+            // the frame is drawn as a quad at (x - io.Width, y - io.Height)
+            // sized spr->Width x spr->Height (see CGame::DrawStaticArt)
+            const int left = drawX - io.Width;
+            const int top = drawY - io.Height;
+            if (left + spr->Width < g_RenderBounds.MinPixelsX || left > g_RenderBounds.MaxPixelsX ||
+                top + spr->Height < g_RenderBounds.MinPixelsY || top > g_RenderBounds.MaxPixelsY)
+            {
+                continue;
+            }
+        }
+
         if (maxObjectZ > maxZ)
         {
             break;
@@ -784,9 +840,17 @@ void CGameScreen::AddTileToRenderList(
             testMinZ = testMaxZ;
         }
 
-        if (testMinZ < g_RenderBounds.MinPixelsY || testMaxZ > g_RenderBounds.MaxPixelsY)
+        // tile statics/multis were already culled exactly above; land, game
+        // objects and effects fall back to an anchor test with a sprite-size
+        // margin
+        if (!isTileStatic)
         {
-            continue;
+            const int margin = obj->IsLandObject() ? CULL_LAND_MARGIN : CULL_SPRITE_MARGIN;
+            if (testMinZ < g_RenderBounds.MinPixelsY - margin ||
+                testMaxZ > g_RenderBounds.MaxPixelsY + margin)
+            {
+                continue;
+            }
         }
 
         if (obj->IsGameObject())
@@ -1157,8 +1221,12 @@ void CGameScreen::CalculateGameWindowBounds()
         g_RenderBounds.GameWindowScaledHeight = 0;
     }
 
-    int rangeX = (int)(((g_RenderBounds.GameWindowWidth / 44) + 1) * g_GlobalScale);
-    int rangeY = (int)(((g_RenderBounds.GameWindowHeight / 44) + 1) * g_GlobalScale);
+    // PR #218: widened so sprites anchored outside the window are still
+    // visited and kept alive by the exact frame-rect cull below
+    int rangeX = (int)(((g_RenderBounds.GameWindowWidth / 44) + 1) * g_GlobalScale) +
+                 CULL_MARGIN_TILES_X;
+    int rangeY = (int)(((g_RenderBounds.GameWindowHeight / 44) + 1) * g_GlobalScale) +
+                 CULL_MARGIN_TILES_Y;
 
     if (rangeX < rangeY)
     {
