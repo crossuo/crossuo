@@ -153,6 +153,7 @@ set(gumps_src
 
 set(managers_src
   Managers/AnimationManager.cpp
+  Managers/ItemDrawOrder.cpp
   Managers/CityManager.cpp
   Managers/ClilocManager.cpp
   Managers/ColorManager.cpp

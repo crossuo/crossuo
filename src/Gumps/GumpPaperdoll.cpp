@@ -4,6 +4,7 @@
 #include "GumpPaperdoll.h"
 #include <cstdint>
 #include <xuocore/uodata.h>
+#include "../Managers/ItemDrawOrder.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
@@ -53,13 +54,6 @@ enum
     ID_GP_RACIAL_ABILITIES_BOOK,
     ID_GP_LOCK_MOVING,
 
-    ID_GP_COUNT,
-};
-
-int CGumpPaperdoll::UsedLayers[m_LayerCount] = {
-    OL_CLOAK,    OL_RING,  OL_SHIRT,  OL_ARMS,  OL_PANTS,  OL_SHOES,    OL_LEGS,    OL_TORSO,
-    OL_BRACELET, OL_15,    OL_GLOVES, OL_TUNIC, OL_SKIRT,  OL_NECKLACE, OL_HAIR,    OL_ROBE,
-    OL_EARRINGS, OL_BEARD, OL_HELMET, OL_WAIST, OL_1_HAND, OL_2_HAND,   OL_TALISMAN
 };
 
 CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized)
@@ -505,14 +499,33 @@ void CGumpPaperdoll::UpdateContent()
         bool useSlots = g_Config.ClientVersion > CV_200 ? g_ConfigManager.GetPaperdollSlots() : false;
         static const int maxPaperdollSlots = 6;
         CGameItem *slotObjects[maxPaperdollSlots] = { 0 };
-        for (int i = 0; i < m_LayerCount; i++)
+        // draw order is graphic-driven (see ItemDrawOrder.h), not the plain
+        // layer order: later entries paint on top of earlier ones
+        int layerOrder[ItemDrawOrder::LAYER_SLOTS];
+        uint16_t layerGraphics[ItemDrawOrder::LAYER_SLOTS];
+        ItemDrawOrder::CollectEquippedAnimIDs(obj, layerGraphics);
+        ItemDrawOrder::ComputeDrawOrder(
+            layerGraphics, ItemDrawOrder::UsesFrontTorsoLayout(obj), layerOrder);
+        for (int i = 1; i < ItemDrawOrder::LAYER_SLOTS; i++)
         {
-            equipment = obj->FindLayer(UsedLayers[i]);
+            const int layer = layerOrder[i];
+            if (layer == OL_NONE || layer == OL_BACKPACK || layer == OL_MOUNT)
+            {
+                continue;
+            }
+            // hood-style robes hide hair and helmet outright - painting them
+            // over the hood is wrong
+            if ((layer == OL_HAIR || layer == OL_HELMET) &&
+                ItemDrawOrder::IsHeadHiddenByRobe(obj, layer))
+            {
+                continue;
+            }
+            equipment = obj->FindLayer(layer);
             if (equipment != nullptr)
             {
                 if (useSlots)
                 {
-                    switch (UsedLayers[i])
+                    switch (layer)
                     {
                         case OL_HELMET:
                         {
@@ -567,12 +580,12 @@ void CGumpPaperdoll::UpdateContent()
                     bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(id + cOfs, 8, 19));
                     bodyGumppic->Color = equipment->Color & 0x3FFF;
                     bodyGumppic->PartialHue = equipment->IsPartialHue();
-                    bodyGumppic->Serial = ID_GP_ITEMS + UsedLayers[i];
+                    bodyGumppic->Serial = ID_GP_ITEMS + layer;
                 }
             }
             else if (
                 m_WantTransparentContent && g_ObjectInHand.Enabled &&
-                UsedLayers[i] == g_ObjectInHand.TiledataPtr->Layer &&
+                layer == g_ObjectInHand.TiledataPtr->Layer &&
                 (g_ObjectInHand.TiledataPtr->AnimID != 0u))
             {
                 equipment = obj->FindLayer(g_ObjectInHand.TiledataPtr->Layer);

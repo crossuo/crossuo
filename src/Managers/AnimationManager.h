@@ -15,7 +15,7 @@ class CGameCharacter;
 struct AnimationDirection;
 struct AnimationDirFrames;
 
-static const int MAX_LAYER_DIRECTIONS = 8;
+static const int USED_LAYER_COUNT = 23;
 static const float UPPER_BODY_RATIO = 0.35f;
 static const float MID_BODY_RATIO = 0.60f;
 static const float LOWER_BODY_RATIO = 0.94f;
@@ -45,7 +45,6 @@ private:
     bool m_UseBlending = false;
 
     static const int USED_LAYER_COUNT = 23;
-    static const int m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT];
 
     bool TestPixels(
         class CGameObject *obj,

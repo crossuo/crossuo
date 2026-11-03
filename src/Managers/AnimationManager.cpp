@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <unordered_set>
 #include "AnimationManager.h"
+#include "ItemDrawOrder.h"
 #include "Globals.h"
 #include "MouseManager.h"
 #include "ConfigManager.h"
@@ -124,58 +125,6 @@ void CalculateFrameInformation(
         info.EndY = y + dim.Height;
     }
 }
-
-const int CAnimationManager::m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT] = {
-    {
-        //dir 0
-        OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,   OL_TALISMAN, OL_BRACELET,
-        OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,   OL_WAIST,    OL_NECKLACE,
-        OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_2_HAND, OL_CLOAK,
-    },
-    {
-        //dir 1
-        OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,   OL_TALISMAN, OL_BRACELET,
-        OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,   OL_WAIST,    OL_NECKLACE,
-        OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_2_HAND, OL_CLOAK,
-    },
-    {
-        //dir 2
-        OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,  OL_TALISMAN, OL_BRACELET,
-        OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,  OL_WAIST,    OL_NECKLACE,
-        OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_CLOAK, OL_2_HAND,
-    },
-    {
-        //dir 3
-        OL_CLOAK,    OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,   OL_TALISMAN,
-        OL_BRACELET, OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,   OL_WAIST,
-        OL_NECKLACE, OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_2_HAND,
-    },
-    {
-        //dir 4
-        OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,  OL_TALISMAN, OL_BRACELET,
-        OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,  OL_WAIST,    OL_NECKLACE,
-        OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_CLOAK, OL_2_HAND,
-    },
-    {
-        //dir 5
-        OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,   OL_TALISMAN, OL_BRACELET,
-        OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,   OL_WAIST,    OL_NECKLACE,
-        OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_2_HAND, OL_CLOAK,
-    },
-    {
-        //dir 6
-        OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,   OL_TALISMAN, OL_BRACELET,
-        OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,   OL_WAIST,    OL_NECKLACE,
-        OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_2_HAND, OL_CLOAK,
-    },
-    {
-        //dir 7
-        OL_SHIRT, OL_PANTS, OL_SHOES,    OL_LEGS,   OL_TORSO,  OL_RING,   OL_TALISMAN, OL_BRACELET,
-        OL_15,    OL_ARMS,  OL_GLOVES,   OL_SKIRT,  OL_TUNIC,  OL_ROBE,   OL_WAIST,    OL_NECKLACE,
-        OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_2_HAND, OL_CLOAK,
-    },
-};
-
 CAnimationManager::CAnimationManager()
 {
     memset(m_CharacterLayerGraphic, 0, sizeof(m_CharacterLayerGraphic));
@@ -1640,7 +1589,9 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
         bool mirror = false;
-        uint8_t layerDir = Anim.Direction;
+        // raw facing direction for the cloak draw-order rule (before the
+        // animation-direction remap)
+        const uint8_t rawDir = Anim.Direction & 7;
 
         GetAnimDirection(Anim.Direction, mirror);
 
@@ -1676,10 +1627,12 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
         if (obj->IsHuman() && checkLayers) //Check layred objects
         {
-            for (int l = 0; l < USED_LAYER_COUNT; l++)
+            // graphic-driven equipment draw order (ItemDrawOrder.h)
+            int layerOrder[USED_LAYER_COUNT > ItemDrawOrder::LAYER_SLOTS ? USED_LAYER_COUNT : ItemDrawOrder::LAYER_SLOTS];
+            const int layerCount = ItemDrawOrder::ResolveWorldOrder(obj, rawDir, layerOrder);
+            for (int l = 0; l < layerCount; l++)
             {
-                assert(layerDir < MAX_LAYER_DIRECTIONS && "Out-of-bounds access");
-                goi = obj->FindLayer(m_UsedLayers[layerDir][l]);
+                goi = obj->FindLayer(layerOrder[l]);
 
                 if (goi == nullptr || (goi->AnimID == 0u))
                 {
@@ -1704,6 +1657,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         CGameItem *obj = (CGameItem *)gameObject;
 
         Anim.Direction = (obj->Layer & 0x7F) & 7;
+        const uint8_t rawDir = Anim.Direction;
         bool mirror = false;
 
         GetAnimDirection(Anim.Direction, mirror);
@@ -1717,10 +1671,12 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
         if (checkLayers)
         {
-            for (int l = 0; l < USED_LAYER_COUNT; l++)
+            // graphic-driven equipment draw order (ItemDrawOrder.h)
+            int layerOrder[USED_LAYER_COUNT > ItemDrawOrder::LAYER_SLOTS ? USED_LAYER_COUNT : ItemDrawOrder::LAYER_SLOTS];
+            const int layerCount = ItemDrawOrder::ResolveWorldOrder(obj, rawDir, layerOrder);
+            for (int l = 0; l < layerCount; l++)
             {
-                assert(Anim.Direction < MAX_LAYER_DIRECTIONS && "Out-of-bounds access");
-                CGameItem *goi = obj->FindLayer(m_UsedLayers[Anim.Direction][l]);
+                CGameItem *goi = obj->FindLayer(layerOrder[l]);
 
                 if (goi != nullptr && (goi->AnimID != 0u))
                 {
@@ -1800,155 +1756,203 @@ bool CAnimationManager::DrawEquippedLayers(
 
 bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 {
-    bool result = false;
+    // Explicit per-layer occlusion. The paint order alone is not enough: a
+    // layer's gump can paint outside the bounds of the item meant to cover it
+    // (oversized custom art leaks past the occluder), so layers that an
+    // occluder is expected to fully hide are culled here. Robe graphics are
+    // compared raw (item Graphic); pants/skirt/robe AnimIDs use the equip
+    // AnimID. The exception robe graphics are open/half robes that leave the
+    // chest/arms visible.
+    const uint16_t robeGfx = m_CharacterLayerGraphic[OL_ROBE];
+    const uint16_t robeAnim = m_CharacterLayerAnimID[OL_ROBE];
+
+    const bool robeLeavesChestVisible =
+        robeGfx == 0x9985 || robeGfx == 0x9986 || robeGfx == 0xA2CA ||
+        robeGfx == 0xA2CB || robeGfx == 0xA412 || robeGfx == 0xB1DE;
 
     switch (layer)
     {
         case OL_SHOES:
         {
-            if (m_CharacterLayerGraphic[OL_LEGS] != 0 ||
-                m_CharacterLayerGraphic[OL_PANTS] == 0x1411)
-            {
-                result = true;
-            }
-            else if (
-                m_CharacterLayerAnimID[OL_PANTS] == 0x0513 ||
-                m_CharacterLayerAnimID[OL_PANTS] == 0x0514 ||
-                m_CharacterLayerAnimID[OL_ROBE] == 0x0504)
-            {
-                result = true;
-            }
-
-            break;
+            return true;
         }
         case OL_PANTS:
         {
-            uint16_t robe = m_CharacterLayerAnimID[OL_ROBE];
-            uint16_t pants = m_CharacterLayerAnimID[OL_PANTS];
-
-            if (m_CharacterLayerGraphic[OL_LEGS] != 0 || robe == 0x0504)
+            if (m_CharacterLayerGraphic[OL_LEGS] != 0 || robeAnim == 0x504)
             {
-                result = true;
-            }
-            if (pants == 0x01EB || pants == 0x03E5 || pants == 0x03EB)
-            {
-                uint16_t skirt = m_CharacterLayerAnimID[OL_SKIRT];
-
-                if (skirt != 0x01C7 && skirt != 0x01E4)
-                {
-                    result = true;
-                }
-                else if (robe != 0x0229 && (robe <= 0x04E7 || robe > 0x04EB))
-                {
-                    result = true;
-                }
+                return true;
             }
 
-            break;
+            const uint16_t pantsAnim = m_CharacterLayerAnimID[OL_PANTS];
+            if (pantsAnim != 0x1EB && pantsAnim != 0x1FA && pantsAnim != 0x200)
+            {
+                return false;
+            }
+
+            const uint16_t skirtAnim = m_CharacterLayerAnimID[OL_SKIRT];
+            if (skirtAnim != 0 && skirtAnim != 0x1C7 && skirtAnim != 0x1E4)
+            {
+                return true;
+            }
+
+            if (robeAnim == 0)
+            {
+                return false;
+            }
+
+            if (robeAnim < 0x4EC)
+            {
+                if (robeAnim > 0x4E7)
+                {
+                    return false;
+                }
+                return robeAnim != 0x229;
+            }
+
+            return (uint16_t)(robeAnim - 0x5E2) > 3;
         }
         case OL_TUNIC:
         {
-            uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
-
-            if (robe != 0)
+            // tunic AnimID 0x238 is moved on top of the robe (surcoat); hide
+            // it when a full robe is worn underneath
+            if (m_CharacterLayerAnimID[OL_TUNIC] == 0x238)
             {
-                result = true;
-            }
-            else if (m_CharacterLayerGraphic[OL_TUNIC] == 0x0238)
-            {
-                result = (robe != 0x9985 && robe != 0x9986);
+                return robeGfx != 0 && !robeLeavesChestVisible;
             }
 
-            break;
+            return false;
         }
         case OL_TORSO:
         {
-            uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
-
-            if (robe != 0 && robe != 0x9985 && robe != 0x9986)
+            if (robeGfx != 0 && !robeLeavesChestVisible)
             {
-                result = true;
+                return true;
             }
-            else
-            {
-                uint16_t tunic = m_CharacterLayerGraphic[OL_TUNIC];
-                uint16_t torso = m_CharacterLayerGraphic[OL_TORSO];
 
-                if (tunic != 0 && tunic != 0x1541 && tunic != 0x1542)
+            const uint16_t tunic = m_CharacterLayerGraphic[OL_TUNIC];
+            if (tunic != 0 && tunic != 0x1541 && tunic != 0x1542)
+            {
+                const uint16_t torso = m_CharacterLayerGraphic[OL_TORSO];
+                if (torso == 0x782A || torso == 0x782B)
                 {
-                    result = true;
-                }
-                else if (torso == 0x782A || torso == 0x782B)
-                {
-                    result = true;
+                    return true;
                 }
             }
 
-            break;
+            return false;
         }
         case OL_ARMS:
         {
-            uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
-            result = (robe != 0 && robe != 0x9985 && robe != 0x9986);
+            return robeGfx != 0 && !robeLeavesChestVisible;
+        }
+        case OL_NECKLACE:
+        {
+            if (robeGfx == 0)
+            {
+                return false;
+            }
 
-            break;
+            // open/half robes leave a neck item (AnimID 0x5EC) visible
+            if (robeAnim == 0x5F2 || robeAnim == 0x5F5 ||
+                (robeAnim >= 0x4E8 && robeAnim <= 0x4EB) ||
+                (robeAnim >= 0x5E2 && robeAnim <= 0x5E5))
+            {
+                return false;
+            }
+
+            return m_CharacterLayerAnimID[OL_NECKLACE] == 0x5EC;
+        }
+        case OL_BRACELET:
+        {
+            return m_CharacterLayerGraphic[OL_BRACELET] == 0xB1C0 &&
+                   m_CharacterLayerGraphic[OL_ARMS] != 0;
         }
         case OL_HELMET:
             if (g_ConfigManager.DrawHelmetsOnShroud)
             {
-                break;
+                return false;
             }
             // fall through
         case OL_HAIR:
         {
-            uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
-
-            if (robe > 0x3173)
+            // a 0xA42B/0xA42C helmet hides the hair as well
+            if (layer == OL_HAIR && m_CharacterLayerGraphic[OL_HELMET] - 0xA42B < 2)
             {
-                if ((robe == 0x4B9D || robe == 0x7816) /*&& wat?*/)
+                return true;
+            }
+
+            // hood-style robes hide hair and helmet
+            bool covered;
+            if (robeGfx < 0x4B9E)
+            {
+                if (robeGfx != 0x4B9D)
                 {
-                    result = true;
+                    if (robeGfx < 0x2FBA)
+                    {
+                        if (robeGfx != 0x2FB9)
+                        {
+                            if (robeGfx > 0x2687)
+                            {
+                                return false;
+                            }
+                            if (robeGfx < 0x2683 &&
+                                (robeGfx < 0x204E || robeGfx > 0x204F))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    else if (robeGfx != 0x3173)
+                    {
+                        return false;
+                    }
+                    covered = true;
                 }
+                else
+                {
+                    covered = true;
+                }
+            }
+            else if (robeGfx < 0xA0B0)
+            {
+                covered = (robeGfx >= 0xA0AB || robeGfx == 0x7816);
             }
             else
             {
-                if (robe <= 0x2687)
-                {
-                    if (robe < 0x2683)
-                    {
-                        result = (robe >= 0x204E && robe <= 0x204F);
-                    }
-                    else
-                    {
-                        result = true;
-                    }
-                }
-                else if (robe == 0x2FB9 || robe == 0x3173)
-                {
-                    result = true;
-                }
+                covered = (robeGfx == 0xB2B7);
             }
 
-            break;
+            if (!covered)
+            {
+                return false;
+            }
+
+            // these hoods cover the head on every body except gargoyles
+            uint16_t body = owner->Graphic;
+            if (owner->IsCorpse())
+            {
+                body = ((CGameItem *)owner)->Count;
+            }
+            const bool isGargoyle = body == 0x029A || body == 0x029B ||
+                                    body == 0x02B6 || body == 0x02B7;
+            return !isGargoyle;
         }
         case OL_SKIRT:
         {
-            uint16_t skirt = m_CharacterLayerAnimID[OL_SKIRT];
-
-            if (skirt == 0x01C7 || skirt == 0x01E4)
+            const uint16_t skirtAnim = m_CharacterLayerAnimID[OL_SKIRT];
+            if (skirtAnim != 0x1C7 && skirtAnim != 0x1E4)
             {
-                //uint16_t pants = m_CharacterLayerAnimID[OL_PANTS];
-
-                //result = (!pants || pants == 0x0200);
+                return false;
             }
 
-            break;
+            const uint16_t pantsAnim = m_CharacterLayerAnimID[OL_PANTS];
+            return pantsAnim == 0x1EB || pantsAnim == 0x1FA || pantsAnim == 0x200;
         }
         default:
             break;
     }
 
-    return result;
+    return false;
 }
 
 uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index) const

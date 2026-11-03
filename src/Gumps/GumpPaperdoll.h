@@ -10,9 +10,6 @@
 class CGumpPaperdoll : public CGump
 {
 protected:
-    static const int m_LayerCount = 23;
-    static int UsedLayers[m_LayerCount];
-
     CTextRenderer m_TextRenderer;
     CGUIDataBox *m_DataBox = nullptr;
     CGUIText *m_Description = nullptr;
