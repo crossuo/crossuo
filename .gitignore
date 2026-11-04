@@ -62,3 +62,4 @@ tools/xuoproxy/xuoproxy-cache/
 
 # runtime cache at repo root (the gitignored one is tools/xuoproxy/xuoproxy-cache)
 xuoproxy-cache/
+issues/
