@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,31 +20,38 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- ***************************************************************************/
-
-#include <curl/curl.h>
-
-/*
- * Only "raw" case insensitive strings. This is meant to be locale independent
- * and only compare strings we know are safe for this.
+ * SPDX-License-Identifier: curl
  *
- * The function is capable of comparing a-z case insensitively even for
- * non-ascii.
- */
+ ***************************************************************************/
+#include "curl_setup.h"
 
-#define strcasecompare(a,b) Curl_strcasecompare(a,b)
-#define strncasecompare(a,b,c) Curl_strncasecompare(a,b,c)
+/* Mapping tables for plain ASCII case conversion, defined in strcase.c.
+   Declared here so the conversions below inline at every call site without
+   relying on LTO or a unity build: casecompare() invokes one of them twice
+   per byte compared, where the call costs more than the lookup itself. */
+extern const unsigned char Curl_touppermap[256];
+extern const unsigned char Curl_tolowermap[256];
 
-int Curl_strcasecompare(const char *first, const char *second);
-int Curl_safe_strcasecompare(const char *first, const char *second);
-int Curl_strncasecompare(const char *first, const char *second, size_t max);
+/* Portable, consistent toupper/tolower. Do not use toupper()/tolower() from
+   <ctype.h>, whose behavior is altered by the current locale. */
+static CURL_INLINE char Curl_raw_toupper(char in)
+{
+  return (char)Curl_touppermap[(unsigned char)in];
+}
 
-char Curl_raw_toupper(char in);
+static CURL_INLINE char Curl_raw_tolower(char in)
+{
+  return (char)Curl_tolowermap[(unsigned char)in];
+}
 
 /* checkprefix() is a shorter version of the above, used when the first
-   argument is zero-byte terminated */
-#define checkprefix(a,b)    curl_strnequal(a,b,strlen(a))
+   argument is the string literal */
+#define checkprefix(a, b) curl_strnequal(b, STRCONST(a))
 
 void Curl_strntoupper(char *dest, const char *src, size_t n);
+void Curl_strntolower(char *dest, const char *src, size_t n);
+
+bool Curl_safecmp(const char *a, const char *b);
+int Curl_timestrcmp(const char *a, const char *b);
 
 #endif /* HEADER_CURL_STRCASE_H */

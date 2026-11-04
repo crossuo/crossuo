@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2019, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,18 +20,51 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 #include "curl_setup.h"
-/* scheme is not URL encoded, the longest libcurl supported ones are... */
-#define MAX_SCHEME_LEN 40
+#include <curl/urlapi.h>
 
-bool Curl_is_absolute_url(const char *url, char *scheme, size_t buflen);
-char *Curl_concat_url(const char *base, const char *relurl);
-size_t Curl_strlen_url(const char *url, bool relative);
-void Curl_strcpy_url(char *output, const char *url, bool relative);
+/* Internal representation of CURLU. Point to URL-encoded strings. */
+struct Curl_URL {
+  char *scheme;
+  char *user;
+  char *password;
+  char *options; /* IMAP only? */
+  char *host;
+  char *zoneid; /* for numerical IPv6 addresses */
+  char *path;
+  char *query;
+  char *fragment;
+  uint16_t portnum; /* the numerical port if present */
+  BIT(port_present);    /* to support missing port */
+  BIT(query_present);    /* to support blank */
+  BIT(fragment_present); /* to support blank */
+  BIT(guessed_scheme);   /* when a URL without scheme is parsed */
+};
 
-#ifdef DEBUGBUILD
-CURLUcode Curl_parse_port(struct Curl_URL *u, char *hostname);
-#endif
+#define HOST_ERROR   (-1) /* out of memory */
+#define HOST_NAME    1
+#define HOST_IPV4    2
+#define HOST_IPV6    3
+
+#define QUERY_NO      2
+#define QUERY_NOT_YET 3 /* allow to change to query */
+#define QUERY_YES     4
+
+size_t Curl_is_absolute_url(const char *url, char *buf, size_t buflen,
+                            bool guess_scheme);
+
+CURLUcode Curl_url_set_authority(CURLU *u, const char *authority);
+
+CURLUcode Curl_junkscan(const char *url, size_t *urllen, bool allowspace);
+
+#define U_CURLU_URLDECODE  (unsigned int)CURLU_URLDECODE
+#define U_CURLU_PATH_AS_IS (unsigned int)CURLU_PATH_AS_IS
+
+bool Curl_url_same_origin(CURLU *base, CURLU *href);
+
+CURLUcode Curl_url_get_port(CURLU *u, uint16_t *pport);
 
 #endif /* HEADER_CURL_URLAPI_INT_H */

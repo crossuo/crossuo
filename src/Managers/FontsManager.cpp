@@ -7,6 +7,7 @@
 #include "FontsManager.h"
 #include "ColorManager.h"
 #include <cstdint>
+#include <cwchar>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
 #include "../CrossUO.h"
@@ -1111,6 +1112,9 @@ int CFontsManager::CalculateCaretPosW(
 // to '?' so every table lookup stays in bounds
 static wstr_t FontSafeText(const wstr_t &str)
 {
+#if WCHAR_MAX > 0xFFFF
+    // wchar_t is 32-bit here: run the remap; on 16-bit platforms (Windows)
+    // the branch is unbuildable and gcc would warn (-Wtype-limits)
     for (wchar_t c : str)
     {
         if ((uint32_t)c > 0xFFFF)
@@ -1118,7 +1122,9 @@ static wstr_t FontSafeText(const wstr_t &str)
             wstr_t out = str;
             for (wchar_t &cc : out)
             {
-                if ((uint32_t)c > 0xFFFF)
+                // per-character test (the old code tested the outer c here,
+                // blanking the whole string when any char was astral)
+                if ((uint32_t)cc > 0xFFFF)
                 {
                     cc = L'?';
                 }
@@ -1126,6 +1132,7 @@ static wstr_t FontSafeText(const wstr_t &str)
             return out;
         }
     }
+#endif
     return str;
 }
 

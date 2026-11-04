@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,47 +20,28 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 #ifndef CURL_DISABLE_RTSP
-
-extern const struct Curl_handler Curl_handler_rtsp;
-
-CURLcode Curl_rtsp_parseheader(struct connectdata *conn, char *header);
-
+CURLcode Curl_rtsp_parseheader(struct Curl_easy *data, const char *header);
+extern const struct Curl_protocol Curl_protocol_rtsp;
 #else
-/* disabled */
-#define Curl_rtsp_parseheader(x,y) CURLE_NOT_BUILT_IN
+#define Curl_rtsp_parseheader(x, y) CURLE_NOT_BUILT_IN
+#endif
 
-#endif /* CURL_DISABLE_RTSP */
-
-/*
- * RTSP Connection data
- *
- * Currently, only used for tracking incomplete RTP data reads
- */
-struct rtsp_conn {
-  char *rtp_buf;
-  ssize_t rtp_bufsize;
-  int rtp_channel;
-};
-
-/****************************************************************************
- * RTSP unique setup
- ***************************************************************************/
-struct RTSP {
-  /*
-   * http_wrapper MUST be the first element of this structure for the wrap
-   * logic to work. In this way, we get a cheap polymorphism because
-   * &(data->state.proto.rtsp) == &(data->state.proto.http) per the C spec
-   *
-   * HTTP functions can safely treat this as an HTTP struct, but RTSP aware
-   * functions can also index into the later elements.
-   */
-  struct HTTP http_wrapper; /*wrap HTTP to do the heavy lifting */
-
-  long CSeq_sent; /* CSeq of this request */
-  long CSeq_recv; /* CSeq received */
-};
-
+#define RTSPREQ_NONE CURL_RTSPREQ_NONE
+#define RTSPREQ_OPTIONS CURL_RTSPREQ_OPTIONS
+#define RTSPREQ_DESCRIBE CURL_RTSPREQ_DESCRIBE
+#define RTSPREQ_ANNOUNCE CURL_RTSPREQ_ANNOUNCE
+#define RTSPREQ_SETUP CURL_RTSPREQ_SETUP
+#define RTSPREQ_PLAY CURL_RTSPREQ_PLAY
+#define RTSPREQ_PAUSE CURL_RTSPREQ_PAUSE
+#define RTSPREQ_TEARDOWN CURL_RTSPREQ_TEARDOWN
+#define RTSPREQ_GET_PARAMETER CURL_RTSPREQ_GET_PARAMETER
+#define RTSPREQ_SET_PARAMETER CURL_RTSPREQ_SET_PARAMETER
+#define RTSPREQ_RECORD CURL_RTSPREQ_RECORD
+#define RTSPREQ_RECEIVE CURL_RTSPREQ_RECEIVE
+#define RTSPREQ_LAST CURL_RTSPREQ_LAST
 
 #endif /* HEADER_CURL_RTSP_H */
