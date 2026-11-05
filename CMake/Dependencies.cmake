@@ -28,13 +28,14 @@ macro(xuo_dependency DEP_NAME DEP_PATH DEP_PREFIX)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   endif()
 
-  if("${DEP_PREFIX}" MATCHES "SDL2")
+  if("${DEP_PREFIX}" MATCHES "SDL3")
     if (MINGW)
-      # mingw link convention: the crt helper lib precedes SDL2main so the
-      # WinMain/SDL_main startup objects resolve in order
-      set(REQUIRED_LIBS "${REQUIRED_LIBS}" -lmingw32)
+      # SDL3 relocates main via SDL_main.h, which provides wWinMain on
+      # UNICODE builds; -municode tells the mingw crt to use it (replaces
+      # the old -lmingw32 + SDL2main crt shim)
+      set(REQUIRED_LIBS "${REQUIRED_LIBS}" -municode)
     endif()
-    set(REQUIRED_LIBS "${REQUIRED_LIBS}" XSDL2main "${GL_LIBRARIES}")
+    set(REQUIRED_LIBS "${REQUIRED_LIBS}" "${GL_LIBRARIES}")
     add_definitions("-DGLEW_STATIC")
   endif()
 

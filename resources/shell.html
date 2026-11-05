@@ -442,6 +442,13 @@
               document.getElementById('wrap').classList.toggle('maximized', full);
             }).observe(c);
           }
+          // Module.canvas must be the ELEMENT: the emscripten pthread
+          // bootstrap (-sOFFSCREENCANVASES_TO_PTHREAD='#canvas') performs
+          // transferControlToOffscreen() itself when the program thread is
+          // created, moving rendering control to the pthread worker
+          // (worker-local WebGL). Do not transfer it manually here - a
+          // manual transfer bypasses emscripten's canvas registry and the
+          // pthread_create transfer would find no named canvas.
           return c;
         })();
         Module.setStatus = function (text) {
@@ -459,6 +466,20 @@
           logEl.textContent += text + '\n';
           logEl.scrollTop = logEl.scrollHeight;
         };
+        // headless test harness: URL query parameters starting with 'env.'
+        // are client environment variables (index.html?env.XUO_AUTO_LOGIN=1,1).
+        // Module.arguments only carries command line flags and the pthread
+        // worker has no shared environment object, so the worker asks for
+        // this table through the runtime's 'callHandler' command, which lands
+        // on Module.xuoEnvRequest here; the answer goes back over postMessage
+        // and main() applies it with setenv()
+        var xuoEnv = {};
+        new URLSearchParams(window.location.search).forEach(function (v, k) {
+          if (k.indexOf('env.') === 0) xuoEnv[k.slice(4)] = v;
+        });
+        if (typeof Module !== 'undefined') {
+          Module.xuoEnvRequest = function () { self.postMessage({ xuoEnv: xuoEnv }); };
+        }
         Module.onRuntimeInitialized = function () {
           setStatus('running');
           Module.print('ARGS: ' + JSON.stringify(Module.arguments));
@@ -1320,6 +1341,11 @@
           if (q) {
             q.split('&').forEach(function (kv) {
               if (!kv) return;
+              // env.* pairs are client environment variables, not argv
+              // (Module.xuoEnv below)
+              if (kv.indexOf('env.') === 0) return;
+              try { if (decodeURIComponent(kv).indexOf('env.') === 0) return; }
+              catch (e) { /* malformed escape: the raw test below ran */ }
               // a malformed %-escape must never prevent boot: on decode throw
               // push the RAW pair (the client tolerates junk args)
               var dec;

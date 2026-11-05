@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 #include "PathFinder.h"
 #include "Walker.h"
 #include "../CrossUO.h"

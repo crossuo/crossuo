@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2017 Hotride
 
 #include <cmath> // ceil
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 #include "GumpCustomHouse.h"
 #include <common/fs.h>
 #include "../Point.h"

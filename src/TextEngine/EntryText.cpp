@@ -1,7 +1,7 @@
 ﻿// SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include <SDL_clipboard.h>
+#include <SDL3/SDL_clipboard.h>
 #include <common/str.h>
 #include <cstdint>
 #include "EntryText.h"

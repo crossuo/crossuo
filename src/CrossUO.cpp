@@ -4,7 +4,7 @@
 #include "CrossUO.h"
 #if defined(XUO_EMSC)
 #include <xuocore/vfs_fetch.h> // vfs_fetch_idle (web streaming settle)
-#include <SDL_timer.h>
+#include <SDL3/SDL_timer.h>
 #include <emscripten.h> // MAIN_THREAD_EM_ASM (desktop save notify)
 // the EM_JS definition (src/Main.cpp) has C linkage; a function-scope
 // declaration is not allowed to specify linkage, so it lives here
@@ -1055,10 +1055,10 @@ void CGame::Process(bool rendering)
     const bool oldShift = g_ShiftPressed;
 
     auto mod = SDL_GetModState();
-    g_AltPressed = ((mod & KMOD_ALT) != 0);
-    g_CtrlPressed = ((mod & KMOD_CTRL) != 0);
-    g_CmdPressed = ((mod & KMOD_LGUI) != 0);
-    g_ShiftPressed = ((mod & KMOD_SHIFT) != 0);
+    g_AltPressed = ((mod & SDL_KMOD_ALT) != 0);
+    g_CtrlPressed = ((mod & SDL_KMOD_CTRL) != 0);
+    g_CmdPressed = ((mod & SDL_KMOD_LGUI) != 0);
+    g_ShiftPressed = ((mod & SDL_KMOD_SHIFT) != 0);
 
     if (g_GameState >= GS_GAME) // || g_GameState == GS_GAME_BLOCKED)
     {

@@ -6,7 +6,7 @@
 
 #include "../Misc.h" // RandomInt
 #include <algorithm>
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 #include <climits> // INT_MAX
 #include <cstdlib> // getenv
 #include <common/str.h>
@@ -2910,9 +2910,9 @@ void CGameScreen::OnTextInput(const TextEvent &ev)
     }
 
     const auto mod = SDL_GetModState();
-    const bool altGR = (mod & KMOD_RALT) != 0;
-    const bool altPressed = (mod & KMOD_ALT) != 0;
-    const bool ctrlPressed = (mod & KMOD_CTRL) != 0;
+    const bool altGR = (mod & SDL_KMOD_RALT) != 0;
+    const bool altPressed = (mod & SDL_KMOD_ALT) != 0;
+    const bool ctrlPressed = (mod & SDL_KMOD_CTRL) != 0;
 
     if ((altGR || (!altPressed && !ctrlPressed)) &&
         (int)g_EntryPointer->Length() < std::max(g_EntryPointer->MaxLength, 60))
@@ -3101,9 +3101,9 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     }
 
     const auto mod = SDL_GetModState();
-    const bool altPressed = (mod & KMOD_ALT) != 0;
-    const bool ctrlPressed = (mod & KMOD_CTRL) != 0;
-    const bool shiftPressed = (mod & KMOD_SHIFT) != 0;
+    const bool altPressed = (mod & SDL_KMOD_ALT) != 0;
+    const bool ctrlPressed = (mod & SDL_KMOD_CTRL) != 0;
+    const bool shiftPressed = (mod & SDL_KMOD_SHIFT) != 0;
 
     // Disable macros to avoid mixing with a chat input.
     // If you activate the chat, you want to write a message not run a macro.
@@ -3111,7 +3111,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     {
         return;
     }
-    else if (key == SDLK_q && ctrlPressed)
+    else if (key == SDLK_Q && ctrlPressed)
     {
         g_GameConsole.ChangeConsoleMessage(false);
     }

@@ -29,8 +29,7 @@ CGumpScreenGame::CGumpScreenGame()
     Add(new CGUIGumppic(0x0E14, 0, 0));
 }
 
-CGumpScreenGame::~CGumpScreenGame()
-= default;
+CGumpScreenGame::~CGumpScreenGame() = default;
 
 // web on a phone held upright: the maximized page is the display, the
 // world fills it and there is no frame or resizer to operate. A narrow
@@ -191,7 +190,6 @@ void CGumpScreenGame::UpdateContent()
     if (g_PressedObject.LeftGump == this)
     {
         CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
-
         if (g_PressedObject.LeftObject == m_Items) //resizer
         {
             g_RenderBounds.GameWindowWidth += offset.X;
@@ -363,7 +361,6 @@ CRenderObject *CGumpScreenGame::Select()
 void CGumpScreenGame::OnLeftMouseButtonDown()
 {
     //CGump::OnLeftMouseButtonDown();
-
     if (g_GumpConsoleType != nullptr)
     {
         g_GumpManager.MoveToBack(g_GumpConsoleType);
@@ -378,7 +375,6 @@ void CGumpScreenGame::OnLeftMouseButtonUp()
     }
 
     CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
-
     if (g_PressedObject.LeftObject == m_Items) //resizer
     {
         g_ConfigManager.GameWindowWidth = g_ConfigManager.GameWindowWidth + offset.X;

@@ -21,7 +21,7 @@
 #include "../Managers/OptionsMacroManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Network/Packets.h"
-#include <SDL_keyboard.h>
+#include <SDL3/SDL_keyboard.h>
 #include <common/utils.h> // countof
 #include <cstdint>
 

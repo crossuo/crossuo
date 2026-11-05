@@ -6,7 +6,7 @@
 #include "GameObject.h"
 #include "GameEffect.h"
 #include "GameCharacter.h"
-#include <SDL_timer.h>
+#include <SDL3/SDL_timer.h>
 #include <cstdint>
 #include <xuocore/uodata.h>
 #include <common/str.h>

@@ -23,7 +23,7 @@
 #endif
 
 #if defined(USE_DX11)
-#include <SDL_syswm.h>
+#include <SDL3/SDL_system.h>
 #include <d3d11.h>
 ID3D11Device *g_pd3dDevice = nullptr;
 ID3D11DeviceContext *g_pd3dDeviceContext = nullptr;
@@ -69,18 +69,18 @@ int win_init(win_context *ctx)
     assert(ctx->width != 0);
     assert(ctx->height != 0);
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+    // SDL3 returns true on success (SDL2 returned 0)
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
         printf("Error: %s\n", SDL_GetError());
         return -1;
     }
 
     const SDL_WindowFlags window_flags =
-        (SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+        (SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+    // SDL3: no explicit position (centering is the default)
     SDL_Window *window = SDL_CreateWindow(
         ctx->title,
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
         ctx->width,
         ctx->height,
         window_flags);
@@ -88,32 +88,18 @@ int win_init(win_context *ctx)
 
     if (ctx->icon)
     {
-        uint32_t rmask, gmask, bmask, amask;
-    #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-        int shift = (ctx->icon->bytes_per_pixel == 3) ? 8 : 0;
-        rmask = 0xff000000 >> shift;
-        gmask = 0x00ff0000 >> shift;
-        bmask = 0x0000ff00 >> shift;
-        amask = 0x000000ff >> shift;
-    #else
-        rmask = 0x000000ff;
-        gmask = 0x0000ff00;
-        bmask = 0x00ff0000;
-        amask = (ctx->icon->bytes_per_pixel == 3) ? 0 : 0xff000000;
-    #endif
-
-        SDL_Surface *icon = SDL_CreateRGBSurfaceFrom(
-            (void *)ctx->icon->pixel_data,
+        // SDL3 surfaces carry an explicit pixel format instead of bpp+masks
+        const SDL_PixelFormat icon_format = (ctx->icon->bytes_per_pixel == 4)
+                                                ? SDL_PIXELFORMAT_RGBA32
+                                                : SDL_PIXELFORMAT_RGB24;
+        SDL_Surface *icon = SDL_CreateSurfaceFrom(
             ctx->icon->width,
             ctx->icon->height,
-            ctx->icon->bytes_per_pixel * 8,
-            ctx->icon->bytes_per_pixel * ctx->icon->width,
-            rmask,
-            gmask,
-            bmask,
-            amask);
+            icon_format,
+            (void *)ctx->icon->pixel_data,
+            ctx->icon->bytes_per_pixel * ctx->icon->width);
         SDL_SetWindowIcon(window, icon);
-        SDL_FreeSurface(icon);
+        SDL_DestroySurface(icon);
     }
 
 #if defined(USE_GL) || defined(USE_GLES)
@@ -167,7 +153,7 @@ void win_shutdown(win_context *ctx)
 {
     assert(ctx != 0);
 #if defined(USE_GL) || defined(USE_GLES)
-    SDL_GL_DeleteContext(ctx->context);
+    SDL_GL_DestroyContext(ctx->context);
 #elif defined(USE_DX11)
     // ui_shutdown
 #endif

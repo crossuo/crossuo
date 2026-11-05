@@ -7,9 +7,9 @@
 #include <assert.h> // REMOVE
 #include <common/str.h>
 #include <stdio.h>
-#include <SDL_events.h>
-#include <SDL_keycode.h>
-#include <SDL_thread.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_thread.h>
 
 #if _WIN32
 
@@ -59,7 +59,7 @@ typedef SDL_Event PaintEvent;
 typedef SDL_UserEvent UserEvent;
 #define Keycode SDL_Keycode
 #define TextChar char *
-#define EvKey(x) ((Keycode)x.keysym.sym)
+#define EvKey(x) ((Keycode)x.key)
 #define EvChar(x) (wstr_from_utf8_input(x.text)[0])
 #define IsPrintable(x) iswprint(x)
 
@@ -68,7 +68,7 @@ inline KeyEvent AsKeyEvent(const TextEvent &ev)
     const auto ch = EvChar(ev);
     assert(IsPrintable(ch));
     KeyEvent e;
-    e.keysym.sym = ch;
+    e.key = ch;
     return e;
 }
 
@@ -122,7 +122,7 @@ inline KeyEvent AsKeyEvent(const TextEvent &ev)
 #define KEY_NUMPAD8 SDLK_KP_8
 #define KEY_NUMPAD9 SDLK_KP_9
 
-typedef SDL_mutex *ProtectedSection;
+typedef SDL_Mutex *ProtectedSection;
 #define LOCK(x) SDL_LockMutex(x)
 #define UNLOCK(x) SDL_UnlockMutex(x)
 #define CREATE_MUTEX(x) (x = SDL_CreateMutex())

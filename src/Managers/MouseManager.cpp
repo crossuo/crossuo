@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include <SDL_stdinc.h>
+#include <SDL3/SDL_stdinc.h>
 #include <cmath> // hypotf
-#include <SDL_mouse.h>
+#include <SDL3/SDL_mouse.h>
 #include <cstdint>
 #include "../GameWindow.h" // g_WispWindow (until the window merge)
 #include "MouseManager.h"
@@ -207,9 +207,10 @@ bool CMouseManager::GetCursorDrawRect(
     if (y != nullptr)
     {
         *y = Position.Y + m_CursorOffset[1][index];
-#if !defined(XUO_EMSC)
-        *y +=  + spr->Width - 6; // hack
-#endif
+//#if !defined(XUO_EMSC)
+        // SDL2<>imgui issue
+        //*y +=  + spr->Width - 6; // hack
+//#endif
     }
     if (w != nullptr)
     {
@@ -609,18 +610,66 @@ void CMouseManager::Draw(uint16_t id)
     }
 }
 
+// captured-drag tracking state: SDL3 (X11/XWayland) drops motion events while
+// a captured drag has the cursor outside the window and the cached
+// SDL_GetMouseState position freezes (SDL2 delivered them window-relative for
+// the whole drag). Track the drag by accumulating SDL_GetGlobalMouseState
+// deltas instead - origin-independent, so the unreliable SDL_GetWindowPosition
+// (XWayland does not report the real window position) is not needed.
+static bool s_DragTrackValid = false;
+static float s_DragLastGlobalX = 0.0f;
+static float s_DragLastGlobalY = 0.0f;
+static int s_DragBaseX = 0;
+static int s_DragBaseY = 0;
+
 void CMouseManager::Update()
 {
+    const bool draggingButtons = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
+
+    if (draggingButtons && g_GameWindow.m_window != nullptr)
+    {
+        float gx = 0.0f, gy = 0.0f;
+        SDL_GetGlobalMouseState(&gx, &gy);
+        if (!s_DragTrackValid)
+        {
+            // drag start: the cached position is still the correct
+            // window-relative one (motion events flow while inside)
+            s_DragBaseX = Position.X;
+            s_DragBaseY = Position.Y;
+            s_DragLastGlobalX = gx;
+            s_DragLastGlobalY = gy;
+            s_DragTrackValid = true;
+        }
+        else
+        {
+            int applyX = (int)(gx - s_DragLastGlobalX);
+            int applyY = (int)(gy - s_DragLastGlobalY);
+            s_DragBaseX += applyX;
+            s_DragBaseY += applyY;
+            s_DragLastGlobalX = gx;
+            s_DragLastGlobalY = gy;
+        }
+        Position = CPoint2Di(s_DragBaseX, s_DragBaseY);
+        Dragging = true;
+        RealPosition = Position;
+        return;
+    }
+    s_DragTrackValid = false;
+
     // only follow the mouse while it hovers our own window; other windows in
     // the process (like the embedded launcher) have their own mouse handling,
     // and their coordinates would otherwise move the game cursor around
     if (g_GameWindow.m_window != nullptr && SDL_GetMouseFocus() != g_GameWindow.m_window)
     {
-        Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
+        Dragging = false;
         return;
     }
-    SDL_GetMouseState(&Position.X, &Position.Y);
-    Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
+    // SDL3: SDL_GetMouseState reports float coordinates; the client is
+    // integer-based, so truncate like SDL2 did
+    float mx = 0.0f, my = 0.0f;
+    SDL_GetMouseState(&mx, &my);
+    Position = CPoint2Di((int)mx, (int)my);
+    Dragging = false;
     RealPosition = Position;
 }
 
@@ -628,13 +677,13 @@ void CMouseManager::Release() const
 {
     if (!(LeftButtonPressed || RightButtonPressed || MidButtonPressed))
     {
-        SDL_CaptureMouse(SDL_FALSE);
+        SDL_CaptureMouse(false);
     }
 }
 
 void CMouseManager::Capture() const
 {
-    SDL_CaptureMouse(SDL_TRUE);
+    SDL_CaptureMouse(true);
 }
 
 CPoint2Di CMouseManager::LeftDroppedOffset() const

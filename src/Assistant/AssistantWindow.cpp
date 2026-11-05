@@ -282,23 +282,37 @@ static bool event_belongs_to_game(const SDL_Event &ev)
         return true;
     switch (ev.type)
     {
-        case SDL_WINDOWEVENT:
+        // SDL3: window events are their own event types, all with windowID
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+        case SDL_EVENT_WINDOW_SHOWN:
+        case SDL_EVENT_WINDOW_HIDDEN:
+        case SDL_EVENT_WINDOW_EXPOSED:
+        case SDL_EVENT_WINDOW_MOVED:
+        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        case SDL_EVENT_WINDOW_RESTORED:
+        case SDL_EVENT_WINDOW_MOUSE_ENTER:
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
             return ev.window.windowID == gameId;
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
             return ev.key.windowID == gameId;
-        case SDL_TEXTEDITING:
-        case SDL_TEXTINPUT:
+        case SDL_EVENT_TEXT_EDITING:
+        case SDL_EVENT_TEXT_INPUT:
             return ev.text.windowID == gameId;
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
             return ev.motion.windowID == gameId;
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
             return ev.button.windowID == gameId;
-        case SDL_MOUSEWHEEL:
+        case SDL_EVENT_MOUSE_WHEEL:
             return ev.wheel.windowID == gameId;
         default:
-            return true; // window-less events (SDL_QUIT, ...) go to the game
+            return true; // window-less events (SDL_EVENT_QUIT, ...) go to the game
     }
 }
 
@@ -309,16 +323,16 @@ static bool event_belongs_to_game(const SDL_Event &ev)
 // Precedence: assistant text field > game console > stop.
 // - io.WantTextInput (an assistant InputText is active): keep text input
 //   started. The game console receives nothing meanwhile: the event pump in
-//   Main.cpp hands SDL_TEXTINPUT to ImGui (AssistantWindow_ProcessEvent
+//   Main.cpp hands SDL_EVENT_TEXT_INPUT to ImGui (AssistantWindow_ProcessEvent
 //   consumes it) whenever the assistant wants text, so nothing is typed twice.
 // - game stage (GS_GAME/GS_GAME_BLOCKED): the game console (CGameScreen::
 //   OnTextInput -> g_EntryPointer->Insert) and text-entry gumps (including
 //   CGumpTextEntryDialog on the blocked screen, via CGumpManager::OnTextInput)
-//   are fed EXCLUSIVELY from SDL_TEXTINPUT events (WispWindow OnWindowProc),
+//   are fed EXCLUSIVELY from SDL_EVENT_TEXT_INPUT events (WispWindow OnWindowProc),
 //   so keep text input started even when the assistant does not want text.
 //   The client never toggles the state itself: SDL leaves it enabled from
 //   video init, and stopping it here whenever an assistant field lost focus is
-//   exactly what muted the game console (no SDL_TEXTINPUT -> cannot talk).
+//   exactly what muted the game console (no SDL_EVENT_TEXT_INPUT -> cannot talk).
 // - otherwise: stopped.
 static void sync_text_input(bool assistantWantsText, bool gameStage)
 {
@@ -326,13 +340,20 @@ static void sync_text_input(bool assistantWantsText, bool gameStage)
     if (wantText == s_textInputActive)
         return;
     s_textInputActive = wantText;
+    // SDL3: text input is per-window; the game window owns the console and
+    // the assistant fields draw into its overlay
+    SDL_Window *window = g_GameWindow.m_window;
+    if (window == nullptr)
+    {
+        return;
+    }
     if (wantText)
     {
-        SDL_StartTextInput();
+        SDL_StartTextInput(window);
     }
     else
     {
-        SDL_StopTextInput();
+        SDL_StopTextInput(window);
     }
 }
 
@@ -460,7 +481,7 @@ bool AssistantWindow_Show(bool show)
         // hand the cursor back to the client policy (the game window baseline is
         // a hidden OS cursor); the backend no longer re-hides it for us since
         // init() set ImGuiConfigFlags_NoMouseCursorChange
-        SDL_ShowCursor(SDL_DISABLE);
+        SDL_HideCursor();
     }
     return true;
 }
@@ -574,23 +595,23 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
 
     switch (ev.type)
     {
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
             return io.WantCaptureMouse;
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
             // the engine only consumes middle/X buttons with a matching
             // binding (the plain buttons always pass)
             if (io.WantCaptureMouse)
                 return true;
             return xuoassist::Hotkeys_ProcessGameEvent(ev);
-        case SDL_MOUSEWHEEL:
+        case SDL_EVENT_MOUSE_WHEEL:
             if (io.WantCaptureMouse)
                 return true;
             return xuoassist::Hotkeys_ProcessGameEvent(ev);
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-        case SDL_TEXTINPUT:
-        case SDL_TEXTEDITING:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+        case SDL_EVENT_TEXT_INPUT:
+        case SDL_EVENT_TEXT_EDITING:
             // ImGui text fields always win: typing in the assistant never
             // fires a binding
             if (io.WantCaptureKeyboard || io.WantTextInput)
@@ -635,7 +656,14 @@ void AssistantWindow_DrawOverlay()
     {
         // io.MousePos and the viewport list are valid after NewFrame
         const bool overAssistantPopOut = mouse_over_assistant_popout();
-        SDL_ShowCursor(overAssistantPopOut ? SDL_ENABLE : SDL_DISABLE);
+        if (overAssistantPopOut)
+        {
+            SDL_ShowCursor();
+        }
+        else
+        {
+            SDL_HideCursor();
+        }
     }
     xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
     // the asset viewer submits its window into this same ImGui frame, after
@@ -662,7 +690,7 @@ void AssistantWindow_Shutdown()
 
     // leaving the game stage: restore the state the client shipped with (text
     // input enabled from SDL video init) instead of stopping it - the main-menu
-    // stage still types through SDL_TEXTINPUT (login/account fields and, on
+    // stage still types through SDL_EVENT_TEXT_INPUT (login/account fields and, on
     // embedded-launcher builds, the launcher's ImGui text fields)
     sync_text_input(true, false);
     // flush pending edits + uninstall the UI events consumer while the ImGui
@@ -689,7 +717,7 @@ void AssistantWindow_Shutdown()
     memset(&s_assistantWin, 0, sizeof(s_assistantWin));
     // the game draws its own software cursor and the ImGui SDL2 backend toggles
     // the process cursor on mouse focus changes: make sure it stays hidden
-    SDL_ShowCursor(SDL_DISABLE);
+    SDL_HideCursor();
     Info(Assistant, "shutdown");
 }
 

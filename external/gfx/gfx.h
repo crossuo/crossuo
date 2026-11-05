@@ -147,13 +147,13 @@
     #elif defined(__linux__) // #if defined(__APPLE__)
         #include <GL/gl.h>
     #endif // #elif defined(__linux__) // #if defined(__APPLE__)
-    //#include <SDL_opengl.h>
+    //#include <SDL3/SDL_opengl.h>
 #elif defined(USE_GLES) // #if defined(USE_GL)
     #if (USE_GLES2)
         //#define GL_GLEXT_PROTOTYPES
         //#include <GLES2/gl2.h>
         //#include <GLES2/gl2ext.h>
-        #include <SDL_opengles2.h>
+        #include <SDL3/SDL_opengles2.h>
         #define __glew_h__ // HACK to get sokol_gfx use the right symbols
     #endif
 #endif // #elif defined(USE_GLES) // #if defined(USE_GL)
@@ -265,9 +265,9 @@ struct GenericVertex
 };
 
 #if defined(XUO_LOCAL_HEADERS)
-    #include "SDL.h"
+    #include "SDL3/SDL.h"
 #else // #if defined(XUO_LOCAL_HEADERS)
-    #include <SDL.h>
+    #include <SDL3/SDL.h>
 #endif // #else // #if defined(XUO_LOCAL_HEADERS)
 
 #ifdef __cplusplus
@@ -287,7 +287,8 @@ typedef struct win_context_
     const char *title;
     SDL_Window *window;
     const win_icon_data *icon;
-    void *context;
+    // SDL3: SDL_GLContext is a typed pointer (was void * in SDL2)
+    SDL_GLContext context;
     const char *inifile;
     int width;
     int height;

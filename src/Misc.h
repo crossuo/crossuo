@@ -6,13 +6,13 @@
 #pragma once
 
 #include "Platform.h"
-#include <SDL_thread.h>
-#include <SDL_stdinc.h>
+#include <SDL3/SDL_thread.h>
+#include <SDL3/SDL_stdinc.h>
 #include <stdlib.h>
 
 #define XUO_M_PI 3.14159265358979323846264338327950288
 
-extern SDL_threadID g_MainThread;
+extern SDL_ThreadID g_MainThread;
 const int PACKET_VARIABLE_SIZE = 0;
 
 int CalculatePercents(int max, int current, int maxValue);

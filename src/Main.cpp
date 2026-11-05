@@ -5,7 +5,7 @@
 #include <iostream>
 #include <time.h>
 #if defined(XUO_EMSC)
-#include <SDL_timer.h>
+#include <SDL3/SDL_timer.h>
 #include <emscripten.h>
 #include <emscripten/websocket.h>
 
@@ -22,6 +22,37 @@ EM_JS(void, web_install_alert_shim, (), {
     {
         globalThis.alert = function (msg) { console.warn('alert:', msg); };
     }
+});
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+// web testing harness: the page publishes its 'env.<NAME>=<value>' URL
+// parameters so the env-driven harnesses (XUO_AUTO_LOGIN, XUO_FPS_LOG,
+// XUO_CHAT_TEST, ...) work from a plain page URL. main() runs on the pthread
+// worker; its runtime drops messages it does not know, so the request uses
+// the 'callHandler' command it forwards to the page (Module.xuoEnvRequest,
+// resources/shell.html) and the page answers through the worker's onmessage
+// queue, which the runtime hands to the listener below.
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-variable-declarations"
+#endif
+EM_JS(int, web_import_env, (), {
+    if (typeof self === 'undefined' || !self.postMessage) return 0;
+    var n = 0;
+    self.addEventListener('message', function (e) {
+        var d = e && e.data;
+        if (!d || !d.xuoEnv) return;
+        for (var k in d.xuoEnv) {
+            if (!Object.prototype.hasOwnProperty.call(d.xuoEnv, k)) continue;
+            setenv(k, String(d.xuoEnv[k]), 1);
+            n++;
+        }
+        console.log('[web] environment imported from the page: ' + n + ' entries');
+    });
+    self.postMessage({ cmd: 'callHandler', handler: 'xuoEnvRequest', args: [] });
+    return n;
 });
 #if defined(__clang__)
 #pragma clang diagnostic pop
@@ -76,10 +107,9 @@ EM_JS(void, web_install_alert_shim, (), {
 #include "Gumps/GumpChat.h" // chat test harness
 #include "Managers/GumpManager.h" // chat test harness gump dispatch
 
-#if defined(main) /* SDL renames main to SDL_main for its win32 CRT shim;
-                    the client owns the real main() */
-#undef main
-#endif
+// SDL3: must be included in the translation unit that defines main(); it
+// relocates main to SDL_main (win32 CRT shim, emscripten, ...)
+#include <SDL3/SDL_main.h>
 
 extern bool g_var_DisableRenderGame;
 bool g_var_DisableRenderGame = false;
@@ -1032,6 +1062,15 @@ int main(int argc, char **argv)
     emscripten_websocket_is_supported();
 #endif
     g_fatalErrorCb = &fatal_error_dialog;
+#if defined(XUO_EMSC)
+    // headless test harness: env.* URL parameters become real environment
+    // variables (index.html?env.XUO_AUTO_LOGIN=1,1&env.XUO_FPS_LOG=1), the
+    // same ones the native harnesses read. main() runs on the pthread
+    // worker, which already has the page's environment block, so this runs
+    // here, after the runtime handoff, and the flags read later in the boot
+    // see them
+    web_import_env();
+#endif
     if (!InitCli(argc, argv))
     {
         return 0;
@@ -1055,7 +1094,7 @@ int main(int argc, char **argv)
         LogInit(argc, argv, "crossuo.log");
     }
 
-    if (SDL_Init(SDL_INIT_TIMER) < 0)
+    if (!SDL_Init(0))
     {
         ErrorMessage(
             Client,

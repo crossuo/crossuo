@@ -137,6 +137,9 @@ void sokol_init()
 #endif // #if !defined(USE_GL2)
 }
 
+/* SDL3: relocates main via SDL_main.h */
+#include <SDL3/SDL_main.h>
+
 int main(int argc, char **argv)
 {
     win_context win;
@@ -193,9 +196,9 @@ int main(int argc, char **argv)
         while (SDL_PollEvent(&event))
         {
             ui_process_event(ui, &event);
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_EVENT_QUIT)
                 done = true;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
+            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED &&
                 event.window.windowID == SDL_GetWindowID(win.window))
                 done = true;
         }

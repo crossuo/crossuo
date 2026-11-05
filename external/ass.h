@@ -21,7 +21,7 @@
 #endif /* __GNUC__ */
 #endif
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #ifdef ASS_IMPLEMENTATION
 
 #ifndef dr_mp3_h
@@ -27774,65 +27774,81 @@ namespace SoLoud
 
 namespace SoLoud
 {
+	// SDL3 audio: the callback device model is gone; render through an audio
+	// stream opened on the default playback device. We always mix F32 and let
+	// SDL convert to the device format (channels/rate/format are converted
+	// transparently, so the old S16 fallback path is no longer needed).
 	static SDL_AudioSpec gActiveAudioSpec;
-	static SDL_AudioDeviceID gAudioDeviceID;
+	static SDL_AudioStream *gAudioStream = nullptr;
+	static SDL_AudioDeviceID gAudioDeviceID = 0;
 
-	void soloud_sdl2static_audiomixer(void *userdata, Uint8 *stream, int len)
+	static void soloud_sdl2static_audiomixer(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount)
 	{
-		short *buf = (short*)stream;
+		(void)total_amount;
 		SoLoud::Soloud *soloud = (SoLoud::Soloud *)userdata;
-		if (gActiveAudioSpec.format == AUDIO_F32)
+		const int channels = gActiveAudioSpec.channels > 0 ? gActiveAudioSpec.channels : 1;
+		const int frames = additional_amount / (int)(channels * sizeof(float));
+		if (frames <= 0)
 		{
-			int samples = len / (gActiveAudioSpec.channels * sizeof(float));
-			soloud->mix((float *)buf, samples);
+			return;
 		}
-		else // assume s16 if not float
+		float *buf = (float *)SDL_malloc(frames * channels * sizeof(float));
+		if (buf == nullptr)
 		{
-			int samples = len / (gActiveAudioSpec.channels * sizeof(short));
-			soloud->mixSigned16(buf, samples);
+			return;
 		}
+		soloud->mix(buf, frames);
+		SDL_PutAudioStreamData(stream, buf, frames * channels * (int)sizeof(float));
+		SDL_free(buf);
 	}
 
 	static void soloud_sdl2static_deinit(SoLoud::Soloud *aSoloud)
 	{
-		SDL_CloseAudioDevice(gAudioDeviceID);
+		(void)aSoloud;
+		if (gAudioStream != nullptr)
+		{
+			SDL_DestroyAudioStream(gAudioStream);
+			gAudioStream = nullptr;
+		}
+		if (gAudioDeviceID != 0)
+		{
+			SDL_CloseAudioDevice(gAudioDeviceID);
+			gAudioDeviceID = 0;
+		}
 	}
 
 	result sdl2static_init(SoLoud::Soloud *aSoloud, unsigned int aFlags, unsigned int aSamplerate, unsigned int aBuffer, unsigned int aChannels)
 	{
 		if (!SDL_WasInit(SDL_INIT_AUDIO))
 		{
-			if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+			if (!SDL_InitSubSystem(SDL_INIT_AUDIO))
 			{
 				return UNKNOWN_ERROR;
 			}
 		}
 
-		SDL_AudioSpec as;
-		as.freq = aSamplerate;
-		as.format = AUDIO_F32;
-		as.channels = aChannels;
-		as.samples = aBuffer;
-		as.callback = soloud_sdl2static_audiomixer;
-		as.userdata = (void*)aSoloud;
+		SDL_zero(gActiveAudioSpec);
+		gActiveAudioSpec.freq = aSamplerate;
+		gActiveAudioSpec.format = SDL_AUDIO_F32LE;
+		gActiveAudioSpec.channels = aChannels;
 
-		gAudioDeviceID = SDL_OpenAudioDevice(NULL, 0, &as, &gActiveAudioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE & ~(SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE));
-		if (gAudioDeviceID == 0)
+		gAudioStream = SDL_OpenAudioDeviceStream(
+			SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+			&gActiveAudioSpec,
+			soloud_sdl2static_audiomixer,
+			(void*)aSoloud);
+		if (gAudioStream == nullptr)
 		{
-			as.format = AUDIO_S16;
-			gAudioDeviceID = SDL_OpenAudioDevice(NULL, 0, &as, &gActiveAudioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE & ~(SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE));
-			if (gAudioDeviceID == 0)
-			{
-				return UNKNOWN_ERROR;
-			}
+			return UNKNOWN_ERROR;
 		}
+		gAudioDeviceID = SDL_GetAudioStreamDevice(gAudioStream);
 
-		aSoloud->postinit(gActiveAudioSpec.freq, gActiveAudioSpec.samples, aFlags, gActiveAudioSpec.channels);
+		aSoloud->postinit(gActiveAudioSpec.freq, aBuffer, aFlags, gActiveAudioSpec.channels);
 
 		aSoloud->mBackendCleanupFunc = soloud_sdl2static_deinit;
 
-		SDL_PauseAudioDevice(gAudioDeviceID, 0);
-		aSoloud->mBackendString = "SDL2 (static)";
+		SDL_ResumeAudioStreamDevice(gAudioStream);
+		aSoloud->mBackendString = "SDL3 (static)";
 		return 0;
 	}
 };

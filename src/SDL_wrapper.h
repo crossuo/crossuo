@@ -4,9 +4,7 @@
 #pragma once
 
 #if defined(XUO_LOCAL_HEADERS)
-#include "SDL.h"
-#include "SDL_syswm.h"
+#include "SDL3/SDL.h"
 #else
-#include <SDL.h>
-#include <SDL_syswm.h>
+#include <SDL3/SDL.h>
 #endif

@@ -148,7 +148,7 @@ public:
     virtual void OnAutostartRequest() {}
 
     // The closeuo command: the sink asks
-    // the client window to close (CWindow::Destroy -> the SDL_QUIT path).
+    // the client window to close (CWindow::Destroy -> the SDL_EVENT_QUIT path).
     virtual void OnClientCloseRequest() {}
 
     // --- from-target requests (the tablists "from target" buttons; the

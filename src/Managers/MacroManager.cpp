@@ -8,7 +8,7 @@
 #include "ConfigManager.h"
 #include "GumpManager.h"
 #include "PacketManager.h"
-#include <SDL_clipboard.h>
+#include <SDL3/SDL_clipboard.h>
 #include <xuocore/mappedfile.h>
 #include <xuocore/text_parser.h>
 #include <common/fs.h>

@@ -60,7 +60,7 @@ bool LauncherWindow_Init()
 
     if (!xuol_app_init(s_launcher_win, "xuolauncher-embedded.ini", false))
     {
-        SDL_GL_DeleteContext(s_launcher_win.context);
+        SDL_GL_DestroyContext(s_launcher_win.context);
         SDL_DestroyWindow(s_launcher_win.window);
         memset(&s_launcher_win, 0, sizeof(s_launcher_win));
         if (bak_window && bak_context)
@@ -85,7 +85,7 @@ void LauncherWindow_Shutdown()
     xuol_app_shutdown();
     // win_shutdown() calls SDL_Quit() which would take the client window down
     // with it, so release the launcher resources manually instead
-    SDL_GL_DeleteContext(s_launcher_win.context);
+    SDL_GL_DestroyContext(s_launcher_win.context);
     SDL_DestroyWindow(s_launcher_win.window);
     memset(&s_launcher_win, 0, sizeof(s_launcher_win));
     s_launcher_initialized = false;
@@ -126,20 +126,34 @@ static bool event_belongs_to_launcher(const SDL_Event &ev)
 {
     switch (ev.type)
     {
-        case SDL_WINDOWEVENT:
+        // SDL3: window events are their own event types, all with windowID
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+        case SDL_EVENT_WINDOW_SHOWN:
+        case SDL_EVENT_WINDOW_HIDDEN:
+        case SDL_EVENT_WINDOW_EXPOSED:
+        case SDL_EVENT_WINDOW_MOVED:
+        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        case SDL_EVENT_WINDOW_RESTORED:
+        case SDL_EVENT_WINDOW_MOUSE_ENTER:
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
             return ev.window.windowID == SDL_GetWindowID(s_launcher_win.window);
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
             return ev.key.windowID == SDL_GetWindowID(s_launcher_win.window);
-        case SDL_TEXTEDITING:
-        case SDL_TEXTINPUT:
+        case SDL_EVENT_TEXT_EDITING:
+        case SDL_EVENT_TEXT_INPUT:
             return ev.text.windowID == SDL_GetWindowID(s_launcher_win.window);
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
             return ev.motion.windowID == SDL_GetWindowID(s_launcher_win.window);
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
             return ev.button.windowID == SDL_GetWindowID(s_launcher_win.window);
-        case SDL_MOUSEWHEEL:
+        case SDL_EVENT_MOUSE_WHEEL:
             return ev.wheel.windowID == SDL_GetWindowID(s_launcher_win.window);
         default:
             return false;
@@ -152,8 +166,8 @@ bool LauncherWindow_ProcessEvent(const SDL_Event &ev)
     // created (valid configuration at boot), creating it on demand. The
     // launcher is only available at the login screen: anywhere else the key
     // is handed over to the client untouched.
-    if (ev.type == SDL_KEYDOWN && !ev.key.repeat && ev.key.keysym.sym == SDLK_l &&
-        (ev.key.keysym.mod & KMOD_ALT) != 0)
+    if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat && ev.key.key == SDLK_L &&
+        (ev.key.mod & SDL_KMOD_ALT) != 0)
     {
         if (!at_login_screen())
             return false;
@@ -175,7 +189,8 @@ bool LauncherWindow_ProcessEvent(const SDL_Event &ev)
     if (!event_belongs_to_launcher(ev))
         return false;
 
-    if (ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_CLOSE)
+    if (ev.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED &&
+        ev.window.windowID == SDL_GetWindowID(s_launcher_win.window))
     {
         // closing the launcher only hides it; the client keeps running
         LauncherWindow_Show(false);
@@ -226,7 +241,7 @@ void LauncherWindow_Render()
     // so the game keeps drawing its own cursor only
     if (SDL_GetMouseFocus() != s_launcher_win.window)
     {
-        SDL_ShowCursor(SDL_DISABLE);
+        SDL_HideCursor();
     }
 
     SDL_GL_SwapWindow(s_launcher_win.window);
@@ -239,9 +254,9 @@ bool LauncherWindow_Pump()
     SDL_Event ev;
     while (SDL_PollEvent(&ev) != 0)
     {
-        if (ev.type == SDL_QUIT)
+        if (ev.type == SDL_EVENT_QUIT)
             return false;
-        if (ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_CLOSE &&
+        if (ev.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED &&
             ev.window.windowID == SDL_GetWindowID(s_launcher_win.window))
             return false;
         LauncherWindow_ProcessEvent(ev);

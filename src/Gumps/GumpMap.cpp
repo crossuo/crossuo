@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include <cmath> // atan, sin, cos
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 #include <cstdint>
 #include "GumpMap.h"
 #include "../CrossUO.h"

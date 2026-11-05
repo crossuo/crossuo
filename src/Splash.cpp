@@ -7,7 +7,7 @@
 #include "Renderer/RenderAPI.h"
 #include "GameWindow.h"
 
-#include <SDL_video.h>
+#include <SDL3/SDL_video.h>
 #include <common/logging/logging.h>
 #include <cstdint>
 
@@ -29,7 +29,7 @@
 
 #include "cover.h" // generated: cover_png[], cover_png_size
 
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 // The splash draws through the renderer's command list, which is the only
 // API that exposes texture creation and quad drawing.

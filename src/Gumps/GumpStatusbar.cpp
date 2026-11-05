@@ -4,7 +4,7 @@
 #include "../Misc.h"
 #include "GumpStatusbar.h"
 #include "../Renderer/RenderShader.h" // g_ColorizerShader and friends
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 #include <common/utils.h> // countof
 #include <cstdint>
 #include <xuocore/uodata.h>

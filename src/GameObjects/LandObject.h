@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 
 #include "MapObject.h"
 #include "Vector.h"

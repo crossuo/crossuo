@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include <SDL_keycode.h>
-#include <SDL_timer.h>
-#include <SDL_version.h>
+#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_version.h>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -15,8 +15,81 @@
 #if defined(XUO_EMSC)
 #include <emscripten.h>
 #include <emscripten/html5.h>
+
+// The emscripten worker bootstrap creates the page's WebGL2 context on the
+// transferred OffscreenCanvas before main() runs and leaves it current; that
+// context is the one the browser hands the client. SDL's emscripten GL driver
+// only recognises it through its attribute table (same attributes and canvas
+// => same context is returned), so both the renderer and the fallback probe
+// ask for exactly these. The context is never resized during a session and
+// must stay on this worker.
+
+// SDL hands back the existing context when the requested attributes equal the
+// current context's; these mirror the bootstrap's WebGL2 defaults
+static void WebGLMatchBootContextAttributes()
+{
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+}
+
+// A lost/destroyed WebGL context makes every subsequent GL call abort the
+// frame loop ("bindTexture of undefined"), so the page is reloaded onto a
+// fresh context instead. Registered on the canvas as soon as the window
+// exists; a restore before the reload is just as good, the flag only prevents
+// a reload after a real recovery.
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-variable-declarations"
+#endif
+EM_JS(void, web_watch_webgl_context, (), {
+    if (typeof document === 'undefined' || window.__xuoGlWatch) return;
+    window.__xuoGlWatch = { lost: 0, restored: 0, reloading: 0 };
+    window.__xuoGlLost = function () {
+        var w = window.__xuoGlWatch;
+        if (w.reloading) return;
+        w.lost++;
+        console.warn('[gl] webgl context lost #' + w.lost + ' at ' +
+                     performance.now().toFixed(0) + 'ms, canvas ' +
+                     (Module.canvas ? Module.canvas.width + 'x' +
+                      Module.canvas.height : '?'));
+        // give a same-turn restore a chance before reloading
+        setTimeout(function () {
+            if (w.restored >= w.lost || w.reloading) return;
+            w.reloading = 1;
+            console.error('[gl] context not restored, reloading the page');
+            location.reload();
+        }, 1500);
+    };
+    window.__xuoGlRestored = function () {
+        window.__xuoGlWatch.restored++;
+        console.warn('[gl] webgl context restored #' + window.__xuoGlWatch.restored);
+    };
+});
+EM_JS(void, web_hook_webgl_events, (), {
+    if (typeof document === 'undefined') return;
+    var canvas = document.getElementById('canvas');
+    if (!canvas || canvas.__xuoGlHooked) return;
+    canvas.__xuoGlHooked = 1;
+    // per-frame drops surface as the same undefined-GLctx abort, so a lost
+    // context always ends in a reload; a restored one is only logged
+    canvas.addEventListener('webglcontextlost', function (e) {
+        e.preventDefault();
+        if (window.__xuoGlLost) window.__xuoGlLost();
+    }, false);
+    canvas.addEventListener('webglcontextrestored', function () {
+        if (window.__xuoGlRestored) window.__xuoGlRestored();
+    }, false);
+});
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif
 
+#endif
 
 #include "GameWindow.h"
 #include "CrossUO.h"
@@ -35,7 +108,6 @@
 #include "Gumps/Gump.h"
 #include "Splash.h"
 
-
 CGameWindow g_GameWindow;
 
 CGameWindow::CGameWindow()
@@ -43,8 +115,7 @@ CGameWindow::CGameWindow()
 {
 }
 
-CGameWindow::~CGameWindow()
-= default;
+CGameWindow::~CGameWindow() = default;
 
 void CGameWindow::SetRenderTimerDelay(int delay)
 {
@@ -60,8 +131,9 @@ bool CGameWindow::OnCreate()
         return false;
     }
 
-    HACKRender_SetViewParams(SetViewParamsCmd{
-        0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
+    HACKRender_SetViewParams(
+        SetViewParamsCmd{
+            0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
 
     // Present the embedded splash image as soon as there is a GL context: it
     // covers the window while the data files are loaded and the first screen is
@@ -332,7 +404,7 @@ void CGameWindow::OnKeyDown(const KeyEvent &ev)
 #else
 #define CMD_KEY g_CtrlPressed
 #endif
-        if (CMD_KEY && key == SDLK_v && g_EntryPointer != nullptr)
+        if (CMD_KEY && key == SDLK_V && g_EntryPointer != nullptr)
         {
             if (g_GameState == GS_MAIN)
             {
@@ -379,7 +451,6 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 {
     switch (ev.code)
     {
-
         case CGameWindow::MessageID:
         {
             OnTimer(checked_cast<uint32_t>(ev.data1));
@@ -398,7 +469,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 void CGameWindow::SetWindowResizable(const bool windowResizable) const
 {
 #if SDL_VERSION_ATLEAST(2, 0, 5)
-    SDL_SetWindowResizable(m_window, windowResizable ? SDL_TRUE : SDL_FALSE);
+    SDL_SetWindowResizable(m_window, windowResizable ? true : false);
 #endif
 }
 
@@ -428,7 +499,12 @@ bool WebIsMobile()
 static void TouchPost(const char *line)
 {
 #if defined(XUO_EMSC)
-    MAIN_THREAD_EM_ASM({ if (Module.clientLog) Module.clientLog(UTF8ToString($0)); }, line);
+    MAIN_THREAD_EM_ASM(
+        {
+            if (Module.clientLog)
+                Module.clientLog(UTF8ToString($0));
+        },
+        line);
 #else
     (void)line;
 #endif
@@ -443,8 +519,6 @@ static void TouchPost(const char *line)
         Info(Client, "touch: %s", touch_buf);                                                      \
         TouchPost(touch_buf);                                                                      \
     } while (0)
-
-
 
 #if defined(XUO_EMSC)
 // the browser document is the web "desktop": until the game maximizes, the
@@ -466,14 +540,12 @@ bool WebIsMobile()
     static int s_mobile = -1;
     if (s_mobile < 0)
     {
-        s_mobile = MAIN_THREAD_EM_ASM_INT(
-            {
-                return (navigator.maxTouchPoints > 0 || 'ontouchstart' in window) &&
-                               window.matchMedia &&
-                               window.matchMedia('(pointer: coarse)').matches
-                           ? 1
-                           : 0;
-            });
+        s_mobile = MAIN_THREAD_EM_ASM_INT({
+            return (navigator.maxTouchPoints > 0 || 'ontouchstart' in window) &&
+                           window.matchMedia && window.matchMedia('(pointer: coarse)').matches ?
+                       1 :
+                       0;
+        });
         Info(Client, "Web mobile device: %s", s_mobile != 0 ? "yes" : "no");
     }
     return s_mobile != 0;
@@ -508,10 +580,7 @@ static EM_BOOL web_on_window_resize(int eventType, const EmscriptenUiEvent *even
 bool WebIsTouchDevice()
 {
     return MAIN_THREAD_EM_ASM_INT(
-               {
-                   return (navigator.maxTouchPoints > 0 || 'ontouchstart' in window) ? 1 : 0;
-               }) !=
-           0;
+               { return (navigator.maxTouchPoints > 0 || 'ontouchstart' in window) ? 1 : 0; }) != 0;
 }
 #endif
 
@@ -643,14 +712,13 @@ static void TouchRightClick(int x, int y)
 // g_MouseManager flags the client handlers maintain, never SDL's state
 static void TouchSynthButton(Uint8 button, bool down, int x, int y)
 {
-    TOUCH_LOG(
-        "synth %s button %d at %d,%d", down ? "DOWN" : "UP", (int)button, x, y);
+    TOUCH_LOG("synth %s button %d at %d,%d", down ? "DOWN" : "UP", (int)button, x, y);
     SDL_Event ev;
     SDL_zero(ev);
-    ev.type = down ? SDL_MOUSEBUTTONDOWN : SDL_MOUSEBUTTONUP;
+    ev.type = down ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
     ev.button.windowID = SDL_GetWindowID(g_GameWindow.m_window);
     ev.button.button = button;
-    ev.button.state = down ? SDL_PRESSED : SDL_RELEASED;
+    ev.button.down = down;
     ev.button.clicks = 1;
     ev.button.x = x;
     ev.button.y = y;
@@ -711,9 +779,13 @@ void CGameWindow::TouchTryConvertHold()
     // game window rect and OnRightMouseButtonDown arming g_MovingFromMouse;
     // log the geometry so a dead hold-to-move is diagnosable from the log
     TOUCH_LOG(
-        "game window x=%d y=%d w=%d h=%d, cursor=%d,%d", g_ConfigManager.GameWindowX,
-        g_ConfigManager.GameWindowY, g_ConfigManager.GameWindowWidth,
-        g_ConfigManager.GameWindowHeight, g_MouseManager.Position.X, g_MouseManager.Position.Y);
+        "game window x=%d y=%d w=%d h=%d, cursor=%d,%d",
+        g_ConfigManager.GameWindowX,
+        g_ConfigManager.GameWindowY,
+        g_ConfigManager.GameWindowWidth,
+        g_ConfigManager.GameWindowHeight,
+        g_MouseManager.Position.X,
+        g_MouseManager.Position.Y);
 }
 
 // ---------------------------------------------------------------------------
@@ -738,14 +810,20 @@ static bool s_webKbdFocused = false;
 #if defined(XUO_EMSC)
 static void WebSyncCanvas()
 {
-    MAIN_THREAD_EM_ASM({ if (Module.kbdSync) Module.kbdSync(); });
+    MAIN_THREAD_EM_ASM({
+        if (Module.kbdSync)
+            Module.kbdSync();
+    });
 }
 
 static void WebDropCanvasText()
 {
     // kbdClear (shell.html) empties the canvas text; no empty character
     // constant here - the C preprocessor tokenizes EM_ASM code and rejects ''
-    MAIN_THREAD_EM_ASM({ if (Module.kbdClear) Module.kbdClear(); });
+    MAIN_THREAD_EM_ASM({
+        if (Module.kbdClear)
+            Module.kbdClear();
+    });
 }
 #endif
 
@@ -760,18 +838,18 @@ static void PushWebKey(SDL_Keycode sym, SDL_Scancode sc)
     const Uint32 wid = SDL_GetWindowID(g_GameWindow.m_window);
     SDL_Event down;
     SDL_zero(down);
-    down.type = SDL_KEYDOWN;
+    down.type = SDL_EVENT_KEY_DOWN;
     down.key.windowID = wid;
-    down.key.state = SDL_PRESSED;
-    down.key.keysym.sym = sym;
-    down.key.keysym.scancode = sc;
+    down.key.down = true;
+    down.key.key = sym;
+    down.key.scancode = sc;
     // the bridge carries no modifier state of its own; the game derives
     // ctrl/shift/alt from SDL_GetModState each frame
-    down.key.keysym.mod = KMOD_NONE;
-    down.key.repeat = 0;
+    down.key.mod = SDL_KMOD_NONE;
+    down.key.repeat = false;
     SDL_Event up = down;
-    up.type = SDL_KEYUP;
-    up.key.state = SDL_RELEASED;
+    up.type = SDL_EVENT_KEY_UP;
+    up.key.down = false;
     SDL_PushEvent(&down);
     SDL_PushEvent(&up);
 }
@@ -780,7 +858,7 @@ static void PushWebKey(SDL_Keycode sym, SDL_Scancode sc)
 void CGameWindow::PollWebKeyboard()
 {
 #if defined(XUO_EMSC)
-    if (SDL_IsTextInputActive() != SDL_TRUE)
+    if (!SDL_TextInputActive(m_window))
     {
         // the keyboard is not up: nothing typed can be pending, and a stale
         // canvas buffer must not leak into the next entry
@@ -792,7 +870,11 @@ void CGameWindow::PollWebKeyboard()
     {
         s_webKbdFocused = focus;
         MAIN_THREAD_EM_ASM(
-            { if (Module.phoneKeyboard) Module.phoneKeyboard($0); }, focus ? 1 : 0);
+            {
+                if (Module.phoneKeyboard)
+                    Module.phoneKeyboard($0);
+            },
+            focus ? 1 : 0);
     }
     WebSyncCanvas();
 
@@ -800,11 +882,10 @@ void CGameWindow::PollWebKeyboard()
     // proxy: -1 backspace, -2 enter, otherwise a UTF-16 code unit of text
     for (int i = 0; i < 32; i++)
     {
-        const int ev = MAIN_THREAD_EM_ASM_INT(
-            {
-                var v = Module.kbdTake ? Module.kbdTake() : null;
-                return v === null || v === undefined ? -3 : v;
-            });
+        const int ev = MAIN_THREAD_EM_ASM_INT({
+            var v = Module.kbdTake ? Module.kbdTake() : null;
+            return v === null || v === undefined ? -3 : v;
+        });
         if (ev == -3)
         {
             break;
@@ -824,9 +905,12 @@ void CGameWindow::PollWebKeyboard()
             {
                 SDL_Event te;
                 SDL_zero(te);
-                te.type = SDL_TEXTINPUT;
+                te.type = SDL_EVENT_TEXT_INPUT;
                 te.text.windowID = wid;
-                te.text.text[0] = '\r';
+                // SDL3: event.text is a const char * - point it at a local
+                // NUL-terminated buffer instead of writing through it
+                static const char cr_text[] = { '\r', 0 };
+                te.text.text = cr_text;
                 SDL_PushEvent(&te);
             }
             continue;
@@ -852,9 +936,9 @@ void CGameWindow::PollWebKeyboard()
         }
         SDL_Event te;
         SDL_zero(te);
-        te.type = SDL_TEXTINPUT;
+        te.type = SDL_EVENT_TEXT_INPUT;
         te.text.windowID = wid;
-        memcpy(te.text.text, utf8, len);
+        te.text.text = (const char *)utf8;
         SDL_PushEvent(&te);
     }
 #endif
@@ -865,29 +949,35 @@ void CGameWindow::OnTouchHoldTimer()
     RemoveTimer(TOUCH_HOLD_TIMER_ID);
     TOUCH_LOG(
         "hold timer fired (primary=%d pinch=%d rightHold=%d left=%d drift=%.1f)",
-        s_touchPrimaryValid ? 1 : 0, s_touchPinch ? 1 : 0, s_touchRightHold ? 1 : 0,
-        g_MouseManager.LeftButtonPressed ? 1 : 0, s_touchRecentDrift);
+        s_touchPrimaryValid ? 1 : 0,
+        s_touchPinch ? 1 : 0,
+        s_touchRightHold ? 1 : 0,
+        g_MouseManager.LeftButtonPressed ? 1 : 0,
+        s_touchRecentDrift);
     TouchTryConvertHold();
 }
 
 bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
 {
-    bool isPrimary = s_touchPrimaryValid && ev.fingerId == s_touchPrimary;
-    WebTouchFinger *finger = TouchFind(ev.fingerId);
+    bool isPrimary = s_touchPrimaryValid && ev.fingerID == s_touchPrimary;
+    WebTouchFinger *finger = TouchFind(ev.fingerID);
     const float x = ev.x * m_Size.Width;
     const float y = ev.y * m_Size.Height;
 
     switch (ev.type)
     {
-        case SDL_FINGERDOWN:
+        case SDL_EVENT_FINGER_DOWN:
         {
             TOUCH_LOG(
                 "raw down id=%llu at %d,%d (count=%d primary=%d)",
-                (unsigned long long)ev.fingerId, (int)x, (int)y, s_touchCount,
+                (unsigned long long)ev.fingerID,
+                (int)x,
+                (int)y,
+                s_touchCount,
                 s_touchPrimaryValid ? 1 : 0);
             if (finger == nullptr)
             {
-                finger = TouchAcquire(ev.fingerId);
+                finger = TouchAcquire(ev.fingerID);
                 if (finger == nullptr)
                 {
                     return true;
@@ -918,8 +1008,7 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
                 s_touchPinchDist = first != nullptr ? TouchDist(first, finger) : 0.0f;
                 s_touchPinchTravel = 0.0f;
                 s_touchPinchStart = SDL_GetTicks();
-                TOUCH_LOG(
-                    "gesture start (2 fingers), base spread %.0fpx", s_touchPinchDist);
+                TOUCH_LOG("gesture start (2 fingers), base spread %.0fpx", s_touchPinchDist);
             }
             else if (s_touchCount == 1 && !s_touchPrimaryValid)
             {
@@ -931,7 +1020,7 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
                 s_touchKbdSwipeY = y;
                 s_touchKbdSwipeDone = false;
                 s_touchPrimaryValid = true;
-                s_touchPrimary = ev.fingerId;
+                s_touchPrimary = ev.fingerID;
                 isPrimary = true;
                 s_touchTravel = 0.0f;
                 s_touchRecentDrift = 0.0f;
@@ -957,25 +1046,30 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
                     {
                         g_ConfigManager.SetUseScaling(true);
                     }
-                    TOUCH_LOG(
-                        "game window rect re-synced to %dx%d", m_Size.Width, m_Size.Height);
+                    TOUCH_LOG("game window rect re-synced to %dx%d", m_Size.Width, m_Size.Height);
                 }
 #endif
                 CreateTimer(TOUCH_HOLD_TIMER_ID, WEB_TOUCH_HOLD_MS);
                 TOUCH_LOG(
-                    "primary down %d,%d (hold armed) size=%dx%d", (int)x, (int)y, m_Size.Width,
+                    "primary down %d,%d (hold armed) size=%dx%d",
+                    (int)x,
+                    (int)y,
+                    m_Size.Width,
                     m_Size.Height);
             }
             else if (s_touchCount >= 2)
             {
                 TOUCH_LOG(
-                    "finger down #%d id=%llu at %d,%d", s_touchCount,
-                    (unsigned long long)ev.fingerId, (int)x, (int)y);
+                    "finger down #%d id=%llu at %d,%d",
+                    s_touchCount,
+                    (unsigned long long)ev.fingerID,
+                    (int)x,
+                    (int)y);
             }
         }
         break;
 
-        case SDL_FINGERMOTION:
+        case SDL_EVENT_FINGER_MOTION:
         {
             if (finger == nullptr)
             {
@@ -1048,8 +1142,7 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
                 if (now - s_pinchLogTicks > 250)
                 {
                     s_pinchLogTicks = now;
-                    TOUCH_LOG(
-                        "pinch motion spread=%.0f (base=%.0f)", dist, s_touchPinchDist);
+                    TOUCH_LOG("pinch motion spread=%.0f (base=%.0f)", dist, s_touchPinchDist);
                 }
                 if (s_touchPinchDist > 0.0f && dist > 0.0f && !WebIsTouchDevice())
                 {
@@ -1074,11 +1167,15 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
         }
         break;
 
-        case SDL_FINGERUP:
+        case SDL_EVENT_FINGER_UP:
         {
             TOUCH_LOG(
-                "raw up id=%llu at %d,%d (count=%d primary=%d)", (unsigned long long)ev.fingerId,
-                (int)x, (int)y, s_touchCount, s_touchPrimaryValid ? 1 : 0);
+                "raw up id=%llu at %d,%d (count=%d primary=%d)",
+                (unsigned long long)ev.fingerID,
+                (int)x,
+                (int)y,
+                s_touchCount,
+                s_touchPrimaryValid ? 1 : 0);
             if (finger == nullptr)
             {
                 return true;
@@ -1109,8 +1206,11 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
                 else if (wasPrimary)
                 {
                     TOUCH_LOG(
-                        "primary up at %d,%d (rightHold=%d, travel=%.1f)", (int)x, (int)y,
-                        s_touchRightHold ? 1 : 0, s_touchTravel);
+                        "primary up at %d,%d (rightHold=%d, travel=%.1f)",
+                        (int)x,
+                        (int)y,
+                        s_touchRightHold ? 1 : 0,
+                        s_touchTravel);
                     TouchDisarmHold();
                     if (s_touchRightHold)
                     {
@@ -1157,8 +1257,6 @@ bool CGameWindow::OnTouchFinger(const SDL_TouchFingerEvent &ev)
     return true; // all finger events are consumed by the gesture layer
 }
 
-
-
 void CGameWindow::SetMinSize(int width, int height)
 {
     m_MinSize.Width = width;
@@ -1195,9 +1293,30 @@ void CGameWindow::SetSize(const CSize &size)
     }
     {
         char buf[128];
-        snprintf(buf, sizeof(buf), "size set %dx%d fill=%d", size.Width, size.Height,
-                 s_webFillViewport ? 1 : 0);
+        snprintf(
+            buf,
+            sizeof(buf),
+            "size set %dx%d fill=%d",
+            size.Width,
+            size.Height,
+            s_webFillViewport ? 1 : 0);
         TouchPost(buf);
+    }
+    // break SetSize <-> browser-resize feedback loops: on emscripten the
+    // canvas resizing itself changes the page layout (scrollbar appear/
+    // disappear shifts window.innerWidth/innerHeight), which re-fires
+    // web_on_window_resize -> SetSize. Only push the size when the SDL
+    // window does not already have it, or the loop never settles and the
+    // worker starves in main-thread proxy round-trips.
+    if (m_window != nullptr)
+    {
+        int cw = 0, ch = 0;
+        SDL_GetWindowSize(m_window, &cw, &ch);
+        if (cw == size.Width && ch == size.Height)
+        {
+            m_Size = size;
+            return;
+        }
     }
 #endif
     SDL_SetWindowSize(m_window, size.Width, size.Height);
@@ -1283,118 +1402,70 @@ bool CGameWindow::Create(const char *title, bool showCursor, int width, int heig
     {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     }
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
+    if (!SDL_InitSubSystem(SDL_INIT_VIDEO))
     {
         return false;
     }
+#if defined(XUO_EMSC)
+    web_watch_webgl_context();
+    web_hook_webgl_events();
+#endif
 
     m_Size.Width = width;
     m_Size.Height = height;
-    Uint32 window_flags = SDL_WINDOW_RESIZABLE;
-#if !defined(XUO_EMSC)
-    // on web the window is a plain event/size source: the WebGL2 context is
-    // created and bound directly on the canvas by the renderer
-    window_flags |= SDL_WINDOW_OPENGL;
+    Uint32 window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL;
+#if defined(XUO_EMSC)
+    // the renderer asks for the attributes of the WebGL2 context the
+    // emscripten bootstrap already created and made current on the canvas, so
+    // SDL adopts that context (see WebGLMatchBootContextAttributes)
+    WebGLMatchBootContextAttributes();
 #endif
-    m_window = SDL_CreateWindow(title, 0, 0, width, height, window_flags);
+    // SDL3 window creation takes no explicit position (use
+    // SDL_SetWindowPosition afterwards when needed)
+    m_window = SDL_CreateWindow(title, width, height, window_flags);
     if (m_window == nullptr)
     {
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Coult not create window: %s\n", SDL_GetError());
         return false;
     }
 
-    uint32_t rmask, gmask, bmask, amask;
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    int shift = (g_icon.bytes_per_pixel == 3) ? 8 : 0;
-    rmask = 0xff000000 >> shift;
-    gmask = 0x00ff0000 >> shift;
-    bmask = 0x0000ff00 >> shift;
-    amask = 0x000000ff >> shift;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = (g_icon.bytes_per_pixel == 3) ? 0 : 0xff000000;
-#endif
+    // SDL3: text input is disabled by default (SDL2 enabled it from video
+    // init). The game console and entry gumps consume SDL_EVENT_TEXT_INPUT,
+    // so start it here; the embedded assistant's sync_text_input() takes
+    // over ownership per frame once it is initialized.
+    SDL_StartTextInput(m_window);
 
-    SDL_Surface *icon = SDL_CreateRGBSurfaceFrom(
-        (void *)g_icon.pixel_data,
+
+    // SDL3 surfaces carry an explicit pixel format instead of bpp+masks
+    const SDL_PixelFormat icon_format =
+        (g_icon.bytes_per_pixel == 4) ? SDL_PIXELFORMAT_RGBA32 : SDL_PIXELFORMAT_RGB24;
+    SDL_Surface *icon = SDL_CreateSurfaceFrom(
         g_icon.width,
         g_icon.height,
-        g_icon.bytes_per_pixel * 8,
-        g_icon.bytes_per_pixel * g_icon.width,
-        rmask,
-        gmask,
-        bmask,
-        amask);
+        icon_format,
+        (void *)g_icon.pixel_data,
+        g_icon.bytes_per_pixel * g_icon.width);
     SDL_SetWindowIcon(m_window, icon);
-    SDL_FreeSurface(icon);
+    SDL_DestroySurface(icon);
 
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    if (SDL_GetWindowWMInfo(m_window, &info) != 0u)
-    {
-        Info(Client, "SDL %d.%d.%d", info.version.major, info.version.minor, info.version.patch);
-
-        const char *subsystem = "Unknown";
-        switch (info.subsystem)
-        {
-            case SDL_SYSWM_UNKNOWN:
-                break;
-#if SDL_VERSION_ATLEAST(2, 0, 5)
-            case SDL_SYSWM_OS2:
-                subsystem = "IBM OS/2";
-                break;
-#endif
-            case SDL_SYSWM_WINDOWS:
-                subsystem = "Microsoft Windows(TM)";
-                break;
-            case SDL_SYSWM_X11:
-                subsystem = "X Window System";
-                break;
-#if SDL_VERSION_ATLEAST(2, 0, 3)
-            case SDL_SYSWM_WINRT:
-                subsystem = "WinRT";
-                break;
-#endif
-            case SDL_SYSWM_DIRECTFB:
-                subsystem = "DirectFB";
-                break;
-            case SDL_SYSWM_COCOA:
-                subsystem = "Apple OS X";
-                break;
-            case SDL_SYSWM_UIKIT:
-                subsystem = "UIKit";
-                break;
-#if SDL_VERSION_ATLEAST(2, 0, 2)
-            case SDL_SYSWM_WAYLAND:
-                subsystem = "Wayland";
-                break;
-            case SDL_SYSWM_MIR:
-                subsystem = "Mir";
-                break;
-#endif
-#if SDL_VERSION_ATLEAST(2, 0, 4)
-            case SDL_SYSWM_ANDROID:
-                subsystem = "Android";
-                break;
-#endif
-#if SDL_VERSION_ATLEAST(2, 0, 5)
-            case SDL_SYSWM_VIVANTE:
-                subsystem = "Vivante";
-                break;
-#endif
-            default:
-                break;
-        }
-
-        Info(Client, "System: %s", subsystem);
+    // SDL3 dropped SDL_SysWMinfo; the window subsystem is reported through
+    // SDL_GetPlatform and the SDL runtime version
+    Info(Client, "SDL %s", SDL_GetRevision());
+    Info(Client, "System: %s", SDL_GetPlatform());
 #if defined(XUO_WINDOWS)
 #endif
-    }
-    //SDL_SetWindowGrab(m_window, SDL_TRUE);
+    //SDL_SetWindowGrab(m_window, true);
     SDL_RaiseWindow(m_window);
-    SDL_ShowCursor(static_cast<int>(showCursor));
+
+    // SDL3: SDL_ShowCursor() toggles, SDL_HideCursor() hides
+    if (showCursor)
+    {
+        SDL_ShowCursor();
+    }
+    else
+    {
+        SDL_HideCursor();
+    }
 
 #if defined(XUO_EMSC)
     // keep filling the viewport after the game maximized (browser window
@@ -1412,7 +1483,7 @@ void CGameWindow::Destroy() const
 {
     if (m_window != nullptr)
     {
-        PushEvent(SDL_QUIT, nullptr, nullptr);
+        PushEvent(SDL_EVENT_QUIT, nullptr, nullptr);
     }
 }
 
@@ -1430,34 +1501,49 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
 {
     // only handle events belonging to this window; other windows in the
     // process (like the embedded launcher) have their own event handling.
-    // Events without a window id (like SDL_QUIT) remain process-global.
+    // Events without a window id (like SDL_EVENT_QUIT) remain process-global.
     const auto id = SDL_GetWindowID(m_window);
     switch (ev.type)
     {
-        case SDL_WINDOWEVENT:
+        // SDL3 delivers window events as their own event types (no generic
+        // SDL_WINDOWEVENT wrapper); they all carry ev.window.windowID
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+        case SDL_EVENT_WINDOW_SHOWN:
+        case SDL_EVENT_WINDOW_HIDDEN:
+        case SDL_EVENT_WINDOW_EXPOSED:
+        case SDL_EVENT_WINDOW_MOVED:
+        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        case SDL_EVENT_WINDOW_RESTORED:
+        case SDL_EVENT_WINDOW_MOUSE_ENTER:
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
             if (ev.window.windowID != id)
                 return false;
             break;
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
             if (ev.key.windowID != id)
                 return false;
             break;
-        case SDL_TEXTEDITING:
-        case SDL_TEXTINPUT:
+        case SDL_EVENT_TEXT_EDITING:
+        case SDL_EVENT_TEXT_INPUT:
             if (ev.text.windowID != id)
                 return false;
             break;
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
             if (ev.motion.windowID != id)
                 return false;
             break;
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
             if (ev.button.windowID != id)
                 return false;
             break;
-        case SDL_MOUSEWHEEL:
+        case SDL_EVENT_MOUSE_WHEEL:
             if (ev.wheel.windowID != id)
                 return false;
             break;
@@ -1471,96 +1557,88 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
 
     switch (ev.type)
     {
-        case SDL_WINDOWEVENT:
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
         {
-            switch (ev.window.event)
-            {
-                case SDL_WINDOWEVENT_CLOSE:
-                {
-                    OnDestroy();
-                    return true;
-                }
-                break;
-
-                case SDL_WINDOWEVENT_SHOWN:
-                {
-                    OnActivate(); // Sound + FPS
-                }
-                break;
-
-                case SDL_WINDOWEVENT_SIZE_CHANGED:
-                case SDL_WINDOWEVENT_RESIZED:
-                {
-#if defined(XUO_EMSC)
-                    if (ev.window.data1 < 50 || ev.window.data2 < 50)
-                    {
-                        TOUCH_LOG(
-                            "SIZE-DEGENERATE windowevent %dx%d", ev.window.data1,
-                            ev.window.data2);
-                    }
-#endif
-                    m_Size = { ev.window.data1, ev.window.data2 };
-                    OnResize();
-                }
-                break;
-
-                case SDL_WINDOWEVENT_MAXIMIZED:
-                {
-                    OnResize();
-                }
-                break;
-
-                case SDL_WINDOWEVENT_RESTORED:
-                {
-                    int x, y, borderH = 0;
-#if SDL_VERSION_ATLEAST(2, 0, 5)
-                    SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
-#endif
-                    SDL_GetWindowPosition(m_window, &x, &y);
-                    SDL_SetWindowPosition(m_window, x, std::max(y, borderH));
-                    OnResize();
-                }
-                break;
-
-                case SDL_WINDOWEVENT_HIDDEN:
-                {
-                    OnDeactivate(); // Sound + FPS
-                }
-                break;
-
-                default:
-                    break;
-            }
+            OnDestroy();
+            return true;
         }
         break;
 
-        case SDL_QUIT:
+        case SDL_EVENT_WINDOW_SHOWN:
+        {
+            OnActivate(); // Sound + FPS
+        }
+        break;
+
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+        case SDL_EVENT_WINDOW_RESIZED:
+        {
+#if defined(XUO_EMSC)
+            if (ev.window.data1 < 50 || ev.window.data2 < 50)
+            {
+                TOUCH_LOG("SIZE-DEGENERATE windowevent %dx%d", ev.window.data1, ev.window.data2);
+            }
+#endif
+            m_Size = { ev.window.data1, ev.window.data2 };
+            OnResize();
+        }
+        break;
+
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+        {
+            OnResize();
+        }
+        break;
+
+        case SDL_EVENT_WINDOW_RESTORED:
+        {
+            int x, y, borderH = 0;
+            SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+            SDL_GetWindowPosition(m_window, &x, &y);
+            SDL_SetWindowPosition(m_window, x, std::max(y, borderH));
+            OnResize();
+        }
+        break;
+
+        case SDL_EVENT_WINDOW_HIDDEN:
+        {
+            OnDeactivate(); // Sound + FPS
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    switch (ev.type)
+    {
+        case SDL_EVENT_QUIT:
         {
             OnDestroy();
             return true;
             break;
         }
 
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
         {
             OnKeyDown(ev.key);
         }
         break;
 
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_UP:
         {
             OnKeyUp(ev.key);
         }
         break;
 
         // https://wiki.libsdl.org/Tutorials/TextInput
-        case SDL_TEXTINPUT: // WM_CHAR
+        case SDL_EVENT_TEXT_INPUT: // WM_CHAR
         {
             OnTextInput(ev.text);
         }
         break;
 
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION:
         {
             g_MouseManager.Update();
             if (g_MouseManager.Dragging)
@@ -1570,7 +1648,7 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
-        case SDL_MOUSEWHEEL:
+        case SDL_EVENT_MOUSE_WHEEL:
         {
             g_MouseManager.Update();
 
@@ -1579,9 +1657,9 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
-        case SDL_USEREVENT:
+        case SDL_EVENT_USER:
         {
-            if (ev.user.code == SDL_QUIT)
+            if (ev.user.code == SDL_EVENT_QUIT)
             {
                 OnDestroy();
                 return true;
@@ -1590,11 +1668,11 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
         {
             g_MouseManager.Update();
-            const bool isDown = ev.type == SDL_MOUSEBUTTONDOWN;
+            const bool isDown = ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
             auto &mouse = ev.button;
             switch (mouse.button)
             {
@@ -1738,9 +1816,9 @@ bool CGameWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
-        case SDL_FINGERDOWN:
-        case SDL_FINGERUP:
-        case SDL_FINGERMOTION:
+        case SDL_EVENT_FINGER_DOWN:
+        case SDL_EVENT_FINGER_UP:
+        case SDL_EVENT_FINGER_MOTION:
         {
             OnTouchFinger(ev.tfinger);
         }
@@ -1775,8 +1853,9 @@ bool CGameWindow::IsMaximizedWindow() const
 
 static SDL_TimerID timer_table[TOUCH_HOLD_TIMER_ID] = {};
 
-static uint32_t TimerCallbackEventPusher(uint32_t interval, void *param)
+static Uint32 TimerCallbackEventPusher(void *param, SDL_TimerID timerID, Uint32 interval)
 {
+    (void)timerID;
     PUSH_EVENT(CGameWindow::MessageID, param, nullptr);
     return interval;
 }
@@ -1811,14 +1890,14 @@ void CGameWindow::Raise()
 uint32_t CGameWindow::PushEvent(uint32_t id, void *data1, void *data2)
 {
     SDL_UserEvent userevent;
-    userevent.type = SDL_USEREVENT;
+    userevent.type = SDL_EVENT_USER;
     userevent.code = id;
     userevent.data1 = data1;
     userevent.data2 = data2;
 
     SDL_Event event;
     SDL_zero(event);
-    event.type = SDL_USEREVENT;
+    event.type = SDL_EVENT_USER;
     event.user = userevent;
     SDL_PushEvent(&event);
 
@@ -1827,9 +1906,17 @@ uint32_t CGameWindow::PushEvent(uint32_t id, void *data1, void *data2)
 
 void GetDisplaySize(int *x, int *y)
 {
-#if SDL_VERSION_ATLEAST(2, 0, 5)
-    SDL_Rect r;
-    SDL_GetDisplayUsableBounds(0, &r);
+    // SDL3: displays are identified by SDL_DisplayID handles, not indices -
+    // passing 0 is invalid and leaves the rect untouched (stack garbage),
+    // which used to poison the world map resize clamping
+    SDL_Rect r = { 0, 0, 0, 0 };
+    const SDL_DisplayID display = SDL_GetPrimaryDisplay();
+    if (display == 0 || !SDL_GetDisplayUsableBounds(display, &r) || r.w <= 0 || r.h <= 0)
+    {
+        // sane fallback when the desktop size cannot be queried
+        r.w = 1920;
+        r.h = 1080;
+    }
     if (x != nullptr)
     {
         *x = r.w;
@@ -1838,16 +1925,4 @@ void GetDisplaySize(int *x, int *y)
     {
         *y = r.h;
     }
-#else
-    SDL_DisplayMode dm;
-    SDL_GetCurrentDisplayMode(0, &dm);
-    if (x != nullptr)
-    {
-        *x = dm.w;
-    }
-    if (y != nullptr)
-    {
-        *y = dm.h;
-    }
-#endif
 }

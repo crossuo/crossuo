@@ -45,7 +45,7 @@ static const XA_KEY_INFO s_Keymap[XKI_COUNT] = {
     { SDLK_F12, 0, "F12" },
     { SDLK_SCROLLLOCK, 0, "SCROLLLOCK" },
     { SDLK_PAUSE, 0, "PAUSE" },
-    { SDLK_BACKQUOTE, 0, "`" },
+    { SDLK_GRAVE, 0, "`" },
     { SDLK_1, 0, "1" },
     { SDLK_2, 0, "2" },
     { SDLK_3, 0, "3" },
@@ -67,16 +67,16 @@ static const XA_KEY_INFO s_Keymap[XKI_COUNT] = {
     { SDLK_KP_MULTIPLY, HM_KEYPAD, "MULTIPLY" },
     { SDLK_KP_MINUS, HM_KEYPAD, "MINUS" },
     { SDLK_TAB, 0, "TAB" },
-    { SDLK_q, 0, "Q" },
-    { SDLK_w, 0, "W" },
-    { SDLK_e, 0, "E" },
-    { SDLK_r, 0, "R" },
-    { SDLK_t, 0, "T" },
-    { SDLK_y, 0, "Y" },
-    { SDLK_u, 0, "U" },
-    { SDLK_i, 0, "I" },
-    { SDLK_o, 0, "O" },
-    { SDLK_p, 0, "P" },
+    { SDLK_Q, 0, "Q" },
+    { SDLK_W, 0, "W" },
+    { SDLK_E, 0, "E" },
+    { SDLK_R, 0, "R" },
+    { SDLK_T, 0, "T" },
+    { SDLK_Y, 0, "Y" },
+    { SDLK_U, 0, "U" },
+    { SDLK_I, 0, "I" },
+    { SDLK_O, 0, "O" },
+    { SDLK_P, 0, "P" },
     { SDLK_LEFTBRACKET, 0, "[" },
     { SDLK_RIGHTBRACKET, 0, "]" },
     { SDLK_RETURN, 0, "RETURN" },
@@ -88,28 +88,28 @@ static const XA_KEY_INFO s_Keymap[XKI_COUNT] = {
     { SDLK_KP_9, HM_KEYPAD, "9" },
     { SDLK_KP_PLUS, HM_KEYPAD, "PLUS" },
     { SDLK_CAPSLOCK, 0, "CAPSLOCK" },
-    { SDLK_a, 0, "A" },
-    { SDLK_s, 0, "S" },
-    { SDLK_d, 0, "D" },
-    { SDLK_f, 0, "F" },
-    { SDLK_g, 0, "G" },
-    { SDLK_h, 0, "H" },
-    { SDLK_j, 0, "J" },
-    { SDLK_k, 0, "K" },
-    { SDLK_l, 0, "L" },
+    { SDLK_A, 0, "A" },
+    { SDLK_S, 0, "S" },
+    { SDLK_D, 0, "D" },
+    { SDLK_F, 0, "F" },
+    { SDLK_G, 0, "G" },
+    { SDLK_H, 0, "H" },
+    { SDLK_J, 0, "J" },
+    { SDLK_K, 0, "K" },
+    { SDLK_L, 0, "L" },
     { SDLK_SEMICOLON, 0, ";" },
-    { SDLK_QUOTE, 0, "'" },
+    { SDLK_APOSTROPHE, 0, "'" },
     { SDLK_BACKSLASH, 0, "\\" },
     { SDLK_KP_4, HM_KEYPAD, "4" },
     { SDLK_KP_5, HM_KEYPAD, "5" },
     { SDLK_KP_6, HM_KEYPAD, "6" },
-    { SDLK_z, 0, "Z" },
-    { SDLK_x, 0, "X" },
-    { SDLK_c, 0, "C" },
-    { SDLK_v, 0, "V" },
-    { SDLK_b, 0, "B" },
-    { SDLK_n, 0, "N" },
-    { SDLK_m, 0, "M" },
+    { SDLK_Z, 0, "Z" },
+    { SDLK_X, 0, "X" },
+    { SDLK_C, 0, "C" },
+    { SDLK_V, 0, "V" },
+    { SDLK_B, 0, "B" },
+    { SDLK_N, 0, "N" },
+    { SDLK_M, 0, "M" },
     { SDLK_COMMA, 0, "," },
     { SDLK_PERIOD, 0, "." },
     { SDLK_SLASH, 0, "/" },
@@ -317,15 +317,15 @@ bool is_bare_modifier(uint32_t key)
 uint8_t modifiers_from_sdl(uint16_t mod)
 {
     uint8_t result = HM_NONE;
-    if ((mod & KMOD_ALT) != 0)
+    if ((mod & SDL_KMOD_ALT) != 0)
     {
         result |= HM_ALT;
     }
-    if ((mod & KMOD_CTRL) != 0)
+    if ((mod & SDL_KMOD_CTRL) != 0)
     {
         result |= HM_CTRL;
     }
-    if ((mod & KMOD_SHIFT) != 0)
+    if ((mod & SDL_KMOD_SHIFT) != 0)
     {
         result |= HM_SHIFT;
     }
@@ -364,13 +364,13 @@ bool CHotkeys::ProcessEvent(const SDL_Event &ev)
 {
     switch (ev.type)
     {
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
             return ProcessKeyDown(ev);
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_UP:
             return ProcessKeyUp(ev);
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             return ProcessMouseButtonDown(ev);
-        case SDL_MOUSEWHEEL:
+        case SDL_EVENT_MOUSE_WHEEL:
             return ProcessWheel(ev);
         default:
             return false;
@@ -379,8 +379,8 @@ bool CHotkeys::ProcessEvent(const SDL_Event &ev)
 
 bool CHotkeys::ProcessKeyDown(const SDL_Event &ev)
 {
-    const uint32_t key = (uint32_t)ev.key.keysym.sym;
-    uint8_t modifiers = modifiers_from_sdl(ev.key.keysym.mod);
+    const uint32_t key = (uint32_t)ev.key.key;
+    uint8_t modifiers = modifiers_from_sdl(ev.key.mod);
     if (is_keypad_keycode(key))
     {
         modifiers |= HM_KEYPAD;

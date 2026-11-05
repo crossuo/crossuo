@@ -95,6 +95,22 @@ SDL_GLContext Emscripten_GLES_CreateContext(SDL_VideoDevice *_this, SDL_Window *
 
     emscripten_webgl_init_context_attributes(&attribs);
 
+    // XUO: main() runs on a pthread worker (-sPROXY_TO_PTHREAD) while the
+    // canvas lives on the main browser thread (or is transferred to the
+    // worker as an OffscreenCanvas when the browser supports it). FALLBACK
+    // proxies GL to the main thread only when OffscreenCanvas is unavailable:
+    // with it, the context is created on the worker over the transferred
+    // canvas and all GL calls execute locally. ALWAYS would proxy even the
+    // worker-local case and crash on a transferred canvas. The driver also
+    // returns the context that is already current when the requested
+    // attributes match, so the client's renderer adopts the context the
+    // emscripten bootstrap created on the transferred canvas.
+    attribs.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_FALLBACK;
+    // XUO: the context stays on the worker's OffscreenCanvas implicit-swap
+    // path (renderViaOffscreenBackBuffer keeps its default: no offscreen
+    // target to blit per frame); the fallback above is only for a main-thread
+    // canvas, which never happens once the canvas is transferred.
+
     attribs.alpha = _this->gl_config.alpha_size > 0;
     attribs.depth = _this->gl_config.depth_size > 0;
     attribs.stencil = _this->gl_config.stencil_size > 0;

@@ -9,7 +9,7 @@
 #include <xuocore/mappedfile.h>
 #include <deque>
 #include <vector>
-#include "../Platform.h" // ProtectedSection (SDL_mutex *)
+#include "../Platform.h" // ProtectedSection (SDL_Mutex *)
 
 class CPacketManager;
 class CGameObject;

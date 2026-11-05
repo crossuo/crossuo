@@ -289,7 +289,7 @@ void AssistantUI_RecompileDisplayTitle()
 
 void AssistantUI_RequestClientClose()
 {
-    // CWindow::Destroy pushes the SDL_QUIT that runs the normal shutdown path
+    // CWindow::Destroy pushes the SDL_EVENT_QUIT that runs the normal shutdown path
     if (g_GameWindow.m_window != nullptr)
     {
         g_GameWindow.Destroy();

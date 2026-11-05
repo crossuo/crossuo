@@ -1314,7 +1314,7 @@ bool Render_Init(SDL_Window *window)
 
     if (!canUseFrameBuffer)
     {
-        SDL_GL_DeleteContext(g_render.context);
+        SDL_GL_DestroyContext(g_render.context);
         g_render.context = nullptr;
         Error(Client, "Your graphics card does not support Frame Buffers");
     }
@@ -1372,7 +1372,7 @@ void Render_Shutdown()
 {
     if (g_render.context != nullptr)
     {
-        SDL_GL_DeleteContext(g_render.context);
+        SDL_GL_DestroyContext(g_render.context);
         g_render.context = nullptr;
     }
 }
@@ -1388,7 +1388,7 @@ void Render_GL1Uninstall()
 {
     if (s_gl1LegacyContext != nullptr)
     {
-        SDL_GL_DeleteContext(s_gl1LegacyContext);
+        SDL_GL_DestroyContext(s_gl1LegacyContext);
     }
 }
 

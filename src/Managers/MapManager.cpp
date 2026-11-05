@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include "MapManager.h"
-#include <SDL_timer.h> // Init's wall-clock load budget (g_Ticks is frame-cached)
+#include <SDL3/SDL_timer.h> // Init's wall-clock load budget (g_Ticks is frame-cached)
 #include "Globals.h"
 #include "GumpManager.h"
 #include <common/checksum.h>

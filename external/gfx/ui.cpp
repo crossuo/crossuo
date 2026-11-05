@@ -5,7 +5,7 @@
 
 #include "gfx.h"
 #include "imgui/imgui.h"
-#include "imgui/imgui_impl_sdl2.h"
+#include "imgui/imgui_impl_sdl3.h"
 #include "imgui/IconsForkAwesomeData.h"
 
 // imgui 1.92 removed the old imgui_impl_opengl2 backend and the
@@ -53,7 +53,7 @@ ui_context ui_init(win_context &win, bool enable_viewports)
     // Setup Platform/Renderer bindings
 
 #if defined(USE_GL) || defined(USE_GLES)
-    ImGui_ImplSDL2_InitForOpenGL(win.window, win.context);
+    ImGui_ImplSDL3_InitForOpenGL(win.window, win.context);
 #endif
 
 #if defined(USE_GL3)
@@ -67,11 +67,11 @@ ui_context ui_init(win_context &win, bool enable_viewports)
     ImGui_ImplOpenGL3_Init("#version " GL_SHADER_VERSION);
 #elif defined(USE_DX11)
     // create device d3d
-    SDL_SysWMinfo info;
-    HWND hWnd = 0;
-    SDL_VERSION(&info.version);
-    if (SDL_GetWindowWMInfo(win.window, &info))
-        hWnd = info.info.win.window;
+    // SDL3: native handles come from the window property system
+    HWND hWnd = (HWND)SDL_GetPointerProperty(
+        SDL_GetWindowProperties(win.window),
+        SDL_PROPERTY_WINDOW_WIN32_HWND_POINTER,
+        nullptr);
 
     DXGI_SWAP_CHAIN_DESC sd;
     ZeroMemory(&sd, sizeof(sd));
@@ -139,7 +139,7 @@ ui_context ui_init(win_context &win, bool enable_viewports)
     g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
     pBackBuffer->Release();
 
-    ImGui_ImplSDL2_InitForD3D(win.window);
+    ImGui_ImplSDL3_InitForD3D(win.window);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
     win.context = g_pd3dDeviceContext;
 #elif defined(USE_METAL)
@@ -246,7 +246,7 @@ void ui_style_launcher()
 
 void ui_process_event(ui_context &, const SDL_Event *event)
 {
-    ImGui_ImplSDL2_ProcessEvent(event);
+    ImGui_ImplSDL3_ProcessEvent(event);
 }
 
 void ui_draw(ui_context &ui)
@@ -299,7 +299,7 @@ void ui_newframe(ui_context &ctx)
 #error "Unknown backend for imgui"
 #endif
 
-    ImGui_ImplSDL2_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 
     ImGuiIO &io = ImGui::GetIO();
@@ -390,6 +390,6 @@ void ui_shutdown(ui_context &)
 #else
 #error "Unknown backend for imgui"
 #endif
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 }

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <SDL_rect.h>
+#include <SDL3/SDL_rect.h>
 #include "Gump.h"
 #include "../GameObjects/CustomHouseObjects.h"
 #include "../Managers/CustomHousesManager.h"

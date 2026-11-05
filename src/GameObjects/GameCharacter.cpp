@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2016 Hotride
 
-#include <SDL_timer.h>
+#include <SDL3/SDL_timer.h>
 #include <cstdint>
 #include <xuocore/uodata.h>
 #include <common/utils.h>

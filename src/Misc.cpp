@@ -9,7 +9,7 @@
 #include "revision.h"
 #include "white_label.h"
 
-#include <SDL_thread.h>
+#include <SDL3/SDL_thread.h>
 #include <cstring>
 #include <cctype>
 // no STR_IMPLEMENTATION here: the game links xuocore (mft.cpp), which already
@@ -17,7 +17,7 @@
 // when the streaming wiring started pulling xuocore into the game
 #include <common/str.h>
 
-SDL_threadID g_MainThread;
+SDL_ThreadID g_MainThread;
 
 int CalculatePercents(int max, int current, int maxValue)
 {

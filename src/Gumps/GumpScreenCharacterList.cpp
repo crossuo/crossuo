@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpScreenCharacterList.h"
-#include <SDL_timer.h>
+#include <SDL3/SDL_timer.h>
 #include <cstdint>
 #include "../Config.h"
 #include "../ToolTip.h"

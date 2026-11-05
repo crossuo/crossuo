@@ -109,43 +109,58 @@ bool Render_Init(SDL_Window *window)
     // mark the renderer as down on ANY process exit path (atexit handlers run
     // in reverse order, so this executes before the global/static destructors),
     atexit([] { g_render.shutdown = true; });
-#if defined(XUO_EMSC)
-    // the browser owns the canvas: create a WebGL2 context directly and bind
-    // it as the current GL context (SDL's EGL path is not usable on web).
-    // GLES3 entry points are available on a webgl2 context; the GLSL ES 1.00
-    // shaders keep working.
-    EmscriptenWebGLContextAttributes attrs;
-    emscripten_webgl_init_context_attributes(&attrs);
-    attrs.majorVersion = 2; // WebGL2
-    attrs.minorVersion = 0;
-    attrs.stencil = 1;
-    attrs.depth = 1;
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE wctx =
-        emscripten_webgl_create_context("#canvas", &attrs);
-    if (wctx <= 0)
-    {
-        Error(Renderer, "emscripten: could not create a WebGL2 context (%d)", (int)wctx);
-        return false;
-    }
-    emscripten_webgl_make_context_current(wctx);
-    g_render.context = (SDL_GLContext)(uintptr_t)wctx;
-#else
     win_gfx_context_attrbutes(true);
     auto *context = SDL_GL_GetCurrentContext();
-    if (!context)
+    if (context == nullptr && window != nullptr)
     {
-        win_gfx_context_attrbutes(true);
         context = SDL_GL_CreateContext(window);
     }
-    // always bind: the GL state (GL.currentContext) is only set on MakeCurrent
-    SDL_GL_MakeCurrent(window, context);
+#if defined(XUO_EMSC)
+    // the current context may be the browser's own webgl handle (no SDL
+    // context involved): never hand it to SDL_GL_CreateContext
+    if (context != nullptr && g_render.context == nullptr &&
+        emscripten_webgl_get_current_context() > 0)
+    {
+        context = nullptr;
+    }
+#endif
+    if (context != nullptr)
+    {
+        // always bind: the GL state (GL.currentContext) is only set on
+        // MakeCurrent. On the web this also binds the WebGL2 context the
+        // emscripten bootstrap already made current on the canvas, which SDL
+        // returns as-is when the requested attributes match.
+        SDL_GL_MakeCurrent(window, context);
+    }
+#if defined(XUO_EMSC)
+    else
+    {
+        // browser-side GL setup over the canvas, for when SDL's emscripten GL
+        // driver did not adopt the bootstrap context (attribute mismatch)
+        EmscriptenWebGLContextAttributes attrs;
+        emscripten_webgl_init_context_attributes(&attrs);
+        attrs.majorVersion = 2; // WebGL2
+        attrs.minorVersion = 0;
+        attrs.stencil = 1;
+        attrs.depth = 1;
+        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE wctx =
+            emscripten_webgl_create_context("#canvas", &attrs);
+        if (wctx <= 0)
+        {
+            Error(Renderer, "emscripten: could not create a WebGL2 context (%d)", (int)wctx);
+            return false;
+        }
+        emscripten_webgl_make_context_current(wctx);
+        context = (SDL_GLContext)(uintptr_t)wctx;
+        g_render.context = context;
+    }
 #endif
 
 #if defined(USE_GLEW)
     int glewInitResult = glewInit();
     if (glewInitResult != 0)
     {
-        SDL_GL_DeleteContext(SDL_GL_GetCurrentContext());
+        SDL_GL_DestroyContext(SDL_GL_GetCurrentContext());
         Error(Renderer, "glewInit: %s", glewGetErrorString(glewInitResult));
         return false;
     }
@@ -205,7 +220,7 @@ bool Render_Init(SDL_Window *window)
 
     if (!canUseFrameBuffer)
     {
-        SDL_GL_DeleteContext(SDL_GL_GetCurrentContext());
+        SDL_GL_DestroyContext(SDL_GL_GetCurrentContext());
         Error(Client, "Your graphics card does not support Frame Buffers");
         return false;
     }
@@ -375,9 +390,10 @@ bool Render_Init(SDL_Window *window)
     // Initialize persistent vertex buffers for optimized rendering
     Render_InitVertexBuffers();
 #if defined(XUO_EMSC)
-    // SDL never saw a MakeCurrent (the webgl context was made current via
-    // emscripten_webgl_make_context_current), so SDL_GL_GetCurrentContext
-    // reports null here and would wipe the handle the webgl branch stored
+    // a browser-owned webgl handle (fallback path above) is not an SDL
+    // context: SDL_GL_GetCurrentContext reports null and would wipe it
+    if (g_render.context == nullptr)
+        g_render.context = SDL_GL_GetCurrentContext();
     if (g_render.context == nullptr)
         g_render.context = (SDL_GLContext)(uintptr_t)emscripten_webgl_get_current_context();
 #else
@@ -393,7 +409,7 @@ void Render_Shutdown()
     Render_CleanupVertexBuffers();
     if (g_render.context != nullptr)
     {
-        SDL_GL_DeleteContext(g_render.context);
+        SDL_GL_DestroyContext(g_render.context);
         g_render.context = nullptr;
     }
 }
@@ -448,16 +464,17 @@ void Render_SwapBuffers()
         GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
         GL_CHECK(glBufferData(GL_ARRAY_BUFFER, g_vboSize, nullptr, GL_DYNAMIC_DRAW));
         g_vboOffset = 0;
+    }
+
 #if defined(XUO_EMSC)
-    // with OFFSCREEN_FRAMEBUFFER the frame lives in a wasm-side framebuffer:
-    // commit posts it to the visible canvas (proxied to the browser main
-    // thread, which stays free to process it)
+    // the canvas is an OffscreenCanvas whose WebGL context swaps implicitly
+    // when the current frame callback (this worker's main loop) exits - the
+    // commit is only meaningful for proxied/offscreen-FBO contexts and is a
+    // no-op (-3) here
     emscripten_webgl_commit_frame();
-#elif !defined(XUO_EMSC)
+#else
     SDL_GL_SwapWindow(g_render.window);
 #endif
-    // on web the canvas is composited by the browser after every frame
-}
 }
 
 size_t Render_UploadVertices(const void *data, size_t size)

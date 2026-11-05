@@ -122,8 +122,9 @@ if ((RENDER_GL1 OR RENDER_GL3) AND NOT XUO_EMSC)
 endif()
 
 if (XUO_EMSC)
-  # emscripten: GLES2/WebGL1 comes from the browser, SDL2 from the emsdk
-  # port (-s USE_SDL=2); nothing GL-related needs finding or linking
+  # emscripten: GLES2/WebGL1 comes from the browser, the window/input layer is
+  # the vendored SDL3 (emscripten video driver); nothing GL-related needs
+  # finding or linking
   compile_definitions(USE_GLES2=1)
   compile_definitions(USE_GLES)
   set(USE_GLES2 1)
@@ -236,6 +237,43 @@ endif()
 set(XUO_LOCAL_HEADERS 1)
 # Disable Wayland as it causes multiple definitions errors during linking
 set(WAYLAND_SHARED OFF CACHE BOOL "Force disable Wayland")
+
+# SDL3 (vendored): static-only, hermetic - no tests/apps/install, system
+# libraries linked statically, Wayland disabled (same policy as the old
+# vendored SDL2 build)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+set(SDL_UNINSTALL OFF CACHE BOOL "" FORCE)
+set(SDL_PRESEED OFF CACHE BOOL "" FORCE)
+set(SDL_DEPS_SHARED ON CACHE BOOL "" FORCE)  # dlopen system libs at runtime (static-link safe)
+set(SDL_WAYLAND OFF CACHE BOOL "" FORCE)
+set(SDL_WERROR OFF CACHE BOOL "" FORCE)
+set(SDL_CURL OFF CACHE BOOL "" FORCE)
+# the build images do not ship every optional X11 extension library; the
+# client does not use any of them (XTEST/XSCRNSAVER/XF86VM)
+set(SDL_X11_XTEST OFF CACHE BOOL "" FORCE)
+set(SDL_X11_XFIXES OFF CACHE BOOL "" FORCE)
+# the arm64 image's sysroot has libXcursor/libXrandr but no libXrender dev
+# symlink: FindX11 would build targets whose link interface references the
+# missing X11::Xrender and fail generation
+set(SDL_X11_XCURSOR OFF CACHE BOOL "" FORCE)
+set(SDL_X11_XRANDR OFF CACHE BOOL "" FORCE)
+# the arm64 sysroot's XInput2.h pulls in X11/extensions/Xfixes.h which the
+# image does not ship (no dev headers) - desktop linux needs no XInput2
+set(SDL_X11_XINPUT2 OFF CACHE BOOL "" FORCE)
+set(SDL_X11_XINPUT OFF CACHE BOOL "" FORCE)
+# images without any X11/Wayland dev packages (linux-armv7): skip SDL3's
+# hard fatal and build with the available (dummy/evdev) backends, matching
+# what the old vendored SDL2 build did there
+set(SDL_UNIX_CONSOLE_BUILD ON CACHE BOOL "" FORCE)
+# emscripten: pthread support must be explicitly enabled in SDL3 (the wasm
+# client builds with -pthread/-shared-memory for PROXY_TO_PTHREAD)
+set(SDL_PTHREADS ON CACHE BOOL "" FORCE)
+set(SDL_X11_XSCRNSAVER OFF CACHE BOOL "" FORCE)
+set(SDL_X11_XF86VM OFF CACHE BOOL "" FORCE)
+
 xuo_dependency(glm glm GLM)
 if (NOT XUO_EMSC)
   xuo_dependency(cmcurl cmcurl CURL)
@@ -245,10 +283,13 @@ if (NOT XUO_EMSC)
     # vendored static curl (libressl already builds with PIC)
     set_property(TARGET cmcurl PROPERTY POSITION_INDEPENDENT_CODE ON)
   endif()
-  xuo_dependency(XSDL2 sdl-2.0.10-c1be3add38 SDL2)
-  set(3RDPARTY_STATIC SDL2-static cmcurl)
+  xuo_dependency(SDL3-static sdl3-3.4.21 SDL3)
+  set(3RDPARTY_STATIC SDL3-static cmcurl)
 else()
-  add_compile_definitions(USE_SDL=2)
+  # the wasm build links the vendored SDL3 too (emscripten video driver); the
+  # emsdk -sUSE_SDL=2 system port is no longer used
+  xuo_dependency(SDL3-static sdl3-3.4.21 SDL3)
+  set(3RDPARTY_STATIC SDL3-static)
   # -pthread: the vfs fetch engine/mft use std::thread and 64-bit atomics,
   # which require the atomics feature (SharedArrayBuffer at runtime - serve
   # with COOP/COEP headers). pthread builds cannot grow memory, so size it
@@ -260,8 +301,14 @@ else()
   # compile-side settings only: MAX_WEBGL_VERSION/PROXY_TO_PTHREAD/
   # OFFSCREEN_FRAMEBUFFER are linker settings (em++ warns they are ignored
   # during compilation, so they live only on the link line below)
-  add_compile_options(-sUSE_SDL=2 -pthread)
-  add_link_options(-sUSE_SDL=2 -sMAX_WEBGL_VERSION=2 -pthread -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER=1 -lidbfs.js -lwebsocket.js)
+  add_compile_options(-pthread)
+  add_link_options(-sMAX_WEBGL_VERSION=2 -pthread -sPROXY_TO_PTHREAD -sOFFSCREENCANVAS_SUPPORT=1 "-sOFFSCREENCANVASES_TO_PTHREAD=#canvas" -lidbfs.js -lwebsocket.js)
+  # OFFSCREEN_FRAMEBUFFER (GL calls proxied to the main browser thread)
+  # replaced by worker-local WebGL over a transferred OffscreenCanvas: the
+  # shell transfers canvas control before the runtime boots (shell.html), and
+  # emscripten creates the WebGL context on the worker directly. The old
+  # main-thread proxying deadlocks/crashes at the maximize resize (GL calls
+  # forwarded into the worker without a WebGL context).
   # the client comes from desktop-sized stacks: give every thread room
   # (default 64KB overflows before main); pthread builds cannot grow memory,
   # so size the fixed heap for the client + streaming buffers upfront
