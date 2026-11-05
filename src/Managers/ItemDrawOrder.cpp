@@ -389,7 +389,7 @@ bool IsHeadHiddenByRobe(const CGameObject *obj, int layer)
     if (layer == OL_HAIR)
     {
         const CGameItem *helm = obj->FindLayer(OL_HELMET);
-        if (helm != nullptr && helm->Graphic - 0xA42B < 2)
+        if (helm != nullptr && (uint16_t)(helm->Graphic - 0xA42B) < 2)
         {
             return true;
         }

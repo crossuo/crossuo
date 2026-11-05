@@ -1875,8 +1875,12 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
             // fall through
         case OL_HAIR:
         {
-            // a 0xA42B/0xA42C helmet hides the hair as well
-            if (layer == OL_HAIR && m_CharacterLayerGraphic[OL_HELMET] - 0xA42B < 2)
+            // a 0xA42B/0xA42C helmet hides the hair as well. The layer graphic is
+            // 0 when nothing is worn on the helmet slot, so require the item to be
+            // present: `uint16_t - 0xA42B` promotes to int and a missing helmet
+            // would wrap negative and match `< 2`, hiding every character's hair.
+            const uint16_t helmetGfx = m_CharacterLayerGraphic[OL_HELMET];
+            if (layer == OL_HAIR && helmetGfx != 0 && (uint16_t)(helmetGfx - 0xA42B) < 2)
             {
                 return true;
             }
