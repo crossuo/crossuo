@@ -171,15 +171,36 @@ void Icons_Shutdown()
         return;
     }
     // ImGui 1.92.9b texture contract: the backend releases the GL name during
-    // ImGui_ImplOpenGL3_Shutdown -> DestroyDeviceObjects, which walks
-    // PlatformIO.Textures and destroys every texture whose RefCount is still
-    // 1 (imgui_impl_opengl3.cpp:1023-1031). The atlas must therefore stay
-    // registered (RefCount == 1) until ui_shutdown/DestroyContext is done:
-    // unregistering + deleting the ImTextureData earlier leaves a dangling
-    // pointer in PlatformIO.Textures (UAF) and, with RefCount already 0, the
-    // backend skips glDeleteTextures (GL leak in the shared game context,
-    // cumulative per logout/login). This frees the CPU-side pixels only and
-    // must be called AFTER the ImGui context is gone (AssistantWindow).
+    // its own shutdown (DestroyDeviceObjects), which walks PlatformIO.Textures
+    // and destroys every texture whose RefCount is still 1
+    // (imgui_impl_opengl3.cpp:1023-1031). The atlas must therefore stay
+    // registered (RefCount == 1) until that teardown runs; unregistering +
+    // deleting the ImTextureData earlier leaves a dangling pointer in
+    // PlatformIO.Textures (UAF) and, with RefCount already 0, the backend
+    // skips glDeleteTextures (GL leak in the shared game context, cumulative
+    // per logout/login). This frees the CPU-side pixels only and must be
+    // called AFTER the ImGui context is gone (AssistantWindow).
+    delete s_Atlas;
+    s_Atlas = nullptr;
+}
+
+void Icons_ReleaseNow()
+{
+    if (s_Atlas == nullptr)
+    {
+        return;
+    }
+    // The ImGui context outlives this whole-assistant shutdown (the asset
+    // viewer keeps using it), so the backend teardown that would reclaim this
+    // texture never runs. Hand the GL name to a throwaway texture that stays
+    // registered: the backend deletes it the next time it creates a texture
+    // (on the viewer's side, or on the next assistant init), and this module
+    // rebuilds the atlas through Icons_Init on its next draw.
+    ImTextureData *retire = new ImTextureData();
+    retire->SetTexID(s_Atlas->GetTexID());
+    retire->SetStatus(ImTextureStatus_OK);
+    ImGui::RegisterUserTexture(retire);
+    ImGui::UnregisterUserTexture(s_Atlas);
     delete s_Atlas;
     s_Atlas = nullptr;
 }

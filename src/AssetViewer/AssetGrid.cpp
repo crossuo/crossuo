@@ -30,9 +30,8 @@ namespace AssetViewerStb
 } // namespace AssetViewerStb
 using namespace AssetViewerStb;
 
-// global "Hide nodraw" toggle + export folder override (see AssetGrid.h)
+// global "Hide nodraw" toggle (see AssetGrid.h)
 static bool s_HideNodraw = false;
-static char s_ExportDirOverride[ASSETVIEWER_EXPORT_DIR_MAX] = {};
 
 // clip a status string (with an ellipsis) so it fits the given pixel width
 static std::string EllipsizeToFit(const char *text, float width)
@@ -75,11 +74,6 @@ void AssetGrid_SetHideNodraw(bool hide)
 bool AssetGrid_GetHideNodraw()
 {
     return s_HideNodraw;
-}
-
-char *AssetGrid_ExportDirOverride()
-{
-    return s_ExportDirOverride;
 }
 
 // platform default: <pictures>/Screenshots
@@ -132,12 +126,6 @@ static std::string DefaultExportDir()
 
 std::string AssetViewerExportDir()
 {
-    if (s_ExportDirOverride[0] != '\0')
-    {
-        const fs_path dir = fs_path_from(s_ExportDirOverride);
-        fs_path_create(dir);
-        return fs_path_str(dir);
-    }
     static std::string cached; // one-shot resolve + create of the default
     if (cached.empty())
     {
@@ -316,7 +304,21 @@ std::string ExportDir()
     return AssetViewerExportDir();
 }
 
+// bumped by AssetGrid_SelectionChanged (see AssetGrid_SelectionSerial)
+int s_SelectionChangeCount = 0;
+
 } // namespace
+
+int AssetGrid_SelectionSerial()
+{
+    return s_SelectionChangeCount;
+}
+
+void AssetGrid_SelectionChanged(AssetGridState &state, int navIndex)
+{
+    state.NavIndex = navIndex;
+    s_SelectionChangeCount++;
+}
 
 bool AssetGrid_DecodeStatic(uint16_t id, std::vector<uint16_t> &pixels, int &w, int &h)
 {
@@ -648,7 +650,11 @@ void AssetGrid_DrawBrowser(
         const float availH = ImGui::GetWindowHeight();
         const float top = ImGui::GetCursorPosY();
         const int firstRow = std::max(0, std::min((int)((scrollY - top) / cell), rows - 1));
-        const int lastRow = std::min(rows, firstRow + (int)(availH / cell) + 2);
+        // visible window + one row of overscan on each side: the selected cell
+        // keeps its texture alive on the frame the scroll lands exactly on a
+        // row boundary (the strict visible range then excludes it)
+        const int firstDrawnRow = std::max(0, firstRow - 1);
+        const int lastDrawnRow = std::min(rows, firstRow + (int)(availH / cell) + 3);
 
         // one-shot cross-tab jump: scroll to the requested graphic id; if the
         // id is filtered out (or hidden by nodraw), clear the filter so the
@@ -725,6 +731,8 @@ void AssetGrid_DrawBrowser(
                 const int selRow = moved / cols;
                 const float cellTop = top + (float)selRow * cell;
                 const float cellBottom = cellTop + cell;
+                // requested BEFORE the draw range is reserved below: the next
+                // frame then builds its row window from the new scroll offset
                 if (cellTop < scrollY)
                 {
                     ImGui::SetScrollFromPosY(cellTop, 0.0f);
@@ -733,6 +741,7 @@ void AssetGrid_DrawBrowser(
                 {
                     ImGui::SetScrollFromPosY(cellBottom, 1.0f);
                 }
+                AssetGrid_SelectionChanged(state, moved);
             }
         }
 
@@ -745,7 +754,7 @@ void AssetGrid_DrawBrowser(
         // reserve the whole scroll range so the scrollbar reflects every row
         ImGui::Dummy(ImVec2(availW, (float)rows * cell));
 
-        for (int row = firstRow; row < lastRow; row++)
+        for (int row = firstDrawnRow; row < lastDrawnRow; row++)
         {
             for (int col = 0; col < cols; col++)
             {
@@ -815,7 +824,8 @@ void AssetGrid_DrawBrowser(
                     dl->AddText(tl, ImGui::GetColorU32(ImGuiCol_Text), "nodraw");
                 }
 
-                if ((uint16_t)state.Selected == id)
+                const bool selected = (uint16_t)state.Selected == id;
+                if (selected)
                 {
                     dl->AddRect(tl, br, selCol, 0.0f, 0, 2.0f);
                 }
@@ -826,20 +836,63 @@ void AssetGrid_DrawBrowser(
                 {
                     ImGui::SetTooltip(
                         "0x%04X\n%s", id, src.NameOf != nullptr ? src.NameOf(id) : "");
-                    if (ImGui::IsMouseClicked(0))
+                    // a click only selects a cell that is not selected yet: a
+                    // repeated click (or the first half of a double-click)
+                    // must not move the keyboard anchor and with it scroll
+                    // the grid away from under the pointer
+                    if (!selected && ImGui::IsMouseClicked(0))
                     {
                         state.Selected = id;
                         state.NavIndex = index;
+                        AssetGrid_SelectionChanged(state, index);
                     }
                     if (ImGui::IsMouseDoubleClicked(0))
                     {
                         state.Selected = id;
                         state.NavIndex = index;
+                        AssetGrid_SelectionChanged(state, index);
                         if (outActivated != nullptr)
                         {
                             *outActivated = true;
                         }
                     }
+                }
+            }
+        }
+
+        // The texture cache is an LRU that may evict between frames: keep a
+        // hit on the selected cell's thumbnail (the detail pane shows the same
+        // texture, so a selection that scrolls off the drawn range, or a
+        // hover re-selection, is not lost on the next frame). The pixels only
+        // exist for cells decoded this frame, so this is a cache touch unless
+        // the selection had no texture yet.
+        if (state.Selected >= 0 && state.Selected < 0x10000)
+        {
+            const uint16_t selId = (uint16_t)state.Selected;
+            if (src.Nodraw == nullptr || !src.Nodraw(selId))
+            {
+                int sw = 0;
+                int sh = 0;
+                if (DimOf(src, selId, sw, sh) && sw <= 2048 && sh <= 2048)
+                {
+                    const AssetTextureKey key{
+                        src.Kind, selId, 0, (uint16_t)state.ThumbSize, (uint16_t)state.ThumbSize
+                    };
+                    AssetTextureCache_AcquireLazy(
+                        key,
+                        [&src, selId, &state](std::vector<uint16_t> &out)
+                        {
+                            std::vector<uint16_t> pixels;
+                            int dw = 0;
+                            int dh = 0;
+                            if (src.Decode == nullptr || !src.Decode(selId, pixels, dw, dh))
+                            {
+                                LogDecodeFailure(src.Kind, selId);
+                                return false;
+                            }
+                            AcquireScale(pixels.data(), dw, dh, out, (int)state.ThumbSize);
+                            return true;
+                        });
                 }
             }
         }

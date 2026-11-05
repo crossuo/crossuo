@@ -28,6 +28,7 @@
 #include <xuocore/uodata.h>     // g_Index, g_Data, g_FileManager
 
 #include "../Config.h"                 // g_Config (client version gate)
+#include "../CrossUO.h"                // g_Game.StopViewerMusic (music ownership)
 #include "../Managers/ColorManager.h"  // g_ColorManager (radar color chip)
 #include "../Managers/ConfigManager.h" // g_ConfigManager (sound/music enables)
 #include "../Managers/SoundManager.h"  // g_SoundManager (preview playback)
@@ -40,6 +41,10 @@ namespace
 {
 bool s_Visible = false;
 bool s_Shutdown = false;
+// the window X was clicked and the strip has not been clicked again yet: the
+// viewer keeps drawing (cursor/hit-testing survive an assistant shutdown)
+// until re-shown or closed outright
+bool s_WindowClosed = false;
 
 // clip a status string (with an ellipsis) so it fits the given pixel width
 std::string EllipsizeToFit(const char *text, float width)
@@ -359,6 +364,14 @@ AssetGridState &LandState()
 {
     static AssetGridState state;
     return state;
+}
+
+// scratch grid state whose only purpose is to bump the shared selection serial
+// from tabs that do not run a grid (the Tiledata lists)
+AssetGridState *TiledataSerialState()
+{
+    static AssetGridState state;
+    return &state;
 }
 
 // Gumps tab
@@ -1021,6 +1034,7 @@ void TiledataDrawSubTab(
         }
         bool scrollToSel = false;
         const int prevRow = selRow;
+        const int selectionSerial = AssetGrid_SelectionSerial();
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && rowCount > 0)
         {
             int sel = selRow;
@@ -1061,6 +1075,7 @@ void TiledataDrawSubTab(
                 }
                 selRow = sel;
                 state.Selected = (int)state.Filtered[sel];
+                AssetGrid_SelectionChanged(*TiledataSerialState(), sel);
             }
             if ((ImGui::IsKeyPressed(ImGuiKey_Enter) ||
                  ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)) &&
@@ -1072,6 +1087,9 @@ void TiledataDrawSubTab(
                 if (sel >= 0 && sel < rowCount)
                 {
                     const uint32_t id = state.Filtered[sel];
+                    // the jump re-selects and scrolls in the target tab; this
+                    // list must not re-anchor itself on the row afterwards
+                    AssetGrid_SelectionChanged(*TiledataSerialState(), sel);
                     if (land)
                     {
                         RequestLandShow(id);
@@ -1099,6 +1117,14 @@ void TiledataDrawSubTab(
                     break;
                 }
             }
+        }
+
+        // a detail-pane jump (grid/preview buttons) already selected the row:
+        // do not arm the auto-scroll for it - the clipper would re-anchor the
+        // list on every frame while the target tab is opening
+        if (scrollToSel && AssetGrid_SelectionSerial() != selectionSerial)
+        {
+            scrollToSel = false;
         }
 
         ImGuiListClipper clipper;
@@ -2190,6 +2216,7 @@ void DrawAnimationsTab()
             {
                 scrollToSel = true;
                 state.SelectedGraphic = state.Filtered[sel];
+                AssetGrid_SelectionChanged(state.Grid, sel);
             }
             if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
             {
@@ -2305,6 +2332,7 @@ void DrawAnimationsTab()
                 {
                     scrollToSel = true;
                     state.SelectedGroup = groups[sel];
+                    AssetGrid_SelectionChanged(state.Grid, sel);
                     state.SelectedDir = 0;
                     state.FrameIndex = 0;
                     state.Playing = true;
@@ -2315,6 +2343,7 @@ void DrawAnimationsTab()
                     // Enter confirms the selection (same reset as a click)
                     if (sel >= 0 && sel < count)
                     {
+                        AssetGrid_SelectionChanged(state.Grid, sel);
                         state.SelectedGroup = groups[sel];
                         state.SelectedDir = 0;
                         state.FrameIndex = 0;
@@ -3013,6 +3042,39 @@ MusicTabState &MusicState()
     return s;
 }
 
+// The track this folder started, if any: closing the folder must stop only
+// its own preview and never silence music the game is playing. The client
+// owns the shared music lane, so the record is re-checked at stop time: if
+// anything else drove the lane since (server-issued track, war music, the
+// login track, music settings), the viewer no longer owns it.
+int s_ViewerMusicIndex = -1;
+
+bool MusicEntryExists(int index);
+void MusicPlay(int index, bool loop);
+
+bool MusicViewerOwns()
+{
+    const int id = MusicState().PlayingId;
+    return id >= 0 && id == s_ViewerMusicIndex && g_SoundManager.CurrentMusicIndex == id &&
+           g_SoundManager.IsPlayingNormalMusic();
+}
+
+void MusicPlay(int index, bool loop)
+{
+    if (!MusicEntryExists(index) || !g_ConfigManager.GetMusic())
+    {
+        return;
+    }
+    const CIndexMusic &mp3 = g_Index.m_MP3[index];
+    if (mp3.FilePath.empty())
+    {
+        return;
+    }
+    g_SoundManager.PlayMP3(mp3.FilePath.c_str(), index, loop, false);
+    s_ViewerMusicIndex = index;
+    MusicState().PlayingId = index;
+}
+
 bool MusicEntryExists(int index)
 {
     MusicTabState &st = MusicState();
@@ -3046,13 +3108,15 @@ const char *MusicFileName(int index)
     return mp3.FilePath.c_str() + (slash == std::string::npos ? 0 : slash + 1);
 }
 
-// Stop uses the client's StopMusic; the viewer-local playing marker is
-// cleared here so the "playing" state never goes stale (CurrentMusicIndex is
-// not relied upon after a stop).
+// Stops only a track the viewer started: if anything else is playing (game
+// music, a server-issued track) it keeps playing untouched. The stop goes
+// through the client's guard (CGame::StopViewerMusic); the viewer-local
+// playing marker is cleared here so the "playing" state never goes stale.
 void MusicStop()
 {
-    g_SoundManager.StopMusic();
+    g_Game.StopViewerMusic(MusicViewerOwns(), s_ViewerMusicIndex);
     MusicState().PlayingId = -1;
+    s_ViewerMusicIndex = -1;
 }
 
 void DrawMusicTab()
@@ -3061,10 +3125,14 @@ void DrawMusicTab()
 
     ImGui::Checkbox("Loop", &st.Loop);
     ImGui::SameLine();
+    // stops only what the viewer started; game music is never silenced here
+    const bool viewerPlaying = MusicViewerOwns();
+    ImGui::BeginDisabled(!viewerPlaying);
     if (ImGui::Button("Stop"))
     {
         MusicStop();
     }
+    ImGui::EndDisabled();
     ImGui::SameLine();
     if (!g_ConfigManager.GetMusic())
     {
@@ -3132,13 +3200,7 @@ void DrawMusicTab()
                 // Enter plays the selected track (same as the detail Play button)
                 if (sel >= 0 && sel < MAX_MUSIC_DATA_INDEX_COUNT)
                 {
-                    const CIndexMusic &mp3 = g_Index.m_MP3[sel];
-                    if (!mp3.FilePath.empty() && MusicEntryExists(sel) &&
-                        g_ConfigManager.GetMusic())
-                    {
-                        g_SoundManager.PlayMP3(mp3.FilePath.c_str(), sel, st.Loop, false);
-                        st.PlayingId = sel;
-                    }
+                    MusicPlay(sel, st.Loop);
                 }
             }
             if (delta != 0)
@@ -3239,8 +3301,7 @@ void DrawMusicTab()
     ImGui::BeginDisabled(!playable);
     if (ImGui::Button("Play"))
     {
-        g_SoundManager.PlayMP3(mp3.FilePath.c_str(), index, st.Loop, false);
-        st.PlayingId = index;
+        MusicPlay(index, st.Loop);
     }
     ImGui::EndDisabled();
     ImGui::SameLine();
@@ -3864,10 +3925,11 @@ bool AssetViewer_Show(bool show)
     }
 
     s_Visible = show;
+    s_WindowClosed = false; // the toggle/strip re-opens the window
     if (!show)
     {
         SoundStopPreview(); // no preview outlives the viewer window
-        MusicStop();        // ... and no music either
+        MusicStop();        // only a track the viewer itself started
     }
     return true;
 }
@@ -3875,6 +3937,32 @@ bool AssetViewer_Show(bool show)
 bool AssetViewer_IsVisible()
 {
     return s_Visible;
+}
+
+bool AssetViewer_IsWindowOpen()
+{
+    return s_Visible && !s_WindowClosed;
+}
+
+void AssetViewer_OnAssistantShutdown()
+{
+    // The assistant keeps its ImGui context alive while this window is open,
+    // and releases its own UI textures up front (see AssistantWindow_Shutdown),
+    // so nothing here is bound to the shell's lifetime. Sounds and music keep
+    // playing (they are per-track, not shell-bound).
+}
+
+bool AssetViewer_Close()
+{
+    if (s_Shutdown || !AssetViewer_IsWindowOpen())
+    {
+        return false;
+    }
+    s_WindowClosed = true;
+    s_Visible = false;
+    SoundStopPreview();
+    MusicStop();
+    return true;
 }
 
 void AssetViewer_Draw()
@@ -3886,15 +3974,22 @@ void AssetViewer_Draw()
         return;
     }
 
+    // the title bar X goes through the same path as the shared close routine
+    // (AssetViewer_Close): the frame still runs so the closed window can be
+    // re-opened by the toggle or the bottom strip
+    bool windowOpen = true;
     ImGui::SetNextWindowSize(ImVec2(960.0f, 640.0f), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Asset Viewer", &s_Visible))
+    if (!ImGui::Begin("Asset Viewer", &windowOpen))
     {
         ImGui::End();
         return;
     }
-    if (!s_Visible)
+    if (!windowOpen)
     {
-        // closed through the title bar X: stop any playing preview + music
+        // closed through the title bar X: stop any playing preview + the
+        // viewer's own music (never the game's)
+        s_WindowClosed = true;
+        s_Visible = false;
         SoundStopPreview();
         MusicStop();
     }
@@ -3917,30 +4012,25 @@ void AssetViewer_Draw()
         AssetGrid_SetHideNodraw(hideNodraw);
     }
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(260.0f);
-    ImGui::InputText("##ExportDir", AssetGrid_ExportDirOverride(), ASSETVIEWER_EXPORT_DIR_MAX);
-    if (ImGui::IsItemHovered())
     {
-        ImGui::SetTooltip(
-            "Export folder override (absolute path);\nempty = default (%s)",
-            AssetViewerExportDir().c_str());
-    }
-    ImGui::SameLine();
-    {
-        // hint ellipsized to whatever width is left after the two items
+        // exports always land in the default (pictures) folder; the hint is
+        // ellipsized to whatever width is left after the checkbox
         const float spacing = ImGui::GetStyle().ItemSpacing.x;
         const float avail = ImGui::GetContentRegionAvail().x - spacing - 4.0f; // reserve a few px
         ImGui::TextDisabled(
             "%s",
             EllipsizeToFit(
-                (std::string("Export folder (empty = default: ") + AssetViewerExportDir().c_str() +
-                 ")")
-                    .c_str(),
+                (std::string("Export folder: ") + AssetViewerExportDir().c_str()).c_str(),
                 std::max(1.0f, avail))
                 .c_str());
     }
     ImGui::Separator();
 
+    // tab bar + status strip in one child so the strip never depends on the
+    // window height; the strip stays usable while the window itself is closed
+    ImGui::BeginChild("##AssetViewerBody", ImVec2(0.0f, 0.0f), ImGuiChildFlags_None);
+    const float stripHeight = ImGui::GetFrameHeightWithSpacing();
+    ImGui::BeginChild("##AssetViewerTabsHost", ImVec2(0.0f, -stripHeight), ImGuiChildFlags_None);
     if (ImGui::BeginTabBar("##AssetViewerTabs", ImGuiTabBarFlags_None))
     {
         const ImGuiTabItemFlags staticsFlags = (s_PendingTab == PendingStatics) ?
@@ -4003,15 +4093,60 @@ void AssetViewer_Draw()
         }
         ImGui::EndTabBar();
     }
+    ImGui::EndChild();
 
-    ImGui::End();
+    // The window X and the client window's X only close the window: the
+    // viewer keeps running invisibly (cursor + input belong to it, and it
+    // keeps running when the assistant is closed before it) until this strip
+    // is clicked to re-open or to end it for good.
+    ImGui::TextUnformatted("Asset Viewer");
+    ImGui::SameLine();
+    if (ImGui::SmallButton(s_Visible ? "Close" : "Open"))
+    {
+        AssetViewer_Toggle();
+    }
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip(
+            s_Visible ? "Hide the asset viewer window (it keeps running)" :
+                        "Show the asset viewer window");
+    }
+    ImGui::SameLine();
+    if (ImGui::SmallButton("End session"))
+    {
+        AssetViewer_Close();
+    }
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip(
+            "Close the asset viewer completely (also stops its own sound/music "
+            "preview)");
+    }
+    ImGui::SameLine();
+    if (s_Visible)
+    {
+        ImGui::TextDisabled("the game is paused while the window is open");
+    }
+    else
+    {
+        ImGui::TextDisabled("window hidden: the game keeps running");
+    }
+    ImGui::EndChild();
+    ImGui::End(); // ##AssetViewerBody
 }
 
 void AssetViewer_Shutdown()
 {
+    // only reachable from the client exit path (Main.cpp): the session is over
     s_Visible = false;
+    s_WindowClosed = true;
     s_Shutdown = true;
-    SoundStopPreview();
+    // the assistant's ImGui context has already been destroyed in that path,
+    // so the music guard's "still playing" probes of that lane are moot; the
+    // owned-track record is simply dropped
+    SoundState().Playing = SOUND_NULL;
+    MusicState().PlayingId = -1;
+    s_ViewerMusicIndex = -1;
     AnimShutdown();
     AssetTextureCache_Shutdown();
 }

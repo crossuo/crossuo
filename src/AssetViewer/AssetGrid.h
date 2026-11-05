@@ -61,8 +61,17 @@ struct AssetGridState
 void AssetGrid_DrawBrowser(
     const AssetGridSource &src, AssetGridState &state, uint16_t *outSelected, bool *outActivated);
 
-// size of the export-folder override buffer (see AssetGrid_ExportDirOverride)
-#define ASSETVIEWER_EXPORT_DIR_MAX 256
+// Book-keeping for a selection change made by the grid itself (keyboard or
+// mouse) or by a tab list driving a grid state: updates the keyboard-nav index
+// and bumps the selection serial.
+void AssetGrid_SelectionChanged(AssetGridState &state, int navIndex);
+
+// Serial bumped on every selection made through the grid. Tabs that
+// auto-scroll to their selection snapshot it before a detail action and
+// re-read it right after: a value that moved means the grid already
+// selected/navigated to the item, so the tab must not re-scroll (and with it
+// re-anchor the list) on top of that.
+int AssetGrid_SelectionSerial();
 
 // Global "Hide nodraw" toggle (session-persistent, shared by every grid tab):
 // when enabled, cells whose source reports Nodraw() are not rendered and
@@ -70,14 +79,10 @@ void AssetGrid_DrawBrowser(
 void AssetGrid_SetHideNodraw(bool hide);
 bool AssetGrid_GetHideNodraw();
 
-// The session-persistent export folder override (owned here); empty = use the
-// default (Pictures/Screenshots). Absolute paths only.
-char *AssetGrid_ExportDirOverride();
-
-// Resolves the export directory: the override when non-empty, otherwise the
-// user's pictures folder + "Screenshots" (XDG_PICTURES_DIR / xdg-user-dir /
-// $HOME/Pictures on Linux, %USERPROFILE%\\Pictures on Windows, $HOME/Pictures
-// on macOS); the directory is created on first export.
+// Resolves the export directory: always the user's pictures folder +
+// "Screenshots" (XDG_PICTURES_DIR / xdg-user-dir / $HOME/Pictures on Linux,
+// %USERPROFILE%\Pictures on Windows, $HOME/Pictures on macOS); the directory
+// is created on first export.
 std::string AssetViewerExportDir();
 
 // Pixel decoders for the two art families: statics go through the RLE

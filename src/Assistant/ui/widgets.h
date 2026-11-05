@@ -59,6 +59,11 @@ bool Icons_Init();
 // must still be 1, so the atlas must NOT be unregistered before that). The
 // assistant window calls this right after ui_shutdown returns.
 void Icons_Shutdown();
+// Whole-assistant shutdown with the ImGui context still alive (the asset
+// viewer keeps drawing): releases the atlas right away; the next Icons_Init
+// builds a fresh one. Must not be followed by ui_shutdown's texture teardown
+// for the same texture (the atlas is unregistered, so it is not walked).
+void Icons_ReleaseNow();
 // Loads an assistant asset by file name (the embedded copy first, the
 // assets/xuoassist disk lookup as fallback); the caller frees with
 // stbi_image_free. Shared by the icon atlas and the other png-loading UI

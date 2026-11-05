@@ -183,6 +183,11 @@ public:
     void ConsolePromptSend();
     void ConsolePromptCancel();
 
+    // Asset viewer music preview guard: stops a track the viewer started
+    // (`owned`, index valid) and otherwise only ever stops that same index
+    // when it is still the one playing - music the game started is never
+    // silenced by the viewer closing.
+    void StopViewerMusic(bool owned, int index);
     void PlayMusic(int index, bool warmode = false);
     void PlaySoundEffect(uint16_t id, float volume = -1);
     void PlaySoundEffectAtPosition(uint16_t id, int x, int y);

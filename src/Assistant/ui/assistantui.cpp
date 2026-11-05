@@ -397,6 +397,19 @@ void AssistantUI_Shutdown()
     // ui_shutdown via AssistantUI_AfterImGuiShutdown.
 }
 
+void AssistantUI_ReleaseTexturesImGuiAlive()
+{
+    // whole-assistant shutdown while the ImGui context survives (the asset
+    // viewer keeps drawing): the textures the UI modules own can be released
+    // right away; every module lazily rebuilds its texture on next use (the
+    // icon atlas, the map radar and the About logo all have init-on-draw
+    // paths), and the rebuilt textures are torn down by the next ui_shutdown
+    // exactly as before
+    Icons_ReleaseNow();
+    AssMap_AfterImGuiShutdown();
+    TabAbout_AfterImGuiShutdown();
+}
+
 void AssistantUI_AfterImGuiShutdown()
 {
     // called right after ui_shutdown (the ImGui context is gone): free the

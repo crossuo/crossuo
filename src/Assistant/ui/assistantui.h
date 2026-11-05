@@ -62,6 +62,11 @@ void AssistantUI_RecompileDisplayTitle();
 // GL names the backend teardown reclaimed while the context was alive.
 void AssistantUI_AfterImGuiShutdown();
 
+// Same release for a whole-assistant shutdown that keeps the ImGui context
+// alive (the asset viewer window survives it): the textures are unregistered
+// and freed immediately and rebuilt lazily by the modules on next draw.
+void AssistantUI_ReleaseTexturesImGuiAlive();
+
 
 // --- secondary windows ----------------------------------------------------------
 // The Map window + its settings form (ui/mapwindow.cpp), the Object Inspector

@@ -3942,6 +3942,28 @@ void CGame::LoadClientStartupConfig()
     }
 }
 
+void CGame::StopViewerMusic(bool owned, int index)
+{
+    // mirrors PlayMusic's early-out: such a request never reached a track, so
+    // there is nothing to stop either
+    if (!g_ConfigManager.GetMusic() || index >= MAX_MUSIC_DATA_INDEX_COUNT)
+    {
+        return;
+    }
+    if (owned)
+    {
+        g_SoundManager.StopMusic();
+        return;
+    }
+    // not owned anymore: only silence the music lane when the viewer's track
+    // is what is playing, never the game's music
+    if (index >= 0 && g_SoundManager.CurrentMusicIndex == index &&
+        g_SoundManager.IsPlayingNormalMusic())
+    {
+        g_SoundManager.StopMusic();
+    }
+}
+
 void CGame::PlayMusic(int index, bool warmode)
 {
     if (!g_ConfigManager.GetMusic() || index >= MAX_MUSIC_DATA_INDEX_COUNT)

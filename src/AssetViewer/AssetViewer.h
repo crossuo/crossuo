@@ -15,6 +15,21 @@ bool AssetViewer_Toggle();
 bool AssetViewer_Show(bool show);
 // Reports whether the asset viewer window is currently shown.
 bool AssetViewer_IsVisible();
+// Reports whether the viewer window is shown (not closed by its X / the
+// client window's X). The viewer keeps running while closed: it owns the
+// cursor and input over its area, and the assistant's overlay keeps coming
+// back for it even when the assistant shell itself is shut down.
+bool AssetViewer_IsWindowOpen();
+// Whole-assistant shutdown: when the viewer window is open it keeps living on
+// the ImGui context (the assistant keeps the context alive just for it), so
+// there is nothing to give back here; kept as the single hook for that life
+// cycle.
+void AssetViewer_OnAssistantShutdown();
+// Ends the viewer session (the assistant "Assets" button starts a new one):
+// hides the window, stops the sounds/music the viewer itself started and
+// leaves the client's own music untouched. Returns true when a session was
+// active.
+bool AssetViewer_Close();
 // Submits the asset viewer window inside the assistant's ImGui frame (called
 // from AssistantWindow_DrawOverlay, after the assistant shell, so the window
 // participates in the same docking/viewport pass). A no-op while hidden.

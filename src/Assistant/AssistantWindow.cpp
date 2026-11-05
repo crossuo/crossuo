@@ -128,6 +128,19 @@ static void assistant_cursor_reap()
     }
 }
 
+// True when the viewer's own windows are under the mouse: the asset viewer
+// runs as a top-level ImGui window that outlives the assistant shell, and its
+// cursor/input must not depend on the shell being visible.
+static bool mouse_over_asset_viewer()
+{
+    // With shell windows hidden, the only windows that can capture the mouse
+    // are the viewer's, so WantCaptureMouse answers "over one of them". While
+    // the shell is up it is the same relation the assistant cursor policy
+    // uses for its own windows.
+    return AssetViewer_IsWindowOpen() && ImGui::GetIO().WantCaptureMouse &&
+           !mouse_over_assistant_popout();
+}
+
 // the ImGui-owned mirror texture, (re)created at the cursor sprite size
 static ImTextureData *assistant_cursor_texture(int w, int h)
 {
@@ -215,8 +228,8 @@ static void assistant_cursor_draw()
     // check below (they are separate OS windows in desktop space). Over the
     // bare game world the client's own cursor render is the visible cursor -
     // mirroring there produced a second cursor.
-    if (!s_visible || g_GameState != GS_GAME || !ImGui::GetIO().WantCaptureMouse ||
-        mouse_over_assistant_popout())
+    if ((!s_visible && !mouse_over_asset_viewer()) || g_GameState != GS_GAME ||
+        !ImGui::GetIO().WantCaptureMouse || mouse_over_assistant_popout())
     {
         g_MouseManager.Hide(false);
         return;
@@ -493,7 +506,6 @@ bool AssistantWindow_Toggle()
 
 void AssistantWindow_FrameTick()
 {
-
     // per-frame assistant logic that must run while visible or not
     if (s_initialized)
         xuoassist::AssistantUI_Tick(); // auto-reconnect countdown (was TabMain::m_ReconnectTimer)
@@ -589,9 +601,35 @@ bool AssistantWindow_ProcessEvent(const SDL_Event &ev)
 
     // Hidden: keep ImGui fed but let the game play normally - EXCEPT the
     // hotkey engine, which keeps working while the assistant is hidden
-    // (Pass-keys and the On/Off switch govern it, see core/hotkeys.cpp).
+    // (Pass-keys and the On/Off switch govern it, see core/hotkeys.cpp). The
+    // asset viewer's own window outlives the shell: its area keeps the events
+    // ImGui captured (exactly as when the shell is up) and consumes none of
+    // the game hotkeys.
     if (!s_visible)
+    {
+        if (mouse_over_asset_viewer())
+        {
+            // ImGui keeps what it captured over the viewer (clicks, wheel,
+            // keys typed into it); everything else reaches the hotkey engine
+            switch (ev.type)
+            {
+                case SDL_EVENT_MOUSE_MOTION:
+                    return io.WantCaptureMouse;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                case SDL_EVENT_MOUSE_BUTTON_UP:
+                case SDL_EVENT_MOUSE_WHEEL:
+                    return io.WantCaptureMouse;
+                case SDL_EVENT_KEY_DOWN:
+                case SDL_EVENT_KEY_UP:
+                case SDL_EVENT_TEXT_INPUT:
+                case SDL_EVENT_TEXT_EDITING:
+                    return io.WantCaptureKeyboard || io.WantTextInput;
+                default:
+                    return false;
+            }
+        }
         return xuoassist::Hotkeys_ProcessGameEvent(ev);
+    }
 
     switch (ev.type)
     {
@@ -628,7 +666,13 @@ void AssistantWindow_DrawOverlay()
         return; // never draws outside the game stage (FrameTick owns shutdown)
     if (!assistant_enabled())
         return;
+    // Shut down with the asset viewer's window still open: the viewer owns a
+    // top-level window in the (still existing) ImGui context, so its frames
+    // keep flowing - only the viewer is drawn, the shell stays closed.
+    const bool shellInit = s_initialized;
     if (!s_initialized && !init())
+        return;
+    if (!shellInit && !AssetViewer_IsWindowOpen())
         return;
 
     // the game render pass owns the context: ImGui renders the main viewport
@@ -652,7 +696,7 @@ void AssistantWindow_DrawOverlay()
     // viewport list are valid; init() set ImGuiConfigFlags_NoMouseCursorChange
     // so the SDL2 backend never fights this. When the overlay is not visible
     // the assistant leaves the cursor alone entirely: the client owns it.
-    if (s_visible)
+    if (s_visible || AssetViewer_IsWindowOpen())
     {
         // io.MousePos and the viewport list are valid after NewFrame
         const bool overAssistantPopOut = mouse_over_assistant_popout();
@@ -665,7 +709,10 @@ void AssistantWindow_DrawOverlay()
             SDL_HideCursor();
         }
     }
-    xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
+    if (shellInit)
+    {
+        xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
+    }
     // the asset viewer submits its window into this same ImGui frame, after
     // the assistant shell (its own top-level window; a no-op while hidden)
     AssetViewer_Draw();
@@ -701,13 +748,27 @@ void AssistantWindow_Shutdown()
     // imgui_impl_opengl3.cpp:1023-1031); freeing it earlier would leave a
     // dangling ImTextureData in PlatformIO.Textures (UAF) and leak the GL name
     xuoassist::AssistantUI_Shutdown();
-    // destroys the ImGui context and every platform window it created; must
-    // not SDL_Quit: the client keeps running
-    ui_shutdown(s_ctx);
-    // only now, with the context gone and the GL names released, may the
-    // CPU-side pixels be freed (icon atlas + map radar + About logo;
-    // idempotent, deletes the ImTextureData objects)
-    xuoassist::AssistantUI_AfterImGuiShutdown();
+    // the asset viewer window outlives this shutdown when it is open
+    AssetViewer_OnAssistantShutdown();
+    // The ImGui context is about to go away - unless the asset viewer kept its
+    // own window open past this shutdown: then the context and the viewer's
+    // textures live on, and only the shell's textures are released (the
+    // backend teardown below would never walk them).
+    const bool keepContext = AssetViewer_IsWindowOpen();
+    if (keepContext)
+    {
+        xuoassist::AssistantUI_ReleaseTexturesImGuiAlive();
+    }
+    else
+    {
+        // destroys the ImGui context and every platform window it created;
+        // must not SDL_Quit: the client keeps running
+        ui_shutdown(s_ctx);
+        // only now, with the context gone and the GL names released, may the
+        // CPU-side pixels be freed (icon atlas + map radar + About logo;
+        // idempotent, deletes the ImTextureData objects)
+        xuoassist::AssistantUI_AfterImGuiShutdown();
+    }
     // the cursor mirror follows the same lifecycle (CPU pixels after the GL
     // names are gone)
     assistant_cursor_after_imgui_shutdown();
