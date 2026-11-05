@@ -6,6 +6,7 @@
 #include "mulstruct.h"
 #include "text_parser.h"
 #include "revision.h" // CLIENT_APPNAME
+#include "client_info.h" // client_version (version auto-detect by data folder)
 #include "vfs.h"
 
 #include <stdarg.h>
@@ -96,6 +97,81 @@ void uo_data_init(const char *path, uint32_t client_version, bool use_verdata)
     g_UOPath = fs_path_from(path);
     s_ClientVersion = client_version;
     s_UseVerdata = use_verdata;
+}
+
+uint32_t uo_data_client_version()
+{
+    return s_ClientVersion;
+}
+
+uint32_t uo_data_detect_client_version(const char *dataPath)
+{
+    // the data folder's client.exe carries the version signature (the client
+    // does the same auto-detect at boot); anything else falls back to the
+    // modern default the loaders expect
+    if (dataPath != nullptr && dataPath[0] != '\0')
+    {
+        const fs_path exe = fs_path_join(fs_path_from(dataPath), "client.exe");
+        client_info info;
+        if (client_version(fs_path_ascii(exe), info) != 0 && info.version != 0)
+        {
+            char str[32] = {};
+            client_version_string(info.version, str, sizeof(str));
+            Info(Data, "detected client version %s in %s", str, dataPath);
+            return info.version;
+        }
+    }
+    return CV_UNKNOWN;
+}
+
+void uo_index_prepare_reload()
+{
+    // standalone data-set switching (the asset viewer app): every mapping and
+    // decoded table of the previous install is released so a fresh
+    // CFileManager::Load() starts from the same empty state the client boots
+    // with
+    Info(Data, "releasing the loaded data set for a reload");
+
+    // g_Index is ~24 MB of tables, so it is reset in place: assigning a value
+    // initialized Index{} would materialise that whole struct as a stack
+    // temporary and overflow the stack
+    for (auto &it : g_Index.m_Animations)
+    {
+        AnimationDirFrames *dir = it.second;
+        if (dir != nullptr)
+        {
+            delete[] dir->Frames;
+            delete dir;
+        }
+    }
+    g_Index.m_Animations.clear();
+    g_Index.m_AnimationGroupFile.clear();
+
+    for (int i = 0; i < MAX_LAND_DATA_INDEX_COUNT; i++)
+        g_Index.m_Land[i] = {};
+    for (int i = 0; i < MAX_STATIC_DATA_INDEX_COUNT; i++)
+        g_Index.m_Static[i] = {};
+    for (int i = 0; i < MAX_GUMP_DATA_INDEX_COUNT; i++)
+        g_Index.m_Gump[i] = {};
+    for (int i = 0; i < MAX_LAND_TEXTURES_DATA_INDEX_COUNT; i++)
+        g_Index.m_Texture[i] = {};
+    for (int i = 0; i < MAX_SOUND_DATA_INDEX_COUNT; i++)
+        g_Index.m_Sound[i] = {};
+    for (int i = 0; i < MAX_MUSIC_DATA_INDEX_COUNT; i++)
+        g_Index.m_MP3[i] = {};
+    for (int i = 0; i < MAX_MULTI_DATA_INDEX_COUNT; i++)
+        g_Index.m_Multi[i] = {};
+    for (int i = 0; i < MAX_LIGHTS_DATA_INDEX_COUNT; i++)
+        g_Index.m_Light[i] = {};
+    for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
+        g_Index.m_Anim[i] = {};
+    g_Index.m_MultiIndexCount = 0;
+
+    g_Data.m_Land.clear();
+    g_Data.m_Static.clear();
+    g_Data.m_StumpTiles.clear();
+    g_Data.m_CaveTiles.clear();
+    g_Data.m_Anim.clear();
 }
 
 static fs_path file_path(const fs_path &path, const char *str, va_list arg)
@@ -1234,6 +1310,11 @@ void CFileManager::Unload()
     m_Tileart.Unload();
     m_MultiCollection.Unload();
     m_AnimationSequence.Unload();
+    m_StringDictionary.Unload();
+    for (int i = 0; i < countof(m_AnimationFrame); i++)
+    {
+        m_AnimationFrame[i].Unload();
+    }
     m_MainMisc.Unload();
 
     m_LightIdx.Unload();
@@ -1286,6 +1367,16 @@ void CFileManager::Unload()
     }
 
     m_VerdataMul.Unload();
+
+    for (int i = 0; i < countof(m_GroupReplaces); i++)
+    {
+        m_GroupReplaces[i].clear();
+    }
+    for (int i = 0; i < countof(m_AddressIdx); i++)
+    {
+        m_AddressIdx[i] = 0;
+        m_SizeIdx[i] = 0;
+    }
 
     m_Skills.clear();
 }
@@ -1421,26 +1512,37 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
             // 0x44 0x6c1031f63255845a 0x0190 (400) // GENDER_MALE RT_HUMAN
             continue;
         }
-        assert(entry->Graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+        if (entry->Graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+        {
+            // an out-of-range graphics id would address past the animation
+            // table: skip the whole replacement list instead
+            for (uint32_t replaceIdx = 0; replaceIdx < entry->Replaces; ++replaceIdx)
+            {
+                Move(sizeof(UopAnimationSequenceReplacement));
+            }
+            continue;
+        }
         auto anim = &g_Index.m_Anim[entry->Graphic];
         const bool canPatch = (anim->Flags & AF_USE_UOP_ANIMATION) != 0;
         for (uint32_t replaceIdx = 0; replaceIdx < entry->Replaces; ++replaceIdx)
         {
             const auto seq = (UopAnimationSequenceReplacement *)Ptr;
-            assert(seq->Group < MAX_ANIMATION_GROUPS_COUNT);
+            const bool groupValid = seq->Group < MAX_ANIMATION_GROUPS_COUNT;
+            const bool newGroupValid = seq->NewGroup < MAX_ANIMATION_GROUPS_COUNT;
             if (seq->FrameCount == 0)
             {
-                if (canPatch)
+                // the source frames can only be copied from a valid peer
+                // group: a self-replacement or an out-of-range id means the
+                // entry carries no usable source
+                if (canPatch && groupValid && newGroupValid && seq->NewGroup != seq->Group)
                 {
-                    assert(seq->NewGroup != seq->Group);
-                    assert(seq->NewGroup < MAX_ANIMATION_GROUPS_COUNT);
                     anim->Groups[seq->Group] = anim->Groups[seq->NewGroup];
                     // update replaced file blocks with replacement entries
                     auto file = uo_animation_group_get(GroupId(entry->Graphic, seq->NewGroup));
                     g_Index.m_AnimationGroupFile.emplace(GroupId(entry->Graphic, seq->Group), file);
                 }
             }
-            else
+            else if (groupValid)
             {
                 auto &group = anim->Groups[seq->Group];
                 for (int k = 0; k < MAX_MOBILE_DIRECTIONS; ++k)
@@ -1472,7 +1574,7 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
         }
     }
     Info(Data, "AnimationSequence processed %zd entries", m_AnimationSequence.FileCount());
-    m_AnimationSequence.Unload();
+    m_AnimationSequence.Unload(); // also drops the entry table read above
 }
 
 static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
@@ -1604,6 +1706,18 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
     {
         return false;
     }
+
+    // a previously loaded pack leaves its entry table behind (Unload only
+    // releases the mapping), and those UopFileEntry pointers would then point
+    // into the replaced mapping: start every load from an empty table so the
+    // entries registered below are the only ones visible
+    file.m_MapByHash.clear();
+    file.m_MapByOffset.clear();
+    file.m_NameHashes.clear();
+    file.m_FileOffsets.clear();
+#if defined(XUO_EMSC)
+    file.m_OwnedEntries.clear();
+#endif
 
     const char *filename = fs_path_ascii(path);
     DEBUG(Data, "loading UOP: %s", filename);
@@ -3982,8 +4096,16 @@ static void load_body_corpse_def(fs_path file, bool alive)
         const auto strings = parser.ReadTokens();
         if (strings.size() >= 3)
         {
-            const auto graphic = checked_cast<uint16_t>(str_to_int(strings[0]));
-            assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+            // the raw value is range-checked before it is narrowed: a
+            // 16-bit cast would wrap an out-of-range body id (some def sets
+            // ship ids well past the animation table) into a valid index and
+            // silently rewrite an unrelated body
+            const int origGraphic = str_to_int(strings[0]);
+            if (origGraphic <= 0 || origGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
+                continue;
+            }
+            const auto graphic = checked_cast<uint16_t>(origGraphic);
 
             const auto replaces = newParser.GetTokens(strings[1]);
             if (replaces.empty())
@@ -3997,16 +4119,23 @@ static void load_body_corpse_def(fs_path file, bool alive)
             }
 
             // FIXME: there is something missing here: { anim1, anim2, anim3, anim4 }
-            auto newGraphic = checked_cast<uint16_t>(str_to_int(replaces[0]));
-            if (replaces.size() >= 3)
+            const int newGraphicValue =
+                replaces.size() >= 3 ? str_to_int(replaces[2]) : str_to_int(replaces[0]);
+            if (newGraphicValue <= 0 || newGraphicValue >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
-                newGraphic = checked_cast<uint16_t>(str_to_int(replaces[2]));
+                continue;
             }
-            assert(newGraphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+            const auto newGraphic = checked_cast<uint16_t>(newGraphicValue);
 
             DBG_ANIM_ID(graphic, "\tnew graphic: 0x%04X", newGraphic);
             auto &dataIndex = g_Index.m_Anim[graphic];
             const auto type = dataIndex.Type;
+            if ((size_t)type >= countof(uo_group_count_by_type))
+            {
+                // no group table for this entry (the animation index was not
+                // loaded for this graphic): nothing to remap
+                continue;
+            }
             auto &newDataIndex = g_Index.m_Anim[newGraphic];
             const auto count = (int)uo_group_count_by_type[type];
             for (int grpId = 0; grpId < count; grpId++)

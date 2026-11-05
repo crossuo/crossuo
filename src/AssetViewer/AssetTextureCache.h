@@ -98,6 +98,11 @@ AssetTextureCache_AcquireLazy(const AssetTextureKey &key, const AssetTextureDeco
 // textures for one frame.
 bool AssetTextureCache_IsReady(const ImTextureRef &ref);
 
+// Drops every cached texture while the ImGui context is still live (the host
+// is swapping the data set under the viewer): each entry is retired through
+// WantDestroyNextFrame so the same backend path as an LRU eviction reclaims
+// it, and the cached decode failures are forgotten as well.
+void AssetTextureCache_Reset();
 // Frees every cached ImTextureData (CPU pixels only - the GL names were
 // reclaimed by the backend teardown during the ImGui context shutdown).
 void AssetTextureCache_Shutdown();

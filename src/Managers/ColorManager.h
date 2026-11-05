@@ -14,7 +14,6 @@ struct FLOAT_HUES
 struct CColorManager
 {
     std::vector<FLOAT_HUES> m_HuesFloat;
-    std::vector<uint16_t> m_Radarcol;
 
     void Init();
 

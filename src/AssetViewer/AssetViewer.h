@@ -30,9 +30,16 @@ void AssetViewer_OnAssistantShutdown();
 // leaves the client's own music untouched. Returns true when a session was
 // active.
 bool AssetViewer_Close();
-// Submits the asset viewer window inside the assistant's ImGui frame (called
-// from AssistantWindow_DrawOverlay, after the assistant shell, so the window
-// participates in the same docking/viewport pass). A no-op while hidden.
+// Standalone host shutdown: ends the session (sounds/music stopped) before the
+// ImGui context and the window go away.
+void AssetViewer_Destroy();
+// The host is about to load another data folder: stops the viewer's previews
+// and leaves nothing bound to the previous data set.
+void AssetViewer_DataUnload();
+// Submits the asset viewer window into the current ImGui frame. In the client
+// it is called from AssistantWindow_DrawOverlay, after the assistant shell, so
+// the window participates in the same docking/viewport pass; the standalone
+// app calls it from its own frame. A no-op while hidden.
 void AssetViewer_Draw();
 // Releases every cached texture's CPU pixels; called after the assistant (and
 // with it the ImGui context) is shut down. Idempotent.

@@ -17,7 +17,7 @@
 #include <xuocore/uodata.h> // g_Index, g_Data, g_FileManager
 
 
-#include "../Managers/UOFileReader.h" // g_UOFileReader::GetArtPixels
+#include "AssetViewerCore.h" // AssetViewer_DecodeArt (host-provided parser)
 
 // the stb implementation is namespaced so it does not collide with the other
 // in-tree translation unit that instantiates it (ScreenshotBuilder.cpp)
@@ -333,7 +333,7 @@ bool AssetGrid_DecodeStatic(uint16_t id, std::vector<uint16_t> &pixels, int &w, 
     }
     short sw = 0;
     short sh = 0;
-    pixels = g_UOFileReader.GetArtPixels(id, io, true, sw, sh);
+    pixels = AssetViewer_DecodeArt(id, io, true, sw, sh);
     w = sw;
     h = sh;
     return !pixels.empty() && w > 0 && h > 0;
@@ -352,7 +352,7 @@ bool AssetGrid_DecodeLand(uint16_t id, std::vector<uint16_t> &pixels, int &w, in
     }
     short sw = 0;
     short sh = 0;
-    pixels = g_UOFileReader.GetArtPixels(id, io, false, sw, sh);
+    pixels = AssetViewer_DecodeArt(id, io, false, sw, sh);
     w = sw;
     h = sh;
     return !pixels.empty() && w > 0 && h > 0;
@@ -647,8 +647,14 @@ void AssetGrid_DrawBrowser(
         const int cols = std::max(1, (int)(availW / cell));
         const int rows = (count + cols - 1) / cols;
         const float scrollY = ImGui::GetScrollY();
-        const float availH = ImGui::GetWindowHeight();
+        // the usable viewport, not GetWindowHeight(): that includes the child
+        // border and window padding, which would overstate the visible rows and
+        // leave a cell partly clipped after a keyboard scroll
         const float top = ImGui::GetCursorPosY();
+        const float availH = ImGui::GetWindowHeight() - top - ImGui::GetStyle().WindowPadding.y;
+        // row `r` starts at content offset `top + r*cell` and is on screen when
+        // that offset is >= scrollY; `top` is a content coordinate (it already
+        // carries the scroll), so the row index is (scrollY - top)/cell
         const int firstRow = std::max(0, std::min((int)((scrollY - top) / cell), rows - 1));
         // visible window + one row of overscan on each side: the selected cell
         // keeps its texture alive on the frame the scroll lands exactly on a
@@ -668,7 +674,10 @@ void AssetGrid_DrawBrowser(
                 if ((int)state.Filtered[i] == state.ScrollToId)
                 {
                     state.NavIndex = i;
-                    ImGui::SetScrollFromPosY(top + (float)(i / cols) * cell, 0.3f);
+                    // SetScrollFromPosY takes a window-local y and adds the
+                    // current scroll itself: passing a content position (which
+                    // already counts the scroll) would double it on every call
+                    ImGui::SetScrollFromPosY(top + (float)(i / cols) * cell - scrollY, 0.3f);
                     state.ScrollToId = -1;
                     found = true;
                     break;
@@ -685,10 +694,21 @@ void AssetGrid_DrawBrowser(
         // child window is focused; never auto-scrolls on mouse hover)
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
         {
+            // the anchor is the Filtered index of the selection; it is
+            // rebuilt from state.Selected when it is missing or stale (the
+            // filtered list can shrink under a tab switch or a filter edit)
             int nav = state.NavIndex;
-            if (nav >= count)
+            if (nav < 0 || nav >= count || (int)state.Filtered[nav] != state.Selected)
             {
-                nav = count - 1;
+                nav = -1;
+                for (int i = 0; i < count; i++)
+                {
+                    if ((int)state.Filtered[i] == state.Selected)
+                    {
+                        nav = i;
+                        break;
+                    }
+                }
             }
             const int visibleRows = std::max(1, (int)(availH / cell));
             int moved = nav;
@@ -724,7 +744,7 @@ void AssetGrid_DrawBrowser(
             {
                 moved = count - 1;
             }
-            if (moved != nav)
+            if (moved >= 0 && moved < count && moved != nav)
             {
                 state.NavIndex = moved;
                 state.Selected = (int)state.Filtered[moved];
@@ -732,14 +752,17 @@ void AssetGrid_DrawBrowser(
                 const float cellTop = top + (float)selRow * cell;
                 const float cellBottom = cellTop + cell;
                 // requested BEFORE the draw range is reserved below: the next
-                // frame then builds its row window from the new scroll offset
+                // frame then builds its row window from the new scroll offset.
+                // cellTop/cellBottom are content coordinates and SetScrollY
+                // takes exactly those (SetScrollFromPosY would add the
+                // current scroll on top of them)
                 if (cellTop < scrollY)
                 {
-                    ImGui::SetScrollFromPosY(cellTop, 0.0f);
+                    ImGui::SetScrollY(cellTop);
                 }
                 else if (cellBottom > scrollY + availH)
                 {
-                    ImGui::SetScrollFromPosY(cellBottom, 1.0f);
+                    ImGui::SetScrollY(cellBottom - availH);
                 }
                 AssetGrid_SelectionChanged(state, moved);
             }

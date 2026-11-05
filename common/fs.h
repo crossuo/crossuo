@@ -70,6 +70,10 @@ struct fs_path
 void fs_case_insensitive_init(const fs_path &path);
 fs_path fs_insensitive(const fs_path &path);
 void fs_path_list(const fs_path &path, std::vector<fs_path> &out);
+// Non-recursive sibling of fs_path_list: lists the files directly inside
+// `path` (no descent). Used to probe a folder cheaply before the recursive
+// case-insensitive scan is built for it.
+void fs_path_list_shallow(const fs_path &path, std::vector<fs_path> &out);
 
 fs_path fs_path_from(const astr_t &s);
 fs_path fs_path_from(const wstr_t &w);
@@ -658,9 +662,54 @@ static void fs_path_list_internal_r(const char *name, std::vector<fs_path> &out)
     closedir(dir);
 }
 
+FS_PRIVATE void fs_path_list_internal_shallow(const char *name, std::vector<fs_path> &out)
+{
+    DIR *dir;
+    struct dirent *entry;
+    if (!(dir = opendir(name)))
+    {
+        return;
+    }
+    char it[FS_MAX_PATH]{};
+    struct stat st = {};
+    const size_t name_len = strlen(name);
+    const bool name_slash = name_len > 0 && name[name_len - 1] == '/';
+    while ((entry = readdir(dir)) != nullptr)
+    {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        {
+            continue;
+        }
+        if (name_slash)
+        {
+            snprintf(it, sizeof(it), "%s%s", name, entry->d_name);
+        }
+        else
+        {
+            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+        }
+        if (stat(it, &st) != 0)
+        {
+            continue;
+        }
+        if (S_ISDIR(st.st_mode))
+        {
+            continue;
+        }
+        astr_t p = it;
+        out.emplace_back(fs_path_from(p));
+    }
+    closedir(dir);
+}
+
 FS_PRIVATE void fs_path_list(const fs_path &path, std::vector<fs_path> &out)
 {
     fs_path_list_internal_r(fs_path_ascii(path), out);
+}
+
+FS_PRIVATE void fs_path_list_shallow(const fs_path &path, std::vector<fs_path> &out)
+{
+    fs_path_list_internal_shallow(fs_path_ascii(path), out);
 }
 
 /*
@@ -700,6 +749,12 @@ static void fs_list_recursive(const char *name)
 
 FS_PRIVATE void fs_case_insensitive_init(const fs_path &path)
 {
+    // re-initialising must replace the previous scan, not append to it: a
+    // second call (the asset viewer switching data folders) otherwise leaves
+    // s_files and s_lower out of sync, and fs_insensitive then resolves paths
+    // through a mismatched index
+    s_files.clear();
+    s_lower.clear();
     s_files.reserve(1024);
     s_lower.reserve(1024);
     //fs_list_recursive(fs_path_ascii(path));

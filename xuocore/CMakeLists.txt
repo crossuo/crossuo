@@ -50,6 +50,8 @@ set(XUOCORE_SRCS
   uo_installer.h
   uop.cpp
   uodata.cpp
+  uodata_reader.cpp
+  uodata_reader.h
   mappedfile.cpp
   client_info.cpp
   text_parser.cpp

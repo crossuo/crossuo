@@ -27595,6 +27595,12 @@ freely, subject to the following restrictions:
    distribution.
 */
 #if defined(WITH_SDL2)
+// Local build change: the classic SDL2 backend dlopens SDL2 and talks to the
+// SDL2 callback audio API, which SDL3 no longer has (the names SDL_oldnames
+// rewrites are never real functions here). This tree always links the
+// vendored SDL3 statically and uses the WITH_SDL2_STATIC backend below, so
+// this block stays compiled out.
+#if 0
 
 #include <stdlib.h>
 #include <math.h>
@@ -27730,6 +27736,7 @@ void dll_SDL2_PauseAudioDevice(SDL_AudioDeviceID dev,
 }
 
 #endif
+#endif // 0: SDL2 dlopen backend (SDL3 builds use WITH_SDL2_STATIC)
 // file: soloud/src/backend/sdl2_static\soloud_sdl2_static.cpp
 /*
 SoLoud audio engine

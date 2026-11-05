@@ -28,14 +28,11 @@
 #include <xuocore/uodata.h>     // g_Index, g_Data, g_FileManager
 
 #include "../Config.h"                 // g_Config (client version gate)
-#include "../CrossUO.h"                // g_Game.StopViewerMusic (music ownership)
-#include "../Managers/ColorManager.h"  // g_ColorManager (radar color chip)
-#include "../Managers/ConfigManager.h" // g_ConfigManager (sound/music enables)
-#include "../Managers/SoundManager.h"  // g_SoundManager (preview playback)
-#include "../Managers/UOFileReader.h"  // g_UOFileReader.GetGumpPixels
 #include "AssetDecode.h"
 #include "AssetGrid.h"
 #include "AssetTextureCache.h"
+#include "AssetViewerCore.h" // gump decoder + colour tables (shared xuocore)
+#include "AssetViewerHost.h" // audio + data set provided by the host
 
 namespace
 {
@@ -334,7 +331,8 @@ void DrawLandDetail(uint16_t id)
     AssetGrid_DrawFlagNames(tile.Flags);
 
     // radar color chip (radarcol.mul through the color manager)
-    const uint32_t rgb = g_ColorManager.Color16To32(g_ColorManager.GetRadarColorData(id));
+    const uint16_t radarColor = uo_radar_color(id);
+    const uint32_t rgb = uo_color16_to_32(radarColor);
     const ImVec4 color(
         (float)(rgb & 0xFF) / 255.0f,
         (float)((rgb >> 8) & 0xFF) / 255.0f,
@@ -348,7 +346,7 @@ void DrawLandDetail(uint16_t id)
     ImGui::SameLine();
     ImGui::Text(
         "Radar: 0x%04X (%u, %u, %u)",
-        g_ColorManager.GetRadarColorData(id),
+        radarColor,
         (unsigned)(rgb & 0xFF),
         (unsigned)((rgb >> 8) & 0xFF),
         (unsigned)((rgb >> 16) & 0xFF));
@@ -389,7 +387,7 @@ bool GumpDecode(uint16_t id, std::vector<uint16_t> &pixels, int &w, int &h)
         return false;
     }
     CIndexGump &io = g_Index.m_Gump[id];
-    pixels = g_UOFileReader.GetGumpPixels(io);
+    pixels = uo_gump_pixels(io);
     // GetGumpPixels learns/caches the layout on the entry: read the
     // dimensions back from it instead of trusting prior state
     w = io.Width;
@@ -1357,10 +1355,10 @@ void HuesEntryName(int entry, char (&buf)[21])
     buf[20] = '\0';
 }
 
-// uint16 RGB555 -> ImGui color (matches g_ColorManager::Color16To32 layout)
+// uint16 RGB555 -> ImGui color (the shared colour-manager layout)
 ImU32 HuesColor(uint16_t c)
 {
-    const uint32_t rgb = g_ColorManager.Color16To32(c);
+    const uint32_t rgb = uo_color16_to_32(c);
     return IM_COL32(rgb & 0xFF, (rgb >> 8) & 0xFF, (rgb >> 16) & 0xFF, 255);
 }
 
@@ -1647,7 +1645,7 @@ void DrawHuesTab()
             ImGui::TableNextColumn();
             ImGui::TextUnformatted(label);
             ImGui::TableNextColumn();
-            const uint32_t rgb = g_ColorManager.Color16To32(c);
+            const uint32_t rgb = uo_color16_to_32(c);
             ImGui::ColorButton(
                 label,
                 ImVec4(
@@ -2034,9 +2032,9 @@ void AnimDrawFrame(
                     {
                         continue; // fully transparent (the UO color-key)
                     }
-                    if (hue != 0 && hue < g_ColorManager.GetHuesCount())
+                    if (hue != 0 && (size_t)hue < g_FileManager.m_Hues.size())
                     {
-                        const uint32_t rgb = g_ColorManager.Color16To32(c);
+                        const uint32_t rgb = uo_color16_to_32(c);
                         const uint8_t r = (uint8_t)(rgb & 0xFF);
                         const uint8_t g = (uint8_t)((rgb >> 8) & 0xFF);
                         const uint8_t b = (uint8_t)((rgb >> 16) & 0xFF);
@@ -2591,7 +2589,7 @@ struct SoundTabState
     std::string AppliedFilter;
     std::unordered_map<int, std::string> Names; // lazily resolved block names
     int Selected = -1;
-    SoundHandle Playing = SOUND_NULL; // owned preview stream (FreeSound'd)
+    void *Playing = nullptr; // owned preview stream (host stops + frees it)
     int PlayingId = -1;
     // (X11 leaks `#define Status int` through SDL_syswm.h; spelling it out
     // keeps this header-safe wherever it is included from)
@@ -2689,10 +2687,10 @@ void SoundRebuildFiltered(SoundTabState &st, const std::string &lower)
 void SoundStopPreview()
 {
     SoundTabState &st = SoundState();
-    if (st.Playing != SOUND_NULL)
+    if (st.Playing != nullptr)
     {
-        g_SoundManager.FreeSound(st.Playing);
-        st.Playing = SOUND_NULL;
+        AssetViewerHost_StopSoundPreview(st.Playing);
+        st.Playing = nullptr;
         st.PlayingId = -1;
     }
 }
@@ -2706,15 +2704,13 @@ void SoundPlay(uint16_t id)
         st.StatusText = "No sound data for this id";
         return;
     }
-    SoundHandle handle = g_SoundManager.LoadSoundEffect(g_Index.m_Sound[id]);
-    if (handle == SOUND_NULL)
+    void *handle = AssetViewerHost_PlaySoundPreview(id);
+    if (handle == nullptr)
     {
         st.StatusText = "Failed to decode the sound block";
         return;
     }
-    // one preview at a time: the previous stream was stopped above, this one
-    // plays at the client's configured sound volume (game-consistent)
-    g_SoundManager.PlaySoundEffect(handle, g_SoundManager.GetVolumeValue());
+    // one preview at a time: the previous stream was stopped above
     st.Playing = handle;
     st.PlayingId = id;
     st.StatusText.clear();
@@ -2904,7 +2900,7 @@ void DrawSoundTab()
                 if (sel >= 0 && sel < rowCount)
                 {
                     const uint16_t id = st.Filtered[sel];
-                    if (SoundAvailable(id) && g_ConfigManager.GetSound())
+                    if (SoundAvailable(id) && AssetViewerHost_SoundEnabled())
                     {
                         SoundPlay(id);
                     }
@@ -2984,7 +2980,7 @@ void DrawSoundTab()
     {
         ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.2f, 1.0f), "no sound data");
     }
-    else if (!g_ConfigManager.GetSound())
+    else if (!AssetViewerHost_SoundEnabled())
     {
         ImGui::TextDisabled("sound is disabled in the client settings");
     }
@@ -2994,7 +2990,7 @@ void DrawSoundTab()
     }
 
     ImGui::Spacing();
-    ImGui::BeginDisabled(!SoundAvailable(id) || !g_ConfigManager.GetSound());
+    ImGui::BeginDisabled(!SoundAvailable(id) || !AssetViewerHost_SoundEnabled());
     if (ImGui::Button("Play"))
     {
         SoundPlay(id);
@@ -3011,8 +3007,8 @@ void DrawSoundTab()
         std::string error;
         const std::string path = SoundExportWav(id, error);
         st.StatusText = !path.empty()  ? "Exported " + path :
-                    !error.empty() ? error :
-                                     std::string("Export failed");
+                        !error.empty() ? error :
+                                         std::string("Export failed");
     }
     ImGui::Spacing();
     ImGui::TextWrapped(
@@ -3055,13 +3051,12 @@ void MusicPlay(int index, bool loop);
 bool MusicViewerOwns()
 {
     const int id = MusicState().PlayingId;
-    return id >= 0 && id == s_ViewerMusicIndex && g_SoundManager.CurrentMusicIndex == id &&
-           g_SoundManager.IsPlayingNormalMusic();
+    return id >= 0 && id == s_ViewerMusicIndex && AssetViewerHost_MusicStillPlaying(id);
 }
 
 void MusicPlay(int index, bool loop)
 {
-    if (!MusicEntryExists(index) || !g_ConfigManager.GetMusic())
+    if (!MusicEntryExists(index) || !AssetViewerHost_MusicEnabled())
     {
         return;
     }
@@ -3070,7 +3065,10 @@ void MusicPlay(int index, bool loop)
     {
         return;
     }
-    g_SoundManager.PlayMP3(mp3.FilePath.c_str(), index, loop, false);
+    if (!AssetViewerHost_PlayMusic(mp3.FilePath.c_str(), index, loop))
+    {
+        return;
+    }
     s_ViewerMusicIndex = index;
     MusicState().PlayingId = index;
 }
@@ -3114,7 +3112,7 @@ const char *MusicFileName(int index)
 // playing marker is cleared here so the "playing" state never goes stale.
 void MusicStop()
 {
-    g_Game.StopViewerMusic(MusicViewerOwns(), s_ViewerMusicIndex);
+    AssetViewerHost_StopMusic(MusicViewerOwns(), s_ViewerMusicIndex);
     MusicState().PlayingId = -1;
     s_ViewerMusicIndex = -1;
 }
@@ -3134,13 +3132,13 @@ void DrawMusicTab()
     }
     ImGui::EndDisabled();
     ImGui::SameLine();
-    if (!g_ConfigManager.GetMusic())
+    if (!AssetViewerHost_MusicEnabled())
     {
         ImGui::TextDisabled("music is disabled in the client settings");
     }
     else
     {
-        ImGui::TextDisabled("current: %d", g_SoundManager.CurrentMusicIndex);
+        ImGui::TextDisabled("current: %d", AssetViewerHost_CurrentMusicIndex());
     }
 
     const float detailW = 360.0f;
@@ -3297,7 +3295,7 @@ void DrawMusicTab()
 
     ImGui::Spacing();
     const bool playable =
-        !mp3.FilePath.empty() && MusicEntryExists(index) && g_ConfigManager.GetMusic();
+        !mp3.FilePath.empty() && MusicEntryExists(index) && AssetViewerHost_MusicEnabled();
     ImGui::BeginDisabled(!playable);
     if (ImGui::Button("Play"))
     {
@@ -3425,8 +3423,9 @@ bool MultiParse(uint16_t id, std::vector<MultiComponent> &comps, int *outStride 
     // 16) and keep the version check as a fallback otherwise
     const int derivedStride =
         (idx.Count > 0 && idx.DataSize >= idx.Count) ? (int)(idx.DataSize / idx.Count) : 0;
-    const int fallbackStride =
-        g_Config.ClientVersion >= CV_7090 ? sizeof(MULTI_BLOCK_NEW) : sizeof(MULTI_BLOCK);
+    const int fallbackStride = uo_data_client_version() >= VERSION(7, 0, 9, 0) ?
+                                   sizeof(MULTI_BLOCK_NEW) :
+                                   sizeof(MULTI_BLOCK);
     int itemOffset =
         (derivedStride == sizeof(MULTI_BLOCK) || derivedStride == sizeof(MULTI_BLOCK_NEW)) ?
             derivedStride :
@@ -3965,6 +3964,27 @@ bool AssetViewer_Close()
     return true;
 }
 
+void AssetViewer_Destroy()
+{
+    // standalone app shutdown: same as ending the session
+    AssetViewer_Close();
+}
+
+void AssetViewer_DataUnload()
+{
+    // the host is about to replace the data set: no preview may outlive it
+    SoundStopPreview();
+    MusicStop();
+
+    // release every preview decoded from the outgoing install, then close its
+    // mappings and drop the decoded tables so the next load starts from the
+    // same empty state the client boots with
+    AnimShutdown(); // decoded animation frames are viewer-owned
+    AssetTextureCache_Reset();
+    g_FileManager.Unload();
+    uo_index_prepare_reload();
+}
+
 void AssetViewer_Draw()
 {
     // closed: submit nothing (mirrors the assistant shell early-out in
@@ -3994,11 +4014,34 @@ void AssetViewer_Draw()
         MusicStop();
     }
 
+    // data set line: the standalone app browses a folder it was given and can
+    // switch it here; the client host reports an empty path (its data comes
+    // from the game configuration) and the line stays hidden
+    const std::string dataPath = AssetViewerHost_DataPath();
+    if (!dataPath.empty())
+    {
+        ImGui::TextDisabled("Data: %s", dataPath.c_str());
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Change data folder..."))
+        {
+            AssetViewerHost_RequestDataPath();
+        }
+        const std::string status = AssetViewerHost_DataStatus();
+        if (!status.empty())
+        {
+            const float spacing = ImGui::GetStyle().ItemSpacing.x;
+            const float avail = ImGui::GetContentRegionAvail().x - spacing - 4.0f;
+            ImGui::SameLine();
+            ImGui::TextDisabled(
+                "%s", EllipsizeToFit(status.c_str(), std::max(1.0f, avail)).c_str());
+        }
+    }
+
     if (!UoDataAvailable())
     {
         ImGui::TextWrapped(
-            "No UO data loaded: configure a UO data path in the client "
-            "settings and log in to browse its assets.");
+            "No UO data loaded yet: pick a folder that holds the client data "
+            "files (art.mul / artLegacyMUL.uop, tiledata.mul, hues.mul, ...).");
         ImGui::End();
         return;
     }
@@ -4144,7 +4187,7 @@ void AssetViewer_Shutdown()
     // the assistant's ImGui context has already been destroyed in that path,
     // so the music guard's "still playing" probes of that lane are moot; the
     // owned-track record is simply dropped
-    SoundState().Playing = SOUND_NULL;
+    SoundState().Playing = nullptr;
     MusicState().PlayingId = -1;
     s_ViewerMusicIndex = -1;
     AnimShutdown();

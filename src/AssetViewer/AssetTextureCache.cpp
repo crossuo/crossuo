@@ -9,7 +9,7 @@
 #include <vector>
 
 
-#include "../Managers/ColorManager.h" // g_ColorManager
+#include <xuocore/uodata_reader.h> // uo_hue_partial_color16
 
 // The retire/teardown lifecycle mirrors src/Assistant/managers/assmap.cpp:
 // retired textures stay registered (RefCount == 1) until the backend reports
@@ -115,8 +115,7 @@ AssetViewer_Convert16ToRgba32(const uint16_t *src, uint32_t *dst, uint32_t count
             continue;
         }
         uint16_t cc = c;
-        const uint32_t rgb =
-            hued ? g_ColorManager.GetPartialHueColor(cc, hue) : g_ColorManager.Color16To32(cc);
+        const uint32_t rgb = hued ? uo_hue_partial_color16(cc, hue) : uo_color16_to_32(cc);
         dst[i] = rgb | 0xFF000000u;
     }
     return count;
@@ -225,6 +224,23 @@ AssetTextureCache_AcquireLazy(const AssetTextureKey &key, const AssetTextureDeco
     s_Bytes += entry.Bytes;
     s_Entries.emplace(key, entry);
     return tex->GetTexRef();
+    return tex->GetTexRef();
+}
+
+void AssetTextureCache_Reset()
+{
+    // data-set swap: retire every entry the way an LRU eviction would, so the
+    // backend destroys the textures on a later frame instead of the previous
+    // install's pixels staying mapped into the new one's previews
+    for (auto &kv : s_Entries)
+    {
+        if (kv.second.Tex != nullptr)
+        {
+            Retire(kv.second);
+        }
+    }
+    s_Entries.clear();
+    s_Bytes = 0;
 }
 
 void AssetTextureCache_Shutdown()

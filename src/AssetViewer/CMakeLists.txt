@@ -13,6 +13,8 @@ set(XUOASSETVIEWER_SRCS
   "AssetGrid.cpp"
   "AssetDecode.cpp"
   "AssetTextureCache.cpp"
+  # in-client host (the standalone app supplies its own, see tools/)
+  "AssetViewerClientHost.cpp"
 )
 
 add_library(xuoassetviewer STATIC ${XUOASSETVIEWER_SRCS})
@@ -31,4 +33,7 @@ target_include_directories(xuoassetviewer PUBLIC
   ${EXTERNALGFX_INCLUDE}
   ${COMMON_INCLUDE}
   ${CMAKE_SOURCE_DIR}/src
+  # the in-client host reaches the client managers; it is the only TU of this
+  # library that does - the viewer core itself is client-free
+  ${CMAKE_CURRENT_SOURCE_DIR}/..
 )

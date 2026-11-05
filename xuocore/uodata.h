@@ -563,6 +563,21 @@ struct CUopMappedFile : public CMappedFile // FIXME: not needed
     std::vector<uint8_t> GetRaw(const UopFileEntry *block);
     size_t FileCount() const;
 
+    // releases the mapping and the entry table: the stored UopFileEntry
+    // pointers point into the mapping, so they must not outlive it
+    void Unload()
+    {
+        CMappedFile::Unload();
+        Header = nullptr;
+        m_NameHashes.clear();
+        m_FileOffsets.clear();
+        m_MapByHash.clear();
+        m_MapByOffset.clear();
+#if defined(XUO_EMSC)
+        m_OwnedEntries.clear();
+#endif
+    }
+
     CUopMappedFile() = default;
     virtual ~CUopMappedFile() = default;
 };
@@ -726,6 +741,15 @@ private:
 };
 
 void uo_data_init(const char *path, uint32_t client_version, bool use_verdata);
+// the client version the current data set was initialized with
+uint32_t uo_data_client_version();
+// Detects the client version of a data folder from its client.exe signature;
+// CV_LATEST when it cannot be read (a standalone viewer opening any folder).
+uint32_t uo_data_detect_client_version(const char *dataPath);
+// releases the index/data tables of a previously loaded data set so another
+// install can be loaded in the same process (the asset viewer app switching
+// data folders). The caller unloads the file manager first.
+void uo_index_prepare_reload();
 
 // decodes the bwt/mtf coded stream carried by MYP entries compressed with
 // Flags == 3 (and by cliloc files whose byte at offset 3 is 0x8E)
