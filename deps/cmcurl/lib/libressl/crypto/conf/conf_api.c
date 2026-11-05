@@ -1,4 +1,4 @@
-/* $OpenBSD: conf_api.c,v 1.15 2015/04/11 16:03:21 deraadt Exp $ */
+/* $OpenBSD: conf_api.c,v 1.30 2026/06/22 08:45:55 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,18 +56,13 @@
  * [including the GNU Public Licence.]
  */
 
-/* Part of the code in here was originally in conf.c, which is now removed */
-
-#ifndef CONF_DEBUG
-# undef NDEBUG /* avoid conflicting definitions */
-# define NDEBUG
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include <openssl/conf.h>
-#include <openssl/conf_api.h>
+
+#include "conf_local.h"
 
 static void value_free_hash_doall_arg(CONF_VALUE *a,
     LHASH_OF(CONF_VALUE) *conf);
@@ -76,31 +71,18 @@ static IMPLEMENT_LHASH_DOALL_ARG_FN(value_free_hash, CONF_VALUE,
     LHASH_OF(CONF_VALUE))
 static IMPLEMENT_LHASH_DOALL_FN(value_free_stack, CONF_VALUE)
 
-/* Up until OpenSSL 0.9.5a, this was get_section */
 CONF_VALUE *
 _CONF_get_section(const CONF *conf, const char *section)
 {
 	CONF_VALUE *v, vv;
 
-	if ((conf == NULL) || (section == NULL))
-		return (NULL);
+	if (conf == NULL || section == NULL)
+		return NULL;
 	vv.name = NULL;
 	vv.section = (char *)section;
 	v = lh_CONF_VALUE_retrieve(conf->data, &vv);
-	return (v);
-}
 
-/* Up until OpenSSL 0.9.5a, this was CONF_get_section */
-STACK_OF(CONF_VALUE) *
-_CONF_get_section_values(const CONF *conf, const char *section)
-{
-	CONF_VALUE *v;
-
-	v = _CONF_get_section(conf, section);
-	if (v != NULL)
-		return ((STACK_OF(CONF_VALUE) *)v->value);
-	else
-		return (NULL);
+	return v;
 }
 
 int
@@ -132,24 +114,24 @@ _CONF_get_string(const CONF *conf, const char *section, const char *name)
 	CONF_VALUE *v, vv;
 
 	if (name == NULL)
-		return (NULL);
+		return NULL;
 	if (conf != NULL) {
 		if (section != NULL) {
 			vv.name = (char *)name;
 			vv.section = (char *)section;
 			v = lh_CONF_VALUE_retrieve(conf->data, &vv);
 			if (v != NULL)
-				return (v->value);
+				return v->value;
 		}
 		vv.section = "default";
 		vv.name = (char *)name;
 		v = lh_CONF_VALUE_retrieve(conf->data, &vv);
 		if (v != NULL)
-			return (v->value);
+			return v->value;
 		else
-			return (NULL);
+			return NULL;
 	} else
-		return (NULL);
+		return NULL;
 }
 
 static unsigned long
@@ -168,15 +150,15 @@ conf_value_cmp(const CONF_VALUE *a, const CONF_VALUE *b)
 	if (a->section != b->section) {
 		i = strcmp(a->section, b->section);
 		if (i)
-			return (i);
+			return i;
 	}
 	if ((a->name != NULL) && (b->name != NULL)) {
 		i = strcmp(a->name, b->name);
-		return (i);
+		return i;
 	} else if (a->name == b->name)
-		return (0);
+		return 0;
 	else
-		return ((a->name == NULL)?-1 : 1);
+		return a->name == NULL ? -1 : 1;
 }
 
 static IMPLEMENT_LHASH_COMP_FN(conf_value, CONF_VALUE)
@@ -200,9 +182,6 @@ _CONF_free_data(CONF *conf)
 	if (conf == NULL || conf->data == NULL)
 		return;
 
-	lh_CONF_VALUE_down_load(conf->data) = 0; /* evil thing to make
-						  * sure the 'free()' works as
-						  * expected */
 	lh_CONF_VALUE_doall_arg(conf->data,
 	    LHASH_DOALL_ARG_FN(value_free_hash),
 	    LHASH_OF(CONF_VALUE), conf->data);
@@ -244,36 +223,32 @@ value_free_stack_doall(CONF_VALUE *a)
 	free(a);
 }
 
-/* Up until OpenSSL 0.9.5a, this was new_section */
 CONF_VALUE *
 _CONF_new_section(CONF *conf, const char *section)
 {
 	STACK_OF(CONF_VALUE) *sk = NULL;
-	int ok = 0, i;
 	CONF_VALUE *v = NULL, *vv;
 
 	if ((sk = sk_CONF_VALUE_new_null()) == NULL)
 		goto err;
-	if ((v = malloc(sizeof(CONF_VALUE))) == NULL)
+	if ((v = calloc(1, sizeof(*v))) == NULL)
 		goto err;
-	i = strlen(section) + 1;
-	if ((v->section = malloc(i)) == NULL)
+	if ((v->section = strdup(section)) == NULL)
 		goto err;
-
-	memcpy(v->section, section, i);
-	v->name = NULL;
 	v->value = (char *)sk;
 
 	vv = lh_CONF_VALUE_insert(conf->data, v);
 	OPENSSL_assert(vv == NULL);
-	ok = 1;
+	if (lh_CONF_VALUE_error(conf->data))
+		goto err;
 
-err:
-	if (!ok) {
-		if (sk != NULL)
-			sk_CONF_VALUE_free(sk);
-		free(v);
-		v = NULL;
-	}
-	return (v);
+	return v;
+
+ err:
+	sk_CONF_VALUE_free(sk);
+	if (v != NULL)
+		free(v->section);
+	free(v);
+
+	return NULL;
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_none.c,v 1.11 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: rsa_none.c,v 1.13 2025/05/10 05:54:38 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -60,8 +60,9 @@
 #include <string.h>
 
 #include <openssl/bn.h>
-#include <openssl/err.h>
 #include <openssl/rsa.h>
+
+#include "err_local.h"
 
 int
 RSA_padding_add_none(unsigned char *to, int tlen, const unsigned char *from,
@@ -80,6 +81,7 @@ RSA_padding_add_none(unsigned char *to, int tlen, const unsigned char *from,
 	memcpy(to, from, flen);
 	return 1;
 }
+LCRYPTO_ALIAS(RSA_padding_add_none);
 
 int
 RSA_padding_check_none(unsigned char *to, int tlen, const unsigned char *from,
@@ -94,3 +96,4 @@ RSA_padding_check_none(unsigned char *to, int tlen, const unsigned char *from,
 	memcpy(to + tlen - flen, from, flen);
 	return tlen;
 }
+LCRYPTO_ALIAS(RSA_padding_check_none);

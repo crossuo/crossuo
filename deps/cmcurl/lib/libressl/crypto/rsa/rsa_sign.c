@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_sign.c,v 1.31 2018/09/05 00:55:33 djm Exp $ */
+/* $OpenBSD: rsa_sign.c,v 1.38 2025/05/10 05:54:38 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -60,12 +60,14 @@
 #include <string.h>
 
 #include <openssl/bn.h>
-#include <openssl/err.h>
 #include <openssl/objects.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 
-#include "rsa_locl.h"
+#include "asn1_local.h"
+#include "err_local.h"
+#include "rsa_local.h"
+#include "x509_local.h"
 
 /* Size of an SSL signature: MD5+SHA1 */
 #define SSL_SIG_LENGTH	36
@@ -108,7 +110,7 @@ encode_pkcs1(unsigned char **out, int *out_len, int type,
 	sig.algor->parameter = &parameter;
 
 	sig.digest = &digest;
-	sig.digest->data = (unsigned char*)m; /* TMP UGLY CAST */
+	sig.digest->data = (unsigned char *)m; /* TMP UGLY CAST */
 	sig.digest->length = m_len;
 
 	if ((len = i2d_X509_SIG(&sig, &der)) < 0)
@@ -128,7 +130,7 @@ RSA_sign(int type, const unsigned char *m, unsigned int m_len,
 	unsigned char *tmps = NULL;
 	int encrypt_len, encoded_len = 0, ret = 0;
 
-	if ((rsa->flags & RSA_FLAG_SIGN_VER) && rsa->meth->rsa_sign != NULL)
+	if (rsa->meth->rsa_sign != NULL)
 		return rsa->meth->rsa_sign(type, m, m_len, sigret, siglen, rsa);
 
 	/* Compute the encoded digest. */
@@ -164,6 +166,7 @@ RSA_sign(int type, const unsigned char *m, unsigned int m_len,
 	freezero(tmps, (size_t)encoded_len);
 	return (ret);
 }
+LCRYPTO_ALIAS(RSA_sign);
 
 /*
  * int_rsa_verify verifies an RSA signature in `sigbuf' using `rsa'. It may be
@@ -194,7 +197,7 @@ int_rsa_verify(int type, const unsigned char *m, unsigned int m_len,
 	if ((decrypt_len = RSA_public_decrypt((int)siglen, sigbuf, decrypt_buf,
 	    rsa, RSA_PKCS1_PADDING)) <= 0)
 		goto err;
-	   
+
 	if (type == NID_md5_sha1) {
 		/*
 		 * NID_md5_sha1 corresponds to the MD5/SHA1 combination in
@@ -229,7 +232,7 @@ int_rsa_verify(int type, const unsigned char *m, unsigned int m_len,
 		if (rm != NULL) {
 			const EVP_MD *md;
 
-		       	if ((md = EVP_get_digestbynid(type)) == NULL) {
+			if ((md = EVP_get_digestbynid(type)) == NULL) {
 				RSAerror(RSA_R_UNKNOWN_ALGORITHM_TYPE);
 				goto err;
 			}
@@ -268,9 +271,10 @@ int
 RSA_verify(int dtype, const unsigned char *m, unsigned int m_len,
     const unsigned char *sigbuf, unsigned int siglen, RSA *rsa)
 {
-	if ((rsa->flags & RSA_FLAG_SIGN_VER) && rsa->meth->rsa_verify)
+	if (rsa->meth->rsa_verify != NULL)
 		return rsa->meth->rsa_verify(dtype, m, m_len, sigbuf, siglen,
 		    rsa);
 
 	return int_rsa_verify(dtype, m, m_len, NULL, NULL, sigbuf, siglen, rsa);
 }
+LCRYPTO_ALIAS(RSA_verify);

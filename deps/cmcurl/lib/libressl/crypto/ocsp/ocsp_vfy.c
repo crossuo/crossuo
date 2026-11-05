@@ -1,4 +1,4 @@
-/* $OpenBSD: ocsp_vfy.c,v 1.15 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: ocsp_vfy.c,v 1.26 2026/04/07 13:02:50 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2000.
  */
@@ -57,12 +57,15 @@
  */
 
 #include <openssl/ocsp.h>
-#include <openssl/err.h>
 #include <string.h>
+
+#include "err_local.h"
+#include "ocsp_local.h"
+#include "x509_local.h"
 
 static int ocsp_find_signer(X509 **psigner, OCSP_BASICRESP *bs,
     STACK_OF(X509) *certs, X509_STORE *st, unsigned long flags);
-static X509 *ocsp_find_signer_sk(STACK_OF(X509) *certs, OCSP_RESPID *id);
+static X509 *ocsp_find_signer_sk(STACK_OF(X509) *certs, const OCSP_BASICRESP *id);
 static int ocsp_check_issuer(OCSP_BASICRESP *bs, STACK_OF(X509) *chain,
     unsigned long flags);
 static int ocsp_check_ids(STACK_OF(OCSP_SINGLERESP) *sresp, OCSP_CERTID **ret);
@@ -94,10 +97,9 @@ OCSP_basic_verify(OCSP_BASICRESP *bs, STACK_OF(X509) *certs, X509_STORE *st,
 	if (!(flags & OCSP_NOSIGS)) {
 		EVP_PKEY *skey;
 
-		skey = X509_get_pubkey(signer);
+		skey = X509_get0_pubkey(signer);
 		if (skey) {
 			ret = OCSP_BASICRESP_verify(bs, skey, 0);
-			EVP_PKEY_free(skey);
 		}
 		if (!skey || ret <= 0) {
 			OCSPerror(OCSP_R_SIGNATURE_FAILURE);
@@ -118,8 +120,11 @@ OCSP_basic_verify(OCSP_BASICRESP *bs, STACK_OF(X509) *certs, X509_STORE *st,
 					goto end;
 				}
 			}
-		} else
+		} else if (certs != NULL) {
+			untrusted = certs;
+		} else {
 			untrusted = bs->certs;
+		}
 		init_res = X509_STORE_CTX_init(&ctx, st, signer, untrusted);
 		if (!init_res) {
 			ret = -1;
@@ -163,8 +168,8 @@ OCSP_basic_verify(OCSP_BASICRESP *bs, STACK_OF(X509) *certs, X509_STORE *st,
 			goto end;
 
 		x = sk_X509_value(chain, sk_X509_num(chain) - 1);
-		if (X509_check_trust(x, NID_OCSP_sign, 0) !=
-			X509_TRUST_TRUSTED) {
+		if (X509_check_trust(x, X509_TRUST_OCSP_SIGN, 0) !=
+		    X509_TRUST_TRUSTED) {
 			OCSPerror(OCSP_R_ROOT_CA_NOT_TRUSTED);
 			goto end;
 		}
@@ -178,20 +183,28 @@ end:
 		sk_X509_free(untrusted);
 	return ret;
 }
+LCRYPTO_ALIAS(OCSP_basic_verify);
+
+int
+OCSP_resp_get0_signer(OCSP_BASICRESP *bs, X509 **signer,
+    STACK_OF(X509) *extra_certs)
+{
+	return ocsp_find_signer(signer, bs, extra_certs, NULL, 0) > 0;
+}
+LCRYPTO_ALIAS(OCSP_resp_get0_signer);
 
 static int
 ocsp_find_signer(X509 **psigner, OCSP_BASICRESP *bs, STACK_OF(X509) *certs,
     X509_STORE *st, unsigned long flags)
 {
 	X509 *signer;
-	OCSP_RESPID *rid = bs->tbsResponseData->responderId;
 
-	if ((signer = ocsp_find_signer_sk(certs, rid))) {
+	if ((signer = ocsp_find_signer_sk(certs, bs))) {
 		*psigner = signer;
 		return 2;
 	}
 	if (!(flags & OCSP_NOINTERN) &&
-	    (signer = ocsp_find_signer_sk(bs->certs, rid))) {
+	    (signer = ocsp_find_signer_sk(bs->certs, bs))) {
 		*psigner = signer;
 		return 1;
 	}
@@ -202,22 +215,28 @@ ocsp_find_signer(X509 **psigner, OCSP_BASICRESP *bs, STACK_OF(X509) *certs,
 }
 
 static X509 *
-ocsp_find_signer_sk(STACK_OF(X509) *certs, OCSP_RESPID *id)
+ocsp_find_signer_sk(STACK_OF(X509) *certs, const OCSP_BASICRESP *bs)
 {
-	int i;
-	unsigned char tmphash[SHA_DIGEST_LENGTH], *keyhash;
+	const ASN1_OCTET_STRING *byKey = NULL;
+	const X509_NAME *byName = NULL;
+	const unsigned char *keyhash;
+	unsigned char tmphash[SHA_DIGEST_LENGTH];
 	X509 *x;
+	int i;
+
+	if (!OCSP_resp_get0_id(bs, &byKey, &byName))
+		return NULL;
 
 	/* Easy if lookup by name */
-	if (id->type == V_OCSP_RESPID_NAME)
-		return X509_find_by_subject(certs, id->value.byName);
+	if (byName != NULL)
+		return X509_find_by_subject(certs, (X509_NAME *)byName);
 
 	/* Lookup by key hash */
 
 	/* If key hash isn't SHA1 length then forget it */
-	if (id->value.byKey->length != SHA_DIGEST_LENGTH)
+	if (ASN1_STRING_length(byKey) != SHA_DIGEST_LENGTH)
 		return NULL;
-	keyhash = id->value.byKey->data;
+	keyhash = ASN1_STRING_get0_data(byKey);
 	/* Calculate hash of each key and compare */
 	for (i = 0; i < sk_X509_num(certs); i++) {
 		x = sk_X509_value(certs, i);
@@ -395,9 +414,9 @@ OCSP_request_verify(OCSP_REQUEST *req, STACK_OF(X509) *certs, X509_STORE *store,
 	if (!(flags & OCSP_NOSIGS)) {
 		EVP_PKEY *skey;
 
-		skey = X509_get_pubkey(signer);
+		if ((skey = X509_get0_pubkey(signer)) == NULL)
+			return 0;
 		ret = OCSP_REQUEST_verify(req, skey);
-		EVP_PKEY_free(skey);
 		if (ret <= 0) {
 			OCSPerror(OCSP_R_SIGNATURE_FAILURE);
 			return 0;
@@ -436,6 +455,7 @@ OCSP_request_verify(OCSP_REQUEST *req, STACK_OF(X509) *certs, X509_STORE *store,
 	}
 	return 1;
 }
+LCRYPTO_ALIAS(OCSP_request_verify);
 
 static int
 ocsp_req_find_signer(X509 **psigner, OCSP_REQUEST *req, X509_NAME *nm,

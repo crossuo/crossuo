@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_lib.c,v 1.32 2019/09/29 10:09:09 tb Exp $ */
+/* $OpenBSD: ec_lib.c,v 1.132 2026/06/09 05:23:30 tb Exp $ */
 /*
  * Originally written by Bodo Moeller for the OpenSSL project.
  */
@@ -61,274 +61,260 @@
  * SUN MICROSYSTEMS, INC., and contributed to the OpenSSL project.
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/opensslconf.h>
 
-#include <openssl/err.h>
+#include <openssl/bn.h>
+#include <openssl/ec.h>
+#include <openssl/objects.h>
 #include <openssl/opensslv.h>
 
-#include "bn_lcl.h"
-#include "ec_lcl.h"
-
-/* functions for EC_GROUP objects */
+#include "bn_local.h"
+#include "ec_local.h"
+#include "err_local.h"
 
 EC_GROUP *
-EC_GROUP_new(const EC_METHOD * meth)
+EC_GROUP_new(const EC_METHOD *meth)
 {
-	EC_GROUP *ret;
+	EC_GROUP *group = NULL;
 
 	if (meth == NULL) {
 		ECerror(EC_R_SLOT_FULL);
-		return NULL;
+		goto err;
 	}
-	if (meth->group_init == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return NULL;
-	}
-	ret = malloc(sizeof *ret);
-	if (ret == NULL) {
+	if ((group = calloc(1, sizeof(*group))) == NULL) {
 		ECerror(ERR_R_MALLOC_FAILURE);
-		return NULL;
+		goto err;
 	}
-	ret->meth = meth;
 
-	ret->extra_data = NULL;
+	group->meth = meth;
 
-	ret->generator = NULL;
-	BN_init(&ret->order);
-	BN_init(&ret->cofactor);
+	group->asn1_flag = OPENSSL_EC_NAMED_CURVE;
+	group->asn1_form = POINT_CONVERSION_UNCOMPRESSED;
 
-	ret->curve_name = 0;
-	ret->asn1_flag = 0;
-	ret->asn1_form = POINT_CONVERSION_UNCOMPRESSED;
+	if ((group->p = BN_new()) == NULL)
+		goto err;
+	if ((group->a = BN_new()) == NULL)
+		goto err;
+	if ((group->b = BN_new()) == NULL)
+		goto err;
 
-	ret->seed = NULL;
-	ret->seed_len = 0;
+	if ((group->order = BN_new()) == NULL)
+		goto err;
+	if ((group->cofactor = BN_new()) == NULL)
+		goto err;
 
-	if (!meth->group_init(ret)) {
-		free(ret);
-		return NULL;
-	}
-	return ret;
+	/*
+	 * generator, seed and mont_ctx are optional.
+	 */
+
+	return group;
+
+ err:
+	EC_GROUP_free(group);
+
+	return NULL;
 }
 
-
-void 
-EC_GROUP_free(EC_GROUP * group)
+void
+EC_GROUP_free(EC_GROUP *group)
 {
-	if (!group)
+	if (group == NULL)
 		return;
 
-	if (group->meth->group_finish != 0)
-		group->meth->group_finish(group);
+	BN_free(group->p);
+	BN_free(group->a);
+	BN_free(group->b);
 
-	EC_EX_DATA_free_all_data(&group->extra_data);
+	BN_MONT_CTX_free(group->mont_ctx);
 
 	EC_POINT_free(group->generator);
-	BN_free(&group->order);
-	BN_free(&group->cofactor);
-
-	free(group->seed);
-
-	free(group);
-}
-
-
-void 
-EC_GROUP_clear_free(EC_GROUP * group)
-{
-	if (!group)
-		return;
-
-	if (group->meth->group_clear_finish != 0)
-		group->meth->group_clear_finish(group);
-	else if (group->meth->group_finish != 0)
-		group->meth->group_finish(group);
-
-	EC_EX_DATA_clear_free_all_data(&group->extra_data);
-
-	EC_POINT_clear_free(group->generator);
-	BN_clear_free(&group->order);
-	BN_clear_free(&group->cofactor);
+	BN_free(group->order);
+	BN_free(group->cofactor);
 
 	freezero(group->seed, group->seed_len);
 	freezero(group, sizeof *group);
 }
+LCRYPTO_ALIAS(EC_GROUP_free);
 
-
-int 
-EC_GROUP_copy(EC_GROUP * dest, const EC_GROUP * src)
+void
+EC_GROUP_clear_free(EC_GROUP *group)
 {
-	EC_EXTRA_DATA *d;
+	EC_GROUP_free(group);
+}
+LCRYPTO_ALIAS(EC_GROUP_clear_free);
 
-	if (dest->meth->group_copy == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (dest->meth != src->meth) {
+static int
+EC_GROUP_copy(EC_GROUP *dst, const EC_GROUP *src)
+{
+	if (dst->meth != src->meth) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
 		return 0;
 	}
-	if (dest == src)
+	if (dst == src)
 		return 1;
 
-	EC_EX_DATA_free_all_data(&dest->extra_data);
+	if (!bn_copy(dst->p, src->p))
+		return 0;
+	if (!bn_copy(dst->a, src->a))
+		return 0;
+	if (!bn_copy(dst->b, src->b))
+		return 0;
 
-	for (d = src->extra_data; d != NULL; d = d->next) {
-		void *t = d->dup_func(d->data);
+	dst->a_is_minus3 = src->a_is_minus3;
 
-		if (t == NULL)
+	memcpy(&dst->fm, &src->fm, sizeof(src->fm));
+	memcpy(&dst->fe_a, &src->fe_a, sizeof(src->fe_a));
+	memcpy(&dst->fe_b, &src->fe_b, sizeof(src->fe_b));
+
+	BN_MONT_CTX_free(dst->mont_ctx);
+	dst->mont_ctx = NULL;
+	if (src->mont_ctx != NULL) {
+		if ((dst->mont_ctx = BN_MONT_CTX_new()) == NULL)
 			return 0;
-		if (!EC_EX_DATA_set_data(&dest->extra_data, t, d->dup_func,
-		    d->free_func, d->clear_free_func))
+		if (!BN_MONT_CTX_copy(dst->mont_ctx, src->mont_ctx))
 			return 0;
 	}
 
+	EC_POINT_free(dst->generator);
+	dst->generator = NULL;
 	if (src->generator != NULL) {
-		if (dest->generator == NULL) {
-			dest->generator = EC_POINT_new(dest);
-			if (dest->generator == NULL)
-				return 0;
-		}
-		if (!EC_POINT_copy(dest->generator, src->generator))
+		if (!EC_GROUP_set_generator(dst, src->generator, src->order,
+		    src->cofactor))
 			return 0;
 	} else {
-		/* src->generator == NULL */
-		EC_POINT_clear_free(dest->generator);
-		dest->generator = NULL;
-	}
-
-	if (!BN_copy(&dest->order, &src->order))
-		return 0;
-	if (!BN_copy(&dest->cofactor, &src->cofactor))
-		return 0;
-
-	dest->curve_name = src->curve_name;
-	dest->asn1_flag = src->asn1_flag;
-	dest->asn1_form = src->asn1_form;
-
-	if (src->seed) {
-		free(dest->seed);
-		dest->seed = malloc(src->seed_len);
-		if (dest->seed == NULL)
+		/* XXX - should do the sanity checks as in set_generator() */
+		if (!bn_copy(dst->order, src->order))
 			return 0;
-		memcpy(dest->seed, src->seed, src->seed_len);
-		dest->seed_len = src->seed_len;
-	} else {
-		free(dest->seed);
-		dest->seed = NULL;
-		dest->seed_len = 0;
+		if (!bn_copy(dst->cofactor, src->cofactor))
+			return 0;
 	}
 
+	dst->nid = src->nid;
+	dst->asn1_flag = src->asn1_flag;
+	dst->asn1_form = src->asn1_form;
 
-	return dest->meth->group_copy(dest, src);
+	if (!EC_GROUP_set_seed(dst, src->seed, src->seed_len))
+		return 0;
+
+	return 1;
 }
-
 
 EC_GROUP *
-EC_GROUP_dup(const EC_GROUP * a)
+EC_GROUP_dup(const EC_GROUP *in_group)
 {
-	EC_GROUP *t = NULL;
+	EC_GROUP *group = NULL;
 
-	if ((a != NULL) && ((t = EC_GROUP_new(a->meth)) != NULL) &&
-	    (!EC_GROUP_copy(t, a))) {
-		EC_GROUP_free(t);
-		t = NULL;
-	}
-	return t;
+	if (in_group == NULL)
+		goto err;
+
+	if ((group = EC_GROUP_new(in_group->meth)) == NULL)
+		goto err;
+	if (!EC_GROUP_copy(group, in_group))
+		goto err;
+
+	return group;
+
+ err:
+	EC_GROUP_free(group);
+
+	return NULL;
 }
-
-
-const EC_METHOD *
-EC_GROUP_method_of(const EC_GROUP *group)
-{
-	return group->meth;
-}
-
-
-int 
-EC_METHOD_get_field_type(const EC_METHOD *meth)
-{
-	return meth->field_type;
-}
+LCRYPTO_ALIAS(EC_GROUP_dup);
 
 /*
- * Try computing the cofactor from generator order n and field cardinality q.
+ * If there is a user-provided cofactor, sanity check and use it. Otherwise
+ * try computing the cofactor from generator order n and field cardinality p.
  * This works for all curves of cryptographic interest.
  *
- * Hasse's theorem: | h * n - (q + 1) | <= 2 * sqrt(q)
+ * Hasse's theorem: | h * n - (p + 1) | <= 2 * sqrt(p)
  *
- * So: h_min = (q + 1 - 2*sqrt(q)) / n and h_max = (q + 1 + 2*sqrt(q)) / n and
- * therefore h_max - h_min = 4*sqrt(q) / n. So if n > 4*sqrt(q) holds, there is
+ * So: h_min = (p + 1 - 2*sqrt(p)) / n and h_max = (p + 1 + 2*sqrt(p)) / n and
+ * therefore h_max - h_min = 4*sqrt(p) / n. So if n > 4*sqrt(p) holds, there is
  * only one possible value for h:
  *
- *	h = \lfloor (h_min + h_max)/2 \rceil = \lfloor (q + 1)/n \rceil
+ *	h = \lfloor (h_min + h_max)/2 \rceil = \lfloor (p + 1)/n \rceil
  *
  * Otherwise, zero cofactor and return success.
  */
 static int
-ec_guess_cofactor(EC_GROUP *group)
+ec_set_cofactor(EC_GROUP *group, const BIGNUM *in_cofactor)
 {
 	BN_CTX *ctx = NULL;
-	BIGNUM *q = NULL;
+	BIGNUM *cofactor;
 	int ret = 0;
 
-	/*
-	 * If the cofactor is too large, we cannot guess it and default to zero.
-	 * The RHS of below is a strict overestimate of log(4 * sqrt(q)).
-	 */
-	if (BN_num_bits(&group->order) <=
-	    (BN_num_bits(&group->field) + 1) / 2 + 3) {
-		BN_zero(&group->cofactor);
-		return 1;
-	}
+	BN_zero(group->cofactor);
 
 	if ((ctx = BN_CTX_new()) == NULL)
 		goto err;
 
 	BN_CTX_start(ctx);
-	if ((q = BN_CTX_get(ctx)) == NULL)
+	if ((cofactor = BN_CTX_get(ctx)) == NULL)
 		goto err;
 
-	/* Set q = 2**m for binary fields; q = p otherwise. */
-	if (group->meth->field_type == NID_X9_62_characteristic_two_field) {
-		BN_zero(q);
-		if (!BN_set_bit(q, BN_num_bits(&group->field) - 1))
+	/*
+	 * Unfortunately, the cofactor is an optional field in many standards.
+	 * Internally, the library uses a 0 cofactor as a marker for "unknown
+	 * cofactor".  So accept in_cofactor == NULL or in_cofactor >= 0.
+	 */
+	if (in_cofactor != NULL && !BN_is_zero(in_cofactor)) {
+		if (BN_is_negative(in_cofactor)) {
+			ECerror(EC_R_UNKNOWN_COFACTOR);
 			goto err;
-	} else {
-		if (!BN_copy(q, &group->field))
+		}
+		if (!bn_copy(cofactor, in_cofactor))
 			goto err;
+		goto done;
 	}
-	
+
+	/*
+	 * If the cofactor is too large, we cannot guess it and default to zero.
+	 * The RHS of below is a strict overestimate of log(4 * sqrt(p)).
+	 */
+	if (BN_num_bits(group->order) <= (BN_num_bits(group->p) + 1) / 2 + 3)
+		goto done;
+
 	/*
 	 * Compute
-	 *     h = \lfloor (q + 1)/n \rceil = \lfloor (q + 1 + n/2) / n \rfloor.
+	 *     h = \lfloor (p + 1)/n \rceil = \lfloor (p + 1 + n/2) / n \rfloor.
 	 */
 
 	/* h = n/2 */
-	if (!BN_rshift1(&group->cofactor, &group->order))
+	if (!BN_rshift1(cofactor, group->order))
 		goto err;
 	/* h = 1 + n/2 */
-	if (!BN_add(&group->cofactor, &group->cofactor, BN_value_one()))
+	if (!BN_add_word(cofactor, 1))
 		goto err;
-	/* h = q + 1 + n/2 */
-	if (!BN_add(&group->cofactor, &group->cofactor, q))
+	/* h = p + 1 + n/2 */
+	if (!BN_add(cofactor, cofactor, group->p))
 		goto err;
-	/* h = (q + 1 + n/2) / n */
-	if (!BN_div_ct(&group->cofactor, NULL, &group->cofactor, &group->order,
-	    ctx))
+	/* h = (p + 1 + n/2) / n */
+	if (!BN_div_ct(cofactor, NULL, cofactor, group->order, ctx))
+		goto err;
+
+ done:
+	/* Use Hasse's theorem to bound the cofactor. */
+	if (BN_num_bits(cofactor) > BN_num_bits(group->p) + 1) {
+		ECerror(EC_R_INVALID_GROUP_ORDER);
+		goto err;
+	}
+
+	if (!bn_copy(group->cofactor, cofactor))
 		goto err;
 
 	ret = 1;
+
  err:
 	BN_CTX_end(ctx);
 	BN_CTX_free(ctx);
-	BN_zero(&group->cofactor);
+
 	return ret;
 }
 
-int 
+int
 EC_GROUP_set_generator(EC_GROUP *group, const EC_POINT *generator,
     const BIGNUM *order, const BIGNUM *cofactor)
 {
@@ -337,853 +323,1032 @@ EC_GROUP_set_generator(EC_GROUP *group, const EC_POINT *generator,
 		return 0;
 	}
 
-	/* Require group->field >= 1. */
-	if (BN_is_zero(&group->field) || BN_is_negative(&group->field)) {
+	/* Require p >= 1. */
+	if (BN_is_zero(group->p) || BN_is_negative(group->p)) {
 		ECerror(EC_R_INVALID_FIELD);
 		return 0;
 	}
 
 	/*
-	 * Require order >= 1 and enforce an upper bound of at most one bit more
+	 * Require order > 1 and enforce an upper bound of at most one bit more
 	 * than the field cardinality due to Hasse's theorem.
 	 */
-	if (order == NULL || BN_is_zero(order) || BN_is_negative(order) ||
-	    BN_num_bits(order) > BN_num_bits(&group->field) + 1) {
+	if (order == NULL || BN_cmp(order, BN_value_one()) <= 0 ||
+	    BN_num_bits(order) > BN_num_bits(group->p) + 1) {
 		ECerror(EC_R_INVALID_GROUP_ORDER);
 		return 0;
 	}
 
-	/*
-	 * Unfortunately, the cofactor is an optional field in many standards.
-	 * Internally, the library uses a 0 cofactor as a marker for "unknown
-	 * cofactor".  So accept cofactor == NULL or cofactor >= 0.
-	 */
-	if (cofactor != NULL && BN_is_negative(cofactor)) {
-		ECerror(EC_R_UNKNOWN_COFACTOR);
-		return 0;
-	}
-
-	if (group->generator == NULL) {
+	if (group->generator == NULL)
 		group->generator = EC_POINT_new(group);
-		if (group->generator == NULL)
-			return 0;
-	}
+	if (group->generator == NULL)
+		return 0;
+
 	if (!EC_POINT_copy(group->generator, generator))
 		return 0;
 
-	if (!BN_copy(&group->order, order))
+	if (!bn_copy(group->order, order))
 		return 0;
 
-	/* Either take the provided positive cofactor, or try to compute it. */
-	if (cofactor != NULL && !BN_is_zero(cofactor)) {
-		if (!BN_copy(&group->cofactor, cofactor))
-			return 0;
-	} else if (!ec_guess_cofactor(group))
+	if (!ec_set_cofactor(group, cofactor))
 		return 0;
 
 	return 1;
 }
-
+LCRYPTO_ALIAS(EC_GROUP_set_generator);
 
 const EC_POINT *
 EC_GROUP_get0_generator(const EC_GROUP *group)
 {
 	return group->generator;
 }
+LCRYPTO_ALIAS(EC_GROUP_get0_generator);
 
-
-int 
+int
 EC_GROUP_get_order(const EC_GROUP *group, BIGNUM *order, BN_CTX *ctx)
 {
-	if (!BN_copy(order, &group->order))
+	if (!bn_copy(order, group->order))
 		return 0;
 
 	return !BN_is_zero(order);
 }
+LCRYPTO_ALIAS(EC_GROUP_get_order);
 
+const BIGNUM *
+EC_GROUP_get0_order(const EC_GROUP *group)
+{
+	return group->order;
+}
 
-int 
+int
+EC_GROUP_order_bits(const EC_GROUP *group)
+{
+	return BN_num_bits(group->order);
+}
+LCRYPTO_ALIAS(EC_GROUP_order_bits);
+
+int
 EC_GROUP_get_cofactor(const EC_GROUP *group, BIGNUM *cofactor, BN_CTX *ctx)
 {
-	if (!BN_copy(cofactor, &group->cofactor))
+	if (!bn_copy(cofactor, group->cofactor))
 		return 0;
 
-	return !BN_is_zero(&group->cofactor);
+	return !BN_is_zero(group->cofactor);
 }
+LCRYPTO_ALIAS(EC_GROUP_get_cofactor);
 
-
-void 
-EC_GROUP_set_curve_name(EC_GROUP * group, int nid)
+const BIGNUM *
+EC_GROUP_get0_cofactor(const EC_GROUP *group)
 {
-	group->curve_name = nid;
+	return group->cofactor;
 }
 
-
-int 
-EC_GROUP_get_curve_name(const EC_GROUP * group)
+void
+EC_GROUP_set_curve_name(EC_GROUP *group, int nid)
 {
-	return group->curve_name;
+	group->nid = nid;
 }
+LCRYPTO_ALIAS(EC_GROUP_set_curve_name);
 
+int
+EC_GROUP_get_curve_name(const EC_GROUP *group)
+{
+	return group->nid;
+}
+LCRYPTO_ALIAS(EC_GROUP_get_curve_name);
 
-void 
-EC_GROUP_set_asn1_flag(EC_GROUP * group, int flag)
+void
+EC_GROUP_set_asn1_flag(EC_GROUP *group, int flag)
 {
 	group->asn1_flag = flag;
 }
+LCRYPTO_ALIAS(EC_GROUP_set_asn1_flag);
 
-
-int 
-EC_GROUP_get_asn1_flag(const EC_GROUP * group)
+int
+EC_GROUP_get_asn1_flag(const EC_GROUP *group)
 {
 	return group->asn1_flag;
 }
+LCRYPTO_ALIAS(EC_GROUP_get_asn1_flag);
 
-
-void 
-EC_GROUP_set_point_conversion_form(EC_GROUP * group,
+void
+EC_GROUP_set_point_conversion_form(EC_GROUP *group,
     point_conversion_form_t form)
 {
 	group->asn1_form = form;
 }
+LCRYPTO_ALIAS(EC_GROUP_set_point_conversion_form);
 
-
-point_conversion_form_t 
-EC_GROUP_get_point_conversion_form(const EC_GROUP * group)
+point_conversion_form_t
+EC_GROUP_get_point_conversion_form(const EC_GROUP *group)
 {
 	return group->asn1_form;
 }
+LCRYPTO_ALIAS(EC_GROUP_get_point_conversion_form);
 
-
-size_t 
-EC_GROUP_set_seed(EC_GROUP * group, const unsigned char *p, size_t len)
+size_t
+EC_GROUP_set_seed(EC_GROUP *group, const unsigned char *seed, size_t len)
 {
-	if (group->seed) {
-		free(group->seed);
-		group->seed = NULL;
-		group->seed_len = 0;
-	}
-	if (!len || !p)
+	free(group->seed);
+	group->seed = NULL;
+	group->seed_len = 0;
+
+	if (seed == NULL || len == 0)
 		return 1;
 
 	if ((group->seed = malloc(len)) == NULL)
 		return 0;
-	memcpy(group->seed, p, len);
+	memcpy(group->seed, seed, len);
 	group->seed_len = len;
 
 	return len;
 }
-
+LCRYPTO_ALIAS(EC_GROUP_set_seed);
 
 unsigned char *
-EC_GROUP_get0_seed(const EC_GROUP * group)
+EC_GROUP_get0_seed(const EC_GROUP *group)
 {
 	return group->seed;
 }
+LCRYPTO_ALIAS(EC_GROUP_get0_seed);
 
-
-size_t 
-EC_GROUP_get_seed_len(const EC_GROUP * group)
+size_t
+EC_GROUP_get_seed_len(const EC_GROUP *group)
 {
 	return group->seed_len;
 }
+LCRYPTO_ALIAS(EC_GROUP_get_seed_len);
 
-
-int 
-EC_GROUP_set_curve_GFp(EC_GROUP * group, const BIGNUM * p, const BIGNUM * a,
-    const BIGNUM * b, BN_CTX * ctx)
+int
+EC_GROUP_set_curve(EC_GROUP *group, const BIGNUM *p, const BIGNUM *a,
+    const BIGNUM *b, BN_CTX *ctx_in)
 {
-	if (group->meth->group_set_curve == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	return group->meth->group_set_curve(group, p, a, b, ctx);
-}
+	BN_CTX *ctx;
+	int ret = 0;
 
-
-int 
-EC_GROUP_get_curve_GFp(const EC_GROUP * group, BIGNUM * p, BIGNUM * a,
-    BIGNUM * b, BN_CTX * ctx)
-{
-	if (group->meth->group_get_curve == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	return group->meth->group_get_curve(group, p, a, b, ctx);
-}
-
-#ifndef OPENSSL_NO_EC2M
-int 
-EC_GROUP_set_curve_GF2m(EC_GROUP * group, const BIGNUM * p, const BIGNUM * a,
-    const BIGNUM * b, BN_CTX * ctx)
-{
-	if (group->meth->group_set_curve == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	return group->meth->group_set_curve(group, p, a, b, ctx);
-}
-
-
-int 
-EC_GROUP_get_curve_GF2m(const EC_GROUP * group, BIGNUM * p, BIGNUM * a,
-    BIGNUM * b, BN_CTX * ctx)
-{
-	if (group->meth->group_get_curve == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	return group->meth->group_get_curve(group, p, a, b, ctx);
-}
-#endif
-
-int 
-EC_GROUP_get_degree(const EC_GROUP * group)
-{
-	if (group->meth->group_get_degree == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	return group->meth->group_get_degree(group);
-}
-
-
-int 
-EC_GROUP_check_discriminant(const EC_GROUP * group, BN_CTX * ctx)
-{
-	if (group->meth->group_check_discriminant == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	return group->meth->group_check_discriminant(group, ctx);
-}
-
-
-int 
-EC_GROUP_cmp(const EC_GROUP * a, const EC_GROUP * b, BN_CTX * ctx)
-{
-	int r = 0;
-	BIGNUM *a1, *a2, *a3, *b1, *b2, *b3;
-	BN_CTX *ctx_new = NULL;
-
-	/* compare the field types */
-	if (EC_METHOD_get_field_type(EC_GROUP_method_of(a)) !=
-	    EC_METHOD_get_field_type(EC_GROUP_method_of(b)))
-		return 1;
-	/* compare the curve name (if present in both) */
-	if (EC_GROUP_get_curve_name(a) && EC_GROUP_get_curve_name(b) &&
-	    EC_GROUP_get_curve_name(a) != EC_GROUP_get_curve_name(b))
-		return 1;
-
-	if (!ctx)
-		ctx_new = ctx = BN_CTX_new();
-	if (!ctx)
-		return -1;
-
-	BN_CTX_start(ctx);
-	if ((a1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((a2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((a3 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((b1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((b2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((b3 = BN_CTX_get(ctx)) == NULL)
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
 		goto err;
 
-	/*
-	 * XXX This approach assumes that the external representation of
-	 * curves over the same field type is the same.
-	 */
-	if (!a->meth->group_get_curve(a, a1, a2, a3, ctx) ||
-	    !b->meth->group_get_curve(b, b1, b2, b3, ctx))
-		r = 1;
-
-	if (r || BN_cmp(a1, b1) || BN_cmp(a2, b2) || BN_cmp(a3, b3))
-		r = 1;
-
-	/* XXX EC_POINT_cmp() assumes that the methods are equal */
-	if (r || EC_POINT_cmp(a, EC_GROUP_get0_generator(a),
-		EC_GROUP_get0_generator(b), ctx))
-		r = 1;
-
-	if (!r) {
-		/* compare the order and cofactor */
-		if (!EC_GROUP_get_order(a, a1, ctx) ||
-		    !EC_GROUP_get_order(b, b1, ctx) ||
-		    !EC_GROUP_get_cofactor(a, a2, ctx) ||
-		    !EC_GROUP_get_cofactor(b, b2, ctx))
-			goto err;
-		if (BN_cmp(a1, b1) || BN_cmp(a2, b2))
-			r = 1;
+	if (group->meth->group_set_curve == NULL) {
+		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+		goto err;
 	}
-	BN_CTX_end(ctx);
-	if (ctx_new)
-		BN_CTX_free(ctx);
-
-	return r;
+	ret = group->meth->group_set_curve(group, p, a, b, ctx);
 
  err:
-	BN_CTX_end(ctx);
-	if (ctx_new)
+	if (ctx != ctx_in)
 		BN_CTX_free(ctx);
-	return -1;
-}
 
-/*
- * Coordinate blinding for EC_POINT.
- *
- * The underlying EC_METHOD can optionally implement this function:
- * underlying implementations should return 0 on errors, or 1 on success.
- *
- * This wrapper returns 1 in case the underlying EC_METHOD does not support
- * coordinate blinding.
- */
+	return ret;
+}
+LCRYPTO_ALIAS(EC_GROUP_set_curve);
+
 int
-ec_point_blind_coordinates(const EC_GROUP *group, EC_POINT *p, BN_CTX *ctx)
+EC_GROUP_get_curve(const EC_GROUP *group, BIGNUM *p, BIGNUM *a, BIGNUM *b,
+    BN_CTX *ctx_in)
 {
-	if (group->meth->blind_coordinates == NULL)
-		return 1;
+	BN_CTX *ctx;
+	int ret = 0;
 
-	return group->meth->blind_coordinates(group, p, ctx);
-}
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
 
-/* this has 'package' visibility */
-int 
-EC_EX_DATA_set_data(EC_EXTRA_DATA ** ex_data, void *data,
-    void *(*dup_func) (void *),
-    void (*free_func) (void *),
-    void (*clear_free_func) (void *))
-{
-	EC_EXTRA_DATA *d;
-
-	if (ex_data == NULL)
-		return 0;
-
-	for (d = *ex_data; d != NULL; d = d->next) {
-		if (d->dup_func == dup_func && d->free_func == free_func &&
-		    d->clear_free_func == clear_free_func) {
-			ECerror(EC_R_SLOT_FULL);
-			return 0;
-		}
+	if (group->meth->group_get_curve == NULL) {
+		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+		goto err;
 	}
+	ret = group->meth->group_get_curve(group, p, a, b, ctx);
 
-	if (data == NULL)
-		/* no explicit entry needed */
-		return 1;
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
 
-	d = malloc(sizeof *d);
-	if (d == NULL)
-		return 0;
-
-	d->data = data;
-	d->dup_func = dup_func;
-	d->free_func = free_func;
-	d->clear_free_func = clear_free_func;
-
-	d->next = *ex_data;
-	*ex_data = d;
-
-	return 1;
+	return ret;
 }
+LCRYPTO_ALIAS(EC_GROUP_get_curve);
 
-/* this has 'package' visibility */
-void *
-EC_EX_DATA_get_data(const EC_EXTRA_DATA * ex_data,
-    void *(*dup_func) (void *),
-    void (*free_func) (void *),
-    void (*clear_free_func) (void *))
+int
+EC_GROUP_set_curve_GFp(EC_GROUP *group, const BIGNUM *p, const BIGNUM *a,
+    const BIGNUM *b, BN_CTX *ctx)
 {
-	const EC_EXTRA_DATA *d;
+	return EC_GROUP_set_curve(group, p, a, b, ctx);
+}
+LCRYPTO_ALIAS(EC_GROUP_set_curve_GFp);
 
-	for (d = ex_data; d != NULL; d = d->next) {
-		if (d->dup_func == dup_func && d->free_func == free_func && d->clear_free_func == clear_free_func)
-			return d->data;
-	}
+int
+EC_GROUP_get_curve_GFp(const EC_GROUP *group, BIGNUM *p, BIGNUM *a, BIGNUM *b,
+    BN_CTX *ctx)
+{
+	return EC_GROUP_get_curve(group, p, a, b, ctx);
+}
+LCRYPTO_ALIAS(EC_GROUP_get_curve_GFp);
+
+EC_GROUP *
+EC_GROUP_new_curve_GFp(const BIGNUM *p, const BIGNUM *a, const BIGNUM *b,
+    BN_CTX *ctx)
+{
+	EC_GROUP *group;
+
+	if ((group = EC_GROUP_new(EC_GFp_mont_method())) == NULL)
+		goto err;
+
+	if (!EC_GROUP_set_curve(group, p, a, b, ctx))
+		goto err;
+
+	return group;
+
+ err:
+	EC_GROUP_free(group);
 
 	return NULL;
 }
+LCRYPTO_ALIAS(EC_GROUP_new_curve_GFp);
 
-/* this has 'package' visibility */
-void 
-EC_EX_DATA_free_data(EC_EXTRA_DATA ** ex_data,
-    void *(*dup_func) (void *),
-    void (*free_func) (void *),
-    void (*clear_free_func) (void *))
+int
+EC_GROUP_get_degree(const EC_GROUP *group)
 {
-	EC_EXTRA_DATA **p;
-
-	if (ex_data == NULL)
-		return;
-
-	for (p = ex_data; *p != NULL; p = &((*p)->next)) {
-		if ((*p)->dup_func == dup_func &&
-		    (*p)->free_func == free_func &&
-		    (*p)->clear_free_func == clear_free_func) {
-			EC_EXTRA_DATA *next = (*p)->next;
-
-			(*p)->free_func((*p)->data);
-			free(*p);
-
-			*p = next;
-			return;
-		}
-	}
+	return BN_num_bits(group->p);
 }
+LCRYPTO_ALIAS(EC_GROUP_get_degree);
 
-/* this has 'package' visibility */
-void 
-EC_EX_DATA_clear_free_data(EC_EXTRA_DATA ** ex_data,
-    void *(*dup_func) (void *),
-    void (*free_func) (void *),
-    void (*clear_free_func) (void *))
+int
+EC_GROUP_check_discriminant(const EC_GROUP *group, BN_CTX *ctx_in)
 {
-	EC_EXTRA_DATA **p;
+	BN_CTX *ctx;
+	BIGNUM *p, *a, *b, *discriminant;
+	int ret = 0;
 
-	if (ex_data == NULL)
-		return;
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
 
-	for (p = ex_data; *p != NULL; p = &((*p)->next)) {
-		if ((*p)->dup_func == dup_func &&
-		    (*p)->free_func == free_func &&
-		    (*p)->clear_free_func == clear_free_func) {
-			EC_EXTRA_DATA *next = (*p)->next;
+	BN_CTX_start(ctx);
 
-			(*p)->clear_free_func((*p)->data);
-			free(*p);
+	if ((p = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((a = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((b = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((discriminant = BN_CTX_get(ctx)) == NULL)
+		goto err;
 
-			*p = next;
-			return;
-		}
-	}
+	if (!EC_GROUP_get_curve(group, p, a, b, ctx))
+		goto err;
+
+	/*
+	 * Check that the discriminant 4a^3 + 27b^2 is non-zero modulo p
+	 * assuming that p > 3 is prime and that a and b are in [0, p).
+	 */
+
+	if (BN_is_zero(a) && BN_is_zero(b))
+		goto err;
+	if (BN_is_zero(a) || BN_is_zero(b))
+		goto done;
+
+	/* Compute the discriminant: first 4a^3, then 27b^2, then their sum. */
+	if (!BN_mod_sqr(discriminant, a, p, ctx))
+		goto err;
+	if (!BN_mod_mul(discriminant, discriminant, a, p, ctx))
+		goto err;
+	if (!BN_lshift(discriminant, discriminant, 2))
+		goto err;
+
+	if (!BN_mod_sqr(b, b, p, ctx))
+		goto err;
+	if (!BN_mul_word(b, 27))
+		goto err;
+
+	if (!BN_mod_add(discriminant, discriminant, b, p, ctx))
+		goto err;
+
+	if (BN_is_zero(discriminant))
+		goto err;
+
+ done:
+	ret = 1;
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_GROUP_check_discriminant);
 
-/* this has 'package' visibility */
-void 
-EC_EX_DATA_free_all_data(EC_EXTRA_DATA ** ex_data)
+int
+EC_GROUP_check(const EC_GROUP *group, BN_CTX *ctx_in)
 {
-	EC_EXTRA_DATA *d;
+	BN_CTX *ctx;
+	EC_POINT *point = NULL;
+	const EC_POINT *generator;
+	const BIGNUM *order;
+	int ret = 0;
 
-	if (ex_data == NULL)
-		return;
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
 
-	d = *ex_data;
-	while (d) {
-		EC_EXTRA_DATA *next = d->next;
-
-		d->free_func(d->data);
-		free(d);
-
-		d = next;
+	if (!EC_GROUP_check_discriminant(group, ctx)) {
+		ECerror(EC_R_DISCRIMINANT_IS_ZERO);
+		goto err;
 	}
-	*ex_data = NULL;
-}
 
-/* this has 'package' visibility */
-void 
-EC_EX_DATA_clear_free_all_data(EC_EXTRA_DATA ** ex_data)
+	if ((generator = EC_GROUP_get0_generator(group)) == NULL) {
+		ECerror(EC_R_UNDEFINED_GENERATOR);
+		goto err;
+	}
+	if (EC_POINT_is_on_curve(group, generator, ctx) <= 0) {
+		ECerror(EC_R_POINT_IS_NOT_ON_CURVE);
+		goto err;
+	}
+
+	if ((point = EC_POINT_new(group)) == NULL)
+		goto err;
+	if ((order = EC_GROUP_get0_order(group)) == NULL)
+		goto err;
+	if (BN_is_zero(order)) {
+		ECerror(EC_R_UNDEFINED_ORDER);
+		goto err;
+	}
+	if (!EC_POINT_mul(group, point, order, NULL, NULL, ctx))
+		goto err;
+	if (!EC_POINT_is_at_infinity(group, point)) {
+		ECerror(EC_R_INVALID_GROUP_ORDER);
+		goto err;
+	}
+
+	ret = 1;
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	EC_POINT_free(point);
+
+	return ret;
+}
+LCRYPTO_ALIAS(EC_GROUP_check);
+
+/*
+ * Returns -1 on error, 0 if the groups are equal, 1 if they are distinct.
+ */
+int
+EC_GROUP_cmp(const EC_GROUP *group1, const EC_GROUP *group2, BN_CTX *ctx_in)
 {
-	EC_EXTRA_DATA *d;
+	BN_CTX *ctx = NULL;
+	BIGNUM *p1, *a1, *b1, *p2, *a2, *b2;
+	const EC_POINT *generator1, *generator2;
+	const BIGNUM *order1, *order2, *cofactor1, *cofactor2;
+	int nid1, nid2;
+	int cmp = 1;
+	int ret = -1;
 
-	if (ex_data == NULL)
-		return;
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
 
-	d = *ex_data;
-	while (d) {
-		EC_EXTRA_DATA *next = d->next;
+	BN_CTX_start(ctx);
 
-		d->clear_free_func(d->data);
-		free(d);
-
-		d = next;
+	if ((nid1 = EC_GROUP_get_curve_name(group1)) != NID_undef &&
+	    (nid2 = EC_GROUP_get_curve_name(group2)) != NID_undef) {
+		if (nid1 != nid2)
+			goto distinct;
 	}
-	*ex_data = NULL;
+
+	if ((p1 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((a1 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((b1 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((p2 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((a2 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((b2 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+
+	/*
+	 * If we ever support curves in non-Weierstrass form, this check needs
+	 * to be adjusted. The comparison of the generators will fail anyway.
+	 */
+	if (!EC_GROUP_get_curve(group1, p1, a1, b1, ctx))
+		goto err;
+	if (!EC_GROUP_get_curve(group2, p2, a2, b2, ctx))
+		goto err;
+
+	if (BN_cmp(p1, p2) != 0 || BN_cmp(a1, a2) != 0 || BN_cmp(b1, b2) != 0)
+		goto distinct;
+
+	if ((generator1 = EC_GROUP_get0_generator(group1)) == NULL)
+		goto err;
+	if ((generator2 = EC_GROUP_get0_generator(group2)) == NULL)
+		goto err;
+
+	/*
+	 * It does not matter whether group1 or group2 is used: both points must
+	 * have a matching method for this to succeed.
+	 */
+	if ((cmp = EC_POINT_cmp(group1, generator1, generator2, ctx)) < 0)
+		goto err;
+	if (cmp == 1)
+		goto distinct;
+	cmp = 1;
+
+	if ((order1 = EC_GROUP_get0_order(group1)) == NULL)
+		goto err;
+	if ((order2 = EC_GROUP_get0_order(group2)) == NULL)
+		goto err;
+
+	if ((cofactor1 = EC_GROUP_get0_cofactor(group1)) == NULL)
+		goto err;
+	if ((cofactor2 = EC_GROUP_get0_cofactor(group2)) == NULL)
+		goto err;
+
+	if (BN_cmp(order1, order2) != 0 || BN_cmp(cofactor1, cofactor2) != 0)
+		goto distinct;
+
+	/* All parameters match: the groups are equal. */
+	cmp = 0;
+
+ distinct:
+	ret = cmp;
+
+ err:
+	BN_CTX_end(ctx);
+
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_GROUP_cmp);
 
-
-/* functions for EC_POINT objects */
+int
+ec_group_and_point_compatible(const EC_GROUP *group, const EC_POINT *point)
+{
+	if (group->meth != point->meth)
+		return 0;
+	if (group->nid == NID_undef || point->nid == NID_undef)
+		return 1;
+	return group->nid == point->nid;
+}
 
 EC_POINT *
-EC_POINT_new(const EC_GROUP * group)
+EC_POINT_new(const EC_GROUP *group)
 {
-	EC_POINT *ret;
+	EC_POINT *point = NULL;
 
 	if (group == NULL) {
 		ECerror(ERR_R_PASSED_NULL_PARAMETER);
-		return NULL;
+		goto err;
 	}
-	if (group->meth->point_init == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return NULL;
-	}
-	ret = malloc(sizeof *ret);
-	if (ret == NULL) {
+
+	if ((point = calloc(1, sizeof(*point))) == NULL) {
 		ECerror(ERR_R_MALLOC_FAILURE);
-		return NULL;
+		goto err;
 	}
-	ret->meth = group->meth;
 
-	if (!ret->meth->point_init(ret)) {
-		free(ret);
-		return NULL;
-	}
-	return ret;
+	if ((point->X = BN_new()) == NULL)
+		goto err;
+	if ((point->Y = BN_new()) == NULL)
+		goto err;
+	if ((point->Z = BN_new()) == NULL)
+		goto err;
+
+	point->meth = group->meth;
+	point->nid = group->nid;
+
+	return point;
+
+ err:
+	EC_POINT_free(point);
+
+	return NULL;
 }
+LCRYPTO_ALIAS(EC_POINT_new);
 
-
-void 
-EC_POINT_free(EC_POINT * point)
+void
+EC_POINT_free(EC_POINT *point)
 {
-	if (!point)
+	if (point == NULL)
 		return;
 
-	if (point->meth->point_finish != 0)
-		point->meth->point_finish(point);
-	free(point);
-}
+	BN_free(point->X);
+	BN_free(point->Y);
+	BN_free(point->Z);
 
-
-void 
-EC_POINT_clear_free(EC_POINT * point)
-{
-	if (!point)
-		return;
-
-	if (point->meth->point_clear_finish != 0)
-		point->meth->point_clear_finish(point);
-	else if (point->meth->point_finish != 0)
-		point->meth->point_finish(point);
 	freezero(point, sizeof *point);
 }
+LCRYPTO_ALIAS(EC_POINT_free);
 
-
-int 
-EC_POINT_copy(EC_POINT * dest, const EC_POINT * src)
+void
+EC_POINT_clear_free(EC_POINT *point)
 {
-	if (dest->meth->point_copy == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (dest->meth != src->meth) {
+	EC_POINT_free(point);
+}
+LCRYPTO_ALIAS(EC_POINT_clear_free);
+
+int
+EC_POINT_copy(EC_POINT *dst, const EC_POINT *src)
+{
+	if (dst->meth != src->meth) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
 		return 0;
 	}
-	if (dest == src)
+	if (dst == src)
 		return 1;
-	return dest->meth->point_copy(dest, src);
-}
 
+	dst->nid = src->nid;
+
+	if (!bn_copy(dst->X, src->X))
+		return 0;
+	if (!bn_copy(dst->Y, src->Y))
+		return 0;
+	if (!bn_copy(dst->Z, src->Z))
+		return 0;
+	dst->Z_is_one = src->Z_is_one;
+
+	memcpy(&dst->fe_x, &src->fe_x, sizeof(dst->fe_x));
+	memcpy(&dst->fe_y, &src->fe_y, sizeof(dst->fe_y));
+	memcpy(&dst->fe_z, &src->fe_z, sizeof(dst->fe_z));
+
+	return 1;
+}
+LCRYPTO_ALIAS(EC_POINT_copy);
 
 EC_POINT *
-EC_POINT_dup(const EC_POINT * a, const EC_GROUP * group)
+EC_POINT_dup(const EC_POINT *in_point, const EC_GROUP *group)
 {
-	EC_POINT *t;
-	int r;
+	EC_POINT *point = NULL;
 
-	if (a == NULL)
-		return NULL;
+	if (in_point == NULL)
+		goto err;
 
-	t = EC_POINT_new(group);
-	if (t == NULL)
-		return (NULL);
-	r = EC_POINT_copy(t, a);
-	if (!r) {
-		EC_POINT_free(t);
-		return NULL;
-	} else
-		return t;
+	if ((point = EC_POINT_new(group)) == NULL)
+		goto err;
+
+	if (!EC_POINT_copy(point, in_point))
+		goto err;
+
+	return point;
+
+ err:
+	EC_POINT_free(point);
+
+	return NULL;
 }
+LCRYPTO_ALIAS(EC_POINT_dup);
 
-
-const EC_METHOD *
-EC_POINT_method_of(const EC_POINT * point)
+int
+EC_POINT_set_to_infinity(const EC_GROUP *group, EC_POINT *point)
 {
-	return point->meth;
-}
-
-
-int 
-EC_POINT_set_to_infinity(const EC_GROUP * group, EC_POINT * point)
-{
-	if (group->meth->point_set_to_infinity == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
+	if (!ec_group_and_point_compatible(group, point)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
 		return 0;
 	}
 	return group->meth->point_set_to_infinity(group, point);
 }
+LCRYPTO_ALIAS(EC_POINT_set_to_infinity);
 
-
-int 
-EC_POINT_set_Jprojective_coordinates_GFp(const EC_GROUP *group, EC_POINT *point,
-    const BIGNUM *x, const BIGNUM *y, const BIGNUM *z, BN_CTX *ctx)
+int
+EC_POINT_set_affine_coordinates(const EC_GROUP *group, EC_POINT *point,
+    const BIGNUM *x, const BIGNUM *y, BN_CTX *ctx_in)
 {
-	if (group->meth->point_set_Jprojective_coordinates_GFp == 0) {
+	BN_CTX *ctx;
+	int ret = 0;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->point_set_affine_coordinates == NULL) {
 		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
+		goto err;
 	}
-	if (group->meth != point->meth) {
+	if (!ec_group_and_point_compatible(group, point)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
+		goto err;
 	}
-	return group->meth->point_set_Jprojective_coordinates_GFp(group, point, x, y, z, ctx);
+	if (!group->meth->point_set_affine_coordinates(group, point, x, y, ctx))
+		goto err;
+
+	if (EC_POINT_is_on_curve(group, point, ctx) <= 0) {
+		ECerror(EC_R_POINT_IS_NOT_ON_CURVE);
+		goto err;
+	}
+
+	ret = 1;
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_POINT_set_affine_coordinates);
 
-
-int 
-EC_POINT_get_Jprojective_coordinates_GFp(const EC_GROUP *group,
-    const EC_POINT *point, BIGNUM *x, BIGNUM *y, BIGNUM *z, BN_CTX *ctx)
-{
-	if (group->meth->point_get_Jprojective_coordinates_GFp == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
-		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
-	}
-	return group->meth->point_get_Jprojective_coordinates_GFp(group, point, x, y, z, ctx);
-}
-
-
-int 
+int
 EC_POINT_set_affine_coordinates_GFp(const EC_GROUP *group, EC_POINT *point,
     const BIGNUM *x, const BIGNUM *y, BN_CTX *ctx)
 {
-	if (group->meth->point_set_affine_coordinates == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
-		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
-	}
-	return group->meth->point_set_affine_coordinates(group, point, x, y, ctx);
+	return EC_POINT_set_affine_coordinates(group, point, x, y, ctx);
 }
+LCRYPTO_ALIAS(EC_POINT_set_affine_coordinates_GFp);
 
-#ifndef OPENSSL_NO_EC2M
-int 
-EC_POINT_set_affine_coordinates_GF2m(const EC_GROUP *group, EC_POINT *point,
-    const BIGNUM *x, const BIGNUM *y, BN_CTX *ctx)
+int
+EC_POINT_get_affine_coordinates(const EC_GROUP *group, const EC_POINT *point,
+    BIGNUM *x, BIGNUM *y, BN_CTX *ctx_in)
 {
-	if (group->meth->point_set_affine_coordinates == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
-		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
-	}
-	return group->meth->point_set_affine_coordinates(group, point, x, y, ctx);
-}
-#endif
+	BN_CTX *ctx = NULL;
+	int ret = 0;
 
-int 
+	if (EC_POINT_is_at_infinity(group, point)) {
+		ECerror(EC_R_POINT_AT_INFINITY);
+		goto err;
+	}
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->point_get_affine_coordinates == NULL) {
+		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+		goto err;
+	}
+	if (!ec_group_and_point_compatible(group, point)) {
+		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
+		goto err;
+	}
+	ret = group->meth->point_get_affine_coordinates(group, point, x, y, ctx);
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
+}
+LCRYPTO_ALIAS(EC_POINT_get_affine_coordinates);
+
+int
 EC_POINT_get_affine_coordinates_GFp(const EC_GROUP *group, const EC_POINT *point,
     BIGNUM *x, BIGNUM *y, BN_CTX *ctx)
 {
-	if (group->meth->point_get_affine_coordinates == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
-		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
-	}
-	return group->meth->point_get_affine_coordinates(group, point, x, y, ctx);
+	return EC_POINT_get_affine_coordinates(group, point, x, y, ctx);
 }
+LCRYPTO_ALIAS(EC_POINT_get_affine_coordinates_GFp);
 
-#ifndef OPENSSL_NO_EC2M
-int 
-EC_POINT_get_affine_coordinates_GF2m(const EC_GROUP *group, const EC_POINT *point,
-    BIGNUM *x, BIGNUM *y, BN_CTX *ctx)
+int
+EC_POINT_set_compressed_coordinates(const EC_GROUP *group, EC_POINT *point,
+    const BIGNUM *in_x, int y_bit, BN_CTX *ctx_in)
 {
-	if (group->meth->point_get_affine_coordinates == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
-		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
-	}
-	return group->meth->point_get_affine_coordinates(group, point, x, y, ctx);
-}
-#endif
+	BIGNUM *p, *a, *b, *w, *x, *y;
+	BN_CTX *ctx;
+	int ret = 0;
 
-int 
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	y_bit = (y_bit != 0);
+
+	BN_CTX_start(ctx);
+
+	if ((p = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((a = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((b = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((w = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((x = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((y = BN_CTX_get(ctx)) == NULL)
+		goto err;
+
+	/*
+	 * Weierstrass equation: y^2 = x^3 + ax + b, so y is one of the
+	 * square roots of x^3 + ax + b. The y-bit indicates which one.
+	 */
+
+	if (!EC_GROUP_get_curve(group, p, a, b, ctx))
+		goto err;
+
+	/* XXX - should we not insist on 0 <= x < p instead? */
+	if (!BN_nnmod(x, in_x, p, ctx))
+		goto err;
+
+	/* y = x^3 */
+	if (!BN_mod_sqr(y, x, p, ctx))
+		goto err;
+	if (!BN_mod_mul(y, y, x, p, ctx))
+		goto err;
+
+	/* y += ax */
+	if (group->a_is_minus3) {
+		if (!BN_mod_lshift1_quick(w, x, p))
+			goto err;
+		if (!BN_mod_add_quick(w, w, x, p))
+			goto err;
+		if (!BN_mod_sub_quick(y, y, w, p))
+			goto err;
+	} else {
+		if (!BN_mod_mul(w, a, x, p, ctx))
+			goto err;
+		if (!BN_mod_add_quick(y, y, w, p))
+			goto err;
+	}
+
+	/* y += b */
+	if (!BN_mod_add_quick(y, y, b, p))
+		goto err;
+
+	if (!BN_mod_sqrt(y, y, p, ctx)) {
+		ECerror(EC_R_INVALID_COMPRESSED_POINT);
+		goto err;
+	}
+
+	if (y_bit == BN_is_odd(y))
+		goto done;
+
+	if (BN_is_zero(y)) {
+		ECerror(EC_R_INVALID_COMPRESSION_BIT);
+		goto err;
+	}
+	if (!BN_usub(y, p, y))
+		goto err;
+
+	if (y_bit != BN_is_odd(y)) {
+		/* Can only happen if p is even and should not be reachable. */
+		ECerror(ERR_R_INTERNAL_ERROR);
+		goto err;
+	}
+
+ done:
+	if (!EC_POINT_set_affine_coordinates(group, point, x, y, ctx))
+		goto err;
+
+	ret = 1;
+
+ err:
+	BN_CTX_end(ctx);
+
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
+}
+LCRYPTO_ALIAS(EC_POINT_set_compressed_coordinates);
+
+int
+EC_POINT_set_compressed_coordinates_GFp(const EC_GROUP *group, EC_POINT *point,
+    const BIGNUM *x, int y_bit, BN_CTX *ctx)
+{
+	return EC_POINT_set_compressed_coordinates(group, point, x, y_bit, ctx);
+}
+LCRYPTO_ALIAS(EC_POINT_set_compressed_coordinates_GFp);
+
+int
 EC_POINT_add(const EC_GROUP *group, EC_POINT *r, const EC_POINT *a,
-    const EC_POINT *b, BN_CTX *ctx)
+    const EC_POINT *b, BN_CTX *ctx_in)
 {
-	if (group->meth->add == 0) {
+	BN_CTX *ctx;
+	int ret = 0;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->add == NULL) {
 		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
+		goto err;
 	}
-	if ((group->meth != r->meth) || (r->meth != a->meth) || (a->meth != b->meth)) {
+	if (!ec_group_and_point_compatible(group, r) ||
+	    !ec_group_and_point_compatible(group, a) ||
+	    !ec_group_and_point_compatible(group, b)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
+		goto err;
 	}
-	return group->meth->add(group, r, a, b, ctx);
+	ret = group->meth->add(group, r, a, b, ctx);
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_POINT_add);
 
-
-int 
-EC_POINT_dbl(const EC_GROUP *group, EC_POINT *r, const EC_POINT *a, BN_CTX *ctx)
+int
+EC_POINT_dbl(const EC_GROUP *group, EC_POINT *r, const EC_POINT *a,
+    BN_CTX *ctx_in)
 {
-	if (group->meth->dbl == 0) {
+	BN_CTX *ctx;
+	int ret = 0;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->dbl == NULL) {
 		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
+		goto err;
 	}
-	if ((group->meth != r->meth) || (r->meth != a->meth)) {
+	if (!ec_group_and_point_compatible(group, r) ||
+	    !ec_group_and_point_compatible(group, a)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
+		goto err;
 	}
-	return group->meth->dbl(group, r, a, ctx);
+	ret = group->meth->dbl(group, r, a, ctx);
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_POINT_dbl);
 
-
-int 
-EC_POINT_invert(const EC_GROUP *group, EC_POINT *a, BN_CTX *ctx)
+int
+EC_POINT_invert(const EC_GROUP *group, EC_POINT *a, BN_CTX *ctx_in)
 {
-	if (group->meth->invert == 0) {
+	BN_CTX *ctx;
+	int ret = 0;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->invert == NULL) {
 		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
+		goto err;
 	}
-	if (group->meth != a->meth) {
+	if (!ec_group_and_point_compatible(group, a)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
+		goto err;
 	}
-	return group->meth->invert(group, a, ctx);
+	ret = group->meth->invert(group, a, ctx);
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_POINT_invert);
 
-
-int 
+int
 EC_POINT_is_at_infinity(const EC_GROUP *group, const EC_POINT *point)
 {
-	if (group->meth->is_at_infinity == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
+	if (!ec_group_and_point_compatible(group, point)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
 		return 0;
 	}
-	return group->meth->is_at_infinity(group, point);
+	return group->meth->point_is_at_infinity(group, point);
 }
+LCRYPTO_ALIAS(EC_POINT_is_at_infinity);
 
-
-int 
-EC_POINT_is_on_curve(const EC_GROUP * group, const EC_POINT * point, BN_CTX * ctx)
+int
+EC_POINT_is_on_curve(const EC_GROUP *group, const EC_POINT *point,
+    BN_CTX *ctx_in)
 {
-	if (group->meth->is_on_curve == 0) {
+	BN_CTX *ctx;
+	int ret = -1;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->point_is_on_curve == NULL) {
 		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
+		goto err;
 	}
-	if (group->meth != point->meth) {
+	if (!ec_group_and_point_compatible(group, point)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
+		goto err;
 	}
-	return group->meth->is_on_curve(group, point, ctx);
+	ret = group->meth->point_is_on_curve(group, point, ctx);
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_POINT_is_on_curve);
 
-
-int 
+int
 EC_POINT_cmp(const EC_GROUP *group, const EC_POINT *a, const EC_POINT *b,
-    BN_CTX * ctx)
+    BN_CTX *ctx_in)
 {
-	if (group->meth->point_cmp == 0) {
+	BN_CTX *ctx;
+	int ret = -1;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->point_cmp == NULL) {
 		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return -1;
+		goto err;
 	}
-	if ((group->meth != a->meth) || (a->meth != b->meth)) {
+	if (!ec_group_and_point_compatible(group, a) ||
+	    !ec_group_and_point_compatible(group, b)) {
 		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return -1;
+		goto err;
 	}
-	return group->meth->point_cmp(group, a, b, ctx);
+	ret = group->meth->point_cmp(group, a, b, ctx);
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_POINT_cmp);
 
-
-int 
-EC_POINT_make_affine(const EC_GROUP *group, EC_POINT *point, BN_CTX *ctx)
+int
+EC_POINT_make_affine(const EC_GROUP *group, EC_POINT *point, BN_CTX *ctx_in)
 {
-	if (group->meth->make_affine == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	if (group->meth != point->meth) {
-		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-		return 0;
-	}
-	return group->meth->make_affine(group, point, ctx);
+	BN_CTX *ctx;
+	BIGNUM *x, *y;
+	int ret = 0;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	BN_CTX_start(ctx);
+
+	if ((x = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((y = BN_CTX_get(ctx)) == NULL)
+		goto err;
+
+	if (!EC_POINT_get_affine_coordinates(group, point, x, y, ctx))
+		goto err;
+	if (!EC_POINT_set_affine_coordinates(group, point, x, y, ctx))
+		goto err;
+
+	ret = 1;
+
+ err:
+	BN_CTX_end(ctx);
+
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
+LCRYPTO_ALIAS(EC_POINT_make_affine);
 
-
-int 
-EC_POINTs_make_affine(const EC_GROUP *group, size_t num, EC_POINT *points[],
-    BN_CTX *ctx)
-{
-	size_t i;
-
-	if (group->meth->points_make_affine == 0) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	for (i = 0; i < num; i++) {
-		if (group->meth != points[i]->meth) {
-			ECerror(EC_R_INCOMPATIBLE_OBJECTS);
-			return 0;
-		}
-	}
-	return group->meth->points_make_affine(group, num, points, ctx);
-}
-
-
-/* Functions for point multiplication */
-int 
-EC_POINTs_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *scalar,
-    size_t num, const EC_POINT *points[], const BIGNUM *scalars[], BN_CTX *ctx)
-{
-	/*
-	 * The function pointers must be set, and only support num == 0 and
-	 * num == 1.
-	 */
-	if (group->meth->mul_generator_ct == NULL ||
-	    group->meth->mul_single_ct == NULL ||
-	    group->meth->mul_double_nonct == NULL ||
-	    num > 1) {
-		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
-	}
-	
-	/* Either bP or aG + bP, this is sane. */
-	if (num == 1 && points != NULL && scalars != NULL)
-		return EC_POINT_mul(group, r, scalar, points[0], scalars[0],
-		    ctx);
-	
-	/* aG, this is sane */
-	if (scalar != NULL && points == NULL && scalars == NULL)
-		return EC_POINT_mul(group, r, scalar, NULL, NULL, ctx);
-	
-	/* anything else is an error */
-	ECerror(ERR_R_EC_LIB);
-	return 0;
-}
-
-int 
+int
 EC_POINT_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *g_scalar,
-    const EC_POINT *point, const BIGNUM *p_scalar, BN_CTX *ctx)
+    const EC_POINT *point, const BIGNUM *p_scalar, BN_CTX *ctx_in)
 {
-	if (group->meth->mul_generator_ct == NULL ||
-	    group->meth->mul_single_ct == NULL ||
+	BN_CTX *ctx;
+	int ret = 0;
+
+	if ((ctx = ctx_in) == NULL)
+		ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+
+	if (group->meth->mul_single_ct == NULL ||
 	    group->meth->mul_double_nonct == NULL) {
 		ECerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
-		return 0;
+		goto err;
 	}
+
+	if (g_scalar != NULL && group->generator == NULL) {
+		ECerror(EC_R_UNDEFINED_GENERATOR);
+		goto err;
+	}
+
+	if (!ec_group_and_point_compatible(group, r) ||
+	    (point != NULL && !ec_group_and_point_compatible(group, point))) {
+		ECerror(EC_R_INCOMPATIBLE_OBJECTS);
+		goto err;
+	}
+
 	if (g_scalar != NULL && point == NULL && p_scalar == NULL) {
 		/*
 		 * In this case we want to compute g_scalar * GeneratorPoint:
@@ -1193,66 +1358,37 @@ EC_POINT_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *g_scalar,
 		 * secret. This is why we ignore if BN_FLG_CONSTTIME is actually
 		 * set and we always call the constant time version.
 		 */
-		return group->meth->mul_generator_ct(group, r, g_scalar, ctx);
-	}
-	if (g_scalar == NULL && point != NULL && p_scalar != NULL) {
-		/* In this case we want to compute p_scalar * GenericPoint:
+		ret = group->meth->mul_single_ct(group, r,
+		    g_scalar, group->generator, ctx);
+	} else if (g_scalar == NULL && point != NULL && p_scalar != NULL) {
+		/*
+		 * In this case we want to compute p_scalar * GenericPoint:
 		 * this codepath is reached most prominently by the second half
 		 * of ECDH, where the secret scalar is multiplied by the peer's
 		 * public point. To protect the secret scalar, we ignore if
 		 * BN_FLG_CONSTTIME is actually set and we always call the
 		 * constant time version.
 		 */
-		return group->meth->mul_single_ct(group, r, p_scalar, point,
-		    ctx);
-	}
-	if (g_scalar != NULL && point != NULL && p_scalar != NULL) {
+		ret = group->meth->mul_single_ct(group, r, p_scalar, point, ctx);
+	} else if (g_scalar != NULL && point != NULL && p_scalar != NULL) {
 		/*
 		 * In this case we want to compute
 		 *   g_scalar * GeneratorPoint + p_scalar * GenericPoint:
 		 * this codepath is reached most prominently by ECDSA signature
 		 * verification. So we call the non-ct version.
 		 */
-		return group->meth->mul_double_nonct(group, r, g_scalar,
-		    p_scalar, point, ctx);
+		ret = group->meth->mul_double_nonct(group, r,
+		    g_scalar, group->generator, p_scalar, point, ctx);
+	} else {
+		/* Anything else is an error. */
+		ECerror(ERR_R_EC_LIB);
+		goto err;
 	}
-		
-	/* Anything else is an error. */
-	ECerror(ERR_R_EC_LIB);
-	return 0;
+
+ err:
+	if (ctx != ctx_in)
+		BN_CTX_free(ctx);
+
+	return ret;
 }
-
-int 
-EC_GROUP_precompute_mult(EC_GROUP * group, BN_CTX * ctx)
-{
-	if (group->meth->precompute_mult != 0)
-		return group->meth->precompute_mult(group, ctx);
-	else
-		return 1;	/* nothing to do, so report success */
-}
-
-int 
-EC_GROUP_have_precompute_mult(const EC_GROUP * group)
-{
-	if (group->meth->have_precompute_mult != 0)
-		return group->meth->have_precompute_mult(group);
-	else
-		return 0;	/* cannot tell whether precomputation has
-				 * been performed */
-}
-
-EC_KEY *
-ECParameters_dup(EC_KEY *key)
-{
-	unsigned char *p = NULL;
-	EC_KEY *k = NULL;
-	int len;
-
-	if (key == NULL)
-		return (NULL);
-
-	if ((len = i2d_ECParameters(key, &p)) > 0)
-		k = d2i_ECParameters(NULL, (const unsigned char **)&p, len);
-
-	return (k);	
-}
+LCRYPTO_ALIAS(EC_POINT_mul);

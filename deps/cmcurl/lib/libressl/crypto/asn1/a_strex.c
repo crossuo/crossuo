@@ -1,4 +1,4 @@
-/* $OpenBSD: a_strex.c,v 1.28 2018/05/19 10:46:28 tb Exp $ */
+/* $OpenBSD: a_strex.c,v 1.38 2025/03/19 11:18:38 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2000.
  */
@@ -56,14 +56,19 @@
  *
  */
 
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/asn1.h>
-#include <openssl/crypto.h>
+#include <openssl/bio.h>
+#include <openssl/objects.h>
 #include <openssl/x509.h>
 
-#include "asn1_locl.h"
+#include "asn1_local.h"
+#include "bytestring.h"
+#include "x509_local.h"
 
 #include "charmap.h"
 
@@ -322,22 +327,6 @@ do_dump(unsigned long lflags, char_io *io_ch, void *arg, const ASN1_STRING *str)
 	return outlen + 1;
 }
 
-/* Lookup table to convert tags to character widths,
- * 0 = UTF8 encoded, -1 is used for non string types
- * otherwise it is the number of bytes per character
- */
-
-static const signed char tag2nbyte[] = {
-	-1, -1, -1, -1, -1,	/* 0-4 */
-	-1, -1, -1, -1, -1,	/* 5-9 */
-	-1, -1, 0, -1,		/* 10-13 */
-	-1, -1, -1, -1,		/* 15-17 */
-	-1, 1, 1,		/* 18-20 */
-	-1, 1, 1, 1,		/* 21-24 */
-	-1, 1, -1,		/* 25-27 */
-	4, -1, 2		/* 28-30 */
-};
-
 /* This is the main function, print out an
  * ASN1_STRING taking note of various escape
  * and display options. Returns number of
@@ -371,19 +360,16 @@ do_print_ex(char_io *io_ch, void *arg, unsigned long lflags,
 
 	/* Decide what to do with type, either dump content or display it */
 
-	/* Dump everything */
-	if (lflags & ASN1_STRFLGS_DUMP_ALL)
+	if (lflags & ASN1_STRFLGS_DUMP_ALL) {
+		/* Dump everything. */
 		type = -1;
-	/* Ignore the string type */
-	else if (lflags & ASN1_STRFLGS_IGNORE_TYPE)
+	} else if (lflags & ASN1_STRFLGS_IGNORE_TYPE) {
+		/* Ignore the string type. */
 		type = 1;
-	else {
-		/* Else determine width based on type */
-		if ((type > 0) && (type < 31))
-			type = tag2nbyte[type];
-		else
-			type = -1;
-		if ((type == -1) && !(lflags & ASN1_STRFLGS_DUMP_UNKNOWN))
+	} else {
+		/* Else determine width based on type. */
+		type = asn1_tag2charwidth(type);
+		if (type == -1 && !(lflags & ASN1_STRFLGS_DUMP_UNKNOWN))
 			type = 1;
 	}
 
@@ -513,7 +499,7 @@ do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n, int indent,
 		else
 			ent = X509_NAME_get_entry(n, i);
 		if (prev != -1) {
-			if (prev == ent->set) {
+			if (prev == X509_NAME_ENTRY_set(ent)) {
 				if (!io_ch(arg, sep_mv, sep_mv_len))
 					return -1;
 				outlen += sep_mv_len;
@@ -526,7 +512,7 @@ do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n, int indent,
 				outlen += indent;
 			}
 		}
-		prev = ent->set;
+		prev = X509_NAME_ENTRY_set(ent);
 		fn = X509_NAME_ENTRY_get_object(ent);
 		val = X509_NAME_ENTRY_get_data(ent);
 		fn_nid = OBJ_obj2nid(fn);
@@ -579,6 +565,54 @@ do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n, int indent,
 	return outlen;
 }
 
+static int
+X509_NAME_print(BIO *bio, const X509_NAME *name, int obase)
+{
+	CBB cbb;
+	uint8_t *buf = NULL;
+	size_t buf_len;
+	const X509_NAME_ENTRY *ne;
+	int i;
+	int started = 0;
+	int ret = 0;
+
+	if (!CBB_init(&cbb, 0))
+		goto err;
+
+	for (i = 0; i < sk_X509_NAME_ENTRY_num(name->entries); i++) {
+		ne = sk_X509_NAME_ENTRY_value(name->entries, i);
+
+		if (started) {
+			if (!CBB_add_u8(&cbb, ','))
+				goto err;
+			if (!CBB_add_u8(&cbb, ' '))
+				goto err;
+		}
+
+		if (!X509_NAME_ENTRY_add_cbb(&cbb, ne))
+			goto err;
+
+		started = 1;
+	}
+
+	if (!CBB_add_u8(&cbb, '\0'))
+		goto err;
+
+	if (!CBB_finish(&cbb, &buf, &buf_len))
+		goto err;
+
+	if (BIO_printf(bio, "%s", buf) < 0)
+		goto err;
+
+	ret = 1;
+
+ err:
+	CBB_cleanup(&cbb);
+	free(buf);
+
+	return ret;
+}
+
 /* Wrappers round the main functions */
 
 int
@@ -589,6 +623,7 @@ X509_NAME_print_ex(BIO *out, const X509_NAME *nm, int indent,
 		return X509_NAME_print(out, nm, indent);
 	return do_name_ex(send_bio_chars, out, nm, indent, flags);
 }
+LCRYPTO_ALIAS(X509_NAME_print_ex);
 
 int
 X509_NAME_print_ex_fp(FILE *fp, const X509_NAME *nm, int indent,
@@ -606,44 +641,18 @@ X509_NAME_print_ex_fp(FILE *fp, const X509_NAME *nm, int indent,
 	}
 	return do_name_ex(send_fp_chars, fp, nm, indent, flags);
 }
+LCRYPTO_ALIAS(X509_NAME_print_ex_fp);
 
 int
 ASN1_STRING_print_ex(BIO *out, const ASN1_STRING *str, unsigned long flags)
 {
 	return do_print_ex(send_bio_chars, out, flags, str);
 }
+LCRYPTO_ALIAS(ASN1_STRING_print_ex);
 
 int
 ASN1_STRING_print_ex_fp(FILE *fp, const ASN1_STRING *str, unsigned long flags)
 {
 	return do_print_ex(send_fp_chars, fp, flags, str);
 }
-
-/* Utility function: convert any string type to UTF8, returns number of bytes
- * in output string or a negative error code
- */
-
-int
-ASN1_STRING_to_UTF8(unsigned char **out, const ASN1_STRING *in)
-{
-	ASN1_STRING stmp, *str = &stmp;
-	int mbflag, type, ret;
-
-	if (!in)
-		return -1;
-	type = in->type;
-	if ((type < 0) || (type > 30))
-		return -1;
-	mbflag = tag2nbyte[type];
-	if (mbflag == -1)
-		return -1;
-	mbflag |= MBSTRING_FLAG;
-	stmp.data = NULL;
-	stmp.length = 0;
-	ret = ASN1_mbstring_copy(&str, in->data, in->length, mbflag,
-	    B_ASN1_UTF8STRING);
-	if (ret < 0)
-		return ret;
-	*out = stmp.data;
-	return stmp.length;
-}
+LCRYPTO_ALIAS(ASN1_STRING_print_ex_fp);

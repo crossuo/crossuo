@@ -1,4 +1,4 @@
-/* $OpenBSD: tls_verify.c,v 1.20 2018/02/05 00:52:24 jsing Exp $ */
+/* $OpenBSD: tls_verify.c,v 1.37 2026/09/19 16:56:13 tb Exp $ */
 /*
  * Copyright (c) 2014 Jeremie Courreges-Anglas <jca@openbsd.org>
  *
@@ -25,6 +25,7 @@
 #include <openssl/x509v3.h>
 
 #include <tls.h>
+
 #include "tls_internal.h"
 
 static int
@@ -59,6 +60,9 @@ tls_match_name(const char *cert_name, const char *name)
 		/* Disallow "*.bar" */
 		if (next_dot == NULL)
 			return -1;
+		/* Disallow "*.bar." */
+		if (next_dot[1] == '\0')
+			return -1;
 		/* Disallow "*.bar.." */
 		if (next_dot[1] == '.')
 			return -1;
@@ -90,17 +94,25 @@ tls_check_subject_altname(struct tls *ctx, X509 *cert, const char *name,
 {
 	STACK_OF(GENERAL_NAME) *altname_stack = NULL;
 	union tls_addr addrbuf;
+	char *datastr = NULL;
 	int addrlen, type;
 	int count, i;
-	int rv = 0;
+	int critical = 0;
+	int rv = -1;
 
 	*alt_match = 0;
 	*alt_exists = 0;
 
-	altname_stack = X509_get_ext_d2i(cert, NID_subject_alt_name,
-	    NULL, NULL);
-	if (altname_stack == NULL)
-		return 0;
+	altname_stack = X509_get_ext_d2i(cert, NID_subject_alt_name, &critical,
+	    NULL);
+	if (altname_stack == NULL) {
+		if (critical != -1) {
+			tls_set_errorx(ctx, TLS_ERROR_UNKNOWN,
+			    "error decoding subjectAltName");
+			goto err;
+		}
+		goto done;
+	}
 
 	if (inet_pton(AF_INET, name, &addrbuf) == 1) {
 		type = GEN_IPADD;
@@ -115,7 +127,7 @@ tls_check_subject_altname(struct tls *ctx, X509 *cert, const char *name,
 
 	count = sk_GENERAL_NAME_num(altname_stack);
 	for (i = 0; i < count; i++) {
-		GENERAL_NAME	*altname;
+		GENERAL_NAME *altname;
 
 		altname = sk_GENERAL_NAME_value(altname_stack, i);
 
@@ -126,22 +138,29 @@ tls_check_subject_altname(struct tls *ctx, X509 *cert, const char *name,
 			continue;
 
 		if (type == GEN_DNS) {
-			unsigned char	*data;
-			int		 format, len;
+			const unsigned char *data;
+			int format, len;
 
 			format = ASN1_STRING_type(altname->d.dNSName);
 			if (format == V_ASN1_IA5STRING) {
-				data = ASN1_STRING_data(altname->d.dNSName);
+				data = ASN1_STRING_get0_data(altname->d.dNSName);
 				len = ASN1_STRING_length(altname->d.dNSName);
 
-				if (len < 0 || (size_t)len != strlen(data)) {
-					tls_set_errorx(ctx,
+				if (len < 0 ||
+				    (size_t)len != strnlen(data, len)) {
+					tls_set_errorx(ctx, TLS_ERROR_UNKNOWN,
 					    "error verifying name '%s': "
 					    "NUL byte in subjectAltName, "
 					    "probably a malicious certificate",
 					    name);
-					rv = -1;
-					break;
+					goto err;
+				}
+
+				if ((datastr = strndup(data, len)) == NULL) {
+					tls_set_errorx(ctx,
+					    TLS_ERROR_OUT_OF_MEMORY,
+					    "out of memory");
+					goto err;
 				}
 
 				/*
@@ -149,19 +168,21 @@ tls_check_subject_altname(struct tls *ctx, X509 *cert, const char *name,
 				 * " " is a legal domain name, but that
 				 * dNSName must be rejected.
 				 */
-				if (strcmp(data, " ") == 0) {
-					tls_set_errorx(ctx,
+				if (strcmp(datastr, " ") == 0) {
+					tls_set_errorx(ctx, TLS_ERROR_UNKNOWN,
 					    "error verifying name '%s': "
 					    "a dNSName of \" \" must not be "
 					    "used", name);
-					rv = -1;
-					break;
+					goto err;
 				}
 
-				if (tls_match_name(data, name) == 0) {
+				if (tls_match_name(datastr, name) == 0) {
 					*alt_match = 1;
-					break;
+					goto done;
 				}
+
+				free(datastr);
+				datastr = NULL;
 			} else {
 #ifdef DEBUG
 				fprintf(stdout, "%s: unhandled subjectAltName "
@@ -171,18 +192,17 @@ tls_check_subject_altname(struct tls *ctx, X509 *cert, const char *name,
 			}
 
 		} else if (type == GEN_IPADD) {
-			unsigned char	*data;
-			int		 datalen;
+			const unsigned char *data;
+			int datalen;
 
 			datalen = ASN1_STRING_length(altname->d.iPAddress);
-			data = ASN1_STRING_data(altname->d.iPAddress);
+			data = ASN1_STRING_get0_data(altname->d.iPAddress);
 
 			if (datalen < 0) {
-				tls_set_errorx(ctx,
+				tls_set_errorx(ctx, TLS_ERROR_UNKNOWN,
 				    "Unexpected negative length for an "
 				    "IP address: %d", datalen);
-				rv = -1;
-				break;
+				goto err;
 			}
 
 			/*
@@ -192,52 +212,160 @@ tls_check_subject_altname(struct tls *ctx, X509 *cert, const char *name,
 			if (datalen == addrlen &&
 			    memcmp(data, &addrbuf, addrlen) == 0) {
 				*alt_match = 1;
-				break;
+				goto done;
 			}
 		}
 	}
 
+ done:
+	rv = 0;
+
+ err:
 	sk_GENERAL_NAME_pop_free(altname_stack, GENERAL_NAME_free);
+	free(datastr);
 	return rv;
+}
+
+static int
+tls_get_common_name_internal(X509 *cert, char **out_common_name,
+    unsigned int *out_tlserr, const char **out_errstr)
+{
+	unsigned char *utf8_bytes = NULL;
+	const X509_NAME *subject_name;
+	char *common_name = NULL;
+	int common_name_len;
+	const ASN1_STRING *data;
+	int lastpos = -1;
+	int rv = -1;
+
+	*out_tlserr = TLS_ERROR_UNKNOWN;
+	*out_errstr = "unknown";
+
+	free(*out_common_name);
+	*out_common_name = NULL;
+
+	subject_name = X509_get_subject_name(cert);
+	if (subject_name == NULL)
+		goto err;
+
+	lastpos = X509_NAME_get_index_by_NID(subject_name,
+	    NID_commonName, lastpos);
+	if (lastpos == -1)
+		goto done;
+	if (lastpos < 0)
+		goto err;
+	if (X509_NAME_get_index_by_NID(subject_name, NID_commonName, lastpos)
+	    != -1) {
+		/*
+		 * Having multiple CN's is possible, and even happened back in
+		 * the glory days of mullets and Hammer pants. In anything like
+		 * a modern TLS cert, CN is as close to deprecated as it gets,
+		 * and having more than one is bad. We therefore fail if we have
+		 * more than one CN fed to us in the subject, treating the
+		 * certificate as hostile.
+		 */
+		*out_tlserr = TLS_ERROR_UNKNOWN;
+		*out_errstr = "error getting common name: "
+		    "Certificate subject contains multiple Common Name fields, "
+		    "probably a malicious or malformed certificate";
+		goto err;
+	}
+
+	data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(subject_name,
+	    lastpos));
+	/*
+	 * Fail if we cannot encode the CN bytes as UTF-8.
+	 */
+	if ((common_name_len = ASN1_STRING_to_UTF8(&utf8_bytes, data)) < 0) {
+		*out_tlserr = TLS_ERROR_UNKNOWN;
+		*out_errstr = "error getting common name: "
+		    "Common Name field cannot be encoded as a UTF-8 string, "
+		    "probably a malicious certificate";
+		goto err;
+	}
+	/*
+	 * Fail if the CN is of invalid length. RFC 5280 specifies that a CN
+	 * must be between 1 and 64 bytes long.
+	 */
+	if (common_name_len < 1 || common_name_len > 64) {
+		*out_tlserr = TLS_ERROR_UNKNOWN;
+		*out_errstr = "error getting common name: "
+		    "Common Name field has invalid length, "
+		    "probably a malicious certificate";
+		goto err;
+	}
+	/*
+	 * Fail if the resulting text contains a NUL byte.
+	 */
+	if (memchr(utf8_bytes, 0, common_name_len) != NULL) {
+		*out_tlserr = TLS_ERROR_UNKNOWN;
+		*out_errstr = "error getting common name: "
+		    "NUL byte in Common Name field, "
+		    "probably a malicious certificate";
+		goto err;
+	}
+
+	common_name = strndup(utf8_bytes, common_name_len);
+	if (common_name == NULL) {
+		*out_tlserr = TLS_ERROR_OUT_OF_MEMORY;
+		*out_errstr = "out of memory";
+		goto err;
+	}
+
+	*out_common_name = common_name;
+	common_name = NULL;
+
+ done:
+	if (*out_common_name == NULL)
+		*out_common_name = strdup("");
+	if (*out_common_name == NULL) {
+		*out_tlserr = TLS_ERROR_OUT_OF_MEMORY;
+		*out_errstr = "out of memory";
+		goto err;
+	}
+
+	rv = 0;
+
+ err:
+	free(utf8_bytes);
+	free(common_name);
+	return rv;
+}
+
+int
+tls_get_common_name(struct tls *ctx, X509 *cert, const char *in_name,
+    char **out_common_name)
+{
+	unsigned int errcode = TLS_ERROR_UNKNOWN;
+	const char *errstr = "unknown";
+
+	if (tls_get_common_name_internal(cert, out_common_name, &errcode,
+	    &errstr) == -1) {
+		const char *name = in_name;
+		const char *space = " ";
+
+		if (name == NULL)
+			name = space = "";
+
+		tls_set_errorx(ctx, errcode, "%s%s%s", name, space, errstr);
+		return -1;
+	}
+
+	return 0;
 }
 
 static int
 tls_check_common_name(struct tls *ctx, X509 *cert, const char *name,
     int *cn_match)
 {
-	X509_NAME *subject_name;
 	char *common_name = NULL;
 	union tls_addr addrbuf;
-	int common_name_len;
-	int rv = 0;
+	int rv = -1;
 
-	*cn_match = 0;
-
-	subject_name = X509_get_subject_name(cert);
-	if (subject_name == NULL)
+	if (tls_get_common_name(ctx, cert, name, &common_name) == -1)
+		goto err;
+	if (strlen(common_name) == 0)
 		goto done;
-
-	common_name_len = X509_NAME_get_text_by_NID(subject_name,
-	    NID_commonName, NULL, 0);
-	if (common_name_len < 0)
-		goto done;
-
-	common_name = calloc(common_name_len + 1, 1);
-	if (common_name == NULL)
-		goto done;
-
-	X509_NAME_get_text_by_NID(subject_name, NID_commonName, common_name,
-	    common_name_len + 1);
-
-	/* NUL bytes in CN? */
-	if (common_name_len < 0 ||
-	    (size_t)common_name_len != strlen(common_name)) {
-		tls_set_errorx(ctx, "error verifying name '%s': "
-		    "NUL byte in Common Name field, "
-		    "probably a malicious certificate", name);
-		rv = -1;
-		goto done;
-	}
 
 	/*
 	 * We don't want to attempt wildcard matching against IP addresses,
@@ -254,6 +382,9 @@ tls_check_common_name(struct tls *ctx, X509 *cert, const char *name,
 		*cn_match = 1;
 
  done:
+	rv = 0;
+
+ err:
 	free(common_name);
 	return rv;
 }

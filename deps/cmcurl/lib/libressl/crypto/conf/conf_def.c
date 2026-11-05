@@ -1,4 +1,4 @@
-/* $OpenBSD: conf_def.c,v 1.32 2017/01/29 17:49:22 beck Exp $ */
+/* $OpenBSD: conf_def.c,v 1.45 2025/05/10 05:54:38 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -63,12 +63,14 @@
 
 #include <openssl/buffer.h>
 #include <openssl/conf.h>
-#include <openssl/conf_api.h>
-#include <openssl/err.h>
 #include <openssl/lhash.h>
 #include <openssl/stack.h>
 
 #include "conf_def.h"
+#include "conf_local.h"
+#include "err_local.h"
+
+#define MAX_CONF_VALUE_LENGTH 65536
 
 static char *eat_ws(CONF *conf, char *p);
 static char *eat_alpha_numeric(CONF *conf, char *p);
@@ -78,61 +80,12 @@ static char *scan_quote(CONF *conf, char *p);
 static char *scan_dquote(CONF *conf, char *p);
 #define scan_esc(conf,p)	(((IS_EOF((conf),(p)[1]))?((p)+1):((p)+2)))
 
-static CONF *def_create(CONF_METHOD *meth);
-static int def_init_default(CONF *conf);
-static int def_init_WIN32(CONF *conf);
-static int def_destroy(CONF *conf);
-static int def_destroy_data(CONF *conf);
-static int def_load(CONF *conf, const char *name, long *eline);
-static int def_load_bio(CONF *conf, BIO *bp, long *eline);
-static int def_dump(const CONF *conf, BIO *bp);
-static int def_is_number(const CONF *conf, char c);
-static int def_to_int(const CONF *conf, char c);
-
-static CONF_METHOD default_method = {
-	.name = "OpenSSL default",
-	.create = def_create,
-	.init = def_init_default,
-	.destroy = def_destroy,
-	.destroy_data = def_destroy_data,
-	.load_bio = def_load_bio,
-	.dump = def_dump,
-	.is_number = def_is_number,
-	.to_int = def_to_int,
-	.load = def_load
-};
-
-static CONF_METHOD WIN32_method = {
-	"WIN32",
-	def_create,
-	def_init_WIN32,
-	def_destroy,
-	def_destroy_data,
-	def_load_bio,
-	def_dump,
-	def_is_number,
-	def_to_int,
-	def_load
-};
-
-CONF_METHOD *
-NCONF_default(void)
-{
-	return &default_method;
-}
-
-CONF_METHOD *
-NCONF_WIN32(void)
-{
-	return &WIN32_method;
-}
-
 static CONF *
-def_create(CONF_METHOD *meth)
+def_create(const CONF_METHOD *meth)
 {
 	CONF *ret;
 
-	ret = malloc(sizeof(CONF) + sizeof(unsigned short *));
+	ret = calloc(1, sizeof(CONF) + sizeof(unsigned short *));
 	if (ret)
 		if (meth->init(ret) == 0) {
 			free(ret);
@@ -147,34 +100,10 @@ def_init_default(CONF *conf)
 	if (conf == NULL)
 		return 0;
 
-	conf->meth = &default_method;
-	conf->meth_data = CONF_type_default;
+	conf->meth = NCONF_default();
 	conf->data = NULL;
 
 	return 1;
-}
-
-static int
-def_init_WIN32(CONF *conf)
-{
-	if (conf == NULL)
-		return 0;
-
-	conf->meth = &WIN32_method;
-	conf->meth_data = (void *)CONF_type_win32;
-	conf->data = NULL;
-
-	return 1;
-}
-
-static int
-def_destroy(CONF *conf)
-{
-	if (def_destroy_data(conf)) {
-		free(conf);
-		return 1;
-	}
-	return 0;
 }
 
 static int
@@ -187,24 +116,13 @@ def_destroy_data(CONF *conf)
 }
 
 static int
-def_load(CONF *conf, const char *name, long *line)
+def_destroy(CONF *conf)
 {
-	int ret;
-	BIO *in = NULL;
-
-	in = BIO_new_file(name, "rb");
-	if (in == NULL) {
-		if (ERR_GET_REASON(ERR_peek_last_error()) == BIO_R_NO_SUCH_FILE)
-			CONFerror(CONF_R_NO_SUCH_FILE);
-		else
-			CONFerror(ERR_R_SYS_LIB);
-		return 0;
+	if (def_destroy_data(conf)) {
+		free(conf);
+		return 1;
 	}
-
-	ret = def_load_bio(conf, in, line);
-	BIO_free(in);
-
-	return ret;
+	return 0;
 }
 
 static int
@@ -401,7 +319,10 @@ err:
 		*line = eline;
 	ERR_asprintf_error_data("line %ld", eline);
 	if ((h != conf->data) && (conf->data != NULL)) {
-		CONF_free(conf->data);
+		CONF ctmp;
+
+		CONF_set_nconf(&ctmp, conf->data);
+		ctmp.meth->destroy_data(&ctmp);
 		conf->data = NULL;
 	}
 	if (v != NULL) {
@@ -410,6 +331,27 @@ err:
 		free(v);
 	}
 	return (0);
+}
+
+static int
+def_load(CONF *conf, const char *name, long *line)
+{
+	int ret;
+	BIO *in = NULL;
+
+	in = BIO_new_file(name, "rb");
+	if (in == NULL) {
+		if (ERR_GET_REASON(ERR_peek_last_error()) == BIO_R_NO_SUCH_FILE)
+			CONFerror(CONF_R_NO_SUCH_FILE);
+		else
+			CONFerror(ERR_R_SYS_LIB);
+		return 0;
+	}
+
+	ret = def_load_bio(conf, in, line);
+	BIO_free(in);
+
+	return ret;
 }
 
 static void
@@ -455,6 +397,7 @@ str_copy(CONF *conf, char *section, char **pto, char *from)
 {
 	int q, r,rr = 0, to = 0, len = 0;
 	char *s, *e, *rp, *p, *rrp, *np, *cp, v;
+	size_t newsize;
 	BUF_MEM *buf;
 
 	if ((buf = BUF_MEM_new()) == NULL)
@@ -563,8 +506,12 @@ str_copy(CONF *conf, char *section, char **pto, char *from)
 				CONFerror(CONF_R_VARIABLE_HAS_NO_VALUE);
 				goto err;
 			}
-			if (!BUF_MEM_grow_clean(buf,
-				(strlen(p) + buf->length - (e - from)))) {
+			newsize = strlen(p) + buf->length - (e - from);
+			if (newsize > MAX_CONF_VALUE_LENGTH) {
+				CONFerror(CONF_R_VARIABLE_EXPANSION_TOO_LONG);
+				goto err;
+			}
+			if (!BUF_MEM_grow_clean(buf, newsize)) {
 				CONFerror(CONF_R_MODULE_INITIALIZATION_ERROR);
 				goto err;
 			}
@@ -688,4 +635,23 @@ static int
 def_to_int(const CONF *conf, char c)
 {
 	return c - '0';
+}
+
+static const CONF_METHOD default_method = {
+	.name = "OpenSSL default",
+	.create = def_create,
+	.init = def_init_default,
+	.destroy = def_destroy,
+	.destroy_data = def_destroy_data,
+	.load_bio = def_load_bio,
+	.dump = def_dump,
+	.is_number = def_is_number,
+	.to_int = def_to_int,
+	.load = def_load,
+};
+
+const CONF_METHOD *
+NCONF_default(void)
+{
+	return &default_method;
 }

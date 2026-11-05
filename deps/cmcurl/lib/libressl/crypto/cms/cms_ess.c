@@ -1,4 +1,4 @@
-/* $OpenBSD: cms_ess.c,v 1.21 2019/08/11 14:19:09 jsing Exp $ */
+/* $OpenBSD: cms_ess.c,v 1.27 2025/05/10 05:54:38 tb Exp $ */
 /*
  * Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
@@ -52,17 +52,18 @@
  * ====================================================================
  */
 
+#include <stdlib.h>
 #include <string.h>
 
-#include "cryptlib.h"
-#include <openssl/asn1t.h>
-#include <openssl/pem.h>
-#include <openssl/rand.h>
-#include <openssl/x509v3.h>
-#include <openssl/err.h>
+#include <openssl/asn1.h>
 #include <openssl/cms.h>
-#include "cms_lcl.h"
+#include <openssl/evp.h>
+#include <openssl/objects.h>
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
 
+#include "cms_local.h"
+#include "err_local.h"
 
 CMS_ReceiptRequest *
 d2i_CMS_ReceiptRequest(CMS_ReceiptRequest **a, const unsigned char **in, long len)
@@ -70,24 +71,28 @@ d2i_CMS_ReceiptRequest(CMS_ReceiptRequest **a, const unsigned char **in, long le
 	return (CMS_ReceiptRequest *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
 	    &CMS_ReceiptRequest_it);
 }
+LCRYPTO_ALIAS(d2i_CMS_ReceiptRequest);
 
 int
 i2d_CMS_ReceiptRequest(CMS_ReceiptRequest *a, unsigned char **out)
 {
 	return ASN1_item_i2d((ASN1_VALUE *)a, out, &CMS_ReceiptRequest_it);
 }
+LCRYPTO_ALIAS(i2d_CMS_ReceiptRequest);
 
 CMS_ReceiptRequest *
 CMS_ReceiptRequest_new(void)
 {
 	return (CMS_ReceiptRequest *)ASN1_item_new(&CMS_ReceiptRequest_it);
 }
+LCRYPTO_ALIAS(CMS_ReceiptRequest_new);
 
 void
 CMS_ReceiptRequest_free(CMS_ReceiptRequest *a)
 {
 	ASN1_item_free((ASN1_VALUE *)a, &CMS_ReceiptRequest_it);
 }
+LCRYPTO_ALIAS(CMS_ReceiptRequest_free);
 
 /* ESS services: for now just Signed Receipt related */
 
@@ -114,6 +119,7 @@ CMS_get1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest **prr)
 
 	return 1;
 }
+LCRYPTO_ALIAS(CMS_get1_ReceiptRequest);
 
 CMS_ReceiptRequest *
 CMS_ReceiptRequest_create0(unsigned char *id, int idlen, int allorfirst,
@@ -151,6 +157,7 @@ CMS_ReceiptRequest_create0(unsigned char *id, int idlen, int allorfirst,
 
 	return NULL;
 }
+LCRYPTO_ALIAS(CMS_ReceiptRequest_create0);
 
 int
 CMS_add1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest *rr)
@@ -176,6 +183,7 @@ CMS_add1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest *rr)
 
 	return r;
 }
+LCRYPTO_ALIAS(CMS_add1_ReceiptRequest);
 
 void
 CMS_ReceiptRequest_get0_values(CMS_ReceiptRequest *rr, ASN1_STRING **pcid,
@@ -198,6 +206,7 @@ CMS_ReceiptRequest_get0_values(CMS_ReceiptRequest *rr, ASN1_STRING **pcid,
 	if (prto)
 		*prto = rr->receiptsTo;
 }
+LCRYPTO_ALIAS(CMS_ReceiptRequest_get0_values);
 
 /* Digest a SignerInfo structure for msgSigDigest attribute processing */
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: tls13_record.h,v 1.3 2019/01/21 00:24:19 jsing Exp $ */
+/* $OpenBSD: tls13_record.h,v 1.6 2026/08/21 17:15:22 tb Exp $ */
 /*
  * Copyright (c) 2019 Joel Sing <jsing@openbsd.org>
  *
@@ -19,12 +19,11 @@
 #define HEADER_TLS13_RECORD_H
 
 #include "bytestring.h"
-#include "tls13_internal.h"
 
 __BEGIN_HIDDEN_DECLS
 
 /*
- * TLSv1.3 Record Protocol - RFC 8446 section 5.
+ * TLSv1.3 Record Protocol - RFC 9846 section 5.
  *
  * The maximum plaintext is 2^14, however for inner plaintext an additional
  * byte is allowed for the content type. A maximum AEAD overhead of 255-bytes
@@ -42,7 +41,7 @@ __BEGIN_HIDDEN_DECLS
 	(TLS13_RECORD_HEADER_LEN + TLS13_RECORD_MAX_CIPHERTEXT_LEN)
 
 /*
- * TLSv1.3 Per-Record Nonces and Sequence Numbers - RFC 8446 section 5.3.
+ * TLSv1.3 Per-Record Nonces and Sequence Numbers - RFC 9846 section 5.3.
  */
 #define TLS13_RECORD_SEQ_NUM_LEN 8
 
@@ -57,9 +56,9 @@ int tls13_record_content(struct tls13_record *_rec, CBS *_cbs);
 void tls13_record_data(struct tls13_record *_rec, CBS *_cbs);
 int tls13_record_set_data(struct tls13_record *_rec, uint8_t *_data,
     size_t _data_len);
-ssize_t tls13_record_recv(struct tls13_record *_rec, tls13_read_cb _wire_read,
+ssize_t tls13_record_recv(struct tls13_record *_rec, tls_read_cb _wire_read,
     void *_wire_arg);
-ssize_t tls13_record_send(struct tls13_record *_rec, tls13_write_cb _wire_write,
+ssize_t tls13_record_send(struct tls13_record *_rec, tls_write_cb _wire_write,
     void *_wire_arg);
 
 __END_HIDDEN_DECLS

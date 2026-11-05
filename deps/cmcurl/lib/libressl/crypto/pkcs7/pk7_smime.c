@@ -1,4 +1,4 @@
-/* $OpenBSD: pk7_smime.c,v 1.22 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: pk7_smime.c,v 1.30 2026/06/09 12:34:08 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
  */
@@ -60,9 +60,11 @@
 
 #include <stdio.h>
 
-#include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
+
+#include "err_local.h"
+#include "x509_local.h"
 
 static int pkcs7_copy_existing_digest(PKCS7 *p7, PKCS7_SIGNER_INFO *si);
 
@@ -109,6 +111,7 @@ err:
 	PKCS7_free(p7);
 	return NULL;
 }
+LCRYPTO_ALIAS(PKCS7_sign);
 
 int
 PKCS7_final(PKCS7 *p7, BIO *data, int flags)
@@ -137,6 +140,7 @@ err:
 
 	return ret;
 }
+LCRYPTO_ALIAS(PKCS7_final);
 
 /* Check to see if a cipher exists and if so add S/MIME capabilities */
 
@@ -144,14 +148,6 @@ static int
 add_cipher_smcap(STACK_OF(X509_ALGOR) *sk, int nid, int arg)
 {
 	if (EVP_get_cipherbynid(nid))
-		return PKCS7_simple_smimecap(sk, nid, arg);
-	return 1;
-}
-
-static int
-add_digest_smcap(STACK_OF(X509_ALGOR) *sk, int nid, int arg)
-{
-	if (EVP_get_digestbynid(nid))
 		return PKCS7_simple_smimecap(sk, nid, arg);
 	return 1;
 }
@@ -188,10 +184,6 @@ PKCS7_sign_add_signer(PKCS7 *p7, X509 *signcert, EVP_PKEY *pkey,
 				goto err;
 			}
 			if (!add_cipher_smcap(smcap, NID_aes_256_cbc, -1) ||
-			    !add_digest_smcap(smcap, NID_id_GostR3411_94, -1) ||
-			    !add_digest_smcap(smcap, NID_id_tc26_gost3411_2012_256, -1) ||
-			    !add_digest_smcap(smcap, NID_id_tc26_gost3411_2012_512, -1) ||
-			    !add_cipher_smcap(smcap, NID_id_Gost28147_89, -1) ||
 			    !add_cipher_smcap(smcap, NID_aes_192_cbc, -1) ||
 			    !add_cipher_smcap(smcap, NID_aes_128_cbc, -1) ||
 			    !add_cipher_smcap(smcap, NID_des_ede3_cbc, -1) ||
@@ -219,6 +211,7 @@ err:
 		sk_X509_ALGOR_pop_free(smcap, X509_ALGOR_free);
 	return NULL;
 }
+LCRYPTO_ALIAS(PKCS7_sign_add_signer);
 
 /* Search for a digest matching SignerInfo digest type and if found
  * copy across.
@@ -266,7 +259,7 @@ PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store, BIO *indata,
 	char buf[4096];
 	int i, j = 0, k, ret = 0;
 	BIO *p7bio;
-	BIO *tmpin, *tmpout;
+	BIO *next, *tmpin, *tmpout;
 
 	if (!p7) {
 		PKCS7error(PKCS7_R_INVALID_NULL_POINTER);
@@ -284,14 +277,19 @@ PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store, BIO *indata,
 		return 0;
 	}
 
-	/*
-	 * Very old Netscape illegally included empty content with
-	 * a detached signature.  Very old users should upgrade.
-	 */
-	/* Check for data and content: two sets of data */
-	if (!PKCS7_get_detached(p7) && indata) {
-		PKCS7error(PKCS7_R_CONTENT_AND_DATA_PRESENT);
-		return 0;
+	if ((flags & PKCS7_NO_DUAL_CONTENT) != 0) {
+		/*
+		 * This was originally "#if 0" because we thought that only old
+		 * broken Netscape did this.  It turns out that Authenticode
+		 * uses this kind of "extended" PKCS7 format, and things like
+		 * UEFI secure boot and tools like osslsigncode need it.  In
+		 * Authenticode the verification process is different, but the
+		 * existing PKCS7 verification works.
+		 */
+		if (!PKCS7_get_detached(p7) && indata != NULL) {
+			PKCS7error(PKCS7_R_CONTENT_AND_DATA_PRESENT);
+			return 0;
+		}
 	}
 
 	sinfos = PKCS7_get_signer_info(p7);
@@ -411,16 +409,17 @@ PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store, BIO *indata,
 
 	ret = 1;
 
-err:
-	if (tmpin == indata) {
-		if (indata)
-			BIO_pop(p7bio);
+ err:
+	while (p7bio != NULL && p7bio != indata) {
+		next = BIO_pop(p7bio);
+		BIO_free(p7bio);
+		p7bio = next;
 	}
-	BIO_free_all(p7bio);
 	sk_X509_free(signers);
 
 	return ret;
 }
+LCRYPTO_ALIAS(PKCS7_verify);
 
 STACK_OF(X509) *
 PKCS7_get0_signers(PKCS7 *p7, STACK_OF(X509) *certs, int flags)
@@ -479,6 +478,7 @@ PKCS7_get0_signers(PKCS7 *p7, STACK_OF(X509) *certs, int flags)
 	}
 	return signers;
 }
+LCRYPTO_ALIAS(PKCS7_get0_signers);
 
 /* Build a complete PKCS#7 enveloped data */
 
@@ -522,6 +522,7 @@ err:
 	PKCS7_free(p7);
 	return NULL;
 }
+LCRYPTO_ALIAS(PKCS7_encrypt);
 
 int
 PKCS7_decrypt(PKCS7 *p7, EVP_PKEY *pkey, X509 *cert, BIO *data, int flags)
@@ -588,3 +589,4 @@ PKCS7_decrypt(PKCS7 *p7, EVP_PKEY *pkey, X509 *cert, BIO *data, int flags)
 		return ret;
 	}
 }
+LCRYPTO_ALIAS(PKCS7_decrypt);

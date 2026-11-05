@@ -1,4 +1,4 @@
-/* $OpenBSD: x_name.c,v 1.34 2018/02/20 17:09:20 jsing Exp $ */
+/* $OpenBSD: x_name.c,v 1.47 2026/01/05 05:22:09 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -61,10 +61,11 @@
 #include <string.h>
 
 #include <openssl/asn1t.h>
-#include <openssl/err.h>
 #include <openssl/x509.h>
 
-#include "asn1_locl.h"
+#include "asn1_local.h"
+#include "err_local.h"
+#include "x509_local.h"
 
 typedef STACK_OF(X509_NAME_ENTRY) STACK_OF_X509_NAME_ENTRY;
 DECLARE_STACK_OF(STACK_OF_X509_NAME_ENTRY)
@@ -108,6 +109,7 @@ const ASN1_ITEM X509_NAME_ENTRY_it = {
 	.size = sizeof(X509_NAME_ENTRY),
 	.sname = "X509_NAME_ENTRY",
 };
+LCRYPTO_ALIAS(X509_NAME_ENTRY_it);
 
 
 X509_NAME_ENTRY *
@@ -116,30 +118,35 @@ d2i_X509_NAME_ENTRY(X509_NAME_ENTRY **a, const unsigned char **in, long len)
 	return (X509_NAME_ENTRY *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
 	    &X509_NAME_ENTRY_it);
 }
+LCRYPTO_ALIAS(d2i_X509_NAME_ENTRY);
 
 int
 i2d_X509_NAME_ENTRY(X509_NAME_ENTRY *a, unsigned char **out)
 {
 	return ASN1_item_i2d((ASN1_VALUE *)a, out, &X509_NAME_ENTRY_it);
 }
+LCRYPTO_ALIAS(i2d_X509_NAME_ENTRY);
 
 X509_NAME_ENTRY *
 X509_NAME_ENTRY_new(void)
 {
 	return (X509_NAME_ENTRY *)ASN1_item_new(&X509_NAME_ENTRY_it);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_new);
 
 void
 X509_NAME_ENTRY_free(X509_NAME_ENTRY *a)
 {
 	ASN1_item_free((ASN1_VALUE *)a, &X509_NAME_ENTRY_it);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_free);
 
 X509_NAME_ENTRY *
 X509_NAME_ENTRY_dup(X509_NAME_ENTRY *x)
 {
 	return ASN1_item_dup(&X509_NAME_ENTRY_it, x);
 }
+LCRYPTO_ALIAS(X509_NAME_ENTRY_dup);
 
 /* For the "Name" type we need a SEQUENCE OF { SET OF X509_NAME_ENTRY }
  * so declare two template wrappers for this
@@ -153,7 +160,7 @@ static const ASN1_TEMPLATE X509_NAME_ENTRIES_item_tt = {
 	.item = &X509_NAME_ENTRY_it,
 };
 
-const ASN1_ITEM X509_NAME_ENTRIES_it = {
+static const ASN1_ITEM X509_NAME_ENTRIES_it = {
 	.itype = ASN1_ITYPE_PRIMITIVE,
 	.utype = -1,
 	.templates = &X509_NAME_ENTRIES_item_tt,
@@ -171,7 +178,7 @@ static const ASN1_TEMPLATE X509_NAME_INTERNAL_item_tt = {
 	.item = &X509_NAME_ENTRIES_it,
 };
 
-const ASN1_ITEM X509_NAME_INTERNAL_it = {
+static const ASN1_ITEM X509_NAME_INTERNAL_it = {
 	.itype = ASN1_ITYPE_PRIMITIVE,
 	.utype = -1,
 	.templates = &X509_NAME_INTERNAL_item_tt,
@@ -187,14 +194,14 @@ const ASN1_ITEM X509_NAME_INTERNAL_it = {
  * to the external form.
  */
 
-const ASN1_EXTERN_FUNCS x509_name_ff = {
-	NULL,
-	x509_name_ex_new,
-	x509_name_ex_free,
-	0,	/* Default clear behaviour is OK */
-	x509_name_ex_d2i,
-	x509_name_ex_i2d,
-	x509_name_ex_print
+static const ASN1_EXTERN_FUNCS x509_name_ff = {
+	.app_data = NULL,
+	.asn1_ex_new = x509_name_ex_new,
+	.asn1_ex_free = x509_name_ex_free,
+	.asn1_ex_clear = NULL,
+	.asn1_ex_d2i = x509_name_ex_d2i,
+	.asn1_ex_i2d = x509_name_ex_i2d,
+	.asn1_ex_print = x509_name_ex_print,
 };
 
 const ASN1_ITEM X509_NAME_it = {
@@ -206,6 +213,7 @@ const ASN1_ITEM X509_NAME_it = {
 	.size = 0,
 	.sname = "X509_NAME",
 };
+LCRYPTO_ALIAS(X509_NAME_it);
 
 X509_NAME *
 d2i_X509_NAME(X509_NAME **a, const unsigned char **in, long len)
@@ -213,30 +221,35 @@ d2i_X509_NAME(X509_NAME **a, const unsigned char **in, long len)
 	return (X509_NAME *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
 	    &X509_NAME_it);
 }
+LCRYPTO_ALIAS(d2i_X509_NAME);
 
 int
 i2d_X509_NAME(X509_NAME *a, unsigned char **out)
 {
 	return ASN1_item_i2d((ASN1_VALUE *)a, out, &X509_NAME_it);
 }
+LCRYPTO_ALIAS(i2d_X509_NAME);
 
 X509_NAME *
 X509_NAME_new(void)
 {
 	return (X509_NAME *)ASN1_item_new(&X509_NAME_it);
 }
+LCRYPTO_ALIAS(X509_NAME_new);
 
 void
 X509_NAME_free(X509_NAME *a)
 {
 	ASN1_item_free((ASN1_VALUE *)a, &X509_NAME_it);
 }
+LCRYPTO_ALIAS(X509_NAME_free);
 
 X509_NAME *
 X509_NAME_dup(X509_NAME *x)
 {
 	return ASN1_item_dup(&X509_NAME_it, x);
 }
+LCRYPTO_ALIAS(X509_NAME_dup);
 
 static int
 x509_name_ex_new(ASN1_VALUE **val, const ASN1_ITEM *it)
@@ -256,7 +269,7 @@ x509_name_ex_new(ASN1_VALUE **val, const ASN1_ITEM *it)
 	*val = (ASN1_VALUE *)ret;
 	return 1;
 
-memerr:
+ memerr:
 	ASN1error(ERR_R_MALLOC_FAILURE);
 	if (ret) {
 		if (ret->entries)
@@ -336,7 +349,7 @@ x509_name_ex_d2i(ASN1_VALUE **val, const unsigned char **in, long len,
 	*in = p;
 	return ret;
 
-err:
+ err:
 	if (nm.x != NULL)
 		X509_NAME_free(nm.x);
 	ASN1error(ERR_R_NESTED_ASN1_ERROR);
@@ -401,8 +414,10 @@ x509_name_encode(X509_NAME *a)
 			if (!entries)
 				goto memerr;
 			if (!sk_STACK_OF_X509_NAME_ENTRY_push(intname.s,
-			    entries))
+			    entries)) {
+				sk_X509_NAME_ENTRY_free(entries);
 				goto memerr;
+			}
 			set = entry->set;
 		}
 		if (entries == NULL /* if entry->set is bogusly -1 */ ||
@@ -421,7 +436,7 @@ x509_name_encode(X509_NAME *a)
 	a->modified = 0;
 	return len;
 
-memerr:
+ memerr:
 	sk_STACK_OF_X509_NAME_ENTRY_pop_free(intname.s,
 	    local_sk_X509_NAME_ENTRY_free);
 	ASN1error(ERR_R_MALLOC_FAILURE);
@@ -511,7 +526,7 @@ x509_name_canon(X509_NAME *a)
 	i2d_name_canon(intname, &p);
 	ret = 1;
 
-err:
+ err:
 	if (tmpentry)
 		X509_NAME_ENTRY_free(tmpentry);
 	if (intname)
@@ -626,20 +641,15 @@ i2d_name_canon(STACK_OF(STACK_OF_X509_NAME_ENTRY) *_intname, unsigned char **in)
 int
 X509_NAME_set(X509_NAME **xn, X509_NAME *name)
 {
-	X509_NAME *in;
-
-	if (!xn || !name)
-		return (0);
-
-	if (*xn != name) {
-		in = X509_NAME_dup(name);
-		if (in != NULL) {
-			X509_NAME_free(*xn);
-			*xn = in;
-		}
-	}
-	return (*xn != NULL);
+	if (*xn == name)
+		return *xn != NULL;
+	if ((name = X509_NAME_dup(name)) == NULL)
+		return 0;
+	X509_NAME_free(*xn);
+	*xn = name;
+	return 1;
 }
+LCRYPTO_ALIAS(X509_NAME_set);
 
 int
 X509_NAME_get0_der(X509_NAME *nm, const unsigned char **pder, size_t *pderlen)
@@ -653,3 +663,4 @@ X509_NAME_get0_der(X509_NAME *nm, const unsigned char **pder, size_t *pderlen)
 		*pderlen = nm->bytes->length;
 	return 1;
 }
+LCRYPTO_ALIAS(X509_NAME_get0_der);

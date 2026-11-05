@@ -1,4 +1,4 @@
-/* $OpenBSD: randfile.c,v 1.42 2015/09/10 15:56:25 jsing Exp $ */
+/* $OpenBSD: randfile.c,v 1.46 2026/03/10 05:26:04 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -85,6 +85,7 @@ RAND_load_file(const char *file, long bytes)
 	else
 		return bytes;
 }
+LCRYPTO_ALIAS(RAND_load_file);
 
 int
 RAND_write_file(const char *file)
@@ -104,7 +105,7 @@ RAND_write_file(const char *file)
 		return (1);
 	}
 
-	fd = open(file, O_WRONLY|O_CREAT, 0600);
+	fd = open(file, O_WRONLY|O_CREAT|O_CLOEXEC, 0600);
 	if (fd == -1)
 		return (1);
 	out = fdopen(fd, "wb");
@@ -133,6 +134,7 @@ RAND_write_file(const char *file)
 	explicit_bzero(buf, BUFSIZE);
 	return ret;
 }
+LCRYPTO_ALIAS(RAND_write_file);
 
 const char *
 RAND_file_name(char * buf, size_t size)
@@ -141,3 +143,4 @@ RAND_file_name(char * buf, size_t size)
 		return (NULL);
 	return buf;
 }
+LCRYPTO_ALIAS(RAND_file_name);

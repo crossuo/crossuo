@@ -1,4 +1,4 @@
-/* $OpenBSD: cms_kari.c,v 1.13 2019/08/11 14:27:01 jsing Exp $ */
+/* $OpenBSD: cms_kari.c,v 1.19 2026/08/27 07:13:34 tb Exp $ */
 /*
  * Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
@@ -52,17 +52,15 @@
  * ====================================================================
  */
 
+#include <stdlib.h>
 #include <string.h>
 
-#include "cryptlib.h"
-#include <openssl/asn1t.h>
-#include <openssl/pem.h>
-#include <openssl/x509v3.h>
-#include <openssl/err.h>
+#include <openssl/asn1.h>
 #include <openssl/cms.h>
-#include <openssl/aes.h>
-#include "cms_lcl.h"
-#include "asn1/asn1_locl.h"
+#include <openssl/evp.h>
+
+#include "cms_local.h"
+#include "err_local.h"
 
 /* Key Agreement Recipient Info (KARI) routines */
 
@@ -81,6 +79,7 @@ CMS_RecipientInfo_kari_get0_alg(CMS_RecipientInfo *ri, X509_ALGOR **palg,
 
 	return 1;
 }
+LCRYPTO_ALIAS(CMS_RecipientInfo_kari_get0_alg);
 
 /* Retrieve recipient encrypted keys from a kari */
 
@@ -93,6 +92,7 @@ CMS_RecipientInfo_kari_get0_reks(CMS_RecipientInfo *ri)
 	}
 	return ri->d.kari->recipientEncryptedKeys;
 }
+LCRYPTO_ALIAS(CMS_RecipientInfo_kari_get0_reks);
 
 int
 CMS_RecipientInfo_kari_get0_orig_id(CMS_RecipientInfo *ri, X509_ALGOR **pubalg,
@@ -134,6 +134,7 @@ CMS_RecipientInfo_kari_get0_orig_id(CMS_RecipientInfo *ri, X509_ALGOR **pubalg,
 
 	return 1;
 }
+LCRYPTO_ALIAS(CMS_RecipientInfo_kari_get0_orig_id);
 
 int
 CMS_RecipientInfo_kari_orig_id_cmp(CMS_RecipientInfo *ri, X509 *cert)
@@ -152,6 +153,7 @@ CMS_RecipientInfo_kari_orig_id_cmp(CMS_RecipientInfo *ri, X509 *cert)
 
 	return -1;
 }
+LCRYPTO_ALIAS(CMS_RecipientInfo_kari_orig_id_cmp);
 
 int
 CMS_RecipientEncryptedKey_get0_id(CMS_RecipientEncryptedKey *rek,
@@ -187,6 +189,7 @@ CMS_RecipientEncryptedKey_get0_id(CMS_RecipientEncryptedKey *rek,
 
 	return 1;
 }
+LCRYPTO_ALIAS(CMS_RecipientEncryptedKey_get0_id);
 
 int
 CMS_RecipientEncryptedKey_cert_cmp(CMS_RecipientEncryptedKey *rek, X509 *cert)
@@ -200,6 +203,7 @@ CMS_RecipientEncryptedKey_cert_cmp(CMS_RecipientEncryptedKey *rek, X509 *cert)
 	else
 		return -1;
 }
+LCRYPTO_ALIAS(CMS_RecipientEncryptedKey_cert_cmp);
 
 int
 CMS_RecipientInfo_kari_set0_pkey(CMS_RecipientInfo *ri, EVP_PKEY *pk)
@@ -221,6 +225,7 @@ CMS_RecipientInfo_kari_set0_pkey(CMS_RecipientInfo *ri, EVP_PKEY *pk)
 	EVP_PKEY_CTX_free(pctx);
 	return 0;
 }
+LCRYPTO_ALIAS(CMS_RecipientInfo_kari_set0_pkey);
 
 EVP_CIPHER_CTX *
 CMS_RecipientInfo_kari_get0_ctx(CMS_RecipientInfo *ri)
@@ -229,6 +234,7 @@ CMS_RecipientInfo_kari_get0_ctx(CMS_RecipientInfo *ri)
 		return ri->d.kari->ctx;
 	return NULL;
 }
+LCRYPTO_ALIAS(CMS_RecipientInfo_kari_get0_ctx);
 
 /*
  * Derive KEK and decrypt/encrypt with it to produce either the original CEK
@@ -244,6 +250,7 @@ cms_kek_cipher(unsigned char **pout, size_t *poutlen, const unsigned char *in,
 	size_t keklen;
 	int rv = 0;
 	unsigned char *out = NULL;
+	size_t outsize = 0;
 	int outlen;
 
 	keklen = EVP_CIPHER_CTX_key_length(kari->ctx);
@@ -258,7 +265,11 @@ cms_kek_cipher(unsigned char **pout, size_t *poutlen, const unsigned char *in,
 	/* obtain output length of ciphered key */
 	if (!EVP_CipherUpdate(kari->ctx, NULL, &outlen, in, inlen))
 		goto err;
-	out = malloc(outlen);
+
+	outsize = outlen;
+	if (outsize < inlen)
+		outsize = inlen;
+	out = malloc(outsize);
 	if (out == NULL)
 		goto err;
 	if (!EVP_CipherUpdate(kari->ctx, out, &outlen, in, inlen))
@@ -270,8 +281,8 @@ cms_kek_cipher(unsigned char **pout, size_t *poutlen, const unsigned char *in,
  err:
 	explicit_bzero(kek, keklen);
 	if (!rv)
-		free(out);
-	EVP_CIPHER_CTX_reset(kari->ctx);
+		freezero(out, outsize);
+	(void)EVP_CIPHER_CTX_reset(kari->ctx);
 	/* FIXME: WHY IS kari->pctx freed here?  /RL */
 	EVP_PKEY_CTX_free(kari->pctx);
 	kari->pctx = NULL;
@@ -309,6 +320,7 @@ CMS_RecipientInfo_kari_decrypt(CMS_ContentInfo *cms, CMS_RecipientInfo *ri,
 
 	return rv;
 }
+LCRYPTO_ALIAS(CMS_RecipientInfo_kari_decrypt);
 
 /* Create ephemeral key and initialise context based on it */
 static int

@@ -38,9 +38,10 @@ set(USE_NGHTTP2 OFF CACHE INTERNAL "no HTTP/2" FORCE)
 set(LIBRESSL_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/libressl")
 set(LIBRESSL_INCLUDE_DIR "${LIBRESSL_ROOT_DIR}/include")
 
-# LibreSSL 3.1 predates SSL_set0_wbio/rbio: pin the feature probe to the
-# vendored backend so a toolchain advertising OpenSSL headers (e.g. the
-# emscripten sysroot) cannot enable the wrong code path
+# LibreSSL does not provide SSL_set0_wbio/SSL_set0_rbio (only the read half,
+# and no release up to 4.4.0 adds the write one): pin the feature probe so a
+# system OpenSSL in the default include path (present on dev machines and in
+# the emscripten sysroot) cannot enable the OpenSSL-only code path
 set(HAVE_SSL_SET0_WBIO OFF)
 set(CURL_BROTLI "OFF" CACHE INTERNAL "Build curl with BROTLI support (AUTO, ON or OFF)")
 set(CURL_DEBUG_GLOBAL_MEM OFF)
@@ -1031,7 +1032,7 @@ if(CURL_USE_OPENSSL)
   # real ssl/crypto targets so every downstream check and link keeps working.
   set(OPENSSL_FOUND TRUE)
   set(OPENSSL_INCLUDE_DIR "${LIBRESSL_INCLUDE_DIR}")
-  set(OPENSSL_VERSION "3.1.0")
+  set(OPENSSL_VERSION "4.4.0")
   set(HAVE_LIBRESSL TRUE) # recognized fork: skips the OpenSSL >= 3.0 check
   if(NOT TARGET OpenSSL::SSL)
     add_library(OpenSSL::SSL IMPORTED INTERFACE)

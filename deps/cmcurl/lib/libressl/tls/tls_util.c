@@ -1,4 +1,4 @@
-/* $OpenBSD: tls_util.c,v 1.14 2019/04/13 18:47:58 tb Exp $ */
+/* $OpenBSD: tls_util.c,v 1.19 2026/09/19 16:56:13 tb Exp $ */
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  * Copyright (c) 2014 Ted Unangst <tedu@openbsd.org>
@@ -20,10 +20,12 @@
 #include <sys/stat.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "tls.h"
+#include <tls.h>
+
 #include "tls_internal.h"
 
 static void *
@@ -92,7 +94,7 @@ tls_host_port(const char *hostport, char **host, char **port)
 		*p++ = '\0';
 	}
 
-	/* Find the port seperator. */
+	/* Find the port separator. */
 	if ((p = strchr(p, ':')) == NULL)
 		goto done;
 
@@ -161,7 +163,7 @@ tls_load_file(const char *name, size_t *len, char *password)
 
 	*len = 0;
 
-	if ((fd = open(name, O_RDONLY)) == -1)
+	if ((fd = open(name, O_RDONLY|O_CLOEXEC)) == -1)
 		return (NULL);
 
 	/* Just load the file into memory without decryption */

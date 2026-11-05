@@ -8,7 +8,9 @@
 #endif
 
 #ifndef _WIN32
+#ifdef HAVE_NETINET_IP_H
 #include_next <netinet/ip.h>
+#endif
 #else
 #include <win32netcompat.h>
 #endif
@@ -40,6 +42,10 @@
 #define	IPTOS_DSCP_AF41		0x88
 #define	IPTOS_DSCP_AF42		0x90
 #define	IPTOS_DSCP_AF43		0x98
+#endif
+
+#ifndef IPTOS_DSCP_VA
+#define	IPTOS_DSCP_VA		0xb0
 #endif
 
 #ifndef IPTOS_DSCP_EF

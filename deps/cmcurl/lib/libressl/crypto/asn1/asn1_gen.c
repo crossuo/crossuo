@@ -1,4 +1,4 @@
-/* $OpenBSD: asn1_gen.c,v 1.17 2018/04/25 11:48:21 tb Exp $ */
+/* $OpenBSD: asn1_gen.c,v 1.35 2026/09/02 07:15:01 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2002.
  */
@@ -59,8 +59,12 @@
 #include <string.h>
 
 #include <openssl/asn1.h>
-#include <openssl/err.h>
 #include <openssl/x509v3.h>
+
+#include "asn1_local.h"
+#include "conf_local.h"
+#include "err_local.h"
+#include "x509_local.h"
 
 #define ASN1_GEN_FLAG		0x10000
 #define ASN1_GEN_FLAG_IMP	(ASN1_GEN_FLAG|1)
@@ -131,6 +135,7 @@ ASN1_generate_nconf(const char *str, CONF *nconf)
 	X509V3_set_nconf(&cnf, nconf);
 	return ASN1_generate_v3(str, &cnf);
 }
+LCRYPTO_ALIAS(ASN1_generate_nconf);
 
 ASN1_TYPE *
 ASN1_generate_v3(const char *str, X509V3_CTX *cnf)
@@ -258,12 +263,13 @@ ASN1_generate_v3(const char *str, X509V3_CTX *cnf)
 	/* Obtain new ASN1_TYPE structure */
 	ret = d2i_ASN1_TYPE(NULL, &cp, len);
 
-err:
+ err:
 	free(orig_der);
 	free(new_der);
 
 	return ret;
 }
+LCRYPTO_ALIAS(ASN1_generate_v3);
 
 static int
 asn1_cb(const char *elem, int len, void *bitstr)
@@ -430,60 +436,63 @@ parse_tagging(const char *vstart, int vlen, int *ptag, int *pclass)
 static ASN1_TYPE *
 asn1_multi(int utype, const char *section, X509V3_CTX *cnf)
 {
-	ASN1_TYPE *ret = NULL;
 	STACK_OF(ASN1_TYPE) *sk = NULL;
 	STACK_OF(CONF_VALUE) *sect = NULL;
+	ASN1_TYPE *ret = NULL, *typ = NULL;
+	ASN1_STRING *astr = NULL;
 	unsigned char *der = NULL;
 	int derlen;
 	int i;
-	sk = sk_ASN1_TYPE_new_null();
-	if (!sk)
-		goto bad;
-	if (section) {
-		if (!cnf)
-			goto bad;
-		sect = X509V3_get_section(cnf, (char *)section);
-		if (!sect)
-			goto bad;
+
+	if ((sk = sk_ASN1_TYPE_new_null()) == NULL)
+		goto err;
+
+	if (section != NULL) {
+		if (cnf == NULL)
+			goto err;
+
+		if ((sect = X509V3_get0_section(cnf, section)) == NULL)
+			goto err;
+
 		for (i = 0; i < sk_CONF_VALUE_num(sect); i++) {
-			ASN1_TYPE *typ = ASN1_generate_v3(
-			    sk_CONF_VALUE_value(sect, i)->value, cnf);
-			if (!typ)
-				goto bad;
-			if (!sk_ASN1_TYPE_push(sk, typ))
-				goto bad;
+			CONF_VALUE *val = sk_CONF_VALUE_value(sect, i);
+
+			if ((typ = ASN1_generate_v3(val->value, cnf)) == NULL)
+				goto err;
+			if (sk_ASN1_TYPE_push(sk, typ) <= 0)
+				goto err;
+			typ = NULL;
 		}
 	}
 
-	/* Now we has a STACK of the components, convert to the correct form */
-
+	/* DER encode the stack as a SET or a SEQUENCE per utype. */
 	if (utype == V_ASN1_SET)
 		derlen = i2d_ASN1_SET_ANY(sk, &der);
 	else
 		derlen = i2d_ASN1_SEQUENCE_ANY(sk, &der);
 
 	if (derlen < 0)
-		goto bad;
+		goto err;
 
-	if (!(ret = ASN1_TYPE_new()))
-		goto bad;
-
-	if (!(ret->value.asn1_string = ASN1_STRING_type_new(utype)))
-		goto bad;
-
-	ret->type = utype;
-
-	ret->value.asn1_string->data = der;
-	ret->value.asn1_string->length = derlen;
-
+	if ((astr = ASN1_STRING_type_new(utype)) == NULL)
+		goto err;
+	ASN1_STRING_set0(astr, der, derlen);
 	der = NULL;
+	derlen = 0;
 
-bad:
+	if ((typ = ASN1_TYPE_new()) == NULL)
+		goto err;
+	ASN1_TYPE_set(typ, utype, astr);
+	astr = NULL;
+
+	ret = typ;
+	typ = NULL;
+
+ err:
+	sk_ASN1_TYPE_pop_free(sk, ASN1_TYPE_free);
+	ASN1_TYPE_free(typ);
+	ASN1_STRING_free(astr);
 	free(der);
-	if (sk)
-		sk_ASN1_TYPE_pop_free(sk, ASN1_TYPE_free);
-	if (sect)
-		X509V3_section_free(cnf, sect);
 
 	return ret;
 }
@@ -529,7 +538,8 @@ static int
 asn1_str2tag(const char *tagstr, int len)
 {
 	unsigned int i;
-	static const struct tag_name_st *tntmp, tnst [] = {
+	const struct tag_name_st *tntmp;
+	static const struct tag_name_st tnst[] = {
 		ASN1_GEN_STR("BOOL", V_ASN1_BOOLEAN),
 		ASN1_GEN_STR("BOOLEAN", V_ASN1_BOOLEAN),
 		ASN1_GEN_STR("NULL", V_ASN1_NULL),
@@ -754,10 +764,9 @@ asn1_str2type(const char *str, int format, int utype)
 		}
 
 		if ((utype == V_ASN1_BIT_STRING) && no_unused) {
-			atmp->value.asn1_string->flags &=
-			    ~(ASN1_STRING_FLAG_BITS_LEFT | 0x07);
-			atmp->value.asn1_string->flags |=
-			    ASN1_STRING_FLAG_BITS_LEFT;
+			if (!asn1_abs_set_unused_bits(atmp->value.asn1_string,
+			    0))
+				goto bad_str;
 		}
 
 		break;
@@ -771,9 +780,9 @@ asn1_str2type(const char *str, int format, int utype)
 	atmp->type = utype;
 	return atmp;
 
-bad_str:
+ bad_str:
 	ERR_asprintf_error_data("string=%s", str);
-bad_form:
+ bad_form:
 	ASN1_TYPE_free(atmp);
 	return NULL;
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: dh_check.c,v 1.17 2019/01/20 01:56:59 tb Exp $ */
+/* $OpenBSD: dh_check.c,v 1.33 2026/01/23 08:32:22 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -61,86 +61,239 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 
+#include "bn_local.h"
+#include "dh_local.h"
+
+#define DH_NUMBER_ITERATIONS_FOR_PRIME 64
+
 /*
- * Check that p is a safe prime and
- * if g is 2, 3 or 5, check that it is a suitable generator
- * where
- * for 2, p mod 24 == 11
- * for 3, p mod 12 == 5
- * for 5, p mod 10 == 3 or 7
- * should hold.
+ * Check that p is odd and 1 < g < p - 1.
  */
 
-int
-DH_check(const DH *dh, int *ret)
+static int
+DH_check_params(const DH *dh, int *flags)
 {
-	int is_prime, ok = 0;
-	BN_CTX *ctx = NULL;
-	BN_ULONG l;
-	BIGNUM *q = NULL;
+	BIGNUM *max_g = NULL;
+	int ok = 0;
 
-	*ret = 0;
-	ctx = BN_CTX_new();
-	if (ctx == NULL)
-		goto err;
-	q = BN_new();
-	if (q == NULL)
-		goto err;
+	*flags = 0;
 
-	if (BN_is_word(dh->g, DH_GENERATOR_2)) {
-		l = BN_mod_word(dh->p, 24);
-		if (l == (BN_ULONG)-1)
-			goto err;
-		if (l != 11)
-			*ret |= DH_NOT_SUITABLE_GENERATOR;
-	} else if (BN_is_word(dh->g, DH_GENERATOR_5)) {
-		l = BN_mod_word(dh->p, 10);
-		if (l == (BN_ULONG)-1)
-			goto err;
-		if (l != 3 && l != 7)
-			*ret |= DH_NOT_SUITABLE_GENERATOR;
-	} else
-		*ret |= DH_UNABLE_TO_CHECK_GENERATOR;
+	if (!BN_is_odd(dh->p))
+		*flags |= DH_CHECK_P_NOT_PRIME;
 
-	is_prime = BN_is_prime_ex(dh->p, BN_prime_checks, ctx, NULL);
-	if (is_prime < 0)
+	/*
+	 * Check that 1 < dh->g < p - 1
+	 */
+
+	if (BN_cmp(dh->g, BN_value_one()) <= 0)
+		*flags |= DH_NOT_SUITABLE_GENERATOR;
+	/* max_g = p - 1 */
+	if ((max_g = BN_dup(dh->p)) == NULL)
 		goto err;
-	if (is_prime == 0)
-		*ret |= DH_CHECK_P_NOT_PRIME;
-	else {
-		if (!BN_rshift1(q, dh->p))
-			goto err;
-		is_prime = BN_is_prime_ex(q, BN_prime_checks, ctx, NULL);
-		if (is_prime < 0)
-			goto err;
-		if (is_prime == 0)
-			*ret |= DH_CHECK_P_NOT_SAFE_PRIME;
-	}
+	if (!BN_sub_word(max_g, 1))
+		goto err;
+	/* check that g < max_g */
+	if (BN_cmp(dh->g, max_g) >= 0)
+		*flags |= DH_NOT_SUITABLE_GENERATOR;
+
 	ok = 1;
 
  err:
-	BN_CTX_free(ctx);
-	BN_free(q);
+	BN_free(max_g);
+
 	return ok;
 }
 
-int
-DH_check_pub_key(const DH *dh, const BIGNUM *pub_key, int *ret)
+typedef BIGNUM *(*get_p_fn)(BIGNUM *);
+
+static const get_p_fn get_well_known_p[] = {
+	BN_get_rfc2409_prime_768,
+	BN_get_rfc2409_prime_1024,
+	BN_get_rfc3526_prime_1536,
+	BN_get_rfc3526_prime_2048,
+	BN_get_rfc3526_prime_3072,
+	BN_get_rfc3526_prime_4096,
+	BN_get_rfc3526_prime_6144,
+	BN_get_rfc3526_prime_8192,
+	BN_get_rfc7919_prime_2048,
+	BN_get_rfc7919_prime_3072,
+	BN_get_rfc7919_prime_4096,
+	BN_get_rfc7919_prime_6144,
+	BN_get_rfc7919_prime_8192,
+};
+
+#define N_WELL_KNOWN_P_FN (sizeof(get_well_known_p) / sizeof(get_well_known_p[0]))
+
+/*
+ * Scapy special: on startup it now calls DH_check() on all the well-known DH
+ * primes, which is a sensible thing to do. In any case, using BN_is_prime_ex()
+ * on a standardized domain parameter is dumb, so avoid it.
+ */
+static int
+dh_is_well_known_p(const BIGNUM *p, BN_CTX *ctx, int *is_well_known)
 {
-	BIGNUM *q = NULL;
+	BIGNUM *bn;
+	size_t i;
+	int ret = 0;
 
-	*ret = 0;
-	q = BN_new();
-	if (q == NULL)
-		return 0;
-	BN_set_word(q, 1);
-	if (BN_cmp(pub_key, q) <= 0)
-		*ret |= DH_CHECK_PUBKEY_TOO_SMALL;
-	BN_copy(q, dh->p);
-	BN_sub_word(q, 1);
-	if (BN_cmp(pub_key, q) >= 0)
-		*ret |= DH_CHECK_PUBKEY_TOO_LARGE;
+	*is_well_known = 0;
 
-	BN_free(q);
-	return 1;
+	BN_CTX_start(ctx);
+	if ((bn = BN_CTX_get(ctx)) == NULL)
+		goto err;
+
+	for (i = 0; i < N_WELL_KNOWN_P_FN; i++) {
+		get_p_fn get_p = get_well_known_p[i];
+
+		if (get_p(bn) == NULL)
+			goto err;
+		if (BN_cmp(bn, p) == 0) {
+			*is_well_known = 1;
+			break;
+		}
+	}
+
+	ret = 1;
+
+ err:
+	BN_CTX_end(ctx);
+
+	return ret;
 }
+
+/*
+ * Check that p is a safe prime and that g is a suitable generator.
+ */
+
+int
+DH_check(const DH *dh, int *flags)
+{
+	BN_CTX *ctx = NULL;
+	int is_prime, is_well_known;
+	int ok = 0;
+
+	*flags = 0;
+
+	if (!DH_check_params(dh, flags))
+		goto err;
+
+	ctx = BN_CTX_new();
+	if (ctx == NULL)
+		goto err;
+	BN_CTX_start(ctx);
+
+	if (dh->q != NULL) {
+		BIGNUM *residue;
+
+		if ((residue = BN_CTX_get(ctx)) == NULL)
+			goto err;
+		if ((*flags & DH_NOT_SUITABLE_GENERATOR) == 0) {
+			/* Check g^q == 1 mod p */
+			if (!BN_mod_exp_ct(residue, dh->g, dh->q, dh->p, ctx))
+				goto err;
+			if (!BN_is_one(residue))
+				*flags |= DH_NOT_SUITABLE_GENERATOR;
+		}
+		is_prime = BN_is_prime_ex(dh->q, DH_NUMBER_ITERATIONS_FOR_PRIME,
+		    ctx, NULL);
+		if (is_prime < 0)
+			goto err;
+		if (is_prime == 0)
+			*flags |= DH_CHECK_Q_NOT_PRIME;
+		/* Check p == 1 mod q, i.e., q divides p - 1 */
+		if (!BN_div_ct(NULL, residue, dh->p, dh->q, ctx))
+			goto err;
+		if (!BN_is_one(residue))
+			*flags |= DH_CHECK_INVALID_Q_VALUE;
+	}
+
+	if (!dh_is_well_known_p(dh->p, ctx, &is_well_known))
+		goto err;
+	if (is_well_known)
+		goto done;
+
+	is_prime = BN_is_prime_ex(dh->p, DH_NUMBER_ITERATIONS_FOR_PRIME,
+	    ctx, NULL);
+	if (is_prime < 0)
+		goto err;
+	if (is_prime == 0)
+		*flags |= DH_CHECK_P_NOT_PRIME;
+	else if (dh->q == NULL) {
+		BIGNUM *q;
+
+		if ((q = BN_CTX_get(ctx)) == NULL)
+			goto err;
+		if (!BN_rshift1(q, dh->p))
+			goto err;
+		is_prime = BN_is_prime_ex(q, DH_NUMBER_ITERATIONS_FOR_PRIME,
+		    ctx, NULL);
+		if (is_prime < 0)
+			goto err;
+		if (is_prime == 0)
+			*flags |= DH_CHECK_P_NOT_SAFE_PRIME;
+	}
+
+ done:
+	ok = 1;
+
+ err:
+	BN_CTX_end(ctx);
+	BN_CTX_free(ctx);
+	return ok;
+}
+LCRYPTO_ALIAS(DH_check);
+
+int
+DH_check_pub_key(const DH *dh, const BIGNUM *pub_key, int *flags)
+{
+	BN_CTX *ctx = NULL;
+	BIGNUM *max_pub_key;
+	int ok = 0;
+
+	*flags = 0;
+
+	if ((ctx = BN_CTX_new()) == NULL)
+		goto err;
+	BN_CTX_start(ctx);
+	if ((max_pub_key = BN_CTX_get(ctx)) == NULL)
+		goto err;
+
+	/*
+	 * Check that 1 < pub_key < dh->p - 1
+	 */
+
+	if (BN_cmp(pub_key, BN_value_one()) <= 0)
+		*flags |= DH_CHECK_PUBKEY_TOO_SMALL;
+
+	/* max_pub_key = dh->p - 1 */
+	if (!BN_sub(max_pub_key, dh->p, BN_value_one()))
+		goto err;
+
+	if (BN_cmp(pub_key, max_pub_key) >= 0)
+		*flags |= DH_CHECK_PUBKEY_TOO_LARGE;
+
+	/*
+	 * If dh->q is set, check that pub_key^q == 1 mod p
+	 */
+
+	if (dh->q != NULL) {
+		BIGNUM *residue;
+
+		if ((residue = BN_CTX_get(ctx)) == NULL)
+			goto err;
+
+		if (!BN_mod_exp_ct(residue, pub_key, dh->q, dh->p, ctx))
+			goto err;
+		if (!BN_is_one(residue))
+			*flags |= DH_CHECK_PUBKEY_INVALID;
+	}
+
+	ok = 1;
+
+ err:
+	BN_CTX_end(ctx);
+	BN_CTX_free(ctx);
+
+	return ok;
+}
+LCRYPTO_ALIAS(DH_check_pub_key);

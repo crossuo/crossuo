@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_gen.c,v 1.22 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: rsa_gen.c,v 1.32 2025/09/29 08:46:15 jan Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,30 +56,18 @@
  * [including the GNU Public Licence.]
  */
 
-
-/* NB: these functions have been "upgraded", the deprecated versions (which are
- * compatibility wrappers using these functions) are in rsa_depr.c.
- * - Geoff
- */
-
 #include <stdio.h>
 #include <time.h>
 
 #include <openssl/bn.h>
-#include <openssl/err.h>
 #include <openssl/rsa.h>
 
-#include "bn_lcl.h"
+#include "bn_local.h"
+#include "err_local.h"
+#include "rsa_local.h"
 
 static int rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb);
 
-/*
- * NB: this wrapper would normally be placed in rsa_lib.c and the static
- * implementation would probably be in rsa_eay.c. Nonetheless, is kept here so
- * that we don't introduce a new linker dependency. Eg. any application that
- * wasn't previously linking object code related to key-generation won't have to
- * now just because key-generation is part of RSA_METHOD.
- */
 int
 RSA_generate_key_ex(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 {
@@ -87,6 +75,7 @@ RSA_generate_key_ex(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 		return rsa->meth->rsa_keygen(rsa, bits, e_value, cb);
 	return rsa_builtin_keygen(rsa, bits, e_value, cb);
 }
+LCRYPTO_ALIAS(RSA_generate_key_ex);
 
 static int
 rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
@@ -95,6 +84,7 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 	BIGNUM pr0, d, p;
 	int bitsp, bitsq, ok = -1, n = 0;
 	BN_CTX *ctx = NULL;
+	BIGNUM *diff, *mindiff;
 
 	ctx = BN_CTX_new();
 	if (ctx == NULL)
@@ -108,9 +98,23 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 		goto err;
 	if ((r3 = BN_CTX_get(ctx)) == NULL)
 		goto err;
+	if ((diff = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((mindiff = BN_CTX_get(ctx)) == NULL)
+		goto err;
 
 	bitsp = (bits + 1) / 2;
 	bitsq = bits - bitsp;
+
+	/*
+	 * To guarantee a minimum distance of 2^(bits/2 - 100) between p and q.
+	 *
+	 * NIST SP 800-56B, section 6.2.1, 3.c
+	 */
+	if (bits < 200)
+		goto err;
+	if (!BN_set_bit(mindiff, bits/2 - 100))
+		goto err;
 
 	/* We need the RSA components non-NULL */
 	if (!rsa->n && ((rsa->n = BN_new()) == NULL))
@@ -130,7 +134,8 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 	if (!rsa->iqmp && ((rsa->iqmp = BN_new()) == NULL))
 		goto err;
 
-	BN_copy(rsa->e, e_value);
+	if (!bn_copy(rsa->e, e_value))
+		goto err;
 
 	/* generate p and q */
 	for (;;) {
@@ -158,8 +163,9 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 			if (!BN_generate_prime_ex(rsa->q, bitsq, 0, NULL, NULL,
 			    cb))
 				goto err;
-		} while (BN_cmp(rsa->p, rsa->q) == 0 &&
-		    ++degenerate < 3);
+			if (!BN_sub(diff, rsa->p, rsa->q))
+				goto err;
+		} while (BN_ucmp(diff, mindiff) <= 0 && ++degenerate < 3);
 		if (degenerate == 3) {
 			ok = 0; /* we set our own err */
 			RSAerror(RSA_R_KEY_SIZE_TOO_SMALL);
@@ -194,12 +200,14 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 	if (!BN_mul(r0, r1, r2, ctx))			/* (p-1)(q-1) */
 		goto err;
 
+	BN_init(&pr0);
 	BN_with_flags(&pr0, r0, BN_FLG_CONSTTIME);
 
-	if (!BN_mod_inverse_ct(rsa->d, rsa->e, &pr0, ctx)) /* d */
+	if (BN_mod_inverse_ct(rsa->d, rsa->e, &pr0, ctx) == NULL) /* d */
 		goto err;
 
 	/* set up d for correct BN_FLG_CONSTTIME flag */
+	BN_init(&d);
 	BN_with_flags(&d, rsa->d, BN_FLG_CONSTTIME);
 
 	/* calculate d mod (p-1) */
@@ -211,8 +219,9 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 		goto err;
 
 	/* calculate inverse of q mod p */
+	BN_init(&p);
 	BN_with_flags(&p, rsa->p, BN_FLG_CONSTTIME);
-	if (!BN_mod_inverse_ct(rsa->iqmp, rsa->q, &p, ctx))
+	if (BN_mod_inverse_ct(rsa->iqmp, rsa->q, &p, ctx) == NULL)
 		goto err;
 
 	ok = 1;
@@ -228,3 +237,37 @@ err:
 
 	return ok;
 }
+
+RSA *
+RSA_generate_key(int bits, unsigned long e_value,
+    void (*callback)(int, int, void *), void *cb_arg)
+{
+	BN_GENCB cb;
+	int i;
+	RSA *rsa = RSA_new();
+	BIGNUM *e = BN_new();
+
+	if (!rsa || !e)
+		goto err;
+
+	/* The problem is when building with 8, 16, or 32 BN_ULONG,
+	 * unsigned long can be larger */
+	for (i = 0; i < (int)sizeof(unsigned long) * 8; i++) {
+		if (e_value & (1UL << i))
+			if (BN_set_bit(e, i) == 0)
+				goto err;
+	}
+
+	BN_GENCB_set_old(&cb, callback, cb_arg);
+
+	if (RSA_generate_key_ex(rsa, bits, e, &cb)) {
+		BN_free(e);
+		return rsa;
+	}
+err:
+	BN_free(e);
+	RSA_free(rsa);
+
+	return 0;
+}
+LCRYPTO_ALIAS(RSA_generate_key);

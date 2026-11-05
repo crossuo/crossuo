@@ -1,4 +1,4 @@
-/* $OpenBSD: a_mbstr.c,v 1.23 2017/01/29 17:49:22 beck Exp $ */
+/* $OpenBSD: a_mbstr.c,v 1.29 2026/06/09 12:29:47 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -57,13 +57,14 @@
  */
 
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <openssl/asn1.h>
-#include <openssl/err.h>
 
-#include "asn1_locl.h"
+#include "asn1_local.h"
+#include "err_local.h"
 
 static int traverse_string(const unsigned char *p, int len, int inform,
     int (*rfunc)(unsigned long value, void *in), void *arg);
@@ -90,6 +91,7 @@ ASN1_mbstring_copy(ASN1_STRING **out, const unsigned char *in, int len,
 {
 	return ASN1_mbstring_ncopy(out, in, len, inform, mask, 0, 0);
 }
+LCRYPTO_ALIAS(ASN1_mbstring_copy);
 
 int
 ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
@@ -104,8 +106,16 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 	int nchar;
 	int (*cpyfunc)(unsigned long, void *) = NULL;
 
-	if (len < 0)
-		len = strlen((const char *)in);
+	if (len < 0) {
+		size_t length;
+
+		if ((length = strlen((const char *)in)) >= INT_MAX) {
+			ASN1error(ASN1_R_STRING_TOO_LONG);
+			return -1;
+		}
+		len = length;
+	}
+
 	if (!mask)
 		mask = DIRSTRING_TYPE;
 
@@ -220,11 +230,19 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 		break;
 
 	case MBSTRING_BMP:
+		if (nchar > INT_MAX / 2) {
+			ASN1error(ASN1_R_STRING_TOO_LONG);
+			goto err;
+		}
 		outlen = nchar << 1;
 		cpyfunc = cpy_bmp;
 		break;
 
 	case MBSTRING_UNIV:
+		if (nchar > INT_MAX / 4) {
+			ASN1error(ASN1_R_STRING_TOO_LONG);
+			goto err;
+		}
 		outlen = nchar << 2;
 		cpyfunc = cpy_univ;
 		break;
@@ -248,13 +266,14 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 	traverse_string(in, len, inform, cpyfunc, &p);
 	return str_type;
 
-err:
+ err:
 	if (free_out) {
 		ASN1_STRING_free(dest);
 		*out = NULL;
 	}
 	return -1;
 }
+LCRYPTO_ALIAS(ASN1_mbstring_ncopy);
 
 /* This function traverses a string and passes the value of each character
  * to an optional function along with a void * argument.
@@ -276,7 +295,7 @@ traverse_string(const unsigned char *p, int len, int inform,
 		case MBSTRING_BMP:
 			value = *p++ << 8;
 			value |= *p++;
-			/* BMP is explictly defined to not support surrogates */
+			/* BMP is explicitly defined to not support surrogates */
 			if (UNICODE_IS_SURROGATE(value))
 				return -1;
 			len -= 2;

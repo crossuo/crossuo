@@ -1,4 +1,4 @@
-/* $OpenBSD: pk7_doit.c,v 1.44 2019/10/04 18:03:55 tb Exp $ */
+/* $OpenBSD: pk7_doit.c,v 1.69 2026/07/31 00:50:52 kenjiro Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -60,40 +60,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <openssl/err.h>
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
-static int add_attribute(STACK_OF(X509_ATTRIBUTE) **sk, int nid, int atrtype,
-    void *value);
-static ASN1_TYPE *get_attribute(STACK_OF(X509_ATTRIBUTE) *sk, int nid);
+#include "err_local.h"
+#include "evp_local.h"
+/* XXX - for PKCS7_get_octet_string(), which belongs in pkcs7_local.h. */
+#include "pkcs12_local.h"
+#include "x509_local.h"
 
 static int
 PKCS7_type_is_other(PKCS7* p7)
 {
-	int isOther = 1;
-
-	int nid = OBJ_obj2nid(p7->type);
-
-	switch (nid ) {
+	switch (OBJ_obj2nid(p7->type)) {
 	case NID_pkcs7_data:
 	case NID_pkcs7_signed:
 	case NID_pkcs7_enveloped:
 	case NID_pkcs7_signedAndEnveloped:
 	case NID_pkcs7_digest:
 	case NID_pkcs7_encrypted:
-		isOther = 0;
-		break;
-	default:
-		isOther = 1;
+		return 0;
 	}
 
-	return isOther;
-
+	return 1;
 }
 
-static ASN1_OCTET_STRING *
+ASN1_OCTET_STRING *
 PKCS7_get_octet_string(PKCS7 *p7)
 {
 	if (PKCS7_type_is_data(p7))
@@ -109,6 +102,7 @@ PKCS7_bio_add_digest(BIO **pbio, X509_ALGOR *alg)
 {
 	BIO *btmp;
 	const EVP_MD *md;
+
 	if ((btmp = BIO_new(BIO_f_md())) == NULL) {
 		PKCS7error(ERR_R_BIO_LIB);
 		goto err;
@@ -120,7 +114,11 @@ PKCS7_bio_add_digest(BIO **pbio, X509_ALGOR *alg)
 		goto err;
 	}
 
-	BIO_set_md(btmp, md);
+	if (BIO_set_md(btmp, md) <= 0) {
+		PKCS7error(ERR_R_BIO_LIB);
+		goto err;
+	}
+
 	if (*pbio == NULL)
 		*pbio = btmp;
 	else if (!BIO_push(*pbio, btmp)) {
@@ -280,10 +278,9 @@ PKCS7_dataInit(PKCS7 *p7, BIO *bio)
 		return NULL;
 	}
 
-	i = OBJ_obj2nid(p7->type);
 	p7->state = PKCS7_S_HEADER;
 
-	switch (i) {
+	switch (OBJ_obj2nid(p7->type)) {
 	case NID_pkcs7_signed:
 		md_sk = p7->d.sign->md_algs;
 		os = PKCS7_get_octet_string(p7->d.sign->contents);
@@ -399,8 +396,9 @@ err:
 			BIO_free_all(btmp);
 		out = NULL;
 	}
-	return (out);
+	return out;
 }
+LCRYPTO_ALIAS(PKCS7_dataInit);
 
 static int
 pkcs7_cmp_ri(PKCS7_RECIP_INFO *ri, X509 *pcert)
@@ -419,7 +417,6 @@ pkcs7_cmp_ri(PKCS7_RECIP_INFO *ri, X509 *pcert)
 BIO *
 PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
 {
-	int i, j;
 	BIO *out = NULL, *btmp = NULL, *etmp = NULL, *bio = NULL;
 	X509_ALGOR *xa;
 	ASN1_OCTET_STRING *data_body = NULL;
@@ -432,6 +429,7 @@ PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
 	PKCS7_RECIP_INFO *ri = NULL;
 	unsigned char *ek = NULL, *tkey = NULL;
 	int eklen = 0, tkeylen = 0;
+	int i;
 
 	if (p7 == NULL) {
 		PKCS7error(PKCS7_R_INVALID_NULL_POINTER);
@@ -443,10 +441,9 @@ PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
 		return NULL;
 	}
 
-	i = OBJ_obj2nid(p7->type);
 	p7->state = PKCS7_S_HEADER;
 
-	switch (i) {
+	switch (OBJ_obj2nid(p7->type)) {
 	case NID_pkcs7_signed:
 		data_body = PKCS7_get_octet_string(p7->d.sign->contents);
 		md_sk = p7->d.sign->md_algs;
@@ -486,14 +483,16 @@ PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
 				goto err;
 			}
 
-			j = OBJ_obj2nid(xa->algorithm);
-			evp_md = EVP_get_digestbynid(j);
+			evp_md = EVP_get_digestbynid(OBJ_obj2nid(xa->algorithm));
 			if (evp_md == NULL) {
 				PKCS7error(PKCS7_R_UNKNOWN_DIGEST_TYPE);
 				goto err;
 			}
 
-			BIO_set_md(btmp, evp_md);
+			if (BIO_set_md(btmp, evp_md) <= 0) {
+				PKCS7error(ERR_R_BIO_LIB);
+				goto err;
+			}
 			if (out == NULL)
 				out = btmp;
 			else
@@ -530,7 +529,7 @@ PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
 		/* If we haven't got a certificate try each ri in turn */
 		if (pcert == NULL) {
 			/* Always attempt to decrypt all rinfo even
-			 * after sucess as a defence against MMA timing
+			 * after success as a defence against MMA timing
 			 * attacks.
 			 */
 			for (i = 0; i < sk_PKCS7_RECIP_INFO_num(rsk); i++) {
@@ -624,8 +623,9 @@ err:
 			BIO_free_all(etmp);
 		out = NULL;
 	}
-	return (out);
+	return out;
 }
+LCRYPTO_ALIAS(PKCS7_dataDecode);
 
 static BIO *
 PKCS7_find_digest(EVP_MD_CTX **pmd, BIO *bio, int nid)
@@ -683,14 +683,14 @@ do_pkcs7_signed_attrib(PKCS7_SIGNER_INFO *si, EVP_MD_CTX *mctx)
 int
 PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
 {
-	int ret = 0;
-	int i, j;
 	BIO *btmp;
 	PKCS7_SIGNER_INFO *si;
 	EVP_MD_CTX *mdc, ctx_tmp;
 	STACK_OF(X509_ATTRIBUTE) *sk;
 	STACK_OF(PKCS7_SIGNER_INFO) *si_sk = NULL;
 	ASN1_OCTET_STRING *os = NULL;
+	int i, nid;
+	int ret = 0;
 
 	if (p7 == NULL) {
 		PKCS7error(PKCS7_R_INVALID_NULL_POINTER);
@@ -702,11 +702,10 @@ PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
 		return 0;
 	}
 
-	EVP_MD_CTX_init(&ctx_tmp);
-	i = OBJ_obj2nid(p7->type);
+	EVP_MD_CTX_legacy_clear(&ctx_tmp);
 	p7->state = PKCS7_S_HEADER;
 
-	switch (i) {
+	switch (nid = OBJ_obj2nid(p7->type)) {
 	case NID_pkcs7_data:
 		os = p7->d.data;
 		break;
@@ -776,9 +775,8 @@ PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
 			if (si->pkey == NULL)
 				continue;
 
-			j = OBJ_obj2nid(si->digest_alg->algorithm);
-
-			if ((btmp = PKCS7_find_digest(&mdc, bio, j)) == NULL)
+			nid = OBJ_obj2nid(si->digest_alg->algorithm);
+			if ((btmp = PKCS7_find_digest(&mdc, bio, nid)) == NULL)
 				goto err;
 
 			/* We now have the EVP_MD_CTX, lets do the
@@ -804,12 +802,13 @@ PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
 				if (!EVP_SignFinal(&ctx_tmp, abuf, &abuflen,
 				    si->pkey)) {
 					PKCS7error(ERR_R_EVP_LIB);
+					free(abuf);
 					goto err;
 				}
 				ASN1_STRING_set0(si->enc_digest, abuf, abuflen);
 			}
 		}
-	} else if (i == NID_pkcs7_digest) {
+	} else if (nid == NID_pkcs7_digest) {
 		unsigned char md_data[EVP_MAX_MD_SIZE];
 		unsigned int md_len;
 
@@ -852,8 +851,9 @@ PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
 	ret = 1;
 err:
 	EVP_MD_CTX_cleanup(&ctx_tmp);
-	return (ret);
+	return ret;
 }
+LCRYPTO_ALIAS(PKCS7_dataFinal);
 
 int
 PKCS7_SIGNER_INFO_sign(PKCS7_SIGNER_INFO *si)
@@ -869,7 +869,7 @@ PKCS7_SIGNER_INFO_sign(PKCS7_SIGNER_INFO *si)
 	if (md == NULL)
 		return 0;
 
-	EVP_MD_CTX_init(&mctx);
+	EVP_MD_CTX_legacy_clear(&mctx);
 	if (EVP_DigestSignInit(&mctx, &pctx, md, NULL, si->pkey) <= 0)
 		goto err;
 
@@ -912,15 +912,16 @@ err:
 	EVP_MD_CTX_cleanup(&mctx);
 	return 0;
 }
+LCRYPTO_ALIAS(PKCS7_SIGNER_INFO_sign);
 
 int
 PKCS7_dataVerify(X509_STORE *cert_store, X509_STORE_CTX *ctx, BIO *bio,
     PKCS7 *p7, PKCS7_SIGNER_INFO *si)
 {
 	PKCS7_ISSUER_AND_SERIAL *ias;
-	int ret = 0, i;
 	STACK_OF(X509) *cert;
 	X509 *x509;
+	int ret = 0;
 
 	if (p7 == NULL) {
 		PKCS7error(PKCS7_R_INVALID_NULL_POINTER);
@@ -960,8 +961,7 @@ PKCS7_dataVerify(X509_STORE *cert_store, X509_STORE_CTX *ctx, BIO *bio,
 		X509_STORE_CTX_cleanup(ctx);
 		goto err;
 	}
-	i = X509_verify_cert(ctx);
-	if (i <= 0) {
+	if (X509_verify_cert(ctx) <= 0) {
 		PKCS7error(ERR_R_X509_LIB);
 		X509_STORE_CTX_cleanup(ctx);
 		goto err;
@@ -969,10 +969,11 @@ PKCS7_dataVerify(X509_STORE *cert_store, X509_STORE_CTX *ctx, BIO *bio,
 	X509_STORE_CTX_cleanup(ctx);
 
 	return PKCS7_signatureVerify(bio, p7, si, x509);
+
 err:
-	
 	return ret;
 }
+LCRYPTO_ALIAS(PKCS7_dataVerify);
 
 int
 PKCS7_signatureVerify(BIO *bio, PKCS7 *p7, PKCS7_SIGNER_INFO *si, X509 *x509)
@@ -985,7 +986,7 @@ PKCS7_signatureVerify(BIO *bio, PKCS7 *p7, PKCS7_SIGNER_INFO *si, X509 *x509)
 	BIO *btmp;
 	EVP_PKEY *pkey;
 
-	EVP_MD_CTX_init(&mdc_tmp);
+	EVP_MD_CTX_legacy_clear(&mdc_tmp);
 
 	if (!PKCS7_type_is_signed(p7) &&
 	    !PKCS7_type_is_signedAndEnveloped(p7)) {
@@ -1054,8 +1055,10 @@ PKCS7_signatureVerify(BIO *bio, PKCS7 *p7, PKCS7_SIGNER_INFO *si, X509 *x509)
 			ret = -1;
 			goto err;
 		}
-		if (!EVP_VerifyUpdate(&mdc_tmp, abuf, alen))
+		if (!EVP_VerifyUpdate(&mdc_tmp, abuf, alen)) {
+			free(abuf);
 			goto err;
+		}
 
 		free(abuf);
 	}
@@ -1077,42 +1080,29 @@ PKCS7_signatureVerify(BIO *bio, PKCS7 *p7, PKCS7_SIGNER_INFO *si, X509 *x509)
 		ret = 1;
 err:
 	EVP_MD_CTX_cleanup(&mdc_tmp);
-	return (ret);
+	return ret;
 }
+LCRYPTO_ALIAS(PKCS7_signatureVerify);
 
 PKCS7_ISSUER_AND_SERIAL *
 PKCS7_get_issuer_and_serial(PKCS7 *p7, int idx)
 {
 	STACK_OF(PKCS7_RECIP_INFO) *rsk;
 	PKCS7_RECIP_INFO *ri;
-	int i;
 
-	i = OBJ_obj2nid(p7->type);
-	if (i != NID_pkcs7_signedAndEnveloped)
+	if (OBJ_obj2nid(p7->type) != NID_pkcs7_signedAndEnveloped)
 		return NULL;
+
 	if (p7->d.signed_and_enveloped == NULL)
 		return NULL;
-	rsk = p7->d.signed_and_enveloped->recipientinfo;
-	if (rsk == NULL)
+	if ((rsk = p7->d.signed_and_enveloped->recipientinfo) == NULL)
 		return NULL;
-	ri = sk_PKCS7_RECIP_INFO_value(rsk, 0);
-	if (sk_PKCS7_RECIP_INFO_num(rsk) <= idx)
-		return (NULL);
-	ri = sk_PKCS7_RECIP_INFO_value(rsk, idx);
-	return (ri->issuer_and_serial);
-}
+	if ((ri = sk_PKCS7_RECIP_INFO_value(rsk, idx)) == NULL)
+		return NULL;
 
-ASN1_TYPE *
-PKCS7_get_signed_attribute(PKCS7_SIGNER_INFO *si, int nid)
-{
-	return (get_attribute(si->auth_attr, nid));
+	return ri->issuer_and_serial;
 }
-
-ASN1_TYPE *
-PKCS7_get_attribute(PKCS7_SIGNER_INFO *si, int nid)
-{
-	return (get_attribute(si->unauth_attr, nid));
-}
+LCRYPTO_ALIAS(PKCS7_get_issuer_and_serial);
 
 static ASN1_TYPE *
 get_attribute(STACK_OF(X509_ATTRIBUTE) *sk, int nid)
@@ -1123,18 +1113,28 @@ get_attribute(STACK_OF(X509_ATTRIBUTE) *sk, int nid)
 
 	o = OBJ_nid2obj(nid);
 	if (!o || !sk)
-		return (NULL);
+		return NULL;
 	for (i = 0; i < sk_X509_ATTRIBUTE_num(sk); i++) {
 		xa = sk_X509_ATTRIBUTE_value(sk, i);
-		if (OBJ_cmp(xa->object, o) == 0) {
-			if (!xa->single && sk_ASN1_TYPE_num(xa->value.set))
-				return (sk_ASN1_TYPE_value(xa->value.set, 0));
-			else
-				return (NULL);
-		}
+		if (OBJ_cmp(xa->object, o) == 0)
+			return sk_ASN1_TYPE_value(xa->set, 0);
 	}
-	return (NULL);
+	return NULL;
 }
+
+ASN1_TYPE *
+PKCS7_get_signed_attribute(PKCS7_SIGNER_INFO *si, int nid)
+{
+	return get_attribute(si->auth_attr, nid);
+}
+LCRYPTO_ALIAS(PKCS7_get_signed_attribute);
+
+ASN1_TYPE *
+PKCS7_get_attribute(PKCS7_SIGNER_INFO *si, int nid)
+{
+	return get_attribute(si->unauth_attr, nid);
+}
+LCRYPTO_ALIAS(PKCS7_get_attribute);
 
 ASN1_OCTET_STRING *
 PKCS7_digest_from_attributes(STACK_OF(X509_ATTRIBUTE) *sk)
@@ -1147,97 +1147,117 @@ PKCS7_digest_from_attributes(STACK_OF(X509_ATTRIBUTE) *sk)
 		return NULL;
 	return astype->value.octet_string;
 }
+LCRYPTO_ALIAS(PKCS7_digest_from_attributes);
 
-int
-PKCS7_set_signed_attributes(PKCS7_SIGNER_INFO *p7si,
-    STACK_OF(X509_ATTRIBUTE) *sk)
+static STACK_OF(X509_ATTRIBUTE) *
+sk_X509_ATTRIBUTE_deep_copy(const STACK_OF(X509_ATTRIBUTE) *in_attrs)
 {
+	STACK_OF(X509_ATTRIBUTE) *attrs = NULL;
+	X509_ATTRIBUTE *attr = NULL;
 	int i;
 
-	if (p7si->auth_attr != NULL)
-		sk_X509_ATTRIBUTE_pop_free(p7si->auth_attr,
-		    X509_ATTRIBUTE_free);
-	p7si->auth_attr = sk_X509_ATTRIBUTE_dup(sk);
-	if (p7si->auth_attr == NULL)
-		return 0;
-	for (i = 0; i < sk_X509_ATTRIBUTE_num(sk); i++) {
-		if ((sk_X509_ATTRIBUTE_set(p7si->auth_attr, i,
-		    X509_ATTRIBUTE_dup(sk_X509_ATTRIBUTE_value(sk, i))))
-		    == NULL)
-			return (0);
+	if ((attrs = sk_X509_ATTRIBUTE_new_null()) == NULL) {
+		X509error(ERR_R_MALLOC_FAILURE);
+		goto err;
 	}
-	return (1);
+
+	for (i = 0; i < sk_X509_ATTRIBUTE_num(in_attrs); i++) {
+		attr = X509_ATTRIBUTE_dup(sk_X509_ATTRIBUTE_value(in_attrs, i));
+		if (attr == NULL)
+			goto err;
+		if (!sk_X509_ATTRIBUTE_push(attrs, attr))
+			goto err;
+		attr = NULL;
+	}
+
+	return attrs;
+
+ err:
+	X509_ATTRIBUTE_free(attr);
+	sk_X509_ATTRIBUTE_pop_free(attrs, X509_ATTRIBUTE_free);
+
+	return NULL;
 }
+
+int
+PKCS7_set_signed_attributes(PKCS7_SIGNER_INFO *p7si, STACK_OF(X509_ATTRIBUTE) *sk)
+{
+	sk_X509_ATTRIBUTE_pop_free(p7si->auth_attr, X509_ATTRIBUTE_free);
+	if ((p7si->auth_attr = sk_X509_ATTRIBUTE_deep_copy(sk)) == NULL)
+		return 0;
+	return 1;
+}
+LCRYPTO_ALIAS(PKCS7_set_signed_attributes);
 
 int
 PKCS7_set_attributes(PKCS7_SIGNER_INFO *p7si, STACK_OF(X509_ATTRIBUTE) *sk)
 {
+	sk_X509_ATTRIBUTE_pop_free(p7si->unauth_attr, X509_ATTRIBUTE_free);
+	if ((p7si->unauth_attr = sk_X509_ATTRIBUTE_deep_copy(sk)) == NULL)
+		return 0;
+	return 1;
+}
+LCRYPTO_ALIAS(PKCS7_set_attributes);
+
+static int
+add_attribute(STACK_OF(X509_ATTRIBUTE) **in_sk, int nid, int atrtype, void *value)
+{
+	STACK_OF(X509_ATTRIBUTE) *sk;
+	X509_ATTRIBUTE *old_attr = NULL, *new_attr = NULL;
+	int need_pop = 0;
 	int i;
 
-	if (p7si->unauth_attr != NULL)
-		sk_X509_ATTRIBUTE_pop_free(p7si->unauth_attr,
-		    X509_ATTRIBUTE_free);
-	p7si->unauth_attr = sk_X509_ATTRIBUTE_dup(sk);
-	if (p7si->unauth_attr == NULL)
-		return 0;
+	if ((sk = *in_sk) == NULL)
+		sk = sk_X509_ATTRIBUTE_new_null();
+	if (sk == NULL)
+		goto err;
+
+	/* Replace an already existing attribute with the given nid. */
 	for (i = 0; i < sk_X509_ATTRIBUTE_num(sk); i++) {
-		if ((sk_X509_ATTRIBUTE_set(p7si->unauth_attr, i,
-		    X509_ATTRIBUTE_dup(sk_X509_ATTRIBUTE_value(sk, i))))
-		    == NULL)
-			return (0);
+		old_attr = sk_X509_ATTRIBUTE_value(sk, i);
+		if(OBJ_obj2nid(old_attr->object) == nid)
+			break;
 	}
-	return (1);
+
+	/* If there is none, make room for the new one, so _set() succeeds. */
+	if (i == sk_X509_ATTRIBUTE_num(sk)) {
+		old_attr = NULL;
+		if (sk_X509_ATTRIBUTE_push(sk, NULL) <= 0)
+			goto err;
+		need_pop = 1;
+	}
+
+	/* On success, new_attr owns value. */
+	if ((new_attr = X509_ATTRIBUTE_create(nid, atrtype, value)) == NULL)
+		goto err;
+
+	X509_ATTRIBUTE_free(old_attr);
+	(void)sk_X509_ATTRIBUTE_set(sk, i, new_attr);
+
+	*in_sk = sk;
+
+	return 1;
+
+ err:
+	if (need_pop)
+		(void)sk_X509_ATTRIBUTE_pop(sk);
+	if (*in_sk != sk)
+		sk_X509_ATTRIBUTE_pop_free(sk, X509_ATTRIBUTE_free);
+
+	return 0;
 }
 
 int
 PKCS7_add_signed_attribute(PKCS7_SIGNER_INFO *p7si, int nid, int atrtype,
     void *value)
 {
-	return (add_attribute(&(p7si->auth_attr), nid, atrtype, value));
+	return add_attribute(&(p7si->auth_attr), nid, atrtype, value);
 }
+LCRYPTO_ALIAS(PKCS7_add_signed_attribute);
 
 int
 PKCS7_add_attribute(PKCS7_SIGNER_INFO *p7si, int nid, int atrtype, void *value)
 {
-	return (add_attribute(&(p7si->unauth_attr), nid, atrtype, value));
+	return add_attribute(&(p7si->unauth_attr), nid, atrtype, value);
 }
-
-static int
-add_attribute(STACK_OF(X509_ATTRIBUTE) **sk, int nid, int atrtype, void *value)
-{
-	X509_ATTRIBUTE *attr = NULL;
-
-	if (*sk == NULL) {
-		*sk = sk_X509_ATTRIBUTE_new_null();
-		if (*sk == NULL)
-			return 0;
-new_attrib:
-		if (!(attr = X509_ATTRIBUTE_create(nid, atrtype, value)))
-			return 0;
-		if (!sk_X509_ATTRIBUTE_push(*sk, attr)) {
-			X509_ATTRIBUTE_free(attr);
-			return 0;
-		}
-	} else {
-		int i;
-
-		for (i = 0; i < sk_X509_ATTRIBUTE_num(*sk); i++) {
-			attr = sk_X509_ATTRIBUTE_value(*sk, i);
-			if (OBJ_obj2nid(attr->object) == nid) {
-				X509_ATTRIBUTE_free(attr);
-				attr = X509_ATTRIBUTE_create(nid, atrtype,
-				    value);
-				if (attr == NULL)
-					return 0;
-				if (!sk_X509_ATTRIBUTE_set(*sk, i, attr)) {
-					X509_ATTRIBUTE_free(attr);
-					return 0;
-				}
-				goto end;
-			}
-		}
-		goto new_attrib;
-	}
-end:
-	return (1);
-}
+LCRYPTO_ALIAS(PKCS7_add_attribute);

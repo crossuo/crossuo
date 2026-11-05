@@ -1,4 +1,4 @@
-/* $OpenBSD: aes.h,v 1.14 2014/07/09 09:10:07 miod Exp $ */
+/* $OpenBSD: aes.h,v 1.16 2025/01/25 17:59:44 tb Exp $ */
 /* ====================================================================
  * Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
  *
@@ -54,10 +54,6 @@
 
 #include <openssl/opensslconf.h>
 
-#ifdef OPENSSL_NO_AES
-#error AES is disabled.
-#endif
-
 #include <stddef.h>
 
 #define AES_ENCRYPT	1
@@ -78,8 +74,6 @@ struct aes_key_st {
 	int rounds;
 };
 typedef struct aes_key_st AES_KEY;
-
-const char *AES_options(void);
 
 int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
     AES_KEY *key);

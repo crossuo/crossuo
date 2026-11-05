@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_prn.c,v 1.7 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: rsa_prn.c,v 1.11 2025/05/10 05:54:38 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -58,9 +58,10 @@
 
 #include <stdio.h>
 
-#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
+
+#include "err_local.h"
 
 int
 RSA_print_fp(FILE *fp, const RSA *x, int off)
@@ -77,17 +78,23 @@ RSA_print_fp(FILE *fp, const RSA *x, int off)
 	BIO_free(b);
 	return ret;
 }
+LCRYPTO_ALIAS(RSA_print_fp);
 
 int
 RSA_print(BIO *bp, const RSA *x, int off)
 {
 	EVP_PKEY *pk;
-	int ret;
+	int ret = 0;
 
-	pk = EVP_PKEY_new();
-	if (!pk || !EVP_PKEY_set1_RSA(pk, (RSA *)x))
-		return 0;
+	if ((pk = EVP_PKEY_new()) == NULL)
+		goto err;
+
+	if (!EVP_PKEY_set1_RSA(pk, (RSA *)x))
+		goto err;
+
 	ret = EVP_PKEY_print_private(bp, pk, off, NULL);
+ err:
 	EVP_PKEY_free(pk);
 	return ret;
 }
+LCRYPTO_ALIAS(RSA_print);

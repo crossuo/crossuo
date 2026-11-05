@@ -23,6 +23,7 @@ ssize_t pwrite(int d, const void *buf, size_t nbytes, off_t offset);
 #include <io.h>
 #include <process.h>
 
+#define STDIN_FILENO    0
 #define STDOUT_FILENO   1
 #define STDERR_FILENO   2
 
@@ -37,7 +38,16 @@ ssize_t pwrite(int d, const void *buf, size_t nbytes, off_t offset);
 
 #define access _access
 
-unsigned int sleep(unsigned int seconds);
+#ifdef _MSC_VER
+#include <windows.h>
+static inline unsigned int sleep(unsigned int seconds)
+{
+       Sleep(seconds * 1000);
+       return seconds;
+}
+
+int mkstemp(char *template);
+#endif
 
 int ftruncate(int fd, off_t length);
 uid_t getuid(void);
@@ -57,15 +67,25 @@ int getentropy(void *buf, size_t buflen);
 #endif
 #endif
 
+#ifndef HAVE_GETOPT
+#include "getopt.h"
+#endif
+
 #ifndef HAVE_GETPAGESIZE
 int getpagesize(void);
 #endif
 
+#ifndef HAVE_PLEDGE
 #define pledge(request, paths) 0
+#endif
+
+#ifndef HAVE_UNVEIL
 #define unveil(path, permissions) 0
+#endif
 
 #ifndef HAVE_PIPE2
-int pipe2(int fildes[2], int flags);
+int bsd_pipe2(int fildes[2], int flags);
+#define pipe2(fildes, flags) bsd_pipe2(fildes, flags)
 #endif
 
 #endif

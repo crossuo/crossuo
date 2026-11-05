@@ -1,4 +1,4 @@
-/*	$OpenBSD: bs_cbb.c,v 1.20 2019/01/23 22:20:40 beck Exp $	*/
+/*	$OpenBSD: bs_cbb.c,v 1.30 2024/06/22 15:25:06 jsing Exp $	*/
 /*
  * Copyright (c) 2014, Google Inc.
  *
@@ -12,12 +12,12 @@
  * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <openssl/opensslconf.h>
 
 #include "bytestring.h"
 
@@ -28,8 +28,7 @@ cbb_init(CBB *cbb, uint8_t *buf, size_t cap)
 {
 	struct cbb_buffer_st *base;
 
-	base = malloc(sizeof(struct cbb_buffer_st));
-	if (base == NULL)
+	if ((base = calloc(1, sizeof(struct cbb_buffer_st))) == NULL)
 		return 0;
 
 	base->buf = buf;
@@ -53,7 +52,7 @@ CBB_init(CBB *cbb, size_t initial_capacity)
 	if (initial_capacity == 0)
 		initial_capacity = CBB_INITIAL_SIZE;
 
-	if ((buf = malloc(initial_capacity)) == NULL)
+	if ((buf = calloc(1, initial_capacity)) == NULL)
 		return 0;
 
 	if (!cbb_init(cbb, buf, initial_capacity)) {
@@ -163,6 +162,9 @@ CBB_finish(CBB *cbb, uint8_t **out_data, size_t *out_len)
 		 * |out_data| and |out_len| can only be NULL if the CBB is
 		 * fixed.
 		 */
+		return 0;
+
+	if (out_data != NULL && *out_data != NULL)
 		return 0;
 
 	if (out_data != NULL)
@@ -278,7 +280,7 @@ CBB_discard_child(CBB *cbb)
 		return;
 
 	cbb->base->len = cbb->offset;
-	
+
 	cbb->child->base = NULL;
 	cbb->child = NULL;
 	cbb->pending_len_len = 0;
@@ -327,6 +329,12 @@ CBB_add_u24_length_prefixed(CBB *cbb, CBB *out_contents)
 }
 
 int
+CBB_add_u32_length_prefixed(CBB *cbb, CBB *out_contents)
+{
+	return cbb_add_length_prefixed(cbb, out_contents, 4);
+}
+
+int
 CBB_add_asn1(CBB *cbb, CBB *out_contents, unsigned int tag)
 {
 	if (tag > UINT8_MAX)
@@ -362,7 +370,7 @@ CBB_add_bytes(CBB *cbb, const uint8_t *data, size_t len)
 {
 	uint8_t *dest;
 
-	if (!CBB_add_space(cbb, &dest, len))
+	if (!CBB_flush(cbb) || !cbb_buffer_add(cbb->base, &dest, len))
 		return 0;
 
 	memcpy(dest, data, len);
@@ -375,6 +383,7 @@ CBB_add_space(CBB *cbb, uint8_t **out_data, size_t len)
 	if (!CBB_flush(cbb) || !cbb_buffer_add(cbb->base, out_data, len))
 		return 0;
 
+	memset(*out_data, 0, len);
 	return 1;
 }
 
@@ -412,6 +421,19 @@ CBB_add_u32(CBB *cbb, size_t value)
 		return 0;
 
 	return cbb_add_u(cbb, (uint32_t)value, 4);
+}
+
+int
+CBB_add_u64(CBB *cbb, uint64_t value)
+{
+	uint32_t a, b;
+
+	a = value >> 32;
+	b = value & 0xffffffff;
+
+	if (!CBB_add_u32(cbb, a))
+		return 0;
+	return CBB_add_u32(cbb, b);
 }
 
 int

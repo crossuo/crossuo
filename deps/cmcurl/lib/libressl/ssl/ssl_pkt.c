@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_pkt.c,v 1.16 2019/03/19 16:53:03 jsing Exp $ */
+/* $OpenBSD: ssl_pkt.c,v 1.80 2026/09/22 03:45:18 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -110,57 +110,62 @@
  */
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
-
-#include "ssl_locl.h"
 
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 
 #include "bytestring.h"
+#include "dtls_local.h"
+#include "ssl_local.h"
+#include "tls_content.h"
+#include "tls12_record.h"
 
 static int do_ssl3_write(SSL *s, int type, const unsigned char *buf,
-    unsigned int len, int create_empty_fragment);
-static int ssl3_get_record(SSL *s);
+    unsigned int len);
 
 /*
  * Force a WANT_READ return for certain error conditions where
  * we don't want to spin internally.
  */
-static void
+void
 ssl_force_want_read(SSL *s)
 {
-	BIO * bio;
+	BIO *bio;
 
 	bio = SSL_get_rbio(s);
 	BIO_clear_retry_flags(bio);
 	BIO_set_retry_read(bio);
-	s->internal->rwstate = SSL_READING;
+
+	s->rwstate = SSL_READING;
 }
 
 /*
  * If extend == 0, obtain new n-byte packet; if extend == 1, increase
  * packet by another n bytes.
- * The packet will be in the sub-array of S3I(s)->rbuf.buf specified
- * by s->internal->packet and s->internal->packet_length.
- * (If s->internal->read_ahead is set, 'max' bytes may be stored in rbuf
- * [plus s->internal->packet_length bytes if extend == 1].)
+ * The packet will be in the sub-array of s->s3->rbuf.buf specified
+ * by s->packet and s->packet_length.
+ * (If s->read_ahead is set, 'max' bytes may be stored in rbuf
+ * [plus s->packet_length bytes if extend == 1].)
  */
 static int
 ssl3_read_n(SSL *s, int n, int max, int extend)
 {
+	SSL3_BUFFER_INTERNAL *rb = &(s->s3->rbuf);
 	int i, len, left;
 	size_t align;
 	unsigned char *pkt;
-	SSL3_BUFFER *rb;
 
 	if (n <= 0)
 		return n;
 
-	rb = &(S3I(s)->rbuf);
-	if (rb->buf == NULL)
+	if (rb->buf == NULL) {
 		if (!ssl3_setup_read_buffer(s))
 			return -1;
+	}
+	if (rb->buf == NULL)
+		return -1;
 
 	left = rb->left;
 	align = (size_t)rb->buf + SSL3_RT_HEADER_LENGTH;
@@ -187,22 +192,22 @@ ssl3_read_n(SSL *s, int n, int max, int extend)
 				rb->offset = align;
 			}
 		}
-		s->internal->packet = rb->buf + rb->offset;
-		s->internal->packet_length = 0;
+		s->packet = rb->buf + rb->offset;
+		s->packet_length = 0;
 		/* ... now we can act as if 'extend' was set */
 	}
 
 	/* For DTLS/UDP reads should not span multiple packets
 	 * because the read operation returns the whole packet
 	 * at once (as long as it fits into the buffer). */
-	if (SSL_IS_DTLS(s)) {
+	if (SSL_is_dtls(s)) {
 		if (left > 0 && n > left)
 			n = left;
 	}
 
 	/* if there is enough in the buffer from a previous read, take some */
 	if (left >= n) {
-		s->internal->packet_length += n;
+		s->packet_length += n;
 		rb->left = left - n;
 		rb->offset += n;
 		return (n);
@@ -210,15 +215,15 @@ ssl3_read_n(SSL *s, int n, int max, int extend)
 
 	/* else we need to read more data */
 
-	len = s->internal->packet_length;
+	len = s->packet_length;
 	pkt = rb->buf + align;
 	/* Move any available bytes to front of buffer:
 	 * 'len' bytes already pointed to by 'packet',
 	 * 'left' extra ones at the end */
-	if (s->internal->packet != pkt)  {
+	if (s->packet != pkt)  {
 		/* len > 0 */
-		memmove(pkt, s->internal->packet, len + left);
-		s->internal->packet = pkt;
+		memmove(pkt, s->packet, len + left);
+		s->packet = pkt;
 		rb->offset = len + align;
 	}
 
@@ -228,24 +233,24 @@ ssl3_read_n(SSL *s, int n, int max, int extend)
 		return -1;
 	}
 
-	if (!s->internal->read_ahead) {
-		/* ignore max parameter */
-		max = n;
-	} else {
+	if (s->read_ahead || SSL_is_dtls(s)) {
 		if (max < n)
 			max = n;
 		if (max > (int)(rb->len - rb->offset))
 			max = rb->len - rb->offset;
+	} else {
+		/* ignore max parameter */
+		max = n;
 	}
 
 	while (left < n) {
-		/* Now we have len+left bytes at the front of S3I(s)->rbuf.buf
+		/* Now we have len+left bytes at the front of s->s3->rbuf.buf
 		 * and need to read in more until we have len+n (up to
 		 * len+max if possible) */
 
 		errno = 0;
 		if (s->rbio != NULL) {
-			s->internal->rwstate = SSL_READING;
+			s->rwstate = SSL_READING;
 			i = BIO_read(s->rbio, pkt + len + left, max - left);
 		} else {
 			SSLerror(s, SSL_R_READ_BIO_NOT_SET);
@@ -254,8 +259,8 @@ ssl3_read_n(SSL *s, int n, int max, int extend)
 
 		if (i <= 0) {
 			rb->left = left;
-			if (s->internal->mode & SSL_MODE_RELEASE_BUFFERS &&
-			    !SSL_IS_DTLS(s)) {
+			if (s->mode & SSL_MODE_RELEASE_BUFFERS &&
+			    !SSL_is_dtls(s)) {
 				if (len + left == 0)
 					ssl3_release_read_buffer(s);
 			}
@@ -268,7 +273,7 @@ ssl3_read_n(SSL *s, int n, int max, int extend)
 		 * the underlying transport protocol is message oriented as
 		 * opposed to byte oriented as in the TLS case.
 		 */
-		if (SSL_IS_DTLS(s)) {
+		if (SSL_is_dtls(s)) {
 			if (n > left)
 				n = left; /* makes the while condition false */
 		}
@@ -277,8 +282,8 @@ ssl3_read_n(SSL *s, int n, int max, int extend)
 	/* done reading, now the book-keeping */
 	rb->offset += n;
 	rb->left = left - n;
-	s->internal->packet_length += n;
-	s->internal->rwstate = SSL_NOTHING;
+	s->packet_length += n;
+	s->rwstate = SSL_NOTHING;
 
 	return (n);
 }
@@ -288,11 +293,11 @@ ssl3_packet_read(SSL *s, int plen)
 {
 	int n;
 
-	n = ssl3_read_n(s, plen, S3I(s)->rbuf.len, 0);
+	n = ssl3_read_n(s, plen, s->s3->rbuf.len, 0);
 	if (n <= 0)
 		return n;
-	if (s->internal->packet_length < plen)
-		return s->internal->packet_length;
+	if (s->packet_length < plen)
+		return s->packet_length;
 
 	return plen;
 }
@@ -302,260 +307,119 @@ ssl3_packet_extend(SSL *s, int plen)
 {
 	int rlen, n;
 
-	if (s->internal->packet_length >= plen)
+	if (s->packet_length >= plen)
 		return plen;
-	rlen = plen - s->internal->packet_length;
+	rlen = plen - s->packet_length;
 
 	n = ssl3_read_n(s, rlen, rlen, 1);
 	if (n <= 0)
 		return n;
-	if (s->internal->packet_length < plen)
-		return s->internal->packet_length;
+	if (s->packet_length < plen)
+		return s->packet_length;
 
 	return plen;
 }
 
-/* Call this to get a new input record.
- * It will return <= 0 if more data is needed, normally due to an error
- * or non-blocking IO.
- * When it finishes, one packet has been decoded and can be found in
- * ssl->s3->internal->rrec.type    - is the type of record
- * ssl->s3->internal->rrec.data, 	 - data
- * ssl->s3->internal->rrec.length, - number of bytes
- */
-/* used only by ssl3_read_bytes */
 static int
 ssl3_get_record(SSL *s)
 {
-	int al;
-	int enc_err, n, i, ret = -1;
-	SSL3_RECORD *rr;
-	SSL_SESSION *sess;
-	unsigned char md[EVP_MAX_MD_SIZE];
-	unsigned mac_size, orig_len;
-
-	rr = &(S3I(s)->rrec);
-	sess = s->session;
+	struct tls_content *rcontent;
+	uint8_t alert_desc;
+	int al, ret;
+	CBS cbs;
 
  again:
-	/* check if we have the header */
-	if ((s->internal->rstate != SSL_ST_READ_BODY) ||
-	    (s->internal->packet_length < SSL3_RT_HEADER_LENGTH)) {
-		CBS header;
-		uint16_t len, ssl_version;
-		uint8_t type;
+	if (s->s3->tls_rrec == NULL)
+		s->s3->tls_rrec = tls12_record_new();
+	if (s->s3->tls_rrec == NULL)
+		goto err;
 
-		n = ssl3_packet_read(s, SSL3_RT_HEADER_LENGTH);
-		if (n <= 0)
-			return (n);
-
-		s->internal->mac_packet = 1;
-		s->internal->rstate = SSL_ST_READ_BODY;
-
-		if (s->server && s->internal->first_packet) {
-			if ((ret = ssl_server_legacy_first_packet(s)) != 1)
-				return (ret);
-			ret = -1;
-		}
-
-		CBS_init(&header, s->internal->packet, SSL3_RT_HEADER_LENGTH);
-
-		/* Pull apart the header into the SSL3_RECORD */
-		if (!CBS_get_u8(&header, &type) ||
-		    !CBS_get_u16(&header, &ssl_version) ||
-		    !CBS_get_u16(&header, &len)) {
-			SSLerror(s, SSL_R_BAD_PACKET_LENGTH);
-			goto err;
-		}
-
-		rr->type = type;
-		rr->length = len;
-
-		/* Lets check version */
-		if (!s->internal->first_packet && ssl_version != s->version) {
+	if ((ret = tls12_record_recv(s->s3->tls_rrec, tls12_legacy_wire_read_cb, s)) <= 0) {
+		switch (ret) {
+		case TLS12_IO_EOF:
+			return 0;
+		case TLS12_IO_RECORD_VERSION:
 			SSLerror(s, SSL_R_WRONG_VERSION_NUMBER);
-			if ((s->version & 0xFF00) == (ssl_version & 0xFF00) &&
-			    !s->internal->enc_write_ctx && !s->internal->write_hash)
-				/* Send back error using their minor version number :-) */
-				s->version = ssl_version;
 			al = SSL_AD_PROTOCOL_VERSION;
-			goto f_err;
-		}
-
-		if ((ssl_version >> 8) != SSL3_VERSION_MAJOR) {
-			SSLerror(s, SSL_R_WRONG_VERSION_NUMBER);
-			goto err;
-		}
-
-		if (rr->length > S3I(s)->rbuf.len - SSL3_RT_HEADER_LENGTH) {
+			goto fatal_err;
+		case TLS12_IO_RECORD_OVERFLOW:
 			al = SSL_AD_RECORD_OVERFLOW;
 			SSLerror(s, SSL_R_PACKET_LENGTH_TOO_LONG);
-			goto f_err;
+			goto fatal_err;
 		}
-
-		/* now s->internal->rstate == SSL_ST_READ_BODY */
+		return -1;
 	}
 
-	/* s->internal->rstate == SSL_ST_READ_BODY, get and decode the data */
-
-	n = ssl3_packet_extend(s, SSL3_RT_HEADER_LENGTH + rr->length);
-	if (n <= 0)
-		return (n);
-	if (n != SSL3_RT_HEADER_LENGTH + rr->length)
-		return (n);
-
-	s->internal->rstate = SSL_ST_READ_HEADER; /* set state for later operations */
-
-	/* At this point, s->internal->packet_length == SSL3_RT_HEADER_LNGTH + rr->length,
-	 * and we have that many bytes in s->internal->packet
-	 */
-	rr->input = &(s->internal->packet[SSL3_RT_HEADER_LENGTH]);
-
-	/* ok, we can now read from 's->internal->packet' data into 'rr'
-	 * rr->input points at rr->length bytes, which
-	 * need to be copied into rr->data by either
-	 * the decryption or by the decompression
-	 * When the data is 'copied' into the rr->data buffer,
-	 * rr->input will be pointed at the new buffer */
-
-	/* We now have - encrypted [ MAC [ compressed [ plain ] ] ]
-	 * rr->length bytes of encrypted compressed stuff. */
-
-	/* check is not needed I believe */
-	if (rr->length > SSL3_RT_MAX_ENCRYPTED_LENGTH) {
-		al = SSL_AD_RECORD_OVERFLOW;
-		SSLerror(s, SSL_R_ENCRYPTED_LENGTH_TOO_LONG);
-		goto f_err;
+	if (!s->first_packet && tls12_record_version(s->s3->tls_rrec) != s->version) {
+		SSLerror(s, SSL_R_WRONG_VERSION_NUMBER);
+		al = SSL_AD_PROTOCOL_VERSION;
+		goto fatal_err;
 	}
 
-	/* decrypt in place in 'rr->input' */
-	rr->data = rr->input;
-
-	enc_err = s->method->internal->ssl3_enc->enc(s, 0);
-	/* enc_err is:
-	 *    0: (in non-constant time) if the record is publically invalid.
-	 *    1: if the padding is valid
-	 *    -1: if the padding is invalid */
-	if (enc_err == 0) {
-		al = SSL_AD_DECRYPTION_FAILED;
-		SSLerror(s, SSL_R_BLOCK_CIPHER_PAD_IS_WRONG);
-		goto f_err;
-	}
-
-
-	/* r->length is now the compressed data plus mac */
-	if ((sess != NULL) && (s->enc_read_ctx != NULL) &&
-	    (EVP_MD_CTX_md(s->read_hash) != NULL)) {
-		/* s->read_hash != NULL => mac_size != -1 */
-		unsigned char *mac = NULL;
-		unsigned char mac_tmp[EVP_MAX_MD_SIZE];
-
-		mac_size = EVP_MD_CTX_size(s->read_hash);
-		OPENSSL_assert(mac_size <= EVP_MAX_MD_SIZE);
-
-		/* kludge: *_cbc_remove_padding passes padding length in rr->type */
-		orig_len = rr->length + ((unsigned int)rr->type >> 8);
-
-		/* orig_len is the length of the record before any padding was
-		 * removed. This is public information, as is the MAC in use,
-		 * therefore we can safely process the record in a different
-		 * amount of time if it's too short to possibly contain a MAC.
-		 */
-		if (orig_len < mac_size ||
-			/* CBC records must have a padding length byte too. */
-		    (EVP_CIPHER_CTX_mode(s->enc_read_ctx) == EVP_CIPH_CBC_MODE &&
-		    orig_len < mac_size + 1)) {
-			al = SSL_AD_DECODE_ERROR;
-			SSLerror(s, SSL_R_LENGTH_TOO_SHORT);
-			goto f_err;
-		}
-
-		if (EVP_CIPHER_CTX_mode(s->enc_read_ctx) == EVP_CIPH_CBC_MODE) {
-			/* We update the length so that the TLS header bytes
-			 * can be constructed correctly but we need to extract
-			 * the MAC in constant time from within the record,
-			 * without leaking the contents of the padding bytes.
-			 * */
-			mac = mac_tmp;
-			ssl3_cbc_copy_mac(mac_tmp, rr, mac_size, orig_len);
-			rr->length -= mac_size;
-		} else {
-			/* In this case there's no padding, so |orig_len|
-			 * equals |rec->length| and we checked that there's
-			 * enough bytes for |mac_size| above. */
-			rr->length -= mac_size;
-			mac = &rr->data[rr->length];
-		}
-
-		i = tls1_mac(s,md,0 /* not send */);
-		if (i < 0 || mac == NULL ||
-		    timingsafe_memcmp(md, mac, (size_t)mac_size) != 0)
-			enc_err = -1;
-		if (rr->length >
-		    SSL3_RT_MAX_COMPRESSED_LENGTH + mac_size)
-			enc_err = -1;
-	}
-
-	if (enc_err < 0) {
-		/*
-		 * A separate 'decryption_failed' alert was introduced with
-		 * TLS 1.0, SSL 3.0 only has 'bad_record_mac'. But unless a
-		 * decryption failure is directly visible from the ciphertext
-		 * anyway, we should not reveal which kind of error
-		 * occurred -- this might become visible to an attacker
-		 * (e.g. via a logfile)
-		 */
-		al = SSL_AD_BAD_RECORD_MAC;
-		SSLerror(s, SSL_R_DECRYPTION_FAILED_OR_BAD_RECORD_MAC);
-		goto f_err;
-	}
-
-	if (rr->length > SSL3_RT_MAX_PLAIN_LENGTH) {
-		al = SSL_AD_RECORD_OVERFLOW;
-		SSLerror(s, SSL_R_DATA_LENGTH_TOO_LONG);
-		goto f_err;
-	}
-
-	rr->off = 0;
 	/*
-	 * So at this point the following is true
-	 *
-	 * ssl->s3->internal->rrec.type 	is the type of record
-	 * ssl->s3->internal->rrec.length	== number of bytes in record
-	 * ssl->s3->internal->rrec.off	== offset to first valid byte
-	 * ssl->s3->internal->rrec.data	== where to take bytes from, increment
-	 *			   after use :-).
+	 * A full record has now been read from the wire, which now needs
+	 * to be processed.
 	 */
+	tls12_record_layer_set_version(s->rl, s->version);
+	tls12_record_data(s->s3->tls_rrec, &cbs);
 
-	/* we have pulled in a full packet so zero things */
-	s->internal->packet_length = 0;
+	if (!tls12_record_layer_open_record(s->rl, &cbs)) {
+		tls12_record_layer_alert(s->rl, &alert_desc);
 
-	if (rr->length == 0) {
+		if (alert_desc == 0)
+			goto err;
+
+		if (alert_desc == SSL_AD_RECORD_OVERFLOW)
+			SSLerror(s, SSL_R_ENCRYPTED_LENGTH_TOO_LONG);
+		else if (alert_desc == SSL_AD_BAD_RECORD_MAC)
+			SSLerror(s, SSL_R_DECRYPTION_FAILED_OR_BAD_RECORD_MAC);
+
+		al = alert_desc;
+		goto fatal_err;
+	}
+
+	tls12_record_free(s->s3->tls_rrec);
+	s->s3->tls_rrec = NULL;
+
+	rcontent = tls12_record_layer_rcontent(s->rl);
+
+	if (tls_content_remaining(rcontent) == 0) {
 		/*
-		 * CBC countermeasures for known IV weaknesses
-		 * can legitimately insert a single empty record,
-		 * so we allow ourselves to read once past a single
-		 * empty record without forcing want_read.
+		 * Zero-length fragments are only permitted for application
+		 * data, as per RFC 5246 section 6.2.1.
 		 */
-		if (s->internal->empty_record_count++ > SSL_MAX_EMPTY_RECORDS) {
+		if (tls_content_type(rcontent) != SSL3_RT_APPLICATION_DATA) {
+			SSLerror(s, SSL_R_BAD_LENGTH);
+			al = SSL_AD_UNEXPECTED_MESSAGE;
+			goto fatal_err;
+		}
+
+		tls_content_clear(rcontent);
+
+		/*
+		 * CBC countermeasures for known IV weaknesses can legitimately
+		 * insert a single empty record, so we allow ourselves to read
+		 * once past a single empty record without forcing want_read.
+		 */
+		if (s->empty_record_count++ > SSL_MAX_EMPTY_RECORDS) {
 			SSLerror(s, SSL_R_PEER_BEHAVING_BADLY);
 			return -1;
 		}
-		if (s->internal->empty_record_count > 1) {
+		if (s->empty_record_count > 1) {
 			ssl_force_want_read(s);
 			return -1;
 		}
 		goto again;
-	} else {
-		s->internal->empty_record_count = 0;
 	}
 
-	return (1);
+	s->empty_record_count = 0;
 
-f_err:
+	return 1;
+
+ fatal_err:
 	ssl3_send_alert(s, SSL3_AL_FATAL, al);
-err:
-	return (ret);
+ err:
+	return -1;
 }
 
 /* Call this to write data in records of type 'type'
@@ -573,12 +437,12 @@ ssl3_write_bytes(SSL *s, int type, const void *buf_, int len)
 		return -1;
 	}
 
-	s->internal->rwstate = SSL_NOTHING;
-	tot = S3I(s)->wnum;
-	S3I(s)->wnum = 0;
+	s->rwstate = SSL_NOTHING;
+	tot = s->s3->wnum;
+	s->s3->wnum = 0;
 
-	if (SSL_in_init(s) && !s->internal->in_handshake) {
-		i = s->internal->handshake_func(s);
+	if (SSL_in_init(s) && !s->in_handshake) {
+		i = s->handshake_func(s);
 		if (i < 0)
 			return (i);
 		if (i == 0) {
@@ -596,23 +460,15 @@ ssl3_write_bytes(SSL *s, int type, const void *buf_, int len)
 		else
 			nw = n;
 
-		i = do_ssl3_write(s, type, &(buf[tot]), nw, 0);
+		i = do_ssl3_write(s, type, &(buf[tot]), nw);
 		if (i <= 0) {
-			S3I(s)->wnum = tot;
+			s->s3->wnum = tot;
 			return i;
 		}
 
 		if ((i == (int)n) || (type == SSL3_RT_APPLICATION_DATA &&
-		    (s->internal->mode & SSL_MODE_ENABLE_PARTIAL_WRITE))) {
-			/*
-			 * Next chunk of data should get another prepended
-			 * empty fragment in ciphersuites with known-IV
-			 * weakness.
-			 */
-			S3I(s)->empty_fragment_done = 0;
-
+		    (s->mode & SSL_MODE_ENABLE_PARTIAL_WRITE)))
 			return tot + i;
-		}
 
 		n -= i;
 		tot += i;
@@ -620,215 +476,95 @@ ssl3_write_bytes(SSL *s, int type, const void *buf_, int len)
 }
 
 static int
-do_ssl3_write(SSL *s, int type, const unsigned char *buf,
-    unsigned int len, int create_empty_fragment)
+do_ssl3_write(SSL *s, int type, const unsigned char *buf, unsigned int len)
 {
-	unsigned char *p, *plen;
-	int i, mac_size, clear = 0;
-	int prefix_len = 0;
-	int eivlen;
-	size_t align;
-	SSL3_RECORD *wr;
-	SSL3_BUFFER *wb = &(S3I(s)->wbuf);
-	SSL_SESSION *sess;
+	struct tls12_record *wrec = NULL;
+	uint8_t *data = NULL;
+	size_t data_len = 0;
+	CBB cbb;
+	int ret;
 
-	if (wb->buf == NULL)
-		if (!ssl3_setup_write_buffer(s))
+	memset(&cbb, 0, sizeof(cbb));
+
+	/* Send any existing record content. */
+	if (s->s3->tls_wrec != NULL) {
+		if ((ret = tls12_record_send(s->s3->tls_wrec,
+		    tls12_legacy_wire_write_cb, s)) <= 0)
 			return -1;
+		tls12_record_free(s->s3->tls_wrec);
+		s->s3->tls_wrec = NULL;
 
-	/* first check if there is a SSL3_BUFFER still being written
-	 * out.  This will happen with non blocking IO */
-	if (wb->left != 0)
-		return (ssl3_write_pending(s, type, buf, len));
-
-	/* If we have an alert to send, lets send it */
-	if (S3I(s)->alert_dispatch) {
-		i = s->method->ssl_dispatch_alert(s);
-		if (i <= 0)
-			return (i);
-		/* if it went, fall through and send more stuff */
-		/* we may have released our buffer, so get it again */
-		if (wb->buf == NULL)
-			if (!ssl3_setup_write_buffer(s))
-				return -1;
+		return s->s3->wpend_ret;
 	}
 
-	if (len == 0 && !create_empty_fragment)
+	/* If we have an alert to send, let's send it. */
+	if (s->s3->alert_dispatch) {
+		if ((ret = ssl3_dispatch_alert(s)) <= 0)
+			return ret;
+	}
+
+	if (len == 0)
 		return 0;
 
-	wr = &(S3I(s)->wrec);
-	sess = s->session;
+	if (!CBB_init(&cbb, TLS12_RECORD_MAX_CIPHER_OVERHEAD + len))
+		goto err;
 
-	if ((sess == NULL) || (s->internal->enc_write_ctx == NULL) ||
-	    (EVP_MD_CTX_md(s->internal->write_hash) == NULL)) {
-		clear = s->internal->enc_write_ctx ? 0 : 1; /* must be AEAD cipher */
-		mac_size = 0;
-	} else {
-		mac_size = EVP_MD_CTX_size(s->internal->write_hash);
-		if (mac_size < 0)
-			goto err;
-	}
+	tls12_record_layer_set_version(s->rl, s->version);
+
+	if (!tls12_record_layer_seal_record(s->rl, type, buf, len, &cbb))
+		goto err;
+
+	if (!CBB_finish(&cbb, &data, &data_len))
+		goto err;
+
+	if ((wrec = tls12_record_new()) == NULL)
+		goto err;
+	if (!tls12_record_set_data(wrec, data, data_len))
+		goto err;
+
+	data = NULL;
+	data_len = 0;
+
+	s->s3->tls_wrec = wrec;
+	wrec = NULL;
 
 	/*
-	 * 'create_empty_fragment' is true only when this function calls
-	 * itself.
+	 * Memorize arguments so that ssl3_write_pending can detect
+	 * bad write retries later.
 	 */
-	if (!clear && !create_empty_fragment && !S3I(s)->empty_fragment_done) {
-		/*
-		 * Countermeasure against known-IV weakness in CBC ciphersuites
-		 * (see http://www.openssl.org/~bodo/tls-cbc.txt)
-		 */
-		if (S3I(s)->need_empty_fragments &&
-		    type == SSL3_RT_APPLICATION_DATA) {
-			/* recursive function call with 'create_empty_fragment' set;
-			 * this prepares and buffers the data for an empty fragment
-			 * (these 'prefix_len' bytes are sent out later
-			 * together with the actual payload) */
-			prefix_len = do_ssl3_write(s, type, buf, 0, 1);
-			if (prefix_len <= 0)
-				goto err;
+	s->s3->wpend_tot = len;
+	s->s3->wpend_buf = buf;
+	s->s3->wpend_type = type;
+	s->s3->wpend_ret = len;
 
-			if (prefix_len >
-				(SSL3_RT_HEADER_LENGTH + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD)) {
-				/* insufficient space */
-				SSLerror(s, ERR_R_INTERNAL_ERROR);
-				goto err;
-			}
-		}
+	if ((ret = tls12_record_send(s->s3->tls_wrec,
+	    tls12_legacy_wire_write_cb, s)) <= 0)
+		return -1;
 
-		S3I(s)->empty_fragment_done = 1;
-	}
+	tls12_record_free(s->s3->tls_wrec);
+	s->s3->tls_wrec = NULL;
 
-	if (create_empty_fragment) {
-		/* extra fragment would be couple of cipher blocks,
-		 * which would be multiple of SSL3_ALIGN_PAYLOAD, so
-		 * if we want to align the real payload, then we can
-		 * just pretent we simply have two headers. */
-		align = (size_t)wb->buf + 2 * SSL3_RT_HEADER_LENGTH;
-		align = (-align) & (SSL3_ALIGN_PAYLOAD - 1);
+	return s->s3->wpend_ret;
 
-		p = wb->buf + align;
-		wb->offset = align;
-	} else if (prefix_len) {
-		p = wb->buf + wb->offset + prefix_len;
-	} else {
-		align = (size_t)wb->buf + SSL3_RT_HEADER_LENGTH;
-		align = (-align) & (SSL3_ALIGN_PAYLOAD - 1);
+ err:
+	tls12_record_free(wrec);
+	freezero(data, data_len);
+	CBB_cleanup(&cbb);
 
-		p = wb->buf + align;
-		wb->offset = align;
-	}
-
-	/* write the header */
-
-	*(p++) = type&0xff;
-	wr->type = type;
-
-	*(p++) = (s->version >> 8);
-	/* Some servers hang if iniatial client hello is larger than 256
-	 * bytes and record version number > TLS 1.0
-	 */
-	if (S3I(s)->hs.state == SSL3_ST_CW_CLNT_HELLO_B && !s->internal->renegotiate &&
-	    TLS1_get_version(s) > TLS1_VERSION)
-		*(p++) = 0x1;
-	else
-		*(p++) = s->version&0xff;
-
-	/* field where we are to write out packet length */
-	plen = p;
-	p += 2;
-
-	/* Explicit IV length. */
-	eivlen = 0;
-	if (s->internal->enc_write_ctx && SSL_USE_EXPLICIT_IV(s)) {
-		int mode = EVP_CIPHER_CTX_mode(s->internal->enc_write_ctx);
-		if (mode == EVP_CIPH_CBC_MODE) {
-			eivlen = EVP_CIPHER_CTX_iv_length(s->internal->enc_write_ctx);
-			if (eivlen <= 1)
-				eivlen = 0;
-		}
-	} else if (s->internal->aead_write_ctx != NULL &&
-	    s->internal->aead_write_ctx->variable_nonce_in_record) {
-		eivlen = s->internal->aead_write_ctx->variable_nonce_len;
-	}
-
-	/* lets setup the record stuff. */
-	wr->data = p + eivlen;
-	wr->length = (int)len;
-	wr->input = (unsigned char *)buf;
-
-	/* we now 'read' from wr->input, wr->length bytes into wr->data */
-
-	memcpy(wr->data, wr->input, wr->length);
-	wr->input = wr->data;
-
-	/* we should still have the output to wr->data and the input
-	 * from wr->input.  Length should be wr->length.
-	 * wr->data still points in the wb->buf */
-
-	if (mac_size != 0) {
-		if (tls1_mac(s,
-		    &(p[wr->length + eivlen]), 1) < 0)
-			goto err;
-		wr->length += mac_size;
-	}
-
-	wr->input = p;
-	wr->data = p;
-
-	if (eivlen) {
-		/* if (RAND_pseudo_bytes(p, eivlen) <= 0)
-			goto err;
-		*/
-		wr->length += eivlen;
-	}
-
-	/* ssl3_enc can only have an error on read */
-	s->method->internal->ssl3_enc->enc(s, 1);
-
-	/* record length after mac and block padding */
-	s2n(wr->length, plen);
-
-	/* we should now have
-	 * wr->data pointing to the encrypted data, which is
-	 * wr->length long */
-	wr->type=type; /* not needed but helps for debugging */
-	wr->length += SSL3_RT_HEADER_LENGTH;
-
-	if (create_empty_fragment) {
-		/* we are in a recursive call;
-		 * just return the length, don't write out anything here
-		 */
-		return wr->length;
-	}
-
-	/* now let's set up wb */
-	wb->left = prefix_len + wr->length;
-
-	/* memorize arguments so that ssl3_write_pending can detect
-	 * bad write retries later */
-	S3I(s)->wpend_tot = len;
-	S3I(s)->wpend_buf = buf;
-	S3I(s)->wpend_type = type;
-	S3I(s)->wpend_ret = len;
-
-	/* we now just need to write the buffer */
-	return ssl3_write_pending(s, type, buf, len);
-err:
 	return -1;
 }
 
-/* if S3I(s)->wbuf.left != 0, we need to call this */
+/* if s->s3->wbuf.left != 0, we need to call this */
 int
 ssl3_write_pending(SSL *s, int type, const unsigned char *buf, unsigned int len)
 {
 	int i;
-	SSL3_BUFFER *wb = &(S3I(s)->wbuf);
+	SSL3_BUFFER_INTERNAL *wb = &(s->s3->wbuf);
 
 	/* XXXX */
-	if ((S3I(s)->wpend_tot > (int)len) || ((S3I(s)->wpend_buf != buf) &&
-	    !(s->internal->mode & SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER)) ||
-	    (S3I(s)->wpend_type != type)) {
+	if ((s->s3->wpend_tot > (int)len) || ((s->s3->wpend_buf != buf) &&
+	    !(s->mode & SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER)) ||
+	    (s->s3->wpend_type != type)) {
 		SSLerror(s, SSL_R_BAD_WRITE_RETRY);
 		return (-1);
 	}
@@ -836,10 +572,9 @@ ssl3_write_pending(SSL *s, int type, const unsigned char *buf, unsigned int len)
 	for (;;) {
 		errno = 0;
 		if (s->wbio != NULL) {
-			s->internal->rwstate = SSL_WRITING;
-			i = BIO_write(s->wbio,
-			(char *)&(wb->buf[wb->offset]),
-			(unsigned int)wb->left);
+			s->rwstate = SSL_WRITING;
+			i = BIO_write(s->wbio, (char *)&(wb->buf[wb->offset]),
+			    (unsigned int)wb->left);
 		} else {
 			SSLerror(s, SSL_R_BIO_NOT_SET);
 			i = -1;
@@ -847,23 +582,351 @@ ssl3_write_pending(SSL *s, int type, const unsigned char *buf, unsigned int len)
 		if (i == wb->left) {
 			wb->left = 0;
 			wb->offset += i;
-			if (s->internal->mode & SSL_MODE_RELEASE_BUFFERS &&
-			    !SSL_IS_DTLS(s))
+			if (s->mode & SSL_MODE_RELEASE_BUFFERS &&
+			    !SSL_is_dtls(s))
 				ssl3_release_write_buffer(s);
-			s->internal->rwstate = SSL_NOTHING;
-			return (S3I(s)->wpend_ret);
+			s->rwstate = SSL_NOTHING;
+			return (s->s3->wpend_ret);
 		} else if (i <= 0) {
 			/*
 			 * For DTLS, just drop it. That's kind of the
 			 * whole point in using a datagram service.
 			 */
-			if (SSL_IS_DTLS(s))
+			if (SSL_is_dtls(s))
 				wb->left = 0;
 			return (i);
 		}
 		wb->offset += i;
 		wb->left -= i;
 	}
+}
+
+static ssize_t
+ssl3_read_cb(void *buf, size_t n, void *cb_arg)
+{
+	SSL *s = cb_arg;
+
+	return tls_content_read(tls12_record_layer_rcontent(s->rl), buf, n);
+}
+
+#define SSL3_ALERT_LENGTH	2
+
+int
+ssl3_read_alert(SSL *s)
+{
+	uint8_t alert_level, alert_descr;
+	ssize_t ret;
+	CBS cbs;
+
+	/*
+	 * TLSv1.2 permits an alert to be fragmented across multiple records or
+	 * for multiple alerts to be be coalesced into a single alert record.
+	 * In the case of DTLS, there is no way to reassemble an alert
+	 * fragmented across multiple records, hence a full alert must be
+	 * available in the record.
+	 */
+	if (s->s3->alert_fragment == NULL) {
+		if ((s->s3->alert_fragment = tls_buffer_new(0)) == NULL)
+			return -1;
+		tls_buffer_set_capacity_limit(s->s3->alert_fragment,
+		    SSL3_ALERT_LENGTH);
+	}
+	ret = tls_buffer_extend(s->s3->alert_fragment, SSL3_ALERT_LENGTH,
+	    ssl3_read_cb, s);
+	if (ret <= 0 && ret != TLS_IO_WANT_POLLIN)
+		return -1;
+	if (ret != SSL3_ALERT_LENGTH) {
+		if (SSL_is_dtls(s)) {
+			SSLerror(s, SSL_R_BAD_LENGTH);
+			ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_DECODE_ERROR);
+			return -1;
+		}
+		return 1;
+	}
+
+	if (!tls_buffer_data(s->s3->alert_fragment, &cbs))
+		return -1;
+
+	ssl_msg_callback_cbs(s, 0, SSL3_RT_ALERT, &cbs);
+
+	if (!CBS_get_u8(&cbs, &alert_level))
+		return -1;
+	if (!CBS_get_u8(&cbs, &alert_descr))
+		return -1;
+
+	tls_buffer_free(s->s3->alert_fragment);
+	s->s3->alert_fragment = NULL;
+
+	ssl_info_callback(s, SSL_CB_READ_ALERT,
+	    (alert_level << 8) | alert_descr);
+
+	if (alert_level == SSL3_AL_WARNING) {
+		s->s3->warn_alert = alert_descr;
+		if (alert_descr == SSL_AD_CLOSE_NOTIFY) {
+			s->shutdown |= SSL_RECEIVED_SHUTDOWN;
+			return 0;
+		}
+		/* We requested renegotiation and the peer rejected it. */
+		if (alert_descr == SSL_AD_NO_RENEGOTIATION) {
+			SSLerror(s, SSL_R_NO_RENEGOTIATION);
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			    SSL_AD_HANDSHAKE_FAILURE);
+			return -1;
+		}
+	} else if (alert_level == SSL3_AL_FATAL) {
+		s->rwstate = SSL_NOTHING;
+		s->s3->fatal_alert = alert_descr;
+		SSLerror(s, SSL_AD_REASON_OFFSET + alert_descr);
+		ERR_asprintf_error_data("SSL alert number %d", alert_descr);
+		s->shutdown |= SSL_RECEIVED_SHUTDOWN;
+		SSL_CTX_remove_session(s->ctx, s->session);
+		return 0;
+	} else {
+		SSLerror(s, SSL_R_UNKNOWN_ALERT_TYPE);
+		ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_ILLEGAL_PARAMETER);
+		return -1;
+	}
+
+	return 1;
+}
+
+int
+ssl3_read_change_cipher_spec(SSL *s)
+{
+	const uint8_t ccs[1] = { SSL3_MT_CCS };
+	struct tls_content *rcontent;
+
+	rcontent = tls12_record_layer_rcontent(s->rl);
+
+	/*
+	 * ChangeCipherSpec is just a single byte, so we know exactly what
+	 * the record payload has to look like.
+	 */
+	if (tls_content_remaining(rcontent) != sizeof(ccs)) {
+		SSLerror(s, SSL_R_BAD_CHANGE_CIPHER_SPEC);
+		ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_DECODE_ERROR);
+		return -1;
+	}
+	if (!tls_content_equal(rcontent, ccs, sizeof(ccs))) {
+		SSLerror(s, SSL_R_BAD_CHANGE_CIPHER_SPEC);
+		ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_ILLEGAL_PARAMETER);
+		return -1;
+	}
+
+	/* XDTLS: check that epoch is consistent */
+
+	ssl_msg_callback_cbs(s, 0, SSL3_RT_CHANGE_CIPHER_SPEC,
+	    tls_content_cbs(rcontent));
+
+	/* Check that we have a cipher to change to. */
+	if (s->s3->hs.cipher == NULL) {
+		SSLerror(s, SSL_R_CCS_RECEIVED_EARLY);
+		ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_UNEXPECTED_MESSAGE);
+		return -1;
+	}
+
+	/* Check that we should be receiving ChangeCipherSpec. */
+	if ((s->s3->flags & SSL3_FLAGS_CCS_OK) == 0) {
+		if (SSL_is_dtls(s)) {
+			/*
+			 * A CCS cannot be processed currently - either we're
+			 * missing earlier handshake messages or it's an
+			 * unexpected message. In both cases just drop it.
+			 */
+			tls_content_clear(rcontent);
+			return 1;
+		} else {
+			SSLerror(s, SSL_R_CCS_RECEIVED_EARLY);
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			    SSL_AD_UNEXPECTED_MESSAGE);
+			return -1;
+		}
+	}
+	s->s3->flags &= ~SSL3_FLAGS_CCS_OK;
+
+	tls_content_clear(rcontent);
+
+	s->s3->change_cipher_spec = 1;
+	if (!ssl3_do_change_cipher_spec(s))
+		return -1;
+
+	return 1;
+}
+
+static int
+ssl3_read_handshake_unexpected(SSL *s)
+{
+	uint32_t hs_msg_length;
+	uint8_t hs_msg_type;
+	ssize_t ssret;
+	CBS cbs;
+	int ret;
+
+	/*
+	 * We need four bytes of handshake data so we have a handshake message
+	 * header - this may be in the same record or fragmented across multiple
+	 * records.
+	 */
+	if (s->s3->handshake_fragment == NULL) {
+		if ((s->s3->handshake_fragment = tls_buffer_new(0)) == NULL)
+			return -1;
+		tls_buffer_set_capacity_limit(s->s3->handshake_fragment,
+		    SSL3_HM_HEADER_LENGTH);
+	}
+	ssret = tls_buffer_extend(s->s3->handshake_fragment, SSL3_HM_HEADER_LENGTH,
+	    ssl3_read_cb, s);
+	if (ssret <= 0 && ssret != TLS_IO_WANT_POLLIN)
+		return -1;
+	if (ssret != SSL3_HM_HEADER_LENGTH)
+		return 1;
+
+	if (s->in_handshake) {
+		SSLerror(s, ERR_R_INTERNAL_ERROR);
+		return -1;
+	}
+
+	/*
+	 * This code currently deals with HelloRequest and ClientHello messages -
+	 * anything else is pushed to the handshake_func. Almost all of this
+	 * belongs in the client/server handshake code.
+	 */
+
+	/* Parse handshake message header. */
+	if (!tls_buffer_data(s->s3->handshake_fragment, &cbs))
+		return -1;
+	if (!CBS_get_u8(&cbs, &hs_msg_type))
+		return -1;
+	if (!CBS_get_u24(&cbs, &hs_msg_length))
+		return -1;
+
+	if (hs_msg_type == SSL3_MT_HELLO_REQUEST) {
+		/*
+		 * Incoming HelloRequest messages should only be received by a
+		 * client. A server may send these at any time - a client should
+		 * ignore the message if received in the middle of a handshake.
+		 * See RFC 5246 sections 7.4 and 7.4.1.1.
+		 */
+		if (s->server) {
+			SSLerror(s, SSL_R_UNEXPECTED_MESSAGE);
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			     SSL_AD_UNEXPECTED_MESSAGE);
+			return -1;
+		}
+
+		if (hs_msg_length != 0) {
+			SSLerror(s, SSL_R_BAD_HELLO_REQUEST);
+			ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_DECODE_ERROR);
+			return -1;
+		}
+
+		if (!tls_buffer_data(s->s3->handshake_fragment, &cbs))
+			return -1;
+		ssl_msg_callback_cbs(s, 0, SSL3_RT_HANDSHAKE, &cbs);
+
+		tls_buffer_free(s->s3->handshake_fragment);
+		s->s3->handshake_fragment = NULL;
+
+		if ((s->options & SSL_OP_NO_RENEGOTIATION) != 0) {
+			ssl3_send_alert(s, SSL3_AL_WARNING,
+			    SSL_AD_NO_RENEGOTIATION);
+			return 1;
+		}
+
+		/*
+		 * It should be impossible to hit this, but keep the safety
+		 * harness for now...
+		 */
+		if (s->session == NULL || s->s3->hs.cipher == NULL)
+			return 1;
+
+		/*
+		 * Ignore this message if we're currently handshaking,
+		 * renegotiation is already pending or renegotiation is disabled
+		 * via flags.
+		 */
+		if (!SSL_is_init_finished(s) || s->s3->renegotiate)
+			return 1;
+
+		if (!ssl3_renegotiate(s))
+			return 1;
+		if (!ssl3_renegotiate_check(s))
+			return 1;
+
+	} else if (hs_msg_type == SSL3_MT_CLIENT_HELLO) {
+		/*
+		 * Incoming ClientHello messages should only be received by a
+		 * server. A client may send these in response to server
+		 * initiated renegotiation (HelloRequest) or in order to
+		 * initiate renegotiation by the client. See RFC 5246 section
+		 * 7.4.1.2.
+		 */
+		if (!s->server) {
+			SSLerror(s, SSL_R_UNEXPECTED_MESSAGE);
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			     SSL_AD_UNEXPECTED_MESSAGE);
+			return -1;
+		}
+
+		/*
+		 * A client should not be sending a ClientHello unless we're not
+		 * currently handshaking.
+		 */
+		if (!SSL_is_init_finished(s)) {
+			SSLerror(s, SSL_R_UNEXPECTED_MESSAGE);
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			    SSL_AD_UNEXPECTED_MESSAGE);
+			return -1;
+		}
+
+		if ((s->options & SSL_OP_NO_CLIENT_RENEGOTIATION) != 0 ||
+		    ((s->options & SSL_OP_NO_RENEGOTIATION) != 0 &&
+		    (s->options & SSL_OP_ALLOW_CLIENT_RENEGOTIATION) == 0)) {
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			    SSL_AD_NO_RENEGOTIATION);
+			return -1;
+		}
+
+		if (s->session == NULL || s->s3->hs.cipher == NULL) {
+			SSLerror(s, ERR_R_INTERNAL_ERROR);
+			return -1;
+		}
+
+		/* Client requested renegotiation but it is not permitted. */
+		if (!s->s3->secure_renegotiation) {
+			ssl3_send_alert(s, SSL3_AL_WARNING,
+			    SSL_AD_NO_RENEGOTIATION);
+			return 1;
+		}
+
+		s->s3->hs.state = SSL_ST_ACCEPT;
+		s->renegotiate = 1;
+		s->new_session = 1;
+
+	} else {
+		SSLerror(s, SSL_R_UNEXPECTED_MESSAGE);
+		ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_UNEXPECTED_MESSAGE);
+		return -1;
+	}
+
+	if ((ret = s->handshake_func(s)) < 0)
+		return ret;
+	if (ret == 0) {
+		SSLerror(s, SSL_R_SSL_HANDSHAKE_FAILURE);
+		return -1;
+	}
+
+	if (!(s->mode & SSL_MODE_AUTO_RETRY)) {
+		if (s->s3->rbuf.left == 0) {
+			ssl_force_want_read(s);
+			return -1;
+		}
+	}
+
+	/*
+	 * We either finished a handshake or ignored the request, now try again
+	 * to obtain the (application) data we were asked for.
+	 */
+	return 1;
 }
 
 /* Return up to 'len' payload bytes received in 'type' records.
@@ -896,64 +959,55 @@ ssl3_write_pending(SSL *s, int type, const unsigned char *buf, unsigned int len)
 int
 ssl3_read_bytes(SSL *s, int type, unsigned char *buf, int len, int peek)
 {
-	void (*cb)(const SSL *ssl, int type2, int val) = NULL;
-	int al, i, j, ret, rrcount = 0;
-	unsigned int n;
-	SSL3_RECORD *rr;
+	struct tls_content *rcontent;
+	int rrcount = 0;
+	ssize_t ssret;
+	int ret;
 
-	if (S3I(s)->rbuf.buf == NULL) /* Not initialized yet */
-		if (!ssl3_setup_read_buffer(s))
-			return (-1);
+	rcontent = tls12_record_layer_rcontent(s->rl);
 
 	if (len < 0) {
 		SSLerror(s, ERR_R_INTERNAL_ERROR);
 		return -1;
 	}
 
-	if ((type && type != SSL3_RT_APPLICATION_DATA &&
-	    type != SSL3_RT_HANDSHAKE) ||
-	    (peek && (type != SSL3_RT_APPLICATION_DATA))) {
+	if (type != 0 && type != SSL3_RT_APPLICATION_DATA &&
+	    type != SSL3_RT_HANDSHAKE) {
+		SSLerror(s, ERR_R_INTERNAL_ERROR);
+		return -1;
+	}
+	if (peek && type != SSL3_RT_APPLICATION_DATA) {
 		SSLerror(s, ERR_R_INTERNAL_ERROR);
 		return -1;
 	}
 
-	if ((type == SSL3_RT_HANDSHAKE) &&
-	    (S3I(s)->handshake_fragment_len > 0)) {
-		/* (partially) satisfy request from storage */
-		unsigned char *src = S3I(s)->handshake_fragment;
-		unsigned char *dst = buf;
-		unsigned int k;
+	if (type == SSL3_RT_HANDSHAKE &&
+	    s->s3->handshake_fragment != NULL &&
+	    tls_buffer_remaining(s->s3->handshake_fragment) > 0) {
+		ssize_t ssn;
 
-		/* peek == 0 */
-		n = 0;
-		while ((len > 0) && (S3I(s)->handshake_fragment_len > 0)) {
-			*dst++ = *src++;
-			len--;
-			S3I(s)->handshake_fragment_len--;
-			n++;
+		if ((ssn = tls_buffer_read(s->s3->handshake_fragment, buf,
+		    len)) <= 0)
+			return -1;
+
+		if (tls_buffer_remaining(s->s3->handshake_fragment) == 0) {
+			tls_buffer_free(s->s3->handshake_fragment);
+			s->s3->handshake_fragment = NULL;
 		}
-		/* move any remaining fragment bytes: */
-		for (k = 0; k < S3I(s)->handshake_fragment_len; k++)
-			S3I(s)->handshake_fragment[k] = *src++;
-		return n;
+
+		return (int)ssn;
 	}
 
-	/*
-	 * Now S3I(s)->handshake_fragment_len == 0 if
-	 * type == SSL3_RT_HANDSHAKE.
-	 */
-	if (!s->internal->in_handshake && SSL_in_init(s)) {
-		/* type == SSL3_RT_APPLICATION_DATA */
-		i = s->internal->handshake_func(s);
-		if (i < 0)
-			return (i);
-		if (i == 0) {
+	if (SSL_in_init(s) && !s->in_handshake) {
+		if ((ret = s->handshake_func(s)) < 0)
+			return ret;
+		if (ret == 0) {
 			SSLerror(s, SSL_R_SSL_HANDSHAKE_FAILURE);
-			return (-1);
+			return -1;
 		}
 	}
 
-start:
+ start:
 	/*
 	 * Do not process more than three consecutive records, otherwise the
 	 * peer can cause us to loop indefinitely. Instead, return with an
@@ -967,483 +1021,219 @@ start:
 		return -1;
 	}
 
-	s->internal->rwstate = SSL_NOTHING;
+	s->rwstate = SSL_NOTHING;
+
+	if (tls_content_remaining(rcontent) == 0) {
+		if ((ret = ssl3_get_record(s)) <= 0)
+			return ret;
+	}
+
+	/* We now have a packet which can be read and processed. */
+
+	if (s->s3->change_cipher_spec &&
+	    tls_content_type(rcontent) != SSL3_RT_HANDSHAKE) {
+		SSLerror(s, SSL_R_DATA_BETWEEN_CCS_AND_FINISHED);
+		ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_UNEXPECTED_MESSAGE);
+		return -1;
+	}
 
 	/*
-	 * S3I(s)->rrec.type	    - is the type of record
-	 * S3I(s)->rrec.data,    - data
-	 * S3I(s)->rrec.off,     - offset into 'data' for next read
-	 * S3I(s)->rrec.length,  - number of bytes.
+	 * If the other end has shut down, throw anything we read away (even in
+	 * 'peek' mode).
 	 */
-	rr = &(S3I(s)->rrec);
-
-	/* get new packet if necessary */
-	if ((rr->length == 0) || (s->internal->rstate == SSL_ST_READ_BODY)) {
-		ret = ssl3_get_record(s);
-		if (ret <= 0)
-			return (ret);
+	if (s->shutdown & SSL_RECEIVED_SHUTDOWN) {
+		s->rwstate = SSL_NOTHING;
+		tls_content_clear(rcontent);
+		s->s3->rrec.length = 0;
+		return 0;
 	}
-
-	/* we now have a packet which can be read and processed */
-
-	if (S3I(s)->change_cipher_spec /* set when we receive ChangeCipherSpec,
-	                               * reset by ssl3_get_finished */
-	    && (rr->type != SSL3_RT_HANDSHAKE)) {
-		al = SSL_AD_UNEXPECTED_MESSAGE;
-		SSLerror(s, SSL_R_DATA_BETWEEN_CCS_AND_FINISHED);
-		goto f_err;
-	}
-
-	/* If the other end has shut down, throw anything we read away
-	 * (even in 'peek' mode) */
-	if (s->internal->shutdown & SSL_RECEIVED_SHUTDOWN) {
-		rr->length = 0;
-		s->internal->rwstate = SSL_NOTHING;
-		return (0);
-	}
-
 
 	/* SSL3_RT_APPLICATION_DATA or SSL3_RT_HANDSHAKE */
-	if (type == rr->type) {
-		/* make sure that we are not getting application data when we
-		 * are doing a handshake for the first time */
-		if (SSL_in_init(s) && (type == SSL3_RT_APPLICATION_DATA) &&
-			(s->enc_read_ctx == NULL)) {
-			al = SSL_AD_UNEXPECTED_MESSAGE;
+	if (tls_content_type(rcontent) == type) {
+		/*
+		 * Make sure that we are not getting application data when we
+		 * are doing a handshake for the first time.
+		 */
+		if (SSL_in_init(s) && type == SSL3_RT_APPLICATION_DATA &&
+		    !tls12_record_layer_read_protected(s->rl)) {
 			SSLerror(s, SSL_R_APP_DATA_IN_HANDSHAKE);
-			goto f_err;
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			    SSL_AD_UNEXPECTED_MESSAGE);
+			return -1;
 		}
 
 		if (len <= 0)
-			return (len);
+			return len;
 
-		if ((unsigned int)len > rr->length)
-			n = rr->length;
-		else
-			n = (unsigned int)len;
-
-		memcpy(buf, &(rr->data[rr->off]), n);
-		if (!peek) {
-			memset(&(rr->data[rr->off]), 0, n);
-			rr->length -= n;
-			rr->off += n;
-			if (rr->length == 0) {
-				s->internal->rstate = SSL_ST_READ_HEADER;
-				rr->off = 0;
-				if (s->internal->mode & SSL_MODE_RELEASE_BUFFERS &&
-				    S3I(s)->rbuf.left == 0)
-					ssl3_release_read_buffer(s);
-			}
-		}
-		return (n);
-	}
-
-
-	/* If we get here, then type != rr->type; if we have a handshake
-	 * message, then it was unexpected (Hello Request or Client Hello). */
-
-	{
-		/*
-		 * In case of record types for which we have 'fragment'
-		 * storage, * fill that so that we can process the data
-		 * at a fixed place.
-		 */
-		unsigned int dest_maxlen = 0;
-		unsigned char *dest = NULL;
-		unsigned int *dest_len = NULL;
-
-		if (rr->type == SSL3_RT_HANDSHAKE) {
-			dest_maxlen = sizeof S3I(s)->handshake_fragment;
-			dest = S3I(s)->handshake_fragment;
-			dest_len = &S3I(s)->handshake_fragment_len;
-		} else if (rr->type == SSL3_RT_ALERT) {
-			dest_maxlen = sizeof S3I(s)->alert_fragment;
-			dest = S3I(s)->alert_fragment;
-			dest_len = &S3I(s)->alert_fragment_len;
-		}
-		if (dest_maxlen > 0) {
-			/* available space in 'dest' */
-			n = dest_maxlen - *dest_len;
-			if (rr->length < n)
-				n = rr->length; /* available bytes */
-
-			/* now move 'n' bytes: */
-			while (n-- > 0) {
-				dest[(*dest_len)++] = rr->data[rr->off++];
-				rr->length--;
-			}
-
-			if (*dest_len < dest_maxlen)
-				goto start; /* fragment was too small */
-		}
-	}
-
-	/* S3I(s)->handshake_fragment_len == 4  iff  rr->type == SSL3_RT_HANDSHAKE;
-	 * S3I(s)->alert_fragment_len == 2      iff  rr->type == SSL3_RT_ALERT.
-	 * (Possibly rr is 'empty' now, i.e. rr->length may be 0.) */
-
-	/* If we are a client, check for an incoming 'Hello Request': */
-	if ((!s->server) && (S3I(s)->handshake_fragment_len >= 4) &&
-	    (S3I(s)->handshake_fragment[0] == SSL3_MT_HELLO_REQUEST) &&
-	    (s->session != NULL) && (s->session->cipher != NULL)) {
-		S3I(s)->handshake_fragment_len = 0;
-
-		if ((S3I(s)->handshake_fragment[1] != 0) ||
-		    (S3I(s)->handshake_fragment[2] != 0) ||
-		    (S3I(s)->handshake_fragment[3] != 0)) {
-			al = SSL_AD_DECODE_ERROR;
-			SSLerror(s, SSL_R_BAD_HELLO_REQUEST);
-			goto f_err;
-		}
-
-		if (s->internal->msg_callback)
-			s->internal->msg_callback(0, s->version, SSL3_RT_HANDSHAKE,
-			    S3I(s)->handshake_fragment, 4, s,
-			    s->internal->msg_callback_arg);
-
-		if (SSL_is_init_finished(s) &&
-		    !(s->s3->flags & SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS) &&
-		    !S3I(s)->renegotiate) {
-			ssl3_renegotiate(s);
-			if (ssl3_renegotiate_check(s)) {
-				i = s->internal->handshake_func(s);
-				if (i < 0)
-					return (i);
-				if (i == 0) {
-					SSLerror(s, SSL_R_SSL_HANDSHAKE_FAILURE);
-					return (-1);
-				}
-
-				if (!(s->internal->mode & SSL_MODE_AUTO_RETRY)) {
-					if (S3I(s)->rbuf.left == 0) {
-						/* no read-ahead left? */
-			/* In the case where we try to read application data,
-			 * but we trigger an SSL handshake, we return -1 with
-			 * the retry option set.  Otherwise renegotiation may
-			 * cause nasty problems in the blocking world */
-						ssl_force_want_read(s);
-						return (-1);
-					}
-				}
-			}
-		}
-		/* we either finished a handshake or ignored the request,
-		 * now try again to obtain the (application) data we were asked for */
-		goto start;
-	}
-	/* Disallow client initiated renegotiation if configured. */
-	if (s->server && SSL_is_init_finished(s) &&
-	    S3I(s)->handshake_fragment_len >= 4 &&
-	    S3I(s)->handshake_fragment[0] == SSL3_MT_CLIENT_HELLO &&
-	    (s->internal->options & SSL_OP_NO_CLIENT_RENEGOTIATION)) {
-		al = SSL_AD_NO_RENEGOTIATION;
-		goto f_err;
-	}
-	/* If we are a server and get a client hello when renegotiation isn't
-	 * allowed send back a no renegotiation alert and carry on.
-	 * WARNING: experimental code, needs reviewing (steve)
-	 */
-	if (s->server &&
-	    SSL_is_init_finished(s) &&
-	    !S3I(s)->send_connection_binding &&
-	    (S3I(s)->handshake_fragment_len >= 4) &&
-	    (S3I(s)->handshake_fragment[0] == SSL3_MT_CLIENT_HELLO) &&
-	    (s->session != NULL) && (s->session->cipher != NULL)) {
-		/*S3I(s)->handshake_fragment_len = 0;*/
-		rr->length = 0;
-		ssl3_send_alert(s, SSL3_AL_WARNING, SSL_AD_NO_RENEGOTIATION);
-		goto start;
-	}
-	if (S3I(s)->alert_fragment_len >= 2) {
-		int alert_level = S3I(s)->alert_fragment[0];
-		int alert_descr = S3I(s)->alert_fragment[1];
-
-		S3I(s)->alert_fragment_len = 0;
-
-		if (s->internal->msg_callback)
-			s->internal->msg_callback(0, s->version, SSL3_RT_ALERT,
-			    S3I(s)->alert_fragment, 2, s, s->internal->msg_callback_arg);
-
-		if (s->internal->info_callback != NULL)
-			cb = s->internal->info_callback;
-		else if (s->ctx->internal->info_callback != NULL)
-			cb = s->ctx->internal->info_callback;
-
-		if (cb != NULL) {
-			j = (alert_level << 8) | alert_descr;
-			cb(s, SSL_CB_READ_ALERT, j);
-		}
-
-		if (alert_level == SSL3_AL_WARNING) {
-			S3I(s)->warn_alert = alert_descr;
-			if (alert_descr == SSL_AD_CLOSE_NOTIFY) {
-				s->internal->shutdown |= SSL_RECEIVED_SHUTDOWN;
-				return (0);
-			}
-			/* This is a warning but we receive it if we requested
-			 * renegotiation and the peer denied it. Terminate with
-			 * a fatal alert because if application tried to
-			 * renegotiatie it presumably had a good reason and
-			 * expects it to succeed.
-			 *
-			 * In future we might have a renegotiation where we
-			 * don't care if the peer refused it where we carry on.
-			 */
-			else if (alert_descr == SSL_AD_NO_RENEGOTIATION) {
-				al = SSL_AD_HANDSHAKE_FAILURE;
-				SSLerror(s, SSL_R_NO_RENEGOTIATION);
-				goto f_err;
-			}
-		} else if (alert_level == SSL3_AL_FATAL) {
-			s->internal->rwstate = SSL_NOTHING;
-			S3I(s)->fatal_alert = alert_descr;
-			SSLerror(s, SSL_AD_REASON_OFFSET + alert_descr);
-			ERR_asprintf_error_data("SSL alert number %d",
-			    alert_descr);
-			s->internal->shutdown |= SSL_RECEIVED_SHUTDOWN;
-			SSL_CTX_remove_session(s->ctx, s->session);
-			return (0);
+		if (peek) {
+			ssret = tls_content_peek(rcontent, buf, len);
 		} else {
-			al = SSL_AD_ILLEGAL_PARAMETER;
-			SSLerror(s, SSL_R_UNKNOWN_ALERT_TYPE);
-			goto f_err;
+			ssret = tls_content_read(rcontent, buf, len);
+		}
+		if (ssret < INT_MIN || ssret > INT_MAX)
+			return -1;
+		if (ssret < 0)
+			return (int)ssret;
+
+		if (tls_content_remaining(rcontent) == 0) {
+			s->rstate = SSL_ST_READ_HEADER;
+
+			if (s->mode & SSL_MODE_RELEASE_BUFFERS &&
+			    s->s3->rbuf.left == 0)
+				ssl3_release_read_buffer(s);
 		}
 
+		return ssret;
+	}
+
+	if (tls_content_type(rcontent) == SSL3_RT_ALERT) {
+		if ((ret = ssl3_read_alert(s)) <= 0)
+			return ret;
 		goto start;
 	}
 
-	if (s->internal->shutdown & SSL_SENT_SHUTDOWN) {
-		/* but we have not received a shutdown */
-		s->internal->rwstate = SSL_NOTHING;
-		rr->length = 0;
-		return (0);
+	if (s->shutdown & SSL_SENT_SHUTDOWN) {
+		s->rwstate = SSL_NOTHING;
+		tls_content_clear(rcontent);
+		s->s3->rrec.length = 0;
+		return 0;
 	}
 
-	if (rr->type == SSL3_RT_CHANGE_CIPHER_SPEC) {
-		/* 'Change Cipher Spec' is just a single byte, so we know
-		 * exactly what the record payload has to look like */
-		if ((rr->length != 1) || (rr->off != 0) ||
-			(rr->data[0] != SSL3_MT_CCS)) {
-			al = SSL_AD_ILLEGAL_PARAMETER;
-			SSLerror(s, SSL_R_BAD_CHANGE_CIPHER_SPEC);
-			goto f_err;
-		}
-
-		/* Check we have a cipher to change to */
-		if (S3I(s)->hs.new_cipher == NULL) {
-			al = SSL_AD_UNEXPECTED_MESSAGE;
-			SSLerror(s, SSL_R_CCS_RECEIVED_EARLY);
-			goto f_err;
-		}
-
-		/* Check that we should be receiving a Change Cipher Spec. */
-		if (!(s->s3->flags & SSL3_FLAGS_CCS_OK)) {
-			al = SSL_AD_UNEXPECTED_MESSAGE;
-			SSLerror(s, SSL_R_CCS_RECEIVED_EARLY);
-			goto f_err;
-		}
-		s->s3->flags &= ~SSL3_FLAGS_CCS_OK;
-
-		rr->length = 0;
-
-		if (s->internal->msg_callback) {
-			s->internal->msg_callback(0, s->version,
-			    SSL3_RT_CHANGE_CIPHER_SPEC, rr->data, 1, s,
-			    s->internal->msg_callback_arg);
-		}
-
-		S3I(s)->change_cipher_spec = 1;
-		if (!ssl3_do_change_cipher_spec(s))
-			goto err;
-		else
-			goto start;
-	}
-
-	/* Unexpected handshake message (Client Hello, or protocol violation) */
-	if ((S3I(s)->handshake_fragment_len >= 4) && !s->internal->in_handshake) {
-		if (((S3I(s)->hs.state&SSL_ST_MASK) == SSL_ST_OK) &&
-		    !(s->s3->flags & SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)) {
-			S3I(s)->hs.state = s->server ? SSL_ST_ACCEPT : SSL_ST_CONNECT;
-			s->internal->renegotiate = 1;
-			s->internal->new_session = 1;
-		}
-		i = s->internal->handshake_func(s);
-		if (i < 0)
-			return (i);
-		if (i == 0) {
-			SSLerror(s, SSL_R_SSL_HANDSHAKE_FAILURE);
-			return (-1);
-		}
-
-		if (!(s->internal->mode & SSL_MODE_AUTO_RETRY)) {
-			if (S3I(s)->rbuf.left == 0) { /* no read-ahead left? */
-				/* In the case where we try to read application data,
-				 * but we trigger an SSL handshake, we return -1 with
-				 * the retry option set.  Otherwise renegotiation may
-				 * cause nasty problems in the blocking world */
-				ssl_force_want_read(s);
-				return (-1);
-			}
-		}
-		goto start;
-	}
-
-	switch (rr->type) {
-	default:
+	if (tls_content_type(rcontent) == SSL3_RT_APPLICATION_DATA) {
 		/*
-		 * TLS up to v1.1 just ignores unknown message types:
-		 * TLS v1.2 give an unexpected message alert.
+		 * At this point, we were expecting handshake data, but have
+		 * application data. If the library was running inside
+		 * ssl3_read() (i.e. in_read_app_data is set) and it makes
+		 * sense to read application data at this point (session
+		 * renegotiation not yet started), we will indulge it.
 		 */
-		if (s->version >= TLS1_VERSION &&
-		    s->version <= TLS1_1_VERSION) {
-			rr->length = 0;
-			goto start;
-		}
-		al = SSL_AD_UNEXPECTED_MESSAGE;
-		SSLerror(s, SSL_R_UNEXPECTED_RECORD);
-		goto f_err;
-	case SSL3_RT_CHANGE_CIPHER_SPEC:
-	case SSL3_RT_ALERT:
-	case SSL3_RT_HANDSHAKE:
-		/* we already handled all of these, with the possible exception
-		 * of SSL3_RT_HANDSHAKE when s->internal->in_handshake is set, but that
-		 * should not happen when type != rr->type */
-		al = SSL_AD_UNEXPECTED_MESSAGE;
-		SSLerror(s, ERR_R_INTERNAL_ERROR);
-		goto f_err;
-	case SSL3_RT_APPLICATION_DATA:
-		/* At this point, we were expecting handshake data,
-		 * but have application data.  If the library was
-		 * running inside ssl3_read() (i.e. in_read_app_data
-		 * is set) and it makes sense to read application data
-		 * at this point (session renegotiation not yet started),
-		 * we will indulge it.
-		 */
-		if (S3I(s)->in_read_app_data &&
-		    (S3I(s)->total_renegotiations != 0) &&
-		    (((S3I(s)->hs.state & SSL_ST_CONNECT) &&
-		    (S3I(s)->hs.state >= SSL3_ST_CW_CLNT_HELLO_A) &&
-		    (S3I(s)->hs.state <= SSL3_ST_CR_SRVR_HELLO_A)) ||
-		    ((S3I(s)->hs.state & SSL_ST_ACCEPT) &&
-		    (S3I(s)->hs.state <= SSL3_ST_SW_HELLO_REQ_A) &&
-		    (S3I(s)->hs.state >= SSL3_ST_SR_CLNT_HELLO_A)))) {
-			S3I(s)->in_read_app_data = 2;
-			return (-1);
+		if (s->s3->in_read_app_data != 0 &&
+		    s->s3->total_renegotiations != 0 &&
+		    (((s->s3->hs.state & SSL_ST_CONNECT) &&
+		    (s->s3->hs.state >= SSL3_ST_CW_CLNT_HELLO_A) &&
+		    (s->s3->hs.state <= SSL3_ST_CR_SRVR_HELLO_A)) || (
+		    (s->s3->hs.state & SSL_ST_ACCEPT) &&
+		    (s->s3->hs.state <= SSL3_ST_SW_HELLO_REQ_A) &&
+		    (s->s3->hs.state >= SSL3_ST_SR_CLNT_HELLO_A)))) {
+			s->s3->in_read_app_data = 2;
+			return -1;
 		} else {
-			al = SSL_AD_UNEXPECTED_MESSAGE;
 			SSLerror(s, SSL_R_UNEXPECTED_RECORD);
-			goto f_err;
+			ssl3_send_alert(s, SSL3_AL_FATAL,
+			    SSL_AD_UNEXPECTED_MESSAGE);
+			return -1;
 		}
 	}
-	/* not reached */
 
-f_err:
-	ssl3_send_alert(s, SSL3_AL_FATAL, al);
-err:
-	return (-1);
+	if (tls_content_type(rcontent) == SSL3_RT_CHANGE_CIPHER_SPEC) {
+		if ((ret = ssl3_read_change_cipher_spec(s)) <= 0)
+			return ret;
+		goto start;
+	}
+
+	if (tls_content_type(rcontent) == SSL3_RT_HANDSHAKE) {
+		if ((ret = ssl3_read_handshake_unexpected(s)) <= 0)
+			return ret;
+		goto start;
+	}
+
+	/*
+	 * Unknown record type - TLSv1.2 sends an unexpected message alert while
+	 * earlier versions silently ignore the record.
+	 */
+	if (ssl_effective_tls_version(s) <= TLS1_1_VERSION) {
+		tls_content_clear(rcontent);
+		goto start;
+	}
+	SSLerror(s, SSL_R_UNEXPECTED_RECORD);
+	ssl3_send_alert(s, SSL3_AL_FATAL, SSL_AD_UNEXPECTED_MESSAGE);
+	return -1;
 }
 
 int
 ssl3_do_change_cipher_spec(SSL *s)
 {
-	int i;
-	const char *sender;
-	int slen;
-
-	if (S3I(s)->hs.state & SSL_ST_ACCEPT)
-		i = SSL3_CHANGE_CIPHER_SERVER_READ;
-	else
-		i = SSL3_CHANGE_CIPHER_CLIENT_READ;
-
-	if (S3I(s)->hs.key_block == NULL) {
+	if (s->s3->hs.tls12.key_block == NULL) {
 		if (s->session == NULL || s->session->master_key_length == 0) {
 			/* might happen if dtls1_read_bytes() calls this */
 			SSLerror(s, SSL_R_CCS_RECEIVED_EARLY);
 			return (0);
 		}
 
-		s->session->cipher = S3I(s)->hs.new_cipher;
+		s->session->cipher_value = s->s3->hs.cipher->value;
+
 		if (!tls1_setup_key_block(s))
 			return (0);
 	}
 
-	if (!tls1_change_cipher_state(s, i))
+	if (!tls1_change_read_cipher_state(s))
 		return (0);
 
-	/* we have to record the message digest at
-	 * this point so we can get it before we read
-	 * the finished message */
-	if (S3I(s)->hs.state & SSL_ST_CONNECT) {
-		sender = TLS_MD_SERVER_FINISH_CONST;
-		slen = TLS_MD_SERVER_FINISH_CONST_SIZE;
-	} else {
-		sender = TLS_MD_CLIENT_FINISH_CONST;
-		slen = TLS_MD_CLIENT_FINISH_CONST_SIZE;
-	}
-
-	i = tls1_final_finish_mac(s, sender, slen,
-	    S3I(s)->tmp.peer_finish_md);
-	if (i == 0) {
-		SSLerror(s, ERR_R_INTERNAL_ERROR);
-		return 0;
-	}
-	S3I(s)->tmp.peer_finish_md_len = i;
+	/*
+	 * We have to record the message digest at this point so we can get it
+	 * before we read the finished message.
+	 */
+	if (!tls12_derive_peer_finished(s))
+		return (0);
 
 	return (1);
+}
+
+static int
+ssl3_write_alert(SSL *s)
+{
+	if (SSL_is_dtls(s))
+		return do_dtls1_write(s, SSL3_RT_ALERT, s->s3->send_alert,
+		    sizeof(s->s3->send_alert));
+
+	return do_ssl3_write(s, SSL3_RT_ALERT, s->s3->send_alert,
+	    sizeof(s->s3->send_alert));
 }
 
 int
 ssl3_send_alert(SSL *s, int level, int desc)
 {
-	/* Map tls/ssl alert value to correct one */
-	desc = tls1_alert_code(desc);
-	if (desc < 0)
-		return -1;
-	/* If a fatal one, remove from cache */
-	if ((level == 2) && (s->session != NULL))
+	/* If alert is fatal, remove session from cache. */
+	if (level == SSL3_AL_FATAL)
 		SSL_CTX_remove_session(s->ctx, s->session);
 
-	S3I(s)->alert_dispatch = 1;
-	S3I(s)->send_alert[0] = level;
-	S3I(s)->send_alert[1] = desc;
-	if (S3I(s)->wbuf.left == 0) /* data still being written out? */
-		return s->method->ssl_dispatch_alert(s);
+	s->s3->alert_dispatch = 1;
+	s->s3->send_alert[0] = level;
+	s->s3->send_alert[1] = desc;
 
-	/* else data is still being written out, we will get written
-	 * some time in the future */
-	return -1;
+	/*
+	 * If data is still being written out, the alert will be dispatched at
+	 * some point in the future.
+	 */
+	if (s->s3->wbuf.left != 0)
+		return -1;
+
+	return ssl3_dispatch_alert(s);
 }
 
 int
 ssl3_dispatch_alert(SSL *s)
 {
-	int i, j;
-	void (*cb)(const SSL *ssl, int type, int val) = NULL;
+	int ret;
 
-	S3I(s)->alert_dispatch = 0;
-	i = do_ssl3_write(s, SSL3_RT_ALERT, &S3I(s)->send_alert[0], 2, 0);
-	if (i <= 0) {
-		S3I(s)->alert_dispatch = 1;
-	} else {
-		/* Alert sent to BIO.  If it is important, flush it now.
-		 * If the message does not get sent due to non-blocking IO,
-		 * we will not worry too much. */
-		if (S3I(s)->send_alert[0] == SSL3_AL_FATAL)
-			(void)BIO_flush(s->wbio);
-
-		if (s->internal->msg_callback)
-			s->internal->msg_callback(1, s->version, SSL3_RT_ALERT,
-			    S3I(s)->send_alert, 2, s, s->internal->msg_callback_arg);
-
-		if (s->internal->info_callback != NULL)
-			cb = s->internal->info_callback;
-		else if (s->ctx->internal->info_callback != NULL)
-			cb = s->ctx->internal->info_callback;
-
-		if (cb != NULL) {
-			j = (S3I(s)->send_alert[0]<<8)|S3I(s)->send_alert[1];
-			cb(s, SSL_CB_WRITE_ALERT, j);
-		}
+	s->s3->alert_dispatch = 0;
+	if ((ret = ssl3_write_alert(s)) <= 0) {
+		s->s3->alert_dispatch = 1;
+		return ret;
 	}
-	return (i);
+
+	/*
+	 * Alert sent to BIO.  If it is important, flush it now.
+	 * If the message does not get sent due to non-blocking IO,
+	 * we will not worry too much.
+	 */
+	if (s->s3->send_alert[0] == SSL3_AL_FATAL)
+		(void)BIO_flush(s->wbio);
+
+	ssl_msg_callback(s, 1, SSL3_RT_ALERT, s->s3->send_alert, 2);
+
+	ssl_info_callback(s, SSL_CB_WRITE_ALERT,
+	    (s->s3->send_alert[0] << 8) | s->s3->send_alert[1]);
+
+	return ret;
 }
