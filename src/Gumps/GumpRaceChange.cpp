@@ -10,6 +10,7 @@
 #include "../Renderer/RenderShader.h" // g_ColorizerShader
 #include "../SelectedObject.h"        // g_SelectedObject
 #include <cstdint>
+#include <xuocore/uodata_color.h>
 
 CGumpRaceChange *g_GumpRaceChange = nullptr;
 
@@ -36,7 +37,7 @@ static uint32_t GetHueBarColor(uint16_t rawHue)
     int colorOffsetDivider = sizeof(HUES_GROUP) - 4;
     int colorIndex = (rawHue + ((rawHue + (rawHue << 2)) << 1)) << 3;
     colorIndex += (colorIndex / colorOffsetDivider) << 2;
-    return g_ColorManager.Color16To32(*(uint16_t *)(huesData + colorIndex));
+    return uo_color16_to_32(*(uint16_t *)(huesData + colorIndex));
 }
 
 //one color row of the right panel: a read-only caption that opens the

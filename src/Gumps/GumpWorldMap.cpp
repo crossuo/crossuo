@@ -7,6 +7,7 @@
 #include <external/zlib_amalg.h> // crc32 (whole-file running checksum)
 #include <vector>
 #include <xuocore/uodata.h>
+#include <xuocore/uodata_color.h>
 #include "../CrossUO.h"
 #include "../PressedObject.h"
 #include "../Managers/ColorManager.h"
@@ -506,7 +507,7 @@ void CGumpWorldMap::LoadMap(int map) const
                         for (int x = 0; x < 8; x++)
                         {
                             uint16_t color =
-                                0x8000 | g_ColorManager.GetRadarColorData(info.Cells[pos].TileID);
+                                0x8000 | uo_radar_color(info.Cells[pos].TileID);
 
                             buf[block] = color;
 

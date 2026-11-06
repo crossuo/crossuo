@@ -7,6 +7,7 @@
 #include "../Managers/ColorManager.h"
 #include "../Managers/GumpManager.h"
 #include <cstdint>
+#include <xuocore/uodata_color.h>
 
 CGumpSelectColor::CGumpSelectColor(uint32_t serial, short x, short y, SELECT_COLOR_GUMP_STATE state)
     : CGump(GT_SELECT_COLOR, serial, x, y)
@@ -64,7 +65,7 @@ void CGumpSelectColor::UpdateContent()
             colorIndex += (colorIndex / colorOffsetDivider) << 2;
             uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-            uint32_t clr = g_ColorManager.Color16To32(color);
+            uint32_t clr = uo_color16_to_32(color);
 
             uint32_t serial = ID_GSC_COLORS + ((int)x * 30 + (int)y);
             CGUIColoredPolygone *polygone =

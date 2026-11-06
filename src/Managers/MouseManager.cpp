@@ -4,6 +4,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <cmath> // hypotf
 #include <SDL3/SDL_mouse.h>
+#include <xuocore/uodata_color.h>
 #include <cstdint>
 #include "../GameWindow.h" // g_WispWindow (until the window merge)
 #include "MouseManager.h"
@@ -573,15 +574,15 @@ void CMouseManager::Draw(uint16_t id)
                 uint32_t auraColor = 0;
                 if (g_Target.CursorType == 0)
                 {
-                    auraColor = g_ColorManager.GetPolygoneColor(16, 0x03B2);
+                    auraColor = uo_hue_get_color_poly(16, 0x03B2);
                 }
                 else if (g_Target.CursorType == 1)
                 {
-                    auraColor = g_ColorManager.GetPolygoneColor(16, 0x0023);
+                    auraColor = uo_hue_get_color_poly(16, 0x0023);
                 }
                 else if (g_Target.CursorType == 2)
                 {
-                    auraColor = g_ColorManager.GetPolygoneColor(16, 0x005A);
+                    auraColor = uo_hue_get_color_poly(16, 0x005A);
                 }
 
                 if (auraColor != 0u)

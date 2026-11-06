@@ -21,14 +21,6 @@ struct CColorManager
     inline int GetHuesCount() const { return (int)g_FileManager.m_Hues.size(); }
     void CreateHuesPalette();
     void SendColorsToShader(uint16_t color);
-    uint16_t Color32To16(int c) const;
-    uint32_t Color16To32(uint16_t c) const;
-    uint16_t ConvertToGray(uint16_t c) const;
-    uint16_t GetColor16(uint16_t c, uint16_t color) const;
-    uint16_t GetRadarColorData(int c) const;
-    uint32_t GetPolygoneColor(uint16_t c, uint16_t color) const;
-    uint32_t GetUnicodeFontColor(uint16_t &c, uint16_t color) const;
-    uint32_t GetColor(uint16_t &c, uint16_t color) const;
     uint32_t GetPartialHueColor(uint16_t &c, uint16_t color) const;
     uint16_t FixColor(uint16_t color, uint16_t defaultColor = 0) const;
 };

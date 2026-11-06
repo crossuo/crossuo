@@ -13,6 +13,7 @@
 #include "MouseManager.h"
 #include "ConfigManager.h"
 #include "ColorManager.h"
+#include <xuocore/uodata_color.h>
 #include "CorpseManager.h"
 #include <vector>
 #include <xuocore/uodata.h>
@@ -939,7 +940,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     if (g_DrawAura)
     {
-        uint32_t auraColor = g_ColorManager.GetPolygoneColor(
+        uint32_t auraColor = uo_hue_get_color_poly(
             16, g_ConfigManager.GetColorByNotoriety(obj->Notoriety));
         RenderAdd_SetBlend(
             g_renderCmdList,

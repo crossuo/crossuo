@@ -4,7 +4,7 @@
 #include "ColorManager.h"
 #include <cstdint>
 #include <xuocore/uodata.h>
-#include <xuocore/uodata_reader.h> // uo_color16_to_32, uo_hue_get_color16, uo_radar_color
+#include <xuocore/uodata_color.h> // uo_color16_to_32, uo_hue_get_color16, uo_radar_color
 #include "../Renderer/RenderAPI.h"
 #include "../Globals.h" // ToColor*, g_ShaderColorTableInUse, SPECTRAL_COLOR_FLAG
 #include "Constants.h"
@@ -16,7 +16,7 @@ CColorManager g_ColorManager;
 
 void CColorManager::Init()
 {
-    // radarcol.mul is read on demand by uo_radar_color (see GetRadarColorData)
+    // radarcol.mul is read on demand by uo_radar_color (see uo_radar_color)
     g_ColorManager.CreateHuesPalette();
 }
 
@@ -72,69 +72,16 @@ void CColorManager::SendColorsToShader(uint16_t color)
     RenderAdd_SetColorPalette(g_renderCmdList, cmd);
 }
 
-uint32_t CColorManager::Color16To32(uint16_t c) const
-{
-    return uo_color16_to_32(c);
-}
-
-uint16_t CColorManager::Color32To16(int c) const
-{
-    return (((c & 0xFF) * 32) / 256) | (((((c >> 16) & 0xff) * 32) / 256) << 10) |
-           (((((c >> 8) & 0xff) * 32) / 256) << 5);
-}
-
-uint16_t CColorManager::ConvertToGray(uint16_t c) const
-{
-    return ((c & 0x1F) * 299 + ((c >> 5) & 0x1F) * 587 + ((c >> 10) & 0x1F) * 114) / 1000;
-}
-
-uint16_t CColorManager::GetColor16(uint16_t c, uint16_t color) const
-{
-    return uo_hue_get_color16(c, color);
-}
-
-uint16_t CColorManager::GetRadarColorData(int c) const
-{
-    return uo_radar_color(c);
-}
-
-uint32_t CColorManager::GetPolygoneColor(uint16_t c, uint16_t color) const
-{
-    int g = 0;
-    int e = 0;
-    if (uo_hue_index(color, g, e))
-    {
-        return Color16To32(g_FileManager.m_Hues[g].Entries[e].ColorTable[c]);
-    }
-    return 0xFF010101; //Black
-}
-
-uint32_t CColorManager::GetUnicodeFontColor(uint16_t &c, uint16_t color) const
-{
-    int g = 0;
-    int e = 0;
-    if (uo_hue_index(color, g, e))
-    {
-        return Color16To32(g_FileManager.m_Hues[g].Entries[e].ColorTable[8]);
-    }
-    return Color16To32(c);
-}
-
-uint32_t CColorManager::GetColor(uint16_t &c, uint16_t color) const
-{
-    return uo_hue_partial_color16(c, color);
-}
-
 uint32_t CColorManager::GetPartialHueColor(uint16_t &c, uint16_t color) const
 {
-    const uint32_t cl = Color16To32(c);
+    const uint32_t cl = uo_color16_to_32(c);
     if (ToColorR(cl) == ToColorG(cl) && ToColorB(cl) == ToColorG(cl))
     {
         int g = 0;
         int e = 0;
         if (uo_hue_index(color, g, e))
         {
-            return Color16To32(g_FileManager.m_Hues[g].Entries[e].ColorTable[(c >> 10) & 0x1F]);
+            return uo_color16_to_32(g_FileManager.m_Hues[g].Entries[e].ColorTable[(c >> 10) & 0x1F]);
         }
     }
     return cl;

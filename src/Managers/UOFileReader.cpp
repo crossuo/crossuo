@@ -10,6 +10,7 @@
 #include <common/logging/logging.h>
 #include <xuocore/uodata.h>
 #include <xuocore/uodata_reader.h> // uo_art_pixels, uo_gump_pixels
+#include <xuocore/uodata_color.h>
 #include "../CrossUO.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"
@@ -232,7 +233,7 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
             uint16_t val = *P++;
             if (color != 0u)
             {
-                val = g_ColorManager.GetColor16(val, color);
+                val = uo_hue_get_color16(val, color);
             }
             pixels[pos + j] = 0x8000 | val;
         }

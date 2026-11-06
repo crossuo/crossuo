@@ -52,6 +52,8 @@ set(XUOCORE_SRCS
   uodata.cpp
   uodata_reader.cpp
   uodata_reader.h
+  uodata_color.cpp
+  uodata_color.h
   mappedfile.cpp
   client_info.cpp
   text_parser.cpp

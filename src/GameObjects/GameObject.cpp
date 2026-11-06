@@ -9,6 +9,7 @@
 #include <SDL3/SDL_timer.h>
 #include <cstdint>
 #include <xuocore/uodata.h>
+#include <xuocore/uodata_color.h>
 #include <common/str.h>
 #include "../Config.h"
 #include "../Point.h"
@@ -261,7 +262,7 @@ void CGameObject::GenerateObjectHandlesTexture(wstr_t text)
                         const uint8_t b = ((pixel >> 10) & 0x1F);
                         if (r == g && r == b)
                         {
-                            pixel = g_ColorManager.GetColor16(pixel, color) | 0x8000;
+                            pixel = uo_hue_get_color16(pixel, color) | 0x8000;
                         }
                     }
                 }
@@ -292,7 +293,7 @@ void CGameObject::GenerateObjectHandlesTexture(wstr_t text)
                 bytes[1] = bytes[2];
                 bytes[2] = buf;
                 pixels[(gumpDataY * g_ObjectHandlesWidth) + gumpDataX] =
-                    g_ColorManager.Color32To16(pixel) | 0x8000;
+                    uo_color32_to_16(pixel) | 0x8000;
             }
         }
     }

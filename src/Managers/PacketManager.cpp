@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cstring>
 #include <vector>
+#include <xuocore/uodata_color.h>
 #if defined(XUO_ASSISTANT)
 #include <config/assistantconfig.h> // xuoassist::g_AssistantConfig (speech filters, font color)
 #include <core/assistantevents.h>   // xuoassist::g_AssistantEvents (journal, JMT_* flags)
@@ -6418,7 +6419,7 @@ void CPacketManager::AddHTMLGumps(CGump *gump, std::vector<HTMLGumpDataInfo> &li
             }
             else
             {
-                htmlColor = (g_ColorManager.Color16To32((uint16_t)data.Color) << 8) | 0xFF;
+                htmlColor = (uo_color16_to_32((uint16_t)data.Color) << 8) | 0xFF;
             }
         }
         else if (data.HaveBackground == 0)

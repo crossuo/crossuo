@@ -16,6 +16,7 @@
 #include "../ScreenStages/CreateCharacterScreen.h"
 #include "xuocore/enumlist.h"
 #include <common/str.h>
+#include <xuocore/uodata_color.h>
 #include <cstdint>
 
 enum
@@ -186,7 +187,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
         colorIndex += (colorIndex / colorOffsetDivider) << 2;
         color = *(uint16_t *)(huesData + colorIndex);
 
-        uint32_t clr = g_ColorManager.Color16To32(color);
+        uint32_t clr = uo_color16_to_32(color);
 
         Add(new CGUIColoredPolygone(ID_CCS_SKIN_TONE, color, 490, 154, 120, 25, clr));
 
@@ -219,7 +220,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
         colorIndex += (colorIndex / colorOffsetDivider) << 2;
         color = *(uint16_t *)(huesData + colorIndex);
 
-        clr = g_ColorManager.Color16To32(color);
+        clr = uo_color16_to_32(color);
 
         Add(new CGUIColoredPolygone(ID_CCS_SHIRT_COLOR, color, 490, 199, 120, 25, clr));
 
@@ -253,7 +254,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
             colorIndex += (colorIndex / colorOffsetDivider) << 2;
             color = *(uint16_t *)(huesData + colorIndex);
 
-            clr = g_ColorManager.Color16To32(color);
+            clr = uo_color16_to_32(color);
 
             Add(new CGUIColoredPolygone(
                 ID_CCS_SKIRT_OR_PANTS_COLOR, color, 490, 244, 120, 25, clr));
@@ -279,7 +280,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
         colorIndex += (colorIndex / colorOffsetDivider) << 2;
         color = *(uint16_t *)(huesData + colorIndex);
 
-        clr = g_ColorManager.Color16To32(color);
+        clr = uo_color16_to_32(color);
 
         Add(new CGUIColoredPolygone(ID_CCS_HAIR_COLOR, color, 490, 289, 120, 25, clr));
 
@@ -305,7 +306,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
             colorIndex += (colorIndex / colorOffsetDivider) << 2;
             color = *(uint16_t *)(huesData + colorIndex);
 
-            clr = g_ColorManager.Color16To32(color);
+            clr = uo_color16_to_32(color);
 
             Add(new CGUIColoredPolygone(ID_CCS_FACIAL_HAIR_COLOR, color, 490, 333, 120, 25, clr));
         }
@@ -343,7 +344,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
                     colorIndex += (colorIndex / colorOffsetDivider) << 2;
                     uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-                    uint32_t clr = g_ColorManager.Color16To32(color);
+                    uint32_t clr = uo_color16_to_32(color);
 
                     CGUIColoredPolygone *polygone =
                         (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
@@ -372,7 +373,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
                     colorIndex += (colorIndex / colorOffsetDivider) << 2;
                     uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-                    uint32_t clr = g_ColorManager.Color16To32(color);
+                    uint32_t clr = uo_color16_to_32(color);
 
                     CGUIColoredPolygone *polygone =
                         (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
@@ -418,7 +419,7 @@ void CGumpScreenCreateCharacter::UpdateContentModern()
                     colorIndex += (colorIndex / colorOffsetDivider) << 2;
                     uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-                    uint32_t clr = g_ColorManager.Color16To32(color);
+                    uint32_t clr = uo_color16_to_32(color);
 
                     CGUIColoredPolygone *polygone =
                         (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(

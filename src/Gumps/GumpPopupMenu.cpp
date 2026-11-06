@@ -10,6 +10,7 @@
 #include "../Network/Packets.h"
 #include "../Globals.h" // g_Language, CONTEXT_MENU_FONT
 #include <cstdint>
+#include <xuocore/uodata_color.h>
 #if defined(XUO_ASSISTANT)
 #include <macros/macroexecutor.h> // xuoassist::g_MacroExecutor.RecordWaitContextMenu (macro tap)
 #endif
@@ -121,7 +122,7 @@ void CGumpPopupMenu::Parse(CPacketManager &reader)
         if (info.ReplaceColor != 0u)
         {
             item->SetGlobalColor(
-                true, g_ColorManager.Color16To32(info.ReplaceColor), 0xFFFFFFFE, 0xFFFFFFFE);
+                true, uo_color16_to_32(info.ReplaceColor), 0xFFFFFFFE, 0xFFFFFFFE);
         }
 
         if (((info.Flags & 0x02) != 0) && !arrowAdded)

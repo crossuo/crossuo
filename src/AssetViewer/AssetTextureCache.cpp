@@ -9,7 +9,7 @@
 #include <vector>
 
 
-#include <xuocore/uodata_reader.h> // uo_hue_partial_color16
+#include <xuocore/uodata_color.h> // uo_hue_partial_color16
 
 // The retire/teardown lifecycle mirrors src/Assistant/managers/assmap.cpp:
 // retired textures stay registered (RefCount == 1) until the backend reports

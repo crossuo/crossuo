@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <xuocore/uodata.h>
 #include <xuocore/vfs.h>
+#include <xuocore/uodata_color.h>
 #include "../CrossUO.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ColorManager.h"
@@ -195,9 +196,9 @@ void CGumpMinimap::GenerateMap()
                         tableSize = 17;
                         table = &foliageOffsetTable[((color - 0x4000) % 3) * tableSize];
                     }*/
-                    color = 0x8000 | g_ColorManager.GetRadarColorData(color);
+                    color = 0x8000 | uo_radar_color(color);
                     if (hue != 0u)
-                        color = 0x8000 | g_ColorManager.GetColor16(color, hue);
+                        color = 0x8000 | uo_hue_get_color16(color, hue);
 
                     CreatePixels(data, color, gx, gy, gumpWidth, gumpHeight, table, tableSize);
                 }
@@ -311,7 +312,7 @@ void CGumpMinimap::UpdateContent()
                     g_ConfigManager.GetColorByNotoriety(go->GameCharacterPtr()->Notoriety);
                 if (color != 0u)
                 {
-                    uint32_t pcl = g_ColorManager.GetPolygoneColor(30, color);
+                    uint32_t pcl = uo_hue_get_color_poly(30, color);
                     int x = go->GetX() - playerX;
                     int y = go->GetY() - playerY;
                     int gx = x - y;

@@ -18,6 +18,7 @@
 
 #include <xuocore/mulstruct.h>  // RADAR_MAP_BLOCK / MAP_BLOCK / STATICS_BLOCK
 #include <xuocore/uodata.h>     // g_MapSize / g_MapBlockSize
+#include <xuocore/uodata_color.h>
 
 #include "Managers/MapManager.h"    // ::g_MapManager (radar blocks via GetIndex)
 #include "Managers/ColorManager.h" // ::g_ColorManager (radarcol + hue)
@@ -213,10 +214,10 @@ static uint16_t RadarCellColor(const RADAR_MAP_CELLS &cell)
         color = ::g_Game.GetLandSeasonGraphic(color);
     }
 
-    uint32_t result = 0x8000 | ::g_ColorManager.GetRadarColorData(color);
+    uint32_t result = 0x8000 | ::uo_radar_color(color);
     if (cell.Hue != 0u)
     {
-        result = 0x8000 | ::g_ColorManager.GetColor16(uint16_t(result & 0xFFFF), cell.Hue);
+        result = 0x8000 | ::uo_hue_get_color16(uint16_t(result & 0xFFFF), cell.Hue);
     }
 
     return uint16_t(result);

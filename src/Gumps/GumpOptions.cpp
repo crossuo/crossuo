@@ -21,6 +21,7 @@
 #include "../Managers/OptionsMacroManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Network/Packets.h"
+#include <xuocore/uodata_color.h>
 #include <SDL3/SDL_keyboard.h>
 #include <common/utils.h> // countof
 #include <cstdint>
@@ -1534,7 +1535,7 @@ void CGumpOptions::DrawPage3()
 
     if (g_OptionsConfig.ToolTipsTextColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ToolTipsTextColor);
     }
 
@@ -1570,7 +1571,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
 
@@ -1585,7 +1586,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1604,7 +1605,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1623,7 +1624,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1642,7 +1643,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1661,7 +1662,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1680,7 +1681,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1699,7 +1700,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1718,7 +1719,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1737,7 +1738,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1756,7 +1757,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1775,7 +1776,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1794,7 +1795,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1813,7 +1814,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1832,7 +1833,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -1851,7 +1852,7 @@ void CGumpOptions::DrawPage4()
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
     }
     else
@@ -2339,7 +2340,7 @@ void CGumpOptions::DrawPage7()
 
     if (g_OptionsConfig.SpeechColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.SpeechColor);
     }
 
@@ -2354,7 +2355,7 @@ void CGumpOptions::DrawPage7()
 
     if (g_OptionsConfig.EmoteColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.EmoteColor);
     }
     else
@@ -2373,7 +2374,7 @@ void CGumpOptions::DrawPage7()
 
     if (g_OptionsConfig.PartyMessageColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.PartyMessageColor);
     }
     else
@@ -2404,7 +2405,7 @@ void CGumpOptions::DrawPage7()
 
         if (g_OptionsConfig.GuildMessageColor != 0xFFFF)
         {
-            color = g_ColorManager.GetPolygoneColor(
+            color = uo_hue_get_color_poly(
                 g_OptionsPolygoneColorOffset, g_OptionsConfig.GuildMessageColor);
         }
         else
@@ -2429,7 +2430,7 @@ void CGumpOptions::DrawPage7()
 
         if (g_OptionsConfig.AllianceMessageColor != 0xFFFF)
         {
-            color = g_ColorManager.GetPolygoneColor(
+            color = uo_hue_get_color_poly(
                 g_OptionsPolygoneColorOffset, g_OptionsConfig.AllianceMessageColor);
         }
         else
@@ -2484,7 +2485,7 @@ void CGumpOptions::DrawPage8()
 
     if (g_OptionsConfig.InnocentColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.InnocentColor);
     }
 
@@ -2499,7 +2500,7 @@ void CGumpOptions::DrawPage8()
 
     if (g_OptionsConfig.FriendlyColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.FriendlyColor);
     }
     else
@@ -2518,7 +2519,7 @@ void CGumpOptions::DrawPage8()
 
     if (g_OptionsConfig.SomeoneColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.SomeoneColor);
     }
     else
@@ -2537,7 +2538,7 @@ void CGumpOptions::DrawPage8()
 
     if (g_OptionsConfig.CriminalColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.CriminalColor);
     }
     else
@@ -2556,7 +2557,7 @@ void CGumpOptions::DrawPage8()
 
     if (g_OptionsConfig.EnemyColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.EnemyColor);
     }
     else
@@ -2575,7 +2576,7 @@ void CGumpOptions::DrawPage8()
 
     if (g_OptionsConfig.MurdererColor != 0xFFFF)
     {
-        color = g_ColorManager.GetPolygoneColor(
+        color = uo_hue_get_color_poly(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.MurdererColor);
     }
     else
@@ -2691,196 +2692,196 @@ void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t co
         {
             g_OptionsConfig.ToolTipsTextColor = color;
             m_ColorTooltipText->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_INPUT_TEXT:
         {
             g_OptionsConfig.ChatColorInputText = color;
             m_ColorInputText->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_MENU_OPTION:
         {
             g_OptionsConfig.ChatColorMenuOption = color;
             m_ColorMenuOption->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_PLAYER_IN_MEMBER_LIST:
         {
             g_OptionsConfig.ChatColorPlayerInMemberList = color;
             m_ColorPlayerColorInMemberList->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_TEXT:
         {
             g_OptionsConfig.ChatColorText = color;
             m_ColorChatText->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_PLAYER_WITHOUT_PRIV:
         {
             g_OptionsConfig.ChatColorPlayerNameWithout = color;
             m_ColorPlayerNameWithoutSpeakingPrivileges->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_MUTED_TEXT:
         {
             g_OptionsConfig.ChatColorMuted = color;
             m_ColorMutedText->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_CHAN_MODER_NAME:
         {
             g_OptionsConfig.ChatColorChannelModeratorName = color;
             m_ColorChannelModeratorName->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_CHAN_MODER_TEXT:
         {
             g_OptionsConfig.ChatColorChannelModeratorText = color;
             m_ColorChannelModeratorText->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_MY_NAME:
         {
             g_OptionsConfig.ChatColorMyName = color;
             m_ColorMyName->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_MY_TEXT:
         {
             g_OptionsConfig.ChatColorMyText = color;
             m_ColorMyText->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_SYSTEM_MESSAGE:
         {
             g_OptionsConfig.ChatColorSystemMessage = color;
             m_ColorSystemMessage->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_BG_OUTPUT:
         {
             g_OptionsConfig.ChatColorBGOutputText = color;
             m_ColorTextOutputBackground->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_BG_INPUT:
         {
             g_OptionsConfig.ChatColorBGInputText = color;
             m_ColorTextInputBackground->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_BG_USER_LIST:
         {
             g_OptionsConfig.ChatColorBGUserList = color;
             m_ColorUserListBackground->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_BG_CONF_LIST:
         {
             g_OptionsConfig.ChatColorBGCommandList = color;
             m_ColorConferenceListBackground->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_CHAT_BG_COMMAND_LIST:
         {
             g_OptionsConfig.ChatColorBGCommandList = color;
             m_ColorCommandListBackground->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_DISPLAY_SPEECH:
         {
             g_OptionsConfig.SpeechColor = color;
             m_ColorSpeech->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_DISPLAY_EMOTE:
         {
             g_OptionsConfig.EmoteColor = color;
             m_ColorEmote->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_DISPLAY_PARTY_MESSAGE:
         {
             g_OptionsConfig.PartyMessageColor = color;
             m_ColorPartyMessage->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_DISPLAY_GUILD_MESSAGE:
         {
             g_OptionsConfig.GuildMessageColor = color;
             m_ColorGuildMessage->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_DISPLAY_ALLIANCE_MESSAGE:
         {
             g_OptionsConfig.AllianceMessageColor = color;
             m_ColorAllianceMessage->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_REPSYS_INNOCENT:
         {
             g_OptionsConfig.InnocentColor = color;
             m_ColorInnocent->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_REPSYS_FRIENDLY:
         {
             g_OptionsConfig.FriendlyColor = color;
             m_ColorFriendly->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_REPSYS_SOMEONE:
         {
             g_OptionsConfig.SomeoneColor = color;
             m_ColorSomeone->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_REPSYS_CRIMINAL:
         {
             g_OptionsConfig.CriminalColor = color;
             m_ColorCriminal->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_REPSYS_ENEMY:
         {
             g_OptionsConfig.EnemyColor = color;
             m_ColorEnemy->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         case SCGS_OPT_REPSYS_MURDERER:
         {
             g_OptionsConfig.MurdererColor = color;
             m_ColorMurderer->UpdateColor(
-                color, g_ColorManager.GetPolygoneColor(g_OptionsPolygoneColorOffset, color));
+                color, uo_hue_get_color_poly(g_OptionsPolygoneColorOffset, color));
             break;
         }
         default:

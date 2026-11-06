@@ -10,10 +10,11 @@
 #include <cwchar>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
+#include <xuocore/mappedfile.h>
+#include <xuocore/uodata_color.h>
 #include "../CrossUO.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderBatch.h"
-#include "xuocore/mappedfile.h"
 
 CFontsManager g_FontManager;
 
@@ -873,7 +874,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
                         }
                         else
                         {
-                            pcl = g_ColorManager.GetColor(pic, charColor);
+                            pcl = uo_hue_partial_color16(pic, charColor);
                         }
 
                         int block = (testY * width) + (x + w);
@@ -2636,9 +2637,9 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     {
 #if defined(XUO_EMSC)
         // GetPolygoneColor returns 32-bit RGBA via Color16To32
-        datacolor = g_ColorManager.GetPolygoneColor(cell, color) | 0xFF000000u;
+        datacolor = uo_hue_get_color_poly(cell, color) | 0xFF000000u;
 #else
-        datacolor = g_ColorManager.GetPolygoneColor(cell, color) << 8 | 0xFF;
+        datacolor = uo_hue_get_color_poly(cell, color) << 8 | 0xFF;
 #endif
     }
 
