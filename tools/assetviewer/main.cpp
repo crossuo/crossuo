@@ -10,6 +10,10 @@
 #include <string.h>
 
 #include <SDL3/SDL.h>
+// SDL3 relocates main; with the -municode link flag (SDL3 on mingw) the CRT
+// entry is wWinMain, which SDL_main.h provides in the TU defining main
+// (mirrors src/Main.cpp)
+#include <SDL3/SDL_main.h>
 
 #include <common/fs.h>
 #include <common/logging/logging.h>
@@ -497,7 +501,9 @@ void AssetViewerApp::Shutdown()
     AssetViewer_Shutdown();
     ShutdownAudio();
     win_shutdown(&m_Win);
-    memset(&m_Ui, 0, sizeof(m_Ui));
+    // ui_context has NSDMIs: assignment keeps the type-safe zeroing the old
+    // memset provided without tripping -Wclass-memaccess
+    m_Ui = ui_context{};
     m_Initialized = false;
 }
 

@@ -24863,6 +24863,12 @@ static int8 channel_position[7][6] =
    { L, C, R, L, R, C },
 };
 
+// these single-letter macros clash with the Win32 headers included further
+// down (winnt.h has bitfields named L/R/C); the table above is their last use
+#undef L
+#undef C
+#undef R
+
 
 #ifndef STB_VORBIS_NO_FAST_SCALED_FLOAT
    typedef union {

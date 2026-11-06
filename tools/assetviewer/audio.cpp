@@ -17,6 +17,14 @@
 #include <cstring>
 #include <vector>
 
+// ass.h includes <windows.h> when built for Windows; it must land at global
+// scope - inside the wrapping namespace the mingw Interlocked shim functions
+// end up in the namespace and cannot resolve their long-pointer overloads
+// (the client's SoundManager gets the same effect via common/fs.h)
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#endif
+
 #include "../../src/SDL_wrapper.h"
 
 #include <xuocore/mulstruct.h>

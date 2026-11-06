@@ -53,12 +53,19 @@ target_include_directories(${ASSETVIEWER_APP_PROJECT} PUBLIC
   ${COMMON_INCLUDE}
 )
 
-if (NOT XUO_WINDOWS)
+if (APPLE)
+  # apple ld64 spells it -undefined,error (see the matching guard in
+  # src/CMakeLists.txt for the crossuo target)
+  target_link_options(${ASSETVIEWER_APP_PROJECT} PRIVATE "LINKER:-undefined,error")
+elseif (NOT XUO_WINDOWS AND NOT XUO_EMSC)
   target_link_options(${ASSETVIEWER_APP_PROJECT} PRIVATE "LINKER:--no-undefined")
 endif()
 
 if (XUO_WINDOWS)
   target_sources(${ASSETVIEWER_APP_PROJECT} PRIVATE ${CMAKE_SOURCE_DIR}/resources/client.rc)
+  # client.rc includes src/targetver.h; windres picks the include dirs up
+  # from this target's INTERFACE/PUBLIC include path
+  target_include_directories(${ASSETVIEWER_APP_PROJECT} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 endif()
 
 xuo_disable_console(${ASSETVIEWER_APP_PROJECT})
