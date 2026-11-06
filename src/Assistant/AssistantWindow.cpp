@@ -239,7 +239,7 @@ static void assistant_cursor_draw()
 
     int x = 0, y = 0, w = 0, h = 0;
     CRenderTexture *texture = nullptr;
-    const uint16_t id = 0x206A + 7;//g_MouseManager.GetGameCursor();
+    const uint16_t id = g_MouseManager.GetGameCursor();
     if (!g_MouseManager.GetCursorDrawRect(id, &x, &y, &w, &h, &texture))
     {
         return;

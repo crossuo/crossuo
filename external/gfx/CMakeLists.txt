@@ -8,7 +8,7 @@ set(EXTERNALGFX_PROJECT "${PROJECT_NAME}" CACHE INTERNAL "")
 set(EXTERNALGFX_DIR "${PROJECT_SOURCE_DIR}" CACHE INTERNAL "")
 set(EXTERNALGFX_INCLUDE "${CMAKE_SOURCE_DIR}" CACHE INTERNAL "")
 
-file(GLOB EXTERNALGFX_HEADERS ${EXTERNALGFX_DIR}/*.h ${EXTERNALGFX_DIR}/imgui/*.h)
+file(GLOB EXTERNALGFX_HEADERS ${EXTERNALGFX_DIR}/*.h ${EXTERNALGFX_DIR}/imgui/*.h ${EXTERNALGFX_DIR}/imgui/bui/*.h)
 
 set(EXTERNALGFX_SRC
     gfxpp.cpp
@@ -22,6 +22,7 @@ set(EXTERNALGFX_SRC
     imgui/imgui_stdlib.cpp
     imgui/imgui_widgets.cpp
     imgui/imgui_spinner.cpp
+    imgui/bui/imgui_bui_style.cpp
     ui.cpp
 )
 

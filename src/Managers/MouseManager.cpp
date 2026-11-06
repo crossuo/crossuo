@@ -201,25 +201,25 @@ bool CMouseManager::GetCursorDrawRect(
         return false;
     }
 
+    // mirror DrawStaticArt's placement exactly (the assistant cursor mirror
+    // draws this rect with ImGui's top-left AddImage): its quad top-left is
+    // (x - m_Static[id].Width, y - m_Static[id].Height) with the texture dims
+    // as size (CrossUO.cpp DrawStaticArt)
     if (x != nullptr)
     {
-        *x = Position.X + m_CursorOffset[0][index];
+        *x = Position.X + m_CursorOffset[0][index] - g_Index.m_Static[id].Width;
     }
     if (y != nullptr)
     {
-        *y = Position.Y + m_CursorOffset[1][index];
-//#if !defined(XUO_EMSC)
-        // SDL2<>imgui issue
-        //*y +=  + spr->Width - 6; // hack
-//#endif
+        *y = Position.Y + m_CursorOffset[1][index] - g_Index.m_Static[id].Height;
     }
     if (w != nullptr)
     {
-        *w = spr->Width;
+        *w = spr->Texture->Width;
     }
     if (h != nullptr)
     {
-        *h = spr->Height;
+        *h = spr->Texture->Height;
     }
     if (texture != nullptr)
     {

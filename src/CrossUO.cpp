@@ -14,6 +14,7 @@
 #include "SDL_wrapper.h"
 #if defined(XUO_ASSISTANT)
 #include "AssistantWindow.h"
+#include "AssetViewer.h" // AssetViewer_Shutdown (viewer texture pixels)
 #include <core/assist.h> // xuoassist::AssistantSpeechIntercept (speech taps)
 #include <core/global.h> // xuoassist::g_SelectedClientWorldObject (selected-tile feed)
 #include <managers/promptmanager.h> // xuoassist::g_PromptManager.OnPromptSent (prompt taps)
@@ -660,6 +661,16 @@ void CGame::Uninstall()
     g_FileManager.Unload();
     vfs_shutdown(); // no-op when streaming is disabled
     g_LightBuffer.Free();
+
+#if defined(XUO_ASSISTANT)
+    // release the assistant/viewer ImGui + GL resources while the game GL
+    // context is still alive: Render_Shutdown below destroys it, and
+    // ui_shutdown afterwards frees ImGui device objects and viewport windows
+    // on a dead context (SIGSEGV in DestroyPlatformWindows; SDL3 also
+    // destroys popped-out child windows along with the game window)
+    AssistantWindow_Shutdown();
+    AssetViewer_Shutdown();
+#endif
 
     Render_Shutdown();
 }
