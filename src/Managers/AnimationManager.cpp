@@ -3002,34 +3002,34 @@ uint8_t CAnimationManager::CorrectAnimationGroupServer(
 }
 
 // mount layer item graphic -> body graphic (the client's hardcoded table,
-// 0x3E90..0x3EE4 with a horse fallback for unknown ids inside the range)
+// 0x3E90..0x3EE5 with a horse fallback for unknown ids inside the range)
 uint16_t MountItemId_ToBodyGraphic(uint16_t itemGraphic)
 {
     switch (itemGraphic)
     {
-        case 0x3E90: return 0x114;
-        case 0x3E91: return 0x115;
-        case 0x3E92: return 0x11C;
-        case 0x3E94: return 0x0F3;
-        case 0x3E95: return 0x0A9;
-        case 0x3E97: return 0x0C3;
-        case 0x3E98: return 0x0C2;
-        case 0x3E9A: return 0x0C1;
+        case 0x3E90: return 0x0114;
+        case 0x3E91: return 0x0115;
+        case 0x3E92: return 0x011C;
+        case 0x3E94: return 0x00F3;
+        case 0x3E95: return 0x00A9;
+        case 0x3E97: return 0x00C3;
+        case 0x3E98: return 0x00C2;
+        case 0x3E9A: return 0x00C1;
         case 0x3E9B: // both map to the same body in the client
-        case 0x3E9D: return 0x0C0;
-        case 0x3E9C: return 0x0BF;
-        case 0x3E9E: return 0x0BE;
-        case 0x3EA0: return 0x0E2;
-        case 0x3EA1: return 0x0E4;
-        case 0x3EA2: return 0x0CC;
-        case 0x3EA3: return 0x0D2;
-        case 0x3EA4: return 0x0DA;
-        case 0x3EA5: return 0x0DB;
-        case 0x3EA6: return 0x0DC;
-        case 0x3EA7: return 0x074;
-        case 0x3EA8: return 0x075;
-        case 0x3EA9: return 0x072;
-        case 0x3EAA: return 0x073;
+        case 0x3E9D: return 0x00C0;
+        case 0x3E9C: return 0x00BF;
+        case 0x3E9E: return 0x00BE;
+        case 0x3EA0: return 0x00E2;
+        case 0x3EA1: return 0x00E4;
+        case 0x3EA2: return 0x00CC;
+        case 0x3EA3: return 0x00D2;
+        case 0x3EA4: return 0x00DA;
+        case 0x3EA5: return 0x00DB;
+        case 0x3EA6: return 0x00DC;
+        case 0x3EA7: return 0x0074;
+        case 0x3EA8: return 0x0075;
+        case 0x3EA9: return 0x0072;
+        case 0x3EAA: return 0x0073;
         case 0x3EAB: return 0x00AA;
         case 0x3EAC: return 0x00AB;
         case 0x3EAD: return 0x0084;
@@ -3047,8 +3047,8 @@ uint16_t MountItemId_ToBodyGraphic(uint16_t itemGraphic)
         case 0x3EBB: return 0x0319;
         case 0x3EBC: return 0x0317;
         case 0x3EBD: return 0x031A;
-        case 0x3EBE: return 799;
-        case 0x3EC5: return 0x0D5;
+        case 0x3EBE: return 0x031F;
+        case 0x3EC5: return 0x00D5;
         case 0x3EC6: return 0x01B0;
         case 0x3EC7: return 0x04E6;
         case 0x3EC8: return 0x04E7;
@@ -3079,10 +3079,11 @@ uint16_t MountItemId_ToBodyGraphic(uint16_t itemGraphic)
         case 0x3EE1: return 0x0678;
         case 0x3EE2: return 0x0679;
         case 0x3EE4: return 0x06C1;
+        case 0x3EE5: return 0x06CA; // 7.0.117.33
         default:
             break;
     }
-    if (IN_RANGE(itemGraphic, 0x3E90, 0x3EE4))
+    if (IN_RANGE(itemGraphic, 0x3E90, 0x3EE5))
     {
         return 0xC8; // horse
     }
