@@ -155,7 +155,7 @@ bool AssetViewerApp::InitWindow()
     m_Win.title = "X:UO Asset Viewer";
     m_Win.width = 1280;
     m_Win.height = 800;
-    m_Win.vsync = 1;
+    m_Win.vsync = 0;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == false)
     {

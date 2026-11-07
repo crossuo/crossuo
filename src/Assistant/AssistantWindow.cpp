@@ -19,8 +19,6 @@
 #include <xuocore/uodata.h> // ExeFilePath
 #include <vector>
 #include "core/textcommandmanager.h" // g_TextCommandManager (Client.* table init)
-#include "Renderer/RenderTexture.h" // CRenderTexture (the cursor mirror source)
-#include "Managers/MouseManager.h" // g_MouseManager (game cursor draw geometry)
 #include "ui/assistantui.h" // AssistantUI_Draw/Init/Tick/Shutdown (xuoassist)
 #include "ui/widgets.h"     // Icons_Init/Icons_Shutdown (icon atlas lifecycle)
 #include "../AssetViewer/AssetViewer.h" // AssetViewer_Draw (the viewer shares this frame)
@@ -65,27 +63,6 @@ static bool assistant_enabled()
     return g_Config.AssistantEnabled;
 }
 
-// --- UO cursor overlay mirror -----------------------------------------------
-//
-// The client renders the UO cursor in the game render pass (CGameScreen::Render
-// -> g_MouseManager.Draw), which lands BEHIND the ImGui overlay drawn after it
-// - and inside the game window the OS cursor is suppressed by the per-frame
-// cursor policy below, so with the overlay up nothing visible pointed at the
-// assistant UI. While the overlay is visible and the mouse is inside the game
-// window, the cursor sprite is mirrored into an ImGui-owned texture and drawn
-// on the foreground draw list at the exact rect CMouseManager::Draw uses.
-//
-// The mirror reads the client texture with assistant_cursor_gl_read during the
-// assistant draw pass: that pass runs inside the game GL context (before
-// ui_draw switches around popped-out windows) so the client texture is
-// directly readable; the previous GL_TEXTURE_2D and framebuffer bindings are
-// restored. Note the Felucca hue
-// (CMouseManager::Draw tints ids >= 0x206A with 0x0033 on non-zero facets) is a
-// shader-time tint: the mirrored pixels are the uncolorized art.
-static ImTextureData *s_CursorTex = nullptr;
-static std::vector<ImTextureData *> s_CursorRetired;
-static uint16_t s_CursorGraphic = 0; // art id currently mirrored
-
 // true when the mouse is over one of the assistant's popped-out platform
 // windows (the desktop cursor rules there, both for the OS cursor policy and
 // for the game-cursor overlay)
@@ -108,26 +85,6 @@ static bool mouse_over_assistant_popout()
     return false;
 }
 
-// reaps mirror retirements the backend finished destroying (the radar map's
-// resize sequence): only ever holds entries on a cursor size change
-static void assistant_cursor_reap()
-{
-    for (size_t i = 0; i < s_CursorRetired.size();)
-    {
-        ImTextureData *tex = s_CursorRetired[i];
-        if (tex->Status == ImTextureStatus_Destroyed)
-        {
-            ImGui::UnregisterUserTexture(tex);
-            delete tex;
-            s_CursorRetired.erase(s_CursorRetired.begin() + i);
-        }
-        else
-        {
-            i++;
-        }
-    }
-}
-
 // True when the viewer's own windows are under the mouse: the asset viewer
 // runs as a top-level ImGui window that outlives the assistant shell, and its
 // cursor/input must not depend on the shell being visible.
@@ -139,148 +96,6 @@ static bool mouse_over_asset_viewer()
     // uses for its own windows.
     return AssetViewer_IsWindowOpen() && ImGui::GetIO().WantCaptureMouse &&
            !mouse_over_assistant_popout();
-}
-
-// the ImGui-owned mirror texture, (re)created at the cursor sprite size
-static ImTextureData *assistant_cursor_texture(int w, int h)
-{
-    if (s_CursorTex != nullptr && (s_CursorTex->Width != w || s_CursorTex->Height != h))
-    {
-        // size change: queue the texture for destroy and register a replacement
-        // (the atlas lifecycle sequence: it stays registered until the backend
-        // destroys it, then assistant_cursor_reap unregisters + frees it)
-        s_CursorTex->WantDestroyNextFrame = true;
-        s_CursorRetired.push_back(s_CursorTex);
-        s_CursorTex = nullptr;
-    }
-
-    if (s_CursorTex == nullptr)
-    {
-        s_CursorTex = new ImTextureData();
-        s_CursorTex->Create(ImTextureFormat_RGBA32, w, h);
-        s_CursorTex->SetStatus(ImTextureStatus_WantCreate);
-        s_CursorTex->UseColors = true;
-        memset(s_CursorTex->GetPixels(), 0, (size_t)s_CursorTex->GetSizeInBytes());
-        ImGui::RegisterUserTexture(s_CursorTex);
-    }
-    return s_CursorTex;
-}
-
-// reads a GL texture into dst (w*h RGBA8 rows) on desktop GL and GLES2 alike
-// (glGetTexImage does not exist in OpenGL ES): temporary FBO + glReadPixels,
-// with RGBA/UNSIGNED_BYTE - the one combination ES2 guarantees readable; the
-// previously bound FBO and texture are saved and restored
-static void assistant_cursor_gl_read(GLuint glName, int w, int h, void *dst)
-{
-    GLint previousTex = 0;
-    GLint previousFbo = 0;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &previousTex);
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFbo);
-    GLuint fbo = 0;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, glName, 0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
-    {
-        // row order: glReadPixels returns the FBO bottom row first, i.e.
-        // texture v=0 - the same order glGetTexImage handed back
-        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, dst);
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)previousFbo);
-    glDeleteFramebuffers(1, &fbo);
-    glBindTexture(GL_TEXTURE_2D, (GLuint)previousTex);
-}
-
-// copies the client cursor sprite pixels into the mirror (RGBA8, first row =
-// top: the client uploads v=0 at the top of its quads and the FBO readback in
-// assistant_cursor_gl_read returns v=0 first too, so no flip vs ImGui's UV
-// convention)
-static void assistant_cursor_upload(ImTextureData *tex, GLuint glName)
-{
-    assistant_cursor_gl_read(glName, tex->Width, tex->Height, tex->GetPixels());
-
-    if (tex->Status == ImTextureStatus_WantCreate)
-    {
-        // first frame of this texture: the create upload carries the pixels -
-        // do NOT downgrade the status (the backend asserts if a texture is
-        // never created)
-        return;
-    }
-    ImTextureRect full;
-    full.x = 0;
-    full.y = 0;
-    full.w = (unsigned short)tex->Width;
-    full.h = (unsigned short)tex->Height;
-    tex->Updates.clear();
-    tex->Updates.push_back(full);
-    tex->SetStatus(ImTextureStatus_WantUpdates);
-}
-
-// draws the mirrored cursor on the ImGui foreground list; mirrors the client's
-// own draw condition: CGameScreen::Render draws the cursor only at GS_GAME
-// (the blocked screen draws none), for the id g_MouseManager.GetGameCursor()
-// resolves, and CMouseManager::Draw skips ids without sprite/texture
-static void assistant_cursor_draw()
-{
-    // draw ONLY while the mouse is over assistant UI inside the game viewport:
-    // with only assistant windows in the context WantCaptureMouse is exactly
-    // "over an assistant window", and pop-outs are excluded by the viewport
-    // check below (they are separate OS windows in desktop space). Over the
-    // bare game world the client's own cursor render is the visible cursor -
-    // mirroring there produced a second cursor.
-    if ((!s_visible && !mouse_over_asset_viewer()) || g_GameState != GS_GAME ||
-        !ImGui::GetIO().WantCaptureMouse || mouse_over_assistant_popout())
-    {
-        g_MouseManager.Hide(false);
-        return;
-    }
-
-    g_MouseManager.Hide();
-
-    int x = 0, y = 0, w = 0, h = 0;
-    CRenderTexture *texture = nullptr;
-    const uint16_t id = g_MouseManager.GetGameCursor();
-    if (!g_MouseManager.GetCursorDrawRect(id, &x, &y, &w, &h, &texture))
-    {
-        return;
-    }
-
-    // refresh the pixels only when the cursor art (or its size) changed
-    if (s_CursorGraphic != id || s_CursorTex == nullptr || s_CursorTex->Width != w ||
-        s_CursorTex->Height != h)
-    {
-        assistant_cursor_reap();
-        ImTextureData *tex = assistant_cursor_texture(w, h);
-        assistant_cursor_upload(tex, (GLuint)texture->Texture);
-        s_CursorGraphic = id;
-    }
-    else
-    {
-        assistant_cursor_reap();
-    }
-
-    // the foreground list renders above every ImGui window: exactly where the
-    // cursor belongs; coordinates are game-window pixels (SDL_GetMouseState
-    // space), 1:1 with g_MouseManager.Position - no HiDPI scaling anywhere
-    ImGui::GetForegroundDrawList()->AddImage(
-        s_CursorTex->GetTexRef(), ImVec2((float)x, (float)y), ImVec2((float)(x + w), (float)(y + h)));
-}
-
-// the post-shutdown half of the cursor mirror texture lifecycle (runs from
-// AssistantWindow_Shutdown right AFTER ui_shutdown/DestroyContext, next to
-// AssistantUI_AfterImGuiShutdown): the GL name was reclaimed by the backend
-// teardown inside ui_shutdown (the texture stayed registered, RefCount == 1);
-// only now may the CPU-side pixels be freed
-static void assistant_cursor_after_imgui_shutdown()
-{
-    delete s_CursorTex;
-    s_CursorTex = nullptr;
-    for (ImTextureData *tex : s_CursorRetired)
-    {
-        delete tex;
-    }
-    s_CursorRetired.clear();
-    s_CursorGraphic = 0;
 }
 
 static bool event_belongs_to_game(const SDL_Event &ev)
@@ -688,19 +503,31 @@ void AssistantWindow_DrawOverlay()
     // the popped-out platform windows. Bailing out here left them frozen on
     // screen: the assistant could not be closed via its X button.
     ui_newframe(s_ctx);
-    // Cursor policy while the overlay is visible: the OS cursor stays hidden
-    // inside the game window - the game's UO software cursor is the cursor,
-    // including over assistant windows docked in the game viewport - and the
-    // desktop cursor shows only over the assistant's own popped-out platform
-    // windows. Enforced per frame after NewFrame, where io.MousePos and the
-    // viewport list are valid; init() set ImGuiConfigFlags_NoMouseCursorChange
-    // so the SDL2 backend never fights this. When the overlay is not visible
-    // the assistant leaves the cursor alone entirely: the client owns it.
+    if (shellInit)
+    {
+        xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
+    }
+    // the asset viewer submits its window into this same ImGui frame, after
+    // the assistant shell (its own top-level window; a no-op while hidden)
+    AssetViewer_Draw();
+    // Cursor policy, taken once every ImGui surface of this frame is submitted.
+    // The client hides the OS cursor and draws its own UO software cursor
+    // inside the game window, so over the game world that cursor is the
+    // pointer. Over an ImGui surface it is the ImGui widgets the user points
+    // at, and those are composited above the game-drawn cursor - so there the
+    // system cursor takes over: shown while the mouse is over an assistant or
+    // asset viewer window (docked in the game viewport or popped out), hidden
+    // again as soon as it leaves them, and hidden when no such window is left
+    // at all. Deciding here rather than before the submissions is what makes
+    // the X button of the docked shell put the cursor back in one frame: the
+    // button flips s_visible while the shell is drawn, and WantCaptureMouse
+    // answers for the windows of the frame being built, not the previous one.
+    // init() set ImGuiConfigFlags_NoMouseCursorChange so the SDL2 backend
+    // never fights this; while the pipeline is not running the assistant
+    // leaves the cursor alone entirely: the client owns it.
     if (s_visible || AssetViewer_IsWindowOpen())
     {
-        // io.MousePos and the viewport list are valid after NewFrame
-        const bool overAssistantPopOut = mouse_over_assistant_popout();
-        if (overAssistantPopOut)
+        if (ImGui::GetIO().WantCaptureMouse)
         {
             SDL_ShowCursor();
         }
@@ -709,17 +536,10 @@ void AssistantWindow_DrawOverlay()
             SDL_HideCursor();
         }
     }
-    if (shellInit)
+    else
     {
-        xuoassist::AssistantUI_Draw(&s_visible, s_sessionStartTicks);
+        SDL_HideCursor();
     }
-    // the asset viewer submits its window into this same ImGui frame, after
-    // the assistant shell (its own top-level window; a no-op while hidden)
-    AssetViewer_Draw();
-    // the on-top UO cursor: after every assistant window submission (the
-    // foreground list draws above windows anyway), before ui_draw renders the
-    // frame; only while visible (see assistant_cursor_draw)
-    assistant_cursor_draw();
     ui_draw(s_ctx);
 
     // belt and braces: ui_draw restores the game context, nothing should have
@@ -769,9 +589,6 @@ void AssistantWindow_Shutdown()
         // idempotent, deletes the ImTextureData objects)
         xuoassist::AssistantUI_AfterImGuiShutdown();
     }
-    // the cursor mirror follows the same lifecycle (CPU pixels after the GL
-    // names are gone)
-    assistant_cursor_after_imgui_shutdown();
     s_initialized = false;
     s_visible = false;
     s_ctx = ui_context();

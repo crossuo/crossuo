@@ -232,6 +232,19 @@ void ui_draw(ui_context &ui)
         ImGui::RenderPlatformWindowsDefault();
 #if defined(USE_GL) || defined(USE_GLES)
         SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+#if !defined(USE_GLES) && !defined(XUO_EMSC)
+        // Popped-out platform windows carry their own drawables, and bringing
+        // them into the frame leaves the interval of the window the game loop
+        // swaps (the main viewport's) at the driver default of 1: its swaps
+        // then block on vsync and the whole loop runs at the refresh rate.
+        // Re-arm it here, with that window current, once the platform windows
+        // are done - this is the last GL work of the frame, so nothing undoes
+        // it before the swap.
+        if (ImGui::GetPlatformIO().Viewports.Size > 1 && backup_current_window != nullptr)
+        {
+            SDL_GL_SetSwapInterval(0);
+        }
+#endif
 #endif
     }
 
