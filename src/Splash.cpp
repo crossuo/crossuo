@@ -67,15 +67,16 @@ bool s_progressValid = false;
 bool Splash_CreateSolidTexture(uint8_t r, uint8_t g, uint8_t b, texture_handle_t *out)
 {
     uint8_t pixels[4] = { r, g, b, 0xff };
-#if defined(USE_GL)
-    // desktop GL samples this format as A,R,G,B (see DecodeCoverPng) - rotate
-    // one byte, or the bar colors come out channel-swapped (blue/magenta)
-    const uint8_t a = pixels[3];
-    pixels[3] = pixels[2];
-    pixels[2] = pixels[1];
-    pixels[1] = pixels[0];
-    pixels[0] = a;
-#endif
+    if (!glctx_caps_get()->is_es)
+    {
+        // desktop GL samples this format as A,R,G,B (see DecodeCoverPng) -
+        // rotate one byte, or the bar colors come out channel-swapped
+        const uint8_t a = pixels[3];
+        pixels[3] = pixels[2];
+        pixels[2] = pixels[1];
+        pixels[1] = pixels[0];
+        pixels[0] = a;
+    }
     *out = Render_CreateTexture2D(1, 1, TextureGPUFormat_RGBA4, pixels, TextureFormat_Unsigned_RGBA8);
     return *out != RENDER_TEXTUREHANDLE_INVALID;
 }
@@ -113,20 +114,21 @@ bool DecodeCoverPng()
         return false;
     }
 
-#if defined(USE_GL)
-    // stb yields R,G,B,A; the desktop GL layout wants A,R,G,B - a rotation
-    // by one byte, done in place
-    const size_t count = (size_t)width * (size_t)height;
-    for (size_t i = 0; i < count; ++i)
+    if (!glctx_caps_get()->is_es)
     {
-        uint8_t *px = pixels + i * 4;
-        const uint8_t alpha = px[3];
-        px[3] = px[2];
-        px[2] = px[1];
-        px[1] = px[0];
-        px[0] = alpha;
+        // stb yields R,G,B,A; the desktop GL layout wants A,R,G,B - a rotation
+        // by one byte, done in place
+        const size_t count = (size_t)width * (size_t)height;
+        for (size_t i = 0; i < count; ++i)
+        {
+            uint8_t *px = pixels + i * 4;
+            const uint8_t alpha = px[3];
+            px[3] = px[2];
+            px[2] = px[1];
+            px[1] = px[0];
+            px[0] = alpha;
+        }
     }
-#endif
 
     s_image.width = (uint32_t)width;
     s_image.height = (uint32_t)height;

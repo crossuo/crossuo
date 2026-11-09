@@ -109,11 +109,32 @@ bool Render_Init(SDL_Window *window)
     // mark the renderer as down on ANY process exit path (atexit handlers run
     // in reverse order, so this executes before the global/static destructors),
     atexit([] { g_render.shutdown = true; });
+#if defined(XUO_GL_RUNTIME)
+    // glctx already created and destroyed a probe context of the chosen
+    // flavour; recreate the real one with exactly those attributes
+    glctx_apply_attributes(glctx_flavor_get(), true);
+#else
     win_gfx_context_attrbutes(true);
+#endif
     auto *context = SDL_GL_GetCurrentContext();
     if (context == nullptr && window != nullptr)
     {
         context = SDL_GL_CreateContext(window);
+    }
+    if (context == nullptr)
+    {
+        // CGameWindow creates a context up front with its own attributes; on a
+        // backend where those do not match what the renderer needs (desktop
+        // GLES lives on an EGL ES3 context) the stale one must go before a
+        // differently configured context can be requested.
+        SDL_GLContext stale = SDL_GL_GetCurrentContext();
+        if (stale != nullptr)
+        {
+            SDL_GL_MakeCurrent(window, nullptr);
+            SDL_GL_DestroyContext(stale);
+        }
+        Error(Renderer, "could not create the GL context: %s", SDL_GetError());
+        return false;
     }
 #if defined(XUO_EMSC)
     // the current context may be the browser's own webgl handle (no SDL
@@ -155,8 +176,23 @@ bool Render_Init(SDL_Window *window)
         g_render.context = context;
     }
 #endif
+#if defined(USE_GLES)
+    // resolve the renderer entry points through SDL (see
+    // gfx_gl_load_proc_address): this backend has no gl3w/glew, and on an
+    // ES-only stack libGL's glX path does not exist either. Must run before
+    // GLTextureTracker_Install wraps glGenTextures/glDeleteTextures.
+    const int missing = gfx_gl_load_proc_address();
+    if (missing != 0)
+    {
+        Warning(
+            Renderer,
+            "%d GL entry point(s) not resolvable on this driver: %s",
+            missing,
+            gfx_gl_missing_summary());
+    }
+#endif // defined(USE_GLES)
 
-#if defined(USE_GLEW)
+#if defined(USE_GLEW) && !defined(XUO_GLES_DESKTOP)
     int glewInitResult = glewInit();
     if (glewInitResult != 0)
     {
@@ -171,13 +207,17 @@ bool Render_Init(SDL_Window *window)
         GL_ARB_framebuffer_object,
         glGetString(GL_VERSION),
         GL_ARB_shader_objects);
-#elif defined(USE_GL3W)
+#elif defined(USE_GL3W) && !defined(XUO_GL_RUNTIME)
     if (gl3wInit() != 0)
     {
         Error(Renderer, "could not initialize opengl\n");
         return false;
     }
 #endif
+    // the context is current and the entry points are resolved: complete the
+    // capability facts now, before anything queries them (VAO gates, upload
+    // formats, art-array copy support)
+    glctx_refresh_caps();
 
     // wrap glGenTextures/glDeleteTextures before any texture exists so every
     // name is tracked from birth (XUO_TRACK_TEXTURES=1 to enable reporting)
@@ -196,8 +236,8 @@ bool Render_Init(SDL_Window *window)
     Info(Renderer, "    Markers Depth: %d", maxStackDepth);
 #endif // #if defined(USE_GL3) && defined(OGL_DEBUGCONTEXT_ENABLED)
 
-#if defined(USE_GL)
-#ifdef OGL_DEBUGCONTEXT_ENABLED
+#if defined(USE_GL) || defined(XUO_GLES_DESKTOP)
+#if defined(OGL_DEBUGCONTEXT_ENABLED) && !defined(XUO_GLES_DESKTOP)
     // debug messages callback needs ogl >= 4.30
     // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
 #if defined(USE_GLEW)
@@ -210,9 +250,17 @@ bool Render_Init(SDL_Window *window)
     }
 #endif // OGL_DEBUGCONTEXT_ENABLED
 
+#if defined(XUO_GLES_DESKTOP)
+    // ES3 core has framebuffer objects; what matters here is that the loader
+    // actually resolved the entry points on this driver
+    const auto canUseFrameBuffer =
+        (glBindFramebuffer && glDeleteFramebuffers && glFramebufferTexture2D &&
+         glGenFramebuffers);
+#else
     const auto canUseFrameBuffer =
         (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
          glFramebufferTexture2D && glGenFramebuffers);
+#endif
 #else // defined(USE_GL)
     SetupOGLDebugMessage();
     const auto canUseFrameBuffer = true;
@@ -234,12 +282,15 @@ bool Render_Init(SDL_Window *window)
     // TODO: gles - init shaders
     // https://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences
     char msg[512];
+    // glShaderSource wants the address of a string pointer: hold it locally
+    const char *vsSource = g_vShader;
+    const char *psSource = g_pShader;
     const auto vs = glCreateShader(GL_VERTEX_SHADER);
-    GL_CHECK(glShaderSource(vs, 1, &g_vShader, nullptr));
+    GL_CHECK(glShaderSource(vs, 1, &vsSource, nullptr));
     GL_CHECK(glCompileShader(vs));
     GLint status = GL_TRUE;
     GL_CHECK(glGetShaderiv(vs, GL_COMPILE_STATUS, &status));
-#if defined(XUO_EMSC)
+#if defined(XUO_EMSC) || defined(XUO_GLES_DESKTOP)
     {
         char vlog[1024] = {};
         glGetShaderInfoLog(vs, sizeof(vlog), nullptr, vlog);
@@ -251,14 +302,14 @@ bool Render_Init(SDL_Window *window)
     {
         glGetShaderInfoLog(vs, sizeof(msg), nullptr, msg);
         Error(Renderer, "vs compilation: %s", msg);
-#if defined(XUO_EMSC)
+#if defined(XUO_EMSC) || defined(XUO_GLES_DESKTOP)
         fprintf(stderr, "--- VS SOURCE ---\n%s\n---", g_vShader);
         fflush(stdout);
 #endif
     }
 
     const auto ps = glCreateShader(GL_FRAGMENT_SHADER);
-    GL_CHECK(glShaderSource(ps, 1, &g_pShader, nullptr));
+    GL_CHECK(glShaderSource(ps, 1, &psSource, nullptr));
     GL_CHECK(glCompileShader(ps));
     status = GL_TRUE;
     GL_CHECK(glGetShaderiv(ps, GL_COMPILE_STATUS, &status));
@@ -338,10 +389,11 @@ bool Render_Init(SDL_Window *window)
         { {  1.0f, -1.0f }, 0.0f, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f }, -1 },
     };
     const unsigned int idx[] = { 0, 1, 2, 3 };
-#if !defined(USE_GLES2)
-    GL_CHECK(glGenVertexArrays(1, &_vao));
-    GL_CHECK(glBindVertexArray(_vao));
-#endif // #if !defined(USE_GLES2)
+    if (glctx_caps_get()->has_vao)
+    {
+        GL_CHECK(glGenVertexArrays(1, &_vao));
+        GL_CHECK(glBindVertexArray(_vao));
+    }
     GL_CHECK(glGenBuffers(2, _vibuffers));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vibuffers[0]));
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
@@ -403,10 +455,18 @@ bool Render_Init(SDL_Window *window)
     return true;
 }
 
+// retired art-array versions: a grow can land mid-frame while a batch keyed
+// on the outgoing texture is still pending (its flush binds the key's name),
+// and the indirect-rendering mode records draws against it for the whole
+// frame - so the old array stays alive until the frame boundary retires it.
+// Only ever pushed on the ES-capable builds (the array does not exist on GL1)
+static std::vector<texture_handle_t> s_artArrayRetired;
+
 void Render_Shutdown()
 {
     g_render.shutdown = true;
     Render_CleanupVertexBuffers();
+    s_artArrayRetired.clear(); // context is going away regardless
     if (g_render.context != nullptr)
     {
         SDL_GL_DestroyContext(g_render.context);
@@ -464,6 +524,15 @@ void Render_SwapBuffers()
         GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
         GL_CHECK(glBufferData(GL_ARRAY_BUFFER, g_vboSize, nullptr, GL_DYNAMIC_DRAW));
         g_vboOffset = 0;
+    }
+
+    // retire old art-array versions: every command referencing them was
+    // submitted above (see the grow path)
+    if (!s_artArrayRetired.empty())
+    {
+        GL_CHECK(glDeleteTextures(
+            (GLsizei)s_artArrayRetired.size(), s_artArrayRetired.data()));
+        s_artArrayRetired.clear();
     }
 
 #if defined(XUO_EMSC)
@@ -533,10 +602,11 @@ bool Render_InitVertexBuffers()
     // VBO size based on GenericVertex format (now includes normal)
     g_vboSize = MAX_VERTICES * sizeof(GenericVertex);
 
-#if !defined(USE_GLES2)
-    GL_CHECK(glGenVertexArrays(1, &g_drawVAO));
-    GL_CHECK(glBindVertexArray(g_drawVAO));
-#endif
+    if (glctx_caps_get()->has_vao)
+    {
+        GL_CHECK(glGenVertexArrays(1, &g_drawVAO));
+        GL_CHECK(glBindVertexArray(g_drawVAO));
+    }
 
     GL_CHECK(glGenBuffers(1, &g_drawVBO));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
@@ -554,9 +624,10 @@ bool Render_InitVertexBuffers()
     GL_CHECK(glEnableVertexAttribArray(_inLayer));
     GL_CHECK(glVertexAttribPointer(_inLayer, 1, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, layer)));
 
-#if !defined(USE_GLES2)
-    GL_CHECK(glBindVertexArray(0));
-#endif
+    if (glctx_caps_get()->has_vao)
+    {
+        GL_CHECK(glBindVertexArray(0));
+    }
 
     Info(Renderer, "Persistent vertex buffers initialized: %zu bytes (%zu vertices)", g_vboSize, MAX_VERTICES);
     return true;
@@ -572,13 +643,11 @@ void Render_CleanupVertexBuffers()
         g_drawVBO = 0;
     }
 
-#if !defined(USE_GLES2)
-    if (g_drawVAO != 0)
+    if (glctx_caps_get()->has_vao && g_drawVAO != 0)
     {
         GL_CHECK(glDeleteVertexArrays(1, &g_drawVAO));
         g_drawVAO = 0;
     }
-#endif // #if !defined(USE_GLES2)
 
     g_vboSize = 0;
 }
@@ -802,27 +871,34 @@ texture_handle_t Render_CreateTexture2D(
         GL_RGB5_A1, // RGB5_A1
     };
 
-#if defined(USE_GL)
-    static GLenum s_pixelFormatToOGLFormat[] = {
+    // The upload byte order follows the context, not the build: desktop GL
+    // takes the packed BGRA the game produces directly, while ES has neither
+    // GL_BGRA nor the *_REV packed types and needs the RGBA expansion below.
+    const bool desktopPixelFormats = !glctx_caps_get()->is_es;
+
+    static GLenum s_pixelFormatDesktop[] = {
         GL_UNSIGNED_INT_8_8_8_8,       // TextureFormat_Unsigned_RGBA8
         GL_UNSIGNED_SHORT_1_5_5_5_REV, // TextureFormat_Unsigned_A1_BGR5
     };
-    const auto imgFormat = GL_BGRA;
-#else // #if defined(USE_GL)
-    // WebGL2/GLES: GL_BGRA and the *_REV packed types do not exist. The
-    // incoming pixels are BGRA-ordered (A1BGR5 for the 16-bit path, matching
-    // the desktop GL reading of the same data); expand/swizzle to RGBA bytes
-    // and upload as GL_RGBA + GL_UNSIGNED_BYTE.
-    const auto imgFormat = GL_RGBA;
+    static GLenum s_pixelFormatES[] = {
+        GL_UNSIGNED_BYTE, // TextureFormat_Unsigned_RGBA8
+        GL_UNSIGNED_BYTE, // TextureFormat_Unsigned_A1_BGR5 (converted below)
+    };
+    GLenum *pixelFormatTable = desktopPixelFormats ? s_pixelFormatDesktop : s_pixelFormatES;
+
+    // ES: the incoming pixels are BGRA-ordered (A1BGR5 for the 16-bit path,
+    // matching the desktop GL reading of the same data); expand/swizzle to
+    // RGBA bytes and upload as GL_RGBA + GL_UNSIGNED_BYTE.
+    const auto imgFormat = desktopPixelFormats ? GL_BGRA : GL_RGBA;
     std::vector<uint8_t> converted;
-    if (pixels != nullptr)
+    if (!desktopPixelFormats && pixels != nullptr)
     {
         const size_t count = size_t(width) * height;
         if (pixelsFormat == TextureFormat_Unsigned_A1_BGR5)
         {
             // ARGB1555 (bit15 = alpha, 14-10 = R, 9-5 = G, 4-0 = B) - the
             // same field mapping the desktop GL_BGRA + 1_5_5_5_REV upload
-            // produces. The RGBA8 format arrives web-ready (no swizzle).
+            // produces. The RGBA8 format arrives ready (no swizzle).
             converted.resize(count * 4);
             const auto *src = static_cast<const uint16_t *>(pixels);
             for (size_t i = 0; i < count; ++i)
@@ -836,11 +912,6 @@ texture_handle_t Render_CreateTexture2D(
             pixels = converted.data();
         }
     }
-    static GLenum s_pixelFormatToOGLFormat[] = {
-        GL_UNSIGNED_BYTE, // TextureFormat_Unsigned_RGBA8
-        GL_UNSIGNED_BYTE, // TextureFormat_Unsigned_A1_BGR5 (converted above)
-    };
-#endif // #if defined(USE_GL)
 
     texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;
 
@@ -863,7 +934,7 @@ texture_handle_t Render_CreateTexture2D(
         height,
         0,
         imgFormat,
-        s_pixelFormatToOGLFormat[pixelsFormat],
+        pixelFormatTable[pixelsFormat],
         pixels));
 
     return tex;
@@ -883,13 +954,17 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     GL_CHECK(glGenTextures(1, &texture));
     GLTextureTracker_OnBind("CreateFrameBuffer", texture);
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
-#if defined(USE_GL)
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
-#else
-    GL_CHECK(glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
-#endif
+    // same split as the uploads: packed desktop formats vs plain RGBA bytes
+    if (glctx_caps_get()->is_es)
+    {
+        GL_CHECK(glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+    }
+    else
+    {
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
+    }
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GLint currFb = 0;
@@ -1041,7 +1116,7 @@ RenderState Render_DefaultState()
 // ---------------------------------------------------------------------------
 
 static const int ART_ARRAY_LAYER_SIZE = 256; // sprites up to 256x256 fit
-#if !defined(XUO_EMSC)
+#if !defined(XUO_EMSC) && !defined(XUO_GLES_DESKTOP) && !defined(XUO_GL_RUNTIME)
 static const int ART_ARRAY_INITIAL_LAYERS = 1024;
 #endif
 static const int ART_ARRAY_MAX_LAYERS = 4096;
@@ -1050,6 +1125,15 @@ static uint32_t s_artArrayTexture = 0;
 static int s_artArrayCap = 0;
 static int s_artArrayUsed = 0;
 static bool s_artArrayDisabled = false; // set when the GL limits are hit
+
+// XUO_ART_ARRAY_OFF=1 disables the shared array entirely (every sprite and
+// land tile draws from its individual texture): the kill switch for
+// isolating array-related artifacts
+static bool art_array_off_by_env()
+{
+    static const bool off = getenv("XUO_ART_ARRAY_OFF") != nullptr;
+    return off;
+}
 
 // layers of destroyed sprites: the texture GC (3s unused -> DestroySprite ->
 // CRenderTexture::Clear) releases them here so re-visited areas re-place into dead
@@ -1089,29 +1173,28 @@ texture_handle_t Render_ArtArrayTexture()
     return s_artArrayTexture;
 }
 
-#if defined(XUO_EMSC)
-// WebGL2 exposes no glCopyImageSubData (GLES3-only API, absent from the
-// WebGL2 IDL and from emscripten's GL bindings - the link would leave the
-// symbol unresolved and any call would abort at runtime). Emulate the two
-// uses below (2D -> array layer, and array grow) with a framebuffer attach
-// + copyTexSubImage, which is WebGL2 core. The build compiles against the
-// GLES2 headers (gl2.h), so the two GLES3 entry points used here get local
-// prototypes (same pattern as the glTexImage3D declaration in gfx.h) -
-// emscripten resolves them from the WebGL2 bindings. Framebuffer and
-// texture bindings are saved and restored around the copies: the callers
-// rely on the real glCopyImageSubData being side-effect free.
-extern "C" {
-void glFramebufferTextureLayer(
-    GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
-void glCopyTexSubImage3D(
-    GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x,
-    GLint y, GLsizei width, GLsizei height);
-}
-static void webgl_CopyImageSubData(
+#if defined(XUO_EMSC) || defined(XUO_GLES_DESKTOP) || defined(XUO_GL_RUNTIME)
+// The ES-capable builds cannot take glCopyImageSubData for granted: it is
+// ES 3.2 core, and the common ES 3.1 drivers (Mali/Panfrost among them) either
+// do not resolve it or return a stub that only raises GL_INVALID_ENUM. On a
+// release build that error is never checked, so every array layer would stay
+// empty and all array-placed draws (land tiles, world statics) would sample
+// alpha 0 and be discarded - invisible world content while the UI (which is
+// not array-placed) keeps rendering. Emulate the two uses below (2D -> array
+// layer, and array grow) with a framebuffer attach + copyTexSubImage, which is
+// ES 3.0 core. Dispatch is at run time, see art_array_copy_subimage().
+// Framebuffer and texture bindings are saved and restored around the copies:
+// the callers rely on a successful copy being side-effect free.
+#if !defined(XUO_GLES_DESKTOP) && !defined(XUO_GL_RUNTIME)
+// web build: the prototypes come from the glcorearb package via gfx.h, and
+// the SDL loader table macros expand the calls to resolved pointers
+#endif
+static bool webgl_CopyImageSubData(
     uint32_t srcName, GLenum srcTarget, int srcLevel, int srcX, int srcY, int srcZ,
     uint32_t dstName, GLenum dstTarget, int dstLevel, int dstX, int dstY, int dstZ,
     int width, int height, int depth)
 {
+    bool complete = true;
     GLint savedFbo = 0;
     GL_CHECK(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &savedFbo));
     GLint savedActive = GL_TEXTURE0;
@@ -1143,6 +1226,10 @@ static void webgl_CopyImageSubData(
         }
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
+            // the driver refused the attach (format not renderable, ...):
+            // report it so the caller can fall back to individual textures
+            // instead of leaving the layer empty and the sprite invisible
+            complete = false;
             continue;
         }
         if (dstTarget == GL_TEXTURE_2D)
@@ -1161,6 +1248,7 @@ static void webgl_CopyImageSubData(
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, savedFbo));
     GL_CHECK(glBindTexture(dstBindTarget, savedTex));
     GL_CHECK(glActiveTexture(savedActive));
+    return complete;
 }
 
 // initialize every layer of the array through an FBO clear. WebGL2 textures
@@ -1229,8 +1317,78 @@ static bool webgl_ArtArrayAllocOk()
                   // an unrelated old error would permanently kill the array
     return glGetError() == GL_NO_ERROR;
 }
+#if defined(XUO_EMSC)
+// the web build has no real glCopyImageSubData at all: route every call site
+// through the emulation unconditionally
+#ifdef glCopyImageSubData
+#undef glCopyImageSubData
+#endif
 #define glCopyImageSubData webgl_CopyImageSubData
 #endif // XUO_EMSC
+#endif // ES-capable builds
+
+#if defined(XUO_EMSC)
+static bool art_array_copy_subimage(
+    uint32_t srcName, GLenum srcTarget, int srcLevel, int srcX, int srcY, int srcZ,
+    uint32_t dstName, GLenum dstTarget, int dstLevel, int dstX, int dstY, int dstZ,
+    int width, int height, int depth)
+{
+    return webgl_CopyImageSubData(
+        srcName, srcTarget, srcLevel, srcX, srcY, srcZ,
+        dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth);
+}
+#else
+// True when this context actually implements glCopyImageSubData. The version
+// is the only reliable signal: driver resolution functions (eglGetProcAddress
+// and friends) are allowed to hand out non-NULL stubs for unsupported entry
+// points, and release builds never check GL errors.
+static bool art_array_has_real_copy()
+{
+    static const bool has = []
+    {
+        const glctx_caps *caps = glctx_caps_get();
+        if (caps->is_es)
+        {
+            return caps->version_major > 3 ||
+                   (caps->version_major == 3 && caps->version_minor >= 2);
+        }
+        return caps->version_major > 4 ||
+               (caps->version_major == 4 && caps->version_minor >= 3);
+    }();
+    return has;
+}
+
+// An escape hatch to exercise the emulation on a driver that has the real
+// function (reproducing an ES 3.1 device on a desktop machine).
+static bool art_array_force_emulation()
+{
+    static const bool force = getenv("XUO_ART_ARRAY_EMULATE") != nullptr;
+    return force;
+}
+
+static bool art_array_copy_subimage(
+    uint32_t srcName, GLenum srcTarget, int srcLevel, int srcX, int srcY, int srcZ,
+    uint32_t dstName, GLenum dstTarget, int dstLevel, int dstX, int dstY, int dstZ,
+    int width, int height, int depth)
+{
+    if (art_array_has_real_copy() && !art_array_force_emulation())
+    {
+        glCopyImageSubData(
+            srcName, srcTarget, srcLevel, srcX, srcY, srcZ,
+            dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth);
+        return true;
+    }
+#if defined(XUO_EMSC) || defined(XUO_GLES_DESKTOP) || defined(XUO_GL_RUNTIME)
+    return webgl_CopyImageSubData(
+        srcName, srcTarget, srcLevel, srcX, srcY, srcZ,
+        dstName, dstTarget, dstLevel, dstX, dstY, dstZ, width, height, depth);
+#else
+    // desktop-only build without glCopyImageSubData (pre-4.3 context): no
+    // emulation compiled in - the caller falls back to individual textures
+    return false;
+#endif
+}
+#endif
 
 // copies srcTexture (w x h) into a fresh layer of the shared art array and
 // returns the uv scale to use for it (uv = size / ART_ARRAY_LAYER_SIZE);
@@ -1243,7 +1401,8 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
     place.u = 1.0f;
     place.v = 1.0f;
 
-    if (s_artArrayDisabled || g_render.shutdown || width == 0 || height == 0)
+    if (s_artArrayDisabled || art_array_off_by_env() || g_render.shutdown ||
+        width == 0 || height == 0)
     {
         return place;
     }
@@ -1267,13 +1426,21 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
     {
         GLint maxLayers = 1024;
         GL_CHECK(glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxLayers));
-#if defined(XUO_EMSC)
+#if defined(XUO_EMSC) || defined(XUO_GLES_DESKTOP) || defined(XUO_GL_RUNTIME)
         // a real driver must commit the array's backing store up front:
-        // 1024 layers of 256x256 RGBA8 is ~256MB of VRAM at the FIRST world
-        // draw. Start small and let the grow path below scale on demand;
-        // SwiftShader (headless) serves lazily-backed zero pages, so this
-        // cost is invisible there and only hits real GPUs
-        const int initialLayers = 256;
+        // 1024 layers of 256x256 RGBA8 is ~128MB at the FIRST world draw -
+        // more than an ES device (Mali-class iGPU) wants to commit in one
+        // go, and a failed allocation leaves an incomplete texture that
+        // samples alpha 0 (invisible world, no crash, release builds never
+        // see the error). Start small and let the grow path scale on demand.
+        // XUO_ART_ARRAY_LAYERS=<n>: test knob - start the array tiny so the
+        // mid-frame grow path (retire + re-key) is exercised on demand
+        int initialLayers = 256;
+        const char *layers = getenv("XUO_ART_ARRAY_LAYERS");
+        if (layers != nullptr)
+        {
+            initialLayers = atoi(layers);
+        }
 #else
         const int initialLayers = ART_ARRAY_INITIAL_LAYERS;
 #endif
@@ -1295,7 +1462,7 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
             s_artArrayCap, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
-#if defined(XUO_EMSC)
+#if defined(XUO_EMSC) || defined(XUO_GLES_DESKTOP) || defined(XUO_GL_RUNTIME)
         if (!webgl_ArtArrayAllocOk())
         {
             GL_CHECK(glDeleteTextures(1, &s_artArrayTexture));
@@ -1315,6 +1482,17 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
 
     if (s_artArrayFreeCount == 0 && s_artArrayUsed >= s_artArrayCap)
     {
+        // flush any pending batch keyed on the outgoing array BEFORE this
+        // function touches anything: the batch's layer indices are identical
+        // in the grown array (the copy below preserves layer order), so
+        // drawing it now against the current array is correct - letting the
+        // batch straddle the swap would bind a retired texture name as a
+        // GL_TEXTURE_2D (invalid) and lose every quad in it
+        if (g_renderCmdList != nullptr && g_renderCmdList->immediateMode)
+        {
+            RenderBatch_Flush(&g_renderCmdList->state);
+        }
+
         // grow the array (up to the GL limit) by recreating and copying
         if (s_artArrayCap >= ART_ARRAY_MAX_LAYERS)
         {
@@ -1340,7 +1518,7 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
         GL_CHECK(glTexImage3D(
             GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, ART_ARRAY_LAYER_SIZE, ART_ARRAY_LAYER_SIZE,
             newCap, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
-#if defined(XUO_EMSC)
+#if defined(XUO_EMSC) || defined(XUO_GLES_DESKTOP) || defined(XUO_GL_RUNTIME)
         if (!webgl_ArtArrayAllocOk())
         {
             // keep the old array: already-placed sprites stay merged, only
@@ -1358,12 +1536,25 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
 #endif
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
         GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-        GL_CHECK(glCopyImageSubData(
-            s_artArrayTexture, GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0,
-            newArray, GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, ART_ARRAY_LAYER_SIZE,
-            ART_ARRAY_LAYER_SIZE, s_artArrayUsed));
+        if (!art_array_copy_subimage(
+                s_artArrayTexture, GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0,
+                newArray, GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, ART_ARRAY_LAYER_SIZE,
+                ART_ARRAY_LAYER_SIZE, s_artArrayUsed))
+        {
+            // keep the old array: already-placed sprites stay valid, new ones
+            // fall back to individual textures
+            GL_CHECK(glDeleteTextures(1, &newArray));
+            GL_CHECK(glActiveTexture(GL_TEXTURE0));
+            Warning(
+                Renderer,
+                "art texture array grow copy failed, new sprites fall back to individual textures");
+            return place;
+        }
 
-        GL_CHECK(glDeleteTextures(1, &s_artArrayTexture));
+        // the old version stays alive until the frame boundary (see
+        // s_artArrayRetired): batches and recorded commands may still
+        // reference its name
+        s_artArrayRetired.push_back(s_artArrayTexture);
         s_artArrayTexture = newArray;
         s_artArrayCap = newCap;
         if (artarray_log_enabled())
@@ -1401,9 +1592,21 @@ RenderArrayPlacement Render_ArtArrayPlace(texture_handle_t srcTexture, uint32_t 
             s_artArrayFreeCount,
             s_artArrayUsed);
     }
-    GL_CHECK(glCopyImageSubData(
-        srcTexture, GL_TEXTURE_2D, 0, 0, 0, 0,
-        s_artArrayTexture, GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, width, height, 1));
+    if (!art_array_copy_subimage(
+            srcTexture, GL_TEXTURE_2D, 0, 0, 0, 0,
+            s_artArrayTexture, GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, width, height, 1))
+    {
+        // the driver refused the copy (attach not renderable, ...): a placed
+        // sprite with an empty layer samples alpha 0 and is discarded by the
+        // alpha test - invisible content. Disable the array for good and draw
+        // this sprite from its individual texture instead.
+        s_artArrayDisabled = true;
+        Warning(
+            Renderer,
+            "art texture array copy failed, sprites fall back to individual textures");
+        s_artArrayFree[s_artArrayFreeCount++] = layer;
+        return place; // layer stays -1: the individual-texture path
+    }
     place.layer = layer;
     place.texture = s_artArrayTexture;
     place.u = float(width) / float(ART_ARRAY_LAYER_SIZE);

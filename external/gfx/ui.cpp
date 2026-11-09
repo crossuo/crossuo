@@ -57,10 +57,16 @@ ui_context ui_init(win_context &win, bool enable_viewports)
     ImGui_ImplSDL3_InitForOpenGL(win.window, win.context);
 #endif
 
-#if defined(USE_GL3)
+#if defined(XUO_GL_RUNTIME)
+    // one binary, either context: ImGui must get the dialect the context was
+    // actually created with, and that is only known at run time
+    ImGui_ImplOpenGL3_Init(glctx_shader_version_string());
+#elif defined(USE_GL3)
     ImGui_ImplOpenGL3_Init("#version " GL_SHADER_VERSION);
 #elif defined(USE_GLES)
-    ImGui_ImplOpenGL3_Init("#version 100");
+    // XUO_GLES_DESKTOP runs on an ES3 context and reports the ES3 shader
+    // version from gfx.h; the WebGL1/ES2 build needs the ES 1.00 dialect
+    ImGui_ImplOpenGL3_Init("#version " GL_SHADER_VERSION);
 #elif defined(USE_GL2) || defined(USE_GL1)
     // imgui 1.92 dropped imgui_impl_opengl2; the GL3 backend runs fine on a
     // compatibility profile (GL1 builds report the GL2.1/GL1.1 context here,

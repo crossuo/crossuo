@@ -1094,6 +1094,12 @@ int main(int argc, char **argv)
         LogInit(argc, argv, "crossuo.log");
     }
 
+    // window hints (GL profile/version, and the forced EGL backend on the
+    // desktop GLES build) have to be in place before SDL's video subsystem
+    // starts, or its first picks stick for the whole process
+#if defined(XUO_GLES_DESKTOP) && !defined(XUO_EMSC)
+    win_gfx_context_attrbutes(false);
+#endif
     if (!SDL_Init(0))
     {
         ErrorMessage(

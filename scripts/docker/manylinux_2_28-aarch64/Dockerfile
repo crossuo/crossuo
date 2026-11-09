@@ -14,13 +14,19 @@ FROM dockcross/manylinux_2_28-aarch64
 ENV DEFAULT_DOCKCROSS_IMAGE=crossuo/manylinux_2_28-aarch64
 ENV SYSROOT=/usr/xcc/aarch64-unknown-linux-gnu/aarch64-unknown-linux-gnu/sysroot
 
+# libglvnd ships the versionless libGLESv2.so/libEGL.so symlinks itself and
+# puts the real objects in the -gles/-egl/-glx sub-packages. If one of those
+# fails to resolve, the symlink dangles and find_library(GLESv2) fails with no
+# obvious cause - the checks near the end of this RUN fail the image build
+# instead of leaving it to break much later, in the client build.
 RUN dnf install -y cpio curl grep \
     && mkdir -p /tmp/rpms && cd /tmp/rpms \
     && BASE=https://repo.almalinux.org/almalinux/8 \
     && for repo in AppStream BaseOS PowerTools; do \
          curl -s "$BASE/$repo/aarch64/os/Packages/" -o "/tmp/list-$repo"; \
        done \
-    && PKGS="libglvnd libglvnd-opengl libglvnd-glx mesa-libGL libX11 libxcb libXau libXdmcp libXcursor \
+    && PKGS="libglvnd libglvnd-opengl libglvnd-glx libglvnd-gles libglvnd-egl mesa-libGL \
+             mesa-libEGL mesa-libGLES libX11 libxcb libXau libXdmcp libXcursor \
              libXext libX11 libxcb \
              libXfixes libXrandr libXi libXinerama libXScrnSaver libXxf86vm \
              alsa-lib zlib \
@@ -49,6 +55,14 @@ RUN dnf install -y cpio curl grep \
            { [ -e "$base.so.6" ] || [ -L "$base.so.6" ]; } || ln -s "$so" "$base.so.6"; \
          done; \
        done \
+    && for so in libGLESv2.so libEGL.so libGL.so; do \
+         if [ -L "$SYSROOT/usr/lib64/$so" ] && [ ! -e "$SYSROOT/usr/lib64/$so" ]; then \
+           echo "ERROR: $SYSROOT/usr/lib64/$so is a dangling symlink -> $(readlink "$SYSROOT/usr/lib64/$so")"; \
+           exit 1; \
+         fi; \
+       done \
     && ls "$SYSROOT/usr/include/GL/gl.h" "$SYSROOT/usr/include/X11/Xlib.h" \
           "$SYSROOT/usr/lib64/libGL.so" "$SYSROOT/usr/lib64/libz.a" \
-          "$SYSROOT/usr/lib/libXext.so.6"
+          "$SYSROOT/usr/lib/libXext.so.6" \
+          "$SYSROOT/usr/include/GLES2/gl2.h" "$SYSROOT/usr/include/EGL/egl.h" \
+          "$SYSROOT/usr/lib64/libGLESv2.so" "$SYSROOT/usr/lib64/libEGL.so"

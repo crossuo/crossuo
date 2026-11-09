@@ -72,6 +72,20 @@ extern "C" {
 #define GLAPI extern
 #endif
 
+/* GLES desktop build: mirror the ES2 base types (64-bit offsets, same as
+ * ES3) before the desktop GL blocks further down get a chance to define
+ * them with desktop widths. The GL_VERSION_1_5 typedef block below is
+ * guarded to stay out of this path. */
+#if defined(__gl2_h_)
+#include <stddef.h> /* ptrdiff_t */
+typedef ptrdiff_t GLintptr;
+typedef ptrdiff_t GLsizeiptr;
+/* GL_VERSION_1_5 stays undefined: only the package's own base-type
+ * typedefs for GLintptr/GLsizeiptr are desktop-shaped, the GL 1.5 blocks
+ * below carry the buffer objects and shader entry points the renderer
+ * needs, and their GLintptr definition is the same 64-bit ptrdiff_t. */
+#endif
+
 /* Base GL types */
 
 typedef unsigned int GLenum;

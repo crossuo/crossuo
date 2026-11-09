@@ -13,6 +13,8 @@ file(GLOB EXTERNALGFX_HEADERS ${EXTERNALGFX_DIR}/*.h ${EXTERNALGFX_DIR}/imgui/*.
 set(EXTERNALGFX_SRC
     gfxpp.cpp
     gfx.c
+    glctx.c
+    shaderbuilder.c
     imgui/imgui.cpp
     imgui/imgui_demo.cpp
     imgui/imgui_draw.cpp
@@ -38,11 +40,32 @@ endif()
 add_library(${PROJECT_NAME} STATIC ${EXTERNALGFX_SRC} ${EXTERNALGFX_HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 
-if (USE_GLES2)
+if (RENDER_AUTO)
+    # The automatic binary may run on either context: imgui takes the ES3
+    # backend (which also serves plain OpenGL 3.2, it only selects the shader
+    # dialect from the version string passed to Init) and resolves its entry
+    # points through its own loader.
+    # IMGUI_IMPL_OPENGL_ES3 makes the backend include <GLES3/gl3.h>, which
+    # only exists where an ES dev stack is present (it is the same condition
+    # that sets XUO_GLES_DESKTOP in the root CMakeLists). Everywhere else
+    # (Windows, macOS, musl) the backend falls back to its bundled loader
+    # header; the shader dialect still comes from the runtime version string.
+    if (XUO_GLES_DESKTOP)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE XUO_GL_RUNTIME=1 XUO_GLES_DESKTOP=1 IMGUI_IMPL_OPENGL_ES3)
+    else()
+        target_compile_definitions(${PROJECT_NAME} PRIVATE XUO_GL_RUNTIME=1)
+    endif()
+endif()
+if (USE_GLES2 AND NOT XUO_GLES_DESKTOP AND NOT RENDER_AUTO)
     # The GL3 backend now ships its own loader (imgui_impl_opengl3_loader.h) and
     # selects GLES2 through IMGUI_IMPL_OPENGL_ES2 instead of the old
     # IMGUI_IMPL_OPENGL_LOADER_* macros.
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_OPENGL_ES2)
+endif()
+# The desktop GLES build runs on an ES3 context and needs the backend's ES3
+# mode: gfx.h only describes it per TU, imgui picks it at its own compile time
+if (XUO_GLES_DESKTOP)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE XUO_GLES_DESKTOP=1 IMGUI_IMPL_OPENGL_ES3)
 endif()
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 # Remove warning from 3rd party compilation

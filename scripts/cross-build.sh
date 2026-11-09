@@ -38,7 +38,12 @@
 #
 # Per-invocation overrides (environment):
 #   XUO_IMAGE=<img>     replace the docker image for the targets being built
-#   XUO_RENDER=GL3|GLES2  force the render backend (default: GL3 desktop, GLES2 arm)
+#   XUO_RENDER=AUTO|GL3|GLES2
+#                       BUILD-time renderer choice. AUTO (default) is one
+#                       binary that picks desktop OpenGL 3.2 core or OpenGL ES 3
+#                       at startup; GL3/GLES2 pin a single backend. The client
+#                       also reads XUO_RENDER at RUN time (auto|gl3|gles3) to
+#                       override an AUTO binary, so this one is for packaging.
 #   XUO_STATIC=0|1      force -static linking on/off (default: on for musl)
 #   XUO_CMAKE_EXTRA="..." extra cmake -D arguments appended to the configure line
 #
@@ -46,6 +51,7 @@
 #   ./scripts/cross-build.sh all
 #   ./scripts/cross-build.sh linux-x64 windows-x64
 #   XUO_RENDER=GLES2 ./scripts/cross-build.sh linux-armv7
+#   ./scripts/deploy.sh --clean linux-arm64   # AUTO, runs on ES-only devices
 #
 set -euo pipefail
 
@@ -116,10 +122,17 @@ target_image() {
 }
 
 target_render() {
-  if [[ -n "${XUO_RENDER:-}" ]]; then echo "$XUO_RENDER"; return; fi
+  # AUTO is the default: one binary that resolves the context at startup
+  # (desktop OpenGL 3.2 core, falling back to OpenGL ES 3). Set
+  # XUO_RENDER=GL3|GLES2|AUTO to force a single backend at build time.
+  #
+  # NOTE this is the BUILD-time switch. At run time the same variable name
+  # selects the flavour of an AUTO binary (auto|gl3|gles3) - it is read by the
+  # client itself, so exporting it here has no effect on a shipped binary.
+  if [[ -n "${XUO_RENDER:-}" ]]; then echo "${XUO_RENDER^^}"; return; fi
   case "$1" in
-    linux-armv7|linux-musl-arm64|linux-musl-armv7|wasm) echo GLES2;;
-    *) echo GL3;;
+    wasm) echo GLES2;;
+    *) echo AUTO;;
   esac
 }
 
@@ -277,8 +290,9 @@ cmake_args() {
   local target="$1"
   local args=(-G Ninja -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DXUO_DEPLOY=On)
   case "$(target_render "$target")" in
-    GL3)   args+=(-DRENDER_GL3=On);;
-    GLES2) args+=(-DRENDER_GLES2=On);;
+    GL3)   args+=(-DRENDER_GL3=On -DRENDER_AUTO=Off);;
+    GLES2) args+=(-DRENDER_GLES2=On -DRENDER_AUTO=Off);;
+    AUTO)  args+=(-DRENDER_AUTO=On);;
   esac
   if [[ "$target" == linux-musl-* ]]; then
     # musl static: static client link; drop the wayland video driver (needs

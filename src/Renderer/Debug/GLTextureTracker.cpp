@@ -130,7 +130,7 @@ static NameRecord *record_for(unsigned int name)
     return nullptr;
 }
 
-#if defined(USE_GL3W) // only the gl3w hooks below use these
+#if defined(USE_GL3W) || (defined(USE_GLES) && defined(XUO_GLES_DESKTOP))
 static NameRecord &record_slot(unsigned int name)
 {
     if (auto *found = record_for(name))
@@ -156,25 +156,25 @@ static void push_event(EventKind kind, unsigned int name)
     ev.frame = s_frame;
     hist.push_back(ev);
 }
-#endif // USE_GL3W
+#endif // pointer-based loader hooks
 
 // ---------------------------------------------------------------------------
-// entry point wrappers (gl3w only: GLEW's are real symbols, not pointers)
+// entry point wrappers (pointer-based loaders only: GLEW's are real symbols)
 // ---------------------------------------------------------------------------
 
-#if defined(USE_GL3W)
+#if defined(USE_GL3W) || (defined(USE_GLES) && defined(XUO_GLES_DESKTOP))
 typedef void (APIENTRY *PFN_TRACKED_GEN)(GLsizei, GLuint *);
 typedef void (APIENTRY *PFN_TRACKED_DELETE)(GLsizei, const GLuint *);
 
 static PFN_TRACKED_GEN s_real_gen = nullptr;
 static PFN_TRACKED_DELETE s_real_delete = nullptr;
-#endif // USE_GL3W
+#endif // pointer-based loader hooks
 
 #ifndef APIENTRY
 #define APIENTRY
 #endif
 
-#if defined(USE_GL3W)
+#if defined(USE_GL3W) || (defined(USE_GLES) && defined(XUO_GLES_DESKTOP))
 #define GLTEXTURE_TRACKER_HAS_HOOKS 1
 
 void APIENTRY tracked_glGenTextures(GLsizei n, GLuint *textures)
@@ -224,7 +224,7 @@ void APIENTRY tracked_glDeleteTextures(GLsizei n, const GLuint *textures)
         s_real_delete(n, textures);
     }
 }
-#endif // USE_GL3W
+#endif // pointer-based loader hooks
 
 static const char *event_kind_as_string(EventKind kind)
 {
@@ -305,11 +305,21 @@ void GLTextureTracker_Install()
     records();
     history();
 
-#if defined(USE_GL3W)
+#if defined(USE_GL3W) && !defined(XUO_GL_RUNTIME)
     s_real_gen = gl3wGenTextures;
     s_real_delete = gl3wDeleteTextures;
     gl3wGenTextures = tracked_glGenTextures;
     gl3wDeleteTextures = tracked_glDeleteTextures;
+    s_hooked = true;
+#elif defined(USE_GLES) && defined(XUO_GLES_DESKTOP)
+    // this backend resolves every entry point into a reassignable pointer
+    // through SDL (gfx_gl_load_proc_address in gfx.h), so the same wrapper
+    // indirection works here; Render_Init calls Install() right after the
+    // lookup and before any texture exists
+    s_real_gen = (PFN_TRACKED_GEN)glGenTextures;
+    s_real_delete = (PFN_TRACKED_DELETE)glDeleteTextures;
+    glGenTextures = tracked_glGenTextures;
+    glDeleteTextures = tracked_glDeleteTextures;
     s_hooked = true;
 #else
     s_hooked = false;

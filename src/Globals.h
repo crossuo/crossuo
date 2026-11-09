@@ -10,7 +10,7 @@
 // Renderer/RenderFrameBuffer.h; only pointers/extern declarations here
 struct CRenderTexture;
 class CRenderFrameBuffer;
-#include "Renderer/RenderAPI.h"
+#include "Renderer/RenderAPI.h" // pulls external/gfx/gfx.h
 #include <common/str.h>
 #include "Point.h"
 #include "Constants.h"

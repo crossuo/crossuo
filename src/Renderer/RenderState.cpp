@@ -31,16 +31,19 @@ bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatr
 
     // the draw VAO/VBO pair is the only one bound on these targets at draw
     // time; guard with a cached value instead of re-issuing binds per draw
-#if !defined(USE_GLES2)
-    // VAOs are GL3/GLES3+: g_drawVAO is never created under GLES2
-    // (Render_CleanupVertexBuffers / Render_InitVertexBuffers skip it)
-    static GLuint cachedVAO = 0;
-    if (cachedVAO != g_drawVAO)
+    // VAOs exist on desktop GL 3+ and ES 3 (has_vao); on them g_drawVAO is the
+    // only bound pair at draw time - guard with a cached value instead of
+    // re-issuing binds per draw. ES2/WebGL1 has no VAOs (has_vao false,
+    // g_drawVAO never created)
+    if (glctx_caps_get()->has_vao)
     {
-        GL_CHECK(glBindVertexArray(g_drawVAO));
-        cachedVAO = g_drawVAO;
+        static GLuint cachedVAO = 0;
+        if (cachedVAO != g_drawVAO)
+        {
+            GL_CHECK(glBindVertexArray(g_drawVAO));
+            cachedVAO = g_drawVAO;
+        }
     }
-#endif // #if !defined(USE_GLES2)
     static GLuint cachedVBO = 0;
     if (cachedVBO != g_drawVBO)
     {

@@ -28,15 +28,25 @@ CFontsManager g_FontManager;
 // HTML text pixel carries alpha 1/255 and server gump text is invisible.
 // The non-HTML colors never see this helper: they are produced directly in
 // the native pixel order of each platform.
+// Texture pixels are packed in the byte order the ACTIVE context samples:
+// desktop GL reads the packed BGRA layout, ES reads plain RGBA. This used to
+// be a build-time decision; one binary can be either now, so it is cached
+// from the context once.
+static bool FontPixelsUseRGBA()
+{
+    static const bool es = glctx_caps_get()->is_es;
+    return es;
+}
+
 static uint32_t HTMLColorToPixelColor(uint32_t color)
 {
-#if defined(XUO_EMSC)
-    // desktop [31:24]=B [23:16]=G [15:8]=R [7:0]=A -> emsc [31:24]=A [23:16]=B [15:8]=G [7:0]=R
-    return ((color & 0x000000FFu) << 24) | (color & 0xFF000000u) | ((color & 0x00FF0000u) >> 8) |
-           ((color & 0x0000FF00u) >> 8);
-#else
+    if (FontPixelsUseRGBA())
+    {
+        // desktop [31:24]=B [23:16]=G [15:8]=R [7:0]=A -> ES [31:24]=A [23:16]=B [15:8]=G [7:0]=R
+        return ((color & 0x000000FFu) << 24) | (color & 0xFF000000u) |
+               ((color & 0x00FF0000u) >> 8) | ((color & 0x0000FF00u) >> 8);
+    }
     return color;
-#endif
 }
 
 CFontsManager::~CFontsManager()
@@ -880,14 +890,17 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
                         int block = (testY * width) + (x + w);
                         if (block >= 0)
                         {
-#if defined(XUO_EMSC)
-                            // GLES/WebGL2: GL_RGBA reads RGBA byte order.
-                            // GetColor already returns 32-bit RGBA (via
-                            // Color16To32); just add the alpha channel.
-                            pData[block] = pcl | 0xFF000000u;
-#else
-                            pData[block] = pcl << 8 | 0xFF;
-#endif
+                            if (FontPixelsUseRGBA())
+                            {
+                                // ES: GL_RGBA reads RGBA byte order. GetColor
+                                // already returns 32-bit RGBA (via
+                                // Color16To32); just add the alpha channel.
+                                pData[block] = pcl | 0xFF000000u;
+                            }
+                            else
+                            {
+                                pData[block] = pcl << 8 | 0xFF;
+                            }
                         }
                     }
                 }
@@ -2635,12 +2648,9 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     }
     else
     {
-#if defined(XUO_EMSC)
-        // GetPolygoneColor returns 32-bit RGBA via Color16To32
-        datacolor = uo_hue_get_color_poly(cell, color) | 0xFF000000u;
-#else
-        datacolor = uo_hue_get_color_poly(cell, color) << 8 | 0xFF;
-#endif
+        // ES: GetPolygoneColor returns 32-bit RGBA via Color16To32
+        datacolor = FontPixelsUseRGBA() ? (uo_hue_get_color_poly(cell, color) | 0xFF000000u)
+                                        : (uo_hue_get_color_poly(cell, color) << 8 | 0xFF);
     }
 
     bool isItalic = (flags & UOFONT_ITALIC) != 0;

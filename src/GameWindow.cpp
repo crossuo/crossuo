@@ -1393,19 +1393,50 @@ void CGameWindow::GetPositionSize(int *x, int *y, int *width, int *height) const
 
 bool CGameWindow::Create(const char *title, bool showCursor, int width, int height)
 {
-#ifdef OGL_DEBUGCONTEXT_ENABLED
-    auto debugContext = true;
-#else
-    auto debugContext = false;
-#endif
-    if (debugContext)
-    {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    }
     if (!SDL_InitSubSystem(SDL_INIT_VIDEO))
     {
         return false;
     }
+    // The context flavour has to be settled before the first window with
+    // SDL_WINDOW_OPENGL exists: SDL chooses the GL/EGL library the first time
+    // it sees one and never revisits that choice. glctx_probe creates and
+    // destroys a hidden 1x1 window for each candidate, which is why it must
+    // run here, after video init and before the game window.
+    const enum glctx_flavor preferred =
+        glctx_flavor_from_name(getenv("XUO_RENDER"));
+    (void)preferred;
+#if defined(USE_GL1)
+    const enum glctx_flavor flavor = GLCTX_FLAVOR_NONE;
+    glctx_mark_flavor(flavor);
+#elif defined(USE_GL3) && !defined(XUO_GL_RUNTIME)
+    const enum glctx_flavor flavor = GLCTX_FLAVOR_GL3;
+    glctx_mark_flavor(flavor);
+    win_gfx_context_attrbutes(false);
+#elif defined(USE_GLES2) && !defined(XUO_GL_RUNTIME)
+    const enum glctx_flavor flavor = GLCTX_FLAVOR_GLES3;
+    glctx_mark_flavor(flavor);
+    win_gfx_context_attrbutes(false);
+#else
+    const enum glctx_flavor flavor = glctx_probe(preferred);
+#endif
+    if (flavor == GLCTX_FLAVOR_NONE)
+    {
+        SDL_ShowSimpleMessageBox(
+            SDL_MESSAGEBOX_ERROR,
+            "Error",
+            "This system does not provide a usable OpenGL context.\n"
+            "CrossUO needs either desktop OpenGL 3.2 (core profile) or "
+            "OpenGL ES 3.",
+            nullptr);
+        return false;
+    }
+    Info(
+        Client,
+        "GL flavour: %s (%d.%d%s)",
+        glctx_flavor_name(flavor),
+        glctx_caps_get()->version_major,
+        glctx_caps_get()->version_minor,
+        glctx_caps_get()->is_es ? " ES" : "");
 #if defined(XUO_EMSC)
     web_watch_webgl_context();
     web_hook_webgl_events();

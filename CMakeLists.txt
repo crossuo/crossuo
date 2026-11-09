@@ -33,7 +33,8 @@ message(STATUS "Version: ${XUO_VERSION} (${XUO_VERSION_NUM})")
 #
 option(ENABLE_LTO "Enables Link Time Optimization for Release/MinSizeRel (default: On)" ON)
 option(ENABLE_FORMAT "Enables clang-format (default: On)" ON)
-option(RENDER_GLES2 "Force OpenGL ES2 (default Off; web builds only, unsupported on desktop)" OFF)
+option(RENDER_AUTO "One binary: pick OpenGL 3.2 core or OpenGL ES 3 at startup (default On)" ON)
+option(RENDER_GLES2 "Force OpenGL ES only (web, and the aarch64 release binaries)" OFF)
 option(RENDER_GL3 "Force OpenGL 3.x (default Off)" OFF)
 option(RENDER_GL1 "Force OpenGL 1.1 (automatic)" OFF)
 option(XUO_ASSISTANT "Build in-client assistant (default: On)" ON)
@@ -50,6 +51,30 @@ if (ENABLE_FORMAT)
   include(ClangFormat)
 endif()
 include(CompileDefinitions)
+
+# Link Time Optimization gating: this MUST run before include(Compiler)
+# (below) - that file bakes -flto//GL into the per-configuration flag
+# variables, and a gate that runs afterwards cannot undo them. Without this
+# order, toolchains whose linker lacks LTO support (musl cross gcc without
+# binutils plugin, ...) still get the flags and fail to compile or link.
+include(CheckIPOSupported)
+if (ENABLE_LTO)
+  # LTO is only proven on the glibc Linux targets. The MinGW (MXE) and
+  # osxcross (Apple) links lose symbols at the final LTO link (undefined
+  # references from the ltrans partitions), and musl cross gcc has no linker
+  # plugin at all; keep those on the non-LTO path until fixed.
+  if (CMAKE_SYSTEM_NAME MATCHES "Windows|Darwin")
+    message(STATUS "LTO: disabled (${CMAKE_SYSTEM_NAME} cross toolchains are not LTO-safe)")
+    set(ENABLE_LTO OFF)
+  else()
+    check_ipo_supported(RESULT XUO_IPO_SUPPORTED OUTPUT XUO_IPO_ERROR)
+    if (NOT XUO_IPO_SUPPORTED)
+      message(STATUS "LTO requested but unsupported by the toolchain: ${XUO_IPO_ERROR}")
+      set(ENABLE_LTO OFF)
+    endif()
+  endif()
+endif()
+
 include(Compiler)
 
 if (XUO_WINDOWS AND NOT MSVC)
@@ -67,20 +92,12 @@ if (NOT CMAKE_BUILD_TYPE)
       "Build type (Release/Debug/RelWithDebInfo/MinSizeRel)" FORCE)
 endif()
 
-# Link Time Optimization: the source trees are built into static archives that
+ # Link Time Optimization: the source trees are built into static archives that
 # then link into the single client executable, so -flto only pays off when the
 # bitcode reaches the final link. The flags are added in CMake/Compiler.cmake
-# (below, via include()) for every target of the tree, on the optimized build
-# types only (Debug is meant to stay quick); this check only reports whether
-# the toolchain can do it at all.
-include(CheckIPOSupported)
-if (ENABLE_LTO)
-  check_ipo_supported(RESULT XUO_IPO_SUPPORTED OUTPUT XUO_IPO_ERROR)
-  if (NOT XUO_IPO_SUPPORTED)
-    message(STATUS "LTO requested but unsupported by the toolchain: ${XUO_IPO_ERROR}")
-    set(ENABLE_LTO OFF)
-  endif()
-endif()
+# for every target of the tree, on the optimized build types only (Debug is
+# meant to stay quick); the support/platform gate above already ran and may
+# have turned ENABLE_LTO off before this point.
 
 # ImGui debug tools (the id-conflict error checker, the "developer mode"
 # assert/error window, the demo window) are a developer aid: end users must
@@ -90,36 +107,70 @@ if (CMAKE_BUILD_TYPE MATCHES "Release|RelWithDebInfo|MinSizeRel")
   add_compile_definitions(IMGUI_DISABLE_DEBUG_TOOLS IMGUI_DISABLE_DEMO_WINDOWS)
 endif()
 
-if (NOT RENDER_GLES2 AND NOT RENDER_GL1 AND NOT RENDER_GL3)
-  if (XUO_EMSC)
-    # the browser only offers WebGL: GLES2 renderer
-    set(RENDER_GLES2 On)
-  else()
-    message(STATUS "No render selected, defaulting to OpenGL 3")
-    set(RENDER_GL3 On)
-  endif()
+# Renderer selection. Any explicitly forced backend wins, so -DRENDER_GL3,
+# -DRENDER_GLES2 and -DRENDER_GL1 keep their old meaning; with none of them
+# set the default is the single automatic binary, which asks for OpenGL 3.2
+# core and falls back to OpenGL ES 3 when the driver cannot provide it.
+if (NOT RENDER_GL3 AND NOT RENDER_GL1 AND NOT RENDER_GLES2 AND NOT RENDER_AUTO)
+  set(RENDER_AUTO On)
+endif()
+if (RENDER_GL3 OR RENDER_GL1 OR RENDER_GLES2)
+  # a forced backend cannot also be automatic
+  set(RENDER_AUTO Off)
+endif()
+if (XUO_EMSC)
+  # the browser only offers WebGL2: there is nothing to choose
+  set(RENDER_AUTO Off)
+  set(RENDER_GLES2 On)
+  set(RENDER_GL3 Off)
+  set(RENDER_GL1 Off)
+endif()
+if (RENDER_AUTO)
+  message(STATUS "Renderer: automatic (OpenGL 3.2 core, falling back to OpenGL ES 3)")
 endif()
 
 #
 # Build Dependencies
 #
-if (RENDER_GLES2 AND NOT XUO_EMSC)
-  if (NOT CMAKE_CROSSCOMPILING)
-    # the renderer calls GLES3 entry points (glTexImage3D, glCopyImageSubData,
-    # GL_TEXTURE_BINDING_2D_ARRAY, GL_MAX_ARRAY_TEXTURE_LAYERS) that desktop
-    # libGLESv2 does not expose, so this combination can never compile
-    message(FATAL_ERROR
-        "RENDER_GLES2 is not supported on desktop builds: the renderer requires "
-        "GLES3 entry points that desktop libGLESv2 lacks.\n"
-        "Build the web target for GLES2 (emscripten/WebGL2), or use GL3 "
-        "(default) or GL1 (-DRENDER_GL1=On) on desktop.")
+# RENDER_AUTO links both stacks: it may end up on either context
+if ((RENDER_GLES2 OR RENDER_AUTO) AND NOT XUO_EMSC)
+  # GLES3 needs a context from EGL: an ES-only stack (e.g. panfrost) ships
+  # libEGL/libGLESv2 and no libGL.so.1 at all, so both are required here and
+  # the client runs with SDL_VIDEO_FORCE_EGL. libGLESv2 alone is not enough.
+  find_package(GLESv2 QUIET)
+  if (GLESv2_FOUND)
+    if (NOT EGL_FOUND)
+      message(FATAL_ERROR
+          "An OpenGL ES context needs EGL (it comes from eglCreateContext; GLX "
+          "cannot hand out an ES profile). Install the EGL development files.")
+    endif()
+    # the vendored GL headers (GL/glcorearb.h) provide the GLES3 core entry
+    # points desktop libGLESv2 headers omit; SDL resolves them at runtime
+    set(XUO_GLES_DESKTOP 1)
+  elseif (WIN32 OR APPLE)
+    # Windows (WGL) and macOS (CGL) ship no EGL/GLES dev stack, and a forced
+    # RENDER_GLES2 makes no sense there either. AUTO still works: every entry
+    # point resolves through SDL_GL_GetProcAddress at run time and the probe
+    # asks for a GL3 core context first, which WGL/CGL both serve - so the
+    # link line simply carries no GL library at all.
+    if (RENDER_GLES2)
+      message(FATAL_ERROR "RENDER_GLES2 is not available on Windows/macOS: no GLES/EGL dev stack. Use RENDER_AUTO or RENDER_GL3.")
+    endif()
+    if (RENDER_AUTO)
+      message(STATUS "Renderer: no GLES/EGL dev stack on this platform; AUTO resolves entry points at run time")
+    endif()
+  else()
+    # musl cross containers and other minimal Linux environments ship no
+    # libGLESv2/EGL either; the client still runs there (SDL dlopens the GL
+    # stack at run time and the probe picks whichever context the driver
+    # serves), so only warn instead of failing the build
+    if (RENDER_GLES2)
+      message(FATAL_ERROR "RENDER_GLES2 needs an OpenGL ES stack: install libGLESv2 + EGL development files.")
+    endif()
+    message(WARNING "No GLES/EGL dev stack found; AUTO resolves entry points at run time (no GL library on the link line).")
   endif()
-  # cross builds are toolchain-based: their toolchain files set
-  # CMAKE_SYSTEM_NAME, which is what makes CMake set CMAKE_CROSSCOMPILING, so
-  # the gate above never fires for e.g. dockcross armv7/musl-arm64
-  find_package(GLESv2 REQUIRED)
 endif()
-if ((RENDER_GL1 OR RENDER_GL3) AND NOT XUO_EMSC)
+if ((RENDER_GL1 OR RENDER_GL3 OR RENDER_AUTO) AND NOT XUO_EMSC)
   if (NOT APPLE)
     if (XUO_STATIC_CXX_RUNTIME)
       # portable glibc builds: prefer legacy libGL (mesa-style, universal) over
@@ -133,7 +184,11 @@ if ((RENDER_GL1 OR RENDER_GL3) AND NOT XUO_EMSC)
       set(OpenGL_GL_PREFERENCE GLVND)
     endif()
   endif()
-  find_package(OpenGL REQUIRED)
+  # loader-only AUTO (no GLES stack anywhere, e.g. musl containers) must not
+  # demand desktop GL either: the client resolves entry points at run time
+  if (NOT (RENDER_AUTO AND NOT XUO_GLES_DESKTOP))
+    find_package(OpenGL REQUIRED)
+  endif()
 endif()
 
 if (XUO_EMSC)
@@ -145,6 +200,33 @@ if (XUO_EMSC)
   set(USE_GLES2 1)
   set(GL_LIBRARIES "")
   message(STATUS "Building with GLES2 renderer (WebGL via emscripten)")
+elseif (RENDER_AUTO)
+  # One binary for both: the renderer's compile-time family is the GLES3 one
+  # (it is the stricter set of entry points), the headers and shader dialect
+  # come from the GL3 set, and glctx picks the actual context at startup.
+  compile_definitions(XUO_GL_RUNTIME=1)
+  compile_definitions(USE_GLES)
+  compile_definitions(USE_GLES2=1)
+  compile_definitions(SDL_DISABLE_IMMINTRIN_H=1)
+  set(USE_GLES2 1)
+  # No desktop GL on the link line. Every entry point is resolved through
+  # SDL_GL_GetProcAddress at run time, so nothing needs to link libGL /
+  # libOpenGL / libGLX - and an ES-only device (Panfrost and friends) has no
+  # libOpenGL.so.0 at all, which would make the binary fail to load before it
+  # ever got the chance to choose a context. Platforms without a GLES stack
+  # (Windows/macOS) end up with an empty list for the same reason.
+  set(GL_LIBRARIES "")
+  if (XUO_GLES_DESKTOP)
+    set(GL_LIBRARIES ${GLESv2_LIBRARY_FILE} ${GLdispatch_LIBRARY} ${EGL_LIBRARIES})
+  endif()
+  if (XUO_STATIC_BINARY AND NOT MSVC)
+    set(GL_LIBRARIES "-Wl,-Bdynamic" ${GL_LIBRARIES})
+  endif()
+  if (NOT XUO_EMSC)
+    set(XUO_LAUNCHER_EMBEDDED 1)
+    message(STATUS "X:UO Launcher: embedded in crossuo")
+  endif()
+  message(STATUS "Building the automatic renderer (OpenGL 3.2 core / OpenGL ES 3)")
 elseif (OPENGL_FOUND)
   if (RENDERER_GL1 OR RENDER_GL1) # RENDERER_GL1 for compatibility, RENDER_GL1 is original
     # RENDER_GL1 selects the GL1 legacy backend (the old GL2 mode is no
@@ -190,6 +272,9 @@ elseif (OPENGL_FOUND)
   endif()
 elseif (GLESv2_FOUND)
   compile_definitions(USE_GLES2=1)
+  # desktop GLES (as opposed to the emscripten WebGL2 build above): headers
+  # come from glcorearb, entry points come from SDL at runtime
+  compile_definitions(XUO_GLES_DESKTOP=1)
   # the src renderer gates key off the generic family flag (USE_GLES - the
   # same name gfx.h derives from USE_GLES2 for the gfx lib), and they sit on
   # the first lines of the TUs (RenderDraw.cpp:4, RenderState.cpp:4,
@@ -229,7 +314,13 @@ elseif (GLESv2_FOUND)
             /usr/lib/i386-linux-gnu
             /usr/lib
         NO_CMAKE_FIND_ROOT_PATH)
-    set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR} ${GLdispatch_LIBRARY})
+    # the FILE, not the directory: GLESv2_LIBRARY_DIR is a -L search path
+    set(GL_LIBRARIES ${GLESv2_LIBRARY_FILE} ${GLdispatch_LIBRARY})
+  endif()
+  if (EGL_FOUND)
+    # SDL's EGL driver dlopens libEGL itself; linking it keeps the binary
+    # honest about the dependency for packagers
+    list(APPEND GL_LIBRARIES ${EGL_LIBRARIES})
   endif()
   if (XUO_STATIC_BINARY AND NOT MSVC)
     # fully static client: GLES2 has no static archive, so restore dynamic
