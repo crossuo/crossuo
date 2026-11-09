@@ -82,6 +82,15 @@ struct Config
     // not saved back
     bool CustomPathSet = false;
 
+    // true when this session booted in streaming mode (no usable CustomPath
+    // in the config). The streamed install directory is derived from the
+    // shard name, so it is fully reproducible on the next boot - CustomPath
+    // must NOT be written on exit: it would pin a streamed install path in
+    // the config, and if the player then deletes the data the next launch
+    // would try to load from the stale path instead of streaming again
+    // (broken client / crash)
+    bool StreamingMode = false;
+
     // true when the config file explicitly set the data product url
     // (ProductUrl=); not saved back
     bool DataProductUrlSet = false;

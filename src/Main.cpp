@@ -515,6 +515,7 @@ bool load_config()
 #else
     const bool streaming = g_cli["streaming"].was_set() || custom_path_is_streamed ||
                            !(config_exists && g_Config.CustomPathSet);
+    g_Config.StreamingMode = streaming;
 #endif
     if (streaming)
     {
@@ -913,6 +914,36 @@ static void AutoHelpTick()
 #define XUO_POLL_WEB_KEYBOARD() ((void)0)
 #endif
 
+// test harness (XUO_AUTO_QUIT=<seconds>): requests a clean client shutdown
+// (the normal quit path, including the config save) after the given number
+// of seconds - lets automated runs exercise the exact "quit" behavior that
+// writes crossuo.cfg instead of killing the process
+static void AutoQuitTick()
+{
+    static const char *value = getenv("XUO_AUTO_QUIT");
+    if (value == nullptr || value[0] == '\0')
+    {
+        return;
+    }
+    static const uint32_t quitAt = (uint32_t)(atof(value) * 1000.0f);
+    static uint32_t startTick = 0;
+    if (startTick == 0)
+    {
+        startTick = g_Ticks;
+        return;
+    }
+    if (g_Ticks - startTick >= quitAt)
+    {
+        Warning(Client, "auto-quit: clean shutdown requested (XUO_AUTO_QUIT=%s)", value);
+        // the clean path: the window proc translates SDL_EVENT_QUIT into the
+        // normal shutdown (config save included)
+        SDL_Event ev;
+        memset(&ev, 0, sizeof(ev));
+        ev.type = SDL_EVENT_QUIT;
+        SDL_PushEvent(&ev);
+    }
+}
+
 static bool RunFrame(bool &raised)
 {
     bool quit = false;
@@ -951,6 +982,7 @@ static bool RunFrame(bool &raised)
     g_Game.Process(true);
     AutoHelpTick();
     ChatTestTick();
+    AutoQuitTick();
 
 #if defined(XUO_LAUNCHER_EMBEDDED)
     LauncherWindow_Render();

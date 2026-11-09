@@ -939,7 +939,12 @@ void SaveGlobalConfig(bool launcher_apply)
     }
 
 #if !defined(XUO_EMSC)
-    if (!fs_path_equal(g_UOPath, g_ExePath))
+    // Streaming boots derive the data location from the shard name every
+    // session, so the path is never persisted: a stale CustomPath pointing
+    // at a deleted streamed install would bypass the streaming path on the
+    // next launch (broken client / crash). Only a non-streaming session
+    // (a real, player-managed install directory) saves it.
+    if (!g_Config.StreamingMode && !fs_path_equal(g_UOPath, g_ExePath))
     {
         fprintf(cfg, "CustomPath=%s\n", fs_path_ascii(g_UOPath));
     }
