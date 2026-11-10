@@ -11,10 +11,12 @@
 #include <cstdint>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
+#include <xuocore/http.h>
 #include <common/logging/logging.h>
 #include <common/fs.h>
 #include <common/str.h>
 #include <sstream>
+#include <cstdio>
 #include <common/utils.h>
 #include <xuocore/enumlist.h>
 #include <xuocore/client_info.h>
@@ -64,6 +66,7 @@ enum
     MSCC_IGNORE_RELAY,
     MSCC_SEND_PING,
     MSCC_ASSISTANT,
+    MSCC_ASK_URL_HANDLER,
     MSCC_COUNT,
 };
 
@@ -114,6 +117,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_IGNORE_RELAY, "ignorerelay" },
     { MSCC_SEND_PING, "sendping" },
     { MSCC_ASSISTANT, "assistant" },
+    { MSCC_ASK_URL_HANDLER, "askurlhandler" },
     { MSCC_COUNT, nullptr },
 };
 static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
@@ -454,8 +458,91 @@ static fs_path GetDefaultConfigFile()
     return FilePath(CROSSUO_CONFIG);
 }
 
+// hotlinking: -c/--config (and bare crossuo:// links from the OS URL
+// handler, rewritten to --config in main) accept remote configs:
+// crossuo://<host>/<path>/<config>.cfg (https:// is used, http is tried as
+// a fallback) and plain http:// / https:// urls. The fetched body is
+// cached under the appdata tree as remote-<fnv1a(url)>.cfg; every boot
+// re-fetches and the cache is only used when the fetch fails, so links
+// always answer with the live config and keep working offline once seen.
+// Saving never writes back into the cache: the session config lands on the
+// default crossuo.cfg instead (same rule as the launcher's --config latch).
+static bool IsConfigUrl(const astr_t &value)
+{
+    return value.rfind("crossuo://", 0) == 0 || value.rfind("http://", 0) == 0 ||
+           value.rfind("https://", 0) == 0;
+}
+
+static astr_t ConfigUrlToHttp(const astr_t &url)
+{
+    if (url.rfind("crossuo://", 0) != 0)
+    {
+        return url;
+    }
+    // crossuo://host/path -> https://host/path (http is the fetch fallback)
+    return "https://" + url.substr(strlen("crossuo://"));
+}
+
+static uint64_t ConfigUrlHash(const astr_t &url)
+{
+    uint64_t hash = 1469598103934665603ull;
+    for (char c : url)
+    {
+        hash ^= uint8_t(c);
+        hash *= 1099511628211ull;
+    }
+    return hash;
+}
+
+static fs_path FetchRemoteConfig(const astr_t &url)
+{
+    const auto http = ConfigUrlToHttp(url);
+    char name[64] = {};
+    snprintf(name, sizeof(name), "remote-%016llx.cfg", (unsigned long long)ConfigUrlHash(url));
+    const auto cache = FilePath(name);
+    Info(Config, "fetching remote config from: %s", http.c_str());
+
+    http_init();
+    http_response response;
+    std::vector<astr_t> urls{ http };
+    if (http.rfind("https://", 0) == 0)
+    {
+        // https refused (plain http server, no TLS): retry plain http once
+        urls.push_back("http://" + http.substr(strlen("https://")));
+    }
+    bool fetched = false;
+    for (const auto &candidate : urls)
+    {
+        if (http_get(candidate.c_str(), nullptr, 4 * 1024 * 1024, &response) &&
+            response.status == 200)
+        {
+            fetched = true;
+            break;
+        }
+    }
+    if (!fetched)
+    {
+        Error(
+            Config,
+            "remote config fetch failed (status %ld): %s - using the last"
+            " cached copy when available",
+            response.status,
+            http.c_str());
+        return fs_path_exists(cache) ? cache : fs_path_from("");
+    }
+    // first run: the appdata tree may not exist yet (nothing else created
+    // it before config load)
+    fs_path_create(fs_path_from(fs_path_ascii(FilePath(""))));
+    if (!fs_file_write(fs_path_ascii(cache), response.body.data(), response.body.size()))
+    {
+        Error(Config, "cannot write remote config cache: %s", fs_path_ascii(cache));
+        return fs_path_from("");
+    }
+    return cache;
+}
+
 // priority order looking for a config file:
-// 1. command line -c/--config option
+// 1. command line -c/--config option (local path or remote url)
 // 2. crossuo.cfg on the side with executable
 // 3. crossuo.cfg in the crossuo appdata
 static fs_path GetConfigFile()
@@ -465,7 +552,12 @@ static fs_path GetConfigFile()
         return GetDefaultConfigFile();
     }
 
-    return fs_path_from(g_cli["config"].get().string);
+    const auto value = g_cli["config"].get().string;
+    if (IsConfigUrl(value))
+    {
+        return FetchRemoteConfig(value);
+    }
+    return fs_path_from(value);
 }
 
 void ApplyLanguageSettings()
@@ -668,6 +760,11 @@ bool LoadGlobalConfig()
                     g_Config.AssistantEnabled = str_to_bool(strings[1]);
                     break;
                 }
+                case MSCC_ASK_URL_HANDLER:
+                {
+                    g_Config.AskUrlHandler = str_to_bool(strings[1]);
+                    break;
+                }
                 case MSCC_USE_KEYS:
                 {
                     g_Config.Key1 = str_to_int(strings[1], 16);
@@ -822,9 +919,14 @@ void SaveGlobalConfig(bool launcher_apply)
     {
         s_launcher_changed_config = true;
     }
-    auto cfgPath = (g_cli["config"].was_set() && s_launcher_changed_config)
-                       ? GetDefaultConfigFile()
-                       : GetConfigFile();
+    // a remote config (--config url / crossuo:// hotlink) is read-only
+    // input: session state lands on the default crossuo.cfg, never in the
+    // fetched cache file
+    const bool config_is_url =
+        g_cli["config"].was_set() && IsConfigUrl(g_cli["config"].get().string);
+    auto cfgPath = ((config_is_url || s_launcher_changed_config) && g_cli["config"].was_set()) ?
+                       GetDefaultConfigFile() :
+                       GetConfigFile();
 
     Info(Config, "saving global config to: %s", fs_path_ascii(cfgPath));
     FILE *cfg = fs_open(cfgPath, FS_WRITE);
@@ -923,6 +1025,10 @@ void SaveGlobalConfig(bool launcher_apply)
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
     fprintf(cfg, "IgnoreRelay=%s\n", (g_Config.IgnoreRelay ? "yes" : "no"));
+    if (!g_Config.AskUrlHandler)
+    {
+        fprintf(cfg, "AskUrlHandler=no\n");
+    }
     if (!g_Config.AssistantEnabled)
     {
         fprintf(cfg, "Assistant=no\n");

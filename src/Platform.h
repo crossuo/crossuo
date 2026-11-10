@@ -135,4 +135,12 @@ namespace Platform
 {
 void SetLanguageFromSystemLocale();
 void OpenBrowser(const astr_t &url);
+
+// crossuo:// URL scheme handler (hotlinking shard configs):
+// IsUrlSchemeRegistered reports whether the OS already resolves
+// crossuo:// links to this install; RegisterUrlScheme performs the
+// registration (user-scope only) and returns false when it failed or
+// is not supported on this platform (web builds, non-bundle macOS).
+bool IsUrlSchemeRegistered();
+bool RegisterUrlScheme();
 } // namespace Platform

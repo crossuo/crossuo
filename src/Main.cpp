@@ -77,9 +77,12 @@ EM_JS(int, web_import_env, (), {
 // serializing hundreds of MB of blob store on a ui tick would stall the
 // page.
 #endif
+#include <cstring>
+#include <vector>
 #include <common/str.h>
 #include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
 #include "Config.h"
+#include "Platform.h"
 #include "revision.h"
 #include "Globals.h" // g_Ticks
 #include "Misc.h" // g_MainThread
@@ -234,7 +237,9 @@ static bool InitCli(int argc, char *argv[])
     g_cli["config"]
         .abbreviation('c')
         .type(po::string)
-        .description("Use a different configuration file");
+        .description("Use a different configuration file (a local path or a"
+                     " remote url: crossuo://host/path/config.cfg,"
+                     " http:// or https://)");
     g_cli(argc, argv);
 
     g_var_DisableRenderGame = g_cli["DisableRenderGame"].was_set();
@@ -1065,6 +1070,56 @@ static int Run()
 #if defined(XUO_EMSC)
 #endif
 
+// first boot experience: when no crossuo:// handler is registered yet, offer
+// to register one (user-scope, no elevation) so shard config hotlinks work
+// straight from the browser (`crossuo://host/path/config.cfg`). Skipped on
+// the web build (no OS handler concept), headless runs and when the user
+// already declined (AskUrlHandler=no, persisted at shutdown; "Not now" only
+// skips this boot - the next one asks again).
+static void MaybePromptUrlSchemeRegistration(bool isHeadless)
+{
+#if defined(XUO_EMSC)
+    (void)isHeadless;
+#else
+    if (isHeadless || !g_Config.AskUrlHandler || Platform::IsUrlSchemeRegistered())
+    {
+        return;
+    }
+    SDL_MessageBoxButtonData buttons[2] = {
+        { 0, 0, "Not now" },
+        { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Register" },
+    };
+    SDL_MessageBoxData data = {};
+    data.buttons = buttons;
+    data.numbuttons = 2;
+    data.title = "CrossUO";
+    data.message =
+        "Register a crossuo:// URL handler for quick shard launching?\n"
+        "\n"
+        "Websites can then link shard configs directly"
+        " (crossuo://host/path/shard.cfg) and CrossUO opens with the shard"
+        " loaded.";
+    int choice = 0;
+    if (!SDL_ShowMessageBox(&data, &choice))
+    {
+        return;
+    }
+    if (choice == 1)
+    {
+        const bool ok = Platform::RegisterUrlScheme();
+        Info(
+            Client,
+            "crossuo:// url handler registration: %s",
+            ok ? "done" : "failed");
+        return;
+    }
+    // "Not now" defers to the next boot: nothing is persisted. Users who
+    // never want the prompt set AskUrlHandler=no in crossuo.cfg (it is only
+    // written back when explicitly no, so default installs keep asking)
+    Info(Client, "crossuo:// url handler prompt: deferred to next boot");
+#endif
+}
+
 int main(int argc, char **argv)
 {
 #if defined(XUO_EMSC)
@@ -1103,7 +1158,23 @@ int main(int argc, char **argv)
     // see them
     web_import_env();
 #endif
-    if (!InitCli(argc, argv))
+    // hotlinking: the OS URL handler launches the client as
+    // `crossuo <crossuo://host/path/config.cfg>` - the link arrives as a
+    // bare positional argument the CLI parser ignores, so it is rewritten
+    // to --config=<url> (the config loader accepts remote urls) before
+    // parsing. `--config crossuo://...` / `--config http(s)://...` work too.
+    std::vector<char *> launchArgv(argv, argv + argc);
+    for (int i = 1; i < argc; i++)
+    {
+        if (strncmp(argv[i], "crossuo://", 10) == 0)
+        {
+            static std::string configArg = std::string("--config=") + argv[i];
+            launchArgv[i] = &configArg[0];
+            Info(Client, "hotlink launch: %s", argv[i]);
+            break;
+        }
+    }
+    if (!InitCli((int)launchArgv.size(), launchArgv.data()))
     {
         return 0;
     }
@@ -1150,6 +1221,8 @@ int main(int argc, char **argv)
     g_UOPath = fs_path_current();
 
     const bool isHeadless = g_cli["headless"].was_set();
+
+    MaybePromptUrlSchemeRegistration(isHeadless);
 
     if (!load_config())
     {

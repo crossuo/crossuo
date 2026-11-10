@@ -65,6 +65,12 @@ struct Config
     // Assistant entry from the macro editor and the menubar button. Defaults
     // to yes when the key is missing from crossuo.cfg
     bool AssistantEnabled = true;
+    // AskUrlHandler=yes: on boot, offer to register the crossuo:// URL
+    // scheme handler when none is registered yet (first-boot experience).
+    // AskUrlHandler=no: never ask (the in-client "Not now" button only
+    // defers to the next boot; silencing the prompt is a deliberate manual
+    // choice, so the key is only written back when explicitly set to no)
+    bool AskUrlHandler = true;
 
     // Calculated stuff that are not saved back
     uint16_t Seed = 0x1357;
