@@ -27,6 +27,7 @@ mod decode;
 mod filter;
 mod format;
 mod framer;
+mod huffman;
 mod packets;
 mod special;
 
@@ -331,12 +332,29 @@ fn handle_game_connection(shared: Arc<Shared>, client: TcpStream, target: String
         (Ok(a), Ok(b), Ok(c), Ok(d)) => (a, b, c, d),
         _ => return,
     };
+    // Same teardown guarantee as the login path: when either leg ends, close
+    // the upstream game session instead of leaving it half-open.
+    let kill_s1 = server.try_clone();
+    let kill_s2 = server.try_clone();
+    let kill_c1 = client.try_clone();
+    let kill_c2 = client.try_clone();
     let sh1 = Arc::clone(&shared);
     let sh2 = Arc::clone(&shared);
-    let t1 = thread::spawn(move || pump(sh1, c2s_client, c2s_server, true, true, Stage::Game));
-    let t2 = thread::spawn(move || pump(sh2, s2c_server, s2c_client, false, false, Stage::Game));
+    let t1 = thread::spawn(move || {
+        pump(sh1, c2s_client, c2s_server, true, true, Stage::Game);
+        if let Ok(k) = kill_s1 {
+            let _ = k.shutdown(std::net::Shutdown::Both);
+        }
+    });
+    let t2 = thread::spawn(move || {
+        pump(sh2, s2c_server, s2c_client, false, false, Stage::Game);
+        if let Ok(k) = kill_c2 {
+            let _ = k.shutdown(std::net::Shutdown::Both);
+        }
+    });
     let _ = t1.join();
     let _ = t2.join();
+    let _ = (kill_c1, kill_s2);
     write_marker(&shared, &format!("DISCONNECT STAGE=GAME ({})", target));
 }
 
@@ -411,6 +429,15 @@ fn pump(
     expect_seed: bool,
     stage: Stage,
 ) {
+    // The wire must carry the bytes the peer actually wrote. We therefore:
+    //   1. append every received chunk to `raw` (the forward buffer, indexed
+    //      by logical stream offset via `base`),
+    //   2. decrypt the same chunk into the framer for dump/size purposes,
+    //   3. when a popped packet is mutated (0x8C relay rewrite) patch the
+    //      matching bytes inside `raw`,
+    //   4. forward `raw` up to the current end.
+    // Any other design risks sending plaintext (or duplicated bytes) upstream,
+    // which desyncs the server's cipher state and kills the session.
     let mut crypt = StreamCrypt::new(if to_server {
         shared.cfg.cipher
     } else {
@@ -419,107 +446,92 @@ fn pump(
     let mut framer = Framer::new();
     let mut seeded = !expect_seed;
     let mut buf = [0u8; 0x1000];
-    // bytes of the framer's logical stream already written to the wire; when
-    // packets pop, their first `wire_ahead` bytes are skipped so mutations
-    // (the 0x8C relay rewrite) reach the peer instead of only the dump.
-    let mut wire_ahead = 0usize;
+
+    // raw bytes not yet written to the peer, with the logical offset of [0]
+    let mut raw: Vec<u8> = Vec::new();
+    let mut base: usize = 0;
+    // logical offset of the first byte currently held inside the framer
+    let mut frame_at: usize = 0;
+    let mut stream_in: usize = 0;
+    let mut stream_out: usize = 0;
+    // The game socket's S->C stream is Huffman-compressed by the server and
+    // decompressed by the client before framing (CSocket::Decompression).
+    // Decompress a copy so packets frame; the raw bytes still go to the wire.
+    let decompress = !to_server && stage == Stage::Game;
+    let mut huff = huffman::HuffmanDecompressor::new();
+    let mut first_bytes: Vec<u8> = Vec::new();
+    let mut framer_pending_tail: Vec<u8> = Vec::new();
 
     loop {
         let n = match reader.read(&mut buf) {
-            Ok(0) => {
-                // flush complete packets still pending in the framer
-                let mut out: Vec<u8> = Vec::new();
-                while let Some(mut pkt) = framer.next_packet() {
-                    if to_server && pkt[0] == 0xEF {
-                        if let Some(ver) = packets::version_from_ef_packet(&pkt) {
-                            packets::set_table(ver);
-                            write_marker(
-                                &shared,
-                                &format!(
-                                    "CLIENT VERSION {}.{}.{}.{} deduced from 0xEF",
-                                    ver.0, ver.1, ver.2, ver.3
-                                ),
-                            );
-                        }
-                    }
-                    if !to_server {
-                        on_packet_from_server(&shared, stage, &mut pkt);
-                    }
-                    write_packet(&shared, to_server, &pkt);
-                    let skip = wire_ahead.min(pkt.len());
-                    wire_ahead -= skip;
-                    out.extend_from_slice(&pkt[skip..]);
-                }
-                // forward any unframed tail for wire transparency
-                if !framer.pending().is_empty() {
-                    out.extend_from_slice(framer.pending());
-                    framer.clear();
-                }
-                if !out.is_empty() && writer.write_all(&out).is_err() {
-                    break;
-                }
-                break;
-            }
+            Ok(0) => break,
             Ok(n) => n,
             Err(_) => break,
         };
         let chunk = &buf[..n];
-        let mut out: Vec<u8> = Vec::new();
+        if first_bytes.len() < 32 {
+            first_bytes.extend(chunk.iter().take(32 - first_bytes.len()));
+        }
+        stream_in += n;
+
+        let mut decrypted: Vec<u8>;
+        let mut flushed_seed = false;
 
         if !seeded {
-            // The first bytes of a client connection are either a bare 4-byte
-            // seed (< 6.0.6.0 and every game connection) or a 0xEF packet
-            // (seed + client version) - see CConnectionManager::Connect.
-            if to_server && framer.pending().is_empty() {
-                // buffer until we have 4 bytes to identify the form
-                framer.push(chunk);
-                if framer.pending().len() < 4 {
-                    // partial seed - forward and wait for the rest
-                    wire_ahead += n;
-                    if writer.write_all(chunk).is_err() {
-                        break;
-                    }
+            if to_server && raw.is_empty() {
+                raw.extend_from_slice(chunk);
+                if raw.len() < 4 {
+                    flush_raw(&mut writer, &mut raw, &mut base, usize::MAX);
                     continue;
                 }
-                // 0xEF is only ever sent on the login connection
-                // (ConnectionManager.cpp:157-181); game connections always
-                // use a bare seed (ConnectionManager.cpp:202).
-                if stage == Stage::Login && framer.pending()[0] == 0xEF {
-                    // 0xEF is a normal framed packet (0x15 bytes) carrying
-                    // the version; leave it for the framer and the deduce step.
-                    // Modern clients do not encrypt the login stream.
+                if stage == Stage::Login && raw[0] == 0xEF {
+                    // plaintext modern handshake
                     seeded = true;
+                    decrypted = chunk.to_vec();
                 } else {
-                    let seed: [u8; 4] = framer.pending()[..4].try_into().unwrap();
-                    let rest: Vec<u8> = framer.pending()[4..].to_vec();
-                    framer.clear();
+                    let seed: [u8; 4] = raw[..4].try_into().unwrap();
                     write_seed(&shared, stage, &seed);
                     crypt.arm(&shared, &seed);
-                    let plain = crypt.plain(&rest);
-                    framer.push(&plain);
-                    // The 4 seed bytes go out raw now. They never entered the
-                    // framer, so the framed packets below must be forwarded
-                    // in full (wire_ahead counts only framer-held bytes).
-                    wire_ahead = 0;
-                    out.extend_from_slice(&chunk[..4]);
+                    // the seed is clear text; everything after it is ciphered
+                    let rest = raw[4..].to_vec();
+                    decrypted = crypt.plain(&rest);
+                    // forward the seed immediately, keep the rest for patching
+                    if writer.write_all(&raw[..4]).is_err() {
+                        break;
+                    }
+                    stream_out += 4;
+                    base += 4;
+                    raw.drain(..4);
+                    frame_at = base;
                     seeded = true;
+                    // fall through so the packets in `decrypted` are popped
+                    // and dumped (they would otherwise be skipped entirely)
+                    framer.push(&decrypted);
+                    decrypted.clear();
+                    flushed_seed = true;
                 }
             } else {
-                framer.push(chunk);
                 seeded = true;
+                raw.extend_from_slice(chunk);
+                decrypted = chunk.to_vec();
             }
         } else {
-            let plain = crypt.plain(chunk);
-            framer.push(&plain);
+            raw.extend_from_slice(chunk);
+            if decompress {
+                decrypted = Vec::new();
+                huff.decompress(chunk, &mut decrypted);
+            } else {
+                decrypted = crypt.plain(chunk);
+            }
         }
 
+        framer.push(&decrypted);
+
+        // Pop packets: dump them, patch raw when mutated.
         while let Some(mut pkt) = framer.next_packet() {
+            let pkt_at = frame_at;
+            frame_at += pkt.len();
             if to_server {
-                // The client announces its version in the 0xEF connection
-                // packet (seed + major/minor/rev/prot BE u32s) - mirrors
-                // CConnectionManager::Connect (ConnectionManager.cpp:157-181).
-                // Clients < 6.0.6.0 send a bare seed instead, so the fallback
-                // table from --client-version stays in effect for them.
                 if let Some(ver) = packets::version_from_ef_packet(&pkt) {
                     packets::set_table(ver);
                     write_marker(
@@ -530,9 +542,17 @@ fn pump(
                         ),
                     );
                 }
-            }
-            if !to_server {
+            } else {
+                let before = pkt.clone();
                 on_packet_from_server(&shared, stage, &mut pkt);
+                if pkt != before {
+                    let lo = pkt_at.wrapping_sub(base);
+                    if lo + pkt.len() <= raw.len() {
+                        raw[lo..lo + pkt.len()].copy_from_slice(&pkt);
+                    } else {
+                        write_marker(&shared, "WARN relay patch skipped (offset out of range)");
+                    }
+                }
                 if pkt[0] == 0x8C {
                     write_marker(&shared, "RELAY 0x8C received - next connection is STAGE GAME");
                 }
@@ -544,20 +564,61 @@ fn pump(
                 }
             }
             write_packet(&shared, to_server, &pkt);
-            // forward the (possibly rewritten) packet bytes
-            let skip = wire_ahead.min(pkt.len());
-            wire_ahead -= skip;
-            out.extend_from_slice(&pkt[skip..]);
         }
 
-        if !out.is_empty() && writer.write_all(&out).is_err() {
+        // Forward everything received so far.
+        if writer.write_all(&raw).is_err() {
             break;
         }
+        stream_out += raw.len();
+        base += raw.len();
+        raw.clear();
     }
-    // half-close only: EOF on this leg means the upstream peer ended its
-    // direction; propagate EOF downstream without killing the other leg
-    // (a server closing after a response must not cut the client's replies)
+
+    if !raw.is_empty() {
+        let _ = writer.write_all(&raw);
+    }
+    let _ = &framer_pending_tail;
+    let tail: Vec<u8> = framer.pending().to_vec();
+    write_marker(
+        &shared,
+        &format!(
+            "STATS {} read={} forwarded={} framed={}",
+            if to_server { "C->S" } else { "S->C" },
+            stream_in,
+            stream_out,
+            frame_at
+        ),
+    );
+    write_marker(
+        &shared,
+        &format!(
+            "FIRST {} bytes: {:02X?}{}",
+            if to_server { "C->S" } else { "S->C" },
+            first_bytes,
+            if decompress { " (raw, pre-decompression)" } else { "" }
+        ),
+    );
+    write_marker(
+        &shared,
+        &format!(
+            "UNFRAMED {} tail ({} bytes): {:02X?}",
+            if to_server { "C->S" } else { "S->C" },
+            tail.len(),
+            &tail[..tail.len().min(32)]
+        ),
+    );
     let _ = writer.shutdown(std::net::Shutdown::Write);
+}
+
+fn flush_raw(w: &mut TcpStream, raw: &mut Vec<u8>, base: &mut usize, _max: usize) {
+    if raw.is_empty() {
+        return;
+    }
+    if w.write_all(raw).is_ok() {
+        *base += raw.len();
+        raw.clear();
+    }
 }
 
 fn handle_connection(shared: Arc<Shared>, client: TcpStream, stage: Stage) {
@@ -594,12 +655,34 @@ fn handle_connection(shared: Arc<Shared>, client: TcpStream, stage: Stage) {
         Err(_) => return,
     };
 
+    // Each pump gets a shutdown handle so that when EITHER leg finishes the
+    // whole connection is torn down. Without this the upstream socket stayed
+    // half-open and the shard kept the account marked "in use" (0x82 02)
+    // until its own timeout, blocking every subsequent login.
+    let kill_s1 = server.try_clone();
+    let kill_c1 = client.try_clone();
+    let kill_s2 = server.try_clone();
+    let kill_c2 = client.try_clone();
+
     let sh1 = Arc::clone(&shared);
     let sh2 = Arc::clone(&shared);
-    let t1 = thread::spawn(move || pump(sh1, c2s_client, c2s_server, true, true, stage));
-    let t2 = thread::spawn(move || pump(sh2, s2c_server, s2c_client, false, false, stage));
+    let t1 = thread::spawn(move || {
+        pump(sh1, c2s_client, c2s_server, true, true, stage);
+        // client leg ended: drop the upstream session immediately
+        if let Ok(k) = kill_s1 {
+            let _ = k.shutdown(std::net::Shutdown::Both);
+        }
+    });
+    let t2 = thread::spawn(move || {
+        pump(sh2, s2c_server, s2c_client, false, false, stage);
+        // server leg ended: make sure the client leg unwinds too
+        if let Ok(k) = kill_c2 {
+            let _ = k.shutdown(std::net::Shutdown::Both);
+        }
+    });
     let _ = t1.join();
     let _ = t2.join();
+    let _ = (kill_c1, kill_s2);
 
     write_marker(&shared, &format!("DISCONNECT STAGE={}", stage.name()));
 }
