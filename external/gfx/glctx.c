@@ -135,6 +135,12 @@ static void glctx_fill_caps(enum glctx_flavor flavor)
 
     const char *version = (const char *)glGetString(GL_VERSION);
     const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
+    // glGetString(GL_EXTENSIONS) is illegal on core profiles (and ES3): the
+    // driver returns NULL and raises a sticky GL_INVALID_ENUM that would
+    // otherwise surface at the first GL_CHECK afterwards. Consume it.
+    while (glGetError() != GL_NO_ERROR)
+    {
+    }
     if (extensions == NULL)
     {
         // core profiles and every ES3 context use the indexed API; glGetString
