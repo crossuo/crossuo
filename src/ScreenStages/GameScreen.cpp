@@ -1023,14 +1023,14 @@ void CGameScreen::AddTileToRenderList(
             }
         }
 
-        TRACE(
+        /*TRACE(
             Client,
             "Item[0x%04X]: x=%i y=%i (dx=%i, dy=%i)\n",
             obj->Graphic,
             drawX,
             drawY,
             obj->DrawX,
-            obj->DrawY);
+            obj->DrawY);*/
 
         m_RenderList[m_RenderListCount].Object = obj;
         m_RenderList[m_RenderListCount].GrayColor = grayColor;
