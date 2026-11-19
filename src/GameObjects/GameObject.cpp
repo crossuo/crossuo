@@ -47,6 +47,7 @@ uint16_t get_stack_graphic(uint16_t graphic, int count, bool &doubleDraw)
     else
     {
         doubleDraw = IsStackable(graphic) && (count > 1);
+        doubleDraw = (g_Config.ClientVersion >= CV_200) ? doubleDraw : false;
     }
     return result;
 }
