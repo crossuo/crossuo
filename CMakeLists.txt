@@ -411,6 +411,12 @@ else()
   # during compilation, so they live only on the link line below)
   add_compile_options(-pthread)
   add_link_options(-sMAX_WEBGL_VERSION=2 -pthread -sPROXY_TO_PTHREAD -sOFFSCREENCANVAS_SUPPORT=1 "-sOFFSCREENCANVASES_TO_PTHREAD=#canvas" -lidbfs.js -lwebsocket.js)
+  # memoize the canvas WebGL context (runs on the page and on the pthread
+  # worker): Firefox 159/ESR 153.6 throw InvalidStateError on the SECOND
+  # getContext of a worker-owned OffscreenCanvas (Bug 2079676, relaxed in 160
+  # but not uplifted) and the client legitimately creates/adopts the canvas
+  # context more than once during startup
+  add_link_options(--pre-js "${CMAKE_CURRENT_SOURCE_DIR}/resources/webgl_context_cache.js")
   # OFFSCREEN_FRAMEBUFFER (GL calls proxied to the main browser thread)
   # replaced by worker-local WebGL over a transferred OffscreenCanvas: the
   # shell transfers canvas control before the runtime boots (shell.html), and
