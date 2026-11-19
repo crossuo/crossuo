@@ -7496,14 +7496,12 @@ PACKET_HANDLER(OpenBook) // 0x93
 
     uint32_t serial = ReadUInt32BE();
     uint8_t flags = ReadUInt8();
-    Move(1);
     auto pageCount = ReadUInt16BE();
+
     CGumpBook *gump = new CGumpBook(
         serial, 0, 0, pageCount, flags != 0, (g_Config.ProtocolClientVersion >= CV_308Z));
-
     gump->m_EntryTitle->m_Entry.SetTextA(ReadString(60));
     gump->m_EntryAuthor->m_Entry.SetTextA(ReadString(30));
-
     g_GumpManager.AddGump(gump);
 }
 
@@ -7520,21 +7518,17 @@ PACKET_HANDLER(OpenBookNew) // 0xD4
     uint16_t pageCount = ReadUInt16BE();
 
     CGumpBook *gump = new CGumpBook(serial, 0, 0, pageCount, (flag1 + flag2) != 0, true);
-
     int titleLen = ReadUInt16BE();
-
     if (titleLen > 0)
     {
         gump->m_EntryTitle->m_Entry.SetTextA(ReadString(titleLen));
     }
 
     int authorLen = ReadUInt16BE();
-
     if (authorLen > 0)
     {
         gump->m_EntryAuthor->m_Entry.SetTextA(ReadString(authorLen));
     }
-
     g_GumpManager.AddGump(gump);
 }
 
