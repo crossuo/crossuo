@@ -3097,24 +3097,7 @@ PACKET_HANDLER(OpenContainer)
     }
 #endif
 
-    // Pre-2.0.0 servers share this id with a different value table: the field
-    // selects the gump type in both eras (the 1998 handler 0x459020 dispatches
-    // on it through the shared gump opener 0x43bd20), but 0xFFFF is "close the
-    // object's open gump" on the old wire instead of the spellbook. The other
-    // legacy-only types (0x07/0x08/0x0A/0x31 client UIs, plain containers
-    // 0x01F4/0x01F5, hair styling 0x1392/0x1393) have no crossuo gump parallels
-    // and drop through the modern generic path, which ignores unknown gump
-    // graphics; 0x0030 is the shop gump in both eras.
-    if (g_Config.ProtocolClientVersion < CV_200 && gumpid == 0xFFFF)
-    {
-        // the 1998 close also detaches an open drag through a scratch gump
-        // object; crossuo has no such state to detach
-        g_GumpManager.CloseGump(serial, 0, GT_CONTAINER);
-        return;
-    }
-
     CGump *gump = nullptr;
-
     if (gumpid == 0xFFFF) //Spellbook
     {
         int gameWindowCenterX =
