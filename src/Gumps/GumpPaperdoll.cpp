@@ -49,6 +49,7 @@ enum
     ID_GP_BUTTON_MINIMIZE,
     ID_GP_PROFILE_SCROLL,
     ID_GP_PARTY_MANIFEST_SCROLL,
+    ID_GP_PLAY_GUIDE_SCROLL, // uo1998
     ID_GP_BUTTON_VIRTUE,
     ID_GP_COMBAT_BOOK,
     ID_GP_RACIAL_ABILITIES_BOOK,
@@ -145,8 +146,11 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
             }
         }
 
-        Add(new CGUIButton(
-            ID_GP_PARTY_MANIFEST_SCROLL, 0x07D2, 0x07D2, 0x07D2, partyManifestX, 196));
+        if (g_Config.ClientVersion > CV_200)
+        {
+            Add(new CGUIButton(
+                ID_GP_PARTY_MANIFEST_SCROLL, 0x07D2, 0x07D2, 0x07D2, partyManifestX, 196));
+        }
 
         CGUIHitBox *minimizeButton =
             (CGUIHitBox *)Add(new CGUIHitBox(ID_GP_BUTTON_MINIMIZE, 226, 258, 16, 16, true));
@@ -160,7 +164,14 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
 
     Add(new CGUIButton(ID_GP_BUTTON_STATUS, 0x07EB, 0x07ED, 0x07EC, 185, 233));
 
-    Add(new CGUIButton(ID_GP_PROFILE_SCROLL, 0x07D2, 0x07D2, 0x07D2, profileX, 196));
+    if (g_Config.ClientVersion > CV_200)
+    {
+        Add(new CGUIButton(ID_GP_PROFILE_SCROLL, 0x07D2, 0x07D2, 0x07D2, profileX, 196));
+    }
+    else
+    {
+        Add(new CGUIButton(ID_GP_PLAY_GUIDE_SCROLL, 0x07D2, 0x07D2, 0x07D2, profileX, 196));
+    }
 
     //if (ConnectionManager.ClientVersion >= CV_60142)
     //	UO->DrawGump(0x2B34, 0, 156, 200);
@@ -260,6 +271,11 @@ void CGumpPaperdoll::InitToolTip()
             case ID_GP_BUTTON_MINIMIZE:
             {
                 g_ToolTip.Set(L"Minimize the paperdoll gump");
+                break;
+            }
+            case ID_GP_PLAY_GUIDE_SCROLL:
+            {
+                g_ToolTip.Set(L"UO Guide");
                 break;
             }
             case ID_GP_PROFILE_SCROLL:
@@ -902,6 +918,11 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
             g_MouseManager.CancelDoubleClick = true;
             break;
         }
+        case ID_GP_PLAY_GUIDE_SCROLL:
+        {
+            Platform::OpenBrowser("https://uo1998.com/help/playmain.html");
+        }
+        break;
         case ID_GP_PROFILE_SCROLL:
         case ID_GP_PARTY_MANIFEST_SCROLL:
         {
