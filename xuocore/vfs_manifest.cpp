@@ -6,8 +6,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <atomic>
 #include <chrono>
 #include <map>
+#include <thread>
 #include <vector>
 
 #include "mft.h"
@@ -853,28 +855,68 @@ bool vfs_refine_file(VfsPlan::VfsFile &file, const fs_path &blobs_dir, const ast
 }
 } // namespace
 
+// how many archives refine at once. Each worker walks its own table over its
+// own connection, so this is bounded by the server's tolerance, not by CPU -
+// 4 keeps the tail latency of a cold boot low while making the per-file
+// sequential walks overlap.
+static const size_t VFS_REFINE_WORKERS = 4;
+
 bool vfs_manifest_refine_ranges(
     VfsPlan &plan, const fs_path &blobs_dir, const astr_t &file_repo, uint64_t min_size)
 {
-    size_t refined = 0;
-    size_t candidates = 0;
+    // candidates first: the walk below only touches each one's own file
+    std::vector<VfsPlan::VfsFile *> candidates;
+    size_t skipped = 0;
     for (auto &file : plan.files)
     {
         if (file.is_uop || file.streamable || file.assets.size() != 1 || file.size < min_size)
             continue;
-        astr_t lower = str_lower(file.name);
+        const astr_t lower = str_lower(file.name);
         if (lower.rfind(".uop") != lower.size() - 4)
             continue;
-        ++candidates;
-        const auto &asset = file.assets.front();
-        if (asset.ct != 0)
+        if (file.assets.front().ct != 0)
         {
-            LOG_WARN("refine: skipping %s (compressed source, ct=%u)", file.name.c_str(), asset.ct);
+            LOG_WARN("refine: skipping %s (compressed source, ct=%u)", file.name.c_str(), file.assets.front().ct);
+            ++skipped;
             continue; // compressed sources cannot be ranged (zlib is not seekable)
         }
-        if (vfs_refine_file(file, blobs_dir, file_repo))
-            ++refined;
+        candidates.push_back(&file);
     }
-    LOG_INFO("refine: %zu of %zu candidates split into block range assets", refined, candidates);
+
+    // Every archive's walk is a dependent chain (header -> section -> table),
+    // so a single file cannot be split; the FILES are independent of each
+    // other, and that is where the idle time was. One worker per file keeps
+    // its own keep-alive connection busy instead of N archives queueing on one.
+    std::atomic<size_t> next{ 0 };
+    std::atomic<size_t> refined{ 0 };
+    const auto run = [&]() {
+        for (;;)
+        {
+            const size_t index = next.fetch_add(1);
+            if (index >= candidates.size())
+                return;
+            if (vfs_refine_file(*candidates[index], blobs_dir, file_repo))
+                refined.fetch_add(1);
+        }
+    };
+    const size_t workers = std::min(VFS_REFINE_WORKERS, candidates.size());
+    if (workers <= 1)
+    {
+        run();
+    }
+    else
+    {
+        std::vector<std::thread> pool;
+        pool.reserve(workers);
+        for (size_t i = 0; i < workers; ++i)
+            pool.emplace_back(run);
+        for (auto &thread : pool)
+            thread.join();
+    }
+    LOG_INFO(
+        "refine: %zu of %zu candidates split into block range assets (%zu workers)",
+        refined.load(),
+        candidates.size() + skipped,
+        workers);
     return true;
 }
