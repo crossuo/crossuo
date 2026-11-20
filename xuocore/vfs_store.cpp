@@ -89,8 +89,8 @@ static int
 vfs_store_read_blob(const fs_path &blobs_dir, const VfsAsset &asset, std::vector<uint8_t> &out)
 {
     const bool ranged = asset.blob_offset != 0;
-    uint64_t expected =
-        ranged ? vfs_asset_range_len(asset) : (asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl));
+    uint64_t expected = ranged ? vfs_asset_range_len(asset) :
+                                 (asset.ct == 0 ? uint64_t(asset.ul) : uint64_t(asset.cl));
     const auto path = fs_path_join(blobs_dir, asset.blob);
     FILE *fp = fopen(fs_path_ascii(path), "rb");
     if (!fp)
@@ -276,8 +276,7 @@ static void vfs_store_check_sparse(uint64_t planned_bytes, const fs_path &dir)
     vfs_store_sparse_ok = vfs_store_fs_supports_sparse(dir);
     if (!vfs_store_sparse_ok)
         LOG_WARN(
-            "filesystem does not support sparse files; up to %" PRIu64
-            " MB will be preallocated",
+            "filesystem does not support sparse files; up to %" PRIu64 " MB will be preallocated",
             planned_bytes / (1024 * 1024));
 }
 
@@ -550,147 +549,137 @@ bool vfs_store_materialize_pack(
     const fs_path &blobs_dir)
 {
     if (arena == nullptr || file_index >= plan.files.size())
-    return false;
+        return false;
     const auto &file = plan.files[file_index];
     if (file.assets.empty())
-    return false;
+        return false;
 
     // loose whole-file packs (the product ships e.g. gumpart/sound/MainMisc
     // as one blob each): the materialized file IS the inflated payload
     if (!file.is_uop)
     {
-    const auto &asset = file.assets.front();
-    if (vfs_asset_is_hole(asset))
-        return false;
-    const auto loose_path = fs_path_join(install_dir, file.name);
-    uint64_t existing = 0;
-    if (FILE *probe = fopen(fs_path_ascii(loose_path), "rb"))
-    {
-        vfs_file_size(probe, &existing);
-        fclose(probe);
-    }
-    if (existing == asset.ul && asset.ul != 0)
-    {
+        const auto &asset = file.assets.front();
+        if (vfs_asset_is_hole(asset))
+            return false;
+        const auto loose_path = fs_path_join(install_dir, file.name);
+        uint64_t existing = 0;
+        if (FILE *probe = fopen(fs_path_ascii(loose_path), "rb"))
+        {
+            vfs_file_size(probe, &existing);
+            fclose(probe);
+        }
+        if (existing == asset.ul && asset.ul != 0)
+        {
+            LOG_INFO(
+                "pack materialized: %s (already present, %" PRIu64 " bytes)",
+                file.name.c_str(),
+                existing);
+            return true;
+        }
+        std::vector<uint8_t> payload;
+        if (vfs_store_asset_payload(blobs_dir, asset, &payload) != 0)
+        {
+            // blob not in the store: pull it through the arena (fetches on
+            // demand), then copy the granule out
+            if (!arena->ensure(asset, true))
+                return false;
+            payload.resize(size_t(asset.ul), 0);
+            if (asset.ul != 0 && !arena->read(asset, 0, payload.data(), payload.size()))
+                return false;
+        }
+        if (!fs_file_write(fs_path_ascii(loose_path), payload.data(), payload.size()))
+        {
+            LOG_ERROR(
+                "pack materialize: %s write failed (%zu bytes)", file.name.c_str(), payload.size());
+            return false;
+        }
         LOG_INFO(
-            "pack materialized: %s (already present, %" PRIu64 " bytes)",
-            file.name.c_str(),
-            existing);
-        return true;
-    }
-    std::vector<uint8_t> payload;
-    if (vfs_store_asset_payload(blobs_dir, asset, &payload) != 0)
-    {
-        // blob not in the store: pull it through the arena (fetches on
-        // demand), then copy the granule out
-        if (!arena->ensure(asset, true))
-            return false;
-        payload.resize(size_t(asset.ul), 0);
-        if (asset.ul != 0 && !arena->read(asset, 0, payload.data(), payload.size()))
-            return false;
-    }
-    if (!fs_file_write(fs_path_ascii(loose_path), payload.data(), payload.size()))
-    {
-        LOG_ERROR(
-            "pack materialize: %s write failed (%zu bytes)",
+            "pack materialized: %s (%zu bytes, loose whole file)",
             file.name.c_str(),
             payload.size());
-        return false;
-    }
-    LOG_INFO(
-        "pack materialized: %s (%zu bytes, loose whole file)",
-        file.name.c_str(),
-        payload.size());
-    return true;
+        return true;
     }
 
     const auto path = fs_path_join(install_dir, file.name);
     bool created = false;
     FILE *fp = vfs_store_pack_open(path, file, &created);
     if (fp == nullptr)
-    return false;
+        return false;
     if (!created)
     {
-    fclose(fp); // fingerprint + size match the plan: already assembled
-    return true;
+        fclose(fp); // fingerprint + size match the plan: already assembled
+        return true;
     }
 
     LOG_INFO(
-    "materializing pack: %s (%" PRIu64 " bytes, %zu assets)",
-    file.name.c_str(),
-    file.size,
-    file.assets.size());
+        "materializing pack: %s (%" PRIu64 " bytes, %zu assets)",
+        file.name.c_str(),
+        file.size,
+        file.assets.size());
     bool ok = true;
     size_t written = 0;
     for (size_t ai = 0; ai < file.assets.size() && ok; ++ai)
     {
-    const auto &asset = file.assets[ai];
-    if (vfs_asset_is_hole(asset))
-        continue; // reserved slot: the table entry stays zero (Offset == 0)
-    if (!arena->ensure(asset, true))
-    {
-        LOG_ERROR(
-            "pack materialize: %s asset %zu failed to ensure (%s)",
-            file.name.c_str(),
-            ai,
-            asset.blob.c_str());
-        ok = false;
-        break;
-    }
-    std::vector<uint8_t> payload(size_t(asset.ul), 0);
-    if (asset.ul != 0 && !arena->read(asset, 0, payload.data(), payload.size()))
-    {
-        LOG_ERROR(
-            "pack materialize: %s asset %zu not resident after ensure",
-            file.name.c_str(),
-            ai);
-        ok = false;
-        break;
-    }
-    std::vector<uint8_t> metadata;
-    vfs_store_synthesize_metadata(asset, metadata);
-    if (!vfs_file_write_at(fp, asset.file_offset, metadata.data(), metadata.size()) ||
-        (!payload.empty() &&
-         !vfs_file_write_at(
-             fp, asset.file_offset + asset.ml, payload.data(), payload.size())))
-    {
-        LOG_ERROR(
-            "pack materialize: %s asset %zu write failed", file.name.c_str(), ai);
-        ok = false;
-        break;
-    }
-    UopFileEntry patch;
-    patch.Offset = asset.file_offset;
-    patch.MetadataSize = asset.ml;
-    patch.CompressedSize = uint32_t(asset.ul);
-    patch.DecompressedSize = uint32_t(asset.ul);
-    patch.Hash = asset.uop_hash;
-    patch.Checksum = asset.mc;
-    patch.Flags = uint16_t(asset.ct == 1 ? 0 : asset.ct);
-    if (!vfs_file_write_at(fp, vfs_store_table_pos(ai), &patch, sizeof(patch)))
-    {
-        LOG_ERROR(
-            "pack materialize: %s asset %zu table patch failed",
-            file.name.c_str(),
-            ai);
-        ok = false;
-        break;
-    }
-    ++written;
+        const auto &asset = file.assets[ai];
+        if (vfs_asset_is_hole(asset))
+            continue; // reserved slot: the table entry stays zero (Offset == 0)
+        if (!arena->ensure(asset, true))
+        {
+            LOG_ERROR(
+                "pack materialize: %s asset %zu failed to ensure (%s)",
+                file.name.c_str(),
+                ai,
+                asset.blob.c_str());
+            ok = false;
+            break;
+        }
+        std::vector<uint8_t> payload(size_t(asset.ul), 0);
+        if (asset.ul != 0 && !arena->read(asset, 0, payload.data(), payload.size()))
+        {
+            LOG_ERROR(
+                "pack materialize: %s asset %zu not resident after ensure", file.name.c_str(), ai);
+            ok = false;
+            break;
+        }
+        std::vector<uint8_t> metadata;
+        vfs_store_synthesize_metadata(asset, metadata);
+        if (!vfs_file_write_at(fp, asset.file_offset, metadata.data(), metadata.size()) ||
+            (!payload.empty() &&
+             !vfs_file_write_at(fp, asset.file_offset + asset.ml, payload.data(), payload.size())))
+        {
+            LOG_ERROR("pack materialize: %s asset %zu write failed", file.name.c_str(), ai);
+            ok = false;
+            break;
+        }
+        UopFileEntry patch;
+        patch.Offset = asset.file_offset;
+        patch.MetadataSize = asset.ml;
+        patch.CompressedSize = uint32_t(asset.ul);
+        patch.DecompressedSize = uint32_t(asset.ul);
+        patch.Hash = asset.uop_hash;
+        patch.Checksum = asset.mc;
+        patch.Flags = uint16_t(asset.ct == 1 ? 0 : asset.ct);
+        if (!vfs_file_write_at(fp, vfs_store_table_pos(ai), &patch, sizeof(patch)))
+        {
+            LOG_ERROR("pack materialize: %s asset %zu table patch failed", file.name.c_str(), ai);
+            ok = false;
+            break;
+        }
+        ++written;
     }
     const bool flushed = fflush(fp) == 0;
     fclose(fp);
     if (!ok || !flushed)
     {
-    LOG_ERROR(
-        "pack materialize failed: %s (%zu/%zu assets, flush %d)",
-        file.name.c_str(),
-        written,
-        file.assets.size(),
-        int(flushed));
-    return false;
+        LOG_ERROR(
+            "pack materialize failed: %s (%zu/%zu assets, flush %d)",
+            file.name.c_str(),
+            written,
+            file.assets.size(),
+            int(flushed));
+        return false;
     }
-    LOG_INFO(
-    "pack materialized: %s (%zu assets)", file.name.c_str(), file.assets.size());
+    LOG_INFO("pack materialized: %s (%zu assets)", file.name.c_str(), file.assets.size());
     return true;
 }
 
@@ -701,10 +690,7 @@ bool vfs_store_materialize_pack(
 // Every asset is written in the pack's native sparse layout; an asset whose
 // blob is not in the store keeps its zeroed slot (the caller censuses it).
 vfs_pack_write_stats vfs_store_materialize_pack_from_store(
-    const VfsPlan &plan,
-    size_t file_index,
-    const fs_path &install_dir,
-    const fs_path &blobs_dir)
+    const VfsPlan &plan, size_t file_index, const fs_path &install_dir, const fs_path &blobs_dir)
 {
     vfs_pack_write_stats stats = {};
     if (file_index >= plan.files.size())
@@ -793,8 +779,7 @@ vfs_pack_write_stats vfs_store_materialize_pack_from_store(
         vfs_store_synthesize_metadata(asset, metadata);
         if (!vfs_file_write_at(fp, asset.file_offset, metadata.data(), metadata.size()) ||
             (!payload.empty() &&
-             !vfs_file_write_at(
-                 fp, asset.file_offset + asset.ml, payload.data(), payload.size())))
+             !vfs_file_write_at(fp, asset.file_offset + asset.ml, payload.data(), payload.size())))
         {
             ++stats.failed;
             continue;
@@ -910,8 +895,8 @@ static bool vfs_store_write_loose(
         fp = fopen(ascii, "wb");
     if (!fp)
         return false;
-    const bool wrote =
-        fseek(fp, 0, SEEK_SET) == 0 && fwrite(payload.data(), 1, payload.size(), fp) == payload.size();
+    const bool wrote = fseek(fp, 0, SEEK_SET) == 0 &&
+                       fwrite(payload.data(), 1, payload.size(), fp) == payload.size();
     if (wrote)
     {
         // best-effort size match (a mapped sparse file is already the exact
@@ -941,10 +926,10 @@ struct vfs_store_context
 {
     const VfsPlan *plan = nullptr;
     vfs_store_params params;
-    std::vector<uint8_t> *states = nullptr; // one byte per plan asset
-    vfs_journal *journal = nullptr;         // optional completion marks
-    vfs_materialize_stats *stats = nullptr; // optional counters
-    std::vector<uint8_t> file_dirty;        // per file: written to this run
+    std::vector<uint8_t> *states = nullptr;              // one byte per plan asset
+    vfs_journal *journal = nullptr;                      // optional completion marks
+    vfs_materialize_stats *stats = nullptr;              // optional counters
+    std::vector<uint8_t> file_dirty;                     // per file: written to this run
     const std::vector<uint8_t> *provided_blob = nullptr; // caller-held source bytes
 };
 
@@ -1093,8 +1078,7 @@ static void vfs_store_seal(vfs_store_context &ctx)
         bool complete = !file.assets.empty();
         for (size_t ai = 0; ai < file.assets.size(); ++ai)
         {
-            if (!vfs_asset_is_hole(file.assets[ai]) &&
-                (*ctx.states)[base + ai] != vfs_fetched)
+            if (!vfs_asset_is_hole(file.assets[ai]) && (*ctx.states)[base + ai] != vfs_fetched)
                 complete = false;
         }
         if (complete)
@@ -1286,10 +1270,7 @@ bool vfs_store_prepare(const VfsPlan &plan, const vfs_store_params &params)
 // ---------------------------------------------------------------------------
 
 bool vfs_store_invalidate_asset(
-    const VfsPlan &plan,
-    const vfs_store_params &params,
-    uint32_t file_index,
-    uint32_t asset_index)
+    const VfsPlan &plan, const vfs_store_params &params, uint32_t file_index, uint32_t asset_index)
 {
     if (file_index >= plan.files.size())
         return false;
@@ -1541,6 +1522,26 @@ bool vfs_store_pack_asset_present(
     const size_t head = size_t(asset.ul < VFS_PACK_HEAD_BYTES ? asset.ul : VFS_PACK_HEAD_BYTES);
     if (head == 0)
         return true;
+    const auto blob_path = fs_path_join(blobs_dir, asset.blob);
+    if (!fs_path_exists(blob_path))
+    {
+        // streamed source (HTTP Range blocks): the blob never lands in the
+        // local store, so content cannot be compared against it. A shape-
+        // matching entry whose stored head is not all-zero is a real block -
+        // the writer emits whole entries and a stub patch leaves zeros. An
+        // all-zero head stays unproven (conservative: the sweep re-fetches
+        // identical bytes for it, and the heal path marks it fetched).
+        // Without this fallback every plan/state reset (serializer bump,
+        // corruption, drift rebuild) re-downloads every streamed block the
+        // packs already hold - the reconcile could never promote them.
+        const uint8_t *stored = start + entry.Offset + entry.MetadataSize;
+        for (size_t i = 0; i < head; ++i)
+        {
+            if (stored[i] != 0)
+                return true;
+        }
+        return false;
+    }
     uint8_t blob_head[VFS_PACK_HEAD_BYTES] = {};
     if (!vfs_store_blob_payload_head(blobs_dir, asset, head, blob_head))
         return false;
@@ -1584,7 +1585,8 @@ bool vfs_store_loose_asset_content_ok(
     size_t sample_count = 0;
     // decides from the head window alone when it can: 0 = keep sampling,
     // 1 = proven present, -1 = proven absent
-    const auto head_verdict = [&samples]() {
+    const auto head_verdict = [&samples]()
+    {
         const auto &head = samples[0];
         if (memcmp(head.disk, head.want, head.length) != 0)
             return -1;
@@ -1708,8 +1710,7 @@ bool vfs_store_loose_asset_content_ok(
                         auto &sample = samples[si];
                         const uint64_t s = sample.offset;
                         const uint64_t e = s + sample.length;
-                        if (s >= chunk_start && e <= chunk_start + produced_now &&
-                            !sample.captured)
+                        if (s >= chunk_start && e <= chunk_start + produced_now && !sample.captured)
                         {
                             memcpy(sample.want, out + size_t(s - chunk_start), sample.length);
                             sample.captured = true;
@@ -1900,8 +1901,8 @@ vfs_store_backend *vfs_store_backend_sparse_create(const vfs_store_params &param
     return new store_sparse(params);
 }
 
-vfs_store_backend *vfs_store_backend_create(
-    vfs_store_backend_kind kind, const vfs_store_params &params)
+vfs_store_backend *
+vfs_store_backend_create(vfs_store_backend_kind kind, const vfs_store_params &params)
 {
     switch (kind)
     {
@@ -1925,10 +1926,7 @@ vfs_store_backend *vfs_store_backend_create(
 // indices whose [file_offset, file_offset + ml + payload) range overlaps
 // [start, end) - exactly the bytes the write path puts down per asset
 void vfs_store_blocks_overlapping(
-    const VfsPlan::VfsFile &file,
-    uint64_t start,
-    uint64_t end,
-    std::vector<uint32_t> *out)
+    const VfsPlan::VfsFile &file, uint64_t start, uint64_t end, std::vector<uint32_t> *out)
 {
     if (!out)
         return;
@@ -2059,17 +2057,15 @@ int vfs_store_verify(
         for (size_t ai = 0; ai < file.assets.size(); ++ai)
         {
             const auto &asset = file.assets[ai];
-            const bool stubbed =
-                states != nullptr && global_index < states->size() &&
-                (*states)[global_index] == vfs_stubbed;
+            const bool stubbed = states != nullptr && global_index < states->size() &&
+                                 (*states)[global_index] == vfs_stubbed;
             std::vector<uint8_t> scratch;
             vfs_verify_asset va;
             va.uop_hash = asset.uop_hash;
             va.name = asset.name;
             va.stubbed = stubbed;
             va.status = file.is_uop ?
-                            vfs_verify_pack_asset(
-                                params, mapped, mapped_size, ai, asset, stubbed) :
+                            vfs_verify_pack_asset(params, mapped, mapped_size, ai, asset, stubbed) :
                             vfs_verify_loose_asset(params, asset, stubbed, scratch);
             ++vf.counts[va.status];
             if (va.status == vfs_verify_corrupt)
@@ -2091,4 +2087,3 @@ int vfs_store_verify(
         *out = std::move(result);
     return corrupt;
 }
-

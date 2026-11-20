@@ -697,3 +697,89 @@ VFS_TEST(store_range_asset_materialize)
     TEST_CHECK(
         meta_b.size() == meta2.size() && memcmp(meta_b.data(), meta2.data(), meta2.size()) == 0);
 }
+
+VFS_TEST(store_range_asset_present_without_blob)
+{
+    // reconcile promotion after a plan/state reset: a streamed range block
+    // whose blob never lands in the local store cannot be content-compared,
+    // so the entry shape alone must decide when the stored payload is real
+    // (non-zero head). An all-zero payload stays unproven (it is what a stub
+    // patch looks like) - the sweep re-fetches identical bytes for it.
+    test_product_data prod;
+    TEST_CHECK(test_build_product(prod, "store_range_noblob"));
+
+    const std::vector<uint8_t> meta1(12, 0xAA);
+    const std::vector<uint8_t> payload1 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    const std::vector<uint8_t> meta2(12, 0xBB);
+    const uint64_t off1 = 16;
+    const uint64_t off2 = off1 + meta1.size() + payload1.size() + 5;
+    std::vector<uint8_t> source(size_t(off2 + meta2.size() + 12), 0x00);
+    memcpy(source.data() + off1, meta1.data(), meta1.size());
+    memcpy(source.data() + off1 + meta1.size(), payload1.data(), payload1.size());
+    memcpy(source.data() + off2, meta2.data(), meta2.size());
+    const auto src_path = fs_path_join(prod.blobs, "base", "unpacked", "rangesrc");
+    TEST_CHECK(fs_path_create(fs_directory(src_path)));
+    TEST_CHECK(fs_file_write(fs_path_ascii(src_path), source));
+
+    VfsPlan plan;
+    VfsPlan::VfsFile file;
+    file.name = "range.uop";
+    file.is_uop = true;
+    VfsAsset a1;
+    a1.uop_hash = 0xAAAA000000000001;
+    a1.ul = payload1.size();
+    a1.cl = a1.ul;
+    a1.ct = 0;
+    a1.ml = uint32_t(meta1.size());
+    a1.mc = 0x11111111;
+    a1.blob = "base/unpacked/rangesrc";
+    a1.blob_offset = off1;
+    file.assets.push_back(a1);
+    VfsAsset a2 = a1;
+    a2.uop_hash = 0xAAAA000000000002;
+    a2.ul = 12; // all-zero payload
+    a2.cl = a2.ul;
+    a2.mc = 0x22222222;
+    a2.blob_offset = off2;
+    file.assets.push_back(a2);
+    const uint64_t table = sizeof(UopHeader) + sizeof(UopSection) + sizeof(UopFileEntry) * 2;
+    file.assets[0].file_offset = table;
+    file.assets[1].file_offset = table + file.assets[0].ml + file.assets[0].ul;
+    file.size = file.assets[1].file_offset + file.assets[1].ml + file.assets[1].ul;
+    plan.files.push_back(file);
+
+    vfs_store_params store_params;
+    store_params.blobs_dir = prod.blobs;
+    store_params.install_dir = prod.install;
+    TEST_CHECK(vfs_store_prepare(plan, store_params));
+
+    std::vector<uint8_t> states(2, vfs_pending);
+    vfs_journal journal;
+    TEST_CHECK(vfs_journal_open(journal, fs_path_join(prod.root, "journal.log")));
+    TEST_CHECK(vfs_store_rematerialize_asset(plan, store_params, states, &journal, 0, 0));
+    TEST_CHECK(vfs_store_rematerialize_asset(plan, store_params, states, &journal, 0, 1));
+    TEST_CHECK(vfs_journal_close(journal));
+
+    const auto pack_path = fs_path_join(prod.install, file.name);
+    const auto check_present = [&](const VfsAsset &asset, size_t index) -> bool
+    {
+        size_t disk_size = 0;
+        auto *disk = fs_map(pack_path, &disk_size);
+        if (disk == nullptr)
+            return false;
+        const bool present =
+            vfs_store_pack_asset_present(disk, uint64_t(disk_size), index, asset, prod.blobs);
+        fs_unmap(disk, disk_size);
+        return present;
+    };
+
+    // with the blob cached, content decides: both are present
+    TEST_CHECK(check_present(file.assets[0], 0));
+    TEST_CHECK(check_present(file.assets[1], 1));
+
+    // drop the cached blob: the real (non-zero) payload stays proven, the
+    // all-zero payload becomes unprovable
+    fs_del(src_path);
+    TEST_CHECK(check_present(file.assets[0], 0));
+    TEST_CHECK(!check_present(file.assets[1], 1));
+}
