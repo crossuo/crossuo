@@ -913,22 +913,43 @@ long NTAPI trap_veh(PEXCEPTION_POINTERS info)
 
 #else // POSIX
 
-struct sigaction s_previous_action;
-bool s_previous_valid = false;
+// POSIX fault routes: Linux delivers protection faults on any mapping as
+// SIGSEGV/SEGV_ACCERR, but macOS raises SIGBUS for permission faults on
+// file-backed mappings (KERN_PROTECTION_FAILURE) and SIGSEGV for anonymous
+// ones - both signals must carry the handler or a trap page kills the
+// process. Each signal keeps its own previous action.
+#ifdef __APPLE__
+#define VFS_TRAP_SIG_COUNT 2
+static const int s_trap_signals[VFS_TRAP_SIG_COUNT] = { SIGSEGV, SIGBUS };
+#else
+#define VFS_TRAP_SIG_COUNT 1
+static const int s_trap_signals[VFS_TRAP_SIG_COUNT] = { SIGSEGV };
+#endif
+
+struct sigaction s_previous_action[VFS_TRAP_SIG_COUNT];
+bool s_previous_valid[VFS_TRAP_SIG_COUNT] = {};
 
 // chains to whatever was installed before us; the default action is restored
 // and re-raised (never returns) so a foreign segfault still crashes
 void trap_chain(int sig, siginfo_t *info, void *context)
 {
-    if (s_previous_valid && (s_previous_action.sa_flags & SA_SIGINFO))
+    int slot = -1;
+    for (int i = 0; i < VFS_TRAP_SIG_COUNT; i++)
     {
-        s_previous_action.sa_sigaction(sig, info, context);
+        if (s_trap_signals[i] == sig)
+            slot = i;
+    }
+    const bool valid = slot >= 0 && s_previous_valid[slot];
+    const struct sigaction &previous = slot >= 0 ? s_previous_action[slot] : s_previous_action[0];
+    if (valid && (previous.sa_flags & SA_SIGINFO))
+    {
+        previous.sa_sigaction(sig, info, context);
         return;
     }
-    if (s_previous_valid && s_previous_action.sa_handler != SIG_DFL)
+    if (valid && previous.sa_handler != SIG_DFL)
     {
-        if (s_previous_action.sa_handler != SIG_IGN)
-            s_previous_action.sa_handler(sig);
+        if (previous.sa_handler != SIG_IGN)
+            previous.sa_handler(sig);
         return;
     }
     signal(sig, SIG_DFL);
@@ -938,8 +959,12 @@ void trap_chain(int sig, siginfo_t *info, void *context)
 void trap_sigaction(int sig, siginfo_t *info, void *context)
 {
     // protection faults (holes) arrive as SEGV_ACCERR; SEGV_MAPERR is for
-    // addresses outside any mapping, which the range check rejects below
-    if (info->si_code != SEGV_ACCERR && info->si_code != SEGV_MAPERR)
+    // addresses outside any mapping, which the range check rejects below.
+    // macOS SIGBUS carries Apple's BUS_* codes (and reports protection
+    // failures with KERN_PROTECTION_FAILURE), so the ownership range check
+    // below is the only reliable discriminator there
+    if (
+        sig != SIGBUS && info->si_code != SEGV_ACCERR && info->si_code != SEGV_MAPERR)
     {
         trap_counter_inc(trap_chained);
         trap_chain(sig, info, context);
@@ -983,6 +1008,22 @@ bool vfs_trap_fault_is_write(void *context)
     if (!record || record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return false;
     return record->ExceptionInformation[0] == 1;
+#elif defined(__APPLE__)
+    // Darwin: uc_mcontext is a pointer to __darwin_mcontext64; the err
+    // register lives in the segment-register block (x86_64) / the esr field
+    // (arm64), both carrying bit 0x2 for write faults like REG_ERR
+    const auto *uc = static_cast<const ucontext_t *>(context);
+    if (uc == nullptr || uc->uc_mcontext == nullptr)
+        return false;
+#if defined(__x86_64__)
+    // x86_64: the err register sits in the segment-state block, bit 0x2 == write
+    return (uc->uc_mcontext->__es.__err & 0x2) != 0;
+#else
+    // arm64: __darwin_mcontext64 exposes no ESR, so writes cannot be told
+    // apart from reads - report a read (same policy as platforms without
+    // REG_ERR); a game-bug write refaults instead of crashing
+    return false;
+#endif
 #else
 #if defined(REG_ERR)
     const auto *uc = static_cast<const ucontext_t *>(context);
@@ -1039,12 +1080,20 @@ bool vfs_trap_install()
     stack_t stack;
     if (sigaltstack(nullptr, &stack) == 0 && (stack.ss_flags & SS_DISABLE) == 0)
         action.sa_flags |= SA_ONSTACK;
-    if (sigaction(SIGSEGV, &action, &s_previous_action) != 0)
+    for (int i = 0; i < VFS_TRAP_SIG_COUNT; i++)
     {
-        LOG_ERROR("vfs_trap: sigaction(SIGSEGV) failed");
-        return false;
+        if (sigaction(s_trap_signals[i], &action, &s_previous_action[i]) != 0)
+        {
+            LOG_ERROR(
+                "vfs_trap: sigaction(%d) failed", s_trap_signals[i]);
+            // undo the slots already taken so a partial install never leaves
+            // the handler armed for one signal and the default for the other
+            for (int j = 0; j < i; j++)
+                sigaction(s_trap_signals[j], &s_previous_action[j], nullptr);
+            return false;
+        }
+        s_previous_valid[i] = true;
     }
-    s_previous_valid = true;
 #endif
     s_report_counters = getenv("VFS_FAULT_COUNTERS") != nullptr;
     s_handler_installed = true;
@@ -1060,9 +1109,12 @@ void vfs_trap_shutdown()
 #if defined(_WIN32)
     RemoveVectoredExceptionHandler(reinterpret_cast<PVOID>(trap_veh));
 #else
-    if (s_previous_valid)
-        sigaction(SIGSEGV, &s_previous_action, nullptr);
-    s_previous_valid = false;
+    for (int i = 0; i < VFS_TRAP_SIG_COUNT; i++)
+    {
+        if (s_previous_valid[i])
+            sigaction(s_trap_signals[i], &s_previous_action[i], nullptr);
+        s_previous_valid[i] = false;
+    }
 #endif
     s_handler_installed = false;
     // bounded wait for in-flight resolutions: they hold pins against the
