@@ -123,3 +123,6 @@ void LogHexBuffer(eLogSystem system, int level, const char *title, uint8_t *buf,
 // `verbosity` raises loguru's stderr cutoff (default 1); level 2+ lets the
 // hex packet dumps (SAFE_DEBUG_DUMP) through when their system is enabled
 void LogInit(int argc, char *argv[], const char *filename, int verbosity = 1);
+// raises the verbosity of an already-initialized log (CLI flags parsed after
+// LogInit choose it)
+void LogSetVerbosity(int verbosity, const char *file = nullptr);

@@ -378,6 +378,33 @@ uint64_t vfs_aops_serial(const uint8_t *data, size_t size)
     return (uint64_t(sh) << 32) | uint64_t(ph);
 }
 
+// Patch servers (EA's and most shard tools) declare their data directories as
+// plain http:// while the same origin redirects every request to https://.
+// A followed redirect lands on a DIFFERENT origin, so the HTTP client cannot
+// reuse its keep-alive connection: every ranged window pays a fresh TCP+TLS
+// handshake (~185ms vs ~28ms on a reused socket, measured). When the product
+// manifest itself arrived over https from that same host, TLS is proven to
+// work there - so the data urls are upgraded in place and keep-alive survives.
+// Only the scheme changes; host, port and path stay byte-identical, and a host
+// that genuinely serves plain http is untouched (its manifest came over http).
+static void vfs_aops_upgrade_https(astr_t &url, const astr_t &product_url)
+{
+    if (url.rfind("http://", 0) != 0 || product_url.rfind("https://", 0) != 0)
+        return;
+    // same host only: port and path are preserved verbatim
+    const auto host_of = [](const astr_t &u) {
+        const size_t scheme = u.find("://");
+        if (scheme == astr_t::npos)
+            return astr_t();
+        const size_t begin = scheme + 3;
+        const size_t end = u.find_first_of("/?#", begin);
+        return u.substr(begin, end == astr_t::npos ? astr_t::npos : end - begin);
+    };
+    if (host_of(url) != host_of(product_url))
+        return;
+    url.replace(0, 7, "https://");
+}
+
 // the patchcfg sits beside the patchlist; cached in the blob store so
 // offline rebuilds keep working
 static bool vfs_aops_load_patchcfg(
@@ -392,7 +419,13 @@ static bool vfs_aops_load_patchcfg(
     if (fs_file_read(fs_path_ascii(cache), data) &&
         vfs_aops_sniff_patchcfg(data.data(), data.size()))
     {
-        return vfs_aops_parse_patchcfg(data.data(), data.size(), root, out);
+        const bool parsed = vfs_aops_parse_patchcfg(data.data(), data.size(), root, out);
+        if (parsed)
+        {
+            vfs_aops_upgrade_https(out->patch_directory, product_url);
+            vfs_aops_upgrade_https(out->patchlist_url, product_url);
+        }
+        return parsed;
     }
     if (params.fetch == nullptr || root.empty())
     {
@@ -419,6 +452,9 @@ static bool vfs_aops_load_patchcfg(
         LOG_WARN("aops: unrecognized patchcfg at %s: using defaults", url.c_str());
         out->custom_extension = "aops";
     }
+    // see vfs_aops_upgrade_https: keeps keep-alive when the origin redirects
+    vfs_aops_upgrade_https(out->patch_directory, product_url);
+    vfs_aops_upgrade_https(out->patchlist_url, product_url);
     return true;
 }
 

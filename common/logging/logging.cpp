@@ -52,6 +52,22 @@ void LogInit(int argc, char *argv[], const char *filename, int verbosity)
 #undef LOG_SYSTEM
 }
 
+// raises the verbosity of an already-initialized log (CLI flags parsed after
+// LogInit choose it). loguru filters per sink, so the file sink added at INFO
+// must be re-added at the new level - DEBUG lines otherwise never reach it no
+// matter what g_stderr_verbosity says.
+void LogSetVerbosity(int verbosity, const char *file)
+{
+    if (verbosity > loguru::g_stderr_verbosity)
+    {
+        loguru::g_stderr_verbosity = verbosity;
+    }
+    if (file && *file)
+    {
+        loguru::add_file(file, loguru::Append, loguru::Verbosity(verbosity));
+    }
+}
+
 void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, int size)
 {
     if (title && title[0] != '\0')

@@ -188,6 +188,10 @@ static bool InitCli(int argc, char *argv[])
             " server -> client) to the log, with the account/password block"
             " censored (SAFE_DEBUG_DUMP); also raises the log verbosity the"
             " dump needs");
+    g_cli["log-verbose"]
+        .description(
+            "raise the log verbosity to DEBUG so per-transfer timing lines"
+            " (streaming throughput, redirect counts) are written");
 
     g_cli["indirect-rendering"].description("uses indirect rendering pipeline");
     g_cli["quiet"]
@@ -1195,6 +1199,13 @@ int main(int argc, char **argv)
     else
     {
         LogInit(argc, argv, "crossuo.log");
+    }
+    // --log-verbose: the CLI is parsed after LogInit, so the cutoff is
+    // raised here; DEBUG lines (streaming transfer timing) become visible
+    if (g_cli["log-verbose"].was_set())
+    {
+        g_LogEnabled = eLogSystem::LogSystemAll;
+        LogSetVerbosity(2, "crossuo.log");
     }
 
     // window hints (GL profile/version, and the forced EGL backend on the

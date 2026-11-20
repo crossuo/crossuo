@@ -640,6 +640,7 @@ std::string http_urlencode(std::string str)
 #include "http.h"
 
 #include <vector>
+#include <chrono>
 #include <string.h>
 #include <assert.h>
 
@@ -808,9 +809,17 @@ static size_t http_header(const char *data, size_t size, size_t nmemb, void *out
 }
 
 static http_response http_perform(
-    const char *url, const char *agent, const char *range, size_t body_cap)
+    const char *url,
+    const char *agent,
+    const char *range,
+    size_t body_cap,
+    size_t body_hint = 0)
 {
     http_response out;
+    // exact-size transfers (ranges, sized GETs) reserve once instead of
+    // regrowing the body vector on every chunk
+    if (body_hint != 0)
+        out.body.reserve(body_hint);
 
     // thread-local easy handle: reset per request so option state cannot
     // leak, while the connection cache (the reason for a persistent handle)
@@ -847,7 +856,19 @@ static http_response http_perform(
     if (range)
         curl_easy_setopt(curl, CURLOPT_RANGE, range);
 
+    // transfer diagnostics are computed only when the caller enabled DEBUG
+    // verbosity: release builds must not pay a clock read per request
+    const bool trace_transfer = loguru::current_verbosity_cutoff() >= loguru::Verbosity_1;
+    const auto t_perform = trace_transfer ? std::chrono::steady_clock::now()
+                                          : std::chrono::steady_clock::time_point{};
     const CURLcode res = curl_easy_perform(curl);
+    const double perform_ms =
+        trace_transfer
+            ? std::chrono::duration<double, std::milli>(
+                  std::chrono::steady_clock::now() - t_perform)
+                  .count()
+            : 0.0;
+    (void)perform_ms; // LOG_DEBUG expands to nothing below DEBUG verbosity
     if (res != CURLE_OK)
     {
         LOG_ERROR("GET %s: %s", url, curl_easy_strerror(res));
@@ -857,6 +878,28 @@ static http_response http_perform(
     }
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &out.status);
     out.retry_after = header_state.retry_after;
+    // wall time, redirect hops and the origin that actually served the bytes
+    // distinguish endpoint limits from our own per-request overhead (a
+    // redirect per request costs a round trip)
+    if (trace_transfer)
+    {
+        long redirects = 0;
+        double connect_s = 0.0;
+        char *effective = nullptr;
+        curl_easy_getinfo(curl, CURLINFO_REDIRECT_COUNT, &redirects);
+        curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &connect_s);
+        curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective);
+        // LOG_DEBUG is compiled out of release builds, so this diagnostic is
+        // an INFO line the runtime verbosity gate has already cleared
+        LOG_INFO(
+            "http: %zu bytes in %.1fms (%.2f MB/s) connect=%.0fms redirects=%ld effective=%s",
+            out.body.size(),
+            perform_ms,
+            perform_ms > 0.0 ? (double(out.body.size()) / 1048576.0) / (perform_ms / 1000.0) : 0.0,
+            connect_s * 1000.0,
+            redirects,
+            effective ? effective : url);
+    }
     return out;
 }
 
@@ -880,7 +923,7 @@ bool http_get_range(
         return false;
     const std::string range =
         std::to_string(offset) + "-" + std::to_string(offset + length - 1);
-    *out = http_perform(url, agent, range.c_str(), length);
+    *out = http_perform(url, agent, range.c_str(), length, size_t(length));
     if (out_total != nullptr)
     {
         // curl has no Content-Range total parsed here; callers only need it

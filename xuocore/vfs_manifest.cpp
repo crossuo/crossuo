@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <chrono>
 #include <map>
 #include <vector>
 
@@ -612,6 +613,15 @@ struct vfs_refine_reader
     uint64_t source_size = 0;
     bool failed = false;
     size_t transfers = 0;
+    // diagnostics (XUO_VFS_REFINE_LOG): wall time inside ranged transfers vs
+    // the whole walk, so a sequential-window bottleneck is distinguishable
+    // from transfer latency
+    uint64_t span_bytes = 0;
+    double span_ms = 0.0;
+    std::chrono::steady_clock::time_point walk_start {}; // set by vfs_refine_file
+    bool logged_url = false;
+    const char *label = nullptr; // plan file name, diagnostics only
+    const bool trace = loguru::current_verbosity_cutoff() >= loguru::Verbosity_1;
 
     static const size_t CHUNK = 256 * 1024;
 
@@ -648,9 +658,35 @@ struct vfs_refine_reader
         }
         else
         {
+            if (!logged_url)
+            {
+                logged_url = true;
+                LOG_INFO("refine reader: source %s (%" PRIu64 " bytes)", url.c_str(), source_size);
+            }
+            // per-span timing only while DEBUG verbosity is on
+            const auto t0 = trace ? std::chrono::steady_clock::now()
+                                  : std::chrono::steady_clock::time_point{};
             vfs_transport_result res = vfs_transport_active()->range(
                 url.c_str(), tail.c_str(), offset, span.size(), &vfs_refine_reader::span_sink,
                 &span, 0, false);
+            if (trace)
+            {
+                const double ms =
+                    std::chrono::duration<double, std::milli>(
+                        std::chrono::steady_clock::now() - t0)
+                        .count();
+                span_ms += ms;
+                span_bytes += span.size();
+                // LOG_DEBUG is compiled out of release builds; gate the INFO
+                // line on the runtime verbosity instead
+                LOG_INFO(
+                    "refine span: %s +%" PRIu64 " %zu bytes in %.1fms (%.2f MB/s)",
+                    label ? label : "?",
+                    offset,
+                    span.size(),
+                    ms,
+                    ms > 0.0 ? (double(span.size()) / 1048576.0) / (ms / 1000.0) : 0.0);
+            }
             if (!res.ok || res.bytes != span.size())
             {
                 failed = true;
@@ -723,6 +759,9 @@ bool vfs_refine_file(VfsPlan::VfsFile &file, const fs_path &blobs_dir, const ast
     vfs_refine_reader reader;
     reader.source_size = file.size;
     reader.tail = loose.blob;
+    reader.label = file.name.c_str();
+    if (reader.trace)
+        reader.walk_start = std::chrono::steady_clock::now();
     if (fs_path_exists(blob_path))
     {
         reader.local_fp = fopen(fs_path_ascii(blob_path), "rb");
@@ -749,6 +788,25 @@ bool vfs_refine_file(VfsPlan::VfsFile &file, const fs_path &blobs_dir, const ast
         LOG_WARN(
             "refine: could not walk %s (%zu transfers), keeping it whole", file.name.c_str(), reader.transfers);
         return false;
+    }
+
+    if (reader.trace)
+    {
+        const double walk_ms = std::chrono::duration<double, std::milli>(
+                                   std::chrono::steady_clock::now() - reader.walk_start)
+                                   .count();
+        LOG_INFO(
+            "refine timing: %s %zu transfers, %.1f MB in %.1fms wall (%.1fms in transfers, "
+            "%.2f MB/s transfer, %.0f%% of wall)",
+            file.name.c_str(),
+            reader.transfers,
+            double(reader.span_bytes) / 1048576.0,
+            walk_ms,
+            reader.span_ms,
+            reader.span_ms > 0.0
+                ? (double(reader.span_bytes) / 1048576.0) / (reader.span_ms / 1000.0)
+                : 0.0,
+            walk_ms > 0.0 ? (reader.span_ms * 100.0) / walk_ms : 0.0);
     }
 
     VfsPlan::VfsFile refined;

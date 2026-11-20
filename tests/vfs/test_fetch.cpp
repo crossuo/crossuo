@@ -1050,6 +1050,70 @@ VFS_TEST(aops_plan_filters_and_normalizes)
         "the tail carries the url-encoded path and the aops extension");
 }
 
+// patch servers declare plain http:// data urls while the origin redirects to
+// https://; a followed redirect is a different origin, so the HTTP client
+// loses keep-alive and every ranged window pays a fresh handshake. When the
+// product manifest itself arrived over https from the same host, the data
+// urls are upgraded in place - host and path stay byte-identical.
+VFS_TEST(aops_upgrades_data_urls_to_https)
+{
+    test_vfs_shutdown guard;
+    struct aops_case
+    {
+        const char *manifest;   // product url (scheme decides the upgrade)
+        const char *directory;  // patch server's declared data url
+        const char *expected;   // the url the plan must carry afterwards
+    };
+    static const aops_case cases[] = {
+        // https manifest, same host: upgraded (the redirect-avoidance fix)
+        { "https://shard.test/fc/patchlist", "http://shard.test/fc/data/",
+          "https://shard.test/fc/data/" },
+        // https manifest, DIFFERENT host: untouched (no proof that host has TLS)
+        { "https://shard.test/fc/patchlist", "http://other.test/data/",
+          "http://other.test/data/" },
+        // http manifest: the server genuinely serves plain http, untouched
+        { "http://shard.test/fc/patchlist", "http://shard.test/fc/data/",
+          "http://shard.test/fc/data/" },
+        // already https: idempotent
+        { "https://shard.test/fc/patchlist", "https://shard.test/fc/data/",
+          "https://shard.test/fc/data/" },
+    };
+
+    size_t index = 0;
+    for (const auto &c : cases)
+    {
+        const std::string dir_name = "aops_https_" + std::to_string(index++);
+        const auto root = test_dir(dir_name.c_str());
+        const auto blobs = fs_path_join(root, "blobs");
+        const auto patchlist = fs_path_join(root, "patchlist");
+        TEST_CHECK(fs_path_create(fs_path_join(blobs, "aops")));
+
+        test_aops_write_patchlist(patchlist, { "test1\\tiledata.mul|01012024|12|0|0|0|3072|No|"
+                                               "No|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" });
+        // cached patchcfg so the build never needs the fetch seam
+        const astr_t ini = astr_t("[project]\ncustom_extension=aops\n"
+                                  "[patch_system_configuration]\nonline_patch_directory=") +
+                           c.directory + "\n";
+        std::vector<uint8_t> ini_bytes(ini.begin(), ini.end());
+        TEST_CHECK(fs_file_write(
+            fs_path_ascii(fs_path_join(blobs, "aops", "patchcfg")), ini_bytes));
+        std::vector<uint8_t> patchlist_bytes;
+        TEST_CHECK(fs_file_read(fs_path_ascii(patchlist), patchlist_bytes));
+
+        vfs_manifest_params params;
+        params.blobs_dir = blobs;
+        VfsPlan plan;
+        TEST_CHECK_MSG(
+            vfs_aops_build_plan(params, patchlist_bytes, c.manifest, plan),
+            "the aops plan build failed");
+        TEST_CHECK_MSG(
+            plan.file_repo == c.expected,
+            ("data url mismatch for " + astr_t(c.manifest) + " + " + astr_t(c.directory) +
+             ": got " + plan.file_repo + ", want " + astr_t(c.expected))
+                .c_str());
+    }
+}
+
 // the full pipeline over http: patchcfg + patchlist fetch, T0 blocking
 // install of the core file, fetch_all converging the rest - and the
 // update flow (serial drift re-fetches exactly the changed file)
