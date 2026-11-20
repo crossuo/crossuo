@@ -464,6 +464,14 @@ if (XUO_WINDOWS AND MSVC)
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 endif()
 
+#if (NOT XUO_EMSC AND NOT CMAKE_BUILD_TYPE MATCHES "Debug|RelWithDebInfo")
+#  if (MSVC)
+#    add_link_options($<$<NOT:$<CONFIG:Debug>>:/DEBUG:NONE>)
+#  else()
+#    add_link_options($<$<NOT:$<CONFIG:Debug>>:-s>)
+#  endif()
+#endif()
+
 # DEBUG internal cmake state
 #get_cmake_property(_variableNames VARIABLES)
 #foreach (_variableName ${_variableNames})
@@ -481,6 +489,10 @@ endif()
 #
 
 create_resource(${PROJECT_SOURCE_DIR}/resources/cover.png ${PROJECT_BINARY_DIR}/cover.h)
+# hermetic TLS: the client links curl against a static libressl that has no
+# access to a system CA store (musl containers, Windows, wasm), so the
+# Mozilla trust bundle travels with the binary (see http.cpp)
+create_resource(${PROJECT_SOURCE_DIR}/resources/cacert.pem ${PROJECT_BINARY_DIR}/cacert.h)
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/resources/revision.h.in"
