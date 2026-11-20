@@ -419,6 +419,7 @@ static client_info client_db[] = {
     { 0xcf451441c5d4185a, 0xc06deecb, 0x07007428 }, // 7.0.116.40
     { 0x52d03bf767c21c6d, 0xfafae4ba, 0x0700742d }, // 7.0.116.45
     { 0x291f5578327308a6, 0x5a1332e5, 0x07007500 }, // 7.0.117.0
+    { 0xd58cdc16b6d24530, 0xfc1cd413, 0x0700762e }, // 7.0.118.46
     // other sources or from github issues
     { 0x5b8221ad426988d4, 0x81992bfb, 0x07000f01 }, // 7.0.15.1 Outlands (#265)
     { 0x00b6aa2e5cd753c0, 0xc6dac6ea, 0x011a0462 }, // 1.26.4b (#266) (modified)

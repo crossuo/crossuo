@@ -141,7 +141,9 @@ enum CLIENT_VERSION
     CV_708111 = VERSION(7, 0, 81, 11),
     CV_701040 = VERSION(7, 0, 104, 0), // 7.0.104.0 packets 0xD5 (v1), 0xFD
     CV_701170 = VERSION(7, 0, 117, 0), // 7.0.117.0 packets 0xD5 (v3)
-    CV_LATEST = CV_701170,
+    CV_7011733 = VERSION(7, 0, 117, 33), // no change in binary, just recompiled
+    CV_7011846 = VERSION(7, 0, 118, 46), // 7.0.118.46
+    CV_LATEST = CV_7011846,
 
     CV_UNKNOWN = VERSION(255, 255, 255, 255)
 };
