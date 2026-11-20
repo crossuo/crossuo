@@ -625,7 +625,24 @@ struct vfs_refine_reader
     const char *label = nullptr; // plan file name, diagnostics only
     const bool trace = loguru::current_verbosity_cutoff() >= loguru::Verbosity_1;
 
+#if defined(XUO_EMSC)
+    // web: keep the window small. Sync XHR responses past a few MB spill to
+    // temp files in Firefox (NS_ERROR_FILE_TOO_BIG), and the whole transfer
+    // buffers in JS memory before any client-side check can abort it.
     static const size_t CHUNK = 256 * 1024;
+#else
+    // native: transfers are latency-bound (~28ms per round-trip on a reused
+    // connection), so a wider window amortizes the per-request cost. Measured
+    // on a live aops shard, whole-refine wall over 3 cold boots each:
+    //   256KB -> 2.43-2.57s, 512KB -> 2.21-2.33s, 1MB -> 3.3-4.0s,
+    //   2MB -> 4.2-5.2s (total bytes fetched ballooned ~50MB -> ~285MB).
+    // Table chains come in two shapes: contiguous (animationframe2, 11MB of
+    // table) where big windows win, and spread (artlegacymul, 40 sections
+    // ~250KB apart) where every window byte beyond the stride is waste - the
+    // spread chains dominate past 512KB. 512KB doubles the bytes per
+    // round-trip while keeping the waste bounded.
+    static const size_t CHUNK = 512 * 1024;
+#endif
 
     static bool span_sink(void *context, const uint8_t *data, size_t size)
     {
