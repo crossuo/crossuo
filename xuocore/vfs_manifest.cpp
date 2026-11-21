@@ -412,6 +412,10 @@ static bool vfs_tier_t1_file(const astr_t &lower)
     };
     if (vfs_tier_name_is(lower, names, sizeof(names) / sizeof(names[0])))
         return true;
+    // image replacements are boot-critical: they are typically login-screen
+    // art, and the file is only a few MB across a whole product
+    if (lower.rfind("externalimages/", 0) == 0)
+        return true;
     for (int i = 1; i <= 6; ++i)
     {
         char buf[32];

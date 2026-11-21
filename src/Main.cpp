@@ -83,6 +83,7 @@ EM_JS(int, web_import_env, (), {
 #include <common/utils.h> // MACRO_TOSTRING (via MACRO_STRINGIFY)
 #include "Config.h"
 #include "Platform.h"
+#include "ArtReplacer.h"
 #include "revision.h"
 #include "Globals.h" // g_Ticks
 #include "Misc.h" // g_MainThread
@@ -548,6 +549,7 @@ bool load_config()
             ApplyClientVersionDefaults();
         }
         uo_data_init(fs_path_ascii(g_UOPath), g_Config.ClientVersion, g_Config.UseVerdata);
+        art_replacer_init(g_UOPath);
         Info(Client, "\tStreaming Data Path: %s", fs_path_ascii(g_UOPath));
         // the streamed product is the modern uop distribution; a config
         // pinned to a pre-uop client version cannot consume it. An EXPLICIT
@@ -699,6 +701,7 @@ bool load_config()
     if (uopath && uopath[0] && fs_path_exists(g_UOPath))
     {
         uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);
+        art_replacer_init(g_UOPath);
     }
 
     return true;

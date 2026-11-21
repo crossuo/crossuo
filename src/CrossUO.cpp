@@ -4096,21 +4096,27 @@ CSprite *CGame::ExecuteGump(uint16_t id)
     vfs_gump_dims_resolve(&io); // streamed hole-baked gumps resolve dims on first use
     if (io.UserData == nullptr)
     {
+        // a disk replacement is the whole graphic: it needs no index entry
+        // (the art replacer resolves the id against ExternalImages)
+        const bool replaced = g_UOFileReader.HasGumpReplacement(id);
+        if (!replaced)
+        {
 #if defined(XUO_EMSC)
-        // web: skeleton-baked gumps keep Address 0 (the payload lives in
-        // the fetch layer); only holes (no block at all) are nodraw
-        if (io.Address == 0u && io.UopBlock == nullptr)
-        {
-            return nullptr;
-        }
+            // web: skeleton-baked gumps keep Address 0 (the payload lives in
+            // the fetch layer); only holes (no block at all) are nodraw
+            if (io.Address == 0u && io.UopBlock == nullptr)
+            {
+                return nullptr;
+            }
 #else
-        if (io.Address == 0u)
-        {
-            return nullptr;
-        }
+            if (io.Address == 0u)
+            {
+                return nullptr;
+            }
 #endif
+        }
 
-        io.UserData = g_UOFileReader.ReadGump(io);
+        io.UserData = g_UOFileReader.ReadGump(io, id);
         if (io.UserData != nullptr)
         {
             m_UsedGumpList.push_back(&g_Index.m_Gump[id]);
@@ -4131,8 +4137,9 @@ CSprite *CGame::ExecuteLandArt(uint16_t id)
     vfs_refresh_index(&io, DestroySprite); // hot-swap a placeholder tile
     if (io.UserData == nullptr)
     {
-        if (io.Address == 0u)
-        { //nodraw tiles banned
+        // nodraw tiles banned - unless a disk replacement supplies the pixels
+        if (io.Address == 0u && !g_UOFileReader.HasArtReplacement(id, false))
+        {
             return nullptr;
         }
 
@@ -4164,8 +4171,9 @@ CSprite *CGame::ExecuteStaticArt(uint16_t id)
     vfs_refresh_index(&io, DestroySprite); // hot-swap a placeholder art
     if (io.UserData == nullptr)
     {
-        if (io.Address == 0u)
-        { //nodraw tiles banned
+        // nodraw tiles banned - unless a disk replacement supplies the pixels
+        if (io.Address == 0u && !g_UOFileReader.HasArtReplacement(id, true))
+        {
             return nullptr;
         }
 

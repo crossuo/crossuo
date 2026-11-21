@@ -12,6 +12,7 @@
 #include <xuocore/uodata_reader.h> // uo_art_pixels, uo_gump_pixels
 #include <xuocore/uodata_color.h>
 #include "../CrossUO.h"
+#include "../ArtReplacer.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"
 #include "xuocore/mulstruct.h"
@@ -25,8 +26,34 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
     return uo_gump_pixels(io);
 }
 
-CSprite *UOFileReader::ReadGump(CIndexObject &io)
+bool UOFileReader::HasGumpReplacement(uint16_t id) const
 {
+    return art_replacer_has(ART_REPLACER_GUMP, id);
+}
+
+bool UOFileReader::HasArtReplacement(uint16_t id, bool run) const
+{
+    return art_replacer_has(run ? ART_REPLACER_ART : ART_REPLACER_LAND, id);
+}
+
+CSprite *UOFileReader::ReadGump(CIndexObject &io, uint16_t graphic)
+{
+    {
+        // a disk replacement shadows the mul/uop data entirely: the png's
+        // dimensions become the index dimensions so every dimension consumer
+        // (GetGumpDimension, layout) tracks the replacement
+        short width = 0;
+        short height = 0;
+        std::vector<uint16_t> replacement;
+        if (art_replacer_pixels(ART_REPLACER_GUMP, graphic, replacement, width, height))
+        {
+            auto *spr = new CSprite();
+            spr->LoadSprite16(width, height, replacement.data());
+            io.Width = width;
+            io.Height = height;
+            return spr;
+        }
+    }
     std::vector<uint16_t> pixels = GetGumpPixels(io);
     if (pixels.empty())
     {
@@ -89,6 +116,29 @@ std::vector<uint16_t> UOFileReader::GetArtPixels(
 
 CSprite *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
 {
+    {
+        // replacement art/land: world art keeps the same layout contract as
+        // the native path (full-content bounds), land replacements load at
+        // the png's own size (the diamond draw maps the whole surface) and
+        // mark the land entry non-black
+        short width = 0;
+        short height = 0;
+        std::vector<uint16_t> replacement;
+        if (art_replacer_pixels(run ? ART_REPLACER_ART : ART_REPLACER_LAND, id, replacement, width, height))
+        {
+            auto *spr = new CSprite();
+            spr->ImageOffsetX = 0;
+            spr->ImageOffsetY = 0;
+            spr->ImageWidth = width;
+            spr->ImageHeight = height;
+            if (!run)
+            {
+                ((CIndexObjectLand *)&io)->AllBlack = false;
+            }
+            spr->LoadSprite16(width, height, replacement.data());
+            return spr;
+        }
+    }
     int16_t width = 0;
     int16_t height = 0;
     std::vector<uint16_t> pixels = GetArtPixels(id, io, run, width, height);

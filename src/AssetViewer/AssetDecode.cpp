@@ -2,6 +2,7 @@
 
 #include "AssetDecode.h"
 #include <cstdint>
+#include <memory> // shared_ptr/make_shared (the shared texBlock)
 
 #if defined(XUO_ASSISTANT)
 

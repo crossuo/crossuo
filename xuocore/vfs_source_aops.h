@@ -37,6 +37,15 @@ struct vfs_aops_config
 bool vfs_aops_sniff_patchlist(const uint8_t *data, size_t size);
 bool vfs_aops_sniff_patchcfg(const uint8_t *data, size_t size);
 
+// the patchcfg next to a patchlist url (<dir>/patchcfg), for pre-boot use
+astr_t vfs_aops_patchcfg_url(const astr_t &product_url);
+// percent-encodes one path segment the way the patch server expects it
+astr_t vfs_aops_url_encode(const astr_t &path);
+// an install name inside the image-replacement tree (externalimages/...)
+bool vfs_aops_is_external_images(const astr_t &name_lower);
+// patchlist relpath -> install name (see vfs_aops_rel_to_install)
+astr_t vfs_aops_rel_to_install(const astr_t &rel);
+
 // the product manifest url for an aops-style product url: a bare root
 // (trailing /, .../patchlist, .../patchcfg) normalizes onto .../patchlist;
 // a full manifest file url (a dot after the last /: the mythic

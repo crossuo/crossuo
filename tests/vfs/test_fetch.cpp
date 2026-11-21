@@ -1017,6 +1017,7 @@ VFS_TEST(aops_plan_filters_and_normalizes)
         "test1\\Cliloc.enu|02022024|1|2|3|0|654|No|No|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "data\\Launcher.exe|03032025|1|2|3|0|123|Yes|No|cccccccccccccccccccccccccccccccc",
         "test1\\shard art.png|04042025|1|2|3|0|999|No|No|dddddddddddddddddddddddddddddddd",
+        "Faerham Citadel\\ExternalImages\\gumps\\83.png|06062025|1|2|3|0|2048|No|No|ffffffffffffffffffffffffffffffff",
         "test1\\TILEDATA.MUL|05052025|1|2|3|0|111|No|No|eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     });
 
@@ -1029,11 +1030,18 @@ VFS_TEST(aops_plan_filters_and_normalizes)
 
     VfsPlan plan;
     TEST_CHECK_MSG(vfs_plan_rebuild(plan), "the aops plan build failed");
-    TEST_CHECK_MSG(plan.files.size() == 2, "only the UO data files may plan");
-    bool have_tile = false, have_cliloc = false;
+    TEST_CHECK_MSG(plan.files.size() == 3, "data files plus the ExternalImages entry plan");
+    bool have_tile = false, have_cliloc = false, have_image = false;
     for (const auto &file : plan.files)
     {
-        if (file.name == "tiledata.mul")
+        if (file.name == "externalimages/gumps/83.png")
+        {
+            have_image = true;
+            TEST_CHECK_MSG(
+                file.assets.front().blob == "Faerham%20Citadel/ExternalImages/gumps/83.pngaops",
+                "the image tail keeps the encoded path and the aops extension");
+        }
+        else if (file.name == "tiledata.mul")
         {
             have_tile = true;
             TEST_CHECK_MSG(file.size == 3072, "the first entry wins the dedup");
@@ -1044,7 +1052,9 @@ VFS_TEST(aops_plan_filters_and_normalizes)
         }
         TEST_CHECK_MSG(file.name == str_lower(file.name), "names install lowercase");
     }
-    TEST_CHECK_MSG(have_tile && have_cliloc, "the UO data entries must plan");
+    TEST_CHECK_MSG(
+        have_tile && have_cliloc && have_image,
+        "the UO data entries and the image replacement must plan");
     TEST_CHECK_MSG(
         plan.files[0].assets.front().blob == "test1/tiledata.mulaops",
         "the tail carries the url-encoded path and the aops extension");

@@ -267,6 +267,7 @@ set(crossuo_src
   Weather.cpp
   WeatherEffect.cpp
   Splash.cpp
+  ArtReplacer.cpp
   Utility/PerfMarker.cpp
   Sockets.cpp
   Main.cpp

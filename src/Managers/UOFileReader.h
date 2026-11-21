@@ -13,7 +13,11 @@ struct UOFileReader
     ~UOFileReader() = default;
 
     std::vector<uint16_t> GetGumpPixels(CIndexObject &io);
-    CSprite *ReadGump(CIndexObject &io);
+    CSprite *ReadGump(CIndexObject &io, uint16_t graphic);
+    // disk replacements (ExternalImages): the index gate consults these so a
+    // replaced graphic loads even when the native entry is nodraw
+    bool HasGumpReplacement(uint16_t id) const;
+    bool HasArtReplacement(uint16_t id, bool run) const;
     // Art block pixels: the reference decoder (block selection, RLE rows,
     // bounds handling). `applyTileFilters` is false for read-only consumers
     // such as the asset viewer, which must see the stored art rather than the

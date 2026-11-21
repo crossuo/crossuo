@@ -131,7 +131,7 @@ static bool vfs_aops_utf16_to_utf8(const uint8_t *data, size_t size, astr_t &out
 
 // percent-encodes everything outside the unreserved url path set so the
 // tail doubles as the store's relative path (spaces, UTF-8 bytes)
-static astr_t vfs_aops_url_encode(const astr_t &path)
+astr_t vfs_aops_url_encode(const astr_t &path)
 {
     static const char hex[] = "0123456789ABCDEF";
     astr_t out;
@@ -209,6 +209,14 @@ const char *const VFS_AOPS_NAMES[] = {
     "uobscene.lst", "version.dat",    "version.txt",     "walls.txt",
 };
 
+// image replacements (ExternalImages tree): png/bmp/jpg loose files the
+// client's png replacer loads over gump/art/land graphics
+const char *const VFS_AOPS_EXT_IMAGES[] = {
+    ".png",
+    ".bmp",
+    ".jpg",
+};
+
 template <size_t N>
 bool vfs_aops_has_ext(const astr_t &lower, const char *const (&exts)[N])
 {
@@ -234,22 +242,29 @@ bool vfs_aops_is_name(const astr_t &lower, const char *const (&names)[N])
 
 } // namespace
 
-bool vfs_aops_filter_accept(const astr_t &basename_lower)
+bool vfs_aops_filter_accept(const astr_t &relpath_lower)
 {
-    if (basename_lower.empty())
+    if (relpath_lower.empty())
         return false;
-    if (vfs_aops_has_ext(basename_lower, VFS_AOPS_EXT_DATA))
+    if (vfs_aops_has_ext(relpath_lower, VFS_AOPS_EXT_IMAGES))
+    {
+        // image replacements only plan inside the ExternalImages tree:
+        // launcher/web art elsewhere stays out
+        return relpath_lower.rfind("externalimages/", 0) == 0 ||
+               relpath_lower.find("/externalimages/") != astr_t::npos;
+    }
+    if (vfs_aops_has_ext(relpath_lower, VFS_AOPS_EXT_DATA))
         return true;
-    if (vfs_aops_has_ext(basename_lower, VFS_AOPS_LANGS))
+    if (vfs_aops_has_ext(relpath_lower, VFS_AOPS_LANGS))
     {
         for (const char *stem : VFS_AOPS_LANG_STEMS)
         {
-            if (basename_lower.rfind(stem, 0) == 0)
+            if (relpath_lower.rfind(stem, 0) == 0)
                 return true;
         }
         return false;
     }
-    return vfs_aops_is_name(basename_lower, VFS_AOPS_NAMES);
+    return vfs_aops_is_name(relpath_lower, VFS_AOPS_NAMES);
 }
 
 // ---------------------------------------------------------------------------
@@ -367,6 +382,45 @@ astr_t vfs_aops_product_url_canonical(const astr_t &root_or_url)
     }
     url += "/patchlist";
     return url;
+}
+
+// ExternalImages replacement entries (art replacer): true for the
+// images tree files the plan installs under externalimages/...
+bool vfs_aops_is_external_images(const astr_t &name_lower)
+{
+    return name_lower.rfind("externalimages/", 0) == 0;
+}
+
+// the install name of a patchlist relpath: lowercase, forward slashes, and
+// for the image-replacement tree only the path from ExternalImages/ down
+// (the art replacer resolves the kind from that component); everything else
+// flattens to its basename
+astr_t vfs_aops_rel_to_install(const astr_t &rel)
+{
+    astr_t slashed = rel;
+    for (char &c : slashed)
+    {
+        if (c == '\\')
+            c = '/';
+    }
+    astr_t lower = str_lower(slashed);
+    const size_t images = lower.find("externalimages/");
+    if (images != astr_t::npos)
+        return lower.substr(images);
+    const size_t slash = lower.rfind('/');
+    return slash == astr_t::npos ? lower : lower.substr(slash + 1);
+}
+
+// the patchcfg next to a patchlist: the aops engine reads the ini from the
+// manifest's own directory (<dir>/patchcfg). Used by the pre-boot image
+// refresh, which runs before the plan exists.
+astr_t vfs_aops_patchcfg_url(const astr_t &product_url)
+{
+    const astr_t url = vfs_aops_product_url_canonical(product_url);
+    const size_t slash = url.rfind('/');
+    if (slash == astr_t::npos)
+        return astr_t();
+    return url.substr(0, slash + 1) + "patchcfg";
 }
 
 uint64_t vfs_aops_serial(const uint8_t *data, size_t size)
@@ -542,8 +596,27 @@ bool vfs_aops_build_plan(
         }
 
         // installing enforces lowercase: the game's file requests resolve
-        // through the case-normalized managed registry
-        const astr_t name = str_lower(parts.back());
+        // through the case-normalized managed registry. The install name is
+        // flat (the product prefix drops with the basename) except for the
+        // ExternalImages tree: the art replacer resolves the kind (gumps/
+        // art/land) from the relative subdirectory, so those entries keep
+        // the path from that component down
+        const astr_t basename = str_lower(parts.back());
+        astr_t name = basename;
+        for (size_t i = 0; i + 1 < parts.size(); ++i)
+        {
+            if (str_lower(parts[i]) == "externalimages")
+            {
+                name.clear();
+                for (size_t j = i; j < parts.size(); ++j)
+                {
+                    if (j != i)
+                        name += "/";
+                    name += str_lower(parts[j]);
+                }
+                break;
+            }
+        }
         if (!vfs_aops_filter_accept(name))
             continue; // not UO data: launcher/web/shard files stay out
         if (!seen.emplace(name, true).second)
@@ -566,7 +639,7 @@ bool vfs_aops_build_plan(
             ((stamp_date / 10000ull) % 100ull) * 1000000ull + // DD
             stamp_hms;
 
-        parts.back() = name;
+        parts.back() = basename;
         astr_t remote;
         for (size_t i = 0; i < parts.size(); ++i)
         {

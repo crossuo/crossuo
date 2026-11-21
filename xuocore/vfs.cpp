@@ -3096,6 +3096,114 @@ static bool vfs_boot_product_fetch()
     return false;
 }
 
+// pre-boot image replacements: the art replacer resolves ExternalImages/
+// files lazily while the game runs, but the login screen draws before the
+// background install tier converges - a replacement that only landed in the
+// sweep shows up minutes late. This phase downloads the product's own image
+// entries up front (a few MB at most), byte-compares against the install
+// copies and replaces what changed. Runs only for aops products with an
+// online fetch; any failure leaves the existing files in place.
+static size_t vfs_boot_refresh_external_images()
+{
+    if (s_params.offline || !vfs_fetch_started() || s_params.product_url.empty())
+        return 0;
+    // a local --product file owns its manifest: no remote to compare with
+    if (!vfs_product_file_defaulted)
+        return 0;
+
+    std::vector<uint8_t> patchlist;
+    if (!fs_file_read(fs_path_ascii(s_params.product_file), patchlist) ||
+        !vfs_aops_sniff_patchlist(patchlist.data(), patchlist.size()))
+        return 0;
+
+    // patchcfg: same source the plan build uses (cached copy first)
+    astr_t patch_directory;
+    astr_t extension = "aops";
+    {
+        const auto cache = fs_path_join(s_params.blobs_dir, "aops", "patchcfg");
+        std::vector<uint8_t> cfg;
+        if (!fs_file_read(fs_path_ascii(cache), cfg) ||
+            !vfs_aops_sniff_patchcfg(cfg.data(), cfg.size()))
+        {
+            const astr_t url = vfs_aops_patchcfg_url(s_params.product_url);
+            if (url.empty() || !http_get_binary(url.c_str(), cfg) ||
+                !vfs_aops_sniff_patchcfg(cfg.data(), cfg.size()))
+                return 0;
+        }
+        vfs_aops_config parsed;
+        if (!vfs_aops_parse_patchcfg(
+                cfg.data(), cfg.size(), s_params.product_url.c_str(), &parsed))
+            return 0;
+        patch_directory = parsed.patch_directory;
+        if (!parsed.custom_extension.empty())
+            extension = parsed.custom_extension;
+    }
+    if (patch_directory.empty())
+        return 0;
+    if (patch_directory.back() != '/')
+        patch_directory.push_back('/');
+
+    std::vector<astr_t> text;
+    {
+        astr_t decoded;
+        const auto *bytes = patchlist.data();
+        size_t size = patchlist.size();
+        if (size >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+        {
+            bytes += 2;
+            size -= 2;
+        }
+        for (size_t i = 0; i + 1 < size; i += 2)
+            decoded.push_back(char(uint16_t(bytes[i]) | (uint16_t(bytes[i + 1]) << 8)));
+        size_t pos = 0;
+        while (pos < decoded.size())
+        {
+            const size_t nl = decoded.find('\n', pos);
+            astr_t line = decoded.substr(pos, nl == astr_t::npos ? astr_t::npos : nl - pos);
+            if (!line.empty() && line.back() == '\r')
+                line.pop_back();
+            if (!line.empty())
+                text.push_back(line);
+            if (nl == astr_t::npos)
+                break;
+            pos = nl + 1;
+        }
+    }
+
+    size_t refreshed = 0;
+    for (const auto &line : text)
+    {
+        // <relpath>|<DDMMYYYY>|...: the encoded path keeps case, the install
+        // name is lowercase and keeps the tree from ExternalImages/ down
+        const size_t pipe = line.find('|');
+        if (pipe == astr_t::npos)
+            continue;
+        const astr_t rel = line.substr(0, pipe);
+        const size_t images = str_lower(rel).find("externalimages\\");
+        if (images == astr_t::npos)
+            continue;
+        const astr_t name = str_lower(vfs_aops_rel_to_install(rel));
+        const fs_path target = fs_path_join(s_params.install_dir, name);
+        std::vector<uint8_t> remote;
+        const astr_t url = patch_directory + vfs_aops_url_encode(rel) +
+                           vfs_aops_url_encode(extension);
+        if (!http_get_binary(url.c_str(), remote) || remote.empty())
+        {
+            LOG_WARN("art replacer: could not fetch %s", url.c_str());
+            continue;
+        }
+        std::vector<uint8_t> existing;
+        if (fs_file_read(fs_path_ascii(target), existing) && existing == remote)
+            continue;
+        fs_path_create(fs_directory(target));
+        if (vfs_file_write_atomic(fs_path_ascii(target), remote))
+            ++refreshed;
+    }
+    if (refreshed != 0)
+        LOG_INFO("art replacer: %zu image replacements refreshed before boot", refreshed);
+    return refreshed;
+}
+
 // update flow: the store mirrors the remote URL tree, so manifests
 // whose content changed upstream would be shadowed by the cached copies on
 // the next plan build. A serial drift drops every cached manifest (*.mft) -
@@ -3181,6 +3289,9 @@ static bool vfs_boot_plan(VfsPlan &out_plan, vfs_plan_diff_result *out_diff, boo
 
     if (!vfs_boot_product_fetch())
         return false;
+    // before the plan: image replacements are served by the game itself and
+    // must exist before the first screen draws (the plan's T1 copy follows)
+    vfs_boot_refresh_external_images();
 
     const auto plan_path = fs_path_join(s_params.state_dir, "plan.bin");
     VfsPlan persisted;
