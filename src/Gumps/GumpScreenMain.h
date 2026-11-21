@@ -4,10 +4,22 @@
 #pragma once
 
 #include "Gump.h"
+#include <map>
+
+struct LoginTheme;
 
 class CGumpScreenMain : public CGump
 {
     CGUIButton *m_Arrow{ nullptr };
+
+    // data-driven login screen state (see BuildThemed)
+    bool m_Themed = false;
+    bool m_ThemedArrowBlinks = false;
+    int m_ThemedArrowArt = 0;
+    std::map<int, astr_t> m_Tooltips;
+
+    void BuildThemed(const LoginTheme &theme);
+    const astr_t *ThemedTooltip(int serial) const;
 
 public:
     CGumpScreenMain();

@@ -6,6 +6,15 @@
 #include "BaseGUI.h"
 struct CSprite;
 
+// how a CGUIExternalTexture places its sprite inside the widget rectangle
+enum class EXTERNAL_TEXTURE_DRAW_MODE
+{
+    Native,  // draw at the sprite's own size
+    Stretch, // stretch the sprite to DrawWidth x DrawHeight
+    Tile,    // repeat the sprite to fill DrawWidth x DrawHeight (clipped)
+    Fit,     // aspect-fit the sprite into DrawWidth x DrawHeight, centered
+};
+
 class CGUIExternalTexture : public CBaseGUI
 {
     bool DeleteTextureOnDestroy = false;
@@ -13,6 +22,9 @@ class CGUIExternalTexture : public CBaseGUI
     short DrawHeight = 0;
 
 public:
+    // Native scales with DrawWidth/DrawHeight as before when they are set
+    EXTERNAL_TEXTURE_DRAW_MODE DrawMode = EXTERNAL_TEXTURE_DRAW_MODE::Native;
+
     CGUIExternalTexture(
         CSprite *sprite,
         bool deleteTextureOnDestroy,

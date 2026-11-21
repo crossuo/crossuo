@@ -239,6 +239,9 @@ static bool InitCli(int argc, char *argv[])
         "streaming: 'web' plans the web product subset (drops the large"
         " legacy files)");
 
+    g_cli["login-theme"].type(po::string).description(
+        "data-driven main login screen: a local theme file, a url"
+        " (http(s):// or crossuo://), or 'embedded' for the build-time theme");
     g_cli["config"]
         .abbreviation('c')
         .type(po::string)

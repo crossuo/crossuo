@@ -132,6 +132,7 @@ set(gumps_src
   Gumps/GumpScreenCreateCharacter.cpp
   Gumps/GumpScreenGame.cpp
   Gumps/GumpScreenMain.cpp
+  Gumps/LoginTheme.cpp
   Gumps/GumpScreenSelectProfession.cpp
   Gumps/GumpScreenSelectTown.cpp
   Gumps/GumpScreenServer.cpp

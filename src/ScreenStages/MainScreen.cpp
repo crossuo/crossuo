@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "MainScreen.h"
+#include "../Managers/ConfigManager.h"
 #include "BaseScreen.h"
 #include <common/utils.h>
 #include <cstdint>
@@ -331,6 +332,15 @@ void CMainScreen::Load() const
     {
         m_Password->SetTextA("");
         m_Password->SetPos(0);
+    }
+
+    if (m_Music != nullptr)
+    {
+        m_Music->Checked = g_ConfigManager.GetMusic();
+        if (m_MusicVolume != nullptr)
+        {
+            m_MusicVolume->Visible = m_Music->Checked;
+        }
     }
 
     m_SavePassword->Checked = g_Config.SavePassword;

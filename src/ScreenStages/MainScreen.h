@@ -11,6 +11,7 @@
 
 class CEntryText;
 class CGUICheckbox;
+class CGUISlider;
 
 // debug helper: enabled via the XUO_DEBUG_SCREEN environment variable, strips the
 // login screen down to its background image and draws colored test
@@ -35,6 +36,10 @@ public:
     CEntryText *m_Password = nullptr;
     CGUICheckbox *m_SavePassword = nullptr;
     CGUICheckbox *m_AutoLogin = nullptr;
+    // data-driven login screen only: the theme's optional music toggle and
+    // volume slider (null for the built-in layouts)
+    CGUICheckbox *m_Music = nullptr;
+    CGUISlider *m_MusicVolume = nullptr;
 
 public:
     CMainScreen();

@@ -1,0 +1,127 @@
+# FC / UORealms login screen theme.
+
+{ id = background
+  type = gump
+  graphic = 0x014E }
+
+# Exampleof art that is NOT in the data files: uncomment this block
+# (and remove the gump above) to load a PNG instead.
+#
+# [image] name = background
+# file = fc-login-bg.png
+# mode = stretch
+#
+# { id = background
+#   type = image
+#   image = background
+#   x = 0, y = 0
+#   width = 640, height = 480 }
+
+{ id = account-label
+  type = text
+  text = Account
+  x = 215, y = 342
+  font = 1
+  color = 0x0481 }
+
+{ id = account-name-label
+  type = text
+  text = Name
+  x = 222, y = 357
+  font = 1
+  color = 0x0481 }
+
+{ id = password-label
+  type = text
+  text = Password
+  x = 212, y = 397
+  font = 1
+  color = 0x0481 }
+
+{ id = account-box
+  type = resizepic
+  graphic = 0x0BB8
+  x = 280, y = 340
+  width = 165, height = 30 }
+
+{ id = account-entry
+  type = textbox
+  bind = account
+  x = 285, y = 342
+  width = 165
+  font = 5
+  color = 0x034F
+  color-selected = 0x03E3
+  color-focused = 0x0021
+  max-length = 32 }
+
+{ id = password-box
+  type = resizepic
+  graphic = 0x0BB8
+  x = 280, y = 390
+  width = 165, height = 30 }
+
+{ id = password-entry
+  type = textbox
+  bind = password
+  masked = yes
+  x = 285, y = 392
+  width = 165
+  font = 5
+  color = 0x034F
+  color-selected = 0x03E3
+  color-focused = 0x0021
+  max-length = 32 }
+
+{ id = login
+  type = button
+  action = connect
+  graphic = 0x5CD, graphic-selected = 0x5CB, graphic-pressed = 0x5CC
+  x = 280, y = 425
+  blink = yes
+  tooltip = "Next screen" }
+
+{ id = auto-login
+  type = checkbox
+  bind = auto_login
+  graphic = 0x16C3, graphic-checked = 0x16C4
+  x = 5, y = 455
+  text = Autologin
+  font = 9, color = 0x0481
+  text-position = right_center }
+
+{ id = save-password
+  type = checkbox
+  bind = save_password
+  graphic = 0x16C9, graphic-checked = 0x16CA
+  x = 130, y = 455
+  text = Save Account
+  font = 9, color = 0x0481
+  text-position = right_center }
+
+{ id = music
+  type = checkbox
+  bind = music
+  graphic = 0x16D4, graphic-checked = 0x16D5
+  x = 255, y = 455
+  text = Music
+  font = 9, color = 0x0481
+  text-position = right_center }
+
+{ id = support-link
+  type = html_link
+  text = Support UORealms!
+  url = https://uorealms.com/donate/
+  x = 505, y = 440
+  width = 260
+  font = 1
+  link-color = #00ff00 }
+
+{ id = website-link
+  type = html_link
+  text = UORealms Website
+  url = https://uorealms.com
+  x = 505, y = 460
+  width = 260
+  font = 1
+  link-color = #00ff00 }

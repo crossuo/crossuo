@@ -63,6 +63,7 @@ enum
     MSCC_SHARD_CREDITS,
     MSCC_SHARD_OTHER,
     MSCC_SHARD_COMMUNITY,
+    MSCC_LOGIN_THEME,
     MSCC_IGNORE_RELAY,
     MSCC_SEND_PING,
     MSCC_ASSISTANT,
@@ -114,6 +115,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_SHARD_CREDITS, "shardcredits" },
     { MSCC_SHARD_OTHER, "shardother" },
     { MSCC_SHARD_COMMUNITY, "shardcommunity" },
+    { MSCC_LOGIN_THEME, "logintheme" },
     { MSCC_IGNORE_RELAY, "ignorerelay" },
     { MSCC_SEND_PING, "sendping" },
     { MSCC_ASSISTANT, "assistant" },
@@ -859,6 +861,11 @@ bool LoadGlobalConfig()
                     g_Config.ShardCommunity = strings[1];
                     break;
                 }
+                case MSCC_LOGIN_THEME:
+                {
+                    g_Config.LoginTheme = strings[1];
+                    break;
+                }
                 default:
                     break;
             }
@@ -1021,6 +1028,12 @@ void SaveGlobalConfig(bool launcher_apply)
     if (!g_Config.ShardCommunity.empty())
     {
         fprintf(cfg, "ShardCommunity=%s\n", g_Config.ShardCommunity.c_str());
+    }
+    // the login theme is shard presentation: written only when set so a shard
+    // switch to a theme-less shard does not inherit a stale one
+    if (!g_Config.LoginTheme.empty())
+    {
+        fprintf(cfg, "LoginTheme=%s\n", g_Config.LoginTheme.c_str());
     }
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
@@ -1188,6 +1201,12 @@ bool ApplyShardProfile(const shard_profile &profile)
         !profile.credits.empty() ? profile.credits : astr_t(XUO_DEFAULT_SHARD_CREDITS);
     g_Config.ShardOther = profile.other;
     g_Config.ShardCommunity = profile.community;
+    // an empty theme keeps the current one (a shard without a themed login
+    // screen must not wipe a theme the user picked)
+    if (!str_trim(profile.login_theme).empty())
+    {
+        g_Config.LoginTheme = str_trim(profile.login_theme);
+    }
 
     // shard-specific protocol overrides: a shard switch is deterministic, so
     // an empty value clears the override (a shard that needs one always

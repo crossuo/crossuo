@@ -91,6 +91,10 @@ bool resolve(int kind, uint16_t id, fs_path &out)
     return false;
 }
 
+// png/bmp/jpg -> the engine's 16-bit color-key format (the only layout the
+// game's art pipeline speaks: 0 transparent, 0x8000 | RGB555 opaque). Alpha
+// is 1-bit, same as every mul/uop graphic; stb delivers top-down RGBA8 and
+// UO rows are top-down too, so no flip.
 bool decode(const fs_path &path, std::vector<uint16_t> &pixels, short &width, short &height)
 {
     int w = 0;
@@ -115,8 +119,6 @@ bool decode(const fs_path &path, std::vector<uint16_t> &pixels, short &width, sh
     for (int i = 0; i < w * h; ++i)
     {
         const uint8_t *px = rgba + size_t(i) * 4;
-        // the engine format has 1-bit alpha: threshold, then keep its
-        // color-key layout (0 transparent, 0x8000 | RGB555 opaque)
         pixels[size_t(i)] =
             px[3] < 128 ? uint16_t(0) :
                           uint16_t(0x8000 | uo_color32_to_16((px[0] << 16) | (px[1] << 8) | px[2]));
@@ -127,6 +129,11 @@ bool decode(const fs_path &path, std::vector<uint16_t> &pixels, short &width, sh
     return true;
 }
 } // namespace
+
+bool art_replacer_decode(const fs_path &path, std::vector<uint16_t> &pixels, short &width, short &height)
+{
+    return decode(path, pixels, width, height);
+}
 
 void art_replacer_init(const fs_path &install_dir)
 {

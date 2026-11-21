@@ -46,6 +46,10 @@ struct Config
     // no white-label default: shards carry community links as plain urls
     astr_t ShardOther;
     astr_t ShardCommunity;
+    // LoginTheme=: data-driven main login screen (local path, url, or
+    // `embedded` for the build-time resource); empty = the built-in layout.
+    // See docs/LOGIN_THEME.md and src/Gumps/LoginTheme.h
+    astr_t LoginTheme;
     uint16_t ServerPort = XUO_DEFAULT_SERVER_PORT;
     uint16_t ClientFlag = 0;
     bool SavePassword = true;
@@ -161,6 +165,7 @@ struct shard_profile
     astr_t web, account_page, help, video, credits; // login-screen links
     astr_t other;     // plain community url ("" = none)
     astr_t community; // forum/community page (accepted, launcher-facing)
+    astr_t login_theme;             // login screen theme ("" = current)
     astr_t seed_override;           // "0xaa 0xbb 0xcc 0xdd" login seed ("" = none)
     astr_t system_check_override;   // 0x03 payload bytes ("" = none)
     // assistant constraint: "" = keep the client's own Assistant= value,

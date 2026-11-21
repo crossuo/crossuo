@@ -1,0 +1,132 @@
+# Reference login theme: reproduces the client's built-in modern (>= 7.0.61.1)
+# login screen exactly. Useful as a starting point for a shard theme - start
+# from here, then move/restyle elements.
+#
+# Every coordinate is a pixel on the fixed 640x480 login screen.
+# Format reference: docs/LOGIN_THEME.md
+
+{ id = backdrop
+  type = gump
+  graphic = 0x014E }
+
+{ id = account-button
+  type = button
+  action = web:account
+  graphic = 0x5C4, graphic-selected = 0x5C2, graphic-pressed = 0x5C3
+  x = 10, y = 25
+  tooltip = "Open the shard account page" }
+
+{ id = web-button
+  type = button
+  action = web:web
+  graphic = 0x5C7, graphic-selected = 0x5C5, graphic-pressed = 0x5C6
+  x = 10, y = 135
+  tooltip = "Open the shard website" }
+
+{ id = quit
+  type = button
+  action = quit
+  graphic = 0x5CA, graphic-selected = 0x5C8, graphic-pressed = 0x5C9
+  x = 20, y = 240
+  tooltip = "Quit Ultima Online" }
+
+{ id = help
+  type = button
+  action = web:help
+  graphic = 0x5D3, graphic-selected = 0x5D1, graphic-pressed = 0x5D2
+  x = 530, y = 35
+  tooltip = "Open the help page" }
+
+{ id = movie
+  type = button
+  action = web:video
+  graphic = 0x5D6, graphic-selected = 0x5D4, graphic-pressed = 0x5D5
+  x = 530, y = 80
+  tooltip = "Open the video page" }
+
+{ id = credits
+  type = button
+  action = web:credits
+  graphic = 0x5D0, graphic-selected = 0x5CE, graphic-pressed = 0x5CF
+  x = 530, y = 125
+  tooltip = "Open the credits page" }
+
+{ id = teen-rating
+  type = gump
+  graphic = 0x2335
+  x = 30, y = 380 }
+
+{ id = account-box
+  type = resizepic
+  graphic = 0x0BB8
+  x = 220, y = 280
+  width = 210, height = 30 }
+
+{ id = password-box
+  type = resizepic
+  graphic = 0x0BB8
+  x = 220, y = 335
+  width = 210, height = 30 }
+
+{ id = account-entry
+  type = textbox
+  bind = account
+  x = 228, y = 283
+  width = 190
+  font = 5
+  color = 0x034F
+  color-selected = 0x03E3
+  color-focused = 0x0021
+  max-length = 32 }
+
+{ id = password-entry
+  type = textbox
+  bind = password
+  masked = yes
+  x = 228, y = 338
+  width = 190
+  font = 5
+  color = 0x034F
+  color-selected = 0x03E3
+  color-focused = 0x0021
+  max-length = 32 }
+
+{ id = login
+  type = button
+  action = connect
+  graphic = 0x5CD, graphic-selected = 0x5CB, graphic-pressed = 0x5CC
+  x = 280, y = 365
+  blink = yes
+  tooltip = "Next screen" }
+
+{ id = save-password
+  type = checkbox
+  bind = save_password
+  graphic = 0x00D2, graphic-checked = 0x00D3, graphic-disabled = 0x00D2
+  x = 328, y = 417
+  text = Save Password
+  font = 9, color = 0x0802
+  text-position = right_center }
+
+{ id = auto-login
+  type = checkbox
+  bind = auto_login
+  graphic = 0x00D2, graphic-checked = 0x00D3, graphic-disabled = 0x00D2
+  x = 183, y = 417
+  text = Auto Login
+  font = 9, color = 0x0802
+  text-position = right_center }
+
+{ id = version
+  type = text
+  text = "UO Version \1."
+  x = 235, y = 440
+  font = 9
+  color = 0x0802 }
+
+{ id = client
+  type = text
+  text = "\2"
+  x = 200, y = 460
+  font = 9
+  color = 0x7F2 }

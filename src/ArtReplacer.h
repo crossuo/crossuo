@@ -32,9 +32,35 @@ void art_replacer_init(const fs_path &install_dir);
 // replacement pixels in the engine's 16-bit 5551 color-key format (0 =
 // transparent, opaque = 0x8000 | RGB555), top-down rows. false when no
 // replacement exists for the id (a miss is probed, not cached: the patch
-// install can land the file at any moment) or the image cannot be decoded
+// install can land the file at any moment) or the image cannot be decoded.
+// The same decoder serves every image the client loads from disk (login
+// theme [image] files included): one layout, one code path.
+bool art_replacer_decode(const fs_path &path, std::vector<uint16_t> &pixels, short &width, short &height);
 bool art_replacer_pixels(
     int kind, uint16_t id, std::vector<uint16_t> &pixels, short &width, short &height);
 
 // cheap "is there a replacement for this id" (resolved and cached)
 bool art_replacer_has(int kind, uint16_t id);
+
+void art_replacer_init(const fs_path &install_dir);
+
+// replacement pixels in the engine's 16-bit 5551 color-key format (0 =
+// transparent, opaque = 0x8000 | RGB555), top-down rows. false when no
+// replacement exists for the id (a miss is probed, not cached: the patch
+// install can land the file at any moment) or the image cannot be decoded.
+// The same decoder serves every image the client loads from disk (login
+// theme [image] files included): one layout, one code path.
+bool art_replacer_decode(const fs_path &path, std::vector<uint16_t> &pixels, short &width, short &height);
+bool art_replacer_pixels(
+    int kind, uint16_t id, std::vector<uint16_t> &pixels, short &width, short &height);
+
+// cheap "is there a replacement for this id" (resolved and cached)
+bool art_replacer_has(int kind, uint16_t id);
+
+// Shared image decode: png/bmp/jpg -> 32bpp words for CSprite::LoadSprite32
+// (one word per pixel, R in the low byte, A in the high one, rows bottom-up:
+// the layout the renderer uploads as GL_RGBA8). stb delivers top-down RGBA,
+// so the rows are flipped and the channels swizzled here. Used by the art
+// replacer and the login theme images.
+bool art_replacer_decode_image32(
+    const fs_path &path, std::vector<uint32_t> &pixels, int &width, int &height);

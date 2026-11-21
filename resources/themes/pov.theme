@@ -1,0 +1,101 @@
+# Paths of Virtue login screen theme (from the shard's login screenshot).
+#
+# Start the client with:  crossuo --login-theme path/to/pov.theme
+# or add  LoginTheme=path/to/pov.theme  to crossuo.cfg
+
+{ id = background
+  type = gump
+  graphic = 0x2329 }
+
+{ id = account-label
+  type = text
+  text = Account\nName
+  x = 15, y = 340
+  font = 2
+  color = 0x0802 }
+
+{ id = password-label
+  type = text
+  text = Password
+  x = 12, y = 390
+  font = 2
+  color = 0x0802 }
+
+{ id = account-box
+  type = resizepic
+  graphic = 0x0BB8
+  x = 120, y = 340
+  width = 175, height = 28 }
+
+{ id = account-entry
+  type = textbox
+  bind = account
+  x = 128, y = 340
+  width = 175
+  font = 5
+  color = 0x034F
+  color-selected = 0x03E3
+  color-focused = 0x0021
+  max-length = 32 }
+
+{ id = password-box
+  type = resizepic
+  graphic = 0x0BB8
+  x = 120, y = 385
+  width = 175, height = 28 }
+
+{ id = password-entry
+  type = textbox
+  bind = password
+  masked = yes
+  x = 128, y = 385
+  width = 175
+  font = 5
+  color = 0x034F
+  color-selected = 0x03E3
+  color-focused = 0x0021
+  max-length = 32 }
+
+{ id = login
+  type = button
+  action = connect
+  graphic = 0x15A4, graphic-selected = 0x15A5, graphic-pressed = 0x15A6
+  x = 610, y = 445
+  blink = true
+  tooltip = "Log in" }
+
+{ id = auto-login
+  type = checkbox
+  bind = auto_login
+  graphic = 9722, graphic-checked = 9733
+  x = 30, y = 452
+  text = Autologin
+  font = 2, color = 0x0802
+  text-position = right_center }
+
+{ id = save-password
+  type = checkbox
+  bind = save_password
+  graphic = 9728, graphic-checked = 9729
+  x = 160, y = 452
+  text = Save Account
+  font = 2, color = 0x0802
+  text-position = right_center }
+
+{ id = support-link
+  type = html_link
+  text = Support UORealms!
+  url = https://uorealms.com/donate/
+  x = 475, y = 440
+  width = 260
+  font = 1
+  link-color = #00ff00 }
+
+{ id = website-link
+  type = html_link
+  text = UORealms Website
+  url = https://uorealms.com
+  x = 475, y = 460
+  width = 260
+  font = 1
+  link-color = #00ff00 }

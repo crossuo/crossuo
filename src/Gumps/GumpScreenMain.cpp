@@ -5,13 +5,21 @@
 #include "TextEngine/EntryText.h"
 #include "revision.h"
 #include "../Config.h"
+#include "../CrossUO.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
 #include "../Managers/ConfigManager.h"
+#include "../Managers/ClilocManager.h"
 #include "../ScreenStages/MainScreen.h"
 #include "../GUI/GUIColoredPolygone.h"
+#include "../GUI/GUIExternalTexture.h"
+#include "../GUI/GUIHTMLText.h"
+#include "../GUI/GUISlider.h"
+#include "../Gumps/LoginTheme.h"
 #include "../LauncherWindow.h"
 #include "xuocore/enumlist.h"
+#include "xuocore/uodata_color.h"
+#include <set>
 
 enum
 {
@@ -29,6 +37,9 @@ enum
     ID_MS_MOVIE,
     ID_MS_CREDITS,
     ID_MS_LAUNCHER,
+    // data-driven login screen only (docs/LOGIN_THEME.md)
+    ID_MS_MUSIC,
+    ID_MS_MUSICVOLUME,
 
     ID_MS_COUNT,
 
@@ -96,7 +107,19 @@ void CGumpScreenMain::PrepareContent()
         }
     }
 
-    if (lastArrowTick < g_Ticks && m_Arrow != nullptr)
+    // the themed arrow blinks between the theme's normal/selected art, and
+    // only when the theme asked for it (`blink = yes`)
+    if (m_Themed && m_Arrow != nullptr && m_ThemedArrowBlinks)
+    {
+        if (lastArrowTick < g_Ticks)
+        {
+            arrowLighted = !arrowLighted;
+            m_Arrow->Graphic = arrowLighted ? m_ThemedArrowArt : m_Arrow->GraphicSelected;
+            lastArrowTick = g_Ticks + 500;
+            WantRedraw = true;
+        }
+    }
+    else if (!m_Themed && lastArrowTick < g_Ticks && m_Arrow != nullptr)
     {
         arrowLighted = !arrowLighted;
         if (g_Config.ClientVersion < CV_70611)
@@ -132,6 +155,12 @@ void CGumpScreenMain::UpdateContent()
 {
     if (m_Items != nullptr)
     {
+        return;
+    }
+
+    if (const LoginTheme *theme = LoginTheme_Get())
+    {
+        BuildThemed(*theme);
         return;
     }
 
@@ -358,6 +387,13 @@ void CGumpScreenMain::InitToolTip()
 
     uint32_t id = g_SelectedObject.Serial;
 
+    // theme-provided tooltip text wins over the built-in one
+    if (const astr_t *custom = ThemedTooltip((int)id))
+    {
+        g_ToolTip.Set(wstr_from(*custom));
+        return;
+    }
+
     switch (id)
     {
         case ID_MS_QUIT:
@@ -436,6 +472,20 @@ void CGumpScreenMain::GUMP_BUTTON_EVENT_C
             break;
         }
 #endif
+        case ID_MS_MUSIC:
+        {
+            if (g_MainScreen.m_Music != nullptr)
+            {
+                // the login music toggle writes the same setting the options
+                // gump uses; the sound manager follows the config setter
+                g_ConfigManager.SetMusic(g_MainScreen.m_Music->Checked);
+                if (g_MainScreen.m_MusicVolume != nullptr)
+                {
+                    g_MainScreen.m_MusicVolume->Visible = g_MainScreen.m_Music->Checked;
+                }
+            }
+            break;
+        }
         case ID_MS_UOACCOUNT:
         {
             Platform::OpenBrowser(g_Config.ShardAccount);
@@ -472,4 +522,479 @@ void CGumpScreenMain::GUMP_TEXT_ENTRY_EVENT_C
     {
         g_MainScreen.m_Password->SetPos(m_PasswordFake->Pos());
     }
+}
+
+// ---------------------------------------------------------------------------
+// Data-driven login screen (see docs/LOGIN_THEME.md)
+//
+// The theme describes widgets; this maps each one onto the same CGUI classes
+// the hardcoded layout uses, and onto the fixed ID_MS_* serials so the button
+// dispatch below stays in one place. Required bindings (account, password,
+// both checkboxes) get hidden defaults when a theme omits them because
+// CMainScreen::Load()/Save() dereference them unconditionally.
+// ---------------------------------------------------------------------------
+namespace
+{
+int SerialForBind(LOGIN_THEME_BIND bind)
+{
+    switch (bind)
+    {
+        case LOGIN_THEME_BIND::Account:
+            return ID_MS_ACCOUNT;
+        case LOGIN_THEME_BIND::Password:
+            return ID_MS_PASSWORD;
+        case LOGIN_THEME_BIND::AutoLogin:
+            return ID_MS_AUTOLOGIN;
+        case LOGIN_THEME_BIND::SavePassword:
+            return ID_MS_SAVEPASSWORD;
+        case LOGIN_THEME_BIND::Music:
+            return ID_MS_MUSIC;
+        case LOGIN_THEME_BIND::MusicVolume:
+            return ID_MS_MUSICVOLUME;
+        default:
+            return ID_MS_NONE;
+    }
+}
+
+int SerialForAction(const astr_t &action)
+{
+    if (action == "connect")
+        return ID_MS_ARROW_NEXT;
+    if (action == "quit")
+        return ID_MS_QUIT;
+    if (action == "launcher")
+        return ID_MS_LAUNCHER;
+    if (action == "web:account")
+        return ID_MS_UOACCOUNT;
+    if (action == "web:web")
+        return ID_MS_UOCOM;
+    if (action == "web:help")
+        return ID_MS_HELP;
+    if (action == "web:video")
+        return ID_MS_MOVIE;
+    if (action == "web:credits")
+        return ID_MS_CREDITS;
+    // page:<n> switches pages without firing the button event
+    return ID_MS_NONE;
+}
+
+SLIDER_TEXT_POSITION ParseTextPosition(const astr_t &value)
+{
+    if (value.empty() || value == "right")
+        return STP_RIGHT;
+    if (value == "left")
+        return STP_LEFT;
+    if (value == "right_center" || value == "right-center")
+        return STP_RIGHT_CENTER;
+    if (value == "left_center" || value == "left-center")
+        return STP_LEFT_CENTER;
+    if (value == "top" || value == "bottom")
+        return value == "top" ? STP_TOP : STP_BOTTOM;
+    return STP_RIGHT;
+}
+
+astr_t ExpandThemeText(const astr_t &text)
+{
+    astr_t out;
+    out.reserve(text.size());
+    for (size_t i = 0; i < text.size(); i++)
+    {
+        if (text[i] == '\\' && i + 1 < text.size())
+        {
+            const char next = text[i + 1];
+            if (next == 'n')
+            {
+                out.push_back('\n');
+                i++;
+                continue;
+            }
+            if (next == '1')
+            {
+                out += g_Config.ClientVersionString;
+                i++;
+                continue;
+            }
+            if (next == '2')
+            {
+                out += astr_t("UO Version ") + g_Config.ClientVersionString + ".";
+                i++;
+                continue;
+            }
+        }
+        out.push_back(text[i]);
+    }
+    return out;
+}
+
+} // namespace
+
+void CGumpScreenMain::BuildThemed(const LoginTheme &theme)
+{
+    Info(Client, "login theme: building %d themed widgets", (int)theme.Widgets.size());
+    if (theme.HasBind(LOGIN_THEME_BIND::Account) || theme.HasBind(LOGIN_THEME_BIND::Password))
+    {
+        m_Themed = true;
+    }
+
+    // widgets are laid out in file order, so a theme controls the draw order
+    // (backgrounds first, entries over their art, buttons last)
+    for (const auto &widget : theme.Widgets)
+    {
+        switch (widget.Type)
+        {
+            case LOGIN_THEME_WIDGET_TYPE::Image:
+            {
+                auto *image = const_cast<LoginThemeImage *>(theme.GetImage(widget.Image));
+                if (image == nullptr)
+                {
+                    break;
+                }
+                CSprite *sprite = LoginTheme_GetImageSprite(*image);
+                if (sprite == nullptr)
+                {
+                    break;
+                }
+                // a widget box overrides the image's own placement; without
+                // one the image sits at the theme's anchor and keeps its size
+                const int x = widget.Width || widget.Height ? widget.X : image->X;
+                const int y = widget.Width || widget.Height ? widget.Y : image->Y;
+                const int w = widget.Width ? widget.Width : sprite->Width;
+                const int h = widget.Height ? widget.Height : sprite->Height;
+                auto *external = new CGUIExternalTexture(sprite, false, x, y, w, h);
+                // the screen is a fixed-size surface: images are click-through
+                external->SelectOnly = false;
+                external->DrawOnly = true;
+                external->BoundingBoxCheck = true;
+                external->DrawMode = image->Mode;
+                Add(external);
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::Gump:
+            {
+                Add(new CGUIGumppic(widget.Graphic, widget.X, widget.Y));
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::GumpTiled:
+            {
+                Add(new CGUIGumppicTiled(
+                    widget.Graphic, widget.X, widget.Y, widget.Width, widget.Height));
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::Resizepic:
+            {
+                Add(new CGUIResizepic(
+                    SerialForBind(widget.Bind),
+                    widget.Graphic,
+                    widget.X,
+                    widget.Y,
+                    widget.Width,
+                    widget.Height));
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::Text:
+            {
+                if (widget.Unicode && !g_FontManager.UnicodeFontExists((uint8_t)widget.Font))
+                {
+                    Warning(
+                        Client,
+                        "login theme: widget '%s' uses font %d, which the client has no data"
+                        " for (bitmap fonts are 0-19; using font 0)",
+                        widget.Id.c_str(),
+                        widget.Font);
+                }
+
+                auto *text = new CGUIText(widget.Color, widget.X, widget.Y);
+                Add(text);
+                const auto &raw = widget.Text;
+                if (raw.rfind("cliloc:", 0) == 0)
+                {
+                    const auto cliloc = g_ClilocManager.ParseArgumentsToClilocString(
+                        (uint32_t)str_to_int(raw.substr(7)), true, L"");
+                    text->CreateTextureW(widget.Font, cliloc, 30, widget.Width, TS_LEFT, 0);
+                }
+                else
+                {
+                    if (widget.Unicode)
+                    {
+                        auto t = wstr_from_utf8(ExpandThemeText(raw));
+                        text->CreateTextureW(
+                            widget.Font, t, widget.Color, widget.Width, TS_LEFT, 0);
+                    }
+                    else
+                    {
+                        text->CreateTextureA(
+                            widget.Font, ExpandThemeText(raw), widget.Width, TS_LEFT, 0);
+                    }
+                }
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::TextBox:
+            {
+                const int serial = SerialForBind(widget.Bind);
+                if (serial == ID_MS_NONE)
+                {
+                    break;
+                }
+                const uint16_t color = widget.Color ? widget.Color : 0x034F;
+                const uint16_t selected = widget.ColorSelected ? widget.ColorSelected : color;
+                const uint16_t focused = widget.ColorFocused ? widget.ColorFocused : selected;
+                auto *entry = (CGUITextEntry *)Add(new CGUITextEntry(
+                    serial,
+                    color,
+                    selected,
+                    focused,
+                    widget.X,
+                    widget.Y,
+                    widget.Width,
+                    false,
+                    (uint8_t)widget.Font,
+                    TS_LEFT,
+                    0,
+                    widget.MaxLength));
+                entry->CheckOnSerial = true;
+                if (widget.Bind == LOGIN_THEME_BIND::Account)
+                {
+                    g_MainScreen.m_Account = &entry->m_Entry;
+                }
+                else
+                {
+                    // the fake entry keeps the asterisks; the real password
+                    // goes to g_MainScreen.m_Password (see GUMP_TEXT_ENTRY_EVENT)
+                    m_PasswordFake = &entry->m_Entry;
+                }
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::Button:
+            {
+                const int serial = SerialForAction(widget.Action);
+                const int targetPage =
+                    widget.Action.rfind("page:", 0) == 0 ? str_to_int(widget.Action.substr(5)) : -1;
+                if (serial == ID_MS_NONE && targetPage < 0)
+                {
+                    Warning(
+                        Client,
+                        "login theme: button '%s' has no action, dropped",
+                        widget.Id.c_str());
+                    break;
+                }
+                auto *button = (CGUIButton *)Add(new CGUIButton(
+                    serial,
+                    widget.Graphic,
+                    widget.GraphicSelected ? widget.GraphicSelected : widget.Graphic,
+                    widget.GraphicPressed ? widget.GraphicPressed : widget.Graphic,
+                    widget.X,
+                    widget.Y));
+                button->ToPage = targetPage;
+                if (widget.Action == "connect")
+                {
+                    m_Arrow = button;
+                    m_ThemedArrowArt = widget.Graphic;
+                    m_ThemedArrowBlinks = widget.Blink;
+                }
+                if (!widget.Tooltip.empty())
+                {
+                    m_Tooltips[serial] = widget.Tooltip;
+                }
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::Checkbox:
+            {
+                const int serial = SerialForBind(widget.Bind);
+                if (serial == ID_MS_NONE)
+                {
+                    break;
+                }
+                auto *checkbox = (CGUICheckbox *)Add(new CGUICheckbox(
+                    serial,
+                    widget.Graphic,
+                    widget.GraphicChecked ? widget.GraphicChecked : widget.Graphic,
+                    widget.GraphicDisabled ? widget.GraphicDisabled : widget.Graphic,
+                    widget.X,
+                    widget.Y));
+                if (!widget.Text.empty())
+                {
+                    checkbox->SetTextParameters(
+                        (uint8_t)widget.Font,
+                        ExpandThemeText(widget.Text),
+                        widget.Color,
+                        ParseTextPosition(widget.TextPosition));
+                }
+                if (serial == ID_MS_AUTOLOGIN)
+                {
+                    g_MainScreen.m_AutoLogin = checkbox;
+                }
+                else if (serial == ID_MS_SAVEPASSWORD)
+                {
+                    g_MainScreen.m_SavePassword = checkbox;
+                }
+                else if (serial == ID_MS_MUSIC)
+                {
+                    g_MainScreen.m_Music = checkbox;
+                    checkbox->Checked = g_ConfigManager.GetMusic();
+                }
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::Slider:
+            {
+                if (widget.Bind != LOGIN_THEME_BIND::MusicVolume)
+                {
+                    break;
+                }
+                // the slider art is the client's own; a theme only places it
+                auto *slider = (CGUISlider *)Add(new CGUISlider(
+                    ID_MS_MUSICVOLUME,
+                    0x00D2,
+                    0x00D3,
+                    0x00D2,
+                    0,
+                    false,
+                    false,
+                    widget.X,
+                    widget.Y,
+                    widget.Width,
+                    widget.MinValue,
+                    widget.MaxValue ? widget.MaxValue : 100,
+                    g_ConfigManager.GetMusicVolume()));
+                g_MainScreen.m_MusicVolume = slider;
+                break;
+            }
+            case LOGIN_THEME_WIDGET_TYPE::HtmlLink:
+            {
+                // one-line HTML link; the clickable rects are resolved by the
+                // gump's HTML text click path into OnDirectHTMLLink
+                // html text only renders with a unifont face (0-19); a theme
+                // that used a bitmap index falls back to 1, which LoadFonts
+                // always provides
+                uint8_t htmlFont = (uint8_t)widget.Font;
+                if (!g_FontManager.UnicodeFontExists(htmlFont))
+                {
+                    Warning(
+                        Client,
+                        "login theme: html_link '%s' uses font %d, which is not a unicode font"
+                        " (0-19); using font 1",
+                        widget.Id.c_str(),
+                        widget.Font);
+                    htmlFont = 1;
+                }
+                // the HTML builder resolves <a href> to a clickable rect and
+                // OnDirectHTMLLink opens it. The html renderer colors anchor
+                // text ONLY from the <body link=> attribute (the classic html
+                // rule: an anchor overrides any <font> with m_WebLinkColor,
+                // blue by default) - `color` is a no-op for html_link widgets.
+                // `link-color` sets it; without one the blue default applies.
+                astr_t body;
+                if (widget.LinkColor != 0)
+                {
+                    // uo_color16_to_32 returns the desktop pixel word
+                    // 0x00BBGGRR; the html parser reads "#RRGGBB"
+                    const uint32_t pixel = uo_color16_to_32(widget.LinkColor);
+                    char buf[32] = {};
+                    snprintf(
+                        buf,
+                        sizeof(buf),
+                        "<body link=\"#%02X%02X%02X\">",
+                        (pixel >> 0) & 0xFF,
+                        (pixel >> 8) & 0xFF,
+                        (pixel >> 16) & 0xFF);
+                    body = buf;
+                }
+                // no closing tags after the link: the HTML reader starts a new
+                // line for a line break it sees outside a link, which would
+                // make a one-line link render two rows tall
+                body += "<a href=\"" + widget.Url + "\">" + ExpandThemeText(widget.Text) + "</a>";
+
+                auto *html = (CGUIHTMLText *)Add(new CGUIHTMLText(
+                    0,
+                    htmlFont,
+                    widget.Color,
+                    widget.X,
+                    widget.Y,
+                    widget.Width ? widget.Width : 150,
+                    TS_LEFT,
+                    0,
+                    0xFFFFFFFF));
+                html->Text = wstr_from(body);
+                html->Create(false);
+                // a link wider than its box is split over several lines, which
+                // is rarely what a shard intends: say so once
+                const int textWidth =
+                    g_FontManager.GetWidthW(htmlFont, wstr_from(ExpandThemeText(widget.Text)));
+                if (widget.Width > 0 && textWidth > widget.Width)
+                {
+                    Warning(
+                        Client,
+                        "login theme: html_link '%s' text is %dpx wide but its box is %dpx;"
+                        " raise `width` to keep it on one line",
+                        widget.Id.c_str(),
+                        textWidth,
+                        widget.Width);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    // theme art ids come from the shard's data: warn once per id when the
+    // client cannot resolve it, so a shard owner sees a typo or a data file
+    // that is not the one the theme was authored against
+    std::set<uint16_t> missingArt;
+    for (const auto &widget : theme.Widgets)
+    {
+        for (const uint16_t graphic : { widget.Graphic,
+                                        widget.GraphicSelected,
+                                        widget.GraphicPressed,
+                                        widget.GraphicChecked,
+                                        widget.GraphicDisabled })
+        {
+            if (graphic == 0 || !missingArt.insert(graphic).second)
+            {
+                continue;
+            }
+            if (g_Game.ExecuteGump(graphic) == nullptr)
+            {
+                Warning(
+                    Client,
+                    "login theme: graphic 0x%04X (widget '%s') is not in the data "
+                    "files",
+                    graphic,
+                    widget.Id.c_str());
+            }
+        }
+    }
+
+    // the entry pointers and checkboxes CMainScreen::Load()/Save() use must
+    // exist even for a minimal theme: keep off-screen defaults for the ones
+    // the theme left out (same trick as the 1.25.32 pages)
+    if (g_MainScreen.m_Account == nullptr)
+    {
+        auto *entry = (CGUITextEntry *)Add(
+            new CGUITextEntry(ID_MS_ACCOUNT, 0x034F, 0x03E3, 0x0021, 0, 0, 190, false, 5));
+        entry->CheckOnSerial = true;
+        g_MainScreen.m_Account = &entry->m_Entry;
+    }
+    if (m_PasswordFake == nullptr)
+    {
+        auto *entry = (CGUITextEntry *)Add(
+            new CGUITextEntry(ID_MS_PASSWORD, 0x034F, 0x03E3, 0x0021, 0, 0, 190, false, 5));
+        entry->CheckOnSerial = true;
+        m_PasswordFake = &entry->m_Entry;
+    }
+    if (g_MainScreen.m_AutoLogin == nullptr)
+    {
+        g_MainScreen.m_AutoLogin =
+            (CGUICheckbox *)Add(new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 0, 0));
+    }
+    if (g_MainScreen.m_SavePassword == nullptr)
+    {
+        g_MainScreen.m_SavePassword =
+            (CGUICheckbox *)Add(new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 0, 0));
+    }
+}
+
+const astr_t *CGumpScreenMain::ThemedTooltip(int serial) const
+{
+    auto it = m_Tooltips.find(serial);
+    return it == m_Tooltips.end() ? nullptr : &it->second;
 }

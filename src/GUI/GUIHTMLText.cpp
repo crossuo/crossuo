@@ -36,8 +36,13 @@ CGUIHTMLText::~CGUIHTMLText()
 void CGUIHTMLText::Create(bool backgroundCanBeColored)
 {
     g_FontManager.SetUseHTML(true, HTMLStartColor, backgroundCanBeColored);
-    g_FontManager.GenerateW(Font, m_Sprite, Text, Color, 30, Width, Align, TextFlags);
+    const bool ok =
+        g_FontManager.GenerateW(Font, m_Sprite, Text, Color, 30, Width, Align, TextFlags);
     g_FontManager.SetUseHTML(false);
+    if (!ok)
+    {
+        Warning(Client, "html text: could not render '%s'", str_from(Text).c_str());
+    }
 }
 
 void CGUIHTMLText::Draw(bool checktrans)
@@ -49,7 +54,11 @@ void CGUIHTMLText::Draw(bool checktrans)
 
 bool CGUIHTMLText::Select()
 {
-    int x = g_MouseManager.Position.X - m_X;
-    int y = g_MouseManager.Position.Y - m_Y;
-    return (x >= 0 && y >= 0 && x < m_Sprite.Width && y < m_Sprite.Height);
+    // only the link rects are clickable, not the whole text box: the gump
+    // yields to the first item that selects, so a full-box html text steals
+    // presses from anything sharing its area (a login theme places the
+    // connect button under its link line). WebLinkUnderMouse takes the
+    // absolute mouse position and shifts by the text origin itself; it
+    // returns 0 when the pointer is outside every link.
+    return m_Sprite.WebLinkUnderMouse(m_X, m_Y) != 0;
 }

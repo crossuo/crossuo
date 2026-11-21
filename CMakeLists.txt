@@ -494,6 +494,20 @@ create_resource(${PROJECT_SOURCE_DIR}/resources/cover.png ${PROJECT_BINARY_DIR}/
 # Mozilla trust bundle travels with the binary (see http.cpp)
 create_resource(${PROJECT_SOURCE_DIR}/resources/cacert.pem ${PROJECT_BINARY_DIR}/cacert.h)
 
+# optional built-in login screen theme (docs/LOGIN_THEME.md): a shard can bake
+# its theme into the binary and select it with --login-theme embedded
+set(XUO_LOGIN_THEME_FILE "" CACHE FILEPATH "Login theme to embed (empty = none)")
+if (XUO_LOGIN_THEME_FILE)
+  # create_resource names the symbols after the input file, which the caller
+  # picks: copy the theme to a fixed name first so the C++ side can always
+  # include login_theme_embedded.h and read login_theme_embedded[]
+  set(XUO_LOGIN_THEME_STAGE ${PROJECT_BINARY_DIR}/login_theme_embedded.theme)
+  configure_file(${XUO_LOGIN_THEME_FILE} ${XUO_LOGIN_THEME_STAGE} COPYONLY)
+  create_resource(${XUO_LOGIN_THEME_STAGE} ${PROJECT_BINARY_DIR}/login_theme_embedded.h)
+  compile_definitions(XUO_LOGIN_THEME_EMBEDDED)
+  include_directories(${PROJECT_BINARY_DIR})
+endif()
+
 configure_file(
   "${PROJECT_SOURCE_DIR}/resources/revision.h.in"
   "${PROJECT_BINARY_DIR}/revision.h"
