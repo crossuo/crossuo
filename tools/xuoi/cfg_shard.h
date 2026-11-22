@@ -70,6 +70,17 @@ CFG_FIELD(shard, shardvideo, {}, astr_t)
 // optional, plain http(s) url — shard video/trailer; drives the client's
 // video link (crossuo.cfg 'shardvideo')
 
+CFG_FIELD(shard, logintheme, {}, astr_t)
+// optional
+// data-driven login screen for this shard (client CLI: --login-theme, or the
+// client's LoginTheme= key): a url, or a path the client can read. The web
+// shell forwards this as --login-theme, routing absolute urls through the
+// deployment's same-origin proxy (a cross-origin theme host is not
+// CORS-enabled by default). Empty = the client's built-in login screen.
+// format:
+//   <url>
+//   https://play.example.com/themes/fc.theme
+
 CFG_FIELD(shard, producturl, {}, astr_t)
 // optional
 // data install source: where the client streams/downloads its data from

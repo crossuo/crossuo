@@ -24,6 +24,7 @@
 #include <external/gfx/stb_image.h>
 
 #include <stdio.h>
+#include <algorithm>
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
@@ -61,68 +62,46 @@ astr_t UrlToHttp(const astr_t &url)
     return "https://" + url.substr(strlen("crossuo://"));
 }
 
-uint64_t UrlHash(const astr_t &url)
+// Fetches a url into memory (theme text and theme images alike). No cache
+// file is involved: the web build has no guaranteed writable tree at boot, and
+// a re-fetch per boot matches the remote-config contract anyway.
+bool FetchToMemory(const astr_t &url, std::vector<uint8_t> &out, size_t cap)
 {
-    uint64_t hash = 1469598103934665603ull;
-    for (char c : url)
-    {
-        hash ^= uint8_t(c);
-        hash *= 1099511628211ull;
-    }
-    return hash;
-}
-
-// Download a theme/asset into the appdata cache and return the cached path.
-// Every boot re-fetches (the live URL always answers), the cache only serves
-// offline starts - same contract as the remote crossuo.cfg.
-fs_path FetchToCache(const astr_t &url, const char *suffix, size_t cap)
-{
-    const auto http = UrlToHttp(url);
-    char name[96] = {};
-    snprintf(name, sizeof(name), "remote-%016llx.%s", (unsigned long long)UrlHash(url), suffix);
-    const auto cache = FilePath(name);
-
+    // a deployment-relative path ("/stream/<encoded url>", the web shell's
+    // proxy lane) is a same-origin request, not an absolute url: the XHR
+    // transport resolves it against the page origin
+    const auto http = IsUrl(url) ? UrlToHttp(url) : url;
     http_init();
     http_response response;
-    bool fetched = false;
     for (const auto &candidate :
          { http,
            (http.rfind("https://", 0) == 0) ? "http://" + http.substr(strlen("https://")) : http })
     {
-        if (http_get(candidate.c_str(), nullptr, cap, &response) && response.status == 200)
+        if (http_get(candidate.c_str(), nullptr, cap, &response) && response.status == 200 &&
+            !response.body.empty())
         {
-            fetched = true;
-            break;
+            out = response.body;
+            return true;
         }
     }
-
-    if (!fetched)
-    {
-        Error(
-            Client,
-            "login theme: fetch failed for %s (using cached copy when present)",
-            url.c_str());
-        return fs_path_exists(cache) ? cache : fs_path_from("");
-    }
-
-    fs_path_create(fs_path_from(fs_path_ascii(FilePath(""))));
-    if (!fs_file_write(fs_path_ascii(cache), response.body.data(), response.body.size()))
-    {
-        Error(Client, "login theme: cannot write cache %s", fs_path_ascii(cache));
-        return fs_path_exists(cache) ? cache : fs_path_from("");
-    }
-    return cache;
+    Error(Client, "login theme: fetch failed for %s", url.c_str());
+    return false;
 }
 
 // Local candidate resolution for an image: absolute path, theme-relative,
 // data dir relative, then the plain file name in the working directory.
+bool IsAbsolutePath(const astr_t &file)
+{
+    return !file.empty() && (file[0] == '/' || (file.size() > 1 && file[1] == ':'));
+}
+
 fs_path ResolveLocalImage(const astr_t &baseDir, const astr_t &file)
 {
     if (file.empty())
     {
         return fs_path_from("");
     }
-    if (file[0] == '/' || (file.size() > 1 && file[1] == ':'))
+    if (IsAbsolutePath(file))
     {
         return fs_path_from(file);
     }
@@ -600,11 +579,10 @@ ParseWidgets(const std::vector<ThemeLine> &lines, const LoginTheme::ImageMap &im
 // `key = value`, `#`/`;` comments, optional double quotes around the value,
 // and `{`/`}` block delimiters. Brace handling is explicit here because the
 // blocks are per-widget records (see ParseWidgets).
-std::vector<ThemeLine> Tokenize(const fs_path &path)
+std::vector<ThemeLine> Tokenize(const std::vector<uint8_t> &data)
 {
     std::vector<ThemeLine> lines;
-    std::vector<uint8_t> data;
-    if (!fs_file_read(fs_path_ascii(path), data) || data.empty())
+    if (data.empty())
     {
         return lines;
     }
@@ -755,44 +733,106 @@ std::vector<ThemeLine> Tokenize(const fs_path &path)
     return lines;
 }
 
-bool ParseTheme(const fs_path &path, LoginTheme &theme)
+bool ParseTheme(const std::vector<uint8_t> &data, LoginTheme &theme)
 {
-    const auto lines = Tokenize(path);
+    const auto lines = Tokenize(data);
     theme.Images = ParseImages(lines);
     theme.Widgets = ParseWidgets(lines, theme.Images);
     return !theme.Widgets.empty();
 }
 
 #if defined(XUO_LOGIN_THEME_EMBEDDED)
-// Writes the embedded theme to a scratch file so the line-based parser can
-// read it; returns the empty path on failure.
-fs_path StageEmbeddedTheme(const unsigned char *data, size_t size)
-{
-    const auto path = FilePath("login-theme-embedded.theme");
-    if (!fs_file_write(fs_path_ascii(path), data, size))
-    {
-        Error(Client, "login theme: cannot stage the embedded theme");
-        return fs_path_from("");
-    }
-    return path;
-}
 #endif // XUO_LOGIN_THEME_EMBEDDED
 
-// Resolves one source to the local file it lives in: url (fetched to the
-// cache), embedded resource (staged), or the local path itself.
-fs_path ResolveThemeSource(const astr_t &source)
+// Reads the theme body for one source into memory. Everything here stays
+// filesystem-agnostic (the web build runs on a MEMFS/IDBFS tree): the theme
+// text is parsed from these bytes, and only *relative image paths* ever need
+// the source to have a directory.
+//
+//   url        fetched through http_get (same-origin path or CORS-enabled
+//              host; the web shell routes cross-origin shard urls through
+//              the deployment's /stream relay)
+//   embedded   the resource compiled into the binary
+//   anything   a local path (native) or a MEMFS path (web)
+bool ReadThemeBytes(
+    const astr_t &source, std::vector<uint8_t> &body, astr_t &baseDir, astr_t &baseUrl)
 {
+    baseDir.clear();
+    baseUrl.clear();
+
     if (IsUrl(source))
     {
-        return FetchToCache(source, "theme", MAX_THEME_BYTES);
+        const auto http = UrlToHttp(source);
+        http_init();
+        http_response response;
+        bool fetched = false;
+        const astr_t httpCandidate =
+            http.rfind("https://", 0) == 0 ? "http://" + http.substr(strlen("https://")) : http;
+        for (const auto &candidate : { http, httpCandidate })
+        {
+            if (http_get(candidate.c_str(), nullptr, MAX_THEME_BYTES, &response) &&
+                response.status == 200 && !response.body.empty())
+            {
+                fetched = true;
+                break;
+            }
+        }
+        if (!fetched)
+        {
+            Error(Client, "login theme: fetch failed for %s", source.c_str());
+            return false;
+        }
+        body = response.body;
+        // a remote theme has no local directory, but a theme-relative image
+        // is still a valid url next to the theme itself
+        const auto slash = http.rfind('/');
+        if (slash != astr_t::npos)
+        {
+            baseUrl = http.substr(0, slash + 1);
+        }
+        return true;
     }
+
 #if defined(XUO_LOGIN_THEME_EMBEDDED)
     if (source == "embedded")
     {
-        return StageEmbeddedTheme(login_theme_embedded, (size_t)login_theme_embedded_size);
+        body.assign(login_theme_embedded, login_theme_embedded + login_theme_embedded_size);
+        return !body.empty();
     }
 #endif
-    return fs_path_from(source);
+
+    // Same-origin path: on the web the client runs on a MEMFS tree that only
+    // holds what was staged into it, so a path the page references must be
+    // requested over HTTP. Native keeps reading the file - and a path that
+    // exists locally still wins on the web (the shell stages page-relative
+    // themes there).
+    const auto path = fs_path_from(source);
+#if defined(XUO_EMSC)
+    if (!source.empty() && source[0] == '/' && !fs_path_exists(path))
+    {
+        if (FetchToMemory(source, body, MAX_THEME_BYTES))
+        {
+            const auto slash = source.rfind('/');
+            if (slash != astr_t::npos)
+            {
+                baseUrl = source.substr(0, slash + 1);
+            }
+            return true;
+        }
+        return false;
+    }
+#endif
+    if (!fs_path_exists(path) || !fs_file_read(fs_path_ascii(path), body) || body.empty())
+    {
+        return false;
+    }
+    // relative images resolve against the theme file's directory
+    const auto dir = fs_directory(path);
+    if (!fs_path_empty(dir))
+    {
+        baseDir = fs_path_ascii(dir);
+    }
+    return true;
 }
 
 } // namespace
@@ -840,23 +880,49 @@ CSprite *LoginTheme_GetImageSprite(LoginThemeImage &image)
     }
     image.Tried = true;
 
-    fs_path path;
-    if (IsUrl(image.File))
-    {
-        path = FetchToCache(image.File, "png", 16 * 1024 * 1024);
-    }
-    else
-    {
-        path = ResolveLocalImage(s_theme.BaseDir, image.File);
-    }
-
     // the art replacer's decoder: png/bmp/jpg straight into the engine's
     // 16-bit color-key layout - one image pipeline for everything loaded
-    // from disk, no special casing for theme files
+    // from disk, no special casing for theme files. Url images are fetched
+    // into memory (the web build may have no writable cache tree, and a
+    // deployment can serve themes from the same origin) and decoded by the
+    // same decoder's memory entry point.
     std::vector<uint16_t> buffer;
     short width = 0;
     short height = 0;
-    if (fs_path_empty(path) || !art_replacer_decode(path, buffer, width, height))
+    // a theme-relative image of a theme that came from a url is itself a url
+    // next to it (the web stages the theme from the page, so its images live
+    // there too)
+    astr_t imageUrl;
+    if (IsUrl(image.File))
+    {
+        imageUrl = image.File;
+    }
+    else if (!s_theme.BaseUrl.empty() && !IsAbsolutePath(image.File))
+    {
+        imageUrl = s_theme.BaseUrl + image.File;
+    }
+#if defined(XUO_EMSC)
+    // web: a page-absolute path is a server resource, not a MEMFS file
+    // unless the shell staged it there
+    else if (IsAbsolutePath(image.File) && !fs_path_exists(fs_path_from(image.File)))
+    {
+        imageUrl = image.File;
+    }
+#endif
+
+    bool decoded = false;
+    if (!imageUrl.empty())
+    {
+        std::vector<uint8_t> bytes;
+        decoded = FetchToMemory(imageUrl, bytes, 16 * 1024 * 1024) &&
+                  art_replacer_decode_memory(bytes.data(), bytes.size(), buffer, width, height);
+    }
+    else
+    {
+        const auto path = ResolveLocalImage(s_theme.BaseDir, image.File);
+        decoded = !fs_path_empty(path) && art_replacer_decode(path, buffer, width, height);
+    }
+    if (!decoded)
     {
         Warning(Client, "login theme: cannot load image '%s'", image.File.c_str());
         return nullptr;
@@ -914,10 +980,25 @@ const LoginTheme *LoginTheme_Get()
         }
     }
 
+    // the CLI value is mirrored into g_Config at the config-load stage, so the
+    // same source can appear twice; keep the first (highest priority) copy
+    std::vector<astr_t> unique;
     for (const auto &source : sources)
     {
-        const auto path = ResolveThemeSource(source);
-        if (fs_path_empty(path) || !fs_path_exists(path))
+        if (std::find(unique.begin(), unique.end(), source) == unique.end())
+        {
+            unique.push_back(source);
+        }
+    }
+    sources.swap(unique);
+
+    for (const auto &source : sources)
+    {
+        std::vector<uint8_t> body;
+        astr_t baseDir;
+        astr_t baseUrl;
+        Info(Client, "login theme: trying '%s'", source.c_str());
+        if (!ReadThemeBytes(source, body, baseDir, baseUrl))
         {
             Warning(Client, "login theme: cannot read '%s'", source.c_str());
             continue;
@@ -925,19 +1006,12 @@ const LoginTheme *LoginTheme_Get()
 
         LoginTheme theme;
         theme.Source = source;
-        if (!ParseTheme(path, theme))
+        theme.BaseDir = baseDir;
+        theme.BaseUrl = baseUrl;
+        if (!ParseTheme(body, theme))
         {
             Warning(Client, "login theme: '%s' has no widgets, ignoring", source.c_str());
             continue;
-        }
-
-        // relative images resolve against the theme file directory (the url
-        // cache dir for remote themes; embedded themes use data-dir names or
-        // absolute urls)
-        const auto dir = fs_directory(path);
-        if (!fs_path_empty(dir))
-        {
-            theme.BaseDir = fs_path_ascii(dir);
         }
 
         s_theme = theme;
@@ -951,5 +1025,13 @@ const LoginTheme *LoginTheme_Get()
     }
 
     s_theme = LoginTheme();
+    if (!sources.empty())
+    {
+        Warning(
+            Client,
+            "login theme: no source could be loaded (%d tried), keeping the built-in"
+            " login screen",
+            (int)sources.size());
+    }
     return nullptr;
 }

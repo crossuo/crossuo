@@ -1232,6 +1232,25 @@
           if (so) args.push('--seedoverride=' + so);
           var sco = String(shard.systemcheckoverride || '').trim();
           if (sco) args.push('--systemcheckoverride=' + sco);
+          // login screen theme (client CLI: --login-theme, src/Gumps/LoginTheme)
+          // - the web has no crossuo.cfg to carry LoginTheme=, so the shard
+          // entry is the only source. The client can read it by url, but a
+          // cross-origin theme host is not CORS-enabled by default: an
+          // absolute http(s) url goes through the same /stream relay the
+          // product lane uses (the proxy decodes its whole remainder into the
+          // upstream url). Relative and page-absolute values already resolve
+          // same-origin. A '..' segment is refused like the producturl lane.
+          var theme = String(shard.logintheme || '').trim();
+          if (theme) {
+            if (/^https?:\/\//i.test(theme) || /^crossuo:\/\//i.test(theme)) {
+              args.push('--login-theme=/stream/' + encodeURIComponent(theme));
+            } else if (/(^|\/)\.\.(\/|$)/.test(theme)) {
+              console.warn('[shards] logintheme "' + theme +
+                           '" contains a parent segment - ignored');
+            } else {
+              args.push('--login-theme=' + theme);
+            }
+          }
           var installer = String(shard.producturl || '').trim();
           // producturl is a plain url (the uo+/xuo+/website+/download+ prefix
           // grammar is gone; empty = manual install, no product flag)
@@ -1600,9 +1619,57 @@
             s.async = true;
             document.body.appendChild(s);
           };
+          // A page-relative login theme ("themes/fc.theme", "/themes/fc.theme")
+          // names a file the SERVER serves; the client resolves it on the
+          // MEMFS tree, which starts empty. Fetch it here, before the runtime
+          // consumes the arguments, and hand the client the staged path. An
+          // absolute url or "embedded" needs no staging: the client fetches
+          // the former through the /stream relay and reads the latter from
+          // the binary.
+          var stageTheme = function () {
+            for (var i = 0; i < Module.arguments.length; ++i) {
+              var a = String(Module.arguments[i]);
+              if (a.indexOf('--login-theme=') !== 0) continue;
+              var value = a.slice('--login-theme='.length);
+              if (!value || /^(?:https?|crossuo):\/\//i.test(value) || value === 'embedded') {
+                return null; // the client resolves these itself
+              }
+              return new Promise(function (resolve) {
+                fetch(value, { credentials: 'omit' })
+                  .then(function (r) {
+                    if (!r.ok) throw new Error('http ' + r.status);
+                    return r.arrayBuffer();
+                  })
+                  .then(function (buf) {
+                    try {
+                      var dir = '/data/crossuo';
+                      try { FS.mkdirTree(dir); } catch (e) {}
+                      var staged = dir + '/login-theme.theme';
+                      FS.writeFile(staged, new Uint8Array(buf));
+                      Module.arguments[i] = '--login-theme=' + staged;
+                    } catch (e) {
+                      console.warn('[theme] could not stage "' + value + '": ' + e);
+                    }
+                    resolve();
+                  })
+                  .catch(function (err) {
+                    console.warn('[theme] fetch failed for "' + value + '": ' + err);
+                    resolve(); // the client falls back to its built-in screen
+                  });
+              });
+            }
+            return null;
+          };
           var prepare = (Module.opfsBootPrepare ? Module.opfsBootPrepare(shardName)
                                                 : Promise.resolve(0));
-          prepare.then(startRuntime, startRuntime); // the cache never blocks a boot
+          // the theme must be staged before the runtime parses the arguments;
+          // a failed fetch must not block the boot
+          var themePromise = stageTheme();
+          // the OPFS warm-up keeps its "never blocks a boot" contract; only
+          // the theme staging is awaited, and it resolves even when its fetch
+          // fails
+          prepare.then(function () { return themePromise; }, function () { return themePromise; })
+            .then(startRuntime, startRuntime);
         }
 
         function setPageStatus(text) {

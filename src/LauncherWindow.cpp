@@ -319,6 +319,7 @@ apply_result client_apply_shard(const shard_profile &profile)
     shard.assistant = profile.assistant;
     shard.language = profile.language;
     shard.report_language = profile.report_language;
+    shard.login_theme = profile.login_theme;
     //a shard switch is a restart-class change: the shard profile carries the
     //client version/type/crypt/data identity, which cannot be safely
     //re-fixed-up on a running session (and a live address-only swap does not

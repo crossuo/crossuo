@@ -264,6 +264,9 @@ static void shard_fill_entry(const shard_data &shard, crossuo::entry &e)
         e.crossuo_seedoverride = shard.seed_override;
     if (shard.system_check_override && shard.system_check_override[0])
         e.crossuo_systemcheckoverride = shard.system_check_override;
+    // the shard's login screen theme travels with the rest of its profile
+    if (shard.login_theme && shard.login_theme[0])
+        e.crossuo_logintheme = shard.login_theme;
     // only a shard that explicitly disables the assistant writes the key:
     // a shard without an Assistant entry keeps the client's own crossuo.cfg
     // value (the assistant is a client-local preference, not shard data)
@@ -361,6 +364,7 @@ void account_launch_shard(int shard_index)
     profile.video = entry.crossuo_shardvideo;
     profile.seed_override = entry.crossuo_seedoverride;
     profile.system_check_override = entry.crossuo_systemcheckoverride;
+    profile.login_theme = entry.crossuo_logintheme;
     // "" = the profile does not constrain the assistant (keep the client's
     // own value); "no" forbids it (a profile-level Assistant=yes is treated
     // as unconstrained: it is the default everywhere)

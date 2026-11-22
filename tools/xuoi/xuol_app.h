@@ -92,6 +92,7 @@ struct shard_profile
     astr_t assistant;
     astr_t language;              // client locale (.loc), "" = keep default
     astr_t report_language;       // report locale, "" = keep default
+    astr_t login_theme;           // login screen theme url/path, "" = built-in
 };
 // applies a shard selection to the running client instead of spawning a new
 // process; see client_apply_profile for the result semantics

@@ -21,6 +21,7 @@
 namespace
 {
 fs_path s_root;
+fs_path s_install_dir; // remembered so the images root can be probed later
 bool s_initialized = false;
 std::mutex s_mutex; // double-buffered draw threads share the lookup cache
 
@@ -63,6 +64,21 @@ size_t id_stems(uint16_t id, char out[2][16])
     snprintf(out[0], 16, "%u", unsigned(id));
     snprintf(out[1], 16, "0x%x", unsigned(id));
     return 2;
+}
+
+// probes <install>/ExternalImages and records it once it exists. Caller holds
+// s_mutex (init calls it before any other thread can be running).
+void UpdateRootLocked()
+{
+    if (!fs_path_empty(s_root) || fs_path_empty(s_install_dir))
+    {
+        return;
+    }
+    s_root = find_images_root(s_install_dir);
+    if (!fs_path_empty(s_root))
+    {
+        LOG_INFO("art replacer: images root %s", fs_path_ascii(s_root));
+    }
 }
 
 // first readable <root>/<kind>/<id>.<ext>: the flat layout the patch planner
@@ -135,23 +151,71 @@ bool art_replacer_decode(const fs_path &path, std::vector<uint16_t> &pixels, sho
     return decode(path, pixels, width, height);
 }
 
+bool art_replacer_decode_memory(
+    const uint8_t *data, size_t size, std::vector<uint16_t> &pixels, short &width, short &height)
+{
+    if (data == nullptr || size == 0)
+    {
+        return false;
+    }
+    int w = 0;
+    int h = 0;
+    int comp = 0;
+    uint8_t *rgba = stbi_load_from_memory(data, (int)size, &w, &h, &comp, 4);
+    if (rgba == nullptr)
+    {
+        LOG_ERROR("art replacer: could not decode an in-memory image: %s", stbi_failure_reason());
+        return false;
+    }
+    if (w <= 0 || h <= 0 || w > 0x4000 || h > 0x4000)
+    {
+        stbi_image_free(rgba);
+        return false;
+    }
+    pixels.resize(size_t(w) * size_t(h));
+    for (int i = 0; i < w * h; ++i)
+    {
+        const uint8_t *px = rgba + size_t(i) * 4;
+        pixels[size_t(i)] =
+            px[3] < 128 ? uint16_t(0) :
+                          uint16_t(0x8000 | uo_color32_to_16((px[0] << 16) | (px[1] << 8) | px[2]));
+    }
+    stbi_image_free(rgba);
+    width = short(w);
+    height = short(h);
+    return true;
+}
+
 void art_replacer_init(const fs_path &install_dir)
 {
     if (s_initialized || fs_path_empty(install_dir))
     {
         return;
     }
-    s_root = find_images_root(install_dir);
-    s_initialized = true; // even without a root: a later patch install is
-                          // tested per id, so nothing needs re-initializing
-    if (!fs_path_empty(s_root))
+    s_initialized = true;
+    s_install_dir = install_dir;
+    // Probe now, but do NOT latch a miss: on a streamed install this runs
+    // from the config-load stage, before vfs_boot() fetches the product's
+    // ExternalImages tree (the pre-boot refresh), so the directory usually
+    // does not exist yet. UpdateRoot() probes again on the next lookup.
+    UpdateRootLocked();
+}
+
+// resolves <install>/ExternalImages once it exists; a miss stays open so a
+// patch install (or the streaming refresh) landing later is still picked up
+void art_replacer_update_root()
+{
+    if (!s_initialized || !fs_path_empty(s_root))
     {
-        LOG_INFO("art replacer: images root %s", fs_path_ascii(s_root));
+        return;
     }
+    std::lock_guard<std::mutex> lock(s_mutex);
+    UpdateRootLocked();
 }
 
 bool art_replacer_has(int kind, uint16_t id)
 {
+    art_replacer_update_root();
     if (!s_initialized || fs_path_empty(s_root) || kind < 0 || kind > 2)
     {
         return false;

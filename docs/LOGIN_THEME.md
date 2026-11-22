@@ -9,16 +9,41 @@ rebuilding the client. When no theme is present the built-in layout is used.
 
 First available source wins, in this order:
 
-1. `--login-theme <path|url>`
+1. `--login-theme <path|url|embedded>`
    - a local path, or
-   - `http(s)://` / `crossuo://` url (fetched on every boot, cached for
-     offline starts), or
+   - `http(s)://` / `crossuo://` url (fetched on every boot), or
    - `embedded` — the theme baked into the binary (see below).
 2. `LoginTheme=<path|url>` in `crossuo.cfg` (or the shard profile).
 3. `login.theme` in the UO data directory (`CustomPath`).
 
-A source that cannot be read or parsed is logged and skipped. `none` disables
-a lower-priority source explicitly.
+A source that cannot be read or parsed is logged (`login theme: trying …`,
+`cannot read …`) and skipped. `none` disables a lower-priority source.
+
+Relative images of a theme fetched **by url** are fetched from the same
+directory as the theme, so a shard can publish `themes/fc.theme` plus
+`themes/fc-bg.png` together.
+
+### On the web
+
+The browser build has no `crossuo.cfg` to write, so a shard's theme travels in
+its `shards.cfg` entry:
+
+```ini
+logintheme=https://play.example.com/themes/fc.theme
+```
+
+The page shell forwards it as `--login-theme`, and:
+
+- an absolute url is routed through the deployment's same-origin proxy
+  (`/stream/<encoded url>`) — a cross-origin theme host is not CORS-enabled by
+  default, so a direct fetch would be blocked by the browser;
+- a page-relative value (`themes/fc.theme`, `/themes/fc.theme`) is fetched by
+  the page and staged into the client's filesystem before boot;
+- `embedded` needs no network at all.
+
+The client treats a `/`-prefixed theme or image path as a same-origin request
+when the file is not staged, and the theme text is parsed from memory either
+way, so no writable cache directory is required.
 
 ### Embedding a theme
 

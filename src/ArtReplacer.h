@@ -36,11 +36,21 @@ void art_replacer_init(const fs_path &install_dir);
 // The same decoder serves every image the client loads from disk (login
 // theme [image] files included): one layout, one code path.
 bool art_replacer_decode(const fs_path &path, std::vector<uint16_t> &pixels, short &width, short &height);
+// same decoder for bytes already in memory (login theme images fetched by
+// url, including the web build where no cache file is written)
+bool art_replacer_decode_memory(
+    const uint8_t *data, size_t size, std::vector<uint16_t> &pixels, short &width, short &height);
 bool art_replacer_pixels(
     int kind, uint16_t id, std::vector<uint16_t> &pixels, short &width, short &height);
 
 // cheap "is there a replacement for this id" (resolved and cached)
 bool art_replacer_has(int kind, uint16_t id);
+
+// re-probes the images root when it was missing at init time: a streamed
+// install fetches the ExternalImages tree after the replacer is initialized,
+// and a running patch install can land it later (cheap no-op once resolved,
+// called on every lookup miss path)
+void art_replacer_update_root();
 
 void art_replacer_init(const fs_path &install_dir);
 

@@ -483,6 +483,18 @@ bool load_config()
     {
         g_Config.SystemCheckOverride = str_trim(g_cli["systemcheckoverride"].get().string);
     }
+    // login screen theme: same shape as the config-file key. The web shell
+    // has no crossuo.cfg to carry LoginTheme=, so the shard profile rides in
+    // here; the loader reads the CLI too, but mirroring it keeps every
+    // profile-driven path (and the value the client later saves) consistent
+    if (g_cli["login-theme"].was_set())
+    {
+        const auto value = str_trim(g_cli["login-theme"].get().string);
+        if (!value.empty())
+        {
+            g_Config.LoginTheme = value;
+        }
+    }
     if (g_cli["autologin"].was_set())
     {
         g_Config.AutoLogin = g_cli["autologin"].get().u32 != 0;

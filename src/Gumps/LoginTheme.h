@@ -117,6 +117,9 @@ struct LoginTheme
 
     astr_t Source;  // description of where the theme came from, for logs
     astr_t BaseDir; // local theme file directory, for relative image paths
+    astr_t BaseUrl; // theme url up to its last '/', for relative image paths
+                    // of a theme fetched by url (the web stages a theme from
+                    // the page and its images must be fetched too)
     ImageMap Images;
     std::vector<LoginThemeWidget> Widgets;
 

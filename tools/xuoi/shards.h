@@ -36,6 +36,7 @@ struct shard_data
     astr_t community;   // forum/community page url ("" = none)
     const char *product_url; // plain data product url ("" = manual install,
                              // the client falls back to its default)
+    const char *login_theme; // login screen theme url/path ("" = built-in)
 };
 
 // true when the url looks like a discord community link

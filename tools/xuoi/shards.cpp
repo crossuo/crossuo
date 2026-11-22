@@ -198,7 +198,8 @@ shard_data shard_by_id(int id)
              s.shard_shardvideo.c_str(),
              s.shard_shardother,
              s.shard_shardcommunity,
-             s.shard_producturl.c_str() };
+             s.shard_producturl.c_str(),
+             s.shard_logintheme.c_str() };
 }
 
 } // namespace xuol
