@@ -21,7 +21,7 @@ if (XUO_WINDOWS AND NOT MSVC)
 endif()
 
 if (NOT XUO_VERSION)
-  set(XUO_VERSION "2.0.4")
+  set(XUO_VERSION "2.0.5")
 endif()
 
 string(REPLACE "." "," XUO_VERSION_NUM ${XUO_VERSION})
