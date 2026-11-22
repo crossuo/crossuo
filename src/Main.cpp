@@ -971,10 +971,37 @@ static void AutoQuitTick()
     }
 }
 
+#if defined(XUO_EMSC)
+// set once the first (splash) frame of the web boot hand-off was presented
+static bool g_WebBootContinuationStarted = false;
+#endif
+
 static bool RunFrame(bool &raised)
 {
     bool quit = false;
     FrameStatsTick();
+
+#if defined(XUO_EMSC)
+    // web boot hand-off (see CGame::Install): the install is streamed and
+    // materialized from InstallContinue(), which blocks for seconds. That work
+    // runs from a frame callback here so the boot splash is presented first -
+    // a worker-owned OffscreenCanvas only composites when a callback returns.
+    // Two phases: present the splash on the first frame, run the boot on the
+    // next one.
+    if (g_WebBootPending)
+    {
+        if (!g_WebBootContinuationStarted)
+        {
+            g_WebBootContinuationStarted = true;
+            g_Game.InstallWebBootPoll(); // draws + commits the splash frame
+            return false;
+        }
+        if (!g_GameWindow.ContinueWebBoot())
+        {
+            return true; // the boot failed: quit through the normal path
+        }
+    }
+#endif
 
     // 1] Handle all SDL events. Mouse, keyboard, windows etc..
     SDL_Event event;

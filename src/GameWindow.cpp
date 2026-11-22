@@ -150,9 +150,36 @@ bool CGameWindow::OnCreate()
         return false;
     }
 
+#if defined(XUO_EMSC)
+    // web: Install() returns while the streamed install is still running, so
+    // the window is ready and the rest of the boot is driven from the main
+    // loop (RunFrame -> ContinueWebBoot). Nothing else to do here.
+    if (g_WebBootPending)
+    {
+        return true;
+    }
+#endif
+
     g_GumpManager.RedrawAll();
     return true;
 }
+
+#if defined(XUO_EMSC)
+// Runs the post-install part of the web boot exactly once, after the main
+// loop sees the streamed install complete. Returns false when the boot could
+// not continue (the caller should quit).
+bool CGameWindow::ContinueWebBoot()
+{
+    Info(Client, "streaming install complete, continuing the boot");
+    g_WebBootPending = false;
+    const bool ok = g_Game.InstallContinue();
+    if (ok)
+    {
+        g_GumpManager.RedrawAll();
+    }
+    return ok;
+}
+#endif
 
 void CGameWindow::OnDestroy()
 {

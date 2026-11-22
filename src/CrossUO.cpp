@@ -305,6 +305,12 @@ void CGame::ProcessCommandLine()
     }
 }
 
+#if defined(XUO_EMSC)
+// web: true while the boot waits for the main loop to run InstallContinue()
+// (Install() returns early - see its comment)
+bool g_WebBootPending = false;
+#endif
+
 bool CGame::Install()
 {
     Info(Client, "CGame::Install()");
@@ -318,6 +324,123 @@ bool CGame::Install()
 
     LoadAutoLoginNames();
 
+#if defined(XUO_EMSC)
+    // web: everything from here down streams and materializes the install and
+    // is slow (seconds) and blocking. The canvas is an OffscreenCanvas owned
+    // by this worker, so a frame reaches the screen only when a *frame
+    // callback* returns; spinning in here draws the splash into a canvas the
+    // browser never composites (the black boot screen). The work moves to
+    // InstallContinue(), which the main loop calls once the streamed install
+    // reports done through InstallWebBootPoll() - that poll is the only place
+    // the boot splash is presented.
+    g_WebBootPending = true;
+    return true;
+#else
+    return InstallContinue();
+#endif
+}
+
+template <typename T, size_t SIZE>
+void ValidateSpriteIsDeleted(T (&arr)[SIZE])
+{
+    for (int i = 0; i < SIZE; ++i)
+    {
+        CIndexObject &obj = arr[i];
+        (void)obj;
+        assert(obj.UserData == nullptr);
+    }
+}
+
+void DestroySprite(CIndexObject *obj)
+{
+    static const bool artArrayLog = getenv("XUO_ART_ARRAY_LOG") != nullptr;
+    auto *spr = (CSprite *)obj->UserData;
+    if (spr != nullptr)
+    {
+        if (spr->Texture && artArrayLog)
+        {
+            fprintf(
+                stderr,
+                "[artarray] destroy tex=%u layer=%d\n",
+                spr->Texture->Texture,
+                spr->Texture->ArrayLayer);
+        }
+        spr->Clear();
+        delete spr;
+        obj->UserData = nullptr;
+    }
+}
+
+// teardown for a sound decoded from a streaming placeholder -
+// the same path the garbage collector uses, plus the malloc'd wave scratch
+static void DestroySoundCache(CIndexObject *obj)
+{
+    auto *snd = (CIndexSound *)obj;
+    if (snd->UserData != SOUND_NULL)
+    {
+        g_SoundManager.UpdateSoundEffect((SoundHandle)snd->UserData, -1);
+        snd->UserData = SOUND_NULL;
+    }
+    if (snd->m_WaveFile != nullptr)
+    {
+        free(snd->m_WaveFile);
+        snd->m_WaveFile = nullptr;
+    }
+}
+
+void CGame::UnloadIndexFiles()
+{
+    std::deque<CIndexObject *> *lists[] = {
+        &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
+    };
+
+    for (int i = 0; i < countof(lists); i++)
+    {
+        auto &list = *lists[i];
+        for (auto it = list.begin(); it != list.end(); ++it)
+        {
+            DestroySprite(*it);
+        }
+        list.clear();
+    }
+
+    for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end(); ++it)
+    {
+        CIndexSound *obj = *it;
+        if (obj->UserData != SOUND_NULL)
+        {
+            g_SoundManager.UpdateSoundEffect((SoundHandle)obj->UserData, -1);
+            obj->UserData = SOUND_NULL;
+        }
+    }
+    m_UsedSoundList.clear();
+
+    ValidateSpriteIsDeleted(g_Index.m_Land);
+    ValidateSpriteIsDeleted(g_Index.m_Static);
+    ValidateSpriteIsDeleted(g_Index.m_Gump);
+    ValidateSpriteIsDeleted(g_Index.m_Texture);
+    ValidateSpriteIsDeleted(g_Index.m_Light);
+}
+
+#if defined(XUO_EMSC)
+// Web boot hand-off (see Install()): draws the boot splash from a frame
+// callback - the only place a worker-owned OffscreenCanvas is composited - and
+// reports that the main loop may start the install itself. The streaming runs
+// inside vfs_boot (InstallContinue), which is exactly the blocking work that
+// must not happen before the first composited frame.
+bool CGame::InstallWebBootPoll()
+{
+    Splash_SetProgress(vfs_boot_web_progress());
+    Splash_Render();
+    return true;
+}
+#endif
+
+// The slow part of the boot: the streamed install and every data-file read.
+// On the web it runs from the main loop once the streamed install completes
+// (InstallWebBootPoll), on native straight after Install()'s setup.
+bool CGame::InstallContinue()
+{
     Info(Client, "loading files");
     if (vfs_enabled() && !vfs_boot([](float done01, const char *label) {
             static float lastLogged = -1.0f;
@@ -546,88 +669,6 @@ bool CGame::Install()
     Info(Client, "initialization completed");
     vfs_notify_first_frame(); // boot-critical work done: allow post-frame convergence
     return true;
-}
-
-template <typename T, size_t SIZE>
-void ValidateSpriteIsDeleted(T (&arr)[SIZE])
-{
-    for (int i = 0; i < SIZE; ++i)
-    {
-        CIndexObject &obj = arr[i];
-        (void)obj;
-        assert(obj.UserData == nullptr);
-    }
-}
-
-void DestroySprite(CIndexObject *obj)
-{
-    static const bool artArrayLog = getenv("XUO_ART_ARRAY_LOG") != nullptr;
-    auto *spr = (CSprite *)obj->UserData;
-    if (spr != nullptr)
-    {
-        if (spr->Texture && artArrayLog)
-        {
-            fprintf(
-                stderr,
-                "[artarray] destroy tex=%u layer=%d\n",
-                spr->Texture->Texture,
-                spr->Texture->ArrayLayer);
-        }
-        spr->Clear();
-        delete spr;
-        obj->UserData = nullptr;
-    }
-}
-
-// teardown for a sound decoded from a streaming placeholder -
-// the same path the garbage collector uses, plus the malloc'd wave scratch
-static void DestroySoundCache(CIndexObject *obj)
-{
-    auto *snd = (CIndexSound *)obj;
-    if (snd->UserData != SOUND_NULL)
-    {
-        g_SoundManager.UpdateSoundEffect((SoundHandle)snd->UserData, -1);
-        snd->UserData = SOUND_NULL;
-    }
-    if (snd->m_WaveFile != nullptr)
-    {
-        free(snd->m_WaveFile);
-        snd->m_WaveFile = nullptr;
-    }
-}
-
-void CGame::UnloadIndexFiles()
-{
-    std::deque<CIndexObject *> *lists[] = {
-        &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
-    };
-
-    for (int i = 0; i < countof(lists); i++)
-    {
-        auto &list = *lists[i];
-        for (auto it = list.begin(); it != list.end(); ++it)
-        {
-            DestroySprite(*it);
-        }
-        list.clear();
-    }
-
-    for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end(); ++it)
-    {
-        CIndexSound *obj = *it;
-        if (obj->UserData != SOUND_NULL)
-        {
-            g_SoundManager.UpdateSoundEffect((SoundHandle)obj->UserData, -1);
-            obj->UserData = SOUND_NULL;
-        }
-    }
-    m_UsedSoundList.clear();
-
-    ValidateSpriteIsDeleted(g_Index.m_Land);
-    ValidateSpriteIsDeleted(g_Index.m_Static);
-    ValidateSpriteIsDeleted(g_Index.m_Gump);
-    ValidateSpriteIsDeleted(g_Index.m_Texture);
-    ValidateSpriteIsDeleted(g_Index.m_Light);
 }
 
 void CGame::Uninstall()

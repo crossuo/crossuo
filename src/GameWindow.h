@@ -41,6 +41,11 @@ public:
     void MaximizeWindow();
 
     bool Create(const char *title, bool showCursor = false, int width = 800, int height = 600);
+#if defined(XUO_EMSC)
+    // web: runs the post-install part of the boot once the main loop sees the
+    // streamed install complete (Create returns early while it streams)
+    bool ContinueWebBoot();
+#endif
     void Destroy() const;
 
     static uint32_t PushEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);

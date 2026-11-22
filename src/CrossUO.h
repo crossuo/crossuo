@@ -58,6 +58,14 @@ public:
     ~CGame();
 
     bool Install();
+    // the part of Install() that needs the data files (split so the web boot
+    // can hand its streamed-install wait to the main loop - see Install())
+    bool InstallContinue();
+#if defined(XUO_EMSC)
+    // web: draws the boot splash from a frame callback and reports whether the
+    // streamed install finished (Install() returns while it is still running)
+    bool InstallWebBootPoll();
+#endif
     void Uninstall();
     void ProcessCommandLine();
 
@@ -215,3 +223,9 @@ public:
 };
 
 extern CGame g_Game;
+
+#if defined(XUO_EMSC)
+// web: true while the boot is waiting for the streamed install from the main
+// loop (Install() returned early); ContinueWebBoot() clears it
+extern bool g_WebBootPending;
+#endif
