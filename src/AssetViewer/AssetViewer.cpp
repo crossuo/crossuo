@@ -279,7 +279,7 @@ void DrawStaticsDetail(uint16_t id, AssetGridState &state)
         ImGui::TextDisabled("No tiledata entry");
         return;
     }
-    const MulStaticTile2 &tile = g_Data.m_Static[id];
+    const MulStaticTile &tile = g_Data.m_Static[id];
     ImGui::SeparatorText("Tiledata");
     if (ImGui::Button("Show in Tiledata"))
     {
@@ -319,7 +319,7 @@ void DrawLandDetail(uint16_t id)
         ImGui::TextDisabled("No tiledata entry");
         return;
     }
-    const MulLandTile2 &tile = g_Data.m_Land[id];
+    const MulLandTile &tile = g_Data.m_Land[id];
     ImGui::SeparatorText("Tiledata");
     if (ImGui::Button("Show in Tiledata"))
     {
@@ -791,14 +791,45 @@ void TiledataRebuildFiltered(
 
 // read-only checkbox matrix over the named flag word (bits 32+ are reported
 // in the hex line; the shipped client data only uses the low 32 bits)
+// raw fields of a static record straight from tiledata.mul (same file offset
+// arithmetic the loader uses; the width follows the layout the loader chose),
+// so the interpreted values above can be cross-checked against the file by
+// hand, whatever tool says otherwise
+static void TiledataDrawRawRecord(uint32_t id)
+{
+    const CMappedFile &file = g_FileManager.m_TiledataMul;
+    const size_t landGroup = g_Data.m_Tiledata64Flags ? sizeof(MulLandTileGroup2) :
+                                                         sizeof(MulLandTileGroup1);
+    const size_t staticGroup = g_Data.m_Tiledata64Flags ? sizeof(MulStaticTileGroup2) :
+                                                           sizeof(MulStaticTileGroup1);
+    const size_t flagsSize = g_Data.m_Tiledata64Flags ? 8 : 4;
+    const size_t groups = 512;
+    const size_t recordSize = 1 + flagsSize + 1 + 4 + 2 + 2 + 2 + 1 + 20;
+    const size_t offset = groups * landGroup + (id / 32) * staticGroup + 4 +
+                          (id % 32) * recordSize;
+    if (file.Size == 0 || offset + recordSize > file.Size)
+    {
+        ImGui::TextDisabled("raw: record outside tiledata.mul");
+        return;
+    }
+    ImGui::TextDisabled(
+        "raw @0x%zX (%zu-byte records): %s",
+        offset,
+        recordSize,
+        g_Data.m_Tiledata64Flags ? "64-bit flags" : "32-bit flags");
+    char hex[3 * 64 + 1];
+    char *out = hex;
+    for (size_t i = 0; i < recordSize; i++)
+    {
+        out += snprintf(out, 4, "%02X ", file.Start[offset + i]);
+    }
+    *out = '\0';
+    ImGui::TextWrapped("%s", hex);
+}
+
 void TiledataDrawFlagCheckboxes(uint64_t flags)
 {
-    ImGui::Text("Flags: 0x%08llX", (unsigned long long)flags);
-    if ((flags >> 32) != 0)
-    {
-        ImGui::SameLine();
-        ImGui::TextDisabled("(high word: 0x%08llX)", (unsigned long long)(flags >> 32));
-    }
+    ImGui::Text("Flags: 0x%llX", (unsigned long long)flags);
     ImGui::BeginDisabled(true);
     const int bits = AssetGrid_FlagBits();
     const int cols = 2;
@@ -816,8 +847,19 @@ void TiledataDrawFlagCheckboxes(uint64_t flags)
                 {
                     continue;
                 }
+                // a bit without a name (reserved) gets its bit number
+                char unnamed[16];
+                const char *label = AssetGrid_FlagBitName(bit);
+                if (label == nullptr)
+                {
+                    snprintf(unnamed, sizeof(unnamed), "Bit%d", bit);
+                    label = unnamed;
+                }
+                // the hidden id is positional: ImGui ids default to the label
+                ImGui::PushID(bit);
                 bool value = ((flags >> bit) & 1) != 0;
-                ImGui::Checkbox(AssetGrid_FlagBitName(bit), &value);
+                ImGui::Checkbox(label, &value);
+                ImGui::PopID();
             }
         }
         ImGui::EndTable();
@@ -864,7 +906,7 @@ void TiledataItemColumns(uint32_t id)
     {
         return;
     }
-    const MulStaticTile2 &tile = g_Data.m_Static[id];
+    const MulStaticTile &tile = g_Data.m_Static[id];
     ImGui::Text(
         "W %u | L %u | Q %u | Anim 0x%04X | Hue %d | LI %u | H %u",
         tile.Weight,
@@ -892,7 +934,7 @@ void TiledataItemDetail(uint32_t id)
         ImGui::TextDisabled("No tiledata entry");
         return;
     }
-    const MulStaticTile2 &tile = g_Data.m_Static[id];
+    const MulStaticTile &tile = g_Data.m_Static[id];
     ImGui::Text("Name: %.20s", tile.Name);
     ImGui::Text("Weight: %u", tile.Weight);
     ImGui::Text("Layer: %u", tile.Layer);
@@ -906,6 +948,7 @@ void TiledataItemDetail(uint32_t id)
         RequestStaticsShow(id);
     }
     TiledataDrawFlagCheckboxes(tile.Flags);
+    TiledataDrawRawRecord(id);
 }
 
 void TiledataLandDetail(uint32_t id)
@@ -915,7 +958,7 @@ void TiledataLandDetail(uint32_t id)
         ImGui::TextDisabled("No tiledata entry");
         return;
     }
-    const MulLandTile2 &tile = g_Data.m_Land[id];
+    const MulLandTile &tile = g_Data.m_Land[id];
     ImGui::Text("Name: %.20s", tile.Name);
     ImGui::Text("TexID: 0x%04X", tile.TexID);
     if (ImGui::Button("View in Land"))
@@ -1228,7 +1271,7 @@ bool TiledataItemsCsv(const TiledataTabState &state)
         {
             continue;
         }
-        const MulStaticTile2 &tile = g_Data.m_Static[id];
+        const MulStaticTile &tile = g_Data.m_Static[id];
         csv += std::to_string(id);
         snprintf(row, sizeof(row), ",0x%04X,", id);
         csv += row;
@@ -1260,7 +1303,7 @@ bool TiledataLandCsv(const TiledataTabState &state)
         {
             continue;
         }
-        const MulLandTile2 &tile = g_Data.m_Land[id];
+        const MulLandTile &tile = g_Data.m_Land[id];
         csv += std::to_string(id);
         snprintf(row, sizeof(row), ",0x%04X,", id);
         csv += row;

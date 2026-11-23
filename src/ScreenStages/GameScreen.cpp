@@ -2527,7 +2527,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                 }
                 else if (rwo->IsStaticObject() || rwo->IsMultiObject())
                 {
-                    MulStaticTile2 *st = nullptr;
+                    MulStaticTile *st = nullptr;
                     if (g_Config.ClientVersion >= CV_7090 && rwo->IsSurface())
                     {
                         st = ((CRenderStaticObject *)rwo)->GetStaticData();

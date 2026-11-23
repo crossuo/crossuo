@@ -97,7 +97,7 @@ void CGumpTargetSystem::UpdateContent()
 
         if (!obj->NPC && (OldName.length() == 0u))
         {
-            MulStaticTile2 *st = obj->StaticGroupObjectPtr()->GetStaticData();
+            MulStaticTile *st = obj->StaticGroupObjectPtr()->GetStaticData();
             OldName =
                 g_ClilocManager.Cliloc(g_Language)->GetA(1020000 + obj->Graphic, true, st->Name);
         }

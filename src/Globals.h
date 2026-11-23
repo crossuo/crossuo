@@ -413,6 +413,63 @@ inline bool IsStairRight(int64_t flags)
     return (flags & 0x80000000) != 0;
 }
 
+// canonical tiledata flag bits, in bit order: the whole (possibly 64-bit) flag
+// word must be nameable, so the table runs past the 32 bits the Is*() helpers
+// above cover. ArticleThe is the pair ArticleA|ArticleAn, so it is not a single
+// bit and is not listed; null names are reserved bits.
+struct TileFlagName
+{
+    uint64_t Bit;
+    const char *Name;
+};
+namespace uo_tile_flags
+{
+constexpr TileFlagName Names[] = {
+    { 0x0000000001ull, "Background" },
+    { 0x0000000002ull, "Weapon" },
+    { 0x0000000004ull, "Transparent" },
+    { 0x0000000008ull, "Translucent" },
+    { 0x0000000010ull, "Wall" },
+    { 0x0000000020ull, "Damaging" },
+    { 0x0000000040ull, "Impassable" },
+    { 0x0000000080ull, "Wet" },
+    { 0x0000000100ull, "Ignored" },
+    { 0x0000000200ull, "Surface" },
+    { 0x0000000400ull, "Bridge" },
+    { 0x0000000800ull, "Generic" },
+    { 0x0000001000ull, "Window" },
+    { 0x0000002000ull, "NoShoot" },
+    { 0x0000004000ull, "ArticleA" },
+    { 0x0000008000ull, "ArticleAn" },
+    { 0x0000010000ull, "Mongen" },
+    { 0x0000020000ull, "Foliage" },
+    { 0x0000040000ull, "PartialHue" },
+    { 0x0000080000ull, "UseNewArt" },
+    { 0x0000100000ull, "Map" },
+    { 0x0000200000ull, "Container" },
+    { 0x0000400000ull, "Wearable" },
+    { 0x0000800000ull, "LightSource" },
+    { 0x0001000000ull, "Animation" },
+    { 0x0002000000ull, "HoverOver" },
+    { 0x0004000000ull, "ArtUsed" },
+    { 0x0008000000ull, "Armor" },
+    { 0x0010000000ull, "Roof" },
+    { 0x0020000000ull, "Door" },
+    { 0x0040000000ull, "StairBack" },
+    { 0x0080000000ull, "StairRight" },
+    { 0x0100000000ull, "NoHouse" },
+    { 0x0200000000ull, "NoDraw" },
+    { 0x0400000000ull, nullptr }, // Unused1
+    { 0x0800000000ull, "AlphaBlend" },
+    { 0x1000000000ull, "NoShadow" },
+    { 0x2000000000ull, "PixelBleed" },
+    { 0x4000000000ull, nullptr }, // Unused2
+    { 0x8000000000ull, "PlayAnimOnce" },
+    { 0x10000000000ull, "MultiMovable" },
+};
+constexpr int Count = (int)(sizeof(Names) / sizeof(Names[0]));
+} // namespace uo_tile_flags
+
 
 extern uint32_t g_Ping;     // From packet 0x73
 extern astr_t g_PingString; // Debug Info

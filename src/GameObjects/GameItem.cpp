@@ -96,7 +96,7 @@ void CGameItem::OnGraphicChange(int direction)
         else
         {
             m_TiledataPtr = &g_Data.m_Static[Graphic];
-            MulStaticTile2 &tile = *m_TiledataPtr;
+            MulStaticTile &tile = *m_TiledataPtr;
             NoDrawTile = IsNoDrawTile(Graphic);
             if (IsWearable() || Graphic == 0x0A28)
             {

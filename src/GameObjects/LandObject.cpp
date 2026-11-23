@@ -19,7 +19,7 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
 
     m_DrawTextureColor[3] = 0xFF;
 
-    MulLandTile2 &tile = g_Data.m_Land[graphic];
+    MulLandTile &tile = g_Data.m_Land[graphic];
     IsStretched = ((tile.TexID == 0u) && ::IsWet(tile.Flags));
 
     memset(&m_Rect, 0, sizeof(m_Rect));

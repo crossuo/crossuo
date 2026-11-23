@@ -914,7 +914,7 @@ bool CTarget::CheckHook()
                     if (!tileInfo.Land && g_Config.ClientVersion >= CV_7090 &&
                         ((size_t)tileGraphic < g_Data.m_Static.size()))
                     {
-                        const MulStaticTile2 &st = g_Data.m_Static[tileGraphic];
+                        const MulStaticTile &st = g_Data.m_Static[tileGraphic];
 
                         if ((st.Flags & 0x00000200) != 0) // IsSurface
                         {

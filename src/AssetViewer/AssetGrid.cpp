@@ -16,6 +16,7 @@
 
 #include <xuocore/uodata.h> // g_Index, g_Data, g_FileManager
 
+#include "Globals.h" // uo_tile_flags::Names (canonical tiledata flag names)
 
 #include "AssetViewerCore.h" // AssetViewer_DecodeArt (host-provided parser)
 
@@ -439,51 +440,54 @@ void AssetGrid_ExportFilteredPngs(
     }
 }
 
-// the full 32-bit tiledata word, bit by bit (shared with the Tiledata tab,
-// which renders every bit as a read-only checkbox)
-namespace
-{
-const struct
-{
-    uint64_t Bit;
-    const char *Name;
-} kFlags[] = {
-    { 0x00000001, "Background" },  { 0x00000002, "Weapon" },    { 0x00000004, "Transparent" },
-    { 0x00000008, "Translucent" }, { 0x00000010, "Wall" },      { 0x00000020, "Damaging" },
-    { 0x00000040, "Impassable" },  { 0x00000080, "Wet" },       { 0x00000100, "Unknown1" },
-    { 0x00000200, "Surface" },     { 0x00000400, "Bridge" },    { 0x00000800, "Generic" },
-    { 0x00001000, "Window" },      { 0x00002000, "NoShoot" },   { 0x00004000, "ArticleA" },
-    { 0x00008000, "ArticleAn" },   { 0x00010000, "Foliage" },   { 0x00020000, "PartialHue" },
-    { 0x00040000, "Unknown2" },    { 0x00080000, "Unknown3" },  { 0x00100000, "NoDiagonal" },
-    { 0x00200000, "Unknown4" },    { 0x00400000, "Unknown5" },  { 0x00800000, "Animated" },
-    { 0x01000000, "Unknown6" },    { 0x02000000, "Unknown7" },  { 0x04000000, "NoShade" },
-    { 0x08000000, "Armor" },       { 0x10000000, "Unknown8" },  { 0x20000000, "Unknown9" },
-    { 0x40000000, "Unknown10" },   { 0x80000000, "Unknown11" },
-};
-} // namespace
+// the full tiledata flag word, bit by bit (shared with the Tiledata tab,
+// which renders every bit as a read-only checkbox). The names are the single
+// canonical table in Globals.h (uo_tile_flags::Names), so the viewer and the
+// client can never disagree on them; the standalone viewer may compile that
+// header as C++14, where its inline variables are an accepted extension.
+static_assert(uo_tile_flags::Count <= 64, "tiledata flag names must fit the flag word");
 
 int AssetGrid_FlagBits()
 {
-    return (int)(sizeof(kFlags) / sizeof(kFlags[0]));
+    return 64;
 }
 
 const char *AssetGrid_FlagBitName(int bit)
 {
-    if (bit < 0 || bit >= AssetGrid_FlagBits())
+    if (bit < 0 || bit >= 64)
     {
         return nullptr;
     }
-    return kFlags[bit].Name;
+    for (int i = 0; i < uo_tile_flags::Count; i++)
+    {
+        if (uo_tile_flags::Names[i].Bit == (1ull << bit))
+        {
+            return uo_tile_flags::Names[i].Name;
+        }
+    }
+    return nullptr;
 }
 
 void AssetGrid_DrawFlagNames(uint64_t flags)
 {
-    for (const auto &f : kFlags)
+    uint64_t named = 0;
+    bool any = false;
+    for (int i = 0; i < uo_tile_flags::Count; i++)
     {
-        if ((flags & f.Bit) != 0)
+        const auto &f = uo_tile_flags::Names[i];
+        named |= f.Bit;
+        if ((flags & f.Bit) != 0 && f.Name != nullptr)
         {
             ImGui::TextUnformatted(f.Name);
+            any = true;
         }
+    }
+    // keep the pane non-empty and never hide a set bit: the unnamed high bits
+    // and the reserved Unused1/Unused2 bits are reported numerically
+    if (!any || (flags & ~named) != 0)
+    {
+        ImGui::TextDisabled(
+            "unnamed bits: 0x%llX", (unsigned long long)(flags & ~named));
     }
 }
 

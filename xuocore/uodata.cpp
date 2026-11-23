@@ -2028,7 +2028,20 @@ void CFileManager::LoadTiledata()
 {
     auto &file = m_TiledataMul;
     Info(Data, "loading tiledata");
-    const bool isOldVersion = (s_ClientVersion < VERSION(7, 0, 9, 0));
+    // the record layout is a property of the FILE, not of the configured
+    // client version: an install without client.exe (or a mismatched version
+    // setting) still has to pick the right stride, otherwise the flags/first
+    // fields are read at the wrong offsets. A file that divides evenly into
+    // 836-byte land + 1188-byte static groups is the 32-bit-flag layout
+    // (<7.0.9); anything else (including 7.x, whose 964/1316 layout does not
+    // divide the same way) keeps the 64-bit one
+    static constexpr size_t kOldLandGroup = 836;
+    static constexpr size_t kOldStaticGroup = 1188;
+    const bool oldRecordLayout =
+        file.Size > kOldLandGroup * 512 &&
+        ((file.Size - kOldLandGroup * 512) % kOldStaticGroup) == 0;
+    const bool isOldVersion = oldRecordLayout || (s_ClientVersion < VERSION(7, 0, 9, 0));
+    g_Data.m_Tiledata64Flags = !isOldVersion;
     const int landSize = 512;
     const auto landGroup = isOldVersion ? sizeof(MulLandTileGroup1) : sizeof(MulLandTileGroup2);
     const auto staticsGroup =
@@ -2046,6 +2059,10 @@ void CFileManager::LoadTiledata()
         file.ResetPtr();
         g_Data.m_Land.resize(landSize * 32);
         g_Data.m_Static.resize(staticsSize * 32);
+        // the runtime tables always use the 64-bit record layout: a pre-7.0.9
+        // file stores 4-byte flags, which are widened here instead of leaving
+        // the record stride to every consumer (it would read the following
+        // fields at the 8-byte-flag offsets)
         for (int i = 0; i < landSize; i++)
         {
             file.ReadUInt32LE();
@@ -4688,7 +4705,7 @@ void CFileManager::PatchFiles()
                 file.ReadUInt32LE();
                 for (int j = 0; j < 32; j++)
                 {
-                    MulLandTile2 &tile = g_Data.m_Land[offset + j];
+                    MulLandTile &tile = g_Data.m_Land[offset + j];
                     if (s_ClientVersion < CV_7090)
                     {
                         tile.Flags = file.ReadUInt32LE();
@@ -4711,7 +4728,7 @@ void CFileManager::PatchFiles()
                 file.ReadUInt32LE();
                 for (int j = 0; j < 32; j++)
                 {
-                    MulStaticTile2 &tile = g_Data.m_Static[offset + j];
+                    MulStaticTile &tile = g_Data.m_Static[offset + j];
                     if (s_ClientVersion < CV_7090)
                     {
                         tile.Flags = file.ReadUInt32LE();

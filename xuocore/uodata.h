@@ -16,7 +16,7 @@
 #include <vector>
 #include "enumlist.h"
 #include "uop.h"
-#include "mulstruct.h" // FIXME: MulLandTile2, MulStaticTile2 -> g_Data
+#include "mulstruct.h" // FIXME: MulLandTile, MulStaticTile -> g_Data
 #include "mappedfile.h"
 
 struct MapSize
@@ -326,11 +326,17 @@ struct Index
 // FIXME: make private
 struct UOData
 {
-    std::vector<MulLandTile2> m_Land;
-    std::vector<MulStaticTile2> m_Static;
+    // both tables always hold the 64-bit (>=7.0.9) record layout; the loader
+    // widens the pre-7.0.9 records, so consumers never depend on the client
+    // version (see LoadTiledata)
+    std::vector<MulLandTile> m_Land;
+    std::vector<MulStaticTile> m_Static;
     std::vector<uint16_t> m_StumpTiles;
     std::vector<uint16_t> m_CaveTiles;
     std::vector<uint8_t> m_Anim;
+    // tiledata.mul record layout actually used by the loader (false = the
+    // >=7.0.9 8-byte-flags records), so a debugging tool can dump real fields
+    bool m_Tiledata64Flags = true;
 };
 
 extern Index g_Index;

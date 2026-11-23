@@ -7,11 +7,11 @@
 
 #include <stdint.h>
 
-struct MulStaticTile2;
+struct MulStaticTile;
 
 struct CObjectOnCursor
 {
-    MulStaticTile2 *TiledataPtr = nullptr;
+    MulStaticTile *TiledataPtr = nullptr;
     uint32_t Serial = 0;
     uint32_t Container = 0;
     uint16_t Graphic = 0;

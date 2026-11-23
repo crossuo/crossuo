@@ -22,7 +22,7 @@ public:
 
 protected:
     // Pointer to the tiledata structure
-    MulStaticTile2 *m_TiledataPtr{ nullptr };
+    MulStaticTile *m_TiledataPtr{ nullptr };
 
 public:
     CRenderStaticObject(
@@ -57,7 +57,7 @@ public:
     // Check whether the text can be transparent
     bool TextCanBeTransparent(CRenderTextObject *text) override;
 
-    MulStaticTile2 *GetStaticData() { return m_TiledataPtr; }
+    MulStaticTile *GetStaticData() { return m_TiledataPtr; }
 
     // Get the object height (from the tiledata)
     uint8_t GetStaticHeight() { return m_TiledataPtr->Height; }

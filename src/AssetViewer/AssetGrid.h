@@ -117,8 +117,10 @@ ImTextureRef AssetGrid_AcquireThumb(AssetTextureKind kind, uint16_t id, int size
 void AssetGrid_DrawFlagNames(uint64_t flags);
 
 // The tiledata flag word is fully named: bits 0..AssetGrid_FlagBits()-1 map
-// to AssetGrid_FlagBitName(bit) ("UnknownN" for the reserved bits), which
-// lets other tabs render the whole word as read-only checkboxes.
+// to AssetGrid_FlagBitName(bit) (nullptr for a bit with no name, e.g. the
+// reserved ones), so other tabs can render the whole word as read-only
+// checkboxes. The names come from the canonical uo_tile_flags::Names in
+// Globals.h.
 int AssetGrid_FlagBits();
 const char *AssetGrid_FlagBitName(int bit);
 

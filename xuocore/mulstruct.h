@@ -189,6 +189,34 @@ struct MulStaticTileGroup2
 };
 static_assert(sizeof(MulStaticTileGroup2) == 1316, "Invalid MulStaticTileGroup2 (>=7.0.9) size");
 
+// Runtime layout of the tiledata tables g_Data.m_Land / g_Data.m_Static: every
+// record is held in the 64-bit (>=7.0.9) shape, whatever the source file. The
+// <7.0.9 mul stores the same fields with 4-byte flags (MulLandTile1 /
+// MulStaticTile1, 26/37 bytes) and the loader widens those on load - a table
+// whose record stride followed the client version silently shifted every field
+// after Flags for old installs.
+struct MulLandTile
+{
+    uint64_t Flags;
+    uint16_t TexID;
+    char Name[20];
+};
+static_assert(sizeof(MulLandTile) == sizeof(MulLandTile2), "Invalid MulLandTile runtime size");
+
+struct MulStaticTile
+{
+    uint64_t Flags;
+    uint8_t Weight;
+    uint8_t Layer;
+    uint32_t Count;
+    uint16_t AnimID;
+    uint16_t Hue;
+    uint16_t LightIndex;
+    uint8_t Height;
+    char Name[20];
+};
+static_assert(sizeof(MulStaticTile) == sizeof(MulStaticTile2), "Invalid MulStaticTile runtime size");
+
 struct MULTI_BLOCK
 {
     uint16_t ID;
